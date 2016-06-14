@@ -1,0 +1,838 @@
+<wsdl:definitions name="Service" 
+      targetNamespace="http://tempuri.org/" 
+	  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+	  xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" 
+	  xmlns:wsa10="http://www.w3.org/2005/08/addressing" 
+	  xmlns:tns="http://tempuri.org/" 
+	  xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" 
+	  xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" 
+	  xmlns:wsx="http://schemas.xmlsoap.org/ws/2004/09/mex" 
+	  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+	  xmlns:i0="http://xml.qvision.nl/2015/01/30/" 
+	  xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" 
+	  xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" 
+	  xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" 
+	  xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" 
+	  xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" 
+	  xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" 
+	  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+   
+   <wsp:Policy wsu:Id="BasicHttpBinding_IService_policy">
+      <wsp:ExactlyOne>
+         <wsp:All>
+            <sp:TransportBinding xmlns:sp="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy">
+               <wsp:Policy>
+                  <sp:TransportToken>
+                     <wsp:Policy>
+                        <sp:HttpsToken RequireClientCertificate="false"/>
+                     </wsp:Policy>
+                  </sp:TransportToken>
+                  <sp:AlgorithmSuite>
+                     <wsp:Policy>
+                        <sp:Basic256/>
+                     </wsp:Policy>
+                  </sp:AlgorithmSuite>
+                  <sp:Layout>
+                     <wsp:Policy>
+                        <sp:Lax/>
+                     </wsp:Policy>
+                  </sp:Layout>
+                  <sp:IncludeTimestamp/>
+               </wsp:Policy>
+            </sp:TransportBinding>
+            <sp:SignedSupportingTokens xmlns:sp="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy">
+               <wsp:Policy>
+                  <sp:UsernameToken sp:IncludeToken="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy/IncludeToken/AlwaysToRecipient">
+                     <wsp:Policy>
+                        <sp:WssUsernameToken10/>
+                     </wsp:Policy>
+                  </sp:UsernameToken>
+               </wsp:Policy>
+            </sp:SignedSupportingTokens>
+            <sp:Wss10 xmlns:sp="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy">
+               <wsp:Policy/>
+            </sp:Wss10>
+         </wsp:All>
+      </wsp:ExactlyOne>
+   </wsp:Policy>
+   
+   
+   <wsdl:types>
+      <xs:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+         <xs:import namespace="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setAcceptatie"/>
+         <xs:import namespace="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setLeegmelding"/>
+         <xs:import namespace="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setVerhuurd"/>
+         <xs:element name="setAcceptatie">
+            <xs:complexType>
+               <xs:sequence>
+			      <xs:element minOccurs="0" name="acceptatieWon" nillable="true" type="q1:acceptatieWoning" xmlns:q1="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setAcceptatie"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="setAcceptatieResponse">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element minOccurs="0" name="setAcceptatieResult" nillable="true" type="q2:setAcceptatieResponse" xmlns:q2="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setAcceptatie"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="setLeegmelding">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element minOccurs="0" name="woning" nillable="true" type="q3:woning" xmlns:q3="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setLeegmelding"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="setLeegmeldingResponse">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element minOccurs="0" name="setLeegmeldingResult" nillable="true" type="q4:setLeegmeldingResponse" xmlns:q4="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setLeegmelding"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="setVerhuurd">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element minOccurs="0" name="verhuurdWoning" nillable="true" type="q5:verhuurdWoning" xmlns:q5="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setVerhuurd"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="setVerhuurdResponse">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element minOccurs="0" name="setVerhuurdResult" nillable="true" type="q6:setVerhuurdResponse" xmlns:q6="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setVerhuurd"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+      </xs:schema>
+      <xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/2003/10/Serialization/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://schemas.microsoft.com/2003/10/Serialization/">
+         <xs:element name="anyType" nillable="true" type="xs:anyType"/>
+         <xs:element name="anyURI" nillable="true" type="xs:anyURI"/>
+         <xs:element name="base64Binary" nillable="true" type="xs:base64Binary"/>
+         <xs:element name="boolean" nillable="true" type="xs:boolean"/>
+         <xs:element name="byte" nillable="true" type="xs:byte"/>
+         <xs:element name="dateTime" nillable="true" type="xs:dateTime"/>
+         <xs:element name="decimal" nillable="true" type="xs:decimal"/>
+         <xs:element name="double" nillable="true" type="xs:double"/>
+         <xs:element name="float" nillable="true" type="xs:float"/>
+         <xs:element name="int" nillable="true" type="xs:int"/>
+         <xs:element name="long" nillable="true" type="xs:long"/>
+         <xs:element name="QName" nillable="true" type="xs:QName"/>
+         <xs:element name="short" nillable="true" type="xs:short"/>
+         <xs:element name="string" nillable="true" type="xs:string"/>
+         <xs:element name="unsignedByte" nillable="true" type="xs:unsignedByte"/>
+         <xs:element name="unsignedInt" nillable="true" type="xs:unsignedInt"/>
+         <xs:element name="unsignedLong" nillable="true" type="xs:unsignedLong"/>
+         <xs:element name="unsignedShort" nillable="true" type="xs:unsignedShort"/>
+         <xs:element name="char" nillable="true" type="tns:char"/>
+         <xs:simpleType name="char">
+            <xs:restriction base="xs:int"/>
+         </xs:simpleType>
+         <xs:element name="duration" nillable="true" type="tns:duration"/>
+         <xs:simpleType name="duration">
+            <xs:restriction base="xs:duration">
+               <xs:pattern value="\-?P(\d*D)?(T(\d*H)?(\d*M)?(\d*(\.\d*)?S)?)?"/>
+               <xs:minInclusive value="-P10675199DT2H48M5.4775808S"/>
+               <xs:maxInclusive value="P10675199DT2H48M5.4775807S"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="guid" nillable="true" type="tns:guid"/>
+         <xs:simpleType name="guid">
+            <xs:restriction base="xs:string">
+               <xs:pattern value="[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:attribute name="FactoryType" type="xs:QName"/>
+         <xs:attribute name="Id" type="xs:ID"/>
+         <xs:attribute name="Ref" type="xs:IDREF"/>
+      </xs:schema>
+      <xs:schema elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setAcceptatie" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setAcceptatie">
+         <xs:import namespace="http://schemas.datacontract.org/2004/07/System"/>
+         <xs:complexType name="acceptatieWoning">
+            <xs:sequence>
+               <xs:element name="adressen" nillable="true" type="tns:ArrayOfadresacc"/>
+               <xs:element name="contactdetails" nillable="true" type="tns:contactdetails"/>
+               <xs:element name="corp_Nummer" nillable="true" type="xs:string"/>
+               <xs:element name="productregistratie" nillable="true" type="tns:productregistratie"/>
+               <xs:element name="relaties" nillable="true" type="tns:ArrayOfrelatie"/>
+               <xs:element name="vge" nillable="true" type="tns:vge"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="acceptatieWoning" nillable="true" type="tns:acceptatieWoning"/>
+         <xs:complexType name="ArrayOfadresacc">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="adresacc" nillable="true" type="tns:adresacc"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOfadresacc" nillable="true" type="tns:ArrayOfadresacc"/>
+         <xs:complexType name="adresacc">
+            <xs:sequence>
+               <xs:element name="adresgebruik" type="tns:adres_adresgebruik_enum"/>
+               <xs:element name="huisnummer" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="huisnummer_toevoeging" nillable="true" type="xs:string"/>
+               <xs:element name="land" nillable="true" type="xs:string"/>
+               <xs:element name="postcode" nillable="true" type="xs:string"/>
+               <xs:element name="straatnaam_nen" nillable="true" type="xs:string"/>
+               <xs:element name="woonplaats_nen" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="adresacc" nillable="true" type="tns:adresacc"/>
+         <xs:simpleType name="adres_adresgebruik_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="BEZK">
+			     <annotation><documentation>Bezoek adres</documentation></annotation>
+			   </xs:enumeration>
+               <xs:enumeration value="CORR">
+			     <annotation><documentation>Correspondentie adres</documentation></annotation>
+			   </xs:enumeration>
+               <xs:enumeration value="FYSK">
+			     <annotation><documentation>Fysiek adres</documentation></annotation>
+			   </xs:enumeration>
+               <xs:enumeration value="WOON">
+			     <annotation><documentation>Woon adres</documentation></annotation>
+			   </xs:enumeration>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="adres_adresgebruik_enum" nillable="true" type="tns:adres_adresgebruik_enum"/>
+         <xs:complexType name="contactdetails">
+            <xs:sequence>
+               <xs:element name="email" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="telm" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="telp" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="telw" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="contactdetails" nillable="true" type="tns:contactdetails"/>
+         <xs:complexType name="productregistratie">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="aantal_verhuiz_personen" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="inkomen" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="inkomensjaar" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="productregistratie" nillable="true" type="tns:productregistratie"/>
+         <xs:complexType name="ArrayOfrelatie">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="relatie" nillable="true" type="tns:relatie"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOfrelatie" nillable="true" type="tns:ArrayOfrelatie"/>
+         <xs:complexType name="relatie">
+            <xs:sequence>
+               <xs:element name="achternaam" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="bsn" nillable="true" type="xs:string"/>
+               <xs:element name="geboortedatum" type="q1:DateTimeOffset" xmlns:q1="http://schemas.datacontract.org/2004/07/System"/>
+               <xs:element name="geslacht" type="tns:relatie_geslacht_enum"/>
+               <xs:element minOccurs="0" name="rekeningnummer" nillable="true" type="xs:string"/>
+               <xs:element name="voorletters" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="voorvoegsel" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="relatie" nillable="true" type="tns:relatie"/>
+         <xs:simpleType name="relatie_geslacht_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="M">
+			     <annotation><documentation>Mannelijk</documentation></annotation>
+			   </xs:enumeration>
+               <xs:enumeration value="V">
+			     <annotation><documentation>Vrouwelijk</documentation></annotation>
+			   </xs:enumeration>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="relatie_geslacht_enum" nillable="true" type="tns:relatie_geslacht_enum"/>
+         <xs:complexType name="vge">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="crp" nillable="true" type="xs:string"/>
+               <xs:element name="externe_id" nillable="true" type="xs:string"/>
+               <xs:element name="huisnummer" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="huisnummer_toevoeging" nillable="true" type="xs:string"/>
+               <xs:element name="postcode" nillable="true" type="xs:string"/>
+               <xs:element name="straatnaam_nen" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="vst" nillable="true" type="xs:string"/>
+               <xs:element name="woonplaats_nen" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="vge" nillable="true" type="tns:vge"/>
+         <xs:complexType name="setAcceptatieResponse">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="FOUTCODE" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="MELDING" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="RESULTAAT" type="tns:acceptatieResponse_resultaat_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="setAcceptatieResponse" nillable="true" type="tns:setAcceptatieResponse"/>
+         <xs:simpleType name="acceptatieResponse_resultaat_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="GOED"/>
+               <xs:enumeration value="FOUT"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="acceptatieResponse_resultaat_enum" nillable="true" type="tns:acceptatieResponse_resultaat_enum"/>
+      </xs:schema>
+      <xs:schema elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/System" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://schemas.datacontract.org/2004/07/System">
+         <xs:import namespace="http://schemas.microsoft.com/2003/10/Serialization/"/>
+         <xs:complexType name="DateTimeOffset">
+            <xs:annotation>
+               <xs:appinfo>
+                  <IsValueType xmlns="http://schemas.microsoft.com/2003/10/Serialization/">true</IsValueType>
+               </xs:appinfo>
+            </xs:annotation>
+            <xs:sequence>
+               <xs:element name="DateTime" type="xs:dateTime"/>
+               <xs:element name="OffsetMinutes" type="xs:short"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="DateTimeOffset" nillable="true" type="tns:DateTimeOffset"/>
+      </xs:schema>
+      <xs:schema elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setLeegmelding" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setLeegmelding">
+         <xs:complexType name="woning">
+            <xs:sequence>
+               <xs:element name="admin_units" nillable="true" type="tns:ArrayOfadmin_unit"/>
+               <xs:element name="adres" nillable="true" type="tns:adres"/>
+               <xs:element minOccurs="0" name="code_koopkosten" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="eenmalige_kosten" nillable="true" type="tns:ArrayOfeenmalige_kosten"/>
+               <xs:element name="externe_id" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="faciliteiten" nillable="true" type="tns:ArrayOffaciliteit"/>
+               <xs:element minOccurs="0" name="grond_in_eigendom" nillable="true" type="tns:woning_grond_in_eigendom_enum"/>
+               <xs:element minOccurs="0" name="huidige_huurder" nillable="true" type="tns:huidige_huurder"/>
+               <xs:element minOccurs="0" name="ind_volledig" nillable="true" type="tns:woning_ind_volledig_enum"/>
+               <xs:element minOccurs="0" name="makelaar" nillable="true" type="tns:makelaar"/>
+               <xs:element minOccurs="0" name="media" nillable="true" type="tns:ArrayOfmedia"/>
+               <xs:element minOccurs="0" name="num" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="parkeergelegenheid" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="perceelnaam" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="perceeloppervlakte" nillable="true" type="xs:decimal"/>
+               <xs:element name="prijzen" nillable="true" type="tns:ArrayOfprijs"/>
+               <xs:element minOccurs="0" name="reactie_email" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="staat_woning" nillable="true" type="tns:woning_staat_woning_enum"/>
+               <xs:element name="status" nillable="true" type="tns:status"/>
+               <xs:element minOccurs="0" name="type_berging" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="verh_leegstandswet" nillable="true" type="tns:woning_verh_leegstandswet_enum"/>
+               <xs:element minOccurs="0" name="vertrekken" nillable="true" type="tns:ArrayOfvertrek"/>
+               <xs:element minOccurs="0" name="vloer" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="voorzieningen" nillable="true" type="tns:ArrayOfvoorziening"/>
+               <xs:element name="woonruimte" nillable="true" type="tns:woonruimte"/>
+               <xs:element minOccurs="0" name="zonnepaneel" nillable="true" type="tns:woning_zonnepaneel_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="woning" nillable="true" type="tns:woning"/>
+         <xs:complexType name="ArrayOfadmin_unit">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="admin_unit" nillable="true" type="tns:admin_unit"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOfadmin_unit" nillable="true" type="tns:ArrayOfadmin_unit"/>
+         <xs:complexType name="admin_unit">
+            <xs:sequence>
+               <xs:element name="alt_ref" nillable="true" type="xs:string"/>
+               <xs:element name="type" type="tns:admin_unit_type_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="admin_unit" nillable="true" type="tns:admin_unit"/>
+         <xs:simpleType name="admin_unit_type_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="CRP"/>
+               <xs:enumeration value="SWV"/>
+               <xs:enumeration value="VST"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="admin_unit_type_enum" nillable="true" type="tns:admin_unit_type_enum"/>
+         <xs:complexType name="adres">
+            <xs:sequence>
+               <xs:element name="huisnummer" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="land" nillable="true" type="xs:string"/>
+               <xs:element name="postcode" nillable="true" type="xs:string"/>
+               <xs:element name="straatnaam" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="toevoeging" nillable="true" type="xs:string"/>
+               <xs:element name="woonplaats" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="adres" nillable="true" type="tns:adres"/>
+         <xs:complexType name="ArrayOfeenmalige_kosten">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="eenmalige_kosten" nillable="true" type="tns:eenmalige_kosten"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOfeenmalige_kosten" nillable="true" type="tns:ArrayOfeenmalige_kosten"/>
+         <xs:complexType name="eenmalige_kosten">
+            <xs:sequence>
+               <xs:element name="bedrag" type="xs:decimal"/>
+               <xs:element name="type_eenmalige_kosten" type="tns:eenmalige_kosten_type_eenmalige_kosten"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="eenmalige_kosten" nillable="true" type="tns:eenmalige_kosten"/>
+         <xs:simpleType name="eenmalige_kosten_type_eenmalige_kosten">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="ADMIN"/>
+               <xs:enumeration value="CONTR"/>
+               <xs:enumeration value="WAARB"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="eenmalige_kosten_type_eenmalige_kosten" nillable="true" type="tns:eenmalige_kosten_type_eenmalige_kosten"/>
+         <xs:complexType name="ArrayOffaciliteit">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="faciliteit" nillable="true" type="tns:faciliteit"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOffaciliteit" nillable="true" type="tns:ArrayOffaciliteit"/>
+         <xs:complexType name="faciliteit">
+            <xs:sequence>
+               <xs:element name="type_faciliteit" type="tns:faciliteit_type_faciliteit_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="faciliteit" nillable="true" type="tns:faciliteit"/>
+         <xs:simpleType name="faciliteit_type_faciliteit_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="ALARM"/>
+               <xs:enumeration value="HUI"/>
+               <xs:enumeration value="MAAL"/>
+               <xs:enumeration value="ONTM"/>
+               <xs:enumeration value="REST"/>
+               <xs:enumeration value="ZORG"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="faciliteit_type_faciliteit_enum" nillable="true" type="tns:faciliteit_type_faciliteit_enum"/>
+         <xs:simpleType name="woning_grond_in_eigendom_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="J"/>
+               <xs:enumeration value="N"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woning_grond_in_eigendom_enum" nillable="true" type="tns:woning_grond_in_eigendom_enum"/>
+         <xs:complexType name="huidige_huurder">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="achternaam" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="email" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="geslacht" nillable="true" type="tns:huidige_huurder_geslacht_enum"/>
+               <xs:element minOccurs="0" name="telefoon_mobiel" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="telefoon_vast" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="tussenvoegsels" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="voorletters" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="huidige_huurder" nillable="true" type="tns:huidige_huurder"/>
+         <xs:simpleType name="huidige_huurder_geslacht_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="M"/>
+               <xs:enumeration value="V"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="huidige_huurder_geslacht_enum" nillable="true" type="tns:huidige_huurder_geslacht_enum"/>
+         <xs:simpleType name="woning_ind_volledig_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="J"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woning_ind_volledig_enum" nillable="true" type="tns:woning_ind_volledig_enum"/>
+         <xs:complexType name="makelaar">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="email" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="naam" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="telefoon" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="makelaar" nillable="true" type="tns:makelaar"/>
+         <xs:complexType name="ArrayOfmedia">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="media" nillable="true" type="tns:media"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOfmedia" nillable="true" type="tns:ArrayOfmedia"/>
+         <xs:complexType name="media">
+            <xs:sequence>
+               <xs:element name="type" type="tns:media_type_enum"/>
+               <xs:element name="url" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="media" nillable="true" type="tns:media"/>
+         <xs:simpleType name="media_type_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="AFV"/>
+               <xs:enumeration value="PLT"/>
+               <xs:enumeration value="VID"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="media_type_enum" nillable="true" type="tns:media_type_enum"/>
+         <xs:complexType name="ArrayOfprijs">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="prijs" nillable="true" type="tns:prijs"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOfprijs" nillable="true" type="tns:ArrayOfprijs"/>
+         <xs:complexType name="prijs">
+            <xs:sequence>
+               <xs:element name="bedrag" type="xs:decimal"/>
+               <xs:element name="type_vgeprijs" type="tns:prijs_type_vgeprijs_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="prijs" nillable="true" type="tns:prijs"/>
+         <xs:simpleType name="prijs_type_vgeprijs_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="BRUT"/>
+               <xs:enumeration value="HBR"/>
+               <xs:enumeration value="HNET"/>
+               <xs:enumeration value="HSU"/>
+               <xs:enumeration value="KCF"/>
+               <xs:enumeration value="KGR"/>
+               <xs:enumeration value="KOOP"/>
+               <xs:enumeration value="NETT"/>
+               <xs:enumeration value="SERV"/>
+               <xs:enumeration value="SRVS"/>
+               <xs:enumeration value="STKK"/>
+               <xs:enumeration value="SUBS"/>
+               <xs:enumeration value="VVE"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="prijs_type_vgeprijs_enum" nillable="true" type="tns:prijs_type_vgeprijs_enum"/>
+         <xs:simpleType name="woning_staat_woning_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="O"/>
+               <xs:enumeration value="B"/>
+               <xs:enumeration value="NB"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woning_staat_woning_enum" nillable="true" type="tns:woning_staat_woning_enum"/>
+         <xs:complexType name="status">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="einddatum" nillable="true" type="xs:dateTime"/>
+               <xs:element name="ingangsdatum" type="xs:dateTime"/>
+               <xs:element minOccurs="0" name="reden_bschikbr" nillable="true" type="tns:status_reden_bschikbr_enum"/>
+               <xs:element minOccurs="0" name="reden_niet_bschkbr" nillable="true" type="tns:status_reden_niet_bschkbr_enum"/>
+               <xs:element minOccurs="0" name="soort_bschikbrheid" nillable="true" type="tns:status_soort_bschikbrheid_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="status" nillable="true" type="tns:status"/>
+         <xs:simpleType name="status_reden_bschikbr_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="MUT"/>
+               <xs:enumeration value="NWB"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="status_reden_bschikbr_enum" nillable="true" type="tns:status_reden_bschikbr_enum"/>
+         <xs:simpleType name="status_reden_niet_bschkbr_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="PROF"/>
+               <xs:enumeration value="REN"/>
+               <xs:enumeration value="SAMV"/>
+               <xs:enumeration value="SLP"/>
+               <xs:enumeration value="VERH"/>
+               <xs:enumeration value="VERK"/>
+               <xs:enumeration value="WONR"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="status_reden_niet_bschkbr_enum" nillable="true" type="tns:status_reden_niet_bschkbr_enum"/>
+         <xs:simpleType name="status_soort_bschikbrheid_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="HRTY"/>
+               <xs:enumeration value="HUUR"/>
+               <xs:enumeration value="KOOP"/>
+               <xs:enumeration value="WOON"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="status_soort_bschikbrheid_enum" nillable="true" type="tns:status_soort_bschikbrheid_enum"/>
+         <xs:simpleType name="woning_verh_leegstandswet_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="J"/>
+               <xs:enumeration value="N"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woning_verh_leegstandswet_enum" nillable="true" type="tns:woning_verh_leegstandswet_enum"/>
+         <xs:complexType name="ArrayOfvertrek">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="vertrek" nillable="true" type="tns:vertrek"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOfvertrek" nillable="true" type="tns:ArrayOfvertrek"/>
+         <xs:complexType name="vertrek">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="oppervlakte" nillable="true" type="xs:decimal"/>
+               <xs:element name="type_vertrek" type="tns:vetrek_type_vertrek_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="vertrek" nillable="true" type="tns:vertrek"/>
+         <xs:simpleType name="vetrek_type_vertrek_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="BAD"/>
+               <xs:enumeration value="HAL"/>
+               <xs:enumeration value="HOBBY"/>
+               <xs:enumeration value="KEU"/>
+               <xs:enumeration value="OV"/>
+               <xs:enumeration value="SLP"/>
+               <xs:enumeration value="WOON"/>
+               <xs:enumeration value="WSLP"/>
+               <xs:enumeration value="ZOL"/>
+               <xs:enumeration value="ZSLP"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="vetrek_type_vertrek_enum" nillable="true" type="tns:vetrek_type_vertrek_enum"/>
+         <xs:complexType name="ArrayOfvoorziening">
+            <xs:sequence>
+               <xs:element minOccurs="0" maxOccurs="unbounded" name="voorziening" nillable="true" type="tns:voorziening"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="ArrayOfvoorziening" nillable="true" type="tns:ArrayOfvoorziening"/>
+         <xs:complexType name="voorziening">
+            <xs:sequence>
+               <xs:element name="type_voorziening" type="tns:voorziening_type_voorziening_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="voorziening" nillable="true" type="tns:voorziening"/>
+         <xs:simpleType name="voorziening_type_voorziening_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="BAD"/>
+               <xs:enumeration value="BADLUX"/>
+               <xs:enumeration value="BERGING"/>
+               <xs:enumeration value="CVEIS"/>
+               <xs:enumeration value="DOUCHE"/>
+               <xs:enumeration value="ELEKKOKEN"/>
+               <xs:enumeration value="GEENTREDEN"/>
+               <xs:enumeration value="GELIJKBEN"/>
+               <xs:enumeration value="GELIJKLIFT"/>
+               <xs:enumeration value="INPAANP"/>
+               <xs:enumeration value="INPTRAP"/>
+               <xs:enumeration value="KEULUX"/>
+               <xs:enumeration value="ROLST"/>
+               <xs:enumeration value="SCOOT"/>
+               <xs:enumeration value="STOFARM"/>
+               <xs:enumeration value="STRETCH"/>
+               <xs:enumeration value="STROOM"/>
+               <xs:enumeration value="TOILET"/>
+               <xs:enumeration value="TOILET2"/>
+               <xs:enumeration value="TUINEIS"/>
+               <xs:enumeration value="VOCHTVRY"/>
+               <xs:enumeration value="WATER"/>
+               <xs:enumeration value="WOONGROEP"/>
+               <xs:enumeration value="WOONLEEF"/>
+               <xs:enumeration value="ZELFSLP"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="voorziening_type_voorziening_enum" nillable="true" type="tns:voorziening_type_voorziening_enum"/>
+         <xs:complexType name="woonruimte">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="aantal_kamers" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="aantal_slaapkamers" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="bouwjaar" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="code_zolder" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="complexnaam" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="complexnummer" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="e_energielabel" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="gemeenschappelijke_buitenruimte" nillable="true" type="tns:woonruimte_gemeenschappelijke_buitenruimte_enum"/>
+               <xs:element minOccurs="0" name="geschikt_voor" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="huurvast_mogelijk" nillable="true" type="tns:woonruimte_huurvast_mogelijk_enum"/>
+               <xs:element minOccurs="0" name="lift_aanwezig" nillable="true" type="tns:woonruimte_lift_aanwezig_enum"/>
+               <xs:element minOccurs="0" name="ligg_buitenruimte" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="oppervl_buitenruimte" nillable="true" type="xs:decimal"/>
+               <xs:element minOccurs="0" name="portiek_galerij" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="renovatiejaar" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="soort_buitenruimte" nillable="true" type="tns:woonruimte_soort_buitenruimte_enum"/>
+               <xs:element minOccurs="0" name="soort_keuken" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="soort_niet_woning" nillable="true" type="tns:woonruimte_soort_niet_woning_enum"/>
+               <xs:element minOccurs="0" name="soort_verwarming" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="toegankelijkheid" nillable="true" type="xs:string"/>
+               <xs:element name="woningtype" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="woonlaag" nillable="true" type="xs:string"/>
+               <xs:element name="woonoppervlakte" type="xs:decimal"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="woonruimte" nillable="true" type="tns:woonruimte"/>
+         <xs:simpleType name="woonruimte_gemeenschappelijke_buitenruimte_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="BLKN"/>
+               <xs:enumeration value="DAKT"/>
+               <xs:enumeration value="GEEN"/>
+               <xs:enumeration value="LOG"/>
+               <xs:enumeration value="PAT"/>
+               <xs:enumeration value="TUIN"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woonruimte_gemeenschappelijke_buitenruimte_enum" nillable="true" type="tns:woonruimte_gemeenschappelijke_buitenruimte_enum"/>
+         <xs:simpleType name="woonruimte_huurvast_mogelijk_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="J"/>
+               <xs:enumeration value="N"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woonruimte_huurvast_mogelijk_enum" nillable="true" type="tns:woonruimte_huurvast_mogelijk_enum"/>
+         <xs:simpleType name="woonruimte_lift_aanwezig_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="J"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woonruimte_lift_aanwezig_enum" nillable="true" type="tns:woonruimte_lift_aanwezig_enum"/>
+         <xs:simpleType name="woonruimte_soort_buitenruimte_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="BLKN"/>
+               <xs:enumeration value="DAKT"/>
+               <xs:enumeration value="GEEN"/>
+               <xs:enumeration value="LOGG"/>
+               <xs:enumeration value="PAT"/>
+               <xs:enumeration value="TUIN"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woonruimte_soort_buitenruimte_enum" nillable="true" type="tns:woonruimte_soort_buitenruimte_enum"/>
+         <xs:simpleType name="woonruimte_soort_niet_woning_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="BDR"/>
+               <xs:enumeration value="GAR"/>
+               <xs:enumeration value="KAV"/>
+               <xs:enumeration value="PRK"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woonruimte_soort_niet_woning_enum" nillable="true" type="tns:woonruimte_soort_niet_woning_enum"/>
+         <xs:simpleType name="woning_zonnepaneel_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="J"/>
+               <xs:enumeration value="N"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="woning_zonnepaneel_enum" nillable="true" type="tns:woning_zonnepaneel_enum"/>
+         <xs:complexType name="setLeegmeldingResponse">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="FOUTCODE" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="MELDING" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="RESULTAAT" type="tns:leegmeldingResponse_resultaat_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="setLeegmeldingResponse" nillable="true" type="tns:setLeegmeldingResponse"/>
+         <xs:simpleType name="leegmeldingResponse_resultaat_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="GOED"/>
+               <xs:enumeration value="FOUT"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="leegmeldingResponse_resultaat_enum" nillable="true" type="tns:leegmeldingResponse_resultaat_enum"/>
+      </xs:schema>
+      <xs:schema elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setVerhuurd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://schemas.datacontract.org/2004/07/Qvision.Webservices.wsWoonnetRijnmondKoppelingen.Datacontract.setVerhuurd">
+         <xs:complexType name="verhuurdWoning">
+            <xs:sequence>
+               <xs:element name="bbsh" nillable="true" type="tns:bbsh"/>
+               <xs:element name="datum_huur_of_koop" type="xs:dateTime"/>
+               <xs:element name="externe_id" nillable="true" type="xs:string"/>
+               <xs:element name="status" type="tns:verhuurdWoning_status_enum"/>
+               <xs:element name="type_toewijzing" nillable="true" type="xs:string"/>
+               <xs:element name="verantwoording" nillable="true" type="tns:verantwoording"/>
+               <xs:element name="vst_alt_ref" nillable="true" type="xs:string"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="verhuurdWoning" nillable="true" type="tns:verhuurdWoning"/>
+         <xs:complexType name="bbsh">
+            <xs:sequence>
+               <xs:element name="geboortedatum_hbew" type="xs:dateTime"/>
+               <xs:element name="huishoud_grootte" type="xs:int"/>
+               <xs:element name="huishoud_inkomen" type="xs:int"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="bbsh" nillable="true" type="tns:bbsh"/>
+         <xs:simpleType name="verhuurdWoning_status_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="ACCHUUR"/>
+               <xs:enumeration value="ACCKOOP"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="verhuurdWoning_status_enum" nillable="true" type="tns:verhuurdWoning_status_enum"/>
+         <xs:complexType name="verantwoording">
+            <xs:sequence>
+               <xs:element name="te_verantwoorden" type="tns:verantwoording_te_verantwoorden_enum"/>
+               <xs:element name="verantwoordingsdatum" type="xs:dateTime"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="verantwoording" nillable="true" type="tns:verantwoording"/>
+         <xs:simpleType name="verantwoording_te_verantwoorden_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="J"/>
+               <xs:enumeration value="N"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="verantwoording_te_verantwoorden_enum" nillable="true" type="tns:verantwoording_te_verantwoorden_enum"/>
+         <xs:complexType name="setVerhuurdResponse">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="FOUTCODE" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="MELDING" nillable="true" type="xs:string"/>
+               <xs:element minOccurs="0" name="RESULTAAT" type="tns:verhuurdResponse_resultaat_enum"/>
+            </xs:sequence>
+         </xs:complexType>
+         <xs:element name="setVerhuurdResponse" nillable="true" type="tns:setVerhuurdResponse"/>
+         <xs:simpleType name="verhuurdResponse_resultaat_enum">
+            <xs:restriction base="xs:string">
+               <xs:enumeration value="GOED"/>
+               <xs:enumeration value="FOUT"/>
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:element name="verhuurdResponse_resultaat_enum" nillable="true" type="tns:verhuurdResponse_resultaat_enum"/>
+      </xs:schema>
+   </wsdl:types>
+   
+   
+   <wsdl:message name="IService_setAcceptatie_InputMessage">
+      <wsdl:part name="parameters" element="tns:setAcceptatie"/>
+   </wsdl:message>
+   <wsdl:message name="IService_setAcceptatie_OutputMessage">
+      <wsdl:part name="parameters" element="tns:setAcceptatieResponse"/>
+   </wsdl:message>
+   <wsdl:message name="IService_setLeegmelding_InputMessage">
+      <wsdl:part name="parameters" element="tns:setLeegmelding"/>
+   </wsdl:message>
+   <wsdl:message name="IService_setLeegmelding_OutputMessage">
+      <wsdl:part name="parameters" element="tns:setLeegmeldingResponse"/>
+   </wsdl:message>
+   <wsdl:message name="IService_setVerhuurd_InputMessage">
+      <wsdl:part name="parameters" element="tns:setVerhuurd"/>
+   </wsdl:message>
+   <wsdl:message name="IService_setVerhuurd_OutputMessage">
+      <wsdl:part name="parameters" element="tns:setVerhuurdResponse"/>
+   </wsdl:message>
+   
+   
+   <wsdl:portType name="IService">
+      <wsdl:operation name="setAcceptatie">
+         <wsdl:input wsaw:Action="http://tempuri.org/IService/setAcceptatie" message="tns:IService_setAcceptatie_InputMessage"/>
+         <wsdl:output wsaw:Action="http://tempuri.org/IService/setAcceptatieResponse" message="tns:IService_setAcceptatie_OutputMessage"/>
+      </wsdl:operation>
+      <wsdl:operation name="setLeegmelding">
+         <wsdl:input wsaw:Action="http://tempuri.org/IService/setLeegmelding" message="tns:IService_setLeegmelding_InputMessage"/>
+         <wsdl:output wsaw:Action="http://tempuri.org/IService/setLeegmeldingResponse" message="tns:IService_setLeegmelding_OutputMessage"/>
+      </wsdl:operation>
+      <wsdl:operation name="setVerhuurd">
+         <wsdl:input wsaw:Action="http://tempuri.org/IService/setVerhuurd" message="tns:IService_setVerhuurd_InputMessage"/>
+         <wsdl:output wsaw:Action="http://tempuri.org/IService/setVerhuurdResponse" message="tns:IService_setVerhuurd_OutputMessage"/>
+      </wsdl:operation>
+   </wsdl:portType>
+   
+   <wsdl:binding name="BasicHttpBinding_IService" type="tns:IService">
+      <wsp:PolicyReference URI="#BasicHttpBinding_IService_policy"/>
+      <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+      <wsdl:operation name="setAcceptatie">
+         <soap:operation soapAction="http://tempuri.org/IService/setAcceptatie" style="document"/>
+         <wsdl:input>
+            <soap:body use="literal"/>
+         </wsdl:input>
+         <wsdl:output>
+            <soap:body use="literal"/>
+         </wsdl:output>
+      </wsdl:operation>
+      <wsdl:operation name="setLeegmelding">
+         <soap:operation soapAction="http://tempuri.org/IService/setLeegmelding" style="document"/>
+         <wsdl:input>
+            <soap:body use="literal"/>
+         </wsdl:input>
+         <wsdl:output>
+            <soap:body use="literal"/>
+         </wsdl:output>
+      </wsdl:operation>
+      <wsdl:operation name="setVerhuurd">
+         <soap:operation soapAction="http://tempuri.org/IService/setVerhuurd" style="document"/>
+         <wsdl:input>
+            <soap:body use="literal"/>
+         </wsdl:input>
+         <wsdl:output>
+            <soap:body use="literal"/>
+         </wsdl:output>
+      </wsdl:operation>
+   </wsdl:binding>
+   
+   <wsdl:service name="Service">
+      <wsdl:port name="BasicHttpBinding_IService" binding="tns:BasicHttpBinding_IService">
+         <soap:address location="https://webservice.test.qvision.nl/wsWoonnetRijnmondKoppelingen/Service.svc"/>
+      </wsdl:port>
+   </wsdl:service>
+</wsdl:definitions>

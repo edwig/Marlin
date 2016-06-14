@@ -1,0 +1,508 @@
+RELEASENOTES MARLIN VERSION 3.x
+===============================
+
+For releasenotes of the previous main version (2.x), see the separate file "Releasenotes_v2.txt".
+This document contains all release notes and remarks beginning with version 3.0. The document
+would otherwise grow to large and complex.
+Version 3.x contains functional breaks with the past and previous version and your programms
+will need checking on the logic and functionality to make version 3.x correctly working.
+----------------------------------------------------------------------------------------------
+
+CHANGES IN VERSION 3.6.1
+========================
+1) Bugfix: WSDL can generate recursive nodes in messages
+
+CHANGES IN VERSION 3.6
+======================
+1) Added the capability to set the website's root directory outside of the servers root directory
+   This is done by setting the sites root directory with the "virtual://" prefix, so as to leave
+   the root directory of the server allone.
+   Example:
+   The server root directory is:     "C:\WWW\Server\"
+   The site   root directory was:    "C:\WWW\Server\MySite\"
+   The site   root directory now is: "C:\Appication\Version12\MySite\"
+   You can specify this with: site->SetWebroot("virtual://C:\Application\Version12\MySite");
+2) Added extra media types for MS-Office and OpenOffice.org
+3) Rewrite of the "SiteHandlerGet". The following extensions now exist
+   - Default HTML page for a resource ending in '/' is the infamous "index.html"
+   - Extra virtual handlers to create your own restrictions on the resource names
+     This is especially helpfull for the handling of "AngularJS", so a non existing
+     resource will get you a fallback to the "index.html" of the root directory
+4) SOAP XML nodes that have repeating groups in them are in the translation to JSON now translated
+   to the so-called JSON arrays. Likewise, the JSON arrays are converted to SOAP XML nodes with 
+   siblings of the same name. For an example and test case see the MarlinClient test program
+   under TestJSON::TestArray.
+5) All methods "AddContentType" in HTTPSite and WebServiceServer have been altered to have two 
+   parameters instead of one. The correct call is now "AddContentType(p_extension,p_contentType)"
+   This is done to accomodate the automatic search of the content type for the 'get' handlers.
+   The site will search first for it's own registered content types, and then search for the general
+   content types of the HTTPServer. This allows for greater flexibility and more default content 
+   types, so the need to set your own is reduced.
+
+CHANGES IN VERSION 3.5.1
+========================
+1) Full MediaTypes detection of contenttypes in send back files to the 'GET' requests.
+   Contains most known contenttypes / MIME type extension pairs in common websites
+2) Repair of sending back the correct server-error-page and client-error-page of the HTTP
+   status ranges in the 5xx and 4xx series.
+
+CHANGES IN VERSION 3.5.0
+========================
+1) Serious performance release. The incoming HTTP request is now only recorded in the central
+   server and forewarded through the HTTPMessage and the threadpool to a different thread that's 
+   handling the reading of the HTTP body of the message within the HTTPSite handler. This clears
+   out the responsibility of reading large file bodies from the central server to a threadpool 
+   thread and a site. Thus clearing the central processing thread of the server to be on the 
+   business again of receiving incoming calls.
+   One major parameter of course is the number of available threads, and the length of the input
+   waiting queue of HTTP calls to be processed. So keep in mind that after this version you migth
+   want to fiddle with the following web.config parameters:
+   - <Server><QueueLength>  : Multiple of 64
+   - <Server><Stacksize>    : Stack space of the threads
+   - <Server><MaxThreads>   : Should be less than <QueuLength>!
+2) Re-Written the memory model of the complete server. All (c/m)alloc and free() calls are now
+   gone from the code. Everything has been allocated with new or with new[] methods and will be
+   freed from the heap with 'delete' or 'delete []'. If you are using FileBuffers straight from
+   the Marlin library, or using the WideString conversion calls, retrace your steps in the code
+   and refactor your memory modelling likewise!
+3) Fixed a few serious stack bugs in the sizing of the XML/SOAP messages and the reading of the
+   HTTP buffers, while rewriting the memory model of the server. The server is now less prone
+   to buffer overruns and memory-overflows. Thanks to SonarQube analyzing (www.sonarsource.com)
+
+CHANGES IN VERSION 3.4.4
+========================
+1) The HTTPServer now has the ability to respond to a "Accept-encoding" of "gzip". 
+   If the answer the HTTPServer sends back exceeds the 16K limit, it will gzip the answer and
+   add the "Content-encoding" response header with a value of "gzip".
+   The HTTPClient has the ability to detect the content-encoding and decrypt the gzipped answer.
+   Zipping and unzipping is/can be done within the FileBuffer of the HTTPMessage.
+   GZIP is the most common used form of data compression between webservers and clients.
+   It is described in ietf RFC's 1950/1951/1952
+2) To enable the HTTPClient to request a 'gzipped' answer, use the 'SetHTTPCompression(true)'
+   method of the client. It is off by default.
+   For a HTTPSite to answer with a gzip compressed answer use the "SetHTTPCompression(true)"
+   method of the site (before or after starting the site).
+   In the future, these settings migth vanish, as all traffic might be compressed.
+3) There is a hard compiled limit of 16 K size of HTTP payload. Below this limit, currently
+   no traffic will be compressed. Time to compress and decompress the dataflow is only meaningful
+   above a certain amount of buffers sent. The arbitrary limit here is 4 buffers of 4K.
+4) The original 'zlib' of Jean-loup Gailly and Mark Adler has been used. (Latest version 1.2.8)
+   This is a library with a permissive license to use it, in exchange for the mentioning of 
+   there names here. See 'zlib.h' for details
+5) Optimized the logging of the HTTPSite. If multiple web.config's exist for the site, only 
+   after the reading of the last config, will the site log it's settings in the logfile. So only
+   the final settings reach the logfile, and no more confusion can exist about the correct
+   settings of the URL.
+6) The HTTPManager has been expanded to accomodate the 'HTTPCompression" attributes in the 
+   web.config files for both HTTPClient and HTTPServer. Although you can set these attributes,
+   the HTTP decompresion in the HTTPClient is non optional. If a server chooses to send a gzip'ed
+   answer altogether, it will get decompressed.
+
+CHANGES IN VERSION 3.4.3
+========================
+1) The HTTPClient now has an extra helper class "HTTPClientTracing". This makes it possible to
+   trace the connection in more detail, by specifying "SetRequestTracing(true)".
+   Be advised that each request will become traced both before AND after a request call to a 
+   HTTP server. This can have a very serious impact on the performance of the connection.
+   The option is also in the web.config and the HTTPManager of course.
+2) Fixed a release-build bug in the ConvertWideString routines. In case of a UTF-8 char string
+   with 3-byte or 4-byte composite characters, these routines fail in release build mode.
+   This is why the internal allocated buffers are made bigger in the intermediate fase of the 
+   conversion back from UTF-16 to UTF-8 or MBCS.
+
+CHANGES IN VERSION 3.4.2
+========================
+1)  The SOAPMessage and JSONMessage now support full UTF-8 / UTF-16 / windows-1252 / ISO-8859-1
+    encodings throughout. This means that the previous restriction on only supporting the first
+    3 code pages of UTF-8 has now been dropped!!
+
+CHANGES IN VERSION 3.4.1
+========================
+1)  URL encoding/decoding has even got better. It now also en/decodes full UTF-8 sequences
+    including 3-byte to 5-byte sequences needed for European symbols like the euro-symbol (€)
+    As a result the decoding/encoding scheme's are now completely encapsulated within the
+    CrackedURL class.
+    As a result the Marlin server no longer supports composite characters (e<-' for é).
+    Be aware that the UTF-8 support for SOAP and JSON is still limited to the first 3 code
+    pages (x00, xC2, xC3) of the UTF-8 standard.
+2)  The threadpool function "StopHartbeat" is now a public member. So it can be called to stop
+    an earlier registered hartbeat function. This is especially handy for stopping programs, 
+    because the hartbeat thread would otherwise block the whole threadpool from stopping.
+3)  It is now possible to change the controlling site of a HTTPMessage. This can be handy to
+    make it possible to delegate the handling of the message to a different site.
+    Caveat Utilitor!
+
+CHANGES IN VERSION 3.4
+======================
+This version was meant to support OData and multipart/form-data requests as of the following
+IETF RFC's: 2183, 2388, 7578.
+The second reason for this version was the support of a client-certificate in a secure connection.
+1)  To be able to post form-data in a multi-part HTTP message as is done for POST's from a HTTP
+    form, a new object "MultiPartBuffer" has been added. Each multipart buffer consists of various
+    MultiPart's. And each MultiPart can hold form data, or a file reference. 
+    A boundary system, as in email with attachments keeps these MultiParts 'apart'.
+    You can add a MultiPartBuffer to a HTTPMessage through the "SetMultiPartFormData()" method.
+2)  A new SiteHandler has been introduced: the SiteHandlerFormData. This site handler calls it's 
+    own handlers in the following order
+    - PreHandleBuffer:  called once for the whole buffer
+    - HandleData:       called for a MultiPart, once per part, for each data part
+    - HandleFile:       called for a MultiPart, once per part, for each part carrying a file
+    - PostHandleBuffer: called once for the whole buffer, after each part has been called
+3)  A test handler and test client have been added to check the correct workings of the new handler.
+    Refer to "TestFormData.cpp" in both the server and client testing programs.
+4)  The HTTPClient can have a client-certificate from the certificate store. This **must** be a 
+    Clientauthentication (1.3.6.1.5.5.7.3.2) certificate with a private key, so that a webserver 
+    in a secure TLS/SSL connection can test for the presence of this origin of the connection.
+    You can use the following new settings:
+    - SetClientCertificatePreset(bool)          : Sent the certificate upfront, or after a roundtrip
+    - SetClientCertificateStore("storename")    : The storename. Most commonly "MY".
+    - SetClientCertificateName("Subject name")  : The "CN=" field of the certificate
+    With the next method:
+    bool SetClientCertificateThumbprint(CString p_store,CString p_thumbprint);
+    You can test in this way whether the client-certificate is surly in the certificate store,
+    before you try to call a HTTP service.
+5)  To support client-certificates from the server side, a new SiteFilter has been introduced
+    "SiteFilterClientcertificate". This filter has the following methods:
+    - SetClientCertificate(CString p_name,CString p_thumbprint)
+      The filter will check for a client certificate with this thumbprint and name.
+      The name is a substring of the "CN=" field of the client-certificate
+    - SetRequestCertificate(bool): 
+      Will try to get the client-certificate from the client side of the connection
+      The default is always set to true (testing for a client-certificate)
+    This only works if the site is in secure mode (https). But no test is done wheter the site 
+    is really in the secure mode.
+6)  In order to be able to request a client-certificate, the registration of the sites in the kernel
+    through the HTTPManager is altered. If you have already defined secure "https", remove the regi-
+    stration and register them again with client-certification enabled.
+7)  Restructured the internals of the HTTPSite object. Instead of one pointer per HTTP verb for the 
+    SiteHandlers, the object now has a stl::map of SiteHandlers. This makes the object more lean in
+    terms of memory consumption.
+8)  A new directory "Certificates" holds the batch scripts to create a bunch of certificates for the
+    testing process. A development-root-CA certificate, an SSL certificate and a client-certificate
+    are all in this directory, including a very good blog-post with a description how to use the
+    scripts to make more certificates and how to install them on a development machine.
+9)  Fixed memory leak through missing virtual destructor in various classes.
+10) Fixed a looping server, if sites could not be de-registered from the Windows-API. The server was
+    waiting until all sites where deregistered, but the de-registration did not honour the 'force' 
+    parameter, causing the server to end in an endless loop.
+11) Optimized the network packet size and the number of roundtrips on larger transmissions of files
+    decreasing the roundtrips sometimes by a factor of two. This is done by introducing the
+    HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER flag on the "HttpReceiveRequestEntityBody"
+    function of the HTTPServer API library.
+12) Rewrite of the web.config editor dialog in the HTTPManager. The dialog had grown substantially,
+    to the extent that it was no longer an easy task to maintain. It was no longer possible to add
+    new items, like the client certificates for client and server. For this reason alone, the dialog 
+    was split into five different parts: server, client, authentication, web-services and logging.
+    Each part now has it's own tab in the dialog.
+13) Fixed a serious bug under Windows-10 OS. Receiving a HTTPS call on port 443 would hang the server,
+    as the HTTP_REQUEST_V2 structure for this OS has been extended. No documentation on MSDN exists
+    for this expansion, but donwloading the Windows 10 SDK solved the problem.
+    Under Windows-10 an extra info record has been added, stating the secure channel status of the
+    connection. The crypto class has been expanded to read this information in order to log it.
+    This information is now logged in the logfile as in:
+    Secure SSL Connection. Protocol [TLS 1.2 Server] Cipher [AES:256] Hash [SHA2-384:0] Key Exchange [AES:256]
+
+CHANGES IN VERSION 3.3.3
+========================
+1)  In order to propagate the ErrorReport object, it's a settable property of the WebServiceServer.
+    If set, it will pass it on to any HTTPServer it creates.
+2)  The ErrorReport object now does not have a "SetSending()" property any more. These have been
+    moved to any derived object from the root object. Implement at your disgression. ErrorReports,
+    are now always made, whether the are created or not. This makes it possible to make and store
+    the error reports locally, and later on decide whether to send them or not.
+3)  The General (...) handlers from the WebServiceServer handlers have been removed, This allows
+    crashes to reach the SEH Handlers, and thusly create an error report. 
+    You are advised to remove all catch(...) catch-all handlers from your solutions.
+4)  Fixed an error of removing an EventStream twice, in case the stream to close, was already
+    fysically closed at the file-stream level.
+5)  Added a test in the main loop of the HTTPServer for incorrect closing of the program and 
+    incorrect calling of destructors. If the central HTTP thread comes out of sleep on a request
+    and the server is no longer running, it will not try to handle that last request any more,
+    and not run into trouble with deallocated objects.
+
+CHANGES IN VERSION 3.3.2
+========================
+1)  In order for the WCF implementation of .NET 4.0, to consume our WSDL files, it was neccesary
+    to make a change to the definition of the complex types. The double nameing convention
+    (Named elements, and named ComplexTypes) have been changed to only naming the surrounding
+    element of the ComplexType.
+2)  In order for the WCF implementation of .NET 4.0, to consume our services, it is neccesary
+    to have a namespace on the first element of a SOAP message of the response to the request.
+    In order to make it easier to not forget to set the returning namespace the Reset method
+    of the SOAPMessage has been expanded with a parameter namespace (with default empty string).
+    Instead of p_message->Reset(), you can now do something like:
+    - p_message->Reset("http://myspace.organisation.com/service"); or
+    - p_message->Reset(wsdl.GetNamespace());
+    Be advised that the namespace of the return message must be the same as the namespace in the
+    WSDL file that you advertise.
+3)  Error reporting has been made dynamic, by moving out the static member m_errorReport from
+    the HTTPServer. It's now a settable mandatory pointer member. Before trying to run your server
+    you should call 'SetErrorReport()' with a pointer to a ErrorReport class object or a derived
+    object from the ErrorReport class.
+    There still can be only one - and one (1) only - object in any implementation executable, 
+    enforced by the checking of s_instance in the constructor/destructor!!
+    To use the log rotation mechanism: call SetLogRotation(true); first !!
+
+CHANGES IN VERSION 3.3.1
+========================
+1)  SiteHandlers can be chained after each other. This is done by calling HTTPSite->SetHandler()
+    more than once for each HTTPCommand (get,post,put,delete etc.).
+    If a SiteHandler decides it cannot handle the request, it can return a false, so the next 
+    handler in the chain will be called to handle this request.
+    Chained site handlers get de-allocated together trough their 'next' chain. But there's lot
+    of opportunities to leak memory here!!
+2)  WebServiceServer now can re-use a WSDLCache and a Threadpool from other servers or objects.
+    This was neccessary to create multiple WebServiceServer for user connections and not creating
+    an extra WSDLCache and an extra ThreadPool each time. Be adivesd that you it is now highly
+    recommended before you ::Run a WebServiceServer to set 4 types of objects, to be exact:
+    - A HTTPServer object
+    - A HTTPThreadpool object
+    - A WSDLCache object
+    - A LogAnalysis object
+    If one of these four are not registered, WebServiceServer will create one of it's own.
+3)  RunRedirect has been expanded with two calls to start a console program in the background
+    and then wait for string output and return the strings to the caller.
+4)  Default WSDL base page handlers (the HTML pages that show the interface) have been altered
+    to co-operate with the changed functionallity of the chaining SiteHandlers. So you can add
+    a get-handler to a site that's owned by the WebServiceServer and handle the rest of all the
+    HTTP GET requests yourself, without worrying about the interface pages.
+
+
+CHANGES IN VERSION 3.3
+======================
+1)  Roundtrip SOAP -> JSON -> SOAP is now supported for the framework. This means that websites
+    can request a JSON parameterized 'GET' instead of a full SOAP service. The server will then
+    translate this request internally through the "SiteHandlerJson2Soap" handler to a SOAP request.
+    This request can then regularly be processed by the WebServiceServer. The answer (in SOAP) will
+    then be translated back by the SiteHandler to a JSON object.
+    This simplifies the development of JavaScript interfaces (w.o. AngularJS) greatly.
+2)  To be able to test the roundtrip functionallity, the HTTPClient has been expanded so that it can 
+    transfor a SOAP PUT request to a HTTP GET request with parameters, and upon receiving a JSON
+    answer from a server, transform that answer back to the SOAP request.
+    The new Send method is: "SendAsJson(SOAPMessage* p_message)"
+3)  To use the JSON->SOAP transformations, use the following:
+    WebServiceServer::SetJsonSoapTranslation(true);
+    WebServiceClient::SetJsonSoapTranslation(true);
+4)  Constraints of the JSON-SOAP translations:
+    - SOAP requests can only have first level nodes and no complex objects
+      Rationale: Only first level nodes can be translated to URL parameters
+    - SOAP responses are translated to JSON as json objects with name-value pairs
+    - JSON answers are translated by the HTTPClient, including complex objects
+      but no JSON arrays can be translated. If JSON arrays are included, they will be translated
+      to sets of <__>value</__> nodes.
+    - SOAP attributes or namespaces are stripped from the JSON messages
+    - If JSON translation is used, no WSDL will be generated by the service at that time,
+      although the WSDLCache will be, and need be, filled with all messages for the service.
+5)  Details of the JSON-SOAP translations:
+    - A SOAPMessage can be constructed from a JSONMessage (through a XTOR)
+    - A JSONMessage can be constructed from a SOAPMessage (through a XTOR)
+    - A JSONMessage can be assigned to a SOAPMessage (trough the = operator)
+    - XMLParser and JSONParser have derived classes XMLParserJSON and JSONParserSOAP
+    - A new SiteHandler has been provided (SiteHandlerJson2Soap) for the WebServiceServer
+      This handler interprets the URL parameters into a SOAP message for the POST handler
+6)  See the TestContract files in the TestServer and TestClient project for an example of the 
+    JSON-SOAP translations by the HTTPClient / HTTPServer.
+7)  All project files have been reshuffled. The general 'Marlin' directory has now become a library.
+    The TestServer, TestClient and HTTPManager programs are using the library in the build.
+    This reduces the amount of rebuilds during the development cycle greatly.
+8)  Everything in this version has been tested through the Fiddler4 web debugger from Telerik.
+
+CHANGES IN VERSION 3.2.1
+========================
+1)  The URL site of the WebServiceServer can now be created as a subsite of an existing URL
+    This makes it possible to create a service interface for multiple subsites (e.g. for sessions)
+    Use WebServiceServer::SetSubsite(true) before calling the ::Run() method.
+
+CHANGES IN VERSION 3.2
+======================
+1)  The WSDLCache can now not only write a WSDL file for the current services, it can also read in an
+    existing WSDL file that has been externally defined and provided.
+    Reading of this WSDL file be set by calling WebServiceServer.SetExternalWsdl(filename);
+2)  WSDL checks can now have XMLRestrictions on a field. The following XSD restrictions are supported:
+    - enumeration       Including <annotation><documentation>
+    - length            Exact length of the field
+    - minLength         Minimal required length of the field
+    - maxLength         Maximal possible length of the field
+    - totalDigits       Total digits of the number
+    - fractionDigits    Max fractional digits of a number
+    - maxExclusive      Max value not including this one
+    - maxInclusive      Max value including this one
+    - minExclusive      Min value not including this one
+    - minInclusive      Min value including this one
+    - pattern           Matching string pattern
+    - whiteSpace        Including ('preserve','replace','collapse')
+3)  Datatype checks (boolean, integer, double, base64) and the restrictions checks are default off.
+    To enable the field checks, turn on those checks in de web.config in the webservices section.
+4)  Mind you: the WSDL file reading is only for local files. Things that need to be implemented are:
+    - The <import> of external schema files (*.XSD)
+    - The reading of *.wsdl and *.xsd files directly from the internet through a http link.
+
+CHANGES IN VERSION 3.1
+======================
+1)  Converted as much as could be to C++11, and discovered some hard to find bugs in the initialisation
+    of messages and objects. Still mentally recovering from the different look of:
+    - enums converted to "enum class"
+    - initialization moved from the CTOR's to the interface definition
+    - typedefs changed to 'using' declarations
+    - Removed implicit conversions from enum values
+    Thinking about shared_ptr for pointers to HTTPServer, HTTClient, WebService-client/server
+2)  X-HTTP-Method-Override has been added so we can use HTTP VERB's not originally supported by Microsoft
+    You can use the "SetVerbTunneling()" methods of HTTPSite, HTTPMessage and HTTPClient to make use
+    of the "MERGE" and "PATCH" HTTP verb's.
+    Also proxies not allowing PUT or DELETE can be bypassed with a POST, carrying a 'put' or 'delete'
+    override in the X-HTTP-Method header.
+    The MERGE and PATCH verbs are in highly use in the OData and other REST interfaces in the world.
+    Two new SiteHandlers are added:
+    HTTP Action       Derived from SiteHandler
+    --------------    --------------------------------------
+    MERGE             SiteHandlerMerge
+    PATCH             SiteHandlerPatch
+3)  JSONMessages now alsoo can carry extra headers and URL parameters. They where ommitted in version 3.0
+4)  Fixed a bug in the headers functionality in HTTPClient for the sending of multiple HTTPMessages.
+5)  VerbTunneling can be allowed via the web.config for the server, and can be forced on the client side 
+    settings for the HTTPClient. The HTTPClient promotes the verb tunneling then to the HTTP and JSON messages.
+6)  A new mechanism for extending the number of threads in the threadpool for a period of time has been added.
+    The "ExtendMaxThreads" mechanism is build round a autopointer class that restores the number of threads
+    in the threadpool after finishing. 
+    This mechanism is meant to be used shortly before a thread enters the 'WaitForSingleObject' Windows API,
+    so that the functioning of the threadpool for that period of time will stay consistent.
+7)  Changed the detailed-logging mechanism in HTTPSever/HTTPSite because various strings still could contain
+    '%' signs, which led to crashes if the detailed logging was 'on'. The logging is now split in three parts
+    - Logging with a string without formatting
+    - Logging with one extra stirng
+    - Logging with detailed formatting
+8)  The URL percent-encoding for the following URL parts has been extended:
+    - User name and password for base authentication in the host part
+    - The URL parameters and values
+    - The URL anchors
+    Every character outside the range of the normal ASCII alphanumeric range is now percent encoded, and the
+    server is capable of decoding the percent encodings in those parts.
+9)  A new mechanism is in place to put threads in a intermediate sleep in the threadpool. During the sleeping
+    period the maximum number of threads is raised with 1 thread, to make it possible to let the CPU go on
+    working during that period. The new interfaces are:
+    9.1: Raising the maximum number of threads:
+         void ExtendMaximumThreads(AutoIncrementPoolMax& p_increment);
+         void RestoreMaximumThreads(AutoIncrementPoolMax* p_increment);
+    9.2: Sleeping and waking a thread
+         void*  SleepThread(DWORD_PTR p_unique,void* p_payload = nullptr);
+         bool  WakeUpThread(DWORD_PTR p_unique,void* p_result  = nullptr);
+         void* GetSleepingThreadPayload(DWORD_PTR p_unique);
+    9.3: Eliminating a sleeping thread for good:
+         void  EliminateSleepingThread (DWORD_PTR p_unique);
+    Remarks:
+    1) The p_unique parameter MUST be an application global unique parameter, or else you will suffer strange
+       and undefined behaviour in your application.
+    2) The void* result at wakeup, is what will become the result of the "SleepThread" call.
+    3) The payload of the sleeping thread may be accessed by any other thread through "GetSleepingThreadPayload"
+       but no garantuees as to wheter the object behind the pointer's lifetime can be made.
+    4) Eliminating a thread? Really? Should you do this?
+
+CHANGES IN VERSION 3.0
+======================
+Works only on Visual Studio 2015!!
+1)  Fixed a bug in the threadpool, causing the stack of a thread to never grow larger than 1 MB
+2)  Fixed a bug in the Digest auhtentication protocol for passing on the correct 'realm'
+3)  New dervice class HTTPThreadpool, derived from 'ThreadPool'. This derivate is especially 
+    meant for the dispatches of the HTTPServer to the correct HTTPSite, and to be able to call
+    the correct 'SiteHandler' of that site
+4)  New class "SiteHandler". This main class is meant to derive 'SiteHandlers' from. Each sitehandler
+    in its turn can handle a HTTP action (GET, PUT, POST etc).
+5)  Derived classes from SiteHandler are:
+    HTTP Action       Derived from SiteHandler
+    --------------    --------------------------------------
+    GET               SiteHandlerGet
+    PUT               SiteHandlerPut
+    DELETE            SiteHandlerDelete
+    POST              SiteHandlerPost
+    HEAD              SiteHandlerHead
+    OPTIONS           SiteHandlerOptions
+    TRACE             SiteHandlerTrace
+    POST XML          SiteHandlerSoap
+    WEBDAV            SiteHandlerWebDAV
+6)  All tests for the HTTPServer and HTTPClient in the MarlinServer and MarlinClient projects are 
+    re-wrtiiten to then new SiteHandler way of handling HTTP calls
+7)  Calling the SSE (Server Sent Events) are re-routed through the HTTPThreadpool en HTTPSite.
+8)  After creating your site, you should attach your handlers with HTTPSite::SetHandler()
+    before starting your site with HTTPSite::StartSite()
+    For examples, see the Server TestProject registrations of sites.
+    Something like:
+    HTTPSite* site = g_server->CreateSite(URLPRE_Strong,false,1200,url);
+    // Setting the POST handler for this site
+    site->SetHandler(http_post,new SiteHandlerSoapSomething());
+    // Modify the standard settings for this site
+    site->AddContentType("soap/xml");
+    site->AddContentType("application/soap+xml");
+    // Start the site explicitly
+    site->StartSite();
+9)  Standard error reporting with SEH (Structured Expection Handlers) has been added HTTPSite handlers.
+    This removes the need to write these handlers again for each HTTP handler or service endpoint.
+10) The WebServiceServer has been reconfigured to work with the new SiteHandlers. You can do one of the
+    following to write a quick webservice server:
+    - Write a derived class with a WEBSERVICE_MAP directly. See 'TestContract.cpp' for an example
+    - Write your own dispatcher by deriving a class from WebServiceServer and write your own
+      "OnProcessPost" handler with a 'p_code' dispatcher at your convenience.
+11) The WebServiceServer now had the general "OnProcessGet" handler for the WSDL and the SOAP example 
+    pages of the complete service interface. The following are recognized and handled:
+    1: URL/servicename.wsdl
+    2: URL/servicename<postfix>?wsdl
+    3: URL/servicename?wsdl
+    4: URL/servicename.aspcxx
+    5: URL/Servicename<postfix>
+    6: URL/servicename.<operation>.html
+12) The server now has the ability to register sub-sites. These are sites with a main site (registered before)
+    as a part of their URL. This makes it possible to have a few listeners in the URLGroup in the kernel
+    while serving more than 1 subsite under this URL, making the registration very efficient.
+    A general application is to have each user have it's own subsite under a general mainsite. The subsites
+    constitutes for HTTPSite objects and handlers to be called on a per-user basis.
+    You can register a subsite with the HTTPServer::CreateSite() method, by supplying the subsite parameter.
+    The server will then first check whether a main site is already registered and will otherwise return NULL.
+    There is a slight performance hit, as each incoming http call will now be tested for a subsite reference.
+13) A new message type has been added: JSONMessage. This message works just as a SOAP message in this respect
+    that you can send it to the HTTPClient on the client side, and that you can handle it on the server side
+    in a SiteHandlerJson site handler. The message does contain the complete JSON data object in a JSONvalue 
+    data structure. For details: see JSONMessage.cpp and JSONMessage.h
+    JSONMessage can be used throughout the framework where ever you can use a SOAPMessage. e.g. the method
+    AddQueue of the HTTPClient also has a AddToQueue(JSONMessage* p_message) override. Site handlers have
+    overrides for JSONMessages, and the HTTPMessage can be constructed from a JSONMessage, as well as the
+    fact that a JSONMessage can be constructed from a (incoming) HTTPMessage.
+14) Various web servers (namely MS-Exchange 2010) are sending cookies and headers with dates that do **NOT**
+    strictly adhere to the RFC dates, as stated in RFC's 822, 850, 1036, 1123 or 2616. But they do something
+    loosly like those dates. That is the reason that the standard Server API 2.0 functions like 
+    "WinHttpTimeFromSystemTime" and "WinHttpTimeToSystemTime" can not convert those dates to and from the
+    internal windows structure SYSTEMTIME. To meet up with these loose canons, I have created two new functions:
+    - HTTPTimeToSystemTime 
+    - HTTPTimeFromSystemTime
+    These functions are so formed that they have a less strict definition of the date format in the mentioned
+    RFC standards, so that they will accept HTTP trafic from non-conforming implementations.
+15) SOAP Faults no longer automatically send a HTTP 400 (Client error) back. This now only happens when the
+    original XML message was incorrect. SOAP Faults are no longer an error on the HTTP level.
+    This is a behaviour breaking change!
+16) SOAPMessage and JSONMessage now can send and receive their contents in the UTF-16 format. You can do this
+    by setting the 'SendUnicode' status on each message, or set the whole HTTPSite or HTTPClient in this status.
+    Status change is done by the following methods:
+    SOAPMessage::SetSendUnicode(true/false) / bool GetSendUnicode()
+    JSONMessage::SetSendUnicode(true/false) / bool GetSendUnicode()
+    HTTPClient ::SetSendUnicode(true/false) / bool GetSendUnicode()
+    HTTPSite   ::SetSendUnicode(true/false) / bool GetSendUnicode()
+    The reason for these functions is the fact that the ECMA-404 standard on JSON clearly states that JSON
+    MUST be coded in the UTF-16 unicode format.
+    The web.config files have been extended to be able to set the HTTPClient and HTTPSite in default UTF-16 mode.
+17) SOAPMessage and JSONMessage can be sent or received with a prepended Byte-Order-Mark before them.
+    The UTF-8 Little-Endian BOM and the UTF-16 Little-Endian BOM are both recognized and prepended on output.
+    HTTPSites and HTTPClient are capable of storing a default 'sendBOM' status, to send all messages 
+    with a prepended Byte-Order-Mark.
+    Messages received with a BOM before them will propagate this behaviour to the answering message, as the 
+    reset of the messages will never remove this state automatically.
+    Event-streams can only be prepended by the UTF-8 BOM, as event-streams must always be UTF-8.
+    To control this behaviour, these are the methods:
+    SOAPMessage::SetSendBOM(true/false) / bool GetSendBOM()
+    JSONMessage::SetSendBOM(true/false) / bool GetSendBOM()
+    HTTPClient ::SetSendBOM(true/false) / bool GetSendBOM()
+    HTTPSite   ::SetSendBOM(true/false) / bool GetSendBOM()
+18) Rework has been done on the 'retry' mechanism of the HTTPClient. It is now perfectly possible to 
+    set the retry parameters to zero, without disrupting the multi-step authorization mechanisms.
+19) HTTPSites can have one or more SiteFilters. These filters get executed in priority order before the
+    handler of the SiteHandler is called. The intention is that the filter receives the HTTPMessage as a const
+    (in read-only state) to do some filtering actions with it or in the application.
+    Filters get executed in priority order they were registered with "SetFilter".
+

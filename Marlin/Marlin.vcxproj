@@ -1,0 +1,371 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3CC23320-1FF0-41AF-9F3A-960C5F657C81}</ProjectGuid>
+    <RootNamespace>Marlin</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\ExtraParts;</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\ExtraParts;</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\ExtraParts;</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\ExtraParts;</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Analysis.cpp" />
+    <ClCompile Include="Base64.cpp" />
+    <ClCompile Include="HTTPCertificate.cpp" />
+    <ClCompile Include="ConvertWideString.cpp" />
+    <ClCompile Include="Cookie.cpp" />
+    <ClCompile Include="CrackURL.cpp" />
+    <ClCompile Include="CreateURLPrefix.cpp" />
+    <ClCompile Include="Crypto.cpp" />
+    <ClCompile Include="DefuseBOM.cpp" />
+    <ClCompile Include="EnsureFile.cpp" />
+    <ClCompile Include="ErrorReport.cpp" />
+    <ClCompile Include="EventSource.cpp" />
+    <ClCompile Include="FileBuffer.cpp" />
+    <ClCompile Include="FindProxy.cpp" />
+    <ClCompile Include="GenerateGUID.cpp" />
+    <ClCompile Include="GetLastErrorAsString.cpp" />
+    <ClCompile Include="GetUserAccount.cpp" />
+    <ClCompile Include="HPFCounter.cpp" />
+    <ClCompile Include="HTTPClient.cpp" />
+    <ClCompile Include="HTTPClientTracing.cpp" />
+    <ClCompile Include="HTTPError.cpp" />
+    <ClCompile Include="HTTPMessage.cpp" />
+    <ClCompile Include="HTTPServer.cpp" />
+    <ClCompile Include="HTTPSite.cpp" />
+    <ClCompile Include="HTTPThreadPool.cpp" />
+    <ClCompile Include="HTTPTime.cpp" />
+    <ClCompile Include="HTTPURLGroup.cpp" />
+    <ClCompile Include="JSONMessage.cpp" />
+    <ClCompile Include="JSONParser.cpp" />
+    <ClCompile Include="MediaType.cpp" />
+    <ClCompile Include="MultiPartBuffer.cpp" />
+    <ClCompile Include="Namespace.cpp" />
+    <ClCompile Include="PrintToken.cpp" />
+    <ClCompile Include="ProcInfo.cpp" />
+    <ClCompile Include="Redirect.cpp" />
+    <ClCompile Include="RunRedirect.cpp" />
+    <ClCompile Include="SiteFilter.cpp" />
+    <ClCompile Include="SiteFilterClientCertificate.cpp" />
+    <ClCompile Include="SiteHandler.cpp" />
+    <ClCompile Include="SiteHandlerConnect.cpp" />
+    <ClCompile Include="SiteHandlerDelete.cpp" />
+    <ClCompile Include="SiteHandlerFormData.cpp" />
+    <ClCompile Include="SiteHandlerGet.cpp" />
+    <ClCompile Include="SiteHandlerHead.cpp" />
+    <ClCompile Include="SiteHandlerJson.cpp" />
+    <ClCompile Include="SiteHandlerJson2Soap.cpp" />
+    <ClCompile Include="SiteHandlerMerge.cpp" />
+    <ClCompile Include="SiteHandlerOptions.cpp" />
+    <ClCompile Include="SiteHandlerPatch.cpp" />
+    <ClCompile Include="SiteHandlerPost.cpp" />
+    <ClCompile Include="SiteHandlerPut.cpp" />
+    <ClCompile Include="SiteHandlerSoap.cpp" />
+    <ClCompile Include="SiteHandlerTrace.cpp" />
+    <ClCompile Include="SiteHandlerWebDAV.cpp" />
+    <ClCompile Include="SOAPMessage.cpp" />
+    <ClCompile Include="StackTrace.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="WebConfig.cpp" />
+    <ClCompile Include="WebServiceClient.cpp" />
+    <ClCompile Include="WebServiceServer.cpp" />
+    <ClCompile Include="WSDLCache.cpp" />
+    <ClCompile Include="XMLMessage.cpp" />
+    <ClCompile Include="XMLParser.cpp" />
+    <ClCompile Include="XMLParserImport.cpp" />
+    <ClCompile Include="XMLRestriction.cpp" />
+    <ClCompile Include="ZLib\adler32.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZLib\crc32.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZLib\deflate.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Zlib\gzip.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZLib\inffast.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZLib\inflate.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZLib\inftrees.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZLib\trees.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZLib\zutil.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Analysis.h" />
+    <ClInclude Include="AutoCritical.h" />
+    <ClInclude Include="Base64.h" />
+    <ClInclude Include="HTTPCertificate.h" />
+    <ClInclude Include="ConvertWideString.h" />
+    <ClInclude Include="Cookie.h" />
+    <ClInclude Include="CPULoad.h" />
+    <ClInclude Include="CrackURL.h" />
+    <ClInclude Include="CreateURLPrefix.h" />
+    <ClInclude Include="Crypto.h" />
+    <ClInclude Include="DefuseBOM.h" />
+    <ClInclude Include="EnsureFile.h" />
+    <ClInclude Include="ErrorReport.h" />
+    <ClInclude Include="EventSource.h" />
+    <ClInclude Include="FileBuffer.h" />
+    <ClInclude Include="FindProxy.h" />
+    <ClInclude Include="GenerateGUID.h" />
+    <ClInclude Include="GetLastErrorAsString.h" />
+    <ClInclude Include="GetUserAccount.h" />
+    <ClInclude Include="HPFCounter.h" />
+    <ClInclude Include="HTTPClient.h" />
+    <ClInclude Include="HTTPClientTracing.h" />
+    <ClInclude Include="HTTPError.h" />
+    <ClInclude Include="HTTPMessage.h" />
+    <ClInclude Include="HTTPServer.h" />
+    <ClInclude Include="HTTPSite.h" />
+    <ClInclude Include="HTTPThreadPool.h" />
+    <ClInclude Include="HTTPTime.h" />
+    <ClInclude Include="HTTPURLGroup.h" />
+    <ClInclude Include="JSONMessage.h" />
+    <ClInclude Include="JSONParser.h" />
+    <ClInclude Include="MediaType.h" />
+    <ClInclude Include="MultiPartBuffer.h" />
+    <ClInclude Include="Namespace.h" />
+    <ClInclude Include="PrintToken.h" />
+    <ClInclude Include="ProcInfo.h" />
+    <ClInclude Include="Redirect.h" />
+    <ClInclude Include="RunRedirect.h" />
+    <ClInclude Include="ServerEvent.h" />
+    <ClInclude Include="SiteFilter.h" />
+    <ClInclude Include="SiteFilterClientCertificate.h" />
+    <ClInclude Include="SiteHandler.h" />
+    <ClInclude Include="SiteHandlerConnect.h" />
+    <ClInclude Include="SiteHandlerDelete.h" />
+    <ClInclude Include="SiteHandlerFormData.h" />
+    <ClInclude Include="SiteHandlerGet.h" />
+    <ClInclude Include="SiteHandlerHead.h" />
+    <ClInclude Include="SiteHandlerJson.h" />
+    <ClInclude Include="SiteHandlerJson2Soap.h" />
+    <ClInclude Include="SiteHandlerMerge.h" />
+    <ClInclude Include="SiteHandlerOptions.h" />
+    <ClInclude Include="SiteHandlerPatch.h" />
+    <ClInclude Include="SiteHandlerPost.h" />
+    <ClInclude Include="SiteHandlerPut.h" />
+    <ClInclude Include="SiteHandlerSoap.h" />
+    <ClInclude Include="SiteHandlerTrace.h" />
+    <ClInclude Include="SiteHandlerWebDAV.h" />
+    <ClInclude Include="SOAPMessage.h" />
+    <ClInclude Include="SoapTypes.h" />
+    <ClInclude Include="StackTrace.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="Version.h" />
+    <ClInclude Include="WebConfig.h" />
+    <ClInclude Include="WebServiceClient.h" />
+    <ClInclude Include="WebServiceServer.h" />
+    <ClInclude Include="WinINETError.h" />
+    <ClInclude Include="WSDLCache.h" />
+    <ClInclude Include="XMLMessage.h" />
+    <ClInclude Include="XMLParser.h" />
+    <ClInclude Include="XMLParserImport.h" />
+    <ClInclude Include="XMLRestriction.h" />
+    <ClInclude Include="ZLib\crc32.h" />
+    <ClInclude Include="ZLib\deflate.h" />
+    <ClInclude Include="ZLib\gzguts.h" />
+    <ClInclude Include="Zlib\gzip.h" />
+    <ClInclude Include="ZLib\inffast.h" />
+    <ClInclude Include="ZLib\inffixed.h" />
+    <ClInclude Include="ZLib\inflate.h" />
+    <ClInclude Include="ZLib\inftrees.h" />
+    <ClInclude Include="ZLib\trees.h" />
+    <ClInclude Include="ZLib\zconf.h" />
+    <ClInclude Include="ZLib\zlib.h" />
+    <ClInclude Include="ZLib\zutil.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

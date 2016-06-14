@@ -1,0 +1,190 @@
+/////////////////////////////////////////////////////////////////////////////////
+//
+// SourceFile: WSDLCache.h
+//
+// Marlin Server: Internet server/client
+// 
+// Copyright (c) 2016 ir. W.E. Huisman
+// All rights reserved
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+//////////////////////////////////////////////////////////////////////////
+//
+// WSDLCache
+//
+//////////////////////////////////////////////////////////////////////////
+
+#pragma once
+#include "SOAPMessage.h"
+#include "XMLRestriction.h"
+#include <vector>
+#include <map>
+
+class WsdlOperation
+{
+public:
+  int          m_code;
+  SOAPMessage* m_input;
+  SOAPMessage* m_output;
+};
+
+using OperationMap = std::map<CString,WsdlOperation>;
+using TypeDone     = std::map<CString,int>;
+using TypeMap      = std::map<CString,XMLElement*>;
+
+class WSDLCache
+{
+public:
+  WSDLCache(bool p_server = true);
+ ~WSDLCache();
+
+  // Reset the complete WSDLCache
+  void    Reset();
+  // Clear the cache
+  void    ClearCache();
+  // Generate the resulting WSDL file
+  bool    GenerateWSDL();
+  // Read an existing WSDL file
+  bool    ReadWSDLFile(LPCTSTR p_filename);
+  // Add SOAP message call and answer
+  bool    AddOperation(int p_code,CString p_name,SOAPMessage* p_input,SOAPMessage* p_output);
+  // Check incoming SOAP message against WSDL
+  bool    CheckIncomingMessage(SOAPMessage* p_msg,bool p_checkFields);
+  // Check outgoing SOAP message against WSDL
+  bool    CheckOutgoingMessage(SOAPMessage* p_msg,bool p_checkFields);
+
+  // SETTERS
+
+  // MANDATORY: Set a service
+  bool    SetService(CString p_servicename,CString p_url);
+  // MANDATORY: Set a target namespace
+  void    SetTargetNamespace(CString p_name)     { m_targetNamespace = p_name;     };
+  // MANDATORY: Set a webroot (where to save the WSDL)
+  void    SetWebroot(CString p_webroot)          { m_webroot         = p_webroot;  };
+  // OPTIONAL:  Set SOAP 1.0
+  void    SetPerformSoap10(bool p_perform)       { m_performSoap10   = p_perform;  };
+  // OPTIONAL:  Set SOAP 1.2
+  void    SetPerformSoap12(bool p_perform)       { m_performSoap12   = p_perform;  };
+  // OPTIONAL:  Set service postfix other than ".aspcxx"
+  void    SetServicePostfix(CString p_postfix)   { m_servicePostfix  = p_postfix;  };
+  // OPTIONAL:  Set the logfile (never owned, or generated!)
+  void    SetLogAnalysis(LogAnalysis* p_log)     { m_logging         = p_log;      };
+
+  // GETTERS
+
+  CString GetServicePage();
+  CString GetOperationPage(CString p_operation,CString p_hostname);
+  CString GetServiceBasePageName();
+  int     GetCommandCode(CString& p_commandName);
+  size_t  GetOperationsCount()                   { return m_operations.size();     };
+  CString GetErrorMessage()                      { return m_errormessage;          };
+  CString GetWSDLFilename()                      { return m_filename;              };
+  CString GetTargetNamespace()                   { return m_targetNamespace;       };
+  CString GetWebroot()                           { return m_webroot;               };
+  CString GetServiceName()                       { return m_serviceName;           };
+  CString GetServicePostfix()                    { return m_servicePostfix;        };
+  CString GetURL()                               { return m_url;                   };
+  CString GetBasePath()                          { return m_absPath;               };
+  bool    GetPerformSoap10()                     { return m_performSoap10;         };
+  bool    GetPerfromSoap12()                     { return m_performSoap12;         };
+
+private:
+  // Check message
+  bool    CheckMessage(SOAPMessage* p_orig,SOAPMessage* p_tocheck,CString p_who,bool p_checkFields);
+  // Check parameters
+  bool    CheckParameters(XMLElement*  p_orgBase
+                         ,SOAPMessage* p_orig
+                         ,XMLElement*  p_checkBase
+                         ,SOAPMessage* p_check
+                         ,CString      p_who
+                         ,bool         p_fields);
+  // GENERATING A WSDL
+  void    GenerateTypes(CString& p_wsdlcontent);
+  void    GenerateMessageTypes(CString& p_wsdlcontent,SOAPMessage* p_msg,TypeDone& p_gedaan);
+  void    GenerateParameterTypes(CString&         p_wsdlcontent
+                                ,CString          p_element
+                                ,XmlElementMap&   p_map
+                                ,TypeDone&        p_done
+                                ,WsdlOrder        p_order
+                                ,int              p_level);
+  void    GenerateMessages(CString& p_wsdlcontent);
+  void    GeneratePortType(CString& p_wsdlcontent);
+  void    GenerateBindings(CString& p_wsdlcontent);
+  void    GenerateBinding(CString& p_wsdlcontent,CString p_binding,CString p_soapNamespace);
+  void    GenerateServiceBindings(CString& p_wsdlcontent);
+  void    GenerateDefinitions(CString& p_wsdlcontent);
+
+  // READING A WSDL
+  bool    ReadWSDLFileSafe(LPCTSTR p_filename);
+  bool    ReadWSDLLocalFile(CString p_filename);
+  bool    ReadWSDLFileFromURL(CString p_url);
+  bool    ReadWSDL             (XMLMessage& p_wsdl);
+  bool    ReadDefinitions      (XMLMessage& p_wsdl);
+  bool    ReadServiceBindings  (XMLMessage& p_wsdl);
+  bool    ReadBindings         (XMLMessage& p_wsdl);
+  bool    ReadPortTypes        (XMLMessage& p_wsdl);
+  bool    ReadMessage          (XMLMessage& p_wsdl,SOAPMessage& p_message);
+  bool    ReadParameters       (XMLMessage& p_wsdl,SOAPMessage& p_message,CString m_element);
+  XMLElement* ReadTypesElement (XMLMessage& p_wsdl,CString p_element);
+  XMLElement* ReadTypesType    (XMLMessage& p_wsdl,CString p_type);
+  int     ReadWSDLOptions      (XMLMessage& p_wsdl,XMLElement* p_element);
+  int     ReadWSDLOrdering     (XMLElement* p_order);
+  bool    ReadParametersInOrder(XMLMessage& p_wsdl
+                               ,SOAPMessage& p_message
+                               ,XMLElement* p_base
+                               ,XMLElement* p_order);
+  void    ReadRestriction      (XMLMessage& p_wsdl
+                               ,XMLElement* p_newelem
+                               ,XMLElement* p_order
+                               ,CString     p_restriction
+                               ,int         p_options);
+  int     ReadElementaryType   (CString p_type);
+  int     ReadWhiteSpace       (CString p_value);
+  CString ReadAnnoDocumentation(XMLMessage& p_wsdl,XMLElement* enumeration);
+
+  // Generating HTML pages for documentation
+  CString GetPageHeader();
+  CString GetPageFooter();
+  CString GetOperationWsdl();
+  CString GetOperationNameLink(CString p_operation);
+  CString GetOperationPageIntro(CString p_operation);
+  CString GetOperationPageHttpI(CString p_operation,CString p_hostname,bool p_soapVersion);
+  CString GetOperationPageHttpO(bool p_soapVersion);
+  CString GetOperationPageSoap (SOAPMessage* p_msg, bool p_soapVersion);
+  CString GetOperationPageFooter();
+  
+  CString m_filename;               // Where we save the WSDL (webroot / service / name.wsdl)
+  CString m_targetNamespace;        // Object of this WSDL
+  CString m_webroot;                // Webroot from the HTTPServer
+  CString m_serviceName;            // Service name in short
+  CString m_url;                    // URL servicing this WSDL
+  CString m_absPath;                // Absolute URL path
+  CString m_servicePostfix;         // Service name postfix other than ".acx"
+  CString m_errormessage;           // Last errormessage reading a WSDL
+  bool    m_server        { true }; // Server or client side WSDL?
+  bool    m_performSoap10 { true }; // Perform SOAP 1.0 bindings
+  bool    m_performSoap12 { true }; // Perform SOAP 1.2 bindings
+  bool    m_exception     { false}; // Exception while reading WSDL
+  // Complex objects
+  OperationMap    m_operations;           // All recorded operations of the service
+  XMLRestrictions m_restrictions;         // All restrictions on XMLMessage:XMLElement values
+  LogAnalysis*    m_logging { nullptr };  // Logging in the logfile
+  TypeMap         m_types;                // Used for reading WSDL
+};

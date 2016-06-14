@@ -1,0 +1,87 @@
+<Configuration>
+  <Server>
+    <WebRoot>C:\inetpub</WebRoot>            // read/write access !!
+    <ChannelType>weak</ChannelType>          // weak, strong, named, address, full
+    <Secure>false</Secure>                   // 1=https, 0=http
+    <Port>7100</Port>                        // 80,443, or above 1024
+    <BaseURL>/Key2Brief/</BaseURL>           // Your app!
+    <MinThreads>4</MinThreads>               // Minimum = 2
+    <MaxThreads>100</MaxThreads>             // Maximum < 250
+    <StackSize>1048576<StackSize>			       // Minimum = 1MB
+    <Reliable>false</Reliable>               // WS-ReliableMessaging is 'on' or 'off'
+    <QueueLength>256<QueueLength>            // n * 64 calls in the backlog queue
+    <RespondUnicode>false</ResondUnicode>    // Respond in UTF-16 unicode
+    <VerbTunneling>true</VerbTunneling>      // Allow VERB Tunneling
+  </Server>
+  <Security>
+    <XFrameOption>SAME-ORIGIN</XFrameOption> // IFRAME protection
+    <XFrameAllowd>URL</XFrameAllowd>         // IFRAME allowed from this URL
+    <HSTSMaxAge>106070400</HSTSMaxAge>       // HTTPS for this amount of seconds
+    <HSTSSubDomains>false</HSTSSubDomains>   // HTTPS subdomains allowed?
+    <ContentNoSniff>true</ContentNoSniff>    // Content-type is always correct
+    <XSSProtection>true</XSSProtection>      // Protect against Xcross Site Scripting
+    <XSSBlockMode>true</XSSBlockMode>        // If XSS detected, block site
+    <NoCacheControl>true</NoCacheControl>    // Block caching control of browser eniterly    
+  </Security>
+  <Authentication>
+    <Scheme>NTLM</Scheme>                     // Anonymous, Basic, NTLM, Negotiate, Digest, Kerberos
+    <NTLMCache>true</NTLMCache>               // true or false
+    <Realm>ITS</Realm>					              // DomainRealm (inlog domain)
+    <Domain>organization.lan</Domain>         // Domainname  (network domain)
+    <User>username<User>                      // CLIENT ONLY: user name to log in with
+    <Password>secret01</Password>             // CLIENT ONLY: password  to log in with (encrypted)
+    <SSO>false</SSO>                          // CLIENT ONLY: Windows SingleSignOn (SSO). "Password" must be empty, "User" may be empty
+    <ClientCertificate>true</ClientCertificate>           // Server requests for client certificate
+    <CertificateName>MyName<CerticateName>                // Client-certificate to expect on the server
+    <CertificateThumbprint>12345</CertificateThumbprint>  // Client-certificate to expect on the server
+  </Authentication>
+  <Encryption>
+    <Level>sign</Level>                       // Level: sign, body, message
+    <Password>password1</Password>            // Signing/encryption password
+  </Encryption>
+  <WebServices>
+    <CheckWSDLIncoming>true</CheckWSDLIncoming>			  // Check incoming SOAPMessages against WSDL in the WebServiceServer
+    <CheckWSDLOutgoing>false</CheckWSDLOutgoing>	    // Check outgoing SOAPMessages against WSDL in the WebServiceServer
+    <CheckFieldValues>true</CheckFieldValues>         // Check enumerations and datavalues against datatypes of the WSDL
+    <JSONTranslations>false</JSONTranslations>        // Support JSON 'GET' to JSON responses. Rountrip engineering JSON->SOAP->JSON
+  </WebServices>
+  <Client>
+    <Agent>Tester/1.0</Agent>                 // At liberty, use against identity spoofing
+    <RetryCount>0</RetryCount>                // Number of retries if sending goes wrong (between 0 and 3 inclusive)
+    <SOAPCompress>false<SOAPCompress>         // Compress SOAP messages
+    <UseProxy>1</UseProxy>                    // 1=always autoproxy, 2=autoproxy fallback, 3=web.config proxy 4=NO proxy
+    <Proxy/>                                  // proxylist + user/passwords
+    <ProxyBypass/>                            // proxy bypass list (don't use this proxies)
+    <ProxyUser/>                              // Proxy authentication user
+    <ProxyPassword/>                          // Proxy authentication password (encrypted)
+    <SendUnicode/>                            // Send requests in UTF-16 Unicode
+    <VerbTunneling/>                          // Force sending through VERB-Tunneling
+    <CertificatePreset>true</CertificatePreset>  // Preset client-certificate on connection prior to requesting
+    <CertificateStore>MY</CertificateStore>   // Name of the store of the client-certificate
+    <CertificateName>MyName</CertificateName> // Name of client-certificate to send to the server
+    <TimeoutResolve>8000</TimeoutResolve>     // Resolve URL timeout
+    <TimeoutConnect>8000</TimeoutConnect>     // Connect to URL timeout
+    <TimeoutSend>10000</TimeoutSend>          // Send confirmation timeout
+    <TimeoutReceive>20000</TimeoutReceive>    // Receive answer timeout
+
+
+    <RelaxCertificateValid>false</RelaxCertificateValid>          // Always 'false' in production situations
+    <RelaxCertificateDate>false</RelaxCertificateDate>            // Always 'false' in production situations
+    <RelaxCertificateAuthority>false</RelaxCertificateAuthority>  // Always 'false' in production situations
+    <RelaxCertificateUsage>false</RelaxCertificateUsage>          // Always 'false' in production situations
+
+    <SecureSSL20>false</SecureSSL20>          // Allow SSL 2.0 connections
+    <SecureSSL30>false</SecureSSL30>          // Allow SSL 3.0 connections
+    <SecureTLS10>true</SecureTLS10>           // Allow TLS 1.0 connections
+    <SecureTLS11>true</SecureTLS11>           // Allow TLS 1.1 connections
+    <SecureTLS12>true</SecureTLS12>           // Allow TLS 1.2 connections
+  </Client>
+  <Logging>
+    <Logfile>C:\Tmp\Serverlog.txt</Logfile>   // read/write access
+    <DoLogging>true</DoLogging>               // logging on/off
+    <DoTiming>true</DoTiming>                 // timing in logfile
+    <DoEvents>true</DoEvents>                 // writing to WMI eventlog
+    <Cache>100</Cache>                        // cache loglines before flushing
+    <Detail>true</Detail>                     // Only for server/client (not for the logfile!)
+  </Logging>
+</Configuration>

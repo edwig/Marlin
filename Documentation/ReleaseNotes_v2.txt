@@ -1,0 +1,267 @@
+RELEASENOTES MARLIN VERSION 2.x
+===============================
+
+For releasenotes of the previous main version (1.x), see the separate file "Releasenotes_v1.txt".
+This document contains all release notes and remarks beginning with version 2.0. The document
+would otherwise grow to large and complex.
+Version 2.x contains functional breaks with the past and previous version and your programms
+will need checking on the logic and functionality to make version 2.x correctly working.
+----------------------------------------------------------------------------------------------
+
+CHANGES IN VERSION 2.4.2
+========================
+1) Corrections of the ThreadPool in case of a high CPU load and a lack of threads.
+   In the case the threadpool is *almost* stopping, situations can occur where the backlog queue
+   of work cannot be processed through a bug in the mainloop of the threadprocessor.
+
+CHANGES IN VERSION 2.4.1
+========================
+1) The logging mechanism (LogAnalysis) is beter performing through the use of 'overlapping I/O'.
+   This asynchroneous way of writing the tekstfiles is very usefull for the writing of large logfiles.
+   Just as is the case with this HTTP server and client programms.
+2) The independent configuration of the logfiles through the 'logfile.config' file has been extended
+   The maximum content of this configuration file is now:
+   ------------------------------------------------------
+   ; Comment line
+   # Second comment line
+   logfile=C:\Directory\override_logfile.txt
+   logging=1
+   timing=1
+   events=1
+   cache=2000
+   interval=20
+   -------------------------------------------------------
+   What these lines do:
+   logfile       Overriding the logfile of the application
+   logging       The logging is on (1) or off (0)
+   timing        Date and time logging is on (1) or off(0) at the beginning of the lines
+   events        Duplication to the WMI log is on (1) or off (0)
+   cache         Number of lines to cache before writing is initialized
+                 The internal default is 1000 lines, Configurable between 100 and 100.000
+   interval      Number of seconds before the program will flush the log cache to file
+                 Default is 30 sec. Configurable between 10 sec and 10 minutes
+                 Synchronization will ALWAYS take place after 4 of those intervals
+
+CHANGES IN VERSION 2.4
+======================
+1) Errors and errorhandling in the HTTPClient and the HTTPServer are revised. All standard WinINET
+   errors have standard text. All errors between 12000 and 12177 (the most common HTTP errors)
+   now have a explanatory text, and will be shown in the log (if it's on).
+2) Optimization of the main loop of the HTTPClient. Simple errors like 'server-not-found' are now
+   beter detected and shown in the logging.
+3) Detecting the proxies is now for the first time correct. If a HTTP debugger (e.g. Fiddler4)
+   is started before the server, all HTTP trafic is correctly routed through the proxy.
+   But please be aware that Fiddler will try to catch HTTP as well as HTTPS trafic, and that HTTPS
+   always has the advantage above insecure traffic.
+4) It is now possible to set the proxy handling in the webconfig or programmatically in the
+   HTTPClient through the use of the "HTTPClient::SetUseProxy" method.
+   Not only the proxy and the proxy-bypass lists, but the proxy-user and proxy-password can now
+   also be set in the web.config. The program HTTPManager is adapted for this.
+   The class 'FindProxy' has been extended to find the correct proxy. As the MS-Windows INET
+   supports just 1 (één) proxy, 'FindProxy' will now do this too. HTTPS proxies will be found first.
+   If no HTTPS proxy is found, FindProxy will search on to a HTTP proxy.
+5) The complete project has been ported to Visual Studio 2015
+6) All builded executables come together in the '$(SolutionDir)..\Bin$(Configuration)_$(Platform)\'
+   directory. The advantage of this is the fact that the results of the HTTPManager (the web.config files)
+   and the MarlinServer and MarlinClient can be tested directly with the web.config files.
+7) You can now ask for the HTTP headers in the SOAPMessage object. You can set them and this headers
+   will be transported through the HTTPMessage through the HTTP trafic channel.
+   Beware: The method "Reset" will alsoo reset the header content of the message, just as it has been 
+   done with the HTTPMessage.
+   To get everything working it is needed to make 2 configurations to get really all headers.
+   (And it will lower the performance of the server and client by a fraction)
+   For the server side: HTTPSite.SetAllHeaders(true);
+   For the client side: HTTPClient.SetReadAllHeaders(true);
+   After this it is possible to use the following methods in HTTPMessage AND in the SOAPMessage:
+   SOAPMessage.AddHeader("name","value");
+   SOAPMessage.GetHeader("name");
+   HTTPMessage.AddHeader("name","value");
+   HTTPMessage.GetHeader("name");
+
+CHANGES IN VERSION 2.3
+======================
+1)  State Management Mechanisme (Cookies) is 'loosly' geimplemented according to RFC 2965
+    This RFC has been 'loosly' followed, in accord with wikipedia's (https://en.wikipedia.org/wiki/HTTP_cookie)
+    remarkt that most user-agents (browsers) do this, and if one does not complies to these
+    loosly rules, 'things could break'.
+    The following implementation changes in the WinHTTP library have been made:
+    a)  HTTPMessage now has a cookie cache (more than 1 cookie)
+    b)  SOAPMessage now has a cookie cache (more than 1 cookie)
+    c)  Per cookie you can set the attributes 'secure' en 'httponly'
+    d)  Cookies now support name/value pairs
+    e)  Values in the cookcies can be encrypted with heavy encryption (AES 256 bits)
+        Setting and Getting can be done with a 'metadata' field. This field acts as an encryption key
+        for the en- and decryption of the cookie value. See the methods "SetCookie" and "GetCookie".
+    f)  HttpOnly cookies are only 'visible' for the HTTPMessage, but not for the SOAPMessage
+2)  For embetterment of the security, the server can automatically add headers with each repsonse.
+    These headers will set security features in contemporaine user-agents (browers). They are in fact 
+    hints for the implementation of these security features.
+    a)  The server can automatically add 'X-Frame-Options' to each response. This can prevent that 
+        applications can be set in an IFRAME of another website.
+        See: HTTPSite::SetXFrameOptions()
+    b)  The server can set 'HSTS' through the adding of the 'Strict-Transport-Security' headers 
+        to each response. See: HTTPSite::SetStrictTransportSecurity()
+    c)  The server can automatically block the utf-8 and unicode conversion of the browser, throug the
+        means of adding the 'X-Content-Type-Options' header in each response.
+        See: HTTPSite::SetXContentTypeOptions().
+    d)  The server can hint to prevent Cross-site-scripting (XSS), by turning on the protectoin of the 
+        browser through automatically adding the X-XSS-Protection headers. See HTTPSite::SetXSSProtection()
+    e)  De server kan 3 automatische headers meegeven, met als doel om de cache-control van de browser
+        uit te schakelen. Deze 3 headers zijn: 'Cache-Control', 'Pragma' en 'Expires'.
+    For the so-called 'responsive applications' it is important that files are passed on directly
+    and that no 'old' files from the browser cache are used.
+    The HTTPServer and HTTPClient are extended so that they can relay the 'unknown-headers' automatically.
+3)  The HTTPManager program is adapted, so that you can configure the autmatic server headers
+    In the web.config there - in the server frame on screen - an extra button has been added named
+    'Server headers'. An extra dialog handles the 'server headers, as explained under item 2).
+4)  It is now possible to tell the HTTPClient that it will relay all response headers from the 
+    SOAPMessages and HTTPMessages and read them from the response answer. Do configure the HTTP client, 
+    use the following methods:
+    - SetReadAllHeaders(bool)
+    - GetReadAllHeaders()
+
+CHANGES IN VERSION 2.2
+======================
+1)  New comparison routines for the handling of namespaces have been added. Problems with the difference
+    of namespaces with or without the closing '/' char are solved with these routines.
+2)  The default constructed SOAPMessage is now a SOAP 1.0 (POS = Plain Old Soap) message. Potentially
+    the message soap version number will be updated to 1.1. or 1.2, depending the contents of the message.
+3)  BREAKING CHANGE: Namespaces and command names are not automatically added, but have to be explicitly
+    set by the implementation. See notes 4) and 5) below.
+4)  BREAKING CHANGE: In the constructor of a new SOAP Message from the service interface you need to set
+    the actionname always explicitly. And set the SOAP version number explicitly.
+5)  BREAKING CHANGE: The standard namespace is no longer set automatically in the body of the parameter 
+    object. You can set it with the "SetNamespace" method in combination with the "SetHasInitialAction"
+    method. If you do the following three:
+    - Add a namespace with "SetNamespace" to your namespace
+    - Use "SetHasInitialAction" to 'true'
+    - Set SetSoapVersion to version 1.2
+    Then the namespace will be added to the 'Body' object
+6)  BREAKING CHANGE: The xml-namespace of the envelope determines if a message will be seen as a version
+    1.1 or 1.2 by searching fot the following two namespaces
+    SOAP 1.1 : http://schemas.xmlsoap.org/soap/envelope/
+    SOAP 1.2 : http://www.w3.org/2003/05/soap-envelope
+    BEWARE OF THE TRAILING '/' char !!
+7)  BREAKING CHANGE: The SOAPAction of the HTTP protocol will only be applied to the SOAP 1.2 messages
+    in the case that the <Envelope>/<Action>  node is absent!
+    The SOAPAction will still be aplied to POS and SOAP 1.1 messages
+8)  BREAKING CHANGE: The default namespaces has been dropped and does not exist any longer.
+9)  BREAKING CHANGE: Some of the members of SOAPMessage has been renamed:
+    m_commandName    -> m_soapAction
+    SetSoapAction()  -> SetSoapActionFromHTTP()
+    GetCommandName() -> GetSoapAction()
+    SetCommandName() -> SetSoapAction()
+10) Extra no longer needed checks in SOAPMessage::GetSoapMessage are now removed. e.g. the check
+    on the namespace. See points 5,6 and 7.
+11) Unit testing the namespace problemes have been added: See: TestNamespaces.cpp
+13) The complete library has been checked with the program CPP-Check versie 1.69 and corrected.
+    A lot of small formatting printf bugs and formatting issues have been solved.
+
+Repaired bugs in version2.1.4
+-----------------------------
+1)  Forcing the first node of the body to have a namespace is no loger required
+2)  Locking issues in the handling of the server-sent-event streams have been solved.
+3)  A bug in a loop iterator, causing the CPU to rise to 100% has been solved.
+
+CHANGES IN VERSION 2.1
+======================
+1)  It is now possible to leave a namespace empty in a SOAP 1.0 call, or to set a standard namespace 
+    with a call to "SetDefaultNamespace". The default namespace has been moved from a macro to a
+    global variabel for the library / application.
+2)  It is now possible to add a void pointer ("void*") to a HTTPSite in the form of the "SetPayload"
+    method. You need to do this before the "StartSite" method will be called.
+    This enables yoy to slip in your own object pointer to the site. You can use it to build your own
+    registration of sites and callbacks. You can get to the object pointer by calling from HTTPMessage
+    the following: void* object = message->GetSite()->GetPayload();
+3)  If the encryption in the client and server differ from each other, the error message was unreadable.
+    This is because the error messages where encrypted as well. The SOAP Fault that results in these
+    kind of situations is now returned un-encrypted.
+4)  The method "SOAPMessage.SetReliability" is changed so that we first check if all the conditions of 
+    the reliable messaging protocol are met. Only then will the client support the reliable protocol.
+    This blocks the possibility that someone will add his/hers own message-ID's without being known
+    by the WebServiceClients.
+5)  The method "PrintElements" of the XMLMessage is moved from private to public. This makes it 
+    possible to print a part of the XMLMessage for other purposes. e.g. the body part.
+6)  The SOAP 1.1 'SOAPAction' header of the HTTP protocol delivers the soap action namespace and 
+    command name sometimes with the " chars around it. Deze quotes are now removed from the action name.
+
+CHANGES IN VERSION 2.0
+======================
+1)  The HTTPServerXP and the HTTPServer are merged to one server: "HTTPServer".
+    From this version on there iks no more support for the WinHTTP Server 1.0 API, and hence no more
+    support for the MS-Windows OS versions "Windows Server 2003" and "Windows XP".
+2)  Dropped the parameter "FastServer" of the "WebServiceServer", because the difference between the
+    to types of server has been dropped.
+3)  Support for the 32-bits versions of the libarary has been removed.
+4)  The basic method "CreateChannel" is moved to "CreateSite".
+    This method no longer returns a boolean, but a new base object: "HTTPSite". It replaces the old
+    "SiteContext" structure. So it has become a 'real' object.
+5)  The following attributes (Set/get methods) have been moved from the servers to the new HTTPSite:
+    - SetAsync()                 -> A-Synchroneous answers on SOAP Messages
+    - SetIsEventStream()         -> Site will be used to start a SSE event stream
+    - AddContentType()           -> Content-types are now per site
+    - SetEncryptionLevel()       -> Signing, body/message-encryption is per-site 
+    - SetEncryptionPassword()    -> The encryption password is per site
+    - SetAuthenticationScheme    -> Authentication method required for this site
+    - SetAuthenticationNTLMCache -> NTLM caching for Windows authentication
+    - SetAuthenticationRealm     -> Realm of the user
+    - SetAuthenticationDomain    -> Domain of the user
+    - SetAllHeaders              -> Server will retain ALL http headers in the HTTPMessage
+    - SetReliable()              -> Use the WS-ReliableMessaging protocol
+    - SetReliableLogIn()         -> MS-Reliable implies authentication login
+    Apart from these chages, the HTTPSite now alsoo has a "SetWebroot". So it is not only possible to
+    set the webroot of the server, but on a per-site basis as wel. The only restriction is that the 
+    webroot of the site must be a subdirectory of the webroot of the total server.
+6)  All checks on encryption and reliable messaging are moved from the server to the sites.
+7)  HTTPSites must be explicitly started with the method "StartSite" after they hav been configured
+    with the Set* methods. This is a major change since version 1.x of the library.
+    Check your programming logic for this major change!
+8)  There is a new type of object (HTTPURLGroup) that is completly transparent to the user and 
+    to the programmer. These objects are jused to group the URL sites on an authentication basis.
+    All sites with the same authentication share the same URL-Group.
+9)  Sites can be added or removed from a running HTTPServer. Before removing the site, please call
+    the "StopSite" method of the HTTPSite. Stopped sites are removed from there respective URLGroup's.
+10) At the stopping of the server, all sites are stopped first, removed from the HTTPURLGroup and after
+    the last site and group has been stopped, the total server will stop.
+11) The SOAPMessage object has a new attribute "Condensed". It can be used through Set/GetCondensed.
+    The HTTPClient and WebServicelcient have a new attribute "SoapCompress", used to control the condensed
+    attribute of the SOAP messages. Condensed SOAP messages doe not have multiple text lines with XML,
+    but just one condensed line, with no spaces, tabs or newlines (and carriage returns) between the 
+    elements. 
+    And there is also an entry in the web.config under <Client><SOAPCompress>. You can set this attribute
+    in the HTTPManager in the web.config dialog.
+12) The level of the detailed-logging is placed at a lower level in each component. Detailed logging now
+    means that the HTTP- and SOAP traffice in the HTTPServer and HTTPClient are logged there. Extra logging
+    call's in your application can therefore be removed.
+13) There is a new feature in the SOAPMessage class in the form of the method "ParseAsBody".
+    This makes it possible to read a soap <Body> straight from an XML string of data, and replace the 
+    current body of the mesasge, regardless of the fact that the previous structure was in the SOAP 1.0, 
+    1.1 or 1.2 protocol.
+14) If the HTTPCLient has no settings for encryption or body-signing it is now possible to send individual
+    SOAPMessages without changing the settings of the HTTPClient.
+    The other way around (sending messages with no encryption through a client set for encryption) is still
+    NOT possible.
+15) Added a complete unit-test set in the client and in the server test projects.
+    Short manual:
+    a) Compile the client and server project (MarlinServer, MarlinClient)
+    b) Start the server first, then start the client.
+    c) If all checks return an "OK" type "stop"
+    d) If errors are found, change the "doDetails" parameter in the main file and investigate.
+16) The configuration of the length of the request queue is now possible.
+    This parameter was already in the web.config as <Server><QueueLength>, but could not yet be managed
+    by the HTTPManager program. This program is now extended for this purpose. This parameter can now be
+    set between 64 (the minimum backlog queue) and 1000 http calls.
+
+Fixed bugs in version 2.0
+-------------------------
+1)  All bugs between the versions 1.8.0 and 1.9.9 are ported to this version too.
+2)  The functionality of the WS-ReliableMessaging protocl was broken in the 1.x series.
+    It is restored and fully tested in this version.
+    As an extension you can make use of the reliable protocol without authentication.
+    See the "SetReliableLogin" method of the HTTPSite object.
+    The WS-RM protocol states taht authentication is optional and the mandatory authentication in previous
+    versions was incorrect.
+3)  The functionality of the "SetEncryptionLevel" was broken in the 1.x series after 1.8.x
+    The complete WS-Security standard has been checked and corrected in version 2.0
+4)  The functionality of the "if-modified-since" header that was removed is restored in its full glory 
+    in this version of the library.

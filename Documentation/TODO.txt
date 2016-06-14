@@ -1,0 +1,5 @@
+STILL TO DO IN MARLIN
+=====================
+
+1) Schema <import> in the WSDL reading in the WSDL Cache
+2) Full Schema XSD validation of datatypes

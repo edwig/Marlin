@@ -1,0 +1,567 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!--------------------------------------------------------------------------->
+<!--                           INTRODUCTION                                
+
+ The Code Project article submission template (HTML version)
+
+Using this template will help us post your article sooner. To use, just 
+follow the 3 easy steps below:
+ 
+     1. Fill in the article description details
+     2. Add links to your images and downloads
+     3. Include the main article text
+
+That's all there is to it! All formatting will be done by our submission
+scripts and style sheets. 
+
+-->
+<!--------------------------------------------------------------------------->
+<!--                        IGNORE THIS SECTION                            -->
+<HTML>
+<HEAD>
+<TITLE>The Code Project</TITLE>
+<META content="text/html; charset=utf-8" http-equiv=Content-Type>
+<STYLE>BODY {
+	FONT-SIZE: 10pt; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif
+}
+P {
+	FONT-SIZE: 10pt; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif
+}
+TD {
+	FONT-SIZE: 10pt; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif
+}
+H2 {
+	FONT-WEIGHT: bold; COLOR: #ff9900
+}
+H3 {
+	FONT-WEIGHT: bold; COLOR: #ff9900
+}
+H4 {
+	FONT-WEIGHT: bold; COLOR: #ff9900
+}
+H5 {
+	FONT-WEIGHT: bold; COLOR: #ff9900
+}
+H2 {
+	FONT-SIZE: 13pt
+}
+H3 {
+	FONT-SIZE: 12pt
+}
+H4 {
+	FONT-SIZE: 10pt; COLOR: black
+}
+PRE {
+	FONT-FAMILY: "Courier New", Courier, mono; WHITE-SPACE: pre; BACKGROUND-COLOR: #fbedbb
+}
+CODE {
+	FONT-FAMILY: "Courier New", Courier, mono; COLOR: #990000
+}
+</STYLE>
+<LINK rel=stylesheet type=text/css 
+href="http://www.codeproject.com/App_Themes/Std/CodeProject.css">
+<META name=GENERATOR content=AuthorDocumentation>
+</HEAD>
+<BODY bgColor=#ffffff color="#000000">
+<!--------------------------------------------------------------------------->
+<!-------------------------------     STEP 1      --------------------------->
+<!--  Fill in the details (CodeProject will reformat this section for you) -->
+<PRE>Title:       Marlin: Escaping from IIS
+Author:      Edwig Huisman
+Email:       <A href="mailto:edwig.huisman@hetnet.nl">edwig.huisman@hetnet.nl</A>  
+Language:    C++
+Platform:    Windows
+Technology:  Webserver / Webclient
+Level:       Intermediate
+Description: Complete webserver and webclient with SOAP/JSON messageing framework
+Section      Webdevelopment
+SubSection   Web Services
+License:     MIT
+</PRE>
+<!-------------------------------     STEP 2      --------------------------->
+<!--  Include download and sample image information.                       -->
+<UL class=download>
+  <LI><A href="Article_src.zip">Download source - XXX Kb</A> </LI>
+</UL>
+
+<H2>Introduction</H2>
+<P>This document is about the Marlin webserver library. It's structure and how to make use of it in your programs.</P>
+<P>The "Marlin" components&nbsp;"webserver and web client" are built in C++ around a number of general classes that take care of optimal performance and 
+have the purpose that the server and client parts can be plugged-in in a C++ project.</P>
+<P>The main reason to build this library was to expand an existing web server with basic HTTPS capabilities like SSL and TLS connections and advanced 
+authentication possibilities like digest- and Kerberos authentication. Instead of building all those components again, I choose to use the general existing 
+Microsoft components "HTTP-Server API 2.0" and "WinHTTP API 5.1"</P>
+<P>Reason to use C++ for these components " and no .NET technology " has to do with the performance of the components in comparison to the WCF services. 
+Typically these compo&shy;nents are a many times faster than a WCF implementation in Dot NET. Certainly if you configure all kinds of W3C standards 
+like signing of messages, security encryption and reliable-messaging.</P>
+<P>Another reason was the need to be able to run a webservice on remote desktops (Citrix !) environments. This was clearly not going to happen with the IIS ISAPI 
+framework. Although IIS 7.0 and higher has done much good with the new integrated pipelining of the requests, enabling an IIS server on every desktop 
+was not an option.Background.</P>
+
+<H2>The name</H2>
+<P>This is a picture of a white marlin, a common type of marlin in the Atlantic ocean. This is about the fastest fish in that ocean and it"s a very secretive 
+fish. If you manage to catch one on a fishing line, it will struggle on "unseen" in the deep. Like a fast webserver would :-)</P>
+<P>&nbsp;</P>
+<IMG hspace=0 src="marlin.png" width=600 height=304></IMG>
+
+<H2>The components consist of</H2>
+<P>a number of generic classes with which you can build the functionality of an application. These generic classes are grouped in a communal directory, so that 
+they can be used in the server application, as well as in the client applications. Furthermore an example webserver and webclient program are 
+created. These programs serve as a unit testing framework as well as coding examples for your convenience. This results in the following directories:</P>
+<P>- 
+Marlin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Directory with the generic classes</P>
+<P>-&nbsp;MarlinServer&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Directory with an example webserver</P>
+<P>-&nbsp;MarlinClient&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Directory with an example client program</P>
+<P>-&nbsp;HTTPManager&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Directory with the HTTP management application</P>
+<P>To use these components and examples, u need only open the solution files in Microsoft Visual Studio (2015 version) in het MarlinServer and MarlinClient 
+directory. Both solutions contain a test project and a directory with a sub collection of the generic classes in the Marlin directory.</P>
+<P>For directions how to compile and set up a server on your machine, see the "Running the examples" section later on in this document.</P>
+
+<H2>Overview of the architecture</H2>
+<P>In this picture, you can see the overview of the total architecture of the Marlin webserver &amp; web client components.</P>
+<IMG hspace=0 src="architecture.png" width=600 height=416></IMG>
+<P>A brief description of how to use the article or code. The class names, the methods and properties, any tricks or tips. </P>
+
+<H2>The programming model: Clientside</H2>
+<P>The central programming model is the HTTPClient object. Messages (HTTPMessage or SOAPMessage) are sent to this object through the overloaded "Send" method. 
+After this method returns with the TRUE status, the message contains the answer of the server. You can then pull the answer of the server out of the object. 
+Example 1 shows how this is done.</P>
+<PRE>//
+// Example 1
+//
+#include "HTTPClient.h"
+#include "HTTPMessage.h"
+
+void function()
+{
+  HTTPClient client;
+  HTTPMessage msg(http_get,"http://www.organisation.com/some_file.html");
+
+  if(client.Send(msg))
+  {
+   // Success. Get the result
+   msg.GetFileBuffer().SetFileName("C:\tmp\MyLocalFile.html");
+   msg.GetFileBuffer().WriteFile();
+  }
+  else
+  {
+    // Error
+    CString text;
+    client.GetError(text);
+    printf("Error getting file: %s\n",text);
+  }
+}</PRE>
+<P>Of course: you can extend this example in many ways, by overriding the default settings of both the client and the message with a number of Set* 
+methods. To be able to use webservices, you only need to replace the general HTTPMessage object by the more specialized SOAPMessage object. Add a few 
+parameters to the SOAPMessage and send to your service interface by way of the client. If the "Send()" method returns TRUE, the object will contain the answers 
+of the server. This is shown in example 2:</P>
+<PRE>// Example 2
+//
+#include "HTTPClient.h"
+#include "SOAPMessage.h"
+
+HTTPClient client;
+SOAPMessage msg("http://mycompany.com/mynamespace/"
+               ,"TestMethodOne"
+               ,SOAP_12
+               ,"https://mycompany.com/TestInterfaceOne/");
+
+// Fill the message with parameter info
+msg.SetParameter("ParamOne","Value1");
+msg.SetParameter("ParamTwo","Value2");
+
+if(client.Send(msg))
+{
+  // Success. Get the result from the object
+  CString result = msg.GetParameter("ResultParameter");
+  ...
+}
+else
+{
+  // Error
+  CString text;
+  client.GetError(text);
+  printf("Error getting file: %s\n",text);
+}</PRE>
+<P>Of course, in this manner we can only send 1 SOAP message at the time through our HTTP(S) channel. If we want to add the ability to add WS-Security, 
+WS-ReliableMessaging or WSDL support we cannot do that right away. But wait: by replacing the "HTTPClient" object with a "WebServiceClient" object these 
+protocols work right out of the box! Just use the WebServiceClient's "Send()" method will take care of this. We only need to construct a WebServiceClient 
+object with the desired contract and URL for this purpose. See example 3:</P>
+<PRE>// Example 3
+//
+#include "WebServiceClient.h"
+#include "SOAPMessage.h"
+&nbsp;
+WebServiceClient client("http://mycompany.com/mynamespace/"
+                       ,"https://mycompany.com/TestInterfaceOne/Reliable/");
+SOAPMessage msg("https://mycompany.com/mynamespace/","TestMethodOne")
+client.SetReliable(true,RELIABLE_ONCE);
+&nbsp;
+// Fill the message with parameter info
+msg.SetParameter("ParamOne","Value1");
+msg.SetParameter("ParamTwo","Value2");
+&nbsp;
+if(client.Send(msg))
+{
+  // Success after WS-Reliable protocol. Get the result from the object
+  CString result = msg.GetParameter("ResultParameter");
+  ...
+}
+else
+{
+  // Some error handling
+  CString text;
+  client.GetError(text);
+  printf("Error getting file: %s\n",text);
+}</PRE>
+
+<H2>The programming model: Serverside</H2>
+<P>The central programming model is the sitehandler. Each handler is an object class that handles 'in principal' one of the HTTP methods. So there is a handler 
+for the GET and PUT commands of the HTTP protocol. Each handler has a central method "Handle", with the current received message as a parameter. Information 
+is pulled out of this object, after which the object is reset to a null state with the "Reset" method and filled with the answer. There is no need to call a 
+Send() or Answer() method to send the result back to the caller. This is done by the framework automatically after the handler has ended. Here is a (very) simple 
+example to service a GET request. Be advised: do not do this at home!!</P>
+
+<PRE>// Example 4
+//
+#include "SiteHandlerGet.h"
+#define webroot "C:\\inetpub\\myapp\\"
+&nbsp;
+bool SiteHandelerGet::Handle(HTTPMessage* p_message)
+{
+  CString filename = webroot + p_message-&gt;GetAbsolutePath();
+  p_message.Reset();
+  p_message.GetFileBuffer.SetFileName(filename);
+}</PRE>
+
+<P>To service a basic SOAP request, you need only use the SOAP handler in this same manner. The SiteHandlerSoap has an override of the "Handle" method 
+especially designed to service SOAP requests. Again there is no need to send the answer back. That is done after the handler has ended. Here is a handler to 
+service the request from example 2.</P>
+<PRE>// Example 5
+//
+#include "SiteHandlerSoap"
+ 
+bool SiteHandlerSoap::Handle(SOAPMessage* p_message)
+{
+  // Getting the info
+  CString paramOne = p_message.GetParameter("ParamOne");
+  CString paramTwo = p_message.GetParameter("ParamTwo");
+  // Reseting the object
+  p_message.Reset();
+  // Doing our logic!
+  if(paramOne == "Value1" &amp;&amp; paramTwo == "Value2")
+  {
+    P_message.SetParameter("ResultParameter","I declare this OK");
+  }
+}</PRE>
+<P>Now, how do we create an http handler on the server side? There are several ways which we show here. At first we need to declare an HTTPServer object. 
+That"s the easy part. You then create an HTTPSite, set a few paramters of that site and "start" it.</P>
+<P>One of the parameters you set, is a SiteHandler which you declare first.</P>
+<P>Here is a more elaborate example that extends the example number 5 just before.</P>
+<PRE>// Example 6
+//
+#include "HTTPServer.h"
+#include "HTTPSite.h"
+#include "SiteHandlerSoap"
+&nbsp;
+class SiteHandlerSoapForMe : public SiteHandlerSoap
+{
+protected:
+  Bool Handle(HTTPMessage* p_message);
+}
+&nbsp;
+bool SiteHandlerSoapForMe::Handle(SOAPMessage* p_message)
+{
+  // Getting the info
+  CString paramOne = p_message.GetParameter("ParamOne");
+  CString paramTwo = p_message.GetParameter("ParamTwo");
+  // Reseting the object
+  p_message.Reset();
+  // Doing our logic!
+  if(paramOne == "Value1" &amp;&amp; paramTwo == "Value2")
+  {
+    P_message.SetParameter("ResultParameter","I declare this OK");
+  }
+}
+&nbsp;
+void CreatingTheService()
+{
+  CString url("https://mycompany.com/TestInterfaceOne/");
+  HTTPServer server("TestInterfaceOne");
+  HTTPSite* mysite = server-&gt;CreateSite(URLPRE_Strong,true,443,url);
+  // Setting the SOAP handler for this site
+  site-&gt;SetHandler(http_post,new SiteHandlerSoapForMe());
+  site-&gt;AddContentType("application/soap+xml");
+&nbsp;
+  // Start the site explicitly
+  if(site-&gt;StartSite())
+  {
+    printf("Site started correctly: %s\n",url);
+  }
+  else
+  {
+    ++error;
+    printf("ERROR STARTING SITE: %s\n",url);
+  }
+&nbsp;
+  // Now start the server running (in it's own thread!)
+  server.Run();
+  // Or start the server in this thread (commented out)
+  // Server.RunHTTPServer();
+}</PRE>
+<P>As with the client programming model, we can again substitute the HTTPServer object for a WebServiceServer object. This enables us to handle WS-Security, 
+WS-ReliableMessaging and the checking against a WSDL. The server side also will write the WSDL file on starting the object, unless we tell it not to with 
+"SetGenerateWsdl(false)".</P>
+<P>Here is how to do this:</P>
+<PRE>// Example 7
+//
+#include "WebServiceServer.h"
+ 
+void CreatingTheService()
+{
+  CString url("https://mycompany.com/TestInterfaceOne/");
+  CString webroot("C:\\inetpub\\");
+  CString namespace("http://mycompany.com/mynamespace/");
+  WebServiceServer server("TestOne",webroot,url,URLPRE_STRING,namespace,10);
+ 
+  // Create our site
+  HTTPSite* mysite = server-&gt;CreateSite(URLPRE_Strong,true,443,url);
+  // Setting the SOAP handler for this site
+  site-&gt;SetSoapHandler(http_post,new SiteHandlerSoapForMe());
+ 
+  // Running the server 
+  server.Run()
+}</PRE>
+
+<H4>Bringing it all together</H4>
+<P>But if we want to run a group of webservices? Like a service interface and describe it in a WSDL file for the world to know? Well: this can also be done in 
+a WebServiceServer. To enable the WSDL functionality, you first have to register all services in the wsdl cache of that server. This can be done by submitting a 
+copy of an incoming <I>and</I> an outgoing SOAP&shy;Message to this cache. In the mean while you can do two things:</P>
+<LI>
+<P>Add extra info to each parameter for the WSDL for the "mandatory / optional" 
+status, and the optionality of the ordering of the elements</P>
+<LI>
+<P>Provide each message with a service number, for use in the receiving dispatcher. Hold on to that thought and see what happens while programming.</P>
+<P>Below is an excerpt from the testing examples, where I first derive a class form the web service server, and defining three services (one, two and three) 
+for this class.</P>
+<PRE>// Example 8a
+//
+#include "WebServiceServer.h"
+#include "SiteHandlerSoap.h"
+ 
+#define CONTRACT_MF   1 // First
+#define CONTRACT_MS   2 // Second
+#define CONTRACT_MT   3 // Third
+
+// DERIVED CLASS FROM WebServiceServer
+
+class TestContract: public WebServiceServer
+{
+public:
+  TestContract(CString    p_name
+              ,CString    p_webroot
+              ,CString    p_url
+              ,PrefixType p_channelType
+              ,CString    p_targetNamespace
+              ,unsigned   p_maxThreads);
+protected:
+  WEBSERVICE_MAP; // Using a WEBSERVICE mapping
+ 
+  // Declare all our webservice call names
+  // which will translate in the On.... methods
+  WEBSERVICE_DECLARE(MarlinFirst)
+  WEBSERVICE_DECLARE(MarlinSecond)
+  WEBSERVICE_DECLARE(MarlinThird)
+
+  // Our functionality
+  CString Translation(CString p_language,CString p_translation,CString p_word);
+  // Set input/output languages
+  CString m_language;
+  CString m_translation;
+};</PRE>
+<P>After we have instantiated an object of this class we, can add the incoming and outgoing SOAP messages to the WSDL cache of the WebServiceServer through 
+"AddOperation".</P>
+<P>The operations in this example here have numbers 1 (CONTRACT_MF), 2 (CONTRACT_MS) and 3 (CONTRACT_MT).</P>
+<PRE>// Example 8b
+//
+#include "WebServiceServer.h"
+&nbsp;
+//////////////////////////////////////////////////////////////////////////
+//
+// PREPARING OUR WSDL, This is what will fill the WSDL file
+//
+void
+AddOperations(TestContract&amp; p_server,CString p_contract)
+{
+  // Defining the names of the operations
+  CString first ("MarlinFirst");
+  CString second("MarlinSecond");
+  CString third ("MarlinThird");
+ 
+  CString respFirst ("ResponseFirst");
+  CString respSecond("ResponseSecond");
+  CString respThird ("ResponseThird");
+ 
+  // Defining input and output messages for the operations
+  SOAPMessage input1 (p_contract,first);
+  SOAPMessage output1(p_contract,respFirst);
+  SOAPMessage input2 (p_contract,second);
+  SOAPMessage output2(p_contract,respSecond);
+  SOAPMessage input3 (p_contract,third);
+  SOAPMessage output3(p_contract,respThird);
+ 
+  // Defining the parameters for all the operations
+
+  // First: Getting an accepted language
+  input1 .AddElement(NULL,"Language",WSDL_Mandatory | XDT_String, "string");
+  output1.AddElement(NULL,"Accepted",WSDL_Mandatory | XDT_Boolean,"bool");
+
+  // Second: Getting an accepted translation
+  input2 .AddElement(NULL,"Translation",WSDL_Mandatory | XDT_String, "string");
+  output2.AddElement(NULL,"CanDo",      WSDL_Mandatory | XDT_Boolean,"bool");
+
+  // Third Getting the answer
+  input3 .AddElement(NULL,"WordToTranslate",WSDL_Mandatory | XDT_String,"string");
+  output3.AddElement(NULL,"TranslatedWord", WSDL_Optional  | XDT_String,"string");
+
+  // Putting the operations in the WSDL Cache
+  p_server.AddOperation(CONTRACT_MF,first, &amp;input1,&amp;output1);
+  p_server.AddOperation(CONTRACT_MS,second,&amp;input2,&amp;output2);
+  p_server.AddOperation(CONTRACT_MT,third, &amp;input3,&amp;output3);
+}</PRE>
+<P>Adding the operations to the WebServiceServer derived class, will automatically result in the writing of a WSDL file, unless of course we set 
+"SetGenerateWsdl" to false.</P>
+<P>After defining the interface, we can now define the operations themselves. This is the easy part where we define our handlers.</P>
+<PRE>// Example 8c
+//
+#include "WebServiceServer.h"
+
+// Implementation of the TestContract class
+
+TestContract::TestContract(CString    p_name
+                          ,CString    p_webroot
+                          ,CString    p_url
+                          ,PrefixType p_channelType
+                          ,CString    p_targetNamespace
+                          ,unsigned   p_maxThreads)
+             :WebServiceServer(p_name,p_webroot,p_url,p_channelType,p_targetNamespace,p_maxThreads)
+{
+}
+
+// Mapping corresponding to the AddOperation of the WSDL
+
+WEBSERVICE_MAP_BEGIN(TestContract)
+  WEBSERVICE(CONTRACT_MF,MarlinFirst)
+  WEBSERVICE(CONTRACT_MS,MarlinSecond)
+  WEBSERVICE(CONTRACT_MT,MarlinThird)
+WEBSERVICE_MAP_END
+
+//////////////////////////////////////////////////////////////////////////
+//
+// HERE ARE THE SERVICE HANDLERS!!
+// Derived from the definition above in the WEBSERVICE_MAP
+//
+//////////////////////////////////////////////////////////////////////////
+
+void
+TestContract::OnMarlinFirst(int p_code,SOAPMessage* p_message)
+{
+  ASSERT(p_code == CONTRACT_MF);
+ 
+  m_language = p_message-&gt;GetParameter("Language");
+  printf("\n");
+  printf("Setting base  language to: %s\n",(LPCTSTR)m_language);
+ 
+  // Reset message and set answering parameters
+  p_message-&gt;Reset();
+  p_message-&gt;SetParameter("Accepted",m_language == "Dutch");
+}
+... more handlers... See "TestContract.cpp"</PRE>
+<P>After this bit of abstraction you need only to write a "OnXxxxxx" handler for each service call, using the input parameters, resetting the message and 
+providing the answering parameters. All the rest is done by the Marlin framework.</P>
+
+<H2>Overview of the programming model</H2>
+<P>After this long explanation of the way of programming, let's look at how that can be caught in a thinking model for programming. Ideally you construct a SOAP 
+message through a call to the constructor (new SOAPMessage), and you send this message of to the HTTPClient. After the call returns, you receive either a null 
+pointer, or an answer.</P>
+<P>The framework takes care of constructing a HTTPMessage out of your SOAP message, carrying it over the HTTP(S) intra/internet to your server, where it 
+gets processed, and returns a message to you.</P>
+<P>Note: Wherever you see the word "SOAP" in this text and the figure below, you can also read "JSON".</P>
+<P>
+<P><IMG hspace=0 src="programming.png" width=600 height=400></P>
+<P></P>
+
+<H2>Running the examples</H2>
+<P>After downloading the sourcecode, the steps to get the examples running are the following:</P>
+<P>1)&nbsp;&nbsp;&nbsp;&nbsp;Startup Visual Studio 2015 (minimum requirement);</P>
+<P>2)&nbsp;&nbsp;&nbsp;&nbsp;Load the "HTTPManager" project and compile that one first, so we can set up a server on our machine. Recommended is to compile the 
+"debug | x64" variant;</P>
+<P>3)&nbsp;&nbsp;&nbsp;&nbsp;Start the HTTPManager and register the site "http://localhost:1200/MarlinTest/" (see the figure below how to do this);</P>
+<P><IMG hspace=0 src="manager.png" width=516 height=342></P>
+<P>After starting you should:</P>
+<P>1)&nbsp;&nbsp;&nbsp;&nbsp;Press the "Listen on IP" button to make sure your machine will listen to IP traffic;</P>
+<P>2)&nbsp;&nbsp;&nbsp;&nbsp;Fill in the number "1200" for a port number. All tests run on IP port 1200;</P>
+<P>3)&nbsp;&nbsp;&nbsp;&nbsp;Fill in the base path "/MarlinTest". All test run on subsites of this site;</P>
+<P>4)&nbsp;&nbsp;&nbsp;&nbsp;Press the button "Create" to register the "http://+:1200/MarlinTest" prefix listener;</P>
+<P>5)&nbsp;&nbsp;&nbsp;&nbsp;Close the HTTPManager program and go back to Visual Studio;</P>
+<P>6)&nbsp;&nbsp;&nbsp;&nbsp;Load the "MarlinServer" project and compile it;</P>
+<P>7)&nbsp;&nbsp;&nbsp;&nbsp;Start a Second Visual Studio and load and compile the "MarlinClient" project;</P>
+<P>8)&nbsp;&nbsp;&nbsp;&nbsp;Now start the MarlinServer first and check that all sites have been registered;</P>
+<P>9)&nbsp;&nbsp;&nbsp;&nbsp;Start the MarlinClient now and if all tests are satisfactory it will end with a "Yipee!!"</P>
+
+<H2>Why not using IIS and ISAPI?</H2>
+<P>But why not using IIS for those applications where we can clearly administer them the correct way, without having to "smuggle" them in? The ISAPI programming 
+model for native appli&shy;cations in C or C++ have some clear restrictions, stemming from the IIS administrative model. These restrictions are exposed 
+below:</P>
+<OL>
+  <LI>Originally the ISAPI model was very simple, with just one module handler, and the possibility to "read" the http incoming traffic and to "write" the 
+  answer back. This model is luckily expanded at the emergence of version 7, but still is very restricted. One of the better features of the HTTP Server API is 
+  the possibility to choose the way of writing back: in one go, per chunk or just by pointing to a filename to be written without even opening and reading 
+  / writing the file; </LI>
+  <LI>The ISAPI model does not guarantee that we end up in the same process or even on the same physical machine with our call. This makes it necessary to 
+  save the complete session state of a session to an external machine or a database, re-reading the session state upon each call. This slows down the 
+  server processing for session based appli&shy;ca&shy;tions. Certainly those applications that live on lots and lots of short calls. </LI>
+  <LI>Using ISAPI means that you have to scan each request. When combining multiple applications on a machine, the performance of the applications can 
+  serious degrade as all the applications will have to scan an average of ½ * (sum of all requests of all applications). This leads to the installation 
+  instruction to install each and every one of the applications on it"s own machine. And thus heightening the total cost of ownership (TOC); </LI>
+  <LI>The ISAPI extension module interface was designed to be, well..., an interface for just <I>extensions</I>. Not the real thing. You can write 
+  extensions to interfaces or websites, but if you want it to be the thing itself, you"re in for a hard time. </LI>
+</OL>
+
+<H2>History</H2>
+<P>Long ago I needed a webserver that was capable of running on Citrix desktops. With the extra require&shy;ment that no administrator should be bothered to 
+grant me the rights to run a webserver like IIS or apache for instance. What I wanted was a webserver I could "smuggle" on board in a corner of a larger 
+application. So that the applications could communicate with each other on a relatively free and with zero administrative overhead.<O:P></O:P></P>
+<P>After a long search I settled with the "Universal TCP Socket" program from Elmue that I found on Codeproject (<A 
+href="http://www.codeproject.com/Articles/34163/A-Universal-TCP-Socket-Class-for-Non-blocking-Serv">http://www.codeproject.com/Articles/34163/A-Universal-TCP-Socket-Class-for-Non-blocking-Serv</A>). 
+It is a very nice product and along with other things has asynchronous handling of incoming TCP/IP traffic. The only thing needed was the implementation of the 
+full HTTP protocol. Which I then did. And it worked out well for quite some time.</P>
+<P>But times changed. Could I not take care of the wish to be able to also run on the internet, instead of the intranet alone? And please could you then see to 
+it that the server understands regular SSL/TLS and authentication methods?</P>
+<P>Well, what righteous programmer wouldn't? I imagined myself already exploring the OpenSSL libraries and all sorts of cryptographic methods, but 
+hey...&nbsp;wait.. Why bother if Microsoft hadn't taken care of that already? After a thorough bing/google search I found and settled for the "HTTP Server 
+API" from Microsoft. (<A href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa364510(v=vs.85).aspx">https://msdn.microsoft.com/en-us/library/windows/desktop/aa364510(v=vs.85).aspx</A>). 
+It's incorporated for free in any MS-Windows installation and after Windows-Vista / Server 2008 the version 2.0 of this library also takes care of 
+SSL/TLS and authentication. So I ported the central classes of this library from the "Universal TCP Socket" to the "HTTP Server API 2.0", and it became the 
+HTTPServer in this program.</P>
+<P>Well, to be exact: I hesitated for a while. Why not use an existing framework like gSOAP 
+(<A href="http://www.cs.fsu.edu/~engelen/soap.html">http://www.cs.fsu.edu/~engelen/soap.html</A> 
+) or the new and promising "Casablanca" framework from Microsoft 
+(<A href="https://casablanca.codeplex.com">https://casablanca.codeplex.com</A>)? 
+Both are on a slightly higher abstraction level and provide all needed mechanisms. But after experimenting with both, I decided to stick with the 
+current programming model. gSoap proved to be quite arcane and Casablanca a moving target before it moved to codeplex.</P>
+<P>Communication with other programs 'mainly in the .NET stack' were required over the years. Some of these programs used the "reliable-messaging-interface". 
+So that was added in an extra abstraction layer in "WebServiceServer" and "WebServiceClient". Because the Microsoft .NET stack uses WSDL 1.1 and not 2.0 
+like the Java stack, I used that version (1.1) for the support of WSDL (Sorry Java guys).</P>
+<P>From the beginning on I had written the HTTPMessage and the SOAPMessage to abstract the sending and receiving of messages. HTTPMessage took care of files 
+(put and get) and the SOAPMessage took care of SOAP XML messages. All sites were sitting in a mapping of the server. After some time the server spread to more 
+and more programs and it soon became clear that an extra layer of abstraction was needed. This became the HTTPSite object. Much of the settings and attributes 
+of the server moved to the site objects, so that different sites could have different settings.</P>
+<P>This web server is currently in its third incarnation. The version history is included in the sourcecode in the documentation directory. As is this document 
+and the architecture overview in a Visio drawing.</P>
+
+<H2>Revision history</H2>
+<P>A complete revision history of this project is contained within the source download.</P>
+<!-------------------------------    That's it!   --------------------------->
+</BODY>
+</HTML>

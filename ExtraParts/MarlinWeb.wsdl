@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions 
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
+  xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/"
+  xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/"
+  xmlns:s="http://www.w3.org/2001/XMLSchema"
+  xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:tns="http://interface.marlin.org/testing/"
+  targetNamespace="http://interface.marlin.org/testing/">
+
+<!-- TESTING Abstract types TESTING -->
+<wsdl:types>
+  <s:schema elementFormDefault="qualified" targetNamespace="http://interface.marlin.org/testing/">
+    <s:element name="MarlinFirst">
+    <s:complexType name="MarlinFirst">
+      <s:all>
+        <s:element minOccurs="1" maxOccurs="1" name="Language" type="s:string" />
+      </s:all>
+    </s:complexType>
+    </s:element>
+    <s:element name="ResponseFirst">
+    <s:complexType name="ResponseFirst">
+      <s:all>
+        <s:element minOccurs="1" maxOccurs="1" name="Accepted" type="s:boolean" />
+      </s:all>
+    </s:complexType>
+    </s:element>
+    <s:element name="MarlinSecond">
+    <s:complexType name="MarlinSecond">
+      <s:all>
+        <s:element minOccurs="1" maxOccurs="1" name="Translation" type="s:string" />
+      </s:all>
+    </s:complexType>
+    </s:element>
+    <s:element name="ResponseSecond">
+    <s:complexType name="ResponseSecond">
+      <s:all>
+        <s:element minOccurs="1" maxOccurs="1" name="CanDo" type="s:boolean" />
+      </s:all>
+    </s:complexType>
+    </s:element>
+    <s:element name="MarlinThird">
+    <s:complexType name="MarlinThird">
+      <s:all>
+        <s:element minOccurs="1" maxOccurs="1" name="WordToTranslate" type="s:string" />
+      </s:all>
+    </s:complexType>
+    </s:element>
+    <s:element name="ResponseThird">
+    <s:complexType name="ResponseThird">
+      <s:all>
+        <s:element minOccurs="0" maxOccurs="1" name="TranslatedWord" type="s:string" />
+      </s:all>
+    </s:complexType>
+    </s:element>
+  </s:schema>
+</wsdl:types>
+
+<!-- Abstract messages -->
+<wsdl:message name="MarlinFirstSoapIn">
+  <wsdl:part name="parameters" element="tns:MarlinFirst" />
+</wsdl:message>
+<wsdl:message name="MarlinFirstSoapOut">
+  <wsdl:part name="parameters" element="tns:ResponseFirst" />
+</wsdl:message>
+<wsdl:message name="MarlinSecondSoapIn">
+  <wsdl:part name="parameters" element="tns:MarlinSecond" />
+</wsdl:message>
+<wsdl:message name="MarlinSecondSoapOut">
+  <wsdl:part name="parameters" element="tns:ResponseSecond" />
+</wsdl:message>
+<wsdl:message name="MarlinThirdSoapIn">
+  <wsdl:part name="parameters" element="tns:MarlinThird" />
+</wsdl:message>
+<wsdl:message name="MarlinThirdSoapOut">
+  <wsdl:part name="parameters" element="tns:ResponseThird" />
+</wsdl:message>
+
+<!-- Abstract porttypes -->
+<wsdl:portType name="MarlinWeb">
+  <wsdl:operation name="MarlinFirst">
+    <wsdl:input message="tns:MarlinFirstSoapIn" />
+    <wsdl:output message="tns:MarlinFirstSoapOut" />
+  </wsdl:operation>
+  <wsdl:operation name="MarlinSecond">
+    <wsdl:input message="tns:MarlinSecondSoapIn" />
+    <wsdl:output message="tns:MarlinSecondSoapOut" />
+  </wsdl:operation>
+  <wsdl:operation name="MarlinThird">
+    <wsdl:input message="tns:MarlinThirdSoapIn" />
+    <wsdl:output message="tns:MarlinThirdSoapOut" />
+  </wsdl:operation>
+</wsdl:portType>
+
+<!-- Concrete binding with SOAP -->
+<wsdl:binding name="MarlinWebSoap" type="tns:MarlinWeb">
+  <soap:binding transport="http://schemas.xmlsoap.org/soap/http/" />
+  <wsdl:operation name="MarlinFirst">
+    <soap:operation soapAction="http://interface.marlin.org/testing//MarlinFirst" style="document" />
+    <wsdl:input><soap:body use="literal" /></wsdl:input>
+    <wsdl:output><soap:body use="literal" /></wsdl:output>
+  </wsdl:operation>
+  <wsdl:operation name="MarlinSecond">
+    <soap:operation soapAction="http://interface.marlin.org/testing//MarlinSecond" style="document" />
+    <wsdl:input><soap:body use="literal" /></wsdl:input>
+    <wsdl:output><soap:body use="literal" /></wsdl:output>
+  </wsdl:operation>
+  <wsdl:operation name="MarlinThird">
+    <soap:operation soapAction="http://interface.marlin.org/testing//MarlinThird" style="document" />
+    <wsdl:input><soap:body use="literal" /></wsdl:input>
+    <wsdl:output><soap:body use="literal" /></wsdl:output>
+  </wsdl:operation>
+</wsdl:binding>
+
+<wsdl:binding name="MarlinWebSoap12" type="tns:MarlinWeb">
+  <soap12:binding transport="http://schemas.xmlsoap.org/soap/http/" />
+  <wsdl:operation name="MarlinFirst">
+    <soap12:operation soapAction="http://interface.marlin.org/testing//MarlinFirst" style="document" />
+    <wsdl:input><soap12:body use="literal" /></wsdl:input>
+    <wsdl:output><soap12:body use="literal" /></wsdl:output>
+  </wsdl:operation>
+  <wsdl:operation name="MarlinSecond">
+    <soap12:operation soapAction="http://interface.marlin.org/testing//MarlinSecond" style="document" />
+    <wsdl:input><soap12:body use="literal" /></wsdl:input>
+    <wsdl:output><soap12:body use="literal" /></wsdl:output>
+  </wsdl:operation>
+  <wsdl:operation name="MarlinThird">
+    <soap12:operation soapAction="http://interface.marlin.org/testing//MarlinThird" style="document" />
+    <wsdl:input><soap12:body use="literal" /></wsdl:input>
+    <wsdl:output><soap12:body use="literal" /></wsdl:output>
+  </wsdl:operation>
+</wsdl:binding>
+
+<!-- Web service offering endpoints for bindings -->
+<wsdl:service name="MarlinWeb">
+  <wsdl:port name="MarlinWebSoap" binding="tns:MarlinWebSoap">
+    <soap:address location="http://localhost:1200/MarlinTest/TestInterface/MarlinWeb.acx" />
+  </wsdl:port>
+  <wsdl:port name="MarlinWebSoap12" binding="tns:MarlinWebSoap12">
+    <soap12:address location="http://localhost:1200/MarlinTest/TestInterface/MarlinWeb.acx" />
+  </wsdl:port>
+</wsdl:service>
+</wsdl:definitions>
