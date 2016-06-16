@@ -115,6 +115,11 @@ private:
                          ,SOAPMessage* p_check
                          ,CString      p_who
                          ,bool         p_fields);
+  // Check data field in depth
+  bool    CheckFieldDatatypeValues(XMLElement*   p_origParam
+                                  ,XMLElement*   p_checkParam
+                                  ,SOAPMessage*  p_check
+                                  ,CString       p_who);
   // GENERATING A WSDL
   void    GenerateTypes(CString& p_wsdlcontent);
   void    GenerateMessageTypes(CString& p_wsdlcontent,SOAPMessage* p_msg,TypeDone& p_gedaan);

@@ -668,7 +668,9 @@ WSDLCache::CheckMessage(SOAPMessage* p_orig,SOAPMessage* p_tocheck,CString p_who
   if(p_orig->GetParameterCount() && p_tocheck->GetParameterCount())
   {
     // Recursively check all parameters
-    return CheckParameters(NULL,p_orig,NULL,p_tocheck,p_who,p_checkFields);
+    XMLElement* orig  = p_orig->GetParameterObjectNode();
+    XMLElement* param = p_tocheck->GetParameterObjectNode();
+    return CheckParameters(orig,p_orig,param,p_tocheck,p_who,p_checkFields);
   }
   // One of both have no parameters. Always allowed (but no very efficient in calling!)
   return true;
@@ -683,16 +685,25 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
                           ,CString      p_who
                           ,bool         p_fields)
 {
-  XMLElement* orgParam = p_orig->GetElementFirstChild(p_orgBase);
+  XmlDataType type = 0;
+  XMLElement* orgParam   = p_orig->GetElementFirstChild(p_orgBase);
+  XMLElement* checkParam = p_check->GetElementFirstChild(p_checkBase);
   while(orgParam)
   {
-    CString naam = orgParam->GetName();
-    XMLElement* checkParam = p_check->FindElement(p_checkBase,naam);
+    // Name of node to find in the message to check
+    CString orgName = orgParam->GetName();
+    type = orgParam->GetType();
+    // If the ordering is choice, instead of sequence: do a free search
+    if(type & WSDL_Choice)
+    {
+      checkParam = p_check->FindElement(p_checkBase,orgName,false);
+    }
+    CString chkName = checkParam ? checkParam->GetName() : "";
 
     // DO CHECKS
 
     // Parameter is mandatory but not given in the definition
-    if((orgParam->GetType() & WSDL_Mandatory) && checkParam == NULL)
+    if((orgName != chkName) || (type & WSDL_Mandatory) && checkParam == nullptr)
     {
       p_check->Reset();
       p_check->SetFault("Mandatory field not found",p_who,"Message is missing a field",orgParam->GetName());
@@ -704,47 +715,75 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     {
       if(p_fields)
       {
-        // Do datatype check
-        CString result = XMLRestriction::CheckDatatype(orgParam->GetType(),checkParam->GetValue());
-        if(!result.IsEmpty())
+        if(CheckFieldDatatypeValues(orgParam,checkParam,p_check,p_who) == false)
         {
-          CString details("Datatype check failed: ");
-          details += result;
-
-          p_check->Reset();
-          p_check->SetFault("Datatype",p_who,checkParam->GetName(),details);
           return false;
-        }
-
-        // Variable XSD Restriction check
-        if(checkParam->GetRestriction())
-        {
-          result = checkParam->GetRestriction()->CheckRestriction(orgParam->GetType() & XDT_Mask,orgParam->GetValue());
-          if(!result.IsEmpty())
-          {
-            p_check->Reset();
-            p_check->SetFault("Fieldvalue",p_who,"Restriction",result);
-            return false;
-          }
         }
       }
       // RECURSE
       if(orgParam->m_elements.size())
       {
-        bool res = CheckParameters(orgParam,p_orig,checkParam,p_check,p_who,p_fields);
-        if(res == false)
+        if(CheckParameters(orgParam,p_orig,checkParam,p_check,p_who,p_fields) == false)
         {
-          // Stop with error
           return false;
         }
       }
     }
-    // Next parameter
-    orgParam = p_orig->GetElementSibling(p_orgBase);
+
+    // Message can have more than one nodes of this name
+    // So check that next node, before continuing on the original template
+    if(((type & WSDL_OneMany) || (type & WSDL_ZeroMany)) && !(type & WSDL_Sequence))
+    {
+      XMLElement* next = p_check->GetElementSibling(checkParam);
+      if(next && next->GetName().Compare(orgName) == 0)
+      {
+        checkParam = next;
+        continue;
+      }
+    }
+
+    // Next parameter in template
+    orgParam   = p_orig ->GetElementSibling(orgParam);
+    checkParam = p_check->GetElementSibling(checkParam);
+    type       = orgParam ? orgParam->GetType() : 0;
   }
   // Gotten to the end, it's OK
   return true;
 }
+
+// Check data field in depth
+bool
+WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
+                                   ,XMLElement*   p_checkParam
+                                   ,SOAPMessage*  p_check
+                                   ,CString       p_who)
+{
+  // Do datatype check
+  CString result = XMLRestriction::CheckDatatype(p_origParam->GetType(),p_checkParam->GetValue());
+  if(!result.IsEmpty())
+  {
+    CString details("Datatype check failed: ");
+    details += result;
+
+    p_check->Reset();
+    p_check->SetFault("Datatype",p_who,p_checkParam->GetName(),details);
+    return false;
+  }
+
+  // Variable XSD Restriction check
+  if(p_checkParam->GetRestriction())
+  {
+    result = p_checkParam->GetRestriction()->CheckRestriction(p_origParam->GetType() & XDT_Mask,p_origParam->GetValue());
+    if(!result.IsEmpty())
+    {
+      p_check->Reset();
+      p_check->SetFault("Fieldvalue",p_who,"Restriction",result);
+      return false;
+    }
+  }
+  return true;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //

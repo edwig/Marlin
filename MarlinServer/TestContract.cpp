@@ -125,7 +125,9 @@ TestContract::OnMarlinFirst(int p_code,SOAPMessage* p_message)
   m_language = p_message->GetParameter("Language");
   printf("Setting base  language to: %s\n",(LPCTSTR)m_language);
 
-  p_message->Reset();
+  CString resp("ResponseFirst");
+  p_message->SetSoapAction(resp);
+  p_message->Reset(m_targetNamespace);
   p_message->SetParameter("Accepted",m_language == "Dutch");
 }
 
@@ -137,7 +139,9 @@ TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
   m_translation = p_message->GetParameter("Translation");
   printf("Setting trans language to: %s\n",(LPCTSTR)m_translation);
 
-  p_message->Reset();
+  CString resp("ResponseSecond");
+  p_message->SetSoapAction(resp);
+  p_message->Reset(m_targetNamespace);
   bool cando = false;
   if(m_translation == "English"  ||
      m_translation == "Français" ||
@@ -162,7 +166,9 @@ TestContract::OnMarlinThird(int p_code,SOAPMessage* p_message)
   CString result = Translation(m_language,m_translation,word);
   printf("Translated [%s] to [%s]\n",(LPCTSTR)word,(LPCTSTR)result);
 
-  p_message->Reset();
+  CString resp("ResponseThird");
+  p_message->SetSoapAction(resp);
+  p_message->Reset(m_targetNamespace);
   // Optional parameter, need not be set!
   if(!result.IsEmpty())
   {
