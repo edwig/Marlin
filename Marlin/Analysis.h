@@ -119,7 +119,6 @@ private:
   // Writing out a log line
   void    Flush(bool p_all);
   void    WriteLog(CString p_buffer);
-  void    MakeNewlines();
 
   // Settings
   CString m_name;                               // For WMI Event viewer

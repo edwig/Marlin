@@ -333,8 +333,6 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
     m_logBuffer += p_format;
   }
 
-  MakeNewlines();
-
   // Add end-of line
   m_logBuffer += "\r\n";
 
@@ -364,17 +362,6 @@ LogAnalysis::WriteEvent(HANDLE p_eventLog,LogType p_type,CString& p_buffer)
   lpszStrings[0] = p_buffer.GetString();
   lpszStrings[1] = nullptr;
   ReportEvent(p_eventLog,static_cast<WORD>(p_type),0,0,NULL,1,0,lpszStrings,0);
-}
-
-void
-LogAnalysis::MakeNewlines()
-{
-  // Something to do?
-  if(m_logBuffer.Find('\n') == -1)
-  {
-    return;
-  }
-  m_logBuffer.Replace("\n","\r\n");
 }
 
 void
