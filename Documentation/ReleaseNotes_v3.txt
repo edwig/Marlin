@@ -10,7 +10,9 @@ will need checking on the logic and functionality to make version 3.x correctly 
 
 CHANGES IN VERSION 3.6.1
 ========================
-1) Bugfix: WSDL can generate recursive nodes in messages
+1) Bugfix in the generation of recursive nodes in the WSDL file.
+2) WSDL can better check for missing nodes and keeping track of arrays of nodes.
+   0ne-to-many and zero-to-many relations are now taken into account
 
 CHANGES IN VERSION 3.6
 ======================

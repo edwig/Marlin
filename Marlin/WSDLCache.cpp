@@ -561,6 +561,9 @@ WSDLCache::GenerateServiceBindings(CString& p_wsdlcontent)
 }
 
 // Generate definitions envelope
+// This is a WSDL 1.1 definition!!
+// Microsoft C# .NET cannot handle any higher definitions!!
+// And we do not want to lose compatibility with that platform
 void
 WSDLCache::GenerateDefinitions(CString& p_wsdlcontent)
 {
@@ -703,7 +706,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     // DO CHECKS
 
     // Parameter is mandatory but not given in the definition
-    if((orgName != chkName) || (type & WSDL_Mandatory) && checkParam == nullptr)
+    if((orgName != chkName) || ((type & WSDL_Mandatory) && checkParam == nullptr))
     {
       p_check->Reset();
       p_check->SetFault("Mandatory field not found",p_who,"Message is missing a field",orgParam->GetName());
@@ -732,7 +735,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
 
     // Message can have more than one nodes of this name
     // So check that next node, before continuing on the original template
-    if(((type & WSDL_OneMany) || (type & WSDL_ZeroMany)) && !(type & WSDL_Sequence))
+    if((type & WSDL_OneMany) || (type & WSDL_ZeroMany))
     {
       XMLElement* next = p_check->GetElementSibling(checkParam);
       if(next && next->GetName().Compare(orgName) == 0)
@@ -742,7 +745,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
       }
     }
 
-    // Next parameter in template
+    // Next parameter in the template
     orgParam   = p_orig ->GetElementSibling(orgParam);
     checkParam = p_check->GetElementSibling(checkParam);
     type       = orgParam ? orgParam->GetType() : 0;
