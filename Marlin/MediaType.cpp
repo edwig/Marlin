@@ -135,6 +135,7 @@ MediaTypes::Init()
   m_types.insert(std::make_pair("jpeg",  MediaType("jpeg",   "image/jpg")));
   m_types.insert(std::make_pair("gif",   MediaType("gif",    "image/gif")));
   m_types.insert(std::make_pair("svg",   MediaType("svg",    "image/svg+xml")));
+  m_types.insert(std::make_pair("ico",   MediaType("ico",    "image/x-icon")));
   // Old style MS-Word upto version 2013/XP
   m_types.insert(std::make_pair("doc",   MediaType("doc",    "application/msword")));
   m_types.insert(std::make_pair("dot",   MediaType("doc",    "application/msword")));

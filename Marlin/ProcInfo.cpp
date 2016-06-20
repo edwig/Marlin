@@ -239,18 +239,23 @@ void ProcInfo::GetSystemType()
                             break;
                     case 2: m_platform = WS ? "Windows Server 2012"    : "Windows-8";
                             break;
-                    case 3: m_platform = WS ? "Windows Server 2012 R2" : "Windows-8.1";
-                            break;
-                    case 4: m_platform = WS ? "Windows Server 2016"    : "Windows 10";
-                            break;
                     default:m_platform = "Yet unknown MS-Windows version";
                             break;
                   }
+                  break;
+      case 10:    m_platform = WS ? "Windows Server 2016" : "Windows 10";  
                   break;
       default:    m_platform = "Yet unknown MS-Windows version";
                   break;
     }
   }
+
+  // Check voor Windows 10 : Not in app.manifest!!
+  if(ove.dwMajorVersion >= 6 && ove.dwMinorVersion >= 2 && ove.dwBuildNumber >= 9200)
+  {
+    m_platform = WS ? "Windows Server 2016" : "Windows 10";
+  }
+
   //	Add version designation
   if(strlen(ove.szCSDVersion))
   {

@@ -334,7 +334,7 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
   }
 
   // Add end-of line
-  m_logBuffer += "\r\n";
+  m_logBuffer += "\n";
 
   if(m_file)
   {
