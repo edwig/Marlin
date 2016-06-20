@@ -1483,7 +1483,12 @@ HTTPClient::ReceiveResponseDataBuffer()
       }
       else
       {
-        ErrorLog(__FUNCTION__,"Reading data block. Error [%d] %s");
+        // Could be the end of the reading of all blocks
+        // if not, show the MS-Windows error
+        if(GetLastError())
+        {
+          ErrorLog(__FUNCTION__,"Reading data block. Error [%d] %s");
+        }
       }
     }
   }
