@@ -13,6 +13,8 @@ CHANGES IN VERSION 3.6.1
 1) Bugfix in the generation of recursive nodes in the WSDL file.
 2) WSDL can better check for missing nodes and keeping track of arrays of nodes.
    0ne-to-many and zero-to-many relations are now taken into account
+3) Correct detection of the Windows 10 Operating system
+4) No logging status '0' (as an error) on end of reading all the data blocks in the HTTPClient
 
 CHANGES IN VERSION 3.6
 ======================
