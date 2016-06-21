@@ -15,6 +15,7 @@ CHANGES IN VERSION 3.6.1
    0ne-to-many and zero-to-many relations are now taken into account
 3) Correct detection of the Windows 10 Operating system
 4) No logging status '0' (as an error) on end of reading all the data blocks in the HTTPClient
+5) Bugfix: Multiple recursions in multiple messages in the same WSDL
 
 CHANGES IN VERSION 3.6
 ======================
