@@ -52,6 +52,7 @@ XMLRestriction g_restrict("Language");
 #define CONTRACT_MS   2 // Second
 #define CONTRACT_MT   3 // Third
 #define CONTRACT_M4   4 // Fourth
+#define CONTRACT_MV   5 // Fifth
 
 // DERIVED CLASS FROM WebServiceServer
 
@@ -74,6 +75,7 @@ protected:
   WEBSERVICE_DECLARE(OnMarlinSecond)
   WEBSERVICE_DECLARE(OnMarlinThird)
   WEBSERVICE_DECLARE(OnMarlinFourth)
+  WEBSERVICE_DECLARE(OnMarlinFifth)
 private:
   // Our functionality
   CString Translation(CString p_language,CString p_translation,CString p_word);
@@ -106,6 +108,7 @@ WEBSERVICE_MAP_BEGIN(TestContract)
   WEBSERVICE(CONTRACT_MS,OnMarlinSecond)
   WEBSERVICE(CONTRACT_MT,OnMarlinThird)
   WEBSERVICE(CONTRACT_M4,OnMarlinFourth)
+  WEBSERVICE(CONTRACT_MV,OnMarlinFifth)
 WEBSERVICE_MAP_END
 
 //////////////////////////////////////////////////////////////////////////
@@ -180,8 +183,12 @@ void
 TestContract::OnMarlinFourth(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_M4);
+}
 
-
+void
+TestContract::OnMarlinFifth(int p_code,SOAPMessage* p_message)
+{
+  ASSERT(p_code == CONTRACT_MV);
 }
 
 #pragma warning (error : 4100)
@@ -215,12 +222,14 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   CString second("MarlinSecond");
   CString third ("MarlinThird");
   CString fourth("MarlinFourth");
+  CString fifth ("MarlinFifth");
 
   // Response with "Response" before name. Good testing WSDL / XSD
   CString respFirst ("ResponseFirst");
   CString respSecond("ResponseSecond");
   CString respThird ("ResponseThird");
   CString respFourth("ResponseFourth");
+  CString respFifth ("ResponseFifth");
 
   // Defining input and output messages for the operations
   SOAPMessage input1 (p_contract,first);
@@ -231,6 +240,8 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   SOAPMessage output3(p_contract,respThird);
   SOAPMessage input4 (p_contract,fourth);
   SOAPMessage output4(p_contract,respFourth);
+  SOAPMessage input5 (p_contract,fifth);
+  SOAPMessage output5(p_contract,respFifth);
 
   g_restrict.AddEnumeration("English", "The English language");
   g_restrict.AddEnumeration("Deutsch", "Die Deutsche sprache");
@@ -256,6 +267,10 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   XMLElement* param   = input4.AddElement(NULL, "Parameters",   WSDL_Mandatory|XDT_Complex,"");
   XMLElement* lanFrom = input4.AddElement(param,"LanguageFrom", WSDL_Mandatory|XDT_String, "language");
   XMLElement* lanTo   = input4.AddElement(param,"LanguageTo",   WSDL_Mandatory|XDT_String, "langauge");
+  XMLElement* datatp  = input4.AddElement(param,"DataTypes",    WSDL_Mandatory|XDT_Complex,"");
+  input4.AddElement(datatp,"String",  WSDL_Optional|XDT_String,"string");
+  input4.AddElement(datatp,"Diacrits",WSDL_Optional|XDT_String,"diacritics");
+
   XMLElement* answer  = input4.AddElement(NULL, "DoubleWord",   WSDL_Mandatory|XDT_Complex,"");
   input4.AddElement(answer,"WordToTranslate",WSDL_Mandatory|XDT_String,"to_be_translated");
   input4.AddElement(answer,"AlternativeWord",WSDL_Optional |XDT_String,"alternative");
@@ -265,11 +280,28 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   output4.AddElement(NULL,"TranslatedWord",WSDL_Optional|XDT_String,"string");
   output4.AddElement(NULL,"TranslationAlt",WSDL_Optional|XDT_String,"string");
 
+  // Fifth. Has another "Parameters" node and "DoubleWord"
+  XMLElement* param5   = input5.AddElement(NULL, "Parameters",   WSDL_Mandatory|XDT_Complex,"");
+  input5.AddElement(param5,"Dialect",      WSDL_Mandatory|XDT_String, "Dialect");
+  input5.AddElement(param5,"Regio",        WSDL_Mandatory|XDT_String, "Regio");
+  XMLElement* datatyp  = input5.AddElement(param5,"DataTypes", WSDL_Optional|XDT_Complex,"");
+  input5.AddElement(datatyp,"MinLength",  WSDL_Mandatory|XDT_Integer,"int");
+  input5.AddElement(datatyp,"MaxLength",  WSDL_Mandatory|XDT_Integer,"int");
+  input5.AddElement(datatyp,"MaxDecimals",WSDL_Mandatory|XDT_Integer,"int");
+  
+  XMLElement* answer5  = input5.AddElement(NULL, "DoubleWord",   WSDL_Mandatory|XDT_Complex,"Wording");
+  input5.AddElement(answer5,"Word",        WSDL_Mandatory|XDT_String,"to_be_translated");
+  input5.AddElement(answer5,"Alternative", WSDL_Optional |XDT_String,"alternative");
+
+  output5.AddElement(NULL,"TranslatedWord",WSDL_Optional|XDT_String,"string");
+  output5.AddElement(NULL,"TranslationAlt",WSDL_Optional|XDT_String,"string");
+
   // Putting the operations in the WSDL Cache
   p_server.AddOperation(CONTRACT_MF,first, &input1,&output1);
   p_server.AddOperation(CONTRACT_MS,second,&input2,&output2);
   p_server.AddOperation(CONTRACT_MT,third, &input3,&output3);
   p_server.AddOperation(CONTRACT_M4,fourth,&input4,&output4);
+  p_server.AddOperation(CONTRACT_MV,fifth, &input5,&output5);
 }
 
 //////////////////////////////////////////////////////////////////////////

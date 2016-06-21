@@ -260,8 +260,6 @@ WSDLCache::GenerateMessageTypes(CString&      p_wsdlcontent
                                ,SOAPMessage*  p_msg
                                ,TypeDone&     p_gedaan)
 {
-  CString command = p_msg->GetSoapAction();
-
   // Put the parameters here
   GenerateParameterTypes(p_wsdlcontent
                         ,p_msg->GetSoapAction()
@@ -342,10 +340,10 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
       case WSDL_OnceOnly:  // Fall through
       case WSDL_Mandatory: temp  = "minOccurs=\"1\" maxOccurs=\"1\""; break;
       case WSDL_ZeroMany:  temp  = "minOccurs=\"0\" maxOccurs=\"unbounded\""; 
-                           array = "ArrayOf";
+                           array = p_element;
                            break;
       case WSDL_OneMany:   temp  = "minOccurs=\"1\" maxOccurs=\"unbounded\""; 
-                           array = "ArrayOf";
+                           array = p_element;
                            break;
     }
     p_wsdlcontent += temp;
@@ -365,7 +363,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
       case XDT_Boolean: temp = " type=\"s:boolean\"";      break;
       case XDT_Base64:  temp = " type=\"s:base64Binary\""; break;
       case XDT_DateTime:temp = " type=\"s:dateTime\"";     break;
-      case XDT_Complex: temp.Format(" type=\"tns:ArrayOf%s\"",param->m_name);
+      case XDT_Complex: temp.Format(" type=\"tns:%s%s\"",p_element,param->m_name);
                         break;
       default:          temp = " type=\"s:string\"";       
                         break;
@@ -401,7 +399,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
          (param->m_type & WSDL_Mask) == WSDL_ZeroMany ||
          (param->m_type & XDT_Mask)  == XDT_Complex   )
       {
-        name += "ArrayOf";
+        name += p_element;
       }
       name += param->m_name;
       GenerateParameterTypes(p_wsdlcontent,name,param->m_elements,p_done,p_order,p_level + 1);
