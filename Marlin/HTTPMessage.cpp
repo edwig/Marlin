@@ -54,25 +54,40 @@ using std::wstring;
 // See HTTPCommand for sequencing
 const char* headers[] = 
 {
-   "HTTP"       // HTTP Response header
-  ,"POST"       // Posting a resource
-  ,"GET"        // Getting a resource
-  ,"PUT"        // Putting a resource
-  ,"DELETE"     // Deleting a resource
-  ,"HEAD"       // Header for forwarding calls
-  ,"TRACE"      // Tracing the server
-  ,"CONNECT"    // Connect tunneling and forwarding
-  ,"OPTIONS"    // Connection abilities of the server
-  ,"MOVE"       // Moving a resource
-  ,"COPY"       // Copying a resource
-  ,"PROPFIND"   // Finding a property of a resource
-  ,"PROPPATCH"  // Patching a property of a resource
-  ,"MKCOL"      // Make a resource collection
-  ,"LOCK"       // Locking a resource
-  ,"UNLOCK"     // Unlocking a resource
-  ,"SEARCH"     // Searching for a resource
-  ,"MERGE"      // Merge resources
-  ,"PATCH"      // Patching a resource
+   "HTTP"             // HTTP Response header
+  ,"POST"             // Posting a resource
+  ,"GET"              // Getting a resource
+  ,"PUT"              // Putting a resource
+  ,"DELETE"           // Deleting a resource
+  ,"HEAD"             // Header for forwarding calls
+  ,"TRACE"            // Tracing the server
+  ,"CONNECT"          // Connect tunneling and forwarding
+  ,"OPTIONS"          // Connection abilities of the server
+
+  // EXTENSION ON THE STANDARD HTTP PROTOCOL
+
+  ,"MOVE"             // Moving a resource
+  ,"COPY"             // Copying a resource
+  ,"PROPFIND"         // Finding a property of a resource
+  ,"PROPPATCH"        // Patching a property of a resource
+  ,"MKCOL"            // Make a resource collection
+  ,"LOCK"             // Locking a resource
+  ,"UNLOCK"           // Unlocking a resource
+  ,"SEARCH"           // Searching for a resource
+  ,"MERGE"            // Merge resources
+  ,"PATCH"            // Patching a resource
+  ,"VERSION-CONTROL"  // VERSION-CONTROL of a resource
+  ,"REPORT"           // REPORT-ing of a resource
+  ,"CHECKOUT"         // CHECKOUT of a resource
+  ,"CHECKIN"          // CHECKIN of a resource
+  ,"UNCHECKOUT"       // UNDO a CHECKOUT of a resource
+  ,"MKWORKSPACE"      // Making a WORKSPACE for resources
+  ,"UDPATE"           // UPDATE of a resource
+  ,"LABEL"            // LABELing of a resource
+  ,"BASELINE-CONTROL" // BASLINES of resources
+  ,"MKACTIVITY"       // ACTIVITY creation for a resource
+  ,"ORDERPATCH"       // PATCHING of orders
+  ,"ACL"              // Account Controll List
 };
 
 // General XTOR
@@ -833,17 +848,15 @@ HTTPMessage::FindVerbTunneling()
   return m_verbTunnel = (oldCommand != m_command);
 }
 
-// Use POST method for PUT/MERGE/PATCH/DELETE
+// Use POST method for PUT or anything greater than MOVE
 // Also known as VERB-Tunneling
 bool
 HTTPMessage::UseVerbTunneling()
 {
   if(m_verbTunnel)
   {
-    if(m_command == HTTPCommand::http_put   ||
-       m_command == HTTPCommand::http_merge ||
-       m_command == HTTPCommand::http_patch ||
-       m_command == HTTPCommand::http_delete )
+    if(m_command == HTTPCommand::http_put  ||
+       m_command >= HTTPCommand::http_move )
     {
       // Change of identity!
       CString method = headers[static_cast<unsigned>(m_command)];

@@ -44,7 +44,7 @@ enum class HTTPCommand
   http_no_command = -1
   // Response
  ,http_response   = 0
-  // Outgoing standard commands
+  // Outgoing standard commands RFC 2616
  ,http_post       = 1
  ,http_get
  ,http_put
@@ -53,7 +53,7 @@ enum class HTTPCommand
  ,http_trace
  ,http_connect
  ,http_options
-  // WebDAV commands
+  // WebDAV commands RFC 2518
  ,http_move
  ,http_copy
  ,http_proppfind
@@ -61,12 +61,26 @@ enum class HTTPCommand
  ,http_mkcol
  ,http_lock
  ,http_unlock
- ,http_search
-  // For REST interfaces
+ ,http_search  // draft-reschke-webdav-search
+  // For REST interfaces RFC 3253
  ,http_merge
- ,http_patch
+ ,http_patch   // draft-dusseault-http-patch 
+ ,http_versioncontrol
+ ,http_report
+ ,http_checkout
+ ,http_checkin
+ ,http_uncheckout
+ ,http_mkworkspace
+ ,http_update
+ ,http_label
+ ,http_baselinecontrol
+ ,http_mkactivity
+  // RFC 3648
+ ,http_orderpatch
+  // RFC 3744
+ ,http_acl
   // Nothing after this
- ,http_last_command = http_patch
+ ,http_last_command = http_acl
 };
 
 // All HTTP header commands
