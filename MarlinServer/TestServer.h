@@ -68,4 +68,5 @@ int TestPatch            (HTTPServer* p_server);
 int TestFormData         (HTTPServer* p_server);
 int TestClientCertificate(HTTPServer* p_server);
 int TestCompression      (HTTPServer* p_server);
+int TestAsynchrone       (HTTPServer* p_server);
 int TestThreadPool       (ThreadPool* p_pool);

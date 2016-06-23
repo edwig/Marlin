@@ -259,6 +259,9 @@ _tmain(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           // Test 'normal' SOAP messages without further protocol
           errors += TestInsecure(server);
 
+          // Test 'async' SOAP Messages
+          errors += TestAsynchrone(server);
+
           // Test 'body signing' capabilities of the SOAP message
           errors += TestBodySigning(server);
 

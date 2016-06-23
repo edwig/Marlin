@@ -89,6 +89,9 @@
     <ClCompile Include="TestBaseSite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestAsynchrone.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Web.Config">

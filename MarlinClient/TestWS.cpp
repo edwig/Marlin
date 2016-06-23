@@ -299,6 +299,32 @@ DoSendByQueue(HTTPClient& p_client,CString p_namespace,CString p_action,CString 
   return 0;
 }
 
+int
+DoSendAsyncQueue(HTTPClient& p_client,CString p_namespace,CString p_url)
+{
+  int times = 10;
+  CString resetMess("MarlinReset");
+  CString textMess ("MarlinText");
+  
+  SOAPMessage* reset1 = new SOAPMessage(p_namespace,resetMess,SoapVersion::SOAP_12,p_url);
+  SOAPMessage* reset2 = new SOAPMessage(p_namespace,resetMess,SoapVersion::SOAP_12,p_url);
+  reset1->SetParameter("DoReset",true);
+  reset2->SetParameter("DoReset",true);
+
+  p_client.AddToQueue(reset1);
+  for(int ind = 0;ind < times; ++ind)
+  {
+    SOAPMessage* msg = new SOAPMessage(p_namespace,textMess,SoapVersion::SOAP_12,p_url);
+    msg->SetParameter("Text","This is a testing message to see if async SOAP messages are delivered.");
+    p_client.AddToQueue(msg);
+  }
+  p_client.AddToQueue(reset2);
+
+  printf("%d Messages added to the sending queue.\n",2 + times);
+
+  return 0;
+}
+
 int TestWebservices(HTTPClient& client)
 {
   int errors = 0;
@@ -312,89 +338,96 @@ int TestWebservices(HTTPClient& client)
   CString command("TestMessage");
   CString url("http://" MARLIN_HOST ":1200/MarlinTest/Insecure");
 
-//   // Test 1
-//   printf("TESTING STANDARD SOAP MESSAGE TO /MarlinTest/Insecure/\n");
-//   printf("====================================================\n");
-//   SOAPMessage* msg = CreateSoapMessage(namesp,command,url);
-//   errors += DoSend(client,msg);
-// 
-//   // Test 2
-//   printf("TESTING BODY SIGNING SOAP TO /MarlinTest/BodySigning/\n");
-//   printf("===================================================\n");
-//   url = "http://localhost:1200/MarlinTest/BodySigning";
-//   msg = CreateSoapMessage(namesp,command,url,SoapVersion::SOAP_12, XMLEncryption::XENC_Signing);
-//   errors += DoSend(client,msg);
-// 
-//   // Test 3
-//   printf("TESTING BODY ENCRYPTION SOAP TO /MarlinTest/BodyEncrypt/\n");
-//   printf("======================================================\n");
-//   url = "http://localhost:1200/MarlinTest/BodyEncrypt";
-//   msg = CreateSoapMessage(namesp,command,url, SoapVersion::SOAP_12, XMLEncryption::XENC_Body);
-//   errors += DoSend(client,msg);
-// 
-//   // Test 4
-//   printf("TESTING WHOLE MESSAGE ENCRYPTION TO /MarlinTest/MessageEncrypt/\n");
-//   printf("=============================================================\n");
-//   url = "http://localhost:1200/MarlinTest/MessageEncrypt";
-//   msg = CreateSoapMessage(namesp,command,url, SoapVersion::SOAP_12, XMLEncryption::XENC_Message);
-//   errors += DoSend(client,msg);
-// 
-//   // Test 4
-//   printf("TESTING RELIABLE MESSAGING TO /MarlinTest/Reliable/\n");
-//   printf("=================================================\n");
-//   url = "http://localhost:1200/MarlinTest/Reliable";
-//   errors += TestReliableMessaging(&client,namesp,command,url);
-// 
-//   // Test 5
-//   printf("TESTING THE TOKEN FUNCTION TO /MarlinTest/TestToken/\n");
-//   printf("====================================================\n");
-//   url = "http://localhost:1200/MarlinTest/TestToken";
-//   msg = CreateSoapMessage(namesp,command,url);
-//   client.SetSingleSignOn(true);
-//   errors += DoSend(client,msg);
-//   client.SetSingleSignOn(false);
-// 
-//   // Test 6
-//   printf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n");
-//   printf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/Two/\n");
-//   printf("============================================================\n");
-//   CString url1 = "http://localhost:1200/MarlinTest/TestToken/One";
-//   CString url2 = "http://localhost:1200/MarlinTest/TestToken/Two";
-//   msg = CreateSoapMessage(namesp,command,url1);
-//   client.SetSingleSignOn(true);
-//   errors += DoSend(client,msg);
-//   msg = CreateSoapMessage(namesp,command,url2);
-//   errors += DoSend(client,msg);
-//   client.SetSingleSignOn(false);
-// 
-//   // Test 7
-//   printf("TESTING SOAP FAULT TO /MarlinTest/Insecure/\n");
-//   printf("=================================================\n");
-//   url = "http://localhost:1200/MarlinTest/Insecure/";
-//   msg = CreateSoapMessage(namesp,command,url);
-//   msg->SetParameter("TestFault",true);
-//   errors += DoSend(client,msg,true);
-// 
-//   // Test 8
-//   printf("TESTING UNICODE SENDING TO /MarlinTest/Insecure/\n");
-//   printf("================================================\n");
-//   url = "http://localhost:1200/MarlinTest/Insecure/";
-//   msg = CreateSoapMessage(namesp,command,url);
-//   msg->SetSendUnicode(true);
-//   errors += DoSend(client,msg);
-// 
-//   // Test 9
-//   printf("TESTING FILTERING CAPABILITIES TO /MarlinTest/Filter/\n");
-//   printf("=====================================================\n");
-//   url = "http://localhost:1200/MarlinTest/Filter/";
-//   msg = CreateSoapPriceMessage(namesp,command,url,456.78);
-//   errors += DoSendPrice(client,msg,456.78);
+  // Test 1
+  printf("TESTING STANDARD SOAP MESSAGE TO /MarlinTest/Insecure/\n");
+  printf("====================================================\n");
+  SOAPMessage* msg = CreateSoapMessage(namesp,command,url);
+  errors += DoSend(client,msg);
+
+  // Test 2
+  printf("TESTING BODY SIGNING SOAP TO /MarlinTest/BodySigning/\n");
+  printf("===================================================\n");
+  url = "http://localhost:1200/MarlinTest/BodySigning";
+  msg = CreateSoapMessage(namesp,command,url,SoapVersion::SOAP_12, XMLEncryption::XENC_Signing);
+  errors += DoSend(client,msg);
+
+  // Test 3
+  printf("TESTING BODY ENCRYPTION SOAP TO /MarlinTest/BodyEncrypt/\n");
+  printf("======================================================\n");
+  url = "http://localhost:1200/MarlinTest/BodyEncrypt";
+  msg = CreateSoapMessage(namesp,command,url, SoapVersion::SOAP_12, XMLEncryption::XENC_Body);
+  errors += DoSend(client,msg);
+
+  // Test 4
+  printf("TESTING WHOLE MESSAGE ENCRYPTION TO /MarlinTest/MessageEncrypt/\n");
+  printf("=============================================================\n");
+  url = "http://localhost:1200/MarlinTest/MessageEncrypt";
+  msg = CreateSoapMessage(namesp,command,url, SoapVersion::SOAP_12, XMLEncryption::XENC_Message);
+  errors += DoSend(client,msg);
+
+  // Test 4
+  printf("TESTING RELIABLE MESSAGING TO /MarlinTest/Reliable/\n");
+  printf("=================================================\n");
+  url = "http://localhost:1200/MarlinTest/Reliable";
+  errors += TestReliableMessaging(&client,namesp,command,url);
+
+  // Test 5
+  printf("TESTING THE TOKEN FUNCTION TO /MarlinTest/TestToken/\n");
+  printf("====================================================\n");
+  url = "http://localhost:1200/MarlinTest/TestToken";
+  msg = CreateSoapMessage(namesp,command,url);
+  client.SetSingleSignOn(true);
+  errors += DoSend(client,msg);
+  client.SetSingleSignOn(false);
+
+  // Test 6
+  printf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n");
+  printf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/Two/\n");
+  printf("============================================================\n");
+  CString url1 = "http://localhost:1200/MarlinTest/TestToken/One";
+  CString url2 = "http://localhost:1200/MarlinTest/TestToken/Two";
+  msg = CreateSoapMessage(namesp,command,url1);
+  client.SetSingleSignOn(true);
+  errors += DoSend(client,msg);
+  msg = CreateSoapMessage(namesp,command,url2);
+  errors += DoSend(client,msg);
+  client.SetSingleSignOn(false);
+
+  // Test 7
+  printf("TESTING SOAP FAULT TO /MarlinTest/Insecure/\n");
+  printf("=================================================\n");
+  url = "http://localhost:1200/MarlinTest/Insecure/";
+  msg = CreateSoapMessage(namesp,command,url);
+  msg->SetParameter("TestFault",true);
+  errors += DoSend(client,msg,true);
+
+  // Test 8
+  printf("TESTING UNICODE SENDING TO /MarlinTest/Insecure/\n");
+  printf("================================================\n");
+  url = "http://localhost:1200/MarlinTest/Insecure/";
+  msg = CreateSoapMessage(namesp,command,url);
+  msg->SetSendUnicode(true);
+  errors += DoSend(client,msg);
+
+  // Test 9
+  printf("TESTING FILTERING CAPABILITIES TO /MarlinTest/Filter/\n");
+  printf("=====================================================\n");
+  url = "http://localhost:1200/MarlinTest/Filter/";
+  msg = CreateSoapPriceMessage(namesp,command,url,456.78);
+  errors += DoSendPrice(client,msg,456.78);
 
   // Test 10
   printf("TESTING HIGH SPEED QUEUE TO /MarlinTest/Insecure/\n");
-  printf("===============================================\n");
+  printf("=================================================\n");
   url = "http://" MARLIN_HOST ":1200/MarlinTest/Insecure";
   errors += DoSendByQueue(client,namesp,command,url);
+
+  // Test 11
+  printf("TESTING ASYNCHRONEOUS SOAP MESSAGES TO /MarlinTest/Asynchrone/\n");
+  printf("==============================================================\n");
+  url = "http://" MARLIN_HOST ":1200/MarlinTest/Asynchrone/";
+  errors += DoSendAsyncQueue(client,namesp,url);
+
 
   printf("\nWait for last test to complete. Type a word and ENTER\n");
 

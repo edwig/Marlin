@@ -8,6 +8,12 @@ Version 3.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 3.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 3.6.2
+========================
+1) Bugfix for the asynchroneous calls. These were handled incorrectly in 3.6, due to the handling
+   of messages in the site. The reading of the body and the sending of the async response were
+   mixed up. This is corrected and a unit test has been added to the MarlinClient test program.
+
 CHANGES IN VERSION 3.6.1
 ========================
 1) Bugfix in the generation of recursive nodes in the WSDL file.
