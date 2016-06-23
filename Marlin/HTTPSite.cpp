@@ -727,14 +727,6 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       g_throttle = StartThrotteling(p_message);
     }
 
-    // If site in asynchronous SOAP/XML mode
-    if(m_async)
-    {
-      // Send back an OK immediately, even before processing the message
-      // In fact we might totally ignore it.
-      AsyncResponse(p_message);
-    }
-
     // Try to read the body / rest of the message
     // This is now done by the threadpool thread, so the central
     // server has more time to handle the incoming requests.
@@ -747,6 +739,14 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
         p_message->SetStatus(HTTP_STATUS_GONE);
         SendResponse(p_message);
       }
+    }
+
+    // If site in asynchronous SOAP/XML mode
+    if(m_async)
+    {
+      // Send back an OK immediately, even before processing the message
+      // In fact we might totally ignore it.
+      AsyncResponse(p_message);
     }
 
     // Call all site filters first, in priority order
