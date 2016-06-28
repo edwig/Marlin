@@ -79,10 +79,9 @@ LogAnalysis::Reset()
     for(unsigned ind = 0; ind < 100; ++ind)
     {
       // Extra context for lock
-      // Can leave 1 outstanding I/O call in the kernel queue
       {
         AutoCritSec lock(&m_lock);
-        if(m_list.empty() && m_requests == 0)
+        if(m_list.empty())
         {
           break;
         }
@@ -94,7 +93,16 @@ LogAnalysis::Reset()
   // De-initialize and so stopping the thread
   m_initialised = false;
   SetEvent(m_event);
-  Sleep(200);
+
+  // Wait for a max of 200ms For the thread to stop
+  for(unsigned ind = 0; ind < 10; ++ind)
+  {
+    if(m_logThread == NULL)
+    {
+      break;
+    }
+    Sleep(20);
+  }
 
   // Flush file to disk, after thread has ended
   if(m_file)
@@ -216,7 +224,7 @@ LogAnalysis::Initialisation()
                      ,FILE_SHARE_READ | FILE_SHARE_WRITE
                      ,NULL              // Security
                      ,CREATE_ALWAYS     // Always throw away old log
-                     ,FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED
+                     ,FILE_ATTRIBUTE_NORMAL 
                      ,NULL);
   if(m_file ==  INVALID_HANDLE_VALUE)
   {
@@ -268,6 +276,7 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
 {
   // Multi threaded protection
   AutoCritSec lock(&m_lock);
+  CString logBuffer;
   bool result = false;
 
   // Make sure the system is initialized
@@ -301,23 +310,23 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
     position = 26;  // Prefix string length
     _ftime64_s(&now);
     _localtime64_s(&today,&now.time);
-    m_logBuffer.Format("%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d.%03d %c "
-                      ,today.tm_year + 1900
-                      ,today.tm_mon  + 1
-                      ,today.tm_mday
-                      ,today.tm_hour
-                      ,today.tm_min
-                      ,today.tm_sec
-                      ,now.millitm
-                      ,type);
+    logBuffer.Format("%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d.%03d %c "
+                    ,today.tm_year + 1900
+                    ,today.tm_mon  + 1
+                    ,today.tm_mday
+                    ,today.tm_hour
+                    ,today.tm_min
+                    ,today.tm_sec
+                    ,now.millitm
+                    ,type);
   }
 
   // Print the calling function
-  m_logBuffer += p_function;
-  if(m_logBuffer.GetLength() < position + ANALYSIS_FUNCTION_SIZE)
+  logBuffer += p_function;
+  if(logBuffer.GetLength() < position + ANALYSIS_FUNCTION_SIZE)
   {
-    m_logBuffer.Append("                                          "
-                      ,position + ANALYSIS_FUNCTION_SIZE - m_logBuffer.GetLength());
+    logBuffer.Append("                                          "
+                    ,position + ANALYSIS_FUNCTION_SIZE - logBuffer.GetLength());
   }
 
   // Print the arguments
@@ -325,26 +334,26 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
   {
     va_list  varargs;
     va_start(varargs,p_format);
-    m_logBuffer.AppendFormatV(p_format,varargs);
+    logBuffer.AppendFormatV(p_format,varargs);
     va_end(varargs);
   }
   else
   {
-    m_logBuffer += p_format;
+    logBuffer += p_format;
   }
 
   // Add end-of line
-  m_logBuffer += "\n";
+  logBuffer += "\n";
 
   if(m_file)
   {
     // Locked m_list gets a buffer
-    m_list.push_back(m_logBuffer);
+    m_list.push_back(logBuffer);
     result = true;
   }
   else if(m_doEvents)
   {
-    WriteEvent(m_eventLog,p_type,m_logBuffer);
+    WriteEvent(m_eventLog,p_type,logBuffer);
     result = true;
   }
   // In case of an error, flush immediately!
@@ -406,94 +415,18 @@ LogAnalysis::Flush(bool p_all)
   }
 }
 
-// Our completion routine for the Overlapped I/O to the logfile
-// 
-VOID CALLBACK 
-FileIOComplete(_In_    DWORD        errorCode
-              ,_In_    DWORD        numberOfBytesTransfered
-              ,_Inout_ LPOVERLAPPED overlapped)
-{
-  LogDest* destiny  = overlapped ? (LogDest*)overlapped->hEvent : nullptr;
-  HANDLE   file     = destiny ? destiny->m_file     : nullptr;
-  HANDLE   events   = destiny ? destiny->m_wmiEvent : nullptr;
-  DWORD*   requests = destiny ? destiny->m_requests : nullptr;
-  CString* buffer   = destiny ? destiny->m_buffer   : nullptr;
-
-  // Did use this parameter in the past for flushing
-  UNREFERENCED_PARAMETER(file);
-
-  // See if we did have an error and log it
-  if(errorCode && events)
-  {
-    CString reason;
-    reason.Format("LogAnalysis IO completion error: %d : ",errorCode);
-    reason += GetLastErrorAsString(errorCode);
-    LogAnalysis::WriteEvent(events, LogType::LOG_ERROR,reason);
-  }
-
-  if(events)
-  {
-    // Report written to logfile
-    CString message;
-    message.Format("Written to logfile: %d bytes",numberOfBytesTransfered);
-    LogAnalysis::WriteEvent(events, LogType::LOG_INFO,message);
-  }
-
-  // Decrement the number of outstanding requests
-  if(requests)
-  {
-    InterlockedDecrement(requests);
-  }
-
-  // Memory of overlapped IO can now be freed
-  // Guaranteed that MS-Windows won't use it.
-  if(destiny)
-  {
-    delete destiny;
-    if(buffer)
-    {
-      delete buffer;
-    }
-  }
-  if(overlapped)
-  {
-    delete overlapped;
-    overlapped = nullptr;
-  }
-}
-
 // Write out a log line
 void
 LogAnalysis::WriteLog(CString p_buffer)
 {
-  // Write to the logfile
-  DWORD len = p_buffer.GetLength();
-  LPOVERLAPPED over = new OVERLAPPED(); 
-  LogDest* destiny  = new LogDest();
-
-  // Append to end of file
-  memset(over,0,sizeof(OVERLAPPED));
-  over->Offset     = 0xFFFFFFFF;
-  over->OffsetHigh = 0xFFFFFFFF;
-
-  // Put the file handle and event log in the overlapped event
-  destiny->m_file     = m_file;
-  destiny->m_wmiEvent = m_eventLog;
-  destiny->m_requests = &m_requests;
-  // BEWARE: ONE LEAK PER RUN CAN COME FROM THE NEXT LINE
-  // AS LONG AS THE LOGFILE IS WRITTEN, THIS IS NOT CRITICAL
-  destiny->m_buffer   = new CString(p_buffer);
-  // Put everything in the overlapped structure
-  over->hEvent = destiny;
-
-  // Increment the number of outstanding requests
-  InterlockedIncrement(&m_requests);
-
-  // Writing to file, ignoring errors
-  // Starting the write in the Overlapped I/O mode
-  if(!WriteFileEx(m_file,destiny->m_buffer->GetString(),len,over,FileIOComplete))
+  DWORD written = 0L;
+  if(!WriteFile(m_file
+               ,(void*)p_buffer.GetString()
+               ,(DWORD)p_buffer.GetLength()
+               ,&written
+               ,NULL))
   {
-    TRACE("Cannot write with IO completion. Error: %d\n",GetLastError());
+    TRACE("Cannot write logfile. Error: %d\n",GetLastError());
   }
 }
 

@@ -36,7 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #pragma once
-#include <list>
+#include <deque>
 
 constexpr auto ANALYSIS_FUNCTION_SIZE = 40;                            // Size of prefix printing in logfile
 constexpr auto LOGWRITE_INTERVAL      = (CLOCKS_PER_SEC * 30);         // Median  is once per 30 seconds
@@ -67,7 +67,7 @@ public:
 };
 
 // Caching list for log-lines
-using LogList = std::list<CString>;
+using LogList = std::deque<CString>;
 
 class LogAnalysis
 {
@@ -97,7 +97,6 @@ public:
   bool    GetDoLogging()                       { return m_doLogging;  };
   bool    GetDoEvents()                        { return m_doEvents;   };
   bool    GetDoTiming()                        { return m_doTiming;   };
-  CString GetLogBuffer()                       { return m_logBuffer;  };
   CString GetLogFileName()                     { return m_logFileName;};
   int     GetCache()                           { return m_cache;      };
   int     GetInterval()                        { return m_interval;   };
@@ -135,8 +134,6 @@ private:
   HANDLE  m_event       { NULL };               // Event for waking writing thread
   HANDLE  m_file        { NULL };               // File handle to write log to
   HANDLE  m_eventLog    { NULL };               // WMI handle to write event-log to
-  DWORD   m_requests    { 0    };               // Pending I/O requests
-  CString m_logBuffer;                          // Current buffered log-line
   CString m_logFileName { "Logfile.txt" };      // Name of the logging file
   LogList m_list;                               // Cached list of logging lines
 
