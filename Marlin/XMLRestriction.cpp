@@ -322,7 +322,7 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,CString p_value)
   CString result;
 
   // Checking only base datatypes
-  switch(p_type)
+  switch(p_type & XDT_Mask)
   {
     case XDT_Integer:   result = CheckInteger (p_value); break;
     case XDT_Boolean:   result = CheckBoolean (p_value); break;
