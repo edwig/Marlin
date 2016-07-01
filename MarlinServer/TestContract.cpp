@@ -251,7 +251,8 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
 
   // First: Getting an accepted language
   input1 .AddElement(NULL,"Language",WSDL_Mandatory | XDT_String, "string");
-  output1.AddElement(NULL,"Accepted",WSDL_Mandatory | XDT_Boolean,"bool");
+  input1 .AddElement(NULL,"Version", WSDL_Mandatory | XDT_Integer,   "int");
+  output1.AddElement(NULL,"Accepted",WSDL_Mandatory | XDT_Boolean,  "bool");
   
   // Second: Getting an accepted translation
   XMLElement* trans = 

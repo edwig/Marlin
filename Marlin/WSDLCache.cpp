@@ -764,10 +764,11 @@ WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
   if(!result.IsEmpty())
   {
     CString details("Datatype check failed: ");
+    CString name = p_checkParam->GetName();
     details += result;
 
     p_check->Reset();
-    p_check->SetFault("Datatype",p_who,p_checkParam->GetName(),details);
+    p_check->SetFault("Datatype",p_who,name,details);
     return false;
   }
 

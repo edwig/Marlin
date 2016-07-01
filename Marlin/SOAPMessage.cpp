@@ -200,6 +200,8 @@ SOAPMessage::SOAPMessage(JSONMessage* p_msg)
 
   // The message itself
   XMLParserJSON(this,p_msg);
+
+  CheckAfterParsing();
 }
 
 // XTOR for an outgoing message
@@ -552,10 +554,10 @@ SOAPMessage::operator=(JSONMessage& p_json)
 
   // The message itself
   XMLParserJSON(this,&p_json);
+  CheckAfterParsing();
 
   return this;
 }
-
 
 #pragma endregion ReUse
 
@@ -712,6 +714,7 @@ SOAPMessage::GetJSON_URL()
     }
     // Next parameter
     param = GetElementSibling(param);
+    ++count;
   }
   return url;
 }
@@ -1760,20 +1763,22 @@ SOAPMessage::HandleSoapFault(XMLElement* p_fault)
   m_soapFaultString.Empty();
   m_soapFaultDetail.Empty();
 
-  if(m_soapVersion < SoapVersion::SOAP_12)
+  // Search for soap Version 1.0/1.1 type of faultcode
+  XMLElement* fcode = FindElement(p_fault,"faultcode");
+  if(fcode)
   {
-    XMLElement* code   = FindElement(p_fault,"faultcode");
     XMLElement* actor  = FindElement(p_fault,"faultactor");
     XMLElement* fmess  = FindElement(p_fault,"faultstring");
     XMLElement* detail = FindElement(p_fault,"detail");
 
-    m_soapFaultCode   = code   ? code  ->GetValue() : "";
+    m_soapFaultCode   = fcode  ? fcode ->GetValue() : "";
     m_soapFaultActor  = actor  ? actor ->GetValue() : "";
     m_soapFaultString = fmess  ? fmess ->GetValue() : "";
     m_soapFaultDetail = detail ? detail->GetValue() : "";
   }
   else
   {
+    // Soap Version 1.2 Fault expected
     XMLElement* code    = FindElement(p_fault,"Code");
     XMLElement* reason  = FindElement(p_fault,"Reason");
     XMLElement* detail  = FindElement(p_fault,"Detail");

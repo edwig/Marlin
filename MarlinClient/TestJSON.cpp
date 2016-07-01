@@ -265,6 +265,25 @@ int TestJSON(void)
     ++errors;
   }
 
+  // Check that soap faults will survive SOAP/JSON/SOAP roundtrip conversions
+  SOAPMessage wrong("<body></body>");
+  wrong.SetSoapVersion(SoapVersion::SOAP_12);
+  wrong.SetFault("Client","Message","Wrong body","Empty Body");
+  xprintf(wrong.GetSoapMessage());
+  JSONMessage wrongtoo(&wrong);
+  xprintf(wrongtoo.GetJsonMessage());
+  SOAPMessage veryWrong(&wrongtoo);
+  xprintf(veryWrong.GetSoapMessage());
+  xprintf(veryWrong.GetFault());
+
+  if(veryWrong.GetFaultCode()   != "Client"     ||
+     veryWrong.GetFaultActor()  != "Message"    ||
+     veryWrong.GetFaultString() != "Wrong body" ||
+     veryWrong.GetFaultDetail() != "Empty Body"  )
+  {
+    ++errors;
+  }
+
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
   printf("TEST JSON MESSAGES          : %s\n",errors ? "ERROR" : "OK");

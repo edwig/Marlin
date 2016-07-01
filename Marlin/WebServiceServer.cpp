@@ -599,7 +599,6 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
     {
       if(m_wsdl->CheckIncomingMessage(p_message,m_checkFieldvalues) == false)
       {
-        SendResponse(p_message,HTTP_STATUS_BAD_REQUEST);
         return false;
       }
     }
@@ -613,7 +612,6 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
     {
       if(m_wsdl->CheckOutgoingMessage(p_message,m_checkFieldvalues) == false)
       {
-        SendResponse(p_message,HTTP_STATUS_SERVER_ERROR);
         return false;
       }
     }

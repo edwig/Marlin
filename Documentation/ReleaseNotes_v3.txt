@@ -13,6 +13,10 @@ CHANGES IN VERSION 3.6.2
 1) Bugfix for the asynchroneous calls. These were handled incorrectly in 3.6, due to the handling
    of messages in the site. The reading of the body and the sending of the async response were
    mixed up. This is corrected and a unit test has been added to the MarlinClient test program.
+2) Bugfix for JSON/SOAP roundtrip translations. If WSDL errors are sent through a JSON/SOAP 
+   translator, the SOAP Fault with the info as to why the WSDL check failed would not translate
+   back to JSON and then to the SOAP fault at the client side. This has been fixt in multiple
+   places (the = operator and the constructors of the SOAPMessage and the WSDL check)
 
 CHANGES IN VERSION 3.6.1
 ========================

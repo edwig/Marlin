@@ -42,6 +42,7 @@ SettingTheBaseLanguage(WebServiceClient& p_client,CString p_contract)
   CString language("Dutch");
   SOAPMessage msg1(p_contract,command);
   msg1.SetParameter("Language",language);
+  msg1.SetParameter("Version",1);
 
   if(p_client.Send(&msg1))
   {
@@ -53,6 +54,7 @@ SettingTheBaseLanguage(WebServiceClient& p_client,CString p_contract)
     else
     {
       printf("ERROR: No parameter 'Accepted' or in wrong state.\n");
+      printf(msg1.GetFault());
     }
   }
   else
@@ -121,9 +123,45 @@ Translate(WebServiceClient& p_client
   return false;
 }
 
+bool
+TestWSDLDatatype(WebServiceClient& p_client,CString p_contract)
+{
+  CString command("MarlinFirst");
+  CString language("Dutch");
+  SOAPMessage msg1(p_contract,command);
+  msg1.SetParameter("Language",language);
+  msg1.SetParameter("Version","MyVersion");
+
+  if(p_client.Send(&msg1))
+  {
+    if(msg1.GetParameterBoolean("Accepted") == true)
+    {
+      printf("Should not be accepted, because the parameter 'Version' contains an error!\n");
+      return false;
+    }
+    else
+    {
+      xprintf(msg1.GetFault());
+      if(msg1.GetFaultCode()   != "Datatype" ||
+         msg1.GetFaultActor()  != "Client"   ||
+         msg1.GetFaultString() != "Version"  ||
+         msg1.GetFaultDetail() != "Datatype check failed: Not an integer, but: MyVersion")
+      {
+        return false;
+      }
+      return true;
+    }
+  }
+  else
+  {
+    printf(p_client.GetErrorText());
+  }
+  return false;
+}
+
 int TestContract(HTTPClient* p_client,bool p_json)
 {
-  int errors = 3;
+  int errors = 4;
   extern CString logfileName;
 
   CString contract("http://interface.marlin.org/testing/");
@@ -188,6 +226,12 @@ int TestContract(HTTPClient* p_client,bool p_json)
           if(Translate(client,contract,"dinsdag",""        )) --errors;
         }
       }
+
+      // Test that WSDL gets our datatype check
+      if(TestWSDLDatatype(client,contract)) 
+      {
+        --errors;
+      }
     }
     client.Close();
   }
@@ -197,6 +241,8 @@ int TestContract(HTTPClient* p_client,bool p_json)
     printf("ERROR received      : %s\n",error.GetString());
     printf("ERROR from WS Client: %s\n",client.GetErrorText().GetString());
   }
+
+
 
   if(errors == 0)
   {
