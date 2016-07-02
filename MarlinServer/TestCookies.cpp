@@ -37,6 +37,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
 class SiteHandlerPutCookies: public SiteHandlerPut
 {
 public:
@@ -52,8 +54,8 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
   if(!cookie)
   {
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("COOKIE TEST                 : ERROR: No cookie received\n");
+    // --- "---------------------------------------------- - ------
+    printf("Cookie test: no cookie received                : ERROR\n");
   }
   else
   {
@@ -62,13 +64,13 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
 
     if(name == "GUID" && value == "1-2-3-4-5-6-7-0-7-6-5-4-3-2-1")
     {
-      testname = "COOKIE TEST SIMPLE";
+      testname = "Cookie test simple";
       result = true;
     }
 
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("%-27s : %s\n",testname.GetString(),result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("Cookie received: %-27s   : %s\n",testname.GetString(),result ? "OK" : "ERROR");
     if(!result) xerror();
   }
 
@@ -81,20 +83,20 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
 
     if(name == "BEAST" && value == "Monkey")
     {
-      testname = "MULTIPLE COOKIE TEST";
+      testname = "Multiple cookie test";
       result = true;
     }
 
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("%-27s : %s\n",testname.GetString(),result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("Cookie received: %-27s   : %s\n",testname.GetString(),result ? "OK" : "ERROR");
     if(!result) xerror();
   }
   else
   {
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("COOKIE TEST                 : ERROR: No MULTIPLE cookie received\n");
+    // --- "---------------------------------------------- - ------
+    printf("No multiple cookie received                    : ERROR\n");
   }
 
   CString day = p_msg->GetHeader("EdosHeader");
@@ -110,6 +112,10 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     // Answer for the test client
     p_msg->AddHeader("EdosHeader","Thursday");
   }
+
+  // Check done
+  --totalChecks;
+
   return true;
 }
 
@@ -123,7 +129,7 @@ TestCookies(HTTPServer* p_server)
   xprintf("TESTING HTTP RECEIVER COOKIE FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=========================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/CookieTest/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/CookieTest/"
   // Callback function is no longer required!
   CString webaddress = "/MarlinTest/CookieTest/";
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,webaddress);
@@ -170,4 +176,16 @@ TestCookies(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)webaddress);
   }
   return error;
+}
+
+int
+AfterTestCookies()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Not all cookie tests received                  : ERROR\n");
+  }
+  return totalChecks > 0;
 }

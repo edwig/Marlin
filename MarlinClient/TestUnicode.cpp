@@ -84,8 +84,9 @@ int TestUnicode(void)
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TESTING UNICODE CONVERSIONS : %s\n",errors ? "ERROR" : "OK");
+  printf("Testcase                                         Result\n");
+  printf("---------------------------------------------- - ------\n");
+  printf("Testing Unicode conversions on diacritic chars : %s\n",errors ? "ERROR" : "OK");
 
   return errors;
 }
@@ -118,8 +119,8 @@ int TestURLChars(void)
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TESTING URL ENCODING        : %s\n",errors ? "ERROR" : "OK");
+  // --- "---------------------------------------------- - ------
+  printf("Testing URL %% encoding and Unicode chars       : %s\n",errors ? "ERROR" : "OK");
 
   return errors;
 }

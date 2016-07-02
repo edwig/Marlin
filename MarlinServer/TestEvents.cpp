@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // TESTING PUSH EVENTS
@@ -70,8 +72,8 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
 
     result = server->SendEvent(p_stream,eventx);
 
-    // --- "--------------------------- - ------\n"
-    printf("TEST EVENT MESSAGE [%d]      : %s\n", x, result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("Event stream OnMessage %d sent                  : %s\n", x, result ? "OK" : "ERROR");
     if(!result) xerror();
   }
 
@@ -80,8 +82,8 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
   ander->m_id   = 1;
   ander->m_data = "This is a complete different message in another set of stories.";
   result = server->SendEvent(p_stream,ander);
-  // --- "--------------------------- - ------\n"
-  printf("TEST EVENT MESSAGE [OTHER]  : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Event stream 'other' message sent              : %s\n", result ? "OK" : "ERROR");
   if(!result) xerror();
 
 
@@ -90,8 +92,8 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
   err->m_id = 0;
   err->m_data = "This is a very serious bug report from your server! Heed attention to it!";
   result = server->SendEvent(p_stream,err);
-  // --- "--------------------------- - ------\n"
-  printf("TEST EVENT MESSAGE [ERROR]  : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Event stream 'OnError' message sent            : %s\n", result ? "OK" : "ERROR");
   if(!result) xerror();
 
   // Implicitly sending an OnClose
@@ -100,9 +102,12 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
 
   // Check for closed stream
   result = !server->HasEventStream(p_stream);
-  // --- "--------------------------- - ------\n"
-  printf("TEST EVENT STREAM CLOSED    : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Event stream closed by server (OnClose sent)   : %s\n", result ? "OK" : "ERROR");
   if(!result) xerror();
+
+  // Checks done
+  --totalChecks;
 }
 
 int
@@ -113,7 +118,7 @@ TestPushEvents(HTTPServer* p_server)
   xprintf("TESTING SSE (Server-Sent-Events) CHANNEL FUNCTIONS OF THE HTTP-SERVER\n");
   xprintf("=====================================================================\n");
   CString url("/MarlinTest/Events/");
-  // Create URL site to listen to events "http://+:1200/MarlinTest/Events/"
+  // Create URL site to listen to events "http://+:port/MarlinTest/Events/"
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if (site)
   {
@@ -148,4 +153,16 @@ TestPushEvents(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
+}
+
+int 
+AfterTestEvents()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Testing of the event streams not done          : ERROR\n");
+  }
+  return totalChecks > 0;
 }

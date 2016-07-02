@@ -36,7 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int highSpeed = 0;
+static int highSpeed   = 0;
+static int totalChecks = 23;
 
 class SiteHandlerSoapInsecure: public SiteHandlerSoap
 {
@@ -87,15 +88,15 @@ SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
     result    = true;
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST STANDARD SOAP          : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Standard SOAP message on insecure site         : %s\n", result ? "OK" : "ERROR");
   if(!result) xerror();
 
   if(highSpeed == 20)
   {
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("TEST HIGH SPEED QUEUE       : OK\n");
+    // --- "---------------------------------------------- - ------
+    printf("High speed queue has received all messages     : OK\n");
     highSpeed = 0;
   }
 
@@ -111,6 +112,7 @@ SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
     xprintf("Outgoing parameter: %s = %s\n","Three",paramOne);
     xprintf("Outgoing parameter: %s = %s\n","Four",paramTwo);
   }
+  --totalChecks;
   // Ready with the message.
   return true;
 }
@@ -128,7 +130,7 @@ TestInsecure(HTTPServer* p_server)
   xprintf("TESTING STANDARD SOAP RECEIVER FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("===========================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/Insecure/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Insecure/"
   // Callback function is no longer required!
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if (site)
@@ -166,4 +168,16 @@ TestInsecure(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
+}
+
+int
+AfterTestInsecure()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Not all insecure SOAP messages received        : ERROR\n");
+  }
+  return totalChecks > 0;
 }

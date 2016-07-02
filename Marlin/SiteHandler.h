@@ -58,6 +58,9 @@ public:
   virtual void HandleStream (EventStream* p_stream);
   virtual void CleanUp      (HTTPMessage* p_message);
 
+  // When stopping the site
+  virtual void OnStopSite();
+
 protected:
   // Handlers: Override and return 'false' if handling is ready
   virtual bool  PreHandle(HTTPMessage* p_message);

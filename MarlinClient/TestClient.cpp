@@ -65,27 +65,13 @@ WaitForKey()
 }
 
 CString hostname("localhost");
-
-#ifdef _DEBUG
-#ifdef _M_X64
-CString logfileName = "..\\BinDebug_x64\\ClientLog.txt";
-#else
-CString logfileName = "..\\BinDebug_x32\\ClientLog.txt";
-#endif // _M_X64
-#else // _DEBUG
-#ifdef _M_X64
-CString logfileName = "..\\BinRelease_x64\\ClientLog.txt";
-#else
-CString logfileName = "..\\BinRelease_x32\\ClientLog.txt";
-#endif // _M_X64
-#endif // _DEBUG
-
 static LogAnalysis* g_log = nullptr;
-
 
 HTTPClient*
 StartClient()
 {
+  CString logfileName = WebConfig::GetExePath() + "ClientLog.txt";
+
   // Create log file and turn logging 'on'
   g_log = new LogAnalysis("TestHTTPClient");
   g_log->SetLogFilename(logfileName,true);
@@ -157,6 +143,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestNamespaces();
       errors += TestJSON();
       errors += TestFindClientCertificate();
+      errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestEvents(client);
       errors += TestJsonData(client);

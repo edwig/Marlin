@@ -46,9 +46,9 @@ int TestHashing()
   int     errors = 0;
 
   // Dit gaan we testen
-   printf("TESTING HASHING PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
+  xprintf("TESTING HASHING PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
    
-   printf("===================================================================\n");
+  xprintf("===================================================================\n");
   xprintf("DIGEST Password: %s\n",password);
   xprintf("DIGEST Buffer  : %s\n",buffer);
   xprintf("-------------------------------------------------------------------\n");
@@ -63,8 +63,8 @@ int TestHashing()
   xprintf("DIGEST Expected: %s\n",expected1);
   xprintf("DIGEST hashval : %s\n",hash);
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 1 - SHA1          : %s\n",(hash == expected1) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptographic hashing provider SHA1            : %s\n",(hash == expected1) ? "OK" : "ERROR");
   errors = (hash == expected1) ? 0 : 1;
 
   // TEST 2
@@ -77,8 +77,8 @@ int TestHashing()
   xprintf("DIGEST Expected: %s\n", expected2);
   xprintf("DIGEST hashval : %s\n", hash);
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 2 - HMAC          : %s\n",(hash == expected2) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptographic hashing provider HMAC            : %s\n",(hash == expected2) ? "OK" : "ERROR");
   errors += (hash == expected2) ? 0 : 1;
 
   // TEST 3
@@ -91,8 +91,8 @@ int TestHashing()
   xprintf("DIGEST Expected: %s\n", expected3);
   xprintf("DIGEST hashval : %s\n", hash);
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 3 - DSS_SIGN      : %s\n",(hash == expected3) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptographic hashing provider DSS_SIGN        : %s\n",(hash == expected3) ? "OK" : "ERROR");
   errors += (hash == expected3) ? 0 : 1;
 
   // TEST 4
@@ -105,8 +105,8 @@ int TestHashing()
   xprintf("DIGEST Expected: %s\n", expected4);
   xprintf("DIGEST hashval : %s\n", hash);
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 4 - RSA_SIGN      : %s\n",(hash == expected4) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptographic hashing provider RSA_SIGN        : %s\n",(hash == expected4) ? "OK" : "ERROR");
   errors += (hash == expected4) ? 0 : 1;
 
   // TEST 5
@@ -119,8 +119,8 @@ int TestHashing()
   xprintf("DIGEST Expected: %s\n", expected5);
   xprintf("DIGEST hashval : %s\n", hash);
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 5 - CALG_MD2      : %s\n",(hash == expected5) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptographic hashing provider CALG_MD2        : %s\n",(hash == expected5) ? "OK" : "ERROR");
   errors += (hash == expected5) ? 0 : 1;
 
   // TEST 6
@@ -133,8 +133,8 @@ int TestHashing()
   xprintf("DIGEST Expected: %s\n", expected6);
   xprintf("DIGEST hashval : %s\n", hash);
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 6 - CALG_MD4      : %s\n",(hash == expected6) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptographic hashing provider CALG_MD4        : %s\n",(hash == expected6) ? "OK" : "ERROR");
   errors += (hash == expected6) ? 0 : 1;
 
   // TEST 7
@@ -147,8 +147,8 @@ int TestHashing()
   xprintf("DIGEST Expected: %s\n",expected7);
   xprintf("DIGEST hashval : %s\n", hash);
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 7 - CALG_MD5      : %s\n",(hash == expected7) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptograhpic hashing provider CALG_MD5        : %s\n",(hash == expected7) ? "OK" : "ERROR");
   errors += (hash == expected7) ? 0 : 1;
 
   // TEST 8
@@ -161,8 +161,8 @@ int TestHashing()
   xprintf("DIGEST Expected: %s\n",expected8);
   xprintf("DIGEST hashval : %s\n", hash);
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 8 - SHA-384       : %s\n",(hash == expected8) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptographic hashing provider SHA-384         : %s\n",(hash == expected8) ? "OK" : "ERROR");
   errors += (hash == expected8) ? 0 : 1;
 
   // TEST 9
@@ -176,8 +176,8 @@ int TestHashing()
   xprintf("DIGEST hashval : %s\n", hash);
   xprintf("\n");
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HASH 9 - SHA-512       : %s\n",(hash == expected9) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Cryptographic hashing provider SHA-512         : %s\n",(hash == expected9) ? "OK" : "ERROR");
   errors += (hash == expected9) ? 0 : 1;
 
   return errors;
@@ -191,8 +191,8 @@ int  TestEncryption(void)
   CString buffer("This is a somewhat longer string with an intentional message");
 
   // Dit gaan we testen
-   printf("TESTING ENCRYPTION PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
-   printf("======================================================================\n");
+  xprintf("TESTING ENCRYPTION PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
+  xprintf("======================================================================\n");
   xprintf("DIGEST Password: %s\n", password);
   xprintf("DIGEST Buffer  : %s\n", buffer);
   xprintf("----------------------------------------------------------------------\n");
@@ -215,8 +215,8 @@ int  TestEncryption(void)
   xprintf("\n");
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST ENCRYPTION AES-256     : %s\n",(result == buffer) ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Test MS Cryptographic provider in AES-256 mode : %s\n",(result == buffer) ? "OK" : "ERROR");
 
   return (result == buffer) ? 0 : 1;
 }

@@ -51,6 +51,13 @@ SiteFilter::OnStartSite()
 {
 }
 
+// Default nothing to do
+// Implement your own for initialisation reasons!
+void
+SiteFilter::OnStopSite()
+{
+}
+
 // TO IMPLEMENT: Override this method to write your own filter
 // MIND YOU: The intention is to READ the HTTPMessage only
 // and to not send an answer to the client (although you can!)
@@ -61,4 +68,5 @@ SiteFilter::Handle(HTTPMessage* p_message)
 {
   UNREFERENCED_PARAMETER(p_message);
   // Nothing done
+  TRACE("BEWARE: Incorrect implemented HTTP SiteFilter. Handle method not overriden!\n");
 }

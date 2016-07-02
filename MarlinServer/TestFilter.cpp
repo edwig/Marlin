@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 2;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // FIRST DEFINE TWO FILTERS WITH PRIORITY 1 and 23
@@ -46,7 +48,7 @@ class SiteFilterTester1 : public SiteFilter
 {
 public:
   SiteFilterTester1(unsigned p_priority,CString p_name);
-  void Handle(HTTPMessage* p_message);
+  virtual void Handle(HTTPMessage* p_message);
 };
 
 SiteFilterTester1::SiteFilterTester1(unsigned p_priority,CString p_name)
@@ -61,15 +63,17 @@ SiteFilterTester1::Handle(HTTPMessage* p_message)
   xprintf("%s\n",(LPCTSTR)p_message->GetBody());
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST FILTER HANDLER PRIO 1  : OK\n");
+  // --- "---------------------------------------------- - ------
+  printf("Filter handler with priority 1                 : OK\n");
+
+  --totalChecks;
 }
 
 class SiteFilterTester23 : public SiteFilter
 {
 public:
   SiteFilterTester23(unsigned p_priority,CString p_name);
-  void Handle(const HTTPMessage* p_message);
+  virtual void Handle(HTTPMessage* p_message);
 };
 
 SiteFilterTester23::SiteFilterTester23(unsigned p_priority,CString p_name)
@@ -79,15 +83,17 @@ SiteFilterTester23::SiteFilterTester23(unsigned p_priority,CString p_name)
 
 // Not much useful things here, but hey: it's a test!
 void
-SiteFilterTester23::Handle(const HTTPMessage* p_message)
+SiteFilterTester23::Handle(HTTPMessage* p_message)
 {
   HTTPMessage* msg = const_cast<HTTPMessage*>(p_message);
   xprintf("FILTER TESTER NR 23: %s FROM %s\n", (LPCTSTR)msg->GetURL(), (LPCTSTR)SocketToServer(msg->GetSender()));
   xprintf("Registering the body length: %lu\n",(unsigned long)msg->GetBodyLength());
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST FILTER HANDLER PRIO 23 : OK\n");
+  // --- "---------------------------------------------- - ------
+  printf("Filter handler with priority 23                : OK\n");
+
+  --totalChecks;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -136,7 +142,7 @@ TestFilter(HTTPServer* p_server)
   xprintf("TESTING SITE FILTERING FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("===================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/Filter/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Filter/"
   // Callback function is no longer required!
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if (site)
@@ -177,3 +183,17 @@ TestFilter(HTTPServer* p_server)
   }
   return error;
 }
+
+// At least both filters must show up in the results
+int
+AfterTestFilter()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("One of the filter handlers has not fired       : ERROR\n");
+  }
+  return totalChecks > 0;
+}
+

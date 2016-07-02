@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 3;
+
 class SiteHandlerSoapReliable: public SiteHandlerSoap
 {
   // BEWARE:
@@ -74,14 +76,17 @@ SiteHandlerSoapReliable::Handle(SOAPMessage* p_message)
     result    = true;
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST RELIABLE MESSAGING     : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("SOAP message in WS-ReliableMessaging channel   : %s\n", result ? "OK" : "ERROR");
   if(!result) xerror();
 
   p_message->SetParameter("Three",paramOne);
   p_message->SetParameter("Four", paramTwo);
   xprintf("Outgoing parameter: %s = %s\n","Three",paramOne);
   xprintf("Outgoing parameter: %s = %s\n","Four", paramTwo);
+
+  // Check done
+  --totalChecks;
 
   return true;
 }
@@ -97,7 +102,7 @@ TestReliable(HTTPServer* p_server)
   xprintf("TESTING RELIABLE MESSAGING FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=======================================================\n");
   
-  // Create URL channel to listen to "http://+:1200/MarlinTest/Reliable/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Reliable/"
   // But WebConfig can override all values except for the callback function address
   CString url("/MarlinTest/Reliable/");
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
@@ -134,4 +139,16 @@ TestReliable(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR) url);
   }
   return error;
+}
+
+int
+AfterTestReliable()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Not all WS-ReliableMessaging tests are done    : ERROR\n");
+  }
+  return totalChecks > 0;
 }

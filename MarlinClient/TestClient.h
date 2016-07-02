@@ -30,6 +30,7 @@
 #include "resource.h"
 
 #define NUM_RM_TESTS 3
+
 class   HTTPClient;
 
 // In TestClient.cpp
@@ -40,6 +41,9 @@ void WaitForKey();
 
 // COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST
 #define MARLIN_HOST "localhost"
+// COMPILE FOR ANOTHER PORT THAN 1200
+#define MARLIN_SERVER_PORT  1200
+
 // Define your other host here!
 // By commenting out the marlin_host above, and uncommenting this one
 // #define MARLIN_HOST "my-other-machine"  

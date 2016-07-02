@@ -666,6 +666,23 @@ HTTPSite::CheckReliable()
 bool
 HTTPSite::StopSite(bool p_force /*=false*/)
 {
+  // Call all filters 'OnStopSite' methods
+  for(auto& filter : m_filters)
+  {
+    filter.second->OnStopSite();
+  }
+
+  // Call all site handlers 'OnStopSite' methods
+  for(auto& handler : m_handlers)
+  {
+    SiteHandler* shand = handler.second.m_handler;
+    while(shand)
+    {
+      shand->OnStopSite();
+      shand = shand->GetNextHandler();
+    }
+  }
+
   // Try to remove site from the server
   if(m_server->DeleteSite(m_port,m_site,p_force) == false)
   {

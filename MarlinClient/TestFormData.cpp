@@ -67,17 +67,18 @@ int TestFormData(HTTPClient* p_client)
   //         or even crash on it (WCF .NET returns HTTP status 500)
   buffer.SetFileExtensions(true);
 
-  CString url = "http://" MARLIN_HOST ":1200/MarlinTest/FormData";
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/FormData",MARLIN_HOST,MARLIN_SERVER_PORT);
   HTTPMessage msg(HTTPCommand::http_post,url);
   msg.SetMultiPartFormData(&buffer);
 
-  printf("TESTING FORM-DATA MULTPART BUFFER FUNCTION TO /MarlinTest/FormData\n");
-  printf("==================================================================\n");
+  xprintf("TESTING FORM-DATA MULTPART BUFFER FUNCTION TO /MarlinTest/FormData\n");
+  xprintf("==================================================================\n");
   bool result = p_client->Send(&msg);
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("FORM-DATA MESSAGE           : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Send: Multipart form-data message              : %s\n",result ? "OK" : "ERROR");
 
   if(result == false)
   {

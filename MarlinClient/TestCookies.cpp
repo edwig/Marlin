@@ -50,9 +50,9 @@ DoTestApplication(HTTPMessage* p_msg)
   int error2 = text2 != "";
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST SOAP COOKIE            : %s\n",error1 ? "ERROR" : "OK");
-  printf("TEST SOAP COOKIE SECURED    : %s\n",error2 ? "ERROR" : "OK");
+  // --- "---------------------------------------------- - ------
+  printf("Getting applciation cookie                     : %s\n",error1 ? "ERROR" : "OK");
+  printf("Getting secured application cookie             : %s\n",error2 ? "ERROR" : "OK");
 
   return error1 + error2;
 }
@@ -105,31 +105,31 @@ DoSend(HTTPClient& p_client,HTTPMessage* p_msg,CString p_expected)
       ++errors;
     }
     else extraHeader = true;
-    // --- "--------------------------- - ------\n"
-    printf("TEST NON-STANDARD HEADERS   : %s\n",extraHeader ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("HTTP testing non-standard headers received     : %s\n",extraHeader ? "OK" : "ERROR");
   }
   else ++errors;
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HTTP COOKIE            : %s\n",success   ? "OK" : "ERROR");
-  printf("TEST HTTP COOKIE ENCRYPTION : %s\n",encryptie ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("HTTPMessage cookie received                    : %s\n",success   ? "OK" : "ERROR");
+  printf("HTTPMessage encrypted cookie received          : %s\n",encryptie ? "OK" : "ERROR");
 
   // Now test application secure cookies
   errors += DoTestApplication(p_msg);
 
-  printf("\n");
-  printf("READING ALL HTTP HEADERS FOR THIS SITE\n");
-  printf("--------------------------------------\n");
+  xprintf("\n");
+  xprintf("READING ALL HTTP HEADERS FOR THIS SITE\n");
+  xprintf("--------------------------------------\n");
   ResponseMap& all = p_client.GetAllHeadersMap();
   ResponseMap::iterator it = all.begin();
   while(it != all.end())
   {
-    printf("%s : %s\n",it->first.GetString(),it->second.GetString());
+    xprintf("%s : %s\n",it->first.GetString(),it->second.GetString());
     ++it;
   }
-  printf("--------------------------------------\n");
-  printf("\n");
+  xprintf("--------------------------------------\n");
+  xprintf("\n");
 
   // Reset the all-headers reading
   p_client.SetReadAllHeaders(false);
@@ -144,11 +144,12 @@ TestCookies(HTTPClient& p_client)
   int errors = 0;
 
   // Standard values
-  CString url("http://" MARLIN_HOST ":1200/MarlinTest/CookieTest/");
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/CookieTest/",MARLIN_HOST,MARLIN_SERVER_PORT);
 
   // Test 1
-  printf("TESTING STANDARD HTTP MESSAGE TO /Key2Test/CookieTest/\n");
-  printf("======================================================\n");
+  xprintf("TESTING STANDARD HTTP MESSAGE TO /Key2Test/CookieTest/\n");
+  xprintf("======================================================\n");
   HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_put,url);
   msg->SetBody("<Test><Een>1</Een></Test>\n");
   msg->SetCookie("GUID","1-2-3-4-5-6-7-0-7-6-5-4-3-2-1");
@@ -161,5 +162,3 @@ TestCookies(HTTPClient& p_client)
  
   return errors;
 }
-
-

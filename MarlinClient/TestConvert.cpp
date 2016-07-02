@@ -100,8 +100,8 @@ TestConvertFile(CString p_fileName,CString p_extraFile)
             result = true;
           }
           // SUMMARY OF THE TEST
-          // --- "--------------------------- - ------\n"
-          printf("TEST UTF-8 ENCODING         : %s\n",result ? "OK" : "ERROR");
+          // --- "---------------------------------------------- - ------
+          printf("Tesing UTF-8 encoding on XML files             : %s\n",result ? "OK" : "ERROR");
         }
       }
 
@@ -223,8 +223,8 @@ TestConvert()
 //   delete[] wText;
 //   delete[] utf8Text;
 
-  printf("TESTING ENCODING READING/WRITING FOR UTF-8 MESSAGES IN XML\n");
-  printf("==========================================================\n");
+  xprintf("TESTING ENCODING READING/WRITING FOR UTF-8 MESSAGES IN XML\n");
+  xprintf("==========================================================\n");
 
   return TestConvertFile("utf8File.txt","utf8FileConverted.txt");
 }

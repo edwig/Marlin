@@ -37,12 +37,13 @@ static char THIS_FILE[] = __FILE__;
 
 int TestCompression(HTTPClient* p_client)
 {
-  CString url = "http://" MARLIN_HOST ":1200/MarlinTest/Compression/Releasenotes_v1.txt";
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/Compression/Releasenotes_v1.txt",MARLIN_HOST,MARLIN_SERVER_PORT);
   HTTPMessage msg(HTTPCommand::http_get,url);
   msg.SetContentType("text/plain");
 
-  printf("TESTING HTTP COMPRESSION GZIP FUNCTION TO /MarlinTest/Compression/\n");
-  printf("==================================================================\n");
+  xprintf("TESTING HTTP COMPRESSION GZIP FUNCTION TO /MarlinTest/Compression/\n");
+  xprintf("==================================================================\n");
 
   // Set the compression mode
   p_client->SetHTTPCompression(true);
@@ -53,8 +54,9 @@ int TestCompression(HTTPClient* p_client)
 
   if(!result)
   {
-    printf("ERROR Client received status: %d\n",p_client->GetStatus());
-    printf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+    // --- "---------------------------------------------- - ------
+    xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
+    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
   }
   else
   {
@@ -63,8 +65,8 @@ int TestCompression(HTTPClient* p_client)
     msg.GetFileBuffer()->WriteFile();
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("FILE GOTTEN WITH COMPRESSION: %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Send: File gotten with gzip compression        : %s\n",result ? "OK" : "ERROR");
 
   // Reset the compression mode
   p_client->SetHTTPCompression(false);

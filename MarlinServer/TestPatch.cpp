@@ -37,6 +37,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 2;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // FIRST DEFINE PATCH HANDLER
@@ -77,9 +79,12 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
     p_message->SetBody("AB-\n");
   }
 
+  // Check done
+  --totalChecks;
+
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST HTTP PATCH VERB        : %s\n",errors ? "ERROR" : "OK");
+  // --- "---------------------------------------------- - ------
+  printf("Less known HTTP verbs (PATCH)                  : %s\n",errors ? "ERROR" : "OK");
   if(errors) xerror();
 
   return true;
@@ -104,7 +109,7 @@ TestPatch(HTTPServer* p_server)
   xprintf("TESTING HTTP PATCH VERB FUNCTION OF THE HTTP SERVER\n");
   xprintf("===================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/Patching/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Patching/"
   // Callback function is no longer required!
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if(site)
@@ -145,4 +150,16 @@ TestPatch(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
+}
+
+int
+AfterTestPatch()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("No HTTP PATCH test received                    : ERROR\n");
+  }
+  return totalChecks > 0;
 }

@@ -30,6 +30,8 @@
 #include "SiteHandlerFormData.h"
 #include "MultiPartBuffer.h"
 
+static int totalChecks = 3;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Form Data POST handler
@@ -46,21 +48,6 @@ protected:
 private:
   int m_parts { 0 };
 };
-
-// Setting the filename directory for testing
-#ifdef _DEBUG
-#ifdef _M_X64
-CString directoryName = "..\\BinDebug_x64\\";
-#else
-CString directoryName = "..\\BinDebug_x32\\";
-#endif // _M_X64
-#else // _DEBUG
-#ifdef _M_X64
-CString directoryName = "..\\BinRelease_x64\\";
-#else
-CString directoryName= "..\\BinRelease_x32\\";
-#endif // _M_X64
-#endif // _DEBUG
 
 int 
 FormDataHandler::PreHandleBuffer(MultiPartBuffer* p_buffer)
@@ -86,9 +73,12 @@ FormDataHandler::HandleData(MultiPart* p_part)
     --m_parts;
   }
 
+  // Check done
+  --totalChecks;
+
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST MULTI-PART DATA-PART   : %s\n",data.IsEmpty() ? "ERROR" : "OK");
+  // --- "---------------------------------------------- - ------
+  printf("Multi-part formdata - data part                : %s\n",data.IsEmpty() ? "ERROR" : "OK");
   return data.IsEmpty() ? 1 : 0;
 }
 
@@ -106,7 +96,7 @@ FormDataHandler::HandleFile(MultiPart* p_part)
   xprintf("File indicated size    : %d\n",(int)    p_part->GetSize());
 
   // Keep debugging things together, by resetting the filename
-  CString filename = directoryName + p_part->GetFileName();
+  CString filename = WebConfig::GetExePath() + p_part->GetFileName();
   p_part->SetFileName(filename);
   // Re-write the file part buffer + optional file times.
   bool result = p_part->WriteFile();
@@ -114,9 +104,12 @@ FormDataHandler::HandleFile(MultiPart* p_part)
   // Remember the fact that we where called
   m_parts -= result ? 1 : 0;
 
+  // Check done
+  --totalChecks;
+
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST MULTI-PART FILE-PART   : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Multi-part formdata - file part                : %s\n",result ? "OK" : "ERROR");
   return result ? 0 : 1;
 }
 
@@ -127,9 +120,12 @@ FormDataHandler::PostHandleBuffer(MultiPartBuffer* p_buffer)
   // By checking the m_parts counter in the class
   bool result = m_parts == 0 && p_buffer->GetParts() == 2;
 
+  // Check done
+  --totalChecks;
+
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST MULTI-PART FORM DATA   : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Multi-part formdata - total test               : %s\n",result ? "OK" : "ERROR");
   return 0;  
 }
 
@@ -151,7 +147,7 @@ int TestFormData(HTTPServer* p_server)
   xprintf("TESTING FORM-DATA MULTI-PART-BUFFER FUNCTION OF THE HTTP SERVER\n");
   xprintf("===============================================================\n");
 
-  // Create HTTP site to listen to "http://+:1200/MarlinTest/FormData/"
+  // Create HTTP site to listen to "http://+:port/MarlinTest/FormData/"
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if(site)
   {
@@ -185,4 +181,16 @@ int TestFormData(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
+}
+
+int
+AfterTestFormData()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Form-data multi-buffer test incomplete         : ERROR\n");
+  }
+  return totalChecks > 0;
 }

@@ -37,6 +37,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 10;
+
 // Testing an external WSDL file
 const bool  test_external_wsdl   = false;
 const char* MARLIN_WSDL_CONTRACT = "..\\ExtraParts\\MarlinWeb.wsdl";
@@ -126,12 +128,15 @@ TestContract::OnMarlinFirst(int p_code,SOAPMessage* p_message)
   ASSERT(p_code == CONTRACT_MF);
   
   m_language = p_message->GetParameter("Language");
-  printf("Setting base  language to: %s\n",(LPCTSTR)m_language);
+  // --- "---------------------------------------------- - ------
+  printf("WSDL Contract: First: Setting base language    : OK\n");
 
   CString resp("ResponseFirst");
   p_message->SetSoapAction(resp);
   p_message->Reset(m_targetNamespace);
   p_message->SetParameter("Accepted",m_language == "Dutch");
+
+  --totalChecks;
 }
 
 void
@@ -140,7 +145,8 @@ TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
   ASSERT(p_code == CONTRACT_MS);
   
   m_translation = p_message->GetParameter("Translation");
-  printf("Setting trans language to: %s\n",(LPCTSTR)m_translation);
+  // --- "---------------------------------------------- - ------
+  printf("WSDL Contract: Second: translation language    : OK\n");
 
   CString resp("ResponseSecond");
   p_message->SetSoapAction(resp);
@@ -156,8 +162,12 @@ TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
   else
   {
     xerror();
+    // --- "---------------------------------------------- - ------
+    printf("WSDL Contract: Second: translation language    : ERROR\n");
   }
   p_message->SetParameter("CanDo",cando);
+
+  --totalChecks;
 }
 
 void
@@ -167,7 +177,8 @@ TestContract::OnMarlinThird(int p_code,SOAPMessage* p_message)
 
   CString word   = p_message->GetParameter("WordToTranslate");
   CString result = Translation(m_language,m_translation,word);
-  printf("Translated [%s] to [%s]\n",(LPCTSTR)word,(LPCTSTR)result);
+  // --- "---------------------------------------------- - ------
+  printf("WSDL Contract: Translated givven               : OK\n");
 
   CString resp("ResponseThird");
   p_message->SetSoapAction(resp);
@@ -177,18 +188,26 @@ TestContract::OnMarlinThird(int p_code,SOAPMessage* p_message)
   {
     p_message->SetParameter("TranslatedWord",result);
   }
+  // Called 3 times
+  --totalChecks;
 }
 
 void
 TestContract::OnMarlinFourth(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_M4);
+  // --- "---------------------------------------------- - ------
+  printf("WSDL Contract: Wrong contract (Fourth)         : ERROR\n");
+  xerror();
 }
 
 void
 TestContract::OnMarlinFifth(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MV);
+  // --- "---------------------------------------------- - ------
+  printf("WSDL Contract: Wrong contract (Fifth)          : ERROR\n");
+  xerror();
 }
 
 #pragma warning (error : 4100)
@@ -314,11 +333,14 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
 int 
 TestJsonServer(HTTPServer* p_server,CString p_contract)
 {
-  CString  url("http://localhost:1200/MarlinTest/TestInterface/Extra/");
+  CString  url;
   CString  name("MarlinExtra");
   CString  webroot("C:\\WWW\\Marlin");
   unsigned threads = 4;
   int      errors  = 0;
+
+  // Formatting the testing port
+  url.Format("http://localhost:%d/MarlinTest/TestInterface/Extra/",TESTING_HTTP_PORT);
 
   // Defined in TestServer.cpp
   extern CString logfileName;
@@ -369,10 +391,13 @@ TestWebServiceServer(HTTPServer* p_server,CString p_contract)
 {
   int result = 0;
 
-  CString  url("http://localhost:1200/MarlinTest/TestInterface/");
+  CString  url;
   CString  name("MarlinWeb");
   CString  webroot("C:\\WWW\\Marlin");
   unsigned threads = 4;
+
+  // Formatting the testing port
+  url.Format("http://localhost:%d/MarlinTest/TestInterface/",TESTING_HTTP_PORT);
 
   // Defined in TestServer.cpp
   extern CString logfileName;
@@ -427,5 +452,17 @@ TestWebServiceServer(HTTPServer* p_server,CString p_contract)
     printf("ERROR Reported by the server: %s\n",(LPCTSTR)server->GetErrorMessage());
   }
   return result;
+}
+
+int
+AfterTestContract()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Not al WSDL contract calls has been fired      : ERROR\n");
+  }
+  return totalChecks > 0;
 }
 

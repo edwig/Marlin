@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 2;
+
 class SiteHandlerSoapMsgEncrypt: public SiteHandlerSoap
 {
 public:
@@ -77,9 +79,12 @@ SiteHandlerSoapMsgEncrypt::Handle(HTTPMessage* p_message)
     }
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("MESSAGE ENCRYPTION CHECK    : %s\n",cypherResult ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Total message encryption check                 : %s\n",cypherResult ? "OK" : "ERROR");
   if(!cypherResult) xerror();
+
+  // Check done
+  --totalChecks;
 
   // DO NOT FORGET TO CALL THE SOAP HANDLER!!
   // Now handle our message as a soap message
@@ -113,14 +118,17 @@ SiteHandlerSoapMsgEncrypt::Handle(SOAPMessage* p_message)
     result   = true;
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST SOAP MESSAGE CONTENTS  : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Total encrypted message received contents      : %s\n", result ? "OK" : "ERROR");
   if(!result) xerror();
 
   p_message->SetParameter("Three", paramOne);
   p_message->SetParameter("Four",  paramTwo);
   xprintf("Outgoing parameter: %s = %s\n", "Three", paramOne);
   xprintf("Outgoing parameter: %s = %s\n", "Four",  paramTwo);
+
+  // Check done
+  --totalChecks;
 
   return true;
 }
@@ -136,7 +144,7 @@ TestMessageEncryption(HTTPServer* p_server)
   xprintf("TESTING MESSAGE ENCRYPTION OF A SOAP MESSAGE FUNCTIONS OF THE HTTP SITE\n");
   xprintf("=======================================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/MessageSigning/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/MessageSigning/"
   // But WebConfig can override all values except for the callback function address
   CString url("/MarlinTest/MessageEncrypt/");
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
@@ -174,4 +182,16 @@ TestMessageEncryption(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR) url);
   }
   return error;
+}
+
+int
+AfterTestMessageEncryption()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Not all total message encryption tests done    : ERROR\n");
+  }
+  return totalChecks > 0;
 }

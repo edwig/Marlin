@@ -62,8 +62,8 @@ void OnOpen(ServerEvent* p_event)
   ++onOpenSeen;
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("EVENT OnOpen received       : OK\n");
+  // --- "---------------------------------------------- - ------
+  printf("EVENT channel OnOpen received                  : OK\n");
 }
 
 void OnClose(ServerEvent* p_event)
@@ -78,8 +78,8 @@ void OnClose(ServerEvent* p_event)
   isStopped = true;
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("EVENT OnClose received      : OK\n");
+  // --- "---------------------------------------------- - ------
+  printf("EVENT channel OnClose received                 : OK\n");
 }
 
 void OnMessage(ServerEvent* p_event)
@@ -98,8 +98,9 @@ void OnMessage(ServerEvent* p_event)
   xprintf("MaxID is now: %u\n",maxID);
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("EVENT OnMessage MESSAGE     : %d %s\n",p_event->m_id,(LPCTSTR)p_event->m_data);
+  // --- "---------------------------------------------- - ------
+  printf("EVENT channel OnMessage received               : OK\n");
+  xprintf("%d %s\n",p_event->m_id,(LPCTSTR)p_event->m_data);
 
   // Now dispose of the event!!
   delete p_event;
@@ -116,8 +117,9 @@ void OnOther(ServerEvent* p_event)
   ++onOtherSeen;
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("EVENT OnOther MESSAGE       : %d %s\n", p_event->m_id, (LPCTSTR)p_event->m_data);
+  // --- "---------------------------------------------- - ------
+  printf("EVENT channel OnOther received                 : OK\n");
+  xprintf("%d %s\n",p_event->m_id, (LPCTSTR)p_event->m_data);
 
   // Now dispose of the event!!
   delete p_event;
@@ -134,8 +136,9 @@ void OnError(ServerEvent* p_event)
   ++onErrorSeen;
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("EVENT OnError MESSAGE       : %d %s\n", p_event->m_id, (LPCTSTR)p_event->m_data);
+  // --- "---------------------------------------------- - ------
+  printf("EVENT channel OnError received                 : OK\n");
+  xprintf("%d %s\n", p_event->m_id, (LPCTSTR)p_event->m_data);
 
   // Now dispose of the event!!
   delete p_event;
@@ -148,10 +151,12 @@ TestEvents(HTTPClient* p_client)
   doDetails = false;
 
   // This is what we are going to test
-  printf("TESTING EVENTSOURCE SIDE OF SSE (SERVER-SENT-EVENTS) PUSH INTERFACE\n");
-  printf("===================================================================\n");
+  xprintf("TESTING EVENTSOURCE SIDE OF SSE (SERVER-SENT-EVENTS) PUSH INTERFACE\n");
+  xprintf("===================================================================\n");
 
-  CString url("http://" MARLIN_HOST ":1200/MarlinTest/Events/");
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/Events/",MARLIN_HOST,MARLIN_SERVER_PORT);
+
   HTTPClient client;
   client.SetLogging(p_client->GetLogging());
   client.SetDetailLogging(p_client->GetDetailLogging());
@@ -189,8 +194,8 @@ TestEvents(HTTPClient* p_client)
   // All event types seen and a minimum of 3 OnMessage events
   bool result = (onOpenSeen && onMessageSeen && onOtherSeen && onErrorSeen && maxID == 3) ? true : false;
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST EVENT CHANNEL COMPLETE : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Send: Testing the SSE event channel complete   : %s\n", result ? "OK" : "ERROR");
 
   if(!result)
   {

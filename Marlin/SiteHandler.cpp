@@ -56,6 +56,13 @@ SiteHandler::OnStartSite()
 {
 }
 
+// Default nothing to do
+// Implement your own for initialisation reasons!
+void
+SiteHandler::OnStopSite()
+{
+}
+
 void 
 SiteHandler::HandleStream(EventStream* /*p_stream*/)
 {

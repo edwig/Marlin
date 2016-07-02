@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 2;
+
 class SiteHandlerSoapSubsite: public SiteHandlerSoap
 {
 protected:
@@ -63,9 +65,9 @@ SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
     result = true;
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST SUBSITE SOAP HANDLER   : %s\n",result ? "OK" : "ERROR");
-  printf("Site of this message was    : %s\n",(LPCTSTR)p_message->GetHTTPSite()->GetSite());
+  // --- "---------------------------------------------- - ------
+  printf("Subsite SOAP handler on main site              : %s\n",result ? "OK" : "ERROR");
+  xprintf("Site of this message was    : %s\n",(LPCTSTR)p_message->GetHTTPSite()->GetSite());
   if(!result) xerror();
 
   // Set the result
@@ -73,6 +75,9 @@ SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
   p_message->SetParameter("Four", paramTwo);
   xprintf("Outgoing parameter: %s = %s\n","Three",paramOne);
   xprintf("Outgoing parameter: %s = %s\n","Four", paramTwo);
+
+  // Check done
+  --totalChecks;
 
   // Ready with the message.
   return true;
@@ -91,7 +96,7 @@ int TestSubSites(HTTPServer* p_server)
   xprintf("TESTING SUB-SITE FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=============================================\n");
 
-  // Create HTTP site to listen to "http://+:1200/MarlinTest/TestToken/one or two"
+  // Create HTTP site to listen to "http://+:port/MarlinTest/TestToken/one or two"
   // This is a subsite of another one, so 5th parameter is set to true
   HTTPSite* site1 = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url1,true);
   if(site1)
@@ -121,7 +126,6 @@ int TestSubSites(HTTPServer* p_server)
     printf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url2);
     return error;
   }
-
 
   // Testing the functionality that the check on the main site is correct!
   CString url3("/MarlinTest/Rubish/One");
@@ -217,6 +221,18 @@ StopSubsites(HTTPServer* p_server)
     xerror();
     ++error;
   }
-
   return error;
 }
+
+int
+AfterTestSubsites()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Not all subsite tests received                 : ERROR\n");
+  }
+  return totalChecks > 0;
+}
+

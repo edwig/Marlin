@@ -35,6 +35,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
 class SiteHandlerGetCompress: public SiteHandlerGet
 {
 public:
@@ -51,8 +53,11 @@ SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
   p_message->GetFileBuffer()->SetFileName(filename);
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST GZIP GET OF FILE       : OK\n");
+  // --- "---------------------------------------------- - ------
+  printf("GZIP of a file at a HTTP GET operation         : OK\n");
+
+  // Checks done
+  --totalChecks;
 
   return true;
 }
@@ -67,7 +72,7 @@ TestCompression(HTTPServer* p_server)
   xprintf("TESTING HTTP GZIP COMPRESSION OF THE HTTP SERVER\n");
   xprintf("================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/Compression/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Compression/"
   // Callback function is no longer required!
   CString webaddress = "/MarlinTest/Compression/";
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,webaddress);
@@ -106,4 +111,16 @@ TestCompression(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)webaddress);
   }
   return error;
+}
+
+int
+AfterTestCompression()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("File compression with GZIP not tested          : ERROR\n");
+  }
+  return totalChecks > 0;
 }

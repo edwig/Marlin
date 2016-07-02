@@ -70,8 +70,8 @@ DoSend(HTTPClient* p_client,HTTPMessage* p_msg)
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("HTTP PATCH VERB TESTING     : %s\n", errors ? "ERROR" : "OK");
+  // --- "---------------------------------------------- - ------
+  printf("Send: HTTP PATCH verb (less known protocol)    : %s\n", errors ? "ERROR" : "OK");
 
   // Ready with the message
   delete p_msg;
@@ -83,11 +83,12 @@ int TestPatching(HTTPClient* p_client)
   int errors = 0;
 
   // URL with resource and parameters
-  CString url("http://" MARLIN_HOST ":1200/MarlinTest/Patching/FirstPatchTest?type=ab&rhesus=neg");
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/Patching/FirstPatchTest?type=ab&rhesus=neg",MARLIN_HOST,MARLIN_SERVER_PORT);
 
   // Test 1: Send through a HTTP-VERB Tunnel
-  printf("TESTING STANDARD HTTP MESSAGE TO /Key2Test/Patching/\n");
-  printf("======================================================\n");
+  xprintf("TESTING STANDARD HTTP MESSAGE TO /Key2Test/Patching/\n");
+  xprintf("======================================================\n");
   HTTPMessage* msg1 = new HTTPMessage(HTTPCommand::http_patch,url);
   msg1->SetBody("Example one: 56123\n"
                 "Example two: 98127\n");
@@ -109,7 +110,6 @@ int TestPatching(HTTPClient* p_client)
   msg2->AddHeader("EdosHeader","16-05-1986");
 
   errors += DoSend(p_client,msg2);
-
 
   return errors;
 }

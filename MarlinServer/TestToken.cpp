@@ -38,6 +38,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
 class SiteHandlerSoapToken: public SiteHandlerSoap
 {
 public:
@@ -49,6 +51,9 @@ private:
 bool
 SiteHandlerSoapToken::Handle(SOAPMessage* p_message)
 {
+  // Check done
+  --totalChecks;
+
   TestSecurity(p_message);
   return true;
 }
@@ -60,13 +65,18 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   HANDLE   token    = p_msg->GetAccessToken();
   DWORD    length   = 0;
   HANDLE   htok     = NULL;
+  int      errors   = 0;
+  CString  fileName = WebConfig::GetExePath() + "FileOwner.txt";
   CString  listing;
 
   // See if we have a token
   if(token == NULL)
   {
-    printf("Not an authenticated call\n");
-    return;
+    // --- "---------------------------------------------- - ------
+    printf("Test token: Not an authenticated call          : ERROR\n");
+    xerror();
+    ++errors;
+    goto END;
   }
 
   // Find the token of our server process
@@ -75,28 +85,33 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   {
     if(!OpenProcessToken(GetCurrentProcess(),MAXIMUM_ALLOWED,&htok))
     {
-      printf("ERROR: OpenProcessToken failed: error code 0x%lx\n",GetLastError());
+      // --- "---------------------------------------------- - ------
+      printf("OpenProcessToken failed                        : ERROR\n");
+      xprintf("Error code 0x%lx\n",GetLastError());
+      ++errors;
       xerror();
-      return;
+      goto END;
     }
   }
 
   listing = "\nPRIMARY SERVER TOKEN\n";
 
-  printf("Processing primary server token\n");
+  xprintf("Processing primary server token\n");
 
   if(!DumpToken(listing,htok))
   {
-    printf("ERROR: DumpTokenInformation for process failed\n");
+    // --- "---------------------------------------------- - ------
+    printf("DumpTokenInformation for process failed        : ERROR\n");
     CloseHandle(htok);
     xerror();
-    return;
+    ++errors;
+    goto END;
   }
   CloseHandle(htok);
   listing += "\n\n";
 
   // Print The passed token
-  printf("Processing received HTTP token\n");
+  xprintf("Processing received HTTP token\n");
   listing += "RECEIVED HTTP TOKEN\n";
   DumpToken(listing,token);
 
@@ -104,22 +119,23 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   GetTokenInformation(token,TokenOwner,NULL,0,&length);
   if(!length)
   {
-    printf("ERROR: Cannot find the token owner, or token not present\n");
+    // --- "---------------------------------------------- - ------
+    printf("Cannot find the token owner, or no token       : ERROR\n");
     xerror();
-    return;
+    ++errors;
+    goto END;
   }
   // Try to do everything in one call
   // Only CreateProcess has to be rewritten to CreateProcessAsUser(hToken,...)
   if(ImpersonateLoggedOnUser(token) == FALSE)
   {
-    printf("ERROR: Cannot impersonate logged on user\n");
+    // --- "---------------------------------------------- - ------
+    printf("Cannot impersonate logged on user by token     : ERROR\n");
     // Cannot continue, otherwise a security breach could occur
     xerror();
-    return;
+    ++errors;
+    goto END;
   }
-
-  // Create file name
-  CString fileName = g_baseDir + "FileOwner.txt";
 
   // Try to open a file as another user
   file = CreateFile(fileName
@@ -137,7 +153,9 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     // 1346 - ERROR_BAD_IMPERSONATION_LEVEL
     xerror();
     int error = GetLastError();
-    printf("ERROR: Creating file: %d : %s\n",error,GetLastErrorAsString(error).GetString());
+    // --- "---------------------------------------------- - ------
+    printf("Cannot create file for file token owner        : ERROR\n");
+    xprintf("ERROR %d : %s\n",error,GetLastErrorAsString(error).GetString());
   }
   else
   {
@@ -147,31 +165,39 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
 
     if(WriteFile(file,msg.GetString(),msg.GetLength(),&written,NULL) == FALSE)
     {
-      printf("ERROR: Writing to file: %d\n",GetLastError());
+      // --- "---------------------------------------------- - ------
+      printf("Writing to file. Error [%d]                    : ERROR\n",GetLastError());
       xerror();
+      ++errors;
     }
     else
     {
-      printf("SOAP message written to: %s\n",(LPCTSTR)fileName);
+      xprintf("SOAP message written to: %s\n",(LPCTSTR)fileName);
     }
 
     listing.Replace("\n","\r\n");
     if(WriteFile(file,listing.GetString(),listing.GetLength(),&written,NULL) == FALSE)
     {
-      printf("ERROR: Writing to file: %d\n",GetLastError());
+      // --- "---------------------------------------------- - ------
+      printf("Writing to file. Error [%d]                    : ERROR\n",GetLastError());
       xerror();
+      ++errors;
     }
     else
     {
-      printf("TOKEN Access written to: %s\n",(LPCTSTR)fileName);
+      xprintf("TOKEN Access written to: %s\n",(LPCTSTR)fileName);
     }
     // Close the file
     CloseHandle(file);
   }
 
+END:
   // Correctly came to the end
   p_msg->Reset();
-  p_msg->SetParameter("Testing","OK");
+  p_msg->SetParameter("Testing",errors ? "ERRORS" : "OK");
+
+  // --- "---------------------------------------------- - ------
+  printf("Token handling on incoming message             : %s\n",errors ? "ERROR" : "OK");
 
   // NO LONGER NEEDED: SiteHandler does this now!
   // End of identity crisis :-)
@@ -191,7 +217,7 @@ TestToken(HTTPServer* p_server)
   xprintf("TESTING THE TOKEN FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("==============================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/TestToken/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/TestToken/"
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if(site)
   {
@@ -233,3 +259,14 @@ TestToken(HTTPServer* p_server)
   return error;
 }
 
+int
+AfterTestToken()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Not all token tests received                   : ERROR\n");
+  }
+  return totalChecks > 0;
+}

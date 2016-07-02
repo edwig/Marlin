@@ -48,18 +48,23 @@ SettingTheBaseLanguage(WebServiceClient& p_client,CString p_contract)
   {
     if(msg1.GetParameterBoolean("Accepted") == true)
     {
-      printf("Set base      language to: %s\n",(LPCTSTR)language);
+      // --- "---------------------------------------------- - ------
+      printf("Service contract: accepting base language      : OK\n");
+      xprintf("Base language is: %s\n",(LPCTSTR)language);
       return true;
     }
     else
     {
-      printf("ERROR: No parameter 'Accepted' or in wrong state.\n");
-      printf(msg1.GetFault());
+      // --- "---------------------------------------------- - ------
+      printf("Service contract: accepted language wrong state: ERROR\n");
+      xprintf(msg1.GetFault());
     }
   }
   else
   {
-    printf(p_client.GetErrorText());
+    // --- "---------------------------------------------- - ------
+    printf("Service contract: Language message not sent!   : ERROR\n");
+    xprintf(p_client.GetErrorText());
   }
   return false;
 }
@@ -76,16 +81,21 @@ SettingTheTranslateLanguage(WebServiceClient& p_client,CString p_contract)
   {
     if(msg2.GetParameterBoolean("CanDo") == true)
     {
-      printf("Set translate language to: %s\n",(LPCTSTR)translate);
+      // --- "---------------------------------------------- - ------
+      printf("Service contract: set 'translate to' language  : OK\n");
+      xprintf("%s\n",(LPCTSTR)translate);
       return true;
     }
     else
     {
-      printf("ERROR: Cannot translate words!\n");
+      // --- "---------------------------------------------- - ------
+      printf("Service contract: cannot translate words!      : ERROR\n");
     }
   }
   else
   {
+    // --- "---------------------------------------------- - ------
+    printf("Serivce contract: 'translate to' not sent!     : ERROR\n");
     printf(p_client.GetErrorText());
   }
   return false;
@@ -105,19 +115,25 @@ Translate(WebServiceClient& p_client
   {
     CString todayString = msg3.GetParameter("TranslatedWord");
     
-    printf("TRANSLATED [%s] to [%s]\n",(LPCTSTR)p_word,(LPCTSTR)p_expected);
+    // --- "---------------------------------------------- - ------
+    xprintf("TRANSLATED [%s] to [%s]\n",(LPCTSTR)p_word,(LPCTSTR)p_expected);
 
     if(todayString == p_expected)
     {
+      // --- "---------------------------------------------- - ------
+      printf("Service contract: correct translation          : OK\n");
       return true;
     }
     else
     {
-      printf("WORD translation is wrong!\n");
+      // --- "---------------------------------------------- - ------
+      printf("Service contract: translation is wrong!        : ERROR\n");
     }
   }
   else
   {
+    // --- "---------------------------------------------- - ------
+    printf("Service contract: translation not sent!        : ERROR\n");
     printf(p_client.GetErrorText());
   }
   return false;
@@ -131,54 +147,58 @@ TestWSDLDatatype(WebServiceClient& p_client,CString p_contract)
   SOAPMessage msg1(p_contract,command);
   msg1.SetParameter("Language",language);
   msg1.SetParameter("Version","MyVersion");
+  bool error = true;
 
   if(p_client.Send(&msg1))
   {
     if(msg1.GetParameterBoolean("Accepted") == true)
     {
-      printf("Should not be accepted, because the parameter 'Version' contains an error!\n");
-      return false;
+      // --- "---------------------------------------------- - ------
+      xprintf("Should not be accepted, because the parameter 'Version' contains an error!\n");
     }
     else
     {
       xprintf(msg1.GetFault());
-      if(msg1.GetFaultCode()   != "Datatype" ||
-         msg1.GetFaultActor()  != "Client"   ||
-         msg1.GetFaultString() != "Version"  ||
-         msg1.GetFaultDetail() != "Datatype check failed: Not an integer, but: MyVersion")
+      if(msg1.GetFaultCode()   == "Datatype" &&
+         msg1.GetFaultActor()  == "Client"   &&
+         msg1.GetFaultString() == "Version"  &&
+         msg1.GetFaultDetail() == "Datatype check failed: Not an integer, but: MyVersion")
       {
-        return false;
+        error = false;
       }
-      return true;
     }
   }
   else
   {
     printf(p_client.GetErrorText());
   }
-  return false;
+  // --- "---------------------------------------------- - ------
+  printf("Service contract: Testing WSDL datatypes       : %s\n", error ? "ERROR" : "OK");
+  return error;
 }
 
 int TestContract(HTTPClient* p_client,bool p_json)
 {
   int errors = 4;
-  extern CString logfileName;
+  CString logfileName = WebConfig::GetExePath() + "ClientLog.txt";
 
+  CString url;
+  CString wsdl;
   CString contract("http://interface.marlin.org/testing/");
-  CString url ("http://" MARLIN_HOST ":1200/MarlinTest/TestInterface/");
-  CString wsdl("http://" MARLIN_HOST ":1200/MarlinTest/TestInterface/MarlinWeb.wsdl");
 
+  url .Format("http://%s:%d/MarlinTest/TestInterface/",              MARLIN_HOST,MARLIN_SERVER_PORT);
+  wsdl.Format("http://%s:%d/MarlinTest/TestInterface/MarlinWeb.wsdl",MARLIN_HOST,MARLIN_SERVER_PORT);
   // Json is simultane on different site
   if(p_json)
   {
     url += "Extra/";
   }
 
-  printf("TESTING THE WebServiceClient ON THE FOLLOWING CONTRACT:\n");
-  printf("Contract: %s\n",(LPCTSTR)contract);
-  printf("URL     : %s\n",(LPCTSTR)url);
-  printf("WSDL    : %s\n",(LPCTSTR)wsdl);
-  printf("---------------------------------------------------------\n");
+  xprintf("TESTING THE WebServiceClient ON THE FOLLOWING CONTRACT:\n");
+  xprintf("Contract: %s\n",(LPCTSTR)contract);
+  xprintf("URL     : %s\n",(LPCTSTR)url);
+  xprintf("WSDL    : %s\n",(LPCTSTR)wsdl);
+  xprintf("---------------------------------------------------------\n");
 
 
   WebServiceClient client(contract,url,wsdl);
@@ -228,7 +248,7 @@ int TestContract(HTTPClient* p_client,bool p_json)
       }
 
       // Test that WSDL gets our datatype check
-      if(TestWSDLDatatype(client,contract)) 
+      if(TestWSDLDatatype(client,contract) == false) 
       {
         --errors;
       }
@@ -238,16 +258,17 @@ int TestContract(HTTPClient* p_client,bool p_json)
   catch(CString& error)
   {
     ++errors;
-    printf("ERROR received      : %s\n",error.GetString());
-    printf("ERROR from WS Client: %s\n",client.GetErrorText().GetString());
+    // --- "---------------------------------------------- - ------
+    printf("Service contract: errors received              : ERROR\n");
+    xprintf("%s\n",error.GetString());
+    xprintf("ERROR from WS Client: %s\n",client.GetErrorText().GetString());
   }
-
-
 
   if(errors == 0)
   {
-    printf("\nWORKS FINE!\n");
-    printf("Also tested UTF-8 for the West-European languages!\n");
+    // --- "---------------------------------------------- - ------
+    printf("Service contract: works fine!                  : OK\n");
+    printf("tested UTF-8 for the West-European languages!  : OK\n");
   }
   return errors;
 }

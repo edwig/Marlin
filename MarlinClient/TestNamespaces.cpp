@@ -39,16 +39,18 @@ int Testsplit(CString p_soapAction,CString p_expect)
 {
   int result = 0;
   CString namesp,action;
-  printf("SOAPAction : %s\t",p_soapAction.GetString());
+  xprintf("SOAPAction : %s\t",p_soapAction.GetString());
   if(SplitNamespaceAndAction(p_soapAction,namesp,action))
   {
     if(namesp == p_expect && action == "command")
     {
-      printf("OK\n");
+      // --- "---------------------------------------------- - ------
+      printf("Splitting of namespace and SOAP Action         : OK\n");
     }
     else
     {
-      printf("Split namespace error: %s\n",p_soapAction.GetString());
+      // --- "---------------------------------------------- - ------
+      printf("Spliting of namespace and SOAP Action          : ERROR: %s\n",p_soapAction.GetString());
       ++result;
     }
   }
@@ -56,10 +58,15 @@ int Testsplit(CString p_soapAction,CString p_expect)
   {
     if(action != "command")
     {
-      printf("Split namespace error: %s\n", p_soapAction.GetString());
+      // --- "---------------------------------------------- - ------
+      printf("Splitting of namespace and SOAP action         : ERROR: %s\n", p_soapAction.GetString());
       ++result;
     }
-    else printf("OK\n");
+    else 
+    {
+      // --- "---------------------------------------------- - ------
+      printf("Splitting of namespace and SOAP Action         : OK\n");
+    }
   }
   return result;
 }
@@ -70,17 +77,17 @@ int TestNamespaces(void)
   CString left  ("http://Name.Test.lower\\something");
   CString right("https://NAME.test.LOWER/SomeThing/");
 
-  printf("TESTING NAMESPACE FUNCTIONS:\n");
-  printf("========================================================\n");
+  xprintf("TESTING NAMESPACE FUNCTIONS:\n");
+  xprintf("========================================================\n");
   xprintf("Left  namesp:  %s\n", left);
   xprintf("Right namesp: %s\n", right);
   xprintf("-------------------------------------------------------\n");
   int result = CompareNamespaces(left,right);
-  printf("%s = %s\n",left.GetString(),result == 0 ? "OK" : "NAMESPACE ERROR");
+  xprintf("%s = %s\n",left.GetString(),result == 0 ? "OK" : "NAMESPACE ERROR");
   errors += result;
 
-  printf("TESTING NAMESPACE + SOAP ACTION:\n");
-  printf("========================================================\n");
+  xprintf("TESTING NAMESPACE + SOAP ACTION:\n");
+  xprintf("========================================================\n");
   errors += Testsplit("\"http://server/uri/command/\"","http://server/uri");
   errors += Testsplit("http://server/uri/some#command","http://server/uri/some#");
   errors += Testsplit("command","");

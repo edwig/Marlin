@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
 class SiteHandlerSoapBodyEncrypt: public SiteHandlerSoap
 {
 public:
@@ -66,8 +68,8 @@ SiteHandlerSoapBodyEncrypt::Handle(HTTPMessage* p_message)
     }
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("BODY ENCRYPTION CHECK       : %s\n",cypherResult ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Total body encryption for SOAP message         : %s\n",cypherResult ? "OK" : "ERROR");
 
   if(!cypherResult) xerror();
 
@@ -103,8 +105,8 @@ SiteHandlerSoapBodyEncrypt::Handle(SOAPMessage* p_message)
     result   = true;
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST SOAP MESSAGE CONTENTS  : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("SOAP Body encryption                           : %s\n", result ? "OK" : "ERROR");
 
   p_message->SetParameter("Three",paramOne);
   p_message->SetParameter("Four", paramTwo);
@@ -112,6 +114,9 @@ SiteHandlerSoapBodyEncrypt::Handle(SOAPMessage* p_message)
   xprintf("Outgoing parameter: %s = %s\n", "Four", paramTwo);
 
   if(!result) xerror();
+
+  // Check done
+  --totalChecks;
 
   return true;
 }
@@ -127,7 +132,7 @@ TestBodyEncryption(HTTPServer* p_server)
   xprintf("TESTING BODY ENCRYPTION OF A SOAP MESSAGE FUNCTIONS OF THE HTTP SITE\n");
   xprintf("====================================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/BodyEncrypt/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/BodyEncrypt/"
   // But WebConfig can override all values except for the callback function address
   CString url("/MarlinTest/BodyEncrypt/");
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
@@ -165,4 +170,15 @@ TestBodyEncryption(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR) url);
   }
   return error;
+}
+
+int AfterTestBodyEncryption()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Body encryption was not tested                 : ERROR\n");
+  }
+  return totalChecks > 0;
 }

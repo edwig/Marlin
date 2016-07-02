@@ -32,8 +32,6 @@
 // All tests running on this port
 const int TESTING_HTTP_PORT = 1200;
 
-// Where our software runs
-extern CString g_baseDir;
 // Printing details of the tests
 extern bool doDetails;
 
@@ -70,3 +68,24 @@ int TestClientCertificate(HTTPServer* p_server);
 int TestCompression      (HTTPServer* p_server);
 int TestAsynchrone       (HTTPServer* p_server);
 int TestThreadPool       (ThreadPool* p_pool);
+
+
+int AfterTestFilter();
+int AfterTestAsynchrone();
+int AfterTestBodyEncryption();
+int AfterTestBodySigning();
+int AfterTestClientCert();
+int AfterTestCompression();
+int AfterTestContract();
+int AfterTestCookies();
+int AfterTestEvents();
+int AfterTestFormData();
+int AfterTestInsecure();
+int AfterTestJsonData();
+int AfterTestMessageEncryption();
+int AfterTestPatch();
+int AfterTestReliable();
+int AfterTestSubsites();
+int AfterTestThreadpool();
+int AfterTestTime();
+int AfterTestToken();

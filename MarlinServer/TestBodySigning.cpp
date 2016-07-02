@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
 class SiteHandlerSoapBodySign: public SiteHandlerSoap
 {
 public:
@@ -68,8 +70,8 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
     }
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("BODY SIGNING VALUE CHECK    : %s\n", bodyResult ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("SOAP body signing value check                  : %s\n", bodyResult ? "OK" : "ERROR");
 
   if(!bodyResult) xerror();
 
@@ -88,8 +90,8 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
     result   = true;
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST SOAP MESSAGE CONTENTS  : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("SOAP body signing message check                : %s\n", result ? "OK" : "ERROR");
 
   p_message->SetParameter("Three",paramOne);
   p_message->SetParameter("Four", paramTwo);
@@ -97,6 +99,9 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
   xprintf("Outgoing parameter: %s = %s\n","Four" ,paramTwo);
 
   if(!result) xerror();
+
+  // Check done
+  --totalChecks;
 
   // TESTING ERROR REPORTING
   // char* test = NULL;
@@ -117,7 +122,7 @@ TestBodySigning(HTTPServer* p_server)
   xprintf("TESTING BODY SIGNING OF A SOAP MESSAGE FUNCTIONS OF THE HTTP SITE\n");
   xprintf("=================================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/BodySigning/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/BodySigning/"
   // But WebConfig can override all values except for the callback function address
   CString url("/MarlinTest/BodySigning/");
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
@@ -154,4 +159,16 @@ TestBodySigning(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
+}
+
+int 
+AfterTestBodySigning()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Body signing was not tested                    : ERROR\n");
+  }
+  return totalChecks > 0;
 }

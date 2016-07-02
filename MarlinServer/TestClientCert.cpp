@@ -37,6 +37,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
 class SiteHandlerPutSecure : public SiteHandlerPut
 {
 protected:
@@ -53,9 +55,11 @@ SiteHandlerPutSecure::PostHandle(HTTPMessage* p_message)
   bool result = p_message->GetStatus() == HTTP_STATUS_CREATED;
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST CLIENT CERTIFICATE PUT : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Client certificate at a HTTP PUT operation     : %s\n",result ? "OK" : "ERROR");
   if(!result) xerror();
+
+  --totalChecks;
 }
 
 int TestClientCertificate(HTTPServer* p_server)
@@ -117,5 +121,16 @@ int TestClientCertificate(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
+}
 
+int
+AfterTestClientCert()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Client certificate at file PUT was not tested  : ERROR\n");
+  }
+  return totalChecks > 0;
 }

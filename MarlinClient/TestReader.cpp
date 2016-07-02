@@ -83,8 +83,8 @@ int  SimplePOS()
     }
 
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("TEST SOAP-POS               : %s\n",result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("SOAP : Plain old soap mode                     : %s\n",result ? "OK" : "ERROR");
   }
   return result ? 0 : 1;
 }
@@ -134,8 +134,8 @@ int Soap11_noADR()
     }
 
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("TEST SOAP-Version 1.1       : %s\n",result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("SOAP Version 1.1 Without WS-Addressing         : %s\n",result ? "OK" : "ERROR");
   }
   return result ? 0 : 1;
 }
@@ -185,8 +185,8 @@ int Soap12_ADR()
     }
 
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("TEST SOAP-Version 1.2       : %s\n",result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("SOAP Version 1.2 With WS-Addressing            : %s\n",result ? "OK" : "ERROR");
   }
   return result ? 0 : 1;
 }
@@ -257,8 +257,8 @@ int Soap12_ADR_MDS()
     }
 
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("TEST SOAP-Version MDS       : %s\n",result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("SOAP Version 1.2 with full WS-Addressing       : %s\n",result ? "OK" : "ERROR");
   }
   return result ? 0 : 1;
 };
@@ -320,8 +320,8 @@ int Soap12_NS_request()
     xprintf("Soap action: %s\n",action);
     result = (action == "IContent/GetContent");
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("TEST WS-Addressing action   : %s\n",result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("SOAP Version 1.2 with Header SOAP action       : %s\n",result ? "OK" : "ERROR");
   }
   return result ? 0 : 1;
 }
@@ -369,8 +369,8 @@ int Soap12_NS_response()
 
     result = (action == "IContent/GetContentResponse");
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("TEST WS-Addressing response : %s\n",result ? "OK" : "ERROR");
+    // --- "---------------------------------------------- - ------
+    printf("SOAP WS-Addressing namespace response          : %s\n",result ? "OK" : "ERROR");
   }
   return result ? 0 : 1;
 }
@@ -403,15 +403,18 @@ int TestXMLMessage1()
   
   if(msg.GetInternalError() != XmlError::XE_NoError)
   {
-    printf("XML-Message INTERNAL ERROR [%d] %s\n",msg.GetInternalError(),msg.GetInternalErrorString().GetString());
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("XML Message with full UTF-8 nodes and CDATA    : ERROR\n");
+    xprintf("XML-Message INTERNAL ERROR [%d] %s\n",msg.GetInternalError(),msg.GetInternalErrorString().GetString());
   }
   else
   {
     result = true;
     xprintf(msg.Print());
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    printf("TEST XML-Message            : OK\n");
+    // --- "---------------------------------------------- - ------
+    printf("XML Message with full UTF-8 nodes and CDATA    : OK\n");
   }
   return result ? 0 : 1;
 }
@@ -448,18 +451,22 @@ int TestXMLMessage2()
     {
       result = true;
       // SUMMARY OF THE TEST
-      // --- "--------------------------- - ------\n"
-      printf("TEST Incomplete XML-Message : OK\n");
+      // --- "---------------------------------------------- - ------
+      printf("XML message incompleteness error reporting     : OK\n");
     }
     else
     {
-      printf("XML-Message UNEXPECTED ERROR\n");
+      // SUMMARY OF THE TEST
+      // --- "---------------------------------------------- - ------
+      printf("XML message incompleteness NOT REPORTED        : ERROR\n");
       xprintf(msg.Print());
     }
   }
   else
   {
-    printf("XML-Message INCORRECT message NOT recognized\n");
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("XML message incompleteness NOT recognized      : ERROR\n");
     xprintf(msg.Print());
   }
   return result ? 0 : 1;
@@ -521,8 +528,8 @@ TestXMLMessage3()
     xprintf(msg.Print());
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("XML hexadecimale nummers    : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("XML hexadecimal numbers parsing                : %s\n",result ? "OK" : "ERROR");
 
   return result ? 0 : 1;
 }
@@ -550,8 +557,8 @@ TestXMLMessage4()
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("XML Supports full UTF-8     : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("XML Supports full UTF-8 in 4 codepages         : %s\n",result ? "OK" : "ERROR");
 
   return result ? 0 : 1;
 }
@@ -579,8 +586,8 @@ TestXMLMessage5()
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("XML Supports full ISO8859-1 : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("XML Supports full ISO8859-1                    : %s\n",result ? "OK" : "ERROR");
 
   return result ? 0 : 1;
 }
@@ -608,8 +615,8 @@ TestXMLMessage6()
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("XML Supports windows-1252   : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("XML Supports windows-1252                      : %s\n",result ? "OK" : "ERROR");
 
   return result ? 0 : 1;
 }
@@ -631,8 +638,8 @@ TestJSONMessage1()
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("JSON Supports MBCS strings  : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("JSON Supports MBCS strings                     : %s\n",result ? "OK" : "ERROR");
 
   return result ? 0 : 1;
 }
@@ -661,8 +668,8 @@ TestJSONMessage2()
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("JSON Supports full UTF-8    : %s\n",result ? "ERROR" : "OK");
+  // --- "---------------------------------------------- - ------
+  printf("JSON Supports full UTF-8                       : %s\n",result ? "ERROR" : "OK");
 
   return result;
 }
@@ -691,8 +698,8 @@ TestJSONMessage3()
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("JSON Supports ISO-8859-1    : %s\n",result ? "ERROR" : "OK");
+  // --- "---------------------------------------------- - ------
+  printf("JSON Supports ISO-8859-1                       : %s\n",result ? "ERROR" : "OK");
 
   return result;
 }
@@ -702,8 +709,8 @@ TestReader(void)
 {
   int errors = 0;
 
-  printf("TESTING XML/SOAP PARSER EN MESSAGE STRUCTURES OF WINHTTP COMPONENT\n");
-  printf("==================================================================\n");
+  xprintf("TESTING XML/SOAP PARSER EN MESSAGE STRUCTURES OF WINHTTP COMPONENT\n");
+  xprintf("==================================================================\n");
   try
   {
     errors += TestXMLMessage1();

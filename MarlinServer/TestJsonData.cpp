@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 4;
+
 class SiteHandlerJsonData: public SiteHandlerJson
 {
 public:
@@ -88,9 +90,12 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
     p_message->Reset();
   }
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST JSON singular object   : %s\n", result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("JSON singular object received                  : %s\n", result ? "OK" : "ERROR");
   if(!result) xerror();
+
+  // Check done
+  --totalChecks;
 
   return true;
 }
@@ -108,7 +113,7 @@ TestJsonData(HTTPServer* p_server)
   xprintf("TESTING STANDARD JSON RECEIVER FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("===========================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/Data/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Data/"
   // Callback function is no longer required!
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if(site)
@@ -143,4 +148,16 @@ TestJsonData(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
+}
+
+int
+AfterTestJsonData()
+{
+  if(totalChecks > 0)
+  {
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Not all JSON Data tests received               : ERROR\n");
+  }
+  return totalChecks > 0;
 }

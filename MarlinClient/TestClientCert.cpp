@@ -40,7 +40,6 @@
 
 // CA / MY / ROOT / SPC
 
-
 // Test if we can find the MarlinClient certificate in my personal store
 int TestFindClientCertificate()
 {
@@ -48,8 +47,8 @@ int TestFindClientCertificate()
   bool result = client.SetClientCertificateThumbprint("MY","db 34 40 64 f2 fa c2 13 18 dd 90 f5 07 fe 78 e8 1b 03 16 00");
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("CAN FIND CERTIFICATE        : %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Can find the Marlin client certificate in store: %s\n",result ? "OK" : "ERROR");
 
   return result ? 0 : 1;
 }
@@ -62,8 +61,8 @@ int TestClientCertificate(HTTPClient* p_client)
   msg.GetFileBuffer()->SetFileName(filename);
   msg.SetContentType("application/octet-stream");
 
-  printf("TESTING CLIENT CERTIFICATE FUNCTION TO /MarlinTest/SecureClient/\n");
-  printf("================================================================\n");
+  xprintf("TESTING CLIENT CERTIFICATE FUNCTION TO /MarlinTest/SecureClient/\n");
+  xprintf("================================================================\n");
 
   // Set the detailed request tracing here
   // p_client->SetTraceRequest(true);
@@ -80,11 +79,11 @@ int TestClientCertificate(HTTPClient* p_client)
   bool result = p_client->SetClientCertificateThumbprint("MY","db344064f2fac21318dd90f507fe78e81b031600");
   if(result)
   {
-    printf("Client certificate correctly set\n");
+    xprintf("Client certificate correctly set\n");
   }
   else
   {
-    printf("ERROR Client certificate not found in the store!\n");
+    xprintf("ERROR Client certificate not found in the store!\n");
   }
 
   // Send our message
@@ -92,13 +91,13 @@ int TestClientCertificate(HTTPClient* p_client)
 
   if(!result)
   {
-    printf("ERROR Client received status: %d\n",p_client->GetStatus());
-    printf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+    xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
+    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("PUT FILE THROUGH CERTIFICATE: %s\n",result ? "OK" : "ERROR");
+  // --- "---------------------------------------------- - ------
+  printf("Put file through certificate check             : %s\n",result ? "OK" : "ERROR");
 
   // Empty the certificate details
   p_client->SetClientCertificatePreset(false);

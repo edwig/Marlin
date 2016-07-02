@@ -285,8 +285,8 @@ int TestJSON(void)
   }
 
   // SUMMARY OF THE TEST
-  // --- "--------------------------- - ------\n"
-  printf("TEST JSON MESSAGES          : %s\n",errors ? "ERROR" : "OK");
+  // --- "---------------------------------------------- - ------
+  printf("Basic tests on JSON object messages            : %s\n",errors ? "ERROR" : "OK");
 
   return errors;
 }
@@ -327,17 +327,22 @@ int DoSend(HTTPClient* p_client,JSONMessage* p_msg)
     // Raw HTTP error
     printf("HTTP Client error: %s\n",p_client->GetStatusText().GetString());
   }
+
+  // --- "---------------------------------------------- - ------
+  printf("Send: Json message send and received           : %s\n", errors ? "ERROR" : "OK");
+
   return errors;
 }
 
 int TestJsonData(HTTPClient* p_client)
 {
   int errors = 0;
-  CString url = "http://" MARLIN_HOST ":1200/MarlinTest/Data?test=2&size=medium%20large";
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/Data?test=2&size=medium%%20large",MARLIN_HOST,MARLIN_SERVER_PORT);
 
   // Test standard JSON
-  printf("TESTING STANDARD JSON MESSAGE TO /MarlinTest/Data/\n");
-  printf("==================================================\n");
+  xprintf("TESTING STANDARD JSON MESSAGE TO /MarlinTest/Data/\n");
+  xprintf("==================================================\n");
 
   JSONMessage msg1("\"Test1\"",url);
   msg1.AddHeader("GUID","888-777-666");
@@ -348,8 +353,8 @@ int TestJsonData(HTTPClient* p_client)
   errors += DoSend(p_client,&msg2);
 
   // Now Send again in UTF-16 Unicode
-  printf("TESTING UNICODE JOSN MESSAGE TO /MarlinTest/Data/\n");
-  printf("=================================================\n");
+  xprintf("TESTING UNICODE JOSN MESSAGE TO /MarlinTest/Data/\n");
+  xprintf("=================================================\n");
 
   JSONMessage msg3("\"Test1\"",url);
   msg3.SetSendUnicode(true);

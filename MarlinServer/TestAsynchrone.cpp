@@ -70,14 +70,15 @@ SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
     if(m_current == m_default)
     {
       // SUMMARY OF THE TEST
-      // --- "--------------------------- - ------\n"
-      printf("TEST ASYNC SOAP             : OK\n");
+      // --- "---------------------------------------------- - ------
+      printf("Received all of the asynchronous SOAP messages : OK\n");
     }
     else if(m_current > 0)
     {
       // Some, but not all tests appeared before us
       xerror();
-      printf("TEST ASYNC SOAP             : ERROR\n");
+      // --- "---------------------------------------------- - ------
+      printf("Not all asynchronous SOAP messages received    : ERROR\n");
     }
     m_current = 0;
   }
@@ -85,6 +86,9 @@ SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
   {
     xprintf("Async display text: %s\n",(LPCTSTR)displayText);
     ++m_current;
+    // SUMMARY OF THE TEST
+    // --- "---------------------------------------------- - ------
+    printf("Received an asynchronous SOAP message [%2.2d]     : OK\n",m_current);
   }
   // Ready with the message.
   return true;
@@ -103,7 +107,7 @@ TestAsynchrone(HTTPServer* p_server)
   xprintf("TESTING ASYNCHRONE SOAP RECEIVER FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=============================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/Asynchrone/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Asynchrone/"
   // Callback function is no longer required!
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if(site)
@@ -143,4 +147,10 @@ TestAsynchrone(HTTPServer* p_server)
     printf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
+}
+
+// Completeness check already on receive of last message!
+int AfterTestAsynchrone()
+{
+  return 0;
 }

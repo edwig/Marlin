@@ -39,6 +39,9 @@ public:
 
   // When starting the site
   virtual void OnStartSite();
+  // When stopping the site
+  virtual void OnStopSite();
+
   // Handle the filter
   virtual void Handle(HTTPMessage* p_message);
   // Getters and setters

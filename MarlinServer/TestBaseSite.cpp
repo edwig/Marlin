@@ -47,12 +47,12 @@ int TestBaseSite(HTTPServer* p_server)
   xprintf("TESTING STANDARD GET FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=================================================\n");
 
-  // Create URL channel to listen to "http://+:1200/MarlinTest/Site/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Site/"
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if(site)
   {
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
+    // --- "---------------------------------------------- - ------
     printf("HTTPSite for base 'get' test: OK : %s\n",site->GetPrefixURL().GetString());
     printf("HTTPSite for base 'put' test: OK : %s\n",site->GetPrefixURL().GetString());
   }
@@ -71,7 +71,7 @@ int TestBaseSite(HTTPServer* p_server)
   site->SetHandler(HTTPCommand::http_put,handlerPut);
 
   // Setting the virtual root directory
-  CString root = WebConfig::GetExePath() + g_baseDir + "site";
+  CString root = WebConfig::GetExePath() + "site";
   EnsureFile ensure;
   root = ensure.ReduceDirectoryPath(root);
   root = "virtual://" + root;

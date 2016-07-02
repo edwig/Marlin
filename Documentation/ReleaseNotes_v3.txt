@@ -8,6 +8,20 @@ Version 3.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 3.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 3.7
+======================
+1) All tests in server and client test framework have been simplified in output as to have a 
+   good clean oversight of the total test results. You should see one long line of "OK"s 
+   forming in the server and client testrun.
+2) New test mechanism in the test server to check wether all tests have been fired correctly.
+   This brought two extra errors to light (in the testing mechanism, not in the server!)
+   The tests for cookies and SiteFilters have been corrected to work properly.
+3) All serverside and clientside test are now configurable for the following properties
+   MARLIN_HOST        -> Name of the machine where the server is running (default localhost)
+   MARLIN_SERVER_PORT -> Port number of all tested sites (default 1200) In the client
+   TESTING_HTTP_PORT  -> Port number of all tested sites (default 1200) In the server
+   This is done, so that you can easily configure your test programs to test across machines.
+
 CHANGES IN VERSION 3.6.2
 ========================
 1) Bugfix for the asynchroneous calls. These were handled incorrectly in 3.6, due to the handling
