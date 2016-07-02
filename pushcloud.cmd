@@ -2,6 +2,9 @@
 @echo Cleaning Marlin directories
 @echo .
 
+rem Pruning the GIT repository before posting to the cloud
+git prune -v --expire now
+
 del marlin_3.rar
 del /q /s /f *.sdf
 del /q /s /f *.VC.db
