@@ -42,6 +42,7 @@ class ThreadPool;
 // In TestServer.cpp
 void xerror();
 void xprintf(const char* p_format, ...);
+void qprintf(const char* p_format, ...);
 void WaitForKey();
 
 // In detail files
