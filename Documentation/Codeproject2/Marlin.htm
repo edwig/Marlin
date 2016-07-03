@@ -1,0 +1,498 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!--=======================================================================-->
+<!--                           INTRODUCTION                                
+
+ The Code Project article submission template (HTML version)
+
+Using this template will help us post your article sooner. To use, just 
+follow the 3 easy steps below:
+ 
+     1. Fill in the article description details
+     2. Add links to your images and downloads
+     3. Include the main article text
+
+That's all there is to it! All formatting will be done by our submission
+scripts and style sheets. 
+
+-->
+<!--=======================================================================-->
+<!--                        IGNORE THIS SECTION                            -->
+<HTML>
+   <HEAD><TITLE>The Code Project</TITLE>
+   <META content="text/html; charset=us-ascii" http-equiv=Content-Type>
+   <STYLE type=text/css>BODY {
+	FONT-SIZE: 10pt; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif
+}
+P {
+	FONT-SIZE: 10pt; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif
+}
+TD {
+	FONT-SIZE: 10pt; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif
+}
+H2 {
+	FONT-WEIGHT: bold; COLOR: #ff9900
+}
+H3 {
+	FONT-WEIGHT: bold; COLOR: #ff9900
+}
+H4 {
+	FONT-WEIGHT: bold; COLOR: #ff9900
+}
+H5 {
+	FONT-WEIGHT: bold; COLOR: #ff9900
+}
+H2 {
+	FONT-SIZE: 13pt
+}
+H3 {
+	FONT-SIZE: 12pt
+}
+H4 {
+	FONT-SIZE: 10pt; COLOR: black
+}
+PRE {
+	FONT-FAMILY: "Courier New", Courier, mono; WHITE-SPACE: pre; BACKGROUND-COLOR: #fbedbb
+}
+CODE {
+	FONT-FAMILY: "Courier New", Courier, mono; COLOR: #990000
+}
+</STYLE>
+<LINK rel=stylesheet type=text/css href="http://www.codeproject.com/App_Themes/Std/CodeProject.css">
+</HEAD>
+<BODY bgColor=#ffffff color="#000000">
+<!--=======================================================================-->
+<!--=============================     STEP 1      =========================-->
+<!--  Fill in the details (CodeProject will reformat this section for you) -->
+<PRE>Title:       Marlin: Maturing the WEB framework
+Author:      Edwig Huisman
+Email:       <A href="mailto:edwig.huisman@hetnet.nl">edwig.huisman@hetnet.nl</A>  
+Language:    C++
+Platform:    Windows
+Technology:  Webserver / Webclient
+Level:       Intermediate
+Description: Complete webserver and webclient with SOAP/JSON messageing framework
+Section      Webdevelopment
+SubSection   Web Services
+License:     MIT
+</PRE>
+<!--=============================     STEP 2      =========================-->
+<!--  Include download and sample image information.                       -->
+<UL class=download>
+  <LI><A href="Article_src.zip">Download source - XXX Kb</A></LI>
+</UL>
+
+<H2>Introduction</H2>
+
+<P>This document is about the Marlin webserver library. Previous documentation 
+and clarification of the programming model and the reasons behind the Marlin 
+webserver can be found on the codeproject article: 
+<A href="http://www.codeproject.com/Articles/1069106/Marlin-Escaping-from-IIS">Marlin: Escaping from IIS</A></P>
+
+<P>This article is about the further developments of Marlin between versions 
+3.0 and 3.6. It describes the general improvements in terms of function. For a 
+full report of all changes and bug fixes (sure, it's software &#8211; so there's bound 
+to be little bugs), see the releasnotes of the last version in the source download.<BR>
+In general: these versions have seen the light after exensive testing on AngularJS applications
+in real life. A lot of the functionality presented here has arisen from mixed mode webservers
+running SOAP microservices and JSON services in co-junction on one and the same server environment.<BR>
+All upgrades and new features have been assemled here in one package.<BR></P>
+
+<P>So these are the highlights!</P>
+
+<H2>Version 3.1: WebDAV Handling</H2>
+
+<P>Handling of WebDAV HTTP calls has been added. WebDAV is used for document 
+management systems, source versioning systems and OData (Open-data). WebDAV 
+calls include the calls for 'MOVE, 'COPY' and 'SEARCH' on the general resources 
+(files). But they also include the calls for the properties, like:<BR>
+<BR>
+<TABLE>
+ <TR><TD>PROPFIND</TD> <TD>Finding a resource by finding a property</TD></TR>
+ <TR><TD>PROPPATCH</TD><TD>Patching the property of a resource</TD></TR>
+ <TR><TD>MKCOL</TD>    <TD>Making a collection of resources (i.e. a directory)</TD></TR>
+ <TR><TD>LOCK</TD>     <TD>Locking a resource for other users</TD></TR>
+ <TR><TD>UNLOCK</TD>   <TD>Unlocking a resource after use</TD></TR>
+</TABLE>
+<BR>
+Having all those extra HTTP calls can be very fine, but some 
+webservers or proxies might not recognize these calls and even block them. To 
+come by this problem, verb-tunneling has been invented. This involves the 
+translation of these calls to regular HTTP "POST"s and then having the "real" 
+call in a http request header ('verb-tunnel:'). Marlin now supports the verb 
+tunneling by default.<BR>
+The logging subsystem has seriously improved. A lot of 
+bugs where removed in logging strings with "%" signs in them. But the most 
+important improvement was the asynchronous writing of the logging buffer to the 
+filesystem. This removed a serious performance hit in the server. These 
+improvements have spread over several versions after this one, but I mention it 
+here once.<BR>
+Sleeping and reawakening a thread in the threadpool is now 
+possible. This means that you can grab an extra thread from the threadpool and 
+use it for an extra purpose, other than the webserver. The number of maximum 
+threads get extended by 1 if you do so, and decreased after you stop the thread. 
+You can use this to your advantage to build processing queue's heartbeats or 
+whatever longer processing that you want.<BR></P>
+
+<H2>Version 3.2: WSDL's</H2>
+
+<P>Prior to this release, you had to add a lot of SOAP messages, and then let 
+the WSDL cache go on its way and generate a WSDL file from it. This ensures of 
+course that the WSDL is complete and correct. That&#8217;s of course very fine for a 
+server, but what about the client?<BR>
+From this version on you can also read an 
+existing WSDL from a file and use that one for testing your calls. This makes it 
+possible to generate a WSDL with external tools, up front and engineer an 
+interface API solution, working your way toward the agreed interface.<BR>
+Apart from the "loose" WSDL files, more data testing has been added. Apart from 
+integer sizes, the support of string enumerations is the big change here. You 
+can define which enumerations a SOAP XML field can have. You will see the 
+enumerations on the generated interface HTML pages in the SOAP examples, and you 
+can explicitly test on them.<BR>
+Here is an example from the test server in the project:</P>
+
+<PRE>POST /MarlinTest/TestInterface//MarlinWeb.acx HTTP/1.1
+Host: CERT5
+Content-Type: application/soap+xml; charset=utf-8
+Content-Length: length
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;s:Envelope xmlns:i="<A href="http://www.w3.org/2001/XMLSchema-instance">http://www.w3.org/2001/XMLSchema-instance</A>" 
+                 xmlns:xsd="<A href="http://www.w3.org/2001/XMLSchema">http://www.w3.org/2001/XMLSchema</A>" 
+                 xmlns:s="<A href="http://www.w3.org/2003/05/soap-envelope">http://www.w3.org/2003/05/soap-envelope</A>" 
+                 xmlns:a="<A href="http://www.w3.org/2005/08/addressing">http://www.w3.org/2005/08/addressing</A>"&gt;
+  &lt;s:Header&gt;
+      &lt;a:Action s:mustUnderstand="1"&gt;http://interface.marlin.org/testing/MarlinSecond&lt;/a:Action&gt;
+  &lt;/s:Header&gt;
+  &lt;s:Body&gt;
+        &lt;MarlinSecond xmlns="<A href="http://interface.marlin.org/testing/">http://interface.marlin.org/testing/</A>"&gt;
+           &lt;!--Translation has values: Deutsch (='Die Deutsche sprache') / English (='The English language') / Espagnol (='El lingua franca') / Fran&ccedil;ais (='La plus belle langue')--&gt;
+           &lt;Translation&gt;string&lt;/Translation&gt;
+        &lt;/MarlinSecond&gt;
+  &lt;/s:Body&gt;
+&lt;/s:Envelope&gt;
+</PRE>
+Before the node that carries the enumeration (<TRANSLATION>) you"ll see a 
+comment node with an explanation as to which enumerations you can use on the 
+following node.<BR>
+
+<H2>Version 3.3 JSON roundtrip</H2>
+
+<P>Suppose you have a server with a SOAP interface. But there comes a new 
+paradigm on the browser: javascript. And not just one script, but a barrage of 
+javascript interfaces. Sometimes is seems whole the world is jumping into that. 
+AngularJS to mention as one of the new hypes in these interfaces. But wait: 
+suddenly SOAP is not cool anymore. Everyone wants JSON interfaces. Now how to 
+cope? Writing your server over again. No, roundtrip JSON / SOAP / JSON 
+translation is one of the quicker solutions.<BR>
+Suppose a web javascript interface want's to call my SOAP service, it can do so by calling the service 
+with all the parameters as HTTP parameters. So lets suppose I have a SOAP 
+service with a "SiteHandlerJson2Soap" in place, then the following call:<BR>
+<P>
+<PRE>http://server:7500/Interface/MyCall?one=1&amp;two=2&amp;three=3</PRE>
+
+<P>Will be automatically translated into the following SOAP call:<BR></P>
+
+<PRE>&lt;xml&gt;
+&lt;Envelope&gt;
+  &lt;header/&gt;
+  &lt;Body&gt;
+    &lt;MyCall&gt;
+      &lt;one&gt;1&lt;/one&gt;
+      &lt;two&gt;2&lt;/two&gt;
+      &lt;three&gt;3&lt;/three&gt;
+    &lt;/MyCall&gt;
+  &lt;/Body&gt;
+&lt;/Envelope&gt;
+</PRE>
+
+<P>Note here the placement of the name of the call ("MyCall") as last part of 
+the resource of the URI, and as the main node of the message. All URL parameters 
+now translate to "ordinary" SOAP parameters in the soap call. This message then 
+can be handled in the "old fashioned SOAP way", as the server used to, and the 
+server will generate a response message in SOAP.<BR></P>
+
+<PRE>&lt;xml&gt;
+&lt;Envelope&gt;
+  &lt;header/&gt;
+  &lt;Body&gt;
+    &lt;MyCallResponse&gt;
+      &lt;Counting&gt;true&lt;/Counting&gt;
+      &lt;Sum&gt;6&lt;/Sum&gt;
+    &lt;/MyCallResponse&gt;
+  &lt;/Body&gt;
+&lt;/Envelope&gt;
+</PRE>
+
+<P>The response message then gets translated back to JSON by the SiteHandler 
+"Json2Soap" to a JSON answer for the web interface.<BR>
+
+<P><PRE>{
+  "MyCallResponse" : {
+    "Counting": true
+   ,"Sum": 6
+  }
+}
+</PRE></P>
+
+<P>And this is the JSON message that a web interface can easily digest.<BR>
+Please note that the conversion from JSON into SOAP and SOAP into 
+JSON is done in the server just by constructing a SOAP message from a JSON 
+message and vice versa. So that you can do the same thing also in your 
+code.<BR>
+Also be warned that not all JSON messages translate into SOAP messages, 
+as the JSON notion of arrays does not exist within the SOAP realm!</P>
+
+<P><B>Version 3.1.1 Chaining of SiteHandlers</B><BR>
+
+It's quite possible that you have different ways of handeling a HTTP request for a site. For instance a 
+handler for authorized files and directories, and one without authorization in 
+special cases.<BR>
+To easily program this, you can now set multiple site handlers 
+on one and the same site, just by calling "AddHandler" more than once for the 
+same HTTPCommand ("get", "put" and so on).<BR>
+The handlers get chained in order of appearance, and if a handler cannot handle the HTTP request by returning 
+"false", the next handler in the chain gets called automatically, until you run 
+out of handlers.<BR></P>
+
+<P><B>Version 3.3.2 Mandatory namespaces in SOAP</B><BR>
+In order for .NET 4.0.0 and higher to consume our WSDL's it proved to be necessary to add mandatory 
+namespaces to all SOAP messages and in the WSDL. After this action had been 
+taken Visual Studio could create a .NET SOAP client interface directly from our 
+WSDLs.<BR></P>
+
+<H2>Version 3.4 (More) OData</H2>
+
+<P>Multipart buffer posts as the HTML &lt;form&gt; element posts multiple 
+sections of field data and files in one (1) HTTP post to the server. These forms 
+of posts are also in widespread use in the handling of OData (open-data) 
+requests. In order for Marlin to handle OData, it was necessary to fully support 
+serverside and clientside multipart buffer requests.<BR>
+The requests are gathered in an object called "MultiPartBuffer". You can add parts to it with a 
+call to "AddPart" and add messages or files to the multipart buffer. After that 
+you can send them through the HTTPClient and receive them in a site handler 
+called "SiteHandler-FormData". This site handler has a different set of extra 
+handlers. These handlers are:<BR></P>
+<TABLE>
+  <TR><TD>PreHandleBuffer</TD> <TD>Gets called once for each HTTP call.</TD></TR>
+  <TR><TD>HandleData</TD>      <TD>Gets called for each data part in the call (field etc)</TD></TR>
+  <TR><TD>HandleFile</TD>      <TD>Gets called for each file part in the call</TD></TR>
+  <TR><TD>PostHandleBuffer</TD><TD>Gets called after all data and file parts have been handled</TD></TR>
+</TABLE>
+<P><U>Client certificates</U>
+In order to build secure websites that can only be approached by known clients, a general provision called "client certificates" 
+has been invented. You can specify in the HTTPClient which client certificate 
+from your certificate store to use in a call to a certain website. The Marlin 
+server can request for this client certificate and find it in the local 
+certificate store on the server machine and ascertain itself that it's the 
+correct client certificate.<BR>
+In order to build certificates for the development stage, a new directory "Certificate" has been created in this 
+project. Here you can make root CA certificates, SSL/TLS certificates and client 
+certificates for yourself and for the development fazes of your software. 
+Beware. Here there be dragons! Read the extra documentation on how to do this 
+exactly.<BR></P>
+
+<P><U>Windows 10 hangs</U><BR>
+"O everything is better in the next version of MS-Windows". We keep hearing that from the commercial department of Microsoft. 
+But not in the HTTP Server API 2.0 ! For the first time the contents of the 
+incoming request in "HttpReceiveHttpRequest" has been changed since MS-Windows 
+Vista. And undocumented as well. Yes: your heard me: no extra documentation on 
+MSDN.<BR>
+There where now undocumented extra requestInfo records in the request. 
+It was only after installing the Windows 10 SDK, and after reading through all 
+the headers from that SDK that the veil was lifted. The extra requestInfo 
+records are carrying the SSL specifics of an incoming "https" call. And as 
+Marlin was not prepared for those, it did hang in reading the request info 
+records. Auch.<BR>
+After the SDK entries were found, Marlin now logs the extra 
+info in the logging file (if turned on of course). So there is an extra 
+LogSSLInformation method in the server that logs the current SSL/TLS protocol 
+and the cypher strengths of the current connection. But only if run on 
+MS-Windows 10 and Server 2016. Mind you!<BR></P>
+
+<P><U>Rewrite of the web.config editor.</U><BR>
+The web.config editor in the 
+HTTPManager program had become quite bloted, long and less clear as it once was. 
+So I decided to give it a rewrite and create tabs per function. So now you have 
+tabs for the server configuration, the client configuration, authentication, web 
+services and logging. This is what it looks like:</P>
+<P><BR><IMG src="newwebconfig.png"></P>
+<P>&nbsp;</P>
+
+<P><U>Version 3.4.2 Full UTF-8 / UTF-16 support</U><BR>
+Marlin already had UTF-8 and UTF-16 support. So what do you mean by 'full'? Well, the support of UTF-8 
+was only for the first 3 code pages and the West-European diacritics. Letters 
+such as &auml;, &eacute;, &iuml; and so on. In essence the standard vowels with all the accents 
+on them. But as time progressed, more became necessary. A &#8364; euro sign for 
+instance is not on the first three pages of UTF-8, and the UTF-8 was not 
+supported in the URL parameters as well. So I fixed all that. It was ugly, 
+horribly and also behaves different in debug and in release mode.<BR>
+UTF-8 and UTF-16 are now fully supported on the full URL, the URL parameters, and the URL 
+anchor as well. And also in the SOAPMessage and the JSONMessage and all its 
+parts. So if I messed up somewhere, let me know and I'll dive right back in. 
+(and take a deep sigh!)<BR></P>
+
+<P><U>Version 3.4.3 Extra Tracing in the HTTPClient</U><BR>
+Tracing of the traffic in the logfile of the HTTPClient has been rather basic. So now it is 
+possible to "SetTraceData" and "SetTraceRequest". The first call traces incoming 
+answers and the second traces the state of the HTTP request prior and after the 
+'real' request and response calls. So that we can see what state the WinHTTP 
+engine of Microsoft is in. Please be prepared for rather big logfiles!</P>
+
+<P><U>Version 3.4.4 GZIP compression / decompression</U><BR>
+Compression and decompression of content was a missing feature in the Marlin server. I added it 
+in this version. Marlin is now using the original ZLIB of Jean-loup Gailly and 
+Mark Adler for RFC 1950/1951/1952 'gzip' compression and decompression. Yes I 
+known: there are a lot more compression/decompression methods to be had in HTTP 
+traffic, but 'gzip' is just the basic one that's most widespread and since 2011 
+that everybody is using. It's been tested with all major browsers and web 
+stacks, including Google Chrome, Firefox, the IE's and Edge.<BR></P>
+
+<P><B>Version 3.5 Performance release</B><BR>
+This was a serious performance release. Firstly: the incoming HTTP request is now only recorded in the central 
+server and forwarded through the HTTPMessage and the threadpool to a different 
+thread that's handling the reading of the HTTP body of the message within the 
+HTTPSite. This clears out the responsibility of reading large file bodies from 
+the central server to a threadpool thread and a site. Thus clearing the central 
+processing thread of the server to be on the business again of receiving 
+incoming calls.<BR>
+One major parameter of course is the number of available threads, and the length
+of the input waiting queue of HTTP calls to be processed. So keep in mind that 
+after this version you just might want to fiddle 
+with the following web.config parameters:<BR></P>
+<TABLE>
+  <TR><TD>- &lt;Server&gt;&lt;QueueLength&gt;</TD><TD>Multiple of 64</TD></TR>
+  <TR><TD>- &lt;Server&gt;&lt;Stacksize&gt;</TD>  <TD>Stack space of the threads</TD></TR>
+  <TR><TD>- &lt;Server&gt;&lt;MaxThreads&gt;</TD> <TD>Should be less than <QUEUELENGTH>!</TD></TR>
+</TABLE>
+
+<P>Secondly: I have rewritten the memory model of the complete server. 
+All malloc / calloc and free() calls are now gone from the code. 
+Everything has been allocated with 'new' or with 'new []' methods and will be 
+freed from the heap with 'delete' or 'delete []'. If you are using FileBuffers 
+straight from the Marlin library, or using the WideString* conversion calls, 
+retrace your steps in the code and refactor your memory modelling 
+likewise!<BR>
+Thirdly, and as a consequence of the rewriting of the memory model, 
+I fixed a few serious stack bugs in the sizing of the XML/SOAP messages and the 
+reading of the HTTP buffers, while rewriting the memory model of the server. The 
+server is now less prone to buffer overruns and memory-overflows. All thanks to 
+the sonarsource company in Switzerland and their SonarQube analysis 
+<A href="www.sonarsource.com">(See: www.sonarsource.com)<A><BR></P>
+
+<P><B>Version 3.6 Rewriting the get handler</B><BR>
+During the last versions the get handlers has gotten several re-writes. (But we only mention it here) The 
+reason behind these rewrites lies in the way the popular AngularJS framework 
+handles missing files and other internal errors. These are the main rules:<BR>
+- All missing full resource names ending in '/' fall back to 'index.html' in that directory;<BR>
+- All other missing resources do fall back to the 'index.html' on the main page (!!)<BR>
+- If the site is an application the fallback should do a fallback to the login page.<BR>
+Another JSON feature is the handling of arrays. The roundtrip conversion from SOAP XML to JSON and back to JSON, did not handle 
+these. Especially if the handler returns a SOAP message where multiple nodes 
+with the same name are returned, it's handy to have these converted to a JSON 
+array, lest the nodes will overwrite themselves when importing the message into 
+a javascript object. See this example from the test client below:<BR></P>
+
+<PRE>&lt;xml&gt;
+&lt;Envelope&gt;
+  &lt;header/&gt;
+  &lt;Body&gt;
+    &lt;Applications&gt;
+      &lt;Datasources&gt;
+        &lt;Datasource&gt;develop&lt;/Datasource&gt;
+        &lt;Datasource&gt;test&lt;/Datasource&gt;
+        &lt;Datasource&gt;accept&lt;/Datasource&gt;
+        &lt;Datasource&gt;production&lt;/Datasource&gt;
+      &lt;Datasources&gt;
+    &lt;Applications&gt;
+    &lt;Commercial&gt;
+      &lt;Application&gt;Financials&lt;/Application&gt;
+      &lt;Application&gt;Maintenance&lt;/Application&gt;
+      &lt;Application&gt;Rentals&lt;/Application&gt;
+    &lt;/Commercial&gt;
+    &lt;Default&gt;Rentals&lt;/Default&gt;
+  &lt;/Applications&gt;
+  &lt;/Body&gt;
+&lt;/Envelope&gt;
+</PRE>
+
+<P>Two of the nodes here (Datasources &amp; Commercial) contain subnodes of the 
+same name. So they get converted to a JSON array with only the contents of those 
+nodes.<BR></P>
+
+<PRE>{
+ "Applications":{
+   "Datasources":{
+     "Datasource":
+[      "develop"
+      ,"test"
+      ,"accept"
+      ,"production"
+]
+    }
+  ,"Commercial":{
+     "Application":
+[      "Financials"
+      ,"Maintainance"
+      ,"Rentals"
+]
+    }
+  ,"Default":"Rentals"
+  }
+}
+</PRE>
+<P>One of the main reasons the get handlers got re-written so often, was the 
+need to have a websites content somewhere on disk outside of the server's root 
+directory. To accommodate this better, the virtual directory capability was 
+added. This works by prepending the root directory of the site with the 
+"virtual://" protocal. For instance:<BR>
+- The server root directory is: "C:\WWW\Server\"<BR>
+- The site root directory was: "C:\WWW\Server\MySite\"<BR>
+- The site root directory now is: "C:\Appication\Version12\MySite\"<BR>
+<BR>
+You can specify this with: site-&gt;SetWebroot("virtual://C:\Application\Version12\MySite");<BR>
+<BR>
+Rewriting of a site handler was also triggered by the need to initialize things and set 
+things up for a handler. That's why a 'OnStartSite()' method was added to the 
+SiteHandlers and the SiteFilters. The starting of the site in 
+HTTPSite::StartSite() calls all the 'OnStartSite' methods of all registered 
+filters and handlers. And because the 'OnStartSite' method is a virtual method, 
+you can have your own localized initialization for your handler.<BR>
+A last feature in this release are the handling of media types for the get 
+handler.<BR>
+To support both Microsoft Office and OpenOffice (or LibreOffice), a 
+great number of content types have been added to the marlin server. These media 
+types are quite hard to come by. In fact you have to gather them from all over 
+the internet. This version adds an extensive list of media types to the default 
+'get handler'.<BR></P>
+
+<H2>Version 3.7 Rewriting the testset</H2>
+
+<P>During the development the testset was re-written a lot to accommodate for 
+all the new features. But also the first head-up check of the testset was 
+altered. In the new start screen you can see in 'one go' that the startup of the 
+server went well. That is, if you look at the column of "OK" statuses after all 
+the tests. And you can pick the interface pages from the start screen and paste 
+them in your favorite browser. Or pick the WSDL reference and paste it into the
+.NET client builder in Visual Studio.</P>
+
+<P><IMG src="ServerStart.png"> </A></P>
+
+<H2>Conclusion</H2>
+
+<P>Okay, that was a lot! I'm quite confident that version 3.7 is a stable release 
+to be in service for a long time tot come. But then again: it's still (just) software :-)<BR>
+Who will know what's next? I've even been spammed to deploy the framework in IIS. 
+Defeating my original goal of escaping from it. Should be worth a serious performance test!<BR>
+And who know's what's around the next bend.....<BR>
+</P>
+
+<H2>About the name</H2>
+
+<P>For those who did not read the first article: This is a picture of a white 
+marlin, a common type of marlin in the Atlantic ocean. This is about the fastest 
+fish in that ocean and it's a very secretive fish. If you manage to catch one on 
+a fishing line, it will struggle on "unseen" in the deep. Like a fast webserver would :-)</P>
+
+<IMG hspace=0 src="marlin.png"> 
+
+</BODY>
+</HTML>
