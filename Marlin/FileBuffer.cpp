@@ -192,6 +192,22 @@ FileBuffer::AddBuffer(uchar* p_buffer,size_t p_length)
   m_parts.push_back(part);
 }
 
+// Allocate a one-buffer block
+bool    
+FileBuffer::AllocateBuffer(size_t p_length)
+{
+  if(m_parts.empty())
+  {
+    if(m_binaryLength == 0)
+    {
+      m_buffer = new uchar[p_length + 1];
+      m_binaryLength = p_length;
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 FileBuffer::GetBuffer(uchar*& p_buffer,size_t& p_length)
 {

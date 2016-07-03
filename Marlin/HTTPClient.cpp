@@ -1570,6 +1570,7 @@ HTTPClient::ReceivePushEvents()
         // Bookkeeping
         m_responseLength += dwRead;
         m_response[m_responseLength] = 0;
+        DETAILLOG("Reading response data block. Size: %d",dwRead);
       }
       else
       {
@@ -1585,6 +1586,12 @@ HTTPClient::ReceivePushEvents()
                                return;
         case CLOSED_BY_SERVER: m_status = HTTP_STATUS_NO_CONTENT;
                                return;
+      }
+
+      // Receiving SSE event stream. Log if logging is 'on'
+      if(m_detail)
+      {
+        m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,false,CString("SSE received: ") + CString(m_response));
       }
 
       // Parse to event responses

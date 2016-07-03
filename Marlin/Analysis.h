@@ -38,7 +38,7 @@
 #pragma once
 #include <deque>
 
-constexpr auto ANALYSIS_FUNCTION_SIZE = 40;                            // Size of prefix printing in logfile
+constexpr auto ANALYSIS_FUNCTION_SIZE = 48;                            // Size of prefix printing in logfile
 constexpr auto LOGWRITE_INTERVAL      = (CLOCKS_PER_SEC * 30);         // Median  is once per 30 seconds
 constexpr auto LOGWRITE_INTERVAL_MIN  = (CLOCKS_PER_SEC * 10);         // Minimum is once per 10 seconds
 constexpr auto LOGWRITE_INTERVAL_MAX  = (CLOCKS_PER_SEC * 60 * 10);    // Maximum is once per 10 minutes

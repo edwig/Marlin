@@ -136,7 +136,6 @@ public:
   void SetPort(unsigned p_port)                 { m_cracked.m_port     = p_port;      ReparseURL();  };
   void SetAbsolutePath(CString& p_path)         { m_cracked.m_path     = p_path;      ReparseURL();  };
   void SetRequestHandle(HTTP_REQUEST_ID p_req)  { m_request            = p_req;       };
-  void SetReadBuffer(bool p_read)               { m_readBuffer         = p_read;      };
   void SetAccessToken(HANDLE p_token)           { m_token              = p_token;     };
   void SetRemoteDesktop(UINT p_desktop)         { m_desktop            = p_desktop;   };
   void SetContentType(CString p_type)           { m_contentType        = p_type;      };
@@ -144,6 +143,7 @@ public:
   void SetSendBOM(bool p_bom)                   { m_sendBOM            = p_bom;       };
   void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    };
   void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        };
+  void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender(PSOCKADDR_IN6 p_address);
   void SetFile(CString& p_fileName);
   void SetAuthorization(CString& p_authorization);
@@ -170,6 +170,7 @@ public:
   HTTP_REQUEST_ID     GetRequestHandle()        { return m_request;                   };
   HTTPSite*           GetHTTPSite()             { return m_site;                      };
   bool                GetReadBuffer()           { return m_readBuffer;                };
+  size_t              GetContentLength()        { return m_contentLength;             };
   FileBuffer*         GetFileBuffer()           { return &m_buffer;                   };
   CString             GetContentType()          { return m_contentType;               };
   HANDLE              GetAccessToken()          { return m_token;                     };
@@ -224,26 +225,27 @@ private:
   // Reparse URL after setting a part of the URL
   void    ReparseURL();
 
-  HTTPCommand         m_command     { HTTPCommand::http_response};  // HTTP Command code 'get','post' etc
-  unsigned            m_status      { HTTP_STATUS_OK };             // HTTP status return code
-  HTTP_REQUEST_ID     m_request     { NULL    };                    // Request handle for answering
-  HTTP_CONNECTION_ID  m_connectID   { NULL    };                    // HTTP Connection ID
-  HTTPSite*           m_site        { nullptr };                    // Site for which message is received
-  CString             m_contentType;                                // Carrying this content
-  CString             m_acceptEncoding;                             // Accepted compression encoding
-  bool                m_verbTunnel  { false   };                    // HTTP-VERB Tunneling used
-  bool                m_sendBOM     { false   };                    // BOM discovered in content block
-  bool                m_readBuffer  { false   };                    // HTTP content still to be read
-  FileBuffer          m_buffer;                                     // Body or file buffer
-  Cookies             m_cookies;                                    // Cookies
-  CString             m_url;                                        // Full URL to service
-  HANDLE              m_token       { NULL    };                    // Access token
-  SOCKADDR_IN6        m_sender;                                     // Senders address;
-  UINT                m_desktop     { 0       };                    // Remote desktop number
-  CrackedURL          m_cracked;                                    // Cracked down URL
-  HeaderMap           m_headers;                                    // All/Known headers
-  bool                m_ifmodified  { false   };                    // Use "if-modified-since"
-  SYSTEMTIME          m_systemtime;                                 // System time for m_modified
+  HTTPCommand         m_command       { HTTPCommand::http_response};  // HTTP Command code 'get','post' etc
+  unsigned            m_status        { HTTP_STATUS_OK };             // HTTP status return code
+  HTTP_REQUEST_ID     m_request       { NULL    };                    // Request handle for answering
+  HTTP_CONNECTION_ID  m_connectID     { NULL    };                    // HTTP Connection ID
+  HTTPSite*           m_site          { nullptr };                    // Site for which message is received
+  CString             m_contentType;                                  // Carrying this content
+  CString             m_acceptEncoding;                               // Accepted compression encoding
+  bool                m_verbTunnel    { false   };                    // HTTP-VERB Tunneling used
+  bool                m_sendBOM       { false   };                    // BOM discovered in content block
+  bool                m_readBuffer    { false   };                    // HTTP content still to be read
+  size_t              m_contentLength { 0       };                    // Total content to read for the message
+  FileBuffer          m_buffer;                                       // Body or file buffer
+  Cookies             m_cookies;                                      // Cookies
+  CString             m_url;                                          // Full URL to service
+  HANDLE              m_token         { NULL    };                    // Access token
+  SOCKADDR_IN6        m_sender;                                       // Senders address;
+  UINT                m_desktop       { 0       };                    // Remote desktop number
+  CrackedURL          m_cracked;                                      // Cracked down URL
+  HeaderMap           m_headers;                                      // All/Known headers
+  bool                m_ifmodified    { false   };                    // Use "if-modified-since"
+  SYSTEMTIME          m_systemtime;                                   // System time for m_modified
 };
 
 inline void

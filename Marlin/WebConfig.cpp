@@ -57,12 +57,25 @@ WebConfig::~WebConfig()
   WriteConfig();
 }
 
+static char g_staticAddress;
+
 /* static */ CString
 WebConfig::GetExePath()
 {
-  char buffer[_MAX_PATH];
+  char buffer[_MAX_PATH + 1];
 
-  GetModuleFileName(GetModuleHandle(NULL), buffer, _MAX_PATH);
+  // Getting the module handle, if any
+  // If it fails, the process names will be retrieved
+  // Thus we get the *.DLL handle in IIS instead of a
+  // %systemdrive\system32\inetsrv\w3wp.exe path
+  HMODULE module = NULL;
+  GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
+                    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT
+                   ,static_cast<LPCTSTR>(&g_staticAddress)
+                   ,&module);
+
+  // Retrieve the path
+  GetModuleFileName(module,buffer,_MAX_PATH);
   CString applicatiePlusPad = buffer;
 
   int slashPositie = applicatiePlusPad.ReverseFind('\\');

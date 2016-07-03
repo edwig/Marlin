@@ -565,6 +565,13 @@ HTTPMessage::GetCookieValue(CString p_name /*=""*/,CString p_metadata /*=""*/)
   return "";
 }
 
+void 
+HTTPMessage::SetReadBuffer(bool p_read,size_t p_length)
+{
+  m_readBuffer    = p_read;
+  m_contentLength = p_length;
+};
+
 void
 HTTPMessage::SetSender(PSOCKADDR_IN6 p_address)
 {
@@ -848,15 +855,17 @@ HTTPMessage::FindVerbTunneling()
   return m_verbTunnel = (oldCommand != m_command);
 }
 
-// Use POST method for PUT or anything greater than MOVE
+// Use POST method for PUT/MERGE/PATCH/DELETE
 // Also known as VERB-Tunneling
 bool
 HTTPMessage::UseVerbTunneling()
 {
   if(m_verbTunnel)
   {
-    if(m_command == HTTPCommand::http_put  ||
-       m_command >= HTTPCommand::http_move )
+    if(m_command == HTTPCommand::http_put   ||
+       m_command == HTTPCommand::http_merge ||
+       m_command == HTTPCommand::http_patch ||
+       m_command == HTTPCommand::http_delete )
     {
       // Change of identity!
       CString method = headers[static_cast<unsigned>(m_command)];
