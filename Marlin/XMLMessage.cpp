@@ -386,6 +386,12 @@ XMLMessage::PrintElements(XMLElement* p_element
     temp.Format("<%s><![CDATA[%s]]>",PrintXmlString(name,p_utf8),value);
     message += spaces + temp;
   }
+  if(p_element->m_type & XDT_Complex)
+  {
+    // Other XML data 
+    temp.Format("<%s>%s",PrintXmlString(name,p_utf8),value);
+    message += spaces + temp;
+  }
   else if(value.IsEmpty() && p_element->m_attributes.size() == 0 && p_element->m_elements.size() == 0)
   {
     // A 'real' empty node

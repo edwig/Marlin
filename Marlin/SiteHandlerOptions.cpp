@@ -62,7 +62,7 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
   bool server = false;
 
   // See if it is a server ping
-  if(p_message->GetAbsolutePath() == "*")
+  if(p_message->GetAbsoluteResource() == "*")
   {
     // Request is for the total server HTTPSite
     server = true;

@@ -8,6 +8,40 @@ Version 3.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 3.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 3.7.1
+=======================
+1) The 'CrackedURL' object now has an extra method 'AbsoluteResource'. This member returns the
+   absolute resource path without the query and parameters, in favor of getting to the designated
+   file on a site. This makes it easier to reference that file from within a site handler.
+   The 'HTTPMessage' object also has a new method 'GetAbsoluteResource' derived from the new
+   cracked-url method.
+2) The 'CrackedURL' object now has an extra method 'GetExtension'. This member returns the file
+   extension in case the URL references a file on the website. This makes it easier to extract 
+   the media type and to take action on that type.
+   This method can also be used to destinguish between logical URL's who are targeting e.g. 
+   SOAP / JSON logical objects or 'real' file objects.
+3) All SiteHandlers dealing with files now use the 'AbsoluteResource' method instead of the 
+   absolute path method. This makes it easier to add parameters to files if needed.
+   This was done for AngularJS 2.0 applications, where we wanted to add a security / session
+   cookie to the file. At places you would need to re-write complete part of the Angular stack
+   to get as low to get to the cookies. This is an easier way to add extra parameters to files.
+4) It is now possible to add strings with XML fragments to a XMLMessage or a SOAP Message.
+   if you add a node with the type "XDT_Complex" and add a string containing XML nodes, these
+   nodes will be seemlessly integrated in the resulting XML message. This eliminates the reparsing
+   of strings and makes it possible to integrate old legacy code parts that 'spew out' raw XML
+   strings into neater code that creates XML nodes.
+   Example:
+   
+   SOAPMessage msg = othermessage;    // msg now contains already some nodes
+   msg.AddElement("Extras",XDT_Complex,"<one><part>1</part><position>low</position></one>");
+
+   The resulting message will now contain an extra chain of nodes of in total three deep
+   (Extras / one / part) and (Extras / one / position)
+   In the past this extra message block was seen added with the XDT_CDATA option in a CDATA
+   block. But that technique requires to reparse the CDATA block. In this adding through a 
+   XDT_Complex data type, everything get's glued together to just one neat message.    
+
+
 CHANGES IN VERSION 3.7
 ======================
 1) All tests in server and client test framework have been simplified in output as to have a 

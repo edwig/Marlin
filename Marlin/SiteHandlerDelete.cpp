@@ -65,7 +65,7 @@ bool
 SiteHandlerDelete::Handle(HTTPMessage* p_message)
 {
   // Getting the path of the file
-  CString pathname = m_site->GetWebroot() + p_message->GetAbsolutePath();
+  CString pathname = m_site->GetWebroot() + p_message->GetAbsoluteResource();
 
   p_message->Reset();
   p_message->SetStatus(HTTP_STATUS_DENIED);

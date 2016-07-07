@@ -2304,7 +2304,7 @@ HTTPServer::DoIsModifiedSince(HTTPMessage* p_msg)
   // Getting the filename
   if(site)
   {
-    fileName = site->GetWebroot() + p_msg->GetAbsolutePath();
+    fileName = site->GetWebroot() + p_msg->GetAbsoluteResource();
   }
   
   // Normalize pathname to MS-Windows

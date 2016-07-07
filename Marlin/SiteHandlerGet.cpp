@@ -68,7 +68,7 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
 
   // Getting the path of the file
   EnsureFile ensure;
-  CString resource = p_message->GetAbsolutePath();
+  CString resource = p_message->GetAbsoluteResource();
   // See to transformations of derived handler
   FileNameTransformations(resource);
   // Convert into a filename

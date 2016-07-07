@@ -291,6 +291,14 @@ CrackedURL::CrackURL(CString p_url)
   m_path.Replace("\\\\","\\");
   m_path.Replace("\\","/");
 
+  // Find the extension for the media type
+  // Media types are stored without the '.'
+  pos = m_path.ReverseFind('.');
+  if(pos >= 0)
+  {
+    m_extension = m_path.Mid(pos + 1);
+  }
+
   // Now a valid URL
   return (m_valid = true);
 }
@@ -463,6 +471,15 @@ CrackedURL::URL()
 
 // Resulting absolute path
 CString 
+CrackedURL::AbsoluteResource()
+{
+  // Begin with the base path
+  return EncodeURLChars(m_path);
+}
+
+// Resulting absolute path + parameters + anchor
+// But without protocol and user/password/server/port
+CString
 CrackedURL::AbsolutePath()
 {
   // Begin with the base path

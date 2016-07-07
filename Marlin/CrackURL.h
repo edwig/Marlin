@@ -59,8 +59,12 @@ public:
 
   // Resulting URL
   CString   URL();
-  // Resulting absolute path
+  // Resulting absolute path, including parameters & anchor
   CString   AbsolutePath();
+  // Resulting absolute designated resource
+  CString   AbsoluteResource();
+  // Getting the resource extension
+  CString   GetExtension();
   // Resulting UNC
   CString   UNC();
   // Resulting parameter
@@ -82,12 +86,13 @@ public:
   CString 	m_scheme;
   bool      m_secure  { false };
   CString   m_userName;
-  CString	  m_password;
-  CString	  m_host;
-  int		    m_port    { INTERNET_DEFAULT_HTTP_PORT };
+  CString   m_password;
+  CString   m_host;
+  int       m_port    { INTERNET_DEFAULT_HTTP_PORT };
   CString   m_path;
+  CString   m_extension;
   UriParams m_parameters;
-  CString	  m_anchor;
+  CString   m_anchor;
 
   // Parts found in the url (otherwise empty)
   bool      m_foundScheme;
@@ -116,4 +121,10 @@ inline unsigned
 CrackedURL::GetParameterCount()
 {
   return (unsigned)m_parameters.size();
+}
+
+inline CString
+CrackedURL::GetExtension()
+{
+  return m_extension;
 }

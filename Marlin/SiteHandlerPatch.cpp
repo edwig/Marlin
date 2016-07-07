@@ -67,7 +67,7 @@ bool
 SiteHandlerPatch::Handle(HTTPMessage* p_message)
 {
   // Getting the path of the file
-  CString pathname = m_site->GetWebroot() + p_message->GetAbsolutePath();
+  CString pathname = m_site->GetWebroot() + p_message->GetAbsoluteResource();
   DWORD error = 0;
 
   p_message->Reset();

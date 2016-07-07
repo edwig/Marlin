@@ -179,6 +179,8 @@ public:
   virtual void    ParseForNode(XMLElement* p_node, CString& p_message, WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);
   // Print the XML again
   virtual CString Print();
+  // Print the XML header
+  CString         PrintHeader();
   // Print the elements stack
   virtual CString PrintElements(XMLElement* p_element
                                ,bool        p_utf8  = true
@@ -289,8 +291,7 @@ public:
   XMLElement*     FindElementByAttribute(XMLElement* p_element, CString p_attribute, CString p_value);
 
 protected:
-  // Print the XML header
-  CString         PrintHeader();
+  // Print the WSDL Comments in the message
   CString         PrintWSDLComment(XMLElement* p_element);
   // Parser for the XML texts
   friend          XMLParser;

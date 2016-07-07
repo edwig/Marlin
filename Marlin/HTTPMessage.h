@@ -167,6 +167,7 @@ public:
   CString             GetServer()               { return m_cracked.m_host;            };
   unsigned            GetPort()                 { return m_cracked.m_port;            };
   CString             GetAbsolutePath()         { return m_cracked.AbsolutePath();    };
+  CString             GetAbsoluteResource()     { return m_cracked.AbsoluteResource();};
   HTTP_REQUEST_ID     GetRequestHandle()        { return m_request;                   };
   HTTPSite*           GetHTTPSite()             { return m_site;                      };
   bool                GetReadBuffer()           { return m_readBuffer;                };
