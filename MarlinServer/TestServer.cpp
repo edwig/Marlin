@@ -32,7 +32,7 @@
 #include "CrackURL.h"
 #include "CreateURLPrefix.h"
 #include "ThreadPool.h"
-#include "HTTPServer.h"
+#include "HTTPServerMarlin.h"
 #include "HTTPThreadPool.h"
 #include "SOAPMessage.h"
 #include "GetLastErrorAsString.h"
@@ -77,6 +77,15 @@ void xprintf(const char* p_format, ...)
   }
 }
 
+void qprintf(const char* p_format,...)
+{
+  va_list vl;
+  va_start(vl,p_format);
+  vprintf(p_format,vl);
+  va_end(vl);
+}
+
+
 // Record an error from on of the test functions
 void xerror()
 {
@@ -93,6 +102,21 @@ WaitForKey()
   _cgets_s(buffer, 256, &readIn);
 }
 
+// Setting the filename of the logfile
+#ifdef _DEBUG
+#ifdef _M_X64
+CString g_baseDir = "..\\BinDebug_x64\\";
+#else
+CString g_baseDir = "..\\BinDebug_x32\\";
+#endif // _M_X64
+#else // _DEBUG
+#ifdef _M_X64
+CString g_baseDir = "..\\BinRelease_x64\\";
+#else
+CString g_baseDir = "..\\BinRelease_x32\\";
+#endif // _M_X64
+#endif // _DEBUG
+
 ErrorReport g_errorReport;
 
 // Starting our server
@@ -106,11 +130,11 @@ bool StartServer(HTTPServer*&     p_server
 
   // Start the base objects
   p_pool    = new HTTPThreadPool(4,10);
-  p_server  = new HTTPServer(naam);
+  p_server  = new HTTPServerMarlin(naam);
   p_logfile = new LogAnalysis(naam);
 
   // Set the logfile
-  CString logfileName = WebConfig::GetExePath() + "ServerLog.txt";
+  CString logfileName = g_baseDir + "ServerLog.txt";
 
   // Put a logfile on the server
   p_logfile->SetLogFilename(logfileName,false);
@@ -173,31 +197,6 @@ CleanupServer(HTTPServer*&     p_server
   }
 }
 
-int AllAfterChecks()
-{
-  int total = 0;
-
-  total += AfterTestAsynchrone();
-  total += AfterTestBodyEncryption();
-  total += AfterTestBodySigning();
-  total += AfterTestClientCert();
-  total += AfterTestCompression();
-  total += AfterTestContract();
-  total += AfterTestCookies();
-  total += AfterTestEvents();
-  total += AfterTestFilter();
-  total += AfterTestFormData();
-  total += AfterTestInsecure();
-  total += AfterTestJsonData();
-  total += AfterTestMessageEncryption();
-  total += AfterTestPatch();
-  total += AfterTestReliable();
-  total += AfterTestSubsites();
-  total += AfterTestToken();
-
-  return total;
-}
-
 // Our main test program
 int 
 _tmain(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
@@ -257,6 +256,7 @@ _tmain(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           // Individual tests
           errors += Test_CrackURL();
           errors += Test_HTTPTime();
+
           errors += TestThreadPool(pool);
 
           // Push events interface (SSE)
@@ -267,9 +267,6 @@ _tmain(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
 
           // Test 'normal' SOAP messages without further protocol
           errors += TestInsecure(server);
-
-          // Test 'async' SOAP Messages
-          errors += TestAsynchrone(server);
 
           // Test 'body signing' capabilities of the SOAP message
           errors += TestBodySigning(server);
@@ -330,9 +327,6 @@ _tmain(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
                    "Server running....\n"
                    "Waiting to be called by test clients...\n"
                    "\n");
-            printf("Incoming test messages                           Result\n");
-            printf("---------------------------------------------- - ------\n");
-
             // Wait for key to occur
             WaitForKey();
           }
@@ -362,10 +356,6 @@ _tmain(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
         CleanupServer(server,pool,logfile);
       }
     }
-
-    // See if all test where 'seen'
-    totalErrors += AllAfterChecks();
-
     printf("\n");
     printf("SUMMARY OF ALL SERVER TESTS\n");
     printf("===========================\n");

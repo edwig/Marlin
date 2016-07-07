@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "HTTPServer.h"
+#include "HTTPServerMarlin.h"
 #include <map>
 
 class HTTPSite;
@@ -43,12 +43,12 @@ using UrlSiteMap = std::map<CString,HTTPSite*>;
 class HTTPURLGroup
 {
 public:
-  HTTPURLGroup(HTTPServer* p_server
-              ,CString     p_authName
-              ,ULONG       p_authScheme
-              ,bool        p_cache
-              ,CString     p_realm
-              ,CString     p_domain);
+  HTTPURLGroup(HTTPServerMarlin* p_server
+              ,CString p_authName
+              ,ULONG   p_authScheme
+              ,bool    p_cache
+              ,CString p_realm
+              ,CString p_domain);
  ~HTTPURLGroup();
 
   // Starting a new URL Group
@@ -62,7 +62,7 @@ public:
 
   // GETTERS
 
-  HTTPServer*       GetHTTPServer()              { return m_server;     };
+  HTTPServerMarlin* GetHTTPServer()              { return m_server;     };
   bool              GetIsStarted()               { return m_isStarted;  };
   HTTP_URL_GROUP_ID GetUrlGroupID()              { return m_group;      };
   CString           GetAuthenticationName()      { return m_authName;   };
@@ -73,7 +73,7 @@ public:
   unsigned          GetNumberOfSites();
 
 private:
-  HTTPServer*       m_server      { nullptr };        // Server of the URL group
+  HTTPServerMarlin* m_server      { nullptr };        // Server of the URL group
   HTTP_URL_GROUP_ID m_group       { NULL    };        // URL Group within Windows OS
   bool              m_isStarted   { false   };        // Group is started
   // Authentication

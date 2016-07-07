@@ -47,12 +47,12 @@ static char THIS_FILE[] = __FILE__;
                                     m_server->GetLogfile()->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,true, "Error code: %d",code);\
                                   }
 
-HTTPURLGroup::HTTPURLGroup(HTTPServer* p_server
-                          ,CString     p_authName
-                          ,ULONG       p_authScheme
-                          ,bool        p_cache
-                          ,CString     p_realm
-                          ,CString     p_domain)
+HTTPURLGroup::HTTPURLGroup(HTTPServerMarlin* p_server
+                          ,CString p_authName
+                          ,ULONG   p_authScheme
+                          ,bool    p_cache
+                          ,CString p_realm
+                          ,CString p_domain)
              :m_server(p_server)
              ,m_authName(p_authName)
              ,m_authScheme(p_authScheme)

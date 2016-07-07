@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3F12A6BF-2B42-4867-86B1-2F0E96C56835}</ProjectGuid>
+    <ProjectGuid>{F1FB03E4-E831-49B4-BAC3-CA216A4B8E9D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>MarlinServer</RootNamespace>
-    <ProjectName>MarlinServer</ProjectName>
+    <RootNamespace>MarlinClient</RootNamespace>
+    <ProjectName>MarlinIISClient</ProjectName>
     <SccProjectName>
     </SccProjectName>
     <SccAuxPath>
@@ -39,7 +39,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -87,6 +87,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)..\Bin$(Configuration)_$(Platform)\</OutDir>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -102,20 +103,21 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\ServerTestset;</AdditionalIncludeDirectories>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>marlin.lib;httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)</Command>
-      <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
+      <Command>copy utf8file.txt $(OutDir)</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy testfile to running directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -124,25 +126,22 @@ copy ..\Certificates\web.config $(OutDir)</Command>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\ServerTestset;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <ExceptionHandling>Async</ExceptionHandling>
-      <FloatingPointExceptions>true</FloatingPointExceptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>marlin.lib;httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)</Command>
+      <Command>copy utf8file.txt $(OutDir)</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
+      <Message>Copy testfile to running directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -153,7 +152,7 @@ copy ..\Certificates\web.config $(OutDir)</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\ServerTestset;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -162,13 +161,14 @@ copy ..\Certificates\web.config $(OutDir)</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>marlin.lib;httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)</Command>
-      <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
+      <Command>copy utf8file.txt $(OutDir)</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy testfile to running directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -177,63 +177,63 @@ copy ..\Certificates\web.config $(OutDir)</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\ServerTestset;</AdditionalIncludeDirectories>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>marlin.lib;httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)</Command>
-      <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
+      <Command>copy utf8file.txt $(OutDir)</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy testfile to running directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\ServerTestset\TestServer.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="TestClient.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ServerTestset\TestBaseSite.cpp" />
-    <ClCompile Include="..\ServerTestset\TestBodyEncryption.cpp" />
-    <ClCompile Include="..\ServerTestset\TestBodySigning.cpp" />
-    <ClCompile Include="..\ServerTestset\TestClientCert.cpp" />
-    <ClCompile Include="..\ServerTestset\TestCompression.cpp" />
-    <ClCompile Include="..\ServerTestset\TestContract.cpp" />
-    <ClCompile Include="..\ServerTestset\TestCookies.cpp" />
-    <ClCompile Include="..\ServerTestset\TestCrackUrl.cpp" />
-    <ClCompile Include="..\ServerTestset\TestEvents.cpp" />
-    <ClCompile Include="..\ServerTestset\TestFilter.cpp" />
-    <ClCompile Include="..\ServerTestset\TestFormData.cpp" />
-    <ClCompile Include="..\ServerTestset\TestInsecure.cpp" />
-    <ClCompile Include="..\ServerTestset\TestJsonData.cpp" />
-    <ClCompile Include="..\ServerTestset\TestMessageEncryption.cpp" />
-    <ClCompile Include="..\ServerTestset\TestPatch.cpp" />
-    <ClCompile Include="..\ServerTestset\TestReliable.cpp" />
-    <ClCompile Include="..\ServerTestset\TestSubSites.cpp" />
-    <ClCompile Include="..\ServerTestset\TestThreadpool.cpp" />
-    <ClCompile Include="..\ServerTestset\TestTime.cpp" />
-    <ClCompile Include="..\ServerTestset\TestToken.cpp" />
+    <ClCompile Include="..\TestsetClient\TestClientCert.cpp" />
+    <ClCompile Include="..\TestsetClient\TestCompression.cpp" />
+    <ClCompile Include="..\TestsetClient\TestContract.cpp" />
+    <ClCompile Include="..\TestsetClient\TestConvert.cpp" />
+    <ClCompile Include="..\TestsetClient\TestCookies.cpp" />
+    <ClCompile Include="..\TestsetClient\TestCrypto.cpp" />
+    <ClCompile Include="..\TestsetClient\TestEvents.cpp" />
+    <ClCompile Include="..\TestsetClient\TestFormData.cpp" />
+    <ClCompile Include="..\TestsetClient\TestJSON.cpp" />
+    <ClCompile Include="..\TestsetClient\TestNamespaces.cpp" />
+    <ClCompile Include="..\TestsetClient\TestPatch.cpp" />
+    <ClCompile Include="..\TestsetClient\TestReader.cpp" />
+    <ClCompile Include="..\TestsetClient\TestUnicode.cpp" />
+    <ClCompile Include="..\TestsetClient\TestWS.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TestServer.cpp" />
+    <ClCompile Include="TestClient.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="MarlinServer.rc" />
+    <ResourceCompile Include="MarlinClient.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Documentation\WebConfig.txt" />
     <None Include="Web.Config">
       <SubType>Designer</SubType>
     </None>

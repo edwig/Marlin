@@ -103,7 +103,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -126,7 +126,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -152,7 +152,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -179,7 +179,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -207,6 +207,20 @@
     <ClInclude Include="TestClient.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\TestsetClient\TestClientCert.cpp" />
+    <ClCompile Include="..\TestsetClient\TestCompression.cpp" />
+    <ClCompile Include="..\TestsetClient\TestContract.cpp" />
+    <ClCompile Include="..\TestsetClient\TestConvert.cpp" />
+    <ClCompile Include="..\TestsetClient\TestCookies.cpp" />
+    <ClCompile Include="..\TestsetClient\TestCrypto.cpp" />
+    <ClCompile Include="..\TestsetClient\TestEvents.cpp" />
+    <ClCompile Include="..\TestsetClient\TestFormData.cpp" />
+    <ClCompile Include="..\TestsetClient\TestJSON.cpp" />
+    <ClCompile Include="..\TestsetClient\TestNamespaces.cpp" />
+    <ClCompile Include="..\TestsetClient\TestPatch.cpp" />
+    <ClCompile Include="..\TestsetClient\TestReader.cpp" />
+    <ClCompile Include="..\TestsetClient\TestUnicode.cpp" />
+    <ClCompile Include="..\TestsetClient\TestWS.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -214,20 +228,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TestClient.cpp" />
-    <ClCompile Include="TestClientCert.cpp" />
-    <ClCompile Include="TestCompression.cpp" />
-    <ClCompile Include="TestContract.cpp" />
-    <ClCompile Include="TestConvert.cpp" />
-    <ClCompile Include="TestCookies.cpp" />
-    <ClCompile Include="TestCrypto.cpp" />
-    <ClCompile Include="TestEvents.cpp" />
-    <ClCompile Include="TestFormData.cpp" />
-    <ClCompile Include="TestJSON.cpp" />
-    <ClCompile Include="TestNamespaces.cpp" />
-    <ClCompile Include="TestPatch.cpp" />
-    <ClCompile Include="TestReader.cpp" />
-    <ClCompile Include="TestUnicode.cpp" />
-    <ClCompile Include="TestWS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MarlinClient.rc" />

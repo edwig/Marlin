@@ -1,0 +1,642 @@
+RELEASENOTES MARLIN VERSION 1.x
+===============================
+
+This is the file with releasnotes of the Marlin HTTPServer & HTTPClient API
+---------------------------------------------------------------------------
+
+CHANGES IN 1.8.3
+================
+- SOAP fault answers are always un-encrypted send back tot he clients. Unregarding the  
+  configuration of the encryption and signing. Errors should always be readable.
+- SOAP 1.1. was not working under all conditions, te be exact:
+  1) Selecting the content type
+  2) Unknown-headers (like SOAPAction) are added in the server to the HTTP message
+     in case of a HTTP 'POST', so soap versions can be recognized
+  3) After constructing a SOAP message from a HTTP message, the SOAPAction is 
+     found in the unknown headers nad used to distinguish between SOAP 1.1 and 1.2
+  4) Beware: protocols like reliable messaging, signing and encryption will 
+     change the SOAPMessage to version 1.2!
+
+CHANGES IN 1.8.2
+================
+- Fixed a bug in WebConfig class in regard to the injust delting of the 
+  encryption password of the client and the server
+- Extensive maintanance to the encryption provider
+  See Crypto.cpp/Crypto.h for all details
+- Correct support of the OASIS WS-Security standard:
+  "ws-message-security 2004-01"
+  The following have been changed
+  1) Correct support for the header in the body signing. Token/user values are correct
+     Hashing references to  http://www.w3.org/2000/09/xmldsig#
+     Password is processed in the hash instead of in the body
+  2) Encryptie is now accorrding to your own namespaces
+     This is AES_256 hashing and encryption.
+  3) Body encryption and full message encryption correct according to 
+     their own namespaces.
+  4) Checking of the signing is now based on the XML structure instead of the raw
+     text of the HTTPMessage.
+  5) The hashing method used by the signing can now be set.
+     Be aware: not all moethods can work correct. See 'Crypto.cpp'!
+  6) Correct reference to the signing attribute "wsu:Id"
+  7) Support for a custom token for your own namespace
+  NB: "SendResponse" of the server has been extended with a overload.
+  There is now a version for the HTTPMessage and for the SOAPMessage as well.
+  Not using the variant for the SOAPMessage will lead to incorrect behaviour
+  in case of body-signing and/or message-encryption.
+
+CHANGES IN 1.8.1
+================
+- The EventSource has now been extended with 2 non standard method
+  o OnComment -> Makes it possible to log the comments in the event stream
+  o OnRetry   -> Makes it possible to log the new retry times of the server
+  This was needed to trace the ":keepalive" events of the SSE (Server Sent Events)
+  stream, so that we can set a new timeout after a timeout.
+  When using the standard HTTP port 80, the timeouts are sometimes much shorter than
+  the standard 15000 miliseconds of the tcp/ip protocol.
+- A better error handling in the HTTPClient in case of a succeeded 'Connect', but
+  a failed SendRequest. This happens in the case of secure/non-secure differences
+  between client and server.
+
+CHANGES IN 1.8.0
+================
+- Support for UTF-8 diacritics, as well as for the incoming traffic as for the 
+  outgoing SOAP/XML messages. Works mainly for MBCS applications (Multi Byte
+  Character Sets). The first three code pages of UTF-8 are being supported, 
+  to be exact, the pages: 0, 0xC2 and 0xC3.
+  All west-euroopean diacritics are now supported. See test project: "TestConvert.cpp"
+  The support all diacritics on the letters "aceinouyACEINOUY".
+- Dependency of the TinyXML library has been removed. Instead an own XML parser
+  has been incorporated in the project. This parser is faster, by building the 
+  XML structure only once.
+- The object "SOAPMessage" is now a derived class of the generic "XMLMessage".
+
+CHANGES IN 1.7.0
+================
+- Support for the WS-Addressing protocol is now independent from the support of 
+  the Reliable-Messaging protocol.
+- Expanded SOAPMessage functionality. The following is now supported:
+  1) Setting and getting of extra HTTP headers
+  2) Advantage of the WS-Addressing SOAP "Action" in the header above the first name
+     of the first body node of the message
+  3) Independent support for the message-id in WS-Addressing
+  4) The setting of a namespace of a name node by "SetParameterNamespace"
+  5) Het zoeken van een parameter onafhankelijk van de namespace
+  6) No longer an extra <parameters> node in the body needed (Non standard!)
+  7) The CDATA field now has it's own type and is no longer dependent on the naming
+     prefix of "CD_".
+  8) Parameter names can now be set including a namespace as in:
+     message->SetParameter("a:Name","value");
+     They can be retrieved by name only as in:
+     CString value = message->GetParameter("Name");
+     Or alternativly with a namespace as in:
+     CString value = message->GetParameter("a:Name");
+     For a return method, the last method is less stable, as the answering server van
+     implement the exact same namespace with a different alias, and return that to us.
+  9) Attributes now alsoo support namespaces. Attributes can be searched through the 
+     alias of the namespace as well.
+- WebserviceClient: Now logs all outgoing and incoming SOAPMessages.
+- WebserviceClient: Timouts of the HTTPClient are now cached here.
+
+CHANGES IN 1.6.8
+================
+- SSE should not send a BOM (Byte-Order-Mark) with every event, but only at the initialising
+  of the event channel (at the sending of the first answer of the server to the client)
+  There were a lot of browsers on tablets that could not stand all-those-boms.
+- Logfile functionallity adapted so that the type of logging entry shows up in the log.
+- Server is stresstessed on the default HTTP port (80) in combination with SSE.
+
+CHANGES IN 1.6.7
+================
+- Copyright year changed from 2014 to 2015
+- Sending a BOM (Byte-Order-Mark) with a server sent event channel is optional
+  The default is false
+- The string for the BOM is correctly freed, memory leak fixed.
+- The memory-leak-detection of the CRT (C-Runtime) has been repaired in this project
+  Memory leaks are being transcribed to the trace output pane.
+
+CHANGES IN 1.6.6
+================
+- The construction of the Event data in the event stream of the server push events
+  has been brought further in line with the official standard.
+  See: http://www.w3.org/TR/2012/WD-eventsource-20120426
+  This adds up to the following changes:
+  1) All data lines are being prepended with "data:";
+  2) The last newline is not being parsed;
+  3) Comment lines can happen everywhere;
+  4) It is again possible to enter ":" lines in between other lines
+  5) Optionally every event can be prepended by a BYTE-ORDER-MARK (BOM)
+     See the method "HTTPServerXP::SetByteOrderMark()"
+     This feature is standard on! (Because a browser can run on e.g. an iMAC)
+     Specific configurations could turn it off.
+  6) The event source object now parses the event source in-line with these changes
+     (removing the BOM, parsing, removing comment, storing data and dispatching)
+
+CHANGES IN 1.6.5
+================
+- Management of the firewall rules has been added to the HTTPManager program.
+  This is done to support the installations where adminstrators must allow the 
+  firewalls to pass the HTTP trafic for both server and client programs.
+  It is in practice not enough to ask adminstrators to open these ports,
+  by supporting it from the program, it's just a button-click away.
+
+CHANGES IN 1.6.4
+================
+- It turned out to be impossible to send a ':' char trough a server pus event.
+  This character is used in the protocol to separate an event name from its data.
+  To solve this problem, the ':' signs are replaced by there XML-escape equivalent
+  a '&#03A;' string.
+  This escape is removed in the eventsource parser. If you use a javascript eventsource
+  in your browser, it's your responsibility to re-parse this string.
+- The object 'EventStream' that the server gives through a call-back contained only the 
+  base URL path of the registration, and not the 'real' URL of the actual call.
+  This absolute path is added to the object 'EventStream', so that an application can
+  detect from which URL the call came.
+
+CHANGES IN 1.6.3
+================
+This version contains major changes that are the effect of the introduction fo the
+server-sent-event interface. Changes have been made to the server as well as the client.
+
+New functionality
+-----------------
+- The server is expaned with a 'HasEventStream(EventStream* p_stream)' method. So it is 
+  possible to detect wheter an event stream is still in existence and actif.
+- The server will is now capable to end an EventStream with a 'real' End-Of-File (EOF).
+  After sending the last event (On convention 'OnClose'), the server wil send the last
+  response block with the HTTP_SEND_RESPONSE_FLAG_DISCONNECT. This effectivly closes 
+  the HTTP tcp/ip channel.
+- When stopping the HTTPServer, all event-streams get an OnClose event and their respective
+  streams are closed on the HTTP level.
+- The HTTPClient starts a seperat thread to run the EventSource.
+- The HTTPCLient has an extra status 'OnCloseSeen'. This status represents the fact that
+  the client saw an "OnClose" event passing by to the application.
+- The HTTPClient stops after the processing of the OnClose by the EventSource, or if the
+  server breaks the event stream, or the tcp/ip channel gets disconnectd.
+- If a HTTPClient stops by the call to "StopClient" and there is still an EventSource
+  running, it's processing will be forcefully stoped, and the running thread of the EventSrouce
+  and it's threadpool shall be stopped and removed as well.
+- The EventSource has a new method "SetReconnectionTim", to set this time initially,
+  before the server has given a reconnection time through the server-sent-event protocol.
+
+Fixed errors (bugs)
+-------------------
+- A serious memory leak has been repaired
+- A leak in the EventStream objects has been repaired
+- The extra threadpool has been moved from the HTTPClient to the EventSOurce, to have control
+  over the extra threads that are started to process the EventSource's events.
+- The synchronisation between the EventSource and the HTTPClient is improved. This concerns
+  mainly the 'OnClose' status, to end the HTTP channel correctly.
+
+CHANGES IN 1.6.2
+================
+- The threadpool has been expanded with the possibility to create a hartbeat thread.
+  This makes it possible to create a thread that call's it's callback function at a specific
+  interval in time. E.g. to monitor a status or perform a task.
+  The "SubmitWork" method is expanded with an extra (optional) p_heartbeat parameter.
+  Values of this parameters are in CLOCK_TICKS (miliseconds) and this is the waking interval
+  of the new thread.
+  There is alsoo an extra "StopHartbeatThread" method added to the threadpool to stop this 
+  hartbeat thread.
+- The primairy function of the "AnalysisLog" has been expanded with an extra parameter that 
+  controls the fact whether the output can be formatted. This is done for very long logging 
+  messages (containing XML messages). Or the fact that some logging lines can contain the 
+  '%' character, which can crash the multiple variable expanding of the call.
+- Small changes in the requesting of the body of an HTTPMessage. Some crash reports showed
+  variants where the building of the body in the FileBuffer did overflow.
+- Fix for a serious bug in the registered SiteContexts. Through a memory mapping these
+  contexts where sometimes moved in memory, which led to the situation where the HTTP calls
+  couldn't be processed in the HTTPServer.
+
+CHANGES IN 1.6.1
+================
+- It is now possible to identify the server-sent-event to an event-stream and a session.
+  You can now send events specifically to a session.
+  To make this possible the following changes have been made:
+  1) The callback of the function "CreateChannel" (parameter p_pushEvents = true) contains
+     a callback pointer to an "EventStream" object, instead of a pointer to a HTTPMessage.
+  2) There is an extra member function override on "SendEvent" with two parameters as in:
+     "bool SendEvent(EventStream* p_stream,ServerEvent* p_event)"
+     This makes is possible to send a ServerEvent straigth to the correct event stream.
+     The original "SendEvent" method calls this new method in a tight loop for every 
+     registered stream of a user and/or a URL.
+     The new SendEvent method has a new very short locking period, gaining some performance.
+- Fixed a 64bits compilation bug.
+
+CHANGES IN VERSION 1.6.0
+========================
+Functional changes
+------------------
+- Support of HTML5 server-sent-events (http://www.w3.org/TR/eventsource/)
+  Server: At the serverside the method "CreateChannel" has been expanded with an extra
+          boolean parameter (p_pushEvents). When set to 'true', the URL will be registerd
+          as an url that handles the push-event channels.
+          The function "SendEvent(url,ServerEvent[,user])" sends events to all listners
+          of this URL
+          --- Handy procedures ---
+          "HasEventStreams"   -> Counts the number of event streams on the URL
+          "CloseEventStreams" -> Closes the even streams for an URL or a user.
+          Sending of a "close" event will close the stream at the client listner side.
+  Client: For the client-side the HTTPClient you need the new "EventSource" object.
+          This is done by calling the "CreateEventSource" method.
+          In the event source, you need to registere one or more listners, but as a minimum
+          you need to implement the "OnMessage" listner.
+          onmessage, onopen en onerror are the standard listners of the event source object.
+          Other listner handlers are registered with "AddEventListener".
+          As a last step, you need to call "EventSource->EventSourceInit()" for the staring
+          of the actual listner. The EventSource will now call every message handler through
+          a threadpool thread.
+          --- Handy procedures ---
+          "Close"        -> Set the closed status, to stop the EventSource listner
+          "SetSerialize" -> Forces the ordering of the event-id's at delivery.
+
+Bug fixes & small changes
+-------------------------
+- It is now possible to set the authentication schem in the web.config explicitly to
+  "Anonymous" and thusly override the settings of the program for non-authenticated services.
+  This has been done as not filling the field (empty field) does not work as an override.
+- Fixed a bug in the WSDL at the checking of the outgoing traffic. All messages where being
+  invalidated. Fixed by checking on the name of the outgoing message name (not the incoming
+  message name).
+
+CHANGES IN VERSION 1.5.1
+========================
+Functional features:
+--------------------
+- It is now possible to make a distinction in the WSDL parameter ordering of the
+  SOAP service elements. The following are supported:
+  - 1 of the parameters (nodes) must be used (choice)
+  - All of the parameters (nodes) must be used (all)
+  - Parameters (nodes) must appear in this order (sequence)
+- The default generated WSDL has been changed. If nothing is defined, the parameters
+  (nodes) are supplied in the ordering 'all', instead of the ordering 'sequence'.
+  Please be adivsed that the default ordering for a .NET service is still 'sequence'.
+  So if you want to be able to communicate with a .NET endpoint, you must set the
+  ordering to 'sequence'.
+- The parameter (nodes) grouping orderering can be set with the "SetWSDLOrder" method.
+
+Bug fixes & small changes
+-------------------------
+- Conversion of the library from Visual Studio 2012 to VS2013.
+- There was a bug in the length of the received messages, which led in its turn to
+  the injust effect that the incoming SOAP text was being submitted to the Unicode 
+  converter, leading in it's turn to an unreadable message.
+- If the Unicode converter was called with a buffer length modulo 16 with a quotient
+  of 0 or 1, the application would crash.
+- Last-errorcode / last-errormessage text are placed in TLS (Thread Local Storage),
+  so that there is no longer context storing or thread-locking needed.
+
+CHANGES IN VERSION 1.5.0 
+========================
+Functional features
+-------------------
+- It is now possible to make serverside choices in supported security protocolls:
+  SSL 2.0 : But you are strongly advised to **NOT** use this protocl
+  SSL 3.0 : Standard SSL protocol that is in use all over the world.
+  TLS 1.0 : More secure protocol. Not yet fully supported by Google Chrome
+  TLS 1.1 : More secure protocol. Not yet fully supported by Google Chrome
+  TLS 1.2 : Most secure protocol at the current moment.
+  Configurations can be made in the HTTPManager program. After choosing the "https://"
+  protocol, use the button "Security Options".
+  Changes are written in the Windows registry under HKEY_LOCAL_MACHINE, and are only
+  activated after the kernel (OS) has been restarted.
+  These cahnges affect all programms running on the machine!
+- HTTP Manager now alsoo supports "Windows Server 2003" by means of the "httpcfg.exe"
+  program. This program is included in the library set (copied from Server 2003)
+- SOAPMessage has a foutstatus (errorstate) attribute. This new attribute can be used
+  to determine if the message is in an error state (e.g. XML nog parsed).
+  This status is being used by the "WebServiceServer" after an HTTP error status or a
+  SOAP fault to *not* check the message against the WSDL or XSD's.
+- The example web.config file "WebConfig.txt" is expanded accordingly to this version.
+
+Bug fixes & small changes
+-------------------------
+- CrackURL: From incoming crash reports, we have deducted that an explicit destructor
+  for this class was needed. This trivial non-functional change led to far fewer crashes.
+- Some minimal changes in FileBuffer.cpp found from crash reports as well.
+- HTTPClient: A few optimalisations (last used URL).
+- WebConfig: changed status was incorrect initialised.
+- WebServiceClient: the function "GetSubNode" was no longer needed.
+- ThreadPool: QueueUserAPC check dropped.
+
+CHANGES IN VERSION 1.4.2
+========================
+- NTLM Windows authentication: after 120 seconds timeout on the authentication system of 
+  windows, the HTTP authentication failes with a special error status (ERROR_INTERNET_FORCE_RETRY)
+  After this error stats a third roundrip is necessary for the eventual authentication.
+  This mechanism is known as the NTLM-3-STEP. It is now implemented correctly.
+- HTTPClient: the setting of the "global server caching" of the authentication fails on 
+  WIndows 2003. This is no longer logged as an error, but as a not-supported-feature.
+  The HTTPClient is no longer stopped.
+- HTTPClient: Fixed an error in the detailed logging by misreading the 'web.config' file
+  (DoDetails was read instaed of 'Details')
+- HTTPClient: after the first authentication the username/password information was dropped in 
+  the next parsing of the URL. This is fixed with a new internal function (ReplaceSettings).
+- URL cracking: Status codes checking to see if a certain element was present in the URL.
+  This was necessary to stop dropping the user/password info from the URL in the authentication
+  handling of the client.
+- HTTP/SOAP Message: read/write rights of the token are now copied from each other.
+- PrintToken: This is an extra function, to make it possible to list the contents of the
+  passed authentication token in a string.
+- New function "GetUserAccount" to request the current user in a format known to MS-Windows.
+- Extra feature: It is now possible to create logfiles with an extra extension. This extension
+  is the current user name from "GetUserAccount" (see previous point). This makes it possible
+  to list several logfiles on a Citrix/Terminal-server environment in the same directory,
+  so that the logfiles do not clash. One extra boolean parameter in the setting of the
+  logfile name takes care of this feature.
+
+CHANGES IN VERSION 1.4.1
+========================
+This is a minor bug release for the starting on Windows-XP and Server 2003 for those
+systems where the %WINDIR%\System32 directory contains only a HTTPAPI.dll for version 1.0
+and not for version 2.0.
+- Fixed a bug in "HttpRemoveUrlFromUrlGroup". In this function the delay loading of the
+  DLL was incorrect. Starting under Windows Server 2003 now works correctly (again).
+- Fixed a bug in the Cleanup() function of HTTPServer and HTTPServerXP.
+  The cleanup of the HTTPAPI DLL can only be called if it was delay loaded, otherwise the
+  server will crash on closing down.
+- Null-Pointer error fixed in HTTPServerXP on the buffer-object in the case a buffer 
+  response is called with an empty buffer.
+- Null-pointer error in the HTTPClient in case of a not-initialized analyse log file.
+
+CHANGES IN VERSIN 1.4.0
+========================
+This is a major bugfix release in regard the the WS-ReliableMessaging and WS-Security
+protocols, after a regression and stresstest in combination with different HTTP(S) settings.
+Testing (HTTPS + WS-Reliable + WS-Security at the highest security level)
+- Nummerous fixes in the HTTPClient for the sending of messages
+  o Fixed a bug in the buffering of the received message
+  o Fixed a bug in the handling of the logfile
+  o Decryption of incoming trafic regardless of correct/error status
+- Nummerous fixes in the HTTPServer for the WS-ReliableMessaging protcol
+  o Corrected the WS-ReliableMessaging sequences and sessies. Specially the nested
+    parameters and double parameters are fixed.
+  o Handling of the WS-Reliable protocol corrected (LastMessage/Terminate)
+  o Multi-session handling is improved. The unique combination of a incoming session
+    is now determined by the <user, machine, desktop, url> combination.
+- Nummerous fixes in the HTTPMessage/SOAPMessage classes.
+  o SOAP 1.1/1.2 corrections
+  o Corrections on the WS-ReliableMessaging namespaces 
+  o SOAP messages can now better handle nested nodes.
+- Small improvements in the threadpool to show the status in the logfiles
+- CrackURL can now also reconstruct a URL from the parts, instead of cracking down to parts only.
+
+CHANGES IN VERSION 1.3.2
+========================
+- Some extensions in the logfiles. The handling of the newlines has been extended.
+  The writing of blocks of lines has been optimized, and the locking level of received
+  log lines has been optimized for performance.
+- A bug with a crash on a null-pointer in the filebuffering for the REST services 
+  has been corrected. Read files where sometimes not closed, causing the services to 
+  work incorrectly. This has been fixed.
+- Duplication of cookies by the HTTPClient request has been fixed.
+  Applications still have to split the received cookies at the receiving side (server-side)
+  in the correct way.
+- Fixed a bug in the handling of the time in the HTTPMessage.
+- Fixed a bug in the handling of the ownership of the logfile in the HTTPServer
+- Fixed a off-by-one bug in the bufferhandling of the HTTPServer.
+- Fixed a few small bugs in the parameters of the SOAPMessage.
+  o Message encoding is now correct
+  o Subnodes can now correctly be retrieved.
+- Fixed a few small bugs in the handling of the WSDL cache
+  o spelling error for complex types.
+  o namespaces has been added for the "SoapIn" sections/
+  o Service postfix fixed
+  o XMLSchema fix for "/" endings.
+
+CHANGES IN VERSION 1.3.1
+========================
+- The web.config editor of the "HTTPManager" program has been extended.
+  Only the changed parts are written to the file. Unmeant empty overrides are now 
+  inpossble.
+
+CHANGES IN VERSION 1.3.0
+========================
+- The HTTPManager now has an extra editor screen to edit the Web.Config overrides.
+- Fixed various small bugs in the "WebConfig.cpp" class. At the deletion of the parameter
+  values, their respective nodes from the web.config file are removed.
+- Passwords are now strongly encrypted in the web.config (AES 256 bits encryption)
+- HTTPServer/HTTPClient now use encrypted passwords.
+- HTTPServer_v2 is now the default server, derived from HTTPServerXP. This is done to stress
+  the fact that the "HTTP Server API 1.0" is now deprecated for MS-Windows 2003/XP platforms.
+  In a next version the HTTPServerXP will be removed.
+
+CHANGES IN VERSION 1.2.2
+========================
+- The HTTPClient now registered if it is the owner of the created logfile, if yes: the logfile
+  is destructed at the closing of the object. If not: the logfile is left intact.
+- The HTTPClient can be configred to single-signon
+- The threadpool now has a configurable stacksize. This stacksize is read by the HTTPServer from
+  the webconfig and set in the threadpool (See: WebConfig.txt)
+- A leaking event bug has been fixed in the threadpool
+- If the binding of the HTTPServer failes, a much clearer message is written to the WMI log.
+- A bug in the stopping of the HTTPServer has been fixed.
+- A bug in the reading of the web.config is solved. The web.config was sometimes read from a different
+  directory than the HTTPServer's program. (the current application's directory).
+- A bug has been fixed in the creation of the WSDLCache in regard to boolean values.
+- A bug has been fixed in the HTTPServer_v2 in relation to the extension of the request buffer.
+  The buffer was not expanded for a larger HTTP call.
+
+CHANGES IN VERSION 1.2.1
+========================
+- Empty anchors and empty query parameters are now supported in the URL's
+
+CHANGES IN VERSION 1.2.0
+========================
+- Bug fixed in "CreateURLPrefix" function in case you use standard ports (80/443)
+- HTTPServer: bug in deallocation of the logfile fixed.
+- SOAPMessage has a switchable XML coding (UTF-8 / Windows-1252)
+  You can alsoo explicitly deactived the coding scheme's (With SENC_Plain).
+- Security tokens are no longer copied, but duplicated with the function "DuplicateToken"
+  This makes it possible for HTTPMessages and SOAPMessges to use the same security token,
+  instead of only one of the two messages.
+- WebServiceClient has been cleaned up, and now has the ability to place messages in the
+  HTTPClient's messgae queue. This makes it possible for an application to create a 
+  WebServiceClient and use that as the beginning point of the message stream, instead of 
+  creating a HTTPClient itself.
+- SOAPMessage has been extended so that the XML structure of the message can contain the following:
+  1) Attributen on the nodes nodes
+  2) Sub-nodes of the XML nodes
+  3) Duplicate named XML nodes
+  4) All parameters keep the order of the XML and reversly the generated XML is in the order
+     of the creation of new parameters
+  To work within the C++ interface with Set/Get<Parameter> interfaces the methods are expanded:
+  This is a short manual:
+  - CString GetParameter("Name")	   -> Gets the result as a string (as it was before)
+  - <type>  GetParameter<Type>("Name") -> Gets the result as a <type> (as it was before)
+  - SOAPParameter* GetParameter(SQLParameter*,"Name")	-> Gets the resultaat as a parameter object
+  Extensions for attributes:
+  - <type> GetAttribute<type>(Parameter,"name");
+  - SOAPAttribute* SetAttribute(Parameter,"name",<type> value);
+  There are interfaces for "String", "const char*", "integer" and "double"
+  All interfaces have duplicates with the first (extra) "SOAPParameter*" parameter. 
+  This parameter can be empty (NULL) to indicate a parameter of the first level (directly within <body>)
+  But it can be the base node to search in, so that you can reach subnodes easely.
+  See the comments in the interfface description (*.h) and the example code
+- There is a new class "WSDLCache". All messages are cached here singularly. This class is capable
+  to generate a *.wsdl file to describe our webservices (in WebService Description Language)
+  At the moment only WSDL 1.0/1.1 is being supported, because this is the version that is used by the
+  WCF (MS.NET) stack generate webservice clients in Visual Studio .NET.
+- It is now possible to overload the callback of the threadpool in such a way that a threadpool can be
+  made specific for an application class.
+- There is a new class "WebServiceServer". This is this the antipode of the "WebServiceClient".
+  This class makes it possible to build derived classes that implement complete webservices in one go
+  within one namespace. See alsoo the example code "TestConnector.cpp" in the MarlinServer example.
+  The new class implements the following functions:
+  1) Discovery of the service in the browser.
+  2) Examples in the browser of the SOAP messages
+  3) Storage of the WSDL and generation of the WSDL before the server is started
+  4) Optional: Checking of the incoming stream of SOAP messages against the WSDL definition
+  5) Optional: Checking of the outgoing stream of SOAP messages against the WSDL definition (if you don't trust yourself!)
+  6) HTML Page display of all services
+  7) HTML Page for every webservice with examples
+- To implement a derived class of the WebServiceServer, add the following
+
+  In thye header:
+   WEBSERVICE_DECLARE                 -> Declares the webservice mapping
+   MethodFor1(SOAPMessage* p_msg)    -> Method for handling service 1
+   MethodFor<n>(SOAPMessage* p_msg)  -> Method for handling service <n> 
+
+  In the implementation of the class a service map like this one:
+
+  WEBSERVICE_MAP_BEGIN(Classname)
+   WEBSERVICE(1,  MethodFor1)
+   WEBSERVICE(2,  MethodFor2)
+   WEBSERVICE(n,  MethodFor<n>)
+  WEBSERVICE_MAP_END
+
+  And of course all methodes as named before :-)
+
+BEWARE: Breaking changes in SOAPMessage
+---------------------------------------
+- SetParameter can no longer delete the parameter with an empty value. For this functionallity
+  there now exists a method "DeleteParameter". This makes is possible to have parameter with 
+  empty values.
+- Parameters with the "XML_" prefixes are no longer supported.
+  These parameters are now replaced with the hierarchycal 'real'XML nodes.
+  Check your application logic for these!!
+- Parameter names with the "CD_" (CDATA) prefixes are still being supported
+  CDATA nodes do NOT support subnodes!!
+
+BEWARE: Breaking changes in HTTPMessage
+---------------------------------------
+- At the "Reset" method the message now gets the standard status "HTTP_STATUS_OK" (200)
+  instead of "HTTP_STATUS_CONTINUE". 200 is the most common used return status.
+  It sometimes was forgotten to be set. So if you need any other status, please set it
+  with the member function "SetStatus" after a reset.
+
+A new program has been delivered: "HTTPManager".
+With the coming of this program, the command-shell (or powershell) commands for "netsh"
+are no logner needed to configure your ports, sites and SSL certificates.
+All necessary commands are implemented in this maintenance program.
+
+CHANGES IN VERSION 1.1.5
+========================
+- HTTPServer pointer has been added to the HTTPMessage and the SOAPMessage.
+  This is done to aid the sending of the response message through the same server that received
+  the original message, in the case that more than one object "HTTPServer" exists in memory.
+  NOTE: The reference to the global server has been removed from the example code.
+- Bug fixed in the initialisation of the systemtime in the HTTPMessage.
+
+CHANGES IN VERSION 1.1.4
+========================
+- An extra function "DumpToken" has been added that can dump an authentication token to a string.
+  This aids the logging of the authentication tokens in the logfiles. See the file PrintToken.cpp,
+  function "DumpToken".
+  In the testproject MarlinServer, this function is used for the authentication token of the server,
+  as well as the received authentication token from the client, to test the impersonation.
+- The HTTPServer now has extra members to set the authentication "realm" and "domain". 
+  These attributes are used in the HTTPServer_v2 to be used in the autmatic authentication mechanism.
+- The copying of the security token between the HTTPMessage and the SOAPMessage is improved.
+  A duplicate is now been made, so that the impersonation is now possible for the HTTPMessage
+  as well as for the SOAPMessage.
+- An example of client-impersonation has been added to the "TestServer.cpp" example code.
+
+CHANGES IN VERSION 1.1.3
+========================
+- Fixed a serious bug in the copying of a buffer in the HTTPMessage.
+- SendMessage(HTTPMessage*) in the HTTPServer contained a bug. Regardless of the status
+  of the message to send, a 200 ("OK") status was always send back to the client.
+  This has been solved by using the status attribute of the HTTPMessage (of course).
+  A new method ("GetStatusText(int p_code)") has been added to retrieve the readable status text.
+  Where this was evident, this new method was used to convert hardcoded status text from the 
+  'real' http status, and normalize it throughout the programms.
+- Both servers now have an extra method "GetVersion()". Thes now return the following strings:
+
+  "HTTPServer version: 1.1.3 on MS-WinHTTP version 1.0" -> Voor HTTPServer
+  "HTTPServer version: 1.1.3 on MS-WinHTTP version 2.0" -> Voor HTTPServer_v2
+
+  These strings are printed in the logfiles for verification.
+- Throughout the library all C++ compilation warnings have been incremented from level 3 to 4 
+  (all warnings) and the feature "Warning is an error" ahs been turned on, to minimize the
+  possibility of errors in the programs.
+- Compilation and testing is now on basis of 64 bits as well.
+
+CHANGES IN VERSION 1.1.2
+========================
+- Teredo addressen as in ("[" ipv6 "]") are now being supported.
+
+CHANGES IN VERSION 1.1.1
+========================
+- All socket addresses of the sever has been expanded from only IPv4 to IPv4/IPv6 aware
+  This enables the server to handle IPv4 and IPv6 addresses alike.
+  URLPrefix::SocketToServer has been adapted so that the correct type of address will be returned.
+- All "sender" adressen attributes of HTTPMessage, SOAPMessage, HTTPServer and HTTPServer_v2 are 
+  adapted for the processing of IPv4 and IPv6 addresses.
+
+CHANGES IN VERSION 1.1
+======================
+- HighPerformance counters have been added to the HTTPServer and the HTTPClient as well. This makes it 
+  possible to measure performance even under the 6ms threshold.
+- The method "Initialise" is made public in the HTTPServer and the HTTPServer_v2
+  This was needed for the Pronto server to globally initialise the server, before the sites from it's model
+  were defined.
+- Functions to report errors are expanded with the methods:
+  RespondWithClientError
+  RespondWithServerError
+  1) These functions are now 'public'
+  2) The now use the HTTP_REQUEST_ID instead of the PHTTP_REQUEST, so the can be used with the request id 
+     from an HTTPMessage or a SOAPMessage
+  3) An answering cookie is added as an option parameter.
+- SendResponse(HTTPHeader) now alsoo sends a cookie with the answer to the client.
+- SendHttpResponse(....) now alsoo sends a cookie with the answer to the client.
+- The new method "DeleteChannel" was created as the oponent of "CreateChannel".
+  This makse it possible to remove a website without stopping the server. 
+  The new method calls versions itself in HTTPServer and HTTPServer_v2.
+- The Base authorization string in HTTPServer/v2 is propagated to the HTTPMessage
+  This is for the use of the base authentication in an application.
+- The separate parts of a URL are now included in the HTTPMessage and can be gotten through "GetCrackedURL()"
+  This makse it possible to get to the query parts and the anchor of the URL publicly.
+  All seperate attributes (server, port, absolute path, user, password) are removed from the HTTPMessage.
+  CrackedURL is changed from a struct to a 'real' class by this action.
+- The HTTPServer now has a new optional setting "SetCachePolicy".
+  You can set the caching policy to:
+  - HttpCachePolicyNocache :         No answers to the clients are cached
+  - HttpCachePolicyUserInvalidates : Buffers are invalidated by the calling clients.
+  - HttpCachePolicyTimeToLive :      The numbers of seconds to keep answers in cache.
+  Note: Setting a 'nocache' policy will **NOT** block the caching of auhtorization credentials.
+  These credentials always stay in their respective caches.
+- A missing web.config must lead to the use of the correct default settings. The complete library is
+  checkd on the correct default hardcoded settings.
+- It is now possible to retrieve all headers and propagate these to the HTTPMessage.
+  If configures with the SetAllHeaders(true) on the server. You must configure this because it is a 
+  potenial performance hit to always propagate all headers.
+- All URL information is gatherd in one (1) maop
+  o Access to this map is through "GetUrlMap()"
+  o The removal of sites (DeleteChannel) has been simplified with this map
+  o All mappings of the HTTPServer and the HTTPServer_v2 are merged for this URL map.
+- All logic of stopping and closing down the HTTPServer/HTTPServer_v2 and the HTTPClient are checked.
+  Through the multi-threading issues there were problems in the closing logic and de-allocation of objects.
+  Especially in the closing of the AnalysisLog. The stopping methods (StopServer / StopClient) have
+  been modified for this. They now wait for a hardcoded maximum of 30 seconds for the ending of the 
+  mainloop of there respective programs.
+- SendHttpResponse is changed to SendResponse, so that it is changed in an overload of SendResponse(HTTPMessage) 
+- The HTTPMessage now has a copy constructor for itself. To make this handy copy possible the following objects
+  are changed as well.
+  - CrackedURL now has a copy operator.
+  - FileBuffer now has a copy operator.
+- The request header method "if-modified-since" has been implemented on request of a customer.
+  HTTPMessage now has extra methods to set the time and to convert the SystemTime to HTTPTime and vice versa.
+  There now is a method "SetUseIfModified(boolean)"
+  The HTTPServer handles this request straight away, even before the message hits the queue and the threadpool.
+
+

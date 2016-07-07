@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinServer", "MarlinServer.vcxproj", "{3F12A6BF-2B42-4867-86B1-2F0E96C56835}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -14,10 +14,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\Documentation\ReleaseNotes_v1.txt = ..\Documentation\ReleaseNotes_v1.txt
 		..\Documentation\ReleaseNotes_v2.txt = ..\Documentation\ReleaseNotes_v2.txt
 		..\Documentation\ReleaseNotes_v3.txt = ..\Documentation\ReleaseNotes_v3.txt
+		..\Documentation\ReleaseNotes_v4.txt = ..\Documentation\ReleaseNotes_v4.txt
 		..\Documentation\WebConfig.txt = ..\Documentation\WebConfig.txt
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Marlin", "..\Marlin\Marlin.vcxproj", "{3CC23320-1FF0-41AF-9F3A-960C5F657C81}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinIISModule", "..\MarlinIISModule\IISModule.vcxproj", "{8D146F02-9019-BC45-06ED-27B4B4D44AAC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,6 +49,14 @@ Global
 		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Release|x64.Build.0 = Release|x64
 		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Release|x86.ActiveCfg = Release|Win32
 		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Release|x86.Build.0 = Release|Win32
+		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Debug|x64.ActiveCfg = Debug|x64
+		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Debug|x64.Build.0 = Debug|x64
+		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Debug|x86.ActiveCfg = Debug|Win32
+		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Debug|x86.Build.0 = Debug|Win32
+		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Release|x64.ActiveCfg = Release|x64
+		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Release|x64.Build.0 = Release|x64
+		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Release|x86.ActiveCfg = Release|Win32
+		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -27,6 +27,8 @@
 //
 #include "stdafx.h"
 #include "HTTPSite.h"
+#include "HTTPServerMarlin.h"
+#include "HTTPServerIIS.h"
 #include "HTTPURLGroup.h"
 #include "EnsureFile.h"
 #include "Analysis.h"
@@ -535,41 +537,60 @@ HTTPSite::StartSite()
     }
   }
 
-  // Lock for the initialization of the site
-  AutoCritSec lock(m_server->AcquireSitesLockObject());
-
-  // Start a group for our site, and record the group
-  m_group = m_server->FindUrlGroup(m_scheme,m_authScheme,m_ntlmCache,m_realm,m_domain);
-  if(m_group)
+  // Register the site with an URL group for the stand-alone server
+  HTTPServerMarlin* server = dynamic_cast<HTTPServerMarlin*>(m_server);
+  if(server)
   {
-    USES_CONVERSION;
+    // Lock for the initialization of the site
+    AutoCritSec lock(m_server->AcquireSitesLockObject());
 
-    // Register site in the group
-    m_group->RegisterSite(this);
-
-    // The registration
-    if(m_mainSite)
+    // Start a group for our site, and record the group
+    m_group = server->FindUrlGroup(m_scheme,m_authScheme,m_ntlmCache,m_realm,m_domain);
+    if(m_group)
     {
-      DETAILLOGV("URL not registered to URL-Group. Site [%s] is subsite of [%s]",m_site,m_mainSite->GetSite());
+      USES_CONVERSION;
+
+      // Register site in the group
+      m_group->RegisterSite(this);
+
+      // The registration
+      if(m_mainSite)
+      {
+        DETAILLOGV("URL not registered to URL-Group. Site [%s] is subsite of [%s]",m_site,m_mainSite->GetSite());
+        result = true;
+      }
+      else
+      {
+        // Add URL to our URL-Group: using HttpAddUrlToUrlGroup
+        wstring uniURL = A2CW(m_prefixURL);
+        HTTP_URL_GROUP_ID group = m_group->GetUrlGroupID();
+        ULONG retCode = HttpAddUrlToUrlGroup(group,uniURL.c_str(),(HTTP_URL_CONTEXT)this,0);
+        if(retCode != NO_ERROR)
+        {
+          CString error;
+          error.Format("Cannot add URL to the URL-Group: %s",m_prefixURL);
+          ERRORLOG(retCode,error);
+        }
+        else
+        {
+          DETAILLOGS("URL added to URL-Group: ",m_prefixURL);
+          result = true;
+        }
+      }
+    }
+  }
+  else
+  {
+    // Check that the site was started wihthin IIS
+    HTTPServerIIS* iisServer = dynamic_cast<HTTPServerIIS*>(m_server);
+    if(iisServer)
+    {
+      DETAILLOGS("Site started for the IIS server: ",m_site);
       result = true;
     }
     else
     {
-      // Add URL to our URL-Group: using HttpAddUrlToUrlGroup
-      wstring uniURL = A2CW(m_prefixURL);
-      HTTP_URL_GROUP_ID group = m_group->GetUrlGroupID();
-      ULONG retCode = HttpAddUrlToUrlGroup(group,uniURL.c_str(),(HTTP_URL_CONTEXT)this,0);
-      if(retCode != NO_ERROR)
-      {
-        CString error;
-        error.Format("Cannot add URL to the URL-Group: %s",m_prefixURL);
-        ERRORLOG(retCode,error);
-      }
-      else
-      {
-        DETAILLOGS("URL added to URL-Group: ",m_prefixURL);
-        result = true;
-      }
+      ERRORLOG(ERROR_INVALID_PARAMETER,"Site not started!");
     }
   }
   // Return the fact that we started successfully or not
@@ -912,7 +933,7 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
 {
   // Send back an OK immediately, without waiting for
   // worker thread to process the message in the callback
-  m_server->SendResponse(this,p_message->GetRequestHandle(),HTTP_STATUS_OK,"","","");
+  m_server->SendResponse(this,p_message,HTTP_STATUS_OK,"","","");
   p_message->SetRequestHandle(NULL);
 }
 
@@ -1487,7 +1508,7 @@ HTTPSite::SendSOAPFault(SessionAddress& p_address
   p_message->SetFault(p_code,p_actor,p_string,p_detail);
 
   // Send as an SOAP Message
-  m_group->GetHTTPServer()->SendResponse(p_message);
+  m_server->SendResponse(p_message);
 }
 
 // Return ReliableMessaging response to the client
@@ -1513,7 +1534,7 @@ HTTPSite::ReliableResponse(SessionSequence* p_sequence,SOAPMessage* p_message)
   }
 
   // Send as a SOAP response, HTTP_STATUS = OK
-  m_group->GetHTTPServer()->SendResponse(p_message);
+  m_server->SendResponse(p_message);
 }
 
 // Get user SID from an internal SID

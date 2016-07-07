@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: Version.h
+// SourceFile: ServerApp.h
 //
 // Marlin Server: Internet server/client
 // 
@@ -26,12 +26,36 @@
 // THE SOFTWARE.
 //
 #pragma once
+#include "HTTPServerIIS.h"
+#include "ThreadPool.h"
+#include "Analysis.h"
+#include "ErrorReport.h"
+#pragma warning (disable:4091)
+#include <httpserv.h>
 
-// Version number components
-#define MARLIN_PRODUCT_NAME     "MarlinServer"   // Our name
-#define MARLIN_VERSION_NUMBER   "4.0.0"          // The real version
-#define MARLIN_VERSION_BUILD    ""               // Can carry strings like 'Alpha', 'Beta', 'RC'
-#define MARLIN_VERSION_DATE     "07-07-2016"     // Last production date
+class ServerApp
+{
+public:
+  ServerApp();
+  virtual ~ServerApp();
 
-// This is our version string "MarlinServer 4.0.0"
-#define MARLIN_SERVER_VERSION MARLIN_PRODUCT_NAME " " MARLIN_VERSION_NUMBER MARLIN_VERSION_BUILD
+  // Starting and stopping the server
+  virtual void InitInstance();
+  virtual void ExitInstance();
+
+  // Connecting the application to the IIS and Marlin server
+  void ConnectServerApp(IHttpServer*   p_iis
+                       ,HTTPServerIIS* p_server
+                       ,ThreadPool*    p_pool
+                       ,LogAnalysis*   p_logfile
+                       ,ErrorReport*   p_report);
+protected:
+  IHttpServer*   m_iis;
+  HTTPServerIIS* m_appServer;
+  ThreadPool*    m_appPool;
+  LogAnalysis*   m_appLogfile;
+  ErrorReport*   m_appReport;
+};
+
+// Declare your own server app as a derived class!
+// extern <My>ServerApp theServer;

@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: Version.h
+// SourceFile: IISDebug.h
 //
 // Marlin Server: Internet server/client
 // 
@@ -27,11 +27,8 @@
 //
 #pragma once
 
-// Version number components
-#define MARLIN_PRODUCT_NAME     "MarlinServer"   // Our name
-#define MARLIN_VERSION_NUMBER   "4.0.0"          // The real version
-#define MARLIN_VERSION_BUILD    ""               // Can carry strings like 'Alpha', 'Beta', 'RC'
-#define MARLIN_VERSION_DATE     "07-07-2016"     // Last production date
+class IHttpContext;
+class LogAnalysis;
 
-// This is our version string "MarlinServer 4.0.0"
-#define MARLIN_SERVER_VERSION MARLIN_PRODUCT_NAME " " MARLIN_VERSION_NUMBER MARLIN_VERSION_BUILD
+void IISDebugAllVariables(IHttpContext* p_context,LogAnalysis* p_log);
+

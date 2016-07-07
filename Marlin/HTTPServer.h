@@ -160,27 +160,38 @@ class HTTPServer
 {
 public:
   HTTPServer(CString p_name);
- ~HTTPServer();
+  virtual ~HTTPServer();
 
-  // Initialise a HTTP server and server-session
-  bool       Initialise();
-  // Return a version string
-  CString    GetVersion();
-  // Create a channel in the form of a prefixURL
-  HTTPSite*  CreateSite(PrefixType    p_type
-                       ,bool          p_secure
-                       ,int           p_port
-                       ,CString       p_baseURL
-                       ,bool          p_subsite  = false
-                       ,LPFN_CALLBACK p_callback = nullptr);
-  // Delete a channel from the remembered base URL
-  bool       DeleteSite(int p_port,CString p_baseURL,bool p_force = false);
-  // Running the server in a separate thread
-  void       Run();
-  // Running the main loop of the webserver in same thread
-  void       RunHTTPServer();
+  // Running the server 
+  virtual void       Run() = 0;
   // Stop the server
-  void       StopServer();
+  virtual void       StopServer() = 0;
+  // Initialise a HTTP server and server-session
+  virtual bool       Initialise() = 0;
+  // Return a version string
+  virtual CString    GetVersion() = 0;
+  // Create a site to bind the traffic to
+  virtual HTTPSite*  CreateSite(PrefixType    p_type
+                                  ,bool          p_secure
+                                  ,int           p_port
+                                  ,CString       p_baseURL
+                                  ,bool          p_subsite  = false
+                                  ,LPFN_CALLBACK p_callback = nullptr) = 0;
+  // Delete a site from the remembered set of sites
+  virtual bool       DeleteSite(int p_port,CString p_baseURL,bool p_force = false) = 0;
+  // Receive (the rest of the) incoming HTTP request
+  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message) = 0;
+  // Sending a response on a message
+  virtual void       SendResponse(HTTPMessage* p_message) = 0;
+  // Send a response in one-go
+  virtual DWORD      SendResponse(HTTPSite*    p_site
+                                 ,HTTPMessage* p_message
+                                 ,USHORT       p_statusCode
+                                 ,PSTR         p_reason
+                                 ,PSTR         p_entityString
+                                 ,CString      p_authScheme
+                                 ,PSTR         p_cookie      = NULL
+                                 ,PSTR         p_contentType = NULL) = 0;
 
   // SETTERS
  
@@ -253,41 +264,20 @@ public:
   void       ErrorLog  (const char* p_function,DWORD p_code,CString p_text);
   void       HTTPError (const char* p_function,int p_status,CString p_text);
 
+  // Find HTTPSite for an URL
+  HTTPSite*  FindHTTPSite(int p_port,PCWSTR   p_url);
+  HTTPSite*  FindHTTPSite(int p_port,CString& p_url);
+  HTTPSite*  FindHTTPSite(HTTPSite* p_default,CString& p_url);
+
   // Sending response for an incoming message
-  void       SendResponse(HTTPMessage* p_message);
   void       SendResponse(SOAPMessage* p_message);
   void       SendResponse(JSONMessage* p_message);
-  // Send a response in one-go
-  DWORD      SendResponse(HTTPSite*       p_site
-                         ,HTTP_REQUEST_ID p_request
-                         ,USHORT          p_statusCode
-                         ,PSTR            p_reason
-                         ,PSTR            p_entityString
-                         ,CString         p_authScheme
-                         ,PSTR            p_cookie      = NULL
-                         ,PSTR            p_contentType = NULL);
-  // Response in the server error range (500-505)
-  DWORD      RespondWithServerError(HTTPSite*       p_site
-                                   ,HTTP_REQUEST_ID p_requestID
-                                   ,int             p_error
-                                   ,CString         p_reason
-                                   ,CString         p_authScheme
-                                   ,CString         p_cookie = "");
-  // Response in the client error range (400-417)
-  DWORD      RespondWithClientError(HTTPSite*       p_site
-                                   ,HTTP_REQUEST_ID p_requestID
-                                   ,int             p_error
-                                   ,CString         p_reason
-                                   ,CString         p_authScheme
-                                   ,CString         p_cookie = "");
   // Get text from HTTP_STATUS code
   const char* GetStatusText(int p_status);
   // Return the number of push-event-streams for this URL, and probably for a user
   int        HasEventStreams(int p_port,CString p_url,CString p_user = "");
   // Return the fact that we have an event stream
   bool       HasEventStream(EventStream* p_stream);
-  // Receive (the rest of the) incoming HTTP request
-  bool       ReceiveIncomingRequest(HTTPMessage* p_message);
   // Send to a server push event stream / deleting p_event
   bool       SendEvent(int p_port,CString p_site,ServerEvent* p_event,CString p_user = "");
   // Send to a server push event stream on EventStream basis
@@ -300,27 +290,21 @@ public:
   void       CloseEventStreams(int p_port,CString p_url,CString p_user = "");
   // Monitor all server push event streams
   void       EventMonitor();
-  // Find and make an URL group
-  HTTPURLGroup* FindUrlGroup(CString p_authName
-                            ,ULONG   p_authScheme
-                            ,bool    p_cache
-                            ,CString p_realm
-                            ,CString p_domain);
-  // Remove an URLGroup. Called by HTTPURLGroup itself
-  void       RemoveURLGroup(HTTPURLGroup* p_group);
   // Register a WebServiceServer
   bool       RegisterService(WebServiceServer* p_service);
   // Remove registration of a service
   bool       UnRegisterService (CString p_serviceName);
   // Finding a previous registered service endpoint
   WebServiceServer* FindService(CString p_serviceName);
-
-
+  // Finding the locking object for the sites.
   CRITICAL_SECTION* AcquireSitesLockObject();
   
-private:
+protected:
   // Cleanup the server
-  void      Cleanup();
+  virtual void  Cleanup() = 0;
+  // Init the stream response
+  virtual bool  InitEventStream(EventStream& p_stream) = 0;
+
   // Initialise the logging and error mechanism
   void      InitLogging();
   // Initialise general server header settings
@@ -351,32 +335,30 @@ private:
   HTTPCommand GetUnknownVerb(PCSTR p_verb);
     // Form event to a stream string
   CString   EventToString(ServerEvent* p_event);
-  // Find HTTPSite for an URL
-  HTTPSite* FindHTTPSite(int p_port,PCWSTR   p_url);
-  HTTPSite* FindHTTPSite(int p_port,CString& p_url);
-  HTTPSite* FindHTTPSite(HTTPSite* p_default,CString& p_url);
-  // Init the stream response
-  bool      InitEventStream(EventStream& p_stream);
   // Try to start the even heartbeat monitor
   void      TryStartEventHartbeat();
   // Check all event streams for the heartbeat monitor
   UINT      CheckEventStreams();
-  // Preparing a response
-  void      InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status,PSTR p_reason);
-  void      AddKnownHeader(HTTP_RESPONSE& p_response,HTTP_HEADER_ID p_header,const char* p_value);
-  PHTTP_UNKNOWN_HEADER AddUnknownHeaders(UKHeaders& p_headers);
-  // Subfunctions for SendResponse
-  bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
-  void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
-  void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer);
-  void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,CString& p_page,int p_error,const char* p_reason);
-  bool      SendResponseEventBuffer(                          HTTP_REQUEST_ID p_request,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
   // Log SSL Info of the connection
   void      LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo);
     // Handle text-based content-type messages
   void      HandleTextContent(HTTPMessage* p_message);
   // Set the error status
   void      SetError(int p_error);
+  // Response in the server error range (500-505)
+  DWORD     RespondWithServerError(HTTPSite*       p_site
+                                  ,HTTPMessage*    p_message
+                                  ,int             p_error
+                                  ,CString         p_reason
+                                  ,CString         p_authScheme
+                                  ,CString         p_cookie = "");
+  // Response in the client error range (400-417)
+  DWORD     RespondWithClientError(HTTPSite*       p_site
+                                  ,HTTPMessage*    p_message
+                                  ,int             p_error
+                                  ,CString         p_reason
+                                  ,CString         p_authScheme
+                                  ,CString         p_cookie = "");
 
   // REQUEST HEADER METHODS
 
@@ -409,7 +391,6 @@ private:
   CString                 m_configServerName;       // Server header name from web.config
   ErrorReport*            m_errorReport{ nullptr};  // Error report handling
   // All sites of the server
-  URLGroupMap             m_urlGroups;              // All URL Groups
   SiteMap                 m_allsites;               // All URL's and context pointers
   ServiceMap              m_allServices;            // All Services
   CRITICAL_SECTION        m_sitesLock;              // Creating/starting/stopping sites

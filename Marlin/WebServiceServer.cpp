@@ -44,6 +44,7 @@
 #include "SiteHandlerJson2Soap.h"
 #include "ThreadPool.h"
 #include "GetLastErrorAsString.h"
+#include "HTTPServerMarlin.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -377,7 +378,7 @@ WebServiceServer::Run()
   // Start right type of server if not already given.
   if(m_httpServer == nullptr)
   {
-    m_httpServer  = new HTTPServer(m_name);
+    m_httpServer  = new HTTPServerMarlin(m_name);
     m_serverOwner = true;
     m_httpServer->SetThreadPool(m_pool);
     m_httpServer->SetWebroot(m_webroot);

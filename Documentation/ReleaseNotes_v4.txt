@@ -1,0 +1,16 @@
+RELEASENOTES MARLIN VERSION 4.x
+===============================
+
+For releasenotes of the previous main version (3.x), see the separate file "Releasenotes_v3.txt".
+This document contains all release notes and remarks beginning with version 4.0. The document
+would otherwise grow to large and complex.
+Version 4.x contains functional breaks with the past and previous version and your programms
+will need checking on the logic and functionality to make version 4.x correctly working.
+----------------------------------------------------------------------------------------------
+
+CHANGES IN VERSION 4.0
+======================
+1) This version Contains the jump to seperate IIS configuration for Marlin. The Marlin server 
+   has now been split in two. These two parts are:
+   HTTPServerMarlin  : This is the 'stand alone' server from previous versions
+   HTTPServerIIS     : This is the 'integrated' IIS module.

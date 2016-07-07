@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: Version.h
+// SourceFile: TestClient.h
 //
 // Marlin Server: Internet server/client
 // 
@@ -27,11 +27,42 @@
 //
 #pragma once
 
-// Version number components
-#define MARLIN_PRODUCT_NAME     "MarlinServer"   // Our name
-#define MARLIN_VERSION_NUMBER   "4.0.0"          // The real version
-#define MARLIN_VERSION_BUILD    ""               // Can carry strings like 'Alpha', 'Beta', 'RC'
-#define MARLIN_VERSION_DATE     "07-07-2016"     // Last production date
+#include "resource.h"
 
-// This is our version string "MarlinServer 4.0.0"
-#define MARLIN_SERVER_VERSION MARLIN_PRODUCT_NAME " " MARLIN_VERSION_NUMBER MARLIN_VERSION_BUILD
+#define NUM_RM_TESTS 3
+
+class   HTTPClient;
+
+// In TestClient.cpp
+extern bool doDetails;
+
+void xprintf(const char* p_format,...);
+void WaitForKey();
+
+// COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST
+#define MARLIN_HOST "localhost"
+// COMPILE FOR ANOTHER PORT THAN 80
+#define MARLIN_SERVER_PORT  80
+
+// Define your other host here!
+// By commenting out the marlin_host above, and uncommenting this one
+// #define MARLIN_HOST "my-other-machine"  
+
+// In the various testing files
+extern int TestJSON(void);
+extern int TestUnicode(void);
+extern int TestURLChars(void);
+extern int TestCryptography(void);
+extern int TestReader(void);
+extern int TestConvert(void);
+extern int TestNamespaces(void);
+extern int TestFindClientCertificate(void);
+extern int TestEvents(HTTPClient* p_client);
+extern int TestCookies(HTTPClient& p_client);
+extern int TestContract(HTTPClient* p_client,bool p_json);
+extern int TestJsonData(HTTPClient* p_client);
+extern int TestPatching(HTTPClient* p_client);
+extern int TestFormData(HTTPClient* p_client);
+extern int TestCompression(HTTPClient* p_client);
+extern int TestWebservices(HTTPClient& p_client);
+extern int TestClientCertificate(HTTPClient* p_client);
