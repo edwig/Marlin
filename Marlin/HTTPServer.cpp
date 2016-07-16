@@ -2848,6 +2848,7 @@ HTTPServer::CheckEventStreams()
       HttpCancelHttpRequest(m_requestQueue,it->second->m_requestID,NULL);
 
       // Erase dead stream, and goto next
+      delete it->second;
       it = m_eventStreams.erase(it);
     }
     else
