@@ -73,6 +73,8 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
   FileNameTransformations(resource);
   // Convert into a filename
   CString pathname = m_site->GetWebroot() + ensure.FileNameFromResourceName(resource);
+  FileNameExpansions  (pathname);
+  FileNameRestrictions(pathname);
 
   // Finding and setting the content type
   CString content  = m_site->GetContentTypeByResouceName(pathname);
@@ -121,17 +123,39 @@ SiteHandlerGet::CleanUp(HTTPMessage* p_message)
 
 // Diverse checks on the filename.
 // Returns true if filename is altered
+// You can implement your own override
 bool 
 SiteHandlerGet::FileNameTransformations(CString & p_filename)
 {
+  // Nothing done here!
+  return false;
+}
+
+bool
+SiteHandlerGet::FileNameExpansions(CString& p_filename)
+{
+  if(p_filename.IsEmpty())
+  {
+    p_filename = BASE_INDEX_PAGE;
+    return true;
+  }
   // Almost **ALL** webservers in the world fall back to 'index.html'
   // if no resource given for a site or a subsite
-  if(p_filename.Right(1) == '/')
+  DWORD attrib = GetFileAttributes(p_filename);
+  if((attrib != INVALID_FILE_ATTRIBUTES) && (attrib & FILE_ATTRIBUTE_DIRECTORY))
   {
+    if(!p_filename.IsEmpty())
+    {
+      char c = p_filename.GetAt(p_filename.GetLength() - 1);
+      if(c != '/' && c != '\\')
+      {
+        p_filename += "\\";
+      }
+  }
     p_filename += BASE_INDEX_PAGE;
     return true;
   }
-  return FileNameRestrictions(p_filename);
+  return false;
 }
 
 // Default restrictions on the filename. Does nothing here!
