@@ -41,6 +41,5 @@ protected:
 
   // Filename handlers
   virtual bool FileNameTransformations(CString& p_filename);
-  virtual bool FileNameExpansions     (CString& p_filename);
   virtual bool FileNameRestrictions   (CString& p_filename);
 };

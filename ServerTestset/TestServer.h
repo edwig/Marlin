@@ -28,7 +28,9 @@
 #pragma once
 
 // All tests running on this port
-const int TESTING_HTTP_PORT = 1200;
+// IIS    -> Testing on port 80
+// Marlin -> Testing on port 1200
+const int TESTING_HTTP_PORT = 80;
 
 // Printing details of the tests
 extern bool doDetails;

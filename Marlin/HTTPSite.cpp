@@ -935,6 +935,7 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
   // worker thread to process the message in the callback
   m_server->SendResponse(this,p_message,HTTP_STATUS_OK,"","","");
   p_message->SetRequestHandle(NULL);
+  DETAILLOG1("Sent a HTTP status 200 = OK for asynchroneous message");
 }
 
 // Call the correct EventStream handler

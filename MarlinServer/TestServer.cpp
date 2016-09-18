@@ -199,7 +199,7 @@ CleanupServer(HTTPServer*&     p_server
 
 // Our main test program
 int 
-_tmain(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
+main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
 {
   int nRetCode = 0;
 

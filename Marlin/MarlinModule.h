@@ -39,9 +39,6 @@ extern IHttpServer*   g_iisServer;
 extern LogAnalysis*   g_analysisLog;
 extern HTTPServerIIS* g_marlin;
 
-// The application must supply a ServerApp derived object pointer
-extern ServerApp*   g_serverApp;
-
 // Create the module class
 // Hooking into the 'integrated pipeline' of IIS
 class MarlinModule: public CHttpModule

@@ -41,8 +41,8 @@ void WaitForKey();
 
 // COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST
 #define MARLIN_HOST "localhost"
-// COMPILE FOR ANOTHER PORT THAN 1200
-#define MARLIN_SERVER_PORT  1200
+// Set to 80 for IIS or 1200 for Marlin stand alone
+extern int MARLIN_SERVER_PORT;
 
 // Define your other host here!
 // By commenting out the marlin_host above, and uncommenting this one

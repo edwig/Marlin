@@ -46,7 +46,7 @@ int  Test_CrackURL()
 {
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
-  qprintf("Test function CrackURL      : ");
+  qprintf("Test function CrackURL      : <+>");
 
   CrackedURL url1("http://server/index.html");
   CrackedURL url2("http://edwig:password@server:2108/path1/path2/pathname.pdf?val1=monkey&val2=nut&val3=mies#my_anchor");

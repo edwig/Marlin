@@ -42,6 +42,7 @@ CWinApp theApp;
 using namespace std;
 
 bool doDetails = false;
+int  MARLIN_SERVER_PORT = 80;
 
 void xprintf(const char* p_format,...)
 {
@@ -135,23 +136,23 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     else
     {
       // Do Unit testing
-      errors += TestUnicode();
-      errors += TestURLChars();
-      errors += TestCryptography();
-      errors += TestReader();
-      errors += TestConvert();
-      errors += TestNamespaces();
-      errors += TestJSON();
-      errors += TestFindClientCertificate();
-      errors += TestCookies(*client);
-      errors += TestFormData(client);
-      errors += TestEvents(client);
-      errors += TestJsonData(client);
-      errors += TestContract(client,false);
-      errors += TestContract(client,true);
-      errors += TestPatching(client);
-      errors += TestCompression(client);
-      errors += TestClientCertificate(client);
+//       errors += TestUnicode();
+//       errors += TestURLChars();
+//       errors += TestCryptography();
+//       errors += TestReader();
+//       errors += TestConvert();
+//       errors += TestNamespaces();
+//       errors += TestJSON();
+//       errors += TestFindClientCertificate();
+//       errors += TestCookies(*client);
+//       errors += TestFormData(client);
+//       errors += TestEvents(client);
+//       errors += TestJsonData(client);
+//       errors += TestContract(client,false);
+//       errors += TestContract(client,true);
+//       errors += TestPatching(client);
+//       errors += TestCompression(client);
+//       errors += TestClientCertificate(client);
       errors += TestWebservices(*client);
     }
   

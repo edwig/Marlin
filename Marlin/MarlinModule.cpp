@@ -161,7 +161,7 @@ MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
   const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
   if(request == nullptr)
   {
-    ERRORLOG("Abort:","No raw request object");
+    ERRORLOG("Abort:","IIS did not provide a raw request object!");
     return RQ_NOTIFICATION_CONTINUE;
   }
 
@@ -170,45 +170,48 @@ MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
   HTTPSite* site = g_marlin->FindHTTPSite(serverPort,rawRequest->CookedUrl.pAbsPath);
 
   // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
-  if(site)
+  if(site == nullptr)
   {
-    // Starting the performance counter
-    g_marlin->GetCounter()->Start();
-
-    HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(site,rawRequest);
-    if(msg)
-    {
-      // In case of authentication done: get the authentication token
-      HANDLE token = NULL;
-      IHttpUser* user = p_context->GetUser();
-      if(user)
-      {
-        token = user->GetImpersonationToken();
-      }
-
-      // Store the context with the message, so we can handle all derived messages
-      msg->SetRequestHandle((HTTP_REQUEST_ID)p_context);
-      msg->SetAccessToken(token);
-
-      // Let the site handle the message
-      site->HandleHTTPMessage(msg);
-
-      // Ready for IIS!
-      p_context->SetRequestHandled();
-    }
-    else
-    {
-      ERRORLOG("Cannot handle the request:","Not enough info for a HTTPMessage.");
-    }
-
-    // Stopping the performance counter
-    g_marlin->GetCounter()->Stop();
-
-    // Now completly ready. We did everything!
-    return RQ_NOTIFICATION_FINISH_REQUEST;
+    // Not our request: Other app running on this machine!
+    // This is why it is wastefull to use IIS for our internetserver!
+    DETAILLOG("Rejected",rawRequest->pRawUrl);
+    return RQ_NOTIFICATION_CONTINUE;
   }
 
-  return RQ_NOTIFICATION_CONTINUE;
+  // Starting the performance counter
+  g_marlin->GetCounter()->Start();
+
+  HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(site,rawRequest);
+  if(msg)
+  {
+    // In case of authentication done: get the authentication token
+    HANDLE token = NULL;
+    IHttpUser* user = p_context->GetUser();
+    if(user)
+    {
+      token = user->GetImpersonationToken();
+    }
+
+    // Store the context with the message, so we can handle all derived messages
+    msg->SetRequestHandle((HTTP_REQUEST_ID)p_context);
+    msg->SetAccessToken(token);
+
+    // Let the site handle the message
+    site->HandleHTTPMessage(msg);
+
+    // Ready for IIS!
+    p_context->SetRequestHandled();
+  }
+  else
+  {
+    ERRORLOG("Cannot handle the request:","IIS did not provide enough info for a HTTPMessage.");
+  }
+
+  // Stopping the performance counter
+  g_marlin->GetCounter()->Stop();
+
+  // Now completly ready. We did everything!
+  return RQ_NOTIFICATION_FINISH_REQUEST;
 }
 
 int 
@@ -243,7 +246,7 @@ MarlinModuleFactory::GetHttpModule(OUT CHttpModule**     p_module
   //Test for an error
   if(!requestModule)
   {
-    DETAILLOG("Failed:","RequestModule");
+    DETAILLOG("Failed:","APP pool cannot find the requested Marlin module!");
     return HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
   }
   // DETAILLOG("Created","RequestModule");
@@ -298,9 +301,9 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   // Now run the marlin server
   g_marlin->Run();
   // Create a global ServerApp object
-  if(g_serverApp)
+  if(g_server)
   {
-    g_serverApp->ConnectServerApp(g_iisServer,g_marlin,&g_pool,g_analysisLog,&g_report);
+    g_server->ConnectServerApp(g_iisServer,g_marlin,&g_pool,g_analysisLog,&g_report);
   }
   else
   {
@@ -321,10 +324,9 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   DETAILLOG("Stopping:","MarlinISSModule");
 
   // Stopping the ServerApp
-  if(g_serverApp)
+  if(g_server)
   {
-    g_serverApp->ExitInstance();
-    g_serverApp = nullptr;
+    g_server->ExitInstance();
   }
  
   // Stopping the marlin server

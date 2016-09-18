@@ -204,7 +204,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="TestClient.h" />
+    <ClInclude Include="TestClientIIS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\TestsetClient\TestClientCert.cpp" />
@@ -227,7 +227,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TestClient.cpp" />
+    <ClCompile Include="TestClientIIS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MarlinClient.rc" />

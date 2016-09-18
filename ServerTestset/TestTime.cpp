@@ -57,7 +57,7 @@ int  Test_HTTPTime()
 
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
-  qprintf("Test function HTTPTime      : ");
+  qprintf("Test function HTTPTime      : <+>");
 
   // MS-Exchange server does this (non-conforming!) format
   CString string1("Sun, 06-Nov-1994 08:49:37 GMT");

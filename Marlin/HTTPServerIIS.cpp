@@ -367,6 +367,12 @@ HTTPServerIIS::GetHTTPMessageFromRequest(HTTPSite* p_site,PHTTP_REQUEST p_reques
     }
   }
 
+  // Chunks already read by IIS, so just copy them in the message
+  if(p_request->EntityChunkCount)
+  {
+    ReadEntityChunks(message,p_request);
+  }
+
   // Remember the fact that we should read the rest of the message
   message->SetReadBuffer(p_request->Flags & HTTP_REQUEST_FLAG_MORE_ENTITY_BODY_EXISTS,atoi(contentLength));
 
@@ -374,7 +380,30 @@ HTTPServerIIS::GetHTTPMessageFromRequest(HTTPSite* p_site,PHTTP_REQUEST p_reques
   return message;
 }
 
-// Receive incoming HTTP request
+// Reading the first chunks directly from the request handle from IIS
+void
+HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
+{
+  unsigned count = p_request->EntityChunkCount;
+
+  // Read all chunks
+  for(unsigned ind = 0; ind < count; ++ind)
+  {
+    PHTTP_DATA_CHUNK chunk = &p_request->pEntityChunks[ind];
+    switch(chunk->DataChunkType)
+    {
+      case HttpDataChunkFromMemory:            p_message->GetFileBuffer()->AddBuffer((uchar*)chunk->FromMemory.pBuffer
+                                                                                    ,chunk->FromMemory.BufferLength);
+                                               break;
+      case HttpDataChunkFromFileHandle:        // Should not happen upon receive
+      case HttpDataChunkFromFragmentCache:     // Fall through
+      case HttpDataChunkFromFragmentCacheEx:   ERRORLOG(87,"Unhandled HTTP chunk type from IIS");
+                                               break;
+    }
+  }
+}
+
+// Receive incoming HTTP request (p_request->Flags > 0)
 bool
 HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
 {
@@ -387,30 +416,25 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   HRESULT hr = HttpGetExtendedInterface(g_iisServer,httpRequest,&httpRequest2);
   if(SUCCEEDED(hr))
   {
-//     PBYTE tokenInfo = nullptr;
-//     DWORD tokenSize = 0;
-//     httpRequest2->GetChannelBindingToken(&tokenInfo,&tokenSize);
+    //     PBYTE tokenInfo = nullptr;
+    //     DWORD tokenSize = 0;
+    //     httpRequest2->GetChannelBindingToken(&tokenInfo,&tokenSize);
+  }
 
-    // 3th Exentsion interfaces gives the body of the call
-    IHttpRequest3* httpRequest3 = nullptr;
-    hr = HttpGetExtendedInterface(g_iisServer,httpRequest2,&httpRequest3);
+  // Reading the buffer
+  FileBuffer* fbuffer = p_message->GetFileBuffer();
+  if(fbuffer->AllocateBuffer(p_message->GetContentLength()))
+  {
+    uchar* buffer   = nullptr;
+    size_t size     = NULL;
+    DWORD  received = NULL;
+    BOOL   pending  = FALSE;
+    fbuffer->GetBuffer(buffer,size);
+      
+    hr = httpRequest->ReadEntityBody(buffer,(DWORD)size,FALSE,&received,&pending);
     if(SUCCEEDED(hr))
     {
-      FileBuffer* fbuffer = p_message->GetFileBuffer();
-      if(fbuffer->AllocateBuffer(p_message->GetContentLength()))
-      {
-        uchar* buffer   = nullptr;
-        size_t size     = NULL;
-        DWORD  received = NULL;
-        BOOL   pending  = FALSE;
-        fbuffer->GetBuffer(buffer,size);
-      
-        hr = httpRequest3->ReadEntityBody(buffer,(DWORD)size,FALSE,NULL,NULL,&received,&pending);
-        if(SUCCEEDED(hr))
-        {
-          return true;
-        }
-      }
+      return true;
     }
   }
   return false;

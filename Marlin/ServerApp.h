@@ -40,8 +40,8 @@ public:
   virtual ~ServerApp();
 
   // Starting and stopping the server
-  virtual void InitInstance();
-  virtual void ExitInstance();
+  virtual void InitInstance() = 0;
+  virtual void ExitInstance() = 0;
 
   // Connecting the application to the IIS and Marlin server
   void ConnectServerApp(IHttpServer*   p_iis
@@ -50,6 +50,7 @@ public:
                        ,LogAnalysis*   p_logfile
                        ,ErrorReport*   p_report);
 protected:
+  bool           m_correctInit;
   IHttpServer*   m_iis;
   HTTPServerIIS* m_appServer;
   ThreadPool*    m_appPool;
@@ -58,4 +59,6 @@ protected:
 };
 
 // Declare your own server app as a derived class!
-// extern <My>ServerApp theServer;
+// This pointer will then point to the one-and-only instance
+extern ServerApp* g_server;
+

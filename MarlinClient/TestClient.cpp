@@ -42,6 +42,7 @@ CWinApp theApp;
 using namespace std;
 
 bool doDetails = false;
+int  MARLIN_SERVER_PORT = 80;
 
 void xprintf(const char* p_format,...)
 {

@@ -13,7 +13,10 @@ public:
   void IncrementError() { ++m_errors; };
 
 private:
+  bool CorrectStarted();
+
   int  m_errors    { 0     };
   bool m_doDetails { false };
+  bool m_running   { false };
 };
 

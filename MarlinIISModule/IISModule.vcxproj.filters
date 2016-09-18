@@ -81,6 +81,9 @@
     <ClCompile Include="..\ServerTestset\TestToken.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestAsynchrone.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Marlin\stdafx.h">
