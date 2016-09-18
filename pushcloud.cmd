@@ -39,7 +39,7 @@ echo Ready cleaning
 echo .
 echo Creating a rar archive for the Marlin server
 echo .
-"C:\Program Files\Winrar\rar.exe" a Marlin_4.rar .git Certificates ExtraParts Marlin MarlinClient MarlinIISClient MarlinIISModule MarlinServer ServerTestset TestsetClient HTTPManager Documentation *.cmd
+"C:\Program Files\Winrar\rar.exe" a Marlin_4.rar Certificates ExtraParts Marlin MarlinClient MarlinIISClient MarlinIISModule MarlinServer ServerTestset TestsetClient HTTPManager Documentation *.cmd
 echo .
 echo Ready making RAR archive
 echo .
