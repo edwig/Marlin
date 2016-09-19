@@ -1443,11 +1443,32 @@ HTTPSite::RM_HandleTerminateSequence(SessionAddress& p_address,SOAPMessage* p_me
   return true;
 }
 
+void
+HTTPSite::DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address)
+{
+  CString address;
+  for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
+  {
+    BYTE byte = ((BYTE*)&p_address.m_address)[ind];
+    address.AppendFormat("%2.2X",byte);
+  }
+  
+  DETAILLOGV("DEBUG ADDRESS AT   : %s",p_prefix);
+  DETAILLOGV("Session address    : %s",address);
+  DETAILLOGV("Session address SID: %s",p_address.m_userSID);
+  DETAILLOGV("Session desktop    : %d",p_address.m_desktop);
+  DETAILLOGV("Session abs. path  : %s",p_address.m_absPath);
+}
+
 SessionSequence*
 HTTPSite::FindSequence(SessionAddress& p_address)
 {
   // Lock for the m_sequences map
   AutoCritSec lock(&m_sessionLock);
+
+// #ifdef _DEBUG
+//   DebugPrintSessionAddress("Find sequence",p_address);
+// #endif
 
   ReliableMap::iterator it = m_sequences.find(p_address);
   if(it != m_sequences.end())
@@ -1462,6 +1483,10 @@ HTTPSite::CreateSequence(SessionAddress& p_address)
 {
   // Lock for the m_sequences map
   AutoCritSec lock(&m_sessionLock);
+
+// #ifdef _DEBUG
+//   DebugPrintSessionAddress("CreateSequence",p_address);
+// #endif
 
   SessionSequence sequence;
   sequence.m_serverGUID      = "urn:uuid:" + GenerateGUID();
@@ -1483,6 +1508,10 @@ HTTPSite::RemoveSequence(SessionAddress& p_address)
 {
   // Lock for the m_sequences map
   AutoCritSec lock(&m_sessionLock);
+
+// #ifdef _DEBUG
+//   DebugPrintSessionAddress("RemoveSequence",p_address);
+// #endif
 
   ReliableMap::iterator it = m_sequences.find(p_address);
   if(it != m_sequences.end())

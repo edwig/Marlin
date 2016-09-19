@@ -83,24 +83,24 @@ MarlinServerApp::InitInstance()
   TestThreadPool(m_appPool);
 
   // Starting objects and sites
-//   TestWebServiceServer(m_appServer,contract);
-//   TestJsonServer(m_appServer,contract);
-//   TestBaseSite(m_appServer);
-//   TestPushEvents(m_appServer);
+  //   TestWebServiceServer(m_appServer,contract);
+  //   TestJsonServer(m_appServer,contract);
+  TestBaseSite(m_appServer);
+  TestPushEvents(m_appServer);
   TestInsecure(m_appServer);
   TestBodySigning(m_appServer);
   TestBodyEncryption(m_appServer);
   TestMessageEncryption(m_appServer);
   TestReliable(m_appServer);
-//   TestCookies(m_appServer);
+  TestCookies(m_appServer);
   TestToken(m_appServer);
-//   TestSubSites(m_appServer);
-//   TestJsonData(m_appServer);
+  TestSubSites(m_appServer);
+  TestJsonData(m_appServer);
   TestFilter(m_appServer);
-//   TestPatch(m_appServer);
-//   TestFormData(m_appServer);
-//   TestClientCertificate(m_appServer);
-//   TestCompression(m_appServer);
+  TestPatch(m_appServer);
+  TestFormData(m_appServer);
+  TestClientCertificate(m_appServer);
+  TestCompression(m_appServer);
   TestAsynchrone(m_appServer);
 
   // Instance is now running

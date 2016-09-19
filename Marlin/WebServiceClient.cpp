@@ -44,6 +44,8 @@ static char THIS_FILE[] = __FILE__;
 // General logfile macro
 #undef  DETAILLOG
 #define DETAILLOG(text,...)  if(m_logfile)m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,text,__VA_ARGS__)
+#undef  ERRORLOG
+#define ERRORLOG(text)       if(m_logfile)m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,text);
 
 WebServiceClient::WebServiceClient(CString p_contract
                                   ,CString p_url
@@ -202,11 +204,23 @@ WebServiceClient::Close()
   DETAILLOG("Closing WebServiceClient");
   if(m_isopen && m_reliable && m_result)
   {
-    // Send a LastMessage
-    LastMessage();
+    try
+    {
+      // Send a LastMessage
+      LastMessage();
 
-    // Send a TerminateSequence
-    TerminateSequence();
+      // Send a TerminateSequence
+      TerminateSequence();
+    }
+    catch(CString& error)
+    {
+      CString er = "ERROR in closing the ReliableMessaging protocol: " + error;
+      ERRORLOG(er);
+    }
+    catch(...)
+    {
+      ERRORLOG("Unexpected ERROR in closing WS-RM protocol!");
+    }
   }
   // Ended RM without a throw
   DETAILLOG("WebServiceClient closed");

@@ -300,6 +300,8 @@ private:
   void              RemoveSequence(SessionAddress& p_address);
   SessionSequence*  FindSequence  (SessionAddress& p_address);
   SessionSequence*  CreateSequence(SessionAddress& p_address);
+  void              DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address);
+
   // Handle HTTP throtteling
   CRITICAL_SECTION* StartThrotteling(HTTPMessage* p_message);
   void              EndThrotteling(CRITICAL_SECTION*& p_throttle);

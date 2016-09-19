@@ -449,6 +449,32 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
 }
 
 void
+HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,CString p_name,CString p_value,bool p_replace)
+{
+  if(p_response->SetHeader(p_name,p_value,(USHORT)p_value.GetLength(),p_replace) != S_OK)
+  {
+    DWORD   val   = GetLastError();
+    CString error = GetLastErrorAsString(val);
+    CString bark;
+    bark.Format("Cannot set HTTP repsonse header [%s] to value [%s] : %s",p_name,p_value,error);
+    ERRORLOG(val,bark);
+  }
+}
+
+void 
+HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,CString p_value,bool p_replace)
+{
+  if(p_response->SetHeader(p_id,p_value,(USHORT)p_value.GetLength(),p_replace) != S_OK)
+  {
+    DWORD   val   = GetLastError();
+    CString error = GetLastErrorAsString(val);
+    CString bark;
+    bark.Format("Cannot set HTTP repsonse header [%d] to value [%s] : %s",p_id,p_value,error);
+    ERRORLOG(val,bark);
+  }
+}
+
+void
 HTTPServerIIS::AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers)
 {
   // Something to do?
@@ -461,7 +487,7 @@ HTTPServerIIS::AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers)
     CString name  = it->first;
     CString value = it->second;
 
-    p_response->SetHeader(name,value,0,false);
+    SetResponseHeader(p_response,name,value,false);
   }
 }
 
@@ -514,21 +540,21 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   }
 
   // AddKnownHeader(response,HttpHeaderContentType,contentType);
-  response->SetHeader(HttpHeaderContentType,contentType,0,true);
+  SetResponseHeader(response,HttpHeaderContentType,contentType,true);
 
   // Add the server header or suppress it
   switch(m_sendHeader)
   {
     case SendHeader::HTTP_SH_MICROSOFT:   // Do nothing, Microsoft will add the server header
                                           break;
-    case SendHeader::HTTP_SH_MARLIN:      response->SetHeader(HttpHeaderServer,MARLIN_SERVER_VERSION,0,true);
+    case SendHeader::HTTP_SH_MARLIN:      SetResponseHeader(response,HttpHeaderServer,MARLIN_SERVER_VERSION,true);
                                           break;
-    case SendHeader::HTTP_SH_APPLICATION: response->SetHeader(HttpHeaderServer,m_name,0,true);
+    case SendHeader::HTTP_SH_APPLICATION: SetResponseHeader(response,HttpHeaderServer,m_name,true);
                                           break;
-    case SendHeader::HTTP_SH_WEBCONFIG:   response->SetHeader(HttpHeaderServer,m_configServerName,0,true);
+    case SendHeader::HTTP_SH_WEBCONFIG:   SetResponseHeader(response,HttpHeaderServer,m_configServerName,true);
                                           break;
     case SendHeader::HTTP_SH_HIDESERVER:  // Fill header with empty string will suppress it
-                                          response->SetHeader(HttpHeaderServer,"",0,true);
+                                          SetResponseHeader(response,HttpHeaderServer,"",true);
                                           break;
   }
 
@@ -581,8 +607,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
 #else
   contentLength.Format("%lu",totalLength);
 #endif
-  //AddKnownHeader(response,HttpHeaderContentLength,contentLength);
-  response->SetHeader(HttpHeaderContentLength,contentLength,0,true);
+  SetResponseHeader(response,HttpHeaderContentLength,contentLength,true);
 
   // Dependent on the filling of FileBuffer
   // Send 1 or more buffers or the file
@@ -636,19 +661,18 @@ HTTPServerIIS::SendResponse(HTTPSite*    p_site
   // Add a known header.
   if(p_contentType && strlen(p_contentType))
   {
-    response->SetHeader(HttpHeaderContentType,p_contentType,0,true);
+    SetResponseHeader(response,HttpHeaderContentType,p_contentType,true);
   }
   else
   {
-    response->SetHeader(HttpHeaderContentType,"text/html",0,true);
- 
+    SetResponseHeader(response,HttpHeaderContentType,"text/html",true);
   }
   // Adding authentication schema challenge
   if(p_statusCode == HTTP_STATUS_DENIED)
   {
     // Add authentication scheme
     challenge = BuildAuthenticationChallenge(p_authScheme,p_site->GetAuthenticationRealm());
-    response->SetHeader(HttpHeaderWwwAuthenticate,challenge,0,true);
+    SetResponseHeader(response,HttpHeaderWwwAuthenticate,challenge,true);
   }
   else if (p_statusCode)
   {
@@ -668,7 +692,7 @@ HTTPServerIIS::SendResponse(HTTPSite*    p_site
   // Adding a cookie
   if(p_cookie && strlen(p_cookie) > 0)
   {
-    response->SetHeader(HttpHeaderSetCookie,p_cookie,0,false);
+    SetResponseHeader(response,HttpHeaderSetCookie,p_cookie,false);
   }
 
   DWORD sent = 0L;

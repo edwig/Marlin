@@ -87,6 +87,9 @@ private:
   void AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers);
   // Setting the overal status of the response message
   void SetResponseStatus(IHttpResponse* p_response,USHORT p_status,CString p_statusMessage);
+  // Setting a reponse header by name
+  void SetResponseHeader(IHttpResponse* p_response,CString p_name,     CString p_value,bool p_replace);
+  void SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,CString p_value,bool p_replace);
 
   // Subfunctions for SendResponse
   bool SendResponseBuffer     (IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength);

@@ -55,25 +55,26 @@ int TestFindClientCertificate()
 
 int TestClientCertificate(HTTPClient* p_client)
 {
-  CString url = "https://" MARLIN_HOST "/MarlinTest/SecureClient/Programming1.vsd";
+  bool result = false;
+  CString url = "https://" MARLIN_HOST "/SecureClient/License.txt";
   HTTPMessage msg(HTTPCommand::http_put,url);
   CString filename("..\\Documentation\\Programming1.vsd");
   msg.GetFileBuffer()->SetFileName(filename);
   msg.SetContentType("application/octet-stream");
 
-  xprintf("TESTING CLIENT CERTIFICATE FUNCTION TO /MarlinTest/SecureClient/\n");
-  xprintf("================================================================\n");
+  xprintf("TESTING CLIENT CERTIFICATE FUNCTION TO /SecureClient/\n");
+  xprintf("=====================================================\n");
 
   // Set the detailed request tracing here
-  // p_client->SetTraceRequest(true);
+  p_client->SetTraceRequest(true);
 
   // Setting to true:  No roundtrips, certificate always sent upfront
   // Setting to false: Certificate will be requested by a roundtrip
-  p_client->SetClientCertificatePreset(true);
+  p_client->SetClientCertificatePreset(false);
 
   // The client certificate comes from MY:MarlinClient
-  // p_client->SetClientCertificateStore("MY");
-  // p_client->SetClientCertificateName("MarlinClient");
+  p_client->SetClientCertificateStore("MY");
+  p_client->SetClientCertificateName("MarlinClient");
 
   // Set both store and certificate and test if it exists!
   bool result = p_client->SetClientCertificateThumbprint("MY","db344064f2fac21318dd90f507fe78e81b031600");

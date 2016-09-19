@@ -148,7 +148,7 @@ TestCookies(HTTPClient& p_client)
   url.Format("http://%s:%d/MarlinTest/CookieTest/",MARLIN_HOST,MARLIN_SERVER_PORT);
 
   // Test 1
-  xprintf("TESTING STANDARD HTTP MESSAGE TO /Key2Test/CookieTest/\n");
+  xprintf("TESTING STANDARD HTTP MESSAGE TO /MarlinTest/CookieTest/\n");
   xprintf("======================================================\n");
   HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_put,url);
   msg->SetBody("<Test><Een>1</Een></Test>\n");

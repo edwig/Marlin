@@ -46,12 +46,16 @@ class MarlinModule: public CHttpModule
 public:
   MarlinModule();
   virtual ~MarlinModule();
-
   // Implement NotificationMethods
-  virtual REQUEST_NOTIFICATION_STATUS OnBeginRequest            (IN IHttpContext*        p_httpContext,
+
+  // BeginRequest is too early: cannot implement RawRequest V2 with authentication info!
+//virtual REQUEST_NOTIFICATION_STATUS OnBeginRequest            (IN IHttpContext*        p_httpContext,
+//                                                               IN IHttpEventProvider*  p_provider);
+  // First point where we can intercept the IIS integrated pipeline
+  // after the authenticate and the authorize request are handled
+  virtual REQUEST_NOTIFICATION_STATUS OnResolveRequestCache     (IN IHttpContext*        p_httpContext,
                                                                  IN IHttpEventProvider*  p_provider);
-//virtual REQUEST_NOTIFICATION_STATUS OnMapRequestHandler       (IN IHttpContext*        p_httpContext,
-//                                                               IN IMapHandlerProvider* p_provider);
+  // The Pre-Execute stage is too late: cannot implement our own subsites
 //virtual REQUEST_NOTIFICATION_STATUS OnPreExecuteRequestHandler(IN IHttpContext*        p_httpContext,
 //                                                               IN IHttpEventProvider* p_provider);
 private:

@@ -422,6 +422,22 @@ HTTPServer::MakeSiteRegistrationName(int p_port,CString p_url)
 {
   CString registration;
   p_url.MakeLower();
+
+  // Now chop off all parameters and anchors
+  int posquest = p_url.Find('?');
+  int posquote = p_url.Find('\'');
+  int posanchr = p_url.Find('#');
+
+  if((posquest > 0 && posquote < 0) ||
+     (posquest > 0 && posquote > 0 && posquest < posquote))
+  {
+    p_url = p_url.Left(posquest);
+  }
+  else if((posanchr > 0 && posquote < 0) ||
+          (posanchr > 0 && posquote > 0 && posanchr < posquote))
+  {
+    p_url = p_url.Left(posanchr);
+  }
   p_url.TrimRight('/');
   registration.Format("%d:%s",p_port,p_url);
 

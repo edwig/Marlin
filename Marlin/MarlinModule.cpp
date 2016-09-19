@@ -106,10 +106,10 @@ MarlinModule::~MarlinModule()
   DETAILLOG("MarlinModule: ","Request ready");
 }
 
-//Implement NotificationMethods
+//Implement NotificationMethods: OnBeginRequest
 REQUEST_NOTIFICATION_STATUS
-MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
-                             IN IHttpEventProvider* p_provider)
+MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
+                                    IN IHttpEventProvider* p_provider)
 {
   USES_CONVERSION;
 
@@ -189,14 +189,23 @@ MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
     IHttpUser* user = p_context->GetUser();
     if(user)
     {
-      token = user->GetImpersonationToken();
+      // Make duplicate of the token, otherwise IIS will crash!
+      if(DuplicateTokenEx(user->GetImpersonationToken()
+                         ,TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_ALL_ACCESS | TOKEN_READ | TOKEN_WRITE
+                         ,NULL
+                         ,SecurityImpersonation
+                         ,TokenImpersonation
+                         ,&token) == FALSE)
+      {
+        token = NULL;
+      }
     }
 
     // Store the context with the message, so we can handle all derived messages
     msg->SetRequestHandle((HTTP_REQUEST_ID)p_context);
     msg->SetAccessToken(token);
 
-    // Let the site handle the message
+    // GO! Let the site handle the message
     site->HandleHTTPMessage(msg);
 
     // Ready for IIS!
@@ -362,9 +371,9 @@ RegisterModule(DWORD                        p_version
 {
   HRESULT hr = S_OK;
 
-  DWORD globalEvents = GL_APPLICATION_START | // Starting application pool
-                       GL_APPLICATION_STOP;   // Stopping application pool
-  DWORD moduleEvents = RQ_BEGIN_REQUEST;      // Begin request
+  DWORD globalEvents = GL_APPLICATION_START |     // Starting application pool
+                       GL_APPLICATION_STOP;       // Stopping application pool
+  DWORD moduleEvents = RQ_RESOLVE_REQUEST_CACHE;  // First point to intercept the IIS integrated pipeline
 
   // Preserving the server in a global pointer
   if(g_iisServer == nullptr && p_server != nullptr)

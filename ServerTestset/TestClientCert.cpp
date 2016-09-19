@@ -69,12 +69,12 @@ int TestClientCertificate(HTTPServer* p_server)
   // If errors, change detail level
   doDetails = false;
 
-  CString url("/MarlinTest/SecureClient/");
+  CString url("/SecureClient/");
 
   xprintf("TESTING CLIENT CERTIFICATE FUNCTION OF THE HTTP SERVER\n");
   xprintf("======================================================\n");
 
-  // Create HTTP site to listen to "https://+:443/MarlinTest/SecureClient/"
+  // Create HTTP site to listen to "https://+:443/SecureClient/"
   // 
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,INTERNET_DEFAULT_HTTPS_PORT,url);
   if(site)
