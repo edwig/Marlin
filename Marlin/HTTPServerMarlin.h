@@ -73,6 +73,16 @@ public:
 protected:
   // Cleanup the server
   virtual void Cleanup();
+  // Initialise the logging and error mechanism
+  virtual void InitLogging();
+  // Initialise general server header settings
+  virtual void InitHeaders();
+  // Initialise the hard server limits in bytes
+  virtual void InitHardLimits();
+  // Initialise the threadpool limits
+  virtual void InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize);
+  // Initialise the servers webroot
+  virtual void InitWebroot(CString p_webroot);
   // Init the stream response
   virtual bool InitEventStream(EventStream& p_stream);
   // Send a response in one-go

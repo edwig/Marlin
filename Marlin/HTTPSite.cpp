@@ -333,7 +333,7 @@ HTTPSite::GetContentType(CString p_extension)
 
 // Finding the registered content type from the full resource name
 CString
-HTTPSite::GetContentTypeByResouceName(CString p_pathname)
+HTTPSite::GetContentTypeByResourceName(CString p_pathname)
 {
   EnsureFile ensure;
   CString extens = ensure.ExtensionPart(p_pathname);

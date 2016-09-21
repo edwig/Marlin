@@ -14,6 +14,7 @@ public:
 
 private:
   bool CorrectStarted();
+  void ReportAfterTesting();
 
   int  m_errors    { 0     };
   bool m_doDetails { false };

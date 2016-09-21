@@ -102,6 +102,81 @@ HTTPServerIIS::Cleanup()
     m_log = NULL;
   }
 }
+void
+HTTPServerIIS::InitLogging()
+{
+  // Check for a logging object
+  if(m_log == NULL)
+  {
+    // Create a new one
+    m_log = new LogAnalysis(m_name);
+    m_logOwner = true;
+  }
+  // If you want to tweak the loglevel
+  // you will need a "Logfile.config" in your logging directory
+}
+
+// Initialise general server header settings
+// Can only be overriden from within your ServerApp.
+void
+HTTPServerIIS::InitHeaders()
+{
+  CString headertype;
+  switch(m_sendHeader)
+  {
+    case SendHeader::HTTP_SH_MICROSOFT:   headertype = "Microsoft defined server header"; break;
+    case SendHeader::HTTP_SH_MARLIN:      headertype = "Standard Marlin server header";   break;
+    case SendHeader::HTTP_SH_APPLICATION: headertype = "Application's server name";       break;
+    case SendHeader::HTTP_SH_WEBCONFIG:   headertype = "Configured header type name";     break;
+    case SendHeader::HTTP_SH_HIDESERVER:  headertype = "Hide server response header";     break;
+  }
+  DETAILLOGV("Header type: %s",headertype);
+}
+
+// Initialise the hard server limits in bytes
+// You can only change the hard limits from within your ServerApp
+void
+HTTPServerIIS::InitHardLimits()
+{
+  // Cannot be bigger than 2 GB, otherwise use indirect file access!
+  if(g_streaming_limit > (0x7FFFFFFF))
+  {
+    g_streaming_limit = 0x7FFFFFFF;
+  }
+  // Should not be smaller than 1MB
+  if(g_streaming_limit < (1024 * 1024))
+  {
+    g_streaming_limit = (1024 * 1024);
+  }
+  // Should not be bigger than 25 4K pages
+  if(g_compress_limit > (25 * 4 * 1024))
+  {
+    g_compress_limit = (25 * 4 * 1024);
+  }
+
+  DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
+  DETAILLOGV("Server hard-limit compression threshold: %d",    g_compress_limit);
+}
+
+// Initialise the threadpool limits
+void  
+HTTPServerIIS::InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize)
+{
+  // Does nothing. Cannot get the limits from a web.config!
+  // If you want to change the limits, do this from within your ServerApp!
+  UNREFERENCED_PARAMETER(p_maxThreads);
+  UNREFERENCED_PARAMETER(p_minThreads);
+  UNREFERENCED_PARAMETER(p_stackSize);
+}
+
+// Initialise the servers webroot
+void 
+HTTPServerIIS::InitWebroot(CString p_webroot)
+{
+  // Directly set webroot from IIS
+  // If you want to change the webroot, do this from within your ServerApp!
+  m_webroot = p_webroot;
+}
 
 // Running the server 
 void
@@ -149,20 +224,7 @@ HTTPServerIIS::CreateSite(PrefixType    p_type
      p_port != INTERNET_DEFAULT_HTTP_PORT)
   {
     DETAILLOG1("In IIS the prefix type, https and port number are controlled by IIS Admin, and cannot be set!");
-    p_type   = PrefixType::URLPRE_Strong;
-    p_port   = INTERNET_DEFAULT_HTTP_PORT;
-    p_secure = false;
   }
-
-  CString chanBase;
-  // Getting the settings from the web.config, use parameters as defaults
-  chanBase      = m_webConfig.GetParameterString ("Server","BaseURL",    p_baseURL);
-  // Only use other URL if one specified
-  if(!chanBase.IsEmpty())
-  {
-    p_baseURL = chanBase;
-  }
-
   // Create our URL prefix
   CString prefix = CreateURLPrefix(p_type,p_secure,p_port,p_baseURL);
   if(!prefix.IsEmpty())

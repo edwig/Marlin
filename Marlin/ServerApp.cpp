@@ -64,7 +64,4 @@ ServerApp::ConnectServerApp(IHttpServer*   p_iis
   m_appPool    = p_pool;
   m_appLogfile = p_logfile;
   m_appReport  = p_report;
-
-  // Init the server application
-  InitInstance();
 }

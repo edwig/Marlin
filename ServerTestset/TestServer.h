@@ -27,10 +27,13 @@
 //
 #pragma once
 
+// #define MARLIN_STANDALONE
+
 // All tests running on this port
 // IIS    -> Testing on port 80
 // Marlin -> Testing on port 1200
-const int TESTING_HTTP_PORT = 80;
+const int TESTING_HTTP_PORT  = 80;
+const int TESTING_HTTPS_PORT = 443;
 
 // Printing details of the tests
 extern bool doDetails;
@@ -68,6 +71,7 @@ int TestFormData         (HTTPServer* p_server);
 int TestClientCertificate(HTTPServer* p_server);
 int TestCompression      (HTTPServer* p_server);
 int TestAsynchrone       (HTTPServer* p_server);
+int TestSecureSite       (HTTPServer* p_server);
 int TestThreadPool       (ThreadPool* p_pool);
 
 
@@ -90,3 +94,5 @@ int AfterTestSubsites();
 int AfterTestThreadpool();
 int AfterTestTime();
 int AfterTestToken();
+int AfterSecureSite();
+

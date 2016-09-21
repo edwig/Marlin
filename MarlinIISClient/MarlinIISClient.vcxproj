@@ -219,6 +219,7 @@
     <ClCompile Include="..\TestsetClient\TestNamespaces.cpp" />
     <ClCompile Include="..\TestsetClient\TestPatch.cpp" />
     <ClCompile Include="..\TestsetClient\TestReader.cpp" />
+    <ClCompile Include="..\TestsetClient\TestSecureSite.cpp" />
     <ClCompile Include="..\TestsetClient\TestUnicode.cpp" />
     <ClCompile Include="..\TestsetClient\TestWS.cpp" />
     <ClCompile Include="stdafx.cpp">

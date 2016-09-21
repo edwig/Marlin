@@ -467,6 +467,11 @@ LogAnalysis::ReadConfig()
         m_doLogging = atoi(&buffer[8]) > 0;
         continue;
       }
+      if(_strnicmp(buffer,"rotate=",7) == 0)
+      {
+        m_rotate = atoi(&buffer[7]) > 0;
+        continue;
+      }
       if(_strnicmp(buffer,"timing=",7) == 0)
       {
         m_doTiming = atoi(&buffer[7]) > 0;

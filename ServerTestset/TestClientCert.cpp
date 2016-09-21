@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "TestServer.h"
 #include "HTTPSite.h"
-#include "SiteHandlerPut.h"
+#include "SiteHandlerGet.h"
 #include "SiteFilterClientCertificate.h"
 
 #ifdef _DEBUG
@@ -39,7 +39,7 @@ static char THIS_FILE[] = __FILE__;
 
 static int totalChecks = 1;
 
-class SiteHandlerPutSecure : public SiteHandlerPut
+class SiteHandlerGetSecure : public SiteHandlerGet
 {
 protected:
   void PostHandle(HTTPMessage* p_message) override;
@@ -49,14 +49,14 @@ protected:
 // the site handlers will NEVER be called
 // so we will never come to here!!
 void
-SiteHandlerPutSecure::PostHandle(HTTPMessage* p_message)
+SiteHandlerGetSecure::PostHandle(HTTPMessage* p_message)
 {
-  SiteHandlerPut::PostHandle(p_message);
-  bool result = p_message->GetStatus() == HTTP_STATUS_CREATED;
+  SiteHandlerGet::PostHandle(p_message);
+  bool result = p_message->GetStatus() == HTTP_STATUS_OK;
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  qprintf("Client certificate at a HTTP PUT operation     : %s\n",result ? "OK" : "ERROR");
+  qprintf("Client certificate at a HTTP GET operation     : %s\n",result ? "OK" : "ERROR");
   if(!result) xerror();
 
   --totalChecks;
@@ -69,12 +69,12 @@ int TestClientCertificate(HTTPServer* p_server)
   // If errors, change detail level
   doDetails = false;
 
-  CString url("/SecureClient/");
+  CString url("/SecureTest/");
 
   xprintf("TESTING CLIENT CERTIFICATE FUNCTION OF THE HTTP SERVER\n");
   xprintf("======================================================\n");
 
-  // Create HTTP site to listen to "https://+:443/SecureClient/"
+  // Create HTTP site to listen to "https://+:443/SecureTest/"
   // 
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,INTERNET_DEFAULT_HTTPS_PORT,url);
   if(site)
@@ -92,8 +92,9 @@ int TestClientCertificate(HTTPServer* p_server)
   }
 
   // Setting the POST handler for this site
-  site->SetHandler(HTTPCommand::http_put,new SiteHandlerPutSecure());
+  site->SetHandler(HTTPCommand::http_get,new SiteHandlerGetSecure());
 
+#ifdef MARLIN_STANDALONE
   CString certName   = "marlin";
   CString thumbprint = "db344064f2fac21318dd90f507fe78e81b031600";
 
@@ -108,6 +109,7 @@ int TestClientCertificate(HTTPServer* p_server)
   {
     qprintf("ERROR SETTING SITE FILTER FOR ClientCertificates\n");
   }
+#endif
 
   // Start the site explicitly
   if(site->StartSite())
@@ -126,11 +128,8 @@ int TestClientCertificate(HTTPServer* p_server)
 int
 AfterTestClientCert()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Client certificate at file PUT was not tested  : ERROR\n");
-  }
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  qprintf("Client certificate at file GET was tested     : %s", totalChecks >= 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

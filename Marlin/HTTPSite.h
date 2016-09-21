@@ -228,7 +228,7 @@ public:
   SiteHandler*    GetSiteHandler(HTTPCommand p_command);
   SiteFilter*     GetFilter(unsigned p_priority);
   CString         GetContentType(CString p_extension);
-  CString         GetContentTypeByResouceName(CString p_pathname);
+  CString         GetContentTypeByResourceName(CString p_pathname);
 
   // FUNCTIONS
 

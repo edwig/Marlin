@@ -304,13 +304,16 @@ protected:
   virtual void  Cleanup() = 0;
   // Init the stream response
   virtual bool  InitEventStream(EventStream& p_stream) = 0;
-
   // Initialise the logging and error mechanism
-  void      InitLogging();
+  virtual void  InitLogging() = 0;
   // Initialise general server header settings
-  void      InitHeaders();
+  virtual void  InitHeaders() = 0;
   // Initialise the hard server limits in bytes
-  void      InitHardLimits();
+  virtual void  InitHardLimits() = 0;
+  // Initialise the servers webroot
+  virtual void  InitWebroot(CString p_webroot) = 0;
+  // Initialise the threadpool limits
+  virtual void  InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize) = 0;
   // Register a URL to listen on
   HTTPSite* RegisterSite(CString        p_urlPrefix
                         ,int            p_port

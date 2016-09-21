@@ -29,6 +29,8 @@
 #pragma warning (disable:4091)
 #include <httpserv.h>
 
+#define SERVERNAME_BUFFERSIZE 256
+
 // Forward reference
 class ServerApp;
 class LogAnalysis;
@@ -48,7 +50,7 @@ public:
   virtual ~MarlinModule();
   // Implement NotificationMethods
 
-  // BeginRequest is too early: cannot implement RawRequest V2 with authentication info!
+  // BeginRequest is needed for the client certificate
 //virtual REQUEST_NOTIFICATION_STATUS OnBeginRequest            (IN IHttpContext*        p_httpContext,
 //                                                               IN IHttpEventProvider*  p_provider);
   // First point where we can intercept the IIS integrated pipeline
@@ -76,8 +78,14 @@ public:
 class MarlinGlobalFactory : public CGlobalModule
 {
 public:
+  MarlinGlobalFactory();
+ ~MarlinGlobalFactory();
+
   virtual GLOBAL_NOTIFICATION_STATUS OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider* p_provider);
   virtual GLOBAL_NOTIFICATION_STATUS OnGlobalApplicationStop (_In_ IHttpApplicationStartProvider* p_provider);
   // Stopping the global factory
   virtual void Terminate();
+private:
+  CRITICAL_SECTION m_lock;
+  int              m_applications;
 };

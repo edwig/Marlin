@@ -75,7 +75,7 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
   CString pathname = m_site->GetWebroot() + ensure.FileNameFromResourceName(resource);
 
   // Finding and setting the content type
-  CString content  = m_site->GetContentTypeByResouceName(pathname);
+  CString content  = m_site->GetContentTypeByResourceName(pathname);
   p_message->SetContentType(content);
 
   // Check existence

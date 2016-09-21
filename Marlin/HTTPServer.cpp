@@ -290,41 +290,6 @@ HTTPServer::GeneralChecks()
 }
 
 void
-HTTPServer::InitLogging()
-{
-  // Check for a logging object
-  if(m_log == NULL)
-  {
-    // Create a new one
-    m_log = new LogAnalysis(m_name);
-    m_logOwner = true;
-  }
-  CString file = m_log->GetLogFileName();
-  int  cache   = m_log->GetCache();
-  bool logging = m_log->GetDoLogging();
-  bool timing  = m_log->GetDoTiming();
-  bool events  = m_log->GetDoEvents();
-
-  // Get parameters from web.config
-  file     = m_webConfig.GetParameterString ("Logging","Logfile",  file);
-  logging  = m_webConfig.GetParameterBoolean("Logging","DoLogging",logging);
-  timing   = m_webConfig.GetParameterBoolean("Logging","DoTiming", timing);
-  events   = m_webConfig.GetParameterBoolean("Logging","DoEvents", events);
-  cache    = m_webConfig.GetParameterInteger("Logging","Cache",    cache);
-  m_detail = m_webConfig.GetParameterBoolean("Logging","Detail",   m_detail);
-
-  // Use if overridden in web.config
-  if(!file.IsEmpty())
-  {
-    m_log->SetLogFilename(file);
-  }
-  m_log->SetCache(cache);
-  m_log->SetDoLogging(logging);
-  m_log->SetDoTiming(timing);
-  m_log->SetDoEvents(events);
-}
-
-void
 HTTPServer::SetLogging(LogAnalysis* p_log)
 {
   if(m_log && m_logOwner)
@@ -335,67 +300,18 @@ HTTPServer::SetLogging(LogAnalysis* p_log)
   InitLogging();
 }
 
-// Initialise general server header settings
-void
-HTTPServer::InitHeaders()
-{
-  CString name = m_webConfig.GetParameterString("Server","ServerName","");
-  CString type = m_webConfig.GetParameterString("Server","TypeServerName","Hide");
-
-  // Server name combo
-  if(type.CompareNoCase("Microsoft")   == 0) m_sendHeader = SendHeader::HTTP_SH_MICROSOFT;
-  if(type.CompareNoCase("Marlin")      == 0) m_sendHeader = SendHeader::HTTP_SH_MARLIN;
-  if(type.CompareNoCase("Application") == 0) m_sendHeader = SendHeader::HTTP_SH_APPLICATION;
-  if(type.CompareNoCase("Configured")  == 0) m_sendHeader = SendHeader::HTTP_SH_WEBCONFIG;
-  if(type.CompareNoCase("Hide")        == 0) m_sendHeader = SendHeader::HTTP_SH_HIDESERVER;
-
-  if(m_sendHeader == SendHeader::HTTP_SH_WEBCONFIG)
-  {
-    m_configServerName = name;
-    DETAILLOGS("Server sends 'server' response header of type: ",name);
-  }
-  else
-  {
-    DETAILLOGS("Server sends 'server' response header: ",type);
-  }
-}
-
-// Initialise the hard server limits in bytes
-void
-HTTPServer::InitHardLimits()
-{
-  g_streaming_limit = m_webConfig.GetParameterInteger("Server","StreamingLimit",g_streaming_limit);
-  g_compress_limit  = m_webConfig.GetParameterInteger("Server","CompressLimit", g_compress_limit);
-
-  // Cannot be bigger than 2 GB, otherwise use indirect file access!
-  if(g_streaming_limit > (0x7FFFFFFF))
-  {
-    g_streaming_limit = 0x7FFFFFFF;
-  }
-  // Should not be smaller than 1MB
-  if(g_streaming_limit < (1024 * 1024))
-  {
-    g_streaming_limit = (1024 * 1024);
-  }
-  // Should not be bigger than 25 4K pages
-  if(g_compress_limit > (25 * 4 * 1024))
-  {
-    g_compress_limit = (25 * 4 * 1024);
-  }
-
-  DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
-  DETAILLOGV("Server hard-limit compression threshold: %d",    g_compress_limit);
-}
-
 void
 HTTPServer::SetThreadPool(ThreadPool* p_pool)
 {
   // Look for override in webconfig
   if(p_pool)
   {
-    int minThreads = m_webConfig.GetParameterInteger("Server","MinThreads",p_pool->GetMinThreads());
-    int maxThreads = m_webConfig.GetParameterInteger("Server","MaxThreads",p_pool->GetMaxThreads());
-    int stackSize  = m_webConfig.GetParameterInteger("Server","StackSize", p_pool->GetStackSize());
+    int minThreads = p_pool->GetMinThreads();
+    int maxThreads = p_pool->GetMaxThreads();
+    int stackSize  = p_pool->GetStackSize();
+
+    // Dependent on the type of server
+    InitThreadpoolLimits(minThreads,maxThreads,stackSize);
 
     if(minThreads && minThreads >= NUM_THREADS_MINIMUM)
     {
@@ -405,7 +321,10 @@ HTTPServer::SetThreadPool(ThreadPool* p_pool)
     {
       p_pool->TrySetMaximum(maxThreads);
     }
-    p_pool->SetStackSize(stackSize);
+    if(stackSize >= THREAD_STACKSIZE)
+    {
+      p_pool->SetStackSize(stackSize);
+    }
   }
   m_pool = p_pool;
 }
@@ -414,7 +333,7 @@ void
 HTTPServer::SetWebroot(CString p_webroot)
 {
   // Look for override in webconfig
-  m_webroot = m_webConfig.GetParameterString("Server","WebRoot",p_webroot);
+  InitWebroot(p_webroot);
 }
 
 CString

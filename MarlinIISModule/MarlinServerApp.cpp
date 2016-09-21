@@ -85,23 +85,24 @@ MarlinServerApp::InitInstance()
   // Starting objects and sites
   //   TestWebServiceServer(m_appServer,contract);
   //   TestJsonServer(m_appServer,contract);
-  TestBaseSite(m_appServer);
-  TestPushEvents(m_appServer);
-  TestInsecure(m_appServer);
-  TestBodySigning(m_appServer);
-  TestBodyEncryption(m_appServer);
-  TestMessageEncryption(m_appServer);
-  TestReliable(m_appServer);
-  TestCookies(m_appServer);
-  TestToken(m_appServer);
-  TestSubSites(m_appServer);
-  TestJsonData(m_appServer);
-  TestFilter(m_appServer);
-  TestPatch(m_appServer);
-  TestFormData(m_appServer);
+  //   TestPushEvents(m_appServer);
+// OK: TestSecureSite(m_appServer);
   TestClientCertificate(m_appServer);
-  TestCompression(m_appServer);
-  TestAsynchrone(m_appServer);
+// OK:  TestBaseSite(m_appServer);
+// OK:  TestInsecure(m_appServer);
+// OK:  TestBodySigning(m_appServer);
+// OK:  TestBodyEncryption(m_appServer);
+// OK:  TestMessageEncryption(m_appServer);
+// OK:  TestReliable(m_appServer);
+// OK:  TestCookies(m_appServer);
+// OK:  TestToken(m_appServer);
+// OK:  TestSubSites(m_appServer);
+// OK:  TestJsonData(m_appServer);
+// OK:  TestFilter(m_appServer);
+// OK:  TestPatch(m_appServer);
+// OK:  TestFormData(m_appServer);
+// OK:  TestCompression(m_appServer);
+// OK:  TestAsynchrone(m_appServer);
 
   // Instance is now running
   m_running = true;
@@ -121,6 +122,9 @@ MarlinServerApp::ExitInstance()
     // Stopping all subsites
     StopSubsites(m_appServer);
 
+    // Report all tests
+    ReportAfterTesting();
+
     // Stopped running
     m_running = false;
   }
@@ -135,4 +139,10 @@ MarlinServerApp::CorrectStarted()
     return false;
   }
   return true;
+}
+
+void 
+MarlinServerApp::ReportAfterTesting()
+{
+  AfterSecureSite();
 }

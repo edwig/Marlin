@@ -63,6 +63,7 @@ extern int TestContract(HTTPClient* p_client,bool p_json);
 extern int TestJsonData(HTTPClient* p_client);
 extern int TestPatching(HTTPClient* p_client);
 extern int TestFormData(HTTPClient* p_client);
+extern int TestSecureSite(HTTPClient* p_client);
 extern int TestCompression(HTTPClient* p_client);
 extern int TestWebservices(HTTPClient& p_client);
 extern int TestClientCertificate(HTTPClient* p_client);

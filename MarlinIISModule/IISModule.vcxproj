@@ -187,6 +187,7 @@
     <ClCompile Include="..\ServerTestset\TestMessageEncryption.cpp" />
     <ClCompile Include="..\ServerTestset\TestPatch.cpp" />
     <ClCompile Include="..\ServerTestset\TestReliable.cpp" />
+    <ClCompile Include="..\ServerTestset\TestSecureSite.cpp" />
     <ClCompile Include="..\ServerTestset\TestSubSites.cpp" />
     <ClCompile Include="..\ServerTestset\TestThreadpool.cpp" />
     <ClCompile Include="..\ServerTestset\TestTime.cpp" />
