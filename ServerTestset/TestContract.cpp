@@ -393,7 +393,7 @@ TestWebServiceServer(HTTPServer* p_server,CString p_contract)
 
   CString  url;
   CString  name("MarlinWeb");
-  CString  webroot("C:\\WWW\\Marlin");
+  CString  webroot("C:\\WWW\\Marlin"); // If stand alone marlin server
   unsigned threads = 4;
 
   // Formatting the testing port

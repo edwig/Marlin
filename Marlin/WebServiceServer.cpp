@@ -305,6 +305,31 @@ WebServiceServer::AddOperation(int p_code,CString p_name,SOAPMessage* p_input,SO
   return m_wsdl->AddOperation(p_code,p_name,p_input,p_output);
 }
 
+// Starting our WSDL
+void
+WebServiceServer::StartWsdl()
+{
+  if(m_wsdl == nullptr)
+  {
+    m_wsdl = new WSDLCache(true);
+    m_wsdlOwner = true;
+  }
+}
+
+void
+WebServiceServer::ReadingWebconfig()
+{
+  HTTPServerMarlin* server = dynamic_cast<HTTPServerMarlin*>(m_httpServer);
+
+  if(server)
+  {
+    // Read the general settings first
+    ReadingWebconfig("web.config");
+    CString siteConfigFile = WebConfig::GetSiteConfig(m_site->GetPrefixURL());
+    ReadingWebconfig(siteConfigFile);
+  }
+}
+
 void
 WebServiceServer::ReadingWebconfig(CString p_webconfig)
 {
@@ -329,18 +354,6 @@ WebServiceServer::ReadingWebconfig(CString p_webconfig)
     m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Support GET-SOAP-JSON rountrip translation: ",m_jsonTranslation ? "YES" : "NO");
   }
 }
-
-// Starting our WSDL
-void
-WebServiceServer::StartWsdl()
-{
-  if(m_wsdl == nullptr)
-  {
-    m_wsdl = new WSDLCache(true);
-    m_wsdlOwner = true;
-  }
-}
-
 // Running the service
 bool
 WebServiceServer::Run()
@@ -383,6 +396,11 @@ WebServiceServer::Run()
     m_httpServer->SetThreadPool(m_pool);
     m_httpServer->SetWebroot(m_webroot);
     m_httpServer->SetLogging(m_log);
+  }
+  else
+  {
+    // Use the webroot of the existing server!
+    m_webroot = m_httpServer->GetWebroot();
   }
   // Try to set our caching policy
   m_httpServer->SetCachePolicy(m_cachePolicy,m_cacheSeconds);
@@ -456,9 +474,7 @@ WebServiceServer::Run()
   m_site->SetPayload(this);
 
   // Read the general settings first
-  ReadingWebconfig("web.config");
-  CString siteConfigFile = WebConfig::GetSiteConfig(m_site->GetPrefixURL());
-  ReadingWebconfig(siteConfigFile);
+  ReadingWebconfig();
 
   // Standard text content types
   m_site->AddContentType("",   "text/xml");              // SOAP 1.0 / 1.1
