@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include "HTTPServerIIS.h"
+#include "HTTPSiteIIS.h"
 #include "AutoCritical.h"
 #include "WebServiceServer.h"
 #include "HTTPURLGroup.h"
 #include "GetLastErrorAsString.h"
 #include "MarlinModule.h"
+#include "EnsureFile.h"
 
 // Logging macro's
 #define DETAILLOG1(text)          if(m_detail && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
@@ -175,6 +177,13 @@ HTTPServerIIS::InitWebroot(CString p_webroot)
 {
   // Directly set webroot from IIS
   // If you want to change the webroot, do this from within your ServerApp!
+
+  EnsureFile ensure(p_webroot);
+  int er = ensure.CheckCreateDirectory();
+  if(er)
+  {
+    ERRORLOG(er,"Cannot reach server root directory: " + p_webroot);
+  }
   m_webroot = p_webroot;
 }
 
@@ -246,13 +255,14 @@ HTTPServerIIS::CreateSite(PrefixType    p_type
       }
     }
     // Create and register a URL
-    HTTPSite* registeredSite = RegisterSite(prefix,p_port,p_baseURL,p_callback,mainSite);
-
-    if(registeredSite != nullptr)
+    // Remember URL Prefix strings, and create the site
+    HTTPSiteIIS* registeredSite = new HTTPSiteIIS(this,p_port,p_baseURL,prefix,mainSite,p_callback);
+    if(RegisterSite(registeredSite,prefix))
     {
       // Site created and registered
       return registeredSite;
     }
+    delete registeredSite;
   }
   // No luck
   return nullptr;
@@ -288,12 +298,9 @@ HTTPServerIIS::DeleteSite(int p_port,CString p_baseURL,bool p_force /*=false*/)
       }
     }
     // And remove from the site map
-    if(result || p_force)
-    {
-      delete site;
-      m_allsites.erase(it);
-      result = true;
-    }
+    delete site;
+    m_allsites.erase(it);
+    result = true;
   }
   return result;
 }
@@ -736,7 +743,7 @@ HTTPServerIIS::SendResponse(HTTPSite*    p_site
     challenge = BuildAuthenticationChallenge(p_authScheme,p_site->GetAuthenticationRealm());
     SetResponseHeader(response,HttpHeaderWwwAuthenticate,challenge,true);
   }
-  else if (p_statusCode)
+  else if (p_statusCode >= HTTP_STATUS_AMBIGUOUS)
   {
     // Log responding with error status code
     HTTPError(__FUNCTION__,p_statusCode,"Returning from: " + p_site->GetSite());

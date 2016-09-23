@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "HTTPServerMarlin.h"
+#include "HTTPSiteMarlin.h"
 #include "AutoCritical.h"
 #include "WebServiceServer.h"
 #include "HTTPURLGroup.h"
@@ -412,13 +413,14 @@ HTTPServerMarlin::CreateSite(PrefixType    p_type
       }
     }
     // Create and register a URL
-    HTTPSite* registeredSite = RegisterSite(prefix,p_port,p_baseURL,p_callback,mainSite);
-
-    if(registeredSite != nullptr)
+    // Remember URL Prefix strings, and create the site
+    HTTPSiteMarlin* registeredSite = new HTTPSiteMarlin(this,p_port,p_baseURL,prefix,mainSite,p_callback);
+    if(RegisterSite(registeredSite,prefix))
     {
       // Site created and registered
       return registeredSite;
     }
+    delete registeredSite;
   }
   // No luck
   return nullptr;
@@ -486,10 +488,10 @@ HTTPServerMarlin::FindUrlGroup(CString p_authName
   // And if so: reuse that URL group
   for(auto group : m_urlGroups)
   {
-    if(group->GetAuthenticationScheme() == p_authScheme &&
+    if(group->GetAuthenticationScheme()    == p_authScheme &&
        group->GetAuthenticationNtlmCache() == p_cache      &&
-       group->GetAuthenticationRealm() == p_realm      &&
-       group->GetAuthenticationDomain() == p_domain)
+       group->GetAuthenticationRealm()     == p_realm      &&
+       group->GetAuthenticationDomain()    == p_domain)
     {
       DETAILLOGS("URL Group recycled for authentication scheme: ",p_authName);
       return group;
@@ -1035,7 +1037,7 @@ HTTPServerMarlin::SendResponse(HTTPSite*    p_site
     challenge = BuildAuthenticationChallenge(p_authScheme,p_site->GetAuthenticationRealm());
     AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
   }
-  else if (p_statusCode)
+  else if (p_statusCode >= HTTP_STATUS_AMBIGUOUS)
   {
     // Log responding with error status code
     HTTPError(__FUNCTION__,p_statusCode,"Returning from: " + p_site->GetSite());

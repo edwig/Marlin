@@ -63,7 +63,8 @@ struct AddressCompare
   bool operator()(const SessionAddress& p_left, const SessionAddress& p_right) const
   {
     // Compare internet address (fastest compare)
-    int cmp = memcmp(&p_left.m_address,&p_right.m_address,sizeof(SOCKADDR_IN6));
+    // Uses from SOCKADDR_IN6 the sin6_family, sin6_port, sin6_flowinfo members
+    int cmp = memcmp(&p_left.m_address,&p_right.m_address,sizeof(USHORT) + sizeof(USHORT) + sizeof(ULONG));
     if(cmp < 0) return true;
     if(cmp > 0) return false;
     // Compare desktops
@@ -132,14 +133,14 @@ public:
  ~HTTPSite();
 
   // MANDATORY: Explicitly starting after configuration of the site
-  bool StartSite();
+  virtual bool StartSite() = 0;
   // OPTIONAL: Explicitly stopping a site
-  bool StopSite(bool p_force = false);
+  bool         StopSite(bool p_force = false);
 
   // SETTERS
 
   // OPTIONAL: Set the webroot of the site
-  bool            SetWebroot(CString p_webroot);
+  virtual bool    SetWebroot(CString p_webroot) = 0;
   // MANDATORY: Set handler for HTTP command(s)
   void            SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner = true);
   // OPTIONAL Set filter for HTTP command(s)
@@ -173,15 +174,15 @@ public:
   // OPTIONAL: Set optional site payload, so you can hide your own context
   void            SetPayload(void* p_payload);
   // OPTIONAL: Set XFrame options on server answer
-  void            SetXFrameOptions(XFrameOption p_option,CString p_uri);
+  virtual void    SetXFrameOptions(XFrameOption p_option,CString p_uri) = 0;
   // OPTIONAL: Set Strict Transport Security (HSTS)
-  void            SetStrictTransportSecurity(unsigned p_maxAge,bool p_subDomains);
+  virtual void    SetStrictTransportSecurity(unsigned p_maxAge,bool p_subDomains) = 0;
   // OPTIONAL: Set X-Content-Type options
-  void            SetXContentTypeOptions(bool p_nosniff);
+  virtual void    SetXContentTypeOptions(bool p_nosniff) = 0;
   // OPTIONAL: Set protection against X-Site scripting
-  void            SetXSSProtection(bool p_on,bool p_block);
+  virtual void    SetXSSProtection(bool p_on,bool p_block) = 0;
   // OPTIONAL: Set cache control
-  void            SetBlockCacheControl(bool p_block);
+  virtual void    SetBlockCacheControl(bool p_block) = 0;
   // OPTIONAL: Set send in UTF-16 Unicode
   void            SetSendUnicode(bool p_unicode);
   // OPTIONAL: Set prepend SOAP message with BOM
@@ -254,32 +255,25 @@ public:
                     ,CString          p_string
                     ,CString          p_detail);
   // Add all optional extra headers of this site
-  void AddSiteOptionalHeaders(UKHeaders& p_headers);
+  virtual void AddSiteOptionalHeaders(UKHeaders& p_headers) = 0;
   // Send responses
   bool SendResponse(HTTPMessage* p_message);
   bool SendResponse(SOAPMessage* p_message);
   bool SendResponse(JSONMessage* p_message);
 
 protected:
-  // All registered site handlers, and the default action
-  void HandleHTTPMessageDefault(HTTPMessage* p_message);
-  HandlerMap m_handlers;
-
-private:
-  // Initialize the site from automatic settings in the config
-  void              InitSite(WebConfig& p_config);
-  void              LogSettings();
+  // Cleanup the site when stopping
   void              CleanupHandlers();
   void              CleanupFilters();
   void              CleanupThrotteling();
   // Finding the SiteHandler registration
   RegHandler*       FindSiteHandler(HTTPCommand p_command);
-    // Calling all filters
+  // Calling all filters
   void              CallFilters(HTTPMessage* p_message);
+  // All registered site handlers, and the default action
+  void              HandleHTTPMessageDefault(HTTPMessage* p_message);
   // Direct asynchronous response
   void              AsyncResponse(HTTPMessage* p_message);
-    // Set automatic headers upon starting site
-  void              SetAutomaticHeaders(WebConfig& p_config);
   // Handle the error after an error report
   void              PostHandle(HTTPMessage* p_message);
     // Check that m_reliable and m_async do not mix
@@ -342,7 +336,8 @@ private:
   bool              m_reliable        { false   };        // Does WS-Reliable messaging in SOAP POST's
   bool              m_reliableLogIn   { false   };        // RM implies logged-in user
   ReliableMap       m_sequences;                          // Reliable messaging sequences
-  // HTTP Site filtering                                  
+  // HTTP Site handlers and filters
+  HandlerMap        m_handlers;                           // Site handlers
   FilterMap         m_filters;                            // Site filters
   // Multi-threading
   CRITICAL_SECTION  m_filterLock;                         // Adding/deleting/calling filters

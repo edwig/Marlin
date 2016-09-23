@@ -315,13 +315,9 @@ protected:
   // Initialise the threadpool limits
   virtual void  InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize) = 0;
   // Register a URL to listen on
-  HTTPSite* RegisterSite(CString        p_urlPrefix
-                        ,int            p_port
-                        ,CString        p_baseURL
-                        ,LPFN_CALLBACK  p_context
-                        ,HTTPSite*      p_mainSite = nullptr);
+  bool          RegisterSite(HTTPSite* p_site,CString p_urlPrefix);
   // Register server push event stream for this site
-  EventStream* SubscribeEventStream(HTTPSite* p_site,CString p_url,CString& p_pad,HTTP_REQUEST_ID p_requestID,HANDLE p_token);
+  EventStream*  SubscribeEventStream(HTTPSite* p_site,CString p_url,CString& p_pad,HTTP_REQUEST_ID p_requestID,HANDLE p_token);
   // General checks before starting
   bool      GeneralChecks();
   // Checks if all sites are started

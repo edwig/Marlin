@@ -29,6 +29,7 @@
 #include "TestClient.h"
 #include "HTTPMessage.h"
 #include "HTTPClient.h"
+#include <io.h>
 
 // STORE NAMES
 // MY
@@ -56,14 +57,14 @@ int TestFindClientCertificate()
 int TestClientCertificate(HTTPClient* p_client)
 {
   bool result = false;
-  CString url = "https://" MARLIN_HOST "/SecureTest/codes.html";
+  CString url = "https://" MARLIN_HOST ":1222/SecureClientCert/codes.html";
   HTTPMessage msg(HTTPCommand::http_get,url);
   CString filename("..\\Documentation\\codes.html");
   msg.GetFileBuffer()->SetFileName(filename);
   msg.SetContentType("text/html");
 
-  xprintf("TESTING CLIENT CERTIFICATE FUNCTION TO /SecureTest/\n");
-  xprintf("===================================================\n");
+  xprintf("TESTING CLIENT CERTIFICATE FUNCTION TO /SecureClientCert/\n");
+  xprintf("=========================================================\n");
 
   // Set the detailed request tracing here
   // p_client->SetTraceRequest(true);
@@ -87,10 +88,25 @@ int TestClientCertificate(HTTPClient* p_client)
     xprintf("ERROR Client certificate not found in the store!\n");
   }
 
+  // Remove the file !!
+  if(_access(filename,6) == 0)
+  {
+    if(DeleteFile(filename) == false)
+    {
+      printf("Filename [%s] not removed\n",filename.GetString());
+    }
+  }
+
   // Send our message
   result = p_client->Send(&msg);
 
-  if(!result)
+
+  // If OK and file does exists now!
+  if(result && _access(filename,0) == 0)
+  {
+    result = true;
+  }
+  else
   {
     xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
     xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
@@ -98,7 +114,7 @@ int TestClientCertificate(HTTPClient* p_client)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Put file through certificate check             : %s\n",result ? "OK" : "ERROR");
+  printf("Get file through client certificate check      : %s\n",result ? "OK" : "ERROR");
 
   // Empty the certificate details
   p_client->SetClientCertificatePreset(false);

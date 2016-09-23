@@ -81,8 +81,13 @@ public:
   MarlinGlobalFactory();
  ~MarlinGlobalFactory();
 
+  // Registered Start/Stop handlers
   virtual GLOBAL_NOTIFICATION_STATUS OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider* p_provider);
   virtual GLOBAL_NOTIFICATION_STATUS OnGlobalApplicationStop (_In_ IHttpApplicationStartProvider* p_provider);
+
+  // Extract webroot from config/physical combination
+  CString ExtractWebroot(CString p_configPath,CString p_physicalPath);
+
   // Stopping the global factory
   virtual void Terminate();
 private:

@@ -42,6 +42,7 @@
 #include "WebConfig.h"
 #include "MarlinModule.h"
 #include "ServerApp.h"
+#include "EnsureFile.h"
 #include "AutoCritical.h"
 #ifdef _DEBUG
 #include "IISDebug.h"
@@ -63,7 +64,14 @@ StartLog(DWORD p_version)
 {
   if(g_analysisLog == nullptr)
   {
-    CString logfile = WebConfig::GetExePath() + "Logfile_Marlin.txt";
+    // Determine the logfile name from: "%windir%\system32\inetsrv\config\ApplicationHost.Config
+    //  <configuration>
+    //    <system.applicationHost>
+    //     <log>
+    //       <centralW3CLogFile enabled = "true" directory = "%SystemDrive%\inetpub\logs\LogFiles" />
+    CString logfile = "C:\\inetpub\\logs\\LogFiles\\Marlin\\Logfile.txt";
+    EnsureFile ensure(logfile);
+    ensure.CheckCreateDirectory();
 
     g_analysisLog = new LogAnalysis(MODULE_NAME);
     g_analysisLog->SetDoLogging(true);
@@ -290,7 +298,6 @@ MarlinGlobalFactory::~MarlinGlobalFactory()
   DeleteCriticalSection(&m_lock);
 }
 
-
 GLOBAL_NOTIFICATION_STATUS
 MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider* p_provider)
 {
@@ -301,19 +308,24 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   CString appName    = W2A(app->GetApplicationId());
   CString configPath = W2A(app->GetAppConfigPath());
   CString physical   = W2A(app->GetApplicationPhysicalPath());
-  CString webroot(physical);
+  CString webroot    = ExtractWebroot(configPath,physical);
+  CString showroot;
 
-  appName    = "IIS ApplicationID/name: " + appName;
-  configPath = "IIS Configuration path: " + configPath;
-  physical   = "IIS Pyhsical path     : " + physical;
-
-  DETAILLOG("Starting: MarlinIISModule");
-  DETAILLOG(appName);
-  DETAILLOG(configPath);
-  DETAILLOG(physical);
 
   if(m_applications == 0)
   {
+    // First application starts all
+    appName    = "IIS ApplicationID/name: " + appName;
+    configPath = "IIS Configuration path: " + configPath;
+    physical   = "IIS Physical path     : " + physical;
+    showroot   = "IIS Extracted webroot : " + webroot;
+
+    DETAILLOG("Starting: MarlinIISModule");
+    DETAILLOG(appName);
+    DETAILLOG(configPath);
+    DETAILLOG(physical);
+    DETAILLOG(showroot);
+
     // Create a marlin HTTPServer object for IIS
     g_marlin = new HTTPServerIIS(appName);
     // Connect the logging file
@@ -340,6 +352,21 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
       ERRORLOG("No global pointer to a 'ServerApp' derived object found! Implement a ServerApp!");
     }
   }
+  else
+  {
+    // Adding to existing application
+    configPath = "IIS Configuration path: " + configPath;
+    DETAILLOG("Adding to: MarlinIISModule");
+    DETAILLOG(configPath);
+
+    if(g_marlin->GetWebroot().CompareNoCase(webroot))
+    {
+      ERRORLOG("SITE CONFIGURED INCORRECTLY: " + configPath);
+      ERRORLOG("Configured site with different webroot. Proceed with fingers crossed!!");
+      ERRORLOG("Original webroot: " + g_marlin->GetWebroot());
+      ERRORLOG("New Site webroot: " + webroot);
+    }
+  }
   // Increment the number of applications running
   ++m_applications;
   // Flush the results of starting the server to the logfile
@@ -357,9 +384,9 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   USES_CONVERSION;
 
   IHttpApplication* app = p_provider->GetApplication();
-  CString appName = W2A(app->GetApplicationId());
+  CString config = W2A(app->GetAppConfigPath());
   CString stopping("MarlinISSModule stopping application: ");
-  stopping += appName;
+  stopping += config;
   DETAILLOG(stopping);
 
   // Decrement our application counter
@@ -368,6 +395,7 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   // Only stopping if last application is stopping
   if(m_applications <= 0)
   {
+    DETAILLOG("Stopping last application. Stopping Marlin ServerApp.");
     // Stopping the ServerApp
     if(g_server)
     {
@@ -384,6 +412,43 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   }
   return GL_NOTIFICATION_HANDLED;
 };
+
+
+// RE-Construct the webroot from thse two settings
+// Configuration path : MACHINE/WEBROOT/APPHOST/SECURETEST
+// Physical path      : C:\inetpub\wwwroot\SecureTest\
+// WEBROOT wil be     : C:\inetpub\wwwroot
+//
+CString
+MarlinGlobalFactory::ExtractWebroot(CString p_configPath,CString p_physicalPath)
+{
+  CString config(p_configPath);
+  CString physic(p_physicalPath);
+  // Make same case
+  config.MakeLower();
+  physic.MakeLower();
+  // Remove trailing directory seperator (if any)
+  physic.TrimRight('\\');
+
+  // Find last marker pos
+  int lastPosConf = config.ReverseFind('/');
+  int lastPosPhys = physic.ReverseFind('\\');
+
+  if(lastPosConf > 0 && lastPosPhys > 0)
+  {
+    config = config.Mid(lastPosConf + 1);
+    physic = physic.Mid(lastPosPhys + 1);
+    if(config.Compare(physic) == 0)
+    {
+      CString webroot = p_physicalPath.Left(lastPosPhys);
+      webroot += "\\";
+      return webroot;
+    }
+  }
+  // Not found. return original
+  ERRORLOG("CANNOT FIND THE SERVER WEBROOT. PROCEED WITH FINGERS CROSSED!!");
+  return p_physicalPath;
+}
 
 void 
 MarlinGlobalFactory::Terminate()
@@ -470,8 +535,13 @@ RegisterModule(DWORD                        p_version
     }
     else
     {
-      ERRORLOG("Request priority setting FAILED. Continue iwth lower priority!!");
+      ERRORLOG("Request priority setting FAILED. Continue with lower priority!!");
     }
+  }
+  else
+  {
+    ERRORLOG("Setting request notifications for a MalrinModule FAILED");
+    return hr;
   }
   // Registration complete. Possibly not with highest priority.
   return S_OK;

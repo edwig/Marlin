@@ -8,7 +8,7 @@
 int TestSecureSite(HTTPClient* p_client)
 {
   bool result = false;
-  CString url = "http://" MARLIN_HOST "/SecureTest/codes.html";
+  CString url = "https://" MARLIN_HOST "/SecureTest/codes.html";
   HTTPMessage msg(HTTPCommand::http_get,url);
   CString filename("..\\Documentation\\codes.html");
   msg.GetFileBuffer()->SetFileName(filename);

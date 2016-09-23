@@ -112,14 +112,17 @@ HTTPClient::Reset()
   m_proxy.Empty();
   m_server.Empty();
   m_password.Empty();
+  m_certName.Empty();
   m_proxyUser.Empty();
   m_soapAction.Empty();
   m_contentType.Empty();
   m_proxyBypass.Empty();
   m_proxyPassword.Empty();
+  m_enc_password.Empty();
 
-  m_agent           = "MarlinClient";
+  m_agent           = "HTTPClient/1.0";
   m_retries         = 0;
+  m_useProxy        = ProxyType::PROXY_IEPROXY;
   m_body            = NULL;
   m_bodyLength      = 0;
   m_buffer          = NULL;
@@ -135,6 +138,19 @@ HTTPClient::Reset()
   m_soapCompress    = false;
   m_traceData       = false;
   m_traceRequest    = false;
+  m_httpCompression = false;
+  m_verbTunneling   = false;
+  m_terminalServices= false;
+  m_securityLevel   = XMLEncryption::XENC_NoInit;
+  m_ssltls          = WINHTTP_FLAG_SECURE_PROTOCOL_MARLIN;
+  m_certPreset      = false;
+  m_certStore       = "MY";
+  m_sendUnicode     = false;
+  m_sniffCharset    = true;
+  m_sendBOM         = false;
+  m_readAllHeaders  = false;
+  m_pushEvents      = false;
+  m_onCloseSeen     = false;
   // Timeouts
   m_timeoutResolve  = DEF_TIMEOUT_RESOLVE;
   m_timeoutConnect  = DEF_TIMEOUT_CONNECT;
@@ -170,6 +186,7 @@ HTTPClient::Reset()
   // Clear the maps
   m_headers.clear();
   m_cookies.Clear();
+  m_respHeaders.clear();
   m_resultCookies.Clear();
 
   // Reset the logging

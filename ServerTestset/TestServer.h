@@ -91,8 +91,6 @@ int AfterTestMessageEncryption();
 int AfterTestPatch();
 int AfterTestReliable();
 int AfterTestSubsites();
-int AfterTestThreadpool();
-int AfterTestTime();
 int AfterTestToken();
 int AfterSecureSite();
 

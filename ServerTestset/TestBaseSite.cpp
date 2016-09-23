@@ -70,13 +70,14 @@ int TestBaseSite(HTTPServer* p_server)
   site->SetHandler(HTTPCommand::http_get,handlerGet);
   site->SetHandler(HTTPCommand::http_put,handlerPut);
 
+#ifdef MARLIN_STANDALONE
   // Setting the virtual root directory
   CString root = WebConfig::GetExePath() + "site";
   EnsureFile ensure;
   root = ensure.ReduceDirectoryPath(root);
   root = "virtual://" + root;
-
   site->SetWebroot(root);
+#endif
 
   // Start the site explicitly
   if(site->StartSite())

@@ -267,6 +267,12 @@
     <ClCompile Include="ServerApp.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
+    <ClCompile Include="HTTPSiteIIS.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
+    <ClCompile Include="HTTPSiteMarlin.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -537,6 +543,12 @@
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ServerApp.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HTTPSiteIIS.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HTTPSiteMarlin.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>

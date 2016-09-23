@@ -364,12 +364,8 @@ HTTPServer::MakeSiteRegistrationName(int p_port,CString p_url)
 }
 
 // Register a URL to listen on
-HTTPSite*
-HTTPServer::RegisterSite(CString        p_urlPrefix
-                        ,int            p_port
-                        ,CString        p_baseURL
-                        ,LPFN_CALLBACK  p_callback
-                        ,HTTPSite*      p_mainSite /*=nullptr*/)
+bool
+HTTPServer::RegisterSite(HTTPSite* p_site,CString p_urlPrefix)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -379,7 +375,7 @@ HTTPServer::RegisterSite(CString        p_urlPrefix
   if(GetLastError())
   {
     ERRORLOG(ERROR_INVALID_PARAMETER,"RegisterSite called too early");
-    return nullptr;
+    return false;
   }
 
   // See to it that we are initialized
@@ -388,32 +384,33 @@ HTTPServer::RegisterSite(CString        p_urlPrefix
   {
     // If initialize did not work out OK
     m_counter.Stop();
-    return nullptr;
+    return false;
   }
 
   // Remember our context
-  CString site(MakeSiteRegistrationName(p_port,p_baseURL));
+  int port = p_site->GetPort();
+  CString base = p_site->GetSite();
+  CString site(MakeSiteRegistrationName(port,base));
   SiteMap::iterator it = m_allsites.find(site);
   if(it != m_allsites.end())
   {
     if(p_urlPrefix.CompareNoCase(it->second->GetPrefixURL()) == 0)
     {
       // Duplicate site found
-      ERRORLOG(ERROR_ALIAS_EXISTS,p_baseURL);
-      return nullptr;
+      ERRORLOG(ERROR_ALIAS_EXISTS,base);
+      return false;
     }
   }
 
-  // Remember URL Prefix strings, and create the site
-  HTTPSite* context = new HTTPSite(this,p_port,p_baseURL,p_urlPrefix,p_mainSite,p_callback);
-  if(context)
+  // Remember the site 
+  if(p_site)
   {
-    m_allsites[site] = context;
+    m_allsites[site] = p_site;
   }
   // Use counter
   m_counter.Stop();
 
-  return context;
+  return true;
 }
 
 // Cache policy is registered

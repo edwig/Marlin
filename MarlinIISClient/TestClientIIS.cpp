@@ -136,27 +136,26 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     else
     {
       // Do Unit testing
-      // OK: errors += TestUnicode();
-      // OK: errors += TestURLChars();
-      // OK: errors += TestCryptography();
-      // OK: errors += TestReader();
-      // OK: errors += TestConvert();
-      // OK: errors += TestNamespaces();
-      // OK: errors += TestJSON();
+      errors += TestUnicode();
+      errors += TestURLChars();
+      errors += TestCryptography();
+      errors += TestReader();
+      errors += TestConvert();
+      errors += TestNamespaces();
+      errors += TestJSON();
 
-      // OK: errors += TestFindClientCertificate();
-      // OK: errors += TestCookies(*client);
-      // OK: errors += TestFormData(client);
-      // OK: errors += TestSecureSite(client);
-      // OK: 
+      errors += TestSecureSite(client);
+      errors += TestFindClientCertificate();
       errors += TestClientCertificate(client);
-      //       errors += TestEvents(client);
-      // OK: errors += TestJsonData(client);
-//       errors += TestContract(client,false);
-//       errors += TestContract(client,true);
-      // OK: errors += TestPatching(client);
-      // OK: errors += TestCompression(client);
-      // OK: errors += TestWebservices(*client);
+      errors += TestCookies(*client);
+      errors += TestFormData(client);
+      errors += TestJsonData(client);
+// //       errors += TestEvents(client);
+// //       errors += TestContract(client,false);
+// //       errors += TestContract(client,true);
+      errors += TestPatching(client);
+      errors += TestCompression(client);
+      errors += TestWebservices(*client);
     }
   
     printf("\n");

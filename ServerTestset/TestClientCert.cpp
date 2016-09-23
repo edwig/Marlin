@@ -39,7 +39,7 @@ static char THIS_FILE[] = __FILE__;
 
 static int totalChecks = 1;
 
-class SiteHandlerGetSecure : public SiteHandlerGet
+class SiteHandlerGetClientCert: public SiteHandlerGet
 {
 protected:
   void PostHandle(HTTPMessage* p_message) override;
@@ -49,17 +49,22 @@ protected:
 // the site handlers will NEVER be called
 // so we will never come to here!!
 void
-SiteHandlerGetSecure::PostHandle(HTTPMessage* p_message)
+SiteHandlerGetClientCert::PostHandle(HTTPMessage* p_message)
 {
   SiteHandlerGet::PostHandle(p_message);
   bool result = p_message->GetStatus() == HTTP_STATUS_OK;
 
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
+  // ---- "---------------------------------------------- - ------
   qprintf("Client certificate at a HTTP GET operation     : %s\n",result ? "OK" : "ERROR");
-  if(!result) xerror();
-
-  --totalChecks;
+  if(result) 
+  {
+    --totalChecks;
+  }
+  else
+  {
+    xerror();
+  }
 }
 
 int TestClientCertificate(HTTPServer* p_server)
@@ -69,18 +74,18 @@ int TestClientCertificate(HTTPServer* p_server)
   // If errors, change detail level
   doDetails = false;
 
-  CString url("/SecureTest/");
+  CString url("/SecureClientCert/");
 
   xprintf("TESTING CLIENT CERTIFICATE FUNCTION OF THE HTTP SERVER\n");
   xprintf("======================================================\n");
 
-  // Create HTTP site to listen to "https://+:443/SecureTest/"
+  // Create HTTP site to listen to "https://+:1222/SecureTest/"
   // 
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,INTERNET_DEFAULT_HTTPS_PORT,url);
+  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,1222,url);
   if(site)
   {
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
+    //- --- "--------------------------- - ------\n"
     qprintf("HTTPSite client certificate : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
@@ -92,7 +97,7 @@ int TestClientCertificate(HTTPServer* p_server)
   }
 
   // Setting the POST handler for this site
-  site->SetHandler(HTTPCommand::http_get,new SiteHandlerGetSecure());
+  site->SetHandler(HTTPCommand::http_get,new SiteHandlerGetClientCert());
 
 #ifdef MARLIN_STANDALONE
   CString certName   = "marlin";
@@ -129,7 +134,7 @@ int
 AfterTestClientCert()
 {
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
-  qprintf("Client certificate at file GET was tested     : %s", totalChecks >= 0 ? "ERROR" : "OK");
+  // ---- "---------------------------------------------- - ------
+  qprintf("Client certificate at file GET was tested      : %s", totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

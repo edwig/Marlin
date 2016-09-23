@@ -37,8 +37,8 @@ static int g_placed = 0;
 
 class SiteHandlerGetSecure : public SiteHandlerGet
 {
-public:
-  virtual bool Handle(HTTPMessage* p_message) override;
+protected:
+  virtual bool Handle(HTTPMessage* p_message);
 };
 
 bool
@@ -91,9 +91,9 @@ int TestSecureSite(HTTPServer* p_server)
   if(site)
   {
     // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("HTTPSite for base 'get' test: OK : %s\n",site->GetPrefixURL().GetString());
-    qprintf("HTTPSite for base 'put' test: OK : %s\n",site->GetPrefixURL().GetString());
+    // ---- "---------------------------------------------- - ------
+    qprintf("HTTPSite for base https 'get' test        : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf("HTTPSite for base https 'put' test        : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
@@ -104,17 +104,19 @@ int TestSecureSite(HTTPServer* p_server)
   }
 
   // Setting the default GET and PUT handler for this site
-  SiteHandlerGet* handlerGet = new SiteHandlerGet();
-  SiteHandlerPut* handlerPut = new SiteHandlerPut();
+  SiteHandlerGetSecure* handlerGet = new SiteHandlerGetSecure();
+  SiteHandlerPutSecure* handlerPut = new SiteHandlerPutSecure();
   site->SetHandler(HTTPCommand::http_get,handlerGet);
   site->SetHandler(HTTPCommand::http_put,handlerPut);
 
+#ifdef MARLIN_STANDALONE
   // Setting the virtual root directory
-//   CString root = WebConfig::GetExePath() + "site";
-//   EnsureFile ensure;
-//   root = ensure.ReduceDirectoryPath(root);
-//   root = "virtual://" + root;
-//   site->SetWebroot(root);
+  CString root = WebConfig::GetExePath() + "site";
+  EnsureFile ensure;
+  root = ensure.ReduceDirectoryPath(root);
+  root = "virtual://" + root;
+  site->SetWebroot(root);
+#endif
 
   // Start the site explicitly
   if(site->StartSite())
@@ -135,8 +137,8 @@ int
 AfterSecureSite()
 {
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
-  qprintf("File gotten with GET from secure site         : %s", g_gotten ? "OK" : "ERROR");
+  //- --- "---------------------------------------------- - ------
+  qprintf("File gotten with GET from secure site          : %s", g_gotten ? "OK" : "ERROR");
   return (g_gotten > 0) ? 0 : 1;
 }
 

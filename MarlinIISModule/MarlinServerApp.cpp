@@ -86,23 +86,23 @@ MarlinServerApp::InitInstance()
   //   TestWebServiceServer(m_appServer,contract);
   //   TestJsonServer(m_appServer,contract);
   //   TestPushEvents(m_appServer);
-// OK: TestSecureSite(m_appServer);
+  TestSecureSite(m_appServer);
   TestClientCertificate(m_appServer);
-// OK:  TestBaseSite(m_appServer);
-// OK:  TestInsecure(m_appServer);
-// OK:  TestBodySigning(m_appServer);
-// OK:  TestBodyEncryption(m_appServer);
-// OK:  TestMessageEncryption(m_appServer);
-// OK:  TestReliable(m_appServer);
-// OK:  TestCookies(m_appServer);
-// OK:  TestToken(m_appServer);
-// OK:  TestSubSites(m_appServer);
-// OK:  TestJsonData(m_appServer);
-// OK:  TestFilter(m_appServer);
-// OK:  TestPatch(m_appServer);
-// OK:  TestFormData(m_appServer);
-// OK:  TestCompression(m_appServer);
-// OK:  TestAsynchrone(m_appServer);
+  TestCookies(m_appServer);
+  TestInsecure(m_appServer);
+  TestBaseSite(m_appServer);
+  TestBodySigning(m_appServer);
+  TestBodyEncryption(m_appServer);
+  TestMessageEncryption(m_appServer);
+  TestReliable(m_appServer);
+  TestToken(m_appServer);
+  TestSubSites(m_appServer);
+  TestJsonData(m_appServer);
+  TestFilter(m_appServer);
+  TestPatch(m_appServer);
+  TestFormData(m_appServer);
+  TestCompression(m_appServer);
+  TestAsynchrone(m_appServer);
 
   // Instance is now running
   m_running = true;
@@ -114,7 +114,7 @@ MarlinServerApp::ExitInstance()
   if(m_running)
   {
     // Testing the errorlog function
-    m_appServer->ErrorLog(__FUNCTION__,5,"Not a real error message, but a test to see if the errorlog works :-)");
+    m_appServer->ErrorLog(__FUNCTION__,0,"Not a real error message, but a test to see if the errorlog works :-)");
 
     // Tell the log how many errors where detected on this testrun
     m_appServer->DetailLogV(__FUNCTION__,LogType::LOG_INFO,"Total server errors: %d",m_errors);
@@ -145,4 +145,27 @@ void
 MarlinServerApp::ReportAfterTesting()
 {
   AfterSecureSite();
+  AfterTestClientCert();
+  AfterTestFilter();
+  AfterTestAsynchrone();
+  AfterTestBodyEncryption();
+  AfterTestBodySigning();
+  AfterTestCompression();
+  AfterTestContract();
+  AfterTestCookies();
+  AfterTestEvents();
+  AfterTestFormData();
+  AfterTestInsecure();
+  AfterTestJsonData();
+  AfterTestMessageEncryption();
+  AfterTestPatch();
+  AfterTestReliable();
+  AfterTestSubsites();
+  AfterTestToken();
+
+
+  // SUMMARY OF ALL THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("TOTAL number of errors after all tests are run : %d",m_errors);
+
 }

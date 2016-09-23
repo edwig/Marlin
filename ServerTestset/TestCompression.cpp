@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "TestServer.h"
 #include "SiteHandlerGet.h"
+#include <io.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,22 +40,28 @@ static int totalChecks = 1;
 
 class SiteHandlerGetCompress: public SiteHandlerGet
 {
-public:
+protected:
   bool Handle(HTTPMessage* p_message);
 };
 
 bool
 SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
 {
-  CString filename("..\\Documentation\\ReleaseNotes_v1.txt");
+  bool result = false;
+  CString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v1.txt");
 
   // NOT Much here. Always returns the release message file
   p_message->Reset();
   p_message->GetFileBuffer()->SetFileName(filename);
 
+  if(_access(filename,0) == 0)
+  {
+    result = true;
+  }
+
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
-  qprintf("GZIP of a file at a HTTP GET operation         : OK\n");
+  // ---- "---------------------------------------------- - ------
+  qprintf("GZIP of a file at a HTTP GET operation         : %s", result ? "OK" : "ERROR");
 
   // Checks done
   --totalChecks;
