@@ -1562,10 +1562,10 @@ HTTPClient::ReceivePushEvents()
         response[dwRead] = 0;
 
         // Receiving SSE event stream. Log if logging is 'on'
-        if(m_detail)
+        if(m_detail && m_log)
         {
           DETAILLOG("Reading response data block. Size: %d",dwRead);
-          m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,CString("SSE received: ") + CString(m_response));
+          m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,(const char*)response);
         }
 
         // Store the read-in data
@@ -1606,7 +1606,7 @@ HTTPClient::ReceivePushEvents()
       }
 
       // Receiving SSE event stream. Log if logging is 'on'
-      if(m_detail)
+      if(m_detail && m_log)
       {
         m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,false,CString("SSE received: ") + CString(m_response));
       }

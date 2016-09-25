@@ -79,7 +79,7 @@ int TestClientCertificate(HTTPServer* p_server)
   xprintf("TESTING CLIENT CERTIFICATE FUNCTION OF THE HTTP SERVER\n");
   xprintf("======================================================\n");
 
-  // Create HTTP site to listen to "https://+:1222/SecureTest/"
+  // Create HTTP site to listen to "https://+:1222/SecureClientCert/"
   // 
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,1222,url);
   if(site)

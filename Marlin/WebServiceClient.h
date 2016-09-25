@@ -81,7 +81,7 @@ public:
  ~WebServiceClient();
 
   // Opening and closing the sendport (HTTPClient)
-  void      Open();
+  bool      Open();
   void      Close();
   void      StopSendport();
   // Send this message (w/o reliable protocol)

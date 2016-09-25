@@ -1075,9 +1075,7 @@ HTTPServer::SendEvent(EventStream* p_stream
   // Lock server as short as possible and Push to the stream
   {
     AutoCritSec lock(&m_eventLock);
-    // TODO
-    UNREFERENCED_PARAMETER(p_continue);
-    // p_stream->m_alive = SendResponseEventBuffer(p_stream->m_requestID,sendString.GetString(),sendString.GetLength(),p_continue);
+    p_stream->m_alive = SendResponseEventBuffer(p_stream->m_requestID,sendString.GetString(),sendString.GetLength(),p_continue);
   }
   // Remember the time we sent the event pulse
   _time64(&(p_stream->m_lastPulse));

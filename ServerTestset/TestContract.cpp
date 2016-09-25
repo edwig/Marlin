@@ -354,6 +354,9 @@ TestJsonServer(HTTPServer* p_server,CString p_contract)
   server->SetHTTPServer(p_server);
   server->SetLogAnalysis(p_server->GetLogfile());
 
+  // Checking of the field values of incoming services
+  server->SetCheckFieldValues(true);
+
   // TESTING THE SOAP->JSON->SOAP roundtripping
   server->SetGenerateWsdl(false);
   server->SetJsonSoapTranslation(true);
@@ -416,6 +419,9 @@ TestWebServiceServer(HTTPServer* p_server,CString p_contract)
 
   // Do the logging
   server->SetDetailedLogging(true);
+
+  // Checking of the field values of incoming services
+  server->SetCheckFieldValues(true);
 
   // See if we must use an externally defined WSDL
   if(test_external_wsdl)

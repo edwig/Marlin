@@ -28,6 +28,7 @@
 #pragma once
 #include "HTTPServer.h"
 
+class IHttpContext;
 class IHttpResponse;
 
 class HTTPServerIIS : public HTTPServer
@@ -70,7 +71,10 @@ public:
   // FUNCTIONS FOR IIS
 
   // Building the essential HTTPMessage from the request area
-  HTTPMessage* GetHTTPMessageFromRequest(HTTPSite* p_site,PHTTP_REQUEST p_request);
+  HTTPMessage* GetHTTPMessageFromRequest(IHttpContext*  p_context
+                                        ,HTTPSite*      p_site
+                                        ,PHTTP_REQUEST  p_request
+                                        ,EventStream*&  p_stream);
 
 protected:
   // Cleanup the server
@@ -105,4 +109,7 @@ private:
   void SendResponseBufferParts(IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength);
   void SendResponseFileHandle (IHttpResponse* p_response,FileBuffer* p_buffer);
   void SendResponseError      (IHttpResponse* p_response,CString& p_page,int p_error,const char* p_reason);
+
+  // For the handling of the event streams
+  virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
 };

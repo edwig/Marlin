@@ -120,7 +120,7 @@ WebServiceClient::SetHTTPClient(HTTPClient* p_client)
   m_owner = false;
 }
 
-void
+bool
 WebServiceClient::Open()
 {
   if(m_isopen || m_isSending)
@@ -185,8 +185,7 @@ WebServiceClient::Open()
   // See if we must do WS-ReliableMessaging
   if(m_reliable == false)
   {
-    m_isopen = true;
-    return;
+    return (m_isopen = true);
   }
 
   // RM Needs a sequences
@@ -194,7 +193,7 @@ WebServiceClient::Open()
 
   // Gotten to the end without a throw
   DETAILLOG("WebServiceClient ready to go");
-  m_isopen = true;
+  return (m_isopen = true);
 }
 
 // Closing

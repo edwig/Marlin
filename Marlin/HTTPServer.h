@@ -358,6 +358,8 @@ protected:
                                   ,CString         p_reason
                                   ,CString         p_authScheme
                                   ,CString         p_cookie = "");
+  // For the handling of the event streams
+  virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
 
   // REQUEST HEADER METHODS
 

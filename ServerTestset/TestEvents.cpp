@@ -37,6 +37,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 static int totalChecks = 1;
+static int EventTests  = 3;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -64,7 +65,7 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
   // Report it
   xprintf("NEW EVENT STREAM : %p\n", (void*)testStream);
 
-  for(unsigned x = 1; x <= 3; ++x)
+  for(int x = 1; x <= EventTests; ++x)
   {
     ServerEvent* eventx = new ServerEvent("message");
     eventx->m_id = x;
@@ -75,6 +76,8 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
     // --- "---------------------------------------------- - ------
     qprintf("Event stream OnMessage %d sent                  : %s\n", x, result ? "OK" : "ERROR");
     if(!result) xerror();
+    // Wait 1/10 of a second
+    Sleep(100);
   }
 
   xprintf("Sending other messages\n");

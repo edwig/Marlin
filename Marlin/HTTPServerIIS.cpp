@@ -1,3 +1,36 @@
+/////////////////////////////////////////////////////////////////////////////////
+//
+// SourceFile: HTTPServerIIS.cpp
+//
+// Marlin Server: Internet server/client
+// 
+// Copyright (c) 2016 ir. W.E. Huisman
+// All rights reserved
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+//////////////////////////////////////////////////////////////////////////
+//
+// HTTP Server using IIS Modules
+//
+//////////////////////////////////////////////////////////////////////////
+//
 #include "stdafx.h"
 #include "HTTPServerIIS.h"
 #include "HTTPSiteIIS.h"
@@ -7,6 +40,8 @@
 #include "GetLastErrorAsString.h"
 #include "MarlinModule.h"
 #include "EnsureFile.h"
+#include "ConvertWideString.h"
+#include <httpserv.h>
 
 // Logging macro's
 #define DETAILLOG1(text)          if(m_detail && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
@@ -15,7 +50,6 @@
 #define WARNINGLOG(text,...)      if(m_detail && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
 #define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
 #define HTTPERROR(code,text)      HTTPError(__FUNCTION__,code,text)
-
 
 HTTPServerIIS::HTTPServerIIS(CString p_name)
               :HTTPServer(p_name)
@@ -313,7 +347,10 @@ HTTPServerIIS::DeleteSite(int p_port,CString p_baseURL,bool p_force /*=false*/)
 
 // Building the essential HTTPMessage from the request area
 HTTPMessage* 
-HTTPServerIIS::GetHTTPMessageFromRequest(HTTPSite* p_site,PHTTP_REQUEST p_request)
+HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
+                                        ,HTTPSite*     p_site
+                                        ,PHTTP_REQUEST p_request
+                                        ,EventStream*& p_stream)
 {
   USES_CONVERSION;
 
@@ -372,21 +409,29 @@ HTTPServerIIS::GetHTTPMessageFromRequest(HTTPSite* p_site,PHTTP_REQUEST p_reques
                             break;
   }
 
-// TODO
-//   // Receiving the initiation of an event stream for the server
-//   acceptTypes.Trim();
-//   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
-//   {
-//     CString absolutePath = CW2A(request->CookedUrl.pAbsPath);
-//     EventStream* stream = SubscribeEventStream(site,site->GetSite(),absolutePath,request->RequestId,accessToken);
-//     if(stream)
-//     {
-//       stream->m_baseURL = rawUrl;
-//       m_pool->SubmitWork(callback,(void*)stream);
-//       HTTP_SET_NULL_ID(&requestId);
-//       continue;
-//     }
-//   }
+  // Receiving the initiation of an event stream for the server
+  acceptTypes.Trim();
+  if((type == HTTPCommand::http_get) && 
+     (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
+  {
+    CString absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
+    IHttpResponse* response = p_context->GetResponse();
+    EventStream* stream = SubscribeEventStream(p_site,p_site->GetSite(),absolutePath,(HTTP_REQUEST_ID)response,NULL);
+    if(stream)
+    {
+      // Getting the imporsonated user
+      IHttpUser* user = p_context->GetUser();
+      if(user)
+      {
+        stream->m_user = CW2A(user->GetRemoteUserName());
+      }
+      stream->m_baseURL = rawUrl;
+      // To do for this stream, not for a message
+      m_pool->SubmitWork(p_site->GetCallback(),(void*)stream);
+      p_stream = stream;
+      return nullptr;
+    }
+  }
 
   // For all types of requests: Create the HTTPMessage
   HTTPMessage* message = new HTTPMessage(type,p_site);
@@ -513,8 +558,43 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
 bool
 HTTPServerIIS::InitEventStream(EventStream& p_stream)
 {
-  UNREFERENCED_PARAMETER(p_stream);
-  return false;
+  IHttpResponse* response = (IHttpResponse*)p_stream.m_requestID;
+
+  // First comment to push to the stream (not an event!)
+  CString init = m_eventBOM ? ConstructBOM() : "";
+  init += ":init event-stream\n";
+
+  response->SetStatus(HTTP_STATUS_OK,"OK");
+
+  // Add event/stream header
+  SetResponseHeader(response,HttpHeaderContentType,"text/event-stream",true);
+
+  HTTP_DATA_CHUNK dataChunk;
+  BOOL  expectCompletion = FALSE;
+  DWORD bytesSent = 0;
+
+  // Only if a buffer present
+  dataChunk.DataChunkType = HttpDataChunkFromMemory;
+  dataChunk.FromMemory.pBuffer = (void*)init.GetString();
+  dataChunk.FromMemory.BufferLength = (ULONG)init.GetLength();
+
+  // Buffering should be turned off, so chunks get written right away
+  response->DisableBuffering();
+  response->DisableKernelCache(9); // 9 = HANDLER_HTTPSYS_UNFRIENDLY
+
+  HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,true,&bytesSent,&expectCompletion);
+  if(hr != S_OK)
+  {
+    ERRORLOG(GetLastError(),"HttpSendResponseEntityBody failed initialisation of an event stream");
+  }
+  else
+  {
+    DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",bytesSent);
+    DETAILLOG1("Event stream initialized");
+
+    hr = response->Flush(true,true,&bytesSent,&expectCompletion);
+  }
+  return (hr == S_OK);
 }
 
 void
@@ -959,3 +1039,39 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
   }
 }
 
+// Sending a chunk to an event stream
+bool 
+HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
+                                      ,const char*     p_buffer
+                                      ,size_t          p_length
+                                      ,bool            p_continue /*= true*/)
+{
+  DWORD  bytesSent = 0;
+  HTTP_DATA_CHUNK dataChunk;
+  BOOL   expectCompletion = FALSE;
+  IHttpResponse* response = (IHttpResponse*)p_response;
+
+  // Only if a buffer present
+  dataChunk.DataChunkType           = HttpDataChunkFromMemory;
+  dataChunk.FromMemory.pBuffer      = (void*)p_buffer;
+  dataChunk.FromMemory.BufferLength = (ULONG)p_length;
+
+  HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,p_continue,&bytesSent,&expectCompletion);
+  if(hr != S_OK)
+  {
+    ERRORLOG(GetLastError(),"WriteEntityChunks failed for SendEvent");
+  }
+  else
+  {
+    DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",p_length);
+    hr = response->Flush(true,p_continue,&bytesSent,&expectCompletion);
+
+    // Final closing of the connection
+    if(p_continue == false)
+    {
+      response->CloseConnection();
+      DETAILLOG1("Event stream connection closed");
+    }
+  }
+  return (hr == S_OK);
+}

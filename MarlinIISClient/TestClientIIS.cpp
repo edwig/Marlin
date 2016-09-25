@@ -150,11 +150,11 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestJsonData(client);
-// //       errors += TestEvents(client);
       errors += TestContract(client,false); // SOAP
       errors += TestContract(client,true);  // JSON
       errors += TestPatching(client);
       errors += TestCompression(client);
+      errors += TestEvents(client);
       errors += TestWebservices(*client);
     }
   

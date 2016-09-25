@@ -105,9 +105,10 @@ private:
   void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
   void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer);
   void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,CString& p_page,int p_error,const char* p_reason);
-  bool      SendResponseEventBuffer(                          HTTP_REQUEST_ID p_request,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
+
+  // For the handling of the event streams: Sending a chunk to an event stream
+  virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_request,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
 
   // PRIVATE DATA of the stand-alone HTTPServer
-
   URLGroupMap             m_urlGroups;              // All URL Groups
 };

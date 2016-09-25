@@ -36,7 +36,7 @@
 #include "Analysis.h"
 #include "HTTPServerIIS.h"
 #include "HTTPSite.h"
-#include "ThreadPool.h"
+#include "HTTPThreadPool.h"
 #include "ErrorReport.h"
 #include "AutoCritical.h"
 #include "WebConfig.h"
@@ -55,7 +55,7 @@ IHttpServer*      g_iisServer   = nullptr;
 LogAnalysis*      g_analysisLog = nullptr;
 HTTPServerIIS*    g_marlin      = nullptr;
 // Global threadpool object
-ThreadPool        g_pool;
+HTTPThreadPool    g_pool;
 // Global error report object
 ErrorReport       g_report;
 
@@ -123,6 +123,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
                                     IN IHttpEventProvider* p_provider)
 {
   UNREFERENCED_PARAMETER(p_provider);
+  REQUEST_NOTIFICATION_STATUS status = RQ_NOTIFICATION_CONTINUE;
   char  buffer1[SERVERNAME_BUFFERSIZE + 1];
   char  buffer2[SERVERNAME_BUFFERSIZE + 1];
   DWORD size  = SERVERNAME_BUFFERSIZE;
@@ -138,7 +139,8 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   if(request == nullptr || response == nullptr)
   {
     DETAILLOG("No request or response objects");
-    return RQ_NOTIFICATION_CONTINUE;
+    g_marlin->GetCounter()->Stop();
+    return status;
   }
 
   // Detect Cross Site Scripting (XSS)
@@ -161,7 +163,8 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   if(request == nullptr)
   {
     ERRORLOG("Abort: IIS did not provide a raw request object!");
-    return RQ_NOTIFICATION_CONTINUE;
+    g_marlin->GetCounter()->Stop();
+    return status;
   }
 
   // This is the call we are getting
@@ -180,10 +183,12 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
     CString message("Rejected HTTP call: ");
     message += rawRequest->pRawUrl;
     DETAILLOG(message);
-    return RQ_NOTIFICATION_CONTINUE;
+    g_marlin->GetCounter()->Stop();
+    return status;
   }
 
-  HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(site,rawRequest);
+  EventStream* stream = nullptr;
+  HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(p_context,site,rawRequest,stream);
   if(msg)
   {
     // In case of authentication done: get the authentication token
@@ -215,15 +220,23 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
 
     // Stopping the performance counter
     g_marlin->GetCounter()->Stop();
+
+    status = RQ_NOTIFICATION_FINISH_REQUEST;
+  }
+  else if(stream)
+  {
+    // If we turn into a stream, more notifications are pending
+    //p_context->IndicateCompletion(RQ_NOTIFICATION_PENDING);
+    status = RQ_NOTIFICATION_PENDING;
   }
   else
   {
-    ERRORLOG("Cannot handle the request: IIS did not provide enough info for a HTTPMessage.");
-    g_marlin->GetCounter()->Stop();
-    return RQ_NOTIFICATION_CONTINUE;
+    ERRORLOG("Cannot handle the request: IIS did not provide enough info for a HTTPMessage or an event stream.");
+    status = RQ_NOTIFICATION_CONTINUE;
   }
   // Now completly ready. We did everything!
-  return RQ_NOTIFICATION_FINISH_REQUEST;
+  g_marlin->GetCounter()->Stop();
+  return status;
 }
 
 int 

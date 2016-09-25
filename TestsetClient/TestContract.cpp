@@ -232,10 +232,14 @@ int TestContract(HTTPClient* p_client,bool p_json)
 
   try
   {
-    client.Open();
-
-    if(client.GetIsOpen())
+    if(client.Open())
     {
+      // Test that WSDL gets our datatype check
+      if(TestWSDLDatatype(client,contract) == false)
+      {
+        --errors;
+      }
+
       if(SettingTheBaseLanguage(client,contract))
       {
         if(SettingTheTranslateLanguage(client,contract))
@@ -245,12 +249,6 @@ int TestContract(HTTPClient* p_client,bool p_json)
           if(Translate(client,contract,"maandag","lundi"   )) --errors;
           if(Translate(client,contract,"dinsdag",""        )) --errors;
         }
-      }
-
-      // Test that WSDL gets our datatype check
-      if(TestWSDLDatatype(client,contract) == false) 
-      {
-        --errors;
       }
     }
     client.Close();
