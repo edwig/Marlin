@@ -273,6 +273,9 @@
     <ClCompile Include="HTTPSiteMarlin.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
+    <ClCompile Include="WebConfigIIS.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -550,6 +553,9 @@
     </ClInclude>
     <ClInclude Include="HTTPSiteMarlin.h">
       <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WebConfigIIS.h">
+      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

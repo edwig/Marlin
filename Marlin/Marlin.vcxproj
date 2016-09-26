@@ -223,6 +223,7 @@
     </ClCompile>
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="WebConfig.cpp" />
+    <ClCompile Include="WebConfigIIS.cpp" />
     <ClCompile Include="WebServiceClient.cpp" />
     <ClCompile Include="WebServiceServer.cpp" />
     <ClCompile Include="WSDLCache.cpp" />
@@ -358,6 +359,7 @@
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="WebConfig.h" />
+    <ClInclude Include="WebConfigIIS.h" />
     <ClInclude Include="WebServiceClient.h" />
     <ClInclude Include="WebServiceServer.h" />
     <ClInclude Include="WinINETError.h" />

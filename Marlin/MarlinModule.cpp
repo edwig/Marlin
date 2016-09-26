@@ -44,6 +44,7 @@
 #include "ServerApp.h"
 #include "EnsureFile.h"
 #include "AutoCritical.h"
+#include "WebConfigIIS.h"
 #ifdef _DEBUG
 #include "IISDebug.h"
 #endif
@@ -58,23 +59,23 @@ HTTPServerIIS*    g_marlin      = nullptr;
 HTTPThreadPool    g_pool;
 // Global error report object
 ErrorReport       g_report;
+// IIS config files
+WebConfigIIS      g_config;
 
 void
 StartLog(DWORD p_version)
 {
   if(g_analysisLog == nullptr)
   {
-    // Determine the logfile name from: "%windir%\system32\inetsrv\config\ApplicationHost.Config
-    //  <configuration>
-    //    <system.applicationHost>
-    //     <log>
-    //       <centralW3CLogFile enabled = "true" directory = "%SystemDrive%\inetpub\logs\LogFiles" />
-    CString logfile = "C:\\inetpub\\logs\\LogFiles\\Marlin\\Logfile.txt";
+    // Read in ApplicationHost.Config
+    g_config.ReadConfig();
+
+    CString logfile = g_config.GetLogfilePath() + "\\Marlin\\Logfile.txt";
     EnsureFile ensure(logfile);
     ensure.CheckCreateDirectory();
 
     g_analysisLog = new LogAnalysis(MODULE_NAME);
-    g_analysisLog->SetDoLogging(true);
+    g_analysisLog->SetDoLogging(g_config.GetDoLogging());
     g_analysisLog->SetLogFilename(logfile);
     g_analysisLog->SetLogRotation(true);
   }
@@ -552,7 +553,7 @@ RegisterModule(DWORD                        p_version
   }
   else
   {
-    ERRORLOG("Setting request notifications for a MalrinModule FAILED");
+    ERRORLOG("Setting request notifications for a MarlinModule FAILED");
     return hr;
   }
   // Registration complete. Possibly not with highest priority.
