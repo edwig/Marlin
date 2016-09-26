@@ -92,3 +92,10 @@ int TestBaseSite(HTTPServer* p_server)
   }
   return error;
 }
+
+
+int 
+AfterTestBaseSite()
+{
+  return 0;
+}

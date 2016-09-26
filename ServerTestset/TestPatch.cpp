@@ -47,7 +47,7 @@ static int totalChecks = 2;
 
 class SiteHandlerPatchMe: public SiteHandlerPatch
 {
-public:
+protected:
   bool Handle(HTTPMessage* p_message);
 };
 
@@ -73,19 +73,19 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
   if(bloodType != "ab" || rhesusFactor != "neg")
   {
     ++errors;
+    xerror();
   }
   else
   {
+    --totalChecks;
     p_message->SetBody("AB-\n");
   }
 
   // Check done
-  --totalChecks;
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   qprintf("Less known HTTP verbs (PATCH)                  : %s\n",errors ? "ERROR" : "OK");
-  if(errors) xerror();
 
   return true;
 }
@@ -155,11 +155,8 @@ TestPatch(HTTPServer* p_server)
 int
 AfterTestPatch()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("No HTTP PATCH test received                    : ERROR\n");
-  }
+  // SUMMARY OF THE TEST
+  //- --- "---------------------------------------------- - ------
+  qprintf("HTTP PATCH verb tested                         : %s\n",totalChecks ? "ERROR" : "OK");
   return totalChecks > 0;
 }

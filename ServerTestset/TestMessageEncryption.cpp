@@ -76,15 +76,13 @@ SiteHandlerSoapMsgEncrypt::Handle(HTTPMessage* p_message)
                "eG/phQKDfg=" )
     {
       cypherResult = true;
+      --totalChecks;
     }
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   qprintf("Total message encryption check                 : %s\n",cypherResult ? "OK" : "ERROR");
   if(!cypherResult) xerror();
-
-  // Check done
-  --totalChecks;
 
   // DO NOT FORGET TO CALL THE SOAP HANDLER!!
   // Now handle our message as a soap message
@@ -116,6 +114,7 @@ SiteHandlerSoapMsgEncrypt::Handle(SOAPMessage* p_message)
     paramOne = "DEF";
     paramTwo = "123";
     result   = true;
+    --totalChecks;
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
@@ -126,9 +125,6 @@ SiteHandlerSoapMsgEncrypt::Handle(SOAPMessage* p_message)
   p_message->SetParameter("Four",  paramTwo);
   xprintf("Outgoing parameter: %s = %s\n", "Three", paramOne);
   xprintf("Outgoing parameter: %s = %s\n", "Four",  paramTwo);
-
-  // Check done
-  --totalChecks;
 
   return true;
 }
@@ -187,11 +183,8 @@ TestMessageEncryption(HTTPServer* p_server)
 int
 AfterTestMessageEncryption()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Not all total message encryption tests done    : ERROR\n");
-  }
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("Total message encryption of SOAP messages      : %s\n", totalChecks ? "ERROR" : "OK");
   return totalChecks > 0;
 }

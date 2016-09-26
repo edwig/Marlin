@@ -36,13 +36,14 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 1;
+static int totalChecks = 2;
 
 class SiteHandlerSoapBodyEncrypt: public SiteHandlerSoap
 {
 public:
-  bool  Handle(HTTPMessage* p_message);
   bool  Handle(SOAPMessage* p_message);
+protected:
+  bool  Handle(HTTPMessage* p_message);
 };
 
 bool
@@ -71,7 +72,14 @@ SiteHandlerSoapBodyEncrypt::Handle(HTTPMessage* p_message)
   // --- "---------------------------------------------- - ------
   qprintf("Total body encryption for SOAP message         : %s\n",cypherResult ? "OK" : "ERROR");
 
-  if(!cypherResult) xerror();
+  if(cypherResult)
+  {
+    --totalChecks;  
+  }
+  else
+  {
+    xerror();
+  }
 
   // DO NOT FORGET TO CALL THE SOAP HANDLER!!
   // Now handle our message as a soap message
@@ -113,11 +121,15 @@ SiteHandlerSoapBodyEncrypt::Handle(SOAPMessage* p_message)
   xprintf("Outgoing parameter: %s = %s\n", "Three",paramOne);
   xprintf("Outgoing parameter: %s = %s\n", "Four", paramTwo);
 
-  if(!result) xerror();
-
   // Check done
-  --totalChecks;
-
+  if(result) 
+  {
+    --totalChecks;
+  }
+  else
+  {
+    xerror();
+  }
   return true;
 }
 
@@ -172,13 +184,11 @@ TestBodyEncryption(HTTPServer* p_server)
   return error;
 }
 
-int AfterTestBodyEncryption()
+int 
+AfterTestBodyEncryption()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Body encryption was not tested                 : ERROR\n");
-  }
-  return totalChecks > 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("SOAP Body encryption tests                     : %s\n",totalChecks == 0 ? "OK" : "ERROR");
+  return totalChecks;
 }

@@ -158,6 +158,7 @@ TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
      m_translation == "Espagnol")
   {
     cando = true;
+    --totalChecks;
   }
   else
   {
@@ -166,8 +167,6 @@ TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
     qprintf("WSDL Contract: Second: translation language    : ERROR\n");
   }
   p_message->SetParameter("CanDo",cando);
-
-  --totalChecks;
 }
 
 void
@@ -463,12 +462,9 @@ TestWebServiceServer(HTTPServer* p_server,CString p_contract)
 int
 AfterTestContract()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Not al WSDL contract calls has been fired      : ERROR\n");
-  }
-  return totalChecks > 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("WSDL contract calls (SOAP/JSON)                : %s\n",totalChecks ? "ERROR" : "OK");
+  return totalChecks;
 }
 

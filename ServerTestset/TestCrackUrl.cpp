@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 5;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Testframe
@@ -60,6 +62,8 @@ int  Test_CrackURL()
     xerror();
     return 1;
   }
+  --totalChecks;
+
   if(url2.m_scheme   != "http"     ||
      url2.m_userName != "edwig"    ||
      url2.m_password != "password" ||
@@ -72,6 +76,7 @@ int  Test_CrackURL()
     xerror();
     return 1;
   }
+  --totalChecks;
   if(url2.m_parameters.size() == 3)
   {
     if(url2.m_parameters[0].m_key   != "val1"   ||
@@ -92,6 +97,7 @@ int  Test_CrackURL()
     xerror();
     return 1;
   }
+  --totalChecks;
   if(url3.m_parameters.size() == 1)
   {
     if(url3.m_parameters[0].m_key   != "value" ||
@@ -106,6 +112,7 @@ int  Test_CrackURL()
     qprintf("Broken. Parameter without value doesn't work. FixMe\n");
     xerror();
   }
+  --totalChecks;
   CrackedURL url4("https://server/test.html");
   bool res3 = url4.Valid();
   if(!res3 || url4.m_port != INTERNET_DEFAULT_HTTPS_PORT)
@@ -114,7 +121,16 @@ int  Test_CrackURL()
     xerror();
     return 1;
   }
+  --totalChecks;
   qprintf("OK\n");
   return 0;
 }
 
+int
+AfterTestCrackURL()
+{
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("CrackURL to path/parameters/anchor             : %s\n",totalChecks ? "ERROR" : "OK");
+  return totalChecks;
+}

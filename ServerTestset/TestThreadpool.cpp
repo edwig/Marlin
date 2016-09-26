@@ -35,6 +35,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 2;
 static unsigned number = 0;
 static ThreadPool* pool = nullptr;
 const  unsigned TH_SLEEP =  314;
@@ -62,6 +63,7 @@ void callback1(void* p_pnt)
   {
     xprintf("Waking from sleep: %s\n",(LPCTSTR)p_pnt);
     result = true;
+    --totalChecks;
   }
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
@@ -90,6 +92,10 @@ int TestThreadPool(ThreadPool* p_pool)
   
   // Waking the thread with another string as result
   bool result = p_pool->WakeUpThread(TH_SLEEP,(void*)text2);
+  if(result)
+  {
+    --totalChecks;
+  }
 
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
@@ -110,4 +116,13 @@ int TestThreadPool(ThreadPool* p_pool)
   p_pool->EliminateSleepingThread(TH_SLEEP);
 
   return errors;
+}
+
+int 
+AfterTestThreadpool()
+{
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("(HTTP)Threadpool sleeping/waking/submitwork    : %s\n",totalChecks ? "ERROR" : "OK");
+  return totalChecks > 0;
 }

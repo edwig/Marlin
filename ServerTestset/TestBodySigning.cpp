@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 1;
+static int totalChecks = 2;
 
 class SiteHandlerSoapBodySign: public SiteHandlerSoap
 {
@@ -67,6 +67,7 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
     if(sigValue == "cr4Eci/L8w+riKG+hK/v2kuIJGo=")
     {
       bodyResult = true;
+      --totalChecks;
     }
   }
   // SUMMARY OF THE TEST
@@ -88,6 +89,7 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
     paramOne = "DEF";
     paramTwo = "123";
     result   = true;
+    --totalChecks;
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
@@ -99,9 +101,6 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
   xprintf("Outgoing parameter: %s = %s\n","Four" ,paramTwo);
 
   if(!result) xerror();
-
-  // Check done
-  --totalChecks;
 
   // TESTING ERROR REPORTING
   // char* test = NULL;
@@ -164,11 +163,8 @@ TestBodySigning(HTTPServer* p_server)
 int 
 AfterTestBodySigning()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Body signing was not tested                    : ERROR\n");
-  }
-  return totalChecks > 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("SOAP Body signing test                         : %s\n", totalChecks == 0 ? "OK" : "ERROR");
+  return totalChecks;
 }

@@ -37,10 +37,12 @@ ServerApp::ServerApp()
 {
   if(g_server)
   {
+    // Cannot run more than one ServerApp
     m_correctInit = false;     
   }
   else
   {
+    // First registration of the ServerApp derived class
     m_correctInit = true;
     g_server = this;
   }
@@ -58,10 +60,26 @@ ServerApp::ConnectServerApp(IHttpServer*   p_iis
                            ,LogAnalysis*   p_logfile
                            ,ErrorReport*   p_report)
 {
-  // Remember our registration
+  // Simply remember our registration
   m_iis        = p_iis;
   m_appServer  = p_server;
   m_appPool    = p_pool;
   m_appLogfile = p_logfile;
   m_appReport  = p_report;
 }
+
+// Server app was correctly started by MarlinIISModule
+bool
+ServerApp::CorrectlyStarted()
+{
+  // MINIMUM REQUIREMENT:
+  // If a derived class has been staticly declared
+  // and a IHttpServer and a HTTPServerIIS has been found
+  // and a Threadpool is initialized, we are good to go
+  if(m_correctInit && m_iis && m_appServer && m_appPool)
+  {
+    return true;
+  }
+  return false;
+}
+

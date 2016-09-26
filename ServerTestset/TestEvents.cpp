@@ -36,8 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 1;
-static int EventTests  = 3;
+static int EventTests  = 3;              // OnMessage
+static int totalChecks = EventTests + 3; // OnOther + OnError + OnClose
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -75,7 +75,14 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
 
     // --- "---------------------------------------------- - ------
     qprintf("Event stream OnMessage %d sent                  : %s\n", x, result ? "OK" : "ERROR");
-    if(!result) xerror();
+    if(result) 
+    {
+      --totalChecks;
+    }
+    else
+    {
+      xerror();
+    }
     // Wait 1/10 of a second
     Sleep(100);
   }
@@ -87,8 +94,14 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
   result = server->SendEvent(p_stream,ander);
   // --- "---------------------------------------------- - ------
   qprintf("Event stream 'other' message sent              : %s\n", result ? "OK" : "ERROR");
-  if(!result) xerror();
-
+  if(result) 
+  {
+    --totalChecks;
+  }
+  else
+  {
+    xerror();
+  }
 
   xprintf("Sending an error message\n");
   ServerEvent* err = new ServerEvent("error");
@@ -97,7 +110,14 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
   result = server->SendEvent(p_stream,err);
   // --- "---------------------------------------------- - ------
   qprintf("Event stream 'OnError' message sent            : %s\n", result ? "OK" : "ERROR");
-  if(!result) xerror();
+  if(result)
+  {
+    --totalChecks;
+  }
+  else
+  {
+    xerror();
+  }
 
   // Implicitly sending an OnClose
   xprintf("Closing event stream\n");
@@ -107,10 +127,14 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
   result = !server->HasEventStream(p_stream);
   // --- "---------------------------------------------- - ------
   qprintf("Event stream closed by server (OnClose sent)   : %s\n", result ? "OK" : "ERROR");
-  if(!result) xerror();
-
-  // Checks done
-  --totalChecks;
+  if(result)
+  {
+    --totalChecks;
+  }
+  else
+  {
+    xerror();
+  }
 }
 
 int
@@ -161,11 +185,8 @@ TestPushEvents(HTTPServer* p_server)
 int 
 AfterTestEvents()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Testing of the event streams not done          : ERROR\n");
-  }
-  return totalChecks > 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("Event streams On-Message/Error/Other/Close     : %s\n",totalChecks ? "ERROR" : "OK");
+  return totalChecks;
 }

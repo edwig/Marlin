@@ -63,6 +63,7 @@ SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
     paramOne = "DEF";
     paramTwo = "123";
     result = true;
+    --totalChecks;
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
@@ -75,9 +76,6 @@ SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
   p_message->SetParameter("Four", paramTwo);
   xprintf("Outgoing parameter: %s = %s\n","Three",paramOne);
   xprintf("Outgoing parameter: %s = %s\n","Four", paramTwo);
-
-  // Check done
-  --totalChecks;
 
   // Ready with the message.
   return true;
@@ -227,12 +225,9 @@ StopSubsites(HTTPServer* p_server)
 int
 AfterTestSubsites()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Not all subsite tests received                 : ERROR\n");
-  }
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("All subsite tests received and tested          : %s\n",totalChecks ? "ERROR" : "OK");
   return totalChecks > 0;
 }
 

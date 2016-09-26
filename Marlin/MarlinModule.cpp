@@ -226,7 +226,6 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   else if(stream)
   {
     // If we turn into a stream, more notifications are pending
-    //p_context->IndicateCompletion(RQ_NOTIFICATION_PENDING);
     status = RQ_NOTIFICATION_PENDING;
   }
   else

@@ -188,12 +188,9 @@ TestFilter(HTTPServer* p_server)
 int
 AfterTestFilter()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("One of the filter handlers has not fired       : ERROR\n");
-  }
-  return totalChecks > 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("Firing of the filter handlers                  : %s\n",totalChecks ? "ERROR" : "OK");
+  return totalChecks;
 }
 

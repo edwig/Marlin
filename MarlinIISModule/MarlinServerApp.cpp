@@ -6,52 +6,6 @@
 // The one and only server object
 MarlinServerApp theServer;
 
-bool doDetails = false;
-
-// In TestServer.cpp
-void xerror()
-{
-  theServer.IncrementError();
-}
-
-void xprintf(const char* p_format,...)
-{
-  if(doDetails)
-  {
-    va_list varargs;
-    va_start(varargs,p_format);
-    CString string;
-    string.FormatV(p_format,varargs);
-    va_end(varargs);
-
-    string.TrimRight("\n");
-
-    g_analysisLog->AnalysisLog("Testing details",LogType::LOG_INFO,false,string);
-  }
-}
-
-void qprintf(const char* p_format,...)
-{
-  static CString stringRegister;
-
-  va_list varargs;
-  va_start(varargs,p_format);
-  CString string;
-  string.FormatV(p_format,varargs);
-  va_end(varargs);
-
-  string.TrimRight("\n");
-  if(string.Right(3) == "<+>")
-  {
-    stringRegister = string.Left(string.GetLength() - 3);
-    return;
-  }
-  string = stringRegister + string;
-
-  g_analysisLog->AnalysisLog("Testing",LogType::LOG_INFO,false,string);
-  stringRegister.Empty();
-}
-
 //////////////////////////////////////////////////////////////////////////
 //
 // The test server app
@@ -72,10 +26,12 @@ MarlinServerApp::InitInstance()
   CString contract = "http://interface.marlin.org/testing/";
 
   // Can only be called once if correctly started
-  if(!CorrectStarted() || m_running)
+  if(!CorrectlyStarted() || m_running)
   {
     return;
   }
+  // Instance is now running
+  m_running = true;
 
   // Small local test
   Test_CrackURL();
@@ -103,9 +59,6 @@ MarlinServerApp::InitInstance()
   TestFormData(m_appServer);
   TestCompression(m_appServer);
   TestAsynchrone(m_appServer);
-
-  // Instance is now running
-  m_running = true;
 }
 
 void
@@ -115,9 +68,6 @@ MarlinServerApp::ExitInstance()
   {
     // Testing the errorlog function
     m_appServer->ErrorLog(__FUNCTION__,0,"Not a real error message, but a test to see if the errorlog works :-)");
-
-    // Tell the log how many errors where detected on this testrun
-    m_appServer->DetailLogV(__FUNCTION__,LogType::LOG_INFO,"Total server errors: %d",m_errors);
 
     // Stopping all subsites
     StopSubsites(m_appServer);
@@ -131,8 +81,13 @@ MarlinServerApp::ExitInstance()
 }
 
 bool
-MarlinServerApp::CorrectStarted()
+MarlinServerApp::CorrectlyStarted()
 {
+  if(ServerApp::CorrectlyStarted() == false)
+  {
+    qprintf("ServerApp incorrectly started. Review your program logic");
+    return false;
+  }
   if(m_correctInit == false)
   {
     qprintf("Server instance incorrectly started. Review your IIS application pool settings!");
@@ -144,7 +99,11 @@ MarlinServerApp::CorrectStarted()
 void 
 MarlinServerApp::ReportAfterTesting()
 {
-  AfterSecureSite();
+  AfterTestCrackURL();
+  AfterTestTime();
+  AfterTestThreadpool();
+  AfterTestSecureSite();
+  AfterTestBaseSite();
   AfterTestClientCert();
   AfterTestFilter();
   AfterTestAsynchrone();
@@ -163,9 +122,67 @@ MarlinServerApp::ReportAfterTesting()
   AfterTestSubsites();
   AfterTestToken();
 
-
   // SUMMARY OF ALL THE TEST
   // ---- "---------------------------------------------- - ------
   qprintf("TOTAL number of errors after all tests are run : %d",m_errors);
+}
 
+//////////////////////////////////////////////////////////////////////////
+//
+// SERVICE ROUTINES FOR TESTING
+//
+//////////////////////////////////////////////////////////////////////////
+
+bool doDetails = false;
+
+// Increment the total global number of errors while testing
+void xerror()
+{
+  theServer.IncrementError();
+}
+
+// Suppressed printing. Only print when doDetails = true
+// Any testing module can turn doDetails to 'on' or 'off'
+void xprintf(const char* p_format,...)
+{
+  if(doDetails)
+  {
+    va_list varargs;
+    va_start(varargs,p_format);
+    CString string;
+    string.FormatV(p_format,varargs);
+    va_end(varargs);
+
+    string.TrimRight("\n");
+
+    g_analysisLog->AnalysisLog("Testing details",LogType::LOG_INFO,false,string);
+  }
+}
+
+// Printing to the logfile for testresults
+// "String to the logfile"   -> Will be printed to logfile including terminating newline
+// "Another string <+>"      -> Will be printed WITHOUT terminating newline
+void qprintf(const char* p_format,...)
+{
+  static CString stringRegister;
+
+  // Print variadic arguments
+  va_list varargs;
+  va_start(varargs,p_format);
+  CString string;
+  string.FormatV(p_format,varargs);
+  va_end(varargs);
+
+  // See if we must just register the string
+  string.TrimRight("\n");
+  if(string.Right(3) == "<+>")
+  {
+    stringRegister += string.Left(string.GetLength() - 3);
+    return;
+  }
+
+  // Print the result to the logfile as INFO
+  string = stringRegister + string;
+  g_analysisLog->AnalysisLog("Testing",LogType::LOG_INFO,false,string);
+  stringRegister.Empty();
 }

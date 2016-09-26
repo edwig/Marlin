@@ -37,7 +37,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 1;
+static int totalChecks = 2;
 
 class SiteHandlerPutCookies: public SiteHandlerPut
 {
@@ -56,6 +56,7 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
     qprintf("Cookie test: no cookie received                : ERROR\n");
+    xerror();
   }
   else
   {
@@ -66,12 +67,16 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     {
       testname = "Cookie test simple";
       result = true;
+      --totalChecks;
+    }
+    else
+    {
+      xerror();
     }
 
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
     qprintf("Cookie received: %-27s   : %s\n",testname.GetString(),result ? "OK" : "ERROR");
-    if(!result) xerror();
   }
 
   // Test for the second cookie
@@ -85,18 +90,22 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     {
       testname = "Multiple cookie test";
       result = true;
+      --totalChecks;
     }
-
+    else
+    {
+      xerror();
+    }
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
     qprintf("Cookie received: %-27s   : %s\n",testname.GetString(),result ? "OK" : "ERROR");
-    if(!result) xerror();
   }
   else
   {
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
     qprintf("No multiple cookie received                    : ERROR\n");
+    xerror();
   }
 
   CString day = p_msg->GetHeader("EdosHeader");
@@ -112,10 +121,6 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     // Answer for the test client
     p_msg->AddHeader("EdosHeader","Thursday");
   }
-
-  // Check done
-  --totalChecks;
-
   return true;
 }
 
@@ -181,11 +186,8 @@ TestCookies(HTTPServer* p_server)
 int
 AfterTestCookies()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Not all cookie tests received                  : ERROR\n");
-  }
-  return totalChecks > 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("Cookies & multiple-cookies test                : %s\n", totalChecks ? "ERROR" : "OK");
+  return totalChecks;
 }

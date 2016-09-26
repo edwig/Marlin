@@ -30,7 +30,7 @@
 #include "SiteHandlerFormData.h"
 #include "MultiPartBuffer.h"
 
-static int totalChecks = 3;
+static int totalChecks = 4;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -54,6 +54,7 @@ FormDataHandler::PreHandleBuffer(MultiPartBuffer* p_buffer)
 {
   // Resetting the m_parts counter to the number of parts received
   m_parts = (int) p_buffer->GetParts();
+  --totalChecks;
   return 0;
 }
 
@@ -71,13 +72,11 @@ FormDataHandler::HandleData(MultiPart* p_part)
   if(!data.IsEmpty())
   {
     --m_parts;
+    --totalChecks;
   }
 
-  // Check done
-  --totalChecks;
-
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
+  // ---- "---------------------------------------------- - ------
   qprintf("Multi-part formdata - data part                : %s\n",data.IsEmpty() ? "ERROR" : "OK");
   return data.IsEmpty() ? 1 : 0;
 }
@@ -105,10 +104,12 @@ FormDataHandler::HandleFile(MultiPart* p_part)
   m_parts -= result ? 1 : 0;
 
   // Check done
-  --totalChecks;
-
+  if(result)
+  {
+    --totalChecks;
+  }
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
+  // ---- "---------------------------------------------- - ------
   qprintf("Multi-part formdata - file part                : %s\n",result ? "OK" : "ERROR");
   return result ? 0 : 1;
 }
@@ -121,8 +122,10 @@ FormDataHandler::PostHandleBuffer(MultiPartBuffer* p_buffer)
   bool result = m_parts == 0 && p_buffer->GetParts() == 2;
 
   // Check done
-  --totalChecks;
-
+  if(result)
+  {
+    --totalChecks;
+  }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   qprintf("Multi-part formdata - total test               : %s\n",result ? "OK" : "ERROR");
@@ -186,11 +189,8 @@ int TestFormData(HTTPServer* p_server)
 int
 AfterTestFormData()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Form-data multi-buffer test incomplete         : ERROR\n");
-  }
-  return totalChecks > 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("Form-data multi-buffer test complete           : %s\n",totalChecks ? "ERROR" : "OK");
+  return totalChecks;
 }

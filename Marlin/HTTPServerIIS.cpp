@@ -415,8 +415,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
      (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
-    IHttpResponse* response = p_context->GetResponse();
-    EventStream* stream = SubscribeEventStream(p_site,p_site->GetSite(),absolutePath,(HTTP_REQUEST_ID)response,NULL);
+    EventStream* stream = SubscribeEventStream(p_site,p_site->GetSite(),absolutePath,(HTTP_REQUEST_ID)p_context,NULL);
     if(stream)
     {
       // Getting the imporsonated user
@@ -426,6 +425,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
         stream->m_user = CW2A(user->GetRemoteUserName());
       }
       stream->m_baseURL = rawUrl;
+      DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s",stream->m_user,rawUrl);
       // To do for this stream, not for a message
       m_pool->SubmitWork(p_site->GetCallback(),(void*)stream);
       p_stream = stream;
@@ -526,14 +526,14 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   IHttpRequest* httpRequest = context->GetRequest();
 
   // Second extension interface gives the authentication token of the call
-  IHttpRequest2* httpRequest2 = nullptr;
-  HRESULT hr = HttpGetExtendedInterface(g_iisServer,httpRequest,&httpRequest2);
-  if(SUCCEEDED(hr))
-  {
+  // IHttpRequest2* httpRequest2 = nullptr;
+  // HRESULT hr = HttpGetExtendedInterface(g_iisServer,httpRequest,&httpRequest2);
+  // if(SUCCEEDED(hr))
+  // {
     //     PBYTE tokenInfo = nullptr;
     //     DWORD tokenSize = 0;
     //     httpRequest2->GetChannelBindingToken(&tokenInfo,&tokenSize);
-  }
+  // }
 
   // Reading the buffer
   FileBuffer* fbuffer = p_message->GetFileBuffer();
@@ -545,7 +545,7 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
     BOOL   pending  = FALSE;
     fbuffer->GetBuffer(buffer,size);
       
-    hr = httpRequest->ReadEntityBody(buffer,(DWORD)size,FALSE,&received,&pending);
+    HRESULT hr = httpRequest->ReadEntityBody(buffer,(DWORD)size,FALSE,&received,&pending);
     if(SUCCEEDED(hr))
     {
       return true;
@@ -558,7 +558,8 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
 bool
 HTTPServerIIS::InitEventStream(EventStream& p_stream)
 {
-  IHttpResponse* response = (IHttpResponse*)p_stream.m_requestID;
+  IHttpContext* context = (IHttpContext*)p_stream.m_requestID;
+  IHttpResponse* response = context->GetResponse();
 
   // First comment to push to the stream (not an event!)
   CString init = m_eventBOM ? ConstructBOM() : "";
@@ -1049,7 +1050,8 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
   DWORD  bytesSent = 0;
   HTTP_DATA_CHUNK dataChunk;
   BOOL   expectCompletion = FALSE;
-  IHttpResponse* response = (IHttpResponse*)p_response;
+  IHttpContext*  context  = (IHttpContext*)p_response;
+  IHttpResponse* response = context->GetResponse();
 
   // Only if a buffer present
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
@@ -1069,7 +1071,11 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
     // Final closing of the connection
     if(p_continue == false)
     {
+      // Now ready with this response
       response->CloseConnection();
+      response->SetNeedDisconnect();
+      // Now ready with the IIS context. Original request is finished
+      context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
       DETAILLOG1("Event stream connection closed");
     }
   }

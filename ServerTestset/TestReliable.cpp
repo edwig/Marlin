@@ -74,6 +74,7 @@ SiteHandlerSoapReliable::Handle(SOAPMessage* p_message)
     paramOne  = "DEF";
     paramTwo = "123";
     result    = true;
+    --totalChecks;
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
@@ -84,9 +85,6 @@ SiteHandlerSoapReliable::Handle(SOAPMessage* p_message)
   p_message->SetParameter("Four", paramTwo);
   xprintf("Outgoing parameter: %s = %s\n","Three",paramOne);
   xprintf("Outgoing parameter: %s = %s\n","Four", paramTwo);
-
-  // Check done
-  --totalChecks;
 
   return true;
 }
@@ -144,11 +142,8 @@ TestReliable(HTTPServer* p_server)
 int
 AfterTestReliable()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Not all WS-ReliableMessaging tests are done    : ERROR\n");
-  }
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("WS-ReliableMessaging testing                   : %s\n",totalChecks ? "ERROR" : "OK");
   return totalChecks > 0;
 }

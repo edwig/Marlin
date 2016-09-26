@@ -38,7 +38,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 1;
+static int totalChecks = 8;
 
 class SiteHandlerSoapToken: public SiteHandlerSoap
 {
@@ -78,6 +78,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     ++errors;
     goto END;
   }
+  --totalChecks;
 
   // Find the token of our server process
 
@@ -93,6 +94,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
       goto END;
     }
   }
+  --totalChecks;
 
   listing = "\nPRIMARY SERVER TOKEN\n";
 
@@ -107,6 +109,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     ++errors;
     goto END;
   }
+  --totalChecks;
   CloseHandle(htok);
   listing += "\n\n";
 
@@ -125,6 +128,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     ++errors;
     goto END;
   }
+  --totalChecks;
   // Try to do everything in one call
   // Only CreateProcess has to be rewritten to CreateProcessAsUser(hToken,...)
   if(ImpersonateLoggedOnUser(token) == FALSE)
@@ -137,6 +141,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     goto END;
   }
 
+  --totalChecks;
   // Try to open a file as another user
   file = CreateFile(fileName
                    ,GENERIC_READ | GENERIC_WRITE
@@ -172,6 +177,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     }
     else
     {
+      --totalChecks;
       xprintf("SOAP message written to: %s\n",(LPCTSTR)fileName);
     }
 
@@ -185,6 +191,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     }
     else
     {
+      --totalChecks;
       xprintf("TOKEN Access written to: %s\n",(LPCTSTR)fileName);
     }
     // Close the file
@@ -262,11 +269,8 @@ TestToken(HTTPServer* p_server)
 int
 AfterTestToken()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Not all token tests received                   : ERROR\n");
-  }
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("Testing of authentication token capabilities   : %s\n",totalChecks ? "ERROR" : "OK");
   return totalChecks > 0;
 }

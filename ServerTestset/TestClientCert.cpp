@@ -136,5 +136,5 @@ AfterTestClientCert()
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
   qprintf("Client certificate at file GET was tested      : %s", totalChecks > 0 ? "ERROR" : "OK");
-  return totalChecks > 0;
+  return totalChecks;
 }

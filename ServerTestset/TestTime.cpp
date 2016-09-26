@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Testframe
@@ -132,7 +134,16 @@ int  Test_HTTPTime()
   if(errors == 0)
   {
     qprintf("OK\n");
+    --totalChecks;
   }
-  return 0;
+  return errors;
 }
 
+int
+AfterTestTime()
+{
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("HTTPTime / RFC 822/1123 / Ansi-C asctime       : %s\n",totalChecks ? "ERROR" : "OK");
+  return totalChecks > 0;
+}

@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 4;
+static int totalChecks = 12;
 
 class SiteHandlerJsonData: public SiteHandlerJson
 {
@@ -59,16 +59,19 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
     {
       p_message->ParseMessage("{ \"one\" : [ 1, 2, 3, 4, 5] }");
       result = true;
+      --totalChecks;
     }
     else if(command == "Test2")
     {
       p_message->ParseMessage("{ \"two\"  : [ 201, 202, 203, 204.5, 205.6789 ] \n"
                               " ,\"three\": [ 301, 302, 303, 304.5, 305.6789 ] }\n");
       result = true;
+      --totalChecks;
     }
     else
     {
       qprintf("JOSN Unknown command. Check your test client\n");
+      xerror();
     }
 
     // Test parameters in JSON Message
@@ -77,11 +80,21 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
     if(test != "2" || size != "medium large")
     {
       result = false;
+      xerror();
+    }
+    else
+    {
+      --totalChecks;
     }
     // Test headers in JSON message
     if(p_message->GetHeader("GUID") != "888-777-666")
     {
       result = false;
+      xerror();
+    }
+    else
+    {
+      --totalChecks;
     }
   }
   else
@@ -92,10 +105,6 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   qprintf("JSON singular object received                  : %s\n", result ? "OK" : "ERROR");
-  if(!result) xerror();
-
-  // Check done
-  --totalChecks;
 
   return true;
 }
@@ -153,11 +162,8 @@ TestJsonData(HTTPServer* p_server)
 int
 AfterTestJsonData()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Not all JSON Data tests received               : ERROR\n");
-  }
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("JSON Data tests processing                     : %s\n",totalChecks ? "ERROR" : "OK");
   return totalChecks > 0;
 }

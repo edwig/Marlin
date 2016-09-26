@@ -49,6 +49,10 @@ public:
                        ,ThreadPool*    p_pool
                        ,LogAnalysis*   p_logfile
                        ,ErrorReport*   p_report);
+
+  // Server app was correctly started by MarlinIISModule
+  bool CorrectlyStarted();
+
 protected:
   bool           m_correctInit;
   IHttpServer*   m_iis;

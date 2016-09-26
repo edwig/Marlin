@@ -134,7 +134,7 @@ int TestSecureSite(HTTPServer* p_server)
 
 // See if we did everything alright
 int
-AfterSecureSite()
+AfterTestSecureSite()
 {
   // SUMMARY OF THE TEST
   //- --- "---------------------------------------------- - ------

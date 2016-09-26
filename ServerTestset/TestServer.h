@@ -75,6 +75,7 @@ int TestSecureSite       (HTTPServer* p_server);
 int TestThreadPool       (ThreadPool* p_pool);
 
 
+int AfterTestBaseSite();
 int AfterTestFilter();
 int AfterTestAsynchrone();
 int AfterTestBodyEncryption();
@@ -92,5 +93,8 @@ int AfterTestPatch();
 int AfterTestReliable();
 int AfterTestSubsites();
 int AfterTestToken();
-int AfterSecureSite();
+int AfterTestSecureSite();
+int AfterTestThreadpool();
+int AfterTestTime();
+int AfterTestCrackURL();
 

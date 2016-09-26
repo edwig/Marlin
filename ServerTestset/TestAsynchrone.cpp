@@ -72,6 +72,7 @@ SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
       // SUMMARY OF THE TEST
       // --- "---------------------------------------------- - ------
       qprintf("Received all of the asynchronous SOAP messages : OK\n");
+      highSpeed = 1;
     }
     else if(m_current > 0)
     {
@@ -150,7 +151,10 @@ TestAsynchrone(HTTPServer* p_server)
 }
 
 // Completeness check already on receive of last message!
-int AfterTestAsynchrone()
+int 
+AfterTestAsynchrone()
 {
-  return 0;
+  // ---- "---------------------------------------------- - ------
+  qprintf("Received all of the asynchronous SOAP messages : %s\n", highSpeed == 1 ? "OK" : "ERROR");
+  return highSpeed == 1 ? 0 : 1;
 }

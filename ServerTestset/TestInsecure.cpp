@@ -97,7 +97,6 @@ SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
     qprintf("High speed queue has received all messages     : OK\n");
-    highSpeed = 0;
   }
 
   if(doFault)
@@ -173,11 +172,9 @@ TestInsecure(HTTPServer* p_server)
 int
 AfterTestInsecure()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("Not all insecure SOAP messages received        : ERROR\n");
-  }
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("SOAP messages to insecure site                 : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("All highspeed queue messages received          : %s\n",highSpeed == 20 ? "OK" : "ERROR");
   return totalChecks > 0;
 }

@@ -57,14 +57,12 @@ SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
   if(_access(filename,0) == 0)
   {
     result = true;
+    --totalChecks;
   }
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
   qprintf("GZIP of a file at a HTTP GET operation         : %s", result ? "OK" : "ERROR");
-
-  // Checks done
-  --totalChecks;
 
   return true;
 }
@@ -123,11 +121,8 @@ TestCompression(HTTPServer* p_server)
 int
 AfterTestCompression()
 {
-  if(totalChecks > 0)
-  {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("File compression with GZIP not tested          : ERROR\n");
-  }
-  return totalChecks > 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("File compression with GZIP tested              : %s\n", totalChecks ? "ERROR" : "OK");
+  return totalChecks;
 }
