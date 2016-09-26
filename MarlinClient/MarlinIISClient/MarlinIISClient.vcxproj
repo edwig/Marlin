@@ -103,7 +103,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Marlin;..\..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -111,7 +111,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy utf8file.txt $(OutDir)</Command>
@@ -126,7 +126,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Marlin;..\..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -135,7 +135,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy utf8file.txt $(OutDir)</Command>
@@ -152,7 +152,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Marlin;..\..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -162,7 +162,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy utf8file.txt $(OutDir)</Command>
@@ -179,7 +179,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Marlin;..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Marlin;..\..\ExtraParts;..\MarlinClient\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -193,7 +193,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy utf8file.txt $(OutDir)</Command>
