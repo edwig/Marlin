@@ -144,6 +144,6 @@ AfterTestReliable()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("WS-ReliableMessaging testing                   : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("WS-ReliableMessaging testing                   : %s\n",totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

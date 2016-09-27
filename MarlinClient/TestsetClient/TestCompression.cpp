@@ -71,7 +71,6 @@ int TestCompression(HTTPClient* p_client)
   // Reset the compression mode
   p_client->SetHTTPCompression(false);
   p_client->SetReadAllHeaders(false);
-  p_client->Reset();
 
   return result ? 0 : 1;
 }

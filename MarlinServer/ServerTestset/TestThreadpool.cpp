@@ -123,6 +123,6 @@ AfterTestThreadpool()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("(HTTP)Threadpool sleeping/waking/submitwork    : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("(HTTP)Threadpool sleeping/waking/submitwork    : %s\n",totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

@@ -71,10 +71,13 @@ SiteHandlerWebDAV::Handle(HTTPMessage* p_message)
 void 
 SiteHandlerWebDAV::PostHandle(HTTPMessage* p_message)
 {
-  // send our answer 
-  p_message->SetCommand(HTTPCommand::http_response);
-  m_site->SendResponse(p_message);
-  SITE_DETAILLOGS("Answered a WEBDAV message from: ", SocketToServer(p_message->GetSender()));
+  if(p_message->GetRequestHandle())
+  {
+    // send our answer 
+    p_message->SetCommand(HTTPCommand::http_response);
+    m_site->SendResponse(p_message);
+    SITE_DETAILLOGS("Answered a WEBDAV message from: ", SocketToServer(p_message->GetSender()));
+  }
 }
 
 // IMPLEMENT YOURSELF:

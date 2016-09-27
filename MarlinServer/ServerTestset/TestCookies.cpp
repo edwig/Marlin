@@ -188,6 +188,6 @@ AfterTestCookies()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Cookies & multiple-cookies test                : %s\n", totalChecks ? "ERROR" : "OK");
-  return totalChecks;
+  qprintf("Cookies & multiple-cookies test                : %s\n", totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }

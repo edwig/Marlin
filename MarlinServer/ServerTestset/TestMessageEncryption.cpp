@@ -185,6 +185,6 @@ AfterTestMessageEncryption()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Total message encryption of SOAP messages      : %s\n", totalChecks ? "ERROR" : "OK");
+  qprintf("Total message encryption of SOAP messages      : %s\n", totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

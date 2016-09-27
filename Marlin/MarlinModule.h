@@ -51,8 +51,8 @@ public:
   // Implement NotificationMethods
 
   // BeginRequest is needed for the client certificate
-//virtual REQUEST_NOTIFICATION_STATUS OnBeginRequest            (IN IHttpContext*        p_httpContext,
-//                                                               IN IHttpEventProvider*  p_provider);
+  virtual REQUEST_NOTIFICATION_STATUS OnBeginRequest            (IN IHttpContext*        p_httpContext,
+                                                                 IN IHttpEventProvider*  p_provider);
   // First point where we can intercept the IIS integrated pipeline
   // after the authenticate and the authorize request are handled
   virtual REQUEST_NOTIFICATION_STATUS OnResolveRequestCache     (IN IHttpContext*        p_httpContext,

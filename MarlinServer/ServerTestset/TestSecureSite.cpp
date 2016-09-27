@@ -138,7 +138,7 @@ AfterTestSecureSite()
 {
   // SUMMARY OF THE TEST
   //- --- "---------------------------------------------- - ------
-  qprintf("File gotten with GET from secure site          : %s", g_gotten ? "OK" : "ERROR");
+  qprintf("File gotten with GET from secure site          : %s", g_gotten  > 0 ? "OK" : "ERROR");
   return (g_gotten > 0) ? 0 : 1;
 }
 

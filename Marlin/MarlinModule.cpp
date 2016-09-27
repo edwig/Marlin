@@ -51,20 +51,108 @@
 
 #define MODULE_NAME "MarlinIISModule"
 
-// Globals
-IHttpServer*      g_iisServer   = nullptr;
-LogAnalysis*      g_analysisLog = nullptr;
-HTTPServerIIS*    g_marlin      = nullptr;
-// Global threadpool object
-HTTPThreadPool    g_pool;
-// Global error report object
-ErrorReport       g_report;
-// IIS config files
-WebConfigIIS      g_config;
+// GLOBALS Needed for the module
+IHttpServer*      g_iisServer   = nullptr;    // Pointer to the IIS Server
+LogAnalysis*      g_analysisLog = nullptr;    // Pointer to our logfile
+HTTPServerIIS*    g_marlin      = nullptr;    // Pointer to Marlin Server for IIS
+HTTPThreadPool    g_pool;                     // Threadpool for events and tasks
+ErrorReport       g_report;                   // Error reporting for Marlin
+WebConfigIIS      g_config;                   // Global ApplicationHost.config
+
+// Logging macro for this file only
+#define DETAILLOG(text)    g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text))
+#define ERRORLOG(text)     g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(text))
+
+//////////////////////////////////////////////////////////////////////////
+//
+// IIS IS CALLING THIS FIRST
+//
+//////////////////////////////////////////////////////////////////////////
+
+// RegisterModule must be exported through the linker option
+// /EXPORT:RegisterModule
+//
+HRESULT _stdcall 
+RegisterModule(DWORD                        p_version
+              ,IHttpModuleRegistrationInfo* p_moduleInfo
+              ,IHttpServer*                 p_server)
+{
+  void StartLog(DWORD p_version);
+  DWORD globalEvents = GL_APPLICATION_START |     // Starting application pool
+                       GL_APPLICATION_STOP;       // Stopping application pool
+  DWORD moduleEvents = RQ_BEGIN_REQUEST |         // First point to intercept the IIS integrated pipeline
+                       RQ_RESOLVE_REQUEST_CACHE;  // Request is authenticated, ready for processing
+
+  // Start/Restart the logfile.
+  // First moment IIS is calling us. So start logging first!
+  StartLog(p_version);
+
+  // Preserving the server in a global pointer
+  if(g_iisServer == nullptr && p_server != nullptr)
+  {
+    if(g_iisServer)
+    {
+      ERRORLOG("MarlinIISModule registered more than once in the global IIS module registry!");
+    }
+    g_iisServer = p_server;
+  }
+
+  // Register global notifications to process
+  HRESULT hr = p_moduleInfo->SetGlobalNotifications(new MarlinGlobalFactory(),globalEvents);
+  if(hr == S_OK)
+  {
+    DETAILLOG("Register GlobalFactory for: start/stop");
+    hr = p_moduleInfo->SetPriorityForGlobalNotification(globalEvents,PRIORITY_ALIAS_FIRST);
+    if(hr == S_OK)
+    {
+      DETAILLOG("Setting global notification priority to: FIRST");
+    }
+    else
+    {
+      ERRORLOG("Notification priority setting FAILED. Continue with lower priority!!");
+    }
+  }
+  else
+  {
+    ERRORLOG("Setting global notifications for a MarlinFactory FAILED");
+    return hr;
+  }
+
+  // Register module notifications to process
+  hr = p_moduleInfo->SetRequestNotifications(new MarlinModuleFactory(),moduleEvents,0);
+  if(hr == S_OK )
+  {
+    DETAILLOG("Register ModuleFactory for requests");
+    hr = p_moduleInfo->SetPriorityForRequestNotification(moduleEvents,PRIORITY_ALIAS_FIRST);
+    if(hr == S_OK)
+    {
+      DETAILLOG("Setting requests priority to: FIRST");
+    }
+    else
+    {
+      ERRORLOG("Request priority setting FAILED. Continue with lower priority!!");
+    }
+  }
+  else
+  {
+    ERRORLOG("Setting request notifications for a MarlinModule FAILED");
+    return hr;
+  }
+  // Registration complete. Possibly not with highest priority.
+  return S_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Starting/Stopping logging for the module application
+//
+//////////////////////////////////////////////////////////////////////////
 
 void
 StartLog(DWORD p_version)
 {
+  // Depending on the application pool settings, we are sometimes
+  // called more than once, so see if the log is not already started
   if(g_analysisLog == nullptr)
   {
     // Read in ApplicationHost.Config
@@ -96,199 +184,6 @@ StopLog()
     g_analysisLog = nullptr;
   }
 }
-
-// Logging macro for this file only
-#define DETAILLOG(text)    g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text))
-#define ERRORLOG(text)     g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(text))
-
-//////////////////////////////////////////////////////////////////////////
-//
-// MODULE LEVEL: DONE FOR EACH WEB REQUEST
-//
-//////////////////////////////////////////////////////////////////////////
-
-MarlinModule::MarlinModule()
-{
-  DETAILLOG("Start Request");
-
-}
-
-MarlinModule::~MarlinModule()
-{
-  DETAILLOG("Request ready");
-}
-
-// Handle a IIS request
-REQUEST_NOTIFICATION_STATUS
-MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
-                                    IN IHttpEventProvider* p_provider)
-{
-  UNREFERENCED_PARAMETER(p_provider);
-  REQUEST_NOTIFICATION_STATUS status = RQ_NOTIFICATION_CONTINUE;
-  char  buffer1[SERVERNAME_BUFFERSIZE + 1];
-  char  buffer2[SERVERNAME_BUFFERSIZE + 1];
-  DWORD size  = SERVERNAME_BUFFERSIZE;
-  PCSTR serverName = buffer1;
-  PCSTR referrer   = buffer2;
-
-  // Starting the performance counter
-  g_marlin->GetCounter()->Start();
-
-  // Getting the request/response objects
-  IHttpRequest*  request  = p_context->GetRequest();
-  IHttpResponse* response = p_context->GetResponse();
-  if(request == nullptr || response == nullptr)
-  {
-    DETAILLOG("No request or response objects");
-    g_marlin->GetCounter()->Stop();
-    return status;
-  }
-
-  // Detect Cross Site Scripting (XSS)
-  HRESULT hr = p_context->GetServerVariable("SERVER_NAME",&serverName, &size);
-  if(hr == S_OK)
-  {
-    hr = p_context->GetServerVariable("HTTP_REFERER", &referrer, &size);
-    if(hr == S_OK)
-    {
-      if(strstr(referrer,serverName) == 0)
-      {
-        DETAILLOG("XSS Detected!! Deferrer not our server!");
-        response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
-      }
-    }
-  }
-
-  // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
-  const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
-  if(request == nullptr)
-  {
-    ERRORLOG("Abort: IIS did not provide a raw request object!");
-    g_marlin->GetCounter()->Stop();
-    return status;
-  }
-
-  // This is the call we are getting
-  PCSTR url = rawRequest->pRawUrl;
-  DETAILLOG(url);
-
-  // Getting the HTTPSite through the server port/absPath combination
-  int  serverPort = GetServerPort(p_context);
-  HTTPSite* site = g_marlin->FindHTTPSite(serverPort,rawRequest->CookedUrl.pAbsPath);
-
-  // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
-  if(site == nullptr)
-  {
-    // Not our request: Other app running on this machine!
-    // This is why it is wastefull to use IIS for our internetserver!
-    CString message("Rejected HTTP call: ");
-    message += rawRequest->pRawUrl;
-    DETAILLOG(message);
-    g_marlin->GetCounter()->Stop();
-    return status;
-  }
-
-  EventStream* stream = nullptr;
-  HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(p_context,site,rawRequest,stream);
-  if(msg)
-  {
-    // In case of authentication done: get the authentication token
-    HANDLE token = NULL;
-    IHttpUser* user = p_context->GetUser();
-    if(user)
-    {
-      // Make duplicate of the token, otherwise IIS will crash!
-      if(DuplicateTokenEx(user->GetImpersonationToken()
-                         ,TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_ALL_ACCESS | TOKEN_READ | TOKEN_WRITE
-                         ,NULL
-                         ,SecurityImpersonation
-                         ,TokenImpersonation
-                         ,&token) == FALSE)
-      {
-        token = NULL;
-      }
-    }
-
-    // Store the context with the message, so we can handle all derived messages
-    msg->SetRequestHandle((HTTP_REQUEST_ID)p_context);
-    msg->SetAccessToken(token);
-
-    // GO! Let the site handle the message
-    site->HandleHTTPMessage(msg);
-
-    // Ready for IIS!
-    p_context->SetRequestHandled();
-
-    // Stopping the performance counter
-    g_marlin->GetCounter()->Stop();
-
-    status = RQ_NOTIFICATION_FINISH_REQUEST;
-  }
-  else if(stream)
-  {
-    // If we turn into a stream, more notifications are pending
-    status = RQ_NOTIFICATION_PENDING;
-  }
-  else
-  {
-    ERRORLOG("Cannot handle the request: IIS did not provide enough info for a HTTPMessage or an event stream.");
-    status = RQ_NOTIFICATION_CONTINUE;
-  }
-  // Now completly ready. We did everything!
-  g_marlin->GetCounter()->Stop();
-  return status;
-}
-
-int 
-MarlinModule::GetServerPort(IHttpContext* p_context)
-{
-  // Getting the server port
-  char  portNumber[20];
-  int   serverPort = INTERNET_DEFAULT_HTTP_PORT;
-  DWORD size = 20;
-  PCSTR port = (PCSTR) &portNumber[0];
-  HRESULT hr = p_context->GetServerVariable("SERVER_PORT",&port,&size);
-  if(SUCCEEDED(hr))
-  {
-    serverPort = atoi(port);
-  }
-  return serverPort;
-}
-
-//////////////////////////////////////////////////////////////////////////
-//
-// MODULE FACTORY
-//
-//////////////////////////////////////////////////////////////////////////
-
-HRESULT 
-MarlinModuleFactory::GetHttpModule(OUT CHttpModule**     p_module
-                                  ,IN  IModuleAllocator* p_allocator)
-{
-  UNREFERENCED_PARAMETER(p_allocator);
-  // Create new module
-  MarlinModule* requestModule = new MarlinModule();
-  //Test for an error
-  if(!requestModule)
-  {
-    DETAILLOG("Failed: APP pool cannot find the requested Marlin module!");
-    return HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
-  }
-  // Return a pointer to the module
-  *p_module = requestModule;
-  return S_OK;
-}
-
-void 
-MarlinModuleFactory::Terminate()
-{
-  // Last function to stop. So stop the log here
-  StopLog();
-
-  // Remove the class from memory
-  // DETAILLOG("Terminate: ModuleFactory");
-  delete this;
-};
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -323,7 +218,6 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   CString physical   = W2A(app->GetApplicationPhysicalPath());
   CString webroot    = ExtractWebroot(configPath,physical);
   CString showroot;
-
 
   if(m_applications == 0)
   {
@@ -414,7 +308,7 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
     {
       g_server->ExitInstance();
     }
- 
+
     // Stopping the marlin server
     if(g_marlin)
     {
@@ -425,7 +319,6 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   }
   return GL_NOTIFICATION_HANDLED;
 };
-
 
 // RE-Construct the webroot from thse two settings
 // Configuration path : MACHINE/WEBROOT/APPHOST/SECURETEST
@@ -484,78 +377,221 @@ MarlinGlobalFactory::Terminate()
 
 //////////////////////////////////////////////////////////////////////////
 //
-// IIS IS CALLING THIS FIRST
+// MODULE FACTORY: Create a module handler
 //
 //////////////////////////////////////////////////////////////////////////
 
-// RegisterModule must be exported through the linker option
-// /EXPORT:RegisterModule
-//
-HRESULT _stdcall 
-RegisterModule(DWORD                        p_version
-              ,IHttpModuleRegistrationInfo* p_moduleInfo
-              ,IHttpServer*                 p_server)
+HRESULT 
+MarlinModuleFactory::GetHttpModule(OUT CHttpModule**     p_module
+                                  ,IN  IModuleAllocator* p_allocator)
 {
-  HRESULT hr = S_OK;
-
-  DWORD globalEvents = GL_APPLICATION_START |     // Starting application pool
-                       GL_APPLICATION_STOP;       // Stopping application pool
-  DWORD moduleEvents = RQ_RESOLVE_REQUEST_CACHE;  // First point to intercept the IIS integrated pipeline
-
-                                                  // Start/Restart the logfile
-  StartLog(p_version);
-
-  // Preserving the server in a global pointer
-  if(g_iisServer == nullptr && p_server != nullptr)
+  UNREFERENCED_PARAMETER(p_allocator);
+  // Create new module
+  MarlinModule* requestModule = new MarlinModule();
+  //Test for an error
+  if(!requestModule)
   {
-    if(g_iisServer)
-    {
-      ERRORLOG("MarlinIISModule registered more than once in the global IIS module registry!");
-    }
-    g_iisServer = p_server;
+    DETAILLOG("Failed: APP pool cannot find the requested Marlin module!");
+    return HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
   }
-
-  // Global notifications to process
-  hr = p_moduleInfo->SetGlobalNotifications(new MarlinGlobalFactory(),globalEvents);
-  if(hr == S_OK)
-  {
-    DETAILLOG("Register GlobalFactory for: start/stop");
-    hr = p_moduleInfo->SetPriorityForGlobalNotification(globalEvents,PRIORITY_ALIAS_FIRST);
-    if(hr == S_OK)
-    {
-      DETAILLOG("Setting global notification priority to: FIRST");
-    }
-    else
-    {
-      ERRORLOG("Notification priority setting FAILED. Continue with lower priority!!");
-    }
-  }
-  else
-  {
-    ERRORLOG("Setting global notifications for a MarlinFactory FAILED");
-    return hr;
-  }
-
-  // Module notifications to process
-  hr = p_moduleInfo->SetRequestNotifications(new MarlinModuleFactory(),moduleEvents,0);
-  if(hr == S_OK )
-  {
-    DETAILLOG("Register ModuleFactory for requests");
-    hr = p_moduleInfo->SetPriorityForRequestNotification(moduleEvents,PRIORITY_ALIAS_FIRST);
-    if(hr == S_OK)
-    {
-      DETAILLOG("Setting requests priority to: FIRST");
-    }
-    else
-    {
-      ERRORLOG("Request priority setting FAILED. Continue with lower priority!!");
-    }
-  }
-  else
-  {
-    ERRORLOG("Setting request notifications for a MarlinModule FAILED");
-    return hr;
-  }
-  // Registration complete. Possibly not with highest priority.
+  // Return a pointer to the module
+  *p_module = requestModule;
   return S_OK;
 }
+
+void 
+MarlinModuleFactory::Terminate()
+{
+  // Last function to be called from within IIS
+  // So stop the log here
+  StopLog();
+
+  // Strange but true: See MSDN documentation
+  delete this;
+};
+
+//////////////////////////////////////////////////////////////////////////
+//
+// MODULE LEVEL: DONE FOR EACH WEB REQUEST
+//
+//////////////////////////////////////////////////////////////////////////
+
+MarlinModule::MarlinModule()
+{
+  DETAILLOG("Start Request");
+}
+
+MarlinModule::~MarlinModule()
+{
+  DETAILLOG("Request ready");
+}
+
+// On each request: Note the fact that we got it. 
+// Regardless whether we will process it.
+// Even non-authenticated requests will be processed
+//
+REQUEST_NOTIFICATION_STATUS 
+MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
+                             IN IHttpEventProvider* p_provider)
+{
+  UNREFERENCED_PARAMETER(p_provider);
+  IHttpRequest* request = p_context->GetRequest();
+
+  if(request)
+  {
+    // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
+    const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
+    // This is the call we are getting
+    CString logging("Request for: ");
+    logging += rawRequest->pRawUrl;
+    DETAILLOG(logging);
+
+// Here we can debug IIS variables
+// #ifdef _DEBUG
+//     IISDebugAllVariables(p_context,g_analysisLog);
+// #endif
+  }
+  // Just continue processing
+  return RQ_NOTIFICATION_CONTINUE;
+}
+
+// Handle a IIS request after authentication
+//
+REQUEST_NOTIFICATION_STATUS
+MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
+                                    IN IHttpEventProvider* p_provider)
+{
+  UNREFERENCED_PARAMETER(p_provider);
+  REQUEST_NOTIFICATION_STATUS status = RQ_NOTIFICATION_CONTINUE;
+  char  buffer1[SERVERNAME_BUFFERSIZE + 1];
+  char  buffer2[SERVERNAME_BUFFERSIZE + 1];
+  DWORD size  = SERVERNAME_BUFFERSIZE;
+  PCSTR serverName = buffer1;
+  PCSTR referrer   = buffer2;
+
+  // Starting the performance counter
+  g_marlin->GetCounter()->Start();
+
+  // Getting the request/response objects
+  IHttpRequest*  request  = p_context->GetRequest();
+  IHttpResponse* response = p_context->GetResponse();
+  if(request == nullptr || response == nullptr)
+  {
+    DETAILLOG("No request or response objects");
+    g_marlin->GetCounter()->Stop();
+    return status;
+  }
+
+  // Detect Cross Site Scripting (XSS)
+  HRESULT hr = p_context->GetServerVariable("SERVER_NAME",&serverName, &size);
+  if(hr == S_OK)
+  {
+    hr = p_context->GetServerVariable("HTTP_REFERER", &referrer, &size);
+    if(hr == S_OK)
+    {
+      if(strstr(referrer,serverName) == 0)
+      {
+        DETAILLOG("XSS Detected!! Deferrer not our server!");
+        response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
+      }
+    }
+  }
+
+  // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
+  const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
+  if(request == nullptr)
+  {
+    ERRORLOG("Abort: IIS did not provide a raw request object!");
+    g_marlin->GetCounter()->Stop();
+    return status;
+  }
+
+  // This is the call we are getting
+  PCSTR url = rawRequest->pRawUrl;
+  DETAILLOG(url);
+
+  // Getting the HTTPSite through the server port/absPath combination
+  int  serverPort = GetServerPort(p_context);
+  HTTPSite* site = g_marlin->FindHTTPSite(serverPort,rawRequest->CookedUrl.pAbsPath);
+
+  // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
+  if(site == nullptr)
+  {
+    // Not our request: Other app running on this machine!
+    // This is why it is wastefull to use IIS for our internetserver!
+    CString message("Rejected HTTP call: ");
+    message += rawRequest->pRawUrl;
+    DETAILLOG(message);
+    g_marlin->GetCounter()->Stop();
+    // Let someone else handle this call (if any :-( )
+    return RQ_NOTIFICATION_CONTINUE;
+  }
+
+  EventStream* stream = nullptr;
+  HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(p_context,site,rawRequest,stream);
+  if(msg)
+  {
+    // In case of authentication done: get the authentication token
+    HANDLE token = NULL;
+    IHttpUser* user = p_context->GetUser();
+    if(user)
+    {
+      // Make duplicate of the token, otherwise IIS will crash!
+      if(DuplicateTokenEx(user->GetImpersonationToken()
+                         ,TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_ALL_ACCESS | TOKEN_READ | TOKEN_WRITE
+                         ,NULL
+                         ,SecurityImpersonation
+                         ,TokenImpersonation
+                         ,&token) == FALSE)
+      {
+        token = NULL;
+      }
+    }
+
+    // Store the context with the message, so we can handle all derived messages
+    msg->SetRequestHandle((HTTP_REQUEST_ID)p_context);
+    msg->SetAccessToken(token);
+
+    // GO! Let the site handle the message
+    site->HandleHTTPMessage(msg);
+
+    // Ready for IIS!
+    p_context->SetRequestHandled();
+
+    // Stopping the performance counter
+    g_marlin->GetCounter()->Stop();
+
+    // This request is now compeletly handled
+    status = RQ_NOTIFICATION_FINISH_REQUEST;
+  }
+  else if(stream)
+  {
+    // If we turn into a stream, more notifications are pending
+    status = RQ_NOTIFICATION_PENDING;
+  }
+  else
+  {
+    ERRORLOG("Cannot handle the request: IIS did not provide enough info for a HTTPMessage or an event stream.");
+    status = RQ_NOTIFICATION_CONTINUE;
+  }
+  // Now completly ready. We did everything!
+  g_marlin->GetCounter()->Stop();
+  return status;
+}
+
+int 
+MarlinModule::GetServerPort(IHttpContext* p_context)
+{
+  // Getting the server port
+  char  portNumber[20];
+  int   serverPort = INTERNET_DEFAULT_HTTP_PORT;
+  DWORD size = 20;
+  PCSTR port = (PCSTR) &portNumber[0];
+  HRESULT hr = p_context->GetServerVariable("SERVER_PORT",&port,&size);
+  if(SUCCEEDED(hr))
+  {
+    serverPort = atoi(port);
+  }
+  return serverPort;
+}
+

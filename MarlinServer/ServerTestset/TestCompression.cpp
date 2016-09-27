@@ -123,6 +123,6 @@ AfterTestCompression()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("File compression with GZIP tested              : %s\n", totalChecks ? "ERROR" : "OK");
-  return totalChecks;
+  qprintf("File compression with GZIP tested              : %s\n", totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }

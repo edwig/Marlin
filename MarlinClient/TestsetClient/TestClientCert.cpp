@@ -60,7 +60,6 @@ int TestClientCertificate(HTTPClient* p_client)
   CString url = "https://" MARLIN_HOST ":1222/SecureClientCert/codes.html";
   HTTPMessage msg(HTTPCommand::http_get,url);
   CString filename("..\\Documentation\\codes.html");
-  msg.GetFileBuffer()->SetFileName(filename);
   msg.SetContentType("text/html");
 
   xprintf("TESTING CLIENT CERTIFICATE FUNCTION TO /SecureClientCert/\n");
@@ -100,11 +99,17 @@ int TestClientCertificate(HTTPClient* p_client)
   // Send our message
   result = p_client->Send(&msg);
 
-
-  // If OK and file does exists now!
-  if(result && _access(filename,0) == 0)
+  if(result)
   {
-    result = true;
+    // Getting the file
+    msg.GetFileBuffer()->SetFileName(filename);
+    msg.GetFileBuffer()->WriteFile();
+
+    // If OK and file does exists now!
+    if(_access(filename,0) == 0)
+    {
+      result = true;
+    }
   }
   else
   {

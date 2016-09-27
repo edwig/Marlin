@@ -30,6 +30,7 @@
 #include "HTTPServerIIS.h"
 #include "HTTPURLGroup.h"
 #include "EnsureFile.h"
+#include "WebConfigIIS.h"
 
 // Logging via the server
 #define DETAILLOG1(text)        m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text)
@@ -53,28 +54,54 @@ HTTPSiteIIS::HTTPSiteIIS(HTTPServerIIS* p_server
 {
 }
 
+void
+HTTPSiteIIS::InitSite()
+{
+  extern WebConfigIIS g_config;
+
+  // Read for this site
+  g_config.SetApplication(m_site);
+
+  // Getting the port settings from IIS
+  g_streaming_limit = g_config.GetStreamingLimit();
+  m_port            = g_config.GetSitePort(m_site,m_port);
+  m_ntlmCache       = g_config.GetSiteNTLMCache(m_site,m_ntlmCache);
+  m_realm           = g_config.GetSiteRealm    (m_site,m_realm);
+  m_domain          = g_config.GetSiteDomain   (m_site,m_domain);
+  m_authScheme      = g_config.GetSiteScheme   (m_site,m_authScheme);
+}
+
+void
+HTTPSiteIIS::LogSettings()
+{
+  // Authentication scheme
+  CString schemes;
+  if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)     schemes += "Basic/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)    schemes += "Digest/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_NTLM)      schemes += "NTLM/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_NEGOTIATE) schemes += "Negotiate/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_KERBEROS)  schemes += "Kerberos/";
+  schemes.TrimRight('/');
+
+  // List settings of the site
+  //         "------------------------------------------ : ------------"
+  DETAILLOGV("Site HTTP port set to                      : %d",m_port);
+  DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
+  DETAILLOGS("Site authentication scheme(s)              : ",schemes);
+  DETAILLOGV("Site authentication realm/domain           : %s/%s",m_realm,m_domain);
+  DETAILLOGS("Site NT-LanManager caching                 : ",m_ntlmCache ? "ON" : "OFF");
+}
+
 bool
 HTTPSiteIIS::StartSite()
 {
   DETAILLOGS("Starting website. URL: ",m_site);
 
-//   // Getting the global settings
-//   InitSite(m_server->GetWebConfig());
-// 
-//   // If we have a site web.config file: read it
-//   // Overrides the programmatical settings between HTTPServer::CreateSite and HTTPSite::StartSite
-//   CString siteConfigFile = WebConfig::GetSiteConfig(m_prefixURL);
-//   if(!siteConfigFile.IsEmpty())
-//   {
-//     WebConfig config(siteConfigFile);
-//     if(config.IsFilled())
-//     {
-//       InitSite(config);
-//     }
-//   }
-// 
-//   // Now log the settings, once we read all web.config files
-//   LogSettings();
+  // Getting the global settings
+  InitSite();
+ 
+  // Now log the settings, once we read all web.config files
+  LogSettings();
 
   // See if we have a reliable messaging WITH authentication
   CheckReliable();

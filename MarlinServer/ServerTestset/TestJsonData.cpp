@@ -164,6 +164,6 @@ AfterTestJsonData()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("JSON Data tests processing                     : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("JSON Data tests processing                     : %s\n",totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

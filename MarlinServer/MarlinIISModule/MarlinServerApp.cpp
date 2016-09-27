@@ -36,7 +36,7 @@ MarlinServerApp::InitInstance()
   // Small local test
   Test_CrackURL();
   Test_HTTPTime();
-  TestThreadPool(m_appPool);
+//TestThreadPool(m_appPool);
 
   // Starting objects and sites
   TestPushEvents(m_appServer);
@@ -101,7 +101,7 @@ MarlinServerApp::ReportAfterTesting()
 {
   AfterTestCrackURL();
   AfterTestTime();
-  AfterTestThreadpool();
+//AfterTestThreadpool();
   AfterTestSecureSite();
   AfterTestBaseSite();
   AfterTestClientCert();

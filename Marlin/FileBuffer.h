@@ -116,7 +116,7 @@ private:
   bool    Defragement();
 
   // Data contents of the HTTP buffer
-  CString m_fileName;
+  CString m_fileName;     // File to receive/send
   HANDLE  m_file          { NULL };
   size_t  m_binaryLength  { NULL };
   uchar*  m_buffer        { nullptr };

@@ -131,6 +131,6 @@ AfterTestCrackURL()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("CrackURL to path/parameters/anchor             : %s\n",totalChecks ? "ERROR" : "OK");
-  return totalChecks;
+  qprintf("CrackURL to path/parameters/anchor             : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }

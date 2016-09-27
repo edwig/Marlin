@@ -189,6 +189,6 @@ AfterTestBodyEncryption()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("SOAP Body encryption tests                     : %s\n",totalChecks == 0 ? "OK" : "ERROR");
-  return totalChecks;
+  qprintf("SOAP Body encryption tests                     : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }

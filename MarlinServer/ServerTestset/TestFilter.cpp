@@ -190,7 +190,7 @@ AfterTestFilter()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Firing of the filter handlers                  : %s\n",totalChecks ? "ERROR" : "OK");
-  return totalChecks;
+  qprintf("Firing of the filter handlers                  : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }
 

@@ -144,6 +144,6 @@ AfterTestTime()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("HTTPTime / RFC 822/1123 / Ansi-C asctime       : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("HTTPTime / RFC 822/1123 / Ansi-C asctime       : %s\n",totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

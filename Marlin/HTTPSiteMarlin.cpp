@@ -211,7 +211,7 @@ void
 HTTPSiteMarlin::InitSite(WebConfig& p_config)
 {
   // Get the webroot
-  m_webroot = p_config.GetParameterString("Server","WebRoot",m_webroot);
+  m_webroot     = p_config.GetParameterString ("Server","WebRoot",m_webroot);
   // Check Unicode forcing
   m_sendUnicode = p_config.GetParameterBoolean("Server","RespondUnicode",m_sendUnicode);
   m_sendSoapBOM = p_config.GetParameterBoolean("Server","RespondSoapBOM",m_sendSoapBOM);
@@ -252,7 +252,7 @@ HTTPSiteMarlin::InitSite(WebConfig& p_config)
   if(!scheme.IsEmpty())
   {
     // Detect authentication scheme
-    if(scheme == "Anonymous") authScheme = 0;
+         if(scheme == "Anonymous") authScheme = 0;
     else if(scheme == "Basic")     authScheme = HTTP_AUTH_ENABLE_BASIC;
     else if(scheme == "Digest")    authScheme = HTTP_AUTH_ENABLE_DIGEST;
     else if(scheme == "NTLM")      authScheme = HTTP_AUTH_ENABLE_NTLM;
@@ -323,9 +323,10 @@ HTTPSiteMarlin::LogSettings()
   }
 
   // List other settings of the site
+  //         "---------------------------------- : ------------"
   DETAILLOGS("Site SOAP WS-Security level        : ",       level);
   DETAILLOGS("Site authentication scheme         : ",       scheme);
-  DETAILLOGV("Site realm/domain                  : %s/%s",  m_realm,m_domain);
+  DETAILLOGV("Site authentication realm/domain   : %s/%s",  m_realm,m_domain);
   DETAILLOGS("Site NT-LanManager caching         : ",       m_ntlmCache     ? "ON" : "OFF");
   DETAILLOGV("Site a-synchronious SOAP setting to: %sSYNC", m_async         ? "A-" : ""   );
   DETAILLOGS("Site accepting Server-Sent-Events  : ",       m_isEventStream ? "ON" : "OFF");

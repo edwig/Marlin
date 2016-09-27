@@ -191,6 +191,6 @@ AfterTestFormData()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Form-data multi-buffer test complete           : %s\n",totalChecks ? "ERROR" : "OK");
-  return totalChecks;
+  qprintf("Form-data multi-buffer test complete           : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }

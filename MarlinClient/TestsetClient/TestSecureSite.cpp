@@ -11,7 +11,6 @@ int TestSecureSite(HTTPClient* p_client)
   CString url = "https://" MARLIN_HOST "/SecureTest/codes.html";
   HTTPMessage msg(HTTPCommand::http_get,url);
   CString filename("..\\Documentation\\codes.html");
-  msg.GetFileBuffer()->SetFileName(filename);
   msg.SetContentType("text/html");
 
   // Remove the file !!
@@ -27,12 +26,17 @@ int TestSecureSite(HTTPClient* p_client)
   xprintf("=========================================\n");
 
   // Send our message
-  result = p_client->Send(&msg);
+  bool sendResult = p_client->Send(&msg);
 
   // If OK and file does exists now!
-  if(result && _access(filename,0) == 0)
+  if(sendResult)
   {
-    result = true;
+    msg.GetFileBuffer()->SetFileName(filename);
+    msg.GetFileBuffer()->WriteFile();
+    if(_access(filename,0) == 0)
+    {
+      result = true;
+    }
   }
   else
   {

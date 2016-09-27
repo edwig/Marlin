@@ -157,6 +157,6 @@ AfterTestPatch()
 {
   // SUMMARY OF THE TEST
   //- --- "---------------------------------------------- - ------
-  qprintf("HTTP PATCH verb tested                         : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("HTTP PATCH verb tested                         : %s\n",totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

@@ -227,7 +227,7 @@ AfterTestSubsites()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("All subsite tests received and tested          : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("All subsite tests received and tested          : %s\n",totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }
 

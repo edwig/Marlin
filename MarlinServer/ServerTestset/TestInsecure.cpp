@@ -174,7 +174,7 @@ AfterTestInsecure()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("SOAP messages to insecure site                 : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("SOAP messages to insecure site                 : %s\n",totalChecks > 0 ? "ERROR" : "OK");
   qprintf("All highspeed queue messages received          : %s\n",highSpeed == 20 ? "OK" : "ERROR");
   return totalChecks > 0;
 }

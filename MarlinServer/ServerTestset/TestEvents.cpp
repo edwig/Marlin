@@ -187,6 +187,6 @@ AfterTestEvents()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Event streams On-Message/Error/Other/Close     : %s\n",totalChecks ? "ERROR" : "OK");
-  return totalChecks;
+  qprintf("Event streams On-Message/Error/Other/Close     : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }

@@ -464,7 +464,7 @@ AfterTestContract()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("WSDL contract calls (SOAP/JSON)                : %s\n",totalChecks ? "ERROR" : "OK");
-  return totalChecks;
+  qprintf("WSDL contract calls (SOAP/JSON)                : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }
 

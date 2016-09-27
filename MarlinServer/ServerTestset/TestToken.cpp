@@ -271,6 +271,6 @@ AfterTestToken()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Testing of authentication token capabilities   : %s\n",totalChecks ? "ERROR" : "OK");
+  qprintf("Testing of authentication token capabilities   : %s\n",totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

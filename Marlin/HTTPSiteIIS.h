@@ -64,4 +64,8 @@ public:
 private:
   // Getting the sites directory within the IIS rootdir
   CString GetIISSiteDir();
+  // Init the site from the ApplicationHost.Config and web.config
+  void    InitSite();
+  // Log all settings for this site
+  void    LogSettings();
 };

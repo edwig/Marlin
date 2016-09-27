@@ -108,7 +108,10 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
 void
 SiteHandlerGet::PostHandle(HTTPMessage* p_message)
 {
-  m_site->SendResponse(p_message);
+  if(p_message->GetRequestHandle())
+  {
+    m_site->SendResponse(p_message);
+  }
 }
 
 void

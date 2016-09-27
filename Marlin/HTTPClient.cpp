@@ -1327,6 +1327,7 @@ HTTPClient::SendBodyData()
       {
         m_lastError = ERROR_FILE_NOT_FOUND;
         ERRORLOG("File not found on reading: %s",m_buffer->GetFileName());
+        delete [] buffer;
         return;
       }
       DETAILLOG("File opened for reading: %s",m_buffer->GetFileName());
