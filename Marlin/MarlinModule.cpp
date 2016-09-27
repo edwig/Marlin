@@ -446,7 +446,7 @@ MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
     logging += rawRequest->pRawUrl;
     DETAILLOG(logging);
 
-// Here we can debug IIS variables
+// Here we can debug IIS variables, before other functionality is called!
 // #ifdef _DEBUG
 //     IISDebugAllVariables(p_context,g_analysisLog);
 // #endif
