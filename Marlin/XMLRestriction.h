@@ -80,11 +80,43 @@ private:
   CString   PrintSpaceRestriction();
 
   // Checking the restrictions
-  static    CString   CheckInteger (CString p_value);
-  static    CString   CheckBoolean (CString p_value);
-  static    CString   CheckBase64  (CString p_value);
-  static    CString   CheckDouble  (CString p_value);
-  static    CString   CheckDateTime(CString p_value);
+  static    CString   CheckAnyURI   (CString p_value);
+  static    CString   CheckInteger  (CString p_value);
+  static    CString   CheckBoolean  (CString p_value);
+  static    CString   CheckDate     (CString p_value);
+  static    CString   CheckBase64   (CString p_value);
+  static    CString   CheckDouble   (CString p_value,bool p_specials);
+  static    CString   CheckDateTime (CString p_value,bool p_explicit);
+  static    CString   CheckDatePart (CString p_value);
+  static    CString   CheckDuration (CString p_value);
+  static    CString   CheckTimePart (CString p_value); 
+  static    CString   CheckTime     (CString p_value);
+  static    CString   CheckTimeZone (CString p_value);
+  static    CString   CheckStampPart(CString p_value);
+  static    CString   CheckGregDay  (CString p_value);
+  static    CString   CheckGregMonth(CString p_value);
+  static    CString   CheckGregYear (CString p_value);
+  static    CString   CheckGregMD   (CString p_value);
+  static    CString   CheckGregYM   (CString p_value);
+  static    CString   CheckHexBin   (CString p_value);
+  static    CString   CheckLong     (CString p_value);
+  static    CString   CheckShort    (CString p_value);
+  static    CString   CheckByte     (CString p_value);
+  static    CString   CheckNNegInt  (CString p_value);
+  static    CString   CheckPosInt   (CString p_value);
+  static    CString   CheckUnsLong  (CString p_value);
+  static    CString   CheckUnsShort (CString p_value);
+  static    CString   CheckUnsByte  (CString p_value);
+  static    CString   CheckNonPosInt(CString p_value);
+  static    CString   CheckNegInt   (CString p_value);
+  static    CString   CheckNormal   (CString p_value);
+  static    CString   CheckToken    (CString p_value);
+  static    CString   CheckNMTOKEN  (CString p_value);
+  static    CString   CheckName     (CString p_value);
+  static    CString   CheckNCName   (CString p_value);
+  static    CString   CheckQName    (CString p_value);
+  static    CString   CheckNMTOKENS (CString p_value);
+  static    CString   CheckNames    (CString p_value);
 
   CString   m_name;                     // Name of the restriction
   CString   m_baseType;                 // Base XSD type of the restriction

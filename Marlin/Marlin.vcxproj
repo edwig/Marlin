@@ -364,6 +364,7 @@
     <ClInclude Include="WebServiceServer.h" />
     <ClInclude Include="WinINETError.h" />
     <ClInclude Include="WSDLCache.h" />
+    <ClInclude Include="XMLDataType.h" />
     <ClInclude Include="XMLMessage.h" />
     <ClInclude Include="XMLParser.h" />
     <ClInclude Include="XMLParserImport.h" />

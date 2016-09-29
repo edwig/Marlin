@@ -557,5 +557,8 @@
     <ClInclude Include="WebConfigIIS.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="XMLDataType.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

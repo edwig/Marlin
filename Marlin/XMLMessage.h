@@ -27,36 +27,7 @@
 //
 #pragma once
 #include <deque>
-
-// XML DATA TYPES (SDT)
-#define XDT_String      0x000001
-#define XDT_Integer     0x000002
-#define XDT_Boolean     0x000004
-#define XDT_Double      0x000008
-#define XDT_Base64      0x000010
-#define XDT_DateTime    0x000020
-#define XDT_CDATA       0x000040
-#define XDT_Complex     0x000080
-
-#define XDT_Mask        0x0000ff
-
-// WSDL Options (USE ONLY ONE (1) !!)
-#define WSDL_Mandatory  0x000100
-#define WSDL_Optional   0x000200
-#define WSDL_ZeroOne    0x000400
-#define WSDL_OnceOnly   0x000800
-#define WSDL_ZeroMany   0x001000
-#define WSDL_OneMany    0x002000
-#define WSDL_Choice     0x004000 // Choice
-#define WSDL_Sequence   0x008000 // Exact sequence
-
-#define WSDL_Mask       0x00ff00
-#define WSDL_MaskOrder  0x00C000
-#define WSDL_MaskField  0x003F00
-
-
-typedef unsigned short ushort;
-typedef ushort   XmlDataType;
+#include "XMLDataType.h"
 
 // XML coding of the message
 enum class XMLEncoding
@@ -115,6 +86,7 @@ class XMLRestriction;
 // Different types of maps for the server message
 using XmlElementMap = std::deque<XMLElement*>;
 using XmlAttribMap  = std::deque<XMLAttribute>;
+using ushort        = unsigned short;
 
 // SOAP parameters and attributes are stored in these
 class XMLAttribute
