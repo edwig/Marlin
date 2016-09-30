@@ -967,167 +967,173 @@ XMLRestriction::CheckNames(CString p_value)
 // [-] P T nM[nS[.S]]
 // [-] P T nS[.S]
 CString
-XMLRestriction::CheckDuration(CString p_value)
+XMLRestriction::CheckDuration(CString p_value,int& p_type)
 {
-  CString result;
-  CString value(p_value);
-  int year = 0, month = 0, day = 0;
-  int hour = 0, min   = 0, sec = 0;
-  int ch = 0;
+  bool negative    = false;
+  bool didTime     = false;
+  int  value       = 0;
+  int  fraction    = 0;
+  char marker      = 0;
+  char firstMarker = 0;
+  char lastMarker  = 0;
+  CString duration(p_value);
 
-  value.Trim();
-  // Check for legal negative value
-  if(value.GetAt(0) == '-')
-  {
-    value = value.Mid(1);
-  }
-  // We must now find a 'P' (period)
-  if(value.GetAt(0) != 'P')
-  {
-    return "duration has no starting P(eriod) marker: " + p_value;
-  }
-  value = value.Mid(1);
+  // Reset type
+  p_type = 0;
 
-  // Find 'T' marker?
-  if(value.GetAt(0) != 'T')
+  // Parse the negative sign
+  duration.Trim();
+  if(duration.Left(1) == "-")
   {
-    // Must find year-month-day
-    day = atoi(value);
-    while(isdigit(value.GetAt(0))) value = value.Mid(1);
-    ch = value.GetAt(0);
-    if(ch == 'D')
+    negative = true;
+    duration = duration.Mid(1);
+  }
+
+  // Must see a 'P' for period
+  if(duration.Left(1) != 'P')
+  {
+    return false; // Leave interval at NULL
+  }
+  duration = duration.Mid(1);
+
+  // Scan year/month/day/hour/min/second/fraction values
+  while(ScanDurationValue(duration,value,fraction,marker,didTime))
+  {
+    switch(marker)
     {
-      value = value.Mid(1);
-    }  
-    else
+      case 'Y': break;
+      case 'D': break;
+      case 'H': break;
+      case 'M': if(didTime)
+                {
+                  marker = 'm'; // minutes!
+                }
+                break;
+      case 'S': break;
+      default:  // Illegal string, leave interval at NULL
+                return "Illegal field markers in duration: " + p_value;
+    }
+    // Getting first/last marker
+    lastMarker = marker;
+    if(firstMarker == 0)
     {
-      if(ch == 'M')
-      {
-        month = day;
-        value = value.Mid(1);
-        if(!value.IsEmpty())
-        {
-          day = atoi(value);
-          while(isdigit(value.GetAt(0))) value = value.Mid(1);
-          ch = value.GetAt(0);
-          if(ch == 'D')
-          {
-            value = value.Mid(1);
-          }
-          else
-          {
-            return "duration with incorrect PnMnD value: " + p_value;
-          }
-        }
-      }
-      else if(ch == 'Y')
-      {
-        year = day;
-        value = value.Mid(1);
-        if(!value.IsEmpty())
-        {
-          month = atoi(value);
-          while(isdigit(value.GetAt(0))) value = value.Mid(1);
-          ch = value.GetAt(0);
-          if(ch == 'M')
-          {
-            value = value.Mid(1);
-            if(!value.IsEmpty())
-            {
-              day = atoi(value);
-              while(isdigit(value.GetAt(0))) value = value.Mid(1);
-              ch = value.GetAt(0);
-              if(ch == 'D')
-              {
-                value = value.Mid(1);
-              }
-              else
-              {
-                return "duration with incorrect PnYnMnD value: " + p_value;
-              }
-            }
-          }
-          else
-          {
-            return "duration with incorrect PnYnM value: " + p_value;
-          }
-        }
-      }
-      else
-      {
-        return "duration with incorrect PnX value: " + p_value;
-      }
+      firstMarker = marker;
     }
   }
 
-  if(value.IsEmpty())
-  {
-    return result;
-  }
-
-  // Time marker to find
-  if(value.GetAt(0) != 'T')
-  {
-    return "duration missing T(ime) marker: " + p_value;
-  }
-  value = value.Mid(1);
-
-  sec = atoi(value);
-  while(isdigit(value.GetAt(0))) value = value.Mid(1);
-  ch = value.GetAt(0);
-  if(ch == '.')
-  {
-    value = value.Mid(1);
-  }
+  // Finding the interval type
+       if(firstMarker == 'Y' && lastMarker == 'Y') p_type = 1;
+  else if(firstMarker == 'M' && lastMarker == 'M') p_type = 2;
+  else if(firstMarker == 'Y' && lastMarker == 'M') p_type = 3;
+  else if(firstMarker == 'D' && lastMarker == 'D') p_type = 4;
+  else if(firstMarker == 'H' && lastMarker == 'H') p_type = 5;
+  else if(firstMarker == 'm' && lastMarker == 'm') p_type = 6;
+  else if(firstMarker == 'S' && lastMarker == 'S') p_type = 7;
+  else if(firstMarker == 'D' && lastMarker == 'H') p_type = 8;
+  else if(firstMarker == 'D' && lastMarker == 'm') p_type = 9;
+  else if(firstMarker == 'D' && lastMarker == 'S') p_type = 10;
+  else if(firstMarker == 'H' && lastMarker == 'm') p_type = 11;
+  else if(firstMarker == 'H' && lastMarker == 'S') p_type = 12;
+  else if(firstMarker == 'm' && lastMarker == 'S') p_type = 13;
   else
   {
-    if(ch == 'M')
-    {
-      min = sec;
-      value = value.Mid(1);
-      if(!value.IsEmpty())
-      {
-        sec = atoi(value);
-        while(isdigit(value.GetAt(0))) value = value.Mid(1);
-        ch = value.GetAt(0);
-        if(ch == '.')
-        {
-          value = value.Mid(1);
-        }
-        else if(ch == 'S')
-        {
-          goto endcheck;
-        }
-      }
-    }
-    else
-    {
-      if(ch == 'H')
-      {
-        hour = sec;
-        value = value.Mid(1);
-        min = atoi(value);
-        while(isdigit(value.GetAt(0))) value = value.Mid(1);
-        ch = value.GetAt(0);
-        if(ch == 'M')
-        {
-        
-        }
-      }
-      else
-      {
-        return "duration with wrong time TnX: " + p_value;
-      }
-    }
-  }
-  // Seconds fractions to find
-  while(isdigit(value.GetAt(0))) value = value.Mid(1);
-endcheck:
-  if(value != "S")
-  {
-    return "duration with residue characters: " + p_value;
+    // Beware: XML duration has combinations that are NOT compatible
+    // with the SQL definition of an interval, like Month-to-Day
+    return "duration has incompatible field values: " + p_value;
   }
   return "";
+}
+
+bool
+XMLRestriction::ScanDurationValue(CString& p_duration
+                                 ,int&     p_value
+                                 ,int&     p_fraction
+                                 ,char&    p_marker
+                                 ,bool&    p_didTime)
+{
+  // Reset values
+  p_value  = 0;
+  p_marker = 0;
+  bool found = false;
+
+  // Check for empty string
+  if(p_duration.IsEmpty())
+  {
+    return false;
+  }
+
+  // Scan for beginning of time part
+  if(p_duration.GetAt(0) == 'T')
+  {
+    p_didTime  = true;
+    p_duration = p_duration.Mid(1);
+  }
+
+  // Scan a number
+  while(isdigit(p_duration.GetAt(0)))
+  {
+    found = true;
+    p_value *= 10;
+    p_value += p_duration.GetAt(0) - '0';
+    p_duration = p_duration.Mid(1);
+  }
+
+  if(p_duration.GetAt(0) == '.')
+  {
+    p_duration = p_duration.Mid(1);
+
+    int frac = 9;
+    while(isdigit(p_duration.GetAt(0)))
+    {
+      --frac;
+      p_fraction *= 10;
+      p_fraction += p_duration.GetAt(0) - '0';
+      p_duration  = p_duration.Mid(1);
+    }
+    p_fraction *= (int) pow(10,frac);
+  }
+
+  // Scan a marker
+  if(isalpha(p_duration.GetAt(0)))
+  {
+    p_marker = p_duration.GetAt(0);
+    p_duration = p_duration.Mid(1);
+  }
+
+  // True if both found, and fraction only found for seconds
+  return (p_fraction && p_marker == 'S') ||
+         (p_fraction == 0 && found && p_marker > 0);
+}
+
+CString
+XMLRestriction::CheckDuration(CString p_value)
+{
+  int p_type = 0;
+  return CheckDuration(p_value,p_type);
+}
+
+CString
+XMLRestriction::CheckYearMonth(CString p_value)
+{
+  int p_type = 0;
+  CString result = CheckDuration(p_value,p_type);
+  if(result.IsEmpty() && (p_type < 1 || 3 < p_type))
+  {
+    result = "yearMonthDuration out of bounds: " + p_value;
+  }
+  return result;
+}
+
+CString
+XMLRestriction::CheckDaySecond(CString p_value)
+{
+  int p_type = 0;
+  CString result = CheckDuration(p_value,p_type);
+  if(result.IsEmpty() && (p_type < 4 || 13 < p_type))
+  {
+    result = "dayTimeDuration out of bounds: " + p_value;
+  }
+  return result;
 }
 
 CString
@@ -1155,6 +1161,9 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,CString p_value)
     case XDT_DateTime:      result = CheckDateTime (p_value,false); break;
     case XDT_DateTimeStamp: result = CheckDateTime (p_value,true);  break;
     case XDT_Float:         result = CheckDouble   (p_value,true);  break;
+    case XDT_Duration:      result = CheckDuration (p_value);       break;
+    case XDT_DayTimeDur:    result = CheckDaySecond(p_value);       break;
+    case XDT_YearMonthDur:  result = CheckYearMonth(p_value);       break;
     case XDT_GregDay:       result = CheckGregDay  (p_value);       break;
     case XDT_GregMonth:     result = CheckGregMonth(p_value);       break;
     case XDT_GregYear:      result = CheckGregYear (p_value);       break;
@@ -1183,9 +1192,6 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,CString p_value)
     case XDT_NMTOKENS:      result = CheckNMTOKENS (p_value);       break;
     case XDT_ENTITIES:      result = CheckNames    (p_value);       break;
     case XDT_IDREFS:        result = CheckNames    (p_value);       break;
-    case XDT_Duration:      result = CheckDuration (p_value);       break;
-    case XDT_DayTimeDur:    result = CheckDuration (p_value);       break;
-    case XDT_YearMonthDur:  result = CheckDuration (p_value);       break;
     default:                break;
   }
   return result;

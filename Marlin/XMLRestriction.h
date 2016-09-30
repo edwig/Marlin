@@ -89,6 +89,8 @@ private:
   static    CString   CheckDateTime (CString p_value,bool p_explicit);
   static    CString   CheckDatePart (CString p_value);
   static    CString   CheckDuration (CString p_value);
+  static    CString   CheckYearMonth(CString p_value);
+  static    CString   CheckDaySecond(CString p_value);
   static    CString   CheckTimePart (CString p_value); 
   static    CString   CheckTime     (CString p_value);
   static    CString   CheckTimeZone (CString p_value);
@@ -117,6 +119,8 @@ private:
   static    CString   CheckQName    (CString p_value);
   static    CString   CheckNMTOKENS (CString p_value);
   static    CString   CheckNames    (CString p_value);
+  static    CString   CheckDuration (CString p_value,int& p_type);
+  static    bool      ScanDurationValue(CString& p_duration,int& p_value,int& p_fraction,char& p_marker,bool& p_didTime);
 
   CString   m_name;                     // Name of the restriction
   CString   m_baseType;                 // Base XSD type of the restriction
