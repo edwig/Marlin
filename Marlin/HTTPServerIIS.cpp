@@ -43,6 +43,12 @@
 #include "ConvertWideString.h"
 #include <httpserv.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Logging macro's
 #define DETAILLOG1(text)          if(m_detail && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(m_detail && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
@@ -248,7 +254,54 @@ HTTPServerIIS::Run()
 void
 HTTPServerIIS::StopServer()
 {
+  AutoCritSec lock(&m_eventLock);
+  DETAILLOG1("Received a StopServer request");
+
+  // See if we are running at all
+  if(m_running == false)
+  {
+    return;
+  }
+
+  // Try to remove all event streams
+  for(auto& it : m_eventStreams)
+  {
+    // SEND OnClose event
+    ServerEvent* event = new ServerEvent("close");
+    SendEvent(it.second->m_port,it.second->m_baseURL,event);
+  }
+  // Try to remove all event streams
+  while(!m_eventStreams.empty())
+  {
+    EventStream* stream = m_eventStreams.begin()->second;
+    CloseEventStream(stream);
+  }
+
+  // See if we have a running server-push-event heartbeat monitor
+  if(m_eventEvent)
+  {
+    // Explicitly pulse the event heartbeat monitor
+    // this abandons the monitor in one go!
+    DETAILLOG1("Abandon the server-push-events hartbeat monitor");
+    SetEvent(m_eventEvent);
+  }
+
+  // mainloop will stop on next iteration
   m_running = false;
+
+  // Wait for a maximum of 30 seconds for the queue to stop
+  // All server action should be ended after that.
+  for(int ind = 0; ind < 300; ++ind)
+  {
+    Sleep(100);
+    // Wait till the  event Monitor has stopped
+    if(m_eventMonitor == nullptr)
+    {
+      break;
+    }
+  }
+  // Cleanup the sites and groups
+  Cleanup();
 }
 
 // Create a site to bind the traffic to

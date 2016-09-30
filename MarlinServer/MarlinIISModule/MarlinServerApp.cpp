@@ -3,6 +3,12 @@
 #include "MarlinModule.h"
 #include "TestServer.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // The one and only server object
 MarlinServerApp theServer;
 

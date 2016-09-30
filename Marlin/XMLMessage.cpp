@@ -427,12 +427,12 @@ XMLMessage::PrintElements(XMLElement* p_element
 
       switch(attrib.m_type & XDT_Mask)
       {
-        default:              temp.Format("\"%s\"",attrib.m_value);
-                              break;
-        case XDT_String:  
-        case XDT_AnyURI:
-        case XDT_NormString:  temp.Format("\"%s\"",PrintXmlString(attrib.m_value,p_utf8)); 
-                              break;
+        default:                    temp.Format("\"%s\"",attrib.m_value);
+                                    break;
+        case XDT_String:            // Fall through
+        case XDT_AnyURI:            // Fall through
+        case XDT_NormalizedString:  temp.Format("\"%s\"",PrintXmlString(attrib.m_value,p_utf8)); 
+                                    break;
       }
       message += temp;
     }
@@ -550,13 +550,13 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   // print element value
   switch(p_element->m_type & XDT_Mask)
   {
-    default:              temp.Format("%s",value);
-                          break;
-    case XDT_CDATA:
-    case XDT_String: 
-    case XDT_AnyURI:
-    case XDT_NormString:  temp = JSONvalue::FormatAsJsonString(value,p_utf8);
-                          break;
+    default:                    temp.Format("%s",value);
+                                break;
+    case XDT_CDATA:             // Fall through
+    case XDT_String:            // Fall through
+    case XDT_AnyURI:            // Fall through
+    case XDT_NormalizedString:  temp = JSONvalue::FormatAsJsonString(value,p_utf8);
+                                break;
   }
   message += temp + newline;
 

@@ -30,6 +30,12 @@
 #pragma warning (disable:4091)
 #include <httpserv.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 #define DETAILLOG(s1,s2,s3)    p_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, true,"%-35s: %-25s: %s",(s1),(s2),(s3))
 
 static void

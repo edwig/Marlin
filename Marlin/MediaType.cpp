@@ -29,6 +29,12 @@
 #include "MediaType.h"
 #include "EnsureFile.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 MediaType::MediaType(CString p_extension,CString p_contentType)
           :m_extension(p_extension)
           ,m_contentType(p_contentType)

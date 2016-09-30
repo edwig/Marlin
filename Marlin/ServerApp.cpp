@@ -28,6 +28,12 @@
 #include "stdafx.h"
 #include "ServerApp.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Pointer to the one and only server object
 // Meant to be run in IIS and not as a stand alone HTTP server!!
 ServerApp* g_server = nullptr;
