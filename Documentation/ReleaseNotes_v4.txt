@@ -14,3 +14,104 @@ CHANGES IN VERSION 4.0
    has now been split in two. These two parts are:
    HTTPServerMarlin  : This is the 'stand alone' server from previous versions
    HTTPServerIIS     : This is the 'integrated' IIS module.
+
+   Furthermore there important new entry points:
+   MarlinModule      : This is the module that's called by the IIS W3SVC service first
+   ServerApp         : The general app, derive your application from this object. START HERE!
+   WebConfigIIS      : The reading of the IIS configuration files
+
+   If you do not wish to use the IIS option, derive your server from "HTTServerMarlin" when
+   upgrading to this version of the Marlin software.
+
+2) Due to the different workings of IIS, if you want to run in that mode, the web.config of Marlin
+   will not be read. Instead the "ApplicationHost.Config" (on C:\Windows\System32\inetsrv\config)
+   and the web.config (in C:\inetpub\wwwroot\YourSite\) will be read.
+
+   Functionallity               Where to find
+   -------------------------    --------------------------------------------
+   Location of the log file     <log><centralW3CLogFile><directory>
+   Logging is on or off         <log><centralW3CLogFile><enabled>
+   Site's root directory        <site><VirtualDirectory><physicalPath>
+   Protocol binding             <site><binding><bindingInformation>
+   Protocol                     <site><binding><protocol>
+   Secure site (HTTPS)          <site><binding><sslFlags>
+   Streaming limit (in bytes)   <system.WebServer><requestLimits><maxAllowedContentLength>
+   Basic authentication         <location><authentication><basicAuthentication><enabled>
+   Basic realm                  <location><authentication><basicAuthentication><realm>
+   Basic domain                 <location><authentication><basicAuthentication><defaultLogonDomain>
+   Digest authentication        <location><authentication><digestAuthentication><enabled>
+   Digest realm                 <location><authentication><digestAuthentication><realm>
+   Windows authentication       <location><authentication><windowsAuthentication><enabled>
+   NLTM caching                 <location><authentication><windowsAuthentication><authPersistSingleRequest>
+   NTLM authentication          <location><authentication><windowsAuthentication><providers><NTLM>
+   Negotiate authentication     <location><authentication><windowsAuthentication><providers><Negotiate>
+   Kerberos authentication      <location><authentication><windowsAuthentication><providers><Negotiate:Kerberos>
+
+   CAVEAT: Many options of the Marlin web.config are **NOT** supported in IIS mode
+           To use these options, incorporate them in the config file of your product!!
+           And let the product set the options on the site by use of "Set...." methods.
+
+3) The WSDL checking of incoming SOAP services are now extended with all XSD datatypes as
+   defined by the W3C standard for XML schema's "http://www.w3.org/TR/xmlschema11-2/"
+   Newly understood datatypes are:
+
+   XML Schema data type           Implementation
+   ------------------------------ -----------------------------------------------------
+   anyURI                         Any valid 'crackable' URL
+   date                           Gregorian dates between 1-1-1 and 31-12-9999
+   dateTimeStamp                  Gregorian date + time + optional timezone
+   decimal                        Any decimal number (without exponent)
+   long                           32 bits signed integer
+   int                            32 bits signed integer
+   short                          16 bits signed integer
+   byte                           8  bits signed integer
+   nonNegativeNumber              32 bits positive integer or 0 (zero)
+   positiveNumber                 32 bits positive integer (> 0)
+   unsignedLong                   32 bits unsigned integer
+   unsignedInt                    32 bits unsigned integer
+   unsignedShort                  16 bits unsigned integer
+   unsignedByte                   8  bits unsigned integer
+   nonPositiveInteger             32 bits negative integer or 0 (zero)
+   negativeInteger                32 bits negative integer (< 0)
+   duration                       Interval string (+/PnYnMnDTnHnMn.nS)
+   dayTimeDuration                Interval string day to second
+   yearMonthDuration              Interval string year to month
+   float                          IEEE floating point with 7 decimals
+   gDay                           Gregorian calendar day in the month (1-31)
+   gMonth                         Gregorian month in the year (1-12)
+   gMonthDay                      Gregorian month and day in the year
+   gYear                          Gregorian year
+   gYearMonth                     Gregorian year and month
+   hexBinary                      Hexadecimal representation of a binary
+   NOTATION                       Enumeration of XML entities
+   QName                          Full qualified name with namespace (one colon!)
+   normalizedString               String without red space (cr-lf-tab)
+   token                          Identifier name
+   language                       Language code
+   name                           Name with check on first char
+   NCName                         Non-colonized name
+   ENTITY                         Non-colonized name, no special implementation!
+   ID                             Non-colonized name, no special implementation!
+   IDREF                          Non-colonized name, no special implementation!
+   NMTOKEN                        Token, no special implementation!
+   time                           Time string as in "HH:MM:SS"
+   ENTITIES                       List of ENTITY,  seperated by one space
+   IDREFS                         List of IDREF,   seperated by one space
+   NMTOKENS                       List of NMTOKEN, seperated by one space
+   anyType                        Any type in this list
+   anySimpleType                  Any type in this list
+   anyAtomicType                  Any type in this list
+
+   The following datatypes were already supported in previous version:
+
+   XML Schema data type           Implementation
+   ------------------------------ -----------------------------------------------------
+   string                         String of characters
+   integer                        32 bits signed integer
+   boolean                        Boole logic as in: true or false, 1 or 0
+   double                         IEEE floating point with 15 decimal places
+   base64Binary                   Base64 representation of binary
+   dateTime                       "YYYY-MM-DDTHH:MM:SS.S" timestamp string + timezone
+
+   NB: The name of "XDT_Base64" has been changed to "XDT_Base64Binary"
+       so check your sourcecode for this change!
