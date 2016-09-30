@@ -45,21 +45,6 @@ public:
 
   // OPTIONAL: Set the webroot of the site
   virtual bool SetWebroot(CString p_webroot);
-  // OPTIONAL: Set XFrame options on server answer
-  virtual void SetXFrameOptions(XFrameOption p_option,CString p_uri);
-  // OPTIONAL: Set Strict Transport Security (HSTS)
-  virtual void SetStrictTransportSecurity(unsigned p_maxAge,bool p_subDomains);
-  // OPTIONAL: Set X-Content-Type options
-  virtual void SetXContentTypeOptions(bool p_nosniff);
-  // OPTIONAL: Set protection against X-Site scripting
-  virtual void SetXSSProtection(bool p_on,bool p_block);
-  // OPTIONAL: Set cache control
-  virtual void SetBlockCacheControl(bool p_block);
-
-  // FUNCTIONS
-
-  // Add all optional extra headers of this site
-  virtual void AddSiteOptionalHeaders(UKHeaders& p_headers);
 
 private:
   // Initialize the site from automatic settings in the config

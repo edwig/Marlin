@@ -167,7 +167,7 @@ HTTPSiteIIS::SetWebroot(CString p_webroot)
 
 // Getting the sites directory within the IIS rootdir
 // /Site/         -> "\\Site\\"
-// /Site/Subsite/ -> "\\Site\\Site\\Subsite\\"
+// /Site/Subsite/ -> "\\Site\\"
 CString 
 HTTPSiteIIS::GetIISSiteDir()
 {
@@ -176,56 +176,9 @@ HTTPSiteIIS::GetIISSiteDir()
   int pos1 = dir.Find('/',1);
   if(pos1 < dir.GetLength() - 1)
   {
-    dir = dir.Left(pos1) + dir;
+    dir = dir.Left(pos1 + 1);
   }
   dir.Replace("/","\\");
   return dir;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//
-// HEADER SECTION DOES NOTHING FOR IIS
-// USE THE RESPONSE HEADER REGISTRATION OF IIS !!
-//
-//////////////////////////////////////////////////////////////////////////
-
-void 
-HTTPSiteIIS::SetXFrameOptions(XFrameOption p_option,CString p_uri)
-{
-  UNREFERENCED_PARAMETER(p_option);
-  UNREFERENCED_PARAMETER(p_uri);
-}
-
-void
-HTTPSiteIIS::SetStrictTransportSecurity(unsigned p_maxAge,bool p_subDomains)
-{
-  UNREFERENCED_PARAMETER(p_maxAge);
-  UNREFERENCED_PARAMETER(p_subDomains);
-}
-
-void
-HTTPSiteIIS::SetXContentTypeOptions(bool p_nosniff)
-{
-  UNREFERENCED_PARAMETER(p_nosniff);
-}
-
-void
-HTTPSiteIIS::SetXSSProtection(bool p_on,bool p_block)
-{
-  UNREFERENCED_PARAMETER(p_on);
-  UNREFERENCED_PARAMETER(p_block);
-}
-
-void
-HTTPSiteIIS::SetBlockCacheControl(bool p_block)
-{
-  UNREFERENCED_PARAMETER(p_block);
-}
-
-// Add all necessary extra headers to the response
-void
-HTTPSiteIIS::AddSiteOptionalHeaders(UKHeaders& p_headers)
-{
-  UNREFERENCED_PARAMETER(p_headers);
-}

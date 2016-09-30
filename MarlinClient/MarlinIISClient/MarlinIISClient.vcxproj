@@ -207,6 +207,7 @@
     <ClInclude Include="TestClientIIS.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\TestsetClient\TestBaseSite.cpp" />
     <ClCompile Include="..\TestsetClient\TestClientCert.cpp" />
     <ClCompile Include="..\TestsetClient\TestCompression.cpp" />
     <ClCompile Include="..\TestsetClient\TestContract.cpp" />

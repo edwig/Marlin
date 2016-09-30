@@ -174,15 +174,15 @@ public:
   // OPTIONAL: Set optional site payload, so you can hide your own context
   void            SetPayload(void* p_payload);
   // OPTIONAL: Set XFrame options on server answer
-  virtual void    SetXFrameOptions(XFrameOption p_option,CString p_uri) = 0;
+  void            SetXFrameOptions(XFrameOption p_option,CString p_uri);
   // OPTIONAL: Set Strict Transport Security (HSTS)
-  virtual void    SetStrictTransportSecurity(unsigned p_maxAge,bool p_subDomains) = 0;
+  void            SetStrictTransportSecurity(unsigned p_maxAge,bool p_subDomains);
   // OPTIONAL: Set X-Content-Type options
-  virtual void    SetXContentTypeOptions(bool p_nosniff) = 0;
+  void            SetXContentTypeOptions(bool p_nosniff);
   // OPTIONAL: Set protection against X-Site scripting
-  virtual void    SetXSSProtection(bool p_on,bool p_block) = 0;
+  void            SetXSSProtection(bool p_on,bool p_block);
   // OPTIONAL: Set cache control
-  virtual void    SetBlockCacheControl(bool p_block) = 0;
+  void            SetBlockCacheControl(bool p_block);
   // OPTIONAL: Set send in UTF-16 Unicode
   void            SetSendUnicode(bool p_unicode);
   // OPTIONAL: Set prepend SOAP message with BOM
@@ -255,7 +255,7 @@ public:
                     ,CString          p_string
                     ,CString          p_detail);
   // Add all optional extra headers of this site
-  virtual void AddSiteOptionalHeaders(UKHeaders& p_headers) = 0;
+  void AddSiteOptionalHeaders(UKHeaders& p_headers);
   // Send responses
   bool SendResponse(HTTPMessage* p_message);
   bool SendResponse(SOAPMessage* p_message);
