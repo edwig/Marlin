@@ -84,7 +84,7 @@ int TestPatching(HTTPClient* p_client)
 
   // URL with resource and parameters
   CString url;
-  url.Format("http://%s:%d/MarlinTest/Patching/FirstPatchTest?type=ab&rhesus=neg",MARLIN_HOST,MARLIN_SERVER_PORT);
+  url.Format("http://%s:%d/MarlinTest/Patching/FirstPatchTest?type=ab&rhesus=neg",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Test 1: Send through a HTTP-VERB Tunnel
   xprintf("TESTING STANDARD HTTP MESSAGE TO /Key2Test/Patching/\n");

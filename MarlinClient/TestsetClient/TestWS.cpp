@@ -352,7 +352,7 @@ inline CString
 CreateURL(CString p_extra)
 {
   CString url;
-  url.Format("http://%s:%d/MarlinTest/%s",MARLIN_HOST,MARLIN_SERVER_PORT,p_extra);
+  url.Format("http://%s:%d/MarlinTest/%s",MARLIN_HOST,TESTING_HTTP_PORT,p_extra);
   return url;
 }
 

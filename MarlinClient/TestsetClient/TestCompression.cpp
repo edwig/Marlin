@@ -38,7 +38,7 @@ static char THIS_FILE[] = __FILE__;
 int TestCompression(HTTPClient* p_client)
 {
   CString url;
-  url.Format("http://%s:%d/MarlinTest/Compression/Releasenotes_v1.txt",MARLIN_HOST,MARLIN_SERVER_PORT);
+  url.Format("http://%s:%d/MarlinTest/Compression/Releasenotes_v1.txt",MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_get,url);
   msg.SetContentType("text/plain");
 

@@ -338,7 +338,7 @@ int TestJsonData(HTTPClient* p_client)
 {
   int errors = 0;
   CString url;
-  url.Format("http://%s:%d/MarlinTest/Data?test=2&size=medium%%20large",MARLIN_HOST,MARLIN_SERVER_PORT);
+  url.Format("http://%s:%d/MarlinTest/Data?test=2&size=medium%%20large",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Test standard JSON
   xprintf("TESTING STANDARD JSON MESSAGE TO /MarlinTest/Data/\n");

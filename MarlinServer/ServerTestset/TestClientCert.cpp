@@ -81,7 +81,7 @@ int TestClientCertificate(HTTPServer* p_server)
 
   // Create HTTP site to listen to "https://+:1222/SecureClientCert/"
   // 
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,1222,url);
+  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,TESTING_CLCERT_PORT,url);
   if(site)
   {
     // SUMMARY OF THE TEST

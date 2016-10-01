@@ -155,7 +155,7 @@ TestEvents(HTTPClient* p_client)
   xprintf("===================================================================\n");
 
   CString url;
-  url.Format("http://%s:%d/MarlinTest/Events/",MARLIN_HOST,MARLIN_SERVER_PORT);
+  url.Format("http://%s:%d/MarlinTest/Events/",MARLIN_HOST,TESTING_HTTP_PORT);
 
   HTTPClient client;
   client.SetLogging(p_client->GetLogging());

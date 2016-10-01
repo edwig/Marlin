@@ -203,10 +203,12 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\TestsetClient\TestClient.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="TestClient.h" />
+    <ClInclude Include="TestPorts.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\TestsetClient\TestClient.cpp" />
     <ClCompile Include="..\TestsetClient\TestClientCert.cpp" />
     <ClCompile Include="..\TestsetClient\TestCompression.cpp" />
     <ClCompile Include="..\TestsetClient\TestContract.cpp" />
@@ -227,7 +229,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TestClient.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MarlinClient.rc" />

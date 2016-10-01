@@ -186,8 +186,8 @@ int TestContract(HTTPClient* p_client,bool p_json)
   CString wsdl;
   CString contract("http://interface.marlin.org/testing/");
 
-  url .Format("http://%s:%d/MarlinTest/TestInterface/",              MARLIN_HOST,MARLIN_SERVER_PORT);
-  wsdl.Format("http://%s:%d/MarlinTest/TestInterface/MarlinWeb.wsdl",MARLIN_HOST,MARLIN_SERVER_PORT);
+  url .Format("http://%s:%d/MarlinTest/TestInterface/",              MARLIN_HOST,TESTING_HTTP_PORT);
+  wsdl.Format("http://%s:%d/MarlinTest/TestInterface/MarlinWeb.wsdl",MARLIN_HOST,TESTING_HTTP_PORT);
   // Json is simultane on different site
   if(p_json)
   {

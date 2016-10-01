@@ -68,7 +68,7 @@ int TestFormData(HTTPClient* p_client)
   buffer.SetFileExtensions(true);
 
   CString url;
-  url.Format("http://%s:%d/MarlinTest/FormData",MARLIN_HOST,MARLIN_SERVER_PORT);
+  url.Format("http://%s:%d/MarlinTest/FormData",MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_post,url);
   msg.SetMultiPartFormData(&buffer);
 

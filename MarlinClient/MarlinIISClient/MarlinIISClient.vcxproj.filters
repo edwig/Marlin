@@ -18,7 +18,10 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TestClientIIS.h">
+    <ClInclude Include="..\TestsetClient\TestClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestPorts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,13 +71,13 @@
     <ClCompile Include="..\TestsetClient\TestWS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestClientIIS.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\TestsetClient\TestSecureSite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\TestsetClient\TestBaseSite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
