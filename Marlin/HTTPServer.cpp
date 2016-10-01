@@ -1257,8 +1257,7 @@ HTTPServer::CheckEventStreams()
     // we send a ":keepalive" comment to the clients
     if((pulse - stream.m_lastPulse) > (m_eventKeepAlive - 500))
     {
-      // TODO
-      // stream.m_alive = SendResponseEventBuffer(stream.m_requestID,keepAlive.GetString(),keepAlive.GetLength());
+      stream.m_alive = SendResponseEventBuffer(stream.m_requestID,keepAlive.GetString(),keepAlive.GetLength());
       stream.m_lastPulse = pulse;
       ++number;
     }

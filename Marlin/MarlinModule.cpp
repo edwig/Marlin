@@ -75,15 +75,27 @@ WebConfigIIS      g_config;                   // Global ApplicationHost.config
 //
 //////////////////////////////////////////////////////////////////////////
 
-// RegisterModule must be exported through the linker option
-// /EXPORT:RegisterModule
+// IIS calls as a C program (no function decoration in object and linker)
+extern "C"
+{
+// RegisterModule must be exported from the DLL in one of three ways
+// 1) Through a *.DEF export file with a LIBRARY definition
+//    (but the module name can change!)
+// 2) Through the extra linker option "/EXPORT:RegisterModule" 
+//    (but can be forgotten if you build a different configuration)
+// 3) Through the __declspec(dllexport) modifier in the source
+//    This is the most stable way of exporting from a DLL
 //
+__declspec(dllexport) 
 HRESULT _stdcall 
 RegisterModule(DWORD                        p_version
               ,IHttpModuleRegistrationInfo* p_moduleInfo
               ,IHttpServer*                 p_server)
 {
+  // Declaration of the start log function
   void StartLog(DWORD p_version);
+
+  // What we want to have from IIS
   DWORD globalEvents = GL_APPLICATION_START |     // Starting application pool
                        GL_APPLICATION_STOP;       // Stopping application pool
   DWORD moduleEvents = RQ_BEGIN_REQUEST |         // First point to intercept the IIS integrated pipeline
@@ -94,13 +106,15 @@ RegisterModule(DWORD                        p_version
   StartLog(p_version);
 
   // Preserving the server in a global pointer
-  if(g_iisServer == nullptr && p_server != nullptr)
+  if(g_iisServer == nullptr)
   {
-    if(g_iisServer)
-    {
-      ERRORLOG("MarlinIISModule registered more than once in the global IIS module registry!");
-    }
     g_iisServer = p_server;
+  }
+  else
+  {
+    // Already registered
+    ERRORLOG("MarlinIISModule registered more than once in the global IIS module registry!");
+    return S_OK;
   }
 
   // Register global notifications to process
@@ -144,7 +158,7 @@ RegisterModule(DWORD                        p_version
     ERRORLOG("Setting request notifications for a MarlinModule FAILED");
     return hr;
   }
-  // Registration complete. Possibly not with highest priority.
+  // Registration complete. Possibly NOT with highest priority.
   return S_OK;
 }
 
@@ -164,15 +178,18 @@ StartLog(DWORD p_version)
     // Read in ApplicationHost.Config
     g_config.ReadConfig();
 
+    // Create the directory for the logfile
     CString logfile = g_config.GetLogfilePath() + "\\Marlin\\Logfile.txt";
     EnsureFile ensure(logfile);
     ensure.CheckCreateDirectory();
 
+    // Create the logfile
     g_analysisLog = new LogAnalysis(MODULE_NAME);
     g_analysisLog->SetDoLogging(g_config.GetDoLogging());
     g_analysisLog->SetLogFilename(logfile);
     g_analysisLog->SetLogRotation(true);
   }
+  // Tell that we started the logfile
   g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
                             ,"%s called by IIS version %d.%d"
                             ,MODULE_NAME
@@ -189,6 +206,9 @@ StopLog()
     delete g_analysisLog;
     g_analysisLog = nullptr;
   }
+}
+
+// End of Extern "C" calls
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -573,6 +593,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   else if(stream)
   {
     // If we turn into a stream, more notifications are pending
+    // This means the context of this request will **NOT** end
     status = RQ_NOTIFICATION_PENDING;
   }
   else

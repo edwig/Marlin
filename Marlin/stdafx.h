@@ -18,5 +18,3 @@
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 #include <iostream>
-
-// TODO: reference additional headers your program requires here

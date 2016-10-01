@@ -51,7 +51,23 @@ CHANGES IN VERSION 4.0
            To use these options, incorporate them in the config file of your product!!
            And let the product set the options on the site by use of "Set...." methods.
 
-3) The WSDL checking of incoming SOAP services are now extended with all XSD datatypes as
+3) Short walk-through for setting up IIS for the Test server and client:
+   a) Register the "MarlinIISModule.dll" to IIS with the "register.cmd" script in the root directory
+   b) Open IIS-Admin
+   c) Create a "Marlin" application pool as a Native pool (no Dot NET!)
+   d) Create site "MarlinTest" with a binding of "*:80" (http)
+   e) Create site "SecureTest" with a binding of "*:443" (https)
+   f) Create site "SecureClientCert" with a binding of "*:1222" (https)
+   g) Bind all three sites to the "Marlin" application pool.
+   h) Place standard HTML documents in the sites as specified in the MarlinIISClient program
+   i) Open the modules pane for your server OR for your site and activate the native "MarlinIISModule"
+   j) For each site activate the windowsAuthentication and activate the "NTLM" provider
+   k) For the "SecureClientCert" site, activate the "marlin.org" client certificate (see directory Certificates)
+   l) Start IIS
+   m) Start the Marlin application pool
+   n) Start the MarlinIISClient testprogram
+
+4) The WSDL checking of incoming SOAP services are now extended with all XSD datatypes as
    defined by the W3C standard for XML schema's "http://www.w3.org/TR/xmlschema11-2/"
    Newly understood datatypes are:
 
@@ -115,3 +131,25 @@ CHANGES IN VERSION 4.0
 
    NB: The name of "XDT_Base64" has been changed to "XDT_Base64Binary"
        so check your sourcecode for this change!
+
+5)  The configuration file "logfile.config" in your program directory now also can 
+    contain the configuration line "rotate=1" or "rotate=0". This triggers the rotation
+    of the logfiles for a server like applicatin with the starting time in the filename,
+    and the deletion of files of over 1 month old.
+6)  The 'agent' string of the HTTPClient has been changed from "MarlinClient" to the
+    more generic name "HTTPClient/1.0", as to not give a way the fact on the internet
+    what the product's technology is.
+7)  The HTTPClient's cleanup at the reset for a next call has been improved. Less clutter
+    of the last call will be left for the next call. And a rare memory leak in the case
+    a requested file was not sent, has been corrected. 
+8)  A bug for the HTTPClient as a eventsource without a logfile has been corrected.
+9)  The SiteHandlerGet has an extra set of overridable methods for the expansion 
+    of the filename to get. This makes it possible to have a finer grained control
+    over which files / directories to get.
+10) All PostHandle methods of the SiteHandlers are more cautious before calling the
+    SendResponse methods of the HTTPSite and the HTTPServer. Thus removing the extra
+    calling of these methods.
+11) The "Open" method of the WebServiceClient now returns a boolean (true / false) 
+    whether the client was started and opened correctly. No need to call "IsOpen".
+12) All datatypes are moved to a new header ("XMLDataTypes.h")
+

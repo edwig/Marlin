@@ -10,7 +10,7 @@ int TestSecureSite(HTTPClient* p_client)
   bool result = false;
   CString url = "https://" MARLIN_HOST "/SecureTest/codes.html";
   HTTPMessage msg(HTTPCommand::http_get,url);
-  CString filename("..\\Documentation\\codes.html");
+  CString filename("C:\\TEMP\\codes.html");
   msg.SetContentType("text/html");
 
   // Remove the file !!
