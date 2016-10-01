@@ -101,7 +101,6 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalOptions>/EXPORT:RegisterModule %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;marlin.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Marlin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
@@ -118,7 +117,6 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalOptions>/EXPORT:RegisterModule %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;marlin.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Marlin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
@@ -161,7 +159,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;marlin.lib;</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Marlin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalOptions>/EXPORT:RegisterModule %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
