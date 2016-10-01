@@ -38,6 +38,43 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static int totalChecks = 1;
+
+class SiteHandlerGetBase : public SiteHandlerGet
+{
+protected:
+  virtual bool Handle(HTTPMessage* p_message);
+};
+
+class SiteHandlerPutBase: public SiteHandlerPut
+{
+protected:
+  virtual bool Handle(HTTPMessage* p_message);
+};
+
+bool
+SiteHandlerGetBase::Handle(HTTPMessage* p_message)
+{
+  bool result = SiteHandlerGet::Handle(p_message);
+
+  if(p_message->GetStatus() == HTTP_STATUS_OK)
+  {
+    --totalChecks;
+  }
+  return result;
+}
+
+bool
+SiteHandlerPutBase::Handle(HTTPMessage* p_message)
+{
+  bool result = SiteHandlerPut::Handle(p_message);
+
+  if(p_message->GetStatus() == HTTP_STATUS_OK)
+  {
+    --totalChecks;
+  }
+  return result;
+}
 
 // TESTING A BASE SITE.
 // RELIES ON THE DEFAULT 'GET' HANDLER OF THE SERVER
@@ -72,8 +109,8 @@ int TestBaseSite(HTTPServer* p_server)
   }
 
   // Setting the default GET and PUT handler for this site
-  SiteHandlerGet* handlerGet = new SiteHandlerGet();
-  SiteHandlerPut* handlerPut = new SiteHandlerPut();
+  SiteHandlerGetBase* handlerGet = new SiteHandlerGetBase();
+  SiteHandlerPutBase* handlerPut = new SiteHandlerPutBase();
   site->SetHandler(HTTPCommand::http_get,handlerGet);
   site->SetHandler(HTTPCommand::http_put,handlerPut);
 
@@ -100,9 +137,11 @@ int TestBaseSite(HTTPServer* p_server)
   return error;
 }
 
-
 int 
 AfterTestBaseSite()
 {
-  return 0;
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("Base site file tests (GET / PUT)               : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  return totalChecks > 0;
 }
