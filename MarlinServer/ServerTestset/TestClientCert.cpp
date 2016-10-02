@@ -30,6 +30,7 @@
 #include "HTTPSite.h"
 #include "SiteHandlerGet.h"
 #include "SiteFilterClientCertificate.h"
+#include "ServerApp.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -99,22 +100,24 @@ int TestClientCertificate(HTTPServer* p_server)
   // Setting the POST handler for this site
   site->SetHandler(HTTPCommand::http_get,new SiteHandlerGetClientCert());
 
-#ifdef MARLIN_STANDALONE
-  CString certName   = "marlin";
-  CString thumbprint = "db344064f2fac21318dd90f507fe78e81b031600";
+  // If the ServerApp pointer is NULL, we are a standalone Marlin server!
+  if(g_server == nullptr)
+  {
+    CString certName   = "marlin";
+    CString thumbprint = "db344064f2fac21318dd90f507fe78e81b031600";
 
-  // Add a site filter for the client certificate
-  SiteFilterClientCertificate* filter = new SiteFilterClientCertificate(10,"ClientCert");
-  filter->SetClientCertificate(certName,thumbprint); // Here comes the name/thumbprint
-  if(site->SetFilter(10,filter))
-  {
-    xprintf("Site filter for Client-Certificates set correctly. Thumbprint: %s\n",thumbprint);
+    // Add a site filter for the client certificate
+    SiteFilterClientCertificate* filter = new SiteFilterClientCertificate(10,"ClientCert");
+    filter->SetClientCertificate(certName,thumbprint); // Here comes the name/thumbprint
+    if(site->SetFilter(10,filter))
+    {
+      xprintf("Site filter for Client-Certificates set correctly. Thumbprint: %s\n",thumbprint);
+    }
+    else
+    {
+      qprintf("ERROR SETTING SITE FILTER FOR ClientCertificates\n");
+    }
   }
-  else
-  {
-    qprintf("ERROR SETTING SITE FILTER FOR ClientCertificates\n");
-  }
-#endif
 
   // Start the site explicitly
   if(site->StartSite())

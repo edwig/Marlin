@@ -8,7 +8,8 @@ int
 TestBaseSite(HTTPClient* p_client)
 {
   bool result = false;
-  CString url = "http://" MARLIN_HOST "/MarlinTest/Site/FileOne.html";
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/Site/FileOne.html",MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_get,url);
   CString filename("C:\\TEMP\\FileOne.html");
   msg.SetContentType("text/html");

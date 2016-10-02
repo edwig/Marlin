@@ -7,8 +7,10 @@
 
 int TestSecureSite(HTTPClient* p_client)
 {
+  CString url;
   bool result = false;
-  CString url = "https://" MARLIN_HOST "/SecureTest/codes.html";
+  url.Format("https://%s:%d/SecureTest/codes.html",MARLIN_HOST,TESTING_HTTPS_PORT);
+
   HTTPMessage msg(HTTPCommand::http_get,url);
   CString filename("C:\\TEMP\\codes.html");
   msg.SetContentType("text/html");

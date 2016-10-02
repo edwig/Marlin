@@ -79,10 +79,26 @@ void xprintf(const char* p_format, ...)
 
 void qprintf(const char* p_format,...)
 {
+  CString string;
+  static CString stringRegister;
+
   va_list vl;
   va_start(vl,p_format);
-  vprintf(p_format,vl);
+  string.FormatV(p_format,vl);
   va_end(vl);
+
+
+  // See if we must just register the string
+  if(string.Right(3) == "<+>")
+  {
+    stringRegister += string.Left(string.GetLength() - 3);
+    return;
+  }
+
+  // Print the result to the logfile as INFO
+  string = stringRegister + string;
+  stringRegister.Empty();
+  printf(string);
 }
 
 
@@ -256,56 +272,25 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           // Individual tests
           errors += Test_CrackURL();
           errors += Test_HTTPTime();
-
           errors += TestThreadPool(pool);
 
-          // Push events interface (SSE)
-          errors += TestPushEvents(server);
-
-          // Cookies test for HTTP protocol (HTTP PUT)
-          errors += TestCookies(server);
-
-          // Test 'normal' SOAP messages without further protocol
-          errors += TestInsecure(server);
-
-          // Test 'body signing' capabilities of the SOAP message
-          errors += TestBodySigning(server);
-
-          // Test 'body encryption' capabilities
-          errors += TestBodyEncryption(server);
-
-          // Testing 'whole message encryption' capabilities
-          errors += TestMessageEncryption(server);
-
-          // Testing 'WS-ReliableMessaging protocol' of the site
-          errors += TestReliable(server);
-
-          // Testing the token functionality
-          errors += TestToken(server);
-
-          // Testing a base site for file gets
+          // HTTP tests
           errors += TestBaseSite(server);
-
-          // Testing the sub-site functions
-          // Call **AFTER** registering /MarlinTest/TestToken/
-          errors += TestSubSites(server);
-
-          // Testing the JSON functionality in this data site
-          errors += TestJsonData(server);
-
-          // Testing the Site Filtering capabilities
-          errors += TestFilter(server);
-
-          // Testing the HTTP VERB Tunneling
-          errors += TestPatch(server);
-
-          // Testing Form-data MultiPart-Buffering
-          errors += TestFormData(server);
-
-          // Testing the client-certificate request
+          errors += TestSecureSite(server);
           errors += TestClientCertificate(server);
-
-          // Testing the GZIP compression function
+          errors += TestPushEvents(server);
+          errors += TestCookies(server);
+          errors += TestInsecure(server);
+          errors += TestBodySigning(server);
+          errors += TestBodyEncryption(server);
+          errors += TestMessageEncryption(server);
+          errors += TestReliable(server);
+          errors += TestToken(server);
+          errors += TestSubSites(server);
+          errors += TestJsonData(server);
+          errors += TestFilter(server);
+          errors += TestPatch(server);
+          errors += TestFormData(server);
           errors += TestCompression(server);
 
           // Test the WebServiceServer program generation

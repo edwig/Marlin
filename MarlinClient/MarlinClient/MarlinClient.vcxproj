@@ -208,6 +208,7 @@
     <ClInclude Include="TestPorts.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\TestsetClient\TestBaseSite.cpp" />
     <ClCompile Include="..\TestsetClient\TestClient.cpp" />
     <ClCompile Include="..\TestsetClient\TestClientCert.cpp" />
     <ClCompile Include="..\TestsetClient\TestCompression.cpp" />
@@ -221,6 +222,7 @@
     <ClCompile Include="..\TestsetClient\TestNamespaces.cpp" />
     <ClCompile Include="..\TestsetClient\TestPatch.cpp" />
     <ClCompile Include="..\TestsetClient\TestReader.cpp" />
+    <ClCompile Include="..\TestsetClient\TestSecureSite.cpp" />
     <ClCompile Include="..\TestsetClient\TestUnicode.cpp" />
     <ClCompile Include="..\TestsetClient\TestWS.cpp" />
     <ClCompile Include="stdafx.cpp">

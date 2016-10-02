@@ -26,7 +26,6 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "resource.h"
 #include "TestPorts.h"
 
 #define NUM_RM_TESTS 3

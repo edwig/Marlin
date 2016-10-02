@@ -97,9 +97,9 @@ int TestSecureSite(HTTPServer* p_server)
   if(site)
   {
     // SUMMARY OF THE TEST
-    // ---- "---------------------------------------------- - ------
-    qprintf("HTTPSite for base https 'get' test        : OK : %s\n",site->GetPrefixURL().GetString());
-    qprintf("HTTPSite for base https 'put' test        : OK : %s\n",site->GetPrefixURL().GetString());
+    // ---- "--------------------------- - ------
+    qprintf("HTTPSite for 'get' test     : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf("HTTPSite for 'put' test     : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {

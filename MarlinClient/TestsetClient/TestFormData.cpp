@@ -61,7 +61,7 @@ int TestFormData(HTTPClient* p_client)
 
   MultiPartBuffer buffer;
   buffer.AddPart("json","application/json",data);
-  buffer.AddFile("eventsource.js","application/js",file);
+  buffer.AddFile("..\\Documentation\\eventsource.js","application/js",file);
   // Try to transport the filetimes to the server
   // BEWARE: Some servers do not respect the filetimes attributes
   //         or even crash on it (WCF .NET returns HTTP status 500)

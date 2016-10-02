@@ -62,7 +62,7 @@ SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("GZIP of a file at a HTTP GET operation         : %s", result ? "OK" : "ERROR");
+  qprintf("GZIP of a file at a HTTP GET operation         : %s\n", result ? "OK" : "ERROR");
 
   return true;
 }

@@ -144,6 +144,10 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestNamespaces();
       errors += TestJSON();
       errors += TestFindClientCertificate();
+
+      errors += TestBaseSite(client);
+      errors += TestSecureSite(client);
+      errors += TestClientCertificate(client);
       errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestEvents(client);

@@ -28,9 +28,9 @@
 #pragma once
 
 // All tests running on these ports in Marlin Standalone
-const int TESTING_HTTP_PORT   = 1200;
-const int TESTING_HTTPS_PORT  = 1201;
-const int TESTING_CLCERT_PORT = 1202;
+const int TESTING_HTTP_PORT   = 1200;  // For site "/MarlinTest/" 
+const int TESTING_HTTPS_PORT  = 1201;  // For site "/SecureTest/" 
+const int TESTING_CLCERT_PORT = 1202;  // For site "/SecureClientCert/" 
 
 // COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST
 #define MARLIN_HOST "localhost"
