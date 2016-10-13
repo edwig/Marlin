@@ -1160,6 +1160,24 @@ SOAPMessage::SetSoapBody()
   }
 }
 
+// Usage of the "mustUnderstand" attribute in the <Envelope><Header><Action> node
+// These are the possibilities
+//
+// mustUnderstand    Intermediate role   End server role
+// ---------------   -----------------   -------------------------------
+// present & true    Must process        Must process
+// present & false   May  process        May  process
+// absent            May  process        May  process
+//
+// DON'T LET ME BE MISUNDERSTOOD (free after The Animals & Santa Esmeralda :-)
+// Also called the Jan-Jaap Fahner option (We must understand nothing!!)
+void
+SOAPMessage::SetSoapMustBeUnderstood(bool p_addAttribute /*=true*/,bool p_understand /*=true*/)
+{
+  m_addAttribute = p_addAttribute;  // Add the attribute to <Action> node
+  m_understand   = p_understand;    // Value of the "mustUnderstand" attribute
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Detail functions of AddSoapHeader
@@ -1255,15 +1273,16 @@ SOAPMessage::AddToHeaderToService()
 void
 SOAPMessage::AddToHeaderAction()
 {
-  if(FindElement(m_header,"a:Action") == NULL)
+  XMLElement* actParam = FindElement(m_header,"Action");
+  if(actParam == nullptr)
   {
     CString action = CreateSoapAction(m_namespace,m_soapAction);
     // Must come as the first element of the header
-    XMLElement* actParam = SetHeaderParameter("a:Action",action,true);
-    // Make sure other SOAP Roles (proxy, ESB) parses the action header part
-    if(actParam)
+    actParam = SetHeaderParameter("a:Action",action,true);
+    // Make sure other SOAP Roles (proxy, ESB) parses the action header part or not
+    if(actParam && m_addAttribute)
     {
-      SetAttribute(actParam,"s:mustUnderstand",1);
+      SetAttribute(actParam,"s:mustUnderstand",m_understand);
     }
   }
 }
@@ -1675,7 +1694,7 @@ SOAPMessage::CheckHeaderRelatesTo()
 void
 SOAPMessage::CheckHeaderAction()
 {
-  int must = 0;
+  bool must = false;
   CString expectedResponse = CreateSoapAction(m_namespace,m_soapAction);
 
   XMLElement* action = FindElement(m_header,"Action");
@@ -1685,8 +1704,18 @@ SOAPMessage::CheckHeaderAction()
   }
   // OK, We have an action service protocol
   m_initialAction = true;
+  must = GetAttributeBoolean(action,"mustUnderstand");
 
-  must = GetAttributeInteger(action,"mustUnderstand");
+  // Record the mustUnderstand for an incoming message
+  if(m_incoming)
+  {
+    // Must understand can be defined or absent
+    // The absent 'mustUnderstand' leads to 'false'
+    m_understand = must;
+  }
+
+  // Try to 'understand' the SOAP action
+  // otherwise, proceed with fingers crossed
   if(must)
   {
     CString error;

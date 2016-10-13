@@ -129,14 +129,11 @@ SiteHandlerSoap::Handle(SOAPMessage* p_message)
 void
 SiteHandlerSoap::PostHandle(HTTPMessage* p_message)
 {
-  if(g_soapMessage)
+  // Check that we did send something
+  if(g_soapMessage && g_soapMessage->GetRequestHandle())
   {
-    // Check that we did send something
-    if(g_soapMessage->GetRequestHandle())
-    {
-      m_site->SendResponse(g_soapMessage);
-      p_message->SetRequestHandle(NULL);
-    }
+    m_site->SendResponse(g_soapMessage);
+    p_message->SetRequestHandle(NULL);
   }
 }
 

@@ -91,7 +91,7 @@ SiteHandlerPost::Handle(HTTPMessage* p_message)
 void
 SiteHandlerPost::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message->GetRequestHandle())
+  if(p_message && p_message->GetRequestHandle())
   {
     // Send response back
     p_message->SetCommand(HTTPCommand::http_response);

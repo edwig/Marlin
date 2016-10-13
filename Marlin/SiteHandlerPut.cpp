@@ -117,7 +117,7 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
 void 
 SiteHandlerPut::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message->GetRequestHandle())
+  if(p_message && p_message->GetRequestHandle())
   {
     // send our answer straight away
     m_site->SendResponse(p_message);

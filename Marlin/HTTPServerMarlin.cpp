@@ -679,7 +679,7 @@ HTTPServerMarlin::RunHTTPServer()
     // Test if server already stopped, and we are here because of the stopping
     if(m_running == false)
     {
-      ERRORLOG(ERROR_HANDLE_EOF,"HTTPServer stopped in ReceiveHttpRequest.");
+      DETAILLOG1("HTTPServer stopped in mainloop.");
       break;
     }
 

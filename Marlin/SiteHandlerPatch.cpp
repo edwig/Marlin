@@ -167,7 +167,7 @@ SiteHandlerPatch::Handle(HTTPMessage* p_message)
 void
 SiteHandlerPatch::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message->GetRequestHandle())
+  if(p_message && p_message->GetRequestHandle())
   {
     // send our answer straight away, deleting the msg object
     p_message->SetCommand(HTTPCommand::http_response);

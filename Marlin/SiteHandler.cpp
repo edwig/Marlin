@@ -114,8 +114,11 @@ SiteHandler::Handle(HTTPMessage* p_message)
 void
 SiteHandler::PostHandle(HTTPMessage* p_message)
 {
-  p_message->SetCommand(HTTPCommand::http_response);
-  m_site->SendResponse(p_message);
+  if(p_message && p_message->GetRequestHandle())
+  {
+    p_message->SetCommand(HTTPCommand::http_response);
+    m_site->SendResponse(p_message);
+  }
 }
 
 void

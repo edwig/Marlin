@@ -137,6 +137,7 @@ public:
   // Set Command name
   void            SetSoapAction(CString& p_name);
   bool            SetHasInitialAction(bool p_initial);
+  void            SetSoapMustBeUnderstood(bool p_addAttribute = true,bool p_understand = true);
   // Set the SOAP version
   void            SetSoapVersion(SoapVersion p_version);
   // Reset incoming to outgoing
@@ -198,6 +199,7 @@ public:
   CString         GetNamespace() const;
   // Get name of the soap action command (e.g. for messages and debug)
   CString         GetSoapAction() const;
+  bool            GetMustUnderstandAction() const;
   // Get the Soap Version
   SoapVersion     GetSoapVersion() const;
   // Incoming or outgoing message?
@@ -372,6 +374,8 @@ protected:
   CString         m_acceptEncoding;                       // Accepted HTTP compression encoding
   bool            m_initialAction { true  };              // Has Action header part
   bool            m_incoming      { false };              // Incoming SOAP message
+  bool            m_addAttribute  { true  };              // Add "mustUnderstand" attribute to <Envelope>/<Action>
+  bool            m_understand    { true  };              // Set "mustUnderstand" to true or false
   // DESTINATION
   CString         m_url;                                  // Full URL of the soap service
   HTTP_REQUEST_ID m_request       { NULL  };              // Request it must answer
@@ -846,6 +850,12 @@ inline CString
 SOAPMessage::GetAcceptEncoding() const
 {
   return m_acceptEncoding;
+}
+
+inline bool
+SOAPMessage::GetMustUnderstandAction() const
+{
+  return m_understand;
 }
 
 //////////////////////////////////////////////////////////////////////////
