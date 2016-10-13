@@ -1235,7 +1235,7 @@ HTTPClient::SendBodyData()
 {
   // If we did have a body, we sent it now, right after the header
   // Try to do it in one (1) burst, to be as optimal as possible
-  if(m_body != NULL)
+  if(m_body != NULL && m_bodyLength > 0)
   {
     // PART 1: SEND OUR DATA IN ONE (1) GO
     // ONLY m_body/m_bodylength IS FILLED IN.

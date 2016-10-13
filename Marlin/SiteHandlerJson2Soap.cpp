@@ -105,12 +105,13 @@ void
 SiteHandlerJson2Soap::PostHandle(HTTPMessage* p_message)
 {
   // CONVERT SOAP Message to JSON message
-  if(g_soapMessage)
+  if(g_soapMessage && g_soapMessage->GetRequestHandle())
   {
     JSONMessage jsonMessage(g_soapMessage);
     if(m_site->SendResponse(&jsonMessage))
     {
       p_message->SetRequestHandle(NULL);
+      g_soapMessage->SetRequestHandle(NULL);
     }
   }
 }

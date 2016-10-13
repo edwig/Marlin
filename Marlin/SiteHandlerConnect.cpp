@@ -70,8 +70,11 @@ SiteHandlerConnect::Handle(HTTPMessage* p_message)
 void
 SiteHandlerConnect::PostHandle(HTTPMessage* p_message)
 {
-  // send our answer straight away
-  p_message->SetCommand(HTTPCommand::http_response);
-  m_site->SendResponse(p_message);
-  SITE_DETAILLOGS("Answered a CONNECT message from: ", SocketToServer(p_message->GetSender()));
+  if(p_message && p_message->GetRequestHandle())
+  {
+    // send our answer straight away
+    p_message->SetCommand(HTTPCommand::http_response);
+    m_site->SendResponse(p_message);
+    SITE_DETAILLOGS("Answered a CONNECT message from: ",SocketToServer(p_message->GetSender()));
+  }
 }

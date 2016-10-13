@@ -8,6 +8,26 @@ Version 3.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 3.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 3.8.0
+========================
+1) It has been made possible to set the "mustUnderstand" attribute of the SOAP action in the
+   Soap envelope. This attribute can be added or suppressed. And if added it can be set to
+   either true or false. The default of this attribute remains as in previous versions to be
+   both present AND true for SOAP 1.2 Messages.
+
+   Two new methods have been added to the SOAPMessage object. These methods are:
+   void SetSoapMustBeUnderstood(bool p_addAttribute = true,bool p_understand = true);
+   bool GetMustUnderstandAction() const;
+
+   Before setting this attribute to false, or suppressed, programmers are urged to read the
+   section on the 'mustUnderstand' attribute in the SOAP 1.2 standard at this W3C URL:
+   http://www.w3.org/TR/soap12-part0/#L1474
+   It should be understood here, that suppressing the attribute will have effects on inter-
+   mediate layers like proxies and Enterprise Service Busses.
+
+2) Various small bugs in sub optimalisations of both the HTTPServer and HTTPClient as they
+   sometimes generate error messages in the log, without real errors. Origin of these 
+
 CHANGES IN VERSION 3.7.1
 =======================
 1) The 'CrackedURL' object now has an extra method 'AbsoluteResource'. This member returns the

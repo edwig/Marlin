@@ -98,7 +98,7 @@ SiteHandlerJson::Handle(JSONMessage* p_message)
 void
 SiteHandlerJson::PostHandle(HTTPMessage* /*p_message*/)
 {
-  if(g_jsonMessage)
+  if(g_jsonMessage && g_jsonMessage->GetRequestHandle())
   {
     m_site->SendResponse(g_jsonMessage);
   }

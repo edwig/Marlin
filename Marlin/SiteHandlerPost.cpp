@@ -91,9 +91,12 @@ SiteHandlerPost::Handle(HTTPMessage* p_message)
 void
 SiteHandlerPost::PostHandle(HTTPMessage* p_message)
 {
-  // Send response back
-  p_message->SetCommand(HTTPCommand::http_response);
-  m_site->SendResponse(p_message);
+  if(p_message && p_message->GetRequestHandle())
+  {
+    // Send response back
+    p_message->SetCommand(HTTPCommand::http_response);
+    m_site->SendResponse(p_message);
+  }
 }
 
 // DO NOTHING: OVVERRIDE ME!
