@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 4;
+static int totalChecks = 9;
 
 //////////////////////////////////////////////////////////////////////////
 //

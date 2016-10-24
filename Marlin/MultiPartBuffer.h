@@ -32,6 +32,15 @@
 class HTTPMessage;
 
 // Implements the "Content-Type: multipart/form-data" type of HTTP messages
+// or the default "Content-Type: application/x-www-form-urlencoded"
+
+typedef enum _fdtype
+{
+  FD_UNKNOWN
+ ,FD_URLENCODED
+ ,FD_MULTIPART
+}
+FormDataType;
 
 // The MultiPartBuffer consists of various MultiPart's
 // Normally you should only use the MultiPart on incoming messages
@@ -102,10 +111,11 @@ using uchar        = unsigned char;
 class MultiPartBuffer
 {
 public:
-  MultiPartBuffer();
+  MultiPartBuffer(FormDataType p_type);
  ~MultiPartBuffer();
 
   void         Reset();
+  bool         SetFormDataType(FormDataType p_type);
   // Creating a MultiPartBuffer
   MultiPart*   AddPart(CString p_name,CString p_contentType,CString p_data);
   MultiPart*   AddFile(CString p_name,CString p_contentType,CString p_filename);
@@ -113,6 +123,8 @@ public:
   MultiPart*   GetPart(CString p_name);
   MultiPart*   GetPart(int p_index);
   size_t       GetParts();
+  FormDataType GetFormDataType();
+  CString      GetContentType();
 
   // Functions for HTTPMessage
   CString      CalculateBoundary();
@@ -127,8 +139,13 @@ public:
   bool         GetFileExtensions()                 { return m_extensions;     };
 
 private:
+  // Find which type of formdata we are receiving
+  FormDataType FindBufferType(CString p_contentType);
   // Find the boundary in the content-type header
   CString      FindBoundaryInContentType(CString p_contentType);
+  // Parsing different types
+  bool         ParseBufferFormData(CString p_contentType,FileBuffer* p_buffer);
+  bool         ParseBufferUrlEncoded(FileBuffer* p_buffer);
   // Finding a new partial message
   void*        FindPartBuffer(uchar*& p_vinding,size_t& p_remaining,CString& p_boundary);
   CString      GetLineFromBuffer(uchar*& p_begin,uchar* p_end);
@@ -137,9 +154,10 @@ private:
   // Adding a part from a raw buffer
   void         AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd);
 
-  CString      m_boundary;
+  FormDataType m_type;                  // Url-encoded or form-data
+  CString      m_boundary;              // Form-Data boundary string
   MultiPartMap m_parts;                 // All parts
-  bool         m_extensions { false };  // Show times & size in the header
+  bool         m_extensions { false };  // Show file times & size in the header
 };
 
 inline size_t
@@ -147,3 +165,9 @@ MultiPartBuffer::GetParts()
 {
   return m_parts.size();
 };
+
+inline FormDataType
+MultiPartBuffer::GetFormDataType()
+{
+  return m_type;
+}

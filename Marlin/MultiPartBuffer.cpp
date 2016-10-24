@@ -273,7 +273,8 @@ MultiPart::FileTimeFromString(PFILETIME p_filetime,CString& p_time)
 //
 //////////////////////////////////////////////////////////////////////////
 
-MultiPartBuffer::MultiPartBuffer()
+MultiPartBuffer::MultiPartBuffer(FormDataType p_type)
+                :m_type(p_type)
 {
 }
 
@@ -292,6 +293,38 @@ MultiPartBuffer::Reset()
     delete part;
     m_parts.pop_back();
   }
+}
+
+CString
+MultiPartBuffer::GetContentType()
+{
+  CString type;
+  switch(m_type)
+  {
+    case FD_URLENCODED: type = "application/x-www-form-urlencoded"; break;
+    case FD_MULTIPART:  type = "multipart/form-data";               break;
+    case FD_UNKNOWN:    break;
+  }
+  return type;
+}
+
+bool
+MultiPartBuffer::SetFormDataType(FormDataType p_type)
+{
+  // In case we 'reset'  to url encoded
+  // we cannot allow to any files entered as parts
+  if(p_type == FD_URLENCODED)
+  {
+    for(auto& part : m_parts)
+    {
+      if(!part->GetFileName().IsEmpty())
+      {
+        return false;
+      }
+    }
+  }
+  m_type = p_type;
+  return true;
 }
 
 MultiPart*   
@@ -379,16 +412,32 @@ MultiPartBuffer::CalculateBoundary()
 CString 
 MultiPartBuffer::CalculateAcceptHeader()
 {
-  CString accept;
-  for(auto& part : m_parts)
+  if(m_type == FD_URLENCODED)
   {
-    if(!accept.IsEmpty())
-    {
-      accept += ",";
-    }
-    accept += part->GetContentType();
+    return "text/html, application/xhtml+xml";
   }
-  return accept;
+  else if(m_type == FD_MULTIPART)
+  {
+    // De-double all content types of all parts
+    std::map<CString,bool> types;
+    for(auto& part : m_parts)
+    {
+      types[part->GetContentType()] = true;
+    }
+    // Build accept types string
+    CString accept;
+    for(auto& type : types)
+    {
+      if(!accept.IsEmpty())
+      {
+        accept += ",";
+      }
+      accept += type.first;
+    }
+    return accept;
+  }
+  // Default unknown FormData type 
+  return "text/html, application/xhtml+xml, */*";
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -402,10 +451,6 @@ MultiPartBuffer::CalculateAcceptHeader()
 bool         
 MultiPartBuffer::ParseBuffer(CString p_contentType,FileBuffer* p_buffer)
 {
-  bool   result = false;
-  uchar* buffer = nullptr;
-  size_t length = 0;
-
   // Start anew
   Reset();
 
@@ -415,15 +460,33 @@ MultiPartBuffer::ParseBuffer(CString p_contentType,FileBuffer* p_buffer)
     return false;
   }
 
-  // Get a copy of the buffer
-  if(p_buffer->GetBufferCopy(buffer,length) == false)
+  FormDataType type = FindBufferType(p_contentType);
+  switch(type)
   {
-    return false;
+    case FD_URLENCODED: return ParseBufferUrlEncoded(p_buffer);
+    case FD_MULTIPART:  return ParseBufferFormData(p_contentType,p_buffer);
+    case FD_UNKNOWN:    // Fall through
+    default:            return false;
   }
+  return false;
+}
+
+bool
+MultiPartBuffer::ParseBufferFormData(CString p_contentType,FileBuffer* p_buffer)
+{
+  bool   result = false;
+  uchar* buffer = nullptr;
+  size_t length = 0;
 
   // Find the boundary between the parts
   CString boundary = FindBoundaryInContentType(p_contentType);
   if(boundary.IsEmpty())
+  {
+    return false;
+  }
+
+  // Get a copy of the buffer
+  if(p_buffer->GetBufferCopy(buffer,length) == false)
   {
     return false;
   }
@@ -442,8 +505,61 @@ MultiPartBuffer::ParseBuffer(CString p_contentType,FileBuffer* p_buffer)
     result = true;
   }
   // Release the buffer copy 
-  delete [] buffer;
+  delete[] buffer;
   return result;
+}
+
+bool
+MultiPartBuffer::ParseBufferUrlEncoded(FileBuffer* p_buffer)
+{
+  uchar* buffer = nullptr;
+  size_t length = 0;
+
+  // Getting the payload as a string
+  if(p_buffer->GetBufferCopy(buffer,length) == false)
+  {
+    return false;
+  }
+  CString parameters;
+  char* pnt = parameters.GetBufferSetLength((int)length + 1);
+  strcpy_s(pnt,length + 1,(const char*)buffer);
+  pnt[length] = 0;
+  parameters.ReleaseBuffer();
+  delete[] buffer;
+
+  // Find all query parameters
+  int query = 1;
+  while(query > 0)
+  {
+    // FindNext query
+    query = parameters.Find('&');
+    CString part;
+    if(query > 0)
+    {
+      part = parameters.Left(query);
+      parameters = parameters.Mid(query + 1);
+    }
+    else
+    {
+      part = parameters;
+    }
+
+    CString name,value;
+    int pos = part.Find('=');
+    if(pos > 0)
+    {
+      name  = CrackedURL::DecodeURLChars(part.Left(pos));
+      value = CrackedURL::DecodeURLChars(part.Mid(pos + 1),true);
+    }
+    else
+    {
+      // No value. Use as key only
+      name = CrackedURL::DecodeURLChars(part);
+    }
+    // Save as bufferpart
+    AddPart(name,"text",value);
+  }
+  return true;
 }
 
 // Finding a new partial message
@@ -532,7 +648,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd)
     // Buffer is the data component
     CString data;
     size_t length = p_partialEnd - p_partialBegin;
-    char* buffer = data.GetBufferSetLength((int)length + 1);
+    char*  buffer = data.GetBufferSetLength((int)length + 1);
     strncpy_s(buffer,length + 1,(const char*)p_partialBegin,length);
     buffer[length] = 0;
     data.ReleaseBuffer((int)length);
@@ -624,6 +740,23 @@ MultiPartBuffer::GetAttributeFromLine(CString& p_line,CString p_name)
     attribute.Trim("\"");
   }
   return attribute;
+}
+
+// Find which type of formdata we are receiving
+// content-type: multipart/form-data; boundary="--#BOUNDARY#12345678901234"
+// content-type: application/x-www-form-urlencoded
+FormDataType
+MultiPartBuffer::FindBufferType(CString p_contentType)
+{
+  if(p_contentType.Find("urlencoded") > 0)
+  {
+    return FD_URLENCODED;
+  }
+  if(p_contentType.Find("form-data") > 0)
+  {
+    return FD_MULTIPART;
+  }
+  return FD_UNKNOWN;
 }
 
 // Find the boundary in the content-type header
