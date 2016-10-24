@@ -30,7 +30,7 @@
 #include "SiteHandlerFormData.h"
 #include "MultiPartBuffer.h"
 
-static int totalChecks = 3;
+static int totalChecks = 9;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -54,6 +54,7 @@ FormDataHandler::PreHandleBuffer(MultiPartBuffer* p_buffer)
 {
   // Resetting the m_parts counter to the number of parts received
   m_parts = (int) p_buffer->GetParts();
+  --totalChecks;
   return 0;
 }
 

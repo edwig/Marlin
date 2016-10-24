@@ -881,22 +881,92 @@ HTTPMessage::UseVerbTunneling()
 bool    
 HTTPMessage::SetMultiPartFormData(MultiPartBuffer* p_buffer)
 {
-  bool result = false;
-
-  // Check that we have a multi-part buffer
-  if(!p_buffer)
+  // Check that we have a multi-part buffer and that it is filled!
+  if(!p_buffer || p_buffer->GetParts() == 0)
   {
-    return result;
+    return false;
   }
 
   // Create accept header
   CString accept = p_buffer->CalculateAcceptHeader();
   AddHeader("Accept",accept);
 
+  // Get type of formdata buffer
+  FormDataType type = p_buffer->GetFormDataType();
+  switch(type)
+  {
+    case FD_URLENCODED:  return SetMultiPartURL(p_buffer);
+    case FD_MULTIPART:   return SetMultiPartBuffer(p_buffer);
+    case FD_UNKNOWN:     // Fall through
+    default:             return false;
+  }
+  return false;
+}
+
+// RFC 7578: Fill url-encoding
+bool
+HTTPMessage::SetMultiPartURL(MultiPartBuffer* p_buffer)
+{
+  SetContentType(p_buffer->GetContentType());
+  if(m_command == HTTPCommand::http_get)
+  {
+    return SetMultiPartURLGet(p_buffer);
+  }
+  else if(m_command == HTTPCommand::http_post)
+  {
+    return SetMultiPartURLPost(p_buffer);
+  }
+  // Cannot do a FormData object other than get/post
+  return false;
+}
+
+bool
+HTTPMessage::SetMultiPartURLGet(MultiPartBuffer* p_buffer)
+{
+  unsigned ind = 0;
+  MultiPart* part = p_buffer->GetPart(ind);
+  do
+  {
+    m_cracked.SetParameter(part->GetName(),part->GetData());
+    // Getting the next part
+    part = p_buffer->GetPart(++ind);
+  }
+  while(part);
+
+  return true;
+}
+
+bool
+HTTPMessage::SetMultiPartURLPost(MultiPartBuffer* p_buffer)
+{
+  CrackedURL url;
+  unsigned ind = 0;
+  MultiPart* part = p_buffer->GetPart(ind);
+  do
+  {
+    url.SetParameter(part->GetName(),part->GetData());
+    // Getting the next part
+    part = p_buffer->GetPart(++ind);
+  }
+  while(part);
+
+  // Set parameters together as the body
+  CString parameters = url.AbsolutePath();
+  parameters.TrimLeft('?');
+  SetBody(parameters);
+
+  return true;
+}
+
+bool
+HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
+{
+  bool result = false;
+
   // Create the correct content type
   CString boundary = p_buffer->CalculateBoundary();
-  CString contentType("multipart/form-data; boundary=");
-  contentType += boundary;
+  CString contentType(p_buffer->GetContentType());
+  contentType += "; boundary=" + boundary;
   SetContentType(contentType);
 
   unsigned ind = 0;

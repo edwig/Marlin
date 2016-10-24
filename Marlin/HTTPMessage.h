@@ -225,6 +225,12 @@ private:
   void    CheckServer();
   // Reparse URL after setting a part of the URL
   void    ReparseURL();
+  // Fill mesage with FormData buffer
+  bool    SetMultiPartBuffer(MultiPartBuffer* p_buffer);
+  // Fill message with FormData URL encoding
+  bool    SetMultiPartURL(MultiPartBuffer* p_buffer);
+  bool    SetMultiPartURLGet (MultiPartBuffer* p_buffer);
+  bool    SetMultiPartURLPost(MultiPartBuffer* p_buffer);
 
   HTTPCommand         m_command       { HTTPCommand::http_response};  // HTTP Command code 'get','post' etc
   unsigned            m_status        { HTTP_STATUS_OK };             // HTTP status return code

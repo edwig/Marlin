@@ -46,7 +46,7 @@ SiteHandlerFormData::Handle(HTTPMessage* p_message)
 
   CString contentType = p_message->GetContentType();
   FileBuffer* buffer  = p_message->GetFileBuffer();
-  MultiPartBuffer multi;
+  MultiPartBuffer multi(FD_UNKNOWN);
 
   if(buffer && !contentType.IsEmpty())
   {

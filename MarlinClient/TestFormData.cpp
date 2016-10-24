@@ -55,11 +55,12 @@ CString GetJsonString()
   return str;
 }
 
-int TestFormData(HTTPClient* p_client)
+int 
+TestFormDataMP(HTTPClient* p_client)
 {
   CString data = GetJsonString();
 
-  MultiPartBuffer buffer;
+  MultiPartBuffer buffer(FD_MULTIPART);
   buffer.AddPart("json","application/json",data);
   buffer.AddFile("eventsource.js","application/js",file);
   // Try to transport the filetimes to the server
@@ -90,4 +91,46 @@ int TestFormData(HTTPClient* p_client)
     printf("HTTP CLIENT Message         : %s\n",(LPCTSTR)error);
   }
   return result ? 0 : 1;
+}
+
+int TestFormDataUE(HTTPClient* p_client)
+{
+  MultiPartBuffer buffer(FD_URLENCODED);
+  buffer.AddPart("one","text/html","Monkey-Nut-Tree");
+  buffer.AddPart("two","text/html","Tree-Leaf-Root");
+  buffer.AddPart("three","text/rtf","normal{\\b bold} and {\\i italic}");
+
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/FormData",MARLIN_HOST,MARLIN_SERVER_PORT);
+  HTTPMessage msg(HTTPCommand::http_post,url);
+  msg.SetMultiPartFormData(&buffer);
+
+  xprintf("TESTING FORM-DATA URLENCODED BUFFER FUNCTION TO /MarlinTest/FormData\n");
+  xprintf("====================================================================\n");
+  bool result = p_client->Send(&msg);
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("Send: Multipart urlencoded message             : %s\n",result ? "OK" : "ERROR");
+
+  if(result == false)
+  {
+    CString error;
+    p_client->GetError(&error);
+    // SUMMARY OF THE TEST
+    // --- "--------------------------- - ------\n"
+    printf("HTTP ERROR                  : %s\n",(LPCTSTR)p_client->GetStatusText());
+    printf("HTTP CLIENT Message         : %s\n",(LPCTSTR)error);
+  }
+  return result ? 0 : 1;
+}
+
+int TestFormData(HTTPClient* p_client)
+{
+  int errors = 0;
+
+  errors += TestFormDataMP(p_client);
+  errors += TestFormDataUE(p_client);
+
+  return errors;
 }

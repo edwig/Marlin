@@ -74,8 +74,8 @@ public:
   bool      HasParameter(CString p_parameter);
   void      SetParameter(CString p_parameter,CString p_value);
 
-  CString   EncodeURLChars(CString p_text,bool p_queryValue = false);
-  CString   DecodeURLChars(CString p_text,bool p_queryValue = false);
+  static    CString   EncodeURLChars(CString p_text,bool p_queryValue = false);
+  static    CString   DecodeURLChars(CString p_text,bool p_queryValue = false);
 
   CrackedURL* operator=(CrackedURL* p_orig);
 
@@ -108,7 +108,7 @@ public:
 private:
   static LPCTSTR m_unsafeString;
   static LPCTSTR m_reservedString;
-  unsigned char GetHexcodedChar(CString& p_string,int& p_index,bool& p_queryValue);
+  static unsigned char GetHexcodedChar(CString& p_string,int& p_index,bool& p_queryValue);
 };
 
 inline bool
