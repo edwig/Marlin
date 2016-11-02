@@ -42,8 +42,8 @@ protected:
   // one (1) handler will be called, on the fact that the "filename" attribute
   // has been given in the "Content-Disposition" part header!!
   // RETURN: NUMBER OF ERRORS!
-  virtual int PreHandleBuffer(MultiPartBuffer* p_buffer);
-  virtual int HandleData(MultiPart* p_part);
-  virtual int HandleFile(MultiPart* p_part);
-  virtual int PostHandleBuffer(MultiPartBuffer* p_buffer);
+  virtual int PreHandleBuffer (HTTPMessage* p_message,MultiPartBuffer* p_buffer);
+  virtual int HandleData      (HTTPMessage* p_message,MultiPart*       p_part);
+  virtual int HandleFile      (HTTPMessage* p_message,MultiPart*       p_part);
+  virtual int PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buffer);
 };

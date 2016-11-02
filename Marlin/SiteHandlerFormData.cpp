@@ -53,8 +53,12 @@ SiteHandlerFormData::Handle(HTTPMessage* p_message)
     // Getting all parts from the HTTPMessage
     if(multi.ParseBuffer(contentType,buffer))
     {
+      // Clear the message for an answer
+      p_message->Reset();
+      p_message->SetStatus(HTTP_STATUS_OK);
+
       // Do Pre-handling first
-      PreHandleBuffer(&multi);
+      PreHandleBuffer(p_message,&multi);
 
       // Cycle through all the parts
       size_t parts = multi.GetParts();
@@ -65,11 +69,11 @@ SiteHandlerFormData::Handle(HTTPMessage* p_message)
         {
           if(part->GetFileName().IsEmpty())
           {
-            errors += HandleData(part);
+            errors += HandleData(p_message,part);
           }
           else
           {
-            errors += HandleFile(part);
+            errors += HandleFile(p_message,part);
           }
         }
         else
@@ -79,7 +83,7 @@ SiteHandlerFormData::Handle(HTTPMessage* p_message)
         }
       }
       // Now ready with all the parts. Do the post-handling
-      PostHandleBuffer(&multi);
+      PostHandleBuffer(p_message,&multi);
     }
     else
     {
@@ -92,24 +96,21 @@ SiteHandlerFormData::Handle(HTTPMessage* p_message)
     ++errors;
     SITE_ERRORLOG(ERROR_NO_DATA,"NO legal multi-part buffer, or no multi-part content-type");
   }
-  // Resetting our message
-  p_message->Reset();
-  p_message->SetContentType("multipart/form-data");
 
   if(errors)
   {
     // Setting HTTP status "409 Resource Conflict"
+    p_message->Reset();
     p_message->SetStatus(HTTP_STATUS_CONFLICT);
     return false;
   }
-  p_message->SetStatus(HTTP_STATUS_OK);
   return true;
 }
 
 // Does only logging.
 // CAN BE OVERRIDDEN
 int
-SiteHandlerFormData::PreHandleBuffer(MultiPartBuffer* p_buffer)
+SiteHandlerFormData::PreHandleBuffer(HTTPMessage* /*p_message*/,MultiPartBuffer* p_buffer)
 {
   SITE_DETAILLOGV("Pre-handling form-data. Number of bufferparts: %d",p_buffer->GetParts());
   return 0;
@@ -118,7 +119,7 @@ SiteHandlerFormData::PreHandleBuffer(MultiPartBuffer* p_buffer)
 // DOES NOTHING: OVVERRIDE ME!
 // IMPLEMENT YOURSELF: YOUR IMPLEMENTATION HERE
 int
-SiteHandlerFormData::HandleData(MultiPart* p_part)
+SiteHandlerFormData::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
   SITE_DETAILLOGS("Handling form-data data-part: ",p_part->GetName());
   SITE_ERRORLOG(ERROR_BAD_COMMAND,"Default multipart/form-data data-handler. Override me!");
@@ -128,7 +129,7 @@ SiteHandlerFormData::HandleData(MultiPart* p_part)
 // DOES NOTHING: OVVERRIDE ME!
 // IMPLEMENT YOURSELF: YOUR IMPLEMENTATION HERE
 int
-SiteHandlerFormData::HandleFile(MultiPart* p_part)
+SiteHandlerFormData::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
   SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName(),p_part->GetFileName());
   SITE_ERRORLOG(ERROR_BAD_COMMAND,"Default multipart/form-data file-handler. Override me!");
@@ -138,7 +139,7 @@ SiteHandlerFormData::HandleFile(MultiPart* p_part)
 // Does only logging.
 // CAN BE OVERRIDDEN
 int
-SiteHandlerFormData::PostHandleBuffer(MultiPartBuffer* p_buffer)
+SiteHandlerFormData::PostHandleBuffer(HTTPMessage* /*p_message*/,MultiPartBuffer* p_buffer)
 {
   SITE_DETAILLOGV("Post-handling form-data. Number of bufferparts: %d",p_buffer->GetParts());
   return 0;

@@ -41,16 +41,16 @@ static int totalChecks = 9;
 class FormDataHandler : public SiteHandlerFormData
 {
 protected:
-  int PreHandleBuffer(MultiPartBuffer* p_buffer);
-  int HandleData(MultiPart* p_part);
-  int HandleFile(MultiPart* p_part);
-  int PostHandleBuffer(MultiPartBuffer* p_buffer);
+  int PreHandleBuffer (HTTPMessage* p_message,MultiPartBuffer* p_buffer);
+  int HandleData      (HTTPMessage* p_message,MultiPart* p_part);
+  int HandleFile      (HTTPMessage* p_message,MultiPart* p_part);
+  int PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buffer);
 private:
   int m_parts { 0 };
 };
 
 int 
-FormDataHandler::PreHandleBuffer(MultiPartBuffer* p_buffer)
+FormDataHandler::PreHandleBuffer(HTTPMessage* /*p_message*/,MultiPartBuffer* p_buffer)
 {
   // Resetting the m_parts counter to the number of parts received
   m_parts = (int) p_buffer->GetParts();
@@ -59,7 +59,7 @@ FormDataHandler::PreHandleBuffer(MultiPartBuffer* p_buffer)
 }
 
 int 
-FormDataHandler::HandleData(MultiPart* p_part)
+FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
   SITE_DETAILLOGS("Handling form-data data-part: ",p_part->GetName());
 
@@ -84,7 +84,7 @@ FormDataHandler::HandleData(MultiPart* p_part)
 }
 
 int 
-FormDataHandler::HandleFile(MultiPart* p_part)
+FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
   SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName(),p_part->GetFileName());
 
@@ -115,7 +115,7 @@ FormDataHandler::HandleFile(MultiPart* p_part)
 }
 
 int 
-FormDataHandler::PostHandleBuffer(MultiPartBuffer* p_buffer)
+FormDataHandler::PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buffer)
 {
   // Essentially, test if all parts where received!
   // By checking the m_parts counter in the class
@@ -123,6 +123,12 @@ FormDataHandler::PostHandleBuffer(MultiPartBuffer* p_buffer)
 
   // Check done
   --totalChecks;
+
+  CString resultString;
+  resultString.Format("RESULT=%s\n",result ? "OK" : "ERROR");
+  p_message->AddBody(resultString);
+  p_message->SetContentType("text/html");
+
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------

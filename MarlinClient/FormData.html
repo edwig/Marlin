@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript">
+//<![CDATA[
+function loaded(event)
+{
+  alert('Yeah! Data sent and response loaded: ' + event.target.responseText);
+}
+
+function theError(event)
+{
+  alert('Oeps! Something went wrong.');
+}
+
+function sendData()
+{
+  var XHR = new XMLHttpRequest();
+  var FD  = new FormData();
+
+  // We push our data into our FormData object
+  FD.append("one","this is one");
+  FD.append("two","two, three, four");
+
+  // We define what will happen if the data are successfully sent
+  XHR.addEventListener('load', loaded);
+
+  // We define what will happen in case of error
+  XHR.addEventListener('error',theError);
+
+  // We setup our request as 'post / enctype'
+  XHR.open('POST', 'http://localhost:1200/MarlinTest/FormData/');
+  XHR.setRequestHeader('enctype','multipart/form-data');
+
+  // We just send our FormData object, HTTP headers are set automatically
+  XHR.send(FD)}
+//]]>
+  </script>
+</head>
+<body>
+  <fieldset>
+    <legend>Form data test</legend>
+	<p><input type="text" />
+	<p><input type="button" value="Test Marlin" onclick="sendData()" />
+  </fieldset>
+</body>
+</html>
