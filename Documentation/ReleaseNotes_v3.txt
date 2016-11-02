@@ -8,6 +8,12 @@ Version 3.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 3.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 3.8.1
+========================
+1) Added the possiblitiy for a SiteHandlerFormData to give respones through the propagation
+   of an extra parameter that gives you the HTTPMessage in each handler.
+   See also the TestFormData handler in the testserver to see how this works.
+
 CHANGES IN VERSION 3.8.0
 ========================
 1) It has been made possible to set the "mustUnderstand" attribute of the SOAP action in the
