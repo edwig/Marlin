@@ -745,7 +745,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     // DO CHECKS
 
     // Parameter is mandatory but not given in the definition
-    if((orgName != chkName) || ((type & WSDL_Mandatory) && checkParam == nullptr))
+    if((orgName != chkName) && ((type & WSDL_Mandatory) && checkParam == nullptr))
     {
       p_check->Reset();
       p_check->SetFault("Mandatory field not found",p_who,"Message is missing a field",orgParam->GetName());
