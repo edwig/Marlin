@@ -89,7 +89,7 @@ extern const char* headers[];
 using ushort    = unsigned short;
 using HeaderMap = std::map<CString,CString>;
 
-// Foreward declarations
+// Forward declarations
 class   SOAPMessage;
 class   JSONMessage;
 class   FileBuffer;
@@ -128,6 +128,7 @@ public:
   bool SetVerb(CString p_verb);
   void SetAcceptEncoding(CString p_encoding);
   void SetCommand(HTTPCommand p_command)        { m_command            = p_command;   };
+  void SetReferrer(CString p_referrer)          { m_referrer           = p_referrer;  };
   void SetStatus(unsigned p_status)             { m_status             = p_status;    };
   void SetSecure(bool p_secure)                 { m_cracked.m_secure   = p_secure;    ReparseURL();  };
   void SetUser(CString p_user)                  { m_cracked.m_userName = p_user;      ReparseURL();  };
@@ -159,6 +160,7 @@ public:
   // GETTERS
   HTTPCommand         GetCommand()              { return m_command;                   };
   CString             GetURL()                  { return m_url;                       };
+  CString             GetReferrer()             { return m_referrer;                  };
   CrackedURL&         GetCrackedURL()           { return m_cracked;                   };
   unsigned            GetStatus()               { return m_status;                    };
   bool                GetSecure()               { return m_cracked.m_secure;          };
@@ -246,6 +248,7 @@ private:
   FileBuffer          m_buffer;                                       // Body or file buffer
   Cookies             m_cookies;                                      // Cookies
   CString             m_url;                                          // Full URL to service
+  CString             m_referrer;                                     // Referrer of this call
   HANDLE              m_token         { NULL    };                    // Access token
   SOCKADDR_IN6        m_sender;                                       // Senders address;
   UINT                m_desktop       { 0       };                    // Remote desktop number

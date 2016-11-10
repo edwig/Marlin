@@ -666,6 +666,7 @@ HTTPServerMarlin::RunHTTPServer()
     CString   cookie         = request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
     CString   authorize      = request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
     CString   modified       = request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
+    CString   referrer       = request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
     CString   rawUrl         = CW2A(request->CookedUrl.pFullUrl);
     PSOCKADDR sender         = request->Address.pRemoteAddress;
     int       remDesktop     = FindRemoteDesktop(request->Headers.UnknownHeaderCount
@@ -831,6 +832,7 @@ HTTPServerMarlin::RunHTTPServer()
         // For all types of requests: Create the HTTPMessage
         message = new HTTPMessage(type,site);
         message->SetURL(rawUrl);
+        message->SetReferrer(referrer);
         message->SetAuthorization(authorize);
         message->SetRequestHandle(request->RequestId);
         message->SetConnectionID(request->ConnectionId);

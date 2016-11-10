@@ -415,6 +415,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   CString   cookie         = p_request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
   CString   authorize      = p_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
   CString   modified       = p_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
+  CString   referrer       = p_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
   CString   rawUrl         = CW2A(p_request->CookedUrl.pFullUrl);
   PSOCKADDR sender         = p_request->Address.pRemoteAddress;
   int       remDesktop     = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
@@ -489,6 +490,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   // For all types of requests: Create the HTTPMessage
   HTTPMessage* message = new HTTPMessage(type,p_site);
   message->SetURL(rawUrl);
+  message->SetReferrer(referrer);
   message->SetAuthorization(authorize);
   message->SetConnectionID(p_request->ConnectionId);
   message->SetContentType(contentType);

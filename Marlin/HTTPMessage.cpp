@@ -908,16 +908,12 @@ bool
 HTTPMessage::SetMultiPartURL(MultiPartBuffer* p_buffer)
 {
   SetContentType(p_buffer->GetContentType());
-  if(m_command == HTTPCommand::http_get)
-  {
-    return SetMultiPartURLGet(p_buffer);
-  }
-  else if(m_command == HTTPCommand::http_post)
+  if(m_command == HTTPCommand::http_post)
   {
     return SetMultiPartURLPost(p_buffer);
   }
-  // Cannot do a FormData object other than get/post
-  return false;
+  // else put/get/patch etc.
+  return SetMultiPartURLGet(p_buffer);
 }
 
 bool
