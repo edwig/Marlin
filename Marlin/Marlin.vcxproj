@@ -190,6 +190,7 @@
     <ClCompile Include="RunRedirect.cpp" />
     <ClCompile Include="SiteFilter.cpp" />
     <ClCompile Include="SiteFilterClientCertificate.cpp" />
+    <ClCompile Include="SiteFilterXSS.cpp" />
     <ClCompile Include="SiteHandler.cpp" />
     <ClCompile Include="SiteHandlerConnect.cpp" />
     <ClCompile Include="SiteHandlerDelete.cpp" />
@@ -320,6 +321,7 @@
     <ClInclude Include="ServerEvent.h" />
     <ClInclude Include="SiteFilter.h" />
     <ClInclude Include="SiteFilterClientCertificate.h" />
+    <ClInclude Include="SiteFilterXSS.h" />
     <ClInclude Include="SiteHandler.h" />
     <ClInclude Include="SiteHandlerConnect.h" />
     <ClInclude Include="SiteHandlerDelete.h" />

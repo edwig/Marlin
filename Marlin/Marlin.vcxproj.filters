@@ -247,6 +247,9 @@
     <ClCompile Include="MediaType.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
+    <ClCompile Include="SiteFilterXSS.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Analysis.h">
@@ -502,6 +505,9 @@
       <Filter>Zip\Headers</Filter>
     </ClInclude>
     <ClInclude Include="MediaType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SiteFilterXSS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

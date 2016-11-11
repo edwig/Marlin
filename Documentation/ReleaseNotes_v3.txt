@@ -8,6 +8,14 @@ Version 3.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 3.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 3.8.2
+========================
+1) Added the 'referrer' of an HTTP call to the general HTTPMessage.
+2) Added a SiteFilter for the detection of cross-site-scripting (XSS). The filter is called
+   SiteFilterXSS and can be used to filter calls from unwanted sites (not the current site),
+   as to be able to block scripting attacks. This filter uses the referrer of the original
+   HTTPMessage as was added under 1)
+
 CHANGES IN VERSION 3.8.1
 ========================
 1) Added the possiblitiy for a SiteHandlerFormData to give respones through the propagation
@@ -32,7 +40,7 @@ CHANGES IN VERSION 3.8.0
    mediate layers like proxies and Enterprise Service Busses.
 
 2) Various small bugs in sub optimalisations of both the HTTPServer and HTTPClient as they
-   sometimes generate error messages in the log, without real errors. Origin of these 
+   sometimes generate error messages in the log, without real errors.
 
 CHANGES IN VERSION 3.7.1
 =======================
