@@ -435,7 +435,7 @@ int TestWebservices(HTTPClient& client)
   // Test 11
   xprintf("TESTING ASYNCHRONEOUS SOAP MESSAGES TO /MarlinTest/Asynchrone/\n");
   xprintf("==============================================================\n");
-  url = CreateURL("Asyncrhone");
+  url = CreateURL("Asynchrone");
   errors += DoSendAsyncQueue(client,namesp,url);
 
 

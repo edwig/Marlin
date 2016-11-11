@@ -61,7 +61,8 @@ TestFormDataMP(HTTPClient* p_client)
   CString data = GetJsonString();
 
   MultiPartBuffer buffer(FD_MULTIPART);
-  buffer.AddPart("json","application/json",data);
+  buffer.AddPart("json", "application/json",data);
+  buffer.AddPart("empty","text/html","");
   buffer.AddFile("eventsource.js","application/js",file);
   // Try to transport the filetimes to the server
   // BEWARE: Some servers do not respect the filetimes attributes

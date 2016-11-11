@@ -1435,7 +1435,7 @@ HTTPServer::SendResponse(HTTPSite*       p_site
     challenge = BuildAuthenticationChallenge(p_authScheme,p_site->GetAuthenticationRealm());
     AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
   }
-  else if (p_statusCode)
+  else if (p_statusCode != HTTP_STATUS_OK)
   {
     // Log responding with error status code
     HTTPError(__FUNCTION__,p_statusCode,"Returning from: " + p_site->GetSite());

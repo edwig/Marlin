@@ -64,12 +64,13 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
   SITE_DETAILLOGS("Handling form-data data-part: ",p_part->GetName());
 
   CString data = p_part->GetData();
+  CString name = p_part->GetName();
   xprintf("MULTI-PART DATA = Name : %s\n",(LPCTSTR)p_part->GetName());
   xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
   xprintf("MULTI-PART\n%s\n",             (LPCTSTR)p_part->GetData());
 
   // Remember the fact that we where called
-  if(!data.IsEmpty())
+  if(!data.IsEmpty() || !name.IsEmpty())
   {
     --m_parts;
   }
@@ -79,8 +80,8 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Multi-part formdata - data part                : %s\n",data.IsEmpty() ? "ERROR" : "OK");
-  return data.IsEmpty() ? 1 : 0;
+  printf("Multi-part formdata - data part                : %s\n",data.IsEmpty() && name.IsEmpty() ? "ERROR" : "OK");
+  return data.IsEmpty() && name.IsEmpty() ? 1 : 0;
 }
 
 int 
@@ -119,7 +120,7 @@ FormDataHandler::PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buff
 {
   // Essentially, test if all parts where received!
   // By checking the m_parts counter in the class
-  bool result = m_parts == 0 && p_buffer->GetParts() == 2;
+  bool result = m_parts == 0 && p_buffer->GetParts() == 3;
 
   // Check done
   --totalChecks;

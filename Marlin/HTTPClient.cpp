@@ -1279,20 +1279,25 @@ HTTPClient::SendBodyData()
       
         while(m_buffer->GetBufferPart(part,buffer,length))
         {
-          DWORD dwWritten = 0;
-          if (!::WinHttpWriteData(m_request,
-                                  buffer,
-                                  (DWORD)length,
-                                  &dwWritten))
+          // Only send a non-zero length buffer
+          if(length)
           {
-            CString msg;
-            msg.Format("Write body: Buffer part [%d]. Error [%%d] %%s",part + 1);
-            ErrorLog(__FUNCTION__,(char*) msg.GetString());
-            break;
+            DWORD dwWritten = 0;
+            if(!::WinHttpWriteData(m_request
+                                  ,buffer
+                                  ,(DWORD)length
+                                  ,&dwWritten))
+            {
+              CString msg;
+              msg.Format("Write body: Buffer part [%d]. Error [%%d] %%s",part + 1);
+              ErrorLog(__FUNCTION__,(char*)msg.GetString());
+              break;
+            }
           }
           DETAILLOG("Write body. Buffer part [%d]. Size: %d",part + 1,length);
           ((char*)buffer)[length] = 0;
           TRACELOG((char*)buffer);
+
           // Next part
           ++part;
         } 
@@ -1325,10 +1330,10 @@ HTTPClient::SendBodyData()
           dwSize += dwRead;
 
           DWORD dwWritten = 0;
-          if (!::WinHttpWriteData(m_request,
-                                  buffer,
-                                  dwRead,
-                                  &dwWritten))
+          if(dwRead && !::WinHttpWriteData(m_request
+                                          ,buffer
+                                          ,dwRead
+                                          ,&dwWritten))
           {
             ErrorLog(__FUNCTION__,"Write body: File part. Error [%d] %s");
             break;

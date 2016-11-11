@@ -575,14 +575,17 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,CString& p
     if(memcmp(p_finding,(char*)p_boundary.GetString(),length) == 0)
     {
       // Positioning of the boundary found
-      p_finding   += length + 2;
-      p_remaining -= length + 2;
+      p_finding   += length + 2; // 2 is for cr/lf of the HTTP protocol
+      p_remaining -= length + 2; // 2 is for cr/lf of the HTTP protocol
       result       = p_finding;
 
       while(p_remaining-- > (size_t)(length + 1))
       {
         if(memcmp(p_finding,(char*) p_boundary.GetString(),length) == 0)
         {
+          // Two '-' signs before the boundary
+          if((*(p_finding - 1)) == '-') --p_finding;
+          if((*(p_finding - 1)) == '-') --p_finding;
           // Ending of the part found
           break;
         }

@@ -216,6 +216,7 @@ FileBuffer::GetBuffer(uchar*& p_buffer,size_t& p_length)
     // CANNOT GET IT. Indicate the length
     p_buffer = NULL;
     p_length = GetLength();
+    return;
   }
   // Get the buffer in one go
   p_buffer = m_buffer;
