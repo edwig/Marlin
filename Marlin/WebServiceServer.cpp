@@ -184,7 +184,9 @@ WebServiceServer::Reset()
   // are cleaned up by the HTTPSite!
 }
 
-// MANDATORY: Set the SOAP handler
+// OPTIONAL: Set the SOAP handler
+// But beware: Standard soap handling (primary objective of this class)
+//             can be compromised, as the handlers may not get called
 void    
 WebServiceServer::SetSoapHandler(SiteHandler* p_handler)
 {
@@ -194,6 +196,30 @@ WebServiceServer::SetSoapHandler(SiteHandler* p_handler)
   {
     // SOAP handler always is the POST handler!!
     m_site->SetHandler(HTTPCommand::http_post,p_handler);
+  }
+}
+
+// OPTIONAL: Set a different GET handler, but beware!
+// But beware: Standard Interface paging and WSDL/SOAP explanation
+//             pages can be compromised, as it will not be called
+void
+WebServiceServer::SetGetHandler(SiteHandler* p_handler)
+{
+  m_getHandler = p_handler;
+  if(m_site)
+  {
+    m_site->SetHandler(HTTPCommand::http_get,p_handler);
+  }
+}
+
+// OPTIONAL: Set a PUT handler, but beware!
+void
+WebServiceServer::SetPutHandler(SiteHandler* p_handler)
+{
+  m_putHandler = p_handler;
+  if(m_site)
+  {
+    m_site->SetHandler(HTTPCommand::http_put,p_handler);
   }
 }
 
@@ -517,6 +543,12 @@ WebServiceServer::Run()
     // but only if we generate a WSDL for the users
     m_getHandler = new SiteHandlerGetWSService();
     m_site->SetHandler(HTTPCommand::http_get,m_getHandler);
+  }
+
+  // If set, pass on the PUT handler
+  if(m_putHandler)
+  {
+    m_site->SetHandler(HTTPCommand::http_put,m_putHandler);
   }
 
   // Adding the extra content types to the site

@@ -162,6 +162,10 @@ public:
   void    SetAuthenticationDomain(CString p_domain)  { m_authentDomain = p_domain;         };
   // OPTIONAL: Set a different SOAP handler, but beware!
   void    SetSoapHandler(SiteHandler* p_handler);
+  // OPTIONAL: Set a different GET handler, but beware!
+  void    SetGetHandler(SiteHandler* p_handler);
+  // OPTIONAL: Set a PUT handler, but beware!
+  void    SetPutHandler(SiteHandler* p_handler);
 
   // GETTERS
 
@@ -199,6 +203,7 @@ public:
   WSDLCache*    GetWSDLCache()          { return m_wsdl;              };
   SiteHandler*  GetPostHandler()        { return m_soapHandler;       };
   SiteHandler*  GetGetHandler()         { return m_getHandler;        };
+  SiteHandler*  GetPutHandler()         { return m_putHandler;        };
   int           GetCommandCode(CString p_commandName);
 
   // CALLBACKS FOR THE SITEHANDLERS
@@ -261,6 +266,7 @@ protected:
   HTTPSite*       m_site              { nullptr };
   SiteHandler*    m_soapHandler       { nullptr };
   SiteHandler*    m_getHandler        { nullptr };
+  SiteHandler*    m_putHandler        { nullptr };
   LogAnalysis*    m_log               { nullptr };
 };
 
