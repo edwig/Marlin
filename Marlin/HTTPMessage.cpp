@@ -971,7 +971,7 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
   {
     CString header = part->CreateHeader(boundary,p_buffer->GetFileExtensions());
     m_buffer.AddBuffer((uchar*)header.GetString(),(size_t)header.GetLength());
-    if(!part->GetData().IsEmpty())
+    if(part->GetFileName().IsEmpty())
     {
       // Add data
       m_buffer.AddBuffer((uchar*)part->GetData().GetString()

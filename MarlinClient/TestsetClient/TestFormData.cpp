@@ -61,7 +61,8 @@ TestFormDataMP(HTTPClient* p_client)
   CString data = GetJsonString();
 
   MultiPartBuffer buffer(FD_MULTIPART);
-  buffer.AddPart("json","application/json",data);
+  buffer.AddPart("json", "application/json",data);
+  buffer.AddPart("empty","text/html",       ""); 
   buffer.AddFile("..\\Documentation\\eventsource.js","application/js",file);
   // Try to transport the filetimes to the server
   // BEWARE: Some servers do not respect the filetimes attributes
@@ -79,7 +80,7 @@ TestFormDataMP(HTTPClient* p_client)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Send: Multipart form-data message              : %s\n",result ? "OK" : "ERROR");
+  printf("Send: Multi-part form-data message             : %s\n",result ? "OK" : "ERROR");
 
   if(result == false)
   {

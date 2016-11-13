@@ -1247,44 +1247,59 @@ HTTPClient::AddProxyAuthentication()
   return true;
 }
 
+// Sending the body of the message to the server
+// Works in 4 different configurations:
+// 1) One burst of the m_body member is first priority
+// 2) Send in one go from the m_buffer member as one (1) buffer block
+// 3) Send multiple buffer parts from the m_buffer member
+// 4) Send the indicated file from m_buffer by cycling through the file
+//
+// Beware: Cannot send blocks of length 0, as the HTTP channel will stall!!
+//
 void
 HTTPClient::SendBodyData()
 {
   // If we did have a body, we sent it now, right after the header
   // Try to do it in one (1) burst, to be as optimal as possible
-  if(m_body != NULL && m_bodyLength > 0)
+  if(m_body != nullptr)
   {
-    // PART 1: SEND OUR DATA IN ONE (1) GO
-    // ONLY m_body/m_bodylength IS FILLED IN.
-    DWORD dwWritten = 0;
-    if (!::WinHttpWriteData(m_request,
-                            m_body,
-                            m_bodyLength,
-                            &dwWritten))
+    if(m_bodyLength)
     {
-      ErrorLog(__FUNCTION__,"Write body: Data in 1 go. Error [%d] %s");
+      // PART 1: SEND OUR DATA IN ONE (1) GO
+      // ONLY m_body/m_bodylength IS FILLED IN.
+      DWORD dwWritten = 0;
+      if (!::WinHttpWriteData(m_request
+                             ,m_body
+                             ,m_bodyLength
+                             ,&dwWritten))
+      {
+        ErrorLog(__FUNCTION__,"Write body: Data in 1 go. Error [%d] %s");
+      }
     }
     DETAILLOG("Write body. Data in 1 go. Size: %d",m_bodyLength);
   }
-  else if(m_buffer != NULL)
+  else if(m_buffer != nullptr)
   {
     if(m_buffer->GetFileName().IsEmpty())
     {
-      uchar* buffer = NULL;
+      uchar* buffer = nullptr;
       size_t length = 0;
 
       m_buffer->GetBuffer(buffer,length);
       if(buffer)
       {
-        // PART 2: SEND In 1 GO FROM FileBUFFER
-        // Only 1 GetBufer required
-        DWORD dwWritten = 0;
-        if (!::WinHttpWriteData(m_request,
-                                buffer,
-                                (DWORD)length,
-                                &dwWritten))
+        if(length)
         {
-          ErrorLog(__FUNCTION__,"Write body: File buffer. Error [%d] %s");
+          // PART 2: SEND In 1 GO FROM FileBUFFER
+          // Only 1 GetBufer required
+          DWORD dwWritten = 0;
+          if (!::WinHttpWriteData(m_request
+                                 ,buffer
+                                 ,(DWORD)length
+                                 ,&dwWritten))
+          {
+            ErrorLog(__FUNCTION__,"Write body: File buffer. Error [%d] %s");
+          }
         }
         DETAILLOG("Write body. File buffer. Size: %d",length);
       }
@@ -1296,20 +1311,23 @@ HTTPClient::SendBodyData()
       
         while(m_buffer->GetBufferPart(part,buffer,length))
         {
-          DWORD dwWritten = 0;
-          if (!::WinHttpWriteData(m_request,
-                                  buffer,
-                                  (DWORD)length,
-                                  &dwWritten))
+          if(length)
           {
-            CString msg;
-            msg.Format("Write body: Buffer part [%d]. Error [%%d] %%s",part + 1);
-            ErrorLog(__FUNCTION__,(char*) msg.GetString());
-            break;
+            DWORD dwWritten = 0;
+            if (!::WinHttpWriteData(m_request
+                                   ,buffer
+                                   ,(DWORD)length
+                                   ,&dwWritten))
+            {
+              CString msg;
+              msg.Format("Write body: Buffer part [%d]. Error [%%d] %%s",part + 1);
+              ErrorLog(__FUNCTION__,(char*) msg.GetString());
+              break;
+            }
           }
           DETAILLOG("Write body. Buffer part [%d]. Size: %d",part + 1,length);
           ((char*)buffer)[length] = 0;
-          TRACELOG((char*)buffer);
+          // TRACELOG((char*)buffer);
           // Next part
           ++part;
         } 
@@ -1343,10 +1361,10 @@ HTTPClient::SendBodyData()
           dwSize += dwRead;
 
           DWORD dwWritten = 0;
-          if (!::WinHttpWriteData(m_request,
-                                  buffer,
-                                  dwRead,
-                                  &dwWritten))
+          if(dwRead && !::WinHttpWriteData(m_request
+                                          ,buffer
+                                          ,dwRead
+                                          ,&dwWritten))
           {
             ErrorLog(__FUNCTION__,"Write body: File part. Error [%d] %s");
             break;
@@ -1370,6 +1388,7 @@ HTTPClient::SendBodyData()
       m_buffer->CloseFile();
       // Free our writing buffer
       delete [] buffer;
+      DETAILLOG(" File closed: %s",m_buffer->GetFileName());
     }
   }
 }

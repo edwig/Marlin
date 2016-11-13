@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 9;
+static int totalChecks = 10;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -70,12 +70,15 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
   SITE_DETAILLOGS("Handling form-data data-part: ",p_part->GetName());
 
   CString data = p_part->GetData();
+  CString name = p_part->GetName();
   xprintf("MULTI-PART DATA = Name : %s\n",(LPCTSTR)p_part->GetName());
   xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
   xprintf("MULTI-PART\n%s\n",             (LPCTSTR)p_part->GetData());
 
+
   // Remember the fact that we where called
-  if(!data.IsEmpty())
+  bool result = !data.IsEmpty() || !name.IsEmpty();
+  if(result)
   {
     --m_parts;
     --totalChecks;
@@ -83,8 +86,8 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Multi-part formdata - data part                : %s\n",data.IsEmpty() ? "ERROR" : "OK");
-  return data.IsEmpty() ? 1 : 0;
+  qprintf("Multi-part form-data - data part               : %s\n",result ? "OK" : "ERROR");
+  return result ? 0 : 1;
 }
 
 int 
@@ -116,7 +119,7 @@ FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
   }
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Multi-part formdata - file part                : %s\n",result ? "OK" : "ERROR");
+  qprintf("Multi-part form-data - file part               : %s\n",result ? "OK" : "ERROR");
   return result ? 0 : 1;
 }
 
@@ -125,7 +128,7 @@ FormDataHandler::PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buff
 {
   // Essentially, test if all parts where received!
   // By checking the m_parts counter in the class
-  bool result = m_parts == 0 && p_buffer->GetParts() == 2;
+  bool result = m_parts == 0 && p_buffer->GetParts() == 3;
 
   // Check done
   if(result)
@@ -139,8 +142,8 @@ FormDataHandler::PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buff
   p_message->SetContentType("text/html");
 
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
-  qprintf("Multi-part formdata - total test               : %s\n",result ? "OK" : "ERROR");
+  //  --- "---------------------------------------------- - ------
+  qprintf("Multi-part form-data - total test              : %s\n",result ? "OK" : "ERROR");
   return 0;  
 }
 
@@ -167,8 +170,8 @@ int TestFormData(HTTPServer* p_server)
   if(site)
   {
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite multipart/form-data: OK : %s\n",site->GetPrefixURL().GetString());
+    //  --- "--------------------------- - ------\n"
+    qprintf("HTTPSite Form-data          : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
