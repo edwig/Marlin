@@ -974,8 +974,8 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
     if(part->GetFileName().IsEmpty())
     {
       // Add data
-      m_buffer.AddBuffer((uchar*)part->GetData().GetString()
-                        ,(size_t)part->GetData().GetLength());
+      m_buffer.AddBufferCRLF((uchar*)part->GetData().GetString()
+                            ,(size_t)part->GetData().GetLength());
     }
     else
     {
@@ -984,7 +984,7 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
       size_t size = 0L;
       FileBuffer* partBuffer = part->GetBuffer();
       partBuffer->GetBuffer(buf,size);
-      m_buffer.AddBuffer(buf,size);
+      m_buffer.AddBufferCRLF(buf,size);
     }
     // At least one part added
     result = true;

@@ -192,6 +192,26 @@ FileBuffer::AddBuffer(uchar* p_buffer,size_t p_length)
   m_parts.push_back(part);
 }
 
+// Add buffer part + CRLF
+// Handy for the FormData HTTP protocol
+void
+FileBuffer::AddBufferCRLF(uchar* p_buffer,size_t p_length)
+{
+  BufPart part;
+  part.m_buffer = new uchar[p_length + 3];
+  part.m_length = p_length + 2;
+
+  if(part.m_buffer)
+  {
+    memcpy(part.m_buffer,p_buffer,p_length);
+    *((char*)part.m_buffer + p_length + 0) = '\r';
+    *((char*)part.m_buffer + p_length + 1) = '\n';
+    *((char*)part.m_buffer + p_length + 2) = 0;
+  }
+  // Keep the buffer part
+  m_parts.push_back(part);
+}
+
 // Allocate a one-buffer block
 bool    
 FileBuffer::AllocateBuffer(size_t p_length)
