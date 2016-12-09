@@ -81,7 +81,8 @@ public:
   // Set the buffer in one go
   void    SetBuffer(uchar* p_buffer,size_t p_length);
   // Add buffer part
-  void    AddBuffer(uchar* p_buffer,size_t p_length);
+  void    AddBuffer    (uchar* p_buffer,size_t p_length);
+  void    AddBufferCRLF(uchar* p_buffer,size_t p_length);
   // Allocate a one-buffer block
   bool    AllocateBuffer(size_t p_length);
 
