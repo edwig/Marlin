@@ -8,6 +8,12 @@ Version 3.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 3.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 3.8.3
+========================
+1) Correction in the interpretation of the WSDL "minOccurs" and "maxOccurs" attributes.
+   For the interpretation of the 'mandatory' status, only the 'minOccurs' attribute is used now.
+   0 or less means 'Optional', 1 and greater means 'manditory'.
+
 CHANGES IN VERSION 3.8.2
 ========================
 1) Added the 'referrer' of an HTTP call to the general HTTPMessage.

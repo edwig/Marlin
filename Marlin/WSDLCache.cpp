@@ -1618,24 +1618,15 @@ WSDLCache::ReadElementaryType(CString p_type)
 int
 WSDLCache::ReadWSDLOptions(XMLMessage& p_wsdl,XMLElement* p_element)
 {
-  int options = WSDL_Optional;
   CString minOccurs = p_wsdl.GetAttribute(p_element,"minOccurs");
   CString maxOccurs = p_wsdl.GetAttribute(p_element,"maxOccurs");
   int     minNum    = atoi(minOccurs);
-  int     maxNum    = atoi(maxOccurs);
 
+  int options = minNum > 0 ? WSDL_Mandatory : WSDL_Optional;
 
-  if(minNum == 1 && maxNum == 1)
+  if(maxOccurs.Compare("unbounded") == 0)
   {
-    options = WSDL_Mandatory;
-  }
-  else if(minNum == 0 && maxNum == 1)
-  {
-    options = WSDL_Optional;
-  }
-  else if(maxOccurs == "unbounded")
-  {
-     options = minNum == 1 ? WSDL_OneMany : WSDL_ZeroMany;
+    options = (minNum <= 0) ? WSDL_ZeroMany : WSDL_OneMany;
   }
   return options;
 }
