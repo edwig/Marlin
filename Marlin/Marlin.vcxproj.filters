@@ -279,6 +279,9 @@
     <ClCompile Include="SiteFilterXSS.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
+    <ClCompile Include="CommandBus.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -565,6 +568,9 @@
     </ClInclude>
     <ClInclude Include="SiteFilterXSS.h">
       <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandBus.h">
+      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

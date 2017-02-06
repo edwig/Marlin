@@ -68,6 +68,7 @@ ThreadPool::ThreadPool(int p_minThreads,int p_maxThreads)
 ThreadPool::~ThreadPool()
 {
   StopThreadPool();
+  RunCleanupJobs();
   DeleteCriticalSection(&m_critical);
 }
 
@@ -519,6 +520,18 @@ ThreadPool::DoTheCallback(LPFN_CALLBACK p_callback,void* p_argument)
   (*(p_callback))(p_argument);
 }
 
+// Running all cleanup jobs for the threadpool
+void 
+ThreadPool::RunCleanupJobs()
+{
+  // Simply call all jobs from the main thread
+  for(auto& job : m_cleanup)
+  {
+    TP_TRACE0("Calling cleanup job\n");
+    (*job.m_callback)(job.m_argument);
+  }
+}
+
 // More work to do on a thread
 // Pool is/MUST BE already in a locked state
 bool 
@@ -700,6 +713,18 @@ ThreadPool::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbea
   work.m_timeout  = p_hartbeat;
   m_work.push_back(work);
   TP_TRACE1("Work queue now [%d] items\n",m_work.size());
+}
+
+// Submitting cleanup jobs
+void 
+ThreadPool::SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument)
+{
+  ThreadWork job;
+  job.m_callback = p_cleanup;
+  job.m_argument = p_argument;
+  job.m_timeout  = INFINITE;
+  m_cleanup.push_back(job);
+  TP_TRACE1("Cleanup jobs queue [%d] items\n",m_cleanup.size());
 }
 
 // Sleeping and waking-up a thread

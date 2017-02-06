@@ -109,6 +109,8 @@ public:
   // Extend the maximum for a period of time
   void ExtendMaximumThreads(AutoIncrementPoolMax& p_increment);
   void RestoreMaximumThreads(AutoIncrementPoolMax* p_increment);
+  // Submitting cleanup jobs
+  void SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument);
 
   // Sleeping and waking-up a thread
   void*  SleepThread(DWORD_PTR p_unique,void* p_payload = nullptr);
@@ -120,12 +122,13 @@ public:
 
   // GETTERS
 
-  int  GetMinThreads()          { return m_minThreads;        };
-  int  GetMaxThreads()          { return m_maxThreads;        };
-  int  GetStackSize()           { return m_stackSize;         };
-  int  GetWorkOverflow()        { return (int)m_work.size();  };
-  int  GetWaitingThreads()      { return WaitingThreads();    };
-  bool GetUseCPULoad()          { return m_useCPULoad;        };
+  int  GetMinThreads()          { return m_minThreads;          };
+  int  GetMaxThreads()          { return m_maxThreads;          };
+  int  GetStackSize()           { return m_stackSize;           };
+  int  GetWorkOverflow()        { return (int)m_work.size();    };
+  int  GetWaitingThreads()      { return WaitingThreads();      };
+  bool GetUseCPULoad()          { return m_useCPULoad;          };
+  int  GetCleanupJobs()         { return (int)m_cleanup.size(); };
 
   // "Running A Thread" is public, but really should only be called 
   // from within the static work functions to get things working
@@ -158,6 +161,8 @@ private:
   ThreadRegister* FindWaitingThread();
   // Create a thread in the threadpool
   ThreadRegister* CreateThreadPoolThread(DWORD p_hartbeat = INFINITE);
+  // Running all cleanup jobs for the threadpool
+  void RunCleanupJobs();
 
   // This is the real callback. 
   // Overload for your needs, in your own class derived from ThreadPool
@@ -175,6 +180,7 @@ private:
   void*             m_hartbeatContext { nullptr };              // Pointer to the context of the heartbeat
   ThreadMap         m_threads;                                  // Map with all running and waiting threads
   WorkMap           m_work;                                     // Map with the backlog of work to do
+  WorkMap           m_cleanup;                                  // Cleanup jobs after closing the queue
   CRITICAL_SECTION  m_critical;                                 // Locking synchronization object
 };
 
