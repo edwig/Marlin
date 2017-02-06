@@ -152,4 +152,7 @@ CHANGES IN VERSION 4.0
 11) The "Open" method of the WebServiceClient now returns a boolean (true / false) 
     whether the client was started and opened correctly. No need to call "IsOpen".
 12) All datatypes are moved to a new header ("XMLDataTypes.h")
+13) Correction in the interpretation of the WSDL "minOccurs" and "maxOccurs" attributes.
+    For the interpretation of the 'mandatory' status, only the 'minOccurs' attribute is used now.
+    0 or less means 'Optional', 1 and greater means 'manditory'.
 
