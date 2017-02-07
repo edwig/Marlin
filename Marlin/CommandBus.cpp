@@ -71,7 +71,7 @@ CommandBus::SubscribeCommand(CString p_command,LPFN_CALLBACK p_function,void* p_
     return false;
   }
 
-  Commands comm = m_targets.equal_range(p_command);
+  Commands comm = m_subscribers.equal_range(p_command);
   for(CommandMap::iterator it = comm.first;it != comm.second;++it)
   {
     if(it->second.m_target == p_function)
@@ -81,11 +81,11 @@ CommandBus::SubscribeCommand(CString p_command,LPFN_CALLBACK p_function,void* p_
     }
   }
   // Create subscriber target
-  CommandTarget target;
+  Subscriber target;
   target.m_target   = p_function;
   target.m_argument = p_default;
 
-  m_targets.insert(std::make_pair(p_command,target));
+  m_subscribers.insert(std::make_pair(p_command,target));
   return true;
 }
 
@@ -96,7 +96,7 @@ CommandBus::GetNumberOfSubscribers(CString p_command)
   AutoCritSec lock(&m_lock);
 
   int number = 0;
-  Commands comm = m_targets.equal_range(p_command);
+  Commands comm = m_subscribers.equal_range(p_command);
 
   for(CommandMap::iterator it = comm.first; it != comm.second; ++it)
   {
@@ -111,13 +111,13 @@ CommandBus::UnSubscribe(CString p_command,LPFN_CALLBACK p_function)
 {
   AutoCritSec lock(&m_lock);
 
-  Commands comm = m_targets.equal_range(p_command);
+  Commands comm = m_subscribers.equal_range(p_command);
 
   for(CommandMap::iterator it = comm.first; it != comm.second; ++it)
   {
     if(it->second.m_target == p_function)
     {
-      m_targets.erase(it);
+      m_subscribers.erase(it);
       return true;
     }
   }
@@ -138,12 +138,12 @@ CommandBus::PublishCommand(CString p_command,void* p_argument)
 
   // Find all subscribers
   bool result = false;
-  Commands comm = m_targets.equal_range(p_command);
+  Commands comm = m_subscribers.equal_range(p_command);
 
+  // Publish to each subscriber through the threadpool
   for(CommandMap::iterator it = comm.first; it != comm.second; ++it)
   {
-    // Publish to each subscriber through the threadpool
-    m_pool->SubmitWork(it->second.m_target,p_argument,INFINITE);
+    m_pool->SubmitWork(it->second.m_target,p_argument);
     result = true;
   }
   return result;

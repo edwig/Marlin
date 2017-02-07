@@ -27,8 +27,10 @@
 //
 #include "stdafx.h"
 #include "XMLRestriction.h"
+#include "XMLTemporal.h"
 #include "CrackURL.h"
 #include <stdint.h>
+#include <regex>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -162,6 +164,50 @@ XMLRestriction::PrintRestriction(CString p_name)
   return restriction;
 }
 
+// If whitespace not givven and it's not a string -> Collapse
+// If whitespace not givven and it's a string -> preserve
+// Otherwise: use whitespace
+CString 
+XMLRestriction::HandleWhitespace(XmlDataType p_type,CString p_value)
+{
+  if(m_whiteSpace == 0)
+  {
+    // If "whiteSpace" attribute is not given
+    if(p_type == XDT_String)
+    {
+      return p_value;
+    }
+    else
+    {
+      // Collapse
+      p_value.Replace('\t',' ');
+      p_value.Replace('\r',' ');
+      p_value.Replace('\n',' ');
+      p_value.Replace("  "," ");
+      p_value = p_value.Trim();
+    }
+  }
+  else
+  {
+    // In case we have a whiteSpace attribute
+    // Preserve = 1 -> Do nothing
+    if(m_whiteSpace >= 2)
+    {
+      // Replace and collapse
+      p_value.Replace('\t',' ');
+      p_value.Replace('\r',' ');
+      p_value.Replace('\n',' ');
+    }
+    // Full collapse
+    if(m_whiteSpace == 3)
+    {
+      p_value.Replace("  "," ");
+      p_value = p_value.Trim();
+    }
+  }
+  return p_value;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 //  RESTRICTIONS FOR A CLASS OF MESSAGES. I.E. a WSDL registration file
@@ -232,6 +278,231 @@ XMLRestrictions::GiveDisplayValue(CString p_name,CString p_enum)
 //
 //////////////////////////////////////////////////////////////////////////
 
+// Check ranges max/min exclusive/inclusive
+CString   
+XMLRestriction::CheckRangeFloat(CString p_value)
+{
+  if(!m_minInclusive.IsEmpty())
+  {
+    if(atof(p_value) < atof(m_minInclusive)) return "Value too small. < minInclusive";
+  }
+  if(!m_minExclusive.IsEmpty())
+  {
+    if(atof(p_value) <= atof(m_minExclusive)) return "Value too small. <= minExclusive";
+  }
+  if(!m_maxInclusive.IsEmpty())
+  {
+    if(atof(p_value) > atof(m_maxInclusive)) return "Value too big. > maxInclusive";
+  }
+  if(!m_maxExclusive.IsEmpty())
+  {
+    if(atof(p_value) >= atof(m_maxExclusive)) return "Value too big. >= maxExclusive";
+  }
+  return "";
+}
+
+CString   
+XMLRestriction::CheckRangeDecimal(CString p_value)
+{
+  if(!m_minInclusive.IsEmpty())
+  {
+    if(_atoi64(p_value) < _atoi64(m_minInclusive)) return "Value too small. < minInclusive";
+  }
+  if(!m_minExclusive.IsEmpty())
+  {
+    if(_atoi64(p_value) <= _atoi64(m_minExclusive)) return "Value too small. <= minExclusive";
+  }
+  if(!m_maxInclusive.IsEmpty())
+  {
+    if(_atoi64(p_value) > _atoi64(m_maxInclusive)) return "Value too big. > maxInclusive";
+  }
+  if(!m_maxExclusive.IsEmpty())
+  {
+    if(_atoi64(p_value) >= _atoi64(m_maxExclusive)) return "Value too big. >= maxExclusive";
+  }
+  return "";
+}
+
+CString
+XMLRestriction::CheckRangeTime(CString p_time)
+{
+  if(!m_minInclusive.IsEmpty())
+  {
+    INT64 min = XMLTime(m_minInclusive).GetValue();
+    INT64 val = XMLTime(p_time).GetValue();
+    if(val < min) return "Value too small. < minInclusive";
+  }
+  if(!m_minExclusive.IsEmpty())
+  {
+    INT64 min = XMLTime(m_minExclusive).GetValue();
+    INT64 val = XMLTime(p_time).GetValue();
+    if(val <= min) return "Value too small. <= minExclusive";
+  }
+  if(!m_maxInclusive.IsEmpty())
+  {
+    INT64 max = XMLTime(m_maxInclusive).GetValue();
+    INT64 val = XMLTime(p_time).GetValue();
+    if(val > max) return "Value too big. > maxInclusive";
+  }
+  if(!m_maxExclusive.IsEmpty())
+  {
+    INT64 max = XMLTime(m_maxExclusive).GetValue();
+    INT64 val = XMLTime(p_time).GetValue();
+    if(val > max) return "Value too big. >= maxExclusive";
+  }
+  return "";
+}
+
+CString
+XMLRestriction::CheckRangeDate(CString p_date)
+{
+  if(!m_minInclusive.IsEmpty())
+  {
+    INT64 min = XMLDate(m_minInclusive).GetValue();
+    INT64 val = XMLDate(p_date).GetValue();
+    if(val < min) return "Value too small. < minInclusive";
+  }
+  if(!m_minExclusive.IsEmpty())
+  {
+    INT64 min = XMLDate(m_minExclusive).GetValue();
+    INT64 val = XMLDate(p_date).GetValue();
+    if(val <= min) return "Value too small. <= minExclusive";
+  }
+  if(!m_maxInclusive.IsEmpty())
+  {
+    INT64 max = XMLDate(m_maxInclusive).GetValue();
+    INT64 val = XMLDate(p_date).GetValue();
+    if(val > max) return "Value too big. > maxInclusive";
+  }
+  if(!m_maxExclusive.IsEmpty())
+  {
+    INT64 max = XMLDate(m_maxExclusive).GetValue();
+    INT64 val = XMLDate(p_date).GetValue();
+    if(val > max) return "Value too big. >= maxExclusive";
+  }
+  return "";
+}
+
+CString   
+XMLRestriction::CheckRangeStamp(CString p_timestamp)
+{
+  if(!m_minInclusive.IsEmpty())
+  {
+    INT64 min = XMLTimestamp(m_minInclusive).GetValue();
+    INT64 val = XMLTimestamp(p_timestamp).GetValue();
+    if(val < min) return "Value too small. < minInclusive";
+  }
+  if(!m_minExclusive.IsEmpty())
+  {
+    INT64 min = XMLTimestamp(m_minExclusive).GetValue();
+    INT64 val = XMLTimestamp(p_timestamp).GetValue();
+    if(val <= min) return "Value too small. <= minExclusive";
+  }
+  if(!m_maxInclusive.IsEmpty())
+  {
+    INT64 max = XMLTimestamp(m_maxInclusive).GetValue();
+    INT64 val = XMLTimestamp(p_timestamp).GetValue();
+    if(val > max) return "Value too big. > maxInclusive";
+  }
+  if(!m_maxExclusive.IsEmpty())
+  {
+    INT64 max = XMLTimestamp(m_maxExclusive).GetValue();
+    INT64 val = XMLTimestamp(p_timestamp).GetValue();
+    if(val > max) return "Value too big. >= maxExclusive";
+  }
+  return "";
+}
+
+CString
+XMLRestriction::CheckRangeDuration(CString p_duration)
+{
+  if(!m_minInclusive.IsEmpty())
+  {
+    INT64 min = XMLDuration(m_minInclusive).GetValue();
+    INT64 val = XMLDuration(p_duration).GetValue();
+    if(val < min) return "Value too small. < minInclusive";
+  }
+  if(!m_minExclusive.IsEmpty())
+  {
+    INT64 min = XMLDuration(m_minExclusive).GetValue();
+    INT64 val = XMLDuration(p_duration).GetValue();
+    if(val <= min) return "Value too small. <= minExclusive";
+  }
+  if(!m_maxInclusive.IsEmpty())
+  {
+    INT64 max = XMLDuration(m_maxInclusive).GetValue();
+    INT64 val = XMLDuration(p_duration).GetValue();
+    if(val > max) return "Value too big. > maxInclusive";
+  }
+  if(!m_maxExclusive.IsEmpty())
+  {
+    INT64 max = XMLDuration(m_maxExclusive).GetValue();
+    INT64 val = XMLDuration(p_duration).GetValue();
+    if(val > max) return "Value too big. >= maxExclusive";
+  }
+  return "";
+}
+
+CString   
+XMLRestriction::CheckRangeGregYM(CString p_yearmonth)
+{
+  if(!m_minInclusive.IsEmpty())
+  {
+    INT64 min = XMLGregorianYM(m_minInclusive).GetValue();
+    INT64 val = XMLGregorianYM(p_yearmonth).GetValue();
+    if(val < min) return "Value too small. < minInclusive";
+  }
+  if(!m_minExclusive.IsEmpty())
+  {
+    INT64 min = XMLGregorianYM(m_minExclusive).GetValue();
+    INT64 val = XMLGregorianYM(p_yearmonth).GetValue();
+    if(val <= min) return "Value too small. <= minExclusive";
+  }
+  if(!m_maxInclusive.IsEmpty())
+  {
+    INT64 max = XMLGregorianYM(m_maxInclusive).GetValue();
+    INT64 val = XMLGregorianYM(p_yearmonth).GetValue();
+    if(val > max) return "Value too big. > maxInclusive";
+  }
+  if(!m_maxExclusive.IsEmpty())
+  {
+    INT64 max = XMLGregorianYM(m_maxExclusive).GetValue();
+    INT64 val = XMLGregorianYM(p_yearmonth).GetValue();
+    if(val >= max) return "Value too big. >= maxExclusive";
+  }
+  return "";
+}
+
+CString
+XMLRestriction::CheckRangeGregMD(CString p_monthday)
+{
+  if(!m_minInclusive.IsEmpty())
+  {
+    INT64 min = XMLGregorianMD(m_minInclusive).GetValue();
+    INT64 val = XMLGregorianMD(p_monthday).GetValue();
+    if(val < min) return "Value too small. < minInclusive";
+  }
+  if(!m_minExclusive.IsEmpty())
+  {
+    INT64 min = XMLGregorianMD(m_minExclusive).GetValue();
+    INT64 val = XMLGregorianMD(p_monthday).GetValue();
+    if(val <= min) return "Value too small. <= minExclusive";
+  }
+  if(!m_maxInclusive.IsEmpty())
+  {
+    INT64 max = XMLGregorianMD(m_maxInclusive).GetValue();
+    INT64 val = XMLGregorianMD(p_monthday).GetValue();
+    if(val > max) return "Value too big. > maxInclusive";
+  }
+  if(!m_maxExclusive.IsEmpty())
+  {
+    INT64 max = XMLGregorianMD(m_maxExclusive).GetValue();
+    INT64 val = XMLGregorianMD(p_monthday).GetValue();
+    if(val >= max) return "Value too big. >= maxExclusive";
+  }
+  return "";
+}
+
 CString
 XMLRestriction::CheckAnyURI(CString p_value)
 {
@@ -263,7 +534,7 @@ XMLRestriction::CheckInteger(CString p_value)
       return "Not an integer, but: " + p_value;
     }
   }
-  return "";
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -324,9 +595,10 @@ XMLRestriction::CheckDouble(CString p_value,bool p_specials)
     {
       result  = "Not a number: ";
       result += p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeFloat(p_value);
 }
 
 CString
@@ -341,6 +613,7 @@ XMLRestriction::CheckDatePart(CString p_value)
   {
     result = "Not a date: ";
     result += p_value;
+    return result;
   }
   else
   {
@@ -349,9 +622,10 @@ XMLRestriction::CheckDatePart(CString p_value)
        dateDay   < 1 || dateDay   > 31    )
     {
       result = "Date out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDate(p_value);
 }
 
 CString
@@ -438,6 +712,7 @@ XMLRestriction::CheckStampPart(CString p_value)
   if(num != 6)
   {
     result = "Not a dateTime: " + p_value;
+    return result;
   }
   else if(dateYear  < 0 || dateYear  > 9999 ||
           dateMonth < 1 || dateMonth >   12 ||
@@ -447,8 +722,9 @@ XMLRestriction::CheckStampPart(CString p_value)
           timeSec   < 0 || timeSec   >   60  )
   {
     result = "DateTime out of range: " + p_value;
+    return result;
   }
-  return result;
+  return CheckRangeStamp(p_value);
 }
 
 // YYYY-MM-DDThh:mm:ss[Znn[:nn]]
@@ -498,14 +774,16 @@ XMLRestriction::CheckTimePart(CString p_value)
   if(num != 3)
   {
     result = "Not a time: " + p_value;
+    return result;
   }
   else if(hour < 0 || hour > 23 ||
           min  < 0 || min  > 59 ||
           sec  < 0 || sec  > 60)
   {
     result = "time out of range: " + p_value;
+    return result;
   }
-  return result;
+  return CheckRangeTime(p_value);
 }
 
 // HH:MM::SS[Znn[:nn]]
@@ -547,8 +825,9 @@ XMLRestriction::CheckGregDay(CString p_value)
   if(num < 1 || num > 31)
   {
     result = "Not a Gregorian day in month: " + p_value;
+    return result;
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -562,8 +841,9 @@ XMLRestriction::CheckGregMonth(CString p_value)
   if(num < 1 || num > 12)
   {
     result = "Not a Gregorian month in year: " + p_value;
+    return result;
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -576,51 +856,26 @@ XMLRestriction::CheckGregYear(CString p_value)
   if(num < 01 || num > 99)
   {
     result = "Not a Gregorian XML year: " + p_value;
+    return result;
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
 XMLRestriction::CheckGregMD(CString p_value)
 {
-  p_value.Trim();
-  p_value.TrimLeft('-'); // up to 2 chars may appear
-  CString result;
-  int month = 0;
-  int day   = 0;
-
-  int num = sscanf_s(p_value,"%d-%d",&month,&day);
-  if(num != 2)
-  {
-    result = "Not a Gregorian month-day value: " + p_value;
-  }
-  else if(month < 1 || month > 12 ||
-          day   < 1 || day   > 31 )
-  {
-    result = "Gregorian month-day overflow: " + p_value;
-  }
-  return result;
+  // Try to convert to GregorianMD at least once
+  XMLGregorianMD greg(p_value);
+  return CheckRangeGregMD(p_value);
 }
 
 CString
 XMLRestriction::CheckGregYM(CString p_value)
 {
-  p_value.Trim();
-  CString result;
-  int year  = 0;
-  int month = 0;
-
-  int num = sscanf_s(p_value,"%d-%d",&year,&month);
-  if(num != 2)
-  {
-    result = "Not a Gregorian year-month value: " + p_value;
-  }
-  else if(year  < 0 || year  > 9999 ||
-          month < 1 || month >   12  )
-  {
-    result = "Gregorian year-month overflow: " + p_value;
-  }
-  return result;
+  // Try to convert to GregorianYM at least once
+  XMLGregorianYM greg(p_value);
+  // Check ranges
+  return CheckRangeGregYM(p_value);
 }
 
 CString
@@ -647,9 +902,10 @@ XMLRestriction::CheckLong(CString p_value)
     if(val < INT32_MIN || INT32_MAX < val)
     {
       result = "Long int out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -662,9 +918,10 @@ XMLRestriction::CheckShort(CString p_value)
     if(val < INT16_MIN || INT16_MAX < val)
     {
       result = "Short out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -677,9 +934,10 @@ XMLRestriction::CheckByte(CString p_value)
     if(val < INT8_MIN || INT8_MAX < val)
     {
       result = "Byte out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -692,9 +950,10 @@ XMLRestriction::CheckNNegInt(CString p_value)
     if(val < 0 || INT32_MAX < val)
     {
       result = "nonNegativeInteger out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -707,9 +966,10 @@ XMLRestriction::CheckPosInt(CString p_value)
     if(val <= 0 || INT32_MAX < val)
     {
       result = "positiveInteger out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -722,9 +982,10 @@ XMLRestriction::CheckUnsLong(CString p_value)
     if(val < 0 || UINT32_MAX < val)
     {
       result = "unsignedLong / unsignedInt out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -737,9 +998,10 @@ XMLRestriction::CheckUnsShort(CString p_value)
     if(val < 0 || UINT16_MAX < val)
     {
       result = "unsignedShort out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -752,9 +1014,10 @@ XMLRestriction::CheckUnsByte(CString p_value)
     if(val < 0 || UINT8_MAX < val)
     {
       result = "unsignedByte out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -767,9 +1030,10 @@ XMLRestriction::CheckNonPosInt(CString p_value)
     if(val < INT32_MIN || 0 < val)
     {
       result = "nonPositiveInteger out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -782,9 +1046,10 @@ XMLRestriction::CheckNegInt(CString p_value)
     if(val < INT32_MIN || 0 <= val)
     {
       result = "negativeInteger out of range: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString   
@@ -798,9 +1063,10 @@ XMLRestriction::CheckNormal(CString p_value)
     if(ch == '\r' || ch == '\n' || ch == '\t')
     {
       result = "normalizedString contains red space: " + p_value;
+      return result;
     }
   }
-  return result;
+  return CheckRangeDecimal(p_value);
 }
 
 CString
@@ -1041,7 +1307,7 @@ XMLRestriction::CheckDuration(CString p_value,int& p_type)
     // with the SQL definition of an interval, like Month-to-Day
     return "duration has incompatible field values: " + p_value;
   }
-  return "";
+  return CheckRangeDuration(p_value);
 }
 
 bool
@@ -1120,8 +1386,9 @@ XMLRestriction::CheckYearMonth(CString p_value)
   if(result.IsEmpty() && (p_type < 1 || 3 < p_type))
   {
     result = "yearMonthDuration out of bounds: " + p_value;
+    return result;
   }
-  return result;
+  return CheckRangeDuration(p_value);
 }
 
 CString
@@ -1132,8 +1399,9 @@ XMLRestriction::CheckDaySecond(CString p_value)
   if(result.IsEmpty() && (p_type < 4 || 13 < p_type))
   {
     result = "dayTimeDuration out of bounds: " + p_value;
+    return result;
   }
-  return result;
+  return CheckRangeDuration(p_value);
 }
 
 CString
@@ -1147,54 +1415,115 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,CString p_value)
     return result;
   }
 
-  // Checking only base datatypes
-  // String and CDATA are never checked!
-  switch(p_type & XDT_Mask)
+  try
   {
-    case XDT_AnyURI:            result = CheckAnyURI   (p_value);       break;
-    case XDT_Base64Binary:      result = CheckBase64   (p_value);       break;
-    case XDT_Boolean:           result = CheckBoolean  (p_value);       break;
-    case XDT_Date:              result = CheckDate     (p_value);       break;
-    case XDT_Integer:           result = CheckInteger  (p_value);       break;
-    case XDT_Decimal:           result = CheckDouble   (p_value,false); break;
-    case XDT_Double:            result = CheckDouble   (p_value,true);  break;
-    case XDT_DateTime:          result = CheckDateTime (p_value,false); break;
-    case XDT_DateTimeStamp:     result = CheckDateTime (p_value,true);  break;
-    case XDT_Float:             result = CheckDouble   (p_value,true);  break;
-    case XDT_Duration:          result = CheckDuration (p_value);       break;
-    case XDT_DayTimeDuration:   result = CheckDaySecond(p_value);       break;
-    case XDT_YearMonthDuration: result = CheckYearMonth(p_value);       break;
-    case XDT_GregDay:           result = CheckGregDay  (p_value);       break;
-    case XDT_GregMonth:         result = CheckGregMonth(p_value);       break;
-    case XDT_GregYear:          result = CheckGregYear (p_value);       break;
-    case XDT_GregMonthDay:      result = CheckGregMD   (p_value);       break;
-    case XDT_GregYearMonth:     result = CheckGregYM   (p_value);       break;
-    case XDT_HexBinary:         result = CheckHexBin   (p_value);       break;
-    case XDT_Long:              result = CheckLong     (p_value);       break;
-    case XDT_Int:               result = CheckLong     (p_value);       break;
-    case XDT_Short:             result = CheckShort    (p_value);       break;
-    case XDT_NonNegativeInteger:result = CheckNNegInt  (p_value);       break;
-    case XDT_PositiveInteger:   result = CheckPosInt   (p_value);       break;
-    case XDT_UnsignedLong:      result = CheckUnsLong  (p_value);       break;
-    case XDT_UnsignedInt:       result = CheckUnsLong  (p_value);       break;
-    case XDT_UnsignedShort:     result = CheckUnsShort (p_value);       break;
-    case XDT_UnsignedByte:      result = CheckUnsByte  (p_value);       break;
-    case XDT_NonPositiveInteger:result = CheckNonPosInt(p_value);       break;
-    case XDT_NegativeInteger:   result = CheckNegInt   (p_value);       break;
-    case XDT_Time:              result = CheckTime     (p_value);       break;
-    case XDT_Token:             result = CheckToken    (p_value);       break;
-    case XDT_NMTOKEN:           result = CheckNMTOKEN  (p_value);       break;
-    case XDT_Name:              result = CheckName     (p_value);       break;
-    case XDT_ENTITY:            result = CheckName     (p_value);       break;
-    case XDT_ID:                result = CheckName     (p_value);       break;
-    case XDT_IDREF:             result = CheckName     (p_value);       break;
-    case XDT_QName:             result = CheckQName    (p_value);       break;
-    case XDT_NMTOKENS:          result = CheckNMTOKENS (p_value);       break;
-    case XDT_ENTITIES:          result = CheckNames    (p_value);       break;
-    case XDT_IDREFS:            result = CheckNames    (p_value);       break;
-    default:                    break;
+    // Checking only base datatypes
+    // String and CDATA are never checked!
+    switch(p_type & XDT_Mask)
+    {
+      case XDT_AnyURI:            result = CheckAnyURI   (p_value);       break;
+      case XDT_Base64Binary:      result = CheckBase64   (p_value);       break;
+      case XDT_Boolean:           result = CheckBoolean  (p_value);       break;
+      case XDT_Date:              result = CheckDate     (p_value);       break;
+      case XDT_Integer:           result = CheckInteger  (p_value);       break;
+      case XDT_Decimal:           result = CheckDouble   (p_value,false); break;
+      case XDT_Double:            result = CheckDouble   (p_value,true);  break;
+      case XDT_DateTime:          result = CheckDateTime (p_value,false); break;
+      case XDT_DateTimeStamp:     result = CheckDateTime (p_value,true);  break;
+      case XDT_Float:             result = CheckDouble   (p_value,true);  break;
+      case XDT_Duration:          result = CheckDuration (p_value);       break;
+      case XDT_DayTimeDuration:   result = CheckDaySecond(p_value);       break;
+      case XDT_YearMonthDuration: result = CheckYearMonth(p_value);       break;
+      case XDT_GregDay:           result = CheckGregDay  (p_value);       break;
+      case XDT_GregMonth:         result = CheckGregMonth(p_value);       break;
+      case XDT_GregYear:          result = CheckGregYear (p_value);       break;
+      case XDT_GregMonthDay:      result = CheckGregMD   (p_value);       break;
+      case XDT_GregYearMonth:     result = CheckGregYM   (p_value);       break;
+      case XDT_HexBinary:         result = CheckHexBin   (p_value);       break;
+      case XDT_Long:              result = CheckLong     (p_value);       break;
+      case XDT_Int:               result = CheckLong     (p_value);       break;
+      case XDT_Short:             result = CheckShort    (p_value);       break;
+      case XDT_NonNegativeInteger:result = CheckNNegInt  (p_value);       break;
+      case XDT_PositiveInteger:   result = CheckPosInt   (p_value);       break;
+      case XDT_UnsignedLong:      result = CheckUnsLong  (p_value);       break;
+      case XDT_UnsignedInt:       result = CheckUnsLong  (p_value);       break;
+      case XDT_UnsignedShort:     result = CheckUnsShort (p_value);       break;
+      case XDT_UnsignedByte:      result = CheckUnsByte  (p_value);       break;
+      case XDT_NonPositiveInteger:result = CheckNonPosInt(p_value);       break;
+      case XDT_NegativeInteger:   result = CheckNegInt   (p_value);       break;
+      case XDT_Time:              result = CheckTime     (p_value);       break;
+      case XDT_Token:             result = CheckToken    (p_value);       break;
+      case XDT_NMTOKEN:           result = CheckNMTOKEN  (p_value);       break;
+      case XDT_Name:              result = CheckName     (p_value);       break;
+      case XDT_ENTITY:            result = CheckName     (p_value);       break;
+      case XDT_ID:                result = CheckName     (p_value);       break;
+      case XDT_IDREF:             result = CheckName     (p_value);       break;
+      case XDT_QName:             result = CheckQName    (p_value);       break;
+      case XDT_NMTOKENS:          result = CheckNMTOKENS (p_value);       break;
+      case XDT_ENTITIES:          result = CheckNames    (p_value);       break;
+      case XDT_IDREFS:            result = CheckNames    (p_value);       break;
+      default:                    break;
+    }
+  }
+  catch(CString& str)
+  {
+    // Primary datatype conversion went wrong
+    result = str;
   }
   return result;
+}
+
+CString   
+XMLRestriction::CheckTotalDigits(CString p_value)
+{
+  CString error;
+  CString value(p_value);
+  int pos = p_value.Find('.');
+  if(pos > 0)
+  {
+    value = p_value.Left(pos);
+  }
+  int count = 0;
+  for(int ind = 0; ind < value.GetLength(); ++ind)
+  {
+    if(isdigit(value.GetAt(pos))) ++count;
+  }
+  if(count > m_totalDigits)
+  {
+    error.Format("Number overflow totalDigits %d/%d",count,m_totalDigits);
+  }
+  return error;
+}
+
+CString
+XMLRestriction::CheckFractionDigits(CString p_value)
+{
+  CString error;
+  int pos = p_value.Find('.');
+  if(pos >= 0)
+  {
+    // Take fractin part
+    p_value = p_value.Mid(pos + 1);
+   
+    int count = 0;
+    for(int ind = 0; ind < p_value.GetLength(); ++ind)
+    {
+      if(isdigit(p_value.GetAt(pos)))
+      {
+        ++count;
+      }
+      else
+      {
+        // Stop counting at the 'E' or 'e' sign of the exponent
+        break;
+      }
+    }
+    if(count > m_fractionDigits)
+    {
+      error.Format("Number precision overflow fractionDigits %d/%d",count,m_fractionDigits);
+    }
+  }
+  return error;
 }
 
 CString 
@@ -1227,6 +1556,22 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,CString p_value)
       result.Format("Field is too short. Shorter than: %d",m_minLength);
     }
   }
+  if(m_totalDigits)
+  {
+    result = CheckTotalDigits(p_value);
+    if(!result.IsEmpty())
+    {
+      return result;
+    }
+  }
+  if(m_fractionDigits)
+  {
+    result = CheckFractionDigits(p_value);
+    if(!result.IsEmpty())
+    {
+      return result;
+    }
+  }
 
   // Notation datatype must have a enumerator list
   if(p_type == XDT_NOTATION)
@@ -1246,6 +1591,20 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,CString p_value)
     }
   }
 
+  // Pattern matching, if any
+  if(!m_pattern.IsEmpty())
+  {
+    std::string str(p_value);
+    std::regex  reg(m_pattern);
+
+    if(std::regex_match(str,reg) == false)
+    {
+      result.Format("Field value [%s] does not match the pattern: %s",p_value,m_pattern);
+      return result;
+    }
+  }
+  
+  // If no enums, then we are done
   if(m_enums.empty())
   {
     return result;
@@ -1260,12 +1619,4 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,CString p_value)
   }
   result.Format("Field value [%s] is not in the list of allowed enumeration values.",p_value);
   return result;
-
-  // YET TO BE IMPLEMENTED
-  // totalDigits
-  // fractionDigits
-  // maxExclusive
-  // maxInclusive
-  // minExclusive
-  // minInclusive
 }

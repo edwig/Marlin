@@ -800,25 +800,49 @@ WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
                                    ,SOAPMessage*  p_check
                                    ,CString       p_who)
 {
-  // Do datatype check
-  CString result = XMLRestriction::CheckDatatype(p_origParam->GetType(),p_checkParam->GetValue());
+  CString         value;
+  CString         result;
+  XMLRestriction  restrict("empty");
+  XMLRestriction* restriction = p_checkParam->GetRestriction();
+  XmlDataType     type = p_origParam->GetType() & XDT_Mask;
+
+  // Use the restriction, or an empty one
+  if(restriction)
+  {
+    value  = restriction->HandleWhitespace(type,p_checkParam->GetValue());
+    result = restriction->CheckDatatype(type,value);
+  }
+  else
+  {
+    value  = restrict.HandleWhitespace(type,p_checkParam->GetValue());
+    result = restrict.CheckDatatype(type,value);
+  }
+
+  // Datatype failed?
   if(!result.IsEmpty())
   {
-    CString details("Datatype check failed: ");
-    CString name = p_checkParam->GetName();
-    details += result;
-
+    CString details;
+    details.Format("Datatype check failed! Field: %s Value: %s Result: %s"
+                   ,p_checkParam->GetName()
+                   ,value
+                   ,result);
     p_check->Reset();
-    p_check->SetFault("Datatype",p_who,name,details);
+    p_check->SetFault("Datatype",p_who,"Restriction",details);
     return false;
   }
 
-  // Variable XSD Restriction check
-  if(p_checkParam->GetRestriction())
+  // Variable XSD Restriction check, other than the datatype
+  // including (min/max)length, digits, fraction, notation, enumerations, pattern etc.
+  if(restriction)
   {
-    result = p_checkParam->GetRestriction()->CheckRestriction(p_origParam->GetType() & XDT_Mask,p_origParam->GetValue());
+    result = restriction->CheckRestriction(type,value);
     if(!result.IsEmpty())
     {
+      CString details;
+      details.Format("Fieldvalue check failed! Field: %s Value: %s Result: %s"
+                     ,p_checkParam->GetName()
+                     ,value
+                     ,result);
       p_check->Reset();
       p_check->SetFault("Fieldvalue",p_who,"Restriction",result);
       return false;
@@ -826,7 +850,6 @@ WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
   }
   return true;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 //

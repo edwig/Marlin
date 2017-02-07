@@ -282,6 +282,9 @@
     <ClCompile Include="CommandBus.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="XMLTemporal.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -570,6 +573,9 @@
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
     <ClInclude Include="CommandBus.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLTemporal.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -158,3 +158,25 @@ CHANGES IN VERSION 4.0
 14) Added a 'cleanup job' to the threadpool. One or more cleanup jobs can be registered that will
     be called after the threadpool has been drained and stopped. The cleanup jobs will be called
 	from the mainthread of the threadpool, in order of registration.
+15) A 'Command BUS' is implemented on top of the threadpool.
+    Functionallity can subscribe to a command (a string keyword) to be called when needed with
+	their own thread to handle a function. Publishing of a command will call all subscribers
+	to that command with an argument that is passed on to the handler function as a result of 
+	the threadpool calling.
+	This command bus can be used if a single situation calls for multiple handlers to be 
+	started, each with their own unique thread of processing.
+	The bus is an extension of the standard MS-Windows messaging, which in general only goes
+	to the interface thread of an application. The bus is purely meant to be used by a server
+	application, such as a webserver.
+16) The following WSDL checks have been implemented
+    - whiteSpace      Preserve/replace/collapse rules
+	- pattern         Regular expression matching
+	- totalDigits	  Max total digits of a number
+	- fractionDigits  Max total fractional digits of a number
+	- minInclusive    For all relevant datatypes
+	- minExclusive    For all relevant datatypes
+	- maxInclusive    For all relevant datatypes
+	- maxExclusive    For all relevant datatypes
+	In order to fullfill the min/max In/Ex-clusive rules, a new XMLTemporal class has been added.
+	this class contains a partial implementation of Date,Time,Timestamp and Durations.
+	The implementation only calculates a ordinal number to parse min/max values.

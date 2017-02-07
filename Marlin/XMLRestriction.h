@@ -36,8 +36,9 @@ class XMLRestriction
 public:
   XMLRestriction(CString p_name);
   CString PrintRestriction(CString p_name);
-  CString      CheckRestriction(XmlDataType p_type,CString p_value);
-  static  CString CheckDatatype(XmlDataType p_type,CString p_value);
+  CString CheckRestriction(XmlDataType p_type,CString p_value);
+  CString CheckDatatype   (XmlDataType p_type,CString p_value);
+  CString HandleWhitespace(XmlDataType p_type,CString p_value);
 
   // Set restrictions
   void    AddEnumeration(CString p_enum,CString p_displayValue = "");
@@ -80,47 +81,59 @@ private:
   CString   PrintSpaceRestriction();
 
   // Checking the restrictions
-  static    CString   CheckAnyURI   (CString p_value);
-  static    CString   CheckInteger  (CString p_value);
-  static    CString   CheckBoolean  (CString p_value);
-  static    CString   CheckDate     (CString p_value);
-  static    CString   CheckBase64   (CString p_value);
-  static    CString   CheckDouble   (CString p_value,bool p_specials);
-  static    CString   CheckDateTime (CString p_value,bool p_explicit);
-  static    CString   CheckDatePart (CString p_value);
-  static    CString   CheckDuration (CString p_value);
-  static    CString   CheckYearMonth(CString p_value);
-  static    CString   CheckDaySecond(CString p_value);
-  static    CString   CheckTimePart (CString p_value); 
-  static    CString   CheckTime     (CString p_value);
-  static    CString   CheckTimeZone (CString p_value);
-  static    CString   CheckStampPart(CString p_value);
-  static    CString   CheckGregDay  (CString p_value);
-  static    CString   CheckGregMonth(CString p_value);
-  static    CString   CheckGregYear (CString p_value);
-  static    CString   CheckGregMD   (CString p_value);
-  static    CString   CheckGregYM   (CString p_value);
-  static    CString   CheckHexBin   (CString p_value);
-  static    CString   CheckLong     (CString p_value);
-  static    CString   CheckShort    (CString p_value);
-  static    CString   CheckByte     (CString p_value);
-  static    CString   CheckNNegInt  (CString p_value);
-  static    CString   CheckPosInt   (CString p_value);
-  static    CString   CheckUnsLong  (CString p_value);
-  static    CString   CheckUnsShort (CString p_value);
-  static    CString   CheckUnsByte  (CString p_value);
-  static    CString   CheckNonPosInt(CString p_value);
-  static    CString   CheckNegInt   (CString p_value);
-  static    CString   CheckNormal   (CString p_value);
-  static    CString   CheckToken    (CString p_value);
-  static    CString   CheckNMTOKEN  (CString p_value);
-  static    CString   CheckName     (CString p_value);
-  static    CString   CheckNCName   (CString p_value);
-  static    CString   CheckQName    (CString p_value);
-  static    CString   CheckNMTOKENS (CString p_value);
-  static    CString   CheckNames    (CString p_value);
-  static    CString   CheckDuration (CString p_value,int& p_type);
-  static    bool      ScanDurationValue(CString& p_duration,int& p_value,int& p_fraction,char& p_marker,bool& p_didTime);
+  CString   CheckAnyURI   (CString p_value);
+  CString   CheckInteger  (CString p_value);
+  CString   CheckBoolean  (CString p_value);
+  CString   CheckDate     (CString p_value);
+  CString   CheckBase64   (CString p_value);
+  CString   CheckDouble   (CString p_value,bool p_specials);
+  CString   CheckDateTime (CString p_value,bool p_explicit);
+  CString   CheckDatePart (CString p_value);
+  CString   CheckDuration (CString p_value);
+  CString   CheckYearMonth(CString p_value);
+  CString   CheckDaySecond(CString p_value);
+  CString   CheckTimePart (CString p_value); 
+  CString   CheckTime     (CString p_value);
+  CString   CheckTimeZone (CString p_value);
+  CString   CheckStampPart(CString p_value);
+  CString   CheckGregDay  (CString p_value);
+  CString   CheckGregMonth(CString p_value);
+  CString   CheckGregYear (CString p_value);
+  CString   CheckGregMD   (CString p_value);
+  CString   CheckGregYM   (CString p_value);
+  CString   CheckHexBin   (CString p_value);
+  CString   CheckLong     (CString p_value);
+  CString   CheckShort    (CString p_value);
+  CString   CheckByte     (CString p_value);
+  CString   CheckNNegInt  (CString p_value);
+  CString   CheckPosInt   (CString p_value);
+  CString   CheckUnsLong  (CString p_value);
+  CString   CheckUnsShort (CString p_value);
+  CString   CheckUnsByte  (CString p_value);
+  CString   CheckNonPosInt(CString p_value);
+  CString   CheckNegInt   (CString p_value);
+  CString   CheckNormal   (CString p_value);
+  CString   CheckToken    (CString p_value);
+  CString   CheckNMTOKEN  (CString p_value);
+  CString   CheckName     (CString p_value);
+  CString   CheckNCName   (CString p_value);
+  CString   CheckQName    (CString p_value);
+  CString   CheckNMTOKENS (CString p_value);
+  CString   CheckNames    (CString p_value);
+  CString   CheckDuration (CString p_value,int& p_type);
+  bool      ScanDurationValue  (CString& p_duration,int& p_value,int& p_fraction,char& p_marker,bool& p_didTime);
+  // Check max decimal/fraction digits
+  CString   CheckTotalDigits   (CString p_value);
+  CString   CheckFractionDigits(CString p_value);
+  // Check ranges max/min exclusive/inclusive
+  CString   CheckRangeFloat    (CString p_value);
+  CString   CheckRangeDecimal  (CString p_value);
+  CString   CheckRangeStamp    (CString p_timestamp);
+  CString   CheckRangeDate     (CString p_date);
+  CString   CheckRangeTime     (CString p_time);
+  CString   CheckRangeDuration (CString p_duration);
+  CString   CheckRangeGregYM   (CString p_yearmonth);
+  CString   CheckRangeGregMD   (CString p_monthday);
 
   CString   m_name;                     // Name of the restriction
   CString   m_baseType;                 // Base XSD type of the restriction

@@ -29,14 +29,14 @@
 #include "ThreadPool.h"
 #include <map>
 
-typedef struct _commandTarget
+typedef struct _subscriber
 {
   LPFN_CALLBACK m_target;
   void*         m_argument;
 }
-CommandTarget;
+Subscriber;
 
-using CommandMap = std::multimap<CString,CommandTarget>;
+using CommandMap = std::multimap<CString,Subscriber>;
 using Commands   = std::pair<CommandMap::iterator,CommandMap::iterator>;
 
 class CommandBus
@@ -53,7 +53,7 @@ public:
   bool UnSubscribe(CString p_command,LPFN_CALLBACK p_function);
   // Publish new command for all subscribers
   bool PublishCommand(CString p_command,void* p_argument);
-  // Find out if command bus is open
+  // Find out if command bus is (still) open
   bool IsOpen();
   // Close bus for new publishing
   void Close();
@@ -69,10 +69,10 @@ public:
   ThreadPool* GetPool()   { return m_pool; };
 
 private:
-  CString     m_name;
-  bool        m_open { false  };
-  ThreadPool* m_pool { nullptr};
-  CommandMap  m_targets;
+  CString     m_name;               // Name of the command bus
+  bool        m_open { false  };    // Open for publishing
+  ThreadPool* m_pool { nullptr};    // Thread pool used by the bus
+  CommandMap  m_subscribers;        // Command/subscriber-target pairs
   // Multi-threading lock for the bus
   CRITICAL_SECTION m_lock;
 };
