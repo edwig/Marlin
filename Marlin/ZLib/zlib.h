@@ -30,12 +30,6 @@
 
 #pragma once
 
-// Added by [EH] to make it compile under VS2015 conditions
-#pragma warning (disable: 4131)
-#pragma warning (disable: 4244)
-#pragma warning (disable: 4127)
-// End [EH]
-
 #ifndef ZLIB_H
 #define ZLIB_H
 

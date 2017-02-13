@@ -57,12 +57,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Ignore errors from Unicode conversions in CW2A and A2CW
-#pragma warning(disable:6255) 
-// Do not warn about formatting CStrings
-#pragma warning(disable:6284)
-
-
 // Logging macro's
 #undef  DETAILLOG
 #undef  ERRORLOG
@@ -3604,7 +3598,6 @@ HTTPClient::StopClient()
     {
       // Only way to cancel from NTDLL.DLL on the HTTP Stack
       // Do not complain about "TermnateThread". It is the only way. We know!
-      #pragma warning(disable: 6258)
       TerminateThread(m_queueThread,0);
       m_queueThread = NULL;
       m_running = false;
@@ -3641,7 +3634,6 @@ HTTPClient::StopClient()
     }
     // IF not kill the queue thread
     // Do not complain about "TermnateThread". It is the only way. We know!
-    #pragma warning(disable: 6258)
     if(m_queueThread)
     {
       TerminateThread(m_queueThread,3);

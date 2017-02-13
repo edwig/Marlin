@@ -38,9 +38,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Do not warn about formatting CStrings
-#pragma warning(disable:6284)
-
 XMLRestriction::XMLRestriction(CString p_name)
                :m_name(p_name)
 {

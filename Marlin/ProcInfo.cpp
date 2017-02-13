@@ -30,6 +30,7 @@
 #include <fstream>
 #include <Tlhelp32.h>
 #include <Lmcons.h> // defines UNLEN
+#include <VersionHelpers.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -170,109 +171,80 @@ ProcInfo::~ProcInfo()
 
 //=============================================================================
 
-#pragma warning (disable:4996)
-// Shut op about IsWindows* macros from VersionHelpers.h
-#pragma warning (disable: 28159)
-
 void ProcInfo::GetSystemType()
 {
-  OSVERSIONINFOEX ove;
+  int version = 0;
+  m_platform  = "MS-Windows";
 
-  //  Get regular info first
-  ove.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  GetVersionEx((LPOSVERSIONINFO)&ove);
-
-  //  For NT 5 and later, we can gather more info
-  bool isNT5 = ove.dwPlatformId == VER_PLATFORM_WIN32_NT && ove.dwMajorVersion >= 5;
-  bool WS    = ove.wProductType == VER_NT_WORKSTATION;
-
-  if(isNT5)
+  if(IsWindowsXPOrGreater())
   {
-    ove.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    if(!GetVersionEx((LPOSVERSIONINFO)&ove))
+    version = 51;
+    m_platform = "Windows XP";
+  }
+  if(IsWindowsXPSP1OrGreater())
+  {
+    version = 51;
+    m_platform = "Windows XP SP1";
+  }
+  if(IsWindowsXPSP2OrGreater())
+  {
+    version = 51;
+    m_platform = "Windows XP SP3";
+  }
+  if(IsWindowsXPSP3OrGreater())
+  {
+    version = 51;
+    m_platform = "Windows XP SP3";
+  }
+  if(IsWindowsVistaOrGreater())
+  {
+    version = 60;
+    m_platform = "Windows Vista";
+  }
+  if(IsWindowsVistaSP1OrGreater())
+  {
+    version = 60;
+    m_platform = "Windows Vista SP1";
+  }
+  if(IsWindowsVistaSP2OrGreater())
+  {
+    version = 60;
+    m_platform = "Windows Vista SP2";
+  }
+  if(IsWindows7OrGreater())
+  {
+    version = 61;
+    m_platform = "Windows 7";
+  }
+  if(IsWindows7SP1OrGreater())
+  {
+    version = 61;
+    m_platform = "Windows 7 SP1";
+  }
+  if(IsWindows8OrGreater())
+  {
+    version = 62;
+    m_platform = "Windows 8";
+  }
+  if(IsWindows8Point1OrGreater())
+  {
+    version = 62;
+    m_platform = "Windows 8.1";
+  }
+
+  // Check if we have a server variant
+  if(IsWindowsServer())
+  {
+    switch(version)
     {
-      return;
+      case 51: m_platform = "Windows Server 2003";    break;
+      case 60: m_platform = "Windows Server 2008";    break;
+      case 61: m_platform = "Windows Server 2008 R2"; break;
+      case 62: m_platform = "Windows Server 2012";    break;
+      default: m_platform = "Unknown Windows Server"; break;
     }
   }
-  //	Describe platform
-  if(ove.dwPlatformId == VER_PLATFORM_WIN32s)
-  {
-    switch(ove.dwMinorVersion)
-    {
-      case 51:		m_platform = "Windows NT 3.51";		break;
-      default:		m_platform = "Unknown NT 3.xx";		break;
-    }
-  }
-  else if(ove.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
-  {
-    m_use_psapi = false;
-    switch(ove.dwMinorVersion)
-    {
-      case 0:			m_platform = "Windows 95";				break;
-      case 10:		m_platform = "Windows 98";				break;
-      case 90:		m_platform = "Windows Me";				break;
-      default:		m_platform = "Unknown 9x";				break;
-    }
-  }
-  else if(ove.dwPlatformId == VER_PLATFORM_WIN32_NT)
-  {
-    m_use_psapi = false;
-    switch(ove.dwMajorVersion)
-    {
-      case 4:     m_platform = "Windows NT 4.0";
-                  break;
-      case 5:     switch(ove.dwMinorVersion)
-                  {
-                    case 0:			m_platform = "Windows 2000";		break;
-                    case 1:			m_platform = "Windows XP";			break;
-                    case 2:			m_platform = "Windows 2003";		break;
-                    default:		m_platform = "Unknown NT";			
-                                m_use_psapi = true;		
-                                break;
-                  }
-                  break;
-      case 6:			switch(ove.dwMinorVersion)
-                  {
-                    case 0: m_platform = WS ? "Windows Server 2008"    : "Windows Vista";
-                            break;
-                    case 1: m_platform = WS ? "Windows Server 2008 R2" : "Windows-7";
-                            break;
-                    case 2: m_platform = WS ? "Windows Server 2012"    : "Windows-8";
-                            break;
-                    default:m_platform = "Yet unknown MS-Windows version";
-                            break;
-                  }
-                  break;
-      case 10:    m_platform = WS ? "Windows Server 2016" : "Windows 10";  
-                  break;
-      default:    m_platform = "Yet unknown MS-Windows version";
-                  break;
-    }
-  }
-
-  // Check voor Windows 10 : Not in app.manifest!!
-  if(ove.dwMajorVersion >= 6 && ove.dwMinorVersion >= 2 && ove.dwBuildNumber >= 9200)
-  {
-    m_platform = WS ? "Windows Server 2016" : "Windows 10";
-  }
-
-  //	Add version designation
-  if(strlen(ove.szCSDVersion))
-  {
-    m_platform += " ";
-    m_platform += ove.szCSDVersion;
-  }
-  //	Add actual version number
-  char szVersion[25];
-  sprintf_s(szVersion, 25, "%d.%d.%d", 
-          ove.dwMajorVersion, 
-          ove.dwMinorVersion, 
-          ove.dwBuildNumber);
-  m_platform += " (";
-  m_platform += szVersion;
-  m_platform += ")";
 }
-  
 
 //=============================================================================
 

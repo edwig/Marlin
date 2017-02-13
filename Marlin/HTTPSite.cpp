@@ -44,11 +44,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Do not warn about formatting CStrings
-#pragma warning(disable:6284)
-// Ignore errors from Unicode conversions in CW2A and A2CW
-#pragma warning(disable:6255) 
-
 // Logging via the server
 #define DETAILLOG1(text)        m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text)
 #define DETAILLOGS(text,extra)  m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra)

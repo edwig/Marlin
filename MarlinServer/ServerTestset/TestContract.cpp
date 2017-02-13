@@ -120,8 +120,6 @@ WEBSERVICE_MAP_END
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma warning (disable : 4100)
-
 void
 TestContract::OnMarlinFirst(int p_code,SOAPMessage* p_message)
 {
@@ -192,7 +190,7 @@ TestContract::OnMarlinThird(int p_code,SOAPMessage* p_message)
 }
 
 void
-TestContract::OnMarlinFourth(int p_code,SOAPMessage* p_message)
+TestContract::OnMarlinFourth(int p_code,SOAPMessage* /*p_message*/)
 {
   ASSERT(p_code == CONTRACT_M4);
   // --- "---------------------------------------------- - ------
@@ -201,15 +199,13 @@ TestContract::OnMarlinFourth(int p_code,SOAPMessage* p_message)
 }
 
 void
-TestContract::OnMarlinFifth(int p_code,SOAPMessage* p_message)
+TestContract::OnMarlinFifth(int p_code,SOAPMessage* /*p_message*/)
 {
   ASSERT(p_code == CONTRACT_MV);
   // --- "---------------------------------------------- - ------
   qprintf("WSDL Contract: Wrong contract (Fifth)          : ERROR\n");
   xerror();
 }
-
-#pragma warning (error : 4100)
 
 //////////////////////////////////////////////////////////////////////////
 //

@@ -34,9 +34,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// No warnings about _alloca in A2CW/CW2A
-#pragma warning (disable:6255)
-
 FindProxy::FindProxy()
 {
   m_perDest = true;

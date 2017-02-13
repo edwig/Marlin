@@ -45,9 +45,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Do not warn about formatting CStrings
-#pragma warning(disable:6284)
-
 using std::wstring;
 
 // All headers. Must be in sequence with HTTPCommand

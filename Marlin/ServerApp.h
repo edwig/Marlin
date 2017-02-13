@@ -30,8 +30,11 @@
 #include "ThreadPool.h"
 #include "Analysis.h"
 #include "ErrorReport.h"
+
+// To prevent bug report from the Windows 8.1 SDK
 #pragma warning (disable:4091)
 #include <httpserv.h>
+#pragma warning (error:4091)
 
 class ServerApp
 {

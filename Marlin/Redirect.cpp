@@ -288,7 +288,7 @@ HANDLE CRedirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
   // On NT/2000 the handle must have PROCESS_QUERY_INFORMATION access.
   // This is made using an empty security descriptor. It is not the same
   // as using a NULL pointer for the security attribute!
-#pragma warning(disable: 6248) // Don't complain: we know it is unprotected
+
   PSECURITY_DESCRIPTOR lpSD = new SECURITY_DESCRIPTOR;
   VERIFY(::InitializeSecurityDescriptor(lpSD, SECURITY_DESCRIPTOR_REVISION));
   VERIFY(::SetSecurityDescriptorDacl(lpSD, -1, 0, 0));

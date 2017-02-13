@@ -36,9 +36,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Do not complain about A2CW/CW2A conversions
-#pragma warning(disable:6255)
-
 // Logging via the server
 #define DETAILLOG(text,...)       if(m_server->GetLogfile()) m_server->GetLogfile()->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,text,__VA_ARGS__)
 #define ERRORLOG(code,text)       if(m_server->GetLogfile())\

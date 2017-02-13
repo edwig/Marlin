@@ -40,9 +40,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Do not warn about formatting CStrings
-#pragma warning(disable:6284)
-
 // Special entities, so we do not mess with the XML structures
 Entity g_entity[NUM_ENTITY] =
 {

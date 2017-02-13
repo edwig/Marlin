@@ -39,9 +39,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Do not warn about formatting CStrings
-#pragma warning(disable:6284)
-
 #pragma region XMLElement
 
 //////////////////////////////////////////////////////////////////////////
@@ -171,7 +168,6 @@ XMLMessage::LoadFile(const CString& p_fileName)
     // Prepare buffer
     // CString buffers are allocated on the heap
     // so shut up the warning about stack overflow
-    #pragma warning(disable: 6386)
     CString inhoud;
     char* buffer = inhoud.GetBufferSetLength(length + 1);
 

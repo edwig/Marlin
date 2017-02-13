@@ -179,8 +179,7 @@ ThreadPool::StopThreadPool()
   m_initialized = false;
 
   // Force the queue to a halt!!
-  // Do not complain about "TermnateThread". It is the only way. We know!
-  #pragma warning(disable: 6258)
+  // Do not complain about "TerminateThread". It is the only way. We know!
   if(!idle)
   {
     for(unsigned ind = 0;ind < m_threads.size(); ++ind)

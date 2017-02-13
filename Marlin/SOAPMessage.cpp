@@ -45,10 +45,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Do not warn about formatting CStrings
-#pragma warning(disable: 6284)
-#pragma warning(disable: 4189)
-
 #pragma region XTOR
 
 // General XTOR

@@ -32,8 +32,11 @@
 
 // To prevent:
 // C:\Program Files (x86)\Windows Kits\8.1\Include\um\dbghelp.h(1544): warning C4091: 'typedef ': ignored on left of '' when no variable is declared
+// The bug is in the Windows 8.1 SDK, not in our code base.
 #pragma warning (disable: 4091)
 #include <dbghelp.h>
+#pragma warning (error: 4091)
+
 #include <intrin.h>
 
 #ifdef _DEBUG
@@ -41,9 +44,6 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-// Do not warn about formatting CStrings
-#pragma warning(disable:6284)
 
 // Static buffers for symbol-lookup
 // The buffers are static, so that they will work, even if the stack is overstressed

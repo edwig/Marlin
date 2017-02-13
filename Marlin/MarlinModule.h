@@ -26,8 +26,10 @@
 // THE SOFTWARE.
 //
 #pragma once
+// To prevent bug report from the Windows 8.1 SDK
 #pragma warning (disable:4091)
 #include <httpserv.h>
+#pragma warning (error:4091)
 
 #define SERVERNAME_BUFFERSIZE 256
 

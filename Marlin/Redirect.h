@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #pragma once
-#pragma warning (disable: 4100)
+
 /////////////////////////////////////////////////////////////////////////////
 // CRedirect class
 
@@ -47,10 +47,10 @@ public:
   int  WriteChildStdIn(LPCSTR lpszInput);
 
   // Virtual interface. Derived class must implement this!!
-  virtual void OnChildStarted    (LPCSTR lpszCmdLine) {};
-  virtual void OnChildStdOutWrite(LPCSTR lpszOutput)  {};
-  virtual void OnChildStdErrWrite(LPCSTR lpszOutput)  {};
-  virtual void OnChildTerminate  ()                   {};
+  virtual void OnChildStarted    (LPCSTR lpszCmdLine) = 0;
+  virtual void OnChildStdOutWrite(LPCSTR lpszOutput)  = 0;
+  virtual void OnChildStdErrWrite(LPCSTR lpszOutput)  = 0;
+  virtual void OnChildTerminate  ()                   = 0;
 
   mutable int m_exitCode;
   mutable int m_eof_input;

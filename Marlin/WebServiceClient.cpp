@@ -38,9 +38,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Do not warn about formatting CStrings
-#pragma warning(disable:6284)
-
 // General logfile macro
 #undef  DETAILLOG
 #define DETAILLOG(text,...)  if(m_logfile)m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,text,__VA_ARGS__)

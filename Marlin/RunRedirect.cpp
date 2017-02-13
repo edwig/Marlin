@@ -52,7 +52,7 @@ RunRedirect::RunCommand(LPCSTR p_commandLine)
   Release();
 }
 
-void RunRedirect::OnChildStarted(LPCSTR lpszCmdLine) 
+void RunRedirect::OnChildStarted(LPCSTR /*lpszCmdLine*/) 
 {
   Acquire();
   m_lines = "";
