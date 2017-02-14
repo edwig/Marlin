@@ -176,60 +176,64 @@ void ProcInfo::GetSystemType()
   int version = 0;
   m_platform  = "MS-Windows";
 
-  if(IsWindowsXPOrGreater())
+  if(IsWindows8Point1OrGreater())
   {
-    version = 51;
-    m_platform = "Windows XP";
+    version = 62;
+    m_platform = "Windows 8.1 or greater";
   }
-  if(IsWindowsXPSP1OrGreater())
-  {
-    version = 51;
-    m_platform = "Windows XP SP1";
-  }
-  if(IsWindowsXPSP2OrGreater())
-  {
-    version = 51;
-    m_platform = "Windows XP SP3";
-  }
-  if(IsWindowsXPSP3OrGreater())
-  {
-    version = 51;
-    m_platform = "Windows XP SP3";
-  }
-  if(IsWindowsVistaOrGreater())
-  {
-    version = 60;
-    m_platform = "Windows Vista";
-  }
-  if(IsWindowsVistaSP1OrGreater())
-  {
-    version = 60;
-    m_platform = "Windows Vista SP1";
-  }
-  if(IsWindowsVistaSP2OrGreater())
-  {
-    version = 60;
-    m_platform = "Windows Vista SP2";
-  }
-  if(IsWindows7OrGreater())
-  {
-    version = 61;
-    m_platform = "Windows 7";
-  }
-  if(IsWindows7SP1OrGreater())
-  {
-    version = 61;
-    m_platform = "Windows 7 SP1";
-  }
-  if(IsWindows8OrGreater())
+  else if(IsWindows8OrGreater())
   {
     version = 62;
     m_platform = "Windows 8";
   }
-  if(IsWindows8Point1OrGreater())
+  else if(IsWindows7SP1OrGreater())
   {
-    version = 62;
-    m_platform = "Windows 8.1";
+    version = 61;
+    m_platform = "Windows 7 SP1";
+  }
+  else if(IsWindows7OrGreater())
+  {
+    version = 61;
+    m_platform = "Windows 7";
+  }
+  else if(IsWindowsVistaSP2OrGreater())
+  {
+    version = 60;
+    m_platform = "Windows Vista SP2";
+  }
+  else if(IsWindowsVistaSP1OrGreater())
+  {
+    version = 60;
+    m_platform = "Windows Vista SP1";
+  }
+  else if(IsWindowsVistaOrGreater())
+  {
+    version = 60;
+    m_platform = "Windows Vista";
+  }
+  else if(IsWindowsXPSP3OrGreater())
+  {
+    version = 51;
+    m_platform = "Windows XP SP3";
+  }
+  else if(IsWindowsXPSP2OrGreater())
+  {
+    version = 51;
+    m_platform = "Windows XP SP2";
+  }
+  else if(IsWindowsXPSP1OrGreater())
+  {
+    version = 51;
+    m_platform = "Windows XP SP1";
+  }
+  else if(IsWindowsXPOrGreater())
+  {
+    version = 51;
+    m_platform = "Windows XP";
+  }
+  else
+  {
+    m_platform = "Unknown MS-Windows";
   }
 
   // Check if we have a server variant
@@ -324,7 +328,6 @@ void ProcInfo::GetLocaleInfo()
   GetNumberFormat(LOCALE_USER_DEFAULT, 0, "-1234.56", 0, szBuffer, 15);
   m_user_number = szBuffer;
 }
-
 
 //=============================================================================
 

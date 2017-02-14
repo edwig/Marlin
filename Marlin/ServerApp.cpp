@@ -59,6 +59,8 @@ ServerApp::~ServerApp()
 {
 }
 
+// Called by the MarlinModule at startup of the application pool.
+// Will be called **BEFORE** the "InitInstance" of the ServerApp.
 void 
 ServerApp::ConnectServerApp(IHttpServer*   p_iis
                            ,HTTPServerIIS* p_server
