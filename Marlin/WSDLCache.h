@@ -63,6 +63,8 @@ public:
   bool    GenerateWSDL();
   // Read an existing WSDL file
   bool    ReadWSDLFile(LPCTSTR p_filename);
+  // Read an existing WSDL from file buffer
+  bool    ReadWSDLString(CString p_wsdl);
   // Add SOAP message call and answer
   bool    AddOperation(int p_code,CString p_name,SOAPMessage* p_input,SOAPMessage* p_output);
   // Check incoming SOAP message against WSDL
@@ -104,6 +106,8 @@ public:
   CString GetBasePath()                          { return m_absPath;               };
   bool    GetPerformSoap10()                     { return m_performSoap10;         };
   bool    GetPerfromSoap12()                     { return m_performSoap12;         };
+
+  void    SetWSDLFilename(CString p_filename)    {m_filename = p_filename;         };
 
 private:
   // Check message

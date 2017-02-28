@@ -335,21 +335,23 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     switch(param->m_type & WSDL_Mask)
     {
       default:             // Fall through
-      case WSDL_ZeroOne:   // Fall through
-      case WSDL_Optional:  temp  = "minOccurs=\"0\" maxOccurs=\"1\""; break;
       case WSDL_OnceOnly:  // Fall through
-      case WSDL_Mandatory: temp  = "minOccurs=\"1\" maxOccurs=\"1\""; break;
-      case WSDL_ZeroMany:  temp  = "minOccurs=\"0\" maxOccurs=\"unbounded\""; 
+      case WSDL_Mandatory: temp.Empty(); 
+                           break;
+      case WSDL_ZeroOne:   // Fall through
+      case WSDL_Optional:  temp  = "minOccurs=\"0\" "; 
+                           break;
+      case WSDL_ZeroMany:  temp  = "minOccurs=\"0\" maxOccurs=\"unbounded\" "; 
                            array = p_element;
                            break;
-      case WSDL_OneMany:   temp  = "minOccurs=\"1\" maxOccurs=\"unbounded\""; 
+      case WSDL_OneMany:   temp  = "maxOccurs=\"unbounded\" "; 
                            array = p_element;
                            break;
     }
     p_wsdlcontent += temp;
 
     // Do name
-    temp.Format(" name=\"%s\"",param->m_name);
+    temp.Format("name=\"%s\"",param->m_name);
     p_wsdlcontent += temp;
 
     // Do data type
@@ -1172,6 +1174,23 @@ WSDLCache::ReadWSDLLocalFile(CString p_filename)
     return false;
   }
   return ReadWSDL(wsdl);
+}
+
+// Read an existing WSDL from a file buffer
+bool    
+WSDLCache::ReadWSDLString(CString p_wsdl)
+{
+  DETAILLOG("Reading WSDL from internal buffer");
+
+  // Reading the WSDL as a XML message
+  XMLMessage wsdl;
+  wsdl.ParseMessage(p_wsdl);
+  if(wsdl.GetInternalError() == XmlError::XE_NoError)
+  {
+    return ReadWSDL(wsdl);
+  }
+  DETAILLOG("Abort reading WSDL buffer. Cannot load XML document");
+  return false;
 }
 
 bool
