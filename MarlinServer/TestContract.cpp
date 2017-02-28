@@ -40,7 +40,7 @@ static char THIS_FILE[] = __FILE__;
 static int totalChecks = 10;
 
 // Testing an external WSDL file
-const bool  test_external_wsdl   = true;
+const bool  test_external_wsdl   = false;
 const char* MARLIN_WSDL_CONTRACT = "..\\ExtraParts\\MarlinWeb.wsdl";
 const char* EASY_MATCH_CONTRACT  = "..\\ExtraParts\\EasyMatch.wsdl";
 const char* K2W_CONTRACT         = "..\\ExtraParts\\K2WServices.wsdl";
@@ -439,8 +439,8 @@ TestWebServiceServer(HTTPServer* p_server,CString p_contract)
   // Try running the service
   if(server->Run())
   {
-    server->GetWSDLCache()->SetWSDLFilename("C:\\TMP\\Test.wsdl");
-    server->GetWSDLCache()->GenerateWSDL();
+//     server->GetWSDLCache()->SetWSDLFilename("C:\\TMP\\Test.wsdl");
+//     server->GetWSDLCache()->GenerateWSDL();
 
     printf("WebServiceServer [%s] is now running OK\n",(LPCTSTR)name);
     printf("Running contract      : %s\n",       (LPCTSTR)p_contract);

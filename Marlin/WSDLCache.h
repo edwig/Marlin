@@ -88,6 +88,8 @@ public:
   void    SetServicePostfix(CString p_postfix)   { m_servicePostfix  = p_postfix;  };
   // OPTIONAL:  Set the logfile (never owned, or generated!)
   void    SetLogAnalysis(LogAnalysis* p_log)     { m_logging         = p_log;      };
+  // OPTIONAL:  Set a new output filename before generating
+  void    SetWSDLFilename(CString p_filename)    {m_filename         = p_filename; };
 
   // GETTERS
 
@@ -106,8 +108,6 @@ public:
   CString GetBasePath()                          { return m_absPath;               };
   bool    GetPerformSoap10()                     { return m_performSoap10;         };
   bool    GetPerfromSoap12()                     { return m_performSoap12;         };
-
-  void    SetWSDLFilename(CString p_filename)    {m_filename = p_filename;         };
 
 private:
   // Check message
