@@ -13,6 +13,7 @@ CHANGES IN VERSION 3.8.3
 1) Correction in the interpretation of the WSDL "minOccurs" and "maxOccurs" attributes.
    For the interpretation of the 'mandatory' status, only the 'minOccurs' attribute is used now.
    0 or less means 'Optional', 1 and greater means 'manditory'.
+   If "minOccurs" or "maxOccurs" are missing, they default to '1', meaning a 'manditory' status!!
 
 CHANGES IN VERSION 3.8.2
 ========================

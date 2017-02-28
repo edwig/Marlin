@@ -1615,18 +1615,23 @@ WSDLCache::ReadElementaryType(CString p_type)
   return 0;
 }
 
+// Reading the node options for manditory/optional and relations
+// Beware: if not set, the options must default to "1" = Manditory
 int
 WSDLCache::ReadWSDLOptions(XMLMessage& p_wsdl,XMLElement* p_element)
 {
-  CString minOccurs = p_wsdl.GetAttribute(p_element,"minOccurs");
-  CString maxOccurs = p_wsdl.GetAttribute(p_element,"maxOccurs");
-  int     minNum    = atoi(minOccurs);
+  int      options   = WSDL_Mandatory;
+  CString  minOccurs = p_wsdl.GetAttribute(p_element,"minOccurs");
+  CString  maxOccurs = p_wsdl.GetAttribute(p_element,"maxOccurs");
+  unsigned minNum    = static_cast<unsigned>(atoi(minOccurs));
 
-  int options = minNum > 0 ? WSDL_Mandatory : WSDL_Optional;
-
+  if(!minOccurs.IsEmpty() && minNum == 0)
+  {
+    options = WSDL_Optional;
+  }
   if(maxOccurs.Compare("unbounded") == 0)
   {
-    options = (minNum <= 0) ? WSDL_ZeroMany : WSDL_OneMany;
+    options = (options == WSDL_Optional) ? WSDL_ZeroMany : WSDL_OneMany;
   }
   return options;
 }
