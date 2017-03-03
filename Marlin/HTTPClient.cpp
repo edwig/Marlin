@@ -511,6 +511,7 @@ HTTPClient::InitSettings()
   m_certName       =             m_webConfig.GetParameterString ("Client","CertificateName",  m_certName);
   m_traceData      =             m_webConfig.GetParameterBoolean("Client","TraceData",        m_traceData);
   m_traceRequest   =             m_webConfig.GetParameterBoolean("Client","TraceRequest",     m_traceRequest);
+  m_corsOrigin     =             m_webConfig.GetParameterString ("Client","CORS_Origin",      m_corsOrigin);
 
   // Test environments must often do with relaxed certificate settings
   bool m_relaxValid     = m_webConfig.GetParameterBoolean("Client","RelaxCertificateValid",     false);
@@ -611,6 +612,7 @@ HTTPClient::InitSettings()
   DETAILLOG("Client forces HTTP VERB Tunneling    : %s",m_verbTunneling ? "yes" : "no");
   DETAILLOG("Data will be traced in detail        : %s",m_traceData     ? "yes" : "no");
   DETAILLOG("Requests will be traced in detail    : %s",m_traceRequest  ? "yes" : "no");
+  DETAILLOG("Client will use CORS origin header   : %s",m_corsOrigin);
 }
 
 // Initialise the security mechanisms
@@ -857,6 +859,37 @@ HTTPClient::AddSecurityOptions()
   }
 }
 
+// Cross Origin Resource Sharing
+void
+HTTPClient::AddCORSHeaders()
+{
+  // See if we must do CORS
+  if(m_corsOrigin.IsEmpty())
+  {
+    return;
+  }
+
+  // Creating our origin header
+  AddHeader("Origin",m_corsOrigin);
+  DETAILLOG("Added CORS origin header: %s",m_corsOrigin);
+
+  // In a Pre-flight request, we can add request method and headers
+  if(m_verb.Compare("OPTIONS") == 0)
+  {
+    if(!m_corsMethod.IsEmpty())
+    {
+      AddHeader("Access-Control-Request-Method",m_corsMethod);
+      DETAILLOG("Added CORS request method: %s",m_corsMethod);
+    }
+    if(!m_corsHeaders.IsEmpty())
+    {
+      AddHeader("Access-Control-Request-Headers",m_corsHeaders);
+      DETAILLOG("Added CORS request headers: %s",m_corsHeaders);
+    }
+  }
+}
+
+// Add all extra headers that we came upon
 void
 HTTPClient::AddExtraHeaders()
 {
@@ -2065,7 +2098,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
     p_msg->SetFault("Client","Send error","HTTPClient send result",(const char*)m_response);
   }
 
-  // Freeing unicode UTF-16 buffer
+  // Freeing Unicode UTF-16 buffer
   if(buffer)
   {
     delete [] buffer;
@@ -2485,6 +2518,8 @@ HTTPClient::Send()
   AddCookieHeaders();
   // Set security headers
   AddSecurityOptions();
+  // Add Cross Origin headers
+  AddCORSHeaders();
   // Add all recorded external header lines (e.g. SOAPAction)
   AddExtraHeaders();
   
@@ -2724,6 +2759,11 @@ HTTPClient::Send()
   WinHttpCloseHandle(m_request);
   m_request = NULL;
 
+  // CORS testing?
+  if(retValue && !m_corsOrigin.IsEmpty())
+  {
+    retValue = CheckCORSAnswer();
+  }
   // Return result
   return retValue;
 }
@@ -2756,6 +2796,40 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
                     ,m_port
                     ,m_url
                     ,proxy);
+}
+
+bool
+HTTPClient::CheckCORSAnswer()
+{
+  bool result = true;
+
+  if(!m_corsMethod.IsEmpty())
+  {
+    CString methods = FindHeader("Access-Control-Allow-Methods");
+    if(methods.Find(m_corsMethod) < 0)
+    {
+      // We may NOT use this method on this address
+      result = false;
+      ERRORLOG("CORS method not allowed for this site: %s",m_corsMethod);
+    }
+  }
+
+  if(!m_corsHeaders.IsEmpty())
+  {
+    CString allowed = FindHeader("Access-Control-Allow-Headers");
+    if(allowed.Find(m_corsHeaders) < 0)
+    {
+      // We may NOT use method and headers
+      result = false;
+      ERRORLOG("CORS headers not allowed for this site: %s",m_corsHeaders);
+    }
+  }
+
+  // Reset one-shot checks for OPTIONS
+  m_corsMethod.Empty();
+  m_corsHeaders.Empty();
+
+  return result;
 }
 
 // Setting a client certificate on the request handle
@@ -3060,6 +3134,32 @@ HTTPClient::SetClientCertificateThumbprint(CString p_store,CString p_thumbprint)
     ErrorLog(__FUNCTION__,"Requested certificate store not found [%d] %s");
   }
   return result;
+}
+
+void 
+HTTPClient::SetCORSOrigin(CString p_origin)
+{
+  // Remember CORS origin
+  m_corsOrigin = p_origin;
+  // Must read all response headers for CORS answers
+  if(!m_corsOrigin.IsEmpty())
+  {
+    m_readAllHeaders = true;
+  }
+}
+
+// Simply note the Cross Origin Resource Sharing options
+// for the "OPTIONS" call
+bool 
+HTTPClient::SetCORSPreFlight(CString p_method,CString p_headers)
+{
+  if(!m_corsOrigin.IsEmpty())
+  {
+    m_corsMethod  = p_method;
+    m_corsHeaders = p_headers;
+    return true;
+  }
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////

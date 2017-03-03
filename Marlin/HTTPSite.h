@@ -193,8 +193,14 @@ public:
   void            SetVerbTunneling(bool p_tunnel);
   // OPTIONAL: Set HTTP gzip compression
   void            SetHTTPCompression(bool p_compression);
-  // OPTIONAL: Set HTTP throtteling per address
+  // OPTIONAL: Set HTTP throttling per address
   void            SetHTTPThrotteling(bool p_throttel);
+  // OPTIONAL: Set use CORS (Cross Origin Resource Sharing)
+  void            SetUseCORS(bool p_use);
+  // OPTIONAL: Set use this origin for CORS (otherwise all = '*')
+  void            SetCORSOrigin(CString p_origin);
+  // OPTIONAL: Set use CORS max age promise
+  void            SetCORSMaxAge(unsigned p_maxAge);
 
   // GETTERS
   CString         GetSite()                         { return m_site;          };
@@ -223,7 +229,10 @@ public:
   bool            GetSendJsonBOM()                  { return m_sendJsonBOM;   };
   bool            GetVerbTunneling()                { return m_verbTunneling; };
   bool            GetHTTPCompression()              { return m_compression;   };
-  bool            GetHTTPThrotteling()              { return m_throtteling;   };
+  bool            GetHTTPThrotteling()              { return m_throttling;   };
+  bool            GetUseCORS()                      { return m_useCORS;       };
+  CString         GetCORSOrigin()                   { return m_allowOrigin;   };
+  int             GetCORSMaxAge()                   { return m_corsMaxAge;    };
   CString         GetAllowHandlers();
   CString         GetWebroot();
   SiteHandler*    GetSiteHandler(HTTPCommand p_command);
@@ -274,6 +283,8 @@ protected:
   void              HandleHTTPMessageDefault(HTTPMessage* p_message);
   // Direct asynchronous response
   void              AsyncResponse(HTTPMessage* p_message);
+  // See that message has expected origin
+  void              CheckCorsOrigin(HTTPMessage* p_message);
   // Handle the error after an error report
   void              PostHandle(HTTPMessage* p_message);
     // Check that m_reliable and m_async do not mix
@@ -296,10 +307,10 @@ protected:
   SessionSequence*  CreateSequence(SessionAddress& p_address);
   void              DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address);
 
-  // Handle HTTP throtteling
-  CRITICAL_SECTION* StartThrotteling(HTTPMessage* p_message);
-  void              EndThrotteling(CRITICAL_SECTION*& p_throttle);
-  void              TryFlushThrotteling();
+  // Handle HTTP throttling
+  CRITICAL_SECTION* StartThrottling(HTTPMessage* p_message);
+  void              EndThrottling(CRITICAL_SECTION*& p_throttle);
+  void              TryFlushThrottling();
 
   // Unique site
   CString           m_site;                               // Absolute path of the URL
@@ -325,7 +336,12 @@ protected:
   bool              m_sendSoapBOM     { false   };        // Prepend UTF-16 SOAP message with BOM 
   bool              m_sendJsonBOM     { false   };        // Prepend UTF-16 JSON message with BOM
   bool              m_compression     { false   };        // Allows for HTTP gzip compression
-  bool              m_throtteling     { false   };        // Perform throtteling per address
+  bool              m_throttling     { false   };        // Perform throttling per address
+  // CORS Cross Origin Resource Sharing
+  bool              m_useCORS         { false   };        // Use CORS header methods
+  CString           m_allowOrigin;                        // Client that can call us or '*' for everyone
+  HeaderMap         m_exposeHeaders;                      // White-listing of exposed headers
+  unsigned          m_corsMaxAge      { 86400   };        // Pre-flight results are valid this long (1 day in seconds)
   // Authentication
   ULONG             m_authScheme      { 0       };        // Authentication scheme's
   CString           m_scheme;                             // Authentication scheme names
@@ -342,7 +358,7 @@ protected:
   // Multi-threading
   CRITICAL_SECTION  m_filterLock;                         // Adding/deleting/calling filters
   CRITICAL_SECTION  m_sessionLock;                        // Adding/deleting sessions sequences
-  ThrottlingMap     m_throttels;                          // Addresses to be throtteled
+  ThrottlingMap     m_throttels;                          // Addresses to be throttled
   // Auto HTTP headers added to all response traffic
   XFrameOption      m_xFrameOption    { XFrameOption::XFO_NO_OPTION };  // Standard frame options
   CString           m_xFrameAllowed;                      // IFrame allowed from this URI
@@ -462,5 +478,23 @@ HTTPSite::SetHTTPCompression(bool p_compression)
 inline void
 HTTPSite::SetHTTPThrotteling(bool p_throttel)
 {
-  m_throtteling = p_throttel;
+  m_throttling = p_throttel;
+}
+
+inline void
+HTTPSite::SetUseCORS(bool p_use)
+{
+  m_useCORS = p_use;
+}
+
+inline void
+HTTPSite::SetCORSOrigin(CString p_origin)
+{
+  m_allowOrigin = p_origin;
+}
+
+inline void
+HTTPSite::SetCORSMaxAge(unsigned p_maxAge)
+{
+  m_corsMaxAge = p_maxAge;
 }

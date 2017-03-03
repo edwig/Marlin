@@ -4,12 +4,29 @@
 #include "HTTPClient.h"
 #include <io.h>
 
+bool 
+PreFlight(HTTPClient* p_client,HTTPMessage& p_msg,CString p_method,CString p_headers)
+{
+  // See if we may do a GET on this site
+  p_client->SetCORSPreFlight(p_method,p_headers);
+
+  bool result = p_client->Send(&p_msg);
+  if(result == false)
+  {
+    // HTTP error on CORS pre-flight check
+    printf("CORS pre-flight check returned status: %d\n",p_client->GetStatus());
+  }
+  return result;
+}
+
 int
 TestBaseSite(HTTPClient* p_client)
 {
   bool result = false;
   CString url;
   url.Format("http://%s:%d/MarlinTest/Site/FileOne.html",MARLIN_HOST,TESTING_HTTP_PORT);
+
+  HTTPMessage pre(HTTPCommand::http_options,url);
   HTTPMessage msg(HTTPCommand::http_get,url);
   CString filename("C:\\TEMP\\FileOne.html");
   msg.SetContentType("text/html");
@@ -26,36 +43,46 @@ TestBaseSite(HTTPClient* p_client)
   xprintf("TESTING GET FROM BASE SITE /MarlinTest/Site/\n");
   xprintf("============================================\n");
 
-  // Send our message
-  bool sendResult = p_client->Send(&msg);
+  // Prepare client for CORS checking
+  p_client->SetCORSOrigin("http://localhost");
 
-  // If OK and file does exists now!
-  if(sendResult)
+  // Test Mozilla CORS for this site
+  if(PreFlight(p_client,pre,"GET","X-K2B-Authenticate"))
   {
-    msg.GetFileBuffer()->SetFileName(filename);
-    msg.GetFileBuffer()->WriteFile();
-    if(_access(filename,0) == 0)
+    // Send our message
+    bool sendResult = p_client->Send(&msg);
+
+    // If OK and file does exists now!
+    if(sendResult)
     {
-      result = true;
+      msg.GetFileBuffer()->SetFileName(filename);
+      msg.GetFileBuffer()->WriteFile();
+      if(_access(filename,0) == 0)
+      {
+        result = true;
+      }
     }
-  }
-  else
-  {
-    xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
-
-    BYTE*  response = nullptr;
-    unsigned length = 0;
-    p_client->GetResponse(response,length);
-    if(response && length)
+    else
     {
-      response[length] = 0;
-      printf((char*)response);
+      xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
+      xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+
+      BYTE*  response = nullptr;
+      unsigned length = 0;
+      p_client->GetResponse(response,length);
+      if(response && length)
+      {
+        response[length] = 0;
+        printf((char*)response);
+      }
     }
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("HTML page gotten from base HTTP site           : %s\n",result ? "OK" : "ERROR");
+
+  // RESET CORS checking for the client!
+  p_client->SetCORSOrigin("");
 
   return result ? 0 : 1;
 }

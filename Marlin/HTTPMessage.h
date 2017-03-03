@@ -204,7 +204,7 @@ public:
   // Add a body from a binary BLOB
   void    AddBody(void* p_body,unsigned p_length);
   // Add a headername/headervalue pair
-  void    AddHeader(CString p_name,CString p_value);
+  void    AddHeader(CString p_name,CString p_value,bool p_lower = true);
   // Add a header by known header-id
   void    AddHeader(HTTP_HEADER_ID p_id,CString p_value);
   // Get a header by name
@@ -299,13 +299,6 @@ inline void
 HTTPMessage::AddBody(void* p_body,unsigned p_length)
 {
   m_buffer.AddBuffer((uchar*)p_body,p_length);
-}
-
-inline void
-HTTPMessage::AddHeader(CString p_name,CString p_value)
-{
-  p_name.MakeLower();
-  m_headers.insert(std::make_pair(p_name,p_value));
 }
 
 inline Cookies&

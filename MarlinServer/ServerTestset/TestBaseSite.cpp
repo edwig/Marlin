@@ -30,6 +30,7 @@
 #include "HTTPSite.h"
 #include "SiteHandlerGet.h"
 #include "SiteHandlerPut.h"
+#include "SiteHandlerOptions.h"
 #include "EnsureFile.h"
 
 #ifdef _DEBUG
@@ -113,6 +114,8 @@ int TestBaseSite(HTTPServer* p_server)
   SiteHandlerPutBase* handlerPut = new SiteHandlerPutBase();
   site->SetHandler(HTTPCommand::http_get,handlerGet);
   site->SetHandler(HTTPCommand::http_put,handlerPut);
+  // add OPTIONS handler for CORS
+  site->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
 
 #ifdef MARLIN_STANDALONE
   // Setting the virtual root directory
@@ -122,6 +125,11 @@ int TestBaseSite(HTTPServer* p_server)
   root = "virtual://" + root;
   site->SetWebroot(root);
 #endif
+
+  // Site is using CORS for safety
+  site->SetUseCORS(true);
+  site->SetCORSOrigin("http://localhost");    // this machine
+  site->SetCORSMaxAge(43200);                 // Half a day
 
   // Start the site explicitly
   if(site->StartSite())

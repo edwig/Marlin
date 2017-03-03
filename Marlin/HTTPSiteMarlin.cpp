@@ -238,7 +238,7 @@ HTTPSiteMarlin::InitSite(WebConfig& p_config)
   m_reliable      = p_config.GetParameterBoolean("Server",    "Reliable",       m_reliable);
   m_verbTunneling = p_config.GetParameterBoolean("Server",    "VerbTunneling",  m_verbTunneling);
   m_compression   = p_config.GetParameterBoolean("Server",    "HTTPCompression",m_compression);
-  m_throtteling   = p_config.GetParameterBoolean("Server",    "HTTPThrotteling",m_throtteling);
+  m_throttling   = p_config.GetParameterBoolean("Server",    "HTTPThrotteling",m_throttling);
 
   // Now set the resulting security level
        if(level == "sign")    m_securityLevel = XMLEncryption::XENC_Signing;
@@ -338,7 +338,7 @@ HTTPSiteMarlin::LogSettings()
   DETAILLOGS("Site accepting Server-Sent-Events  : ",       m_isEventStream ? "ON" : "OFF");
   DETAILLOGS("Site retaining all headers         : ",       m_allHeaders    ? "ON" : "OFF");
   DETAILLOGS("Site allows for HTTP-VERB Tunneling: ",       m_verbTunneling ? "ON" : "OFF");
-  DETAILLOGS("Site uses HTTP Throtteling         : ",       m_throtteling   ? "ON" : "OFF");
+  DETAILLOGS("Site uses HTTP Throtteling         : ",       m_throttling   ? "ON" : "OFF");
   DETAILLOGS("Site forces response to UTF-16     : ",       m_sendUnicode   ? "ON" : "OFF");
   DETAILLOGS("Site forces SOAP response UTF BOM  : ",       m_sendSoapBOM   ? "ON" : "OFF");
   DETAILLOGS("Site forces JSON response UTF BOM  : ",       m_sendJsonBOM   ? "ON" : "OFF");

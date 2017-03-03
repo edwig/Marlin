@@ -183,6 +183,8 @@ public:
   void LockClient();
   // Unlock the client (for MT use)
   void UnlockClient();
+  // Find a result header
+  CString  FindHeader(CString p_header);
   
   // SETTERS
   bool SetURL(CString p_url);
@@ -228,6 +230,8 @@ public:
   void SetClientCertificateName(CString p_name)   { m_certName          = p_name;     };
   void SetClientCertificateStore(CString p_store) { m_certStore         = p_store;    };
   bool SetClientCertificateThumbprint(CString p_store,CString p_thumbprint);
+  void SetCORSOrigin(CString p_origin);
+  bool SetCORSPreFlight(CString p_method,CString p_headers);
 
   // GETTERS
   CString       GetURL()                    { return m_url;               }; // Full URL
@@ -274,6 +278,7 @@ public:
   bool          GetTraceData()              { return m_traceData;         };
   bool          GetTraceRequest()           { return m_traceRequest;      };
   bool          GetHTTPCompression()        { return m_httpCompression;   };
+  CString       GetCORSOrigin()             { return m_corsOrigin;        };
     
   // GETTERS ONLY
 
@@ -297,7 +302,7 @@ public:
 
   // EVENT STREAM INTERFACE
 
-  // Start a new eventstream object
+  // Start a new event stream object
   EventSource*  CreateEventSource(CString p_url);
   // Main loop of the event-interface (public: starting a thread)
   void          EventThreadRunning();
@@ -322,6 +327,7 @@ private:
   void     AddProxyInfo();
   void     AddHostHeader();
   void     AddSecurityOptions();
+  void     AddCORSHeaders();
   void     AddExtraHeaders();
   void     AddCookieHeaders();
   void     AddProxyAuthorization();
@@ -331,7 +337,6 @@ private:
   void     LogTheSend(wstring& p_server,int p_port);
   void     ProcessResultCookies();
   CString  GetResultHeader(DWORD p_header,DWORD p_index);
-  CString  FindHeader(CString p_header);
   DWORD    ChooseAuthScheme(DWORD p_dwSupportedSchemes);
   bool     AddAuthentication(bool p_ntlm3Step);
   bool     AddProxyAuthentication();
@@ -342,6 +347,7 @@ private:
   void     ReceivePushEvents();
   CString  ReadHeaderField(int p_header);
   void     ReadAllResponseHeaders();
+  bool     CheckCORSAnswer();
   // Methods for WS-Security
   void     CheckAnswerSecurity (SOAPMessage* p_msg,CString p_answer,XMLEncryption p_security,CString p_password);
   void     CheckBodySigning    (CString p_password,SOAPMessage* p_msg);
@@ -422,6 +428,10 @@ private:
   Cookies       m_cookies;                                        // All cookies to send
   bool          m_readAllHeaders  { false   };                    // Get all response headers
   ResponseMap   m_respHeaders;                                    // All Response headers
+  // CORS Cross Origin Resource Sharing
+  CString       m_corsOrigin;                                     // Use CORS header methods (sending "Origin:")
+  CString       m_corsMethod;                                     // Pre-flight request method  in OPTIONS call
+  CString       m_corsHeaders;                                    // Pre-flight request headers in OPTIONS call
   // Server-push-event stream
   bool          m_pushEvents      { false   };                    // Handles server-push-events
   EventSource*  m_eventSource     { nullptr };                    // Parsing of incoming stream

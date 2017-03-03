@@ -40,4 +40,11 @@ protected:
   virtual bool  PreHandle(HTTPMessage* p_message) override;
   virtual bool     Handle(HTTPMessage* p_message) override;
   virtual void PostHandle(HTTPMessage* p_message) override;
+private:
+  // Do the CORS Pre-Flight checking for an OPTIONS call
+  void CheckCrossOriginSettings(HTTPMessage* p_message,CString p_origin,CString p_method,CString p_headers);
+
+  bool CheckCORSOrigin (HTTPMessage* p_message,CString p_origin);
+  bool CheckCORSMethod (HTTPMessage* p_message,CString p_method);
+  bool CheckCORSHeaders(HTTPMessage* p_message,CString p_headers);
 };

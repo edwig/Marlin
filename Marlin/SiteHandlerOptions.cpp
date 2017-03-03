@@ -68,9 +68,23 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
     server = true;
   }
 
-  // See RFC 2616 section 9.8 TRACE
-  p_message->SetCommand(HTTPCommand::http_response);
-  p_message->SetStatus(HTTP_STATUS_OK);
+  // The OPTIONS call is where we do the Pre-flight checks of CORS
+  if(m_site->GetUseCORS())
+  {
+    // Read the message
+    CString comesFrom = p_message->GetHeader("Origin");
+    CString reqMethod = p_message->GetHeader("Access-Control-Request-Method");
+    CString reqHeader = p_message->GetHeader("Access-Control-Request-Headers");
+    p_message->Reset();
+
+    CheckCrossOriginSettings(p_message,comesFrom,reqMethod,reqHeader);
+  }
+  else
+  {
+    // See RFC 2616 section 9.9 OPTIONS
+    p_message->Reset();
+  }
+
   // Empty the response part. Just to be sure!
   CString empty;
   p_message->GetFileBuffer()->Reset();
@@ -80,7 +94,8 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
   {
     p_message->AddHeader("Allow",m_site->GetAllowHandlers());
   }
-  // Ready with the trace, continue processing
+
+  // Ready with the options, continue processing
   return true;
 }
 
@@ -95,3 +110,86 @@ SiteHandlerOptions::PostHandle(HTTPMessage* p_message)
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// PRIVATE
+// CORS checking following: 
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
+//
+//////////////////////////////////////////////////////////////////////////
+
+void
+SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
+                                            ,CString      p_origin
+                                            ,CString      p_method
+                                            ,CString      p_headers)
+{
+  // Check all requested header methods
+  if(!CheckCORSOrigin (p_message,p_origin))  return;
+  if(!CheckCORSMethod (p_message,p_method))  return;
+  if(!CheckCORSHeaders(p_message,p_headers)) return;
+
+  // Adding the max age if any
+  if(m_site->GetCORSMaxAge() > 0)
+  {
+    CString maxAge;
+    maxAge.Format("%d",m_site->GetCORSMaxAge());
+    p_message->AddHeader("Access-Control-Max-Age",maxAge,false);
+  }
+}
+
+// Check that we have same origin
+bool 
+SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,CString p_origin)
+{
+  CString origin = m_site->GetCORSOrigin();
+  if(!origin.IsEmpty())
+  {
+    if(p_origin.CompareNoCase(origin))
+    {
+      // This call is NOT allowed
+      p_message->SetStatus(HTTP_STATUS_DENIED);
+      SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: Not same CORS origin");
+      return false;
+    }
+  }
+  // All sites are allowed, or only the origin
+  // Header "Access-Control-Allow-Origin" will be set by the site!
+
+  return true;
+}
+
+// Check that the site has this HTTP Method
+bool 
+SiteHandlerOptions::CheckCORSMethod(HTTPMessage* p_message,CString p_method)
+{
+  if(!p_method.IsEmpty())
+  {
+    CString handlers = m_site->GetAllowHandlers();
+    if(handlers.Find(p_method) < 0)
+    {
+      // This method is NOT allowed
+      p_message->SetStatus(HTTP_STATUS_DENIED);
+      SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: CORS method not allowed");
+      return false;
+    }
+    // These are the allowed methods for this site
+    p_message->AddHeader("Access-Control-Allow-Methods",handlers,false);
+  }
+  return true;
+}
+
+// Check that we can handle these headers
+bool 
+SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,CString p_headers)
+{
+  if(!p_headers.IsEmpty())
+  {
+    // CURRENTLY THERE IS NO MECHANISME TO CHECK THE ALLOWED HEADERS
+    // SO WE JUST REFLECT WHAT WE'VE GOTTEN
+    // Note 1: To implement all handlers must register there headers
+    // Note 2: Checking on 'official' HTTP headers defies the protocol!
+    p_message->AddHeader("Access-Control-Allow-Headers",p_headers,false);
+  }
+  return true;
+}

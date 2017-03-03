@@ -771,6 +771,17 @@ HTTPMessage::AddHeader(HTTP_HEADER_ID p_id,CString p_value)
   }
 }
 
+// Add header outside protocol
+void
+HTTPMessage::AddHeader(CString p_name,CString p_value,bool p_lower /*=true*/)
+{
+  if(p_lower)
+  {
+    p_name.MakeLower();
+  }
+  m_headers.insert(std::make_pair(p_name,p_value));
+}
+
 // Finding a header by lowercase name
 CString
 HTTPMessage::GetHeader(CString p_name)

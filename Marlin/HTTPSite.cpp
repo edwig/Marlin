@@ -446,10 +446,10 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
 
   __try
   {
-    // HTTP Throtteling is one call per calling address at the time
-    if(m_throtteling)
+    // HTTP Throttling is one call per calling address at the time
+    if(m_throttling)
     {
-      g_throttle = StartThrotteling(p_message);
+      g_throttle = StartThrottling(p_message);
     }
 
     // Try to read the body / rest of the message
@@ -464,6 +464,13 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
         p_message->SetStatus(HTTP_STATUS_GONE);
         SendResponse(p_message);
       }
+    }
+
+    // Control Origin Resource Sharing
+    if(m_useCORS)
+    {
+      // See that message has expected origin
+      CheckCorsOrigin(p_message);
     }
 
     // If site in asynchronous SOAP/XML mode
@@ -492,10 +499,10 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       HandleHTTPMessageDefault(p_message);
     }
 
-    // Remove the throtteling lock!
-    if(m_throtteling)
+    // Remove the throttling lock!
+    if(m_throttling)
     {
-      EndThrotteling(g_throttle);
+      EndThrottling(g_throttle);
     }
   }
   __except(
@@ -548,9 +555,9 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
   __try
   {
     // If we did throtteling, remove the lock
-    if(m_throtteling)
+    if(m_throttling)
     {
-      EndThrotteling(g_throttle);
+      EndThrottling(g_throttle);
     }
 
     // Respond to the client with a server error in all cases. 
@@ -623,6 +630,29 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
   m_server->SendResponse(this,p_message,HTTP_STATUS_OK,"","","");
   p_message->SetRequestHandle(NULL);
   DETAILLOG1("Sent a HTTP status 200 = OK for asynchroneous message");
+}
+
+// See that message has expected origin
+void
+HTTPSite::CheckCorsOrigin(HTTPMessage* p_message)
+{
+  if(!m_allowOrigin.IsEmpty() && m_useCORS)
+  {
+    CString comesFrom = p_message->GetHeader("Origin");
+    if(m_allowOrigin.CompareNoCase(comesFrom))
+    {
+      ERRORLOG(ERROR_ACCESS_DENIED,"CORS origin server error: " + comesFrom);
+      // Message is not allowed
+      p_message->Reset();
+      // Empty the response part. Just to be sure!
+      CString empty;
+      p_message->GetFileBuffer()->Reset();
+      p_message->SetFile(empty);
+      // Answer with error
+      p_message->SetStatus(HTTP_STATUS_DENIED);
+      m_server->SendResponse(p_message);
+    }
+  }
 }
 
 // Call the correct EventStream handler
@@ -741,7 +771,7 @@ HTTPSite::RemoveFilter(unsigned p_priority)
 //////////////////////////////////////////////////////////////////////////
 
 CRITICAL_SECTION* 
-HTTPSite::StartThrotteling(HTTPMessage* p_message)
+HTTPSite::StartThrottling(HTTPMessage* p_message)
 {
   CRITICAL_SECTION* section = nullptr;
 
@@ -774,7 +804,7 @@ HTTPSite::StartThrotteling(HTTPMessage* p_message)
 }
 
 void
-HTTPSite::EndThrotteling(CRITICAL_SECTION*& p_throttle)
+HTTPSite::EndThrottling(CRITICAL_SECTION*& p_throttle)
 {
   // That easy!
   LeaveCriticalSection(p_throttle);
@@ -783,7 +813,7 @@ HTTPSite::EndThrotteling(CRITICAL_SECTION*& p_throttle)
   // Thread has already serviced the HTTP call
   if(m_throttels.size() > MAX_HTTP_THROTTLES)
   {
-    TryFlushThrotteling();
+    TryFlushThrottling();
   }
 }
 
@@ -791,7 +821,7 @@ HTTPSite::EndThrotteling(CRITICAL_SECTION*& p_throttle)
 // But leave the once that are currently used by a session call
 // And so reducing the amount of memory used by the site
 void
-HTTPSite::TryFlushThrotteling()
+HTTPSite::TryFlushThrottling()
 {
   AutoCritSec lock(&m_sessionLock);
 
@@ -1637,5 +1667,11 @@ HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
     p_headers.insert(std::make_pair("Cache-Control","no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0"));
     p_headers.insert(std::make_pair("Pragma","no-cache"));
     p_headers.insert(std::make_pair("Expires","0"));
+  }
+
+  // If we use CORS, make sure we advertise the origin
+  if(m_useCORS)
+  {
+    p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? "*" : m_allowOrigin));
   }
 }
