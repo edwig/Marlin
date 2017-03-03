@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2016 ir. W.E. Huisman
+// Copyright (c) 2017 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,7 +45,7 @@ int TestHashing()
   CString buffer("This is a somewhat longer string with an intentional message");
   int     errors = 0;
 
-  // Dit gaan we testen
+  // This is what we're testing
   xprintf("TESTING HASHING PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
    
   xprintf("===================================================================\n");

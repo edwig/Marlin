@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2016 ir. W.E. Huisman
+// Copyright (c) 2017 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy

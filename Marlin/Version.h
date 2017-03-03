@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2016 ir. W.E. Huisman
+// Copyright (c) 2017 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,8 +30,8 @@
 // Version number components
 #define MARLIN_PRODUCT_NAME     "MarlinServer"   // Our name
 #define MARLIN_VERSION_NUMBER   "4.0.0"          // The real version
-#define MARLIN_VERSION_BUILD    "Beta"           // Can carry strings like 'Alpha', 'Beta', 'RC'
-#define MARLIN_VERSION_DATE     "01-10-2016"     // Last production date
+#define MARLIN_VERSION_BUILD    "RC"             // Can carry strings like 'Alpha', 'Beta', 'RC'
+#define MARLIN_VERSION_DATE     "03-03-2017"     // Last production date
 
 // This is our version string "MarlinServer 4.0.0"
 #define MARLIN_SERVER_VERSION MARLIN_PRODUCT_NAME " " MARLIN_VERSION_NUMBER MARLIN_VERSION_BUILD
