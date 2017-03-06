@@ -744,7 +744,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     // DO CHECKS
 
     // Parameter is mandatory but not given in the definition
-    if((orgName != chkName) && ((type & WSDL_Mandatory) && checkParam == nullptr))
+    if((orgName != chkName) && (type & WSDL_Mandatory))
     {
       p_check->Reset();
       p_check->SetFault("Mandatory field not found",p_who,"Message is missing a field",orgParam->GetName());
@@ -752,41 +752,52 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     }
 
     // Only if parameter field found
-    if(checkParam)
+    if(orgName == chkName)
     {
-      if(p_fields)
+      if(checkParam)
       {
-        if(CheckFieldDatatypeValues(orgParam,checkParam,p_check,p_who) == false)
+        if(p_fields)
         {
-          return false;
+          if(CheckFieldDatatypeValues(orgParam,checkParam,p_check,p_who) == false)
+          {
+            return false;
+          }
+        }
+        // RECURSE
+        if(orgParam->m_elements.size())
+        {
+          if(CheckParameters(orgParam,p_orig,checkParam,p_check,p_who,p_fields) == false)
+          {
+            return false;
+          }
         }
       }
-      // RECURSE
-      if(orgParam->m_elements.size())
+
+      // Message can have more than one nodes of this name
+      // So check that next node, before continuing on the original template
+      if((type & WSDL_OneMany) || (type & WSDL_ZeroMany))
       {
-        if(CheckParameters(orgParam,p_orig,checkParam,p_check,p_who,p_fields) == false)
+        XMLElement* next = p_check->GetElementSibling(checkParam);
+        if(next && next->GetName().Compare(orgName) == 0)
         {
-          return false;
+          checkParam = next;
+          continue;
         }
       }
+      // Get next parameter in sequence list
+      checkParam = p_check->GetElementSibling(checkParam);
     }
-
-    // Message can have more than one nodes of this name
-    // So check that next node, before continuing on the original template
-    if((type & WSDL_OneMany) || (type & WSDL_ZeroMany))
-    {
-      XMLElement* next = p_check->GetElementSibling(checkParam);
-      if(next && next->GetName().Compare(orgName) == 0)
-      {
-        checkParam = next;
-        continue;
-      }
-    }
-
     // Next parameter in the template
-    orgParam   = p_orig ->GetElementSibling(orgParam);
-    checkParam = p_check->GetElementSibling(checkParam);
-    type       = orgParam ? orgParam->GetType() : 0;
+    orgParam = p_orig ->GetElementSibling(orgParam);
+    type     = orgParam ? orgParam->GetType() : 0;
+  }
+  // See if we've got something extra left
+  if(checkParam)
+  {
+    CString extra_field = checkParam->GetName();
+    p_check->Reset();
+    p_check->SetFault("Extra field found",p_who,"Message has unexpected parameter",extra_field);
+    return false;
   }
   // Gotten to the end, it's OK
   return true;
