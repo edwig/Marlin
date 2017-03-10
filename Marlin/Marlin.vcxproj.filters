@@ -285,6 +285,9 @@
     <ClCompile Include="XMLTemporal.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="HostedWebCore.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -577,6 +580,9 @@
     </ClInclude>
     <ClInclude Include="XMLTemporal.h">
       <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HostedWebCore.h">
+      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

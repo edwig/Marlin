@@ -25,6 +25,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinIISModule", "MarlinII
 		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HostedWebCore", "HostedWebCore\HostedWebCore.vcxproj", "{1EA161F3-2559-408D-952F-F78D655C0D3E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -57,6 +62,14 @@ Global
 		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Release|x64.Build.0 = Release|x64
 		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Release|x86.ActiveCfg = Release|Win32
 		{8D146F02-9019-BC45-06ED-27B4B4D44AAC}.Release|x86.Build.0 = Release|Win32
+		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Debug|x64.ActiveCfg = Debug|x64
+		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Debug|x64.Build.0 = Debug|x64
+		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Debug|x86.ActiveCfg = Debug|Win32
+		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Debug|x86.Build.0 = Debug|Win32
+		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Release|x64.ActiveCfg = Release|x64
+		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Release|x64.Build.0 = Release|x64
+		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Release|x86.ActiveCfg = Release|Win32
+		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -108,6 +108,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <CallingConvention>StdCall</CallingConvention>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -155,6 +156,7 @@
     <ClCompile Include="Analysis.cpp" />
     <ClCompile Include="Base64.cpp" />
     <ClCompile Include="CommandBus.cpp" />
+    <ClCompile Include="HostedWebCore.cpp" />
     <ClCompile Include="HTTPCertificate.cpp" />
     <ClCompile Include="ConvertWideString.cpp" />
     <ClCompile Include="Cookie.cpp" />
@@ -294,6 +296,7 @@
     <ClInclude Include="AutoCritical.h" />
     <ClInclude Include="Base64.h" />
     <ClInclude Include="CommandBus.h" />
+    <ClInclude Include="HostedWebCore.h" />
     <ClInclude Include="HTTPCertificate.h" />
     <ClInclude Include="ConvertWideString.h" />
     <ClInclude Include="Cookie.h" />
