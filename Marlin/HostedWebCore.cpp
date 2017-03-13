@@ -39,6 +39,8 @@
 
 #include "stdafx.h"
 #include "HostedWebCore.h"
+#include "MarlinModule.h"
+#include "Analysis.h"
 #include "Version.h"
 #include <conio.h>
 #include <string>
@@ -161,7 +163,7 @@ void ShutdownWebCore()
   {
     DWORD immed = 0;
     HRESULT hres = (*HWC_Shutdown)(immed);
-    switch(hres)
+    switch(HRESULT_CODE(hres))
     {
       case S_OK: 
         printf("IIS Hosted Web Core shutdown.\n");
@@ -266,7 +268,38 @@ ParseCommandLine(int argc,char* argv[])
   }
 }
 
-void PrintMenu()
+void 
+TrySetMetadata()
+{
+  char buffer[80];
+  size_t readin = 0;
+  CString variable,value;
+
+  // Trying to get metadata to set
+  printf("ENTER METADATA\n");
+  printf("Variable: ");
+  if(_cgets_s(buffer,80,&readin))
+  {
+    printf("Cannot read variable!\n");
+    return;
+  }
+  variable = buffer;
+
+  // Getting the value
+  printf("Value   : ");
+  if(_cgets_s(buffer,80,&readin))
+  {
+    printf("Cannot read value!\n");
+    return;
+  }
+  value = buffer;
+
+  // Go try to set it
+  SetMetaData(variable,value);
+}
+
+void 
+PrintMenu()
 {
   CString line;
   for(int ind = 0; ind < 51; ++ind) line += "-";
@@ -277,6 +310,7 @@ void PrintMenu()
   printf("| %-50s|\n","");
   printf("| %-50s|\n","A) Status");
   printf("| %-50s|\n","B) Set metadata");
+  printf("| %-50s|\n","F) Flush serverlog");
   printf("| %-50s|\n","");
   printf("| %-50s|\n","S) Stop");
   printf("| %-50s|\n","");
@@ -296,8 +330,22 @@ void RunHostedMenu()
 
     switch(ch)
     {
-      case 'A': if(g_ServerStatus) (*g_ServerStatus)(); break;
-      case 'B': if(g_SetMetaData)  (*g_SetMetaData)();  break;
+      case 'A': if(g_ServerStatus)
+                {
+                  (*g_ServerStatus)();
+                }
+                break;
+      case 'B': if(g_SetMetaData)
+                {
+                  (*g_SetMetaData)();
+                }
+                break;
+      case 'F': if(g_analysisLog)
+                {
+                  g_analysisLog->ForceFlush();
+                  printf("Serverlog flushed!\n");
+                }
+                break;
     }
   } 
   while(ch != 'S');
