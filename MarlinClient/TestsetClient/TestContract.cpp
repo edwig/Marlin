@@ -159,10 +159,10 @@ TestWSDLDatatype(WebServiceClient& p_client,CString p_contract)
     else
     {
       xprintf(msg1.GetFault());
-      if(msg1.GetFaultCode()   == "Datatype" &&
-         msg1.GetFaultActor()  == "Client"   &&
-         msg1.GetFaultString() == "Version"  &&
-         msg1.GetFaultDetail() == "Datatype check failed: Not an integer, but: MyVersion")
+      if(msg1.GetFaultCode()   == "Datatype"    &&
+         msg1.GetFaultActor()  == "Client"      &&
+         msg1.GetFaultString() == "Restriction" &&
+         msg1.GetFaultDetail() == "Datatype check failed! Field: Version Value: MyVersion Result: Not an integer, but: MyVersion")
       {
         error = false;
       }
