@@ -54,9 +54,9 @@ CString g_poolName;         // The application pool name
 HMODULE g_webcore = NULL;   // Web core module
 
 // The Hosted Web Core API functions
-PFN_WEB_CORE_ACTIVATE     HWC_Activate    = nullptr;
-PFN_WEB_CORE_SETMETADATA  HWC_SetMetadata = nullptr;
-PFN_WEB_CORE_SHUTDOWN     HWC_Shutdown    = nullptr;
+PFN_WEB_CORE_ACTIVATE               HWC_Activate    = nullptr;
+PFN_WEB_CORE_SET_METADATA_DLL_ENTRY HWC_SetMetadata = nullptr;
+PFN_WEB_CORE_SHUTDOWN               HWC_Shutdown    = nullptr;
 
 // Names of the application config files
 CString g_applicationhost;
@@ -78,9 +78,9 @@ bool LoadWebCore()
   if(g_webcore)
   {
     // Load all functions
-    HWC_Activate    = (PFN_WEB_CORE_ACTIVATE)    GetProcAddress(g_webcore,"WebCoreActivate");
-    HWC_SetMetadata = (PFN_WEB_CORE_SETMETADATA) GetProcAddress(g_webcore,"WebCoreSetMetadata");
-    HWC_Shutdown    = (PFN_WEB_CORE_SHUTDOWN)    GetProcAddress(g_webcore,"WebCoreShutdown");
+    HWC_Activate    = (PFN_WEB_CORE_ACTIVATE)               GetProcAddress(g_webcore,"WebCoreActivate");
+    HWC_SetMetadata = (PFN_WEB_CORE_SET_METADATA_DLL_ENTRY) GetProcAddress(g_webcore,"WebCoreSetMetadata");
+    HWC_Shutdown    = (PFN_WEB_CORE_SHUTDOWN)               GetProcAddress(g_webcore,"WebCoreShutdown");
 
     if(HWC_Activate && HWC_SetMetadata && HWC_Shutdown)
     {
@@ -126,7 +126,7 @@ bool ActivateWebCore()
     }
 
     // GO STARTING WEB CORE
-    HRESULT hres = (*HWC_Activate)(apphost.c_str(),webconfig.c_str(),poolname.c_str());
+    HRESULT hres = (*HWC_Activate)(apphost.c_str(),NULL,poolname.c_str());
 
     // Handle result of the startup
     switch(HRESULT_CODE(hres))
@@ -143,6 +143,9 @@ bool ActivateWebCore()
         break;
       case ERROR_ALREADY_EXISTS:
         printf("ERROR: The application pool is already running in IIS!\n");
+        break;
+      case ERROR_PROC_NOT_FOUND:
+        printf("ERROR: The 'RegisterModule' procedure could not be found!\n");
         break;
       default:
         printf("ERROR: Cannot start the Hosted Web Core. Error number: %X\n",hres);
@@ -325,5 +328,7 @@ int HWC_main(int argc,char *argv[])
   {
     retval = 1;
   }
+  printf("Press enter: ");
+  _getch();
   return retval;
 }

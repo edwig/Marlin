@@ -66,8 +66,8 @@ ErrorReport       g_report;                   // Error reporting for Marlin
 WebConfigIIS      g_config;                   // Global ApplicationHost.config
 
 // Logging macro for this file only
-#define DETAILLOG(text)    g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text))
-#define ERRORLOG(text)     g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(text))
+#define DETAILLOG(text)    if(g_analysisLog) { g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text)); }
+#define ERRORLOG(text)     if(g_analysisLog) { g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(text)); }
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -406,6 +406,16 @@ MarlinGlobalFactory::Terminate()
 // MODULE FACTORY: Create a module handler
 //
 //////////////////////////////////////////////////////////////////////////
+
+MarlinModuleFactory::MarlinModuleFactory()
+{
+  DETAILLOG("Starting new module factory");
+}
+
+MarlinModuleFactory::~MarlinModuleFactory()
+{
+  DETAILLOG("Stopping module factory");
+}
 
 HRESULT 
 MarlinModuleFactory::GetHttpModule(OUT CHttpModule**     p_module

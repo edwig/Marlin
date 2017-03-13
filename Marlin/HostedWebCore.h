@@ -26,21 +26,22 @@
 // THE SOFTWARE.
 //
 #pragma once
+#include <hwebcore.h>
 
-extern "C"
-{
-
-  // Activate Hosted Web Core
-  typedef HRESULT(*PFN_WEB_CORE_ACTIVATE)(IN PCWSTR pszAppHostConfigFile
-                                         ,IN PCWSTR pszRootWebConfigFile
-                                         ,IN PCWSTR pszInstanceName);
-
-  typedef HRESULT(*PFN_WEB_CORE_SETMETADATA)(IN PCWSTR pszMetadataType,IN PCWSTR pszValue);
-
-  // Stop the Hosted Web core (1 = immediate, 0 = use app pool settings)
-  typedef HRESULT(*PFN_WEB_CORE_SHUTDOWN)(IN DWORD immediate);
-
-}
+// extern "C"
+// {
+// 
+//   // Activate Hosted Web Core
+//   typedef HRESULT (_stdcall *PFN_WEB_CORE_ACTIVATE)(IN PCWSTR pszAppHostConfigFile
+//                                          ,IN PCWSTR pszRootWebConfigFile
+//                                          ,IN PCWSTR pszInstanceName);
+// 
+//   typedef HRESULT(_stdcall *PFN_WEB_CORE_SET_METADATA_DLL_ENTRY)(IN PCWSTR pszMetadataType,IN PCWSTR pszValue);
+// 
+//   // Stop the Hosted Web core (1 = immediate, 0 = use app pool settings)
+//   typedef HRESULT(_stdcall *PFN_WEB_CORE_SHUTDOWN)(IN DWORD immediate);
+// 
+// }
 
 // Callbacks to the application server
 typedef void(*PFN_SERVERSTATUS)(void);

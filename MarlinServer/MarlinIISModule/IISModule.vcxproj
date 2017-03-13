@@ -103,6 +103,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;marlin.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Marlin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>MarlinIISModule.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

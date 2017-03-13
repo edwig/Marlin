@@ -70,6 +70,8 @@ private:
 class MarlinModuleFactory : public IHttpModuleFactory
 {
 public:
+  MarlinModuleFactory();
+ ~MarlinModuleFactory();
   // Creating a HTTPmodule
   virtual HRESULT GetHttpModule(OUT CHttpModule** p_module,IN IModuleAllocator* p_allocator);
   // Stopping the module factory
