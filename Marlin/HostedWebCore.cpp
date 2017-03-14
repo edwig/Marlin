@@ -266,19 +266,22 @@ ParseCommandLine(int argc,char* argv[])
       case 3: g_poolName        = argv[3]; break;
     }
   }
+  if(g_applicationhost.IsEmpty() || g_poolName.IsEmpty())
+  {
+    printf("USAGE: <application> <ApplictionHost.config> <web.config> <applicationpool>\n");
+  }
 }
 
 void 
 TrySetMetadata()
 {
   char buffer[80];
-  size_t readin = 0;
   CString variable,value;
 
   // Trying to get metadata to set
   printf("ENTER METADATA\n");
   printf("Variable: ");
-  if(_cgets_s(buffer,80,&readin))
+  if(gets_s(buffer,80) == NULL)
   {
     printf("Cannot read variable!\n");
     return;
@@ -287,7 +290,7 @@ TrySetMetadata()
 
   // Getting the value
   printf("Value   : ");
-  if(_cgets_s(buffer,80,&readin))
+  if(gets_s(buffer,80) == NULL)
   {
     printf("Cannot read value!\n");
     return;
@@ -308,9 +311,10 @@ PrintMenu()
   printf("| %-50s|\n","MENU HOSTED WEBCORE");
   printf("+%s+\n",line.GetString());
   printf("| %-50s|\n","");
-  printf("| %-50s|\n","A) Status");
-  printf("| %-50s|\n","B) Set metadata");
-  printf("| %-50s|\n","F) Flush serverlog");
+  printf("| %-50s|\n","A) Server status");
+  printf("| %-50s|\n","B) Server set metadata");
+  printf("| %-50s|\n","C) Flush serverlog");
+  printf("| %-50s|\n","D) Enter Metadata directly");
   printf("| %-50s|\n","");
   printf("| %-50s|\n","S) Stop");
   printf("| %-50s|\n","");
@@ -340,12 +344,14 @@ void RunHostedMenu()
                   (*g_SetMetaData)();
                 }
                 break;
-      case 'F': if(g_analysisLog)
+      case 'C': if(g_analysisLog)
                 {
                   g_analysisLog->ForceFlush();
                   printf("Serverlog flushed!\n");
                 }
                 break;
+      case 'D': TrySetMetadata();
+      default:  break;
     }
   } 
   while(ch != 'S');

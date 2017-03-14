@@ -416,7 +416,7 @@ MarlinModuleFactory::~MarlinModuleFactory()
 {
   DETAILLOG("Stopping module factory");
 }
-
+  
 HRESULT 
 MarlinModuleFactory::GetHttpModule(OUT CHttpModule**     p_module
                                   ,IN  IModuleAllocator* p_allocator)

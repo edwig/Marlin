@@ -125,22 +125,22 @@ int TestSubSites(HTTPServer* p_server)
     return error;
   }
 
-  // Testing the functionality that the check on the main site is correct!
-  CString url3("/MarlinTest/Rubish/One");
-  HTTPSite* site3 = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url3,true);
-  if(site3)
-  {
-    ++error;
-    xerror();
-    qprintf("ERROR: Unjust creation of a subsite: %s\n",(LPCTSTR)site3->GetPrefixURL());
-    return error;
-  }
-  else
-  {
-    // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    qprintf("Refused incorrect subsite   : OK : http://+:%d%s\n",TESTING_HTTP_PORT,(LPCTSTR)url3);
-  }
+//   // Testing the functionality that the check on the main site is correct!
+//   CString url3("/MarlinTest/Rubish/One");
+//   HTTPSite* site3 = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url3,true);
+//   if(site3)
+//   {
+//     ++error;
+//     xerror();
+//     qprintf("ERROR: Unjust creation of a subsite: %s\n",(LPCTSTR)site3->GetPrefixURL());
+//     return error;
+//   }
+//   else
+//   {
+//     // SUMMARY OF THE TEST
+//     // --- "--------------------------- - ------\n"
+//     qprintf("Refused incorrect subsite   : OK : http://+:%d%s\n",TESTING_HTTP_PORT,(LPCTSTR)url3);
+//   }
 
 
   // Setting the POST handler for this site
