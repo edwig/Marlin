@@ -180,3 +180,12 @@ CHANGES IN VERSION 4.0
 	In order to fullfill the min/max In/Ex-clusive rules, a new XMLTemporal class has been added.
 	this class contains a partial implementation of Date,Time,Timestamp and Durations.
 	The implementation only calculates a ordinal number to parse min/max values.
+
+17) Hosted Web Core support for Marlin
+    The hosted webcore is meant for development purposes to be able to run an IIS application 
+	outside the complete IIS infrastructure. The application can be run by pressing 'run' in Visual
+	Studio. Pre-requesites are the following
+	- Installation of "Hosted Web Core" as an OS feature (apart from IIS)
+	- Application image can be compiled as an EXE and deployed as a DLL
+	- The main wil call "HWC_main(argc,argv)" function to start the hosted webcore
+	  See the "HostedWebCore" project in the solution
