@@ -52,8 +52,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-CString g_poolName;         // The application pool name
-HMODULE g_webcore = NULL;   // Web core module
+// Handle on the 'hwebcore.dll' module
+HMODULE g_webcore = NULL;       // Web core module
+DWORD   g_hwcShutdownMode = 0;  // Shutdown mode 0=gracefull, 1=immediate
 
 // The Hosted Web Core API functions
 PFN_WEB_CORE_ACTIVATE               HWC_Activate    = nullptr;
@@ -61,8 +62,9 @@ PFN_WEB_CORE_SET_METADATA_DLL_ENTRY HWC_SetMetadata = nullptr;
 PFN_WEB_CORE_SHUTDOWN               HWC_Shutdown    = nullptr;
 
 // Names of the application config files
-CString g_applicationhost;
-CString g_webconfig;
+CString g_applicationhost;      // ApplicationHost.config file to use
+CString g_webconfig;            // Web.config file to use
+CString g_poolName;             // The application pool name
 
 // Server callbacks
 PFN_SERVERSTATUS g_ServerStatus = nullptr;
@@ -120,15 +122,25 @@ bool ActivateWebCore()
 
   if(HWC_Activate)
   {
-    // Check for valid application host file
+    // Check for valid application host file in readable mode (4)
     if(_waccess(apphost.c_str(),4) != 0)
     {
       printf("ERROR: Cannot access the ApplicationHost.config file!\n");
       return result;
     }
 
+    // Check for valid web.config file (if any) in readable mode
+    if(!webconfig.empty())
+    {
+      if(_waccess(webconfig.c_str(),4) != 0)
+      {
+        printf("ERROR: Cannot access the web.config file!\n");
+        return result;
+      }
+    }
+
     // GO STARTING WEB CORE
-    HRESULT hres = (*HWC_Activate)(apphost.c_str(),NULL,poolname.c_str());
+    HRESULT hres = (*HWC_Activate)(apphost.c_str(),webconfig.c_str(),poolname.c_str());
 
     // Handle result of the startup
     switch(HRESULT_CODE(hres))
@@ -149,8 +161,11 @@ bool ActivateWebCore()
       case ERROR_PROC_NOT_FOUND:
         printf("ERROR: The 'RegisterModule' procedure could not be found!\n");
         break;
+      case ERROR_ACCESS_DENIED:
+        printf("ERROR: Access denied. Are you running as local admin?\n");
+        break;
       default:
-        printf("ERROR: Cannot start the Hosted Web Core. Error number: %X\n",hres);
+        printf("ERROR: Cannot start the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
         break;
     }
   }
@@ -161,8 +176,19 @@ void ShutdownWebCore()
 {
   if(HWC_Shutdown)
   {
-    DWORD immed = 0;
-    HRESULT hres = (*HWC_Shutdown)(immed);
+    // Make sure shutdown mode is only 0 or 1
+    if(g_hwcShutdownMode != 0)
+    {
+      g_hwcShutdownMode = 1;
+    }
+
+    // Tell that we will shutdown
+    printf("Initiating Web Core shutdown...\n");
+
+    // Try to shutdown the Hosted Web Core
+    HRESULT hres = (*HWC_Shutdown)(g_hwcShutdownMode);
+
+    // Show any errors or warnings
     switch(HRESULT_CODE(hres))
     {
       case S_OK: 
@@ -179,7 +205,7 @@ void ShutdownWebCore()
                "See IIS Admin for further shutdown actions and optoins!\n");
         break;
       default:
-        printf("ERROR: Cannot shutdown the Hosted Web Core. Error number: %X\n",hres);
+        printf("ERROR: Cannot shutdown the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
         break;
     }
   }
@@ -194,8 +220,11 @@ bool SetMetaData(CString p_datatype,CString p_value)
 
   if(HWC_SetMetadata)
   {
+    // Try set the metadata
     HRESULT hres = (*HWC_SetMetadata)(type.c_str(),value.c_str());
-    switch(hres)
+
+    // Show result from setting
+    switch(HRESULT_CODE(hres))
     {
       case S_OK: 
         printf("METADATA [%s:%s] is set.\n",p_datatype.GetString(),p_value.GetString());
@@ -208,7 +237,7 @@ bool SetMetaData(CString p_datatype,CString p_value)
         printf("ERROR: Metadata for Hosted Web Core [%s:%s] contains invalid data!\n",p_datatype.GetString(),p_value.GetString());
         break;
       default:
-        printf("ERROR: Metadata NOT set. Error number: %X\n",hres);
+        printf("ERROR: Metadata NOT set. Error number: %X\n",HRESULT_CODE(hres));
         break;
     }
   }
@@ -266,6 +295,8 @@ ParseCommandLine(int argc,char* argv[])
       case 3: g_poolName        = argv[3]; break;
     }
   }
+  // Can be set by command line or by the application
+  // through the external declarations of these global parameters
   if(g_applicationhost.IsEmpty() || g_poolName.IsEmpty())
   {
     printf("USAGE: <application> <ApplictionHost.config> <web.config> <applicationpool>\n");
@@ -301,6 +332,7 @@ TrySetMetadata()
   SetMetaData(variable,value);
 }
 
+// Printing of the console menu
 void 
 PrintMenu()
 {
@@ -322,7 +354,9 @@ PrintMenu()
   printf("\n");
 }
 
-void RunHostedMenu()
+// Running the console menu for the hosted webcore
+void 
+RunHostedMenu()
 {
   int ch = 0;
 

@@ -47,5 +47,13 @@
 typedef void(*PFN_SERVERSTATUS)(void);
 typedef void(*PFN_SETMETADATA)(void);
 
+// Names of the application config files
+extern CString g_applicationhost;      // ApplicationHost.config file to use
+extern CString g_webconfig;            // Web.config file to use
+extern CString g_poolName;             // The application pool name
+
+// Shutdown mode (0=gracefull, 1=immediate forced)
+extern DWORD g_hwcShutdownMode;
+
 // The main entry for a Hosted Web Core application
 int HWC_main(int argc,char* argv[]);

@@ -30,6 +30,9 @@
 
 int main(int argc,char* argv[])
 {
+  // Set gracefull shutdown mode
+  g_hwcShutdownMode = 0;
+
   return HWC_main(argc,argv);
 }
 
