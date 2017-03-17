@@ -266,6 +266,7 @@ public:
   CString         GetSecurityPassword() const;
   WsdlOrder       GetWSDLOrder() const;
   unsigned        GetSigningMethod() const;
+  XMLElement*     GetXMLBodyPart() const;
   CString         GetBodyPart();
   CString         GetCanonicalForm(XMLElement* p_element);
   bool            GetHasInitialAction() const;
@@ -856,6 +857,12 @@ inline bool
 SOAPMessage::GetMustUnderstandAction() const
 {
   return m_understand;
+}
+
+inline XMLElement*
+SOAPMessage::GetXMLBodyPart() const
+{
+  return m_body;
 }
 
 //////////////////////////////////////////////////////////////////////////
