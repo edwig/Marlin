@@ -32,6 +32,7 @@
 #include "SOAPMessage.h"
 #include "MultiPartBuffer.h"
 
+// Beware Debugging starting directory MUST be "$(OutDir)"
 CString file = "..\\Documentation\\HTML5-eventsource.js";
 
 CString GetJsonString()
@@ -61,9 +62,17 @@ TestFormDataMP(HTTPClient* p_client)
   CString data = GetJsonString();
 
   MultiPartBuffer buffer(FD_MULTIPART);
-  buffer.AddPart("json", "application/json",data);
-  buffer.AddPart("empty","text/html",       ""); 
-  buffer.AddFile("..\\Documentation\\eventsource.js","application/js",file);
+  MultiPart* part1 = buffer.AddPart("json", "application/json",data);
+  MultiPart* part2 = buffer.AddPart("empty","text/html",       ""); 
+  MultiPart* part3 = buffer.AddFile("eventsource","application/js",file);
+
+  // Test if we created all parts
+  if(part1 == nullptr || part2 == nullptr || part3 == nullptr)
+  {
+    // --- "--------------------------- - ------\n"
+    printf("MultiPartBuffer creation    : ERROR\n");
+    return 1;
+  }
   // Try to transport the filetimes to the server
   // BEWARE: Some servers do not respect the filetimes attributes
   //         or even crash on it (WCF .NET returns HTTP status 500)

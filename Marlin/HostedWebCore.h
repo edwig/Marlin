@@ -28,26 +28,16 @@
 #pragma once
 #include <hwebcore.h>
 
-// extern "C"
-// {
-// 
-//   // Activate Hosted Web Core
-//   typedef HRESULT (_stdcall *PFN_WEB_CORE_ACTIVATE)(IN PCWSTR pszAppHostConfigFile
-//                                          ,IN PCWSTR pszRootWebConfigFile
-//                                          ,IN PCWSTR pszInstanceName);
-// 
-//   typedef HRESULT(_stdcall *PFN_WEB_CORE_SET_METADATA_DLL_ENTRY)(IN PCWSTR pszMetadataType,IN PCWSTR pszValue);
-// 
-//   // Stop the Hosted Web core (1 = immediate, 0 = use app pool settings)
-//   typedef HRESULT(_stdcall *PFN_WEB_CORE_SHUTDOWN)(IN DWORD immediate);
-// 
-// }
-
 // Callbacks to the application server
+// The application can implement these to
+// 1) Show server status info in the HWC console
+// 2) Set metadata for IIS from the application
 typedef void(*PFN_SERVERSTATUS)(void);
 typedef void(*PFN_SETMETADATA)(void);
 
 // Names of the application config files
+// You can set these before starting, or they can be
+// taken from the command line of the application
 extern CString g_applicationhost;      // ApplicationHost.config file to use
 extern CString g_webconfig;            // Web.config file to use
 extern CString g_poolName;             // The application pool name

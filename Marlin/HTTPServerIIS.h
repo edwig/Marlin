@@ -93,6 +93,9 @@ protected:
   virtual void InitWebroot(CString p_webroot);
 
 private:
+  // Finding the impersonation access token
+  void FindingAccessToken(IHttpContext* p_context,HTTPMessage* p_message);
+
   // Reading the first chunks directly from the request handle from IIS
   void ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request);
 

@@ -1353,7 +1353,7 @@ HTTPClient::SendBodyData()
             }
           }
           DETAILLOG("Write body. Buffer part [%d]. Size: %d",part + 1,length);
-          ((char*)buffer)[length] = 0;
+          // ((char*)buffer)[length] = 0;
           // TRACELOG((char*)buffer);
           // Next part
           ++part;

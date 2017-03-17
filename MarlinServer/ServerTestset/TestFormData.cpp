@@ -75,7 +75,6 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
   xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
   xprintf("MULTI-PART\n%s\n",             (LPCTSTR)p_part->GetData());
 
-
   // Remember the fact that we where called
   bool result = !data.IsEmpty() || !name.IsEmpty();
   if(result)

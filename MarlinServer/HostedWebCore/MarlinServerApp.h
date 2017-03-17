@@ -32,7 +32,7 @@ class MarlinServerApp : public ServerApp
 {
 public:
   MarlinServerApp();
- ~MarlinServerApp();
+  virtual ~MarlinServerApp();
 
   virtual void InitInstance();
   virtual void ExitInstance();

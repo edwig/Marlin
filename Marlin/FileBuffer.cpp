@@ -222,6 +222,7 @@ FileBuffer::AllocateBuffer(size_t p_length)
     {
       m_buffer = new uchar[p_length + 1];
       m_binaryLength = p_length;
+      m_buffer[0] = 0;
       return true;
     }
   }

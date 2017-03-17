@@ -422,9 +422,9 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                                               ,p_request->Headers.pUnknownHeaders);
 
   // Log earliest as possible
-  DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
+  DETAILLOGV("Received HTTP call from [%s] with length: %s"
              ,SocketToServer((PSOCKADDR_IN6)sender)
-             ,p_request->BytesReceived);
+             ,contentLength);
 
   // See if we must substitute for a sub-site
   if(m_hasSubsites)
@@ -498,10 +498,10 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   message->SetSender((PSOCKADDR_IN6)sender);
   message->SetCookiePairs(cookie);
   message->SetAcceptEncoding(acceptEncoding);
+  message->SetRequestHandle((HTTP_REQUEST_ID)p_context);
 
-  // DONE in MarlinModule (gotten by the context)
-  //message->SetRequestHandle(p_request->RequestId);
-  //message->SetAccessToken(accessToken);
+  // Finding the impersonation access token (if any)
+  FindingAccessToken(p_context,message);
 
   if(p_site->GetAllHeaders())
   {
@@ -577,36 +577,83 @@ bool
 HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
 {
   UNREFERENCED_PARAMETER(p_message);
-  IHttpContext* context = reinterpret_cast<IHttpContext*>(p_message->GetRequestHandle());
+  IHttpContext* context     = reinterpret_cast<IHttpContext*>(p_message->GetRequestHandle());
   IHttpRequest* httpRequest = context->GetRequest();
-
-  // Second extension interface gives the authentication token of the call
-  // IHttpRequest2* httpRequest2 = nullptr;
-  // HRESULT hr = HttpGetExtendedInterface(g_iisServer,httpRequest,&httpRequest2);
-  // if(SUCCEEDED(hr))
-  // {
-    //     PBYTE tokenInfo = nullptr;
-    //     DWORD tokenSize = 0;
-    //     httpRequest2->GetChannelBindingToken(&tokenInfo,&tokenSize);
-  // }
+  size_t      contentLength = p_message->GetContentLength();
 
   // Reading the buffer
   FileBuffer* fbuffer = p_message->GetFileBuffer();
-  if(fbuffer->AllocateBuffer(p_message->GetContentLength()))
+  if(fbuffer->AllocateBuffer(contentLength))
   {
-    uchar* buffer   = nullptr;
-    size_t size     = NULL;
-    DWORD  received = NULL;
-    BOOL   pending  = FALSE;
+    uchar* buffer    = nullptr;
+    size_t size      = 0;
+    DWORD  received  = 0;
+    DWORD  total     = 0;
+    DWORD  remaining = 0;
+    BOOL   complete  = FALSE;
+
+    // Get the just allocated buffer
     fbuffer->GetBuffer(buffer,size);
-      
-    HRESULT hr = httpRequest->ReadEntityBody(buffer,(DWORD)size,FALSE,&received,&pending);
-    if(SUCCEEDED(hr))
+
+    // Loop until we've got all data parts
+    do
     {
-      return true;
+      received = 0;
+      HRESULT hr = httpRequest->ReadEntityBody(buffer,(DWORD)size,FALSE,&received,&complete);
+      if(!SUCCEEDED(hr))
+      {
+        if(HRESULT_CODE(hr) == ERROR_MORE_DATA)
+        {
+          // Strange, but this code is used to determine that there is NO more data
+          // The boolean 'complete' status is **NOT** used! (that one is for async completion!)
+          break;
+        }
+        ERRORLOG(HRESULT_CODE(hr),"Cannot read incoming HTTP buffer");
+        return false;
+      }
+      total  += received; // Total received bytes
+      buffer += received; // Advance buffer pointer
+      size   -= received; // Size left in the buffer
+
+      // Still to be received from the IIS request
+      remaining = httpRequest->GetRemainingEntityBytes();
+    }
+    while(remaining && received);
+
+    // Check if we received the total predicted message
+    if(total < contentLength)
+    {
+      ERRORLOG(ERROR_INVALID_DATA,"Total received message shorter dan 'ContentLength' header.");
     }
   }
-  return false;
+  return true;
+}
+
+// Finding the impersonation access token
+void
+HTTPServerIIS::FindingAccessToken(IHttpContext* p_context,HTTPMessage* p_message)
+{
+  // In case of authentication done: get the authentication token
+  HANDLE token = NULL;
+  IHttpUser* user = p_context->GetUser();
+  if(user)
+  {
+    // Make duplicate of the token, otherwise IIS will crash!
+    if(DuplicateTokenEx(user->GetImpersonationToken()
+                        ,TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_ALL_ACCESS | TOKEN_READ | TOKEN_WRITE
+                        ,NULL
+                        ,SecurityImpersonation
+                        ,TokenImpersonation
+                        ,&token) == FALSE)
+    {
+      token = NULL;
+    }
+    else
+    {
+      // Store the context with the message, so we can handle all derived messages
+      p_message->SetAccessToken(token);
+    }
+  }
 }
 
 // Init the stream response

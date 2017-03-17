@@ -567,27 +567,6 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(p_context,site,rawRequest,stream);
   if(msg)
   {
-    // In case of authentication done: get the authentication token
-    HANDLE token = NULL;
-    IHttpUser* user = p_context->GetUser();
-    if(user)
-    {
-      // Make duplicate of the token, otherwise IIS will crash!
-      if(DuplicateTokenEx(user->GetImpersonationToken()
-                         ,TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_ALL_ACCESS | TOKEN_READ | TOKEN_WRITE
-                         ,NULL
-                         ,SecurityImpersonation
-                         ,TokenImpersonation
-                         ,&token) == FALSE)
-      {
-        token = NULL;
-      }
-    }
-
-    // Store the context with the message, so we can handle all derived messages
-    msg->SetRequestHandle((HTTP_REQUEST_ID)p_context);
-    msg->SetAccessToken(token);
-
     // GO! Let the site handle the message
     site->HandleHTTPMessage(msg);
 
