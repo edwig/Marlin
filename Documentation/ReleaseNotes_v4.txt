@@ -8,6 +8,19 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+PATCH VERSION 4.0.1 (17-03-2017)
+--------------------------------
+1) Correction in the reading of the HTTPServerIIS of multipart messages. The stop argument
+   for reading the message to completion was broken. 
+2) Correction of the HostedWebCore module. Not all HRESULT return codes where correctly
+   translated to to HRESULT_CODE's. This also corrects the printing of error information
+   in the hosted webcore
+3) Added the flushing of the server logfile in the Hosted Web Core menu
+4) Documented the inner workings of the IIS module
+5) Added "XMLElement* GetXMLBodyNode()" method to SOAPMessage. This returns the current
+   pointer to the xml-element of the m_body body-node.
+
+
 CHANGES IN VERSION 4.0
 ======================
 1) This version Contains the jump to seperate IIS configuration for Marlin. The Marlin server 
