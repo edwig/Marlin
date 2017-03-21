@@ -2810,6 +2810,7 @@ HTTPClient::CheckCORSAnswer()
     {
       // We may NOT use this method on this address
       result = false;
+      m_status = HTTP_STATUS_BAD_METHOD;
       ERRORLOG("CORS method not allowed for this site: %s",m_corsMethod);
     }
   }

@@ -14,7 +14,8 @@ PreFlight(HTTPClient* p_client,HTTPMessage& p_msg,CString p_method,CString p_hea
   if(result == false)
   {
     // HTTP error on CORS pre-flight check
-    printf("CORS pre-flight check returned status: %d\n",p_client->GetStatus());
+    // --- "---------------------------------------------- - ------
+    printf("ERROR CORS pre-flight check returned status    : STATUS %d\n",p_client->GetStatus());
   }
   return result;
 }
