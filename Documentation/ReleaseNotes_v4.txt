@@ -36,9 +36,9 @@ CHANGES IN VERSION 4.0
    If you do not wish to use the IIS option, derive your server from "HTTServerMarlin" when
    upgrading to this version of the Marlin software.
 
-2) Due to the different workings of IIS, if you want to run in that mode, the web.config of Marlin
-   will not be read. Instead the "ApplicationHost.Config" (on C:\Windows\System32\inetsrv\config)
-   and the web.config (in C:\inetpub\wwwroot\YourSite\) will be read.
+	2) Due to the different workings of IIS, if you want to run in that mode, the web.config of Marlin
+	   will not be read. Instead the "ApplicationHost.Config" (on C:\Windows\System32\inetsrv\config)
+	   and the web.config (in C:\inetpub\wwwroot\YourSite\) will be read.
 
    Functionallity               Where to find
    -------------------------    --------------------------------------------
