@@ -1274,7 +1274,10 @@ HTTPServer::CheckEventStreams()
       DETAILLOGS("Abandoned push-event client from: ",it->second->m_baseURL);
 
       // Remove request from the request queue, closing the connection
-      HttpCancelHttpRequest(m_requestQueue,it->second->m_requestID,NULL);
+      // Canceling the request with "HttpCancelHttpRequest" does not work in the IIS situation
+      // so now we send a keepalive with a 'continue = false' code, so the stream gets closed
+      EventStream& stream = *it->second;
+      SendResponseEventBuffer(stream.m_requestID,keepAlive.GetString(),keepAlive.GetLength(),false);
 
       // Erase dead stream, and goto next
       it = m_eventStreams.erase(it);
@@ -1345,17 +1348,17 @@ HTTPServer::CloseEventStream(EventStream* p_stream)
     {
       // Show in the log
       DETAILLOGV("Closing event stream (user: %s) for URL: %s",p_stream->m_user,p_stream->m_baseURL);
-      // Send a close-stream event
-      // And close the stream by sending a close flag
-      ServerEvent* event = new ServerEvent("close");
-      if(SendEvent(it->second,event,false))
+      if(it->second->m_alive)
       {
-        // delete the stream object
-        delete it->second;
-        // Erase from the cache
-        return m_eventStreams.erase(it);
+        // Send a close-stream event
+        // And close the stream by sending a close flag
+        ServerEvent* event = new ServerEvent("close");
+        SendEvent(it->second,event,false);
       }
-      break;
+      // delete the stream object
+      delete it->second;
+      // Erase from the cache
+      return m_eventStreams.erase(it);
     }
     ++it;
   }

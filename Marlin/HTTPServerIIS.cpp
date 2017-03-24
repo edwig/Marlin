@@ -1169,17 +1169,17 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
   {
     DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",p_length);
     hr = response->Flush(true,p_continue,&bytesSent,&expectCompletion);
+  }
 
-    // Final closing of the connection
-    if(p_continue == false)
-    {
-      // Now ready with this response
-      response->CloseConnection();
-      response->SetNeedDisconnect();
-      // Now ready with the IIS context. Original request is finished
-      context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
-      DETAILLOG1("Event stream connection closed");
-    }
+  // Final closing of the connection
+  if(p_continue == false)
+  {
+    // Now ready with this response
+    response->CloseConnection();
+    response->SetNeedDisconnect();
+    // Now ready with the IIS context. Original request is finished
+    context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
+    DETAILLOG1("Event stream connection closed");
   }
   return (hr == S_OK);
 }

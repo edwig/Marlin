@@ -64,6 +64,7 @@ HTTPServerIIS*    g_marlin      = nullptr;    // Pointer to Marlin Server for II
 HTTPThreadPool    g_pool;                     // Threadpool for events and tasks
 ErrorReport       g_report;                   // Error reporting for Marlin
 WebConfigIIS      g_config;                   // Global ApplicationHost.config
+bool              g_abortServer = false;      // Abort HTTPServer before the ServerApp
 
 // Logging macro for this file only
 #define DETAILLOG(text)    if(g_analysisLog) { g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text)); }
@@ -328,6 +329,15 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   // Only stopping if last application is stopping
   if(m_applications <= 0)
   {
+    // See if Application has requested to stop the HTTPServer
+    // in advance of the ServerApp. Simular to 'abort()' :-)
+    if(g_abortServer)
+    {
+      g_marlin->StopServer();
+      delete g_marlin;
+      g_marlin = nullptr;
+    }
+
     DETAILLOG("Stopping last application. Stopping Marlin ServerApp.");
     // Stopping the ServerApp
     if(g_server)
@@ -335,7 +345,7 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
       g_server->ExitInstance();
     }
 
-    // Stopping the marlin server
+    // 'Normal' Stop of the marlin server
     if(g_marlin)
     {
       g_marlin->StopServer();
