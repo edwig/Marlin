@@ -584,5 +584,8 @@
     <ClInclude Include="HostedWebCore.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="IISSiteConfig.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

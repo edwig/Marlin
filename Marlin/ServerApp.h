@@ -27,6 +27,7 @@
 //
 #pragma once
 #include "HTTPServerIIS.h"
+#include "IISSiteConfig.h"
 #include "ThreadPool.h"
 #include "Analysis.h"
 #include "ErrorReport.h"
@@ -45,6 +46,7 @@ public:
   // Starting and stopping the server
   virtual void InitInstance() = 0;
   virtual void ExitInstance() = 0;
+  virtual bool LoadSite(IISSiteConfig& p_config) = 0;
 
   // Connecting the application to the IIS and Marlin server
   void ConnectServerApp(IHttpServer*   p_iis
@@ -53,10 +55,20 @@ public:
                        ,LogAnalysis*   p_logfile
                        ,ErrorReport*   p_report);
 
+  // Start our sites from the IIS configuration
+  void LoadSites(IHttpApplication* p_app,CString p_physicalPath);
+
   // Server app was correctly started by MarlinIISModule
   bool CorrectlyStarted();
 
 protected:
+  // Read the site's configuration from the IIS internal structures
+  bool  ReadSite   (IAppHostElementCollection* p_sites,CString p_site,int p_num,IISSiteConfig& p_config);
+  bool  ReadBinding(IAppHostElementCollection* p_bindings,int p_item,IISBinding& p_binding);
+
+  // General way to read a property
+  CString GetProperty(IAppHostElement* p_elem,CString p_property);
+
   bool           m_correctInit;
   IHttpServer*   m_iis;
   HTTPServerIIS* m_appServer;

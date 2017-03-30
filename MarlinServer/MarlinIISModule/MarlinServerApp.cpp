@@ -94,6 +94,14 @@ MarlinServerApp::InitInstance()
   TestAsynchrone(m_appServer);
 }
 
+bool 
+MarlinServerApp::LoadSite(IISSiteConfig& p_config)
+{
+  // Already done in the InitInstance
+  return true;
+}
+
+
 void
 MarlinServerApp::ExitInstance()
 {

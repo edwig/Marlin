@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: MarlinServerApp.h
+// SourceFile: IISSiteConfig.h
 //
 // Marlin Server: Internet server/client
 // 
@@ -26,26 +26,31 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "ServerApp.h"
+#include "CreateURLPrefix.h"
+#include <vector>
 
-class MarlinServerApp : public ServerApp
+typedef struct _iis_binding
 {
-public:
-  MarlinServerApp();
-  virtual ~MarlinServerApp();
+  bool        m_secure { false };   // Protocol http or https
+  PrefixType  m_prefix { PrefixType::URLPRE_Weak}; // Prefix type of binding
+  int         m_port   {    80 };   // Default port
+  int         m_flags  {     0 };   // SSL flags 0=ssl, 1=accept client cert, 2=require client cert
+}
+IISBinding;
 
-  virtual void InitInstance();
-  virtual void ExitInstance();
-  virtual bool LoadSite(IISSiteConfig& p_config);
+using BindMap = std::vector<IISBinding>;
 
-  void IncrementError() { ++m_errors; };
+// Config of an application
+typedef struct _iis_site_config
+{
+  //                    What it is                  applicationHost.config
+  // ------------------ -------------------------   -----------------------------------------------------
+  CString   m_name;     // Name of the site         sites/site/name=
+  unsigned  m_id { 0 }; // IIS ID of the site       sites/site/id
+  CString   m_pool;     // Application pool name    sites/site/application/applicationPool=
+  CString   m_base_url; // URL base path            sites/site/application/virtualDirectory/path=
+  CString   m_physical; // Physical working dir     sites/site/application/virtualDirectory/physicalPath=
 
-private:
-  bool CorrectlyStarted();
-  void ReportAfterTesting();
-
-  int  m_errors    { 0     };
-  bool m_doDetails { false };
-  bool m_running   { false };
-};
-
+  BindMap   m_bindings; // Bindings to the internet
+}
+IISSiteConfig;

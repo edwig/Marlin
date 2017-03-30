@@ -329,6 +329,7 @@
     <ClInclude Include="HTTPTime.h" />
     <ClInclude Include="HTTPURLGroup.h" />
     <ClInclude Include="IISDebug.h" />
+    <ClInclude Include="IISSiteConfig.h" />
     <ClInclude Include="JSONMessage.h" />
     <ClInclude Include="JSONParser.h" />
     <ClInclude Include="MarlinModule.h" />

@@ -36,6 +36,7 @@ public:
 
   virtual void InitInstance();
   virtual void ExitInstance();
+  virtual bool LoadSite(IISSiteConfig& p_config);
 
   void IncrementError() { ++m_errors; };
 

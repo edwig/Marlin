@@ -113,6 +113,14 @@ MarlinServerApp::ExitInstance()
   }
 }
 
+bool 
+MarlinServerApp::LoadSite(IISSiteConfig& /*p_config*/)
+{
+  // Already done in InitInstance
+  return true;
+}
+
+
 bool
 MarlinServerApp::CorrectlyStarted()
 {

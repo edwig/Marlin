@@ -249,16 +249,16 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   if(m_applications == 0)
   {
     // First application starts all
-    appName    = "IIS ApplicationID/name: " + appName;
-    configPath = "IIS Configuration path: " + configPath;
-    physical   = "IIS Physical path     : " + physical;
-    showroot   = "IIS Extracted webroot : " + webroot;
+    CString dispAppName    = "IIS ApplicationID/name: " + appName;
+    CString dispConfigPath = "IIS Configuration path: " + configPath;
+    CString dispPhysical   = "IIS Physical path     : " + physical;
+    CString dispShowroot   = "IIS Extracted webroot : " + webroot;
 
     DETAILLOG("Starting: MarlinIISModule");
-    DETAILLOG(appName);
-    DETAILLOG(configPath);
-    DETAILLOG(physical);
-    DETAILLOG(showroot);
+    DETAILLOG(dispAppName);
+    DETAILLOG(dispConfigPath);
+    DETAILLOG(dispPhysical);
+    DETAILLOG(dispShowroot);
 
     // Create a marlin HTTPServer object for IIS
     g_marlin = new HTTPServerIIS(appName);
@@ -301,6 +301,13 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
       ERRORLOG("New Site webroot: " + webroot);
     }
   }
+
+  // Try loading the sites from IIS in the application
+  if(g_server)
+  {
+    g_server->LoadSites(app,physical);
+  }
+
   // Increment the number of applications running
   ++m_applications;
   // Flush the results of starting the server to the logfile
