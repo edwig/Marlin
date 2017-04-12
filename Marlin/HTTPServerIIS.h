@@ -91,6 +91,8 @@ protected:
   virtual void InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize);
   // Initialise the servers webroot
   virtual void InitWebroot(CString p_webroot);
+  // Used for canceling a WebSocket for an event stream
+  virtual void CancelRequestStream(HTTP_REQUEST_ID p_response);
 
 private:
   // Finding the impersonation access token

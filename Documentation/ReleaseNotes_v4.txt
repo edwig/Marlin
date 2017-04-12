@@ -8,6 +8,16 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+PATCH VERSION 4.0.2 (12-04-2017)
+--------------------------------
+1) Correction of the closing of the evenstreams in IIS and stand-alone Marlin server
+   The streams are closed and aborted and destroyed in a different order. In fact the IIS
+   implementation did call some stand alone functionality here.
+2) Correction in the flushing of the event streams. Streams where incorrectly flushed in IIS
+   situation as a async stream, on a synchroneous request queue.
+3) Correction in the reading of the last part of a MultiPartBuffer. E.q. the last JSON part
+   in a multipart buffer was partly missing. The testing for the last delimiter is now relaxed.
+
 PATCH VERSION 4.0.1 (17-03-2017)
 --------------------------------
 1) Correction in the reading of the HTTPServerIIS of multipart messages. The stop argument

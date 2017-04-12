@@ -283,9 +283,9 @@ public:
   // Send to a server push event stream on EventStream basis
   bool       SendEvent(EventStream* p_stream,ServerEvent* p_event,bool p_continue = true);
   // Close an event stream for one stream only
-  EventMap::iterator CloseEventStream(EventStream* p_stream);
+  bool       CloseEventStream(EventStream* p_stream);
   // Close and abort an event stream for whatever reason
-  EventMap::iterator AbortEventStream(EventStream* p_stream);
+  bool       AbortEventStream(EventStream* p_stream);
   // Close event streams for an URL and probably a user
   void       CloseEventStreams(int p_port,CString p_url,CString p_user = "");
   // Monitor all server push event streams
@@ -360,6 +360,8 @@ protected:
                                   ,CString         p_cookie = "");
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
+  // Used for canceling a WebSocket for an event stream
+  virtual void CancelRequestStream(HTTP_REQUEST_ID p_response) = 0;
 
   // REQUEST HEADER METHODS
 

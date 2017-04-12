@@ -1168,18 +1168,33 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
   else
   {
     DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",p_length);
-    hr = response->Flush(true,p_continue,&bytesSent,&expectCompletion);
+    hr = response->Flush(false,p_continue,&bytesSent,&expectCompletion);
+    if(hr != S_OK)
+    {
+      ERRORLOG(GetLastError(),"Flushing event stream failed!");
+    }
   }
 
   // Final closing of the connection
   if(p_continue == false)
   {
-    // Now ready with this response
-    response->CloseConnection();
-    response->SetNeedDisconnect();
-    // Now ready with the IIS context. Original request is finished
-    context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
-    DETAILLOG1("Event stream connection closed");
+    CancelRequestStream(p_response);
   }
   return (hr == S_OK);
+}
+
+// Used for canceling a WebSocket for an event stream
+void
+HTTPServerIIS::CancelRequestStream(HTTP_REQUEST_ID p_response)
+{
+  IHttpContext*  context = (IHttpContext*)p_response;
+  IHttpResponse* response = context->GetResponse();
+
+  // Now ready with the IIS context. Original request is finished
+  context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
+  // Set disconnection
+  response->SetNeedDisconnect();
+  // Now ready with this response
+  response->CloseConnection();
+  DETAILLOG1("Event stream connection closed");
 }

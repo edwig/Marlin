@@ -34,6 +34,12 @@ public:
   // Standard constructores
   ServerEvent()                 { m_id = 0; };
   ServerEvent(CString p_event)  { m_id = 0;m_event = p_event; };
+  ServerEvent(ServerEvent* p_event)
+  {
+    m_id    = p_event->m_id;
+    m_event = p_event->m_event;
+    m_data  = p_event->m_data;
+  }
   // Event data
   UINT    m_id;
   CString m_event;

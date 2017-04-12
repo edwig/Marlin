@@ -30,6 +30,7 @@
 #include "JSONMessage.h"
 #include "SOAPMessage.h"
 #include "HTTPClient.h"
+#include "MultiPartBuffer.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -201,6 +202,58 @@ int TestArray()
   return errors;
 }
 
+int MultiJSON()
+{
+  int errors = 0;
+  char* buffer=
+"------WebKitFormBoundarydZ38XIr1QTTS2IMb\r\n"
+"Content-Disposition: form-data; name=\"277153\"\r\n"
+"\r\n"
+"{\"ID\":\"0\",\"Old: \":\"\",\"New\":\"\",\"Event\":\"Start\"}\r\n"
+"------WebKitFormBoundarydZ38XIr1QTTS2IMb\r\n"
+"Content-Disposition: form-data; name=\"44074\"\r\n"
+"\r\n"
+"{\"ID\":\"44074\",\"Old:\":\"bar2\",\"New\":\"bar5\",\"Event\":\"Blur\"}\r\n"
+"------WebKitFormBoundarydZ38XIr1QTTS2IMb\r\n"
+"Content-Disposition: form-data; name=\"277153\"\r\n"
+"\r\n"
+"{\"ID\":\"277153\",\"Old:\":\"\",\"New\":\"\",\"Event\":\"Click\"}\r\n"
+"------WebKitFormBoundarydZ38XIr1QTTS2IMb\r\n"
+"Content-Disposition: form-data; name=\"277153\"\r\n"
+"\r\n"
+"{\"ID\":\"0\",\"Old: \":\"\",\"New\":\"\",\"Event\":\"Sluit\"}\r\n"
+"------WebKitFormBoundarydZ38XIr1QTTS2IMb--";
+
+  int size = (int)strlen(buffer);
+  xprintf("Buffer size : %d\n",size);
+
+  FileBuffer buf;
+  buf.AddBuffer((uchar*)buffer,size);
+  CString contentType("multipart/form-data; boundary=----WebKitFormBoundarydZ38XIr1QTTS2IMb");
+
+  MultiPartBuffer multi(FD_MULTIPART);
+  multi.ParseBuffer(contentType,&buf);
+
+  size_t parts = multi.GetParts();
+  for(size_t ind = 0; ind < parts; ++ind)
+  {
+    MultiPart* part = multi.GetPart((int) ind);
+
+    xprintf("Part %d: %s\n",(int)ind,part->GetData().GetString());
+  }
+  CString test = multi.GetPart(3)->GetData();
+  if(test.Compare("{\"ID\":\"0\",\"Old: \":\"\",\"New\":\"\",\"Event\":\"Sluit\"}\r\n"))
+  {
+    xprintf("ERROR: Multipart buffer of 4 JSON's not working\n");
+    ++errors;
+  }
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("MultiPartBuffer with multiple JSON messages    : %s\n",errors ? "ERROR" : "OK");
+
+  return errors;
+}
+
 int TestJSON(void)
 {
   int errors = 0;
@@ -287,6 +340,8 @@ int TestJSON(void)
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Basic tests on JSON object messages            : %s\n",errors ? "ERROR" : "OK");
+
+  errors += MultiJSON();
 
   return errors;
 }

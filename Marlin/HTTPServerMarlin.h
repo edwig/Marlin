@@ -94,6 +94,8 @@ protected:
                             ,CString      p_authScheme
                             ,PSTR         p_cookie      = NULL
                             ,PSTR         p_contentType = NULL);
+  // Used for canceling a WebSocket for an event stream
+  virtual void CancelRequestStream(HTTP_REQUEST_ID p_response);
 
 private:
   // Preparing a response

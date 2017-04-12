@@ -241,7 +241,7 @@ ServerApp::ReadBinding(IAppHostElementCollection* p_bindings,int p_item,IISBindi
   }
 
   // Portnumber
-  p_binding.m_port = INTERNET_DEFAULT_HTTPS_PORT;
+  p_binding.m_port = INTERNET_DEFAULT_HTTP_PORT;
   int pos = info.Find(':');
   if(pos >= 0)
   { 

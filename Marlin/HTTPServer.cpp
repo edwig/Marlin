@@ -1014,28 +1014,35 @@ HTTPServer::SendEvent(int p_port,CString p_site,ServerEvent* p_event,CString p_u
 
     while(lower != m_eventStreams.end())
     {
+      // Find the stream
       EventStream* stream = lower->second;
+
+      // Find next already before we remove this one on closing the stream
+      if(lower != upper)
+      {
+        ++lower;
+      }
 
       // See if we must push the event to this stream
       if(p_user.IsEmpty() || p_user.CompareNoCase(stream->m_user) == 0)
       {
+        // Copy the event
+        ServerEvent* event = new ServerEvent(p_event);
+
         // Sending the event, while deleting it
-        if(SendEvent(stream,p_event) == false)
-        {
-          lower = AbortEventStream(stream);
-          if(lower == upper) break;
-          continue;
-        }
-        result = true;
+        // Accumulating the results, true if at least one is sent :-)
+        result |= SendEvent(stream,event);
       }
       // Next iterator
       if(lower == upper)
       {
         break;
       }
-      ++lower;
     }
   }
+  // Ready with the event
+  delete p_event;
+  // Accumulated results
   return result;
 }
 
@@ -1097,7 +1104,7 @@ HTTPServer::SendEvent(EventStream* p_stream
   // Ready with the event
   delete p_event;
 
-  if(p_stream->m_alive == false)
+  if(!p_stream->m_alive || !p_continue)
   {
     AbortEventStream(p_stream);
     return false;
@@ -1336,33 +1343,32 @@ HTTPServer::HasEventStreams(int p_port,CString p_url,CString p_user /*=""*/)
 }
 
 // Close an event stream for one stream only
-EventMap::iterator
+bool
 HTTPServer::CloseEventStream(EventStream* p_stream)
 {
   AutoCritSec lock(&m_eventLock);
 
-  EventMap::iterator it = m_eventStreams.begin();
-  while(it != m_eventStreams.end())
+  for(auto& stream : m_eventStreams)
   {
-    if(it->second == p_stream)
+    if(stream.second == p_stream)
     {
       // Show in the log
       DETAILLOGV("Closing event stream (user: %s) for URL: %s",p_stream->m_user,p_stream->m_baseURL);
-      if(it->second->m_alive)
+      if(stream.second->m_alive)
       {
         // Send a close-stream event
         // And close the stream by sending a close flag
         ServerEvent* event = new ServerEvent("close");
-        SendEvent(it->second,event,false);
+        SendEvent(stream.second,event,false);
       }
-      // delete the stream object
-      delete it->second;
-      // Erase from the cache
-      return m_eventStreams.erase(it);
+      else
+      {
+        AbortEventStream(stream.second);
+      }
+      return true;
     }
-    ++it;
   }
-  return m_eventStreams.end();
+  return false;
 }
 
 // Close event streams for an URL and probably a user
@@ -1379,16 +1385,18 @@ HTTPServer::CloseEventStreams(int p_port,CString p_url,CString p_user /*=""*/)
 
     while(lower != m_eventStreams.end())
     {
-      bool erased = false;
-      if(p_user.IsEmpty() || p_user.CompareNoCase(lower->second->m_user) == 0)
-      {
-        lower = CloseEventStream(lower->second);
-        erased = true;
-      }
-      if(lower == upper) break;
-      if(!erased)
+      EventStream* stream = lower->second;
+      if(lower != upper)
       {
         ++lower;
+      }
+      if(p_user.IsEmpty() || p_user.CompareNoCase(stream->m_user) == 0)
+      {
+        CloseEventStream(stream);
+      }
+      if(lower == upper)
+      {
+        break;
       }
     }
   }
@@ -1397,7 +1405,7 @@ HTTPServer::CloseEventStreams(int p_port,CString p_url,CString p_user /*=""*/)
 // Close and abort an event stream for whatever reason
 // Call only on an abandoned stream.
 // No "OnError" or "OnClose" can be sent now
-EventMap::iterator
+bool
 HTTPServer::AbortEventStream(EventStream* p_stream)
 {
   // No lock on the m_siteslock, as we are dealing with an event
@@ -1408,17 +1416,20 @@ HTTPServer::AbortEventStream(EventStream* p_stream)
   {
     if(it->second == p_stream)
     {
-      // Abandon the stream
-      HttpCancelHttpRequest(m_requestQueue,p_stream->m_requestID,NULL);
-
+      if(p_stream->m_alive)
+      {
+        // Abandon the stream in the correct server
+        CancelRequestStream(p_stream->m_requestID);
+      }
       // Done with the stream
       delete p_stream;
       // Erase from the cache and return next position
-      return m_eventStreams.erase(it);
+      m_eventStreams.erase(it);
+      return true;
     }
     ++it;
   }
-  return it;
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////

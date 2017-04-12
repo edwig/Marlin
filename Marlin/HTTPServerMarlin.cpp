@@ -1122,6 +1122,23 @@ HTTPServerMarlin::SendResponse(HTTPSite*    p_site
   return result;
 }
 
+// Used for canceling a WebSocket for an event stream
+void 
+HTTPServerMarlin::CancelRequestStream(HTTP_REQUEST_ID p_response)
+{
+  // Cancel the outstanding request from the request queue
+  ULONG result = HttpCancelHttpRequest(m_requestQueue,p_response,NULL);
+  if(result == NO_ERROR)
+  {
+    DETAILLOG1("Event stream connection closed");
+  }
+  else
+  {
+    ERRORLOG(result,"Event stream incorrectly canceled");
+  }
+}
+
+
 // Receive incoming HTTP request
 bool
 HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* p_message)
@@ -1181,7 +1198,7 @@ HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* p_message)
   delete [] entityBuffer;
   entityBuffer = nullptr;
 
-  // In case of a POST, try to convert charset before submitting to site
+  // In case of a POST, try to convert character set before submitting to site
   if(p_message->GetCommand() == HTTPCommand::http_post)
   {
     if(p_message->GetContentType().Find("multipart") <= 0)
