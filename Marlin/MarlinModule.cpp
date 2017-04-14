@@ -315,7 +315,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   // Ready, so stop the timer
   g_marlin->GetCounter()->Stop();
 
-  return GL_NOTIFICATION_HANDLED;
+  return GL_NOTIFICATION_CONTINUE;
 };
 
 GLOBAL_NOTIFICATION_STATUS
@@ -360,7 +360,7 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
       g_marlin = nullptr;
     }
   }
-  return GL_NOTIFICATION_HANDLED;
+  return GL_NOTIFICATION_CONTINUE;
 };
 
 // RE-Construct the webroot from thse two settings
@@ -394,8 +394,8 @@ MarlinGlobalFactory::ExtractWebroot(CString p_configPath,CString p_physicalPath)
       return webroot;
     }
   }
-  // Not found. return original
-  ERRORLOG("CANNOT FIND THE SERVER WEBROOT. PROCEED WITH FINGERS CROSSED!!");
+  // Not found. return original physical path
+  // Use this physical path as webroot for this application
   return p_physicalPath;
 }
 
