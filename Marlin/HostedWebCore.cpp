@@ -42,6 +42,7 @@
 #include "MarlinModule.h"
 #include "Analysis.h"
 #include "Version.h"
+#include <winsvc.h>
 #include <conio.h>
 #include <string>
 #include <io.h>
@@ -72,11 +73,71 @@ PFN_SETMETADATA  g_SetMetaData  = nullptr;
 
 //////////////////////////////////////////////////////////////////////////
 //
+// HEADER
+
+void 
+PrintHeader()
+{
+  printf("HOSTED WEB CORE development IIS replacement.\n");
+  printf("============================================\n");
+  printf("\n");
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+// CHECKING IIS
+//
+//////////////////////////////////////////////////////////////////////////
+
+bool
+FindIISRunning()
+{
+  bool result = false;
+  // Get a handle to the SCM database. 
+  SC_HANDLE manager = OpenSCManager(NULL,NULL,SC_MANAGER_ALL_ACCESS);
+  if(manager == NULL)
+  {
+    printf("Making connection with the service manager has failed\n");
+    printf("Cannot find the status of the IIS service!\n");
+    return false;
+  }
+  // Get a handle to the service.
+  SC_HANDLE service = OpenService(manager,"W3SVC",SERVICE_QUERY_STATUS);
+  if(service)
+  {
+    DWORD bytesNeeded;
+    SERVICE_STATUS_PROCESS  status; 
+    if(QueryServiceStatusEx(service,                        // handle to service 
+                            SC_STATUS_PROCESS_INFO,         // information level
+                            (LPBYTE)&status,                // address of structure
+                            sizeof(SERVICE_STATUS_PROCESS), // size of structure
+                            &bytesNeeded))                  // size needed if buffer is too small
+    {
+      // Process ID is filled if service is really running
+      if(status.dwProcessId)
+      {
+        result = true;
+      }
+    }
+  }
+  else
+  {
+    printf("Cannot find the IIS service! Have you installed it as a MS-Windows feature?\n");
+  }
+  CloseServiceHandle(service);
+  CloseServiceHandle(manager);
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
 // Loading and unloading the webcore
 //
 //////////////////////////////////////////////////////////////////////////
 
-bool LoadWebCore()
+bool 
+LoadWebCore()
 {
   g_webcore = ::LoadLibrary("inetsrv\\hwebcore.dll");
   if(g_webcore)
@@ -96,7 +157,8 @@ bool LoadWebCore()
   return false;
 }
 
-void UnloadWebCore()
+void 
+UnloadWebCore()
 {
   if(g_webcore)
   {
@@ -112,7 +174,8 @@ void UnloadWebCore()
 //
 //////////////////////////////////////////////////////////////////////////
 
-bool ActivateWebCore()
+bool 
+ActivateWebCore()
 {
   USES_CONVERSION;
   bool result = false;
@@ -172,7 +235,8 @@ bool ActivateWebCore()
   return result;
 }
 
-void ShutdownWebCore()
+void 
+ShutdownWebCore()
 {
   if(HWC_Shutdown)
   {
@@ -211,7 +275,8 @@ void ShutdownWebCore()
   }
 }
 
-bool SetMetaData(CString p_datatype,CString p_value)
+bool 
+SetMetaData(CString p_datatype,CString p_value)
 {
   USES_CONVERSION;
   bool result = false;
@@ -253,7 +318,8 @@ bool SetMetaData(CString p_datatype,CString p_value)
 
 static char g_staticAddress;
 
-CString GetExeName()
+CString 
+GetExeName()
 {
   char buffer[_MAX_PATH + 1];
 
@@ -397,24 +463,30 @@ RunHostedMenu()
 //
 //////////////////////////////////////////////////////////////////////////
 
-int HWC_main(int argc,char *argv[])
+int 
+HWC_main(int argc,char *argv[])
 {
-  int retval = 0;
+  int retval = 1;
 
-  if(LoadWebCore())
+  PrintHeader();
+  if(FindIISRunning())
   {
-    ParseCommandLine(argc,argv);
-
-    if(ActivateWebCore())
-    {
-      RunHostedMenu();
-      ShutdownWebCore();
-    }
-    UnloadWebCore();
+    printf("Cannot use the Hosted Web Core: IIS still running!\n");
   }
   else
   {
-    retval = 1;
+    if(LoadWebCore())
+    {
+      ParseCommandLine(argc,argv);
+
+      if(ActivateWebCore())
+      {
+        RunHostedMenu();
+        ShutdownWebCore();
+        retval = 0;
+      }
+      UnloadWebCore();
+    }
   }
   printf("Press enter: ");
   _getch();
