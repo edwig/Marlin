@@ -145,19 +145,19 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestJSON();
       errors += TestFindClientCertificate();
 
-      errors += TestBaseSite(client);
-      errors += TestSecureSite(client);
-      errors += TestClientCertificate(client);
-      errors += TestCookies(*client);
-      errors += TestFormData(client);
+//       errors += TestBaseSite(client);
+//       errors += TestSecureSite(client);
+//       errors += TestClientCertificate(client);
+//       errors += TestCookies(*client);
+//       errors += TestFormData(client);
       errors += TestEvents(client);
-      errors += TestJsonData(client);
-      errors += TestContract(client,false);
-      errors += TestContract(client,true);
-      errors += TestPatching(client);
-      errors += TestCompression(client);
-      errors += TestClientCertificate(client);
-      errors += TestWebservices(*client);
+//       errors += TestJsonData(client);
+//       errors += TestContract(client,false);
+//       errors += TestContract(client,true);
+//       errors += TestPatching(client);
+//       errors += TestCompression(client);
+//       errors += TestClientCertificate(client);
+//       errors += TestWebservices(*client);
     }
   
     printf("\n");

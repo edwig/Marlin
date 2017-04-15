@@ -83,6 +83,10 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
     {
       xerror();
     }
+    // Waiting long time to see if the flush works and testing event streams
+    // with immediately reaction on the client
+    // Sleep(20000);
+
     // Wait 1/10 of a second
     Sleep(100);
   }

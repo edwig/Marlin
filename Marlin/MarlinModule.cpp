@@ -522,6 +522,13 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   PCSTR serverName = buffer1;
   PCSTR referrer   = buffer2;
 
+  // See if we are correctly initialized (by global application start)
+  // Otherwise we have no reason to be here!
+  if (g_marlin == nullptr)
+  {
+    return status;
+  }
+
   // Starting the performance counter
   g_marlin->GetCounter()->Start();
 
@@ -571,7 +578,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   if(site == nullptr)
   {
     // Not our request: Other app running on this machine!
-    // This is why it is wastefull to use IIS for our internetserver!
+    // This is why it is wasteful to use IIS for our internet server!
     CString message("Rejected HTTP call: ");
     message += rawRequest->pRawUrl;
     DETAILLOG(message);
@@ -593,7 +600,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
     // Stopping the performance counter
     g_marlin->GetCounter()->Stop();
 
-    // This request is now compeletly handled
+    // This request is now completely handled
     status = RQ_NOTIFICATION_FINISH_REQUEST;
   }
   else if(stream)
@@ -607,7 +614,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
     ERRORLOG("Cannot handle the request: IIS did not provide enough info for a HTTPMessage or an event stream.");
     status = RQ_NOTIFICATION_CONTINUE;
   }
-  // Now completly ready. We did everything!
+  // Now completely ready. We did everything!
   g_marlin->GetCounter()->Stop();
   return status;
 }

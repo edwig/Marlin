@@ -660,8 +660,9 @@ HTTPServerIIS::FindingAccessToken(IHttpContext* p_context,HTTPMessage* p_message
 bool
 HTTPServerIIS::InitEventStream(EventStream& p_stream)
 {
-  IHttpContext* context = (IHttpContext*)p_stream.m_requestID;
-  IHttpResponse* response = context->GetResponse();
+  IHttpContext*    context = (IHttpContext*)p_stream.m_requestID;
+  IHttpResponse*  response = context->GetResponse();
+  IHttpCachePolicy* policy = response->GetCachePolicy();
 
   // First comment to push to the stream (not an event!)
   CString init = m_eventBOM ? ConstructBOM() : "";
@@ -682,10 +683,11 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
   dataChunk.FromMemory.BufferLength = (ULONG)init.GetLength();
 
   // Buffering should be turned off, so chunks get written right away
-  response->DisableBuffering();
+  response->DisableBuffering();    // Disable buffering
   response->DisableKernelCache(9); // 9 = HANDLER_HTTPSYS_UNFRIENDLY
+  policy->DisableUserCache();      // Disable user caching
 
-  HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,true,&bytesSent,&expectCompletion);
+  HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,true,&bytesSent);
   if(hr != S_OK)
   {
     ERRORLOG(GetLastError(),"HttpSendResponseEntityBody failed initialisation of an event stream");
@@ -1151,16 +1153,20 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
 {
   DWORD  bytesSent = 0;
   HTTP_DATA_CHUNK dataChunk;
-  BOOL   expectCompletion = FALSE;
-  IHttpContext*  context  = (IHttpContext*)p_response;
-  IHttpResponse* response = context->GetResponse();
+  IHttpContext*   context  = (IHttpContext*)p_response;
+  IHttpResponse*  response = context->GetResponse();
+  IHttpCachePolicy* policy = response->GetCachePolicy();
 
   // Only if a buffer present
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
   dataChunk.FromMemory.pBuffer      = (void*)p_buffer;
   dataChunk.FromMemory.BufferLength = (ULONG)p_length;
 
-  HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,p_continue,&bytesSent,&expectCompletion);
+  response->DisableBuffering();
+  response->DisableKernelCache();
+  policy->DisableUserCache();
+
+  HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,p_continue,&bytesSent);
   if(hr != S_OK)
   {
     ERRORLOG(GetLastError(),"WriteEntityChunks failed for SendEvent");
@@ -1168,13 +1174,12 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
   else
   {
     DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",p_length);
-    hr = response->Flush(false,p_continue,&bytesSent,&expectCompletion);
+    hr = response->Flush(false,p_continue,&bytesSent);
     if(hr != S_OK)
     {
       ERRORLOG(GetLastError(),"Flushing event stream failed!");
     }
   }
-
   // Final closing of the connection
   if(p_continue == false)
   {

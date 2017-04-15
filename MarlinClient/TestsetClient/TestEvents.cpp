@@ -175,6 +175,10 @@ TestEvents(HTTPClient* p_client)
 
   // Sleep in 1/5 second intervals, until all messages received and channel closed
   int maxWait = 50; // With a maximum of 10 seconds
+
+  // Longer wait time for testing of event streams
+  // int maxWait = 10 * 60 * 5;  // Wait for 10 minutes
+
   do 
   {
     Sleep(200);

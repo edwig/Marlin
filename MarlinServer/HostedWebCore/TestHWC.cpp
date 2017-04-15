@@ -28,9 +28,12 @@
 #include "stdafx.h"
 #include "HostedWebCore.h"
 
+// Testing with arguments: apphost web.config app-pool
+// "C:\Develop\Marlin\MarlinServer\ServerTestset\applicationHost.config" "" "Marlin"
+
 int main(int argc,char* argv[])
 {
-  // Set gracefull shutdown mode
+  // Set gracefully shutdown mode
   g_hwcShutdownMode = 0;
 
   return HWC_main(argc,argv);
