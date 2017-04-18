@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>MANUAL TEST FormData AND EVENT STREAMS</h1>
+<p>Click the button to trigger a server sent event.</p>
+<button onclick="youRang()">Click me</button>
+
+<p id="demo"></p>
+
+<ul></ul>
+
+<script>
+function myStart() {
+    document.getElementById("demo").innerHTML = "Demo started";
+}
+
+var evtSource = new EventSource('http://localhost:1200/MarlinTest/Streams/');
+var eventList = document.querySelector('ul');
+
+evtSource.onmessage = function(e) {
+  var newElement = document.createElement("li");
+
+  newElement.textContent = "message: " + e.data;
+  eventList.appendChild(newElement);
+}
+
+evtSource.onopen = function(e) {
+  myStart();
+}
+
+function theError(event) {
+  alert('Oops! Something went wrong.\n\n' + event);
+}
+
+// Generic function to send FormData object
+function SendFD(url, FD, call_back) {
+
+  var XHR = new XMLHttpRequest();
+
+  // We define what will happen if the data are successfully sent
+  XHR.addEventListener('load', call_back);
+  // We define what will happen in case of error
+  XHR.addEventListener('error', theError);
+
+  // We setup our request as 'post / enctype'
+  // document.location.origin + url
+  XHR.open('POST', url);
+  XHR.setRequestHeader('enctype', 'multipart/form-data');
+  XHR.setRequestHeader("Cache-Control", "no-cache");
+  XHR.setRequestHeader("Pragma", "no-cache");
+  XHR.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");
+
+  // We just send our FormData object, HTTP headers are set automatically
+  XHR.send(FD)
+  return;
+}
+
+function loaded(){
+  var newElement = document.createElement("li");
+  newElement.textContent = "Request sent";
+  eventList.appendChild(newElement);
+}
+
+function youRang() {
+  var FD = new FormData();
+  var json_object = { "ID": 42, "Name": "programmers name" };
+  var details = JSON.stringify(json_object);
+  FD.append("theName", details);
+  SendFD('http://localhost:1200/Marlintest/Forms/', FD, loaded);
+}
+</script>
+
+</body>
+</html>

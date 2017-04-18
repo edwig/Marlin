@@ -90,6 +90,8 @@ MarlinServerApp::InitInstance()
   TestFilter(m_appServer);
   TestPatch(m_appServer);
   TestFormData(m_appServer);
+  TestStreams(m_appServer);
+  TestForms(m_appServer);
   TestCompression(m_appServer);
   TestAsynchrone(m_appServer);
 }

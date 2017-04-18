@@ -194,6 +194,7 @@
     <ClCompile Include="..\ServerTestset\TestFormData.cpp" />
     <ClCompile Include="..\ServerTestset\TestInsecure.cpp" />
     <ClCompile Include="..\ServerTestset\TestJsonData.cpp" />
+    <ClCompile Include="..\ServerTestset\TestManualEvents.cpp" />
     <ClCompile Include="..\ServerTestset\TestMessageEncryption.cpp" />
     <ClCompile Include="..\ServerTestset\TestPatch.cpp" />
     <ClCompile Include="..\ServerTestset\TestReliable.cpp" />
