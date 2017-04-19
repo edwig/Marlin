@@ -137,7 +137,7 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
   }
   else
   {
-    xerror();
+    xerror(); 
   }
 }
 

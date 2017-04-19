@@ -121,19 +121,19 @@ WaitForKey()
 // Setting the filename of the logfile
 #ifdef _DEBUG
 #ifdef _M_X64
-CString g_baseDir = "..\\BinDebug_x64\\";
+CString g_baseDir = "..\\..\\BinDebug_x64\\";
 #else
-CString g_baseDir = "..\\BinDebug_x32\\";
+CString g_baseDir = "..\..\\BinDebug_x32\\";
 #endif // _M_X64
 #else // _DEBUG
 #ifdef _M_X64
-CString g_baseDir = "..\\BinRelease_x64\\";
+CString g_baseDir = "..\\..\\BinRelease_x64\\";
 #else
-CString g_baseDir = "..\\BinRelease_x32\\";
+CString g_baseDir = "..\\..\\BinRelease_x32\\";
 #endif // _M_X64
 #endif // _DEBUG
 
-ErrorReport g_errorReport;
+extern ErrorReport g_report;
 
 // Starting our server
 //
@@ -167,7 +167,7 @@ bool StartServer(HTTPServer*&     p_server
 
   p_server->SetThreadPool(p_pool);               // Threadpool
   p_server->SetWebroot("C:\\WWW\\Marlin\\");     // WebConfig overrides
-  p_server->SetErrorReport(&g_errorReport);      // Error reporting
+  p_server->SetErrorReport(&g_report);      // Error reporting
 
   bool result = false;
   if(p_server->GetLastError() == NO_ERROR)

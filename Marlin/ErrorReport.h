@@ -54,9 +54,6 @@ public:
   // Multi threading
   CRITICAL_SECTION m_lock;  // Locking on a thread basis
 protected:
-  // Its the static errorreport instance
-  static ErrorReport* s_instance;
-
   // Go send an error report
   virtual void DoReport(const CString&    p_subject
                        ,const StackTrace& p_trace
@@ -64,4 +61,3 @@ protected:
                        ,const CString&    p_url) const;
 
 };
-

@@ -49,7 +49,7 @@ static char THIS_FILE[] = __FILE__;
 // Error report running
 __declspec(thread) bool g_exception = false;
 
-ErrorReport *ErrorReport::s_instance = NULL;
+static ErrorReport* s_instance = NULL;
 
 // Names for exceptions and signals
 //

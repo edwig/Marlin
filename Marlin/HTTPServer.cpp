@@ -1247,7 +1247,7 @@ HTTPServer::CheckEventStreams()
   EventMap::iterator it = m_eventStreams.begin();
   UINT number = 0;
   // Create keep alive buffer
-  CString keepAlive = ":keepalive\n";
+  CString keepAlive = ":keepalive\r\n\r\n";
 
   DETAILLOG1("Starting event hartbeat");
 
