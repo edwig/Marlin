@@ -674,7 +674,6 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
   SetResponseHeader(response,HttpHeaderContentType,"text/event-stream",true);
 
   HTTP_DATA_CHUNK dataChunk;
-  BOOL  expectCompletion = FALSE;
   DWORD bytesSent = 0;
 
   // Only if a buffer present
@@ -697,7 +696,7 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
     DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",bytesSent);
     DETAILLOG1("Event stream initialized");
 
-    hr = response->Flush(true,true,&bytesSent,&expectCompletion);
+    hr = response->Flush(false,true,&bytesSent);
   }
   return (hr == S_OK);
 }
@@ -1155,16 +1154,11 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
   HTTP_DATA_CHUNK dataChunk;
   IHttpContext*   context  = (IHttpContext*)p_response;
   IHttpResponse*  response = context->GetResponse();
-  IHttpCachePolicy* policy = response->GetCachePolicy();
 
   // Only if a buffer present
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
   dataChunk.FromMemory.pBuffer      = (void*)p_buffer;
   dataChunk.FromMemory.BufferLength = (ULONG)p_length;
-
-  response->DisableBuffering();
-  response->DisableKernelCache();
-  policy->DisableUserCache();
 
   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,p_continue,&bytesSent);
   if(hr != S_OK)
