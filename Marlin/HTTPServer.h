@@ -42,6 +42,7 @@
 #include "ThreadPool.h"
 #include "MediaType.h"
 #include "ErrorReport.h"
+#include "EventStream.h"
 #include "Version.h"
 #include <http.h>
 #include <winhttp.h>
@@ -63,10 +64,6 @@ constexpr auto INIT_HTTP_BUFFERSIZE   = (32 * 1024);
 // Initial HTTP backlog queue length
 constexpr auto INIT_HTTP_BACKLOGQUEUE = 64;
 constexpr auto MAXX_HTTP_BACKLOGQUEUE = 640;
-// Initial event keep alive milliseconds
-constexpr auto DEFAULT_EVENT_KEEPALIVE = 10000;
-// Initial event retry time in milliseconds
-constexpr auto DEFAULT_EVENT_RETRYTIME = 3000;
 
 // Static globals for the server as a whole
 // Can be set through the web.config reading of the HTTPServer
@@ -103,21 +100,6 @@ typedef struct _HTTP_SSL_PROTOCOL_INFO
   ULONG KeyExchangeStrength;
 } 
 HTTP_SSL_PROTOCOL_INFO,*PHTTP_SSL_PROTOCOL_INFO;
-
-class EventStream
-{
-public:
-  int             m_port;       // Port of the base URL of the stream
-  CString         m_baseURL;    // Base URL of the stream
-  CString         m_absPath;    // Absolute pathname of the URL
-  HTTPSite*       m_site;       // HTTPSite that's handling the stream
-  HTTP_RESPONSE   m_response;   // Response buffer
-  HTTP_REQUEST_ID m_requestID;  // Outstanding HTTP request ID
-  UINT            m_lastID;     // Last ID of this connection
-  bool            m_alive;      // Connection still alive after sending
-  __time64_t      m_lastPulse;  // Time of last sent event
-  CString         m_user;       // For authenticated user
-};
 
 enum class SendHeader
 {

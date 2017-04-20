@@ -297,6 +297,7 @@
     <ClInclude Include="AutoCritical.h" />
     <ClInclude Include="Base64.h" />
     <ClInclude Include="CommandBus.h" />
+    <ClInclude Include="EventStream.h" />
     <ClInclude Include="HostedWebCore.h" />
     <ClInclude Include="HTTPCertificate.h" />
     <ClInclude Include="ConvertWideString.h" />

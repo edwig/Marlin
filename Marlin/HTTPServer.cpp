@@ -970,8 +970,6 @@ HTTPServer::SubscribeEventStream(HTTPSite*        p_site
   stream->m_baseURL   = p_url;
   stream->m_absPath   = p_path;
   stream->m_site      = p_site;
-  stream->m_lastID    = 0;
-  stream->m_lastPulse = 0;
   stream->m_alive     = InitEventStream(*stream);
   if(p_token)
   {
@@ -1090,6 +1088,9 @@ HTTPServer::SendEvent(EventStream* p_stream
     p_stream->m_lastID = p_event->m_id;
   }
 
+  // Increment the chunk counter
+  ++p_stream->m_chunks;
+
   // Tell what we just did
   if(m_detail && m_log && p_stream->m_alive)
   {
@@ -1104,10 +1105,19 @@ HTTPServer::SendEvent(EventStream* p_stream
   // Ready with the event
   delete p_event;
 
+  // Stream not alive, or stopping
   if(!p_stream->m_alive || !p_continue)
   {
     AbortEventStream(p_stream);
     return false;
+  }
+
+  // Delivered our event, but out of more datachunks for next requests
+  if(p_stream->m_chunks > MAX_DATACHUNKS)
+  {
+    // Call recursive (!) with p_continue to false
+    ServerEvent* event = new ServerEvent("close");
+    return SendEvent(p_stream,event,false);
   }
 
   // Delivered the event at least to one stream
@@ -1244,7 +1254,6 @@ HTTPServer::CheckEventStreams()
   __time64_t pulse = (now.time * CLOCKS_PER_SEC) + now.millitm;
 
   AutoCritSec lock(&m_eventLock);
-  EventMap::iterator it = m_eventStreams.begin();
   UINT number = 0;
   // Create keep alive buffer
   CString keepAlive = ":keepalive\r\n\r\n";
@@ -1252,40 +1261,48 @@ HTTPServer::CheckEventStreams()
   DETAILLOG1("Starting event hartbeat");
 
   // Pulse event stream with a comment
-  while(it != m_eventStreams.end())
+  for(auto& str : m_eventStreams)
   {
-    EventStream& stream = *it->second;
-
+    EventStream* stream = str.second;
     // If we did not send anything for the last eventKeepAlive seconds,
     // Keep a margin of half a second for the wakeup of the server
     // we send a ":keepalive" comment to the clients
-    if((pulse - stream.m_lastPulse) > (m_eventKeepAlive - 500))
+    if((pulse - stream->m_lastPulse) > (m_eventKeepAlive - 500))
     {
-      stream.m_alive = SendResponseEventBuffer(stream.m_requestID,keepAlive.GetString(),keepAlive.GetLength());
-      stream.m_lastPulse = pulse;
+      stream->m_alive = SendResponseEventBuffer(stream->m_requestID,keepAlive.GetString(),keepAlive.GetLength());
+      stream->m_lastPulse = pulse;
+      ++stream->m_chunks;
       ++number;
     }
-    // Next stream
-    ++it;
   }
 
   // What we just did
   DETAILLOGV("Sent hartbeat to %d push-event clients.",number);
 
   // Clean up dead event streams
-  it = m_eventStreams.begin();
+  EventMap::iterator it = m_eventStreams.begin();
   while(it != m_eventStreams.end())
   {
-    if(it->second->m_alive == false)
+    EventStream* stream = it->second;
+
+    if(stream->m_chunks > MAX_DATACHUNKS)
     {
-      DETAILLOGS("Abandoned push-event client from: ",it->second->m_baseURL);
+      DETAILLOGS("Push-event stream out of data chunks: ",stream->m_baseURL);
+
+      // Send a close-stream event
+      ServerEvent* event = new ServerEvent("close");
+      SendEvent(stream,event);
+      // Remove request from the request queue, closing the connection
+      CancelRequestStream(stream->m_requestID);
+      // Erase stream, it's out of chunks now
+      it = m_eventStreams.erase(it);
+    }
+    else if(stream->m_alive == false)
+    {
+      DETAILLOGS("Abandoned push-event client from: ",stream->m_baseURL);
 
       // Remove request from the request queue, closing the connection
-      // Canceling the request with "HttpCancelHttpRequest" does not work in the IIS situation
-      // so now we send a keepalive with a 'continue = false' code, so the stream gets closed
-      EventStream& stream = *it->second;
-      SendResponseEventBuffer(stream.m_requestID,keepAlive.GetString(),keepAlive.GetLength(),false);
-
+      CancelRequestStream(stream->m_requestID);
       // Erase dead stream, and goto next
       it = m_eventStreams.erase(it);
     }

@@ -8,6 +8,20 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+PATCH VERSION 4.0.3 (20-04-2017)
+--------------------------------
+1) Event streams can send at maximum 64K chunks in the IIS situation. Including the keepalive
+   hartbeat this can allow for several hours (up to 10 or 20 hours) or even as little as less
+   then 1 hour connection, depending on how much data is sent. The stream will now gracefully
+   close at about the maximum of 64K chunks, so the client can reopen a new fresh event stream.
+2) Fixed a bug in the WebServiceClient when logging large error messages. These could crash 
+   the client in the formatting of the logging.
+3) Added documentation for the even-stream handling in IIS. IIS should be configured **NOT**
+   to use dynamic content compression on event-stream content types. This can seriously impact
+   the functionallity of the event stream.
+4) Added a check on the hosted webcore if IIS is still running. Will not start if the IIS
+   service is still active. Stop that service first!
+
 PATCH VERSION 4.0.2 (12-04-2017)
 --------------------------------
 1) Correction of the closing of the evenstreams in IIS and stand-alone Marlin server

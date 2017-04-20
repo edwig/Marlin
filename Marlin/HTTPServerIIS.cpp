@@ -666,7 +666,7 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
 
   // First comment to push to the stream (not an event!)
   CString init = m_eventBOM ? ConstructBOM() : "";
-  init += ":init event-stream\n";
+  init += ":init event-stream\r\n\r\n";
 
   response->SetStatus(HTTP_STATUS_OK,"OK");
 
@@ -693,6 +693,9 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
   }
   else
   {
+    // Increment chunk count
+    ++p_stream.m_chunks;
+
     DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",bytesSent);
     DETAILLOG1("Event stream initialized");
 

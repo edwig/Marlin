@@ -41,6 +41,7 @@ static char THIS_FILE[] = __FILE__;
 // General logfile macro
 #undef  DETAILLOG
 #define DETAILLOG(text,...)  if(m_logfile)m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,text,__VA_ARGS__)
+#define DETAILLOG1(text)     if(m_logfile)m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,text)
 #undef  ERRORLOG
 #define ERRORLOG(text)       if(m_logfile)m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,text);
 
@@ -124,17 +125,17 @@ WebServiceClient::Open()
   {
     CString error;
     error.Format("WebServiceClient is already open for: %s",m_contract);
-    DETAILLOG(error);
+    DETAILLOG1(error);
     m_errorText += error;
     throw error;
   }
-  DETAILLOG("WebServiceClient starting");
+  DETAILLOG1("WebServiceClient starting");
 
   // Create the client if not given in advance
   // and set the URL to this client
   if(m_httpClient == NULL)
   {
-    DETAILLOG("Creating new HTTPClient");
+    DETAILLOG1("Creating new HTTPClient");
     m_owner  = true;
     m_httpClient = new HTTPClient();
     // Propagate SOAP compression
@@ -149,7 +150,7 @@ WebServiceClient::Open()
 
   if(m_logfile == NULL)
   {
-    DETAILLOG("Creating new logfile");
+    DETAILLOG1("Creating new logfile");
     m_logfile = new LogAnalysis("WebServiceClient");
     m_logfile->SetLogFilename(m_logFilename);
     m_logfile->SetDoLogging(true);
@@ -189,7 +190,7 @@ WebServiceClient::Open()
   CreateSequence();
 
   // Gotten to the end without a throw
-  DETAILLOG("WebServiceClient ready to go");
+  DETAILLOG1("WebServiceClient ready to go");
   return (m_isopen = true);
 }
 
@@ -197,7 +198,7 @@ WebServiceClient::Open()
 void
 WebServiceClient::Close()
 {
-  DETAILLOG("Closing WebServiceClient");
+  DETAILLOG1("Closing WebServiceClient");
   if(m_isopen && m_reliable && m_result)
   {
     try
@@ -219,7 +220,7 @@ WebServiceClient::Close()
     }
   }
   // Ended RM without a throw
-  DETAILLOG("WebServiceClient closed");
+  DETAILLOG1("WebServiceClient closed");
   m_isopen    = false;
   m_isSending = false;
 
@@ -235,7 +236,7 @@ WebServiceClient::Close()
   // New connections on Open() will need their own messagestore
   if(m_messages.size())
   {
-    DETAILLOG("Freeing the WS message store");
+    DETAILLOG1("Freeing the WS message store");
     for(auto msg : m_messages)
     {
       delete msg.m_message;
@@ -258,7 +259,7 @@ WebServiceClient::StopSendport()
 {
   if(m_isopen)
   {
-    DETAILLOG("WebServiceClient stopping sendport");
+    DETAILLOG1("WebServiceClient stopping sendport");
     m_httpClient->StopClient();
   }
 }
@@ -376,7 +377,7 @@ WebServiceClient::ReliabilityChecks(SOAPMessage* p_message)
   if(p_message->GetSoapVersion() != SoapVersion::SOAP_12)
   {
     CString error("Webservice calls under reliability protocol must be of SOAP XML version 1.2");
-    DETAILLOG(error);
+    DETAILLOG1(error);
     m_errorText += error;
     throw error;
   }
@@ -438,7 +439,7 @@ WebServiceClient::SetReliable(bool p_reliable,ReliableType p_type /*= RELIABLE_O
     return;
   }
   CString error("WebServiceClient: Cannot set attribute 'reliable' after opening.");
-  DETAILLOG(error);
+  DETAILLOG1(error);
   m_errorText += error;
   throw error;
 }
@@ -456,12 +457,12 @@ WebServiceClient::SetStoreSize(int p_size)
     }
     CString error;
     error.Format("WebServiceClient: Message store size out of range [%d:%d]",MESSAGESTORE_MINIMUM,MESSAGESTORE_MAXIMUM);
-    DETAILLOG(error);
+    DETAILLOG1(error);
     m_errorText += error;
     throw error;
   }
   CString error("WebServiceClient: Cannot set message store size after 'Open' for: " + m_contract);
-  DETAILLOG(error);
+  DETAILLOG1(error);
   m_errorText += error;
   throw error;
 }
@@ -508,7 +509,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
     // Answer for another sequence
     CString error;
     error.Format("Incorrect Sequence Identifier in header on WS-ReliableMessaging for call [%s/%s]",m_contract,p_message->GetSoapAction());
-    DETAILLOG(error);
+    DETAILLOG1(error);
     m_errorText += error;
     throw error;
   }
@@ -529,7 +530,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
     {
       CString error;
       error.Format("WS-ReliableMessaging server message number out-of-sequence for call [%s/%s]",m_contract,p_message->GetSoapAction());
-      DETAILLOG(error);
+      DETAILLOG1(error);
       m_errorText += error;
       throw error;
     }
@@ -545,7 +546,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
     {
       CString error;
       error.Format("Incorrect Sequence response. No correct 'LastMessage' response in WS-ReliableMessaging for call [%s/%s]",m_contract,p_message->GetSoapAction());
-      DETAILLOG(error);
+      DETAILLOG1(error);
       m_errorText += error;
       throw error;
     }
@@ -561,7 +562,7 @@ WebServiceClient::CheckHeaderHasAcknowledgement(SOAPMessage* p_message)
     // Not an acknowledge from our server sequence
     CString error;
     error.Format("Sequence Acknowledgment requested is not for [%s/%s]",m_contract,p_message->GetSoapAction());
-    DETAILLOG(error);
+    DETAILLOG1(error);
     m_errorText += error;
     throw error;
   }
@@ -588,7 +589,7 @@ WebServiceClient::CheckHeaderRelatesTo(SOAPMessage* p_message)
     // Not related to our call. No <RelatesTo> in answer
     CString error;
     error.Format("Out of band answer on call from [%s/%s]. Wrong message ID",m_contract,p_message->GetSoapAction());
-    DETAILLOG(error);
+    DETAILLOG1(error);
     m_errorText += error;
     throw error;
   }
@@ -639,7 +640,7 @@ WebServiceClient::DoRetransmit()
       SoapMsg* mesg = &(*it);
       if(mesg->m_retransmit)
       {
-        DETAILLOG("*** RETRANSMIT from message store ***");
+        DETAILLOG1("*** RETRANSMIT from message store ***");
         m_request = mesg->m_message->GetSoapAction();
         m_httpClient->Send(mesg->m_message);
       }
@@ -655,7 +656,7 @@ WebServiceClient::DoRetransmit()
         --it;
         SoapMsg* mesg = &(*it);
 
-        DETAILLOG("*** RETRANSMIT from message store ***");
+        DETAILLOG1("*** RETRANSMIT from message store ***");
         m_request = mesg->m_message->GetSoapAction();
         m_httpClient->Send(mesg->m_message);
       }
@@ -696,7 +697,7 @@ WebServiceClient::MinimumCheck()
   if(m_url.IsEmpty())
   {
     CString error("WebServiceClient without an endpoint URL definition.");
-    DETAILLOG(error);
+    DETAILLOG1(error);
     m_errorText += error;
     throw error;
 
@@ -705,7 +706,7 @@ WebServiceClient::MinimumCheck()
   if(m_reliable == false && m_contract.IsEmpty())
   {
     CString error("WebServiceClient without a contract definition, needed for reliable messaging.");
-    DETAILLOG(error);
+    DETAILLOG1(error);
     m_errorText += error;
     throw error;
   }
@@ -714,7 +715,7 @@ WebServiceClient::MinimumCheck()
   if(m_jsonTranslation && (m_reliable || m_encryptionLevel != XMLEncryption::XENC_Plain))
   {
     CString error("WebServiceClient cannot do SOAP->JSON->SOAP translation when in reliable messaging or encryption mode!");
-    DETAILLOG(ERROR);
+    DETAILLOG1(ERROR);
     m_errorText += error;
     throw error;
   }
@@ -785,7 +786,7 @@ WebServiceClient::CreateSequence()
   }
 
   // Put in the logfile
-  DETAILLOG("*** Starting WS-ReliableMessaging protocol ***");
+  DETAILLOG1("*** Starting WS-ReliableMessaging protocol ***");
 
   try
   {
@@ -796,7 +797,7 @@ WebServiceClient::CreateSequence()
     {
       // Throw
       ErrorHandling(&message);
-      DETAILLOG(m_errorText);
+      DETAILLOG1(m_errorText);
       throw m_errorText;
     }
 
@@ -814,7 +815,7 @@ WebServiceClient::CreateSequence()
     {
         // Error: answer fro a previous message
         CString fout("Received a 'CreateSequenceResponse' on another message from another program/process or thread.");
-        DETAILLOG(fout);
+        DETAILLOG1(fout);
         m_errorText += fout;
         throw fout;
     }
@@ -826,7 +827,7 @@ WebServiceClient::CreateSequence()
     if(clientURL.Find(acceptURL) < 0)
     {
       CString error("Received a 'CreateSequenceResponse' that does not answer to our URL address.");
-      DETAILLOG(error);
+      DETAILLOG1(error);
       m_errorText += error;
       throw error;
     }
@@ -835,7 +836,7 @@ WebServiceClient::CreateSequence()
     if(m_messageGuidID.IsEmpty() || acceptURL.IsEmpty())
     {
       CString error("Received a 'CreateSequenceResponse' without an proper 'Accept'");
-      DETAILLOG(error);
+      DETAILLOG1(error);
       m_errorText += error;
       throw error;
     }
@@ -849,7 +850,7 @@ WebServiceClient::CreateSequence()
     fout += "\n";
     fout += message.GetFault();
 
-    DETAILLOG(fout);
+    DETAILLOG1(fout);
     m_errorText += fout;
     throw fout;
   }
@@ -865,7 +866,7 @@ WebServiceClient::LastMessage()
   CString request("LastMessage");
   SOAPMessage message(m_rm,request,SoapVersion::SOAP_12,m_url);
 
-  DETAILLOG("*** Ending WS-ReliableMessaging protocol ***");
+  DETAILLOG1("*** Ending WS-ReliableMessaging protocol ***");
   try
   {
     // Send and do error handling
@@ -874,7 +875,7 @@ WebServiceClient::LastMessage()
     if(ok == false)
     {
       CString error("No answer on 'LastMessage' call");
-      DETAILLOG(error);
+      DETAILLOG1(error);
       m_errorText += error;
       throw error;
     }
@@ -884,7 +885,7 @@ WebServiceClient::LastMessage()
     CString msg;
     msg  = "WebService LastMessage in WS-ReliableMessage protocol did fail.\n";
     msg += error;
-    DETAILLOG(msg);
+    DETAILLOG1(msg);
     m_errorText += msg;
     throw msg;
   }
@@ -914,7 +915,7 @@ WebServiceClient::TerminateSequence()
       {
         // Error: wrong terminate
         error.Format("Wrong TerminateSequence in answer on call from [%s/%s].",m_rm,request);
-        DETAILLOG(error);
+        DETAILLOG1(error);
         m_errorText += error;
         throw error;
       }
@@ -924,7 +925,7 @@ WebServiceClient::TerminateSequence()
     {
       // Error no envelope
       error.Format("No correct answer on [%s%s]",m_rm,request);
-      DETAILLOG(error);
+      DETAILLOG1(error);
       m_errorText += error;
       throw error;
     }
@@ -934,8 +935,8 @@ WebServiceClient::TerminateSequence()
     CString msg;
     msg  = "WebService TerminateSequence in WS-ReliableMessage protocol failed.\n";
     msg += error;
-    DETAILLOG(msg);
+    DETAILLOG1(msg);
     throw msg;
   }
-  DETAILLOG("*** WS-ReliableMessaging protocol terminated correctly ***");
+  DETAILLOG1("*** WS-ReliableMessaging protocol terminated correctly ***");
 }
