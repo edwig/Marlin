@@ -288,6 +288,9 @@
     <ClCompile Include="HostedWebCore.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
+    <ClCompile Include="WebSocket.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -589,6 +592,9 @@
     </ClInclude>
     <ClInclude Include="EventStream.h">
       <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocket.h">
+      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
