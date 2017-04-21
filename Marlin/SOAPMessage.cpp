@@ -452,8 +452,8 @@ SOAPMessage::SetSoapVersion(SoapVersion p_version)
     m_body        = &m_root;
     m_paramObject = &m_root;
     CleanNode(&m_root);
-    m_root.m_name = m_soapAction;
-    m_root.m_namespace.Empty();
+    m_root.SetName(m_soapAction);
+    m_root.SetNamespace("");
   }
   else if(m_soapVersion == SoapVersion::SOAP_10 && p_version > SoapVersion::SOAP_10)
   {
@@ -690,7 +690,7 @@ SOAPMessage::GetJSON_URL()
   while(param)
   {
     // Check for complex objects
-    if(!param->m_elements.empty())
+    if(!param->GetChildren().empty())
     {
       // NOT POSSIBLE to send as a HTTP 'GET'
       url.Empty();
@@ -702,11 +702,11 @@ SOAPMessage::GetJSON_URL()
       url += "&";
     }
     // Add the parameter
-    url += param->m_name;
-    if(!param->m_value.IsEmpty())
+    url += param->GetName();
+    if(!param->GetValue().IsEmpty())
     {
       url += "=";
-      url += param->m_value;
+      url += param->GetValue();
     }
     // Next parameter
     param = GetElementSibling(param);
@@ -877,7 +877,7 @@ SOAPMessage::SetParameterObject(CString p_name)
 {
   if(m_paramObject)
   {
-    m_paramObject->m_name = p_name;
+    m_paramObject->SetName(p_name);
   }
 }
 
@@ -897,7 +897,7 @@ SOAPMessage::SetParameter(CString p_name,CString& p_value)
   XMLElement* elem = FindElement(m_paramObject,p_name,false);
   if(elem)
   {
-    elem->m_value = p_value;
+    elem->SetValue(p_value);
     return elem;
   }
   return AddElement(m_paramObject,p_name,XDT_String,p_value);
@@ -1366,7 +1366,7 @@ SOAPMessage::ParseMessage(CString& p_message)
 {
   // Clean out everything we have
   CleanNode(&m_root);     // Structure
-  m_root.m_name.Empty();  // Envelope name if any
+  m_root.SetName("");     // Envelope name if any
 
   // Do the 'real' XML parsing
   XMLMessage::ParseMessage(p_message);
@@ -1493,7 +1493,7 @@ void
 SOAPMessage::FindHeaderAndBody()
 {
   // Check if root = 'Envelope'
-  if(m_root.m_name.Compare("Envelope"))
+  if(m_root.GetName().Compare("Envelope"))
   {
     // Not an Envelope, must be POS (Plain-Old-Soap)
     m_soapVersion = SoapVersion::SOAP_10;
@@ -1523,7 +1523,7 @@ SOAPMessage::FindHeaderAndBody()
       return;
     }
     // Check for namespace in the header
-    CString nmsp = GetAttribute(&m_root,m_root.m_namespace);
+    CString nmsp = GetAttribute(&m_root,m_root.GetNamespace());
     if(CompareNamespaces(nmsp,NAMESPACE_SOAP12) == 0)
     {
       m_soapVersion = SoapVersion::SOAP_12;
@@ -1557,10 +1557,10 @@ SOAPMessage::CreateHeaderAndBody()
     // Nothing to do: POS = Plain Old Soap
     return;
   }
-  if(m_root.m_elements.size() == 0)
+  if(m_root.GetChildren().size() == 0)
   {
-    m_root.m_namespace = "s";
-    m_root.m_name      = "Envelope";
+    m_root.SetNamespace("s");
+    m_root.SetName("Envelope");
     m_header = SetElement(&m_root,"s:Header","");
     m_body   = SetElement(&m_root,"s:Body",  "");
   }

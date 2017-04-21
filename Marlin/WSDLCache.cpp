@@ -260,7 +260,7 @@ WSDLCache::GenerateMessageTypes(CString&      p_wsdlcontent
   // Put the parameters here
   GenerateParameterTypes(p_wsdlcontent
                         ,p_msg->GetSoapAction()
-                        ,p_msg->m_paramObject->m_elements
+                        ,p_msg->m_paramObject->GetChildren()
                         ,p_gedaan
                         ,p_msg->GetWSDLOrder()
                         ,0);
@@ -329,7 +329,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     p_wsdlcontent += "        <s:element ";
 
     // Do occurrence type
-    switch(param->m_type & WSDL_Mask)
+    switch(param->GetType() & WSDL_Mask)
     {
       default:             // Fall through
       case WSDL_OnceOnly:  // Fall through
@@ -348,11 +348,11 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     p_wsdlcontent += temp;
 
     // Do name
-    temp.Format("name=\"%s\"",param->m_name);
+    temp.Format("name=\"%s\"",param->GetName());
     p_wsdlcontent += temp;
 
     // Do data type
-    switch(param->m_type & XDT_Mask)
+    switch(param->GetType() & XDT_Mask)
     {
       case XDT_CDATA:         // Fall through
       case (XDT_String|XDT_CDATA): // Fall through
@@ -403,7 +403,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
       case XDT_ENTITIES:          temp = " type=\"s:ENTITIES\"";            break;
       case XDT_IDREFS:            temp = " type=\"s:IDREFS\"";              break;
       case XDT_NMTOKENS:          temp = " type=\"s:NMTOKENS\"";            break;
-      case XDT_Complex:           temp.Format(" type=\"tns:%s%s\"",p_element,param->m_name);
+      case XDT_Complex:           temp.Format(" type=\"tns:%s%s\"",p_element,param->GetName());
                                   break;
       default:                    temp = " type=\"s:string\"";       
                                   break;
@@ -431,18 +431,18 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
   {
     XMLElement* param = p_map[ind];
 
-    if(param->m_elements.size())
+    if(param->GetChildren().size())
     {
       // Recurse WITHOUT postfix and target namespace
       CString name;
-      if((param->m_type & WSDL_Mask) == WSDL_OneMany  ||
-         (param->m_type & WSDL_Mask) == WSDL_ZeroMany ||
-         (param->m_type & XDT_Mask)  == XDT_Complex   )
+      if((param->GetType() & WSDL_Mask) == WSDL_OneMany  ||
+         (param->GetType() & WSDL_Mask) == WSDL_ZeroMany ||
+         (param->GetType() & XDT_Mask)  == XDT_Complex   )
       {
         name += p_element;
       }
-      name += param->m_name;
-      GenerateParameterTypes(p_wsdlcontent,name,param->m_elements,p_done,p_order,p_level + 1);
+      name += param->GetName();
+      GenerateParameterTypes(p_wsdlcontent,name,param->GetChildren(),p_done,p_order,p_level + 1);
     }
   }
 }
@@ -764,7 +764,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
           }
         }
         // RECURSE
-        if(orgParam->m_elements.size())
+        if(orgParam->GetChildren().size())
         {
           if(CheckParameters(orgParam,p_orig,checkParam,p_check,p_who,p_fields) == false)
           {
@@ -1604,7 +1604,7 @@ WSDLCache::ReadMessage(XMLMessage& p_wsdl,SOAPMessage& p_message)
   XMLElement* param = p_message.GetParameterObjectNode();
   if(param)
   {
-    param->m_namespace = "tns";
+    param->SetNamespace("tns");
     p_message.SetAttribute(param,"tns",m_targetNamespace);
   }
 
@@ -1862,8 +1862,8 @@ WSDLCache::ReadParametersInOrder(XMLMessage&  p_wsdl
         {
           // Still no complex type
           // Give up and roll over. Add as a string
-          newelem->m_type = (ushort) (XDT_String + options);
-          newelem->m_value = type;
+          newelem->SetType((ushort) (XDT_String + options));
+          newelem->SetValue(type);
         }
       }
     }
@@ -1883,16 +1883,16 @@ WSDLCache::ReadRestriction(XMLMessage& p_wsdl
 {
   // Create the enumeration restriction
   XMLRestriction* restrict = m_restrictions.AddRestriction(p_restriction);
-  p_newelem->m_restriction = restrict;
+  p_newelem->SetRestriction(restrict);
 
   // Setting the base type
   CString baseType = p_wsdl.GetAttribute(p_restrict,"base");
   if(!baseType.IsEmpty())
   {
     SplitNamespace(baseType);
-    int elemBaseType   = ReadElementaryType(baseType);
-    p_newelem->m_type  = (ushort)(elemBaseType + p_options);
-    p_newelem->m_value = baseType;
+    int elemBaseType = ReadElementaryType(baseType);
+    p_newelem->SetType((ushort)(elemBaseType + p_options));
+    p_newelem->SetValue(baseType);
 
     restrict->AddBaseType(baseType);
   }

@@ -457,7 +457,7 @@ SOAPMessage::GetParameterCount() const
 {
   if(m_paramObject)
   {
-    return (int)m_paramObject->m_elements.size();
+    return (int)m_paramObject->GetChildren().size();
   }
   return 0;
 }

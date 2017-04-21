@@ -260,7 +260,7 @@ WebConfig::SetParameter(CString p_section,CString p_parameter,CString p_value)
     {
       if(elem->GetValue().Compare(p_value))
       {
-        elem->m_value = p_value;
+        elem->SetValue(p_value);
         m_changed = true;
       }
       return false;

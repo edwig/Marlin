@@ -79,6 +79,7 @@ enum class WhiteSpace
 // Forward declarations
 class XMLAttribute;
 class XMLElement;
+class XMLMessage;
 class XMLParser;
 class XMLParserImport;
 class XMLRestriction;
@@ -102,6 +103,7 @@ class XMLElement
 {
 public:
   XMLElement();
+  XMLElement(XMLElement* p_parent);
   XMLElement(const XMLElement& p_source);
 
  ~XMLElement();
@@ -112,9 +114,20 @@ public:
   CString         GetName()         { return m_name;        };
   XmlDataType     GetType()         { return m_type;        };
   CString         GetValue()        { return m_value;       };
+  XmlAttribMap&   GetAttributes()   { return m_attributes;  };
+  XmlElementMap&  GetChildren()     { return m_elements;    };
+  XMLElement*     GetParent()       { return m_parent;      };
   XMLRestriction* GetRestriction()  { return m_restriction; };
 
-  // (Public!) data
+  // SETTERS
+  void            SetNamespace(CString p_namesp) { m_namespace = p_namesp;  };
+  void            SetName(CString p_name)        { m_name      = p_name;    };
+  void            SetType(XmlDataType p_type)    { m_type      = p_type;    };
+  void            SetValue(CString p_value)      { m_value     = p_value;   };
+  void            SetRestriction(XMLRestriction* p_restrict) { m_restriction = p_restrict; };
+
+private:
+  // Our element node data
   CString         m_namespace;
   CString         m_name;
   XmlDataType     m_type { 0 };
@@ -262,6 +275,11 @@ public:
   XMLElement*     FindElementByAttribute(CString p_attribute, CString p_value);
   XMLElement*     FindElementByAttribute(XMLElement* p_element, CString p_attribute, CString p_value);
 
+  // XMLElements can be stored elsewhere. Use the reference mechanism to add/drop references
+  // With the drop of the last reference, the object WILL destroy itself
+  void            AddReference();
+  void            DropReference();
+
 protected:
   // Print the WSDL Comments in the message
   CString         PrintWSDLComment(XMLElement* p_element);
@@ -281,6 +299,7 @@ protected:
   // Status and other info
   XmlError        m_internalError   { XmlError::XE_NoError }; // Internal error status
   CString         m_internalErrorString;                      // Human readable form of the error
+  long            m_references      { 0 };                    // Externally referenced
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -313,13 +332,13 @@ XMLMessage::GetInternalErrorString()
 inline void
 XMLMessage::SetRootNodeName(CString p_name)
 {
-  m_root.m_name = p_name;
+  m_root.SetName(p_name);
 }
 
 inline CString
 XMLMessage::GetRootNodeName()
 {
-  return m_root.m_name;
+  return m_root.GetName();
 }
 
 inline XMLEncoding

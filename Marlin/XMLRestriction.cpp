@@ -518,7 +518,7 @@ XMLRestriction::CheckInteger(CString p_value)
 {
   CString value(p_value);
   value.Trim();
-  int ch = value.GetAt(0);
+  unsigned char ch = value.GetAt(0);
   if(ch == '+' || ch == '-')
   {
     value = value.Mid(1);
@@ -558,7 +558,7 @@ XMLRestriction::CheckBase64(CString p_value)
 {
   for(int ind = 0; ind < p_value.GetLength(); ++ind)
   {
-    int ch = p_value.GetAt(ind);
+    unsigned char ch = p_value.GetAt(ind);
     if(!isspace(ch) && !isalnum(ch))
     {
       if((ind >= p_value.GetLength() - 2) && ch == '=')
@@ -587,7 +587,7 @@ XMLRestriction::CheckDouble(CString p_value,bool p_specials)
   }
   for(int ind = 0; ind < p_value.GetLength(); ++ind)
   {
-    int ch = p_value.GetAt(ind);
+    unsigned char ch = p_value.GetAt(ind);
     if(!isspace(ch) && !isdigit(ch) && ch != '+' && ch != '-' && toupper(ch) != 'E')
     {
       result  = "Not a number: ";
@@ -880,7 +880,7 @@ XMLRestriction::CheckHexBin(CString p_value)
 {
   for(int ind = 0; ind < p_value.GetLength(); ++ind)
   {
-    int ch = p_value.GetAt(ind);
+    unsigned char ch = p_value.GetAt(ind);
     if(!isspace(ch) && !isxdigit(ch))
     {
       return "Not a base64Binary field";
@@ -1056,7 +1056,7 @@ XMLRestriction::CheckNormal(CString p_value)
 
   for(int ind = 0;ind < p_value.GetLength(); ++ind)
   {
-    int ch = p_value.GetAt(ind);
+    unsigned char ch = p_value.GetAt(ind);
     if(ch == '\r' || ch == '\n' || ch == '\t')
     {
       result = "normalizedString contains red space: " + p_value;
@@ -1094,7 +1094,7 @@ XMLRestriction::CheckNMTOKEN(CString p_value)
   {
     for(int ind = 0;ind < p_value.GetLength(); ++ind)
     {
-      int ch = p_value.GetAt(ind);
+      unsigned char ch = p_value.GetAt(ind);
       if(!isalnum(ch) && ch != ':' && ch != '-' && ch != '.' && ch != '_' && ch < 128)
       {
         result = "NMTOKEN with illegal characters: " + p_value;
@@ -1110,7 +1110,7 @@ XMLRestriction::CheckName(CString p_value)
   CString result = CheckNMTOKEN(p_value);
   if(result.IsEmpty())
   {
-    int ch = p_value.GetAt(0);
+    unsigned char ch = p_value.GetAt(0);
     if(ch != ':' && !isalpha(ch) && ch != '_' && ch < 128)
     {
       result = "Name should begin with a name-start-character: " + p_value;

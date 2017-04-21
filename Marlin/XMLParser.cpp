@@ -437,8 +437,8 @@ XMLParser::ParseCDATA()
   // Add to current element
   if(m_lastElement)
   {
-    m_lastElement->m_value = value;
-    m_lastElement->m_type  = XDT_CDATA;
+    m_lastElement->SetValue(value);
+    m_lastElement->SetType(XDT_CDATA);
   }
 }
 
@@ -473,7 +473,7 @@ XMLParser::ParseText()
     {
       value = DecodeUTF8String(value);
     }
-    m_lastElement->m_value = value;
+    m_lastElement->SetValue(value);
   }
 }
 
@@ -766,10 +766,10 @@ XMLParser::MakeElement(CString& p_namespace,CString& p_name)
   ++m_elements;
 
   // Start our message at the root
-  if(m_message->m_root.m_name.IsEmpty())
+  if(m_message->m_root.GetName().IsEmpty())
   {
-    m_message->m_root.m_namespace = p_namespace;
-    m_message->m_root.m_name      = p_name;
+    m_message->m_root.SetNamespace(p_namespace);
+    m_message->m_root.SetName(p_name);
     m_element = &(m_message->m_root);
     m_lastElement = m_element;
     return;
@@ -780,7 +780,7 @@ XMLParser::MakeElement(CString& p_namespace,CString& p_name)
   {
     SetError(XmlError::XE_OutOfMemory,(uchar*)"OUT OF MEMORY");
   }
-  m_lastElement->m_namespace = p_namespace;
+  m_lastElement->SetNamespace(p_namespace);
 }
 
 
@@ -849,6 +849,7 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arr
   JSONarray*  array   = nullptr;
   XMLElement* element = nullptr;
   CString arrayName;
+  CString value;
 
   switch(p_value.GetDataType())
   {
@@ -867,24 +868,26 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arr
                                     }
                                     break;
     case JsonType::JDT_array:       array = &p_value.GetArray();
-                                    for(auto& value : *array)
+                                    for(auto& val : *array)
                                     {
                                       element = m_soap->AddElement(p_element,p_arrayName,XDT_String,"");
-                                      ParseLevel(element,value);
+                                      ParseLevel(element,val);
                                     }
                                     break;
-    case JsonType::JDT_string:      p_element->m_value = p_value.GetString();
+    case JsonType::JDT_string:      p_element->SetValue(p_value.GetString());
                                     break;
-    case JsonType::JDT_number_int:  p_element->m_value.Format("%d",p_value.GetNumberInt());
+    case JsonType::JDT_number_int:  value.Format("%d",p_value.GetNumberInt());
+                                    p_element->SetValue(value);
                                     break;
-    case JsonType::JDT_number_dbl:  p_element->m_value.Format("%.15g",p_value.GetNumberDbl());
+    case JsonType::JDT_number_dbl:  value.Format("%.15g",p_value.GetNumberDbl());
+                                    p_element->SetValue(value);
                                     break;
     case JsonType::JDT_const:       switch(p_value.GetConstant())
                                     {
                                       case JsonConst::JSON_NONE:  break; // Do nothing: empty string!!
-                                      case JsonConst::JSON_NULL:  p_element->m_value = "null";  break;
-                                      case JsonConst::JSON_FALSE: p_element->m_value = "false"; break;
-                                      case JsonConst::JSON_TRUE:  p_element->m_value = "true";  break;
+                                      case JsonConst::JSON_NULL:  p_element->SetValue("null");  break;
+                                      case JsonConst::JSON_FALSE: p_element->SetValue("false"); break;
+                                      case JsonConst::JSON_TRUE:  p_element->SetValue("true");  break;
                                     }
                                     break;
   }

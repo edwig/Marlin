@@ -549,7 +549,7 @@ JSONParserSOAP::ParseMain(JSONvalue& p_valPointer,XMLElement& p_element)
   JSONpair& npair = p_valPointer.GetObject().back();
   JSONvalue& value = npair.m_value;
 
-  if(!p_element.m_elements.empty())
+  if(!p_element.GetChildren().empty())
   {
     ParseLevel(value,p_element);
   }
@@ -558,7 +558,7 @@ JSONParserSOAP::ParseMain(JSONvalue& p_valPointer,XMLElement& p_element)
 void
 JSONParserSOAP::ParseLevel(JSONvalue& p_valPointer,XMLElement& p_element)
 {
-  if(p_element.m_elements.size())
+  if(p_element.GetChildren().size())
   {
     CString arrayName;
     bool makeArray = ScanForArray(p_element,arrayName);
@@ -583,7 +583,7 @@ bool
 JSONParserSOAP::ScanForArray(XMLElement& p_element,CString& p_arrayName)
 {
   // See if we must scan
-  if(p_element.m_elements.size() < 2)
+  if(p_element.GetChildren().size() < 2)
   {
     return false;
   }
@@ -592,14 +592,14 @@ JSONParserSOAP::ScanForArray(XMLElement& p_element,CString& p_arrayName)
   bool first = true;
 
   // Scan the underlying elements
-  for(auto& element : p_element.m_elements)
+  for(auto& element : p_element.GetChildren())
   {
     if(first)
     {
       first = false;
-      sameName = element->m_name;
+      sameName = element->GetName();
     }
-    else if(sameName.Compare(element->m_name))
+    else if(sameName.Compare(element->GetName()))
     {
       return false;
     }
@@ -622,7 +622,7 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
   JSONpair&  jpair = p_valPointer.GetObject().back();
   JSONarray& jar   = jpair.m_value.GetArray();
 
-  for(auto& element : p_element.m_elements)
+  for(auto& element : p_element.GetChildren())
   {
     // Put an object in the array and parse it
     JSONvalue value;
@@ -637,9 +637,9 @@ void
 JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
 {
   p_valPointer.SetDatatype(JsonType::JDT_object);
-  for(auto& element : p_element.m_elements)
+  for(auto& element : p_element.GetChildren())
   {
-    if(element->m_elements.size())
+    if(element->GetChildren().size())
     {
       JSONobject object;
       JSONpair   pair;

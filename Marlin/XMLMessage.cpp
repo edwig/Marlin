@@ -51,6 +51,11 @@ XMLElement::XMLElement()
 {
 }
 
+XMLElement::XMLElement(XMLElement* p_parent)
+           :m_parent(p_parent)
+{
+}
+
 XMLElement::XMLElement(const XMLElement& source)
            :m_namespace  (source.m_namespace)
            ,m_name       (source.m_name)
@@ -107,8 +112,7 @@ XMLElement::Reset()
 // XTOR XML Message
 XMLMessage::XMLMessage()
 {
-  m_root.m_type   = XDT_String;
-  m_root.m_parent = nullptr;
+  m_root.SetType(XDT_String);
 }
 
 // XTOR from another message
@@ -354,9 +358,9 @@ XMLMessage::PrintElements(XMLElement* p_element
     }
   }
 
-  CString namesp = p_element->m_namespace;
-  CString name   = p_element->m_name;
-  CString value  = p_element->m_value;
+  CString namesp = p_element->GetNamespace();
+  CString name   = p_element->GetName();
+  CString value  = p_element->GetValue();
 
   // Check namespace
   if(!namesp.IsEmpty())
@@ -365,37 +369,37 @@ XMLMessage::PrintElements(XMLElement* p_element
   }
 
   // Print domain value restriction of the element
-  if(m_printRestiction && p_element->m_restriction)
+  if(m_printRestiction && p_element->GetRestriction())
   {
-    temp     = p_element->m_restriction->PrintRestriction(name);
+    temp     = p_element->GetRestriction()->PrintRestriction(name);
     message += spaces + temp + newline;
   }
-  if((p_element->m_type & WSDL_Mask) & ~(WSDL_Mandatory | WSDL_Sequence))
+  if((p_element->GetType() & WSDL_Mask) & ~(WSDL_Mandatory | WSDL_Sequence))
   {
     message += spaces + PrintWSDLComment(p_element) + newline;
   }
 
   // Print by type
-  if(p_element->m_type & XDT_CDATA)
+  if(p_element->GetType() & XDT_CDATA)
   {
     // CDATA section
     temp.Format("<%s><![CDATA[%s]]>",PrintXmlString(name,p_utf8),value);
     message += spaces + temp;
   }
-  if(p_element->m_type & XDT_Complex)
+  if(p_element->GetType() & XDT_Complex)
   {
     // Other XML data 
     temp.Format("<%s>%s",PrintXmlString(name,p_utf8),value);
     message += spaces + temp;
   }
-  else if(value.IsEmpty() && p_element->m_attributes.size() == 0 && p_element->m_elements.size() == 0)
+  else if(value.IsEmpty() && p_element->GetAttributes().size() == 0 && p_element->GetChildren().size() == 0)
   {
     // A 'real' empty node
     temp.Format("<%s />%s",PrintXmlString(name,p_utf8),newline);
     message += spaces + temp;
     return message;
   }
-  else if(p_element->m_attributes.size() == 0)
+  else if(p_element->GetAttributes().size() == 0)
   {
     // Exact string with escapes
     temp.Format("<%s>%s",PrintXmlString(name,p_utf8),PrintXmlString(value,p_utf8));
@@ -406,7 +410,7 @@ XMLMessage::PrintElements(XMLElement* p_element
     // Parameter printing with attributes
     temp.Format("<%s",PrintXmlString(name,p_utf8));
     message += spaces + temp;
-    for(auto& attrib : p_element->m_attributes)
+    for(auto& attrib : p_element->GetAttributes())
     {
       CString attribute = attrib.m_name;
 
@@ -432,7 +436,7 @@ XMLMessage::PrintElements(XMLElement* p_element
       }
       message += temp;
     }
-    if(value.IsEmpty() && p_element->m_elements.empty())
+    if(value.IsEmpty() && p_element->GetChildren().empty())
     {
       message += "/>" + newline;
       return message;
@@ -445,11 +449,11 @@ XMLMessage::PrintElements(XMLElement* p_element
     }
   }
 
-  if(p_element->m_elements.size())
+  if(p_element->GetChildren().size())
   {
     message += newline;
     // call recursively
-    for(auto element : p_element->m_elements)
+    for(auto element : p_element->GetChildren())
     {
       message += PrintElements(element,p_utf8,p_level + 1);
     }
@@ -520,8 +524,8 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
     }
   }
 
-  CString name  = p_element->m_name;
-  CString value = p_element->m_value;
+  CString name  = p_element->GetName();
+  CString value = p_element->GetValue();
 
   if(!name.IsEmpty())
   {
@@ -529,11 +533,11 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   }
 
   // Optional attributes group
-  if(p_attributes && !p_element->m_attributes.empty())
+  if(p_attributes && !p_element->GetAttributes().empty())
   {
     message += "{" + newline;
 
-    for(auto& attrib : p_element->m_attributes)
+    for(auto& attrib : p_element->GetAttributes())
     {
       CString attrName  = attrib.m_name;
       CString attrValue = attrib.m_value;
@@ -544,7 +548,7 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   }
 
   // print element value
-  switch(p_element->m_type & XDT_Mask)
+  switch(p_element->GetType() & XDT_Mask)
   {
     default:                    temp.Format("%s",value);
                                 break;
@@ -557,16 +561,16 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   message += temp + newline;
 
   // Closing of the attributes group
-  if(p_attributes && !p_element->m_attributes.empty())
+  if(p_attributes && !p_element->GetAttributes().empty())
   {
     message += spaces + "}" + newline;
   }
 
   // Print all child elements of this one by recursing
-  if(!p_element->m_elements.empty())
+  if(!p_element->GetChildren().empty())
   {
     message += spaces + "{" + newline;
-    for(auto& elem : p_element->m_elements)
+    for(auto& elem : p_element->GetChildren())
     {
       PrintElementsJson(elem,p_attributes,p_utf8,p_level + 1);
     }
@@ -599,14 +603,13 @@ XMLMessage::AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,CStr
     throw CString("XML Messages with spaces in elementnames are invalid!");
   }
 
-  XmlElementMap& elements = p_base ? p_base->m_elements : m_root.m_elements;
+  XmlElementMap& elements = p_base ? p_base->GetChildren() : m_root.GetChildren();
   XMLElement* parent = p_base ? p_base : &m_root;
-  XMLElement* elem   = new XMLElement();
-  elem->m_namespace  = namesp;
-  elem->m_parent     = parent;
-  elem->m_name       = p_name;
-  elem->m_type       = p_type;
-  elem->m_value      = p_value;
+  XMLElement* elem   = new XMLElement(parent);
+  elem->SetNamespace(namesp);
+  elem->SetName(p_name);
+  elem->SetType(p_type);
+  elem->SetValue(p_value);
 
   if(p_front)
   {
@@ -625,18 +628,18 @@ XMLMessage::SetElement(XMLElement* p_base,CString p_name,XmlDataType p_type,CStr
 {
   CString name(p_name);
   CString namesp = SplitNamespace(name);
-  XmlElementMap& elements = p_base ? p_base->m_elements : m_root.m_elements;
+  XmlElementMap& elements = p_base ? p_base->GetChildren() : m_root.GetChildren();
 
   // Finding existing element
   for (auto& element : elements)
   {
-    if (element->m_name.Compare(name) == 0)
+    if (element->GetName().Compare(name) == 0)
     {
       // Just setting the values again
-      element->m_namespace = namesp;
-      element->m_name      = name;
-      element->m_type      = p_type;
-      element->m_value     = p_value;
+      element->SetNamespace(namesp);
+      element->SetName(name);
+      element->SetType(p_type);
+      element->SetValue(p_value);
       return element;
     }
   }
@@ -724,8 +727,8 @@ XMLMessage::SetElementValue(XMLElement* p_elem,XmlDataType p_type,CString p_valu
 {
   if(p_elem)
   {
-    p_elem->m_type  = p_type;
-    p_elem->m_value = p_value;
+    p_elem->SetType(p_type);
+    p_elem->SetValue(p_value);
   }
 }
 
@@ -736,7 +739,7 @@ XMLMessage::SetElementOptions(XMLElement* p_elem,XmlDataType p_options)
   {
     // Mask-off previous WSDL options
     // All need to be set in one go!!
-    p_elem->m_type = (p_elem->m_type & XDT_Mask) | (p_options & WSDL_Mask);
+    p_elem->SetType((p_elem->GetType() & XDT_Mask) | (p_options & WSDL_Mask));
   }
 }
 
@@ -770,7 +773,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,CString p_name,CString& p_value)
   CString namesp = SplitNamespace(p_name);
 
   // Find in attribute map
-  for(auto& attrib : p_elem->m_attributes)
+  for(auto& attrib : p_elem->GetAttributes())
   {
     if(attrib.m_name.Compare(p_name) == 0)
     {
@@ -787,8 +790,8 @@ XMLMessage::SetAttribute(XMLElement* p_elem,CString p_name,CString& p_value)
   attrib.m_name      = p_name;
   attrib.m_value     = p_value;
 
-  p_elem->m_attributes.push_back(attrib);
-  return &(p_elem->m_attributes.back());
+  p_elem->GetAttributes().push_back(attrib);
+  return &(p_elem->GetAttributes().back());
 }
 
 // Set attribute of a element
@@ -846,12 +849,12 @@ XMLMessage::SetAttribute(XMLElement* p_elem,CString p_name,double p_value)
 CString  
 XMLMessage::GetElement(XMLElement* p_elem,CString p_name)
 {
-  XmlElementMap& map = p_elem ? p_elem->m_elements : m_root.m_elements;
+  XmlElementMap& map = p_elem ? p_elem->GetChildren() : m_root.GetChildren();
 
   // Find in the current mapping
   for(unsigned ind = 0; ind < map.size(); ++ind)
   {
-    if(map[ind]->m_name.Compare(p_name) == 0)
+    if(map[ind]->GetName().Compare(p_name) == 0)
     {
       return map[ind]->GetValue();
     }
@@ -915,9 +918,9 @@ XMLMessage::GetElementFirstChild(XMLElement* p_elem)
 {
   if(p_elem)
   {
-    if(p_elem->m_elements.size())
+    if(p_elem->GetChildren().size())
     {
-      return p_elem->m_elements.front();
+      return p_elem->GetChildren().front();
     }
   }
   return nullptr;
@@ -928,17 +931,17 @@ XMLMessage::GetElementSibling(XMLElement* p_elem)
 {
   if(p_elem)
   {
-    XMLElement* parent = p_elem->m_parent;
+    XMLElement* parent = p_elem->GetParent();
     if(parent)
     {
-      for(unsigned ind = 0;ind < parent->m_elements.size(); ++ind)
+      for(unsigned ind = 0;ind < parent->GetChildren().size(); ++ind)
       {
-        if(parent->m_elements[ind] == p_elem)
+        if(parent->GetChildren()[ind] == p_elem)
         {
           // Check for last node
-          if(ind < parent->m_elements.size() - 1)
+          if(ind < parent->GetChildren().size() - 1)
           {
-            return parent->m_elements[ind + 1];
+            return parent->GetChildren()[ind + 1];
           }
         }
       }
@@ -954,11 +957,11 @@ XMLMessage::FindElement(XMLElement* p_base, CString p_name,bool p_recurse /*=tru
   CString namesp = SplitNamespace(elementName);
   XMLElement* base = p_base ? p_base : &m_root;
 
-  for(auto& element : base->m_elements)
+  for(auto& element : base->GetChildren())
   {
-    if(element->m_name.Compare(elementName) == 0)
+    if(element->GetName().Compare(elementName) == 0)
     {
-      if(namesp.IsEmpty() || element->m_namespace.Compare(namesp) == 0)
+      if(namesp.IsEmpty() || element->GetNamespace().Compare(namesp) == 0)
       {
         return element;
       }
@@ -966,7 +969,7 @@ XMLMessage::FindElement(XMLElement* p_base, CString p_name,bool p_recurse /*=tru
   }
   if(p_recurse)
   {
-    for(auto& element : base->m_elements)
+    for(auto& element : base->GetChildren())
     {
       XMLElement* elem = FindElement(element,p_name,p_recurse);
       if(elem)
@@ -994,11 +997,11 @@ XMLMessage::FindElementWithAttribute(XMLElement* p_base
   CString namesp = SplitNamespace(p_elementName);
   XMLElement* base = p_base ? p_base : &m_root;
 
-  for(auto& element : base->m_elements)
+  for(auto& element : base->GetChildren())
   {
-    if(element->m_name.Compare(p_elementName) == 0)
+    if(element->GetName().Compare(p_elementName) == 0)
     {
-      if(namesp.IsEmpty() || element->m_namespace.Compare(namesp) == 0)
+      if(namesp.IsEmpty() || element->GetNamespace().Compare(namesp) == 0)
       {
         XMLAttribute* attrib = FindAttribute(element,p_attribName);
         if(attrib)
@@ -1028,7 +1031,7 @@ XMLMessage::GetAttribute(XMLElement* p_elem,CString p_attribName)
 {
   if(p_elem)
   {
-    for(auto& attrib : p_elem->m_attributes)
+    for(auto& attrib : p_elem->GetAttributes())
     {
       if(attrib.m_name.Compare(p_attribName) == 0)
       {
@@ -1073,7 +1076,7 @@ XMLMessage::GetAttributeDouble(XMLElement* p_elem,CString p_attribName)
 XMLAttribute*
 XMLMessage::FindAttribute(XMLElement* p_elem,CString p_attribName)
 {
-  for(auto& attrib : p_elem->m_attributes)
+  for(auto& attrib : p_elem->GetAttributes())
   {
     if(attrib.m_name.Compare(p_attribName) == 0)
     {
@@ -1097,7 +1100,7 @@ XMLMessage::FindAttribute(XMLElement* p_elem,CString p_attribName)
 bool
 XMLMessage::DeleteElement(XMLElement* p_base, CString p_name, int p_instance /*= 0*/)
 {
-  XmlElementMap& map = p_base ? p_base->m_elements : m_root.m_elements;
+  XmlElementMap& map = p_base ? p_base->GetChildren() : m_root.GetChildren();
   XmlElementMap::iterator it = map.begin();
   int  count = 0;
 
@@ -1106,7 +1109,7 @@ XMLMessage::DeleteElement(XMLElement* p_base, CString p_name, int p_instance /*=
     bool found = false;
     while(it != map.end())
     {
-      if((*it)->m_name.Compare(p_name) == 0)
+      if((*it)->GetName().Compare(p_name) == 0)
       {
         ++count;
         found = true;
@@ -1132,7 +1135,7 @@ XMLMessage::DeleteElement(XMLElement* p_base, CString p_name, int p_instance /*=
 bool
 XMLMessage::DeleteElement(XMLElement* p_base,XMLElement* p_element)
 {
-  XmlElementMap& map = p_base ? p_base->m_elements : m_root.m_elements;
+  XmlElementMap& map = p_base ? p_base->GetChildren() : m_root.GetChildren();
   XmlElementMap::iterator it;
 
   for (it = map.begin(); it != map.end(); ++it)
@@ -1156,11 +1159,11 @@ XMLMessage::DeleteAttribute(XMLElement* p_element,CString p_attribName)
     return false;
   }
   XmlAttribMap::iterator it;
-  for(it = p_element->m_attributes.begin();it != p_element->m_attributes.end(); ++it)
+  for(it = p_element->GetAttributes().begin();it != p_element->GetAttributes().end(); ++it)
   {
     if(it->m_name.Compare(p_attribName) == 0)
     {
-      p_element->m_attributes.erase(it);
+      p_element->GetAttributes().erase(it);
       return true;
     }
   }
@@ -1187,7 +1190,7 @@ XMLMessage::FindElementByAttribute(XMLElement* p_element, CString p_attribute, C
       return p_element;
     }
     // Find recursive depth-first
-    for (auto& element : p_element->m_elements)
+    for (auto& element : p_element->GetChildren())
     {
       XMLElement* elem = FindElementByAttribute(element, p_attribute, p_value);
       if (elem)
@@ -1223,3 +1226,25 @@ XMLMessage::SetSendUnicode(bool p_unicode)
 }
 
 #pragma endregion Operations
+
+#pragma region References
+
+// XMLElements can be stored elsewhere. Use the reference mechanism to add/drop references
+// With the drop of the last reference, the object WILL destroy itself
+
+void
+XMLMessage::AddReference()
+{
+  InterlockedIncrement(&m_references);
+}
+
+void
+XMLMessage::DropReference()
+{
+  if(InterlockedDecrement(&m_references) <= 0)
+  {
+    delete this;
+  }
+}
+
+#pragma endregion References

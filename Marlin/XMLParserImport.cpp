@@ -47,7 +47,7 @@ XMLParserImport::XMLParserImport(XMLMessage* p_message)
 void
 XMLParserImport::ParseAfterElement()
 {
-  if(m_lastElement->m_name.CompareNoCase("import") == 0)
+  if(m_lastElement->GetName().CompareNoCase("import") == 0)
   {
     // Getting the attributes
     CString namesp   = m_message->GetAttribute(m_lastElement,"namespace");
