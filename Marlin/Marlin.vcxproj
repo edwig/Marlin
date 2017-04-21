@@ -231,7 +231,10 @@
     <ClCompile Include="WebConfigIIS.cpp" />
     <ClCompile Include="WebServiceClient.cpp" />
     <ClCompile Include="WebServiceServer.cpp" />
-    <ClCompile Include="WebSocket.cpp" />
+    <ClCompile Include="WebSocket.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="WSDLCache.cpp" />
     <ClCompile Include="XMLMessage.cpp" />
     <ClCompile Include="XMLParser.cpp" />

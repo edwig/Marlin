@@ -30,6 +30,7 @@
 #include "Base64.h"
 #include <wincrypt.h>
 #include <schannel.h>
+#include <vector>
 
 // Encryption providers support password-hashing and encryption algorithms
 // See the documentation on: "Cryptographic Provider Types"
@@ -223,6 +224,66 @@ error_exit:
   p_password.ReleaseBuffer();
 
   return m_digest; 
+}
+
+CString
+Crypto::Digest(const void* data,const size_t data_size,unsigned hashType)
+{
+  HCRYPTPROV hProv = NULL;
+
+  if(!CryptAcquireContext(&hProv,NULL,NULL,PROV_RSA_AES,CRYPT_VERIFYCONTEXT))
+  {
+    return "";
+  }
+
+  BOOL hash_ok = FALSE;
+  HCRYPTPROV hHash = NULL;
+  switch(hashType)
+  {
+    case CALG_SHA1:   hash_ok = CryptCreateHash(hProv,CALG_SHA1,   0,0,&hHash); break;
+    case CALG_MD5:    hash_ok = CryptCreateHash(hProv,CALG_MD5,    0,0,&hHash); break;
+    case CALG_SHA_256:hash_ok = CryptCreateHash(hProv,CALG_SHA_256,0,0,&hHash); break;
+    default:          return "";
+  }
+
+  if(!hash_ok)
+  {
+    CryptReleaseContext(hProv,0);
+    return "";
+  }
+
+  if(!CryptHashData(hHash,static_cast<const BYTE *>(data),(DWORD)data_size,0))
+  {
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv,0);
+    return "";
+  }
+
+  DWORD cbHashSize = 0,dwCount = sizeof(DWORD);
+  if(!CryptGetHashParam(hHash,HP_HASHSIZE,(BYTE *)&cbHashSize,&dwCount,0))
+  {
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv,0);
+    return "";
+  }
+
+  std::vector<BYTE> buffer(cbHashSize);
+  if(!CryptGetHashParam(hHash,HP_HASHVAL,reinterpret_cast<BYTE*>(&buffer[0]),&cbHashSize,0))
+  {
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv,0);
+    return "";
+  }
+
+  Base64 base;
+  CString hash;
+  char* pointer = hash.GetBufferSetLength((int)base.B64_length(cbHashSize + 1));
+  base.Encrypt((const unsigned char*)&buffer[0],cbHashSize,(unsigned char*)pointer);
+  hash.ReleaseBuffer();
+
+  CryptDestroyHash(hHash);
+  CryptReleaseContext(hProv,0);
+  return hash;
 }
 
 // ENCRYPT a buffer

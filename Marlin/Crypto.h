@@ -64,6 +64,7 @@ public:
 
   // Make a MD5 Hash value for a buffer
   CString& Digest(CString& p_buffer,CString& p_password);
+  CString  Digest(const void* data,const size_t data_size,unsigned hashType);
   CString& GetDigest(void);
 
   // Get the protocol types

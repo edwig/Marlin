@@ -272,7 +272,7 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   XMLElement* trans = 
   input2 .AddElement(NULL,"Translation",WSDL_Mandatory | XDT_String, "string");
   output2.AddElement(NULL,"CanDo",      WSDL_Mandatory | XDT_Boolean,"bool");
-  trans->m_restriction = &g_restrict;
+  trans->SetRestriction(&g_restrict);
 
   // Third Getting the answer
   input3 .AddElement(NULL,"WordToTranslate",WSDL_Mandatory | XDT_String,"string");
@@ -289,8 +289,8 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   XMLElement* answer  = input4.AddElement(NULL, "DoubleWord",   WSDL_Mandatory|XDT_Complex,"");
   input4.AddElement(answer,"WordToTranslate",WSDL_Mandatory|XDT_String,"to_be_translated");
   input4.AddElement(answer,"AlternativeWord",WSDL_Optional |XDT_String,"alternative");
-  lanFrom->m_restriction = &g_restrict;
-  lanTo  ->m_restriction = &g_restrict;
+  lanFrom->SetRestriction(&g_restrict);
+  lanTo  ->SetRestriction(&g_restrict);
 
   output4.AddElement(NULL,"TranslatedWord",WSDL_Optional|XDT_String,"string");
   output4.AddElement(NULL,"TranslationAlt",WSDL_Optional|XDT_String,"string");

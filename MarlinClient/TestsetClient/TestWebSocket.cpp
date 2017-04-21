@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: TestClient.h
+// SourceFile: TestWebSocket.h
 //
 // Marlin Server: Internet server/client
 // 
@@ -25,41 +25,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
-#include "TestPorts.h"
+#include "stdafx.h"
+#include "TestClient.h"
+#include "WebSocket.h"
 
-#define NUM_RM_TESTS 3
+int
+TestWebSocketAccept(void)
+{
+  bool result = false;
+  CString clientkey = "dGhlIHNhbXBsZSBub25jZQ==";
 
-class   HTTPClient;
+  ClientWebSocket socket("ws://localhost/testing");
+  CString serverkey = socket.ServerAcceptKey(clientkey);
 
-// In TestClient.cpp
-extern bool doDetails;
+  xprintf("Client Key: %s\n",clientkey.GetString());
+  xprintf("Server Key: %s\n",serverkey.GetString());
 
-void xprintf(const char* p_format,...);
-void WaitForKey();
+  // See the example in RFC 6455 on page 24 of the IETF
+  if(serverkey.Compare("s3pPLMBiTxaQ9kYGzzhZRbK+xOo=") == 0)
+  {
+    result = true;
+  }
 
-// Define your other host here!
-// By commenting out the marlin_host above, and uncommenting this one
-// #define MARLIN_HOST "my-other-machine"  
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("Testing the WebSocket Accpet cookie RFC6455    : %s\n",result ? "OK" : "ERROR");
 
-// In the various testing files
-extern int TestJSON(void);
-extern int TestUnicode(void);
-extern int TestURLChars(void);
-extern int TestCryptography(void);
-extern int TestReader(void);
-extern int TestConvert(void);
-extern int TestNamespaces(void);
-extern int TestFindClientCertificate(void);
-extern int TestWebSocketAccept(void);
-extern int TestEvents(HTTPClient* p_client);
-extern int TestCookies(HTTPClient& p_client);
-extern int TestContract(HTTPClient* p_client,bool p_json);
-extern int TestJsonData(HTTPClient* p_client);
-extern int TestPatching(HTTPClient* p_client);
-extern int TestFormData(HTTPClient* p_client);
-extern int TestBaseSite(HTTPClient* p_client);
-extern int TestSecureSite(HTTPClient* p_client);
-extern int TestCompression(HTTPClient* p_client);
-extern int TestWebservices(HTTPClient& p_client);
-extern int TestClientCertificate(HTTPClient* p_client);
+  return result ? 0 : 1;
+}

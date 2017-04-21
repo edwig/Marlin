@@ -224,6 +224,7 @@
     <ClCompile Include="..\TestsetClient\TestReader.cpp" />
     <ClCompile Include="..\TestsetClient\TestSecureSite.cpp" />
     <ClCompile Include="..\TestsetClient\TestUnicode.cpp" />
+    <ClCompile Include="..\TestsetClient\TestWebSocket.cpp" />
     <ClCompile Include="..\TestsetClient\TestWS.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
