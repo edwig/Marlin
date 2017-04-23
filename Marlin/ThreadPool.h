@@ -210,6 +210,7 @@ public:
   AutoIncrementPoolMax(ThreadPool* p_pool)
   {
     m_pool = p_pool;
+    m_pool->ExtendMaximumThreads(*this);
   }
   ~AutoIncrementPoolMax()
   {

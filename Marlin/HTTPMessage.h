@@ -207,6 +207,8 @@ public:
   void    AddHeader(CString p_name,CString p_value,bool p_lower = true);
   // Add a header by known header-id
   void    AddHeader(HTTP_HEADER_ID p_id,CString p_value);
+  // Delete a header by name
+  void    DelHeader(CString p_name);
   // Get a header by name
   CString GetHeader(CString p_name);
   // Convert system time to HTTP time string

@@ -796,6 +796,24 @@ HTTPMessage::GetHeader(CString p_name)
   return "";
 }
 
+// Delete a header by name (case (in)sensitive)
+void    
+HTTPMessage::DelHeader(CString p_name)
+{
+  HeaderMap::iterator it = m_headers.find(p_name);
+  if(it != m_headers.end())
+  {
+    m_headers.erase(it);
+    return;
+  }
+  p_name.MakeLower();
+  it = m_headers.find(p_name);
+  if(it != m_headers.end())
+  {
+    m_headers.erase(it);
+  }
+}
+
 // Convert system time to HTTP time string
 // leaves the m_systemtime member untouched!!
 CString

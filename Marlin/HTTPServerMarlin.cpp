@@ -33,6 +33,7 @@
 #include "HTTPURLGroup.h"
 #include "GetLastErrorAsString.h"
 #include "ConvertWideString.h"
+#include "WebSocket.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1217,6 +1218,88 @@ HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* p_message)
   // Receiving succeeded?
   return retval;
 }
+
+// Receive the WebSocket stream and pass on the the WebSocket
+void
+HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request)
+{
+  // Increment thread count for the server while we are in the read loop
+  AutoIncrementPoolMax inc(m_pool);
+
+  BYTE* buffer  = nullptr;
+  DWORD total   = 0;
+  bool  reading = true;
+
+  do
+  {
+    if(buffer == nullptr)
+    {
+      buffer = (BYTE*)malloc(INIT_HTTP_BUFFERSIZE);
+      total  = 0;
+    }
+    DWORD bytesRead = 0;
+    DWORD result = HttpReceiveRequestEntityBody(m_requestQueue
+                                               ,p_request
+                                               ,HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER
+                                               ,&buffer[total]
+                                               ,INIT_HTTP_BUFFERSIZE
+                                               ,&bytesRead
+                                               ,NULL);
+    switch(result)
+    {
+      case NO_ERROR:          // Regular incoming body part
+                              DETAILLOGV("WebSocket receiving [%d] bytes",bytesRead);
+                              break;
+      case ERROR_HANDLE_EOF:  // Very last incoming body part
+                              if(bytesRead)
+                              {
+                                DETAILLOGV("WebSocket receiving [%d] bytes",bytesRead);
+                              }
+                              reading = false;
+                              break;
+      default:                ERRORLOG(result,"Receiving for WebSocket");
+                              bytesRead = 0;
+                              reading = false;
+                              break;
+    }
+    if(bytesRead)
+    {
+      total += bytesRead;
+
+      RawFrame* frame = new RawFrame();
+      frame->m_data = buffer;
+      if(p_socket->StoreFrameBuffer(frame))
+      {
+        // Shrink the buffer and store it for the socket
+        frame->m_data = (BYTE*)realloc(buffer,total);
+        buffer = nullptr;
+
+        if(p_socket->StoreFrameBuffer(frame) == false)
+        {
+          // closing channel on a close operator
+          reading = false;
+        }
+      }
+      else
+      {
+        // Incomplete buffer, expand buffer to receive some more
+        buffer = (uchar*)realloc(buffer,total + INIT_HTTP_BUFFERSIZE);
+        // Remove unused frame buffer
+        frame->m_data = nullptr;
+        delete frame;
+      }
+    }
+  }
+  while(reading);
+}
+
+// Send to a WebSocket
+bool
+HTTPServerMarlin::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/)
+{
+  return false;
+}
+
 
 // Add a well known HTTP header to the response structure
 void

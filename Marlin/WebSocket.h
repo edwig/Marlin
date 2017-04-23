@@ -28,6 +28,7 @@
 #pragma once
 #include "HTTPClient.h"
 #include <deque>
+#include <map>
 
 // Header and fragment sizes
 constexpr auto WS_MIN_HEADER       =  2;  // Minimum header size in octets
@@ -35,11 +36,13 @@ constexpr auto WS_MAX_HEADER       = 14;  // Maximum header size in octets
 constexpr auto WS_FRAGMENT_MINIMUM = (  1 * 4096) - WS_MAX_HEADER;  //  1 TCP/IP buffer
 constexpr auto WS_FRAGMENT_DEFAULT = (  4 * 4096) - WS_MAX_HEADER;  // 16 KB buffer
 constexpr auto WS_FRAGMENT_MAXIMUM = (256 * 4096) - WS_MAX_HEADER;  //  1 MB buffer
-// Default keepalive time for a 'pong'
-constexpr auto WS_KEEPALIVE_TIME   = 7000;      // 7 sec = 7000 miliseconds
+// Default keep alive time for a 'pong'
+constexpr auto WS_KEEPALIVE_TIME   = 7000;      // 7 sec = 7000 milliseconds
 
 // Forward declaration of our class
 class WebSocket;
+class HTTPServer;
+class HTTPMessage;
 
 enum class Opcode
 {
@@ -50,7 +53,7 @@ enum class Opcode
  ,SO_EXT4    = 4    // RESERVED for future use: PAYLOAD
  ,SO_EXT5    = 5    // RESERVED for future use: PAYLOAD
  ,SO_EXT6    = 6    // RESERVED for future use: PAYLOAD
- ,SO_EXT7    = 7    // RESERVED for futuer use: PAYLOAD
+ ,SO_EXT7    = 7    // RESERVED for future use: PAYLOAD
  ,SO_CLOSE   = 8    // Close the socket frame
  ,SO_PING    = 9    // Ping the other side
  ,SO_PONG    = 10   // Pong on a ping, or a 'keepalive'
@@ -123,10 +126,16 @@ public:
 
   // Open the socket
   virtual bool OpenSocket() = 0;
-  // Write fragment to a websocket
+  // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,int64 p_length,Opcode  p_opcode,bool  p_last = true) = 0;
-  // Read a fragment from a websocket
+  // Read a fragment from a WebSocket
   bool ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last);
+  // Read the extensions of the current frame
+  bool ReadExtensions(bool& p_extens1,bool& p_extens2,bool& p_extens3);
+  // Drop fragment from WebSocket stack after it has been used
+  void DropFragment(BYTE*  p_buffer);
+  // Amount of available fragments to read
+  int  NumberOfFragments();
   // Close the socket with a closing frame
   bool CloseSocket(USHORT p_code,CString p_reason);
   // Decoded close connection 
@@ -143,7 +152,7 @@ public:
 
   // SETTERS
 
-  // Setting the keepalive interval for sending a 'pong'
+  // Setting the keep-alive interval for sending a 'pong'
   void SetKeepalive(ULONG p_miliseconds);
   // Max fragmentation size
   void SetFragmentSize(ULONG p_fragment);
@@ -168,31 +177,46 @@ public:
   CString GetExtensions()   { return m_extensions;    };
   USHORT  GetClosingError() { return m_closingError;  };
 
+
+  // BOTH HTTPClient and HTTPServer must have access to these functions
+
   // Generate a server key-answer
   CString ServerAcceptKey(CString p_clientKey);
-
-protected:
-  // Completely close the connection
-  void    Close();
   // Encode raw frame buffer
   bool    EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE* p_buffer,int64 p_length,bool p_last);
   // Decode raw frame buffer (only m_data is filled)
   bool    DecodeFrameBuffer(RawFrame* p_frame,int64 p_length);
+  // Store incoming raw frame buffer
+  bool    StoreFrameBuffer(RawFrame* p_frame);
+  // Send a 'ping' to see if other side still there
+  bool    SendPing(bool p_waitForPong = false);
+  // Send a 'pong' as an answer on a 'ping'
+  void    SendPong(RawFrame* p_ping);
+
+protected:
+  // Completely close the connection
+  void    Close();
 
   // GENERAL SOCKET DATA
-  bool    m_open;           // Websocket is opened and alive
+  bool    m_open;           // WebSocket is opened and alive
   CString m_uri;            // ws[s]://resource URI for the socket
-  ULONG   m_keepalive;      // Keepalive time of the socket
+  ULONG   m_keepalive;      // Keep alive time of the socket
   ULONG   m_fragmentsize;   // Max fragment size
-  CString m_protocols;      // Websocket main protocols
+  CString m_protocols;      // WebSocket main protocols
   CString m_extensions;     // Extensions in 1,2,3 fields
   USHORT  m_closingError;   // Error on closing
   FragmentStack m_stack;    // Incoming fragments
+  HANDLE  m_pingEvent;      // The ping/pong event
+  ULONG   m_pingTimeout{5000};
+  bool    m_pongSeen;
 
   // Handlers
   LPFN_SOCKETHANDLER m_onopen;    // OnOpen    handler
   LPFN_SOCKETHANDLER m_onmessage; // OnMessage handler
   LPFN_SOCKETHANDLER m_onclose;   // OnClose   handler
+
+  // Synchronization
+  CRITICAL_SECTION   m_lock;
 };
 
 inline bool
@@ -249,6 +273,8 @@ WebSocket::SetOnClose(LPFN_SOCKETHANDLER p_onClose)
 //
 //////////////////////////////////////////////////////////////////////////
 
+using SocketParams = std::map<CString,CString>;
+
 class ServerWebSocket: public WebSocket
 {
 public:
@@ -259,13 +285,29 @@ public:
 
   // Open the socket
   virtual bool OpenSocket();
-  // Write fragment to a websocket
+  // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,int64 p_length,Opcode  p_opcode,bool  p_last = true);
+  // Perform the server handshake
+  bool    ServerHandshake(HTTPMessage* p_message);
+  // Add a URI parameter
+  void    AddParameter(CString p_name,CString p_value);
+  // Find a URI parameter
+  CString GetParameter(CString p_name);
+  // Register the server request for sending info
+  void    RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request);
 
 protected:
-
+  SocketParams    m_parameters;
+  HTTPServer*     m_server  { nullptr };
+  HTTP_REQUEST_ID m_request { 0 };
 };
 
+inline void
+ServerWebSocket::RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request)
+{
+  m_server  = p_server;
+  m_request = p_request;
+}
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -283,7 +325,7 @@ public:
 
   // Open the socket
   virtual bool OpenSocket();
-  // Write fragment to a websocket
+  // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,int64 p_length,Opcode  p_opcode,bool  p_last = true);
 
   // GETTERS

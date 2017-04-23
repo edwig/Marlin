@@ -40,6 +40,7 @@
 #include "GetLastErrorAsString.h"
 #include "MarlinModule.h"
 #include "EnsureFile.h"
+#include "WebSocket.h"
 #include "ConvertWideString.h"
 #include <httpserv.h>
 
@@ -472,7 +473,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
     EventStream* stream = SubscribeEventStream(p_site,p_site->GetSite(),absolutePath,(HTTP_REQUEST_ID)p_context,NULL);
     if(stream)
     {
-      // Getting the imporsonated user
+      // Getting the impersonated user
       IHttpUser* user = p_context->GetUser();
       if(user)
       {
@@ -629,6 +630,113 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   return true;
 }
 
+// Receive the WebSocket stream and pass on the the WebSocket
+void
+HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request)
+{
+  // From here on, IIS needs one more thread, because we are holding one of them 'hostage' :-)
+  g_iisServer->IncrementThreadCount();
+
+
+  IHttpContext* context     = reinterpret_cast<IHttpContext*>(p_request);
+  IHttpRequest* httpRequest = context->GetRequest();
+
+  uchar* buffer   = nullptr;
+  DWORD  total    = 0;
+  BOOL   complete = FALSE;
+
+  // Loop while getting data from the WebSocket
+  do
+  {
+    // Fresh buffer allocation
+    if(buffer == nullptr)
+    {
+      buffer = (uchar*) malloc(INIT_HTTP_BUFFERSIZE + 1);
+      total  = 0;
+    }
+    DWORD received = 0;
+    HRESULT hr = httpRequest->ReadEntityBody(&buffer[total],INIT_HTTP_BUFFERSIZE,FALSE,&received,&complete);
+    if(!SUCCEEDED(hr))
+    {
+      if(HRESULT_CODE(hr) == ERROR_MORE_DATA)
+      {
+        // Strange, but this code is used to determine that there is NO more data
+        // The boolean 'complete' status is **NOT** used! (that one is for async completion!)
+        break;
+      }
+      ERRORLOG(HRESULT_CODE(hr),"Cannot read incoming HTTP buffer");
+      break;
+    }
+    total += received;
+
+    RawFrame* frame = new RawFrame();
+    frame->m_data = buffer;
+    if(p_socket->DecodeFrameBuffer(frame,total))
+    {
+      // Shrink the buffer and store it for the socket
+      frame->m_data = (BYTE*) realloc(buffer,total);
+      buffer = nullptr;
+
+      if(p_socket->StoreFrameBuffer(frame) == false)
+      {
+        // closing channel on a close operator
+        complete = true;
+      }
+    }
+    else
+    {
+      // Incomplete buffer, expand buffer to receive some more
+      buffer = (uchar*)realloc(buffer,total + INIT_HTTP_BUFFERSIZE);
+      // Remove unused frame buffer
+      frame->m_data = nullptr;
+      delete frame;
+    }
+  }
+  while(!complete);
+
+  // Do not forget to free the buffer
+  if(buffer)
+  {
+    free(buffer);
+  }
+
+  // Freeing the thread for IIS, so we decrease the IIS count.
+  g_iisServer->DecrementThreadCount();
+}
+
+// Send to a WebSocket
+bool
+HTTPServerIIS::SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request)
+{
+  IHttpContext*   context  = reinterpret_cast<IHttpContext*>(p_request);
+  IHttpResponse*  response = context->GetResponse();
+  HTTP_DATA_CHUNK dataChunk;
+  DWORD  bytesSent = 0;
+
+  // Only if a buffer present
+  dataChunk.DataChunkType           = HttpDataChunkFromMemory;
+  dataChunk.FromMemory.pBuffer      = (void*)p_frame.m_data;
+  dataChunk.FromMemory.BufferLength = (ULONG)(p_frame.m_headerLength + p_frame.m_payloadLength);
+
+  HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,TRUE,&bytesSent);
+  if(hr != S_OK)
+  {
+    ERRORLOG(GetLastError(),"WriteEntityChunks failed for SendEvent");
+    CancelRequestStream(p_request);
+  }
+  else
+  {
+    DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",bytesSent);
+    hr = response->Flush(FALSE,TRUE,&bytesSent);
+    if(hr != S_OK)
+    {
+      ERRORLOG(GetLastError(),"Flushing event stream failed!");
+      CancelRequestStream(p_request);
+    }
+  }
+  return (hr == S_OK);
+}
+
 // Finding the impersonation access token
 void
 HTTPServerIIS::FindingAccessToken(IHttpContext* p_context,HTTPMessage* p_message)
@@ -712,7 +820,7 @@ HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,CString p_name,CStrin
     DWORD   val   = GetLastError();
     CString error = GetLastErrorAsString(val);
     CString bark;
-    bark.Format("Cannot set HTTP repsonse header [%s] to value [%s] : %s",p_name,p_value,error);
+    bark.Format("Cannot set HTTP response header [%s] to value [%s] : %s",p_name,p_value,error);
     ERRORLOG(val,bark);
   }
 }
@@ -725,7 +833,7 @@ HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,C
     DWORD   val   = GetLastError();
     CString error = GetLastErrorAsString(val);
     CString bark;
-    bark.Format("Cannot set HTTP repsonse header [%d] to value [%s] : %s",p_id,p_value,error);
+    bark.Format("Cannot set HTTP response header [%d] to value [%s] : %s",p_id,p_value,error);
     ERRORLOG(val,bark);
   }
 }
@@ -747,7 +855,7 @@ HTTPServerIIS::AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers)
   }
 }
 
-// Setting the overal status of the response message
+// Setting the overall status of the response message
 void
 HTTPServerIIS::SetResponseStatus(IHttpResponse* p_response,USHORT p_status,CString p_statusMessage)
 {
@@ -1066,7 +1174,7 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
     ERRORLOG(GetLastError(),"OpenFile for SendHttpResponse");
     return;
   }
-  // Get the filehandle from buffer
+  // Get the file handle from buffer
   file = p_buffer->GetFileHandle();
 
   // See if file is under 4G large
@@ -1078,7 +1186,7 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
     SendResponseError(p_response,m_clientErrorPage,413,"Request entity too large");
     // Error state
     ERRORLOG(ERROR_INVALID_PARAMETER,"File to send is too big (>4G)");
-    // Close the filehandle
+    // Close the file handle
     p_buffer->CloseFile();
     return;
   }
@@ -1103,7 +1211,7 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
     result = GetLastError();
     ERRORLOG(result,"SendResponseEntityBody for file");
   }
-  // Now close our filehandle
+  // Now close our file handle
   p_buffer->CloseFile();
 }
 

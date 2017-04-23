@@ -110,11 +110,14 @@ enum class SendHeader
  ,HTTP_SH_HIDESERVER            // Hide the server type - do not send header
 };
 
+// Forward declarations
 class LogAnalysis;
 class HTTPSite;
 class HTTPURLGroup;
 class JSONMessage;
 class WebServiceServer;
+class WebSocket;
+class RawFrame;
 
 // Type declarations for mappings
 using SiteMap     = std::map<CString,HTTPSite*>;
@@ -163,6 +166,10 @@ public:
   virtual bool       DeleteSite(int p_port,CString p_baseURL,bool p_force = false) = 0;
   // Receive (the rest of the) incoming HTTP request
   virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message) = 0;
+  // Receive the WebSocket stream and pass on the the WebSocket
+  virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request) = 0;
+  // Send to a WebSocket
+  virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
   // Send a response in one-go

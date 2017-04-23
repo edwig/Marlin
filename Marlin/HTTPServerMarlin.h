@@ -53,6 +53,10 @@ public:
   virtual bool       DeleteSite(int p_port,CString p_baseURL,bool p_force = false);
   // Receive (the rest of the) incoming HTTP request
   virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message);
+  // Receive the WebSocket stream and pass on the the WebSocket
+  virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request);
+  // Send to a WebSocket
+  virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request);
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
 

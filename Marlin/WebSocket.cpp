@@ -27,8 +27,11 @@
 //
 #include "stdafx.h"
 #include "WebSocket.h"
+#include "HTTPServer.h"
+#include "HTTPMessage.h"
 #include "Base64.h"
 #include "Crypto.h"
+#include "AutoCritical.h"
 #include <wincrypt.h>
 
 #ifdef _DEBUG
@@ -61,7 +64,7 @@ RawFrame::~RawFrame()
 {
   if(m_data)
   {
-    delete [] m_data;
+    free(m_data);
     m_data = nullptr;
   }
 }
@@ -84,16 +87,25 @@ WebSocket::WebSocket(CString p_uri)
   m_onclose       = nullptr;
   // No closing error
   m_closingError  = 0;
+  // Init synchronization
+  InitializeCriticalSection(&m_lock);
+
+  // Event to ping-pong on
+  m_pingEvent = CreateEvent(NULL,FALSE,FALSE,NULL);
 }
 
 WebSocket::~WebSocket()
 {
   Close();
+  // Clean out synchronization
+  DeleteCriticalSection(&m_lock);
 }
 
 void
 WebSocket::Close()
 {
+  AutoCritSec lock(&m_lock);
+
   m_open = false;
   for(auto& frame : m_stack)
   {
@@ -119,6 +131,8 @@ WebSocket::OnMessage()
     (*m_onmessage)(this);
   }
   // Remove fragment from the stack
+  AutoCritSec lock(&m_lock);
+
   if(!m_stack.empty())
   {
     m_stack.pop_front();
@@ -134,10 +148,12 @@ WebSocket::OnClose()
   }
 }
 
-// Read a fragment from a websocket
+// Read a fragment from a WebSocket
 bool 
 WebSocket::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last)
 {
+  AutoCritSec lock(&m_lock);
+
   // See if we did have an incoming fragment
   if(m_stack.empty())
   {
@@ -156,6 +172,65 @@ WebSocket::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p
   p_length = length;
   p_opcode = frame->m_opcode;
   p_last   = frame->m_finalFrame;
+
+  return true;
+}
+
+// Drop fragment from WebSocket stack after it has been used
+void 
+WebSocket::DropFragment(BYTE* p_buffer)
+{
+  AutoCritSec lock(&m_lock);
+
+  // See if we did have a fragment
+  if(m_stack.empty())
+  {
+    return;
+  }
+  // Get frame from the front of the deque
+  RawFrame* frame = m_stack.front();
+
+  // See if it was the previously read fragment
+  int begin = frame->m_headerLength;
+  if(&frame->m_data[begin] == p_buffer)
+  {
+    // Pop from stack and destroy it
+    m_stack.pop_front();
+    delete frame;
+  }
+}
+
+int
+WebSocket::NumberOfFragments()
+{
+  AutoCritSec lock(&m_lock);
+  return (int)m_stack.size();
+}
+
+// Read the extensions of the current frame
+bool 
+WebSocket::ReadExtensions(bool& p_extens1,bool& p_extens2,bool& p_extens3)
+{
+  AutoCritSec lock(&m_lock);
+
+  // Reset the answer
+  p_extens1 = false;
+  p_extens2 = false;
+  p_extens3 = false;
+
+  // See if we did have an incoming fragment
+  if(m_stack.empty())
+  {
+    return false;
+  }
+
+  // Get frame from the front of the deque
+  RawFrame* frame = m_stack.front();
+
+  // Get the reserved extension codes
+  p_extens1 = frame->m_reserved1;
+  p_extens2 = frame->m_reserved2;
+  p_extens3 = frame->m_reserved3;
 
   return true;
 }
@@ -191,7 +266,7 @@ WebSocket::EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE*
   p_frame->m_headerLength = headerlength;
 
   // Now allocate enough bytes for the data part to be sent
-  p_frame->m_data = new BYTE[headerlength + p_length];
+  p_frame->m_data = (BYTE*) malloc(headerlength + p_length);
 
   // Coded payload_length
   int64 payload_length = p_length < 126 ? p_length : 126;
@@ -363,11 +438,138 @@ WebSocket::DecodeFrameBuffer(RawFrame* p_frame,int64 p_length)
   return true;
 }
 
+// Store incoming raw frame buffer
+// Return value true  -> Handled
+// Return value false -> Close is received
+bool
+WebSocket::StoreFrameBuffer(RawFrame* p_frame)
+{
+  // If it is a 'continuation frame', just store it
+  // And go back right away to receive more frames!
+  if(p_frame->m_finalFrame == false ||
+     p_frame->m_opcode     == Opcode::SO_CONTINU)
+  {
+    AutoCritSec lock(&m_lock);
+    m_stack.push_back(p_frame);
+    return true;
+  }
+
+  // If it is a 'pong' on a 'ping', do NOT store it
+  // we ignore the contents and let it go
+  if(p_frame->m_opcode == Opcode::SO_PONG)
+  {
+    m_pongSeen = true;
+    if(m_pingEvent)
+    {
+      SetEvent(m_pingEvent);
+    }
+    delete p_frame;
+    return true;
+  }
+
+  // If it is a 'ping', send a 'pong' back
+  if(p_frame->m_opcode == Opcode::SO_PING)
+  {
+    SendPong(p_frame);
+    delete p_frame;
+    return true;
+  }
+
+  // ALL OTHER OPCODES ARE STORED ON THE STACK AND HANDLED
+  // BY THE OnMessage handler
+
+  // Keep status for after the message handling
+  bool result = p_frame->m_opcode != Opcode::SO_CLOSE;
+
+  // Storing the frame in an extra guarded level
+  {
+    AutoCritSec lock(&m_lock);
+    // Store the frame buffer
+    m_stack.push_back(p_frame);
+  }
+
+  // Go handle the message
+  if(result)
+  {
+    OnMessage();
+  }
+  else
+  {
+    // OnIncomingClose();
+  }
+  return result;
+}
+
+// Send a 'ping' to see if other side is still there
+bool
+WebSocket::SendPing(bool p_waitForPong /*= false*/)
+{
+  bool result = false;
+
+  m_pongSeen = false;
+  CString buffer("PING!");
+  if(WriteFragment((BYTE*)buffer.GetString(),buffer.GetLength(),Opcode::SO_PING,true))
+  {
+    if(p_waitForPong && m_pingEvent)
+    {
+      if(WaitForSingleObject(m_pingEvent,m_pingTimeout) == WAIT_OBJECT_0)
+      {
+        result = m_pongSeen;
+      }
+    }
+  }
+  else
+  {
+    // Cannot send a 'ping', close the WebSocket
+  }
+  return result;
+}
+
+
+// Send a 'pong' as an answer on a 'ping'
+void    
+WebSocket::SendPong(RawFrame* p_ping)
+{
+  // Prepare a pong frame from the ping frame
+  if(WriteFragment(&p_ping->m_data[p_ping->m_headerLength]
+                  ,p_ping->m_payloadLength
+                  ,Opcode::SO_PONG
+                  ,true))
+  {
+    // Log a ping-pong
+  }
+}
+
+// Close the socket with a closing frame
+bool 
+WebSocket::CloseSocket(USHORT p_code,CString p_reason)
+{
+  int length = p_reason.GetLength() + 3;
+  BYTE* buffer = new BYTE[length];
+
+  // First two bytes of the payload contain the closing code
+  buffer[0] = (p_code >> 8 ) & 0xFF;
+  buffer[1] = (p_code & 0xFF);
+
+  // Rest of the buffer contains the message
+  strncpy_s((char*)&buffer[2],length,p_reason.GetString(),p_reason.GetLength());
+
+  // Make the message 1 frame maximum
+  if(length >= 125)
+  {
+    buffer[125] = 0;
+    length = 125;
+  }
+
+  // Try to write the fragment
+  return WriteFragment(buffer,length,Opcode::SO_CLOSE);
+}
+
 // Generate a server key-answer
 CString 
 WebSocket::ServerAcceptKey(CString p_clientKey)
 {
-  // Step 1: Append WebSocket GUID. See RFC 6455. It's hardcoded!!
+  // Step 1: Append WebSocket GUID. See RFC 6455. It's hard coded!!
   CString key = p_clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
   // Step 2: Take the SHA1 hash of the resulting string
@@ -397,10 +599,68 @@ ServerWebSocket::OpenSocket()
 }
 
 bool
-ServerWebSocket::WriteFragment(BYTE* /*p_buffer*/,int64 /*p_length*/,Opcode /*p_opcode*/,bool /*p_last*/ /* = true */)
+ServerWebSocket::WriteFragment(BYTE* p_buffer,int64 p_length,Opcode p_opcode,bool p_last /* = true */)
 {
+  RawFrame frame;
+  EncodeFramebuffer(&frame,p_opcode,false,p_buffer,p_length,p_last);
+
+  if(m_server)
+  {
+    if(m_server->SendSocket(frame,m_request))
+    {
+      return true;
+    }
+    // Cannot send to socket, close the socket.
+  }
   return false;
 }
+
+// Add a URI parameter
+void    
+ServerWebSocket::AddParameter(CString p_name,CString p_value)
+{
+  p_name.MakeLower();
+  m_parameters[p_name] = p_value;
+}
+
+// Find a URI parameter
+CString 
+ServerWebSocket::GetParameter(CString p_name)
+{
+  CString value;
+  p_name.MakeLower();
+  SocketParams::iterator it = m_parameters.find(p_name);
+  if(it != m_parameters.end())
+  {
+    value = it->second;
+  }
+  return value;
+}
+
+// Perform the server handshake
+bool
+ServerWebSocket::ServerHandshake(HTTPMessage* p_message)
+{
+  CString version   = p_message->GetHeader("Sec-WebSocket-Version");
+  CString clientKey = p_message->GetHeader("Sec-WebSocket-Key");
+  CString serverKey = ServerAcceptKey(clientKey);
+  // Get optional extensions
+  m_protocols  = p_message->GetHeader("Sec-WebSocket-Protocol");
+  m_extensions = p_message->GetHeader("Sec-WebSocket-Extensions");
+
+  // Change header fields
+  p_message->DelHeader("Sec-WebSocket-Key");
+  p_message->AddHeader("Sec-WebSocket-Accept",serverKey,false);
+
+  // By default we accept all protocols and extensions
+  // All versions of 13 (RFC 6455) and above
+  if(atoi(version) < 13 || clientKey.IsEmpty())
+  {
+    return false;
+  }
+  return true;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -423,11 +683,14 @@ ClientWebSocket::OpenSocket()
 {
   m_open = false;
 
+  // Totally reset of the HTTPClient
+  m_HTTPClient.Reset();
+
   // GET this URI (ws[s]://resource) !!
   m_HTTPClient.SetVerb("GET");
   m_HTTPClient.SetURL(m_uri);
 
-  // Websocket headers
+  // WebSocket headers
   m_HTTPClient.AddHeader("Upgrade","websocket");
   m_HTTPClient.AddHeader("Connection","upgrade");
   m_HTTPClient.AddHeader("Sec-WebSocket-Version","13"); // RFC 6455 !
@@ -445,12 +708,12 @@ ClientWebSocket::OpenSocket()
   {
     if(m_HTTPClient.GetStatus() == HTTP_STATUS_SWITCH_PROTOCOLS)
     {
-      m_open = true;
-      OnOpen();
-      // m_HTTPClient.ReceiveWebSocket(this);
-
-      // If we come back here the receive thread is running
-
+      if(m_HTTPClient.ReceiveWebSocket(this))
+      {
+        // If we come back here the receive thread is running
+        m_open = true;
+        OnOpen();
+      }
     }
   }
   return m_open;
@@ -461,13 +724,13 @@ ClientWebSocket::WriteFragment(BYTE* p_buffer,int64 p_length,Opcode p_opcode,boo
 {
   bool result = false;
 
-  // Encode in a raw framebuffer.
+  // Encode in a raw frame buffer.
   // We are the client, so mask the data on input (set to true)
   RawFrame frame;
   if(EncodeFramebuffer(&frame,p_opcode,true,p_buffer,p_length,p_last))
   {
     // Write more data to the request buffer
-    // result = m_HTTPClient.WriteRawFrame(frame);
+    result = m_HTTPClient.WriteRawFrame(&frame);
     if(!result)
     {
       m_open = false;
@@ -480,11 +743,11 @@ ClientWebSocket::WriteFragment(BYTE* p_buffer,int64 p_length,Opcode p_opcode,boo
 CString
 ClientWebSocket::GenerateKey()
 {
-  // Cranck up the random generator
+  // crank up the random generator
   clock_t time = clock();
   srand((unsigned int)time);
 
-  // Websocket key is 16 bytes random data
+  // WebSocket key is 16 bytes random data
   BYTE key[16];
   for(int ind = 0;ind < 16; ++ind)
   {

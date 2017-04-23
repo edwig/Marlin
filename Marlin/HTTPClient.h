@@ -91,6 +91,8 @@ class LogAnalysis;
 class EventSource;
 class ThreadPool;
 class HTTPClientTracing;
+class WebSocket;
+class RawFrame;
 
 // Types of proxies supported
 enum class ProxyType
@@ -307,6 +309,14 @@ public:
   // Main loop of the event-interface (public: starting a thread)
   void          EventThreadRunning();
 
+  // WEBSOCKET INTERFACE
+
+  // Start a new WebSocket
+  bool          ReceiveWebSocket(WebSocket* p_socket);
+  // Running the WebSocket
+  void          ReceiveWebSocket();
+  bool          WriteRawFrame(RawFrame* p_frame);
+
 private:
   // Handling of push-events
   friend   EventSource;
@@ -455,6 +465,8 @@ private:
   HPFCounter    m_counter;                                        // High Performance counter
   bool          m_traceRequest    { false   };                    // Default no tracing of the request
   HTTPClientTracing* m_trace      { nullptr };                    // The tracing object
+  // WebSocket
+  WebSocket*    m_websocket       { nullptr };                    // The WebSocket
   // For syncing threads
   CRITICAL_SECTION m_queueSection;  // Synchronizing queue adding/sending
   CRITICAL_SECTION m_sendSection;   // Synchronizing sending for multiple threads

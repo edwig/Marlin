@@ -41,6 +41,7 @@
 #include "HTTPCertificate.h"
 #include "HTTPClientTracing.h"
 #include "ZLib\gzip.h"
+#include "WebSocket.h"
 #include <winerror.h>
 #include <wincrypt.h>
 #include <atlconv.h>
@@ -1708,6 +1709,108 @@ HTTPClient::ReceivePushEvents()
     }
   } 
   while(m_onCloseSeen == false);
+}
+
+void
+HTTPClient::ReceiveWebSocket()
+{
+  __int64 totalSize = 0;
+  BYTE* response = nullptr;
+
+  do
+  {
+    DWORD dwSize = 0;
+    DWORD dwRead = 0;
+
+    if(::WinHttpQueryDataAvailable(m_request,&dwSize))
+    {
+      if(dwSize == 0)
+      {
+        ErrorLog(__FUNCTION__,"Server closed WebSocket prematurely. Error [%d] %s");
+        m_status = HTTP_STATUS_SERVICE_UNAVAIL;
+        return;
+      }
+      response = (BYTE*) realloc(response,dwSize);
+      if(response == NULL)
+      {
+        ERRORLOG("Out of memory");
+        m_status = HTTP_STATUS_REQUEST_TOO_LARGE;
+        return;
+      }
+      if(::WinHttpReadData(m_request,
+                           &response[totalSize],
+                           dwSize,
+                           &dwRead))
+      {
+        totalSize += dwRead;
+        RawFrame* frame = new RawFrame();
+        frame->m_data = response;
+        if(m_websocket->DecodeFrameBuffer(frame,totalSize))
+        {
+          // Frame decoded and complete, so store it!
+          if(m_websocket->StoreFrameBuffer(frame) == false)
+          {
+            // Closing the WebSocket
+            // Close open call
+            WinHttpCloseHandle(m_request);
+            m_request = NULL;
+            ERRORLOG("Stopping the WebSocket channel.");
+            return;
+          }
+
+          // Reset response
+          totalSize = 0;
+          response = nullptr;
+        }
+        else
+        {
+          // Frame yet incomplete, read some more
+        }
+      }
+      else
+      {
+        // Error in polling HTTP Status
+        DWORD er = GetLastError();
+        switch(er)
+        {
+          case ERROR_WINHTTP_CONNECTION_ERROR:          m_status = HTTP_STATUS_SERVICE_UNAVAIL;   break;
+          case ERROR_WINHTTP_INCORRECT_HANDLE_STATE:    m_status = HTTP_STATUS_RETRY_WITH;        break;
+          case ERROR_WINHTTP_INCORRECT_HANDLE_TYPE:     m_status = HTTP_STATUS_PRECOND_FAILED;    break;
+          case ERROR_WINHTTP_INTERNAL_ERROR:            m_status = HTTP_STATUS_NONE_ACCEPTABLE;   break;
+          case ERROR_NOT_ENOUGH_MEMORY:                 m_status = HTTP_STATUS_REQUEST_TOO_LARGE; break;
+          case ERROR_WINHTTP_TIMEOUT:                   // Fall through
+          case ERROR_WINHTTP_OPERATION_CANCELLED:       // Fall through
+          default:                                      m_status = HTTP_STATUS_SERVICE_UNAVAIL;   break;
+        }
+        CString error;
+        error.Format("WebSocket error [%d] HTTP Error [%d]",er,m_status);
+        m_websocket->CloseSocket(WS_CLOSE_ABNORMAL,error);
+      }
+    }
+    else
+    {
+      // No more data, channel closed normally
+    }
+  }
+  while(m_onCloseSeen == false);
+}
+
+bool
+HTTPClient::WriteRawFrame(RawFrame* p_frame)
+{
+  DWORD dwWritten = 0;
+  DWORD dwLength  = p_frame->m_headerLength + (int)p_frame->m_payloadLength;
+
+  if(!::WinHttpWriteData(m_request
+                        ,p_frame->m_data
+                        ,dwLength
+                        ,&dwWritten))
+  {
+    ErrorLog(__FUNCTION__,"Write WebSocket frame: Data in 1 go. Error [%d] %s");
+    return false;
+  }
+  DETAILLOG("Write WebSocket frame. Data in 1 go. Size: %d",dwLength);
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -3673,6 +3776,45 @@ HTTPClient::OnCloseSeen()
 
   DETAILLOG("OnClose event seen: closed the HTTP event stream");
 };
+
+//////////////////////////////////////////////////////////////////////////
+//
+// WEBSOCKET THREAD
+//
+//////////////////////////////////////////////////////////////////////////
+
+unsigned int __stdcall StartingTheWebSocketThread(void* p_context)
+{
+  HTTPClient* client = reinterpret_cast<HTTPClient*>(p_context);
+  client->ReceiveWebSocket();
+  return 0;
+}
+
+// Start a new WebSocket
+bool
+HTTPClient::ReceiveWebSocket(WebSocket* p_socket)
+{
+  // Save our socket
+  m_websocket = p_socket;
+
+  if(m_queueThread == NULL || m_running == false)
+  {
+    // Thread for the client queue
+    unsigned int threadID = 0;
+    if((m_queueThread = (HANDLE)_beginthreadex(NULL,0,StartingTheWebSocketThread,(void *)(this),0,&threadID)) == INVALID_HANDLE_VALUE)
+    {
+      m_queueThread = NULL;
+      threadID = 0;
+      ErrorLog(__FUNCTION__,"Cannot start a thread for a WebSocket client.");
+    }
+    else
+    {
+      DETAILLOG("Thread started with threadID [%d] for WebSocket.",threadID);
+      return true;
+    }
+  }
+  return false;
+}
 
 //////////////////////////////////////////////////////////////////////////
 //

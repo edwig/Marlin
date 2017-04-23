@@ -218,6 +218,7 @@
     <ClCompile Include="SiteHandlerSoap.cpp" />
     <ClCompile Include="SiteHandlerTrace.cpp" />
     <ClCompile Include="SiteHandlerWebDAV.cpp" />
+    <ClCompile Include="SiteHandlerWebSocket.cpp" />
     <ClCompile Include="SOAPMessage.cpp" />
     <ClCompile Include="StackTrace.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -366,6 +367,7 @@
     <ClInclude Include="SiteHandlerSoap.h" />
     <ClInclude Include="SiteHandlerTrace.h" />
     <ClInclude Include="SiteHandlerWebDAV.h" />
+    <ClInclude Include="SiteHandlerWebSocket.h" />
     <ClInclude Include="SOAPMessage.h" />
     <ClInclude Include="SoapTypes.h" />
     <ClInclude Include="StackTrace.h" />
