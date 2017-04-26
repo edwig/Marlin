@@ -145,6 +145,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestJSON();
       errors += TestFindClientCertificate();
       errors += TestWebSocketAccept();
+      errors += TestWebSocket(g_log);
 
       errors += TestBaseSite(client);
       errors += TestSecureSite(client);
@@ -175,6 +176,9 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
 
     printf("\nRead everything? ");
     WaitForKey();
+
+    // Stopping the websocket
+    TestCloseWebSocket();
 
     // And stop the client
     StopClient(client);

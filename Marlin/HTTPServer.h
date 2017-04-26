@@ -125,6 +125,7 @@ using EventMap    = std::multimap<CString,EventStream*>;
 using ServiceMap  = std::map<CString,WebServiceServer*>;
 using URLGroupMap = std::vector<HTTPURLGroup*>;
 using UKHeaders   = std::multimap<CString,CString>;
+using SocketMap   = std::map<CString,WebSocket*>;
 
 // Global error variable in Thread-Local-Storage
 // Per-thread basis error status
@@ -170,6 +171,10 @@ public:
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request) = 0;
   // Send to a WebSocket
   virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request) = 0;
+  // Flushing a WebSocket intermediate
+  virtual bool       FlushSocket (HTTP_REQUEST_ID p_request) = 0;
+  // Cancel and close a WebSocket
+  virtual bool       CancelSocket(HTTP_REQUEST_ID p_request) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
   // Send a response in one-go
@@ -283,8 +288,14 @@ public:
   bool       RegisterService(WebServiceServer* p_service);
   // Remove registration of a service
   bool       UnRegisterService (CString p_serviceName);
+  // Register a WebSocket
+  bool       RegisterSocket(WebSocket* p_socket);
+  // Remove registration of a WebSocket
+  bool       UnRegisterWebSocket(WebSocket* p_socket);
   // Finding a previous registered service endpoint
   WebServiceServer* FindService(CString p_serviceName);
+  // Finding a previous registered websocket
+  WebSocket*        FindWebSocket(CString p_uri);
   // Finding the locking object for the sites.
   CRITICAL_SECTION* AcquireSitesLockObject();
   
@@ -395,6 +406,8 @@ protected:
   ULONG                   m_eventRetryTime{ DEFAULT_EVENT_RETRYTIME };  // Clients must retry after this time
   bool                    m_eventBOM   { false };   // Prepend all event with a Byte-order-mark
   CRITICAL_SECTION        m_eventLock;              // Pulsing events or accessing streams
+  // WebSocket
+  SocketMap               m_sockets;                // Registered WebSockets
 };
 
 inline CString

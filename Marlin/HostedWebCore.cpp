@@ -227,6 +227,9 @@ ActivateWebCore()
       case ERROR_ACCESS_DENIED:
         printf("ERROR: Access denied. Are you running as local admin?\n");
         break;
+      case ERROR_MOD_NOT_FOUND:
+        printf("ERROR: The specified module in the config files could not be found!\n");
+        break;
       default:
         printf("ERROR: Cannot start the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
         break;

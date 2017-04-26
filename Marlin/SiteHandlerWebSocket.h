@@ -30,6 +30,8 @@
 
 // A WebSocket handler is in essence a 'GET' handler
 // that will get upgraded to the WebSocket protocol.
+//
+// BEWARE: ONLY override the 'Handle' method with the WebSocket parameter!!
 
 class WebSocket;
 

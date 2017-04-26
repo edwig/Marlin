@@ -117,6 +117,13 @@ HTTPServerIIS::Cleanup()
   AutoCritSec lock1(&m_sitesLock);
   AutoCritSec lock2(&m_eventLock);
 
+  // Remove all remaining sockets
+  for(auto& it : m_sockets)
+  {
+    delete it.second;
+  }
+  m_sockets.clear();
+
   // Remove all event streams within the scope of the eventLock
   for(auto& it : m_eventStreams)
   {
@@ -264,6 +271,13 @@ HTTPServerIIS::StopServer()
     return;
   }
 
+  // Try to remove all WebSockets
+  while(!m_sockets.empty())
+  {
+    WebSocket* socket = m_sockets.begin()->second;
+    socket->CloseSocket();
+    UnRegisterWebSocket(socket);
+  }
   // Try to remove all event streams
   for(auto& it : m_eventStreams)
   {
@@ -721,20 +735,37 @@ HTTPServerIIS::SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request)
   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,TRUE,&bytesSent);
   if(hr != S_OK)
   {
-    ERRORLOG(GetLastError(),"WriteEntityChunks failed for SendEvent");
+    ERRORLOG(GetLastError(),"WriteEntityChunks failed for WebSocket");
     CancelRequestStream(p_request);
   }
   else
   {
-    DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",bytesSent);
+    DETAILLOGV("WriteEntityChunks for WebSocket sent [%d] bytes",bytesSent);
     hr = response->Flush(FALSE,TRUE,&bytesSent);
     if(hr != S_OK)
     {
-      ERRORLOG(GetLastError(),"Flushing event stream failed!");
+      ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
       CancelRequestStream(p_request);
     }
   }
   return (hr == S_OK);
+}
+
+bool
+HTTPServerIIS::FlushSocket(HTTP_REQUEST_ID p_request)
+{
+  IHttpContext*   context = reinterpret_cast<IHttpContext*>(p_request);
+  IHttpResponse*  response = context->GetResponse();
+  DWORD bytesSent = 0;
+
+  HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent);
+  if(hr != S_OK)
+  {
+    ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
+    CancelRequestStream(p_request);
+    return false;
+  }
+  return true;
 }
 
 // Finding the impersonation access token
@@ -870,6 +901,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   IHttpResponse*  response    = context ? context->GetResponse() : nullptr;
   FileBuffer*     buffer      = p_message->GetFileBuffer();
   CString         contentType("application/octet-stream"); 
+  bool            moredata    = false;
 
   // See if there is something to send
   if(context == nullptr || response == nullptr)
@@ -877,7 +909,6 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     ERRORLOG(ERROR_INVALID_PARAMETER,"SendResponse: nothing to send");
     return;
   }
-
 
   // Respond to general HTTP status
   int status = p_message->GetStatus();
@@ -892,6 +923,12 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     RespondWithClientError(p_message->GetHTTPSite(),p_message,status,"","");
     p_message->SetRequestHandle(NULL);
     return;
+  }
+
+  // Protocol switch must keep the channel open (here for: WebSocket!)
+  if(status == HTTP_STATUS_SWITCH_PROTOCOLS)
+  {
+    moredata = true;
   }
 
   // Setting the response status
@@ -977,15 +1014,15 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // Send 1 or more buffers or the file
   if(buffer->GetHasBufferParts())
   {
-    SendResponseBufferParts(response,buffer,totalLength);
+    SendResponseBufferParts(response,buffer,totalLength,moredata);
   }
   else if(buffer->GetFileName().IsEmpty())
   {
-    SendResponseBuffer(response,buffer,totalLength);
+    SendResponseBuffer(response,buffer,totalLength,moredata);
   }
   else
   {
-    SendResponseFileHandle(response,buffer);
+    SendResponseFileHandle(response,buffer,moredata);
   }
   if(GetLastError())
   {
@@ -999,7 +1036,6 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // Do **NOT** send an answer twice
   p_message->SetRequestHandle(NULL);
 }
-
 
 // Send a response in one-go
 DWORD 
@@ -1079,7 +1115,8 @@ HTTPServerIIS::SendResponse(HTTPSite*    p_site
 bool
 HTTPServerIIS::SendResponseBuffer(IHttpResponse*  p_response
                                  ,FileBuffer*     p_buffer
-                                 ,size_t          p_totalLength)
+                                 ,size_t          p_totalLength
+                                 ,bool            p_more /*= false*/)
 {
   uchar* entity       = NULL;
   DWORD  result       = 0;
@@ -1102,7 +1139,7 @@ HTTPServerIIS::SendResponseBuffer(IHttpResponse*  p_response
 
     DWORD sent = 0L;
     BOOL  completion = false;
-    HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,false,&sent,&completion);
+    HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,p_more,&sent,&completion);
     if(SUCCEEDED(hr))
     {
       DETAILLOGV("ResponseBuffer [%ul] bytes sent",entityLength);
@@ -1119,7 +1156,8 @@ HTTPServerIIS::SendResponseBuffer(IHttpResponse*  p_response
 void
 HTTPServerIIS::SendResponseBufferParts(IHttpResponse* p_response
                                       ,FileBuffer*    p_buffer
-                                      ,size_t         p_totalLength)
+                                      ,size_t         p_totalLength
+                                      ,bool           p_moredata /*= false*/)
 {
   int    transmitPart = 0;
   uchar* entityBuffer = NULL;
@@ -1139,7 +1177,11 @@ HTTPServerIIS::SendResponseBufferParts(IHttpResponse* p_response
       dataChunk.FromMemory.BufferLength = (ULONG)entityLength;
     }
     // Flag to calculate the last sending part
-    bool moreData = (totalSent + entityLength) < p_totalLength;
+    bool moreData = p_moredata;
+    if(p_moredata == false)
+    {
+      moreData = (totalSent + entityLength) < p_totalLength;
+    }
     BOOL completion = false;
 
     HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,moreData,&bytesSent,&completion);
@@ -1161,7 +1203,7 @@ HTTPServerIIS::SendResponseBufferParts(IHttpResponse* p_response
 }
 
 void
-HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_buffer)
+HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_buffer,bool p_more /*= false*/)
 {
   DWORD  result    = 0;
   HANDLE file      = NULL;
@@ -1201,7 +1243,7 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
   BOOL  completion = false;
 
   // Writing the chunk
-  HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,false,&sent,&completion);
+  HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,p_more,&sent,&completion);
   if(SUCCEEDED(hr))
   {
     DETAILLOGV("SendResponseEntityBody for file. Bytes: %ul",fileSize);
@@ -1293,11 +1335,34 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
   return (hr == S_OK);
 }
 
-// Used for canceling a WebSocket for an event stream
+// Used for canceling a WebSocket or an event stream
 void
 HTTPServerIIS::CancelRequestStream(HTTP_REQUEST_ID p_response)
 {
   IHttpContext*  context = (IHttpContext*)p_response;
+  IHttpResponse* response = context->GetResponse();
+  
+  try
+  {
+    // Now ready with the IIS context. Original request is finished
+    context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
+    // Set disconnection
+    response->SetNeedDisconnect();
+    // Now ready with this response
+    response->CloseConnection();
+    DETAILLOG1("Event/Socket connection closed");
+  }
+  catch(...)
+  {
+    ERRORLOG(ERROR_INVALID_PARAMETER,"Cannot close Event/WebSocket stream!");
+  }
+}
+
+// Cancel and close a WebSocket
+bool
+HTTPServerIIS::CancelSocket(HTTP_REQUEST_ID p_request)
+{
+  IHttpContext*  context = (IHttpContext*)p_request;
   IHttpResponse* response = context->GetResponse();
 
   // Now ready with the IIS context. Original request is finished
@@ -1306,5 +1371,7 @@ HTTPServerIIS::CancelRequestStream(HTTP_REQUEST_ID p_response)
   response->SetNeedDisconnect();
   // Now ready with this response
   response->CloseConnection();
-  DETAILLOG1("Event stream connection closed");
+  DETAILLOG1("WebSocket connection closed");
+
+  return true;
 }

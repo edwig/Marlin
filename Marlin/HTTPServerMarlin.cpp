@@ -176,6 +176,13 @@ HTTPServerMarlin::Cleanup()
   AutoCritSec lock1(&m_sitesLock);
   AutoCritSec lock2(&m_eventLock);
 
+  // Remove all remaining sockets
+  for(auto& it : m_sockets)
+  {
+    delete it.second;
+  }
+  m_sockets.clear();
+
   // Remove all event streams within the scope of the eventLock
   for(auto& it : m_eventStreams)
   {
@@ -971,6 +978,13 @@ HTTPServerMarlin::StopServer()
     return;
   }
 
+  // Try to remove all WebSockets
+  while(!m_sockets.empty())
+  {
+    WebSocket* socket = m_sockets.begin()->second;
+    socket->CloseSocket();
+    UnRegisterWebSocket(socket);
+  }
   // Try to remove all event streams
   for(auto& it : m_eventStreams)
   {
@@ -1139,7 +1153,6 @@ HTTPServerMarlin::CancelRequestStream(HTTP_REQUEST_ID p_response)
   }
 }
 
-
 // Receive incoming HTTP request
 bool
 HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* p_message)
@@ -1291,15 +1304,13 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request
     }
   }
   while(reading);
-}
 
-// Send to a WebSocket
-bool
-HTTPServerMarlin::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/)
-{
-  return false;
+  // Do not forget to free the buffer memory
+  if(buffer)
+  {
+    free(buffer);
+  }
 }
-
 
 // Add a well known HTTP header to the response structure
 void
@@ -1347,6 +1358,7 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
   HTTP_REQUEST_ID requestID   = p_message->GetRequestHandle();
   FileBuffer*     buffer      = p_message->GetFileBuffer();
   CString         contentType("application/octet-stream"); 
+  bool            moredata    = false;
 
   // See if there is something to send
   if(requestID == NULL)
@@ -1368,6 +1380,12 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
     RespondWithClientError(p_message->GetHTTPSite(),p_message,status,"","");
     p_message->SetRequestHandle(NULL);
     return;
+  }
+
+  // Protocol switch must keep the channel open (here for: WebSocket!)
+  if(status == HTTP_STATUS_SWITCH_PROTOCOLS)
+  {
+    moredata = true;
   }
 
   // Initialize the HTTP response structure.
@@ -1453,15 +1471,15 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
   // Send 1 or more buffers or the file
   if(buffer->GetHasBufferParts())
   {
-    SendResponseBufferParts(&response,requestID,buffer,totalLength);
+    SendResponseBufferParts(&response,requestID,buffer,totalLength,moredata);
   }
   else if(buffer->GetFileName().IsEmpty())
   {
-    SendResponseBuffer(&response,requestID,buffer,totalLength);
+    SendResponseBuffer(&response,requestID,buffer,totalLength,moredata);
   }
   else
   {
-    SendResponseFileHandle(&response,requestID,buffer);
+    SendResponseFileHandle(&response,requestID,buffer,moredata);
   }
   if(GetLastError())
   {
@@ -1482,7 +1500,8 @@ bool
 HTTPServerMarlin::SendResponseBuffer(PHTTP_RESPONSE   p_response
                                     ,HTTP_REQUEST_ID  p_requestID
                                     ,FileBuffer*      p_buffer
-                                    ,size_t           p_totalLength)
+                                    ,size_t           p_totalLength
+                                    ,bool             p_more /*= false*/)
 {
   uchar* entity       = NULL;
   DWORD  result       = 0;
@@ -1512,11 +1531,14 @@ HTTPServerMarlin::SendResponseBuffer(PHTTP_RESPONSE   p_response
   policy.Policy        = m_policy;
   policy.SecondsToLive = m_secondsToLive;
 
+
+  ULONG flags = p_more ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA |
+                         HTTP_SEND_RESPONSE_FLAG_OPAQUE  : 0;
   // Because the entity body is sent in one call, it is not
   // required to specify the Content-Length.
   result = HttpSendHttpResponse(m_requestQueue,      // ReqQueueHandle
                                 p_requestID,         // Request ID
-                                0,                   // Flags
+                                flags,               // Flags
                                 p_response,          // HTTP response
                                 &policy,             // Cache policy
                                 &bytesSent,          // bytes sent  (OPTIONAL)
@@ -1540,7 +1562,8 @@ void
 HTTPServerMarlin::SendResponseBufferParts(PHTTP_RESPONSE  p_response
                                          ,HTTP_REQUEST_ID p_request
                                          ,FileBuffer*     p_buffer
-                                         ,size_t          p_totalLength)
+                                         ,size_t          p_totalLength
+                                         ,bool            p_more /*=false*/)
 {
   int    transmitPart = 0;
   uchar* entityBuffer = NULL;
@@ -1564,6 +1587,12 @@ HTTPServerMarlin::SendResponseBufferParts(PHTTP_RESPONSE  p_response
     }
     // Flag to calculate the last sending part
     ULONG flags = (totalSent + entityLength) < p_totalLength ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : 0;
+
+    // If we do a websocket upgrade, always keep the connection open
+    if(p_more)
+    {
+      flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE;
+    }
 
     if(transmitPart == 0)
     {
@@ -1617,7 +1646,8 @@ HTTPServerMarlin::SendResponseBufferParts(PHTTP_RESPONSE  p_response
 void      
 HTTPServerMarlin::SendResponseFileHandle(PHTTP_RESPONSE   p_response
                                         ,HTTP_REQUEST_ID  p_request
-                                        ,FileBuffer*      p_buffer)
+                                        ,FileBuffer*      p_buffer
+                                        ,bool             p_more /*= false*/)
 {
   DWORD  result    = 0;
   DWORD  bytesSent = 0;
@@ -1681,9 +1711,16 @@ HTTPServerMarlin::SendResponseFileHandle(PHTTP_RESPONSE   p_response
   dataChunk.FromFileHandle.ByteRange.Length.QuadPart = fileSize; // HTTP_BYTE_RANGE_TO_EOF;
   dataChunk.FromFileHandle.FileHandle = file;
 
+  ULONG flags = 0;
+  // If we do a websocket upgrade, always keep the connection open
+  if(p_more)
+  {
+    flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE;
+  }
+
   result = HttpSendResponseEntityBody(m_requestQueue,
                                       p_request,
-                                      0,           // This is the last send.
+                                      flags,       // This is the last send.
                                       1,           // Entity Chunk Count.
                                       &dataChunk,
                                       NULL,
@@ -1855,6 +1892,70 @@ HTTPServerMarlin::SendResponseEventBuffer(HTTP_REQUEST_ID  p_requestID
     {
       DETAILLOG1("Event stream connection closed");
     }
+  }
+  return (result == NO_ERROR);
+}
+
+// Send to a WebSocket
+bool
+HTTPServerMarlin::SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request)
+{
+  DWORD  result    = 0;
+  DWORD  bytesSent = 0;
+  HTTP_DATA_CHUNK dataChunk;
+
+  // Only if a buffer present
+  dataChunk.DataChunkType           = HttpDataChunkFromMemory;
+  dataChunk.FromMemory.pBuffer      = (void*)p_frame.m_data;
+  dataChunk.FromMemory.BufferLength = (ULONG)(p_frame.m_headerLength + p_frame.m_payloadLength);
+
+  // Keep the socket open!
+  ULONG flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+
+  // Go send it
+  result = HttpSendResponseEntityBody(m_requestQueue,      // ReqQueueHandle
+                                      p_request,           // Request ID
+                                      flags,               // Flags
+                                      1,                   // Entity chunk count
+                                      &dataChunk,          // Chunk to send
+                                      &bytesSent,          // bytes sent  (OPTIONAL)
+                                      NULL,                // pReserved1  (must be NULL)
+                                      0,                   // Reserved2   (must be 0)
+                                      NULL,                // LPOVERLAPPED(OPTIONAL)
+                                      NULL                 // pLogData
+  );
+  if(result != NO_ERROR)
+  {
+    ERRORLOG(result,"HttpSendResponseEntityBody failed for WebSocket");
+  }
+  else
+  {
+    DETAILLOGV("HttpSendResponseEntityBody [%d] bytes sent",bytesSent);
+  }
+  return (result == NO_ERROR);
+}
+
+// Cancel and close a WebSocket
+bool
+HTTPServerMarlin::FlushSocket(HTTP_REQUEST_ID /*p_request*/)
+{
+  return true;
+}
+
+
+// Cancel and close a WebSocket
+bool
+HTTPServerMarlin::CancelSocket(HTTP_REQUEST_ID p_request)
+{
+  // Cancel the outstanding request from the request queue
+  ULONG result = HttpCancelHttpRequest(m_requestQueue,p_request,NULL);
+  if(result == NO_ERROR)
+  {
+    DETAILLOG1("WebSocket connection closed");
+  }
+  else
+  {
+    ERRORLOG(result,"WebSocket incorrectly canceled");
   }
   return (result == NO_ERROR);
 }

@@ -292,6 +292,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestPatch(server);
           errors += TestFormData(server);
           errors += TestCompression(server);
+          errors += TestWebSocket(server);
 
           // Test the WebServiceServer program generation
           CString contract = "http://interface.marlin.org/testing/";
@@ -315,6 +316,9 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
             // Wait for key to occur
             WaitForKey();
           }
+
+          // Try to stop the websocket
+          errors += StopWebSocket();
 
           // Try to stop the subsites
           errors += StopSubsites(server);

@@ -67,7 +67,9 @@ int TestAsynchrone       (HTTPServer* p_server);
 int TestSecureSite       (HTTPServer* p_server);
 int TestStreams          (HTTPServer* p_server);
 int TestForms            (HTTPServer* p_server);
+int TestWebSocket        (HTTPServer* p_server);
 int TestThreadPool       (ThreadPool* p_pool);
+int StopWebSocket(void);
 
 int AfterTestBaseSite();
 int AfterTestFilter();
@@ -91,4 +93,4 @@ int AfterTestSecureSite();
 int AfterTestThreadpool();
 int AfterTestTime();
 int AfterTestCrackURL();
-
+int AfterTestWebSocket();

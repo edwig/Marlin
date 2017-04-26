@@ -32,6 +32,7 @@
 #include "Base64.h"
 #include "Crypto.h"
 #include "AutoCritical.h"
+#include "ConvertWideString.h"
 #include <wincrypt.h>
 
 #ifdef _DEBUG
@@ -49,6 +50,7 @@ static char THIS_FILE[] = __FILE__;
 RawFrame::RawFrame()
 {
   m_internal        = true;
+  m_isRead          = false;
   m_finalFrame      = true;
   m_reserved1       = false;
   m_reserved2       = false;
@@ -101,6 +103,13 @@ WebSocket::~WebSocket()
   DeleteCriticalSection(&m_lock);
 }
 
+//////////////////////////////////////////////////////////////////////////
+// 
+// MESSAGE HANDLERS
+// Connect handlers before opening a socket!
+//
+//////////////////////////////////////////////////////////////////////////
+
 void
 WebSocket::Close()
 {
@@ -117,7 +126,7 @@ WebSocket::Close()
 void
 WebSocket::OnOpen()
 {
-  if(m_onopen)
+  if(m_onopen && m_open)
   {
     (*m_onopen)(this);
   }
@@ -130,23 +139,201 @@ WebSocket::OnMessage()
   {
     (*m_onmessage)(this);
   }
-  // Remove fragment from the stack
-  AutoCritSec lock(&m_lock);
-
-  if(!m_stack.empty())
-  {
-    m_stack.pop_front();
-  }
 }
 
 void
 WebSocket::OnClose()
 {
-  if(m_onclose)
+  if(m_onclose && m_open)
   {
     (*m_onclose)(this);
   }
+  // OnClose can be called just once!
+  m_open = false;
 }
+
+//////////////////////////////////////////////////////////////////////////
+//
+// HIHG LEVEL INTERFACE: READING/WRITING of STRING / BINARY OBJECT
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Write as an UTF-8 string to the WebSocket
+bool 
+WebSocket::WriteString(CString p_string)
+{
+  CString encoded;
+  // Now encode MBCS to UTF-8
+  uchar* buffer = nullptr;
+  int    length = 0;
+  bool   result = false;
+
+  if(TryCreateWideString(p_string,"",false,&buffer,length))
+  {
+    bool foundBom = false;
+    if(TryConvertWideString(buffer,length,"utf-8",encoded,foundBom))
+    {
+      if(WriteFragment((BYTE*)encoded.GetString(),encoded.GetLength(),Opcode::SO_UTF8))
+      {
+        result = true;
+      }
+    }
+    delete [] buffer;
+  }
+  return result;
+}
+
+// Find UTF-8 string on the channel
+// Function for use within the "OnMessage" handler
+bool 
+WebSocket::ReadString(CString& p_string)
+{
+  Opcode opcode;
+  bool   extens1,extens2,extens3;
+
+  // See if there is a UTF-8 string waiting for us
+  if(ReadExtensions(opcode,extens1,extens2,extens3))
+  {
+    if(opcode != Opcode::SO_UTF8)
+    {
+      return false;
+    }
+  }
+
+  CString result;
+  BYTE*   buffer = nullptr;
+  int64   length = 0;
+  int64   total  = 0;
+  bool    last   = true;
+  bool    found  = false;
+
+  // Reading all UTF-8 fragments from the fragment stack
+  do
+  {
+    if(!ReadFragment(buffer,length,opcode,last))
+    {
+      break;
+    }
+    // Store fragment in the result string
+    char* pointer = result.GetBufferSetLength((int)(total + length + 1));
+    strncpy_s(&pointer[total],length + 1,(char*)buffer,length);
+    pointer[total + length] = 0;
+    result.ReleaseBuffer((int)(total + length + 1));
+    total += length;
+  } 
+  while(!last);
+
+  // Special case of an empty string
+  if(total == 0)
+  {
+    p_string.Empty();
+    return true;
+  }
+
+  // Read all fragments, convert UTF-8 to MBCS
+  uchar* buffer_utf8 = nullptr;
+  int    length_utf8 = 0;
+  if(TryCreateWideString(result,"utf-8",false,&buffer_utf8,length_utf8))
+  {
+    bool foundBom = false;
+    CString encoded;
+    if(TryConvertWideString(buffer_utf8,length_utf8,"",encoded,foundBom))
+    {
+      p_string = encoded;
+      found = true;
+    }
+  }
+  delete[] buffer;
+
+  return found;
+}
+
+// Write as a binary object to the channel
+bool 
+WebSocket::WriteObject(BYTE* p_buffer,int64 p_length)
+{
+  // See if we have work to do
+  if(p_buffer == nullptr || p_length == 0)
+  {
+    return false;
+  }
+
+  // How much did we already write out
+  int64 total = 0;
+
+  do 
+  {
+    // Calculate the length of the next fragment
+    int64 toWrite = WS_FRAGMENT_DEFAULT;
+    if(total >= p_length - WS_FRAGMENT_DEFAULT)
+    {
+      toWrite = p_length - total;
+    }
+    // Will this be the last fragment in the chain?
+    bool last = (total + toWrite) >= p_length;
+    // Write out
+    if(!WriteFragment(&p_buffer[total],toWrite,Opcode::SO_BINARY,last))
+    {
+      return false;
+    }
+    // Keep track of amount written
+    total += toWrite;
+  } 
+  while(total < p_length);
+
+  return true;
+}
+
+// Find a binary object on the channel
+// Caller is responsible for de-allocating the buffer
+bool 
+WebSocket::ReadObject(BYTE*& p_buffer,int64& p_length)
+{
+  Opcode opcode;
+  bool   extens1,extens2,extens3;
+
+  // See if there is a binary object waiting for us
+  if(ReadExtensions(opcode,extens1,extens2,extens3))
+  {
+    if(opcode != Opcode::SO_BINARY)
+    {
+      return false;
+    }
+  }
+
+  // Reset result
+  p_buffer = nullptr;
+  p_length = 0L;
+
+  // Reading all binary fragments from the fragment stack
+  bool last = true;
+
+  do
+  {
+    BYTE* buffer = nullptr;
+    int64 length = 0;
+
+    if(!ReadFragment(buffer,length,opcode,last))
+    {
+      break;
+    }
+    // Store fragment in the result buffer
+    // So the stack fragment can get deleted
+    p_buffer = (BYTE*)realloc(p_buffer,p_length + length + 1);
+    memcpy_s(p_buffer,p_length + length + 1,buffer,length);
+    p_buffer[p_length + length] = 0;
+    p_length += length;
+  } 
+  while(!last);
+
+  return (p_length > 0);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// LOW-LEVEL INTERFACE
+//
+//////////////////////////////////////////////////////////////////////////
 
 // Read a fragment from a WebSocket
 bool 
@@ -155,10 +342,16 @@ WebSocket::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p
   AutoCritSec lock(&m_lock);
 
   // See if we did have an incoming fragment
-  if(m_stack.empty())
+  if(m_stack.empty()) return false;
+
+  // Remove the already read fragments from the front of the deque
+  while(m_stack.front()->m_isRead)
   {
-    return false;
+    m_stack.pop_front();
   }
+
+  // Still something left?
+  if(m_stack.empty()) return false;
 
   // Get frame from the front of the deque
   RawFrame* frame = m_stack.front();
@@ -173,31 +366,10 @@ WebSocket::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p
   p_opcode = frame->m_opcode;
   p_last   = frame->m_finalFrame;
 
+  // Mark the fact that we just read it.
+  frame->m_isRead = true;
+
   return true;
-}
-
-// Drop fragment from WebSocket stack after it has been used
-void 
-WebSocket::DropFragment(BYTE* p_buffer)
-{
-  AutoCritSec lock(&m_lock);
-
-  // See if we did have a fragment
-  if(m_stack.empty())
-  {
-    return;
-  }
-  // Get frame from the front of the deque
-  RawFrame* frame = m_stack.front();
-
-  // See if it was the previously read fragment
-  int begin = frame->m_headerLength;
-  if(&frame->m_data[begin] == p_buffer)
-  {
-    // Pop from stack and destroy it
-    m_stack.pop_front();
-    delete frame;
-  }
 }
 
 int
@@ -209,11 +381,12 @@ WebSocket::NumberOfFragments()
 
 // Read the extensions of the current frame
 bool 
-WebSocket::ReadExtensions(bool& p_extens1,bool& p_extens2,bool& p_extens3)
+WebSocket::ReadExtensions(Opcode& p_opcode,bool& p_extens1,bool& p_extens2,bool& p_extens3)
 {
   AutoCritSec lock(&m_lock);
 
   // Reset the answer
+  p_opcode  = Opcode::SO_CONTINU;
   p_extens1 = false;
   p_extens2 = false;
   p_extens3 = false;
@@ -227,6 +400,8 @@ WebSocket::ReadExtensions(bool& p_extens1,bool& p_extens2,bool& p_extens3)
   // Get frame from the front of the deque
   RawFrame* frame = m_stack.front();
 
+  // Getting the opcode
+  p_opcode  = frame->m_opcode;
   // Get the reserved extension codes
   p_extens1 = frame->m_reserved1;
   p_extens2 = frame->m_reserved2;
@@ -475,11 +650,18 @@ WebSocket::StoreFrameBuffer(RawFrame* p_frame)
     return true;
   }
 
+  // See if it is a 'close' message
+  if(p_frame->m_opcode == Opcode::SO_CLOSE)
+  {
+    DecodeCloseFragment(p_frame);
+    OnClose();
+    delete p_frame;
+    // DONE WITH THE SOCKET!!
+    return false;
+  }
+
   // ALL OTHER OPCODES ARE STORED ON THE STACK AND HANDLED
   // BY THE OnMessage handler
-
-  // Keep status for after the message handling
-  bool result = p_frame->m_opcode != Opcode::SO_CLOSE;
 
   // Storing the frame in an extra guarded level
   {
@@ -489,15 +671,9 @@ WebSocket::StoreFrameBuffer(RawFrame* p_frame)
   }
 
   // Go handle the message
-  if(result)
-  {
-    OnMessage();
-  }
-  else
-  {
-    // OnIncomingClose();
-  }
-  return result;
+  OnMessage();
+
+  return true;
 }
 
 // Send a 'ping' to see if other side is still there
@@ -561,8 +737,28 @@ WebSocket::CloseSocket(USHORT p_code,CString p_reason)
     length = 125;
   }
 
+  // Remember our closing codes
+  m_closingError = p_code;
+  m_closing      = p_reason;
+
   // Try to write the fragment
   return WriteFragment(buffer,length,Opcode::SO_CLOSE);
+}
+
+// Decode the incoming closing fragement before we call 'OnClose'
+void
+WebSocket::DecodeCloseFragment(RawFrame* p_frame)
+{
+  int offset = p_frame->m_headerLength;
+
+  // Get the error code
+  m_closingError  = p_frame->m_data[offset] << 8;
+  m_closingError |= p_frame->m_data[offset + 1];
+
+  char* buffer = new char[p_frame->m_payloadLength];
+  strncpy_s(buffer,p_frame->m_payloadLength,(char *)&p_frame->m_data[offset + 2],p_frame->m_payloadLength - 2);
+  m_closing = buffer;
+  delete[] buffer;
 }
 
 // Generate a server key-answer
@@ -575,6 +771,15 @@ WebSocket::ServerAcceptKey(CString p_clientKey)
   // Step 2: Take the SHA1 hash of the resulting string
   Crypto crypt;
   return crypt.Digest(key.GetString(),(size_t)key.GetLength(),CALG_SHA1);
+}
+
+bool
+WebSocket::GetCloseSocket(USHORT& p_code,CString& p_reason)
+{
+  p_code   = m_closingError;
+  p_reason = m_closing;
+
+  return p_code > 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -595,7 +800,31 @@ ServerWebSocket::~ServerWebSocket()
 bool
 ServerWebSocket::OpenSocket()
 {
+  if(m_server && m_request)
+  {
+    return m_open = true;
+  }
   return false;
+}
+
+// Close the socket
+// Close the underlying TCP/IP connection
+bool
+ServerWebSocket::CloseSocket()
+{
+  bool result = false;
+
+  if(m_server && m_request)
+  {
+    // Try to gracefully close the WebSocket
+    if(m_server->CancelSocket(m_request))
+    {
+      result = true;
+    }
+  }
+  m_server  = nullptr;
+  m_request = NULL;
+  return result;
 }
 
 bool
@@ -661,7 +890,6 @@ ServerWebSocket::ServerHandshake(HTTPMessage* p_message)
   return true;
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 //
 // CLIENT WEBSOCKET
@@ -685,6 +913,10 @@ ClientWebSocket::OpenSocket()
 
   // Totally reset of the HTTPClient
   m_HTTPClient.Reset();
+
+  // Connect the logging
+  m_HTTPClient.SetLogging(m_logfile);
+  m_HTTPClient.SetDetailLogging(m_doLogging);
 
   // GET this URI (ws[s]://resource) !!
   m_HTTPClient.SetVerb("GET");
@@ -714,9 +946,31 @@ ClientWebSocket::OpenSocket()
         m_open = true;
         OnOpen();
       }
+      else
+      {
+        // Cannot start the socket reading thread
+      }
+    }
+    else
+    {
+      // No switching of protocols
     }
   }
+  else
+  {
+    // Error handling
+  }
   return m_open;
+}
+
+// Close the socket
+// Close the underlying TCP/IP connection
+bool 
+ClientWebSocket::CloseSocket()
+{
+  // Hard close
+  m_HTTPClient.Reset();
+  return true;
 }
 
 bool
@@ -763,4 +1017,3 @@ ClientWebSocket::GenerateKey()
 
   return m_socketKey;
 }
-

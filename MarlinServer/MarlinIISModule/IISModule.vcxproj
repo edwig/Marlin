@@ -185,6 +185,7 @@
     <ClCompile Include="..\ServerTestset\TestThreadpool.cpp" />
     <ClCompile Include="..\ServerTestset\TestTime.cpp" />
     <ClCompile Include="..\ServerTestset\TestToken.cpp" />
+    <ClCompile Include="..\ServerTestset\TestWebSocket.cpp" />
     <ClCompile Include="MarlinServerApp.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

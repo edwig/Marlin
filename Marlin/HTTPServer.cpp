@@ -38,6 +38,7 @@
 #include "HTTPURLGroup.h"
 #include "HTTPCertificate.h"
 #include "WebServiceServer.h"
+#include "WebSocket.h"
 #include "ThreadPool.h"
 #include "ConvertWideString.h"
 #include "EnsureFile.h"
@@ -1504,3 +1505,54 @@ HTTPServer::FindService(CString p_serviceName)
   return nullptr;
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// WEBSOCKET
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Register a WebSocket
+bool
+HTTPServer::RegisterSocket(WebSocket* p_socket)
+{
+  CString uri = p_socket->GetURI();
+  uri.MakeLower();
+  if(m_sockets[uri])
+  {
+    // We already had that URI
+    return false;
+  }
+  m_sockets[uri] = p_socket;
+  return true;
+}
+
+// Remove registration of a WebSocket
+bool
+HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
+{
+  CString uri = p_socket->GetURI();
+  uri.MakeLower();
+
+  SocketMap::iterator it = m_sockets.find(uri);
+  if(it != m_sockets.end())
+  {
+    delete it->second;
+    m_sockets.erase(it);
+    return true;
+  }
+  // We don't have it
+  return false;
+}
+
+// Finding a previous registered websocket
+WebSocket*
+HTTPServer::FindWebSocket(CString p_uri)
+{
+  p_uri.MakeLower();
+  SocketMap::iterator it = m_sockets.find(p_uri);
+  if(it != m_sockets.end())
+  {
+    return it->second;
+  }
+  return nullptr;
+}

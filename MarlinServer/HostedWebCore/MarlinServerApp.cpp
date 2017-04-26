@@ -94,6 +94,7 @@ MarlinServerApp::InitInstance()
   TestForms(m_appServer);
   TestCompression(m_appServer);
   TestAsynchrone(m_appServer);
+  TestWebSocket(m_appServer);
 }
 
 void
@@ -103,6 +104,9 @@ MarlinServerApp::ExitInstance()
   {
     // Testing the errorlog function
     m_appServer->ErrorLog(__FUNCTION__,0,"Not a real error message, but a test to see if the errorlog works :-)");
+
+    // Stopping our websocket
+    StopWebSocket();
 
     // Stopping all subsites
     StopSubsites(m_appServer);
@@ -164,6 +168,7 @@ MarlinServerApp::ReportAfterTesting()
   AfterTestReliable();
   AfterTestSubsites();
   AfterTestToken();
+  AfterTestWebSocket();
 
   // SUMMARY OF ALL THE TEST
   // ---- "---------------------------------------------- - ------

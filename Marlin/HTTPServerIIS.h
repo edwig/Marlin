@@ -60,6 +60,11 @@ public:
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request);
   // Send to a WebSocket
   virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request);
+  // Flushing a WebSocket intermediate
+  virtual bool       FlushSocket (HTTP_REQUEST_ID p_request);
+  // Cancel and close a WebSocket
+  virtual bool       CancelSocket(HTTP_REQUEST_ID p_request);
+
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
   // Send a response in one-go
@@ -114,9 +119,9 @@ private:
   void SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,CString p_value,bool p_replace);
 
   // Subfunctions for SendResponse
-  bool SendResponseBuffer     (IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength);
-  void SendResponseBufferParts(IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength);
-  void SendResponseFileHandle (IHttpResponse* p_response,FileBuffer* p_buffer);
+  bool SendResponseBuffer     (IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
+  void SendResponseBufferParts(IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
+  void SendResponseFileHandle (IHttpResponse* p_response,FileBuffer* p_buffer,bool p_more = false);
   void SendResponseError      (IHttpResponse* p_response,CString& p_page,int p_error,const char* p_reason);
 
   // For the handling of the event streams

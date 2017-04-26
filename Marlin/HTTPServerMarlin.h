@@ -57,6 +57,10 @@ public:
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request);
   // Send to a WebSocket
   virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request);
+  // Flushing a WebSocket intermediate
+  virtual bool       FlushSocket(HTTP_REQUEST_ID p_request);
+  // Cancel and close a WebSocket
+  virtual bool       CancelSocket(HTTP_REQUEST_ID p_request);
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
 
@@ -107,9 +111,9 @@ private:
   void      AddKnownHeader(HTTP_RESPONSE& p_response,HTTP_HEADER_ID p_header,const char* p_value);
   PHTTP_UNKNOWN_HEADER AddUnknownHeaders(UKHeaders& p_headers);
   // Subfunctions for SendResponse
-  bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
-  void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
-  void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer);
+  bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
+  void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
+  void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,bool p_more = false);
   void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,CString& p_page,int p_error,const char* p_reason);
 
   // For the handling of the event streams: Sending a chunk to an event stream

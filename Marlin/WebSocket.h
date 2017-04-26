@@ -93,6 +93,7 @@ public:
  ~RawFrame();
 
   bool    m_internal;       // For internal use or for the wire
+  bool    m_isRead;         // Each fragement can be read once!
   // HEADER CONTENTS
   bool    m_finalFrame;     // true if final frame
   bool    m_reserved1;      // Extended protocol 1
@@ -126,25 +127,34 @@ public:
 
   // Open the socket
   virtual bool OpenSocket() = 0;
+  // Close the socket
+  virtual bool CloseSocket() = 0;
   // Write fragment to a WebSocket
-  virtual bool WriteFragment(BYTE* p_buffer,int64 p_length,Opcode  p_opcode,bool  p_last = true) = 0;
+  virtual bool WriteFragment(BYTE* p_buffer,int64 p_length,Opcode p_opcode,bool p_last = true) = 0;
   // Read a fragment from a WebSocket
   bool ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last);
-  // Read the extensions of the current frame
-  bool ReadExtensions(bool& p_extens1,bool& p_extens2,bool& p_extens3);
-  // Drop fragment from WebSocket stack after it has been used
-  void DropFragment(BYTE*  p_buffer);
+  // Read the extensions of the current frame (Use before 'ReadFragment')
+  bool ReadExtensions(Opcode& p_opcode,bool& p_extens1,bool& p_extens2,bool& p_extens3);
   // Amount of available fragments to read
   int  NumberOfFragments();
   // Close the socket with a closing frame
   bool CloseSocket(USHORT p_code,CString p_reason);
-  // Decoded close connection 
-  void GetCloseSocket(USHORT& p_code,CString& p_reason);
-  // Close the underlying TCP/IP connection
-  bool CloseConnection();
+  // Decoded close connection (use in 'OnClose')
+  bool GetCloseSocket(USHORT& p_code,CString& p_reason);
   // Socket still open?
   bool IsOpen();
-  
+
+  // HIGH LEVEL INTERFACE
+
+  // Write as an UTF-8 string to the WebSocket
+  bool WriteString(CString p_string);
+  // Find UTF-8 string on the channel
+  bool ReadString(CString& p_string);
+  // Write as a binary object to the channel
+  bool WriteObject(BYTE* p_buffer,int64 p_length);
+  // Find a binary object on the channel
+  bool ReadObject(BYTE*& p_buffer,int64& p_length);
+
   // DEFAULT HANDLERS
   void OnOpen();
   void OnMessage();
@@ -160,6 +170,10 @@ public:
   void SetProtocols(CString p_protocols);
   // Setting the extensions
   void SetExtensions(CString p_extensions);
+  // Setting the logfile
+  void SetLogfile(LogAnalysis* p_logfile);
+  // Set logging to on or off
+  void SetLogging(bool p_logging);
   // Set the OnOpen handler
   void SetOnOpen(LPFN_SOCKETHANDLER p_onOpen);
   // Set the OnMessage handler
@@ -176,7 +190,8 @@ public:
   CString GetProtocols()    { return m_protocols;     };
   CString GetExtensions()   { return m_extensions;    };
   USHORT  GetClosingError() { return m_closingError;  };
-
+  bool    GetDoLogging()    { return m_doLogging;     };
+  LogAnalysis* GetLogfile() { return m_logfile;       };
 
   // BOTH HTTPClient and HTTPServer must have access to these functions
 
@@ -196,26 +211,30 @@ public:
 protected:
   // Completely close the connection
   void    Close();
+  // Decode the incoming closing fragement before we call 'OnClose'
+  void    DecodeCloseFragment(RawFrame* p_frame);
 
   // GENERAL SOCKET DATA
-  bool    m_open;           // WebSocket is opened and alive
-  CString m_uri;            // ws[s]://resource URI for the socket
-  ULONG   m_keepalive;      // Keep alive time of the socket
-  ULONG   m_fragmentsize;   // Max fragment size
-  CString m_protocols;      // WebSocket main protocols
-  CString m_extensions;     // Extensions in 1,2,3 fields
-  USHORT  m_closingError;   // Error on closing
-  FragmentStack m_stack;    // Incoming fragments
-  HANDLE  m_pingEvent;      // The ping/pong event
-  ULONG   m_pingTimeout{5000};
-  bool    m_pongSeen;
-
+  CString m_uri;                      // ws[s]://resource URI for the socket
+  bool    m_open          { false };  // WebSocket is opened and alive
+  ULONG   m_keepalive;                // Keep alive time of the socket
+  ULONG   m_fragmentsize;             // Max fragment size
+  CString m_protocols;                // WebSocket main protocols
+  CString m_extensions;               // Extensions in 1,2,3 fields
+  USHORT  m_closingError  { 0     };  // Error on closing
+  CString m_closing;                  // Closing error text
+  HANDLE  m_pingEvent;                // The ping/pong event
+  ULONG   m_pingTimeout   { 5000  };  // How long we wait for a pong after a ping
+  bool    m_pongSeen      { false };  // Seen a pong for a ping
+  bool    m_doLogging     { false };  // Do we do the logging?
+  // Complex objects
+  FragmentStack m_stack;              // Incoming fragments
+  LogAnalysis*  m_logfile {nullptr};  // Connected to this logfile
   // Handlers
-  LPFN_SOCKETHANDLER m_onopen;    // OnOpen    handler
-  LPFN_SOCKETHANDLER m_onmessage; // OnMessage handler
-  LPFN_SOCKETHANDLER m_onclose;   // OnClose   handler
-
-  // Synchronization
+  LPFN_SOCKETHANDLER m_onopen;        // OnOpen    handler
+  LPFN_SOCKETHANDLER m_onmessage;     // OnMessage handler
+  LPFN_SOCKETHANDLER m_onclose;       // OnClose   handler
+  // Synchronization for the fragment stack
   CRITICAL_SECTION   m_lock;
 };
 
@@ -247,6 +266,18 @@ inline void
 WebSocket::SetExtensions(CString p_extensions)
 {
   m_extensions = p_extensions;
+}
+
+inline void 
+WebSocket::SetLogfile(LogAnalysis* p_logfile)
+{
+  m_logfile = p_logfile;
+}
+
+inline void
+WebSocket::SetLogging(bool p_logging)
+{
+  m_doLogging = p_logging;
 }
 
 inline void 
@@ -285,6 +316,8 @@ public:
 
   // Open the socket
   virtual bool OpenSocket();
+  // Close the socket
+  virtual bool CloseSocket();
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,int64 p_length,Opcode  p_opcode,bool  p_last = true);
   // Perform the server handshake
@@ -325,6 +358,8 @@ public:
 
   // Open the socket
   virtual bool OpenSocket();
+  // Close the socket
+  virtual bool CloseSocket();
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,int64 p_length,Opcode  p_opcode,bool  p_last = true);
 

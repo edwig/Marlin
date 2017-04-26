@@ -365,7 +365,7 @@ ThreadPool::RestoreMaximumThreads(AutoIncrementPoolMax* p_increment)
   if(this == p_increment->m_pool)
   {
     InterlockedDecrement((long*)&m_maxThreads);
-    TP_TRACE1("Number of maximum threads restored to: %d\n",m_maxThreads);
+    TP_TRACE1("Number of maximum threads decreased to: %d\n",m_maxThreads);
   }
 }
 

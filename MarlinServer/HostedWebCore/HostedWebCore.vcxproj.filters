@@ -113,5 +113,8 @@
     <ClCompile Include="..\ServerTestset\TestManualEvents.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestWebSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

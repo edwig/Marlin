@@ -8,6 +8,22 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.1
+======================
+1) Reworked the XMLMessage object. As it is one of the core components of the Marlin framework
+   the reworking on the XMLElement part of the object (making it a 'real' class) has impacat on
+   all of the rest of the library. Expect a few getters and setters here and there in your code
+   that will need adding / refactoring.
+2) The XMLMessage can now be added to resource bound objects with a reference counter. You can
+   use the two designated methods for this:
+   - AddReference    -> Adding a reference to keep the object alive
+   - DropReference   -> Dropping a reference means: destroy the object at the last 'drop'.
+4) Added the WebSocket protocol a la IETF RFC 6455. See alsoo the original URL for this RFC at:
+   https://www.rfc-editor.org/rfc/pdfrfc/rfc6455.txt.pdf
+   A 'WebSocket' class with a 'Server' and 'Client' subclass have been added to the project.
+   We now have two-way-communication between server and client.
+
+
 PATCH VERSION 4.0.3 (20-04-2017)
 --------------------------------
 1) Event streams can send at maximum 64K chunks in the IIS situation. Including the keepalive

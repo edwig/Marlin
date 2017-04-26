@@ -61,6 +61,10 @@ public:
   // Server app was correctly started by MarlinIISModule
   bool CorrectlyStarted();
 
+  // GETTERS
+
+  HTTPServer*    GetHTTPServer() { return m_appServer; };
+
 protected:
   // Read the site's configuration from the IIS internal structures
   bool  ReadSite   (IAppHostElementCollection* p_sites,CString p_site,int p_num,IISSiteConfig& p_config);

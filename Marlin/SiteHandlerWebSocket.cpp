@@ -45,8 +45,10 @@ SiteHandlerWebSocket::PreHandle(HTTPMessage* /*p_message*/)
 bool     
 SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
 {
+  HTTPServer* server = m_site->GetHTTPServer();
   // Create socket by absolute path of the incoming URL
   ServerWebSocket* socket = new ServerWebSocket(p_message->GetAbsolutePath());
+  server->RegisterSocket(socket);
 
   // Also get the parameters (key & value)
   CrackedURL& url = p_message->GetCrackedURL();
@@ -60,6 +62,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
   p_message->SetCommand(HTTPCommand::http_response);
   p_message->SetStatus(HTTP_STATUS_SWITCH_PROTOCOLS);
   p_message->GetFileBuffer()->Reset();
+  p_message->SetBody(" ");
 
   // Perform the server handshake
   if(socket->ServerHandshake(p_message) == false)
@@ -80,22 +83,30 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
     if(request)
     {
       // Sending the switch protocols and handshake headers
+      // as a HTTP 101 status, but keep the channel OPEN
       m_site->SendResponse(p_message);
+      server->FlushSocket(request);
     }
 
-    // Register the request for the socket
+    // Register the request for the socket and open it now
     socket->RegisterServerRequest(m_site->GetHTTPServer(),request);
+    socket->OpenSocket();
 
     // Guaranteed to be called on opening of the socket
     socket->OnOpen();
 
     // Now enter the read loop of the server
-    m_site->GetHTTPServer()->ReceiveWebSocket(socket,request);
+    server->ReceiveWebSocket(socket,request);
 
     // Guaranteed to be called on closing of the socket
     socket->OnClose();
   }
   // WebSocket is now done and closed
+  if(!server->UnRegisterWebSocket(socket))
+  {
+    // It's a local websocket, remove it
+    delete socket;
+  }
   return true;
 }
 
