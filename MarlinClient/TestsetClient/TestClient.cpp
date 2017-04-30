@@ -147,19 +147,19 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestWebSocketAccept();
       errors += TestWebSocket(g_log);
 
-      errors += TestBaseSite(client);
-      errors += TestSecureSite(client);
-      errors += TestClientCertificate(client);
-      errors += TestCookies(*client);
-      errors += TestFormData(client);
-      errors += TestEvents(client);
-      errors += TestJsonData(client);
-      errors += TestContract(client,false);
-      errors += TestContract(client,true);
-      errors += TestPatching(client);
-      errors += TestCompression(client);
-      errors += TestClientCertificate(client);
-      errors += TestWebservices(*client);
+//       errors += TestBaseSite(client);
+//       errors += TestSecureSite(client);
+//       errors += TestClientCertificate(client);
+//       errors += TestCookies(*client);
+//       errors += TestFormData(client);
+//       errors += TestEvents(client);
+//       errors += TestJsonData(client);
+//       errors += TestContract(client,false);
+//       errors += TestContract(client,true);
+//       errors += TestPatching(client);
+//       errors += TestCompression(client);
+//       errors += TestClientCertificate(client);
+//       errors += TestWebservices(*client);
     }
   
     printf("\n");
@@ -177,7 +177,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     printf("\nRead everything? ");
     WaitForKey();
 
-    // Stopping the websocket
+    // Stopping the WebSocket
     TestCloseWebSocket();
 
     // And stop the client

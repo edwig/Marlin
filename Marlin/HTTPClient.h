@@ -91,8 +91,6 @@ class LogAnalysis;
 class EventSource;
 class ThreadPool;
 class HTTPClientTracing;
-class WebSocket;
-class RawFrame;
 
 // Types of proxies supported
 enum class ProxyType
@@ -231,6 +229,7 @@ public:
   void SetClientCertificatePreset(bool p_preset)  { m_certPreset        = p_preset;   };
   void SetClientCertificateName(CString p_name)   { m_certName          = p_name;     };
   void SetClientCertificateStore(CString p_store) { m_certStore         = p_store;    };
+  void SetWebsocketHandshake(bool p_socket)       { m_websocket         = p_socket;   };
   bool SetClientCertificateThumbprint(CString p_store,CString p_thumbprint);
   void SetCORSOrigin(CString p_origin);
   bool SetCORSPreFlight(CString p_method,CString p_headers);
@@ -297,6 +296,7 @@ public:
   CString       GetStatusText();
   void          GetBody(void*& p_body,unsigned& p_length);
   void          GetResponse(BYTE*& p_response,unsigned& p_length);
+  HINTERNET     GetWebsocketHandle();
 
   // Service routines. Not normally called by other objects
   // Central queue running function
@@ -308,14 +308,6 @@ public:
   EventSource*  CreateEventSource(CString p_url);
   // Main loop of the event-interface (public: starting a thread)
   void          EventThreadRunning();
-
-  // WEBSOCKET INTERFACE
-
-  // Start a new WebSocket
-  bool          ReceiveWebSocket(WebSocket* p_socket);
-  // Running the WebSocket
-  void          ReceiveWebSocket();
-  bool          WriteRawFrame(RawFrame* p_frame);
 
 private:
   // Handling of push-events
@@ -340,6 +332,7 @@ private:
   void     AddCORSHeaders();
   void     AddExtraHeaders();
   void     AddCookieHeaders();
+  void     AddWebSocketHeaders();
   void     AddProxyAuthorization();
   void     AddMessageHeaders(HTTPMessage* p_message);
   void     AddMessageHeaders(SOAPMessage* p_message);
@@ -393,6 +386,7 @@ private:
   bool          m_httpCompression { false   };                    // Accepts HTTP compression (gzip!)
   // URL
   CString       m_url;                                            // Full URL
+  CString       m_scheme;                                         // URL part: protocol scheme
   bool          m_secure          { false   };                    // URL part: Secure connection (HTTPS)
   CString       m_user;                                           // URL part: Authentication user
   CString       m_password;                                       // URL part: Authentication password
@@ -466,7 +460,7 @@ private:
   bool          m_traceRequest    { false   };                    // Default no tracing of the request
   HTTPClientTracing* m_trace      { nullptr };                    // The tracing object
   // WebSocket
-  WebSocket*    m_websocket       { nullptr };                    // The WebSocket
+  bool          m_websocket       { false   };                    // Try WebSocket handshake
   // For syncing threads
   CRITICAL_SECTION m_queueSection;  // Synchronizing queue adding/sending
   CRITICAL_SECTION m_sendSection;   // Synchronizing sending for multiple threads

@@ -60,24 +60,39 @@ typedef BOOL (WINAPI *Module32NextProc)  (HANDLE hSnapshot, LPMODULEENTRY32  lpm
 class CDllLoader
 {
 public:
-  CDllLoader(CString const& name) : m_hDll (0)
-    { m_hDll = LoadLibrary(name); }
+  CDllLoader(CString const& name)
+  {
+    m_hDll = LoadLibrary(name); 
+  }
 
   ~CDllLoader()
-    { if(m_hDll) FreeLibrary(m_hDll); }
+  { 
+    if(m_hDll)
+    {
+      FreeLibrary(m_hDll);
+    }
+  }
 
   operator HINSTANCE() const
-    { return m_hDll; }
+  {
+    return m_hDll;
+  }
 
   operator bool () const
-    { return m_hDll != 0; }
+  { 
+    return m_hDll != 0;
+  }
 
   bool operator ! () const 
-    { return m_hDll == 0; }
+  { 
+    return m_hDll == 0;
+  }
 
   template <class T>
   void GetProcAddress(CString const& name, T& funcptr)
-    { funcptr = (T) ::GetProcAddress(m_hDll, name); }
+  {
+    funcptr = (T) ::GetProcAddress(m_hDll, name);
+  }
 
 private:
   HINSTANCE m_hDll;
@@ -85,30 +100,26 @@ private:
 
 //=============================================================================
 
-CString StToString(SYSTEMTIME const& st)
+CString 
+StToString(SYSTEMTIME const& st)
 {
   char buff[25];
-  sprintf_s(buff,25,"%02d:%02d:%02d %02d/%02d/%02d", 
-            st.wHour, st.wMinute, st.wSecond, 
-            st.wDay, st.wMonth, st.wYear);
-
+  sprintf_s(buff,25,"%02d-%02d-%02d %04d:%02d:%02d", 
+            st.wDay, st.wMonth, st.wYear,
+            st.wHour,st.wMinute,st.wSecond);
   return buff;
 }
 
-
-//=============================================================================
-
-CString FtToString(FILETIME const& ft)
+CString 
+FtToString(FILETIME const& ft)
 {
   SYSTEMTIME st;
   FileTimeToSystemTime(&ft, &st);
   return StToString(st);
 }
 
-
-//=============================================================================
-
-CString MakeWidth(CString const& input, int length)
+CString 
+MakeWidth(CString const& input, int length)
 {
   CString result = input;
   while(result.GetLength() < length)
@@ -118,10 +129,8 @@ CString MakeWidth(CString const& input, int length)
   return result;
 }
 
-
-//=============================================================================
-
-CString AttribToString(DWORD dwAttrib)
+CString 
+AttribToString(DWORD dwAttrib)
 {
   CString result;
   #define ATTRIB_CASE(arg) if((dwAttrib & arg) == arg) result += #arg " "
@@ -142,11 +151,11 @@ CString AttribToString(DWORD dwAttrib)
   return result;
 }
 
-
 //=============================================================================
 
 ProcInfo::ProcInfo()
          :m_use_psapi(false)
+         ,m_version(0)
 {
   //	Store current date and time
   SYSTEMTIME st;
@@ -169,66 +178,65 @@ ProcInfo::~ProcInfo()
   }
 }
 
-//=============================================================================
-
-void ProcInfo::GetSystemType()
+void 
+ProcInfo::GetSystemType()
 {
-  int version = 0;
+  m_version = 0;
   m_platform  = "MS-Windows";
 
   if(IsWindows8Point1OrGreater())
   {
-    version = 62;
+    m_version = 62;
     m_platform = "Windows 8.1 or greater";
   }
   else if(IsWindows8OrGreater())
   {
-    version = 62;
+    m_version = 62;
     m_platform = "Windows 8";
   }
   else if(IsWindows7SP1OrGreater())
   {
-    version = 61;
+    m_version = 61;
     m_platform = "Windows 7 SP1";
   }
   else if(IsWindows7OrGreater())
   {
-    version = 61;
+    m_version = 61;
     m_platform = "Windows 7";
   }
   else if(IsWindowsVistaSP2OrGreater())
   {
-    version = 60;
+    m_version = 60;
     m_platform = "Windows Vista SP2";
   }
   else if(IsWindowsVistaSP1OrGreater())
   {
-    version = 60;
+    m_version = 60;
     m_platform = "Windows Vista SP1";
   }
   else if(IsWindowsVistaOrGreater())
   {
-    version = 60;
+    m_version = 60;
     m_platform = "Windows Vista";
   }
   else if(IsWindowsXPSP3OrGreater())
   {
-    version = 51;
+    m_version = 51;
     m_platform = "Windows XP SP3";
   }
   else if(IsWindowsXPSP2OrGreater())
   {
-    version = 51;
+    m_version = 51;
     m_platform = "Windows XP SP2";
   }
   else if(IsWindowsXPSP1OrGreater())
   {
-    version = 51;
+    m_version = 51;
     m_platform = "Windows XP SP1";
   }
   else if(IsWindowsXPOrGreater())
   {
-    version = 51;
+    m_version = 51;
     m_platform = "Windows XP";
   }
   else
@@ -239,7 +247,7 @@ void ProcInfo::GetSystemType()
   // Check if we have a server variant
   if(IsWindowsServer())
   {
-    switch(version)
+    switch(m_version)
     {
       case 51: m_platform = "Windows Server 2003";    break;
       case 60: m_platform = "Windows Server 2008";    break;
@@ -252,7 +260,8 @@ void ProcInfo::GetSystemType()
 
 //=============================================================================
 
-void ProcInfo::GetSystemInfo()
+void 
+ProcInfo::GetSystemInfo()
 {
   char* buffer = new char[MAX_ENVSPACE];
   DWORD dwLength;
@@ -295,7 +304,8 @@ void ProcInfo::GetSystemInfo()
 
 //=============================================================================
 
-void ProcInfo::GetLocaleInfo()
+void 
+ProcInfo::GetLocaleInfo()
 {
   char szBuffer[50];
 
@@ -331,7 +341,8 @@ void ProcInfo::GetLocaleInfo()
 
 //=============================================================================
 
-void ProcInfo::GetApplicInfo()
+void 
+ProcInfo::GetApplicInfo()
 {
   char szBuffer[4096];
 
@@ -339,21 +350,21 @@ void ProcInfo::GetApplicInfo()
   GetModuleFileName(GetModuleHandle(0), szBuffer, MAX_PATH);
   m_application = szBuffer;
 
-  //	Get commandline
+  //	Get command line
   m_commandline = GetCommandLine();
 }
 
-
 //=============================================================================
 
-void ProcInfo::GetModuleInfo()
+void 
+ProcInfo::GetModuleInfo()
 {
   if(m_use_psapi)			//	Windows NT 4.0 enumerator code
   {
     //  Load the required dll
     CDllLoader psapi("psapi.dll");
   
-    //  Get address of enum proc
+    //  Get address of enum process
     EnumProcessModulesProc EnumProcessModules;
     psapi.GetProcAddress("EnumProcessModules", EnumProcessModules);
 
@@ -511,71 +522,73 @@ sprintf_s(buff,40, "0x%08I64X", (__int64)hModule);
 
 
 //=============================================================================
-/*
+
 void ProcInfo::WriteToFile(CString const& Filename) const
 {
-  std::ofstream of(Filename);
+  FILE* fl = nullptr;
+  fopen_s(&fl,Filename.GetString(),"w");
+  if(fl == nullptr)
+  {
+    return;
+  }
+
+  CString line("=================================================================\n");
 
   //	Write info header
-  of << "=================================================================\n";
-  of << "  Application information\n";
-  of << "=================================================================\n";
-  of << "Current date/time: " << m_datetime << "\n";
-  of << "Application:       " << m_application << "\n";
-  of << "Command line:      " << m_commandline << "\n";
-  of << "\n\n";
+  fprintf(fl,line);
+  fprintf(fl,"= Application information\n");
+  fprintf(fl,line);
+  fprintf(fl,"Application      : %s\n",m_application.GetString());
+  fprintf(fl,"Current date/time: %s\n",m_datetime.GetString());
+  fprintf(fl,"Command line     : %s\n",m_commandline.GetString());
+  fprintf(fl,"\n");
 
   //	Write platform info
-  of << "=================================================================\n";
-  of << "  Platform information\n";
-  of << "=================================================================\n";
-  of << "Computer name:     " << m_computer << "\n";
-  of << "Current user:      " << m_username << "\n";
-  of << "Windows version:   " << m_platform << "\n";
-  of << "Windows directory: " << m_windows_path << "\n";
-  of << "Current directory: " << m_current_path << "\n";
-  of << "%PATH%:            " << m_pathspec << "\n";
-  of << "\n\n";
+  fprintf(fl,line);
+  fprintf(fl,"= Platform information\n");
+  fprintf(fl,line);
+  fprintf(fl,"Computer name    : %s\n",m_computer.GetString());
+  fprintf(fl,"Current user     : %s\n",m_username.GetString());
+  fprintf(fl,"Windows version  : %s\n",m_platform.GetString());
+  fprintf(fl,"Windows directory: %s\n",m_windows_path.GetString());
+  fprintf(fl,"Current directory: %s\n",m_current_path.GetString());
+  fprintf(fl,"%%PATH%%           : %s\n",m_pathspec.GetString());
+  fprintf(fl,"\n");
 
   //	Write locale info
-  of << "=================================================================\n";
-  of << "  Locale information\n";
-  of << "=================================================================\n";
-  of << "Value type         System locale       User locale\n";
-  of << "-----------------------------------------------------------------\n";
-  of << "Number            " << MakeWidth(m_system_number, 20) << m_user_number << "\n";
-  of << "Date              " << MakeWidth(m_system_date, 20)   << m_user_date   << "\n";
-  of << "Time              " << MakeWidth(m_system_time, 20)   << m_user_time   << "\n";
-  of << "\n\n";
+  fprintf(fl,line);
+  fprintf(fl,"= Locale information\n");
+  fprintf(fl,line);
+  fprintf(fl,"Value type         System locale        User locale\n");
+  fprintf(fl,"------------------ -------------------- --------------------------\n");
+  fprintf(fl,"Number             %-20s %-20s\n",m_system_number.GetString(),m_user_number.GetString());
+  fprintf(fl,"Date               %-20s %-20s\n",m_system_date.GetString(),  m_user_date.GetString());
+  fprintf(fl,"Time               %-20s %-20s\n",m_system_time.GetString(),  m_user_time.GetString());
+  fprintf(fl,"\n");
 
   //	Write modules
-  ModuleList::const_iterator ii, ie;
-  ii = m_modules.begin();
-  ie = m_modules.end();
-  for(; ii != ie; ++ii)
+  for(auto& mod : m_modules)
   {
-    Module const& mod = *ii;
-    of << "=================================================================\n";
-    of << "  Module information for " << mod.m_file_name << "\n";
-    of << "=================================================================\n";
-    of << "Load address:      " << mod.m_load_address << "\n";
-    of << "File name:         " << mod.m_file_name << "\n";
-    of << "File path:         " << mod.m_full_path << "\n";
-    of << "File size:         " << mod.m_file_info.nFileSizeLow << "\n";
-    of << "File created:      " << FtToString(mod.m_file_info.ftCreationTime) << "\n";
-    of << "File modified:     " << FtToString(mod.m_file_info.ftLastWriteTime) << "\n";
-    of << "File attributes:   " << AttribToString(mod.m_file_info.dwFileAttributes) << "\n";
-    of << "Company name:      " << mod.m_company_name << "\n";
-    of << "File description:  " << mod.m_file_description << "\n";
-    of << "File version:      " << mod.m_fileversion << "\n";
-    of << "Internal name:     " << mod.m_internal_name << "\n";
-    of << "Legal copyright:   " << mod.m_legal_copyright << "\n";
-    of << "Original filename: " << mod.m_original_filename << "\n";
-    of << "Product name:      " << mod.m_product_name << "\n";
-    of << "Product version:   " << mod.m_product_version << "\n";
-    of << "\n\n";
+    fprintf(fl,line);
+    fprintf(fl,"= Module information for: %s\n",mod->m_file_name.GetString());
+    fprintf(fl,line);
+    fprintf(fl,"File name        : %s\n",mod->m_file_name.GetString());
+    fprintf(fl,"File path        : %s\n",mod->m_full_path.GetString());
+    fprintf(fl,"File size        : %lu\n",mod->m_file_info.nFileSizeLow);
+    fprintf(fl,"File created     : %s\n",FtToString(mod->m_file_info.ftCreationTime).GetString());
+    fprintf(fl,"File modified    : %s\n",FtToString(mod->m_file_info.ftLastWriteTime).GetString());
+    fprintf(fl,"File attributes  : %s\n",AttribToString(mod->m_file_info.dwFileAttributes).GetString());
+    fprintf(fl,"Load address     : %s\n",mod->m_load_address.GetString());
+    fprintf(fl,"Company name     : %s\n",mod->m_company_name.GetString());
+    fprintf(fl,"File description : %s\n",mod->m_file_description.GetString());
+    fprintf(fl,"File version     : %s\n",mod->m_fileversion.GetString());
+    fprintf(fl,"Internal name    : %s\n",mod->m_internal_name.GetString());
+    fprintf(fl,"Legal copyright  : %s\n",mod->m_legal_copyright.GetString());
+    fprintf(fl,"Original filename: %s\n",mod->m_original_filename.GetString());
+    fprintf(fl,"Product name     : %s\n",mod->m_product_name.GetString());
+    fprintf(fl,"Product version  : %s\n",mod->m_product_version.GetString());
+    fprintf(fl,"\n");
   }
+  fclose(fl);
 }
 
-*/
-//=============================================================================

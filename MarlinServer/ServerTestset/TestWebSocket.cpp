@@ -40,22 +40,24 @@ int totalChecks = 0;
 //
 //////////////////////////////////////////////////////////////////////////
 
-void OnOpen(WebSocket* p_socket)
+void OnOpen(WebSocket* p_socket,WSFrame* p_frame)
 {
   qprintf("Opened a websocket for: %s",p_socket->GetURI());
 }
 
-void OnMessage(WebSocket* p_socket)
+void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 {
-  CString message;
-  if(p_socket->ReadString(message))
-  {
-    qprintf("Incoming WebSocket message: %s",message);
-  }
+  CString message((char*)p_frame->m_data);
+  qprintf("Incoming WebSocket message: %s",message);
 }
 
-void OnClose(WebSocket* p_socket)
+void OnClose(WebSocket* p_socket,WSFrame* p_frame)
 {
+  CString message((char*)p_frame->m_data);
+  if(!message.IsEmpty())
+  {
+    qprintf("Closing WebSocket message: %s",message);
+  }
   qprintf("Closed the websocket for: %s",p_socket->GetURI());
 }
 
@@ -147,6 +149,7 @@ StopWebSocket(void)
     {
       errors = 0;
     }
+    g_server->GetHTTPServer()->UnRegisterWebSocket(socket);
   }
   return errors;
 }

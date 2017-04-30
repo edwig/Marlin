@@ -1517,12 +1517,19 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
 {
   CString uri = p_socket->GetURI();
   uri.MakeLower();
-  if(m_sockets[uri])
+
+  TRACE("Register WebSocket [%s] %lX\n",uri,p_socket);
+
+  SocketMap::iterator it = m_sockets.find(uri);
+  if(it != m_sockets.end())
   {
-    // We already had that URI
-    return false;
+    // Drop the double socket
+    it->second->CloseSocket();
+    delete it->second;
+    it->second = p_socket;
+    return true;
   }
-  m_sockets[uri] = p_socket;
+  m_sockets.insert(std::make_pair(uri,p_socket));
   return true;
 }
 
@@ -1533,9 +1540,12 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
   CString uri = p_socket->GetURI();
   uri.MakeLower();
 
+  TRACE("UN-Register WebSocket [%s] %lX\n",uri,p_socket);
+
   SocketMap::iterator it = m_sockets.find(uri);
   if(it != m_sockets.end())
   {
+    it->second->CloseSocket();
     delete it->second;
     m_sockets.erase(it);
     return true;
@@ -1549,6 +1559,9 @@ WebSocket*
 HTTPServer::FindWebSocket(CString p_uri)
 {
   p_uri.MakeLower();
+
+  TRACE("Find WebSocket: %s\n",p_uri);
+
   SocketMap::iterator it = m_sockets.find(p_uri);
   if(it != m_sockets.end())
   {

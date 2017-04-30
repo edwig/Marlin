@@ -597,11 +597,8 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
     // Ready for IIS!
     p_context->SetRequestHandled();
 
-    // Stopping the performance counter
-    g_marlin->GetCounter()->Stop();
-
     // This request is now completely handled
-    status = RQ_NOTIFICATION_FINISH_REQUEST;
+    status = GetCompletionStatus(response);
   }
   else if(stream)
   {
@@ -617,6 +614,18 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   // Now completely ready. We did everything!
   g_marlin->GetCounter()->Stop();
   return status;
+}
+
+REQUEST_NOTIFICATION_STATUS
+MarlinModule::GetCompletionStatus(IHttpResponse* p_response)
+{
+  USHORT status = 0;
+  p_response->GetStatus(&status);
+  if(status == HTTP_STATUS_SWITCH_PROTOCOLS)
+  {
+    return RQ_NOTIFICATION_PENDING;
+  }
+  return RQ_NOTIFICATION_CONTINUE;
 }
 
 int 
@@ -635,3 +644,20 @@ MarlinModule::GetServerPort(IHttpContext* p_context)
   return serverPort;
 }
 
+// We keep coming here now-and-then when working with a-typical 
+// condition status-es and flushes. So we handle this Async completion
+// otherwise we get asserts from the main class in IIS.
+REQUEST_NOTIFICATION_STATUS
+MarlinModule::OnAsyncCompletion(IN IHttpContext*        pHttpContext,
+                                IN DWORD                dwNotification,
+                                IN BOOL                 fPostNotification,
+                                IN IHttpEventProvider*  pProvider,
+                                IN IHttpCompletionInfo* pCompletionInfo)
+{
+  UNREFERENCED_PARAMETER(pHttpContext);
+  UNREFERENCED_PARAMETER(dwNotification);
+  UNREFERENCED_PARAMETER(fPostNotification);
+  UNREFERENCED_PARAMETER(pProvider);
+  UNREFERENCED_PARAMETER(pCompletionInfo);
+  return RQ_NOTIFICATION_CONTINUE;
+}

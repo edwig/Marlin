@@ -62,8 +62,14 @@ public:
   // The Pre-Execute stage is too late: cannot implement our own subsites
 //virtual REQUEST_NOTIFICATION_STATUS OnPreExecuteRequestHandler(IN IHttpContext*        p_httpContext,
 //                                                               IN IHttpEventProvider* p_provider);
+  virtual REQUEST_NOTIFICATION_STATUS OnAsyncCompletion         (IN IHttpContext*        pHttpContext,
+                                                                 IN DWORD                dwNotification,
+                                                                 IN BOOL                 fPostNotification,
+                                                                 IN IHttpEventProvider*  pProvider,
+                                                                 IN IHttpCompletionInfo* pCompletionInfo);
 private:
   int GetServerPort(IHttpContext* p_context);
+  REQUEST_NOTIFICATION_STATUS GetCompletionStatus(IHttpResponse* p_response);
 };
 
 // Create the modules' class factory

@@ -30,6 +30,8 @@
 #include "WebSocket.h"
 #include "Analysis.h"
 
+// Stand-alone test without client or server
+// See if the handshake works as described in the IETF RFC 6455
 int
 TestWebSocketAccept(void)
 {
@@ -64,34 +66,42 @@ ClientWebSocket* g_socket = nullptr;
 //////////////////////////////////////////////////////////////////////////
 
 void
-OnOpenWebsocket(WebSocket* /*p_socket*/)
+OnOpenWebsocket(WebSocket* /*p_socket*/,WSFrame* /*p_frame*/)
 {
-  // Websocket has been opened
+  // WebSocket has been opened
   // --- "---------------------------------------------- - ------
   printf("WebSocket gotten the 'OnOpen' event            : OK\n");
 }
 
 void
-OnMessageWebsocket(WebSocket* p_socket)
+OnMessageWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 {
-  CString message;
-  if(p_socket->ReadString(message))
+  CString message((char*)p_frame->m_data);
+
+  if(!message.IsEmpty())
   {
+    // Incoming Message from the server
     // --- "---------------------------------------------- - ------
-    printf("%-44s : SERVER\n",message.GetString());
+    printf("%-46s : SERVER\n",message.GetString());
   }
   else
   {
-    // Websocket without a message string
+    // WebSocket without a message string
     // --- "---------------------------------------------- - ------
     printf("WebSocket cannot get the UTF-8 message string  : ERROR\n");
   }
 }
 
 void
-OnCloseWebsocket(WebSocket* /*p_socket*/)
+OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 {
-  // Websocket has been opened
+  CString message((char*)p_frame->m_data);
+  if(!message.IsEmpty())
+  {
+    printf("CLOSING message: %s\n",message.GetString());
+  }
+
+  // WebSocket has been closed
   // --- "---------------------------------------------- - ------
   printf("WebSocket gotten the 'OnClose' event           : OK\n");
 }
@@ -107,7 +117,10 @@ TestWebSocket(LogAnalysis* p_log)
   CString uri;
   uri.Format("ws://%s:%d/MarlinTest/Sockets/socket_123",MARLIN_HOST,TESTING_HTTP_PORT);
 
-  // Declare a websocket
+  // Independent 3th party test website, to check whether our WebSocket works correct!
+  uri = "wss://echo.websocket.org";
+
+  // Declare a WebSocket
   ClientWebSocket* socket = new ClientWebSocket(uri);
   g_socket = socket;
 
@@ -121,11 +134,25 @@ TestWebSocket(LogAnalysis* p_log)
   socket->SetOnClose  (OnCloseWebsocket);
 
   // Start the socket by opening
+  // Receiving thread is now running on the HTTPClient
   if(socket->OpenSocket())
   {
     errors = 0;
   }
-  // Websocket has been opened
+  if(!socket->WriteString("Hello server, this is the client. Take one!"))
+  {
+    ++errors;
+  }
+  Sleep(1000);
+  if(!socket->WriteString("Hello server, this is the client. Take two!"))
+  {
+    ++errors;
+  }
+  Sleep(20000);
+
+  socket->WebSocket::CloseSocket((USHORT)WS_CLOSE_NORMAL,"Close the socket");
+
+  // WebSocket has been opened
   // --- "---------------------------------------------- - ------
   printf("WebSocket opened for ws://host:port/..._123    : %s\n",errors ? "ERROR" : "OK");
 

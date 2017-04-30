@@ -62,9 +62,6 @@ public:
   virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request);
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket (HTTP_REQUEST_ID p_request);
-  // Cancel and close a WebSocket
-  virtual bool       CancelSocket(HTTP_REQUEST_ID p_request);
-
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
   // Send a response in one-go

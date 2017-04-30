@@ -1941,22 +1941,3 @@ HTTPServerMarlin::FlushSocket(HTTP_REQUEST_ID /*p_request*/)
 {
   return true;
 }
-
-
-// Cancel and close a WebSocket
-bool
-HTTPServerMarlin::CancelSocket(HTTP_REQUEST_ID p_request)
-{
-  // Cancel the outstanding request from the request queue
-  ULONG result = HttpCancelHttpRequest(m_requestQueue,p_request,NULL);
-  if(result == NO_ERROR)
-  {
-    DETAILLOG1("WebSocket connection closed");
-  }
-  else
-  {
-    ERRORLOG(result,"WebSocket incorrectly canceled");
-  }
-  return (result == NO_ERROR);
-}
-

@@ -275,8 +275,11 @@ HTTPServerIIS::StopServer()
   while(!m_sockets.empty())
   {
     WebSocket* socket = m_sockets.begin()->second;
-    socket->CloseSocket();
-    UnRegisterWebSocket(socket);
+    if(socket)
+    {
+      socket->CloseSocket();
+      UnRegisterWebSocket(socket);
+    }
   }
   // Try to remove all event streams
   for(auto& it : m_eventStreams)
@@ -754,9 +757,15 @@ HTTPServerIIS::SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request)
 bool
 HTTPServerIIS::FlushSocket(HTTP_REQUEST_ID p_request)
 {
-  IHttpContext*   context = reinterpret_cast<IHttpContext*>(p_request);
-  IHttpResponse*  response = context->GetResponse();
+  IHttpContext*     context  = reinterpret_cast<IHttpContext*>(p_request);
+  IHttpResponse*    response = context->GetResponse();
+  IHttpCachePolicy* policy   = response->GetCachePolicy();
   DWORD bytesSent = 0;
+
+  // Do not buffer. Also turn dynamic compression OFF in IIS-Admin!
+  response->DisableBuffering();    // Disable buffering
+  response->DisableKernelCache(9); // 9 = HANDLER_HTTPSYS_UNFRIENDLY
+  policy->DisableUserCache();      // Disable user caching
 
   HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent);
   if(hr != S_OK)
@@ -1358,20 +1367,3 @@ HTTPServerIIS::CancelRequestStream(HTTP_REQUEST_ID p_response)
   }
 }
 
-// Cancel and close a WebSocket
-bool
-HTTPServerIIS::CancelSocket(HTTP_REQUEST_ID p_request)
-{
-  IHttpContext*  context = (IHttpContext*)p_request;
-  IHttpResponse* response = context->GetResponse();
-
-  // Now ready with the IIS context. Original request is finished
-  context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
-  // Set disconnection
-  response->SetNeedDisconnect();
-  // Now ready with this response
-  response->CloseConnection();
-  DETAILLOG1("WebSocket connection closed");
-
-  return true;
-}

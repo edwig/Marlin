@@ -27,7 +27,7 @@
 //
 #pragma once
 #include <windows.h>
-#include <list>
+#include <vector>
 
 // Maximum size of the environment variables on MS-Windows
 const int MAX_ENVSPACE = (32 * 1024);
@@ -86,13 +86,15 @@ public:
   void GetApplicInfo();			//	Application information
   void GetModuleInfo();			//	Loaded modules
 
-  typedef std::list<Module*> ModuleList;
+  void WriteToFile(CString const& Filename) const;
+
+  using ModuleList = std::vector<Module*>;
 
   CString			m_datetime;
-
   CString			m_application;
   CString			m_commandline;
 
+  int         m_version;
   CString			m_platform;
   CString			m_computer;
   CString			m_username;

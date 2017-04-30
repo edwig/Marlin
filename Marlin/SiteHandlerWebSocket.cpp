@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "SiteHandlerWebSocket.h"
 #include "WebSocket.h"
+#include "MarlinModule.h"
+#include <iiswebsocket.h>
 
 // A WebSocket handler is in essence a 'GET' handler
 // that will get upgraded to the WebSocket protocol.
@@ -45,10 +47,9 @@ SiteHandlerWebSocket::PreHandle(HTTPMessage* /*p_message*/)
 bool     
 SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
 {
-  HTTPServer* server = m_site->GetHTTPServer();
+  bool opened = false;
   // Create socket by absolute path of the incoming URL
   ServerWebSocket* socket = new ServerWebSocket(p_message->GetAbsolutePath());
-  server->RegisterSocket(socket);
 
   // Also get the parameters (key & value)
   CrackedURL& url = p_message->GetCrackedURL();
@@ -59,52 +60,64 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
   }
 
   // Reset the message and prepare for protocol upgrade
-  p_message->SetCommand(HTTPCommand::http_response);
+  p_message->Reset();
   p_message->SetStatus(HTTP_STATUS_SWITCH_PROTOCOLS);
-  p_message->GetFileBuffer()->Reset();
-  p_message->SetBody(" ");
-
-  // Perform the server handshake
-  if(socket->ServerHandshake(p_message) == false)
-  {
-    p_message->Reset();
-    p_message->SetStatus(HTTP_STATUS_BAD_REQUEST);
-    return true;
-  }
 
   // Our handler should be able to set message handlers
   // change the handshake headers and such or do the
   // Upgraded protocols for the version > 13!
   if(Handle(p_message,socket))
   {
+    // Handler must **NOT** handle the response sending!
     HTTP_REQUEST_ID request = p_message->GetRequestHandle();
-    // Send the response to the client side
-    // Confirming that we become a WebSocket
     if(request)
     {
-      // Sending the switch protocols and handshake headers
-      // as a HTTP 101 status, but keep the channel OPEN
+      HTTPServer* server = m_site->GetHTTPServer();
+
+      // Send the response to the client side, confirming that we become a WebSocket
+      // Sending the switch protocols and handshake headers as a HTTP 101 status, 
+      // but keep the channel OPEN
       m_site->SendResponse(p_message);
       server->FlushSocket(request);
+
+      // Now find the IWebSocketContext
+      IHttpContext*  context = reinterpret_cast<IHttpContext*>(request);
+      IHttpContext3* context3 = nullptr;
+      HRESULT hr = HttpGetExtendedInterface(g_iisServer,context,&context3);
+      if(SUCCEEDED(hr))
+      {
+        // Get Pointer to IWebSocketContext
+        IWebSocketContext* iissocket = (IWebSocketContext *)context3->GetNamedContextContainer()->GetNamedContext(IIS_WEBSOCKET);
+        if(!iissocket)
+        {
+          SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,"Cannot upgrade to websocket!");
+        }
+        else
+        {
+          // Register the request for the socket and open it now
+          opened = true;
+          server->RegisterSocket(socket);
+          socket->RegisterServerRequest(server,request,iissocket);
+          if(socket->OpenSocket())
+          {
+            SITE_DETAILLOGV("Opened a WebSocket for: %s",p_message->GetAbsolutePath());
+          }
+        }
+      }
+      else
+      {
+        SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"IIS Extended socket interface not found!");
+      }
     }
-
-    // Register the request for the socket and open it now
-    socket->RegisterServerRequest(m_site->GetHTTPServer(),request);
-    socket->OpenSocket();
-
-    // Guaranteed to be called on opening of the socket
-    socket->OnOpen();
-
-    // Now enter the read loop of the server
-    server->ReceiveWebSocket(socket,request);
-
-    // Guaranteed to be called on closing of the socket
-    socket->OnClose();
+    else
+    {
+      SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp should NOT handle the response message!");
+    }
   }
-  // WebSocket is now done and closed
-  if(!server->UnRegisterWebSocket(socket))
+
+  // If we did not open our WebSocket, remove it from memory
+  if(!opened)
   {
-    // It's a local websocket, remove it
     delete socket;
   }
   return true;

@@ -125,7 +125,7 @@ using EventMap    = std::multimap<CString,EventStream*>;
 using ServiceMap  = std::map<CString,WebServiceServer*>;
 using URLGroupMap = std::vector<HTTPURLGroup*>;
 using UKHeaders   = std::multimap<CString,CString>;
-using SocketMap   = std::map<CString,WebSocket*>;
+typedef std::map<CString,WebSocket*> SocketMap;;
 
 // Global error variable in Thread-Local-Storage
 // Per-thread basis error status
@@ -173,8 +173,6 @@ public:
   virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request) = 0;
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket (HTTP_REQUEST_ID p_request) = 0;
-  // Cancel and close a WebSocket
-  virtual bool       CancelSocket(HTTP_REQUEST_ID p_request) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
   // Send a response in one-go
