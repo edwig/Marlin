@@ -41,6 +41,8 @@ constexpr auto WS_FRAGMENT_MAXIMUM = (256 * 4096) - WS_MAX_HEADER;  //  1 MB buf
 constexpr auto WS_KEEPALIVE_TIME   = 20000;      // 20 sec = 20000 milliseconds
 // Maximum length of a WebSocket 'close' message
 constexpr auto WS_CLOSE_MAXIMUM    = 123;
+// Buffer overhead, for safty allocation
+constexpr auto WS_OVERHEAD         = 4;
 
 // Forward declaration of our class
 class WebSocket;
@@ -247,7 +249,7 @@ protected:
   LPFN_SOCKETHANDLER m_onclose;       // OnClose   handler
   // Current frame for reading & writing
   WSFrame*      m_reading { nullptr };
-  WSFrame*      m_writing { nullptr };
+//WSFrame*      m_writing { nullptr };
 
   // Synchronization for the fragment stack
   CRITICAL_SECTION   m_lock;
@@ -388,7 +390,8 @@ public:
   // Register the server request for sending info
   void    RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request,IWebSocketContext* p_iis_socket);
   // To be called for ASYNC I/O completion!
-  void    SocketReader();
+  void    SocketReader(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
+  void    SocketWriter(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
   // Socket listener, entered by the HTTPServerIIS only!!
   void    SocketListener();
 
@@ -398,12 +401,13 @@ protected:
   IWebSocketContext*  m_iis_socket{ nullptr };
   HTTP_REQUEST_ID     m_request   { NULL    };
   HANDLE              m_listener  { NULL    };
-  BYTE*               m_buffer{nullptr};
-  DWORD               m_size{0};
+  // Needed for the ASYNC I/O handler
   BOOL                m_utf8;
   BOOL                m_closing;
   BOOL                m_last;
   BOOL                m_expected;
+  // Async write buffer
+  WSFrameStack        m_writing;
 };
 
 inline void

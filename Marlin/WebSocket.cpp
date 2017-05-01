@@ -142,11 +142,6 @@ WebSocket::Close()
     delete m_reading;
     m_reading = nullptr;
   }
-  if(m_writing)
-  {
-    delete m_writing;
-    m_writing = nullptr;
-  }
 }
 
 void
@@ -363,7 +358,7 @@ WebSocket::WriteString(CString p_string)
 
       do
       {
-        // Caculate the length of the next fragment
+        // Calculate the length of the next fragment
         bool last = true;
         DWORD toWrite = toSend - total;
         if(toWrite >= m_fragmentsize)
@@ -995,25 +990,19 @@ ServerWebSocket::Reset()
   m_server     = nullptr;
   m_iis_socket = nullptr;
   m_listener   = NULL;
-  m_size       = 0;
   m_utf8       = false;
   m_closing    = false;
   m_last       = false;
   m_expected   = false;
 
-  if(m_buffer)
-  {
-    free(m_buffer);
-    m_buffer = nullptr;
-  }
 }
-
 
 bool
 ServerWebSocket::OpenSocket()
 {
   if(m_server && m_iis_socket)
   {
+    OnOpen();
     SocketListener();
     return true;
   }
@@ -1050,21 +1039,37 @@ ServerWebSocket::CloseSocket()
 bool
 ServerWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
 {
-  // Now encode MBCS to UTF-8
+  WSFrame* frame = new WSFrame();
+
+  // Now encode MBCS to UTF-16 !!
   uchar*  buffer = nullptr;
   int     length = 0;
   bool    result = false;
-  LPCWSTR reason = nullptr;
 
+  // IIS wants the 'close' reason in UTF-16 format (!!)
   if(p_reason.GetLength() && p_reason.GetLength() <= WS_CLOSE_MAXIMUM)
   {
     if(TryCreateWideString(p_reason,"",false,&buffer,length))
     {
-      reason = (LPCWSTR)buffer;
+      frame->m_utf8   = true;
+      frame->m_data   = (BYTE*)malloc(length + WS_OVERHEAD);
+      frame->m_length = length;
+      memcpy_s(frame->m_data,length + WS_OVERHEAD,buffer,length);
     }
   }
+  delete[] buffer;
+
+
+  // Store the frame
+  m_writing.push_back(frame);
+
   // Still other parameters and reason to do
-  HRESULT hr = m_iis_socket->SendConnectionClose(false,p_code,reason);
+  HRESULT hr = m_iis_socket->SendConnectionClose(TRUE
+                                                ,p_code
+                                                ,(LPCWSTR)frame->m_data
+                                                ,ServerWriteCompletion
+                                                ,this
+                                                ,&m_expected);
   if(FAILED(hr))
   {
     ERRORLOG(ERROR_INVALID_OPERATION,"Cannot send a 'close' message on the WebSocket!");
@@ -1073,40 +1078,81 @@ ServerWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
   {
     result = true;
   }
-  delete [] buffer;
 
   return result;
 }
 
 void WINAPI
-ServerWriteCompletion(HRESULT hrError,
-                      VOID*   pvCompletionContext,
-                      DWORD   cbIO,
-                      BOOL    fUTF8Encoded,
-                      BOOL    fFinalFragment,
-                      BOOL    fClose)
+ServerWriteCompletion(HRESULT p_error,
+                      VOID*   p_completionContext,
+                      DWORD   p_bytes,
+                      BOOL    p_utf8,
+                      BOOL    p_final,
+                      BOOL    p_close)
 {
-  ServerWebSocket* socket = reinterpret_cast<ServerWebSocket*>(pvCompletionContext);
-
-  CString test;
-  test.Format("%d %d %s %s %s",hrError,cbIO,fUTF8Encoded ? "yes" : "no",fFinalFragment ? "yes" : "no",fClose ? "yes" : "no");
-
-  UNREFERENCED_PARAMETER(socket);
+  ServerWebSocket* socket = reinterpret_cast<ServerWebSocket*>(p_completionContext);
+  if(socket)
+  {
+    socket->SocketWriter(p_error,p_bytes,p_utf8,p_final,p_close);
+  }
 }
 
+void
+ServerWebSocket::SocketWriter(HRESULT p_error,DWORD /*p_bytes*/,BOOL /*p_utf8*/,BOOL /*p_final*/,BOOL p_close)
+{
+  // Pop first WSFrame from the writing queue
+  if(!m_writing.empty())
+  {
+    WSFrame* frame = m_writing.front();
+    delete frame;
+    m_writing.pop_front();
+  }
+
+  // Handle any error (if any)
+  if(p_error)
+  {
+    DWORD error = (p_error & 0x0F);
+    ERRORLOG(error,"Websocket failed to read fragment");
+    CloseSocket();
+    return;
+  }
+  if(p_close)
+  {
+    CloseSocket();
+  }
+}
+
+// Low level WriteFragment
 bool
 ServerWebSocket::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last /* = true */)
 {
   bool result = false;
   if(m_server && m_iis_socket)
   {
-    DWORD bytes = p_length;
-    bool  utf8  = p_opcode == Opcode::SO_UTF8;
-    BOOL  expected = FALSE;
-    HRESULT hr  = m_iis_socket->WriteFragment(p_buffer,&bytes,TRUE,utf8,p_last,ServerWriteCompletion,&expected);
+    // Store the buffer in a WSFrame for async storage
+    WSFrame* frame  = new WSFrame();
+    frame->m_utf8   = (p_opcode == Opcode::SO_UTF8);
+    frame->m_length = p_length;
+    frame->m_data   = (BYTE*)malloc(p_length + WS_OVERHEAD);
+    memcpy_s(frame->m_data,p_length + WS_OVERHEAD,p_buffer,p_length);
+
+    // Put it in the writing queue
+    m_writing.push_back(frame);
+
+    // Issue a async write command for this buffer
+    HRESULT hr  = m_iis_socket->WriteFragment(frame->m_data
+                                             ,&frame->m_length
+                                             ,TRUE
+                                             ,frame->m_utf8
+                                             ,p_last
+                                             ,ServerWriteCompletion
+                                             ,this
+                                             ,&m_expected);
     if(FAILED(hr))
     {
-      // Cannot send to socket, close the socket.
+      DWORD error = hr & 0x0F;
+      ERRORLOG(error,"Websocket failed to register write command for a fragment");
+      CloseSocket();
     }
     else
     {
@@ -1116,8 +1162,93 @@ ServerWebSocket::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,boo
   return result;
 }
 
-// Add a URI parameter
+void WINAPI 
+ServerReadCompletion(HRESULT p_error,
+                     VOID*   p_completionContext,
+                     DWORD   p_bytes,
+                     BOOL    p_utf8,
+                     BOOL    p_final,
+                     BOOL    p_close)
+{
+  ServerWebSocket* socket = reinterpret_cast<ServerWebSocket*>(p_completionContext);
+  if(socket)
+  {
+    socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+  }
+}
+
+void
+ServerWebSocket::SocketReader(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close)
+{
+  // Handle any error (if any)
+  if(p_error)
+  {
+    DWORD error = (p_error & 0x0F);
+    ERRORLOG(error,"Websocket failed to read fragment");
+    CloseSocket();
+    return;
+  }
+
+  // Consolidate the reading buffer
+  m_reading->m_data[p_bytes] = 0;
+  m_reading->m_data = (BYTE*)realloc(m_reading->m_data,p_bytes + 1);
+  m_reading->m_length = p_bytes;
+
+  // Store the current fragment we just did read
+  StoreWSFrame(m_reading);
+
+  if(p_final)
+  {
+    if(p_close)
+    {
+      OnClose();
+      SendCloseSocket(WS_CLOSE_NORMAL,"WebSocket closed");
+      return;
+    }
+    else if(p_utf8)
+    {
+      OnMessage();
+    }
+    else
+    {
+      OnBinary();
+    }
+  }
+
+  // Issue a new read command for a new buffer
+  SocketListener();
+}
+
 void    
+ServerWebSocket::SocketListener()
+{
+  if(!m_reading)
+  {
+    m_reading           = new WSFrame();
+    m_reading->m_length = m_fragmentsize;
+    m_reading->m_data   = (BYTE*) malloc(m_fragmentsize + WS_OVERHEAD);
+  }
+    
+  // Issue the Async read-a-fragment command to the Async I/O WebSocket
+  HRESULT hr = m_iis_socket->ReadFragment(m_reading->m_data
+                                         ,&m_reading->m_length
+                                         ,TRUE
+                                         ,&m_utf8
+                                         ,&m_last
+                                         ,&m_closing
+                                         ,ServerReadCompletion
+                                         ,this
+                                         ,&m_expected);
+  if(FAILED(hr))
+  {
+    DWORD error = hr & 0x0F;
+    ERRORLOG(error,"Websocket failed to register read command for a fragment");
+    CloseSocket();
+  }
+}
+
+// Add a URI parameter
+void
 ServerWebSocket::AddParameter(CString p_name,CString p_value)
 {
   p_name.MakeLower();
@@ -1125,7 +1256,7 @@ ServerWebSocket::AddParameter(CString p_name,CString p_value)
 }
 
 // Find a URI parameter
-CString 
+CString
 ServerWebSocket::GetParameter(CString p_name)
 {
   CString value;
@@ -1136,64 +1267,6 @@ ServerWebSocket::GetParameter(CString p_name)
     value = it->second;
   }
   return value;
-}
-
-
-
-void WINAPI 
-ServerReadCompletion(HRESULT hrError,
-                     VOID*   pvCompletionContext,
-                     DWORD   cbIO,
-                     BOOL    fUTF8Encoded,
-                     BOOL    fFinalFragment,
-                     BOOL    fClose)
-{
-  ServerWebSocket* socket = reinterpret_cast<ServerWebSocket*>(pvCompletionContext);
-
-  CString test;
-  test.Format("%d %d %s %s %s",hrError,cbIO,fUTF8Encoded ? "yes" : "no",fFinalFragment ? "yes" : "no",fClose ? "yes" : "no");
-
-  socket->SocketReader();
-  
-  Sleep(100);
-  socket->WriteString("Answer");
-  Sleep(100);
-}
-
-void
-ServerWebSocket::SocketReader()
-{
-
-  HRESULT hr = m_iis_socket->ReadFragment(m_buffer,&m_size,TRUE,&m_utf8,&m_last,&m_closing,ServerReadCompletion,(void*)this,&m_expected);
-  if(SUCCEEDED(hr))
-  {
-    if(m_size)
-    {
-      m_buffer[m_size] = 0;
-    }
-  }
-  // Store Fragment!
-
-}
-
-void    
-ServerWebSocket::SocketListener()
-{
-  OnOpen();
-
-  if(!m_buffer)
-  {
-    // IHttpContext* context = reinterpret_cast<IHttpContext*>(m_request);
-    m_size   = WS_FRAGMENT_DEFAULT;
-    m_buffer = (BYTE*) malloc(m_size + 10);
-  }
-    
-  HRESULT hr = m_iis_socket->ReadFragment(m_buffer,&m_size,TRUE,&m_utf8,&m_last,&m_closing,ServerReadCompletion,(void*)this,&m_expected);
-  if(FAILED(hr))
-  {
-//       CloseSocket();
-//       closing = true;
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1400,7 +1473,7 @@ ClientWebSocket::ReceiveCloseSocket()
   return false;
 }
 
-// Writing one fragement out to the WebSocket handle
+// Writing one fragment out to the WebSocket handle
 // Works regarding the type of fragment
 bool
 ClientWebSocket::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last /* = true */)
@@ -1455,7 +1528,7 @@ ClientWebSocket::SocketListener()
     if(!m_reading)
     {
       m_reading = new WSFrame;
-      m_reading->m_data = (BYTE*)malloc(m_fragmentsize + 10);
+      m_reading->m_data = (BYTE*)malloc(m_fragmentsize + WS_OVERHEAD);
     }
 
     DWORD bytesRead = 0;
@@ -1520,7 +1593,7 @@ ClientWebSocket::SocketListener()
         {
           // Just append another fragment after the current one
           // And keep reading until we find the final UTF-8 fragment
-          DWORD newsize = m_reading->m_length + bytesRead + m_fragmentsize + 10;
+          DWORD newsize = m_reading->m_length + bytesRead + m_fragmentsize + WS_OVERHEAD;
           m_reading->m_data = (BYTE*)realloc(m_reading->m_data,newsize);
           m_reading->m_length += bytesRead;
         }
