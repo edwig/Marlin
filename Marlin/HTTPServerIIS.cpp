@@ -649,131 +649,70 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
 
 // Receive the WebSocket stream and pass on the the WebSocket
 void
-HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request)
+HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID /*p_request*/)
 {
-  // From here on, IIS needs one more thread, because we are holding one of them 'hostage' :-)
-  g_iisServer->IncrementThreadCount();
-
-
-  IHttpContext* context     = reinterpret_cast<IHttpContext*>(p_request);
-  IHttpRequest* httpRequest = context->GetRequest();
-
-  uchar* buffer   = nullptr;
-  DWORD  total    = 0;
-  BOOL   complete = FALSE;
-
-  // Loop while getting data from the WebSocket
-  do
+  ServerWebSocket* socket = reinterpret_cast<ServerWebSocket*>(p_socket);
+  if(socket)
   {
-    // Fresh buffer allocation
-    if(buffer == nullptr)
-    {
-      buffer = (uchar*) malloc(INIT_HTTP_BUFFERSIZE + 1);
-      total  = 0;
-    }
-    DWORD received = 0;
-    HRESULT hr = httpRequest->ReadEntityBody(&buffer[total],INIT_HTTP_BUFFERSIZE,FALSE,&received,&complete);
-    if(!SUCCEEDED(hr))
-    {
-      if(HRESULT_CODE(hr) == ERROR_MORE_DATA)
-      {
-        // Strange, but this code is used to determine that there is NO more data
-        // The boolean 'complete' status is **NOT** used! (that one is for async completion!)
-        break;
-      }
-      ERRORLOG(HRESULT_CODE(hr),"Cannot read incoming HTTP buffer");
-      break;
-    }
-    total += received;
-
-    RawFrame* frame = new RawFrame();
-    frame->m_data = buffer;
-    if(p_socket->DecodeFrameBuffer(frame,total))
-    {
-      // Shrink the buffer and store it for the socket
-      frame->m_data = (BYTE*) realloc(buffer,total);
-      buffer = nullptr;
-
-      if(p_socket->StoreFrameBuffer(frame) == false)
-      {
-        // closing channel on a close operator
-        complete = true;
-      }
-    }
-    else
-    {
-      // Incomplete buffer, expand buffer to receive some more
-      buffer = (uchar*)realloc(buffer,total + INIT_HTTP_BUFFERSIZE);
-      // Remove unused frame buffer
-      frame->m_data = nullptr;
-      delete frame;
-    }
+    // Enter the ASYNC listener loop of the websocket
+    socket->SocketListener();
   }
-  while(!complete);
-
-  // Do not forget to free the buffer
-  if(buffer)
-  {
-    free(buffer);
-  }
-
-  // Freeing the thread for IIS, so we decrease the IIS count.
-  g_iisServer->DecrementThreadCount();
 }
 
 // Send to a WebSocket
 bool
-HTTPServerIIS::SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request)
+HTTPServerIIS::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/)
 {
-  IHttpContext*   context  = reinterpret_cast<IHttpContext*>(p_request);
-  IHttpResponse*  response = context->GetResponse();
-  HTTP_DATA_CHUNK dataChunk;
-  DWORD  bytesSent = 0;
-
-  // Only if a buffer present
-  dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer      = (void*)p_frame.m_data;
-  dataChunk.FromMemory.BufferLength = (ULONG)(p_frame.m_headerLength + p_frame.m_payloadLength);
-
-  HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,TRUE,&bytesSent);
-  if(hr != S_OK)
-  {
-    ERRORLOG(GetLastError(),"WriteEntityChunks failed for WebSocket");
-    CancelRequestStream(p_request);
-  }
-  else
-  {
-    DETAILLOGV("WriteEntityChunks for WebSocket sent [%d] bytes",bytesSent);
-    hr = response->Flush(FALSE,TRUE,&bytesSent);
-    if(hr != S_OK)
-    {
-      ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
-      CancelRequestStream(p_request);
-    }
-  }
-  return (hr == S_OK);
+//   IHttpContext*   context  = reinterpret_cast<IHttpContext*>(p_request);
+//   IHttpResponse*  response = context->GetResponse();
+//   HTTP_DATA_CHUNK dataChunk;
+//   DWORD  bytesSent = 0;
+// 
+//   // Only if a buffer present
+//   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
+//   dataChunk.FromMemory.pBuffer      = (void*)p_frame.m_data;
+//   dataChunk.FromMemory.BufferLength = (ULONG)(p_frame.m_headerLength + p_frame.m_payloadLength);
+// 
+//   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,TRUE,&bytesSent);
+//   if(hr != S_OK)
+//   {
+//     ERRORLOG(GetLastError(),"WriteEntityChunks failed for WebSocket");
+//     CancelRequestStream(p_request);
+//   }
+//   else
+//   {
+//     DETAILLOGV("WriteEntityChunks for WebSocket sent [%d] bytes",bytesSent);
+//     hr = response->Flush(FALSE,TRUE,&bytesSent);
+//     if(hr != S_OK)
+//     {
+//       ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
+//       CancelRequestStream(p_request);
+//     }
+//   }
+//   return (hr == S_OK);
+  return false;
 }
 
 bool
-HTTPServerIIS::FlushSocket(HTTP_REQUEST_ID p_request)
+HTTPServerIIS::FlushSocket(HTTP_REQUEST_ID /*p_request*/)
 {
-  IHttpContext*     context  = reinterpret_cast<IHttpContext*>(p_request);
-  IHttpResponse*    response = context->GetResponse();
-  IHttpCachePolicy* policy   = response->GetCachePolicy();
-  DWORD bytesSent = 0;
-
-  // Do not buffer. Also turn dynamic compression OFF in IIS-Admin!
-  response->DisableBuffering();    // Disable buffering
-  response->DisableKernelCache(9); // 9 = HANDLER_HTTPSYS_UNFRIENDLY
-  policy->DisableUserCache();      // Disable user caching
-
-  HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent);
-  if(hr != S_OK)
-  {
-    ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
-    CancelRequestStream(p_request);
-    return false;
-  }
+//   IHttpContext*     context  = reinterpret_cast<IHttpContext*>(p_request);
+//   IHttpResponse*    response = context->GetResponse();
+//   IHttpCachePolicy* policy   = response->GetCachePolicy();
+//   DWORD bytesSent = 0;
+// 
+//   // Do not buffer. Also turn dynamic compression OFF in IIS-Admin!
+//   response->DisableBuffering();    // Disable buffering
+//   response->DisableKernelCache(9); // 9 = HANDLER_HTTPSYS_UNFRIENDLY
+//   policy->DisableUserCache();      // Disable user caching
+// 
+//   HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent);
+//   if(hr != S_OK)
+//   {
+//     ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
+//     CancelRequestStream(p_request);
+//     return false;
+//   }
   return true;
 }
 

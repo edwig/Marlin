@@ -38,7 +38,7 @@ TestWebSocketAccept(void)
   bool result = false;
   CString clientkey = "dGhlIHNhbXBsZSBub25jZQ==";
 
-  ClientWebSocket socket("ws://localhost/testing");
+  ServerMarlinWebSocket socket("ws://localhost/testing");
   CString serverkey = socket.ServerAcceptKey(clientkey);
 
   xprintf("Client Key: %s\n",clientkey.GetString());
@@ -80,9 +80,18 @@ OnMessageWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 
   if(!message.IsEmpty())
   {
-    // Incoming Message from the server
-    // --- "---------------------------------------------- - ------
-    printf("%-46s : SERVER\n",message.GetString());
+    if(message.GetLength() < 100)
+    {
+      // Incoming Message from the server
+      // --- "---------------------------------------------- - ------
+      printf("%-46s : OK\n",message.GetString());
+    }
+    else
+    {
+      printf("ALL\n");
+      printf(message);
+      printf("END\n");
+    }
   }
   else
   {
@@ -107,13 +116,48 @@ OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 }
 
 //////////////////////////////////////////////////////////////////////////
+
+CString 
+GetLargeMessage()
+{
+  CString large;
+  CString part1,part2,part3;
+
+  for(unsigned ind = 0; ind < 60; ++ind)
+  {
+    part1 += "#";
+    part2 += "$";
+    part3 += "=";
+  }
+
+  large = part1 + "\n" + part2 + "\n" + part3 + "\n";
+
+  part2.Empty();
+  for(unsigned ind = 0; ind < 20; ++ind)
+  {
+    part2 += large;
+  }
+
+  large.Empty();
+  for(unsigned ind = 0; ind < 20; ++ind)
+  {
+    large += part2;
+    large += "*** end ***\n";
+  }
+
+  return large;
+}
+
+//////////////////////////////////////////////////////////////////////////
 //
 // CREATE THE WEBSOCKET ON THE CLIENT SIDE
+//
+//////////////////////////////////////////////////////////////////////////
 
 int
 TestWebSocket(LogAnalysis* p_log)
 {
-  int errors = 1;
+  int errors = 0;
   CString uri;
   uri.Format("ws://%s:%d/MarlinTest/Sockets/socket_123",MARLIN_HOST,TESTING_HTTP_PORT);
 
@@ -135,9 +179,9 @@ TestWebSocket(LogAnalysis* p_log)
 
   // Start the socket by opening
   // Receiving thread is now running on the HTTPClient
-  if(socket->OpenSocket())
+  if(socket->OpenSocket() == false)
   {
-    errors = 0;
+    ++errors;
   }
   if(!socket->WriteString("Hello server, this is the client. Take one!"))
   {
@@ -148,13 +192,25 @@ TestWebSocket(LogAnalysis* p_log)
   {
     ++errors;
   }
-  Sleep(20000);
+  Sleep(1000);
 
-  socket->WebSocket::CloseSocket((USHORT)WS_CLOSE_NORMAL,"Close the socket");
+  // Testing strings that are longer than the TCP/IP buffering for WebSockets
+  // So strings longer than typical 16K bytes must be testable
+  //   CString large = GetLargeMessage();
+  //   if(!socket->WriteString(large))
+  //   {
+  //     ++errors;
+  //   }
+  //   Sleep(5000);
+
+  if(!socket->SendCloseSocket(WS_CLOSE_NORMAL,"TestWebSocket did close the socket"))
+  {
+    ++errors;
+  }
 
   // WebSocket has been opened
   // --- "---------------------------------------------- - ------
-  printf("WebSocket opened for ws://host:port/..._123    : %s\n",errors ? "ERROR" : "OK");
+  printf("WebSocket tests for ws://host:port/..._123     : %s\n",errors ? "ERROR" : "OK");
 
   return errors;
 }

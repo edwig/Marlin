@@ -40,7 +40,7 @@ int totalChecks = 0;
 //
 //////////////////////////////////////////////////////////////////////////
 
-void OnOpen(WebSocket* p_socket,WSFrame* p_frame)
+void OnOpen(WebSocket* p_socket,WSFrame* /*p_frame*/)
 {
   qprintf("Opened a websocket for: %s",p_socket->GetURI());
 }
@@ -48,7 +48,7 @@ void OnOpen(WebSocket* p_socket,WSFrame* p_frame)
 void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 {
   CString message((char*)p_frame->m_data);
-  qprintf("Incoming WebSocket message: %s",message);
+  qprintf("Incoming WebSocket [%s] message: %s",p_socket->GetURI(),message);
 }
 
 void OnClose(WebSocket* p_socket,WSFrame* p_frame)

@@ -1242,6 +1242,7 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request
   BYTE* buffer  = nullptr;
   DWORD total   = 0;
   bool  reading = true;
+  ServerMarlinWebSocket* socket = reinterpret_cast<ServerMarlinWebSocket*>(p_socket);
 
   do
   {
@@ -1281,13 +1282,13 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request
 
       RawFrame* frame = new RawFrame();
       frame->m_data = buffer;
-      if(p_socket->StoreFrameBuffer(frame))
+      if(socket->StoreFrameBuffer(frame))
       {
         // Shrink the buffer and store it for the socket
         frame->m_data = (BYTE*)realloc(buffer,total);
         buffer = nullptr;
 
-        if(p_socket->StoreFrameBuffer(frame) == false)
+        if(socket->StoreFrameBuffer(frame) == false)
         {
           // closing channel on a close operator
           reading = false;
