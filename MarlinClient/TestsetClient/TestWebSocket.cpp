@@ -38,7 +38,7 @@ TestWebSocketAccept(void)
   bool result = false;
   CString clientkey = "dGhlIHNhbXBsZSBub25jZQ==";
 
-  ServerMarlinWebSocket socket("ws://localhost/testing");
+  WebSocketServer socket("ws://localhost/testing");
   CString serverkey = socket.ServerAcceptKey(clientkey);
 
   xprintf("Client Key: %s\n",clientkey.GetString());
@@ -57,7 +57,7 @@ TestWebSocketAccept(void)
   return result ? 0 : 1;
 }
 
-ClientWebSocket* g_socket = nullptr;
+WebSocketClient* g_socket = nullptr;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -165,7 +165,7 @@ TestWebSocket(LogAnalysis* p_log)
   uri = "wss://echo.websocket.org";
 
   // Declare a WebSocket
-  ClientWebSocket* socket = new ClientWebSocket(uri);
+  WebSocketClient* socket = new WebSocketClient(uri);
   g_socket = socket;
 
   // Connect our logging

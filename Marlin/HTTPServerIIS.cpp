@@ -647,11 +647,18 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   return true;
 }
 
+// Create a new WebSocket in the subclass of our server
+WebSocket* 
+HTTPServerIIS::CreateWebSocket(CString p_uri)
+{
+  return new WebSocketServerIIS(p_uri);
+}
+
 // Receive the WebSocket stream and pass on the the WebSocket
 void
 HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID /*p_request*/)
 {
-  ServerWebSocket* socket = reinterpret_cast<ServerWebSocket*>(p_socket);
+  WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_socket);
   if(socket)
   {
     // Enter the ASYNC listener loop of the websocket

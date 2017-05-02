@@ -114,6 +114,18 @@ public:
   BYTE*   m_data;           // Pointer to the raw data (header + payload)
 };
 
+// Socket message and Dispatch message are used
+// to start up the message handlers from within the Threadpool
+enum class SockMessage
+{
+  SM_NOTHING = 0
+ ,SM_OPEN    = 1
+ ,SM_MESSAGE = 2
+ ,SM_BINARY  = 3
+ ,SM_ERROR   = 4
+ ,SM_CLOSE   = 5
+};
+
 // WSFrames are the simplified frames for WinHTTP and IIS
 class WSFrame
 {
@@ -121,14 +133,18 @@ public:
   WSFrame();
  ~WSFrame();
 
-  bool  m_utf8   { false   };   // UTF-8 Frame or Binary frame
-  BYTE* m_data   { nullptr };   // Data block pointer
-  DWORD m_length { 0       };   // Length of the data block
+  SockMessage m_message { SockMessage::SM_NOTHING };
+  DWORD       m_number  { 0       };    // Message sequence number
+  bool        m_final   { false   };    // True if final frame for message
+  bool        m_utf8    { false   };    // UTF-8 Frame or Binary frame
+  BYTE*       m_data    { nullptr };    // Data block pointer
+  DWORD       m_length  { 0       };    // Length of the data block
 };
 
 // Incoming stacks of data
 using FragmentStack = std::deque<RawFrame*>;
 using WSFrameStack  = std::deque<WSFrame*>;
+using SocketParams  = std::map<CString,CString>;
 
 // Prototype for WebSocket callback handler
 typedef void(*LPFN_SOCKETHANDLER)(WebSocket* p_socket,WSFrame* p_event);
@@ -157,6 +173,8 @@ public:
   virtual bool SendCloseSocket(USHORT p_code,CString p_reason) = 0;
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) = 0;
+  // Register the server request for sending info
+  virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request) = 0;
   // Decoded close connection (use in 'OnClose')
   bool GetCloseSocket(USHORT& p_code,CString& p_reason);
   // Socket still open?
@@ -210,11 +228,19 @@ public:
   bool    GetDoLogging()      { return m_doLogging;    };
   LogAnalysis* GetLogfile()   { return m_logfile;      };
 
+  // Add a URI parameter
+  void    AddParameter(CString p_name,CString p_value);
+  // Find a URI parameter
+  CString GetParameter(CString p_name);
+
   // LOGGING
   void    DetailLog(const char* p_function,LogType p_type,const char* p_text);
   void    DetailLogS(const char* p_function,LogType p_type,const char* p_text,const char* p_extra);
   void    DetailLogV(const char* p_function,LogType p_type,const char* p_text,...);
   void    ErrorLog(const char* p_function,DWORD p_code,CString p_text);
+
+  // May only be called from within the Threadpool!
+  void    Dispatcher();
 
 protected:
   // Completely close the connection
@@ -223,36 +249,42 @@ protected:
   void    StoreWSFrame(WSFrame*& p_frame);
   // Get the first frame
   WSFrame* GetWSFrame();
+  // Convert the UTF-8 in a frame back to MBCS
+  void     ConvertWSFrameToMBCS(WSFrame* p_frame);
+  // Append UTF-8 text to last frame on the stack, or just store it
+  void     StoreOrAppendWSFrame(WSFrame*& p_frame);
+
 
   // GENERAL SOCKET DATA
   CString m_uri;                      // ws[s]://resource URI for the socket
-  bool    m_open { false };           // WebSocket is opened and alive
+  bool    m_open        { false };    // WebSocket is opened and alive
   ULONG   m_keepalive;                // Keep alive time of the socket
   ULONG   m_fragmentsize;             // Max fragment size
   CString m_protocols;                // WebSocket main protocols
   CString m_extensions;               // Extensions in 1,2,3 fields
-  USHORT  m_closingError{ 0      };   // Error on closing
+  USHORT  m_closingError{ 0     };    // Error on closing
   CString m_closing;                  // Closing error text
   HANDLE  m_pingEvent;                // The ping/pong event
   ULONG   m_pingTimeout { 30000 };    // How long we wait for a pong after a ping
   bool    m_pongSeen    { false };    // Seen a pong for a ping
   bool    m_doLogging   { false };    // Do we do the logging?
+  DWORD   m_messageNumber { 0   };    // Last message number
   // Complex objects
   FragmentStack m_stack;              // Incoming raw fragments (stand-alone)
   WSFrameStack  m_frames;             // Incoming WS  fragments (IIS, WinHTTP)
   LogAnalysis*  m_logfile {nullptr};  // Connected to this logfile
+  SocketParams  m_parameters;         // All parameters
   // Handlers
-  LPFN_SOCKETHANDLER m_onopen;        // OnOpen    handler
-  LPFN_SOCKETHANDLER m_onmessage;     // OnMessage handler
-  LPFN_SOCKETHANDLER m_onbinary;      // OnBinary  handler
-  LPFN_SOCKETHANDLER m_onerror;       // OnError   handler
-  LPFN_SOCKETHANDLER m_onclose;       // OnClose   handler
+  LPFN_SOCKETHANDLER m_onopen    { nullptr }; // OnOpen    handler
+  LPFN_SOCKETHANDLER m_onmessage { nullptr }; // OnMessage handler
+  LPFN_SOCKETHANDLER m_onbinary  { nullptr }; // OnBinary  handler
+  LPFN_SOCKETHANDLER m_onerror   { nullptr }; // OnError   handler
+  LPFN_SOCKETHANDLER m_onclose   { nullptr }; // OnClose   handler
   // Current frame for reading & writing
-  WSFrame*      m_reading { nullptr };
-//WSFrame*      m_writing { nullptr };
-
+  WSFrame* m_reading { nullptr };
   // Synchronization for the fragment stack
   CRITICAL_SECTION   m_lock;
+  CRITICAL_SECTION   m_disp;
 };
 
 inline bool
@@ -315,11 +347,11 @@ WebSocket::SetOnClose(LPFN_SOCKETHANDLER p_onClose)
 //
 //////////////////////////////////////////////////////////////////////////
 
-class ServerMarlinWebSocket : public WebSocket
+class WebSocketServer : public WebSocket
 {
 public:
-  ServerMarlinWebSocket(CString p_uri);
-  virtual ~ServerMarlinWebSocket();
+  WebSocketServer(CString p_uri);
+  virtual ~WebSocketServer();
 
   // Reset the socket
   virtual void Reset();
@@ -331,6 +363,8 @@ public:
   virtual bool SendCloseSocket(USHORT p_code,CString p_reason);
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
+  // Register the server request for sending info
+  virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request);
   // Read a fragment from a WebSocket
   bool ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last);
 
@@ -355,6 +389,10 @@ public:
 private:
   // Decode the incoming closing fragment before we call 'OnClose'
   void    DecodeCloseFragment(RawFrame* p_frame);
+
+  HTTPServer*     m_server  { nullptr };
+  HTTP_REQUEST_ID m_request { NULL    };
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -363,13 +401,11 @@ private:
 //
 //////////////////////////////////////////////////////////////////////////
 
-using SocketParams = std::map<CString,CString>;
-
-class ServerWebSocket : public WebSocket
+class WebSocketServerIIS : public WebSocket
 {
 public:
-  ServerWebSocket(CString p_uri);
-  virtual ~ServerWebSocket();
+  WebSocketServerIIS(CString p_uri);
+  virtual ~WebSocketServerIIS();
 
   // FUNCTIONS
 
@@ -383,12 +419,8 @@ public:
   virtual bool SendCloseSocket(USHORT p_code,CString p_reason);
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
-  // Add a URI parameter
-  void    AddParameter(CString p_name,CString p_value);
-  // Find a URI parameter
-  CString GetParameter(CString p_name);
   // Register the server request for sending info
-  void    RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request,IWebSocketContext* p_iis_socket);
+  virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request);
   // To be called for ASYNC I/O completion!
   void    SocketReader(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
   void    SocketWriter(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
@@ -396,27 +428,21 @@ public:
   void    SocketListener();
 
 protected:
-  SocketParams        m_parameters;
+  // Decode the incoming close socket message
+  bool    ReceiveCloseSocket();
+
   HTTPServer*         m_server    { nullptr };
   IWebSocketContext*  m_iis_socket{ nullptr };
   HTTP_REQUEST_ID     m_request   { NULL    };
   HANDLE              m_listener  { NULL    };
   // Needed for the ASYNC I/O handler
   BOOL                m_utf8;
-  BOOL                m_closing;
   BOOL                m_last;
+  BOOL                m_isclosing;
   BOOL                m_expected;
   // Async write buffer
   WSFrameStack        m_writing;
 };
-
-inline void
-ServerWebSocket::RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request,IWebSocketContext* p_iis_socket)
-{
-  m_server     = p_server;
-  m_request    = p_request;
-  m_iis_socket = p_iis_socket;
-}
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -424,11 +450,11 @@ ServerWebSocket::RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_re
 //
 //////////////////////////////////////////////////////////////////////////
 
-class ClientWebSocket: public WebSocket
+class WebSocketClient: public WebSocket
 {
 public:
-  ClientWebSocket(CString p_uri);
-  virtual ~ClientWebSocket();
+  WebSocketClient(CString p_uri);
+  virtual ~WebSocketClient();
 
   // FUNCTIONS
 
@@ -440,6 +466,8 @@ public:
   virtual bool CloseSocket();
   // Close the socket with a closing frame
   virtual bool SendCloseSocket(USHORT p_code,CString p_reason);
+  // Register the server request for sending info
+  virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request);
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
   // Generate a handshake key
@@ -465,7 +493,15 @@ protected:
 };
 
 inline CString
-ClientWebSocket::GetHandshakeKey()
+WebSocketClient::GetHandshakeKey()
 {
   return m_socketKey;
+}
+
+// Register the server request for sending info
+inline bool 
+WebSocketClient::RegisterServerRequest(HTTPServer* /*p_server*/,HTTP_REQUEST_ID /*p_request*/)
+{
+  // NO-OP for the client side
+  return true;
 }

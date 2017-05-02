@@ -28,8 +28,6 @@
 #include "stdafx.h"
 #include "SiteHandlerWebSocket.h"
 #include "WebSocket.h"
-#include "MarlinModule.h"
-#include <iiswebsocket.h>
 
 // A WebSocket handler is in essence a 'GET' handler
 // that will get upgraded to the WebSocket protocol.
@@ -48,8 +46,10 @@ bool
 SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
 {
   bool opened = false;
+  HTTPServer* server = m_site->GetHTTPServer();
+
   // Create socket by absolute path of the incoming URL
-  ServerWebSocket* socket = new ServerWebSocket(p_message->GetAbsolutePath());
+  WebSocket* socket = server->CreateWebSocket(p_message->GetAbsolutePath());
 
   // Also get the parameters (key & value)
   CrackedURL& url = p_message->GetCrackedURL();
@@ -72,47 +72,36 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
     HTTP_REQUEST_ID request = p_message->GetRequestHandle();
     if(request)
     {
-      HTTPServer* server = m_site->GetHTTPServer();
-
       // Send the response to the client side, confirming that we become a WebSocket
       // Sending the switch protocols and handshake headers as a HTTP 101 status, 
       // but keep the channel OPEN
       m_site->SendResponse(p_message);
       server->FlushSocket(request);
 
-      // Now find the IWebSocketContext
-      IHttpContext*  context = reinterpret_cast<IHttpContext*>(request);
-      IHttpContext3* context3 = nullptr;
-      HRESULT hr = HttpGetExtendedInterface(g_iisServer,context,&context3);
-      if(SUCCEEDED(hr))
+      // Find the internal structures for the server
+      if(socket->RegisterServerRequest(server,request))
       {
-        // Get Pointer to IWebSocketContext
-        IWebSocketContext* iissocket = (IWebSocketContext *)context3->GetNamedContextContainer()->GetNamedContext(IIS_WEBSOCKET);
-        if(!iissocket)
+        if(socket->OpenSocket())
         {
-          SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,"Cannot upgrade to websocket!");
+          opened = true;
+          // Register the socket at the server, so we can find it
+          server->RegisterSocket(socket);
+          SITE_DETAILLOGV("Opened a WebSocket for: %s",p_message->GetAbsolutePath());
         }
         else
         {
-          // Register the request for the socket and open it now
-          opened = true;
-          server->RegisterSocket(socket);
-          socket->RegisterServerRequest(server,request,iissocket);
-          if(socket->OpenSocket())
-          {
-            SITE_DETAILLOGV("Opened a WebSocket for: %s",p_message->GetAbsolutePath());
-          }
+          SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,"Socket listener not started");
         }
-      }
-      else
-      {
-        SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"IIS Extended socket interface not found!");
       }
     }
     else
     {
       SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp should NOT handle the response message!");
     }
+  }
+  else
+  {
+    SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp could not register the WebSocket!");
   }
 
   // If we did not open our WebSocket, remove it from memory

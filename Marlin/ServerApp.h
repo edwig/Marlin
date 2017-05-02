@@ -64,6 +64,7 @@ public:
   // GETTERS
 
   HTTPServer*    GetHTTPServer() { return m_appServer; };
+  ThreadPool*    GetThreadPool() { return m_appPool;   };
 
 protected:
   // Read the site's configuration from the IIS internal structures

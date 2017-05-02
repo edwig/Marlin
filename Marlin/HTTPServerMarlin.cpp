@@ -1232,6 +1232,13 @@ HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* p_message)
   return retval;
 }
 
+// Create a new WebSocket in the subclass of our server
+WebSocket*
+HTTPServerMarlin::CreateWebSocket(CString p_uri)
+{
+  return new WebSocketServer(p_uri);
+}
+
 // Receive the WebSocket stream and pass on the the WebSocket
 void
 HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request)
@@ -1242,7 +1249,7 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request
   BYTE* buffer  = nullptr;
   DWORD total   = 0;
   bool  reading = true;
-  ServerMarlinWebSocket* socket = reinterpret_cast<ServerMarlinWebSocket*>(p_socket);
+  WebSocketServer* socket = reinterpret_cast<WebSocketServer*>(p_socket);
 
   do
   {

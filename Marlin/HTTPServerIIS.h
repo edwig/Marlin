@@ -56,6 +56,8 @@ public:
   virtual bool       DeleteSite(int p_port,CString p_baseURL,bool p_force = false);
   // Receive (the rest of the) incoming HTTP request
   virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message);
+  // Create a new WebSocket in the subclass of our server
+  virtual WebSocket* CreateWebSocket(CString p_uri);
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request);
   // Send to a WebSocket

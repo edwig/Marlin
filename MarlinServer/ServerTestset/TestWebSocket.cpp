@@ -32,7 +32,8 @@
 #include "WebSocket.h"
 #include "SiteHandlerWebSocket.h"
 
-int totalChecks = 0;
+// Open, close and 2 messages
+int totalChecks = 4;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -43,12 +44,14 @@ int totalChecks = 0;
 void OnOpen(WebSocket* p_socket,WSFrame* /*p_frame*/)
 {
   qprintf("Opened a websocket for: %s",p_socket->GetURI());
+  --totalChecks;
 }
 
 void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 {
   CString message((char*)p_frame->m_data);
   qprintf("Incoming WebSocket [%s] message: %s",p_socket->GetURI(),message);
+  --totalChecks;
 }
 
 void OnClose(WebSocket* p_socket,WSFrame* p_frame)
@@ -59,8 +62,8 @@ void OnClose(WebSocket* p_socket,WSFrame* p_frame)
     qprintf("Closing WebSocket message: %s",message);
   }
   qprintf("Closed the websocket for: %s",p_socket->GetURI());
+  --totalChecks;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 // 

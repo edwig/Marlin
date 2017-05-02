@@ -36,6 +36,7 @@
 #include "ConvertWideString.h"
 #include "MarlinModule.h"
 #include "GetLastErrorAsString.h"
+#include "ServerApp.h"
 #include <wincrypt.h>
 #include <iiswebsocket.h>
 
@@ -106,6 +107,7 @@ WebSocket::WebSocket(CString p_uri)
   Reset();
   // Init synchronization
   InitializeCriticalSection(&m_lock);
+  InitializeCriticalSection(&m_disp);
   // Event to ping-pong on
   m_pingEvent = CreateEvent(NULL,FALSE,FALSE,NULL);
 }
@@ -115,6 +117,7 @@ WebSocket::~WebSocket()
   Close();
   // Clean out synchronization
   DeleteCriticalSection(&m_lock);
+  DeleteCriticalSection(&m_disp);
   // Remove ping event
   CloseHandle(m_pingEvent);
 }
@@ -136,6 +139,7 @@ WebSocket::Close()
     delete frame;
   }
   m_frames.clear();
+  m_messageNumber = 0;
 
   if(m_reading)
   {
@@ -166,7 +170,7 @@ WebSocket::Reset()
 
 //////////////////////////////////////////////////////////////////////////
 //
-// SETTERS
+// SETTERS & GETTERS
 //
 //////////////////////////////////////////////////////////////////////////
 
@@ -182,6 +186,30 @@ WebSocket::SetFragmentSize(ULONG p_fragment)
     p_fragment = WS_FRAGMENT_MAXIMUM;
   }
   m_fragmentsize = p_fragment;
+
+  DETAILLOGV("WebSocket TCP/IP fragment size set to: %s",m_fragmentsize);
+}
+
+// Add a URI parameter
+void
+WebSocket::AddParameter(CString p_name,CString p_value)
+{
+  p_name.MakeLower();
+  m_parameters[p_name] = p_value;
+}
+
+// Find a URI parameter
+CString
+WebSocket::GetParameter(CString p_name)
+{
+  CString value;
+  p_name.MakeLower();
+  SocketParams::iterator it = m_parameters.find(p_name);
+  if(it != m_parameters.end())
+  {
+    value = it->second;
+  }
+  return value;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -261,6 +289,7 @@ WebSocket::OnOpen()
   WSFrame frame;
   if(m_onopen && m_open)
   {
+    DETAILLOGS("WebSocket OnOpen called for: ",m_uri);
     (*m_onopen)(this,&frame);
   }
 }
@@ -274,6 +303,7 @@ WebSocket::OnMessage()
   {
     if(m_onmessage)
     {
+      DETAILLOGS("WebSocket OnMessage called for: ",m_uri);
       (*m_onmessage)(this,frame);
     }
     delete frame;
@@ -289,6 +319,7 @@ WebSocket::OnBinary()
   {
     if(m_onbinary)
     {
+      DETAILLOGS("WebSocket OnBinary called for: ",m_uri);
       (*m_onbinary)(this,frame);
     }
     delete frame;
@@ -301,6 +332,7 @@ WebSocket::OnError()
   WSFrame frame; // Nullframe
   if(m_onerror)
   {
+    DETAILLOGS("WebSocket OnError called for: ",m_uri);
     (*m_onerror)(this,&frame);
   }
 }
@@ -314,6 +346,7 @@ WebSocket::OnClose()
   {
     if(m_onclose && m_open)
     {
+      DETAILLOGS("WebSocket OnClose called for: ",m_uri);
       (*m_onclose)(this,frame);
     }
     delete frame;
@@ -323,12 +356,83 @@ WebSocket::OnClose()
     WSFrame empty;
     if(m_onclose && m_open)
     {
+      DETAILLOGS("WebSocket OnClose called for: ",m_uri);
       (*m_onclose)(this,&empty);
     }
   }
 
   // OnClose can be called just once!
   m_open = false;
+}
+
+// Called by server variants of the websocket
+// to make the receiving of messages scale better in multi-processors
+void MessageDispatcher(void* p_context)
+{
+  WebSocket* socket = reinterpret_cast<WebSocket*>(p_context);
+  if(socket)
+  {
+    socket->Dispatcher();
+  }
+}
+
+// Dispatch as much as we can in incoming order
+void
+WebSocket::Dispatcher()
+{
+  // Lock the dispatcher from here
+  // Other incoming messages will wait here
+  // This might overlap for fragmented messages
+  AutoCritSec dispatch(&m_disp);
+
+  // Getting the first message type from the queue
+  DWORD maxNumber = 0;
+  WSFrame* frame  = nullptr;
+  {
+    AutoCritSec lock(&m_lock);
+    if(m_frames.empty())
+    {
+      return;
+    }
+    frame = m_frames.front();
+
+    // Find the last final message
+    WSFrameStack::iterator it = m_frames.end();
+    do 
+    {
+      --it;
+      if((*it)->m_final)
+      {
+        maxNumber = (*it)->m_number;
+        break;
+      }
+    } 
+    while (it != m_frames.begin());
+  }
+
+  // Serialization of the message dispatcher
+  // Dispatch that part of the stack that was 
+  // present at the moment we entered here
+  while(frame && frame->m_number <= maxNumber)
+  {
+    // Dispatch the message
+    switch(frame->m_message)
+    {
+      case SockMessage::SM_OPEN:    OnOpen();    break;
+      case SockMessage::SM_MESSAGE: OnMessage(); break;
+      case SockMessage::SM_BINARY:  OnBinary();  break;
+      case SockMessage::SM_ERROR:   OnError();   break;
+      case SockMessage::SM_CLOSE:   OnClose();   break;
+      default: break; // Do Nothing!
+    }
+
+    // Get a next messsage from the queue
+    {
+      AutoCritSec lock(&m_lock);
+      m_frames.pop_front();
+      frame = m_frames.empty() ? nullptr : m_frames.front();
+    }
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -425,40 +529,8 @@ WebSocket::WriteObject(BYTE* p_buffer,int64 p_length)
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Store an incoming WSframe 
-void    
-WebSocket::StoreWSFrame(WSFrame*& p_frame)
-{
-  AutoCritSec lock(&m_lock);
-
-  if(p_frame)
-  {
-    if(p_frame->m_utf8)
-    {
-      // Convert UTF-8 back to MBCS
-      uchar*  buffer_utf8 = nullptr;
-      int     length_utf8 = 0;
-      CString input(p_frame->m_data);
-      if(TryCreateWideString(input,"utf-8",false,&buffer_utf8,length_utf8))
-      {
-        bool foundBom = false;
-        CString encoded;
-        if(TryConvertWideString(buffer_utf8,length_utf8,"",encoded,foundBom))
-        {
-          int len = encoded.GetLength() + 1;
-          p_frame->m_data = (BYTE*) realloc(p_frame->m_data,len);
-          strcpy_s((char*)p_frame->m_data,len,encoded.GetString());
-        }
-      }
-      delete [] buffer_utf8;
-    }
-    m_frames.push_back(p_frame);
-    p_frame = nullptr;
-  }
-}
-
 // Get the first frame
-WSFrame* 
+WSFrame*
 WebSocket::GetWSFrame()
 {
   AutoCritSec lock(&m_lock);
@@ -471,6 +543,86 @@ WebSocket::GetWSFrame()
   m_frames.pop_front();
 
   return frame;
+}
+
+// Store an incoming WSframe 
+void    
+WebSocket::StoreWSFrame(WSFrame*& p_frame)
+{
+  AutoCritSec lock(&m_lock);
+
+  if(p_frame->m_utf8 && p_frame->m_final)
+  {
+    // Convert UTF-8 back to MBCS
+    ConvertWSFrameToMBCS(p_frame);
+  }
+  // Store under this number
+  p_frame->m_number = ++m_messageNumber;
+  // Actual store
+  m_frames.push_back(p_frame);
+
+  // Reset the origin of the stored message
+  p_frame = nullptr;
+}
+
+// Append UTF-8 text to last frame on the stack, or just store it
+void
+WebSocket::StoreOrAppendWSFrame(WSFrame*& p_frame)
+{
+  AutoCritSec lock(&m_lock);
+
+  // Try to get the Top-Of-Stack (TOS)
+  WSFrame* last = nullptr;
+  if(!m_frames.empty())
+  {
+    last = m_frames.back();
+  }
+
+  // See if we must append the text frame to the last
+  if(last && last->m_utf8 && !last->m_final)
+  {
+    // Append the frame
+    DWORD length = last->m_length + p_frame->m_length;
+    last->m_data = (BYTE*) realloc(last->m_data,length + 1);
+    memcpy_s(&last->m_data[last->m_length],p_frame->m_length + 1,p_frame->m_data,p_frame->m_length + 1);
+    last->m_length = length;
+
+    // Now convert to total back to MBCS
+    if(p_frame->m_final)
+    {
+      ConvertWSFrameToMBCS(last);
+    }
+    // Done with the frame
+    delete p_frame;
+    p_frame = nullptr;
+  }
+  else
+  {
+    // Store the frame
+    StoreWSFrame(p_frame);
+  }
+}
+
+// Convert the UTF-8 in a frame back to MBCS
+void
+WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
+{
+  // Convert UTF-8 back to MBCS
+  uchar*  buffer_utf8 = nullptr;
+  int     length_utf8 = 0;
+  CString input(p_frame->m_data);
+  if(TryCreateWideString(input,"utf-8",false,&buffer_utf8,length_utf8))
+  {
+    CString encoded;
+    bool foundBom = false;
+    if(TryConvertWideString(buffer_utf8,length_utf8,"",encoded,foundBom))
+    {
+      int len = encoded.GetLength() + 1;
+      p_frame->m_data = (BYTE*) realloc(p_frame->m_data,len);
+      strcpy_s((char*)p_frame->m_data,len,encoded.GetString());
+    }
+  }
+  delete [] buffer_utf8;
 }
 
 bool
@@ -488,17 +640,17 @@ WebSocket::GetCloseSocket(USHORT& p_code,CString& p_reason)
 //
 //////////////////////////////////////////////////////////////////////////
 
-ServerMarlinWebSocket::ServerMarlinWebSocket(CString p_uri)
+WebSocketServer::WebSocketServer(CString p_uri)
                       :WebSocket(p_uri)
 {
 }
 
-ServerMarlinWebSocket::~ServerMarlinWebSocket()
+WebSocketServer::~WebSocketServer()
 {
 }
 
 void
-ServerMarlinWebSocket::Reset()
+WebSocketServer::Reset()
 {
   WebSocket::Reset();
 
@@ -507,21 +659,21 @@ ServerMarlinWebSocket::Reset()
 
 // Open the socket
 bool 
-ServerMarlinWebSocket::OpenSocket()
+WebSocketServer::OpenSocket()
 {
   return false;
 }
 
 // Close the socket unconditionally
 bool 
-ServerMarlinWebSocket::CloseSocket()
+WebSocketServer::CloseSocket()
 {
   return false;
 }
 
 // Close the socket with a closing frame
 bool 
-ServerMarlinWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
+WebSocketServer::SendCloseSocket(USHORT p_code,CString p_reason)
 {
   if(m_open == false)
   {
@@ -563,14 +715,14 @@ ServerMarlinWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
 
 // Write fragment to a WebSocket
 bool 
-ServerMarlinWebSocket::WriteFragment(BYTE* /*p_buffer*/,DWORD /*p_length*/,Opcode /*p_opcode*/,bool /*p_last*/ /*= true*/)
+WebSocketServer::WriteFragment(BYTE* /*p_buffer*/,DWORD /*p_length*/,Opcode /*p_opcode*/,bool /*p_last*/ /*= true*/)
 {
   return false;
 }
 
 // Read a fragment from a WebSocket
 bool
-ServerMarlinWebSocket::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last)
+WebSocketServer::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last)
 {
   AutoCritSec lock(&m_lock);
 
@@ -607,7 +759,7 @@ ServerMarlinWebSocket::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_op
 
 // Send a 'ping' to see if other side is still there
 bool
-ServerMarlinWebSocket::SendPing(bool p_waitForPong /*= false*/)
+WebSocketServer::SendPing(bool p_waitForPong /*= false*/)
 {
   bool result = false;
 
@@ -633,7 +785,7 @@ ServerMarlinWebSocket::SendPing(bool p_waitForPong /*= false*/)
 
 // Send a 'pong' as an answer on a 'ping'
 void    
-ServerMarlinWebSocket::SendPong(RawFrame* p_ping)
+WebSocketServer::SendPong(RawFrame* p_ping)
 {
   // Prepare a pong frame from the ping frame
   if(WriteFragment(&p_ping->m_data[p_ping->m_headerLength]
@@ -647,7 +799,7 @@ ServerMarlinWebSocket::SendPong(RawFrame* p_ping)
 
 // Generate a server key-answer
 CString
-ServerMarlinWebSocket::ServerAcceptKey(CString p_clientKey)
+WebSocketServer::ServerAcceptKey(CString p_clientKey)
 {
   // Step 1: Append WebSocket GUID. See RFC 6455. It's hard coded!!
   CString key = p_clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
@@ -659,7 +811,7 @@ ServerMarlinWebSocket::ServerAcceptKey(CString p_clientKey)
 
 // Encode raw frame buffer
 bool
-ServerMarlinWebSocket::EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE* p_buffer,int64 p_length,bool p_last)
+WebSocketServer::EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE* p_buffer,int64 p_length,bool p_last)
 {
   // Check if we have work to do
   if(p_frame == nullptr || p_buffer == nullptr)
@@ -764,7 +916,7 @@ ServerMarlinWebSocket::EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool 
 // Decode raw frame buffer (only m_data is filled)
 // The length parameter signifies the data length in m_data!!
 bool
-ServerMarlinWebSocket::DecodeFrameBuffer(RawFrame* p_frame,int64 p_length)
+WebSocketServer::DecodeFrameBuffer(RawFrame* p_frame,int64 p_length)
 {
   // No object or no data received
   if(p_frame == nullptr || p_frame->m_data == nullptr)
@@ -816,13 +968,13 @@ ServerMarlinWebSocket::DecodeFrameBuffer(RawFrame* p_frame,int64 p_length)
     }
     payload_offset += 8;
     payloadlength = ((int64)p_frame->m_data[2] << 56) |
-      ((int64)p_frame->m_data[3] << 48) |
-      ((int64)p_frame->m_data[4] << 40) |
-      ((int64)p_frame->m_data[5] << 32) |
-      ((int64)p_frame->m_data[6] << 24) |
-      ((int64)p_frame->m_data[7] << 16) |
-      ((int64)p_frame->m_data[8] <<  8) |
-      ((int64)p_frame->m_data[9]);
+                    ((int64)p_frame->m_data[3] << 48) |
+                    ((int64)p_frame->m_data[4] << 40) |
+                    ((int64)p_frame->m_data[5] << 32) |
+                    ((int64)p_frame->m_data[6] << 24) |
+                    ((int64)p_frame->m_data[7] << 16) |
+                    ((int64)p_frame->m_data[8] <<  8) |
+                    ((int64)p_frame->m_data[9]);
   }
 
   // If masked, take those in account
@@ -864,7 +1016,7 @@ ServerMarlinWebSocket::DecodeFrameBuffer(RawFrame* p_frame,int64 p_length)
 // Return value true  -> Handled
 // Return value false -> Close is received
 bool
-ServerMarlinWebSocket::StoreFrameBuffer(RawFrame* p_frame)
+WebSocketServer::StoreFrameBuffer(RawFrame* p_frame)
 {
   // If it is a 'continuation frame', just store it
   // And go back right away to receive more frames!
@@ -925,7 +1077,7 @@ ServerMarlinWebSocket::StoreFrameBuffer(RawFrame* p_frame)
 
 // Perform the server handshake
 bool
-ServerMarlinWebSocket::ServerHandshake(HTTPMessage* p_message)
+WebSocketServer::ServerHandshake(HTTPMessage* p_message)
 {
   CString version = p_message->GetHeader("Sec-WebSocket-Version");
   CString clientKey = p_message->GetHeader("Sec-WebSocket-Key");
@@ -949,7 +1101,7 @@ ServerMarlinWebSocket::ServerHandshake(HTTPMessage* p_message)
 
 // Decode the incoming closing fragment before we call 'OnClose'
 void
-ServerMarlinWebSocket::DecodeCloseFragment(RawFrame* p_frame)
+WebSocketServer::DecodeCloseFragment(RawFrame* p_frame)
 {
   int offset = p_frame->m_headerLength;
 
@@ -963,24 +1115,36 @@ ServerMarlinWebSocket::DecodeCloseFragment(RawFrame* p_frame)
   delete[] buffer;
 }
 
+// Register the server request for sending info
+bool 
+WebSocketServer::RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request)
+{
+  // Register our server/request
+  m_server  = p_server;
+  m_request = p_request;
+
+  return true;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // SERVER WEBSOCKET
 //
 //////////////////////////////////////////////////////////////////////////
 
-ServerWebSocket::ServerWebSocket(CString p_uri)
-                :WebSocket(p_uri)
+WebSocketServerIIS::WebSocketServerIIS(CString p_uri)
+                   :WebSocket(p_uri)
 {
 }
 
-ServerWebSocket::~ServerWebSocket()
+WebSocketServerIIS::~WebSocketServerIIS()
 {
   Reset();
 }
 
 void
-ServerWebSocket::Reset()
+WebSocketServerIIS::Reset()
 {
   // Reset the main class part
   WebSocket::Reset();
@@ -991,14 +1155,13 @@ ServerWebSocket::Reset()
   m_iis_socket = nullptr;
   m_listener   = NULL;
   m_utf8       = false;
-  m_closing    = false;
   m_last       = false;
+  m_isclosing  = false;
   m_expected   = false;
-
 }
 
 bool
-ServerWebSocket::OpenSocket()
+WebSocketServerIIS::OpenSocket()
 {
   if(m_server && m_iis_socket)
   {
@@ -1012,12 +1175,15 @@ ServerWebSocket::OpenSocket()
 // Close the socket
 // Close the underlying TCP/IP connection
 bool
-ServerWebSocket::CloseSocket()
+WebSocketServerIIS::CloseSocket()
 {
   bool result = false;
 
   if(m_server && m_iis_socket)
   {
+    // Unregister ourselves first
+    m_server->UnRegisterWebSocket(this);
+
     // Try to gracefully close the WebSocket
     try
     {
@@ -1028,6 +1194,11 @@ ServerWebSocket::CloseSocket()
     {
       // result = false;
     }
+
+    // Cancel the outstandig request altogether
+    m_server->CancelRequestStream(m_request);
+
+    // Ready
     result = true;
   }
   m_server     = nullptr;
@@ -1036,8 +1207,223 @@ ServerWebSocket::CloseSocket()
   return result;
 }
 
+void WINAPI
+ServerWriteCompletion(HRESULT p_error,
+                      VOID*   p_completionContext,
+                      DWORD   p_bytes,
+                      BOOL    p_utf8,
+                      BOOL    p_final,
+                      BOOL    p_close)
+{
+  WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_completionContext);
+  if(socket)
+  {
+    socket->SocketWriter(p_error,p_bytes,p_utf8,p_final,p_close);
+  }
+}
+
+// Duties to perform after writing of a fragment is completed
+void
+WebSocketServerIIS::SocketWriter(HRESULT p_error
+                                ,DWORD /*p_bytes*/
+                                ,BOOL  /*p_utf8*/
+                                ,BOOL  /*p_final*/
+                                ,BOOL    p_close)
+{
+  // Pop first WSFrame from the writing queue
+  if(!m_writing.empty())
+  {
+    AutoCritSec lock(&m_lock);
+    WSFrame* frame = m_writing.front();
+    delete frame;
+    m_writing.pop_front();
+  }
+
+  // Handle any error (if any)
+  if(p_error)
+  {
+    DWORD error = (p_error & 0x0F);
+    ERRORLOG(error,"Websocket failed to write fragment");
+    CloseSocket();
+    return;
+  }
+  if(p_close)
+  {
+    ReceiveCloseSocket();
+    if(m_open)
+    {
+      SendCloseSocket(WS_CLOSE_NORMAL,"WebSocket closed");
+    }
+    CloseSocket();
+    OnClose();
+  }
+}
+
+// Low level WriteFragment
 bool
-ServerWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
+WebSocketServerIIS::WriteFragment(BYTE*  p_buffer
+                              ,DWORD  p_length
+                              ,Opcode p_opcode
+                              ,bool   p_last /*=true */)
+{
+  bool result = false;
+  if(m_server && m_iis_socket)
+  {
+    // Store the buffer in a WSFrame for async storage
+    WSFrame* frame  = new WSFrame();
+    frame->m_utf8   = (p_opcode == Opcode::SO_UTF8);
+    frame->m_length = p_length;
+    frame->m_data   = (BYTE*)malloc(p_length + WS_OVERHEAD);
+    memcpy_s(frame->m_data,p_length + WS_OVERHEAD,p_buffer,p_length);
+
+    // Put it in the writing queue
+    // While locking the queue
+    {
+      AutoCritSec lock(&m_lock);
+      m_writing.push_back(frame);
+    }
+
+    // Issue a async write command for this buffer
+    HRESULT hr  = m_iis_socket->WriteFragment(frame->m_data
+                                             ,&frame->m_length
+                                             ,TRUE
+                                             ,frame->m_utf8
+                                             ,p_last
+                                             ,ServerWriteCompletion
+                                             ,this
+                                             ,&m_expected);
+    if(FAILED(hr))
+    {
+      DWORD error = hr & 0x0F;
+      ERRORLOG(error,"Websocket failed to register write command for a fragment");
+      CloseSocket();
+    }
+    else
+    {
+      result = true;
+    }
+  }
+  return result;
+}
+
+void WINAPI 
+ServerReadCompletion(HRESULT p_error,
+                     VOID*   p_completionContext,
+                     DWORD   p_bytes,
+                     BOOL    p_utf8,
+                     BOOL    p_final,
+                     BOOL    p_close)
+{
+  WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_completionContext);
+  if(socket)
+  {
+    socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+  }
+}
+
+void
+WebSocketServerIIS::SocketReader(HRESULT p_error
+                                ,DWORD   p_bytes
+                                ,BOOL    p_utf8
+                                ,BOOL    p_final
+                                ,BOOL    p_close)
+{
+  // Handle any error (if any)
+  if(p_error)
+  {
+    DWORD error = (p_error & 0x0F);
+    ERRORLOG(error,"Websocket failed to read fragment");
+    CloseSocket();
+    return;
+  }
+
+  // Consolidate the reading buffer
+  m_reading->m_data[p_bytes] = 0;
+  m_reading->m_data   = (BYTE*)realloc(m_reading->m_data,p_bytes + 1);
+  m_reading->m_length = p_bytes;
+  m_reading->m_final  = p_final == TRUE;
+
+  // Setting the type of message
+  if(p_close)
+  {
+    m_reading->m_utf8    = true;
+    m_reading->m_final   = true;
+    m_reading->m_message = SockMessage::SM_CLOSE;
+  }
+  else if(p_utf8)
+  {
+    m_reading->m_message = SockMessage::SM_MESSAGE;
+  }
+  else
+  {
+    m_reading->m_message = SockMessage::SM_BINARY;
+  }
+
+  // Store or append the fragment
+  if(p_utf8)
+  {
+    StoreOrAppendWSFrame(m_reading);
+  }
+  else
+  {
+    // Store the current fragment we just did read
+    StoreWSFrame(m_reading);
+  }
+
+  // Decide what to do. Let the threadpool handle the message
+  if(!p_utf8 || (p_utf8 && p_final))
+  {
+    g_server->GetThreadPool()->SubmitWork(MessageDispatcher,this);
+  }
+
+  // What to do at the end
+  if(p_close)
+  {
+    ReceiveCloseSocket();
+    if(m_open)
+    {
+      SendCloseSocket(WS_CLOSE_NORMAL,"WebSocket closed");
+    }
+    CloseSocket();
+    OnClose();
+  }
+  else
+  {
+    // Issue a new read command for a new buffer
+    SocketListener();
+  }
+}
+
+void    
+WebSocketServerIIS::SocketListener()
+{
+  if(!m_reading)
+  {
+    m_reading           = new WSFrame();
+    m_reading->m_length = m_fragmentsize;
+    m_reading->m_data   = (BYTE*) malloc(m_fragmentsize + WS_OVERHEAD);
+  }
+    
+  // Issue the Async read-a-fragment command to the Async I/O WebSocket
+  HRESULT hr = m_iis_socket->ReadFragment(m_reading->m_data
+                                         ,&m_reading->m_length
+                                         ,TRUE
+                                         ,&m_utf8
+                                         ,&m_last
+                                         ,&m_isclosing
+                                         ,ServerReadCompletion
+                                         ,this
+                                         ,&m_expected);
+  if(FAILED(hr))
+  {
+    DWORD error = hr & 0x0F;
+    ERRORLOG(error,"Websocket failed to register read command for a fragment");
+    CloseSocket();
+  }
+}
+
+bool
+WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
 {
   WSFrame* frame = new WSFrame();
 
@@ -1078,195 +1464,65 @@ ServerWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
   {
     result = true;
   }
-
   return result;
 }
 
-void WINAPI
-ServerWriteCompletion(HRESULT p_error,
-                      VOID*   p_completionContext,
-                      DWORD   p_bytes,
-                      BOOL    p_utf8,
-                      BOOL    p_final,
-                      BOOL    p_close)
-{
-  ServerWebSocket* socket = reinterpret_cast<ServerWebSocket*>(p_completionContext);
-  if(socket)
-  {
-    socket->SocketWriter(p_error,p_bytes,p_utf8,p_final,p_close);
-  }
-}
-
-void
-ServerWebSocket::SocketWriter(HRESULT p_error,DWORD /*p_bytes*/,BOOL /*p_utf8*/,BOOL /*p_final*/,BOOL p_close)
-{
-  // Pop first WSFrame from the writing queue
-  if(!m_writing.empty())
-  {
-    WSFrame* frame = m_writing.front();
-    delete frame;
-    m_writing.pop_front();
-  }
-
-  // Handle any error (if any)
-  if(p_error)
-  {
-    DWORD error = (p_error & 0x0F);
-    ERRORLOG(error,"Websocket failed to read fragment");
-    CloseSocket();
-    return;
-  }
-  if(p_close)
-  {
-    CloseSocket();
-  }
-}
-
-// Low level WriteFragment
+// Decode the incoming close socket message
 bool
-ServerWebSocket::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last /* = true */)
+WebSocketServerIIS::ReceiveCloseSocket()
 {
-  bool result = false;
-  if(m_server && m_iis_socket)
+  USHORT  length  = 2 * (WS_CLOSE_MAXIMUM + WS_OVERHEAD);
+  WCHAR   buffer   [2 * (WS_CLOSE_MAXIMUM + WS_OVERHEAD)];
+  LPCWSTR pointer = buffer;
+
+  HRESULT hr = m_iis_socket->GetCloseStatus(&m_closingError,&pointer,&length);
+  if(SUCCEEDED(hr))
   {
-    // Store the buffer in a WSFrame for async storage
-    WSFrame* frame  = new WSFrame();
-    frame->m_utf8   = (p_opcode == Opcode::SO_UTF8);
-    frame->m_length = p_length;
-    frame->m_data   = (BYTE*)malloc(p_length + WS_OVERHEAD);
-    memcpy_s(frame->m_data,p_length + WS_OVERHEAD,p_buffer,p_length);
-
-    // Put it in the writing queue
-    m_writing.push_back(frame);
-
-    // Issue a async write command for this buffer
-    HRESULT hr  = m_iis_socket->WriteFragment(frame->m_data
-                                             ,&frame->m_length
-                                             ,TRUE
-                                             ,frame->m_utf8
-                                             ,p_last
-                                             ,ServerWriteCompletion
-                                             ,this
-                                             ,&m_expected);
-    if(FAILED(hr))
+    // IIS gives close status as UTF-16, Convert to MBCS
+    CString encoded;
+    bool foundBom = false;
+    if(TryConvertWideString((const uchar*)buffer,length,"",encoded,foundBom))
     {
-      DWORD error = hr & 0x0F;
-      ERRORLOG(error,"Websocket failed to register write command for a fragment");
-      CloseSocket();
+      m_closing = encoded;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+WebSocketServerIIS::RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request)
+{
+  // Remember our registration
+  m_server  = p_server;
+  m_request = p_request;
+
+  // Reset the internal IIS socket pointer
+  m_iis_socket = nullptr;
+
+  // Now find the IWebSocketContext
+  IHttpContext*  context = reinterpret_cast<IHttpContext*>(p_request);
+  IHttpContext3* context3 = nullptr;
+  HRESULT hr = HttpGetExtendedInterface(g_iisServer,context,&context3);
+  if(SUCCEEDED(hr))
+  {
+    // Get Pointer to IWebSocketContext
+    m_iis_socket = (IWebSocketContext *)context3->GetNamedContextContainer()->GetNamedContext(IIS_WEBSOCKET);
+    if(!m_iis_socket)
+    {
+      ERRORLOG(ERROR_FILE_NOT_FOUND,"Cannot upgrade to websocket!");
     }
     else
     {
-      result = true;
+      DETAILLOGS("HTTP connection upgraded to WebSocket for: ",m_uri);
+      return true;
     }
   }
-  return result;
-}
-
-void WINAPI 
-ServerReadCompletion(HRESULT p_error,
-                     VOID*   p_completionContext,
-                     DWORD   p_bytes,
-                     BOOL    p_utf8,
-                     BOOL    p_final,
-                     BOOL    p_close)
-{
-  ServerWebSocket* socket = reinterpret_cast<ServerWebSocket*>(p_completionContext);
-  if(socket)
+  else
   {
-    socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+    ERRORLOG(ERROR_INVALID_FUNCTION,"IIS Extended socket interface not found!");
   }
-}
-
-void
-ServerWebSocket::SocketReader(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close)
-{
-  // Handle any error (if any)
-  if(p_error)
-  {
-    DWORD error = (p_error & 0x0F);
-    ERRORLOG(error,"Websocket failed to read fragment");
-    CloseSocket();
-    return;
-  }
-
-  // Consolidate the reading buffer
-  m_reading->m_data[p_bytes] = 0;
-  m_reading->m_data = (BYTE*)realloc(m_reading->m_data,p_bytes + 1);
-  m_reading->m_length = p_bytes;
-
-  // Store the current fragment we just did read
-  StoreWSFrame(m_reading);
-
-  if(p_final)
-  {
-    if(p_close)
-    {
-      OnClose();
-      SendCloseSocket(WS_CLOSE_NORMAL,"WebSocket closed");
-      return;
-    }
-    else if(p_utf8)
-    {
-      OnMessage();
-    }
-    else
-    {
-      OnBinary();
-    }
-  }
-
-  // Issue a new read command for a new buffer
-  SocketListener();
-}
-
-void    
-ServerWebSocket::SocketListener()
-{
-  if(!m_reading)
-  {
-    m_reading           = new WSFrame();
-    m_reading->m_length = m_fragmentsize;
-    m_reading->m_data   = (BYTE*) malloc(m_fragmentsize + WS_OVERHEAD);
-  }
-    
-  // Issue the Async read-a-fragment command to the Async I/O WebSocket
-  HRESULT hr = m_iis_socket->ReadFragment(m_reading->m_data
-                                         ,&m_reading->m_length
-                                         ,TRUE
-                                         ,&m_utf8
-                                         ,&m_last
-                                         ,&m_closing
-                                         ,ServerReadCompletion
-                                         ,this
-                                         ,&m_expected);
-  if(FAILED(hr))
-  {
-    DWORD error = hr & 0x0F;
-    ERRORLOG(error,"Websocket failed to register read command for a fragment");
-    CloseSocket();
-  }
-}
-
-// Add a URI parameter
-void
-ServerWebSocket::AddParameter(CString p_name,CString p_value)
-{
-  p_name.MakeLower();
-  m_parameters[p_name] = p_value;
-}
-
-// Find a URI parameter
-CString
-ServerWebSocket::GetParameter(CString p_name)
-{
-  CString value;
-  p_name.MakeLower();
-  SocketParams::iterator it = m_parameters.find(p_name);
-  if(it != m_parameters.end())
-  {
-    value = it->second;
-  }
-  return value;
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1275,18 +1531,18 @@ ServerWebSocket::GetParameter(CString p_name)
 //
 //////////////////////////////////////////////////////////////////////////
 
-ClientWebSocket::ClientWebSocket(CString p_uri)
+WebSocketClient::WebSocketClient(CString p_uri)
                 :WebSocket(p_uri)
 {
 }
 
-ClientWebSocket::~ClientWebSocket()
+WebSocketClient::~WebSocketClient()
 {
   CloseSocket();
 }
 
 void
-ClientWebSocket::Reset()
+WebSocketClient::Reset()
 {
   // Reset the main class part
   WebSocket::Reset();
@@ -1298,7 +1554,7 @@ ClientWebSocket::Reset()
 }
 
 bool
-ClientWebSocket::OpenSocket()
+WebSocketClient::OpenSocket()
 {
   // Reset the socket
   m_open = false;
@@ -1348,6 +1604,7 @@ ClientWebSocket::OpenSocket()
         if(StartClientListner())
         {
           // If we come back here the receive thread is running
+          DETAILLOGS("WebSocket open for: ",m_uri);
           m_open = true;
           OnOpen();
         }
@@ -1379,11 +1636,12 @@ ClientWebSocket::OpenSocket()
 // Close the socket
 // Close the underlying TCP/IP connection
 bool 
-ClientWebSocket::CloseSocket()
+WebSocketClient::CloseSocket()
 {
   // Hard close
   if(m_socket)
   {
+    DETAILLOGS("Hard TCP/IP close for WebSocket: ",m_uri);
     WinHttpCloseHandle(m_socket);
 
     DWORD wait = 10;
@@ -1399,7 +1657,7 @@ ClientWebSocket::CloseSocket()
 
 // Close the socket with a closing frame
 bool 
-ClientWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
+WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
 {
   if(m_socket)
   {
@@ -1409,6 +1667,7 @@ ClientWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
     {
       length = WS_CLOSE_MAXIMUM;
     }
+    DETAILLOGV("Send close WebSocket [%d:%s] for: %s",p_code,p_reason,m_uri);
     DWORD error = WinHttpWebSocketClose(m_socket,p_code,(void*)p_reason.GetString(),length);
     if(error)
     {
@@ -1444,7 +1703,7 @@ ClientWebSocket::SendCloseSocket(USHORT p_code,CString p_reason)
 
 // Decode the incoming close socket message
 bool
-ClientWebSocket::ReceiveCloseSocket()
+WebSocketClient::ReceiveCloseSocket()
 {
   BYTE  reason[WS_CLOSE_MAXIMUM + 1];
   DWORD received = 0;
@@ -1467,6 +1726,7 @@ ClientWebSocket::ReceiveCloseSocket()
     {
       reason[received] = 0;
       m_closing = reason;
+      DETAILLOGV("Closing WebSocket frame received [%d:%s]",m_closingError,m_closing);
     }
     return true;
   }
@@ -1476,7 +1736,7 @@ ClientWebSocket::ReceiveCloseSocket()
 // Writing one fragment out to the WebSocket handle
 // Works regarding the type of fragment
 bool
-ClientWebSocket::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last /* = true */)
+WebSocketClient::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last /* = true */)
 {
   // See if we can do anything at all
   if(!m_socket)
@@ -1501,19 +1761,27 @@ ClientWebSocket::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,boo
   }
 
   DWORD error = WinHttpWebSocketSend(m_socket,type,p_buffer,p_length);
-  switch(error)
+  if(error)
   {
-    case ERROR_INVALID_OPERATION: // Socket closed
-                                  CloseSocket();
-                                  return false;
-    case ERROR_INVALID_PARAMETER: // Buffer not matched
-                                  return false;
+    ERRORLOG(error,"ERROR while sending to WebSocket: " + m_uri);
+    switch(error)
+    {
+      case ERROR_INVALID_OPERATION: // Socket closed
+                                    CloseSocket();
+                                    return false;
+      case ERROR_INVALID_PARAMETER: // Buffer not matched
+                                    return false;
+    }
+  }
+  else
+  {
+    DETAILLOGV("WebSocket sent type: %d Bytes: %d to: %s",type,p_length,m_uri);
   }
   return (error == ERROR_SUCCESS);
 }
 
 void
-ClientWebSocket::SocketListener()
+WebSocketClient::SocketListener()
 {
   // Wait a short time for the OnOpen event to have been handled
   // Immediately after the OnOpen, the "m_open" goes to 'true'
@@ -1545,13 +1813,13 @@ ClientWebSocket::SocketListener()
         // Socket handle got closed. Object is invalid now. Bail out
         return;
       }
-      CString message;
-      message.Format("WebSocket receive error: %s\n",GetHTTPErrorText(error).GetString());
-      ERRORLOG(error,message);
+      ERRORLOG(error,"ERROR while receiving from WebSocket: " + m_uri);
       CloseSocket();
     }
     else
     {
+      DETAILLOGV("WebSocket receive type: %d Bytes: %d to: %s",type,bytesRead,m_uri);
+
       bool final = (type == WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE) ||
                    (type == WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE)   ||
                    (type == WINHTTP_WEB_SOCKET_CLOSE_BUFFER_TYPE);
@@ -1561,6 +1829,7 @@ ClientWebSocket::SocketListener()
       if(final)
       {
         // Fragment is complete
+        m_reading->m_final   = final;
         m_reading->m_utf8    = utf8;
         m_reading->m_length += bytesRead;
         m_reading->m_data[m_reading->m_length] = 0;
@@ -1601,6 +1870,7 @@ ClientWebSocket::SocketListener()
         {
           // Partial fragment for a binary buffer 
           // Store the fragment and call the handler
+          m_reading->m_final  = false;
           m_reading->m_utf8   = false;
           m_reading->m_length = bytesRead;
           m_reading->m_data[bytesRead] = 0;
@@ -1620,14 +1890,14 @@ ClientWebSocket::SocketListener()
 
 unsigned int __stdcall StartingClientListenerThread(void* p_context)
 {
-  ClientWebSocket* client = reinterpret_cast<ClientWebSocket*>(p_context);
+  WebSocketClient* client = reinterpret_cast<WebSocketClient*>(p_context);
   client->SocketListener();
   return 0;
 }
 
 // Starting a listener for the WebSocket
 bool
-ClientWebSocket::StartClientListner()
+WebSocketClient::StartClientListner()
 {
   if(m_listener == NULL)
   {
@@ -1650,7 +1920,7 @@ ClientWebSocket::StartClientListner()
 // Client key generator for the WebSocket protocol
 // Now using the built-in key generator of WinHTTP
 CString
-ClientWebSocket::GenerateKey()
+WebSocketClient::GenerateKey()
 {
   // crank up the random generator
   clock_t time = clock();
@@ -1670,5 +1940,6 @@ ClientWebSocket::GenerateKey()
   base.Encrypt(key,16,(unsigned char*)buffer);
   m_socketKey.ReleaseBuffer();
 
+  DETAILLOGS("Generated client WebSocket key: ",m_socketKey);
   return m_socketKey;
 }

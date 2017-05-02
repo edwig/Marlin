@@ -167,12 +167,16 @@ public:
   virtual bool       DeleteSite(int p_port,CString p_baseURL,bool p_force = false) = 0;
   // Receive (the rest of the) incoming HTTP request
   virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message) = 0;
+  // Create a new WebSocket in the subclass of our server
+  virtual WebSocket* CreateWebSocket(CString p_uri) = 0;
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request) = 0;
   // Send to a WebSocket
   virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request) = 0;
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket (HTTP_REQUEST_ID p_request) = 0;
+  // Used for canceling a WebSocket for an event stream
+  virtual void       CancelRequestStream(HTTP_REQUEST_ID p_response) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
   // Send a response in one-go
@@ -296,7 +300,7 @@ public:
   WebSocket*        FindWebSocket(CString p_uri);
   // Finding the locking object for the sites.
   CRITICAL_SECTION* AcquireSitesLockObject();
-  
+
 protected:
   // Cleanup the server
   virtual void  Cleanup() = 0;
@@ -358,8 +362,6 @@ protected:
                                   ,CString         p_cookie = "");
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
-  // Used for canceling a WebSocket for an event stream
-  virtual void CancelRequestStream(HTTP_REQUEST_ID p_response) = 0;
 
   // REQUEST HEADER METHODS
 

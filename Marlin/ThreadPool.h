@@ -113,7 +113,7 @@ public:
   void SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument);
 
   // Sleeping and waking-up a thread
-  void*  SleepThread(DWORD_PTR p_unique,void* p_payload = nullptr);
+  void* SleepThread(DWORD_PTR p_unique,void* p_payload = nullptr);
   bool  WakeUpThread(DWORD_PTR p_unique,void* p_result  = nullptr);
   void* GetSleepingThreadPayload(DWORD_PTR p_unique);
   void  EliminateSleepingThread (DWORD_PTR p_unique);
