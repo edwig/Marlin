@@ -108,8 +108,6 @@ WebSocket::WebSocket(CString p_uri)
   // Init synchronization
   InitializeCriticalSection(&m_lock);
   InitializeCriticalSection(&m_disp);
-  // Event to ping-pong on
-  m_pingEvent = CreateEvent(NULL,FALSE,FALSE,NULL);
 }
 
 WebSocket::~WebSocket()
@@ -118,8 +116,6 @@ WebSocket::~WebSocket()
   // Clean out synchronization
   DeleteCriticalSection(&m_lock);
   DeleteCriticalSection(&m_disp);
-  // Remove ping event
-  CloseHandle(m_pingEvent);
 }
 
 void
@@ -151,9 +147,10 @@ WebSocket::Close()
 void
 WebSocket::Reset()
 {
-  m_fragmentsize  = WS_FRAGMENT_DEFAULT;
-  m_keepalive     = WS_KEEPALIVE_TIME;
-  m_pingTimeout   = 30000;  // Default ping timeout from IIS
+  m_fragmentsize   = WS_FRAGMENT_DEFAULT;
+  m_keepalive      = WS_KEEPALIVE_TIME;
+  m_pingTimeout    = 30000;  // Default ping timeout from IIS
+  m_closingTimeout = 10000;  // Wait timeout for 'close' message
   // No handlers (yet)
   m_onopen        = nullptr;
   m_onmessage     = nullptr;
@@ -188,6 +185,38 @@ WebSocket::SetFragmentSize(ULONG p_fragment)
   m_fragmentsize = p_fragment;
 
   DETAILLOGV("WebSocket TCP/IP fragment size set to: %s",m_fragmentsize);
+}
+
+void
+WebSocket::SetKeepalive(unsigned p_miliseconds)
+{
+  if(p_miliseconds < WS_KEEPALIVE_MINIMUM)
+  {
+    p_miliseconds = WS_KEEPALIVE_MINIMUM;
+  }
+  if(p_miliseconds > WS_KEEPALIVE_MAXIMUM)
+  {
+    p_miliseconds = WS_KEEPALIVE_MAXIMUM;
+  }
+  m_keepalive = p_miliseconds;
+  
+  DETAILLOGV("WebSocket keep-alive time set to: %d",m_keepalive);
+}
+
+void
+WebSocket::SetClosingTimeout(unsigned p_timeout)
+{
+  if(p_timeout < WS_CLOSING_MINIMUM)
+  {
+    p_timeout = WS_CLOSING_MINIMUM;
+  }
+  if(p_timeout > WS_CLOSING_MAXIMUM)
+  {
+    p_timeout = WS_CLOSING_MAXIMUM;
+  }
+  m_closingTimeout = p_timeout;
+
+  DETAILLOGV("WebSocket closing timeout set to: %d",m_closingTimeout);
 }
 
 // Add a URI parameter
@@ -570,6 +599,14 @@ WebSocket::GetCloseSocket(USHORT& p_code,CString& p_reason)
   return p_code > 0;
 }
 
+// Perform the server handshake
+bool
+WebSocket::ServerHandshake(HTTPMessage* /*p_message*/)
+{
+  // Does nothing 
+  return true;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // SERVER MARLIN WebSocket
@@ -593,10 +630,27 @@ WebSocketServer::Reset()
   // Nothing to do for ourselves (yet)
 }
 
+void StartSocket(void* p_context)
+{
+  WebSocketServer* socket = reinterpret_cast<WebSocketServer*>(p_context);
+  socket->StartSocket();
+}
+
+void
+WebSocketServer::StartSocket()
+{
+  m_server->ReceiveWebSocket(this,m_request);
+}
+
 // Open the socket
 bool 
 WebSocketServer::OpenSocket()
 {
+  if(m_server && m_request)
+  {
+    m_server->GetThreadPool()->SubmitWork(::StartSocket,this);
+    return true;
+  }
   return false;
 }
 
@@ -695,7 +749,7 @@ WebSocketServer::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,b
 
 // Send a 'ping' to see if other side is still there
 bool
-WebSocketServer::SendPing(bool p_waitForPong /*= false*/)
+WebSocketServer::SendPing()
 {
   bool result = false;
 
@@ -703,13 +757,7 @@ WebSocketServer::SendPing(bool p_waitForPong /*= false*/)
   CString buffer("PING!");
   if(WriteFragment((BYTE*)buffer.GetString(),buffer.GetLength(),Opcode::SO_PING,true))
   {
-    if(p_waitForPong && m_pingEvent)
-    {
-      if(WaitForSingleObject(m_pingEvent,m_pingTimeout) == WAIT_OBJECT_0)
-      {
-        result = m_pongSeen;
-      }
-    }
+    // LOG
   }
   else
   {
@@ -957,7 +1005,7 @@ WebSocketServer::StoreFrameBuffer(RawFrame* p_frame)
   // If it is a 'continuation frame', just store it
   // And go back right away to receive more frames!
   if(p_frame->m_finalFrame == false ||
-    p_frame->m_opcode == Opcode::SO_CONTINU)
+     p_frame->m_opcode == Opcode::SO_CONTINU)
   {
     AutoCritSec lock(&m_lock);
     m_stack.push_back(p_frame);
@@ -969,10 +1017,6 @@ WebSocketServer::StoreFrameBuffer(RawFrame* p_frame)
   if(p_frame->m_opcode == Opcode::SO_PONG)
   {
     m_pongSeen = true;
-    if(m_pingEvent)
-    {
-      SetEvent(m_pingEvent);
-    }
     delete p_frame;
     return true;
   }
@@ -1015,7 +1059,7 @@ WebSocketServer::StoreFrameBuffer(RawFrame* p_frame)
 bool
 WebSocketServer::ServerHandshake(HTTPMessage* p_message)
 {
-  CString version = p_message->GetHeader("Sec-WebSocket-Version");
+  CString version   = p_message->GetHeader("Sec-WebSocket-Version");
   CString clientKey = p_message->GetHeader("Sec-WebSocket-Key");
   CString serverKey = ServerAcceptKey(clientKey);
   // Get optional extensions
@@ -1025,6 +1069,13 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
   // Change header fields
   p_message->DelHeader("Sec-WebSocket-Key");
   p_message->AddHeader("Sec-WebSocket-Accept",serverKey,false);
+
+  // Remove general headers
+  p_message->DelHeader("Sec-WebSocket-Version");
+  p_message->DelHeader("cache-control");
+  p_message->DelHeader("trailer");
+  p_message->DelHeader("user-agent");
+  p_message->DelHeader("host");
 
   // By default we accept all protocols and extensions
   // All versions of 13 (RFC 6455) and above
@@ -1475,6 +1526,14 @@ WebSocketServerIIS::RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p
   return false;
 }
 
+// Perform the server handshake
+bool 
+WebSocketServerIIS::ServerHandshake(HTTPMessage* /*p_message*/)
+{
+  // Does nothing for IIS
+  return true;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // CLIENT WEBSOCKET
@@ -1535,6 +1594,10 @@ WebSocketClient::OpenSocket()
   // We will do the WebSocket handshake on this client!
   // This keeps open the request handle for output as well
   client.SetWebsocketHandshake(true);
+
+  // Set WebSocket options
+  client.SetWSClosingTimeout(m_closingTimeout);
+  client.SetWSKeepAlive(m_keepalive);
 
   // Send a bare HTTP line, just with headers: no body!
   if(client.Send())

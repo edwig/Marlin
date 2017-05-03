@@ -67,48 +67,55 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
   }
 
   // Reset the message and prepare for protocol upgrade
-  p_message->Reset();
-  p_message->SetStatus(HTTP_STATUS_SWITCH_PROTOCOLS);
-
-  // Our handler should be able to set message handlers
-  // change the handshake headers and such or do the
-  // Upgraded protocols for the version > 13!
-  if(Handle(p_message,socket))
+  if(socket->ServerHandshake(p_message))
   {
-    // Handler must **NOT** handle the response sending!
-    HTTP_REQUEST_ID request = p_message->GetRequestHandle();
-    if(request)
-    {
-      // Send the response to the client side, confirming that we become a WebSocket
-      // Sending the switch protocols and handshake headers as a HTTP 101 status, 
-      // but keep the channel OPEN
-      m_site->SendResponse(p_message);
-      server->FlushSocket(request);
+    p_message->SetCommand(HTTPCommand::http_response);
+    p_message->SetStatus(HTTP_STATUS_SWITCH_PROTOCOLS);
 
-      // Find the internal structures for the server
-      if(socket->RegisterServerRequest(server,request))
+    // Our handler should be able to set message handlers
+    // change the handshake headers and such or do the
+    // Upgraded protocols for the version > 13!
+    if(Handle(p_message,socket))
+    {
+      // Handler must **NOT** handle the response sending!
+      HTTP_REQUEST_ID request = p_message->GetRequestHandle();
+      if(request)
       {
-        if(socket->OpenSocket())
+        // Send the response to the client side, confirming that we become a WebSocket
+        // Sending the switch protocols and handshake headers as a HTTP 101 status, 
+        // but keep the channel OPEN
+        m_site->SendResponse(p_message);
+        server->FlushSocket(request);
+
+        // Find the internal structures for the server
+        if(socket->RegisterServerRequest(server,request))
         {
-          opened = true;
-          // Register the socket at the server, so we can find it
-          server->RegisterSocket(socket);
-          SITE_DETAILLOGS("Opened a WebSocket for: ",uri);
+          if(socket->OpenSocket())
+          {
+            opened = true;
+            // Register the socket at the server, so we can find it
+            server->RegisterSocket(socket);
+            SITE_DETAILLOGS("Opened a WebSocket for: ",uri);
+          }
+          else
+          {
+            SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,"Socket listener not started");
+          }
         }
-        else
-        {
-          SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,"Socket listener not started");
-        }
+      }
+      else
+      {
+        SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp should NOT handle the response message!");
       }
     }
     else
     {
-      SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp should NOT handle the response message!");
+      SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp could not register the WebSocket!");
     }
   }
   else
   {
-    SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp could not register the WebSocket!");
+    SITE_ERRORLOG(ERROR_PROTOCOL_UNREACHABLE,"Site could not accept the WebSocket handshake of the client!");
   }
 
   // If we did not open our WebSocket, remove it from memory

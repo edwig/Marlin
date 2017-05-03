@@ -1067,16 +1067,15 @@ HTTPClient::AddWebSocketHeaders()
   {
     ErrorLog(__FUNCTION__,"Cannot set option to upgrade to WebSocket. Error [%d] %s");
   }
-
-//   if(!::WinHttpSetOption(m_request,WINHTTP_OPTION_WEB_SOCKET_CLOSE_TIMEOUT,(LPVOID)10,0))
-//   {
-//     ErrorLog(__FUNCTION__,"Cannot set WebSocket closing timeout interval. Error [%d] %s");
-// 
-//   }
-//   if(!::WinHttpSetOption(m_request,WINHTTP_OPTION_WEB_SOCKET_KEEPALIVE_INTERVAL ,(LPVOID)30000,0))
-//   {
-//     ErrorLog(__FUNCTION__,"Cannot set WebSocket keepalive interval. Error [%d] %s");
-//   }
+  if(!::WinHttpSetOption(m_request,WINHTTP_OPTION_WEB_SOCKET_CLOSE_TIMEOUT,(LPVOID)((__int64)m_closingTimeout),sizeof(unsigned)))
+  {
+    ErrorLog(__FUNCTION__,"Cannot set WebSocket closing timeout interval. Error [%d] %s");
+  }
+  if(!::WinHttpSetOption(m_request,WINHTTP_OPTION_WEB_SOCKET_KEEPALIVE_INTERVAL ,(LPVOID)((__int64)m_keepalive),sizeof(unsigned)))
+  {
+    ErrorLog(__FUNCTION__,"Cannot set WebSocket keep-alive interval. Error [%d] %s");
+  }
+  DETAILLOG("Prepared for WebSocket upgrade. Timeout: %d Keep-alive: %d",m_closingTimeout,m_keepalive);
 }
 
 CString

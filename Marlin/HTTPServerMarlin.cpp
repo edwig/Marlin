@@ -1248,6 +1248,7 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request
 
   BYTE* buffer  = nullptr;
   DWORD total   = 0;
+  ULONG size    = p_socket->GetFragmentSize();
   bool  reading = true;
   WebSocketServer* socket = reinterpret_cast<WebSocketServer*>(p_socket);
 
@@ -1255,15 +1256,15 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request
   {
     if(buffer == nullptr)
     {
-      buffer = (BYTE*)malloc(INIT_HTTP_BUFFERSIZE);
+      buffer = (BYTE*)malloc(size + WS_OVERHEAD);
       total  = 0;
     }
     DWORD bytesRead = 0;
     DWORD result = HttpReceiveRequestEntityBody(m_requestQueue
                                                ,p_request
-                                               ,HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER
+                                               ,0
                                                ,&buffer[total]
-                                               ,INIT_HTTP_BUFFERSIZE
+                                               ,size
                                                ,&bytesRead
                                                ,NULL);
     switch(result)
@@ -1289,7 +1290,7 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request
 
       RawFrame* frame = new RawFrame();
       frame->m_data = buffer;
-      if(socket->StoreFrameBuffer(frame))
+      if(socket->DecodeFrameBuffer(frame,total))
       {
         // Shrink the buffer and store it for the socket
         frame->m_data = (BYTE*)realloc(buffer,total);
@@ -1304,7 +1305,7 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request
       else
       {
         // Incomplete buffer, expand buffer to receive some more
-        buffer = (uchar*)realloc(buffer,total + INIT_HTTP_BUFFERSIZE);
+        buffer = (uchar*)realloc(buffer,total + size + WS_OVERHEAD);
         // Remove unused frame buffer
         frame->m_data = nullptr;
         delete frame;
@@ -1390,24 +1391,32 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
     return;
   }
 
+  // Initialize the HTTP response structure.
+  InitializeHttpResponse(&response,(USHORT)p_message->GetStatus(),(PSTR)GetStatusText(p_message->GetStatus()));
+
+  SendHeader sendheader;
+
   // Protocol switch must keep the channel open (here for: WebSocket!)
   if(status == HTTP_STATUS_SWITCH_PROTOCOLS)
   {
     moredata = true;
+    // Hide the server type
+    sendheader = SendHeader::HTTP_SH_HIDESERVER;
   }
-
-  // Initialize the HTTP response structure.
-  InitializeHttpResponse(&response,(USHORT)p_message->GetStatus(),(PSTR) GetStatusText(p_message->GetStatus()));
-
-  // Add a known header. (octet-stream or the message content type)
-  if(!p_message->GetContentType().IsEmpty())
+  else
   {
-    contentType = p_message->GetContentType();
+    // Add a known header. (octet-stream or the message content type)
+    if(!p_message->GetContentType().IsEmpty())
+    {
+      contentType = p_message->GetContentType();
+    }
+    AddKnownHeader(response,HttpHeaderContentType,contentType);
+    // Use default sendHeader settings
+    sendheader = m_sendHeader;
   }
-  AddKnownHeader(response,HttpHeaderContentType,contentType);
 
   // Add the server header or suppress it
-  switch(m_sendHeader)
+  switch(sendheader)
   {
     case SendHeader::HTTP_SH_MICROSOFT:   // Do nothing, Microsoft will add the server header
                                           break;
@@ -1444,6 +1453,7 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
   for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
   {
     ukheaders.insert(std::make_pair(it->first,it->second));
+    printf("%s: %s\n",it->first.GetString(),it->second.GetString());
   }
 
   // Possible zip the contents, and add content-encoding header
@@ -1473,8 +1483,10 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
 #else
   contentLength.Format("%lu",totalLength);
 #endif
-  AddKnownHeader(response,HttpHeaderContentLength,contentLength);
-
+  if(moredata == false)
+  {
+    AddKnownHeader(response,HttpHeaderContentLength,contentLength);
+  }
   // Dependent on the filling of FileBuffer
   // Send 1 or more buffers or the file
   if(buffer->GetHasBufferParts())
@@ -1539,9 +1551,9 @@ HTTPServerMarlin::SendResponseBuffer(PHTTP_RESPONSE   p_response
   policy.Policy        = m_policy;
   policy.SecondsToLive = m_secondsToLive;
 
-
-  ULONG flags = p_more ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA |
-                         HTTP_SEND_RESPONSE_FLAG_OPAQUE  : 0;
+  
+  ULONG flags = p_more ? HTTP_SEND_RESPONSE_FLAG_OPAQUE : 0;
+                         // HTTP_SEND_RESPONSE_FLAG_MORE_DATA : 0;
   // Because the entity body is sent in one call, it is not
   // required to specify the Content-Length.
   result = HttpSendHttpResponse(m_requestQueue,      // ReqQueueHandle

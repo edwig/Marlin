@@ -135,6 +135,7 @@ TestWebSocket(HTTPServer* p_server)
   // Set a WebSocket handler on the GET handler of this site
   SiteHandlerTestSocket* handler = new SiteHandlerTestSocket();
   site->SetHandler(HTTPCommand::http_get,handler);
+  site->SetAllHeaders(true);
 
   // Start the site explicitly
   if(site->StartSite())
@@ -153,15 +154,19 @@ TestWebSocket(HTTPServer* p_server)
 int
 StopWebSocket(void)
 {
-  int errors = 1;
-  WebSocket* socket = g_server->GetHTTPServer()->FindWebSocket("/MarlinTest/Socket/socket_123");
-  if(socket)
+  int errors = 0;
+
+  // Only done for the IIS server
+  if(g_server)
   {
-    if(socket->CloseSocket())
+    WebSocket* socket = g_server->GetHTTPServer()->FindWebSocket("/MarlinTest/Socket/socket_123");
+    if(socket)
     {
-      errors = 0;
+      if(socket->CloseSocket() == false)
+      {
+        ++errors;
+      }
     }
-    g_server->GetHTTPServer()->UnRegisterWebSocket(socket);
   }
   return errors;
 }

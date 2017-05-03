@@ -136,17 +136,16 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     else
     {
       // Do Unit testing
-      errors += TestUnicode();
-      errors += TestURLChars();
-      errors += TestCryptography();
-      errors += TestReader();
-      errors += TestConvert();
-      errors += TestNamespaces();
-      errors += TestJSON();
-      errors += TestFindClientCertificate();
-      errors += TestWebSocketAccept();
+//       errors += TestUnicode();
+//       errors += TestURLChars();
+//       errors += TestCryptography();
+//       errors += TestReader();
+//       errors += TestConvert();
+//       errors += TestNamespaces();
+//       errors += TestJSON();
+//       errors += TestFindClientCertificate();
+//       errors += TestWebSocketAccept();
       errors += TestWebSocket(g_log);
-
 //       errors += TestBaseSite(client);
 //       errors += TestSecureSite(client);
 //       errors += TestClientCertificate(client);
@@ -158,7 +157,6 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
 //       errors += TestContract(client,true);
 //       errors += TestPatching(client);
 //       errors += TestCompression(client);
-//       errors += TestClientCertificate(client);
 //       errors += TestWebservices(*client);
     }
   

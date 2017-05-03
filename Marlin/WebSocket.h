@@ -32,17 +32,23 @@
 #include <map>
 
 // Header and fragment sizes
-constexpr auto WS_MIN_HEADER       =  2;  // Minimum header size in octets
-constexpr auto WS_MAX_HEADER       = 14;  // Maximum header size in octets
-constexpr auto WS_FRAGMENT_MINIMUM = (  1 * 4096) - WS_MAX_HEADER;  //  1 TCP/IP buffer
-constexpr auto WS_FRAGMENT_DEFAULT = (  2 * 4096) - WS_MAX_HEADER;  //  8 KB buffer
-constexpr auto WS_FRAGMENT_MAXIMUM = (256 * 4096) - WS_MAX_HEADER;  //  1 MB buffer
+constexpr auto WS_MIN_HEADER        =  2;  // Minimum header size in octets
+constexpr auto WS_MAX_HEADER        = 14;  // Maximum header size in octets
+constexpr auto WS_FRAGMENT_MINIMUM  = (  1 * 4096) - WS_MAX_HEADER;  //  1 TCP/IP buffer
+constexpr auto WS_FRAGMENT_DEFAULT  = (  2 * 4096) - WS_MAX_HEADER;  //  8 KB buffer
+constexpr auto WS_FRAGMENT_MAXIMUM  = (256 * 4096) - WS_MAX_HEADER;  //  1 MB buffer
 // Default keep alive time for a 'pong'
-constexpr auto WS_KEEPALIVE_TIME   = 20000;      // 20 sec = 20000 milliseconds
+constexpr auto WS_KEEPALIVE_TIME    =  30000;      // 30 sec = 20000 milliseconds
+constexpr auto WS_KEEPALIVE_MINIMUM =  15000;
+constexpr auto WS_KEEPALIVE_MAXIMUM = 120000;
 // Maximum length of a WebSocket 'close' message
-constexpr auto WS_CLOSE_MAXIMUM    = 123;
-// Buffer overhead, for safty allocation
-constexpr auto WS_OVERHEAD         = 4;
+constexpr auto WS_CLOSE_MAXIMUM     = 123;
+// Timeout for a 'close' message
+constexpr auto WS_CLOSING_TIME      =  10000;
+constexpr auto WS_CLOSING_MINIMUM   =   2000;
+constexpr auto WS_CLOSING_MAXIMUM   = 120000;
+// Buffer overhead, for safety allocation
+constexpr auto WS_OVERHEAD          = 4;
 
 // Forward declaration of our class
 class WebSocket;
@@ -183,7 +189,9 @@ public:
   // SETTERS
 
   // Setting the keep-alive interval for sending a 'pong'
-  void SetKeepalive(ULONG p_miliseconds);
+  void SetKeepalive(unsigned p_miliseconds);
+  // Setting the timeout for a 'close' message
+  void SetClosingTimeout(unsigned p_timeout);
   // Max fragmentation size
   void SetFragmentSize(ULONG p_fragment);
   // Setting the protocols
@@ -229,6 +237,9 @@ public:
   void    DetailLogV(const char* p_function,LogType p_type,const char* p_text,...);
   void    ErrorLog  (const char* p_function,DWORD p_code,CString p_text);
 
+  // Perform the server handshake
+  virtual bool ServerHandshake(HTTPMessage* p_message);
+
 protected:
   // Completely close the connection
   void    Close();
@@ -245,12 +256,12 @@ protected:
   CString m_uri;                      // ws[s]://resource URI for the socket
   bool    m_open        { false };    // WebSocket is opened and alive
   ULONG   m_keepalive;                // Keep alive time of the socket
+  ULONG   m_closingTimeout;           // Timeout for answering 'close' message
   ULONG   m_fragmentsize;             // Max fragment size
   CString m_protocols;                // WebSocket main protocols
   CString m_extensions;               // Extensions in 1,2,3 fields
   USHORT  m_closingError{ 0     };    // Error on closing
   CString m_closing;                  // Closing error text
-  HANDLE  m_pingEvent;                // The ping/pong event
   ULONG   m_pingTimeout { 30000 };    // How long we wait for a pong after a ping
   bool    m_pongSeen    { false };    // Seen a pong for a ping
   bool    m_doLogging   { false };    // Do we do the logging?
@@ -277,12 +288,6 @@ inline bool
 WebSocket::IsOpen()
 {
   return m_open;
-}
-
-inline void
-WebSocket::SetKeepalive(ULONG p_miliseconds)
-{
-  m_keepalive = p_miliseconds;
 }
 
 inline void 
@@ -367,22 +372,24 @@ public:
   bool    ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last);
 
   // Send a 'ping' to see if other side still there
-  bool    SendPing(bool p_waitForPong = false);
+  bool    SendPing();
   // Send a 'pong' as an answer on a 'ping'
   void    SendPong(RawFrame* p_ping);
 
   // BOTH HTTPClient and HTTPServer must have access to these functions
 
+  // Perform the server handshake
+  virtual bool ServerHandshake(HTTPMessage* p_message);
   // Generate a server key-answer
   CString ServerAcceptKey(CString p_clientKey);
-  // Perform the server handshake
-  bool    ServerHandshake(HTTPMessage* p_message);
   // Encode raw frame buffer
   bool    EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE* p_buffer,int64 p_length,bool p_last);
   // Decode raw frame buffer (only m_data is filled)
   bool    DecodeFrameBuffer(RawFrame* p_frame,int64 p_length);
   // Store incoming raw frame buffer
   bool    StoreFrameBuffer(RawFrame* p_frame);
+  // Async starting a socket listener on the HTTPServer
+  void    StartSocket();
 
 private:
   // Decode the incoming closing fragment before we call 'OnClose'
@@ -424,6 +431,9 @@ public:
   void    SocketWriter(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
   // Socket listener, entered by the HTTPServerIIS only!!
   void    SocketListener();
+
+  // Perform the server handshake
+  virtual bool ServerHandshake(HTTPMessage* p_message);
 
 protected:
   // Decode the incoming close socket message
