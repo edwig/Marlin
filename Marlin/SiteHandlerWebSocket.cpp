@@ -29,6 +29,12 @@
 #include "SiteHandlerWebSocket.h"
 #include "WebSocket.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // A WebSocket handler is in essence a 'GET' handler
 // that will get upgraded to the WebSocket protocol.
 
@@ -47,9 +53,10 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
 {
   bool opened = false;
   HTTPServer* server = m_site->GetHTTPServer();
+  CString uri = p_message->GetAbsolutePath();
 
   // Create socket by absolute path of the incoming URL
-  WebSocket* socket = server->CreateWebSocket(p_message->GetAbsolutePath());
+  WebSocket* socket = server->CreateWebSocket(uri);
 
   // Also get the parameters (key & value)
   CrackedURL& url = p_message->GetCrackedURL();
@@ -86,7 +93,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
           opened = true;
           // Register the socket at the server, so we can find it
           server->RegisterSocket(socket);
-          SITE_DETAILLOGV("Opened a WebSocket for: %s",p_message->GetAbsolutePath());
+          SITE_DETAILLOGS("Opened a WebSocket for: ",uri);
         }
         else
         {
@@ -107,7 +114,10 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
   // If we did not open our WebSocket, remove it from memory
   if(!opened)
   {
+    // Remove the socket
     delete socket;
+    // Request status reset, so the request will get ended in the mainloop
+    p_message->SetStatus(HTTP_STATUS_SERVICE_UNAVAIL);
   }
   return true;
 }

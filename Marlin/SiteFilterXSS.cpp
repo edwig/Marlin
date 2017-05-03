@@ -29,6 +29,12 @@
 #include "SiteFilterXSS.h"
 #include "SiteHandler.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 SiteFilterXSS::SiteFilterXSS(unsigned p_priority,CString p_name)
               :SiteFilter(p_priority,p_name)
 {

@@ -32,6 +32,12 @@
 #include "HTTPCertificate.h"
 #include <wincrypt.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 #undef  TRACE
 #define TRACE(text,...) m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,true,(text),__VA_ARGS__)
 

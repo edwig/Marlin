@@ -651,7 +651,13 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
 WebSocket* 
 HTTPServerIIS::CreateWebSocket(CString p_uri)
 {
-  return new WebSocketServerIIS(p_uri);
+  WebSocketServerIIS* socket = new WebSocketServerIIS(p_uri);
+
+  // Connect the server logfile, and loglevel
+  socket->SetLogfile(m_log);
+  socket->SetLogging(m_detail);
+
+  return socket;
 }
 
 // Receive the WebSocket stream and pass on the the WebSocket
@@ -701,25 +707,25 @@ HTTPServerIIS::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/)
 }
 
 bool
-HTTPServerIIS::FlushSocket(HTTP_REQUEST_ID /*p_request*/)
+HTTPServerIIS::FlushSocket(HTTP_REQUEST_ID p_request)
 {
-//   IHttpContext*     context  = reinterpret_cast<IHttpContext*>(p_request);
-//   IHttpResponse*    response = context->GetResponse();
-//   IHttpCachePolicy* policy   = response->GetCachePolicy();
-//   DWORD bytesSent = 0;
-// 
-//   // Do not buffer. Also turn dynamic compression OFF in IIS-Admin!
-//   response->DisableBuffering();    // Disable buffering
-//   response->DisableKernelCache(9); // 9 = HANDLER_HTTPSYS_UNFRIENDLY
-//   policy->DisableUserCache();      // Disable user caching
-// 
-//   HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent);
-//   if(hr != S_OK)
-//   {
-//     ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
-//     CancelRequestStream(p_request);
-//     return false;
-//   }
+  IHttpContext*     context  = reinterpret_cast<IHttpContext*>(p_request);
+  IHttpResponse*    response = context->GetResponse();
+  IHttpCachePolicy* policy   = response->GetCachePolicy();
+  DWORD bytesSent = 0;
+
+  // Do not buffer. Also turn dynamic compression OFF in IIS-Admin!
+  response->DisableBuffering();    // Disable buffering
+  response->DisableKernelCache(9); // 9 = HANDLER_HTTPSYS_UNFRIENDLY
+  policy->DisableUserCache();      // Disable user caching
+
+  HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent);
+  if(hr != S_OK)
+  {
+    ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
+    CancelRequestStream(p_request);
+    return false;
+  }
   return true;
 }
 

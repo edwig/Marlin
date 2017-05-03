@@ -114,18 +114,6 @@ public:
   BYTE*   m_data;           // Pointer to the raw data (header + payload)
 };
 
-// Socket message and Dispatch message are used
-// to start up the message handlers from within the Threadpool
-enum class SockMessage
-{
-  SM_NOTHING = 0
- ,SM_OPEN    = 1
- ,SM_MESSAGE = 2
- ,SM_BINARY  = 3
- ,SM_ERROR   = 4
- ,SM_CLOSE   = 5
-};
-
 // WSFrames are the simplified frames for WinHTTP and IIS
 class WSFrame
 {
@@ -133,8 +121,6 @@ public:
   WSFrame();
  ~WSFrame();
 
-  SockMessage m_message { SockMessage::SM_NOTHING };
-  DWORD       m_number  { 0       };    // Message sequence number
   bool        m_final   { false   };    // True if final frame for message
   bool        m_utf8    { false   };    // UTF-8 Frame or Binary frame
   BYTE*       m_data    { nullptr };    // Data block pointer
@@ -209,11 +195,15 @@ public:
   // Set logging to on or off
   void SetLogging(bool p_logging);
   // Set the OnOpen handler
-  void SetOnOpen(LPFN_SOCKETHANDLER p_onOpen);
+  void SetOnOpen   (LPFN_SOCKETHANDLER p_onOpen);
   // Set the OnMessage handler
   void SetOnMessage(LPFN_SOCKETHANDLER p_onMessage);
+  // Set the OnBinary handler
+  void SetOnBinary (LPFN_SOCKETHANDLER p_onBinary);
+  // Set the OnError handler
+  void SetOnError  (LPFN_SOCKETHANDLER p_onError);
   // Set the OnClose handler
-  void SetOnClose(LPFN_SOCKETHANDLER p_onClose);
+  void SetOnClose  (LPFN_SOCKETHANDLER p_onClose);
 
   // GETTERS
 
@@ -234,13 +224,10 @@ public:
   CString GetParameter(CString p_name);
 
   // LOGGING
-  void    DetailLog(const char* p_function,LogType p_type,const char* p_text);
+  void    DetailLog (const char* p_function,LogType p_type,const char* p_text);
   void    DetailLogS(const char* p_function,LogType p_type,const char* p_text,const char* p_extra);
   void    DetailLogV(const char* p_function,LogType p_type,const char* p_text,...);
-  void    ErrorLog(const char* p_function,DWORD p_code,CString p_text);
-
-  // May only be called from within the Threadpool!
-  void    Dispatcher();
+  void    ErrorLog  (const char* p_function,DWORD p_code,CString p_text);
 
 protected:
   // Completely close the connection
@@ -250,10 +237,9 @@ protected:
   // Get the first frame
   WSFrame* GetWSFrame();
   // Convert the UTF-8 in a frame back to MBCS
-  void     ConvertWSFrameToMBCS(WSFrame* p_frame);
+  void    ConvertWSFrameToMBCS(WSFrame* p_frame);
   // Append UTF-8 text to last frame on the stack, or just store it
-  void     StoreOrAppendWSFrame(WSFrame*& p_frame);
-
+  void    StoreOrAppendWSFrame(WSFrame*& p_frame);
 
   // GENERAL SOCKET DATA
   CString m_uri;                      // ws[s]://resource URI for the socket
@@ -336,6 +322,18 @@ WebSocket::SetOnMessage(LPFN_SOCKETHANDLER p_onMessage)
 }
 
 inline void 
+WebSocket::SetOnBinary(LPFN_SOCKETHANDLER p_onBinary)
+{
+  m_onbinary = p_onBinary;
+}
+
+inline void 
+WebSocket::SetOnError(LPFN_SOCKETHANDLER p_onError)
+{
+  m_onerror = p_onError;
+}
+
+inline void 
 WebSocket::SetOnClose(LPFN_SOCKETHANDLER p_onClose)
 {
   m_onclose = p_onClose;
@@ -366,7 +364,7 @@ public:
   // Register the server request for sending info
   virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request);
   // Read a fragment from a WebSocket
-  bool ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last);
+  bool    ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last);
 
   // Send a 'ping' to see if other side still there
   bool    SendPing(bool p_waitForPong = false);
@@ -390,9 +388,9 @@ private:
   // Decode the incoming closing fragment before we call 'OnClose'
   void    DecodeCloseFragment(RawFrame* p_frame);
 
+  // Private data for the server variant of the WebSocket
   HTTPServer*     m_server  { nullptr };
   HTTP_REQUEST_ID m_request { NULL    };
-
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -431,15 +429,11 @@ protected:
   // Decode the incoming close socket message
   bool    ReceiveCloseSocket();
 
+  // Private data for the IIS WebSocket variant
   HTTPServer*         m_server    { nullptr };
   IWebSocketContext*  m_iis_socket{ nullptr };
   HTTP_REQUEST_ID     m_request   { NULL    };
   HANDLE              m_listener  { NULL    };
-  // Needed for the ASYNC I/O handler
-  BOOL                m_utf8;
-  BOOL                m_last;
-  BOOL                m_isclosing;
-  BOOL                m_expected;
   // Async write buffer
   WSFrameStack        m_writing;
 };
@@ -475,7 +469,6 @@ public:
   // Socket listener, entered by the StartClientListener only!
   void         SocketListener();
 
-
   // GETTERS
 
   // The handshake key the socket was started with
@@ -487,6 +480,7 @@ protected:
   // Decode the incoming close socket message
   bool         ReceiveCloseSocket();
 
+  // WinHTTP Client version of the WebSocket
   HINTERNET    m_socket   { NULL };   // Our socket handle for WinHTTP
   HANDLE       m_listener { NULL };   // Listener thread
   CString      m_socketKey;           // Given at the start

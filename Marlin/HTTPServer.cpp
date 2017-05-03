@@ -1540,12 +1540,11 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
   CString uri = p_socket->GetURI();
   uri.MakeLower();
 
-  TRACE("UN-Register WebSocket [%s] %lX\n",uri,p_socket);
+  // TRACE("UN-Register WebSocket [%s] %lX\n",uri,p_socket);
 
   SocketMap::iterator it = m_sockets.find(uri);
   if(it != m_sockets.end())
   {
-    it->second->CloseSocket();
     delete it->second;
     m_sockets.erase(it);
     return true;

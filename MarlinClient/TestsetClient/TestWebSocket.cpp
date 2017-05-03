@@ -162,7 +162,7 @@ TestWebSocket(LogAnalysis* p_log)
   uri.Format("ws://%s:%d/MarlinTest/Sockets/socket_123",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Independent 3th party test website, to check whether our WebSocket works correct!
-  uri = "wss://echo.websocket.org";
+  // uri = "ws://echo.websocket.org";
 
   // Declare a WebSocket
   WebSocketClient* socket = new WebSocketClient(uri);

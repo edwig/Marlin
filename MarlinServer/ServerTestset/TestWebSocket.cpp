@@ -32,6 +32,12 @@
 #include "WebSocket.h"
 #include "SiteHandlerWebSocket.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Open, close and 2 messages
 int totalChecks = 4;
 
@@ -43,15 +49,18 @@ int totalChecks = 4;
 
 void OnOpen(WebSocket* p_socket,WSFrame* /*p_frame*/)
 {
-  qprintf("Opened a websocket for: %s",p_socket->GetURI());
+  qprintf("TEST handler: Opened a websocket for: %s",p_socket->GetURI());
   --totalChecks;
 }
 
 void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 {
   CString message((char*)p_frame->m_data);
-  qprintf("Incoming WebSocket [%s] message: %s",p_socket->GetURI(),message);
+  qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetURI(),message);
   --totalChecks;
+
+
+  p_socket->WriteString("We are the server!");
 }
 
 void OnClose(WebSocket* p_socket,WSFrame* p_frame)
@@ -59,9 +68,9 @@ void OnClose(WebSocket* p_socket,WSFrame* p_frame)
   CString message((char*)p_frame->m_data);
   if(!message.IsEmpty())
   {
-    qprintf("Closing WebSocket message: %s",message);
+    qprintf("TEST handler: Closing WebSocket message: %s",message);
   }
-  qprintf("Closed the websocket for: %s",p_socket->GetURI());
+  qprintf("TEST handler: Closed the websocket for: %s",p_socket->GetURI());
   --totalChecks;
 }
 
