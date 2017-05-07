@@ -677,6 +677,7 @@ HTTPServerMarlin::RunHTTPServer()
     CString   referrer       = request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
     CString   rawUrl         = CW2A(request->CookedUrl.pFullUrl);
     PSOCKADDR sender         = request->Address.pRemoteAddress;
+    PSOCKADDR receiver       = request->Address.pLocalAddress;
     int       remDesktop     = FindRemoteDesktop(request->Headers.UnknownHeaderCount
                                                 ,request->Headers.pUnknownHeaders);
 
@@ -847,7 +848,8 @@ HTTPServerMarlin::RunHTTPServer()
         message->SetContentType(contentType);
         message->SetAccessToken(accessToken);
         message->SetRemoteDesktop(remDesktop);
-        message->SetSender((PSOCKADDR_IN6)sender);
+        message->SetSender  ((PSOCKADDR_IN6)sender);
+        message->SetReceiver((PSOCKADDR_IN6)receiver);
         message->SetCookiePairs(cookie);
         message->SetAcceptEncoding(acceptEncoding);
         if(site->GetAllHeaders())
@@ -1176,12 +1178,12 @@ HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* p_message)
   {
     bytesRead = 0; 
     DWORD result = HttpReceiveRequestEntityBody(m_requestQueue
-                                                ,p_message->GetRequestHandle()
-                                                ,HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER
-                                                ,entityBuffer
-                                                ,entityBufferLength
-                                                ,&bytesRead
-                                                ,NULL);
+                                               ,p_message->GetRequestHandle()
+                                               ,HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER
+                                               ,entityBuffer
+                                               ,entityBufferLength
+                                               ,&bytesRead
+                                               ,NULL);
     switch(result)
     {
       case NO_ERROR:          // Regular incoming body part
@@ -1204,7 +1206,6 @@ HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* p_message)
                               break;
                               
     }
-
   } 
   while(reading);
 
@@ -1241,84 +1242,133 @@ HTTPServerMarlin::CreateWebSocket(CString p_uri)
 
 // Receive the WebSocket stream and pass on the the WebSocket
 void
-HTTPServerMarlin::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request)
+HTTPServerMarlin::ReceiveWebSocket(WebSocket* /*p_socket*/,HTTP_REQUEST_ID /*p_request*/)
 {
-  // Increment thread count for the server while we are in the read loop
-  AutoIncrementPoolMax inc(m_pool);
+  // FOR WEBSOCKETS TO WORK ON THE STAND-ALONE MARLIN
+  // IT NEEDS TO BE REWRIITEN TO DO ASYNC I/O THROUGHOUT THE SERVER!
+  return;
 
-  BYTE* buffer  = nullptr;
-  DWORD total   = 0;
-  ULONG size    = p_socket->GetFragmentSize();
-  bool  reading = true;
-  WebSocketServer* socket = reinterpret_cast<WebSocketServer*>(p_socket);
 
-  do
-  {
-    if(buffer == nullptr)
-    {
-      buffer = (BYTE*)malloc(size + WS_OVERHEAD);
-      total  = 0;
-    }
-    DWORD bytesRead = 0;
-    DWORD result = HttpReceiveRequestEntityBody(m_requestQueue
-                                               ,p_request
-                                               ,0
-                                               ,&buffer[total]
-                                               ,size
-                                               ,&bytesRead
-                                               ,NULL);
-    switch(result)
-    {
-      case NO_ERROR:          // Regular incoming body part
-                              DETAILLOGV("WebSocket receiving [%d] bytes",bytesRead);
-                              break;
-      case ERROR_HANDLE_EOF:  // Very last incoming body part
-                              if(bytesRead)
-                              {
-                                DETAILLOGV("WebSocket receiving [%d] bytes",bytesRead);
-                              }
-                              reading = false;
-                              break;
-      default:                ERRORLOG(result,"Receiving for WebSocket");
-                              bytesRead = 0;
-                              reading = false;
-                              break;
-    }
-    if(bytesRead)
-    {
-      total += bytesRead;
 
-      RawFrame* frame = new RawFrame();
-      frame->m_data = buffer;
-      if(socket->DecodeFrameBuffer(frame,total))
-      {
-        // Shrink the buffer and store it for the socket
-        frame->m_data = (BYTE*)realloc(buffer,total);
-        buffer = nullptr;
+//   // Increment thread count for the server while we are in the read loop
+//   AutoIncrementPoolMax inc(m_pool);
+// 
+//   BYTE* buffer  = nullptr;
+//   DWORD total   = 0;
+//   ULONG size    = p_socket->GetFragmentSize();
+//   bool  reading = true;
+//   WebSocketServer* websocket = reinterpret_cast<WebSocketServer*>(p_socket);
+// 
+//   if(buffer == nullptr)
+//   {
+//     buffer = (BYTE*)malloc(size + WS_OVERHEAD);
+//     total = 0;
+//   }
 
-        if(socket->StoreFrameBuffer(frame) == false)
-        {
-          // closing channel on a close operator
-          reading = false;
-        }
-      }
-      else
-      {
-        // Incomplete buffer, expand buffer to receive some more
-        buffer = (uchar*)realloc(buffer,total + size + WS_OVERHEAD);
-        // Remove unused frame buffer
-        frame->m_data = nullptr;
-        delete frame;
-      }
-    }
-  }
-  while(reading);
 
-  // Do not forget to free the buffer memory
-  if(buffer)
-  {
-    free(buffer);
-  }
+  // testcode to receive right from the raw socket
+//   PSOCKADDR_IN6 address = websocket->GetReceiverAddress();
+//   SOCKET sock = socket(address->sin6_family,SOCK_STREAM,IPPROTO_TCP);
+//   if(sock)
+//   {
+//     BOOL reuse = TRUE;
+//     if(setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,(char*)&reuse,sizeof(BOOL)))
+//     {
+//       int error = WSAGetLastError();
+//       ERRORLOG(error,"Receive from websocket");
+//     }
+// 
+//     // Getting the socketaddress length
+//     int length = 0;
+//     if(address->sin6_family == AF_INET)
+//     {
+//       length = sizeof(SOCKADDR_IN);
+//     }
+//     else  // if(address->sin6_family == AF_INET6) 
+//     {
+//       length = sizeof(SOCKADDR_IN6);
+//     }
+// 
+//     // Bind to the socket
+//     if(bind(sock,(sockaddr*)address,length) == 0)
+//     {
+//       int bytes = recv(sock,(char*) buffer,size,0);
+// 
+//       if(bytes < 0)
+//       {
+//         int error = WSAGetLastError();
+//         ERRORLOG(error,"Receive from websocket");
+//       }
+//     }
+//     else
+//     {
+//       int error = WSAGetLastError();
+//       ERRORLOG(error,"Receive from websocket");
+//     }
+//   }
+
+//   do
+//   {
+//     DWORD bytesRead = 0;
+//     DWORD result = HttpReceiveRequestEntityBody(m_requestQueue
+//                                                ,p_request
+//                                                ,0
+//                                                ,&buffer[total]
+//                                                ,size
+//                                                ,&bytesRead
+//                                                ,NULL);
+//     switch(result)
+//     {
+//       case NO_ERROR:          // Regular incoming body part
+//                               DETAILLOGV("WebSocket receiving [%d] bytes",bytesRead);
+//                               break;
+//       case ERROR_HANDLE_EOF:  // Very last incoming body part
+//                               if(bytesRead)
+//                               {
+//                                 DETAILLOGV("WebSocket receiving [%d] bytes",bytesRead);
+//                               }
+//                               reading = false;
+//                               break;
+//       default:                ERRORLOG(result,"Receiving for WebSocket");
+//                               bytesRead = 0;
+//                               reading = false;
+//                               break;
+//     }
+//     if(bytesRead)
+//     {
+//       total += bytesRead;
+// 
+//       RawFrame* frame = new RawFrame();
+//       frame->m_data = buffer;
+//       if(websocket->DecodeFrameBuffer(frame,total))
+//       {
+//         // Shrink the buffer and store it for the socket
+//         frame->m_data = (BYTE*)realloc(buffer,total);
+//         buffer = nullptr;
+// 
+//         if(websocket->StoreFrameBuffer(frame) == false)
+//         {
+//           // closing channel on a close operator
+//           reading = false;
+//         }
+//       }
+//       else
+//       {
+//         // Incomplete buffer, expand buffer to receive some more
+//         buffer = (uchar*)realloc(buffer,total + size + WS_OVERHEAD);
+//         // Remove unused frame buffer
+//         frame->m_data = nullptr;
+//         delete frame;
+//       }
+//     }
+//   }
+//   while(reading);
+// 
+//   // Do not forget to free the buffer memory
+//   if(buffer)
+//   {
+//     free(buffer);
+//   }
 }
 
 // Add a well known HTTP header to the response structure
@@ -1483,23 +1533,28 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
 #else
   contentLength.Format("%lu",totalLength);
 #endif
-  if(moredata == false)
+  if(moredata)
   {
-    AddKnownHeader(response,HttpHeaderContentLength,contentLength);
-  }
-  // Dependent on the filling of FileBuffer
-  // Send 1 or more buffers or the file
-  if(buffer->GetHasBufferParts())
-  {
-    SendResponseBufferParts(&response,requestID,buffer,totalLength,moredata);
-  }
-  else if(buffer->GetFileName().IsEmpty())
-  {
-    SendResponseBuffer(&response,requestID,buffer,totalLength,moredata);
+    SendResponseWebSocket(&response,requestID,ukheaders);
   }
   else
   {
-    SendResponseFileHandle(&response,requestID,buffer,moredata);
+    AddKnownHeader(response,HttpHeaderContentLength,contentLength);
+
+    // Dependent on the filling of FileBuffer
+    // Send 1 or more buffers or the file
+    if(buffer->GetHasBufferParts())
+    {
+      SendResponseBufferParts(&response,requestID,buffer,totalLength,moredata);
+    }
+    else if(buffer->GetFileName().IsEmpty())
+    {
+      SendResponseBuffer(&response,requestID,buffer,totalLength,moredata);
+    }
+    else
+    {
+      SendResponseFileHandle(&response,requestID,buffer,moredata);
+    }
   }
   if(GetLastError())
   {
@@ -1515,6 +1570,71 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
   // Do **NOT** send an answer twice
   p_message->SetRequestHandle(NULL);
 }
+
+bool
+HTTPServerMarlin::SendResponseWebSocket(PHTTP_RESPONSE  /*p_response*/
+                                       ,HTTP_REQUEST_ID /*p_requestID*/
+                                       ,UKHeaders&      /*p_headers*/)
+{
+  // FOR WEBSOCKETS TO WORK ON THE STAND-ALONE MARLIN
+  // IT NEEDS TO BE REWRIITEN TO DO ASYNC I/O THROUGHOUT THE SERVER!
+
+  return false;
+  
+//   // Build protocol headers
+//   CString response = "HTTP/1.1 101 Switching protocols\r\n";
+//   for(auto& header : p_headers)
+//   {
+//     CString line;
+//     line.Format("%s: %s\r\n",header.first.GetString(),header.second.GetString());
+//     response += line;
+//   }
+//   response += "\r\n";
+// 
+//   // Put the response in a data chunk
+//   HTTP_DATA_CHUNK dataChunk;
+//   dataChunk.DataChunkType      = HttpDataChunkFromMemory;
+//   dataChunk.FromMemory.pBuffer = (void*) response.GetString();
+//   dataChunk.FromMemory.BufferLength = (ULONG)response.GetLength();
+//   p_response->EntityChunkCount = 1;
+//   p_response->pEntityChunks    = &dataChunk;
+// 
+// 
+//   // Preparing our cache-policy
+//   HTTP_CACHE_POLICY policy;
+//   policy.Policy        = m_policy;
+//   policy.SecondsToLive = m_secondsToLive;
+// 
+//   ULONG flags = HTTP_SEND_RESPONSE_FLAG_OPAQUE;
+//              // HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+//              // HTTP_SEND_RESPONSE_FLAG_BUFFER_DATA;
+//   DWORD bytesSent = 0;
+// 
+//   OVERLAPPED ov;
+//   RtlZeroMemory(&ov,sizeof(OVERLAPPED));
+// 
+//   DWORD result = HttpSendHttpResponse(m_requestQueue,      // ReqQueueHandle
+//                                       p_requestID,         // Request ID
+//                                       flags,               // Flags
+//                                       p_response,          // HTTP response
+//                                       &policy,             // Cache policy
+//                                       &bytesSent,          // bytes sent  (OPTIONAL)
+//                                       NULL,                // pReserved2  (must be NULL)
+//                                       0,                   // Reserved3   (must be 0)
+//                                       &ov,                 // LPOVERLAPPED(OPTIONAL)
+//                                       NULL                 // pReserved4  (must be NULL)
+//                                       );
+//   if(result != NO_ERROR)
+//   {
+//     ERRORLOG(result,"Send WebSockets handshake");
+//   }
+//   else
+//   {
+//     DETAILLOGV("Send WebSocket handshake: [%d] bytes sent",bytesSent);
+//   }
+//   return (result == NO_ERROR);
+}
+
 
 bool      
 HTTPServerMarlin::SendResponseBuffer(PHTTP_RESPONSE   p_response
@@ -1550,10 +1670,9 @@ HTTPServerMarlin::SendResponseBuffer(PHTTP_RESPONSE   p_response
   HTTP_CACHE_POLICY policy;
   policy.Policy        = m_policy;
   policy.SecondsToLive = m_secondsToLive;
-
   
   ULONG flags = p_more ? HTTP_SEND_RESPONSE_FLAG_OPAQUE : 0;
-                         // HTTP_SEND_RESPONSE_FLAG_MORE_DATA : 0;
+
   // Because the entity body is sent in one call, it is not
   // required to specify the Content-Length.
   result = HttpSendHttpResponse(m_requestQueue,      // ReqQueueHandle
@@ -1667,7 +1786,7 @@ void
 HTTPServerMarlin::SendResponseFileHandle(PHTTP_RESPONSE   p_response
                                         ,HTTP_REQUEST_ID  p_request
                                         ,FileBuffer*      p_buffer
-                                        ,bool             p_more /*= false*/)
+                                        ,bool             /*p_more*/ /*= false*/)
 {
   DWORD  result    = 0;
   DWORD  bytesSent = 0;
@@ -1731,12 +1850,7 @@ HTTPServerMarlin::SendResponseFileHandle(PHTTP_RESPONSE   p_response
   dataChunk.FromFileHandle.ByteRange.Length.QuadPart = fileSize; // HTTP_BYTE_RANGE_TO_EOF;
   dataChunk.FromFileHandle.FileHandle = file;
 
-  ULONG flags = 0;
-  // If we do a websocket upgrade, always keep the connection open
-  if(p_more)
-  {
-    flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE;
-  }
+  ULONG flags = HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
 
   result = HttpSendResponseEntityBody(m_requestQueue,
                                       p_request,

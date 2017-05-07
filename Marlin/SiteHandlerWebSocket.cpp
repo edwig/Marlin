@@ -88,7 +88,8 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
         server->FlushSocket(request);
 
         // Find the internal structures for the server
-        if(socket->RegisterServerRequest(server,request))
+        p_message->SetRequestHandle(request);
+        if(socket->RegisterSocket(p_message))
         {
           if(socket->OpenSocket())
           {

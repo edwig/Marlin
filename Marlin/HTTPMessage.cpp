@@ -575,6 +575,12 @@ HTTPMessage::SetSender(PSOCKADDR_IN6 p_address)
   memcpy(&m_sender,p_address,sizeof(SOCKADDR_IN6));
 }
 
+void
+HTTPMessage::SetReceiver(PSOCKADDR_IN6 p_address)
+{
+  memcpy(&m_receiver,p_address,sizeof(SOCKADDR_IN6));
+}
+
 void 
 HTTPMessage::SetFile(CString& p_fileName)
 {

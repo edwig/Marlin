@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "WebSocket.h"
 #include "HTTPServer.h"
+#include "HTTPSite.h"
 #include "HTTPMessage.h"
 #include "HTTPError.h"
 #include "Base64.h"
@@ -293,6 +294,16 @@ WebSocket::ErrorLog(const char* p_function,DWORD p_code,CString p_text)
   {
     p_text.AppendFormat(" Error [%d] %s",p_code,GetLastErrorAsString(p_code));
     result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,p_text);
+
+    WSFrame* frame  = new WSFrame();
+    frame->m_data   = (BYTE*) _strdup(p_text.GetString());
+    frame->m_length = p_text.GetLength();
+    frame->m_utf8   = true;
+    frame->m_final  = true;
+    
+    // Store frame and call onError handler
+    StoreWSFrame(frame);
+    OnError();
   }
 
 #ifdef _DEBUG
@@ -358,12 +369,13 @@ WebSocket::OnBinary()
 void
 WebSocket::OnError()
 {
-  WSFrame frame; // Nullframe
+  WSFrame* frame = GetWSFrame();
   if(m_onerror)
   {
     DETAILLOGS("WebSocket OnError called for: ",m_uri);
-    (*m_onerror)(this,&frame);
+    (*m_onerror)(this,frame);
   }
+  delete frame;
 }
 
 void
@@ -378,9 +390,6 @@ WebSocket::OnClose()
       DETAILLOGS("WebSocket OnClose called for: ",m_uri);
       (*m_onclose)(this,frame);
     }
-    // OnClose can be called just once!
-    m_open = false;
-
     delete frame;
   }
   else
@@ -391,9 +400,9 @@ WebSocket::OnClose()
       DETAILLOGS("WebSocket OnClose called for: ",m_uri);
       (*m_onclose)(this,&empty);
     }
-    // OnClose can be called just once!
-    m_open = false;
   }
+  // OnClose can be called just once!
+  m_open = false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -612,6 +621,9 @@ WebSocket::ServerHandshake(HTTPMessage* /*p_message*/)
 // SERVER MARLIN WebSocket
 //
 //////////////////////////////////////////////////////////////////////////
+
+// FOR WEBSOCKETS TO WORK ON THE STAND-ALONE MARLIN
+// IT NEEDS TO BE REWRIITEN TO DO ASYNC I/O THROUGHOUT THE SERVER!
 
 WebSocketServer::WebSocketServer(CString p_uri)
                 :WebSocket(p_uri)
@@ -941,7 +953,7 @@ WebSocketServer::DecodeFrameBuffer(RawFrame* p_frame,int64 p_length)
 
     payload_offset += 2;
     payloadlength = ((int64)p_frame->m_data[2] << 8) | 
-      (int64)p_frame->m_data[3];
+                     (int64)p_frame->m_data[3];
   }
   if(payloadlength == 127)
   {
@@ -1104,11 +1116,16 @@ WebSocketServer::DecodeCloseFragment(RawFrame* p_frame)
 
 // Register the server request for sending info
 bool 
-WebSocketServer::RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request)
+WebSocketServer::RegisterSocket(HTTPMessage* p_message)
 {
   // Register our server/request
-  m_server  = p_server;
-  m_request = p_request;
+  m_server  = p_message->GetHTTPSite()->GetHTTPServer();
+  m_request = p_message->GetRequestHandle();
+  // Keep the receiver address as a two way socket
+  memcpy(&m_socket,p_message->GetReceiver(),sizeof(SOCKADDR_IN6));
+
+  // Reset request handle in the message
+  p_message->SetRequestHandle(NULL);
 
   return true;
 }
@@ -1173,7 +1190,7 @@ WebSocketServerIIS::CloseSocket()
       // result = false;
     }
 
-    // Cancel the outstandig request altogether
+    // Cancel the outstanding request altogether
     m_server->CancelRequestStream(m_request);
 
     DETAILLOGS("Closed WebSocket: ",m_uri);
@@ -1492,17 +1509,17 @@ WebSocketServerIIS::ReceiveCloseSocket()
 }
 
 bool
-WebSocketServerIIS::RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request)
+WebSocketServerIIS::RegisterSocket(HTTPMessage*  p_message)
 {
   // Remember our registration
-  m_server  = p_server;
-  m_request = p_request;
+  m_server  = p_message->GetHTTPSite()->GetHTTPServer();
+  m_request = p_message->GetRequestHandle();
 
   // Reset the internal IIS socket pointer
   m_iis_socket = nullptr;
 
   // Now find the IWebSocketContext
-  IHttpContext*  context = reinterpret_cast<IHttpContext*>(p_request);
+  IHttpContext*  context = reinterpret_cast<IHttpContext*>(m_request);
   IHttpContext3* context3 = nullptr;
   HRESULT hr = HttpGetExtendedInterface(g_iisServer,context,&context3);
   if(SUCCEEDED(hr))
@@ -1919,7 +1936,7 @@ WebSocketClient::StartClientListner()
     if((m_listener = (HANDLE)_beginthreadex(NULL,0,StartingClientListenerThread,(void *)(this),0,&threadID)) == INVALID_HANDLE_VALUE)
     {
       m_listener = NULL;
-      ERRORLOG(GetLastError(),"Cannot start client listner thread for a WebSocket");
+      ERRORLOG(GetLastError(),"Cannot start client listener thread for a WebSocket");
     }
     else
     {

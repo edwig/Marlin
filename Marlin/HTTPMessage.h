@@ -145,7 +145,8 @@ public:
   void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    };
   void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        };
   void SetReadBuffer(bool p_read,size_t p_length = 0);
-  void SetSender(PSOCKADDR_IN6 p_address);
+  void SetSender  (PSOCKADDR_IN6 p_address);
+  void SetReceiver(PSOCKADDR_IN6 p_address);
   void SetFile(CString& p_fileName);
   void SetAuthorization(CString& p_authorization);
   void SetAllHeaders    (PHTTP_REQUEST_HEADERS p_headers);
@@ -179,6 +180,7 @@ public:
   HANDLE              GetAccessToken()          { return m_token;                     };
   UINT                GetRemoteDesktop()        { return m_desktop;                   };
   PSOCKADDR_IN6       GetSender()               { return &m_sender;                   };
+  PSOCKADDR_IN6       GetReceiver()             { return &m_receiver;                 };
   bool                GetUseIfModified()        { return m_ifmodified;                };
   PSYSTEMTIME         GetSystemTime()           { return &m_systemtime;               };
   HeaderMap*          GetHeaderMap()            { return &m_headers;                  };
@@ -252,7 +254,8 @@ private:
   CString             m_url;                                          // Full URL to service
   CString             m_referrer;                                     // Referrer of this call
   HANDLE              m_token         { NULL    };                    // Access token
-  SOCKADDR_IN6        m_sender;                                       // Senders address;
+  SOCKADDR_IN6        m_sender;                                       // Senders  address end
+  SOCKADDR_IN6        m_receiver;                                     // Receiver address end
   UINT                m_desktop       { 0       };                    // Remote desktop number
   CrackedURL          m_cracked;                                      // Cracked down URL
   HeaderMap           m_headers;                                      // All/Known headers

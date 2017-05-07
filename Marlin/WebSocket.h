@@ -166,7 +166,7 @@ public:
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) = 0;
   // Register the server request for sending info
-  virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request) = 0;
+  virtual bool RegisterSocket(HTTPMessage* p_message) = 0;
   // Decoded close connection (use in 'OnClose')
   bool GetCloseSocket(USHORT& p_code,CString& p_reason);
   // Socket still open?
@@ -350,6 +350,9 @@ WebSocket::SetOnClose(LPFN_SOCKETHANDLER p_onClose)
 //
 //////////////////////////////////////////////////////////////////////////
 
+// FOR WEBSOCKETS TO WORK ON THE STAND-ALONE MARLIN
+// IT NEEDS TO BE REWRIITEN TO DO ASYNC I/O THROUGHOUT THE SERVER!
+
 class WebSocketServer : public WebSocket
 {
 public:
@@ -367,7 +370,7 @@ public:
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
   // Register the server request for sending info
-  virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request);
+  virtual bool RegisterSocket(HTTPMessage* p_message);
   // Read a fragment from a WebSocket
   bool    ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last);
 
@@ -390,6 +393,8 @@ public:
   bool    StoreFrameBuffer(RawFrame* p_frame);
   // Async starting a socket listener on the HTTPServer
   void    StartSocket();
+  // THe receiver address
+  PSOCKADDR_IN6 GetReceiverAddress() { return &m_socket;  };
 
 private:
   // Decode the incoming closing fragment before we call 'OnClose'
@@ -398,6 +403,7 @@ private:
   // Private data for the server variant of the WebSocket
   HTTPServer*     m_server  { nullptr };
   HTTP_REQUEST_ID m_request { NULL    };
+  SOCKADDR_IN6    m_socket;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -425,7 +431,7 @@ public:
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
   // Register the server request for sending info
-  virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request);
+  virtual bool RegisterSocket(HTTPMessage* p_message);
   // To be called for ASYNC I/O completion!
   void    SocketReader(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
   void    SocketWriter(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
@@ -471,7 +477,7 @@ public:
   // Close the socket with a closing frame
   virtual bool SendCloseSocket(USHORT p_code,CString p_reason);
   // Register the server request for sending info
-  virtual bool RegisterServerRequest(HTTPServer* p_server,HTTP_REQUEST_ID p_request);
+  virtual bool RegisterSocket(HTTPMessage* p_message);
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
   // Generate a handshake key
@@ -503,8 +509,8 @@ WebSocketClient::GetHandshakeKey()
 }
 
 // Register the server request for sending info
-inline bool 
-WebSocketClient::RegisterServerRequest(HTTPServer* /*p_server*/,HTTP_REQUEST_ID /*p_request*/)
+inline bool
+WebSocketClient::RegisterSocket(HTTPMessage* /*p_message*/)
 {
   // NO-OP for the client side
   return true;

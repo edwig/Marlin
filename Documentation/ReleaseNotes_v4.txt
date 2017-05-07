@@ -8,6 +8,18 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.2
+======================
+1) WebSocket's have been implemented for the client side and for the IIS server side.
+   The stand-alone Marlin version is still lacking. The server will need rework to do async
+   I/O throughout the server before WebSockets can work.
+2) WebSocketClient can be used on a client application and exposes the OnOpen, OnClose,
+   OnMessage, OnBinary and OnError message handlers. The class has been tested against
+   the standard "ws[s]://echo.websocket.org" service.
+3) WebSocketServerIIS can be used by any server and exposes all the standard message handlers.
+4) 
+
+
 CHANGES IN VERSION 4.1
 ======================
 1) Reworked the XMLMessage object. As it is one of the core components of the Marlin framework

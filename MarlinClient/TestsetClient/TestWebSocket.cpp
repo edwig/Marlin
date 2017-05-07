@@ -102,6 +102,17 @@ OnMessageWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 }
 
 void
+OnErrorWebSocket(WebSocket* p_socket,WSFrame* p_frame)
+{
+  CString message;
+  message.Format("ERROR from WebSocket at URI: %s\n",p_socket->GetURI());
+  message += (char*) p_frame->m_data;
+  message += "\n";
+
+  printf(message);
+}
+
+void
 OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 {
   CString message((char*)p_frame->m_data);
@@ -161,8 +172,10 @@ TestWebSocket(LogAnalysis* p_log)
   CString uri;
   uri.Format("ws://%s:%d/MarlinTest/Sockets/socket_123",MARLIN_HOST,TESTING_HTTP_PORT);
 
-  // Independent 3th party test website, to check whether our WebSocket works correct!
-  // uri = "ws://echo.websocket.org";
+  // Independent 3th party test website, to check whether our WebSocket works correct
+  // Comment out to test against our own Marlin server sockets
+  // Works only for IIS Marlin, not for stand-alone Marlin
+  uri = "ws://echo.websocket.org";
 
   // Declare a WebSocket
   WebSocketClient* socket = new WebSocketClient(uri);
@@ -175,6 +188,7 @@ TestWebSocket(LogAnalysis* p_log)
   // Connect our handlers
   socket->SetOnOpen   (OnOpenWebsocket);
   socket->SetOnMessage(OnMessageWebsocket);
+  socket->SetOnError  (OnErrorWebSocket);
   socket->SetOnClose  (OnCloseWebsocket);
 
   // Start the socket by opening
@@ -187,12 +201,12 @@ TestWebSocket(LogAnalysis* p_log)
   {
     ++errors;
   }
-  Sleep(1000);
+  Sleep(500);
   if(!socket->WriteString("Hello server, this is the client. Take two!"))
   {
     ++errors;
   }
-  Sleep(1000);
+  Sleep(500);
 
   // Testing strings that are longer than the TCP/IP buffering for WebSockets
   // So strings longer than typical 16K bytes must be testable
