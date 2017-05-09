@@ -1033,3 +1033,23 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
 
   return result;
 }
+
+
+// HTTPMessages can be stored elsewhere. Use the reference mechanism to add/drop references
+// With the drop of the last reference, the object WILL destroy itself
+
+void
+HTTPMessage::AddReference()
+{
+  InterlockedIncrement(&m_references);
+}
+
+void
+HTTPMessage::DropReference()
+{
+  if(InterlockedDecrement(&m_references) <= 0)
+  {
+    delete this;
+  }
+}
+

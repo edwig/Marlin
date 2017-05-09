@@ -300,14 +300,16 @@ public:
   bool       UnRegisterWebSocket(WebSocket* p_socket);
   // Find our extra header for RemoteDesktop (Citrix!) support
   int        FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers);
+  // Authentication failed for this reason
+  CString    AuthenticationStatus(SECURITY_STATUS p_secStatus);
   // Finding a previous registered service endpoint
   WebServiceServer* FindService(CString p_serviceName);
-  // Finding a previous registered websocket
+  // Finding a previous registered WebSocket
   WebSocket*        FindWebSocket(CString p_uri);
   // Finding the locking object for the sites.
   CRITICAL_SECTION* AcquireSitesLockObject();
-  // Authentication failed for this reason
-  CString   AuthenticationStatus(SECURITY_STATUS p_secStatus);
+  // Find less known verb
+  HTTPCommand GetUnknownVerb(PCSTR p_verb);
   // Response in the server error range (500-505)
   DWORD     RespondWithServerError(HTTPSite*       p_site
                                   ,HTTPMessage*    p_message
@@ -322,6 +324,13 @@ public:
                                   ,CString         p_reason
                                   ,CString         p_authScheme
                                   ,CString         p_cookie = "");
+  // REQUEST HEADER METHODS
+
+  // RFC 2616: paragraph 14.25: "if-modified-since"
+  bool          DoIsModifiedSince(HTTPMessage* p_msg);
+  // Register server push event stream for this site
+  EventStream*  SubscribeEventStream(HTTPSite* p_site,CString p_url,CString& p_pad,HTTP_REQUEST_ID p_requestID,HANDLE p_token);
+
 protected:
   // Cleanup the server
   virtual void  Cleanup() = 0;
@@ -339,8 +348,6 @@ protected:
   virtual void  InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize) = 0;
   // Register a URL to listen on
   bool          RegisterSite(HTTPSite* p_site,CString p_urlPrefix);
-  // Register server push event stream for this site
-  EventStream*  SubscribeEventStream(HTTPSite* p_site,CString p_url,CString& p_pad,HTTP_REQUEST_ID p_requestID,HANDLE p_token);
   // General checks before starting
   bool      GeneralChecks();
   // Checks if all sites are started
@@ -349,8 +356,6 @@ protected:
   CString   BuildAuthenticationChallenge(CString p_authScheme,CString p_realm);
   // Make a "port:url" registration name
   CString   MakeSiteRegistrationName(int p_port,CString p_url);
-    // Find less known verb
-  HTTPCommand GetUnknownVerb(PCSTR p_verb);
     // Form event to a stream string
   CString   EventToString(ServerEvent* p_event);
   // Try to start the even heartbeat monitor
@@ -363,11 +368,6 @@ protected:
   void      SetError(int p_error);
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
-
-  // REQUEST HEADER METHODS
-
-  // RFC 2616: paragraph 14.25: "if-modified-since"
-  bool      DoIsModifiedSince(HTTPMessage* p_msg);
 
   // Protected data
   CString                 m_name;                   // How the outside world refers to me

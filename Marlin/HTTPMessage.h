@@ -223,15 +223,18 @@ public:
   bool    UseVerbTunneling();
   // Accept a MultiPartBuffer in this message
   bool    SetMultiPartFormData(MultiPartBuffer* p_buffer);
+  // Reference system for storing the message elsewhere
+  void    AddReference();
+  void    DropReference();
 
 private:
-  // Parse raw URL to cracked url data
+  // Parse raw URL to cracked URL data
   bool    ParseURL(CString p_url);
   // Check for minimal sending requirements
   void    CheckServer();
   // Reparse URL after setting a part of the URL
   void    ReparseURL();
-  // Fill mesage with FormData buffer
+  // Fill message with FormData buffer
   bool    SetMultiPartBuffer (MultiPartBuffer* p_buffer);
   // Fill message with FormData URL encoding
   bool    SetMultiPartURL    (MultiPartBuffer* p_buffer);
@@ -261,6 +264,7 @@ private:
   HeaderMap           m_headers;                                      // All/Known headers
   bool                m_ifmodified    { false   };                    // Use "if-modified-since"
   SYSTEMTIME          m_systemtime;                                   // System time for m_modified
+  long                m_references    { 0       };                    // Referencing system
 };
 
 inline void
