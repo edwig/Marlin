@@ -178,6 +178,7 @@
     <ClCompile Include="HTTPClientTracing.cpp" />
     <ClCompile Include="HTTPError.cpp" />
     <ClCompile Include="HTTPMessage.cpp" />
+    <ClCompile Include="HTTPRequest.cpp" />
     <ClCompile Include="HTTPServer.cpp" />
     <ClCompile Include="HTTPServerIIS.cpp" />
     <ClCompile Include="HTTPServerMarlin.cpp" />
@@ -325,6 +326,7 @@
     <ClInclude Include="HTTPClientTracing.h" />
     <ClInclude Include="HTTPError.h" />
     <ClInclude Include="HTTPMessage.h" />
+    <ClInclude Include="HTTPRequest.h" />
     <ClInclude Include="HTTPServer.h" />
     <ClInclude Include="HTTPServerIIS.h" />
     <ClInclude Include="HTTPServerMarlin.h" />

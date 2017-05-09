@@ -250,6 +250,8 @@ public:
   ErrorReport* GetErrorReport();
   // Get the fact that we do detailed logging
   bool        GetDetailedLogging();
+  // Has subsites registered
+  bool        GetHasSubsites();
 
   // FUNCTIONS
 
@@ -259,6 +261,8 @@ public:
   void       DetailLogV(const char* p_function,LogType p_type,const char* p_text,...);
   void       ErrorLog  (const char* p_function,DWORD p_code,CString p_text);
   void       HTTPError (const char* p_function,int p_status,CString p_text);
+  // Log SSL Info of the connection
+  void       LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo);
 
   // Find HTTPSite for an URL
   HTTPSite*  FindHTTPSite(int p_port,PCWSTR   p_url);
@@ -294,13 +298,30 @@ public:
   bool       RegisterSocket(WebSocket* p_socket);
   // Remove registration of a WebSocket
   bool       UnRegisterWebSocket(WebSocket* p_socket);
+  // Find our extra header for RemoteDesktop (Citrix!) support
+  int        FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers);
   // Finding a previous registered service endpoint
   WebServiceServer* FindService(CString p_serviceName);
   // Finding a previous registered websocket
   WebSocket*        FindWebSocket(CString p_uri);
   // Finding the locking object for the sites.
   CRITICAL_SECTION* AcquireSitesLockObject();
-
+  // Authentication failed for this reason
+  CString   AuthenticationStatus(SECURITY_STATUS p_secStatus);
+  // Response in the server error range (500-505)
+  DWORD     RespondWithServerError(HTTPSite*       p_site
+                                  ,HTTPMessage*    p_message
+                                  ,int             p_error
+                                  ,CString         p_reason
+                                  ,CString         p_authScheme
+                                  ,CString         p_cookie = "");
+  // Response in the client error range (400-417)
+  DWORD     RespondWithClientError(HTTPSite*       p_site
+                                  ,HTTPMessage*    p_message
+                                  ,int             p_error
+                                  ,CString         p_reason
+                                  ,CString         p_authScheme
+                                  ,CString         p_cookie = "");
 protected:
   // Cleanup the server
   virtual void  Cleanup() = 0;
@@ -326,10 +347,6 @@ protected:
   void      CheckSitesStarted();
   // Build the www-auhtenticate challenge
   CString   BuildAuthenticationChallenge(CString p_authScheme,CString p_realm);
-  // Authentication failed for this reason
-  CString   AuthenticationStatus(SECURITY_STATUS p_secStatus);
-  // Find our extra header for RemoteDesktop (Citrix!) support
-  int       FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers);
   // Make a "port:url" registration name
   CString   MakeSiteRegistrationName(int p_port,CString p_url);
     // Find less known verb
@@ -340,26 +357,10 @@ protected:
   void      TryStartEventHartbeat();
   // Check all event streams for the heartbeat monitor
   UINT      CheckEventStreams();
-  // Log SSL Info of the connection
-  void      LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo);
     // Handle text-based content-type messages
   void      HandleTextContent(HTTPMessage* p_message);
   // Set the error status
   void      SetError(int p_error);
-  // Response in the server error range (500-505)
-  DWORD     RespondWithServerError(HTTPSite*       p_site
-                                  ,HTTPMessage*    p_message
-                                  ,int             p_error
-                                  ,CString         p_reason
-                                  ,CString         p_authScheme
-                                  ,CString         p_cookie = "");
-  // Response in the client error range (400-417)
-  DWORD     RespondWithClientError(HTTPSite*       p_site
-                                  ,HTTPMessage*    p_message
-                                  ,int             p_error
-                                  ,CString         p_reason
-                                  ,CString         p_authScheme
-                                  ,CString         p_cookie = "");
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
 
@@ -548,3 +549,8 @@ HTTPServer::GetErrorReport()
   return m_errorReport;
 }
 
+inline bool
+HTTPServer::GetHasSubsites()
+{
+  return m_hasSubsites;
+}
