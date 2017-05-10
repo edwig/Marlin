@@ -90,6 +90,8 @@ public:
 
   // Has buffer parts
   bool    GetHasBufferParts();
+  // Number of buffer parts
+  int     GetNumberOfParts();
   // Get the filename
   CString GetFileName();
   // Get the buffer in one go
@@ -152,4 +154,10 @@ inline void
 FileBuffer::ResetFilename()
 {
   m_fileName.Empty();
+}
+
+inline int
+FileBuffer::GetNumberOfParts()
+{
+  return (int)m_parts.size();
 }

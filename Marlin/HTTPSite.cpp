@@ -446,6 +446,9 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
 
   __try
   {
+    // Keep message alive during this handler
+    p_message->AddReference();
+
     // HTTP Throttling is one call per calling address at the time
     if(m_throttling)
     {
@@ -545,7 +548,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
 
   // End of the line: created in HTTPServer::RunServer
   // It gets now destroyed after everything has been done
-  delete p_message;
+  p_message->DropReference();
 }
 
 // Handle the error after an error report

@@ -30,21 +30,32 @@
 
 class HTTPMessage;
 class HTTPSite;
+class HTTPRequest;
 
-typedef enum _outstanding
+// Event action type for async I/O
+typedef enum _ioaction
 {
   IO_Nothing   = 0
  ,IO_Request   = 1
  ,IO_Reading   = 2
- ,IO_Respond   = 3
+ ,IO_Response  = 3
  ,IO_Writing   = 4
 }
-OutstandingIO;
+IOAction;
 
-// The request is derived from OVERLAPPED, thusly making it possible to 
+// Overlay for async I/O registration
+// The overlay is derived from OVERLAPPED, thusly making it possible to 
 // pass a pointer to this object to the I/O function calls
+class OutstandingIO : public OVERLAPPED
+{
+public:
+  OutstandingIO(HTTPRequest* p_request);
+  HTTPRequest* m_request;
+  IOAction     m_action;
+};
 
-class HTTPRequest : public OVERLAPPED
+// Our outstanding request in the server
+class HTTPRequest
 {
 public:
   HTTPRequest(HTTPServer* p_server);
@@ -53,31 +64,48 @@ public:
   // Start a new request against the server
   void StartRequest();
   // Callback from I/O Completion port
-  void HandleAsynchroneousIO();
+  void HandleAsynchroneousIO(OVERLAPPED* p_overlapped);
 
 private:
   // Ready with the response
   void Finalize();
   // Clear local memory structures
   void ClearMemory();
+  // Startup of other parts of the request
+  void StartReceiveRequest();
+  void StartSendResponse();
   // Detailed handlers of HandleAsynchroneousIO in phases
-  void ReceiveRequest();          // 1) Receive general request headers and such
-  void ReceiveBodyPart();         // 2) Receive trailing request body
-  void HandleRequest();           // 4) Let HTTPSite handle the request
-  void SendResponse();            // 5) Send the main response line + headers
-  void SendBodyPart();            // 6) Send response body parts
+  void ReceivedRequest();          // 1) Receive general request headers and such
+  void ReceivedBodyPart();         // 2) Receive trailing request body
+  void SendResponseBody();         // 3) Start sending body parts
+  void SendBodyPart();             // 4) Has send a body part
   // Sub procedures for the handlers
   bool CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_token);
+  // Add a well known HTTP header to the response structure
+  void AddKnownHeader(HTTP_HEADER_ID p_header,const char* p_value);
+  // Add previously unknown HTTP headers
+  void AddUnknownHeaders(UKHeaders& p_headers);
+  // Fill response structure out of the HTTPMessage
+  void FillResponse();
+  // Reset outstanding OVERLAPPED
+  void ResetOutstanding(OutstandingIO& p_outstanding);
 
-  HTTPServer*     m_server;                      // Our server
-  HTTP_REQUEST_ID m_requestID  { NULL       };   // The request we are processing
-  PHTTP_REQUEST   m_request    { nullptr    };   // Pointer to the request  object
-  PHTTP_RESPONSE  m_response   { nullptr    };   // Pointer to the response object
-  HTTPSite*       m_site       { nullptr    };   // Site from the HTTP context
-  HTTPMessage*    m_message    { nullptr    };   // The message we are processing in the request
-  OutstandingIO   m_outstanding{ IO_Nothing };   // Request / reading / writing phase
-  bool            m_mayreceive { false      };   // Authentication done: may receive
-  bool            m_responding { false      };   // Response already started
-  bool            m_logging    { false      };   // Do detailed logging
-  DWORD           m_bytes;
+  HTTPServer*       m_server;                   // Our server
+  HTTP_REQUEST_ID   m_requestID  { NULL    };   // The request we are processing
+  PHTTP_REQUEST     m_request    { nullptr };   // Pointer to the request  object
+  PHTTP_RESPONSE    m_response   { nullptr };   // Pointer to the response object
+  HTTPSite*         m_site       { nullptr };   // Site from the HTTP context
+  HTTPMessage*      m_message    { nullptr };   // The message we are processing in the request
+  HTTP_CACHE_POLICY m_policy;                   // Sending cache policy
+  OutstandingIO     m_incoming;                 // Incoming IO request
+  OutstandingIO     m_reading;                  // Outstanding reading action
+  OutstandingIO     m_writing;                  // Outstanding writing action
+  bool              m_mayreceive { false   };   // Authentication done: may receive
+  bool              m_responding { false   };   // Response already started
+  bool              m_logging    { false   };   // Do detailed logging
+  BYTE*             m_readBuffer { nullptr };   // Read buffer
+  HTTP_DATA_CHUNK   m_sendBuffer;               // Send buffer
+  HANDLE            m_file       { NULL    };   // File handle for sending a file
+  int               m_bufferpart { 0       };   // Buffer part being sent
+  PHTTP_UNKNOWN_HEADER m_unknown { nullptr };   // Send unknown headers
 };

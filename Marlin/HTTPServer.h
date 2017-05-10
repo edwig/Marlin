@@ -125,7 +125,7 @@ using EventMap    = std::multimap<CString,EventStream*>;
 using ServiceMap  = std::map<CString,WebServiceServer*>;
 using URLGroupMap = std::vector<HTTPURLGroup*>;
 using UKHeaders   = std::multimap<CString,CString>;
-typedef std::map<CString,WebSocket*> SocketMap;;
+using SocketMap   = std::map<CString,WebSocket*>;;
 
 // Global error variable in Thread-Local-Storage
 // Per-thread basis error status
@@ -220,6 +220,10 @@ public:
 
   // GETTERS
 
+  // Getting the server's name (according to application)
+  CString     GetName();
+  // Getting the server's name (according to the config file)
+  CString     GetConfiguredName();
   // Getting the webroot
   CString     GetWebroot();
   // Get host name of the server's machine
@@ -252,6 +256,12 @@ public:
   bool        GetDetailedLogging();
   // Has subsites registered
   bool        GetHasSubsites();
+  // Getting the cache policy
+  HTTP_CACHE_POLICY_TYPE GetCachePolicy();
+  // Getting the cache lifetime
+  ULONG       GetCacheSecondsToLive();
+  // How we send our server name header
+  SendHeader  GetSendServerHeader();
 
   // FUNCTIONS
 
@@ -412,6 +422,18 @@ protected:
 };
 
 inline CString
+HTTPServer::GetName()
+{
+  return m_name;
+}
+
+inline CString
+HTTPServer::GetConfiguredName()
+{
+  return m_configServerName;
+}
+
+inline CString
 HTTPServer::GetWebroot()
 {
   return m_webroot;
@@ -553,4 +575,22 @@ inline bool
 HTTPServer::GetHasSubsites()
 {
   return m_hasSubsites;
+}
+
+inline HTTP_CACHE_POLICY_TYPE 
+HTTPServer::GetCachePolicy()
+{
+  return m_policy;
+}
+
+inline ULONG
+HTTPServer::GetCacheSecondsToLive()
+{
+  return m_secondsToLive;
+}
+
+inline SendHeader  
+HTTPServer::GetSendServerHeader()
+{
+  return m_sendHeader;
 }
