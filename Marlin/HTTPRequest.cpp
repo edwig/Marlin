@@ -96,17 +96,17 @@ HTTPRequest::ClearMemory()
   }
   if(m_request)
   {
-    free(m_request);
+    delete m_request;
     m_request = nullptr;
   }
   if(m_response)
   {
-    free(m_response);
+    delete m_response;
     m_response = nullptr;
   }
   if(m_readBuffer)
   {
-    free(m_readBuffer);
+    delete m_readBuffer;
     m_readBuffer = nullptr;
   }
   if(m_unknown)
@@ -137,7 +137,9 @@ HTTPRequest::StartRequest()
 {
   // Allocate the request object
   DWORD size = sizeof(HTTP_REQUEST_V2);
-  m_request  = (PHTTP_REQUEST)calloc(1,size);
+  m_request  = new HTTP_REQUEST_V2();
+  RtlZeroMemory(m_request,size);
+  
   // Set type of request
   m_incoming.m_action = IO_Request;
   // Get queue handle
@@ -173,7 +175,7 @@ HTTPRequest::ReceivedRequest()
 
   // Get status from the OVERLAPPED result
   DWORD result = (DWORD) m_incoming.Internal;
-  // Catch normal abortion statusses
+  // Catch normal abortion statuses
   // Test if server already stopped, and we are here because of the stopping
   if((result == ERROR_CONNECTION_INVALID || result == ERROR_OPERATION_ABORTED) ||
      (!m_server->GetIsRunning()))
@@ -304,16 +306,17 @@ HTTPRequest::ReceivedRequest()
 
   // For all types of requests: Create the HTTPMessage
   m_message = new HTTPMessage(type,site);
+  m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
   m_message->AddReference();
+  // Enter our primary information from the request
   m_message->SetURL(rawUrl);
   m_message->SetReferrer(referrer);
   m_message->SetAuthorization(authorize);
-  m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
   m_message->SetConnectionID(m_request->ConnectionId);
   m_message->SetContentType(contentType);
   m_message->SetAccessToken(accessToken);
   m_message->SetRemoteDesktop(remDesktop);
-  m_message->SetSender((PSOCKADDR_IN6)sender);
+  m_message->SetSender  ((PSOCKADDR_IN6)sender);
   m_message->SetReceiver((PSOCKADDR_IN6)receiver);
   m_message->SetCookiePairs(cookie);
   m_message->SetAcceptEncoding(acceptEncoding);
@@ -358,7 +361,7 @@ HTTPRequest::ReceivedRequest()
   }
   else
   {
-    // Go straigth on to the handling of the message
+    // Go straight on to the handling of the message
     m_site->HandleHTTPMessage(m_message);
   }
 }
@@ -369,7 +372,7 @@ HTTPRequest::StartReceiveRequest()
   // Make sure we have a buffer
   if(!m_readBuffer)
   {
-    m_readBuffer = (BYTE*)malloc(INIT_HTTP_BUFFERSIZE);
+    m_readBuffer = new BYTE[INIT_HTTP_BUFFERSIZE];
   }
   // Set reading action
   ResetOutstanding(m_reading);
@@ -416,7 +419,7 @@ HTTPRequest::ReceivedBodyPart()
     else
     {
       // Message is now complete
-      // Go straigth on to the handling of the message
+      // Go straight on to the handling of the message
       m_site->HandleHTTPMessage(m_message);
     }
   }
@@ -509,23 +512,14 @@ HTTPRequest::SendResponseBody()
       flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
     }
   }
-  else if(!filebuf->GetFileName().IsEmpty())
+  else if(m_file)
   {
     // FILE BUFFER CONTAINS A FILE REFERENCE TO SENT
     // Send file in form of a file-handle to transmit
-    if(filebuf->OpenFile() == false)
-    {
-//       ERRORLOG(GetLastError(),"OpenFile for SendHttpResponse");
-//       return;
-    }
-    // Get the filehandle from buffer
-    m_file          = filebuf->GetFileHandle();
-    DWORD  high     = 0L;
-    ULONG  fileSize = GetFileSize(m_file,&high);
 
     m_sendBuffer.DataChunkType = HttpDataChunkFromFileHandle;
     m_sendBuffer.FromFileHandle.ByteRange.StartingOffset.QuadPart = 0;
-    m_sendBuffer.FromFileHandle.ByteRange.Length.QuadPart = fileSize; // HTTP_BYTE_RANGE_TO_EOF;
+    m_sendBuffer.FromFileHandle.ByteRange.Length.QuadPart = HTTP_BYTE_RANGE_TO_EOF;
     m_sendBuffer.FromFileHandle.FileHandle = m_file;
   }
   else if(filebuf->GetLength())
@@ -570,25 +564,36 @@ HTTPRequest::SendResponseBody()
 void
 HTTPRequest::SendBodyPart()
 {
-  // Getting the file buffer
-  FileBuffer* filebuf = m_message->GetFileBuffer();
-
-  // See if we did a file sent
-  if(m_file)
+  // Check status of the OVERLAPPED structure
+  DWORD result = m_writing.Internal;
+  if(result)
   {
-    filebuf->CloseFile();
-    m_file = nullptr;
+    ERRORLOG(result,"While sending HTTP response part");
   }
-
-  // See if we need to send another chunk
-  if(filebuf->GetHasBufferParts() &&
-    (m_bufferpart < filebuf->GetNumberOfParts()))
+  else
   {
-    SendResponseBody();
-    return;
+    // Getting the file buffer
+    FileBuffer* filebuf = m_message->GetFileBuffer();
+
+    // See if we did a file sent
+    if(m_file)
+    {
+      filebuf->CloseFile();
+      m_file = nullptr;
+    }
+
+    // See if we need to send another chunk
+    if(filebuf->GetHasBufferParts() &&
+      (m_bufferpart < filebuf->GetNumberOfParts()))
+    {
+      SendResponseBody();
+      return;
+    }
   }
 
   // End of the line for the whole request
+  // We did send everything as an answer
+
   Finalize();
 }
 
@@ -678,7 +683,7 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
   {
     return;
   }
-  // Alloc some space
+  // Allocate some space
   m_unknown = new HTTP_UNKNOWN_HEADER[p_headers.size()];
 
   unsigned ind = 0;
@@ -703,7 +708,8 @@ HTTPRequest::FillResponse()
   // Initialize the response body
   if(m_response == nullptr)
   {
-    m_response = (PHTTP_RESPONSE)calloc(1,sizeof(HTTP_RESPONSE));
+    m_response = new HTTP_RESPONSE();
+    RtlZeroMemory(m_response,sizeof(HTTP_RESPONSE));
   
     unsigned status  = m_message->GetStatus();
     const char* text = m_server->GetStatusText(status);
@@ -779,9 +785,40 @@ HTTPRequest::FillResponse()
   m_response->Headers.UnknownHeaderCount = (USHORT)ukheaders.size();
   m_response->Headers.pUnknownHeaders    = m_unknown;
 
-  // Now after the compression, add the total content length
+  // See if this request must send a file as part of a 'GET'
+  // Or if the content comes from the buffer
+  size_t totalLength = 0;
+  if(!buffer->GetFileName().IsEmpty())
+  {
+    // FILE BUFFER CONTAINS A FILE REFERENCE TO SENT
+    // Send file in form of a file-handle to transmit
+    if(buffer->OpenFile())
+    {
+      // OK: Get the file handle from the buffer
+      m_file = buffer->GetFileHandle();
+
+      // Getting the length even above 4GB
+      DWORD  high  = 0L;
+      totalLength  = GetFileSize(m_file,&high);
+      totalLength += ((UINT64)high) << 32;
+    }
+    else
+    {
+      ERRORLOG(GetLastError(),"OpenFile for sending a HTTP 'GET' response");
+      m_response->StatusCode   = HTTP_STATUS_NOT_FOUND;
+      m_response->pReason      = "File not found";
+      m_response->ReasonLength = (USHORT) strlen(m_response->pReason);
+    }
+  }
+  else
+  {
+    // Otherwise the content length comes from the buffer memory parts
+    totalLength = buffer ? buffer->GetLength() : 0;
+  }
+
+  // Now after the compression, and after the calculation of the file length
+  // add the total content length in the form of the content-length header
   CString contentLength;
-  size_t totalLength = buffer ? buffer->GetLength() : 0;
 #ifdef _WIN64
   contentLength.Format("%I64u",totalLength);
 #else

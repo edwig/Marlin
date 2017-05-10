@@ -107,7 +107,7 @@ public:
   // Setting the CPU throttling
   void SetUseCPULoad(bool p_useCpuLoad);
   // Extend the maximum for a period of time
-  void ExtendMaximumThreads(AutoIncrementPoolMax& p_increment);
+  void ExtendMaximumThreads (AutoIncrementPoolMax& p_increment);
   void RestoreMaximumThreads(AutoIncrementPoolMax* p_increment);
   // Submitting cleanup jobs
   void SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument);

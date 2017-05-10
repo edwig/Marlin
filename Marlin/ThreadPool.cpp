@@ -147,10 +147,10 @@ ThreadPool::StopThreadPool()
     // before having them processing their events.
     AutoLockTP lock(&m_critical);
 
-    for(unsigned ind = 0;ind < m_threads.size(); ++ind)
+    for(auto& thread : m_threads)
     {
       TP_TRACE1("Stopping thread: %d\n",ind);
-      StopThread(m_threads[ind]);
+      StopThread(thread);
     }
     TP_TRACE1("Total items of work still in the work-queue: %d\n",m_work.size());
   }
@@ -182,18 +182,18 @@ ThreadPool::StopThreadPool()
   // Do not complain about "TerminateThread". It is the only way. We know!
   if(!idle)
   {
-    for(unsigned ind = 0;ind < m_threads.size(); ++ind)
+    for(auto& thread : m_threads)
     {
       TP_TRACE1("!! TERMINATING thread: %d\n",ind);
-      TerminateThread(m_threads[ind]->m_thread,0);
-      CloseHandle(m_threads[ind]->m_event);
+      TerminateThread(thread->m_thread,0);
+      CloseHandle(thread->m_event);
     }
   }
 
   // Free all thread registrations
-  for(unsigned ind = 0;ind < m_threads.size(); ++ind)
+  for(auto& thread : m_threads)
   {
-    delete m_threads[ind];
+    delete thread;
   }
   m_threads.clear();
 }
@@ -210,23 +210,23 @@ ThreadPool::CreateThreadPoolThread(DWORD p_hartbeat /*=INFINITE*/)
   {
     th->m_pool     = this;
     th->m_state    = ThreadState::THST_Init;
-    th->m_callback = NULL;
-    th->m_argument = NULL;
+    th->m_callback = nullptr;
+    th->m_argument = nullptr;
     th->m_timeout  = p_hartbeat;
-    th->m_event    = CreateEvent(NULL,FALSE,FALSE,NULL);
+    th->m_event    = CreateEvent(nullptr,FALSE,FALSE,nullptr);
 
-    if(th->m_event == NULL)
+    if(th->m_event == nullptr)
     {
       // Didn't work. Destroy thread management and return error
       TP_TRACE0("FAILED to create an event for a threadpool thread\n");
       delete th;
-      th = NULL;
+      th = nullptr;
     }
     else
     {
       // Now create our thread
       TP_TRACE0("Creating thread pool thread\n");
-      th->m_thread = (HANDLE) _beginthreadex(NULL,m_stackSize,RunThread,(void*)th,0,&th->m_threadId);
+      th->m_thread = (HANDLE) _beginthreadex(nullptr,m_stackSize,RunThread,(void*)th,0,&th->m_threadId);
 
       if(th->m_thread == INVALID_HANDLE_VALUE)
       {
@@ -234,7 +234,7 @@ ThreadPool::CreateThreadPoolThread(DWORD p_hartbeat /*=INFINITE*/)
         TP_TRACE0("FAILED creating threadpool thread\n");
         CloseHandle(th->m_event);
         delete th;
-        th = NULL;
+        th = nullptr;
       }
       else
       {
@@ -288,9 +288,9 @@ int
 ThreadPool::WaitingThreads()
 {
   int waiting = 0;
-  for(unsigned ind = 0;ind < m_threads.size(); ++ind)
+  for(auto& thread : m_threads)
   {
-    if(m_threads[ind]->m_state == ThreadState::THST_Waiting)
+    if(thread->m_state == ThreadState::THST_Waiting)
     {
       ++waiting;
     }
@@ -474,8 +474,8 @@ ThreadPool::RunAThread(ThreadRegister* p_register)
         if(p_register->m_timeout == INFINITE)
         {
           // Empty for next submit of work
-          p_register->m_callback = NULL;
-          p_register->m_argument = NULL;
+          p_register->m_callback = nullptr;
+          p_register->m_argument = nullptr;
           // Try to shrink the pool
           ShrinkThreadPool(p_register);
         }
@@ -564,16 +564,15 @@ ThreadPool::WorkToDo(ThreadRegister* p_reg)
 ThreadRegister*
 ThreadPool::FindWaitingThread()
 {
-  for(unsigned ind = 0;ind < m_threads.size(); ++ind)
+  for(auto& threadreg : m_threads)
   {
-    ThreadRegister* threadreg = m_threads[ind];
     if(threadreg->m_state   == ThreadState::THST_Waiting && 
        threadreg->m_timeout == INFINITE)
     {
       return threadreg;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 // Set a thread to do something in the future
@@ -629,9 +628,8 @@ ThreadPool::StopHartbeat(LPFN_CALLBACK p_callback)
 {
   AutoLockTP lock(&m_critical);
 
-  for(unsigned ind = 0;ind < m_threads.size(); ++ind)
+  for(auto& reg : m_threads)
   {
-    ThreadRegister* reg = m_threads[ind];
     if(reg->m_callback == p_callback && reg->m_timeout != INFINITE)
     {
       // Can only stop 1 thread at a time!
@@ -647,7 +645,7 @@ ThreadPool::StopHartbeat(LPFN_CALLBACK p_callback)
 void
 ThreadPool::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat /*=INFINITE*/)
 {
-  ThreadRegister* reg = NULL;
+  ThreadRegister* reg = nullptr;
   // Lock the pool
   AutoLockTP lock(&m_critical);
 
@@ -661,9 +659,6 @@ ThreadPool::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbea
     TP_TRACE0("INTERNAL ERROR: Threadpool not open for work. Program in closing mode.\n");
     return;
   }
-
-  float load = GetCPULoad();
-  TP_TRACE1("CPU Load: %f\n",load);
 
   // Special case: try to create heartbeat thread
   if(p_hartbeat != INFINITE)
@@ -690,6 +685,14 @@ ThreadPool::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbea
     }
   }
 
+  // Find CPU load in case we need it
+  float load = 0.0;
+  if(m_useCPULoad)
+  {
+    GetCPULoad();
+    TP_TRACE1("CPU Load: %f\n",load);
+  }
+
   // If running thread < maximum, create a thread
   // But only if the CPU load is below 90 percent and throttling is 'on'
   if((m_threads.size() < (unsigned)m_maxThreads) && (!m_useCPULoad || (load < 0.9)))
@@ -704,6 +707,7 @@ ThreadPool::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbea
       }
     }
   }
+
   // Overstressed: Queue the work for later use
   TP_TRACE1("Thread pool overstressed [%d]: queueing for later processing\n",m_threads.size());
   ThreadWork work;
@@ -737,9 +741,8 @@ ThreadPool::SleepThread(DWORD_PTR p_unique,void* p_payload)
   // Only locking the pool for the duration of the search
   {  AutoLockTP lock(&m_critical);
 
-    for(unsigned ind = 0; ind < m_threads.size(); ++ind)
+    for(auto& reg : m_threads)
     {
-      reg = m_threads[ind];
       if(reg->m_threadId == GetCurrentThreadId())
       {
         // Arguments of this thread already spent!
