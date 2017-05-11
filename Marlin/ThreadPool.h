@@ -48,15 +48,18 @@ typedef void (* LPFN_CALLBACK)(void *);
 class ThreadPool;
 class AutoIncrementPoolMax;
 
+#define COMPLETION_WORK   1
+#define COMPLETION_CALL   2
+
 // State that a thread can be in
-enum class ThreadState
-{
-  THST_Init       // Creating thread in pool
- ,THST_Waiting    // Waiting in threadpool
- ,THST_Running    // Running in code
- ,THST_Stopping   // Busy stopping to wait
- ,THST_Stopped    // Thread already dead
-};
+// enum class ThreadState
+// {
+//   THST_Init       // Creating thread in pool
+//  ,THST_Waiting    // Waiting in threadpool
+//  ,THST_Running    // Running in code
+//  ,THST_Stopping   // Busy stopping to wait
+//  ,THST_Stopped    // Thread already dead
+// };
 
 // Registration of a waiting/running thread
 class ThreadRegister
@@ -65,7 +68,6 @@ public:
     ThreadPool*   m_pool;
     HANDLE        m_thread;
     unsigned      m_threadId;
-    ThreadState   m_state;
 };
 
 using ThreadMap = std::vector<ThreadRegister*>;
@@ -76,7 +78,6 @@ class ThreadWork
 public:
   LPFN_CALLBACK m_callback;
   void*         m_argument;
-  DWORD         m_timeout;
 };
 
 // Queue of work items still to process
@@ -92,7 +93,9 @@ public:
   // OUR PRIMARY FUNCTION!
 
   // Submit an item, starting a thread on it
-  void SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat = INFINITE);
+  void SubmitWork(LPFN_CALLBACK p_callback,void* p_argument);
+  // Submitting cleanup jobs. Runs when threadpool stops
+  void SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument);
 
   // Try setting (raising/decreasing) the minimum number of threads
   bool TrySetMinimum(int p_minThreads);
@@ -105,14 +108,13 @@ public:
   // Extend the maximum for a period of time
   void ExtendMaximumThreads (AutoIncrementPoolMax& p_increment);
   void RestoreMaximumThreads(AutoIncrementPoolMax* p_increment);
-  // Submitting cleanup jobs
-  void SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument);
 
   // Sleeping and waking-up a thread
-  void* SleepThread(DWORD_PTR p_unique,void* p_payload = nullptr);
+  void* SleepThread (DWORD_PTR p_unique,void* p_payload = nullptr);
   bool  WakeUpThread(DWORD_PTR p_unique,void* p_result  = nullptr);
   void* GetSleepingThreadPayload(DWORD_PTR p_unique);
   void  EliminateSleepingThread (DWORD_PTR p_unique);
+
   // Stop a heartbeat thread
   void  StopHartbeat(LPFN_CALLBACK p_callback);
 
@@ -129,7 +131,7 @@ public:
   // "Running A Thread" is public, but really should only be called 
   // from within the static work functions to get things working
   // Do **NOT** call from your application!!
-  unsigned RunAThread(ThreadRegister* p_register);
+  DWORD RunAThread(ThreadRegister* p_register);
 
 private:
   // CONTROLING THE THREADPOOL
@@ -140,21 +142,13 @@ private:
   void LockPool();
   void UnlockPool();
   // Remove a thread from the threadpool
-  void RemoveThreadPoolThread(HANDLE p_thread = NULL);
+  void RemoveThreadPoolThread(unsigned p_threadID);
   // More work to do on a thread  (pool must be locked!!)
-  bool WorkToDo(ThreadRegister* p_reg);
-  // Try to shrink the threadpool (pool must be locked!!)
-  void ShrinkThreadPool(ThreadRegister* p_reg);
+  bool WorkToDo(LPFN_CALLBACK& p_callback,void*& p_argument);
   // Initialize our new threadpool
   void InitThreadPool();
   // Stopping the thread pool
   void StopThreadPool();
-  // Set a thread to do something in the future
-  BOOL SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat);
-  // Number of waiting threads
-  int  WaitingThreads();
-  // Find first waiting thread in the threadpool
-  ThreadRegister* FindWaitingThread();
   // Create a thread in the threadpool
   ThreadRegister* CreateThreadPoolThread(DWORD p_hartbeat = INFINITE);
   // Running all cleanup jobs for the threadpool
@@ -168,6 +162,8 @@ private:
 
   bool              m_initialized     { false   };              // TP properly initialized
   bool              m_openForWork     { false   };              // TP open for work (not closing)
+  long              m_curThreads      { 0       };              // TP current number of threads
+  long              m_bsyThreads      { 0       };              // TP busy    number of threads
   int               m_minThreads      { NUM_THREADS_MINIMUM };  // TP minimum number of threads
   int               m_maxThreads      { NUM_THREADS_MAXIMUM };  // TP maximum number of threads
   int               m_stackSize       { THREAD_STACKSIZE    };  // TP size of SP stack of each thread
@@ -175,6 +171,7 @@ private:
   LPFN_CALLBACK     m_hartbeat        { nullptr };              // Main heartbeat callback function
   void*             m_hartbeatContext { nullptr };              // Pointer to the context of the heartbeat
   int               m_processors      { 1       };              // Number of logical processors on the system
+  HANDLE            m_completion      { nullptr };              // I/O Completion port for I/O and thread sync
   ThreadMap         m_threads;                                  // Map with all running and waiting threads
   WorkMap           m_work;                                     // Map with the backlog of work to do
   WorkMap           m_cleanup;                                  // Cleanup jobs after closing the queue
