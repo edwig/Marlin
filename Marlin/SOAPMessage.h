@@ -136,7 +136,7 @@ public:
   void            SetNamespace(CString p_namespace);
   // Set Command name
   void            SetSoapAction(CString& p_name);
-  bool            SetHasInitialAction(bool p_initial);
+  void            SetHasInitialAction(bool p_initial);
   void            SetSoapMustBeUnderstood(bool p_addAttribute = true,bool p_understand = true);
   // Set the SOAP version
   void            SetSoapVersion(SoapVersion p_version);
@@ -811,7 +811,7 @@ SOAPMessage::GetHasInitialAction() const
   return m_initialAction;
 }
 
-inline bool
+inline void
 SOAPMessage::SetHasInitialAction(bool p_initial)
 {
   m_initialAction = p_initial;

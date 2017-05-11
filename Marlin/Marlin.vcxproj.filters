@@ -297,6 +297,9 @@
     <ClCompile Include="HTTPRequest.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
+    <ClCompile Include="ThreadPoolORG.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -607,6 +610,9 @@
     </ClInclude>
     <ClInclude Include="HTTPRequest.h">
       <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadPoolORG.h">
+      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

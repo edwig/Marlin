@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: ThreadPool.h
+// SourceFile: ThreadPoolORG.h
 //
 // Marlin Server: Internet server/client
 // 
@@ -45,7 +45,7 @@ constexpr auto THREAD_STACKSIZE = (2 * 1024 * 1024);
 typedef void (* LPFN_CALLBACK)(void *);
 
 // Forward declaration of our threadpool
-class ThreadPool;
+class ThreadPoolORG;
 class AutoIncrementPoolMax;
 
 // State that a thread can be in
@@ -62,10 +62,14 @@ enum class ThreadState
 class ThreadRegister
 {
 public:
-    ThreadPool*   m_pool;
+    ThreadPoolORG*   m_pool;
     HANDLE        m_thread;
     unsigned      m_threadId;
+    HANDLE        m_event;
+    DWORD         m_timeout;
     ThreadState   m_state;
+    LPFN_CALLBACK m_callback;
+    void*         m_argument;
 };
 
 using ThreadMap = std::vector<ThreadRegister*>;
@@ -82,12 +86,12 @@ public:
 // Queue of work items still to process
 using WorkMap = std::deque<ThreadWork>;
 
-class ThreadPool
+class ThreadPoolORG
 {
 public:
-  ThreadPool();
-  ThreadPool(int p_minThreads,int p_maxThreads);
- ~ThreadPool();
+  ThreadPoolORG();
+  ThreadPoolORG(int p_minThreads,int p_maxThreads);
+ ~ThreadPoolORG();
 
   // OUR PRIMARY FUNCTION!
 
@@ -161,7 +165,7 @@ private:
   void RunCleanupJobs();
 
   // This is the real callback. 
-  // Overload for your needs, in your own class derived from ThreadPool
+  // Overload for your needs, in your own class derived from ThreadPoolORG
   virtual void DoTheCallback(LPFN_CALLBACK p_callback,void* p_argument);
 
   // DATA MEMBERS OF THE THREADPOOL
@@ -174,7 +178,6 @@ private:
   bool              m_useCPULoad      { false   };              // TP uses CPU load for work throttling
   LPFN_CALLBACK     m_hartbeat        { nullptr };              // Main heartbeat callback function
   void*             m_hartbeatContext { nullptr };              // Pointer to the context of the heartbeat
-  int               m_processors      { 1       };              // Number of logical processors on the system
   ThreadMap         m_threads;                                  // Map with all running and waiting threads
   WorkMap           m_work;                                     // Map with the backlog of work to do
   WorkMap           m_cleanup;                                  // Cleanup jobs after closing the queue
@@ -204,7 +207,7 @@ private:
 class AutoIncrementPoolMax
 {
 public:
-  AutoIncrementPoolMax(ThreadPool* p_pool)
+  AutoIncrementPoolMax(ThreadPoolORG* p_pool)
   {
     m_pool = p_pool;
     m_pool->ExtendMaximumThreads(*this);
@@ -214,6 +217,6 @@ public:
     m_pool->RestoreMaximumThreads(this);
   }
 private:
-  friend ThreadPool;
-  ThreadPool* m_pool;
+  friend ThreadPoolORG;
+  ThreadPoolORG* m_pool;
 };
