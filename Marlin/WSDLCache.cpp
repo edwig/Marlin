@@ -213,7 +213,7 @@ WSDLCache::GenerateWSDL()
       return false;
     }
     CString generated;
-    generated.Format("WSDL File for service [%s] generated in: %s",m_serviceName,m_filename);
+    generated.Format("WSDL File for service [%s] generated in: %s",m_serviceName.GetString(),m_filename.GetString());
     DETAILLOG(generated);
     return true;
   }
@@ -237,7 +237,7 @@ WSDLCache::GenerateTypes(CString& p_wsdlcontent)
 
   // Generate header
   temp.Format("<wsdl:types>\n"
-              "  <s:schema elementFormDefault=\"qualified\" targetNamespace=\"%s\">\n",m_targetNamespace);
+              "  <s:schema elementFormDefault=\"qualified\" targetNamespace=\"%s\">\n",m_targetNamespace.GetString());
   p_wsdlcontent += temp;
 
   OperationMap::iterator it;
@@ -295,7 +295,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
   // Element header
   if(p_level == 0)
   {
-    p_wsdlcontent.AppendFormat("    <s:element name=\"%s\">\n",p_element);
+    p_wsdlcontent.AppendFormat("    <s:element name=\"%s\">\n",p_element.GetString());
   }
 
   // Get the ordering
@@ -311,13 +311,13 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
   // Header of the complex type
   if(p_level)
   {
-    p_wsdlcontent.AppendFormat("    <s:complexType name=\"%s\">\n",p_element);
+    p_wsdlcontent.AppendFormat("    <s:complexType name=\"%s\">\n",p_element.GetString());
   }
   else
   {
     p_wsdlcontent.AppendFormat("    <s:complexType>\n");
   }
-  p_wsdlcontent.AppendFormat("      <s:%s>\n",order);  // all, choice or sequence
+  p_wsdlcontent.AppendFormat("      <s:%s>\n",order.GetString());  // all, choice or sequence
 
 
   for(unsigned ind = 0;ind < p_map.size(); ++ind)
@@ -348,7 +348,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     p_wsdlcontent += temp;
 
     // Do name
-    temp.Format("name=\"%s\"",param->GetName());
+    temp.Format("name=\"%s\"",param->GetName().GetString());
     p_wsdlcontent += temp;
 
     // Do data type
@@ -403,7 +403,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
       case XDT_ENTITIES:          temp = " type=\"s:ENTITIES\"";            break;
       case XDT_IDREFS:            temp = " type=\"s:IDREFS\"";              break;
       case XDT_NMTOKENS:          temp = " type=\"s:NMTOKENS\"";            break;
-      case XDT_Complex:           temp.Format(" type=\"tns:%s%s\"",p_element,param->GetName());
+      case XDT_Complex:           temp.Format(" type=\"tns:%s%s\"",p_element.GetString(),param->GetName().GetString());
                                   break;
       default:                    temp = " type=\"s:string\"";       
                                   break;
@@ -416,7 +416,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
 
   // Footer complex type sequence
   p_wsdlcontent.AppendFormat("      </s:%s>\n"
-                             "    </s:complexType>\n",order);
+                             "    </s:complexType>\n",order.GetString());
   if(p_level == 0)
   {
     p_wsdlcontent += "    </s:element>\n";
@@ -459,16 +459,16 @@ WSDLCache::GenerateMessages(CString& p_wsdlcontent)
   for(it = m_operations.begin();it != m_operations.end(); ++it)
   {
     // Input message
-    temp.Format("<wsdl:message name=\"%sSoapIn\">\n",it->first);
+    temp.Format("<wsdl:message name=\"%sSoapIn\">\n",it->first.GetString());
     p_wsdlcontent += temp;
-    temp.Format("  <wsdl:part name=\"parameters\" element=\"tns:%s\" />\n",it->second.m_input->GetSoapAction());
+    temp.Format("  <wsdl:part name=\"parameters\" element=\"tns:%s\" />\n",it->second.m_input->GetSoapAction().GetString());
     p_wsdlcontent += temp;
     p_wsdlcontent += "</wsdl:message>\n";
 
     // Output message
-    temp.Format("<wsdl:message name=\"%sSoapOut\">\n",it->first);
+    temp.Format("<wsdl:message name=\"%sSoapOut\">\n",it->first.GetString());
     p_wsdlcontent += temp;
-    temp.Format("  <wsdl:part name=\"parameters\" element=\"tns:%s\" />\n",it->second.m_output->GetSoapAction());
+    temp.Format("  <wsdl:part name=\"parameters\" element=\"tns:%s\" />\n",it->second.m_output->GetSoapAction().GetString());
     p_wsdlcontent += temp;
     p_wsdlcontent += "</wsdl:message>\n";
   }
@@ -483,7 +483,7 @@ WSDLCache::GeneratePortType(CString& p_wsdlcontent)
   p_wsdlcontent += "\n<!-- Abstract porttypes -->\n";
 
   // Generate port type header
-  temp.Format("<wsdl:portType name=\"%s\">\n",m_serviceName);
+  temp.Format("<wsdl:portType name=\"%s\">\n",m_serviceName.GetString());
   p_wsdlcontent += temp;
 
   // Generate port type of messages
@@ -491,15 +491,15 @@ WSDLCache::GeneratePortType(CString& p_wsdlcontent)
   for(it = m_operations.begin();it != m_operations.end(); ++it)
   {
     // Operation header;
-    temp.Format("  <wsdl:operation name=\"%s\">\n",it->first);
+    temp.Format("  <wsdl:operation name=\"%s\">\n",it->first.GetString());
     p_wsdlcontent += temp;
 
     // input
-    temp.Format("    <wsdl:input message=\"tns:%sSoapIn\" />\n",it->first);
+    temp.Format("    <wsdl:input message=\"tns:%sSoapIn\" />\n",it->first.GetString());
     p_wsdlcontent += temp;
 
     // output
-    temp.Format("    <wsdl:output message=\"tns:%sSoapOut\" />\n",it->first);
+    temp.Format("    <wsdl:output message=\"tns:%sSoapOut\" />\n",it->first.GetString());
     p_wsdlcontent += temp;
 
     // operation footer
@@ -533,10 +533,10 @@ WSDLCache::GenerateBinding(CString& p_wsdlcontent,CString p_binding,CString p_so
   CString temp;
 
   // Generate binding header
-  temp.Format("<wsdl:binding name=\"%s%s\" type=\"tns:%s\">\n",m_serviceName,p_binding,m_serviceName);
+  temp.Format("<wsdl:binding name=\"%s%s\" type=\"tns:%s\">\n",m_serviceName.GetString(),p_binding.GetString(),m_serviceName.GetString());
   p_wsdlcontent += temp;
   // Generate soap transport binding
-  temp.Format("  <%s:binding transport=\"http://schemas.xmlsoap.org/soap/http/\" />\n",p_soapNamespace);
+  temp.Format("  <%s:binding transport=\"http://schemas.xmlsoap.org/soap/http/\" />\n",p_soapNamespace.GetString());
   p_wsdlcontent += temp;
 
   // Generate all operations
@@ -544,16 +544,16 @@ WSDLCache::GenerateBinding(CString& p_wsdlcontent,CString p_binding,CString p_so
   for(it = m_operations.begin();it != m_operations.end(); ++it)
   {
     // Operation
-    temp.Format("  <wsdl:operation name=\"%s\">\n",it->first);
+    temp.Format("  <wsdl:operation name=\"%s\">\n",it->first.GetString());
     p_wsdlcontent += temp;
 
     // Soap Operation
-    temp.Format("    <%s:operation soapAction=\"%s/%s\" style=\"document\" />\n",p_soapNamespace,m_targetNamespace,it->first);
+    temp.Format("    <%s:operation soapAction=\"%s/%s\" style=\"document\" />\n",p_soapNamespace.GetString(),m_targetNamespace.GetString(),it->first.GetString());
     p_wsdlcontent += temp;
     // literal input/output
-    temp.Format("    <wsdl:input><%s:body use=\"literal\" /></wsdl:input>\n",p_soapNamespace);
+    temp.Format("    <wsdl:input><%s:body use=\"literal\" /></wsdl:input>\n",p_soapNamespace.GetString());
     p_wsdlcontent += temp;
-    temp.Format("    <wsdl:output><%s:body use=\"literal\" /></wsdl:output>\n",p_soapNamespace);
+    temp.Format("    <wsdl:output><%s:body use=\"literal\" /></wsdl:output>\n",p_soapNamespace.GetString());
     p_wsdlcontent += temp;
 
     // End of operation
@@ -570,27 +570,27 @@ WSDLCache::GenerateServiceBindings(CString& p_wsdlcontent)
 {
   CString temp;
   CString path;
-  path.Format("%s%s%s%s", m_url, m_url.GetAt(m_url.GetLength() - 1) == '/' ? "" : "/", m_serviceName, m_servicePostfix);
+  path.Format("%s%s%s%s", m_url.GetString(), m_url.GetAt(m_url.GetLength() - 1) == '/' ? "" : "/", m_serviceName.GetString(), m_servicePostfix.GetString());
                          
   p_wsdlcontent += "\n<!-- Web service offering endpoints for bindings -->\n";
 
   // Begin envelope
-  temp.Format("<wsdl:service name=\"%s\">\n",m_serviceName);
+  temp.Format("<wsdl:service name=\"%s\">\n",m_serviceName.GetString());
   p_wsdlcontent += temp;
 
   if(m_performSoap10)
   {
-    temp.Format("  <wsdl:port name=\"%sSoap\" binding=\"tns:%sSoap\">\n",m_serviceName,m_serviceName);
+    temp.Format("  <wsdl:port name=\"%sSoap\" binding=\"tns:%sSoap\">\n",m_serviceName.GetString(),m_serviceName.GetString());
     p_wsdlcontent += temp;
-    temp.Format("    <soap:address location=\"%s\" />\n",path);
+    temp.Format("    <soap:address location=\"%s\" />\n",path.GetString());
     p_wsdlcontent += temp;
     p_wsdlcontent += "  </wsdl:port>\n";
   }
   if(m_performSoap12)
   {
-    temp.Format("  <wsdl:port name=\"%sSoap12\" binding=\"tns:%sSoap12\">\n",m_serviceName,m_serviceName);
+    temp.Format("  <wsdl:port name=\"%sSoap12\" binding=\"tns:%sSoap12\">\n",m_serviceName.GetString(),m_serviceName.GetString());
     p_wsdlcontent += temp;
-    temp.Format("    <soap12:address location=\"%s\" />\n",path);
+    temp.Format("    <soap12:address location=\"%s\" />\n",path.GetString());
     p_wsdlcontent += temp;
     p_wsdlcontent += "  </wsdl:port>\n";
   }
@@ -622,9 +622,9 @@ WSDLCache::GenerateDefinitions(CString& p_wsdlcontent)
 
   // Adding the real target namespace
   CString temp;
-  temp.Format("  xmlns:tns=\"%s\"\n",m_targetNamespace);
+  temp.Format("  xmlns:tns=\"%s\"\n",m_targetNamespace.GetString());
   def += temp;
-  temp.Format("  targetNamespace=\"%s\">\n",m_targetNamespace);
+  temp.Format("  targetNamespace=\"%s\">\n",m_targetNamespace.GetString());
   def += temp;
 
   p_wsdlcontent = header + def + p_wsdlcontent + "</wsdl:definitions>\n";
@@ -698,8 +698,8 @@ WSDLCache::CheckMessage(SOAPMessage* p_orig,SOAPMessage* p_tocheck,CString p_who
   {
     CString msg;
     msg.Format("Request/Response object not the same. Expected '%s' got '%s'"
-              ,p_orig->GetParameterObject()
-              ,p_tocheck->GetParameterObject());
+              ,p_orig->GetParameterObject().GetString()
+              ,p_tocheck->GetParameterObject().GetString());
 
     p_tocheck->Reset();
     p_tocheck->SetFault("Request/Response object",p_who,msg,"While testing against WSDL");
@@ -833,9 +833,9 @@ WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
   {
     CString details;
     details.Format("Datatype check failed! Field: %s Value: %s Result: %s"
-                   ,p_checkParam->GetName()
-                   ,value
-                   ,result);
+                   ,p_checkParam->GetName().GetString()
+                   ,value.GetString()
+                   ,result.GetString());
     p_check->Reset();
     p_check->SetFault("Datatype",p_who,"Restriction",details);
     return false;
@@ -850,9 +850,9 @@ WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
     {
       CString details;
       details.Format("Fieldvalue check failed! Field: %s Value: %s Result: %s"
-                     ,p_checkParam->GetName()
-                     ,value
-                     ,result);
+                     ,p_checkParam->GetName().GetString()
+                     ,value.GetString()
+                     ,result.GetString());
       p_check->Reset();
       p_check->SetFault("Fieldvalue",p_who,"Restriction",result);
       return false;
@@ -970,8 +970,8 @@ WSDLCache::GetPageHeader()
                  "  <body>\n"
                  "    <div id=\"content\">\n"
                  "    <p class=\"heading1\">%s</p><br>\n"
-                ,m_serviceName
-                ,m_serviceName);
+                ,m_serviceName.GetString()
+                ,m_serviceName.GetString());
 
   return header;
 }
@@ -995,7 +995,7 @@ WSDLCache::GetOperationWsdl()
   wsdl += "    <p class=\"intro\">This is the overview of the service.</p>";
   wsdl += "    <p class=\"intro\">To use this service you can create a client for it on the basis of the WSDL file below.</p>";
   
-  wsdl.AppendFormat("    <pre><a href=\"%s?wsdl\">%s?wsdl</a></pre>",filename,filename);
+  wsdl.AppendFormat("    <pre><a href=\"%s?wsdl\">%s?wsdl</a></pre>",filename.GetString(),filename.GetString());
 
   wsdl += "    <br>\n";
   wsdl += "    <h2>These are all the separate SOAP messages:</h2>\n";
@@ -1009,7 +1009,7 @@ WSDLCache::GetOperationNameLink(CString p_operation)
   CString linkpage;
   linkpage = m_serviceName + "." + p_operation + ".html";
 
-  link.Format("    <h3><a href=\"%s\">%s</a></h3>\n",linkpage,p_operation);
+  link.Format("    <h3><a href=\"%s\">%s</a></h3>\n",linkpage.GetString(),p_operation.GetString());
   return link;
 }
 
@@ -1023,9 +1023,9 @@ WSDLCache::GetOperationPageIntro(CString p_operation)
                 "      <p class=\"intro\">Click <a href=\"%s%s\">here</a> for a complete list of operations.</p>\n"
                 "      <h2>%s</h2>\n"
                 "      <p class=\"intro\"></p>\n"
-               ,m_serviceName
-               ,m_servicePostfix
-               ,p_operation);
+               ,m_serviceName.GetString()
+               ,m_servicePostfix.GetString()
+               ,p_operation.GetString());
 
   return intro;
 }
@@ -1043,15 +1043,15 @@ WSDLCache::GetOperationPageHttpI(CString p_operation,CString p_hostname,bool p_s
               "Content-Length: <font class=value>length</font>\n"
               ,p_soapVersion ? "1.2" : "1.1"
               ,p_soapVersion ? "1.2" : "1.1"
-              ,m_absPath
-              ,m_serviceName
-              ,m_servicePostfix
-              ,p_hostname
+              ,m_absPath.GetString()
+              ,m_serviceName.GetString()
+              ,m_servicePostfix.GetString()
+              ,p_hostname.GetString()
               ,p_soapVersion ? "application/soap+xml" : "text/xml");
   if(p_soapVersion == false)
   {
     CString extra;
-    extra.Format("SOAPAction: \"%s/%s\"\n",m_targetNamespace,p_operation);
+    extra.Format("SOAPAction: \"%s/%s\"\n",m_targetNamespace.GetString(),p_operation.GetString());
     text += extra;
   }
   text += "\n";
@@ -1266,7 +1266,7 @@ bool
 WSDLCache::ReadWSDLLocalFile(CString p_filename)
 {
   CString message;
-  message.Format("Reading WSDL file: %s",p_filename);
+  message.Format("Reading WSDL file: %s",p_filename.GetString());
   DETAILLOG(message);
 
   // Reading the WSDL as a XML message
@@ -1546,11 +1546,11 @@ WSDLCache::ReadPortTypes(XMLMessage& p_wsdl)
     }
     if(AddOperation(++index,name,&msgIn,&msgOut) == false)
     {
-      m_errormessage.Format("Cannot add WS operation [%s] to the WSDL cache.",name);
+      m_errormessage.Format("Cannot add WS operation [%s] to the WSDL cache.",name.GetString());
       return false;
     }
     CString message;
-    message.Format("Read WSDL service: %s", msgIn.GetSoapAction());
+    message.Format("Read WSDL service: %s", msgIn.GetSoapAction().GetString());
     DETAILLOG(message);
 
     // Find next operation
@@ -1575,7 +1575,7 @@ WSDLCache::ReadMessage(XMLMessage& p_wsdl,SOAPMessage& p_message)
   XMLElement* message = p_wsdl.FindElementWithAttribute(nullptr,"message","name",name);
   if(!message)
   {
-    m_errormessage.Format("<message> with name=%s not found in the WSDL",p_message.GetSoapAction());
+    m_errormessage.Format("<message> with name=%s not found in the WSDL",p_message.GetSoapAction().GetString());
     return false;
   }
 
@@ -1583,14 +1583,14 @@ WSDLCache::ReadMessage(XMLMessage& p_wsdl,SOAPMessage& p_message)
   XMLElement* part = p_wsdl.FindElement(message,"part");
   if(!part)
   {
-    m_errormessage.Format("Message [%s] without a part",p_message.GetSoapAction());
+    m_errormessage.Format("Message [%s] without a part",p_message.GetSoapAction().GetString());
     return false;
   }
 
   XMLAttribute* elem = p_wsdl.FindAttribute(part,"element");
   if(!elem)
   {
-    m_errormessage.Format("Message [%s] without an element part",p_message.GetSoapAction());
+    m_errormessage.Format("Message [%s] without an element part",p_message.GetSoapAction().GetString());
     return false;
   }
 
@@ -1619,7 +1619,7 @@ WSDLCache::ReadParameters(XMLMessage& p_wsdl,SOAPMessage& p_message,CString p_el
   XMLElement* element = ReadTypesElement(p_wsdl,p_element);
   if(element == nullptr)
   {
-    m_errormessage.Format("<type><element> with name=%s not found in WSDL",p_element);
+    m_errormessage.Format("<type><element> with name=%s not found in WSDL",p_element.GetString());
     return false;
   }
   XMLElement* complex = p_wsdl.FindElement(element,"complexType");
@@ -1632,7 +1632,7 @@ WSDLCache::ReadParameters(XMLMessage& p_wsdl,SOAPMessage& p_message,CString p_el
     }
     if(complex == nullptr)
     {
-      m_errormessage.Format("<type><element> with name=%s without 'complex' definition in WSDL",p_element);
+      m_errormessage.Format("<type><element> with name=%s without 'complex' definition in WSDL",p_element.GetString());
       return false;
     }
   }
@@ -1643,7 +1643,7 @@ WSDLCache::ReadParameters(XMLMessage& p_wsdl,SOAPMessage& p_message,CString p_el
   }
   if(!order)
   {
-    m_errormessage.Format("<type><element> with name=%s without order node in WSDL",p_element);
+    m_errormessage.Format("<type><element> with name=%s without order node in WSDL",p_element.GetString());
     return false;
   }
 
@@ -1654,7 +1654,7 @@ WSDLCache::ReadParameters(XMLMessage& p_wsdl,SOAPMessage& p_message,CString p_el
   else if(order->GetName() == "sequence") ord = WsdlOrder::WS_Sequence;
   else 
   {
-    m_errormessage.Format("<type><element> with name=%s with illegal order node in WSDL",p_element);
+    m_errormessage.Format("<type><element> with name=%s with illegal order node in WSDL",p_element.GetString());
     return false;
   }
   p_message.SetWSDLOrder(ord);

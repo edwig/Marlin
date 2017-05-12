@@ -283,7 +283,7 @@ XMLParser::SetError(XmlError p_error,const uchar* p_text,bool p_throw /*=true*/)
   CString errorString("ERROR parsing XML: ");
   if(m_element)
   {
-    errorString.AppendFormat(" Element [%s] : ",m_element->GetName());
+    errorString.AppendFormat(" Element [%s] : ",m_element->GetName().GetString());
   }
   // Setting the error
   errorString += (const char*) p_text;
@@ -379,7 +379,7 @@ XMLParser::ParseDeclaration()
         else
         {
           CString message;
-          message.Format("Unknown XML character encoding: %s",value);
+          message.Format("Unknown XML character encoding: %s",value.GetString());
           SetError(XmlError::XE_UnknownEncoding,(uchar*)message.GetString());
         }
       }
@@ -394,7 +394,7 @@ XMLParser::ParseDeclaration()
     else
     {
       CString message;
-      message.Format("Unknown header attributes [%s=%s]",attributeName,value);
+      message.Format("Unknown header attributes [%s=%s]",attributeName.GetString(),value.GetString());
       SetError(XmlError::XE_HeaderAttribs,(uchar*)message.GetString());
     }
   }
@@ -558,7 +558,7 @@ XMLParser::ParseElement()
         if(namesp.Compare(closingNS))
         {
           CString error;
-          error.Format("Element [%s] has closing tag with different namespace.",elementName);
+          error.Format("Element [%s] has closing tag with different namespace.",elementName.GetString());
           SetError(XmlError::XE_MissingEndTag,(uchar*)error.GetString());
         }
         NeedToken('>');
@@ -567,13 +567,13 @@ XMLParser::ParseElement()
         return strncmp((const char*)m_pointer,"</",2) == 0;
       }
       CString error;
-      error.Format("Element [%s] has incorrect closing tag [%s]",elementName,closing);
+      error.Format("Element [%s] has incorrect closing tag [%s]",elementName.GetString(),closing.GetString());
       SetError(XmlError::XE_MissingEndTag,(uchar*)error.GetString());
     }
     else
     {
       CString error;
-      error.Format("Missing end tag for element: %s",elementName);
+      error.Format("Missing end tag for element: %s",elementName.GetString());
       SetError(XmlError::XE_MissingEndTag,(uchar*)error.GetString());
     }
   }
@@ -584,7 +584,7 @@ XMLParser::ParseElement()
     return true;
   }
   CString error;
-  error.Format("Missing ending of XML element: %s",elementName);
+  error.Format("Missing ending of XML element: %s",elementName.GetString());
   SetError(XmlError::XE_MissingElement,(uchar*)error.GetString());
   return false;
 }

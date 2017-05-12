@@ -130,7 +130,7 @@ WebServiceServer::Reset()
     {
       // If not removed by server, signal that and do it ourselves
       // Otherwise would result in a memory leak!
-      m_errorMessage.Format("Service site [%s] not removed by server.",m_name);
+      m_errorMessage.Format("Service site [%s] not removed by server.",m_name.GetString());
       m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
       delete m_site;
     }
@@ -371,8 +371,8 @@ WebServiceServer::ReadingWebconfig(CString p_webconfig)
     if(m_checkIncoming || m_checkOutgoing)
     {
       m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Field values checked  : %s",m_checkFieldvalues ? "YES" : "NO");
-      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Webconfig file checked: %s",p_webconfig);
-      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"WSDL to check against : %s",m_wsdl->GetWSDLFilename());
+      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Webconfig file checked: %s",p_webconfig.GetString());
+      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"WSDL to check against : %s",m_wsdl->GetWSDLFilename().GetString());
     }
     m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Support GET-SOAP-JSON rountrip translation: ",m_jsonTranslation ? "YES" : "NO");
   }
@@ -443,7 +443,7 @@ WebServiceServer::Run()
     m_generateWsdl = false;
     if(m_wsdl->ReadWSDLFile(m_externalWsdl) == false)
     {
-      m_errorMessage.Format("ERROR reading WSDL file: %s\n",m_externalWsdl);
+      m_errorMessage.Format("ERROR reading WSDL file: %s\n",m_externalWsdl.GetString());
       m_errorMessage += m_wsdl->GetErrorMessage();
       m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
       return false;
@@ -460,7 +460,7 @@ WebServiceServer::Run()
   // Try to generate the WSDL
   if(m_generateWsdl && m_wsdl->GenerateWSDL() == false)
   {
-    m_errorMessage.Format("Cannot start the service. No legal WSDL generated for: %s",m_url);
+    m_errorMessage.Format("Cannot start the service. No legal WSDL generated for: %s",m_url.GetString());
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
@@ -469,7 +469,7 @@ WebServiceServer::Run()
   CrackedURL cracked(m_url);
   if(cracked.Valid() == false)
   {
-    m_errorMessage.Format("WebServiceServer has no legal URL to run on: %s",m_url);
+    m_errorMessage.Format("WebServiceServer has no legal URL to run on: %s",m_url.GetString());
     m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
@@ -488,7 +488,7 @@ WebServiceServer::Run()
                                     ,m_subsite);
   if(m_site == nullptr)
   {
-    m_errorMessage.Format("Cannot register an HTTP channel on this machine for URL: %s",m_url);
+    m_errorMessage.Format("Cannot register an HTTP channel on this machine for URL: %s",m_url.GetString());
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
@@ -557,7 +557,7 @@ WebServiceServer::Run()
   // New: Explicit starting the site for HTTP API Version 2.0
   if(m_site->StartSite() == false)
   {
-    m_errorMessage.Format("Cannot start HTTPSite for webservice server on: %s",m_url);
+    m_errorMessage.Format("Cannot start HTTPSite for webservice server on: %s",m_url.GetString());
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
@@ -572,7 +572,7 @@ WebServiceServer::Run()
   {
     m_errorMessage.Format("Cannot start HTTPServer. Server in error state. Error %lu: %s"
                           ,m_httpServer->GetLastError()
-                          ,GetLastErrorAsString(m_httpServer->GetLastError()));
+                          ,GetLastErrorAsString(m_httpServer->GetLastError()).GetString());
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
@@ -617,7 +617,7 @@ void
 WebServiceServer::OnProcessPost(int p_code,SOAPMessage* p_message)
 {
   CString fault;
-  fault.Format("Programming error for interface [%d] %s",p_code,p_message->GetSoapAction());
+  fault.Format("Programming error for interface [%d] %s",p_code,p_message->GetSoapAction().GetString());
   p_message->SetFault("Critical","Server",fault,"Derive your own handler class from WebServiceServer!");
 }
 
@@ -630,7 +630,7 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
 
   if(code == 0)
   {
-    m_errorMessage.Format("Message to process NOT FOUND: %s",action);
+    m_errorMessage.Format("Message to process NOT FOUND: %s",action.GetString());
     m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
     p_message->Reset();
     p_message->SetFault("Critical","Server","Failed to process the message.",m_errorMessage);
@@ -664,7 +664,7 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
   }
   catch(CString& fault)
   {
-    m_errorMessage.Format("Error in processing the message: %s : %s",action,fault);
+    m_errorMessage.Format("Error in processing the message: %s : %s",action.GetString(),fault.GetString());
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
     p_message->Reset();
     p_message->SetFault("Critical","Server","Failed to process the message.",m_errorMessage);

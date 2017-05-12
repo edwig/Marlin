@@ -127,7 +127,7 @@ HTTPSiteMarlin::StartSite()
     // The registration
     if(m_mainSite)
     {
-      DETAILLOGV("URL not registered to URL-Group. Site [%s] is subsite of [%s]",m_site,m_mainSite->GetSite());
+      DETAILLOGV("URL not registered to URL-Group. Site [%s] is subsite of [%s]",m_site.GetString(),m_mainSite->GetSite().GetString());
       result = true;
     }
     else
@@ -140,7 +140,7 @@ HTTPSiteMarlin::StartSite()
       if(retCode != NO_ERROR)
       {
         CString error;
-        error.Format("Cannot add URL to the URL-Group: %s",m_prefixURL);
+        error.Format("Cannot add URL to the URL-Group: %s",m_prefixURL.GetString());
         ERRORLOG(retCode,error);
       }
       else
@@ -332,7 +332,7 @@ HTTPSiteMarlin::LogSettings()
   //         "---------------------------------- : ------------"
   DETAILLOGS("Site SOAP WS-Security level        : ",       level);
   DETAILLOGS("Site authentication scheme         : ",       scheme);
-  DETAILLOGV("Site authentication realm/domain   : %s/%s",  m_realm,m_domain);
+  DETAILLOGV("Site authentication realm/domain   : %s/%s",  m_realm.GetString(),m_domain.GetString());
   DETAILLOGS("Site NT-LanManager caching         : ",       m_ntlmCache     ? "ON" : "OFF");
   DETAILLOGV("Site a-synchronious SOAP setting to: %sSYNC", m_async         ? "A-" : ""   );
   DETAILLOGS("Site accepting Server-Sent-Events  : ",       m_isEventStream ? "ON" : "OFF");

@@ -132,7 +132,7 @@ ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
         {
           if(LoadSite(iisConfig))
           {
-            DETAILLOGV("Loaded IIS Site: %s",config);
+            DETAILLOGV("Loaded IIS Site: %s",config.GetString());
             return;
           }
         }

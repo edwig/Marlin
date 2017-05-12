@@ -185,7 +185,7 @@ WebSocket::SetFragmentSize(ULONG p_fragment)
   }
   m_fragmentsize = p_fragment;
 
-  DETAILLOGV("WebSocket TCP/IP fragment size set to: %s",m_fragmentsize);
+  DETAILLOGV("WebSocket TCP/IP fragment size set to: %d",m_fragmentsize);
 }
 
 void
@@ -292,7 +292,7 @@ WebSocket::ErrorLog(const char* p_function,DWORD p_code,CString p_text)
 
   if(m_logfile)
   {
-    p_text.AppendFormat(" Error [%d] %s",p_code,GetLastErrorAsString(p_code));
+    p_text.AppendFormat(" Error [%d] %s",p_code,GetLastErrorAsString(p_code).GetString());
     result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,p_text);
 
     WSFrame* frame  = new WSFrame();
@@ -836,7 +836,7 @@ WebSocketServer::EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask
   p_frame->m_headerLength = headerlength;
 
   // Now allocate enough bytes for the data part to be sent
-  p_frame->m_data = (BYTE*) malloc(headerlength + p_length);
+  p_frame->m_data = (BYTE*) malloc(headerlength + (int)p_length);
 
   // Coded payload_length
   int64 payload_length = p_length < 126 ? p_length : 126;
@@ -1108,8 +1108,8 @@ WebSocketServer::DecodeCloseFragment(RawFrame* p_frame)
   m_closingError = p_frame->m_data[offset] << 8;
   m_closingError |= p_frame->m_data[offset + 1];
 
-  char* buffer = new char[p_frame->m_payloadLength];
-  strncpy_s(buffer,p_frame->m_payloadLength,(char *)&p_frame->m_data[offset + 2],p_frame->m_payloadLength - 2);
+  char* buffer = new char[(int)p_frame->m_payloadLength];
+  strncpy_s(buffer,(int)p_frame->m_payloadLength,(char *)&p_frame->m_data[offset + 2],(int)p_frame->m_payloadLength - 2);
   m_closing = buffer;
   delete[] buffer;
 }
@@ -1254,7 +1254,7 @@ WebSocketServerIIS::SocketWriter(HRESULT p_error
     if(m_open)
     {
       CString reason;
-      reason.Format("WebSocket [%s] closed.",m_uri);
+      reason.Format("WebSocket [%s] closed.",m_uri.GetString());
       SendCloseSocket(WS_CLOSE_NORMAL,reason);
     }
     OnClose();
@@ -1398,7 +1398,7 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
     if(m_open)
     {
       CString reason;
-      reason.Format("WebSocket [%s] closed.",m_uri);
+      reason.Format("WebSocket [%s] closed.",m_uri.GetString());
       SendCloseSocket(WS_CLOSE_NORMAL,reason);
     }
     OnClose();
@@ -1477,7 +1477,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
   {
     SocketWriter(hr,length,true,true,false);
   }
-  DETAILLOGV("Sent a 'close' message [%d:%s] on WebSocket: %s",p_code,p_reason,m_uri);
+  DETAILLOGV("Sent a 'close' message [%d:%s] on WebSocket: %s",p_code,p_reason.GetString(),m_uri.GetString());
   return true;
 }
 
@@ -1502,7 +1502,7 @@ WebSocketServerIIS::ReceiveCloseSocket()
     {
       m_closing = encoded;
     }
-    DETAILLOGV("Received closing message [%d:%s] on WebSocket: %s",m_closingError,m_closing,m_uri);
+    DETAILLOGV("Received closing message [%d:%s] on WebSocket: %s",m_closingError,m_closing.GetString(),m_uri.GetString());
     return true;
   }
   return false;
@@ -1657,7 +1657,7 @@ WebSocketClient::OpenSocket()
   {
     // Error handling. Socket not found on URI
     CString error;
-    error.Format("WebSocket protocol not found on URI [%s] HTTP status [%d]",m_uri,client.GetStatus());
+    error.Format("WebSocket protocol not found on URI [%s] HTTP status [%d]",m_uri.GetString(),client.GetStatus());
     ERRORLOG(ERROR_NOT_FOUND,error);
   }
   return m_open;
@@ -1697,7 +1697,7 @@ WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
     {
       length = WS_CLOSE_MAXIMUM;
     }
-    DETAILLOGV("Send close WebSocket [%d:%s] for: %s",p_code,p_reason,m_uri);
+    DETAILLOGV("Send close WebSocket [%d:%s] for: %s",p_code,p_reason.GetString(),m_uri.GetString());
     DWORD error = WinHttpWebSocketClose(m_socket,p_code,(void*)p_reason.GetString(),length);
     if(error)
     {
@@ -1756,7 +1756,7 @@ WebSocketClient::ReceiveCloseSocket()
     {
       reason[received] = 0;
       m_closing = reason;
-      DETAILLOGV("Closing WebSocket frame received [%d:%s]",m_closingError,m_closing);
+      DETAILLOGV("Closing WebSocket frame received [%d:%s]",m_closingError,m_closing.GetString());
     }
     return true;
   }
@@ -1805,7 +1805,7 @@ WebSocketClient::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,boo
   }
   else
   {
-    DETAILLOGV("WebSocket sent type: %d Bytes: %d to: %s",type,p_length,m_uri);
+    DETAILLOGV("WebSocket sent type: %d Bytes: %d to: %s",type,p_length,m_uri.GetString());
   }
   return (error == ERROR_SUCCESS);
 }
@@ -1848,7 +1848,7 @@ WebSocketClient::SocketListener()
     }
     else
     {
-      DETAILLOGV("WebSocket receive type: %d Bytes: %d to: %s",type,bytesRead,m_uri);
+      DETAILLOGV("WebSocket receive type: %d Bytes: %d to: %s",type,bytesRead,m_uri.GetString());
 
       bool final = (type == WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE) ||
                    (type == WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE)   ||

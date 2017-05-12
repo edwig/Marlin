@@ -652,16 +652,16 @@ SOAPMessage::GetBasicURL() const
   {
     url.Format("http%s://%s:%d%s"
               ,m_secure ? "s" : ""
-              ,m_server
+              ,m_server.GetString()
               ,m_port
-              ,m_absPath);
+              ,m_absPath.GetString());
   }
   else
   {
     url.Format("http%s://%s%s"
               ,m_secure ? "s" : ""
-              ,m_server
-              ,m_absPath);
+              ,m_server.GetString()
+              ,m_absPath.GetString());
   }
   return url;
 }
@@ -797,7 +797,7 @@ SOAPMessage::GetParameterMandatory(CString p_paramName)
     return element->GetValue();
   }
   CString msg;
-  msg.Format("Missing parameter [%s.%s]",m_soapAction,p_paramName);
+  msg.Format("Missing parameter [%s.%s]",m_soapAction.GetString(),p_paramName.GetString());
   throw msg;
 }
 
@@ -810,7 +810,7 @@ SOAPMessage::SetHeaderParameter(CString p_name,const char* p_value,bool p_first 
     return SetElement(m_header,p_name,XDT_String,p_value,p_first);
   }
   CString error;
-  error.Format("Tried to set a header parameter [%s:%s], but no header present (yet)!",p_name,p_value);
+  error.Format("Tried to set a header parameter [%s:%s], but no header present (yet)!",p_name.GetString(),p_value);
   throw error;
 }
 
@@ -847,7 +847,7 @@ SOAPMessage::GetHeaderParameter(CString p_paramName)
     return "";
   }
   CString error;
-  error.Format("Tried to get a header parameter [%s], but no header present (yet)!",p_paramName);
+  error.Format("Tried to get a header parameter [%s], but no header present (yet)!",p_paramName.GetString());
   throw error;
 }
 
@@ -1745,9 +1745,9 @@ SOAPMessage::CheckHeaderAction()
       {
         // Unknown namespace
         error.Format("Answer on webservice [%s/%s] with unknown response protocol: %s\n"
-                     ,m_namespace
-                     ,m_soapAction
-                     ,response);
+                     ,m_namespace.GetString()
+                     ,m_soapAction.GetString()
+                     ,response.GetString());
         m_errorstate      = true;
         m_soapFaultCode   = "WS-Addressing";
         m_soapFaultActor  = "Message";
@@ -1877,11 +1877,11 @@ SOAPMessage::GetFault()
                    "Actor : %s\n"
                    "String: %s\n"
                    "Detail: %s\n"
-                   ,GetSoapAction()
-                   ,GetFaultCode()
-                   ,GetFaultActor()
-                   ,GetFaultString()
-                   ,GetFaultDetail());
+                   ,GetSoapAction().GetString()
+                   ,GetFaultCode().GetString()
+                   ,GetFaultActor().GetString()
+                   ,GetFaultString().GetString()
+                   ,GetFaultDetail().GetString());
   return soapFault;
 }
 

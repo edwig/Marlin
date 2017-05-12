@@ -105,7 +105,7 @@ void
 OnErrorWebSocket(WebSocket* p_socket,WSFrame* p_frame)
 {
   CString message;
-  message.Format("ERROR from WebSocket at URI: %s\n",p_socket->GetURI());
+  message.Format("ERROR from WebSocket at URI: %s\n",p_socket->GetURI().GetString());
   message += (char*) p_frame->m_data;
   message += "\n";
 

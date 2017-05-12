@@ -55,7 +55,7 @@ int  SimplePOS()
                "</FirstCommand>\n");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("Soap message:\n%s\n", soap);
+  xprintf("Soap message:\n%s\n", soap.GetString());
 
   SOAPMessage msg(soap);
   if (msg.GetErrorState())
@@ -69,10 +69,10 @@ int  SimplePOS()
     CString param2 = msg.GetParameter("Param2");
     CString param3 = msg.GetParameter("Param3");
 
-    xprintf("Soap action: %s\n", action);
-    xprintf("Parameter 1: %s\n", param1);
-    xprintf("Parameter 2: %s\n", param2);
-    xprintf("Parameter 3: %s\n", param3);
+    xprintf("Soap action: %s\n", action.GetString());
+    xprintf("Parameter 1: %s\n", param1.GetString());
+    xprintf("Parameter 2: %s\n", param2.GetString());
+    xprintf("Parameter 3: %s\n", param3.GetString());
     if(action == "FirstCommand" && 
        param1 == "first" &&
        param2.IsEmpty()  &&
@@ -106,7 +106,7 @@ int Soap11_noADR()
                "</Envelope>\n");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("Soap message:\n%s\n", soap);
+  xprintf("Soap message:\n%s\n", soap.GetString());
 
   SOAPMessage msg(soap);
   if (msg.GetErrorState())
@@ -120,10 +120,10 @@ int Soap11_noADR()
     CString param2 = msg.GetParameter("Param2");
     CString param3 = msg.GetParameter("Param3");
 
-    xprintf("Soap action: %s\n", action);
-    xprintf("Parameter 1: %s\n", param1);
-    xprintf("Parameter 2: %s\n", param2);
-    xprintf("Parameter 3: %s\n", param3);
+    xprintf("Soap action: %s\n", action.GetString());
+    xprintf("Parameter 1: %s\n", param1.GetString());
+    xprintf("Parameter 2: %s\n", param2.GetString());
+    xprintf("Parameter 3: %s\n", param3.GetString());
     if(action == "FirstCommand" && 
        param1 == "first" &&
        param2.IsEmpty()  &&
@@ -157,7 +157,7 @@ int Soap12_ADR()
                "</Envelope>\n");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("Soap message:\n%s\n", soap);
+  xprintf("Soap message:\n%s\n", soap.GetString());
 
   SOAPMessage msg(soap);
   if (msg.GetErrorState())
@@ -171,10 +171,10 @@ int Soap12_ADR()
     CString param2 = msg.GetParameter("Param2");
     CString param3 = msg.GetParameter("Param3");
 
-    xprintf("Soap action: %s\n", action);
-    xprintf("Parameter 1: %s\n", param1);
-    xprintf("Parameter 2: %s\n", param2);
-    xprintf("Parameter 3: %s\n", param3);
+    xprintf("Soap action: %s\n", action.GetString());
+    xprintf("Parameter 1: %s\n", param1.GetString());
+    xprintf("Parameter 2: %s\n", param2.GetString());
+    xprintf("Parameter 3: %s\n", param3.GetString());
     if(action == "SmallObject" && 
        param1 == "first" &&
        param2.IsEmpty()  &&
@@ -223,7 +223,7 @@ int Soap12_ADR_MDS()
                "</s:Envelope>");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("Soap message:\n%s\n", soap);
+  xprintf("Soap message:\n%s\n", soap.GetString());
 
   SOAPMessage msg(soap);
   if(msg.GetErrorState())
@@ -236,8 +236,8 @@ int Soap12_ADR_MDS()
     CString resCode = msg.GetParameter("ResultCode");
     CString folder;
 
-    xprintf("Soap action: %s\n", action);
-    xprintf("Result code: %s\n", resCode);
+    xprintf("Soap action: %s\n", action.GetString());
+    xprintf("Result code: %s\n", resCode.GetString());
 
     XMLElement* refer = msg.FindElement(NULL,"Reference",true);
     if(refer)
@@ -246,7 +246,7 @@ int Soap12_ADR_MDS()
       if(ident)
       {
         folder = ident->GetValue();
-        xprintf("Folder: %s\n",folder);
+        xprintf("Folder: %s\n",folder.GetString());
       }
     }
     if(action  == "IContainer/CreateContainerResponse" &&
@@ -307,7 +307,7 @@ int Soap12_NS_request()
                "</s:Envelope>\n");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("Soap message:\n%s\n", soap);
+  xprintf("Soap message:\n%s\n", soap.GetString());
 
   SOAPMessage msg(soap);
   if (msg.GetErrorState())
@@ -317,7 +317,7 @@ int Soap12_NS_request()
   else
   {
     CString action = msg.GetSoapAction();
-    xprintf("Soap action: %s\n",action);
+    xprintf("Soap action: %s\n",action.GetString());
     result = (action == "IContent/GetContent");
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
@@ -353,7 +353,7 @@ int Soap12_NS_response()
                "</s:Envelope>\n");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("Soap message:\n%s\n",soap);
+  xprintf("Soap message:\n%s\n",soap.GetString());
 
   SOAPMessage msg;
   msg.ParseMessage(soap);
@@ -364,8 +364,8 @@ int Soap12_NS_response()
   else
   {
     CString action = msg.GetSoapAction();
-    xprintf("Soap action: %s\n",action);
-    xprintf("OK\n%s\n",msg.Print());
+    xprintf("Soap action: %s\n",action.GetString());
+    xprintf("OK\n%s\n",msg.Print().GetString());
 
     result = (action == "IContent/GetContentResponse");
     // SUMMARY OF THE TEST
@@ -397,7 +397,7 @@ int TestXMLMessage1()
                "</RootNode>\n");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("XML Message:\n%s\n",text);
+  xprintf("XML Message:\n%s\n",text.GetString());
 
   msg.ParseMessage(text);
   
@@ -437,7 +437,7 @@ int TestXMLMessage2()
                "</soap:Envelope>\n");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("XML Message:\n%s\n",text);
+  xprintf("XML Message:\n%s\n",text.GetString());
 
   msg.ParseMessage(text);
 
@@ -500,7 +500,7 @@ TestXMLMessage3()
                "</soap:Envelope>\n");
 
   xprintf("\nTESTING\n=======\n");
-  xprintf("XML Message:\n%s\n",text);
+  xprintf("XML Message:\n%s\n",text.GetString());
 
   msg.ParseMessage(text);
 

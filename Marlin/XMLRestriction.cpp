@@ -77,7 +77,7 @@ XMLRestriction::PrintEnumRestriction(CString p_name)
 {
   bool print = false;
   CString restriction;
-  restriction.Format("<!--%s has values: ",p_name);
+  restriction.Format("<!--%s has values: ",p_name.GetString());
 
   for(auto& enumvalue : m_enums)
   {
@@ -101,7 +101,7 @@ CString
 XMLRestriction::PrintIntegerRestriction(CString p_name,int p_value)
 {
   CString restriction;
-  restriction.Format("<!--%s: %d-->",p_name,p_value);
+  restriction.Format("<!--%s: %d-->",p_name.GetString(),p_value);
   return restriction;
 }
 
@@ -110,7 +110,7 @@ CString
 XMLRestriction::PrintStringRestriction(CString p_name,CString p_value)
 {
   CString restriction;
-  restriction.Format("<!--%s: %s-->",p_name,p_value);
+  restriction.Format("<!--%s: %s-->",p_name.GetString(),p_value.GetString());
   return restriction;
 }
 
@@ -1596,7 +1596,7 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,CString p_value)
 
     if(std::regex_match(str,reg) == false)
     {
-      result.Format("Field value [%s] does not match the pattern: %s",p_value,m_pattern);
+      result.Format("Field value [%s] does not match the pattern: %s",p_value.GetString(),m_pattern.GetString());
       return result;
     }
   }
@@ -1614,6 +1614,6 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,CString p_value)
       return result;
     }
   }
-  result.Format("Field value [%s] is not in the list of allowed enumeration values.",p_value);
+  result.Format("Field value [%s] is not in the list of allowed enumeration values.",p_value.GetString());
   return result;
 }

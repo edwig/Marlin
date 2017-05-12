@@ -87,7 +87,7 @@ void OnMessage(ServerEvent* p_event)
   xprintf("OnMessage delivered from server.\n"
           "Message ID: %d\n%s\n"
          ,p_event->m_id
-         ,p_event->m_data);
+         ,p_event->m_data.GetString());
   fflush(stdout);
 
   ++onMessageSeen;
@@ -111,7 +111,7 @@ void OnOther(ServerEvent* p_event)
   xprintf("OTHER event delivered from server.\n"
           "Message ID: %d\n%s\n"
           ,p_event->m_id
-          ,p_event->m_data);
+          ,p_event->m_data.GetString());
   fflush(stdout);
 
   ++onOtherSeen;
@@ -130,7 +130,7 @@ void OnError(ServerEvent* p_event)
   xprintf("WHOAAA. ERROR received from server\n"
           "Message ID: %d\n%s\n"
           ,p_event->m_id
-          ,p_event->m_data);
+          ,p_event->m_data.GetString());
   fflush(stdout);
 
   ++onErrorSeen;

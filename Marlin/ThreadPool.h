@@ -50,16 +50,7 @@ class AutoIncrementPoolMax;
 
 #define COMPLETION_WORK   1
 #define COMPLETION_CALL   2
-
-// State that a thread can be in
-// enum class ThreadState
-// {
-//   THST_Init       // Creating thread in pool
-//  ,THST_Waiting    // Waiting in threadpool
-//  ,THST_Running    // Running in code
-//  ,THST_Stopping   // Busy stopping to wait
-//  ,THST_Stopped    // Thread already dead
-// };
+#define COMPLETION_STOP   3
 
 // Registration of a waiting/running thread
 class ThreadRegister
@@ -71,6 +62,19 @@ public:
 };
 
 using ThreadMap = std::vector<ThreadRegister*>;
+
+// Registratio of sleeping threads
+class SleepingThread
+{
+public:
+  unsigned  m_threadId;
+  DWORD_PTR m_unique;
+  void*     m_payload;
+  HANDLE    m_event;
+  bool      m_abort;
+};
+
+using SleepingMap = std::vector<SleepingThread*>;
 
 // The queue of work items, when all threads are busy
 class ThreadWork
@@ -103,20 +107,21 @@ public:
   bool TrySetMaximum(int p_maxThreads);
   // Setting the stack size
   void SetStackSize(int p_stackSize);
-  // Setting the CPU throttling
-  void SetUseCPULoad(bool p_useCpuLoad);
   // Extend the maximum for a period of time
   void ExtendMaximumThreads (AutoIncrementPoolMax& p_increment);
   void RestoreMaximumThreads(AutoIncrementPoolMax* p_increment);
 
   // Sleeping and waking-up a thread
+  // Sleeps ANY thread. Also threads not originating in this threadpool
   void* SleepThread (DWORD_PTR p_unique,void* p_payload = nullptr);
   bool  WakeUpThread(DWORD_PTR p_unique,void* p_result  = nullptr);
   void* GetSleepingThreadPayload(DWORD_PTR p_unique);
-  void  EliminateSleepingThread (DWORD_PTR p_unique);
+  bool  EliminateSleepingThread (DWORD_PTR p_unique);
 
+  // Create a hartbeat thread (Can be called **ONCE**)
+  bool  CreateHartbeat(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat);
   // Stop a heartbeat thread
-  void  StopHartbeat(LPFN_CALLBACK p_callback);
+  void  StopHartbeat();
 
   // GETTERS
 
@@ -124,14 +129,13 @@ public:
   int  GetMaxThreads()          { return m_maxThreads;          };
   int  GetStackSize()           { return m_stackSize;           };
   int  GetWorkOverflow()        { return (int)m_work.size();    };
-  int  GetWaitingThreads()      { return WaitingThreads();      };
-  bool GetUseCPULoad()          { return m_useCPULoad;          };
   int  GetCleanupJobs()         { return (int)m_cleanup.size(); };
 
   // "Running A Thread" is public, but really should only be called 
   // from within the static work functions to get things working
   // Do **NOT** call from your application!!
   DWORD RunAThread(ThreadRegister* p_register);
+  DWORD RunHartbeat();
 
 private:
   // CONTROLING THE THREADPOOL
@@ -150,13 +154,15 @@ private:
   // Stopping the thread pool
   void StopThreadPool();
   // Create a thread in the threadpool
-  ThreadRegister* CreateThreadPoolThread(DWORD p_hartbeat = INFINITE);
+  ThreadRegister* CreateThreadPoolThread();
   // Running all cleanup jobs for the threadpool
   void RunCleanupJobs();
 
   // This is the real callback. 
   // Overload for your needs, in your own class derived from ThreadPool
   virtual void DoTheCallback(LPFN_CALLBACK p_callback,void* p_argument);
+  // The following can only be called on an overload with COMPLETION_CALL
+  virtual void DoTheCallback(void* p_argument);
 
   // DATA MEMBERS OF THE THREADPOOL
 
@@ -167,15 +173,18 @@ private:
   int               m_minThreads      { NUM_THREADS_MINIMUM };  // TP minimum number of threads
   int               m_maxThreads      { NUM_THREADS_MAXIMUM };  // TP maximum number of threads
   int               m_stackSize       { THREAD_STACKSIZE    };  // TP size of SP stack of each thread
-  bool              m_useCPULoad      { false   };              // TP uses CPU load for work throttling
-  LPFN_CALLBACK     m_hartbeat        { nullptr };              // Main heartbeat callback function
-  void*             m_hartbeatContext { nullptr };              // Pointer to the context of the heartbeat
   int               m_processors      { 1       };              // Number of logical processors on the system
   HANDLE            m_completion      { nullptr };              // I/O Completion port for I/O and thread sync
   ThreadMap         m_threads;                                  // Map with all running and waiting threads
+  SleepingMap       m_sleeping;                                 // Registration of sleeping threads
   WorkMap           m_work;                                     // Map with the backlog of work to do
   WorkMap           m_cleanup;                                  // Cleanup jobs after closing the queue
   CRITICAL_SECTION  m_critical;                                 // Locking synchronization object
+  // Hartbeat section
+  LPFN_CALLBACK     m_hartbeatCallback { nullptr };             // HB callback function
+  void*             m_hartbeatPayload  { nullptr };             // HB callback parameter to use
+  DWORD             m_hartbeat         { 0       };             // HB milliseconds between hartbeats
+  HANDLE            m_hartbeatEvent    { nullptr };             // HB event to wak up the hartbeat
 };
 
 // Auto locking mechanism for the threadpool

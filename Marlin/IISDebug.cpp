@@ -70,7 +70,7 @@ IISDebugAllVariables(IHttpContext* p_context,LogAnalysis* p_log)
   CString line("==============================================================");
   
   DETAILLOG("Listing of all IIS Server variables","","");
-  DETAILLOG(line,"","");
+  DETAILLOG(line.GetString(),"","");
   DebugVariable(p_context,p_log,"All headers in HTTP form",        "ALL_HTTP");
   DebugVariable(p_context,p_log,"All headers in RAW form",         "ALL_RAW");
   DebugVariable(p_context,p_log,"Application pool ID",             "APP_POOL_ID");
@@ -132,5 +132,5 @@ IISDebugAllVariables(IHttpContext* p_context,LogAnalysis* p_log)
   DebugVariable(p_context,p_log,"Remote user (unmapped)",          "UNMAPPED_REMOTE_USER");
   DebugVariable(p_context,p_log,"Absolute path in the URL",        "URL");
   DebugVariable(p_context,p_log,"Path info (IIS 5.0)",             "URL_PATH_INFO");
-  DETAILLOG(line,"","");
+  DETAILLOG(line.GetString(),"","");
 }

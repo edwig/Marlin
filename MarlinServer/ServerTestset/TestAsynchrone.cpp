@@ -57,7 +57,7 @@ bool
 SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
 {
   // Display incoming message
-  xprintf("Incoming ASYNC message in XML:\n%s\n",p_message->GetSoapMessage());
+  xprintf("Incoming ASYNC message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
   CString displayText = p_message->GetParameter("Text");
@@ -139,7 +139,7 @@ TestAsynchrone(HTTPServer* p_server)
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url);
+    xprintf("Site started correctly: %s\n",url.GetString());
   }
   else
   {

@@ -180,7 +180,7 @@ HTTPServerIIS::InitHeaders()
     case SendHeader::HTTP_SH_WEBCONFIG:   headertype = "Configured header type name";     break;
     case SendHeader::HTTP_SH_HIDESERVER:  headertype = "Hide server response header";     break;
   }
-  DETAILLOGV("Header type: %s",headertype);
+  DETAILLOGV("Header type: %s",headertype.GetString());
 }
 
 // Initialise the hard server limits in bytes
@@ -354,7 +354,7 @@ HTTPServerIIS::CreateSite(PrefixType    p_type
       {
         // No luck: No main site to register against
         CString message;
-        message.Format("Tried to register a sub-site, without a main-site: %s",p_baseURL);
+        message.Format("Tried to register a sub-site, without a main-site: %s",p_baseURL.GetString());
         ERRORLOG(ERROR_NOT_FOUND,message);
         return nullptr;
       }
@@ -441,8 +441,8 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
 
   // Log earliest as possible
   DETAILLOGV("Received HTTP call from [%s] with length: %s"
-             ,SocketToServer((PSOCKADDR_IN6)sender)
-             ,contentLength);
+             ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
+             ,contentLength.GetString());
 
   // See if we must substitute for a sub-site
   if(m_hasSubsites)
@@ -497,7 +497,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
         stream->m_user = CW2A(user->GetRemoteUserName());
       }
       stream->m_baseURL = rawUrl;
-      DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s",stream->m_user,rawUrl);
+      DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s",stream->m_user.GetString(),rawUrl.GetString());
       // To do for this stream, not for a message
       m_pool->SubmitWork(p_site->GetCallback(),(void*)stream);
       p_stream = stream;
@@ -550,7 +550,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   {
     if(message->FindVerbTunneling())
     {
-      DETAILLOGV("Request VERB changed to: %s",message->GetVerb());
+      DETAILLOGV("Request VERB changed to: %s",message->GetVerb().GetString());
     }
   }
 
@@ -812,7 +812,7 @@ HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,CString p_name,CStrin
     DWORD   val   = GetLastError();
     CString error = GetLastErrorAsString(val);
     CString bark;
-    bark.Format("Cannot set HTTP response header [%s] to value [%s] : %s",p_name,p_value,error);
+    bark.Format("Cannot set HTTP response header [%s] to value [%s] : %s",p_name.GetString(),p_value.GetString(),error.GetString());
     ERRORLOG(val,bark);
   }
 }
@@ -825,7 +825,7 @@ HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,C
     DWORD   val   = GetLastError();
     CString error = GetLastErrorAsString(val);
     CString bark;
-    bark.Format("Cannot set HTTP response header [%d] to value [%s] : %s",p_id,p_value,error);
+    bark.Format("Cannot set HTTP response header [%d] to value [%s] : %s",p_id,p_value.GetString(),error.GetString());
     ERRORLOG(val,bark);
   }
 }
@@ -989,7 +989,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   {
     // Error handler
     CString message = GetLastErrorAsString(tls_lastError);
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",GetLastError(),message);
+    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",GetLastError(),message.GetString());
     // Reset the last error
     SetError(NO_ERROR);
   }

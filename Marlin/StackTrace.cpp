@@ -316,9 +316,9 @@ StackTrace::AsString(bool p_path /* = true */) const
 
     // Add address and function
 #ifdef _WIN64
-    tmp.Format("0x%I64X  %-16.16s", frame.m_address, frame.m_module);
+    tmp.Format("0x%I64X  %-16.16s", frame.m_address, frame.m_module.GetString());
 #else
-    tmp.Format("0x%lX  %-16.16s",frame.m_address,frame.m_module);
+    tmp.Format("0x%lX  %-16.16s",frame.m_address,frame.m_module.GetString());
 #endif
     result += tmp;
     if (frame.m_function.IsEmpty())
@@ -329,9 +329,9 @@ StackTrace::AsString(bool p_path /* = true */) const
 
     // Add function and offset
 #ifdef _WIN64
-    tmp.Format("  %s + 0x%I64X",frame.m_function,frame.m_offset);
+    tmp.Format("  %s + 0x%I64X",frame.m_function.GetString(),frame.m_offset);
 #else
-    tmp.Format("  %s + 0x%08X", frame.m_function,frame.m_offset);
+    tmp.Format("  %s + 0x%08X", frame.m_function.GetString(),frame.m_offset);
 #endif
     result += tmp;
     if (!p_path || frame.m_fileName.IsEmpty())
@@ -341,7 +341,7 @@ StackTrace::AsString(bool p_path /* = true */) const
     }
 
     // Add file and line number
-    tmp.Format("  [%s:%d]\n", frame.m_fileName, frame.m_line);
+    tmp.Format("  [%s:%d]\n", frame.m_fileName.GetString(), frame.m_line);
     result += tmp;
   }
 
@@ -370,7 +370,7 @@ StackTrace::AsXMLString() const
     // Add module
     if (!frame.m_module.IsEmpty())
     {
-      tmp.Format("<module>%s</module>", PrintXmlString(frame.m_module));
+      tmp.Format("<module>%s</module>", PrintXmlString(frame.m_module).GetString());
       result += tmp;
     }
 
@@ -379,11 +379,11 @@ StackTrace::AsXMLString() const
     {
 #ifdef _WIN64
       tmp.Format("<symbool naam=\"%s\" offset=\"%I64d\" />",
-                 PrintXmlString(frame.m_function),
+                 PrintXmlString(frame.m_function).GetString(),
                  frame.m_offset);
 #else
       tmp.Format("<symbool naam=\"%s\" offset=\"%d\" />",
-                 PrintXmlString(frame.m_function),
+                 PrintXmlString(frame.m_function).GetString(),
                  frame.m_offset);
 #endif
       result += tmp;
@@ -393,7 +393,7 @@ StackTrace::AsXMLString() const
     if (!frame.m_fileName.IsEmpty())
     {
       tmp.Format("<regel bestand=\"%s\" nummer=\"%d\" />",
-                 PrintXmlString(frame.m_fileName),
+                 PrintXmlString(frame.m_fileName).GetString(),
                  frame.m_line);
       result += tmp;
     }
@@ -424,9 +424,9 @@ StackTrace::FirstAsString() const
   if (!frame.m_function.IsEmpty())
   {
 #ifdef _WIN64
-    result.Format("%s + 0x%I64X",frame.m_function,frame.m_offset);
+    result.Format("%s + 0x%I64X",frame.m_function.GetString(),frame.m_offset);
 #else
-    result.Format("%s + 0x%08X", frame.m_function,frame.m_offset);
+    result.Format("%s + 0x%08X", frame.m_function.GetString(),frame.m_offset);
 #endif
   }
   else

@@ -50,8 +50,8 @@ SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
   // Get parameters from soap
   CString paramOne = p_message->GetParameter("One");
   CString paramTwo = p_message->GetParameter("Two");
-  xprintf("Incoming parameter: %s = %s\n","One",paramOne);
-  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo);
+  xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
+  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
 
   // Forget
   p_message->Reset();
@@ -74,8 +74,8 @@ SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
   // Set the result
   p_message->SetParameter("Three",paramOne);
   p_message->SetParameter("Four", paramTwo);
-  xprintf("Outgoing parameter: %s = %s\n","Three",paramOne);
-  xprintf("Outgoing parameter: %s = %s\n","Four", paramTwo);
+  xprintf("Outgoing parameter: %s = %s\n","Three",paramOne.GetString());
+  xprintf("Outgoing parameter: %s = %s\n","Four", paramTwo.GetString());
 
   // Ready with the message.
   return true;
@@ -156,7 +156,7 @@ int TestSubSites(HTTPServer* p_server)
   // Start the sites explicitly
   if(site1->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url1);
+    xprintf("Site started correctly: %s\n",url1.GetString());
   }
   else
   {
@@ -167,7 +167,7 @@ int TestSubSites(HTTPServer* p_server)
 
   if(site2->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url2);
+    xprintf("Site started correctly: %s\n",url2.GetString());
   }
   else
   {

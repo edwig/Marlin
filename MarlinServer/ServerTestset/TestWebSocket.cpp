@@ -49,14 +49,14 @@ int totalChecks = 4;
 
 void OnOpen(WebSocket* p_socket,WSFrame* /*p_frame*/)
 {
-  qprintf("TEST handler: Opened a websocket for: %s",p_socket->GetURI());
+  qprintf("TEST handler: Opened a websocket for: %s",p_socket->GetURI().GetString());
   --totalChecks;
 }
 
 void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 {
   CString message((char*)p_frame->m_data);
-  qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetURI(),message);
+  qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetURI().GetString(),message.GetString());
   --totalChecks;
 
 
@@ -68,9 +68,9 @@ void OnClose(WebSocket* p_socket,WSFrame* p_frame)
   CString message((char*)p_frame->m_data);
   if(!message.IsEmpty())
   {
-    qprintf("TEST handler: Closing WebSocket message: %s",message);
+    qprintf("TEST handler: Closing WebSocket message: %s",message.GetString());
   }
-  qprintf("TEST handler: Closed the websocket for: %s",p_socket->GetURI());
+  qprintf("TEST handler: Closed the websocket for: %s",p_socket->GetURI().GetString());
   --totalChecks;
 }
 
@@ -140,7 +140,7 @@ TestWebSocket(HTTPServer* p_server)
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url);
+    xprintf("Site started correctly: %s\n",url.GetString());
   }
   else
   {

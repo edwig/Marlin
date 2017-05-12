@@ -86,7 +86,7 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
       status = HTTP_STATUS_NOT_FOUND; // HTTP_STATUS_FORBIDDEN
       DWORD error = GetLastError();
       CString message;
-      message.Format("HTTP PUT: File not written: %s\n",pathname);
+      message.Format("HTTP PUT: File not written: %s\n",pathname.GetString());
       SITE_ERRORLOG(error,message);
     }
     // RESET THE BUFFER AS FAST AS POSSIBLE
@@ -99,7 +99,7 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
     status = HTTP_STATUS_BAD_REQUEST;
     // No file to put for this absolute path
     CString message;
-    message.Format("HTTP PUT: No file given for: %s\n",pathname);
+    message.Format("HTTP PUT: No file given for: %s\n",pathname.GetString());
     SITE_ERRORLOG(ERROR_NOT_FOUND,message);
   }
   // Remember result

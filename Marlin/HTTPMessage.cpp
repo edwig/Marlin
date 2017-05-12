@@ -235,7 +235,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
 
   // Reconstruct the content type header
   m_contentType = FindMimeTypeInContentType(m_contentType);
-  m_contentType.AppendFormat("; charset=%s", CodepageToCharset(acp));
+  m_contentType.AppendFormat("; charset=%s", CodepageToCharset(acp).GetString());
 
   // Propagate the BOM settings of the site to this message
   if(m_site && m_site->GetSendSoapBOM())
@@ -336,7 +336,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
 
   // Reconstruct the content type header
   m_contentType = FindMimeTypeInContentType(m_contentType);
-  m_contentType.AppendFormat("; charset=%s", CodepageToCharset(acp));
+  m_contentType.AppendFormat("; charset=%s", CodepageToCharset(acp).GetString());
 
   // Propagate the BOM settings of the site to this message
   if(m_site->GetSendJsonBOM())

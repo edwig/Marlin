@@ -307,7 +307,7 @@ XMLMessage::PrintHeader()
   // Construct the header
   if(!m_version.IsEmpty())
   {
-    temp.Format(" version=\"%s\"",m_version);
+    temp.Format(" version=\"%s\"",m_version.GetString());
     header += temp;
   }
   // Take care of character encoding
@@ -320,12 +320,12 @@ XMLMessage::PrintHeader()
     case XMLEncoding::ENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
     default:          break;
   }
-  header.AppendFormat(" encoding=\"%s\"",CodepageToCharset(acp));
+  header.AppendFormat(" encoding=\"%s\"",CodepageToCharset(acp).GetString());
 
   // Add standalone?
   if(!m_standalone.IsEmpty())
   {
-    temp.Format(" standalone=\"%s\"",m_standalone);
+    temp.Format(" standalone=\"%s\"",m_standalone.GetString());
     header += temp;
   }
   // Closing of the header
@@ -383,32 +383,32 @@ XMLMessage::PrintElements(XMLElement* p_element
   if(p_element->GetType() & XDT_CDATA)
   {
     // CDATA section
-    temp.Format("<%s><![CDATA[%s]]>",PrintXmlString(name,p_utf8),value);
+    temp.Format("<%s><![CDATA[%s]]>",PrintXmlString(name,p_utf8).GetString(),value.GetString());
     message += spaces + temp;
   }
   if(p_element->GetType() & XDT_Complex)
   {
     // Other XML data 
-    temp.Format("<%s>%s",PrintXmlString(name,p_utf8),value);
+    temp.Format("<%s>%s",PrintXmlString(name,p_utf8).GetString(),value.GetString());
     message += spaces + temp;
   }
   else if(value.IsEmpty() && p_element->GetAttributes().size() == 0 && p_element->GetChildren().size() == 0)
   {
     // A 'real' empty node
-    temp.Format("<%s />%s",PrintXmlString(name,p_utf8),newline);
+    temp.Format("<%s />%s",PrintXmlString(name,p_utf8).GetString(),newline.GetString());
     message += spaces + temp;
     return message;
   }
   else if(p_element->GetAttributes().size() == 0)
   {
     // Exact string with escapes
-    temp.Format("<%s>%s",PrintXmlString(name,p_utf8),PrintXmlString(value,p_utf8));
+    temp.Format("<%s>%s",PrintXmlString(name,p_utf8).GetString(),PrintXmlString(value,p_utf8).GetString());
     message += spaces + temp;
   }
   else
   {
     // Parameter printing with attributes
-    temp.Format("<%s",PrintXmlString(name,p_utf8));
+    temp.Format("<%s",PrintXmlString(name,p_utf8).GetString());
     message += spaces + temp;
     for(auto& attrib : p_element->GetAttributes())
     {
@@ -417,21 +417,21 @@ XMLMessage::PrintElements(XMLElement* p_element
       // Append attribute name
       if(attrib.m_namespace.IsEmpty())
       {
-        temp.Format(" %s=",PrintXmlString(attribute,p_utf8));
+        temp.Format(" %s=",PrintXmlString(attribute,p_utf8).GetString());
       }
       else
       {
-        temp.Format(" %s:%s=",attrib.m_namespace,PrintXmlString(attribute,p_utf8));
+        temp.Format(" %s:%s=",attrib.m_namespace.GetString(),PrintXmlString(attribute,p_utf8).GetString());
       }
       message += temp;
 
       switch(attrib.m_type & XDT_Mask)
       {
-        default:                    temp.Format("\"%s\"",attrib.m_value);
+        default:                    temp.Format("\"%s\"",attrib.m_value.GetString());
                                     break;
         case XDT_String:            // Fall through
         case XDT_AnyURI:            // Fall through
-        case XDT_NormalizedString:  temp.Format("\"%s\"",PrintXmlString(attrib.m_value,p_utf8)); 
+        case XDT_NormalizedString:  temp.Format("\"%s\"",PrintXmlString(attrib.m_value,p_utf8).GetString());
                                     break;
       }
       message += temp;
@@ -444,7 +444,7 @@ XMLMessage::PrintElements(XMLElement* p_element
     else
     {
       // Write value and end of the key
-      temp.Format(">%s",PrintXmlString(value,p_utf8));
+      temp.Format(">%s",PrintXmlString(value,p_utf8).GetString());
       message += temp;
     }
   }
@@ -460,7 +460,7 @@ XMLMessage::PrintElements(XMLElement* p_element
     message += spaces;
   }
   // Write ending of parameter name
-  temp.Format("</%s>%s",PrintXmlString(name,p_utf8),newline);
+  temp.Format("</%s>%s",PrintXmlString(name,p_utf8).GetString(),newline.GetString());
   message += temp;
 
   return message;
@@ -541,7 +541,7 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
     {
       CString attrName  = attrib.m_name;
       CString attrValue = attrib.m_value;
-      temp.Format("\"@%s\": \"%s'\"",attrName,attrValue);
+      temp.Format("\"@%s\": \"%s'\"",attrName.GetString(),attrValue.GetString());
       message = spaces + temp + newline;
     }
     message += spaces + "\"#text\": ";
@@ -550,7 +550,7 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   // print element value
   switch(p_element->GetType() & XDT_Mask)
   {
-    default:                    temp.Format("%s",value);
+    default:                    temp.Format("%s",value.GetString());
                                 break;
     case XDT_CDATA:             // Fall through
     case XDT_String:            // Fall through

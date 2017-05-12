@@ -215,7 +215,7 @@ HTTPServer::ErrorLog(const char* p_function,DWORD p_code,CString p_text)
 
   if(m_log)
   {
-    p_text.AppendFormat(" Error [%d] %s",p_code,GetLastErrorAsString(p_code));
+    p_text.AppendFormat(" Error [%d] %s",p_code,GetLastErrorAsString(p_code).GetString());
     result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
   }
 
@@ -356,7 +356,7 @@ HTTPServer::MakeSiteRegistrationName(int p_port,CString p_url)
     p_url = p_url.Left(posanchr);
   }
   p_url.TrimRight('/');
-  registration.Format("%d:%s",p_port,p_url);
+  registration.Format("%d:%s",p_port,p_url.GetString());
 
   return registration;
 }
@@ -564,7 +564,7 @@ HTTPServer::BuildAuthenticationChallenge(CString p_authScheme,CString p_realm)
   {
     // Will use Digest authentication
     // the real realm and domain comes from the URL properties!
-    challenge.Format("Digest realm=\"%s\"",p_realm);
+    challenge.Format("Digest realm=\"%s\"",p_realm.GetString());
   }
   else if(p_authScheme.CompareNoCase("Kerberos") == 0)
   {
@@ -658,7 +658,7 @@ HTTPServer::RespondWithServerError(HTTPSite*    p_site
 {
   HTTPERROR(p_error,"Respond with server error");
   CString page;
-  page.Format(m_serverErrorPage,p_error,p_reason);
+  page.Format(m_serverErrorPage,p_error,p_reason.GetString());
   return SendResponse(p_site
                      ,p_message
                      ,(USHORT)p_error
@@ -679,7 +679,7 @@ HTTPServer::RespondWithClientError(HTTPSite*    p_site
 {
   HTTPERROR(p_error,"Respond with client error");
   CString page;
-  page.Format(m_clientErrorPage,p_error,p_reason);
+  page.Format(m_clientErrorPage,p_error,p_reason.GetString());
   return SendResponse(p_site
                      ,p_message
                      ,(USHORT)p_error
@@ -750,10 +750,10 @@ HTTPServer::LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo)
 
   // Now log the cryptographic elements of the connection
   DETAILLOGV("Secure SSL Connection. Protocol [%s] Cipher [%s:%d] Hash [%s:%d] Key Exchange [%s:%d]"
-            ,protocol
-            ,cipher,  p_sslInfo->CipherStrength
-            ,hash,    p_sslInfo->HashStrength
-            ,exchange,p_sslInfo->KeyExchangeStrength);
+            ,protocol.GetString()
+            ,cipher.GetString(),  p_sslInfo->CipherStrength
+            ,hash.GetString(),    p_sslInfo->HashStrength
+            ,exchange.GetString(),p_sslInfo->KeyExchangeStrength);
 }
 
 // Handle text-based content-type messages
@@ -804,7 +804,7 @@ HTTPServer::CheckSitesStarted()
     if(site.second->GetIsStarted() == false)
     {
       CString message;
-      message.Format("Forgotten to call 'StartSite' for: %s",site.second->GetPrefixURL());
+      message.Format("Forgotten to call 'StartSite' for: %s",site.second->GetPrefixURL().GetString());
       ERRORLOG(ERROR_CALL_NOT_IMPLEMENTED,message);
     }
   }
@@ -1139,7 +1139,7 @@ HTTPServer::EventToString(ServerEvent* p_event)
   // Event naam if not standard 'message'
   if(!p_event->m_event.IsEmpty() && p_event->m_event.CompareNoCase("message"))
   {
-    stream.AppendFormat("event:%s\n",p_event->m_event);
+    stream.AppendFormat("event:%s\n",p_event->m_event.GetString());
   }
   // Event ID if not zero
   if(p_event->m_id > 0)
@@ -1371,7 +1371,7 @@ HTTPServer::CloseEventStream(EventStream* p_stream)
     if(stream.second == p_stream)
     {
       // Show in the log
-      DETAILLOGV("Closing event stream (user: %s) for URL: %s",p_stream->m_user,p_stream->m_baseURL);
+      DETAILLOGV("Closing event stream (user: %s) for URL: %s",p_stream->m_user.GetString(),p_stream->m_baseURL.GetString());
       if(stream.second->m_alive)
       {
         // Send a close-stream event
@@ -1518,7 +1518,7 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
   CString uri = p_socket->GetURI();
   uri.MakeLower();
 
-  TRACE("Register WebSocket [%s] %lX\n",uri,p_socket);
+  TRACE("Register WebSocket [%s] %lX\n",uri.GetString(),p_socket);
 
   SocketMap::iterator it = m_sockets.find(uri);
   if(it != m_sockets.end())
@@ -1559,7 +1559,7 @@ HTTPServer::FindWebSocket(CString p_uri)
 {
   p_uri.MakeLower();
 
-  TRACE("Find WebSocket: %s\n",p_uri);
+  TRACE("Find WebSocket: %s\n",p_uri.GetString());
 
   SocketMap::iterator it = m_sockets.find(p_uri);
   if(it != m_sockets.end())

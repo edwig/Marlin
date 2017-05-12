@@ -56,7 +56,7 @@ TestConvertFile(CString p_fileName,CString p_extraFile)
     }
     fclose(file);
 
-    xprintf("Message:\n%s\n",inhoud);
+    xprintf("Message:\n%s\n",inhoud.GetString());
 
     SOAPMessage msg;
     msg.SetSoapVersion(SoapVersion::SOAP_10);
@@ -84,8 +84,8 @@ TestConvertFile(CString p_fileName,CString p_extraFile)
             string2 = adres2->GetValue();
           }
         }
-        xprintf("First  address: %s\n", string1);
-        xprintf("Second address: %s\n", string2);
+        xprintf("First  address: %s\n", string1.GetString());
+        xprintf("Second address: %s\n", string2.GetString());
 
         if(doDetails)
         {
@@ -106,7 +106,7 @@ TestConvertFile(CString p_fileName,CString p_extraFile)
       }
 
       CString resultaat = msg.Print();
-      xprintf("OK\nMessage is now:\n%s\n",resultaat);
+      xprintf("OK\nMessage is now:\n%s\n",resultaat.GetString());
 
       if(doDetails)
       {

@@ -141,18 +141,18 @@ HTTPURLGroup::StartGroup()
     ERRORLOG(retCode,"Cannot set the authentication properties");
     return false;
   }
-  DETAILLOG("Authentication scheme set to: %s",m_authName);
+  DETAILLOG("Authentication scheme set to: %s",m_authName.GetString());
   if(m_authScheme & HTTP_AUTH_ENABLE_NTLM)
   {
     DETAILLOG("Authentication NTLM cache is: %s",m_ntlmCache ? "on" : "off");
   }
   if(m_authScheme && (HTTP_AUTH_ENABLE_DIGEST | HTTP_AUTH_ENABLE_BASIC))
   {
-    DETAILLOG("Authentication realm is     : %s",m_realm);
+    DETAILLOG("Authentication realm is     : %s",m_realm.GetString());
   }
   if(m_authScheme && HTTP_AUTH_ENABLE_DIGEST)
   {
-    DETAILLOG("Authentication domain is    : %s",m_domain);
+    DETAILLOG("Authentication domain is    : %s",m_domain.GetString());
   }
 
   // Reached the end.

@@ -27,6 +27,8 @@
 //
 #pragma once
 
+#define MARLIN_STANDALONE
+
 // All tests running on these ports in Marlin Standalone
 const int TESTING_HTTP_PORT   = 1200;
 const int TESTING_HTTPS_PORT  = 1201;

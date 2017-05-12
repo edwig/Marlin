@@ -49,8 +49,8 @@ int TestHashing()
   xprintf("TESTING HASHING PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
    
   xprintf("===================================================================\n");
-  xprintf("DIGEST Password: %s\n",password);
-  xprintf("DIGEST Buffer  : %s\n",buffer);
+  xprintf("DIGEST Password: %s\n",password.GetString());
+  xprintf("DIGEST Buffer  : %s\n",buffer.GetString());
   xprintf("-------------------------------------------------------------------\n");
 
   // TEST 1
@@ -60,8 +60,8 @@ int TestHashing()
   CString expected1("9M9TaD0gWVy4qwVSeN5DEzMYQFE=");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_SHA1\n");
-  xprintf("DIGEST Expected: %s\n",expected1);
-  xprintf("DIGEST hashval : %s\n",hash);
+  xprintf("DIGEST Expected: %s\n",expected1.GetString());
+  xprintf("DIGEST hashval : %s\n",hash.GetString());
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Cryptographic hashing provider SHA1            : %s\n",(hash == expected1) ? "OK" : "ERROR");
@@ -74,8 +74,8 @@ int TestHashing()
   CString expected2("9M9TaD0gWVy4qwVSeN5DEzMYQFE=");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_HMAC\n");
-  xprintf("DIGEST Expected: %s\n", expected2);
-  xprintf("DIGEST hashval : %s\n", hash);
+  xprintf("DIGEST Expected: %s\n", expected2.GetString());
+  xprintf("DIGEST hashval : %s\n", hash.GetString());
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Cryptographic hashing provider HMAC            : %s\n",(hash == expected2) ? "OK" : "ERROR");
@@ -88,8 +88,8 @@ int TestHashing()
   CString expected3("onrhIV34nZGqoThg6380Xvk1rT0=");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_DSS_SIGN\n");
-  xprintf("DIGEST Expected: %s\n", expected3);
-  xprintf("DIGEST hashval : %s\n", hash);
+  xprintf("DIGEST Expected: %s\n", expected3.GetString());
+  xprintf("DIGEST hashval : %s\n", hash.GetString());
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Cryptographic hashing provider DSS_SIGN        : %s\n",(hash == expected3) ? "OK" : "ERROR");
@@ -102,8 +102,8 @@ int TestHashing()
   CString expected4("PtUUjwUxC2BrYogfGWBqIB4lUsGQK76PxBolbL8nAdk=");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_RSA_SIGN\n");
-  xprintf("DIGEST Expected: %s\n", expected4);
-  xprintf("DIGEST hashval : %s\n", hash);
+  xprintf("DIGEST Expected: %s\n", expected4.GetString());
+  xprintf("DIGEST hashval : %s\n", hash.GetString());
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Cryptographic hashing provider RSA_SIGN        : %s\n",(hash == expected4) ? "OK" : "ERROR");
@@ -116,8 +116,8 @@ int TestHashing()
   CString expected5("Tbf0ESz3tTz/PqhHrJgc1g==");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_MD2\n");
-  xprintf("DIGEST Expected: %s\n", expected5);
-  xprintf("DIGEST hashval : %s\n", hash);
+  xprintf("DIGEST Expected: %s\n", expected5.GetString());
+  xprintf("DIGEST hashval : %s\n", hash.GetString());
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Cryptographic hashing provider CALG_MD2        : %s\n",(hash == expected5) ? "OK" : "ERROR");
@@ -130,8 +130,8 @@ int TestHashing()
   CString expected6("po1oCGriWfvikcPUEBQ/Ow==");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_MD4\n");
-  xprintf("DIGEST Expected: %s\n", expected6);
-  xprintf("DIGEST hashval : %s\n", hash);
+  xprintf("DIGEST Expected: %s\n", expected6.GetString());
+  xprintf("DIGEST hashval : %s\n", hash.GetString());
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Cryptographic hashing provider CALG_MD4        : %s\n",(hash == expected6) ? "OK" : "ERROR");
@@ -144,8 +144,8 @@ int TestHashing()
   CString expected7("03Ka00wHVBoHj1hzpontgg==");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_MD5\n");
-  xprintf("DIGEST Expected: %s\n",expected7);
-  xprintf("DIGEST hashval : %s\n", hash);
+  xprintf("DIGEST Expected: %s\n",expected7.GetString());
+  xprintf("DIGEST hashval : %s\n", hash.GetString());
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Cryptograhpic hashing provider CALG_MD5        : %s\n",(hash == expected7) ? "OK" : "ERROR");
@@ -158,8 +158,8 @@ int TestHashing()
   CString expected8("B/W+IoBdT6Z9YNX584ixk3kaqQBtEXIYVs+O3teFc3z7sj/6oo1OlEkm6UOSUFzE");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_SHA_384\n");
-  xprintf("DIGEST Expected: %s\n",expected8);
-  xprintf("DIGEST hashval : %s\n", hash);
+  xprintf("DIGEST Expected: %s\n",expected8.GetString());
+  xprintf("DIGEST hashval : %s\n", hash.GetString());
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Cryptographic hashing provider SHA-384         : %s\n",(hash == expected8) ? "OK" : "ERROR");
@@ -172,8 +172,8 @@ int TestHashing()
   CString expected9("12Sw4ChvtCYQ2go9h39LArObGfUUmwtFatUTxfvN5e77w9SdsjzGpymhk0jS8CgZKzhkfvWmfWnSaHKFIvs7fQ==");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_SHA_512\n");
-  xprintf("DIGEST Expected: %s\n", expected9);
-  xprintf("DIGEST hashval : %s\n", hash);
+  xprintf("DIGEST Expected: %s\n", expected9.GetString());
+  xprintf("DIGEST hashval : %s\n", hash.GetString());
   xprintf("\n");
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
@@ -193,8 +193,8 @@ int  TestEncryption(void)
   // Dit gaan we testen
   xprintf("TESTING ENCRYPTION PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
   xprintf("======================================================================\n");
-  xprintf("DIGEST Password: %s\n", password);
-  xprintf("DIGEST Buffer  : %s\n", buffer);
+  xprintf("DIGEST Password: %s\n", password.GetString());
+  xprintf("DIGEST Buffer  : %s\n", buffer.GetString());
   xprintf("----------------------------------------------------------------------\n");
   xprintf("\n");
 
@@ -207,11 +207,11 @@ int  TestEncryption(void)
   result = crypt.Encryptie(buffer,password);
 
   xprintf("Expected       : iCby8h4MjErrm3rj4EwKsKVb5/Gt+EyNrDwE2ZG7pAqTgvzZwAMZ+D0045WhM2+5NqVYBrdGQmr+Xhn/ufq5Kw==\n");
-  xprintf("ENCRYPTION     : %s\n",result);
+  xprintf("ENCRYPTION     : %s\n",result.GetString());
 
   result = crypt.Decryptie(result,password);
 
-  xprintf("DECRYPTION     : %s\n",result);
+  xprintf("DECRYPTION     : %s\n",result.GetString());
   xprintf("\n");
 
   // SUMMARY OF THE TEST

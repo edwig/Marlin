@@ -79,8 +79,8 @@ int TestNamespaces(void)
 
   xprintf("TESTING NAMESPACE FUNCTIONS:\n");
   xprintf("========================================================\n");
-  xprintf("Left  namesp:  %s\n", left);
-  xprintf("Right namesp: %s\n", right);
+  xprintf("Left  namesp:  %s\n", left.GetString());
+  xprintf("Right namesp: %s\n", right.GetString());
   xprintf("-------------------------------------------------------\n");
   int result = CompareNamespaces(left,right);
   xprintf("%s = %s\n",left.GetString(),result == 0 ? "OK" : "NAMESPACE ERROR");

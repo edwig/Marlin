@@ -95,7 +95,7 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
     // File does not exist, or no read access
     p_message->SetStatus(HTTP_STATUS_NOT_FOUND);
     CString text;
-    text.Format("HTTP GET: File not found: %s",pathname);
+    text.Format("HTTP GET: File not found: %s",pathname.GetString());
     SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,text);
   }
   // Ready with the get

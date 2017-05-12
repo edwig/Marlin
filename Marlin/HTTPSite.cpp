@@ -214,12 +214,12 @@ HTTPSite::SetFilter(unsigned p_priority,SiteFilter* p_filter)
     // Not found: we can add it
     m_filters.insert(std::make_pair(p_priority,p_filter));
     DETAILLOGV("Setting site filter [%s] for [%s] with priority: %d"
-              ,p_filter->GetName(),m_site,p_priority);
+              ,p_filter->GetName().GetString(),m_site.GetString(),p_priority);
     return true;
   }
   // already filter for this priority
   CString msg;
-  msg.Format("Site filter for [%s] with priority [%d] already exists!",m_site,p_priority);
+  msg.Format("Site filter for [%s] with priority [%d] already exists!",m_site.GetString(),p_priority);
   ERRORLOG(ERROR_ALREADY_EXISTS,msg);
   return false;
 }
@@ -755,7 +755,7 @@ HTTPSite::RemoveFilter(unsigned p_priority)
   if(it == m_filters.end())
   {
     CString msg;
-    msg.Format("Filter with priority [%d] for site [%s] not found!",p_priority,m_site);
+    msg.Format("Filter with priority [%d] for site [%s] not found!",p_priority,m_site.GetString());
     ERRORLOG(ERROR_NOT_FOUND,msg);
     return false;
   }
@@ -1173,11 +1173,11 @@ HTTPSite::DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address)
     address.AppendFormat("%2.2X",byte);
   }
   
-  DETAILLOGV("DEBUG ADDRESS AT   : %s",p_prefix);
-  DETAILLOGV("Session address    : %s",address);
-  DETAILLOGV("Session address SID: %s",p_address.m_userSID);
+  DETAILLOGV("DEBUG ADDRESS AT   : %s",p_prefix.GetString());
+  DETAILLOGV("Session address    : %s",address .GetString());
+  DETAILLOGV("Session address SID: %s",p_address.m_userSID.GetString());
   DETAILLOGV("Session desktop    : %d",p_address.m_desktop);
-  DETAILLOGV("Session abs. path  : %s",p_address.m_absPath);
+  DETAILLOGV("Session abs. path  : %s",p_address.m_absPath.GetString());
 }
 
 SessionSequence*

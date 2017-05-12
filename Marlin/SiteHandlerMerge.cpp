@@ -123,7 +123,7 @@ SiteHandlerMerge::Handle(HTTPMessage* p_message)
     {
       // Server error
       CString text;
-      text.Format("FAILED: HTTP MERGE: %s",pathname);
+      text.Format("FAILED: HTTP MERGE: %s",pathname.GetString());
       SITE_ERRORLOG(error,text);
     }
   }
@@ -132,7 +132,7 @@ SiteHandlerMerge::Handle(HTTPMessage* p_message)
     // File does not exist, or no read access
     p_message->SetStatus(HTTP_STATUS_NOT_FOUND);
     CString text;
-    text.Format("HTTP MERGE: File not found: %s\n",pathname);
+    text.Format("HTTP MERGE: File not found: %s\n",pathname.GetString());
     SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,text);
   }
   // Ready with the put

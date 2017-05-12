@@ -134,7 +134,7 @@ int TestBaseSite(HTTPServer* p_server)
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url);
+    xprintf("Site started correctly: %s\n",url.GetString());
   }
   else
   {

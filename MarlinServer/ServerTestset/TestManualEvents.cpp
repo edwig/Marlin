@@ -49,14 +49,14 @@ void
 SiteHandlerManualStream::HandleStream(EventStream* p_stream)
 {
   qprintf("STREAM OPENED FOR:");
-  qprintf("Stream URL   : %s",p_stream->m_baseURL);
+  qprintf("Stream URL   : %s",p_stream->m_baseURL.GetString());
   qprintf("URL port     : %d",p_stream->m_port);
-  qprintf("Absolute Path: %s",p_stream->m_absPath);
+  qprintf("Absolute Path: %s",p_stream->m_absPath.GetString());
   qprintf("Site found   : %s",p_stream->m_site ? "yes" : "no");
   qprintf("Response     : %X",p_stream->m_response);
   qprintf("Request ID   : %X",p_stream->m_requestID);
   qprintf("Last event ID: %d",p_stream->m_lastID);
-  qprintf("User         : %s",p_stream->m_user);
+  qprintf("User         : %s",p_stream->m_user.GetString());
 }
 
 // Manually test event streams from a web page
@@ -189,7 +189,7 @@ int TestForms(HTTPServer* p_server)
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url);
+    xprintf("Site started correctly: %s\n",url.GetString());
   }
   else
   {

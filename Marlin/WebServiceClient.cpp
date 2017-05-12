@@ -124,7 +124,7 @@ WebServiceClient::Open()
   if(m_isopen || m_isSending)
   {
     CString error;
-    error.Format("WebServiceClient is already open for: %s",m_contract);
+    error.Format("WebServiceClient is already open for: %s",m_contract.GetString());
     DETAILLOG1(error);
     m_errorText += error;
     throw error;
@@ -164,7 +164,7 @@ WebServiceClient::Open()
 
   // Propagate URL
   m_httpClient->SetURL(m_url);
-  DETAILLOG("WebServiceClient for URL: %s",m_url);
+  DETAILLOG("WebServiceClient for URL: %s",m_url.GetString());
 
   // Perform general check
   MinimumCheck();
@@ -406,19 +406,19 @@ WebServiceClient::ErrorHandling(SOAPMessage* p_message)
                        "Total WS-SOAP error stack:\n"
                        "\n"
                        "%s"
-                       ,m_httpClient->GetStatusText()
-                       ,p_message->GetFaultCode()
-                       ,p_message->GetFaultActor()
-                       ,p_message->GetFaultString()
-                       ,p_message->GetFaultDetail()
-                       ,p_message->GetSoapMessage());
+                       ,m_httpClient->GetStatusText().GetString()
+                       ,p_message->GetFaultCode().GetString()
+                       ,p_message->GetFaultActor().GetString()
+                       ,p_message->GetFaultString().GetString()
+                       ,p_message->GetFaultDetail().GetString()
+                       ,p_message->GetSoapMessage().GetString());
   }
   else if(m_httpClient->GetStatus() != HTTP_STATUS_OK)
   {
     // HTTP Protocol fout (connection etc)
     m_errorText.Format("HTTP WS Protocol error. %s\n%s\n"
-                      ,m_httpClient->GetStatusText()
-                      ,p_message->GetSoapMessage());
+                      ,m_httpClient->GetStatusText().GetString()
+                      ,p_message->GetSoapMessage().GetString());
   }
 }
 
@@ -508,7 +508,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
   {
     // Answer for another sequence
     CString error;
-    error.Format("Incorrect Sequence Identifier in header on WS-ReliableMessaging for call [%s/%s]",m_contract,p_message->GetSoapAction());
+    error.Format("Incorrect Sequence Identifier in header on WS-ReliableMessaging for call [%s/%s]",m_contract.GetString(),p_message->GetSoapAction().GetString());
     DETAILLOG1(error);
     m_errorText += error;
     throw error;
@@ -529,7 +529,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
     if(m_reliableType == ReliableType::RELIABLE_ADRESSING)
     {
       CString error;
-      error.Format("WS-ReliableMessaging server message number out-of-sequence for call [%s/%s]",m_contract,p_message->GetSoapAction());
+      error.Format("WS-ReliableMessaging server message number out-of-sequence for call [%s/%s]",m_contract.GetString(),p_message->GetSoapAction().GetString());
       DETAILLOG1(error);
       m_errorText += error;
       throw error;
@@ -545,7 +545,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
     if(p_message->GetLastMessage() == false)
     {
       CString error;
-      error.Format("Incorrect Sequence response. No correct 'LastMessage' response in WS-ReliableMessaging for call [%s/%s]",m_contract,p_message->GetSoapAction());
+      error.Format("Incorrect Sequence response. No correct 'LastMessage' response in WS-ReliableMessaging for call [%s/%s]",m_contract.GetString(),p_message->GetSoapAction().GetString());
       DETAILLOG1(error);
       m_errorText += error;
       throw error;
@@ -561,7 +561,7 @@ WebServiceClient::CheckHeaderHasAcknowledgement(SOAPMessage* p_message)
   {
     // Not an acknowledge from our server sequence
     CString error;
-    error.Format("Sequence Acknowledgment requested is not for [%s/%s]",m_contract,p_message->GetSoapAction());
+    error.Format("Sequence Acknowledgment requested is not for [%s/%s]",m_contract.GetString(),p_message->GetSoapAction().GetString());
     DETAILLOG1(error);
     m_errorText += error;
     throw error;
@@ -588,7 +588,7 @@ WebServiceClient::CheckHeaderRelatesTo(SOAPMessage* p_message)
   {
     // Not related to our call. No <RelatesTo> in answer
     CString error;
-    error.Format("Out of band answer on call from [%s/%s]. Wrong message ID",m_contract,p_message->GetSoapAction());
+    error.Format("Out of band answer on call from [%s/%s]. Wrong message ID",m_contract.GetString(),p_message->GetSoapAction().GetString());
     DETAILLOG1(error);
     m_errorText += error;
     throw error;
@@ -914,7 +914,7 @@ WebServiceClient::TerminateSequence()
       if(clientIdentifier.CompareNoCase(m_guidSequenceClient))
       {
         // Error: wrong terminate
-        error.Format("Wrong TerminateSequence in answer on call from [%s/%s].",m_rm,request);
+        error.Format("Wrong TerminateSequence in answer on call from [%s/%s].",m_rm.GetString(),request.GetString());
         DETAILLOG1(error);
         m_errorText += error;
         throw error;
@@ -924,7 +924,7 @@ WebServiceClient::TerminateSequence()
     else
     {
       // Error no envelope
-      error.Format("No correct answer on [%s%s]",m_rm,request);
+      error.Format("No correct answer on [%s%s]",m_rm.GetString(),request.GetString());
       DETAILLOG1(error);
       m_errorText += error;
       throw error;

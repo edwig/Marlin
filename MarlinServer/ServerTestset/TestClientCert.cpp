@@ -111,7 +111,7 @@ int TestClientCertificate(HTTPServer* p_server)
     filter->SetClientCertificate(certName,thumbprint); // Here comes the name/thumbprint
     if(site->SetFilter(10,filter))
     {
-      xprintf("Site filter for Client-Certificates set correctly. Thumbprint: %s\n",thumbprint);
+      xprintf("Site filter for Client-Certificates set correctly. Thumbprint: %s\n",thumbprint.GetString());
     }
     else
     {
@@ -122,7 +122,7 @@ int TestClientCertificate(HTTPServer* p_server)
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url);
+    xprintf("Site started correctly: %s\n",url.GetString());
   }
   else
   {

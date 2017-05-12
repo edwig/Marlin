@@ -53,8 +53,8 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
   // Get parameters from soap
   CString paramOne = p_message->GetParameter("One");
   CString paramTwo = p_message->GetParameter("Two");
-  xprintf("Incoming parameter: %s = %s\n","One",paramOne);
-  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo);
+  xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
+  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
 
   // Test Body signing
   bool bodyResult = false;
@@ -97,8 +97,8 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
 
   p_message->SetParameter("Three",paramOne);
   p_message->SetParameter("Four", paramTwo);
-  xprintf("Outgoing parameter: %s = %s\n","Three",paramOne);
-  xprintf("Outgoing parameter: %s = %s\n","Four" ,paramTwo);
+  xprintf("Outgoing parameter: %s = %s\n","Three",paramOne.GetString());
+  xprintf("Outgoing parameter: %s = %s\n","Four" ,paramTwo.GetString());
 
   if(!result) xerror();
 

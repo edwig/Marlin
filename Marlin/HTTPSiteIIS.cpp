@@ -94,7 +94,7 @@ HTTPSiteIIS::LogSettings()
   DETAILLOGV("Site HTTP port set to                      : %d",m_port);
   DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
   DETAILLOGS("Site authentication scheme(s)              : ",schemes);
-  DETAILLOGV("Site authentication realm/domain           : %s/%s",m_realm,m_domain);
+  DETAILLOGV("Site authentication realm/domain           : %s/%s",m_realm.GetString(),m_domain.GetString());
   DETAILLOGS("Site NT-LanManager caching                 : ",m_ntlmCache ? "ON" : "OFF");
 }
 

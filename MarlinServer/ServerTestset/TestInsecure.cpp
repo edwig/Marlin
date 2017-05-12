@@ -51,14 +51,14 @@ bool
 SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
 {
   // Display incoming message
-  xprintf("Incoming message in XML:\n%s\n",p_message->GetSoapMessage());
+  xprintf("Incoming message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
   CString paramOne = p_message->GetParameter("One");
   CString paramTwo = p_message->GetParameter("Two");
   bool    doFault  = p_message->GetParameterBoolean("TestFault");
-  xprintf("Incoming parameter: %s = %s\n","One",paramOne);
-  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo);
+  xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
+  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
 
   // Test Speed-queue
   int speed = atoi(p_message->GetParameter("TestNumber"));
@@ -108,8 +108,8 @@ SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
   {
     p_message->SetParameter("Three",paramOne);
     p_message->SetParameter("Four",paramTwo);
-    xprintf("Outgoing parameter: %s = %s\n","Three",paramOne);
-    xprintf("Outgoing parameter: %s = %s\n","Four",paramTwo);
+    xprintf("Outgoing parameter: %s = %s\n","Three",paramOne.GetString());
+    xprintf("Outgoing parameter: %s = %s\n","Four",paramTwo.GetString());
   }
   --totalChecks;
   // Ready with the message.
@@ -158,7 +158,7 @@ TestInsecure(HTTPServer* p_server)
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url);
+    xprintf("Site started correctly: %s\n",url.GetString());
   }
   else
   {

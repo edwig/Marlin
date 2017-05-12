@@ -209,7 +209,7 @@ HTTPRequest::ReceivedRequest()
 
   // Log earliest as possible
   DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
-            ,SocketToServer((PSOCKADDR_IN6)sender)
+            ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
             ,m_request->BytesReceived);
 
   // Log incoming request
@@ -349,7 +349,7 @@ HTTPRequest::ReceivedRequest()
   {
     if(m_message->FindVerbTunneling())
     {
-      DETAILLOGV("Request VERB changed to: %s",m_message->GetVerb());
+      DETAILLOGV("Request VERB changed to: %s",m_message->GetVerb().GetString());
     }
   }
 
@@ -565,7 +565,7 @@ void
 HTTPRequest::SendBodyPart()
 {
   // Check status of the OVERLAPPED structure
-  DWORD result = m_writing.Internal;
+  DWORD result = (DWORD) m_writing.Internal;
   if(result)
   {
     ERRORLOG(result,"While sending HTTP response part");
@@ -627,7 +627,7 @@ HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_to
         {
           // Second round. Still not authenticated. Drop the connection, better next time
           DETAILLOGS("Authentication failed for: ",p_rawUrl);
-          DETAILLOGV("Authentication failed because of: %s",m_server->AuthenticationStatus(auth->SecStatus));
+          DETAILLOGV("Authentication failed because of: %s",m_server->AuthenticationStatus(auth->SecStatus).GetString());
           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_DENIED);
           m_message->AddReference();
           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);

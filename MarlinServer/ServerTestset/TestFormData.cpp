@@ -92,7 +92,7 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 int 
 FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
-  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName(),p_part->GetFileName());
+  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName().GetString(),p_part->GetFileName().GetString());
 
   xprintf("MULTI-PART FILE = Name : %s\n",(LPCTSTR)p_part->GetName());
   xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
@@ -189,7 +189,7 @@ int TestFormData(HTTPServer* p_server)
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url);
+    xprintf("Site started correctly: %s\n",url.GetString());
   }
   else
   {

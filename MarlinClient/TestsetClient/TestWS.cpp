@@ -49,14 +49,14 @@ DoSend(HTTPClient& p_client,SOAPMessage* p_msg,char* p_what,bool p_fault = false
   {
     if(p_msg->GetFaultCode().IsEmpty())
     {
-      xprintf("Received: %s\n%s",p_msg->GetSoapAction(),p_msg->GetSoapMessage());
+      xprintf("Received: %s\n%s",p_msg->GetSoapAction().GetString(),p_msg->GetSoapMessage().GetString());
 
       CString action  = p_msg->GetSoapAction();
       CString test    = p_msg->GetParameter("Three");
       int     number  = p_msg->GetParameterInteger("Four");
       CString testing = p_msg->GetParameter("Testing");
 
-      xprintf("Answer: %s : %s\n","Three",test);
+      xprintf("Answer: %s : %s\n","Three",test.GetString());
       xprintf("Answer: %s : %d\n","Four",number);
 
       // See if the answer is satisfying
@@ -242,17 +242,17 @@ TestReliableMessaging(HTTPClient* p_client,CString p_namespace,CString p_action,
 
       // Forced that it is not set to reliable. It doesn't have to, becouse the client.Send() will do that
       // message->SetReliability(true);
-      xprintf("Sending RM message: %s\n",message->GetSoapMessage());
+      xprintf("Sending RM message: %s\n",message->GetSoapMessage().GetString());
 
       if(client.Send(message))
       {
-        xprintf("Received: %s\n%s",message->GetSoapAction(),message->GetSoapMessage());
+        xprintf("Received: %s\n%s",message->GetSoapAction().GetString(),message->GetSoapMessage().GetString());
 
         CString action = message->GetSoapAction();
         CString test   = message->GetParameter("Three");
         int     number = message->GetParameterInteger("Four");
 
-        xprintf("Answer: %s : %s\n","Three",test);
+        xprintf("Answer: %s : %s\n","Three",test.GetString());
         xprintf("Answer: %s : %d\n","Four ",number);
 
         bool result = false;
@@ -352,7 +352,7 @@ inline CString
 CreateURL(CString p_extra)
 {
   CString url;
-  url.Format("http://%s:%d/MarlinTest/%s",MARLIN_HOST,TESTING_HTTP_PORT,p_extra);
+  url.Format("http://%s:%d/MarlinTest/%s",MARLIN_HOST,TESTING_HTTP_PORT,p_extra.GetString());
   return url;
 }
 

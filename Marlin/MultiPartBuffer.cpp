@@ -148,27 +148,27 @@ MultiPart::CreateHeader(CString p_boundary,bool p_extensions /*=false*/)
   CString header("--");
   header += p_boundary;
   header += "\r\nContent-Disposition: form-data; ";
-  header.AppendFormat("name=\"%s\"",m_name);
+  header.AppendFormat("name=\"%s\"",m_name.GetString());
 
   // Filename attributes
   if(!m_filename.IsEmpty())
   {
-    header.AppendFormat("; filename=\"%s\"",m_filename);
+    header.AppendFormat("; filename=\"%s\"",m_filename.GetString());
 
     // Eventually do the extensions for filetimes and size
     if(p_extensions)
     {
       if(!m_creationDate.IsEmpty())
       {
-        header.AppendFormat("; creation-date=\"%s\"",m_creationDate);
+        header.AppendFormat("; creation-date=\"%s\"",m_creationDate.GetString());
       }
       if(!m_modificationDate.IsEmpty())
       {
-        header.AppendFormat("; modification-date=\"%s\"",m_modificationDate);
+        header.AppendFormat("; modification-date=\"%s\"",m_modificationDate.GetString());
       }
       if(!m_readDate.IsEmpty())
       {
-        header.AppendFormat("; read-date=\"%s\"",m_readDate);
+        header.AppendFormat("; read-date=\"%s\"",m_readDate.GetString());
       }
       size_t size = m_file.GetLength();
       if(size)

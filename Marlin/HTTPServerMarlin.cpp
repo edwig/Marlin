@@ -446,7 +446,7 @@ HTTPServerMarlin::CreateSite(PrefixType    p_type
       {
         // No luck: No main site to register against
         CString message;
-        message.Format("Tried to register a sub-site, without a main-site: %s",p_baseURL);
+        message.Format("Tried to register a sub-site, without a main-site: %s",p_baseURL.GetString());
         ERRORLOG(ERROR_NOT_FOUND,message);
         return nullptr;
       }
@@ -545,7 +545,7 @@ HTTPServerMarlin::FindUrlGroup(CString p_authName
   {
     m_urlGroups.push_back(group);
     int number = (int)m_urlGroups.size();
-    DETAILLOGV("Created URL group [%d] for authentication: %s",number,p_authName);
+    DETAILLOGV("Created URL group [%d] for authentication: %s",number,p_authName.GetString());
   }
   else
   {
@@ -683,7 +683,7 @@ HTTPServerMarlin::RunHTTPServer()
 
     // Log earliest as possible
     DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
-              ,SocketToServer((PSOCKADDR_IN6)sender)
+              ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
               ,request->BytesReceived);
 
     // Test if server already stopped, and we are here because of the stopping
@@ -738,7 +738,7 @@ HTTPServerMarlin::RunHTTPServer()
             {
               // Second round. Still not authenticated. Drop the connection, better next time
               DETAILLOGS("Authentication failed for: ",rawUrl);
-              DETAILLOGV("Authentication failed because of: %s",AuthenticationStatus(auth->SecStatus));
+              DETAILLOGV("Authentication failed because of: %s",AuthenticationStatus(auth->SecStatus).GetString());
               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
               msg.SetRequestHandle(request->RequestId);
               result = RespondWithClientError(site,&msg,HTTP_STATUS_DENIED,"Not authenticated",site->GetAuthenticationScheme());
@@ -882,7 +882,7 @@ HTTPServerMarlin::RunHTTPServer()
         {
           if(message->FindVerbTunneling())
           {
-            DETAILLOGV("Request VERB changed to: %s",message->GetVerb());
+            DETAILLOGV("Request VERB changed to: %s",message->GetVerb().GetString());
           }
         }
 
@@ -1560,7 +1560,7 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
   {
     // Error handler
     CString message = GetLastErrorAsString(tls_lastError);
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",GetLastError(),message);
+    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",GetLastError(),message.GetString());
     // Reset the last error
     SetError(NO_ERROR);
   }

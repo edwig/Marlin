@@ -39,6 +39,7 @@
 #include <exception>
 #include <signal.h>
 #include <assert.h>
+#include <memory>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

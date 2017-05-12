@@ -112,7 +112,7 @@ bool
 SiteHandlerSoapFiltering::Handle(SOAPMessage* p_message)
 {
   // Display incoming message
-  xprintf("Incoming message in XML:\n%s\n", p_message->GetSoapMessage());
+  xprintf("Incoming message in XML:\n%s\n", p_message->GetSoapMessage().GetString());
 
   CString param = p_message->GetParameter("Price");
   p_message->Reset();
@@ -173,7 +173,7 @@ TestFilter(HTTPServer* p_server)
   // Start the site explicitly
   if (site->StartSite())
   {
-    xprintf("Site started correctly: %s\n", url);
+    xprintf("Site started correctly: %s\n", url.GetString());
   }
   else
   {

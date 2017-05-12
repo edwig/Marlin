@@ -131,7 +131,7 @@ SiteHandlerFormData::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 int
 SiteHandlerFormData::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
-  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName(),p_part->GetFileName());
+  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName().GetString(),p_part->GetFileName().GetString());
   SITE_ERRORLOG(ERROR_BAD_COMMAND,"Default multipart/form-data file-handler. Override me!");
   return 1;
 }

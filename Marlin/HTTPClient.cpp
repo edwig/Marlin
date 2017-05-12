@@ -220,7 +220,7 @@ HTTPClient::Disconnect()
 {
   if(m_connect)
   {
-    DETAILLOG("Disconnect from server: %s", m_lastServer);
+    DETAILLOG("Disconnect from server: %s", m_lastServer.GetString());
     WinHttpCloseHandle(m_connect);
     WinHttpCloseHandle(m_session);
     m_lastServer.Empty();
@@ -278,7 +278,7 @@ HTTPClient::ErrorLog(const char* p_function,const char* p_logText)
   // ERRORLOG macro
   if(m_log)
   {
-    m_log->AnalysisLog(p_function, LogType::LOG_ERROR,true,p_logText,m_lastError,msg);
+    m_log->AnalysisLog(p_function, LogType::LOG_ERROR,true,p_logText,m_lastError,msg.GetString());
   }
   return m_lastError;
 }
@@ -320,7 +320,7 @@ HTTPClient::Initialize()
     case ProxyType::PROXY_IEPROXY:     // Fall through. Use proxy finder
     case ProxyType::PROXY_AUTOPROXY:   // Use proxy finder for overrides
                                        totalURL.Format("%s%s://%s:%d%s"
-                                                      ,m_scheme
+                                                      ,m_scheme.GetString()
                                                       ,m_secure ? "s" : ""
                                                       ,m_server.GetString()
                                                       ,m_port
@@ -354,10 +354,10 @@ HTTPClient::Initialize()
     ErrorLog(__FUNCTION__,"Cannot open HTTP session. Error [%d] %s");
     return false;
   }
-  DETAILLOG("HTTP Session opened for: %s",m_agent);
+  DETAILLOG("HTTP Session opened for: %s",m_agent.GetString());
   if(m_proxy.GetLength())
   {
-    DETAILLOG("HTTP Session set for proxy [%s] bypass is [%s]",m_proxy,m_proxyBypass);
+    DETAILLOG("HTTP Session set for proxy [%s] bypass is [%s]",m_proxy.GetString(),m_proxyBypass.GetString());
   }
 
   // We have a connection. Set the timeout values
@@ -583,27 +583,27 @@ HTTPClient::InitSettings()
 
   // Logging of our settings
   DETAILLOG("Client retry counts                  : %d",m_retries);
-  DETAILLOG("Client agent string                  : %s",m_agent);
+  DETAILLOG("Client agent string                  : %s",m_agent.GetString());
   DETAILLOG("CLient compresses soap output        : %s",m_soapCompress   ? "yes" : "no");
   DETAILLOG("Client allows HTTP compression (gzip): %s",m_httpCompression? "yes" : "no");
   DETAILLOG("Client relax validity  of certificate: %s",m_relaxValid     ? "yes" : "no");
   DETAILLOG("Client relax date      on certificate: %s",m_relaxDate      ? "yes" : "no");
   DETAILLOG("Client relax authority of certificate: %s",m_relaxAuthority ? "yes" : "no");
   DETAILLOG("Client relax usage     of certificate: %s",m_relaxUsage     ? "yes" : "no");
-  DETAILLOG("Client accepts secure protocols      : %s",ssltlsLogging);
+  DETAILLOG("Client accepts secure protocols      : %s",ssltlsLogging.GetString());
   if(!m_user.IsEmpty())
   {
-    DETAILLOG("Client authorized for user           : %s",m_user);
+    DETAILLOG("Client authorized for user           : %s",m_user.GetString());
     DETAILLOG("Client authroized password filled    : %s",m_password.IsEmpty() ? "no" : "yes");
   }
   if(m_useProxy >= ProxyType::PROXY_IEPROXY && m_useProxy <= ProxyType::PROXY_NOPROXY)
   {
-    DETAILLOG("Client proxy usage                   : %s",proxyType);
-    DETAILLOG("Client uses proxy                    : %s",m_proxy);
-    DETAILLOG("Clients will ignore these proxies    : %s",m_proxyBypass);
+    DETAILLOG("Client proxy usage                   : %s",proxyType.GetString());
+    DETAILLOG("Client uses proxy                    : %s",m_proxy.GetString());
+    DETAILLOG("Clients will ignore these proxies    : %s",m_proxyBypass.GetString());
     if(!m_proxyUser.IsEmpty())
     {
-      DETAILLOG("Client proxy user                    : %s",m_proxyUser);
+      DETAILLOG("Client proxy user                    : %s",m_proxyUser.GetString());
       DETAILLOG("Client proxy password filled         : %s",m_proxyPassword.IsEmpty() ? "no" : "yes");
     }
   }
@@ -613,7 +613,7 @@ HTTPClient::InitSettings()
   DETAILLOG("Client forces HTTP VERB Tunneling    : %s",m_verbTunneling ? "yes" : "no");
   DETAILLOG("Data will be traced in detail        : %s",m_traceData     ? "yes" : "no");
   DETAILLOG("Requests will be traced in detail    : %s",m_traceRequest  ? "yes" : "no");
-  DETAILLOG("Client will use CORS origin header   : %s",m_corsOrigin);
+  DETAILLOG("Client will use CORS origin header   : %s",m_corsOrigin.GetString());
 }
 
 // Initialise the security mechanisms
@@ -645,7 +645,7 @@ HTTPClient::InitSecurity()
 
   if(!level.IsEmpty())
   {
-    DETAILLOG("Client set for SOAP WS-Security level: %s",level);
+    DETAILLOG("Client set for SOAP WS-Security level: %s",level.GetString());
   }
 }
 
@@ -679,7 +679,7 @@ HTTPClient::SetURL(CString p_url)
 {
   // Keep the complete URL
   m_url = p_url;
-  DETAILLOG("URL set to: %s",p_url);
+  DETAILLOG("URL set to: %s",p_url.GetString());
 
   CrackedURL url(p_url);
   if(url.Valid())
@@ -695,7 +695,7 @@ HTTPClient::SetURL(CString p_url)
   }
   // Generic path-not-found error
   m_lastError = ERROR_PATH_NOT_FOUND;
-  ERRORLOG("Invalid URL: %s",p_url);
+  ERRORLOG("Invalid URL: %s",p_url.GetString());
   return false;
 }
 
@@ -781,13 +781,13 @@ HTTPClient::AddProxyInfo()
   {
     if(::WinHttpSetOption(m_request,WINHTTP_OPTION_PROXY,pinfo,sizeof(WINHTTP_PROXY_INFO)))
     {
-      DETAILLOG("Proxy enabled to proxy: %s",m_proxy);
-      DETAILLOG("Proxy settings will be ignored for: %s",m_proxyBypass);
+      DETAILLOG("Proxy enabled to proxy: %s",m_proxy.GetString());
+      DETAILLOG("Proxy settings will be ignored for: %s",m_proxyBypass.GetString());
     }
     else
     {
       ErrorLog(__FUNCTION__,"Error enabling proxy settings [%d] %s");
-      ERRORLOG("Proxy that cannot be enabled: %s",m_proxy);
+      ERRORLOG("Proxy that cannot be enabled: %s",m_proxy.GetString());
     }
   }
   else
@@ -824,7 +824,7 @@ HTTPClient::AddHostHeader()
     ErrorLog(__FUNCTION__,"Host header NOT set. Error [%d] %s");
     return;
   }
-  DETAILLOG("Host header set: %s",hostHeader);
+  DETAILLOG("Host header set: %s",hostHeader.GetString());
 }
 
 void
@@ -868,7 +868,7 @@ HTTPClient::AddSecurityOptions()
       if(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2) allow += "TLS 1.2, ";
       allow.TrimRight(", ");
 
-      DETAILLOG("Security protocol allows %s",allow);
+      DETAILLOG("Security protocol allows %s",allow.GetString());
     }
   }
 }
@@ -885,7 +885,7 @@ HTTPClient::AddCORSHeaders()
 
   // Creating our origin header
   AddHeader("Origin",m_corsOrigin);
-  DETAILLOG("Added CORS origin header: %s",m_corsOrigin);
+  DETAILLOG("Added CORS origin header: %s",m_corsOrigin.GetString());
 
   // In a Pre-flight request, we can add request method and headers
   if(m_verb.Compare("OPTIONS") == 0)
@@ -893,12 +893,12 @@ HTTPClient::AddCORSHeaders()
     if(!m_corsMethod.IsEmpty())
     {
       AddHeader("Access-Control-Request-Method",m_corsMethod);
-      DETAILLOG("Added CORS request method: %s",m_corsMethod);
+      DETAILLOG("Added CORS request method: %s",m_corsMethod.GetString());
     }
     if(!m_corsHeaders.IsEmpty())
     {
       AddHeader("Access-Control-Request-Headers",m_corsHeaders);
-      DETAILLOG("Added CORS request headers: %s",m_corsHeaders);
+      DETAILLOG("Added CORS request headers: %s",m_corsHeaders.GetString());
     }
   }
 }
@@ -936,7 +936,7 @@ HTTPClient::AddExtraHeaders()
       // Log error but continue. Most servers can reconstruct the content type
       ErrorLog(__FUNCTION__,"Content type NOT set. Error [%d] %s");
     }
-    DETAILLOG("Content type set: %s",m_contentType);
+    DETAILLOG("Content type set: %s",m_contentType.GetString());
   }
   if(m_httpCompression)
   {
@@ -965,7 +965,7 @@ HTTPClient::AddExtraHeaders()
       // Log error but continue. Most SOAP-XML has the action in the header or the root node
       ErrorLog(__FUNCTION__,"SOAPAction NOT set. Error [%d] %s");
     }
-    DETAILLOG("SOAPAction set: %s",m_soapAction);
+    DETAILLOG("SOAPAction set: %s",m_soapAction.GetString());
   }
 
   if(m_terminalServices)
@@ -1040,7 +1040,7 @@ HTTPClient::AddProxyAuthorization()
       {
         ErrorLog(__FUNCTION__,"Proxy username NOT set. Error [%d] %s");
       }
-      DETAILLOG("Proxy user: %s",m_proxyUser);
+      DETAILLOG("Proxy user: %s",m_proxyUser.GetString());
       if(m_proxyPassword.GetLength() > 0)
       {
         wstring password(A2CW(m_proxyPassword));
@@ -1108,7 +1108,7 @@ HTTPClient::GetResultHeader(DWORD p_header,DWORD p_index)
                                 &p_index))
       {
         result = CW2A(szValue);
-        DETAILLOG("Result header: %s",result);
+        DETAILLOG("Result header: %s",result.GetString());
       }
       else
       {
@@ -1257,7 +1257,7 @@ HTTPClient::AddAuthentication(bool p_ntlm3Step)
       ErrorLog(__FUNCTION__,"Setting HTTP Credentials. Error [%d] %s");
       return false;
     }
-    DETAILLOG("Authentication set for user: %s",m_user);
+    DETAILLOG("Authentication set for user: %s",m_user.GetString());
   }
   return true;
 }
@@ -1300,7 +1300,7 @@ HTTPClient::AddProxyAuthentication()
         ErrorLog(__FUNCTION__,"Set proxy credentials. Error [%d] %s");
         return false;
       }
-      DETAILLOG("Proxy authentication set for user: %s",m_user);
+      DETAILLOG("Proxy authentication set for user: %s",m_user.GetString());
     }
   }
   else
@@ -1409,11 +1409,11 @@ HTTPClient::SendBodyData()
       if(m_buffer->OpenFile() == false)
       {
         m_lastError = ERROR_FILE_NOT_FOUND;
-        ERRORLOG("File not found on reading: %s",m_buffer->GetFileName());
+        ERRORLOG("File not found on reading: %s",m_buffer->GetFileName().GetString());
         delete [] buffer;
         return;
       }
-      DETAILLOG("File opened for reading: %s",m_buffer->GetFileName());
+      DETAILLOG("File opened for reading: %s",m_buffer->GetFileName().GetString());
 
       // Get resulting file handle
       HANDLE file = m_buffer->GetFileHandle();
@@ -1453,7 +1453,7 @@ HTTPClient::SendBodyData()
       m_buffer->CloseFile();
       // Free our writing buffer
       delete [] buffer;
-      DETAILLOG(" File closed: %s",m_buffer->GetFileName());
+      DETAILLOG(" File closed: %s",m_buffer->GetFileName().GetString());
     }
   }
 }
@@ -1492,12 +1492,12 @@ HTTPClient::ReceiveResponseDataFile()
   if(m_buffer->OpenFile(false) == false)
   {
     m_lastError = ERROR_PATH_NOT_FOUND;
-    ERRORLOG("Cannot open file for write: %s",m_buffer->GetFileName());
+    ERRORLOG("Cannot open file for write: %s",m_buffer->GetFileName().GetString());
     return;
   }
 
   // Tell how we receive the data
-  DETAILLOG("Receive response data in file: %s",m_buffer->GetFileName());
+  DETAILLOG("Receive response data in file: %s",m_buffer->GetFileName().GetString());
 
   // Get file handle
   HANDLE file = m_buffer->GetFileHandle();
@@ -1941,7 +1941,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
     m_url      = p_msg->GetAbsolutePath();
     m_secure   = p_msg->GetSecure();
 
-    DETAILLOG("SOAP Message for: http%s//%s:%d%s",m_secure ? "s" : "",m_server,m_port,m_url);
+    DETAILLOG("SOAP Message for: http%s//%s:%d%s",m_secure ? "s" : "",m_server.GetString(),m_port,m_url.GetString());
   }
   else
   {
@@ -2021,7 +2021,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
       case XMLEncoding::ENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
       default:                       break;
     }
-    m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp));
+    m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp).GetString());
     SetBody(soap);
   }
 
@@ -2035,7 +2035,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
     {
       namesp += "/";
     }
-    header.Format("SOAPAction:%s%s",namesp,p_msg->GetSoapAction());
+    header.Format("SOAPAction:%s%s",namesp.GetString(),p_msg->GetSoapAction().GetString());
     AddHeader(header);
   }
 
@@ -2046,7 +2046,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   m_cookies = p_msg->GetCookies();
   
   // Put in logfile
-  DETAILLOG("Outgoing SOAP message:\n%s",soap);
+  DETAILLOG("Outgoing SOAP message:\n%s",soap.GetString());
 
   // Now go send our XML
   bool result = Send();
@@ -2086,7 +2086,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
       {
         // SET SOAP FAULT
         CString message;
-        message.Format("Unknown charset from server: %s",charset);
+        message.Format("Unknown charset from server: %s",charset.GetString());
         p_msg->SetFault("Server","Charset",message,"Possibly unknown UNICODE charset, or non-standard machine charset");
         answer.Empty();
         result = false;
@@ -2106,7 +2106,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
 
   // Keep response as new body. Might contain an error!!
-  DETAILLOG("Incoming SOAP answer:\n%s",answer);
+  DETAILLOG("Incoming SOAP answer:\n%s",answer.GetString());
   p_msg->ParseMessage(answer);
 
   // Keep cookies
@@ -2217,7 +2217,7 @@ HTTPClient::Send(JSONMessage* p_msg)
       case JsonEncoding::JENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
       default:                         break;
     }
-    m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp));
+    m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp).GetString());
     SetBody(json);
   }
 
@@ -2234,7 +2234,7 @@ HTTPClient::Send(JSONMessage* p_msg)
   m_cookies = p_msg->GetCookies();
 
   // Put in logfile
-  DETAILLOG("Outgoing JSON message:\n%s",json);
+  DETAILLOG("Outgoing JSON message:\n%s",json.GetString());
   
   // NOW GO SEND IT
   result = Send();
@@ -2298,7 +2298,7 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
     {
       // SET ERROR STATE
       CString message;
-      message.Format("Unknown charset from server: %s",charset);
+      message.Format("Unknown charset from server: %s",charset.GetString());
       p_msg->SetLastError(message);
       p_msg->SetErrorstate(true);
       answer.Empty();
@@ -2325,7 +2325,7 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   }
 
   // Keep response as new body. Might contain an error!!
-  DETAILLOG("Incoming JSON answer:\n%s",answer);
+  DETAILLOG("Incoming JSON answer:\n%s",answer.GetString());
   p_msg->ParseMessage(answer,encoding);
 
   // Keep cookies
@@ -2383,7 +2383,7 @@ HTTPClient::SendAsJSON(SOAPMessage* p_msg)
   m_cookies = p_msg->GetCookies();
 
   // Put in logfile
-  DETAILLOG("Outgoing SOAP->JSON 'GET'\n%s",url);
+  DETAILLOG("Outgoing SOAP->JSON 'GET'\n%s",url.GetString());
 
   // Go get our JSON response
   result = Send();
@@ -2530,7 +2530,7 @@ HTTPClient::Send()
   if(m_request == NULL)
   {
     CString msg;
-    msg.Format("Cannot open a HTTP request for a [%s %s] Error [%%d] %%s",m_verb,m_url);
+    msg.Format("Cannot open a HTTP request for a [%s %s] Error [%%d] %%s",m_verb.GetString(),m_url.GetString());
     ErrorLog(__FUNCTION__,msg);
     return false;
   }
@@ -2782,7 +2782,7 @@ HTTPClient::Send()
   // Log error after retries are up..
   if(!sendRequestSucceed)
   {
-    ERRORLOG("Failed to send a [%s] to: %s",m_verb,m_url);
+    ERRORLOG("Failed to send a [%s] to: %s",m_verb.GetString(),m_url.GetString());
   }
   DETAILLOG("Returned HTTP status: %d",m_status);
 
@@ -2837,18 +2837,18 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
   // Calculate the proxy (if any)
   if(p_port != m_port || server.CompareNoCase(m_server))
   {
-    proxy.Format(" through proxy [%s:%d]",p_server,p_port);
+    proxy.Format(" through proxy [%s:%d]",server.GetString(),p_port);
   }
   // Log in full, do the raw logging call directly
   m_log->AnalysisLog("HTTPClient::Send",LogType::LOG_INFO,true
                     ,"%s %s%s://%s:%d%s%s"
-                    ,m_verb
-                    ,m_scheme
+                    ,m_verb.GetString()
+                    ,m_scheme.GetString()
                     ,m_secure ? "s" : ""
-                    ,m_server
+                    ,m_server.GetString()
                     ,m_port
-                    ,m_url
-                    ,proxy);
+                    ,m_url.GetString()
+                    ,proxy.GetString());
 }
 
 bool
@@ -2864,7 +2864,7 @@ HTTPClient::CheckCORSAnswer()
       // We may NOT use this method on this address
       result = false;
       m_status = HTTP_STATUS_BAD_METHOD;
-      ERRORLOG("CORS method not allowed for this site: %s",m_corsMethod);
+      ERRORLOG("CORS method not allowed for this site: %s",m_corsMethod.GetString());
     }
   }
 
@@ -2875,7 +2875,7 @@ HTTPClient::CheckCORSAnswer()
     {
       // We may NOT use method and headers
       result = false;
-      ERRORLOG("CORS headers not allowed for this site: %s",m_corsHeaders);
+      ERRORLOG("CORS headers not allowed for this site: %s",m_corsHeaders.GetString());
     }
   }
 
@@ -2919,7 +2919,7 @@ HTTPClient::SetClientCertificate(HINTERNET p_request)
                           (LPVOID)pCertificate,
                           sizeof(CERT_CONTEXT)))
       {
-        DETAILLOG("Client certificate set [%s:%s]",m_certStore,m_certName);
+        DETAILLOG("Client certificate set [%s:%s]",m_certStore.GetString(),m_certName.GetString());
         // Now GO and retry the request
         result = true;
       }
@@ -2933,7 +2933,7 @@ HTTPClient::SetClientCertificate(HINTERNET p_request)
   }
   else
   {
-    ERRORLOG("Cannot open the certificate store: %s",m_certStore);
+    ERRORLOG("Cannot open the certificate store: %s",m_certStore.GetString());
   }
   if(result == false)
   {
@@ -3081,7 +3081,7 @@ HTTPClient::AddMessageHeaders(HTTPMessage* p_message)
   HeaderMap* allheaders = p_message->GetHeaderMap();
   for(HeaderMap::iterator it = allheaders->begin(); it != allheaders->end(); ++it)
   {
-    header.Format("%s: %s",it->first,it->second);
+    header.Format("%s: %s",it->first.GetString(),it->second.GetString());
     AddHeader(header);
   }
   // Implement if-modified-since method
@@ -3104,7 +3104,7 @@ HTTPClient::AddMessageHeaders(SOAPMessage* p_message)
   HeaderMap* allheaders = p_message->GetHeaderMap();
   for(HeaderMap::iterator it = allheaders->begin(); it != allheaders->end(); ++it)
   {
-    header.Format("%s: %s",it->first,it->second);
+    header.Format("%s: %s",it->first.GetString(),it->second.GetString());
     AddHeader(header);
   }
 }
@@ -3126,7 +3126,7 @@ HTTPClient::AddMessageHeaders(JSONMessage* p_message)
   HeaderMap* allheaders = p_message->GetHeaderMap();
   for(HeaderMap::iterator it = allheaders->begin(); it != allheaders->end(); ++it)
   {
-    header.Format("%s: %s",it->first,it->second);
+    header.Format("%s: %s",it->first.GetString(),it->second.GetString());
     AddHeader(header);
   }
 }
@@ -3168,7 +3168,7 @@ HTTPClient::SetClientCertificateThumbprint(CString p_store,CString p_thumbprint)
       if(!m_certName.IsEmpty())
       {
         result = true;
-        DETAILLOG("Client certificate set [%s:%s]",m_certStore,m_certName);
+        DETAILLOG("Client certificate set [%s:%s]",m_certStore.GetString(),m_certName.GetString());
       }
       else
       {
