@@ -48,7 +48,7 @@ static char THIS_FILE[] = __FILE__;
 
 // Static function, running a thread
 static unsigned _stdcall RunThread(void* p_myThread);
-static unsigned _stdcall RunHartbeat(void* p_pool);
+static unsigned _stdcall RunHeartbeat(void* p_pool);
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -69,21 +69,22 @@ ThreadPool::ThreadPool(int p_minThreads,int p_maxThreads)
 ThreadPool::~ThreadPool()
 {
   StopThreadPool();
-  RunCleanupJobs();
   DeleteCriticalSection(&m_critical);
 }
 
-// Pool locking from a single thread state change
-void 
-ThreadPool::LockPool()
+// Shutdown mode simply sets the code that
+// allows work to enter the threadpool to false
+void
+ThreadPool::Shutdown()
 {
-  EnterCriticalSection(&m_critical);
+  m_openForWork = false;
 }
 
+// Running the threadpool
 void 
-ThreadPool::UnlockPool()
+ThreadPool::Run()
 {
-  LeaveCriticalSection(&m_critical);
+  InitThreadPool();
 }
 
 // Initialize our new threadpool
@@ -124,9 +125,19 @@ ThreadPool::InitThreadPool()
   GetNativeSystemInfo(&info);
   m_processors = info.dwNumberOfProcessors;
 
+  // Adjust maximum of threads for the number of processors
+  if(m_maxThreads > 2 * m_processors)
+  {
+    m_maxThreads = 2 * m_processors;
+  }
+
   // Create IO Completion Port
   // Must be done before creating the threads!
-  m_completion = CreateIoCompletionPort(INVALID_HANDLE_VALUE,NULL,NULL,0);
+  // But could already have been done by association of an I/O handle
+  if(!m_completion)
+  {
+    m_completion = CreateIoCompletionPort(INVALID_HANDLE_VALUE,NULL,NULL,0);
+  }
 
   // Create our minimum threads
   for(int ind = 0; ind < m_minThreads; ++ind)
@@ -134,89 +145,14 @@ ThreadPool::InitThreadPool()
     CreateThreadPoolThread();
   }
   // Open for business
+  m_initialized = true;
   m_openForWork = true;
-}
-
-// Stopping the thread pool
-void  
-ThreadPool::StopThreadPool()
-{
-  TP_TRACE0("Stopping threadpool\n");
-  m_openForWork = false;
-
-  // Waiting for the work queue to drain
-  // Waiting for max of 30 seconds
-  for(unsigned ind = 0; ind < 3000; ++ind)
-  {
-    if(m_work.empty()) break;
-    Sleep(100);
-  }
-  // Try stopping all threads, signaling to remove
-  {
-    // Extra lock on the stack, so we change the state of all threads
-    // before having them processing their events.
-    AutoLockTP lock(&m_critical);
-
-    for(auto& thread : m_threads)
-    {
-      TP_TRACE1("Stopping thread: %d\n",ind);
-      StopThread(thread);
-    }
-    for (long ind = 0; ind < m_curThreads; ++ind)
-    {
-      StopThread(0);
-    }
-    TP_TRACE1("Total items of work still in the work-queue: %d\n",m_work.size());
-  }
-  // Wait for the queue to become idle
-  bool idle = false;
-  unsigned waitTime = 50;
-  // wait 50,100,200,400,800,1600,3200,6400 milliseconds
-  for(unsigned ind = 0;ind < 8; ++ ind)
-  {
-    // Wait period of time
-    Sleep(waitTime);
-    waitTime *= 2;
-    // See if threadpool has become idle
-    {
-      AutoLockTP lock(&m_critical);
-      if(m_threads.size() == 0)
-      {
-        idle = true;
-        break;
-      }
-    }
-  }
-
-  // No longer initialize after this point
-  AutoLockTP lock(&m_critical);
-  m_initialized = false;
-
-  // Force the queue to a halt!!
-  // Do not complain about "TerminateThread". It is the only way. We know!
-  if(!idle)
-  {
-    for(auto& thread : m_threads)
-    {
-      TP_TRACE1("!! TERMINATING thread: %d\n",ind);
-      TerminateThread(thread->m_thread,0);
-    }
-  }
-
-  // Free all thread registrations
-  for(auto& thread : m_threads)
-  {
-    delete thread;
-  }
-  m_threads.clear();
 }
 
 // Create a thread in the threadpool
 ThreadRegister*
 ThreadPool::CreateThreadPoolThread()
 {
-  AutoLockTP lock(&m_critical);
-
   ThreadRegister* th = new ThreadRegister();
   if(th)
   {
@@ -238,6 +174,7 @@ ThreadPool::CreateThreadPoolThread()
     {
       // Working thread now in the pool
       // So it can be found in the future
+      AutoLockTP lock(&m_critical);
       m_threads.push_back(th);
     }
   }
@@ -248,7 +185,7 @@ ThreadPool::CreateThreadPoolThread()
 void
 ThreadPool::RemoveThreadPoolThread(unsigned p_threadID)
 {
-  AutoLockTP lock(&m_critical);
+  EnterCriticalSection(&m_critical);
 
   // If called for a specific thread, find that thread
   ThreadMap::iterator it = m_threads.begin();
@@ -259,17 +196,38 @@ ThreadPool::RemoveThreadPoolThread(unsigned p_threadID)
     if(th->m_threadId == p_threadID)
     {
       TP_TRACE0("Removing thread from threadpool by closing the handle\n");
-      // Close our thread handle
-      CloseHandle(th->m_thread);
       // Erase from the threadpool, getting next thread
       it = m_threads.erase(it);
       // Free register memory
       delete th;
+
+      // Free the lock
+      // After the close we cannot leave the critical section any more
+      // So we CANNOT use the AutoLockTP on the stack!!
+      LeaveCriticalSection(&m_critical);
       return;
     }
     // Go to next thread
     ++it;
   }
+  // Not found: still leave the critical section
+  LeaveCriticalSection(&m_critical);
+}
+
+// Does the thread belong to our threadpool?
+bool 
+ThreadPool::IsThreadInThreadPool(unsigned p_threadID)
+{
+  AutoLockTP lock(&m_critical);
+
+  for(auto& thread : m_threads)
+  {
+    if(thread->m_threadId == p_threadID)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Try setting (raising/decreasing) the minimum number of threads
@@ -279,6 +237,10 @@ ThreadPool::TrySetMinimum(int p_minThreads)
 {
   if(!m_initialized)
   {
+    if(p_minThreads < NUM_THREADS_MINIMUM)
+    {
+      p_minThreads = NUM_THREADS_MINIMUM;
+    }
     m_minThreads = p_minThreads;
     TP_TRACE1("Set new minimum for threadpool: %d\n",p_minThreads);
     return true;
@@ -335,9 +297,9 @@ ThreadPool::ExtendMaximumThreads(AutoIncrementPoolMax& p_increment)
 }
 
 void
-ThreadPool::RestoreMaximumThreads(AutoIncrementPoolMax* p_increment)
+ThreadPool::RestoreMaximumThreads(AutoIncrementPoolMax& p_increment)
 {
-  if(this == p_increment->m_pool)
+  if(this == p_increment.m_pool)
   {
     InterlockedDecrement((long*)&m_minThreads);
     InterlockedDecrement((long*)&m_maxThreads);
@@ -358,6 +320,35 @@ ThreadPool::SetStackSize(int p_stackSize)
   TP_TRACE1("Threadpool stack size default set to: %d\n",m_stackSize);
 }
 
+// Associate I/O handle with the completion port
+DWORD
+ThreadPool::AssociateIOHandle(HANDLE p_handle,ULONG_PTR p_key)
+{
+  DWORD error = 0;
+
+  m_completion = CreateIoCompletionPort(p_handle,m_completion,p_key,0);
+  if(!m_completion)
+  {
+    error = GetLastError();
+    TP_TRACE1("Threadpool cannot register file handle for asynchroneous I/O completion. Error: %d",error);
+  }
+  return error;
+}
+
+// Setting the thread initialization function
+bool
+ThreadPool::SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_CALLBACK p_abort,void* p_argument)
+{
+  if(m_initialization == nullptr)
+  {
+    m_initialization = p_init;
+    m_abortfunction  = p_abort;
+    m_initParameter  = p_argument;
+    return true;
+  }
+  return false;
+}
+
 // Running our thread!
 /*static*/ unsigned _stdcall
 RunThread(void* p_myThread)
@@ -376,6 +367,14 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
   InterlockedIncrement(&m_curThreads);
   InterlockedIncrement(&m_bsyThreads);
 
+  // Check that there is a initialization routine
+  if(m_initialization)
+  {
+    TP_TRACE0("Running thread initialization routine\n");
+    (*m_initialization)(m_initParameter);
+  }
+
+  // MAIN LOOP
   do 
   {
     DWORD     bytes = 0;
@@ -391,7 +390,18 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     // Start executing again
     InterlockedIncrement(&m_bsyThreads);
 
-    // Special case: stop a thread
+    if(error == ERROR_OPERATION_ABORTED || error == ERROR_INVALID_HANDLE)
+    {
+      // Asynchronous I/O was aborted (e.g: file handle was closed)
+      // Call the abort function, so the caller can clean up the mess
+      if(m_abortfunction)
+      {
+        (*m_abortfunction)(overlapped);
+      }
+      break;
+    }
+
+    // Or a special case: WE stop a thread
     if(key == COMPLETION_STOP)
     {
       break;
@@ -400,7 +410,8 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     // Should we add another thread to the pool?
     if((m_bsyThreads == m_curThreads) &&
        (m_bsyThreads  < m_maxThreads) &&
-       (GetCPULoad()  < 0.75))
+       (GetCPULoad()  < 0.75) &&
+       m_openForWork)
     {
       CreateThreadPoolThread();
     }
@@ -456,9 +467,9 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
 
   // Try removing ourselves
   // We are now out-of-business
-  TP_TRACE0("Thread about to exit. To be removed\n");
   RemoveThreadPoolThread(GetCurrentThreadId());
 
+  TP_TRACE0("Thread about to exit. To be removed\n");
   return 0;
 }
 
@@ -487,6 +498,7 @@ ThreadPool::RunCleanupJobs()
     TP_TRACE0("Calling cleanup job\n");
     (*job.m_callback)(job.m_argument);
   }
+  m_cleanup.clear();
 }
 
 // More work to do on a thread
@@ -524,24 +536,23 @@ ThreadPool::StopThread(ThreadRegister* /*p_reg*/)
   }
 }
 
-
 // Create a hartbeat thread (Can be called **ONCE**)
 bool
 ThreadPool::CreateHartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_hartbeat)
 {
-  // See if a hartbeat was already running
-  if(m_hartbeat)
+  // See if a heartbeat was already running
+  if(m_heartbeat)
   {
     return false;
   }
-  m_hartbeatCallback = p_callback;
-  m_hartbeatPayload  = p_argument;
-  m_hartbeat         = p_hartbeat;
-  m_hartbeatEvent    = CreateEvent(NULL,FALSE,FALSE,NULL);
+  m_heartbeatCallback = p_callback;
+  m_heartbeatPayload  = p_argument;
+  m_heartbeat         = p_hartbeat;
+  m_heartbeatEvent    = CreateEvent(NULL,FALSE,FALSE,NULL);
 
-  if(m_hartbeatEvent)
+  if(m_heartbeatEvent)
   {
-    HANDLE thread = (HANDLE)_beginthreadex(nullptr,m_stackSize,::RunHartbeat,(void*)this,0,NULL);
+    HANDLE thread = (HANDLE)_beginthreadex(nullptr,m_stackSize,::RunHeartbeat,(void*)this,0,NULL);
     if(thread)
     {
       TP_TRACE0("Created a hartbeat thread!\n");
@@ -552,22 +563,22 @@ ThreadPool::CreateHartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_h
   return false;
 }
 
-// Go running our hartbeat
-/*static */unsigned _stdcall RunHartbeat(void* p_pool)
+// Go running our heartbeat
+/*static */unsigned _stdcall RunHeartbeat(void* p_pool)
 {
   ThreadPool* pool = reinterpret_cast<ThreadPool*>(p_pool);
-  return pool->RunHartbeat();
+  return pool->RunHeartbeat();
 }
 
-// Running the hartbeat thread
+// Running the heartbeat thread
 DWORD
-ThreadPool::RunHartbeat()
+ThreadPool::RunHeartbeat()
 {
   bool running = true;
   do 
   {
     TP_TRACE0("Hartbeat thread sleeping after hartbeat\n");
-    DWORD result = WaitForSingleObject(m_hartbeatEvent,m_hartbeat);
+    DWORD result = WaitForSingleObject(m_heartbeatEvent,m_heartbeat);
     switch(result)
     {
       case WAIT_ABANDONED:  // Fall through
@@ -577,35 +588,34 @@ ThreadPool::RunHartbeat()
       case WAIT_OBJECT_0:   // Called to stop
                             running = false;
                             break;
-      case WAIT_TIMEOUT:    // Hartbeat! Do the call
+      case WAIT_TIMEOUT:    // Hart beat! Do the call
                             TP_TRACE0("Hartbeat waking up\n");
-                            (*m_hartbeatCallback)(m_hartbeatPayload);
+                            (*m_heartbeatCallback)(m_heartbeatPayload);
                             break;
     }
   } 
   while(running);
 
   TP_TRACE0("Hartbeat thread stopping\n");
-  // At the end of the hartbeat
-  CloseHandle(m_hartbeatEvent);
-  m_hartbeatEvent    = nullptr;
-  m_hartbeatCallback = nullptr;
-  m_hartbeatPayload  = nullptr;
-  // Create hartbeat can be called again!
-  m_hartbeat = 0;
+  // At the end of the heartbeat
+  CloseHandle(m_heartbeatEvent);
+  m_heartbeatEvent    = nullptr;
+  m_heartbeatCallback = nullptr;
+  m_heartbeatPayload  = nullptr;
+  // Create heartbeat can be called again!
+  m_heartbeat = 0;
 
   return 0;
 }
 
-
 // Stop a heartbeat thread
 void 
-ThreadPool::StopHartbeat()
+ThreadPool::StopHeartbeat()
 {
-  if(m_hartbeatEvent)
+  if(m_heartbeatEvent)
   {
     TP_TRACE0("Stopping the hartbeat externally\n");
-    SetEvent(m_hartbeatEvent);
+    SetEvent(m_heartbeatEvent);
   }
 }
 
@@ -654,11 +664,27 @@ ThreadPool::SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument)
   TP_TRACE1("Cleanup jobs queue [%d] items\n",m_cleanup.size());
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// SLEEPING THREADS
+//
+//////////////////////////////////////////////////////////////////////////
+
 // Sleeping and waking-up a thread
 // Use an application global unique number!!
 void*
 ThreadPool::SleepThread(DWORD_PTR p_unique,void* p_payload)
 {
+  // See if we are initialized
+  InitThreadPool();
+
+  // Check that we are open for work
+  if(m_openForWork == false)
+  {
+    TP_TRACE0("INTERNAL ERROR: Threadpool not open for work. Program in closing mode.\n");
+    return nullptr;
+  }
+
   SleepingThread* sleep = new SleepingThread();
   sleep->m_threadId = GetCurrentThreadId();
   sleep->m_unique   = p_unique;
@@ -674,7 +700,7 @@ ThreadPool::SleepThread(DWORD_PTR p_unique,void* p_payload)
   // Go to sleep
   DWORD result = WaitForSingleObject(sleep->m_event,INFINITE);
   
-  // Wakey, wakey
+  // Time to wake up again
   switch (result)
   {
     case WAIT_ABANDONED:  TP_TRACE0("Thread abandoned in sleep\n");       break;
@@ -683,32 +709,51 @@ ThreadPool::SleepThread(DWORD_PTR p_unique,void* p_payload)
     case WAIT_FAILED:     TP_TRACE0("Failed to fall asleep!!\n");         break;
   }
 
+  SleepingThread* sleeper = nullptr;
+
   // Find and remove the sleeping thread info (in a locking block!)
   { AutoLockTP lock(&m_critical);
 
     SleepingMap::iterator it;
     for(it = m_sleeping.begin();it != m_sleeping.end(); ++it)
     {
-      SleepingThread* thread = *it;
-      if(thread->m_unique == p_unique)
+      sleeper = *it;
+      if(sleeper->m_unique == p_unique)
       {
-        void* payload = thread->m_payload;
-        bool  abort   = thread->m_abort;
-        CloseHandle(thread->m_event);
-        delete thread;
+        // Done with the sleeping thread info
+        bool  abort   = sleeper->m_abort;
+        void* payload = sleeper->m_payload;
+        CloseHandle(sleeper->m_event);
+        delete sleeper;
+    
+        // Remove from the queue
         m_sleeping.erase(it);
 
         // See if we must abort
         if(abort)
         {
-          _endthread();
-          return nullptr;
+          break;
         }
         return payload;
       }
     }
   }
 
+  // If we found a sleeper. Terminate it for the ABORT action
+  // This must be done OUTSIDE the locking section
+  // Otherwise we never release the lock and block the pool
+  if(sleeper)
+  {
+    DWORD id = GetCurrentThreadId();
+    if(IsThreadInThreadPool(id))
+    {
+      InterlockedDecrement(&m_curThreads);
+      InterlockedDecrement(&m_bsyThreads);
+      RemoveThreadPoolThread(id);
+    }
+    // Now do the opposite of _beginthread
+    _endthread();
+  }
   // Strange: sleeping thread info not found
   return nullptr;
 }
@@ -750,6 +795,8 @@ ThreadPool::GetSleepingThreadPayload(DWORD_PTR p_unique)
   return nullptr;
 }
 
+// REALLY? SHOULD YOU. THIS WILL LEEK AN OVERLAPPED STRUCTURE
+// AND EVERYTHING THAT HINGES ON IT!
 bool  
 ThreadPool::EliminateSleepingThread(DWORD_PTR p_unique)
 {
@@ -770,3 +817,144 @@ ThreadPool::EliminateSleepingThread(DWORD_PTR p_unique)
   }
   return false;
 }
+
+// Wake up all sleeping threads as part of the shutdown
+void 
+ThreadPool::WakeUpAllSleepers()
+{
+  std::vector<DWORD_PTR> map;
+
+  // Copy the map within a lock section
+  {
+    AutoLockTP lock(&m_critical);
+    for(auto& sleep : m_sleeping)
+    {
+      map.push_back(sleep->m_unique);
+    }
+  }
+
+  if(!map.empty())
+  {
+    // Wake up all sleeping threads
+    TP_TRACE1("Waking up %d sleeping threads\n",map.size());
+    for(auto& unique : map)
+    {
+      WakeUpThread(unique);
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// STOPPING AND TEARING DOWN THE THREADPOOL
+//
+//////////////////////////////////////////////////////////////////////////
+
+#define WF_IDLE_SLEEP   1
+#define WF_IDLE_HEART   2
+#define WF_IDLE_CLEAN   3
+#define WF_IDLE_WORK    4
+#define WF_IDLE_THREADS 5
+
+bool
+ThreadPool::WaitingForIdle(int p_part)
+{
+  // Wait for the queue to become idle
+  bool idle = false;
+  unsigned waitTime = 50;
+  // wait 50,100,200,400,800,1600,3200,6400 milliseconds
+  for(unsigned ind = 0;ind < 8; ++ind)
+  {
+    // Wait period of time
+    Sleep(waitTime);
+    waitTime *= 2;
+    // See if threadpool has become idle
+    { AutoLockTP lock(&m_critical);
+      switch(p_part)
+      {
+        case WF_IDLE_SLEEP:   if(m_sleeping.empty())idle = true;
+                              break;
+        case WF_IDLE_HEART:   if(m_heartbeat == 0)  idle = true;
+                              break;
+        case WF_IDLE_CLEAN:   if(m_cleanup.empty()) idle = true;
+                              break;
+        case WF_IDLE_WORK:    if(m_work.empty())    idle = true;
+                              break;
+        case WF_IDLE_THREADS: if(m_threads.empty()) idle = true;
+                              break;
+      }
+    }
+    if(idle)
+    {
+      break;
+    }
+  }
+  return idle;
+}
+
+// Stopping the thread pool
+void
+ThreadPool::StopThreadPool()
+{
+  TP_TRACE0("Stopping threadpool\n");
+  // Not open for work, No more SubmitWork or SleepThread can occur
+  m_openForWork = false;
+
+  // Try to wake all sleeping threads
+  WakeUpAllSleepers();
+  WaitingForIdle(WF_IDLE_SLEEP);
+
+  // Stop the heartbeat (if any)
+  StopHeartbeat();
+  WaitingForIdle(WF_IDLE_HEART);
+
+  // Run the cleanup jobs first (if any)
+  RunCleanupJobs();
+  WaitingForIdle(WF_IDLE_CLEAN);
+
+  // Waiting for the work queue to drain
+  // Waiting for max of 30 seconds
+  WaitingForIdle(WF_IDLE_WORK);
+
+  // Try stopping all threads, signaling to remove
+  int number = (int)m_threads.size() + m_curThreads;
+  for(int num = 0;num < number;++num)
+  {
+    TP_TRACE1("Stopping thread: %d\n",ind);
+    StopThread(0);
+  }
+  TP_TRACE1("Total items of work still in the work-queue: %d\n",m_work.size());
+
+  // Closing our completion port,
+  // forcing threads out of the wait state (if any left)
+  CloseHandle(m_completion);
+  m_completion = nullptr;
+
+  // Wait for the queue to become idle
+  bool idle = WaitingForIdle(WF_IDLE_THREADS);
+
+  // No longer initialize after this point
+  AutoLockTP lock(&m_critical);
+  m_initialized = false;
+
+  // Force the queue to a halt!!
+  // Tear those threads out of the sky
+  // Do not complain about "TerminateThread". 
+  // It is the only way. We know!
+  if(!idle)
+  {
+    for(auto& thread : m_threads)
+    {
+      TP_TRACE1("!! TERMINATING thread: %d\n",ind);
+      TerminateThread(thread->m_thread,0);
+    }
+  }
+
+  // Free all thread registrations
+  for(auto& thread : m_threads)
+  {
+    delete thread;
+  }
+  m_threads.clear();
+}
+

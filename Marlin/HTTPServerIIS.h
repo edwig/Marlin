@@ -66,15 +66,6 @@ public:
   virtual bool       FlushSocket (HTTP_REQUEST_ID p_request);
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
-  // Send a response in one-go
-  virtual DWORD      SendResponse(HTTPSite*    p_site
-                                 ,HTTPMessage* p_message
-                                 ,USHORT       p_statusCode
-                                 ,PSTR         p_reason
-                                 ,PSTR         p_entityString
-                                 ,CString      p_authScheme
-                                 ,PSTR         p_cookie      = NULL
-                                 ,PSTR         p_contentType = NULL);
   
   // FUNCTIONS FOR IIS
 

@@ -74,9 +74,6 @@ public:
                             ,CString p_domain);
   // Remove an URLGroup. Called by HTTPURLGroup itself
   void          RemoveURLGroup(HTTPURLGroup* p_group);
-  // Running the main loop of the webserver in same thread
-  void          RunHTTPServer();
-
 
 protected:
   // Cleanup the server
@@ -94,27 +91,24 @@ protected:
   // Init the stream response
   virtual bool InitEventStream(EventStream& p_stream);
   // Send a response in one-go
-  virtual DWORD SendResponse(HTTPSite*    p_site
-                            ,HTTPMessage* p_message
-                            ,USHORT       p_statusCode
-                            ,PSTR         p_reason
-                            ,PSTR         p_entityString
-                            ,CString      p_authScheme
-                            ,PSTR         p_cookie      = NULL
-                            ,PSTR         p_contentType = NULL);
+//   virtual DWORD SendResponse(HTTPSite*    p_site
+//                             ,HTTPMessage* p_message
+//                             ,USHORT       p_statusCode
+//                             ,PSTR         p_reason
+//                             ,PSTR         p_entityString
+//                             ,CString      p_authScheme
+//                             ,PSTR         p_cookie      = NULL
+//                             ,PSTR         p_contentType = NULL);
   // Used for canceling a WebSocket for an event stream
   virtual void CancelRequestStream(HTTP_REQUEST_ID p_response);
 
 private:
   // Preparing a response
-  void      InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status,PSTR p_reason);
-  void      AddKnownHeader(HTTP_RESPONSE& p_response,HTTP_HEADER_ID p_header,const char* p_value);
-  PHTTP_UNKNOWN_HEADER AddUnknownHeaders(UKHeaders& p_headers);
   // Subfunctions for SendResponse
-  bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
-  void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
-  void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,bool p_more = false);
-  void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,CString& p_page,int p_error,const char* p_reason);
+  //   bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
+  //   void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
+  //   void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,bool p_more = false);
+  //   void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,CString& p_page,int p_error,const char* p_reason);
   bool      SendResponseWebSocket  (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,UKHeaders& p_headers);
 
   // For the handling of the event streams: Sending a chunk to an event stream

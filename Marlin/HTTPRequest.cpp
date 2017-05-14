@@ -79,12 +79,6 @@ HTTPRequest::~HTTPRequest()
   ClearMemory();
 }
 
-void
-HTTPRequest::Finalize()
-{
-  delete this;
-}
-
 // Remove all memory from the heap
 void
 HTTPRequest::ClearMemory()
@@ -96,7 +90,7 @@ HTTPRequest::ClearMemory()
   }
   if(m_request)
   {
-    delete m_request;
+    free(m_request);
     m_request = nullptr;
   }
   if(m_response)
@@ -116,12 +110,23 @@ HTTPRequest::ClearMemory()
   }
 }
 
-// Callback from I/O Completion port
-void
-HTTPRequest::HandleAsynchroneousIO(OVERLAPPED* p_overlapped)
+// Callback from I/O Completion port right out of the threadpool
+/*static*/ void
+HandleAsynchroneousIO(OVERLAPPED* p_overlapped)
 {
   OutstandingIO* outstanding = reinterpret_cast<OutstandingIO*>(p_overlapped);
-  switch(outstanding->m_action)
+  HTTPRequest* request = outstanding->m_request;
+  if(request)
+  {
+    request->HandleAsynchroneousIO(outstanding->m_action);
+  }
+}
+
+// Callback from I/O Completion port 
+void
+HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
+{
+  switch(p_action)
   {
     case IO_Request: ReceivedRequest();  break;
     case IO_Reading: ReceivedBodyPart(); break;
@@ -135,11 +140,15 @@ HTTPRequest::HandleAsynchroneousIO(OVERLAPPED* p_overlapped)
 void 
 HTTPRequest::StartRequest()
 {
+  // Buffersize
+  DWORD size = INIT_HTTP_BUFFERSIZE;
+
   // Allocate the request object
-  DWORD size = sizeof(HTTP_REQUEST_V2);
-  m_request  = new HTTP_REQUEST_V2();
-  RtlZeroMemory(m_request,size);
-  
+  if(m_request == nullptr)
+  {
+    m_request = (PHTTP_REQUEST) malloc(size + 1);
+    RtlZeroMemory(m_request,size);
+  }  
   // Set type of request
   m_incoming.m_action = IO_Request;
   // Get queue handle
@@ -164,6 +173,16 @@ HTTPRequest::StartRequest()
     // Error to the server log
     ERRORLOG(result,"Starting new HTTP Request");
   }
+}
+
+// Start response cycle from the HTTPServer / HTTPSite / SiteHandler
+void
+HTTPRequest::StartResponse()
+{
+  // CHECKS
+
+  // Start response
+  StartSendResponse();
 }
 
 // Primarily receive a request
@@ -193,6 +212,9 @@ HTTPRequest::ReceivedRequest()
     return;
   }
 
+  // Get the primary request-id for the request queue
+  m_requestID = m_request->RequestId;
+
   // Grab the senders content
   CString   acceptTypes     = m_request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
   CString   contentType     = m_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
@@ -218,40 +240,34 @@ HTTPRequest::ReceivedRequest()
   // FInding the site
   bool eventStream = false;
   LPFN_CALLBACK callback = nullptr;
-  HTTPSite* site = reinterpret_cast<HTTPSite*>(m_request->UrlContext);
-  if(site)
+  m_site = reinterpret_cast<HTTPSite*>(m_request->UrlContext);
+  if(m_site)
   {
-    callback    = site->GetCallback();
-    eventStream = site->GetIsEventStream();
+    callback    = m_site->GetCallback();
+    eventStream = m_site->GetIsEventStream();
   }
 
   // See if we must substitute for a sub-site
   if(m_server->GetHasSubsites())
   {
     CString absPath = CW2A(m_request->CookedUrl.pAbsPath);
-    site = m_server->FindHTTPSite(site,absPath);
+    m_site = m_server->FindHTTPSite(m_site,absPath);
   }
 
   // Now check for authentication and possible send 401 back
-  if(CheckAuthentication(site,rawUrl,accessToken) == false)
+  if(CheckAuthentication(m_site,rawUrl,accessToken) == false)
   {
     // Not authenticated, go back for next request
     return;
   }
 
   // Remember the context: easy in API 2.0
-  if(callback == nullptr && site == nullptr)
+  if(callback == nullptr && m_site == nullptr)
   {
     m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
     m_message->AddReference();
     m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-    m_server->SendResponse(site
-                          ,m_message
-                          ,HTTP_STATUS_NOT_FOUND
-                          ,"URL not found"
-                          ,(PSTR)rawUrl.GetString()
-                          ,site->GetAuthenticationScheme());
-    // Ready with this request
+    StartSendResponse();
     return;
   }
 
@@ -283,8 +299,7 @@ HTTPRequest::ReceivedRequest()
                               m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
                               m_message->AddReference();
                               m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-                              m_server->RespondWithServerError(site,m_message,HTTP_STATUS_NOT_SUPPORTED,"Not implemented","");
-                              // Ready with this request
+                              StartSendResponse();
                               return;
                             }
                             break;
@@ -295,7 +310,7 @@ HTTPRequest::ReceivedRequest()
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = CW2A(m_request->CookedUrl.pAbsPath);
-    EventStream* stream  = m_server->SubscribeEventStream(site,site->GetSite(),absolutePath,m_request->RequestId,accessToken);
+    EventStream* stream  = m_server->SubscribeEventStream(m_site,m_site->GetSite(),absolutePath,m_request->RequestId,accessToken);
     if(stream)
     {
       stream->m_baseURL = rawUrl;
@@ -305,7 +320,7 @@ HTTPRequest::ReceivedRequest()
   }
 
   // For all types of requests: Create the HTTPMessage
-  m_message = new HTTPMessage(type,site);
+  m_message = new HTTPMessage(type,m_site);
   m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
   m_message->AddReference();
   // Enter our primary information from the request
@@ -320,7 +335,7 @@ HTTPRequest::ReceivedRequest()
   m_message->SetReceiver((PSOCKADDR_IN6)receiver);
   m_message->SetCookiePairs(cookie);
   m_message->SetAcceptEncoding(acceptEncoding);
-  if(site->GetAllHeaders())
+  if(m_site->GetAllHeaders())
   {
     // If requested so, copy all headers to the message
     m_message->SetAllHeaders(&m_request->Headers);
@@ -345,7 +360,7 @@ HTTPRequest::ReceivedRequest()
   }
 
   // Find X-HTTP-Method VERB Tunneling
-  if(type == HTTPCommand::http_post && site->GetVerbTunneling())
+  if(type == HTTPCommand::http_post && m_site->GetVerbTunneling())
   {
     if(m_message->FindVerbTunneling())
     {
@@ -396,7 +411,7 @@ HTTPRequest::StartReceiveRequest()
   else if(result != ERROR_IO_PENDING)
   {
     ERRORLOG(result,"Start receiving request body");
-    m_server->RespondWithServerError(m_site,m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
+    m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
   }
 }
 
@@ -415,19 +430,31 @@ HTTPRequest::ReceivedBodyPart()
     {
       // Start the next read request
       StartReceiveRequest();
-    }
-    else
-    {
-      // Message is now complete
-      // Go straight on to the handling of the message
-      m_site->HandleHTTPMessage(m_message);
+      return;
     }
   }
   else
   {
     ERRORLOG(result,"Error receiving bodypart");
-    m_server->RespondWithServerError(m_site,m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
+    m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
   }
+
+  // In case of a POST, try to convert character set before submitting to site
+  if(m_message->GetCommand() == HTTPCommand::http_post)
+  {
+    if(m_message->GetContentType().Find("multipart") <= 0)
+    {
+      m_server->HandleTextContent(m_message);
+    }
+  }
+  DETAILLOGV("Received %s message from: %s Size: %lu"
+             ,headers[(unsigned)m_message->GetCommand()]
+             ,(LPCTSTR)SocketToServer(m_message->GetSender())
+             ,m_message->GetBodyLength());
+
+  // Message is now complete
+  // Go straight on to the handling of the message
+  m_site->HandleHTTPMessage(m_message);
 }
 
 void
@@ -459,6 +486,8 @@ HTTPRequest::StartSendResponse()
                                       0,                 // Reserved3   (must be 0)
                                       &m_writing,        // LPOVERLAPPED(OPTIONAL)
                                       nullptr);          // pReserved4  (must be NULL)
+  
+  DETAILLOGV("HTTP Response %d %s",m_response->StatusCode,m_response->pReason);
   if(result == ERROR_HANDLE_EOF || result == NO_ERROR)
   {
     // To next stage (response is sent)
@@ -591,11 +620,76 @@ HTTPRequest::SendBodyPart()
     }
   }
 
+  // Message is done. Break the connection with the HTTPRequest
+  m_message->SetRequestHandle(NULL);
+
   // End of the line for the whole request
   // We did send everything as an answer
-
   Finalize();
+
+  // Restart the request
+  StartRequest();
 }
+
+// making the request ready for the next round!
+void
+HTTPRequest::Finalize()
+{
+  // Reset th request id 
+  HTTP_SET_NULL_ID(&m_requestID);
+
+  // Free the request memory
+  if(m_request)
+  {
+    RtlZeroMemory(m_request,INIT_HTTP_BUFFERSIZE);
+  }
+
+  // Free the response memory
+  if(m_response)
+  {
+    RtlZeroMemory(m_response,sizeof(HTTP_RESPONSE));
+  }
+
+  // free the read buffer
+  if(m_readBuffer)
+  {
+    RtlZeroMemory(m_readBuffer,INIT_HTTP_BUFFERSIZE);
+  }
+
+  // Free the sending buffer
+  RtlZeroMemory(&m_sendBuffer,sizeof(HTTP_DATA_CHUNK));
+
+  // Remove unknown headers
+  if(m_unknown)
+  {
+    delete[] m_unknown;
+    m_unknown = nullptr;
+  }
+
+  // Free the message
+  if(m_message)
+  {
+    m_message->SetRequestHandle(NULL);
+    m_message->DropReference();
+    m_message = nullptr;
+  }
+
+  // Reset parameters
+  m_site       = nullptr;
+  m_mayreceive = false;
+  m_responding = false;
+  m_file       = nullptr;
+  m_bufferpart = 0;
+
+  // Remove header strings
+  m_strings.clear();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// SUB FUNCTIONS FOR RECEIVING AND SENDING
+//
+//////////////////////////////////////////////////////////////////////////
 
 // Sub procedures for the handlers
 bool 
@@ -620,7 +714,7 @@ HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_to
           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_DENIED);
           m_message->AddReference();
           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-          m_server->RespondWithClientError(p_site,m_message,HTTP_STATUS_DENIED,"Not authenticated",p_site->GetAuthenticationScheme());
+          m_server->RespondWithClientError(m_message,HTTP_STATUS_DENIED,"Not authenticated",p_site->GetAuthenticationScheme());
           break;
         }
         else if(auth->AuthStatus == HttpAuthStatusFailure)
@@ -631,7 +725,7 @@ HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_to
           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_DENIED);
           m_message->AddReference();
           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-          m_server->RespondWithClientError(p_site,m_message,HTTP_STATUS_DENIED,"Not authenticated",p_site->GetAuthenticationScheme());
+          m_server->RespondWithClientError(m_message,HTTP_STATUS_DENIED,"Not authenticated",p_site->GetAuthenticationScheme());
           break;
         }
         else if(auth->AuthStatus == HttpAuthStatusSuccess)
@@ -649,7 +743,7 @@ HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_to
           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_FORBIDDEN);
           m_message->AddReference();
           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-          m_server->RespondWithClientError(p_site,m_message,HTTP_STATUS_FORBIDDEN,"Forbidden","");
+          m_server->RespondWithClientError(m_message,HTTP_STATUS_FORBIDDEN,"Forbidden","");
           break;
         }
       }
@@ -667,12 +761,27 @@ HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_to
   return doReceive;
 }
 
+// Add a request string for a header
+void 
+HTTPRequest::AddRequestString(CString p_string,const char*& p_buffer,USHORT& p_size)
+{
+  m_strings.push_back(p_string);
+  CString& string = m_strings.back();
+  p_buffer = string.GetString();
+  p_size   = (USHORT) string.GetLength();
+}
+
+
 // Add a well known HTTP header to the response structure
 void
 HTTPRequest::AddKnownHeader(HTTP_HEADER_ID p_header,const char* p_value)
 {
-  m_response->Headers.KnownHeaders[p_header].pRawValue      = p_value;
-  m_response->Headers.KnownHeaders[p_header].RawValueLength = (USHORT)strlen(p_value);
+  const char* str = nullptr;
+  USHORT size = 0;
+
+  AddRequestString(p_value,str,size);
+  m_response->Headers.KnownHeaders[p_header].pRawValue      = str;
+  m_response->Headers.KnownHeaders[p_header].RawValueLength = (USHORT)size;
 }
 
 void
@@ -689,13 +798,19 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
   unsigned ind = 0;
   for(auto& unknown : p_headers)
   {
-    CString name  = unknown.first;
-    CString value = unknown.second;
+    const char* string = nullptr;
+    USHORT size = 0;
 
-    m_unknown[ind].NameLength     = (USHORT)name.GetLength();
-    m_unknown[ind].RawValueLength = (USHORT)value.GetLength();
-    m_unknown[ind].pName          = name.GetString();
-    m_unknown[ind].pRawValue      = value.GetString();
+    CString name = unknown.first;
+    AddRequestString(name,string,size);
+    m_unknown[ind].NameLength = size;
+    m_unknown[ind].pName = string;
+
+
+    CString value = unknown.second;
+    AddRequestString(value,string,size);
+    m_unknown[ind].RawValueLength = size;
+    m_unknown[ind].pRawValue = string;
 
     // next header
     ++ind;
@@ -726,6 +841,15 @@ HTTPRequest::FillResponse()
     contentType = m_message->GetContentType();
   }
   AddKnownHeader(HttpHeaderContentType,contentType);
+
+  // In case of a 401, we challenge to the client to identify itself
+  if(m_message->GetStatus() == HTTP_STATUS_DENIED)
+  {
+    // Add authentication scheme
+    CString challenge = m_server->BuildAuthenticationChallenge(m_site->GetAuthenticationScheme()
+                                                              ,m_site->GetAuthenticationRealm());
+    AddKnownHeader(HttpHeaderWwwAuthenticate,challenge);
+  }
 
   // Add the server header or suppress it
   switch(m_server->GetSendServerHeader())

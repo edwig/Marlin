@@ -632,8 +632,9 @@ HTTPServer::SendResponse(JSONMessage* p_message)
     DETAILLOGS("Send JSON FAULT response:\n",p_message->GetJsonMessage());
     // Convert to a HTTP response
     HTTPMessage answer(HTTPCommand::http_response,p_message);
-    HTTPSite* site = p_message->GetHTTPSite();
-    SendResponse(site,&answer,HTTP_STATUS_BAD_REQUEST,"Bad JSON request","","");
+    answer.SetStatus(HTTP_STATUS_BAD_REQUEST);
+    answer.GetFileBuffer()->Reset();
+    SendResponse(&answer);
   }
   else
   {
@@ -648,9 +649,8 @@ HTTPServer::SendResponse(JSONMessage* p_message)
 }
 
 // Response in the server error range (500-505)
-DWORD
-HTTPServer::RespondWithServerError(HTTPSite*    p_site
-                                  ,HTTPMessage* p_message
+void
+HTTPServer::RespondWithServerError(HTTPMessage* p_message
                                   ,int          p_error
                                   ,CString      p_reason
                                   ,CString      p_authScheme
@@ -659,19 +659,19 @@ HTTPServer::RespondWithServerError(HTTPSite*    p_site
   HTTPERROR(p_error,"Respond with server error");
   CString page;
   page.Format(m_serverErrorPage,p_error,p_reason.GetString());
-  return SendResponse(p_site
-                     ,p_message
-                     ,(USHORT)p_error
-                     ,(PSTR)GetStatusText(p_error)
-                     ,(PSTR)page.GetString()
-                     ,p_authScheme
-                     ,(PSTR)p_cookie.GetString());
+
+  p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
+  p_message->SetStatus(p_error);
+  if(!p_cookie.IsEmpty())
+  {
+    p_message->SetCookie(p_cookie);
+  }
+  SendResponse(p_message);
 }
 
 // Response in the client error range (400-417)
-DWORD
-HTTPServer::RespondWithClientError(HTTPSite*    p_site
-                                  ,HTTPMessage* p_message
+void
+HTTPServer::RespondWithClientError(HTTPMessage* p_message
                                   ,int          p_error
                                   ,CString      p_reason
                                   ,CString      p_authScheme
@@ -680,13 +680,14 @@ HTTPServer::RespondWithClientError(HTTPSite*    p_site
   HTTPERROR(p_error,"Respond with client error");
   CString page;
   page.Format(m_clientErrorPage,p_error,p_reason.GetString());
-  return SendResponse(p_site
-                     ,p_message
-                     ,(USHORT)p_error
-                     ,(PSTR)GetStatusText(p_error)
-                     ,(PSTR)page.GetString()
-                     ,p_authScheme
-                     ,(PSTR)p_cookie.GetString());
+
+  p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
+  p_message->SetStatus(p_error);
+  if(!p_cookie.IsEmpty())
+  {
+    p_message->SetCookie(p_cookie);
+  }
+  SendResponse(p_message);
 }
 
 // Authentication failed for this reason
@@ -864,7 +865,10 @@ HTTPServer::DoIsModifiedSince(HTTPMessage* p_msg)
       }
       // Not modified = 304
       DETAILLOG1("Sending response: Not modified");
-      SendResponse(p_msg->GetHTTPSite(),p_msg,HTTP_STATUS_NOT_MODIFIED,"Not modified","","");
+      p_msg->Reset();
+      p_msg->GetFileBuffer()->Reset();
+      p_msg->SetStatus(HTTP_STATUS_NOT_MODIFIED);
+      SendResponse(p_msg);
       return true;
     }
   }

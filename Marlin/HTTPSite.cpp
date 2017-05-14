@@ -630,8 +630,10 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
 {
   // Send back an OK immediately, without waiting for
   // worker thread to process the message in the callback
-  m_server->SendResponse(this,p_message,HTTP_STATUS_OK,"","","");
-  p_message->SetRequestHandle(NULL);
+  p_message->Reset();
+  p_message->SetStatus(HTTP_STATUS_OK);
+  p_message->GetFileBuffer()->Reset();
+  m_server->SendResponse(p_message);
   DETAILLOG1("Sent a HTTP status 200 = OK for asynchroneous message");
 }
 

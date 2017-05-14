@@ -179,15 +179,6 @@ public:
   virtual void       CancelRequestStream(HTTP_REQUEST_ID p_response) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
-  // Send a response in one-go
-  virtual DWORD      SendResponse(HTTPSite*    p_site
-                                 ,HTTPMessage* p_message
-                                 ,USHORT       p_statusCode
-                                 ,PSTR         p_reason
-                                 ,PSTR         p_entityString
-                                 ,CString      p_authScheme
-                                 ,PSTR         p_cookie      = NULL
-                                 ,PSTR         p_contentType = NULL) = 0;
 
   // SETTERS
  
@@ -318,22 +309,24 @@ public:
   WebSocket*        FindWebSocket(CString p_uri);
   // Finding the locking object for the sites.
   CRITICAL_SECTION* AcquireSitesLockObject();
+  // Handle text-based content-type messages
+  void       HandleTextContent(HTTPMessage* p_message);
+  // Build the www-auhtenticate challenge
+  CString    BuildAuthenticationChallenge(CString p_authScheme,CString p_realm);
   // Find less known verb
   HTTPCommand GetUnknownVerb(PCSTR p_verb);
   // Response in the server error range (500-505)
-  DWORD     RespondWithServerError(HTTPSite*       p_site
-                                  ,HTTPMessage*    p_message
-                                  ,int             p_error
-                                  ,CString         p_reason
-                                  ,CString         p_authScheme
-                                  ,CString         p_cookie = "");
+  void       RespondWithServerError(HTTPMessage*    p_message
+                                   ,int             p_error
+                                   ,CString         p_reason
+                                   ,CString         p_authScheme
+                                   ,CString         p_cookie = "");
   // Response in the client error range (400-417)
-  DWORD     RespondWithClientError(HTTPSite*       p_site
-                                  ,HTTPMessage*    p_message
-                                  ,int             p_error
-                                  ,CString         p_reason
-                                  ,CString         p_authScheme
-                                  ,CString         p_cookie = "");
+  void       RespondWithClientError(HTTPMessage*    p_message
+                                   ,int             p_error
+                                   ,CString         p_reason
+                                   ,CString         p_authScheme
+                                   ,CString         p_cookie = "");
   // REQUEST HEADER METHODS
 
   // RFC 2616: paragraph 14.25: "if-modified-since"
@@ -362,8 +355,6 @@ protected:
   bool      GeneralChecks();
   // Checks if all sites are started
   void      CheckSitesStarted();
-  // Build the www-auhtenticate challenge
-  CString   BuildAuthenticationChallenge(CString p_authScheme,CString p_realm);
   // Make a "port:url" registration name
   CString   MakeSiteRegistrationName(int p_port,CString p_url);
     // Form event to a stream string
@@ -372,8 +363,6 @@ protected:
   void      TryStartEventHartbeat();
   // Check all event streams for the heartbeat monitor
   UINT      CheckEventStreams();
-    // Handle text-based content-type messages
-  void      HandleTextContent(HTTPMessage* p_message);
   // Set the error status
   void      SetError(int p_error);
   // For the handling of the event streams
@@ -395,7 +384,6 @@ protected:
   HTTP_CACHE_POLICY_TYPE  m_policy   { HttpCachePolicyNocache };        // Cache policy
   ULONG                   m_secondsToLive  { 0 };   // Seconds to live in the cache
   ThreadPool*             m_pool     { nullptr };   // Pointer to the threadpool
-  HANDLE                  m_serverThread { NULL};   // Web server's main thread
   WebConfig               m_webConfig;              // Webconfig from current directory
   bool                    m_detail   { false   };   // Do detailed logging
   LogAnalysis*            m_log      { nullptr };   // Logging object
@@ -466,7 +454,7 @@ HTTPServer::SetName(CString p_name)
 inline bool
 HTTPServer::GetIsRunning()
 {
-  return m_running && (m_serverThread != NULL);
+  return m_running;
 }
 
 inline HPFCounter* 

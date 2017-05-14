@@ -137,15 +137,15 @@ extern ErrorReport g_report;
 
 // Starting our server
 //
-bool StartServer(HTTPServer*&     p_server
-                ,HTTPThreadPool*& p_pool
-                ,LogAnalysis*&    p_logfile)
+bool StartServer(HTTPServer*&  p_server
+                ,ThreadPool*&  p_pool
+                ,LogAnalysis*& p_logfile)
 {
   // This is the name of our test server
   CString naam("MarlinServer");
 
   // Start the base objects
-  p_pool    = new HTTPThreadPool(4,10);
+  p_pool    = new ThreadPool(4,10);
   p_server  = new HTTPServerMarlin(naam);
   p_logfile = new LogAnalysis(naam);
 
@@ -172,10 +172,7 @@ bool StartServer(HTTPServer*&     p_server
   bool result = false;
   if(p_server->GetLastError() == NO_ERROR)
   {
-    // Alternate method: Test running in this thread
-    // server->RunHTTPServer();
-
-    // Preferred method: Test in separate thread
+    // Running our server
     p_server->Run();
 
     // Wait max 3 seconds for the server to enter the main loop
@@ -195,9 +192,9 @@ bool StartServer(HTTPServer*&     p_server
 
 // Stopping the server
 void 
-CleanupServer(HTTPServer*&     p_server
-             ,HTTPThreadPool*& p_pool
-             ,LogAnalysis*&    p_logfile)
+CleanupServer(HTTPServer*&  p_server
+             ,ThreadPool*&  p_pool
+             ,LogAnalysis*& p_logfile)
 {
   if(p_server)
   {
@@ -260,9 +257,9 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
       }
       else
       {
-        HTTPServer*     server  = nullptr;
-        HTTPThreadPool* pool    = nullptr;
-        LogAnalysis*    logfile = nullptr;
+        HTTPServer*   server  = nullptr;
+        ThreadPool*   pool    = nullptr;
+        LogAnalysis*  logfile = nullptr;
 
         if(StartServer(server,pool,logfile))
         {
@@ -276,28 +273,28 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
 
           // HTTP tests
           errors += TestBaseSite(server);
-          errors += TestSecureSite(server);
-          errors += TestClientCertificate(server);
-          errors += TestPushEvents(server);
-          errors += TestCookies(server);
-          errors += TestInsecure(server);
-          errors += TestBodySigning(server);
-          errors += TestBodyEncryption(server);
-          errors += TestMessageEncryption(server);
-          errors += TestReliable(server);
-          errors += TestToken(server);
-          errors += TestSubSites(server);
-          errors += TestJsonData(server);
-          errors += TestFilter(server);
-          errors += TestPatch(server);
-          errors += TestFormData(server);
-          errors += TestCompression(server);
-          errors += TestWebSocket(server);
+//           errors += TestSecureSite(server);
+//           errors += TestClientCertificate(server);
+//           errors += TestPushEvents(server);
+//           errors += TestCookies(server);
+//           errors += TestInsecure(server);
+//           errors += TestBodySigning(server);
+//           errors += TestBodyEncryption(server);
+//           errors += TestMessageEncryption(server);
+//           errors += TestReliable(server);
+//           errors += TestToken(server);
+//           errors += TestSubSites(server);
+//           errors += TestJsonData(server);
+//           errors += TestFilter(server);
+//           errors += TestPatch(server);
+//           errors += TestFormData(server);
+//           errors += TestCompression(server);
+//           errors += TestWebSocket(server);
 
-          // Test the WebServiceServer program generation
-          CString contract = "http://interface.marlin.org/testing/";
-          errors += TestJsonServer(server,contract);
-          errors += TestWebServiceServer(server,contract);
+//           // Test the WebServiceServer program generation
+//           CString contract = "http://interface.marlin.org/testing/";
+//           errors += TestJsonServer(server,contract);
+//           errors += TestWebServiceServer(server,contract);
 
           // See if we should wait for testing to occur
           if(errors)
@@ -318,10 +315,10 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           }
 
           // Try to stop the websocket
-          errors += StopWebSocket();
-
-          // Try to stop the subsites
-          errors += StopSubsites(server);
+//           errors += StopWebSocket();
+// 
+//           // Try to stop the subsites
+//           errors += StopSubsites(server);
 
           // Testing the errorlog function
           server->ErrorLog(__FUNCTION__,5,"Not a real error message, but a test to see if it works :-)");

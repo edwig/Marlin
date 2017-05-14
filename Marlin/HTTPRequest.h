@@ -54,6 +54,16 @@ public:
   IOAction     m_action;
 };
 
+// Callback from I/O Completion port right out of the threadpool
+// USE this function as the completion key after registering the 
+// httpRequestQueue in the server.
+void HandleAsynchroneousIO(OVERLAPPED* p_overlapped);
+
+// Strings for headers must be tied to the request, otherwise they do not
+// survive for the async I/O commands
+using RequestStrings = std::vector<CString>;
+
+
 // Our outstanding request in the server
 class HTTPRequest
 {
@@ -63,8 +73,10 @@ public:
  
   // Start a new request against the server
   void StartRequest();
+  // Start the response handling
+  void StartResponse();
   // Callback from I/O Completion port
-  void HandleAsynchroneousIO(OVERLAPPED* p_overlapped);
+  void HandleAsynchroneousIO(IOAction p_action);
 
 private:
   // Ready with the response
@@ -89,6 +101,8 @@ private:
   void FillResponse();
   // Reset outstanding OVERLAPPED
   void ResetOutstanding(OutstandingIO& p_outstanding);
+  // Add a request string for a header
+  void AddRequestString(CString p_string,const char*& p_buffer,USHORT& p_size);
 
   HTTPServer*       m_server;                   // Our server
   HTTP_REQUEST_ID   m_requestID  { NULL    };   // The request we are processing
@@ -105,6 +119,7 @@ private:
   bool              m_logging    { false   };   // Do detailed logging
   BYTE*             m_readBuffer { nullptr };   // Read buffer
   HTTP_DATA_CHUNK   m_sendBuffer;               // Send buffer
+  RequestStrings    m_strings;                  // Strings for headers and such
   HANDLE            m_file       { NULL    };   // File handle for sending a file
   int               m_bufferpart { 0       };   // Buffer part being sent
   PHTTP_UNKNOWN_HEADER m_unknown { nullptr };   // Send unknown headers

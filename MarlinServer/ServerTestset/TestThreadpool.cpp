@@ -57,7 +57,7 @@ void callback1(void* p_pnt)
   p_pnt = pool->SleepThread(TH_SLEEP,p_pnt);
   if(p_pnt == nullptr)
   {
-    qprintf("ERROR: CANNOT SLEEP ON THREAD!\n");
+    xprintf("Cannot sleep on thread, or thread terminated\n");
   }
   else
   {
@@ -83,7 +83,7 @@ int TestThreadPool(ThreadPool* p_pool)
 
   p_pool->SubmitWork(callback1,(void*)text1);
 
-  // Wait unitl thread has done work and is gone sleeping
+  // Wait until thread has done work and is gone sleeping
   while(number < (CYCLES - 1))
   {
     Sleep(WAITTIME);
@@ -105,7 +105,7 @@ int TestThreadPool(ThreadPool* p_pool)
   number = 0;
   p_pool->SubmitWork(callback1,(void*)text1);
   
-  // Wait unitl thread has done work and is gone sleeping
+  // Wait until thread has done work and is gone sleeping
   while(number < (CYCLES - 1))
   {
     Sleep(WAITTIME);
@@ -113,7 +113,8 @@ int TestThreadPool(ThreadPool* p_pool)
   Sleep(3 * WAITTIME);
 
   // Remove the thread and test for no leaking memory
-  p_pool->EliminateSleepingThread(TH_SLEEP);
+  // p_pool->EliminateSleepingThread(TH_SLEEP);
+  result = p_pool->WakeUpThread(TH_SLEEP,(void*)text2);
 
   return errors;
 }
