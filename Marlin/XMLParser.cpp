@@ -198,7 +198,7 @@ XMLParser::ParseMessage(CString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_W
     ParseLevel();
 
     // Checks after parsing
-    if(m_message->m_root.GetName().IsEmpty())
+    if(m_message->m_root->GetName().IsEmpty())
     {
       // Minimum requirement of an XML message
       SetError(XmlError::XE_NoRootElement,(uchar*)"Missing root element of XML message");
@@ -766,11 +766,11 @@ XMLParser::MakeElement(CString& p_namespace,CString& p_name)
   ++m_elements;
 
   // Start our message at the root
-  if(m_message->m_root.GetName().IsEmpty())
+  if(m_message->m_root->GetName().IsEmpty())
   {
-    m_message->m_root.SetNamespace(p_namespace);
-    m_message->m_root.SetName(p_name);
-    m_element = &(m_message->m_root);
+    m_message->m_root->SetNamespace(p_namespace);
+    m_message->m_root->SetName(p_name);
+    m_element = m_message->m_root;
     m_lastElement = m_element;
     return;
   }

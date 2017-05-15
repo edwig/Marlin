@@ -120,11 +120,16 @@ public:
   XMLRestriction* GetRestriction()  { return m_restriction; };
 
   // SETTERS
+  void            SetParent(XMLElement* parent)  { m_parent    = parent;    };
   void            SetNamespace(CString p_namesp) { m_namespace = p_namesp;  };
   void            SetName(CString p_name)        { m_name      = p_name;    };
   void            SetType(XmlDataType p_type)    { m_type      = p_type;    };
   void            SetValue(CString p_value)      { m_value     = p_value;   };
   void            SetRestriction(XMLRestriction* p_restrict) { m_restriction = p_restrict; };
+
+  // REFERENCE SYSTEM
+  void            AddReference();
+  void            DropReference();
 
 private:
   // Our element node data
@@ -136,6 +141,7 @@ private:
   XmlElementMap   m_elements;
   XMLElement*     m_parent      { nullptr };
   XMLRestriction* m_restriction { nullptr };
+  long            m_references  { 1       };
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -287,7 +293,7 @@ protected:
   friend          XMLParser;
   friend          XMLParserImport;
   // The one and only rootnode
-  XMLElement      m_root;                                     // All elements, from the root up
+  XMLElement*     m_root            { nullptr };              // All elements, from the root up
   XMLEncoding     m_encoding        { XMLEncoding::ENC_UTF8 };// Encoding scheme
   CString         m_version         { "1.0" };                // XML Version, most likely 1.0
   CString         m_standalone;                               // Stand alone from DTD or XSD's
@@ -308,7 +314,7 @@ protected:
 inline XMLElement*
 XMLMessage::GetRoot()
 {
-  return &m_root;
+  return m_root;
 }
 
 inline void
@@ -332,13 +338,13 @@ XMLMessage::GetInternalErrorString()
 inline void
 XMLMessage::SetRootNodeName(CString p_name)
 {
-  m_root.SetName(p_name);
+  m_root->SetName(p_name);
 }
 
 inline CString
 XMLMessage::GetRootNodeName()
 {
-  return m_root.GetName();
+  return m_root->GetName();
 }
 
 inline XMLEncoding

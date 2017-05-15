@@ -65,10 +65,10 @@ XMLElement::XMLElement(const XMLElement& source)
            ,m_restriction(source.m_restriction)
            ,m_parent     (nullptr)
 {
-  for(unsigned ind = 0; ind < source.m_elements.size(); ++ind)
+  for(auto& element : source.m_elements)
   {
-    XMLElement* param = new XMLElement(*source.m_elements[ind]);
-    param->m_parent   = this;
+    XMLElement* param = new XMLElement(*element);
+    param->m_parent = this;
     m_elements.push_back(param);
   }
 }
@@ -90,13 +90,26 @@ XMLElement::Reset()
   // Remove all attributes
   m_attributes.clear();
   // Remove all dependent elements
-  for(unsigned ind = 0; ind < m_elements.size(); ++ind)
+  for(auto& element : m_elements)
   {
-    delete m_elements[ind];
+    element->DropReference();
   }
   m_elements.clear();
   // No more restrictions
   m_restriction = nullptr;
+}
+
+void XMLElement::AddReference()
+{
+  InterlockedIncrement(&m_references);
+}
+
+void XMLElement::DropReference()
+{
+  if(InterlockedDecrement(&m_references) <= 0)
+  {
+    delete this;
+  }
 }
 
 #pragma endregion XMLElement
@@ -112,13 +125,17 @@ XMLElement::Reset()
 // XTOR XML Message
 XMLMessage::XMLMessage()
 {
-  m_root.SetType(XDT_String);
+  m_root = new XMLElement();
+  m_root->SetType(XDT_String);
 }
 
 // XTOR from another message
 XMLMessage::XMLMessage(XMLMessage* p_orig)
-           :m_root(p_orig->m_root)
 {
+  // Copy by reference
+  m_root = p_orig->m_root;
+  m_root->AddReference();
+  // Copy the contents
   m_version             = p_orig->m_version;
   m_encoding            = p_orig->m_encoding;
   m_standalone          = p_orig->m_standalone;
@@ -132,12 +149,13 @@ XMLMessage::XMLMessage(XMLMessage* p_orig)
 XMLMessage::~XMLMessage()
 {
   Reset();
+  m_root->DropReference();
 }
 
 void
 XMLMessage::Reset()
 {
-  m_root.Reset();
+  m_root->Reset();
 }
 
 #pragma endregion XMLMessage_XTOR
@@ -284,7 +302,7 @@ XMLMessage::Print()
   bool utf8 = (m_encoding == XMLEncoding::ENC_UTF8);
 
   CString message = PrintHeader();
-  message += PrintElements(&m_root,utf8);
+  message += PrintElements(m_root,utf8);
   if(m_condensed)
   {
     message += "\n";
@@ -494,7 +512,7 @@ XMLMessage::PrintJson(bool p_attributes)
 {
   bool utf8 = (m_encoding == XMLEncoding::ENC_UTF8);
 
-  CString message = PrintElementsJson(&m_root,p_attributes,utf8);
+  CString message = PrintElementsJson(m_root,p_attributes,utf8);
   if(m_condensed)
   {
     message += "\n";
@@ -603,8 +621,8 @@ XMLMessage::AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,CStr
     throw CString("XML Messages with spaces in elementnames are invalid!");
   }
 
-  XmlElementMap& elements = p_base ? p_base->GetChildren() : m_root.GetChildren();
-  XMLElement* parent = p_base ? p_base : &m_root;
+  XmlElementMap& elements = p_base ? p_base->GetChildren() : m_root->GetChildren();
+  XMLElement* parent = p_base ? p_base : m_root;
   XMLElement* elem   = new XMLElement(parent);
   elem->SetNamespace(namesp);
   elem->SetName(p_name);
@@ -628,7 +646,7 @@ XMLMessage::SetElement(XMLElement* p_base,CString p_name,XmlDataType p_type,CStr
 {
   CString name(p_name);
   CString namesp = SplitNamespace(name);
-  XmlElementMap& elements = p_base ? p_base->GetChildren() : m_root.GetChildren();
+  XmlElementMap& elements = p_base ? p_base->GetChildren() : m_root->GetChildren();
 
   // Finding existing element
   for (auto& element : elements)
@@ -651,14 +669,14 @@ XMLMessage::SetElement(XMLElement* p_base,CString p_name,XmlDataType p_type,CStr
 XMLElement*
 XMLMessage::SetElement(CString p_name,CString& p_value)
 {
-  return SetElement(&m_root,p_name,XDT_String,p_value);
+  return SetElement(m_root,p_name,XDT_String,p_value);
 }
 
 XMLElement*
 XMLMessage::SetElement(CString p_name, const char* p_value)
 {
   CString value(p_value);
-  return SetElement(&m_root,p_name,XDT_String,value);
+  return SetElement(m_root,p_name,XDT_String,value);
 }
 
 XMLElement*
@@ -666,7 +684,7 @@ XMLMessage::SetElement(CString p_name,int p_value)
 {
   CString value;
   value.Format("%d",p_value);
-  return SetElement(&m_root,p_name,XDT_Integer,value);
+  return SetElement(m_root,p_name,XDT_Integer,value);
 }
 
 XMLElement*
@@ -674,7 +692,7 @@ XMLMessage::SetElement(CString p_name,bool p_value)
 {
   CString value;
   value.Format("%s",p_value ? "true" : "false");
-  return SetElement(&m_root,p_name,XDT_Boolean,value);
+  return SetElement(m_root,p_name,XDT_Boolean,value);
 }
 
 XMLElement*
@@ -682,7 +700,7 @@ XMLMessage::SetElement(CString p_name,double p_value)
 {
   CString value;
   value.Format("%G",p_value);
-  return SetElement(&m_root,p_name,XDT_Double,value);
+  return SetElement(m_root,p_name,XDT_Double,value);
 }
 
 XMLElement*
@@ -849,7 +867,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,CString p_name,double p_value)
 CString  
 XMLMessage::GetElement(XMLElement* p_elem,CString p_name)
 {
-  XmlElementMap& map = p_elem ? p_elem->GetChildren() : m_root.GetChildren();
+  XmlElementMap& map = p_elem ? p_elem->GetChildren() : m_root->GetChildren();
 
   // Find in the current mapping
   for(unsigned ind = 0; ind < map.size(); ++ind)
@@ -955,7 +973,7 @@ XMLMessage::FindElement(XMLElement* p_base, CString p_name,bool p_recurse /*=tru
 {
   CString elementName(p_name);
   CString namesp = SplitNamespace(elementName);
-  XMLElement* base = p_base ? p_base : &m_root;
+  XMLElement* base = p_base ? p_base : m_root;
 
   for(auto& element : base->GetChildren())
   {
@@ -984,7 +1002,7 @@ XMLMessage::FindElement(XMLElement* p_base, CString p_name,bool p_recurse /*=tru
 XMLElement*
 XMLMessage::FindElement(CString p_name,bool p_recurse /*=true*/)
 {
-  return FindElement(&m_root,p_name,p_recurse);
+  return FindElement(m_root,p_name,p_recurse);
 }
 
 XMLElement*
@@ -995,7 +1013,7 @@ XMLMessage::FindElementWithAttribute(XMLElement* p_base
                                     ,bool        p_recurse /*=true*/)
 {
   CString namesp = SplitNamespace(p_elementName);
-  XMLElement* base = p_base ? p_base : &m_root;
+  XMLElement* base = p_base ? p_base : m_root;
 
   for(auto& element : base->GetChildren())
   {
@@ -1100,7 +1118,7 @@ XMLMessage::FindAttribute(XMLElement* p_elem,CString p_attribName)
 bool
 XMLMessage::DeleteElement(XMLElement* p_base, CString p_name, int p_instance /*= 0*/)
 {
-  XmlElementMap& map = p_base ? p_base->GetChildren() : m_root.GetChildren();
+  XmlElementMap& map = p_base ? p_base->GetChildren() : m_root->GetChildren();
   XmlElementMap::iterator it = map.begin();
   int  count = 0;
 
@@ -1135,14 +1153,14 @@ XMLMessage::DeleteElement(XMLElement* p_base, CString p_name, int p_instance /*=
 bool
 XMLMessage::DeleteElement(XMLElement* p_base,XMLElement* p_element)
 {
-  XmlElementMap& map = p_base ? p_base->GetChildren() : m_root.GetChildren();
+  XmlElementMap& map = p_base ? p_base->GetChildren() : m_root->GetChildren();
   XmlElementMap::iterator it;
 
   for (it = map.begin(); it != map.end(); ++it)
   {
     if ((*it) == p_element)
     {
-      delete p_element;
+      p_element->DropReference();
       map.erase(it);
       return true;
     }
@@ -1176,7 +1194,7 @@ XMLMessage::DeleteAttribute(XMLElement* p_element,CString p_attribName)
 XMLElement*
 XMLMessage::FindElementByAttribute(CString p_attribute, CString p_value)
 {
-  return FindElementByAttribute(&m_root, p_attribute, p_value);
+  return FindElementByAttribute(m_root, p_attribute, p_value);
 }
 
 XMLElement*

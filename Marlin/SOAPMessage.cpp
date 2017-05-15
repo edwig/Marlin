@@ -410,7 +410,7 @@ SOAPMessage::Reset(CString p_namespace /*=""*/)
   XMLMessage::Reset();
 
   // Reset pointers
-  m_body        = &m_root;
+  m_body        = m_root;
   m_header      = nullptr;
   m_paramObject = nullptr;
 
@@ -449,11 +449,11 @@ SOAPMessage::SetSoapVersion(SoapVersion p_version)
   {
     // Revert back to POS
     m_header      = nullptr;
-    m_body        = &m_root;
-    m_paramObject = &m_root;
-    CleanNode(&m_root);
-    m_root.SetName(m_soapAction);
-    m_root.SetNamespace("");
+    m_body        = m_root;
+    m_paramObject = m_root;
+    CleanNode(m_root);
+    m_root->SetName(m_soapAction);
+    m_root->SetNamespace("");
   }
   else if(m_soapVersion == SoapVersion::SOAP_10 && p_version > SoapVersion::SOAP_10)
   {
@@ -1045,7 +1045,7 @@ SOAPMessage::SetSoapEnvelope()
   }
 
   // If no "Envelope" node, fail silently
-  if(m_root.GetName().Compare("Envelope"))
+  if(m_root->GetName().Compare("Envelope"))
   {
     return;
   }
@@ -1057,27 +1057,27 @@ SOAPMessage::SetSoapEnvelope()
   }
 
   // Namespaces for all
-  SetElementNamespace(&m_root,"i",  NAMESPACE_INSTANCE);
-  SetElementNamespace(&m_root,"xsd",NAMESPACE_XMLSCHEMA);
+  SetElementNamespace(m_root,"i",  NAMESPACE_INSTANCE);
+  SetElementNamespace(m_root,"xsd",NAMESPACE_XMLSCHEMA);
 
   if(m_addressing || m_reliable || m_soapVersion > SoapVersion::SOAP_11)
   {
-    SetElementNamespace(&m_root,"a",NAMESPACE_WSADDRESS);
+    SetElementNamespace(m_root,"a",NAMESPACE_WSADDRESS);
   }
   if(m_reliable)
   {
     // Special soap namespace + addressing and RM (reliable messaging)
-    SetElementNamespace(&m_root,"s", NAMESPACE_ENVELOPE);
-    SetElementNamespace(&m_root,"rm",NAMESPACE_RELIABLE);
+    SetElementNamespace(m_root,"s", NAMESPACE_ENVELOPE);
+    SetElementNamespace(m_root,"rm",NAMESPACE_RELIABLE);
   }
   else
   {
     // Very general soap namespace
     switch (m_soapVersion)
     {
-      case SoapVersion::SOAP_11: SetElementNamespace(&m_root,"s",NAMESPACE_SOAP11,true);
+      case SoapVersion::SOAP_11: SetElementNamespace(m_root,"s",NAMESPACE_SOAP11,true);
                                  break;
-      case SoapVersion::SOAP_12: SetElementNamespace(&m_root,"s",NAMESPACE_SOAP12);
+      case SoapVersion::SOAP_12: SetElementNamespace(m_root,"s",NAMESPACE_SOAP12);
                                  break;
     }
   }
@@ -1086,10 +1086,10 @@ SOAPMessage::SetSoapEnvelope()
   // Add WS-Message-Security namespaces
   if(m_encryption != XMLEncryption::XENC_Plain)
   {
-    SetElementNamespace(&m_root,"ds",  NAMESPACE_SIGNATURE);
-    SetElementNamespace(&m_root,"xenc",NAMESPACE_ENCODING);
-    SetElementNamespace(&m_root,"wsse",NAMESPACE_SECEXT);
-    SetElementNamespace(&m_root,"wsu", NAMESPACE_SECUTILITY);
+    SetElementNamespace(m_root,"ds",  NAMESPACE_SIGNATURE);
+    SetElementNamespace(m_root,"xenc",NAMESPACE_ENCODING);
+    SetElementNamespace(m_root,"wsse",NAMESPACE_SECEXT);
+    SetElementNamespace(m_root,"wsu", NAMESPACE_SECUTILITY);
   }
 }
 
@@ -1149,7 +1149,7 @@ SOAPMessage::SetSoapBody()
 
   if(m_soapVersion >= SoapVersion::SOAP_11) 
   {
-    if((m_body != &m_root) && m_paramObject && !m_namespace.IsEmpty())
+    if((m_body != m_root) && m_paramObject && !m_namespace.IsEmpty())
     {
       SetAttribute(m_paramObject,"xmlns",m_namespace);
     }
@@ -1365,8 +1365,8 @@ void
 SOAPMessage::ParseMessage(CString& p_message)
 {
   // Clean out everything we have
-  CleanNode(&m_root);     // Structure
-  m_root.SetName("");     // Envelope name if any
+  CleanNode(m_root);     // Structure
+  m_root->SetName("");     // Envelope name if any
 
   // Do the 'real' XML parsing
   XMLMessage::ParseMessage(p_message);
@@ -1386,7 +1386,7 @@ SOAPMessage::ParseAsBody(CString& p_message)
   CleanNode(m_body);
 
   XMLElement* node = m_body;
-  if(m_body == &m_root)
+  if(m_body == m_root)
   {
     XMLMessage::Reset();
     node = nullptr;
@@ -1493,24 +1493,24 @@ void
 SOAPMessage::FindHeaderAndBody()
 {
   // Check if root = 'Envelope'
-  if(m_root.GetName().Compare("Envelope"))
+  if(m_root->GetName().Compare("Envelope"))
   {
     // Not an Envelope, must be POS (Plain-Old-Soap)
     m_soapVersion = SoapVersion::SOAP_10;
     m_header      = nullptr;
-    m_body        = &m_root;
+    m_body        = m_root;
     m_paramObject = m_body;
   }
   else
   {
     m_soapVersion = SoapVersion::SOAP_11;
-    m_header = FindElement(&m_root,"Header");
-    m_body   = FindElement(&m_root,"Body");
+    m_header = FindElement(m_root,"Header");
+    m_body   = FindElement(m_root,"Body");
 
     // Header can be missing, but we need a body now!
     if(m_body == nullptr)
     {
-      XMLElement* first = GetElementFirstChild(&m_root);
+      XMLElement* first = GetElementFirstChild(m_root);
       if(first && first->GetName().Compare("EncryptionData") == 0)
       {
         // Not a body, but an encoded message. Which is OK
@@ -1523,7 +1523,7 @@ SOAPMessage::FindHeaderAndBody()
       return;
     }
     // Check for namespace in the header
-    CString nmsp = GetAttribute(&m_root,m_root.GetNamespace());
+    CString nmsp = GetAttribute(m_root,m_root->GetNamespace());
     if(CompareNamespaces(nmsp,NAMESPACE_SOAP12) == 0)
     {
       m_soapVersion = SoapVersion::SOAP_12;
@@ -1557,12 +1557,12 @@ SOAPMessage::CreateHeaderAndBody()
     // Nothing to do: POS = Plain Old Soap
     return;
   }
-  if(m_root.GetChildren().size() == 0)
+  if(m_root->GetChildren().size() == 0)
   {
-    m_root.SetNamespace("s");
-    m_root.SetName("Envelope");
-    m_header = SetElement(&m_root,"s:Header","");
-    m_body   = SetElement(&m_root,"s:Body",  "");
+    m_root->SetNamespace("s");
+    m_root->SetName("Envelope");
+    m_header = SetElement(m_root,"s:Header","");
+    m_body   = SetElement(m_root,"s:Body",  "");
   }
 }
 
@@ -1577,7 +1577,7 @@ SOAPMessage::CreateParametersObject()
     {
       switch(m_soapVersion)
       {
-        case SoapVersion::SOAP_10:  m_paramObject = &m_root;
+        case SoapVersion::SOAP_10:  m_paramObject = m_root;
                                     break;
         default:
         case SoapVersion::SOAP_11:  // Fall through

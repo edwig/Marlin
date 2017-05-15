@@ -175,7 +175,7 @@ WebConfig::ReadConfig(CString p_filename)
 
   if(XMLMessage::LoadFile(m_fileName))
   {
-    CString rootName = m_root.GetName();
+    CString rootName = m_root->GetName();
     if(rootName.CompareNoCase("Configuration") == 0)
     {
       // A Configuration file
@@ -359,7 +359,7 @@ WebConfig::RemoveSection(CString p_section)
   XMLElement* section = FindElement(p_section);
   if(section)
   {
-    if(DeleteElement(&m_root,section))
+    if(DeleteElement(m_root,section))
     {
       return m_changed = true;
     }
