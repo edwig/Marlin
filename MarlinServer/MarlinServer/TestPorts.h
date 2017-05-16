@@ -27,7 +27,7 @@
 //
 #pragma once
 
-#define MARLIN_STANDALONE
+// #define MARLIN_VIRTUAL_DIR
 
 // All tests running on these ports in Marlin Standalone
 const int TESTING_HTTP_PORT   = 1200;

@@ -40,6 +40,7 @@
 #include "GetUserAccount.h"
 #include "HTTPCertificate.h"
 #include "HTTPClientTracing.h"
+#include "HTTPError.h"
 #include "ZLib\gzip.h"
 #include <winerror.h>
 #include <wincrypt.h>
@@ -115,6 +116,7 @@ HTTPClient::Reset()
   m_enc_password.Empty();
 
   m_agent           = "HTTPClient/1.0";
+  m_scheme          = "http";
   m_retries         = 0;
   m_useProxy        = ProxyType::PROXY_IEPROXY;
   m_body            = NULL;
@@ -224,6 +226,7 @@ HTTPClient::Disconnect()
     WinHttpCloseHandle(m_connect);
     WinHttpCloseHandle(m_session);
     m_lastServer.Empty();
+    m_scheme      = "http";
     m_connect     = NULL;
     m_session     = NULL;
     m_lastPort    = 0;
@@ -2784,7 +2787,7 @@ HTTPClient::Send()
   {
     ERRORLOG("Failed to send a [%s] to: %s",m_verb.GetString(),m_url.GetString());
   }
-  DETAILLOG("Returned HTTP status: %d",m_status);
+  DETAILLOG("Returned HTTP status: %d:%s",m_status,GetHTTPStatusText(m_status));
 
   // See if we must do 'gzip' decompression
   CString compress = ReadHeaderField(WINHTTP_QUERY_CONTENT_ENCODING);

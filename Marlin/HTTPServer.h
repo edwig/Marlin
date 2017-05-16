@@ -48,6 +48,7 @@
 #include <winhttp.h>
 #include <string>
 #include <vector>
+#include <deque>
 // For SSPI functions
 #ifndef SECURITY_WIN32
 #define SECURITY_WIN32
@@ -74,9 +75,6 @@ extern unsigned long g_compress_limit;  // = COMPRESS_LIMIT;
 #ifndef STATUS_LOGON_FAILURE
 #define STATUS_LOGON_FAILURE  ((LONG)0xC000006DL)
 #endif
-
-// Extra HTTP status numbers (not in <winhttp.h>)
-#define HTTP_STATUS_LEGALREASONS  451   // New in IETF
 
 // Windows 10 extension on HTTP_REQUEST_INFO_TYPE
 typedef enum _HTTP_REQUEST_INFO_TYPE_W10
@@ -114,6 +112,7 @@ enum class SendHeader
 class LogAnalysis;
 class HTTPSite;
 class HTTPURLGroup;
+class HTTPRequest;
 class JSONMessage;
 class WebServiceServer;
 class WebSocket;
@@ -126,6 +125,7 @@ using ServiceMap  = std::map<CString,WebServiceServer*>;
 using URLGroupMap = std::vector<HTTPURLGroup*>;
 using UKHeaders   = std::multimap<CString,CString>;
 using SocketMap   = std::map<CString,WebSocket*>;;
+using RequestMap  = std::deque<HTTPRequest*>;
 
 // Global error variable in Thread-Local-Storage
 // Per-thread basis error status
@@ -215,7 +215,7 @@ public:
   CString     GetName();
   // Getting the server's name (according to the config file)
   CString     GetConfiguredName();
-  // Getting the webroot
+  // Getting the WebRoot
   CString     GetWebroot();
   // Get host name of the server's machine
   CString     GetHostname();
@@ -233,7 +233,7 @@ public:
   ULONG       GetEventKeepAlive();
   // Get the client retry connection time
   ULONG       GetEventRetryConnection();
-  // Reference to the webconfig
+  // Reference to the WebConfig
   WebConfig&  GetWebConfig();
   // Getting the logfile
   LogAnalysis* GetLogfile();
@@ -245,7 +245,7 @@ public:
   ErrorReport* GetErrorReport();
   // Get the fact that we do detailed logging
   bool        GetDetailedLogging();
-  // Has subsites registered
+  // Has sub-sites registered
   bool        GetHasSubsites();
   // Getting the cache policy
   HTTP_CACHE_POLICY_TYPE GetCachePolicy();
@@ -270,11 +270,13 @@ public:
   HTTPSite*  FindHTTPSite(int p_port,CString& p_url);
   HTTPSite*  FindHTTPSite(HTTPSite* p_default,CString& p_url);
 
+  // Outstanding asynchronous I/O requests
+  void         RegisterHTTPRequest(HTTPRequest* p_request);
+  void       UnRegisterHTTPRequest(HTTPRequest* p_request);
+
   // Sending response for an incoming message
   void       SendResponse(SOAPMessage* p_message);
   void       SendResponse(JSONMessage* p_message);
-  // Get text from HTTP_STATUS code
-  const char* GetStatusText(int p_status);
   // Return the number of push-event-streams for this URL, and probably for a user
   int        HasEventStreams(int p_port,CString p_url,CString p_user = "");
   // Return the fact that we have an event stream
@@ -345,7 +347,7 @@ protected:
   virtual void  InitHeaders() = 0;
   // Initialise the hard server limits in bytes
   virtual void  InitHardLimits() = 0;
-  // Initialise the servers webroot
+  // Initialise the servers WebRoot
   virtual void  InitWebroot(CString p_webroot) = 0;
   // Initialise the threadpool limits
   virtual void  InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize) = 0;
@@ -397,6 +399,8 @@ protected:
   ServiceMap              m_allServices;            // All Services
   CRITICAL_SECTION        m_sitesLock;              // Creating/starting/stopping sites
   bool                    m_hasSubsites{ false };   // Server serves at least 1 sub-site
+  // All requests
+  RequestMap              m_requests;               // All outstanding HTTP requests
   // Server push events
   EventMap                m_eventStreams;           // Server push event streams
   HANDLE                  m_eventMonitor{ NULL };   // Monitoring the event streams

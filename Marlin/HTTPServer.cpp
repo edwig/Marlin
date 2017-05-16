@@ -37,6 +37,8 @@
 #include "SOAPMessage.h"
 #include "HTTPURLGroup.h"
 #include "HTTPCertificate.h"
+#include "HTTPRequest.h"
+#include "HTTPError.h"
 #include "WebServiceServer.h"
 #include "WebSocket.h"
 #include "ThreadPool.h"
@@ -136,6 +138,13 @@ HTTPServer::HTTPServer(CString p_name)
 
 HTTPServer::~HTTPServer()
 {
+  // Clean out all request memory
+  for(auto& request : m_requests)
+  {
+    delete request;
+  }
+  m_requests.clear();
+
   DeleteCriticalSection(&m_eventLock);
   DeleteCriticalSection(&m_sitesLock);
 
@@ -236,7 +245,7 @@ HTTPServer::HTTPError(const char* p_function,int p_status,CString p_text)
 
   if(m_log)
   {
-    p_text.AppendFormat(" HTTP Status [%d] %s",p_status,GetStatusText(p_status));
+    p_text.AppendFormat(" HTTP Status [%d] %s",p_status,GetHTTPStatusText(p_status));
     result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
   }
 
@@ -600,16 +609,16 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
   }
 
   // Convert to a HTTP response
-  HTTPMessage answer(HTTPCommand::http_response,p_message);
+  HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
   // Set status in case of an error
   if(p_message->GetErrorState())
   {
-    answer.SetStatus(HTTP_STATUS_BAD_REQUEST);
+    answer->SetStatus(HTTP_STATUS_BAD_REQUEST);
     DETAILLOGS("Send SOAP FAULT response:\n", p_message->GetSoapMessage());
   }
 
   // Send the HTTP Message as response
-  SendResponse(&answer);
+  SendResponse(answer);
 
   // Do **NOT** send an answer twice
   p_message->SetRequestHandle(NULL);
@@ -631,18 +640,18 @@ HTTPServer::SendResponse(JSONMessage* p_message)
   {
     DETAILLOGS("Send JSON FAULT response:\n",p_message->GetJsonMessage());
     // Convert to a HTTP response
-    HTTPMessage answer(HTTPCommand::http_response,p_message);
-    answer.SetStatus(HTTP_STATUS_BAD_REQUEST);
-    answer.GetFileBuffer()->Reset();
-    SendResponse(&answer);
+    HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
+    answer->SetStatus(HTTP_STATUS_BAD_REQUEST);
+    answer->GetFileBuffer()->Reset();
+    SendResponse(answer);
   }
   else
   {
     DETAILLOGS("Send JSON response:\n",p_message->GetJsonMessage());
     // Convert to a HTTP response
-    HTTPMessage answer(HTTPCommand::http_response,p_message);
+    HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
     // Send the HTTP Message as response
-    SendResponse(&answer);
+    SendResponse(answer);
   }
   // Do **NOT** send an answer twice
   p_message->SetRequestHandle(NULL);
@@ -879,57 +888,6 @@ HTTPServer::DoIsModifiedSince(HTTPMessage* p_msg)
     // SendResponse(p_msg->GetRequestHandle(),HTTP_STATUS_NOT_FOUND,"Resource not found","");
   }
   return false;
-}
-
-// Get text from HTTP_STATUS code
-const char*
-HTTPServer::GetStatusText(int p_status)
-{
-       if(p_status == HTTP_STATUS_CONTINUE)           return "Continue";
-  else if(p_status == HTTP_STATUS_SWITCH_PROTOCOLS)   return "Switch protocols";
-  // 200
-  else if(p_status == HTTP_STATUS_OK)                 return "OK";
-  else if(p_status == HTTP_STATUS_CREATED)            return "Created";
-  else if(p_status == HTTP_STATUS_ACCEPTED)           return "Accepted";
-  else if(p_status == HTTP_STATUS_PARTIAL)            return "Partial completion";
-  else if(p_status == HTTP_STATUS_NO_CONTENT)         return "No info";
-  else if(p_status == HTTP_STATUS_RESET_CONTENT)      return "Completed, form cleared";
-  else if(p_status == HTTP_STATUS_PARTIAL_CONTENT)    return "Partial GET";
-  // 300
-  else if(p_status == HTTP_STATUS_AMBIGUOUS)          return "Server could not decide";
-  else if(p_status == HTTP_STATUS_MOVED)              return "Moved resource";
-  else if(p_status == HTTP_STATUS_REDIRECT)           return "Redirect to moved resource";
-  else if(p_status == HTTP_STATUS_REDIRECT_METHOD)    return "Redirect to new access method";
-  else if(p_status == HTTP_STATUS_NOT_MODIFIED)       return "Not modified since time";
-  else if(p_status == HTTP_STATUS_USE_PROXY)          return "Use specified proxy";
-  else if(p_status == HTTP_STATUS_REDIRECT_KEEP_VERB) return "HTTP/1.1: Keep same verb";
-  // 400
-  else if(p_status == HTTP_STATUS_BAD_REQUEST)        return "Invalid syntax";
-  else if(p_status == HTTP_STATUS_DENIED)             return "Access denied";
-  else if(p_status == HTTP_STATUS_PAYMENT_REQ)        return "Payment required";
-  else if(p_status == HTTP_STATUS_FORBIDDEN)          return "Request forbidden";
-  else if(p_status == HTTP_STATUS_NOT_FOUND)          return "URL/Object not found";
-  else if(p_status == HTTP_STATUS_BAD_METHOD)         return "Method is not allowed";
-  else if(p_status == HTTP_STATUS_NONE_ACCEPTABLE)    return "No acceptable response found";
-  else if(p_status == HTTP_STATUS_PROXY_AUTH_REQ)     return "Proxy authentication required";
-  else if(p_status == HTTP_STATUS_REQUEST_TIMEOUT)    return "Server timed out";
-  else if(p_status == HTTP_STATUS_CONFLICT)           return "Conflict";
-  else if(p_status == HTTP_STATUS_GONE)               return "Resource is no longer available";
-  else if(p_status == HTTP_STATUS_LENGTH_REQUIRED)    return "Length required";
-  else if(p_status == HTTP_STATUS_PRECOND_FAILED)     return "Precondition failed";
-  else if(p_status == HTTP_STATUS_REQUEST_TOO_LARGE)  return "Request body too large";
-  else if(p_status == HTTP_STATUS_URI_TOO_LONG)       return "URI too long";
-  else if(p_status == HTTP_STATUS_UNSUPPORTED_MEDIA)  return "Unsupported media type";
-  else if(p_status == HTTP_STATUS_RETRY_WITH)         return "Retry after appropriate action";
-  // 500
-  else if(p_status == HTTP_STATUS_SERVER_ERROR)       return "Internal server error";
-  else if(p_status == HTTP_STATUS_NOT_SUPPORTED)      return "Not supported";
-  else if(p_status == HTTP_STATUS_BAD_GATEWAY)        return "Error from gateway";
-  else if(p_status == HTTP_STATUS_SERVICE_UNAVAIL)    return "Temporarily overloaded";
-  else if(p_status == HTTP_STATUS_GATEWAY_TIMEOUT)    return "Gateway timeout";
-  else if(p_status == HTTP_STATUS_VERSION_NOT_SUP)    return "HTTP version not supported";
-  else if(p_status == HTTP_STATUS_LEGALREASONS)       return "Unavailable for legal reasons";
-  else                                                return "Unknown HTTP Status";
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1572,3 +1530,35 @@ HTTPServer::FindWebSocket(CString p_uri)
   }
   return nullptr;
 }
+
+//////////////////////////////////////////////////////////////////////////
+//
+// OUTSTANDING HTTPRequests
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Outstanding asynchronous I/O requests
+void
+HTTPServer::RegisterHTTPRequest(HTTPRequest* p_request)
+{
+  AutoCritSec lock(&m_sitesLock);
+
+  m_requests.push_back(p_request);
+}
+
+void
+HTTPServer::UnRegisterHTTPRequest(HTTPRequest* p_request)
+{
+  AutoCritSec lock(&m_sitesLock);
+
+  RequestMap::iterator it;
+  for(it = m_requests.begin();it != m_requests.end();++it)
+  {
+    if((*it) == p_request)
+    {
+      m_requests.erase(it);
+      return;
+    }
+  }
+}
+

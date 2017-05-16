@@ -272,22 +272,22 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestThreadPool(pool);
 
           // HTTP tests
-          errors += TestBaseSite(server);
+//           errors += TestBaseSite(server);
 //           errors += TestSecureSite(server);
 //           errors += TestClientCertificate(server);
-//           errors += TestPushEvents(server);
 //           errors += TestCookies(server);
+          errors += TestFormData(server);
+          errors += TestJsonData(server);
 //           errors += TestInsecure(server);
+//           errors += TestPushEvents(server);
 //           errors += TestBodySigning(server);
 //           errors += TestBodyEncryption(server);
 //           errors += TestMessageEncryption(server);
 //           errors += TestReliable(server);
 //           errors += TestToken(server);
 //           errors += TestSubSites(server);
-//           errors += TestJsonData(server);
 //           errors += TestFilter(server);
 //           errors += TestPatch(server);
-//           errors += TestFormData(server);
 //           errors += TestCompression(server);
 //           errors += TestWebSocket(server);
 

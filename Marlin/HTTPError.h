@@ -27,6 +27,9 @@
 //
 #pragma once
 
+// Extra HTTP status numbers (not in <winhttp.h>)
+#define HTTP_STATUS_LEGALREASONS  451   // New in IETF
+
 typedef struct _httpError
 {
   int   m_error;
@@ -35,3 +38,6 @@ typedef struct _httpError
 HTTPError;
 
 CString GetHTTPErrorText(int p_error);
+
+// Get text from HTTP_STATUS code
+const char* GetHTTPStatusText(int p_status);

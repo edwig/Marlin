@@ -37,6 +37,7 @@
 #include "AutoCritical.h"
 #include "WebServiceServer.h"
 #include "HTTPURLGroup.h"
+#include "HTTPError.h"
 #include "GetLastErrorAsString.h"
 #include "MarlinModule.h"
 #include "EnsureFile.h"
@@ -894,7 +895,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   }
 
   // Setting the response status
-  SetResponseStatus(response,(USHORT) p_message->GetStatus(),GetStatusText(p_message->GetStatus()));
+  SetResponseStatus(response,(USHORT) p_message->GetStatus(),GetHTTPStatusText(p_message->GetStatus()));
 
   // Add a known header. (octet-stream or the message content type)
   if(!p_message->GetContentType().IsEmpty())

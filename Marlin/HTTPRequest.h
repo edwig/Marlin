@@ -74,9 +74,13 @@ public:
   // Start a new request against the server
   void StartRequest();
   // Start the response handling
-  void StartResponse();
+  void StartResponse(HTTPMessage* p_message);
   // Callback from I/O Completion port
   void HandleAsynchroneousIO(IOAction p_action);
+
+  // GETTERS
+
+  HTTPServer* GetHTTPServer() { return m_server;  };
 
 private:
   // Ready with the response
@@ -93,6 +97,8 @@ private:
   void SendBodyPart();             // 4) Has send a body part
   // Sub procedures for the handlers
   bool CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_token);
+  // We have read the whole body of a message
+  void PostReceive();
   // Add a well known HTTP header to the response structure
   void AddKnownHeader(HTTP_HEADER_ID p_header,const char* p_value);
   // Add previously unknown HTTP headers
@@ -123,4 +129,5 @@ private:
   HANDLE            m_file       { NULL    };   // File handle for sending a file
   int               m_bufferpart { 0       };   // Buffer part being sent
   PHTTP_UNKNOWN_HEADER m_unknown { nullptr };   // Send unknown headers
+  CRITICAL_SECTION  m_critical;                 // Locking section
 };

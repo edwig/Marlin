@@ -30,6 +30,8 @@
 #include "HTTPMessage.h"
 #include "HTTPServer.h"
 #include "HTTPSite.h"
+#include "HTTPError.h"
+#include "AutoCritical.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -71,18 +73,23 @@ HTTPRequest::HTTPRequest(HTTPServer* p_server)
 {
   // Derive logging from the server
   m_logging = m_server->GetDetailedLogging();
+
+  InitializeCriticalSection(&m_critical);
 }
 
 // DTOR
 HTTPRequest::~HTTPRequest()
 {
   ClearMemory();
+  DeleteCriticalSection(&m_critical);
 }
 
 // Remove all memory from the heap
 void
 HTTPRequest::ClearMemory()
 {
+  AutoCritSec lock(&m_critical);
+
   if(m_message)
   {
     m_message->DropReference();
@@ -105,7 +112,7 @@ HTTPRequest::ClearMemory()
   }
   if(m_unknown)
   {
-    delete [] m_unknown;
+    free(m_unknown);
     m_unknown = nullptr;
   }
 }
@@ -128,10 +135,14 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
 {
   switch(p_action)
   {
-    case IO_Request: ReceivedRequest();  break;
-    case IO_Reading: ReceivedBodyPart(); break;
-    case IO_Response:SendResponseBody(); break;
-    case IO_Writing: SendBodyPart();     break;
+    case IO_Request: TRACE("Receive request\n");
+                     ReceivedRequest();  break;
+    case IO_Reading: TRACE("Do reading request body\n");
+                     ReceivedBodyPart(); break;
+    case IO_Response:TRACE("Send response body\n");
+                     SendResponseBody(); break;
+    case IO_Writing: TRACE("Did write response body part\n");
+                     SendBodyPart();     break;
     default:         ERRORLOG(ERROR_INVALID_PARAMETER,"Unexpected outstanding async I/O");
   }
 }
@@ -162,13 +173,8 @@ HTTPRequest::StartRequest()
                                         size,         // request buffer length
                                         nullptr,      // bytes received
                                         &m_incoming); // LPOVERLAPPED
-  // See what we got
-  if(result == NO_ERROR)
-  {
-    // By chance a request just arrived synchronously
-    ReceivedRequest();
-  }
-  else if(result != ERROR_IO_PENDING)
+  // Check the result
+  if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     // Error to the server log
     ERRORLOG(result,"Starting new HTTP Request");
@@ -177,10 +183,18 @@ HTTPRequest::StartRequest()
 
 // Start response cycle from the HTTPServer / HTTPSite / SiteHandler
 void
-HTTPRequest::StartResponse()
+HTTPRequest::StartResponse(HTTPMessage* p_message)
 {
-  // CHECKS
-
+  // CHECK if we send the same message!!
+  if(p_message && p_message != m_message)
+  {
+    if(m_message)
+    {
+      m_message->SetRequestHandle(NULL);
+      m_message->DropReference();
+    }
+    m_message = p_message;
+  }
   // Start response
   StartSendResponse();
 }
@@ -193,7 +207,7 @@ HTTPRequest::ReceivedRequest()
   HANDLE accessToken = nullptr;
 
   // Get status from the OVERLAPPED result
-  DWORD result = (DWORD) m_incoming.Internal;
+  DWORD result = (DWORD) m_incoming.Internal & 0x0FFFF;
   // Catch normal abortion statuses
   // Test if server already stopped, and we are here because of the stopping
   if((result == ERROR_CONNECTION_INVALID || result == ERROR_OPERATION_ABORTED) ||
@@ -395,6 +409,7 @@ HTTPRequest::StartReceiveRequest()
 
   // Use these flags while reading the request body
   ULONG flags = 0; //  HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER;
+  DWORD bytes = 0;
 
   // Issue the async read request
   DWORD result = HttpReceiveRequestEntityBody(m_server->GetRequestQueue()
@@ -402,16 +417,35 @@ HTTPRequest::StartReceiveRequest()
                                              ,flags
                                              ,m_readBuffer
                                              ,INIT_HTTP_BUFFERSIZE
-                                             ,nullptr
+                                             ,&bytes
                                              ,&m_reading);
-  if(result == ERROR_HANDLE_EOF || result == NO_ERROR)
+  
+  if(result != ERROR_IO_PENDING)
   {
-    ReceivedBodyPart();
-  }
-  else if(result != ERROR_IO_PENDING)
-  {
-    ERRORLOG(result,"Start receiving request body");
-    m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
+    // See if we are ready reading the whole body
+    if(result == ERROR_HANDLE_EOF || 
+       result == ERROR_CONNECTION_INVALID || 
+       ((m_reading.Internal & 0xFFFF) == ERROR_NO_MORE_ITEMS))
+    {
+      // Ready reading the whole body
+      PostReceive();
+    }
+    // Check for error
+    else if(result != NO_ERROR)
+    {
+      ERRORLOG(result,"Start receiving request body");
+      m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
+    }
+    else // NO_ERROR
+    {
+      if(bytes)
+      {
+        m_readBuffer[bytes] = 0;
+        m_message->GetFileBuffer()->AddBuffer(m_readBuffer,bytes);
+      }
+      // Ready reading the whole body
+      PostReceive();
+    }
   }
 }
 
@@ -419,7 +453,7 @@ HTTPRequest::StartReceiveRequest()
 void 
 HTTPRequest::ReceivedBodyPart()
 {
-  DWORD result = (DWORD) m_reading.Internal;
+  DWORD result = (DWORD)(m_reading.Internal & 0x0FFFF);
   if(result == ERROR_HANDLE_EOF || result == NO_ERROR)
   {
     // Store the result of the read action
@@ -438,7 +472,14 @@ HTTPRequest::ReceivedBodyPart()
     ERRORLOG(result,"Error receiving bodypart");
     m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
   }
+  PostReceive();
+}
 
+// We have read the whole body of a message
+// Now go processing it
+void
+HTTPRequest::PostReceive()
+{
   // In case of a POST, try to convert character set before submitting to site
   if(m_message->GetCommand() == HTTPCommand::http_post)
   {
@@ -463,6 +504,7 @@ HTTPRequest::StartSendResponse()
   // Mark the fact that we begin responding
   m_responding = true;
   // Make sure we have the correct event action
+  ResetOutstanding(m_writing);
   m_writing.m_action = IO_Response;
 
   // Place HTTPMessage in the response structure
@@ -488,12 +530,9 @@ HTTPRequest::StartSendResponse()
                                       nullptr);          // pReserved4  (must be NULL)
   
   DETAILLOGV("HTTP Response %d %s",m_response->StatusCode,m_response->pReason);
-  if(result == ERROR_HANDLE_EOF || result == NO_ERROR)
-  {
-    // To next stage (response is sent)
-    SendResponseBody();
-  }
-  else if(result != ERROR_IO_PENDING)
+
+  // Check for error
+  if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     ERRORLOG(result,"Sending HTTP Response");
   }
@@ -502,10 +541,12 @@ HTTPRequest::StartSendResponse()
 void
 HTTPRequest::SendResponseBody()
 {
-  if(m_writing.Internal)
+  DWORD error = m_writing.Internal & 0x0FFFF;
+  if(error)
   {
-    ERRORLOG((DWORD)m_writing.Internal,"Error sending HTTP headers");
+    ERRORLOG(error,"Error sending HTTP headers");
     Finalize();
+    StartRequest();
     return;
   }
   // Now begin writing our response body parts
@@ -580,24 +621,25 @@ HTTPRequest::SendResponseBody()
                                             0,              // Reserved2
                                             &m_writing,     // OVERLAPPED
                                             nullptr);       // LOGDATA
-  if(result == NO_ERROR)
-  {
-    SendBodyPart();
-  }
-  else if(result != ERROR_IO_PENDING)
+
+  // Check for error
+  if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     ERRORLOG(result,"Sending response body part");
   }
+
+  // Still responding or done?
+  m_responding = (flags == HTTP_SEND_RESPONSE_FLAG_MORE_DATA);
 }
 
 void
 HTTPRequest::SendBodyPart()
 {
   // Check status of the OVERLAPPED structure
-  DWORD result = (DWORD) m_writing.Internal;
-  if(result)
+  DWORD error = m_writing.Internal & 0x0FFFF;
+  if(error)
   {
-    ERRORLOG(result,"While sending HTTP response part");
+    ERRORLOG(error,"While sending HTTP response part");
   }
   else
   {
@@ -611,12 +653,15 @@ HTTPRequest::SendBodyPart()
       m_file = nullptr;
     }
 
-    // See if we need to send another chunk
-    if(filebuf->GetHasBufferParts() &&
-      (m_bufferpart < filebuf->GetNumberOfParts()))
+    if(m_responding)
     {
-      SendResponseBody();
-      return;
+      // See if we need to send another chunk
+      if(filebuf->GetHasBufferParts() &&
+        (m_bufferpart < filebuf->GetNumberOfParts()))
+      {
+        SendResponseBody();
+        return;
+      }
     }
   }
 
@@ -635,6 +680,10 @@ HTTPRequest::SendBodyPart()
 void
 HTTPRequest::Finalize()
 {
+  AutoCritSec lock(&m_critical);
+
+  TRACE("FINALIZE\n");
+
   // Reset th request id 
   HTTP_SET_NULL_ID(&m_requestID);
 
@@ -662,7 +711,7 @@ HTTPRequest::Finalize()
   // Remove unknown headers
   if(m_unknown)
   {
-    delete[] m_unknown;
+    free(m_unknown);
     m_unknown = nullptr;
   }
 
@@ -793,7 +842,7 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
     return;
   }
   // Allocate some space
-  m_unknown = new HTTP_UNKNOWN_HEADER[p_headers.size()];
+  m_unknown = (PHTTP_UNKNOWN_HEADER) malloc((1 + p_headers.size()) * sizeof(HTTP_UNKNOWN_HEADER));
 
   unsigned ind = 0;
   for(auto& unknown : p_headers)
@@ -825,14 +874,13 @@ HTTPRequest::FillResponse()
   {
     m_response = new HTTP_RESPONSE();
     RtlZeroMemory(m_response,sizeof(HTTP_RESPONSE));
-  
-    unsigned status  = m_message->GetStatus();
-    const char* text = m_server->GetStatusText(status);
-
-    m_response->StatusCode   = (USHORT)status;
-    m_response->pReason      = text;
-    m_response->ReasonLength = (USHORT)strlen(text);
   }
+  unsigned status  = m_message->GetStatus();
+  const char* text = GetHTTPStatusText(status);
+
+  m_response->StatusCode   = (USHORT)status;
+  m_response->pReason      = text;
+  m_response->ReasonLength = (USHORT)strlen(text);
 
   // Add content type as a known header. (octet-stream or the message content type)
   CString contentType("application/octet-stream");

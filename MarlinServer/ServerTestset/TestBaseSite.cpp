@@ -56,24 +56,38 @@ protected:
 bool
 SiteHandlerGetBase::Handle(HTTPMessage* p_message)
 {
+  bool ok = false;
   bool result = SiteHandlerGet::Handle(p_message);
 
   if(p_message->GetStatus() == HTTP_STATUS_OK)
   {
+    ok = true;
     --totalChecks;
   }
+
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("HTTP Base GET operation on the base site       : %s\n", ok ? "OK" : "ERROR");
+
   return result;
 }
 
 bool
 SiteHandlerPutBase::Handle(HTTPMessage* p_message)
 {
+  bool ok = false;
   bool result = SiteHandlerPut::Handle(p_message);
 
-  if(p_message->GetStatus() == HTTP_STATUS_OK)
+  if(p_message->GetStatus() == HTTP_STATUS_CREATED)
   {
+    ok = true;
     --totalChecks;
   }
+
+  // SUMMARY OF THE TEST
+  // ---- "---------------------------------------------- - ------
+  qprintf("HTTP Base PUT operation on the base site       : %s\n",ok ? "OK" : "ERROR");
+
   return result;
 }
 

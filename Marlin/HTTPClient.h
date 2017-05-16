@@ -390,7 +390,7 @@ private:
   bool          m_httpCompression { false   };                    // Accepts HTTP compression (gzip!)
   // URL
   CString       m_url;                                            // Full URL
-  CString       m_scheme;                                         // URL part: protocol scheme
+  CString       m_scheme          { "http"  };                    // URL part: protocol scheme
   bool          m_secure          { false   };                    // URL part: Secure connection (HTTPS)
   CString       m_user;                                           // URL part: Authentication user
   CString       m_password;                                       // URL part: Authentication password

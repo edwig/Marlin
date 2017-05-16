@@ -399,18 +399,18 @@ int TestJsonData(HTTPClient* p_client)
   xprintf("TESTING STANDARD JSON MESSAGE TO /MarlinTest/Data/\n");
   xprintf("==================================================\n");
 
-  JSONMessage msg1("\"Test1\"",url);
-  msg1.AddHeader("GUID","888-777-666");
-  errors += DoSend(p_client,&msg1);
-
-  JSONMessage msg2("\"Test2\"",url);
-  msg2.AddHeader("GUID","888-777-666");
-  errors += DoSend(p_client,&msg2);
-
-  // Now Send again in UTF-16 Unicode
-  xprintf("TESTING UNICODE JOSN MESSAGE TO /MarlinTest/Data/\n");
-  xprintf("=================================================\n");
-
+//   JSONMessage msg1("\"Test1\"",url);
+//   msg1.AddHeader("GUID","888-777-666");
+//   errors += DoSend(p_client,&msg1);
+// 
+//   JSONMessage msg2("\"Test2\"",url);
+//   msg2.AddHeader("GUID","888-777-666");
+//   errors += DoSend(p_client,&msg2);
+// 
+//   // Now Send again in UTF-16 Unicode
+//   xprintf("TESTING UNICODE JOSN MESSAGE TO /MarlinTest/Data/\n");
+//   xprintf("=================================================\n");
+// 
   JSONMessage msg3("\"Test1\"",url);
   msg3.SetSendUnicode(true);
   msg3.AddHeader("GUID","888-777-666");

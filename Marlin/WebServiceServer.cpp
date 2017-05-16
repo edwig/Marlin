@@ -604,9 +604,9 @@ WebServiceServer::SendResponse(SOAPMessage* p_response)
 void
 WebServiceServer::SendResponse(SOAPMessage* p_response,int p_httpStatus)
 {
-  HTTPMessage answer(HTTPCommand::http_response,p_response);
-  answer.SetStatus(p_httpStatus);
-  m_httpServer->SendResponse(&answer);
+  HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_response);
+  answer->SetStatus(p_httpStatus);
+  m_httpServer->SendResponse(answer);
 
   // Do not respond with the original message
   p_response->SetRequestHandle(NULL);

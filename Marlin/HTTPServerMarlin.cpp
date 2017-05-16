@@ -591,6 +591,7 @@ StartHTTPRequest(void* p_argument)
   if(server)
   {
     HTTPRequest* request = new HTTPRequest(server);
+    server->RegisterHTTPRequest(request);
     request->StartRequest();
   }
 }
@@ -602,11 +603,20 @@ CancelHTTPRequest(void* p_argument)
   OutstandingIO* outstanding = reinterpret_cast<OutstandingIO*>(p_argument);
   if(outstanding)
   {
-    delete outstanding->m_request;
+    HTTPRequest* request = outstanding->m_request;
+    if(request)
+    {
+      HTTPServer* server = request->GetHTTPServer();
+      if(server)
+      {
+        server->UnRegisterHTTPRequest(request);
+      }
+      delete request;
+    }
   }
 }
 
-// Running the server on Async I/O in the threadpool
+// Running the server on asynchronous I/O in the threadpool
 void
 HTTPServerMarlin::Run()
 {
@@ -1426,7 +1436,12 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
   HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_message->GetRequestHandle());
   if(request)
   {
-    request->StartResponse();
+    // Reset the request handle here. The response will continue async from here
+    // so the next handlers cannot find a request handle to answer to
+    p_message->SetRequestHandle(NULL);
+
+    // Go send the response ASYNC
+    request->StartResponse(p_message);
   }
 }
 bool
