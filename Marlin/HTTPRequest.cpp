@@ -232,6 +232,7 @@ HTTPRequest::ReceivedRequest()
   // Grab the senders content
   CString   acceptTypes     = m_request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
   CString   contentType     = m_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
+  CString   contentLength   = m_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
   CString   acceptEncoding  = m_request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
   CString   cookie          = m_request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
   CString   authorize       = m_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
@@ -250,6 +251,9 @@ HTTPRequest::ReceivedRequest()
 
   // Log incoming request
   DETAILLOGS("Got a request for: ",rawUrl);
+
+  // Recording expected content length
+  m_expect = atol(contentLength);
 
   // FInding the site
   bool eventStream = false;
@@ -318,6 +322,9 @@ HTTPRequest::ReceivedRequest()
                             }
                             break;
   }
+
+  // From this point on we may receive the body
+  m_mayreceive = true;
 
   // Receiving the initiation of an event stream for the server
   acceptTypes.Trim();
@@ -409,7 +416,6 @@ HTTPRequest::StartReceiveRequest()
 
   // Use these flags while reading the request body
   ULONG flags = 0; //  HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER;
-  DWORD bytes = 0;
 
   // Issue the async read request
   DWORD result = HttpReceiveRequestEntityBody(m_server->GetRequestQueue()
@@ -417,35 +423,19 @@ HTTPRequest::StartReceiveRequest()
                                              ,flags
                                              ,m_readBuffer
                                              ,INIT_HTTP_BUFFERSIZE
-                                             ,&bytes
+                                             ,NULL
                                              ,&m_reading);
   
-  if(result != ERROR_IO_PENDING)
+  // See if we are ready reading the whole body
+  if(result == ERROR_HANDLE_EOF)
   {
-    // See if we are ready reading the whole body
-    if(result == ERROR_HANDLE_EOF || 
-       result == ERROR_CONNECTION_INVALID || 
-       ((m_reading.Internal & 0xFFFF) == ERROR_NO_MORE_ITEMS))
-    {
-      // Ready reading the whole body
-      PostReceive();
-    }
-    // Check for error
-    else if(result != NO_ERROR)
-    {
-      ERRORLOG(result,"Start receiving request body");
-      m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
-    }
-    else // NO_ERROR
-    {
-      if(bytes)
-      {
-        m_readBuffer[bytes] = 0;
-        m_message->GetFileBuffer()->AddBuffer(m_readBuffer,bytes);
-      }
-      // Ready reading the whole body
-      PostReceive();
-    }
+    // Ready reading the whole body
+    m_mayreceive = false;
+    PostReceive();
+  }
+  else if(result != ERROR_IO_PENDING && result != NO_ERROR)
+  {
+    ERRORLOG(result,"Error receiving HTTP request body");
   }
 }
 
@@ -457,12 +447,15 @@ HTTPRequest::ReceivedBodyPart()
   if(result == ERROR_HANDLE_EOF || result == NO_ERROR)
   {
     // Store the result of the read action
-    m_readBuffer[m_reading.InternalHigh] = 0;
-    m_message->GetFileBuffer()->AddBuffer(m_readBuffer,m_reading.InternalHigh);
-
+    DWORD bytes = (DWORD) m_reading.InternalHigh;
+    if(bytes)
+    {
+      m_readBuffer[bytes] = 0;
+      m_message->GetFileBuffer()->AddBuffer(m_readBuffer,bytes);
+    }
     if(result == NO_ERROR)
     {
-      // Start the next read request
+      // (Re)start the next read request
       StartReceiveRequest();
       return;
     }
@@ -480,6 +473,8 @@ HTTPRequest::ReceivedBodyPart()
 void
 HTTPRequest::PostReceive()
 {
+  // ASSERT(m_message);
+
   // In case of a POST, try to convert character set before submitting to site
   if(m_message->GetCommand() == HTTPCommand::http_post)
   {

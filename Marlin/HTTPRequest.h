@@ -117,6 +117,7 @@ private:
   HTTPSite*         m_site       { nullptr };   // Site from the HTTP context
   HTTPMessage*      m_message    { nullptr };   // The message we are processing in the request
   HTTP_CACHE_POLICY m_policy;                   // Sending cache policy
+  long              m_expect     { 0       };   // Expected content length
   OutstandingIO     m_incoming;                 // Incoming IO request
   OutstandingIO     m_reading;                  // Outstanding reading action
   OutstandingIO     m_writing;                  // Outstanding writing action

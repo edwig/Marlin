@@ -390,7 +390,7 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     // Start executing again
     InterlockedIncrement(&m_bsyThreads);
 
-    if(error == ERROR_OPERATION_ABORTED || error == ERROR_INVALID_HANDLE)
+    if(!ok && error == ERROR_OPERATION_ABORTED)
     {
       // Asynchronous I/O was aborted (e.g: file handle was closed)
       // Call the abort function, so the caller can clean up the mess

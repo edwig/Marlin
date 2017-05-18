@@ -272,29 +272,29 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestThreadPool(pool);
 
           // HTTP tests
-//           errors += TestBaseSite(server);
-//           errors += TestSecureSite(server);
-//           errors += TestClientCertificate(server);
-//           errors += TestCookies(server);
+          errors += TestBaseSite(server);
+          errors += TestSecureSite(server);
+          errors += TestClientCertificate(server);
+          errors += TestCookies(server);
           errors += TestFormData(server);
           errors += TestJsonData(server);
-//           errors += TestInsecure(server);
+          errors += TestInsecure(server);
 //           errors += TestPushEvents(server);
-//           errors += TestBodySigning(server);
-//           errors += TestBodyEncryption(server);
-//           errors += TestMessageEncryption(server);
-//           errors += TestReliable(server);
-//           errors += TestToken(server);
-//           errors += TestSubSites(server);
-//           errors += TestFilter(server);
-//           errors += TestPatch(server);
-//           errors += TestCompression(server);
+          errors += TestBodySigning(server);
+          errors += TestBodyEncryption(server);
+          errors += TestMessageEncryption(server);
+          errors += TestReliable(server);
+          errors += TestToken(server);
+          errors += TestSubSites(server);
+          errors += TestFilter(server);
+          errors += TestPatch(server);
+          errors += TestCompression(server);
 //           errors += TestWebSocket(server);
 
-//           // Test the WebServiceServer program generation
-//           CString contract = "http://interface.marlin.org/testing/";
-//           errors += TestJsonServer(server,contract);
-//           errors += TestWebServiceServer(server,contract);
+         // Test the WebServiceServer program generation
+         CString contract = "http://interface.marlin.org/testing/";
+         errors += TestJsonServer(server,contract);
+         errors += TestWebServiceServer(server,contract);
 
           // See if we should wait for testing to occur
           if(errors)
