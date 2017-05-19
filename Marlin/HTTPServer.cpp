@@ -263,15 +263,6 @@ HTTPServer::HTTPError(const char* p_function,int p_status,CString p_text)
 bool
 HTTPServer::GeneralChecks()
 {
-  // Initial checks
-  if(m_pool == nullptr)
-  {
-    // Cannot run without a pool
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Connect a threadpool for handling url's");
-    return false;
-  }
-  DETAILLOG1("Threadpool checks out OK");
-
   // Check the error report object
   if(m_errorReport == nullptr)
   {
@@ -305,35 +296,6 @@ HTTPServer::SetLogging(LogAnalysis* p_log)
   }
   m_log = p_log;
   InitLogging();
-}
-
-void
-HTTPServer::SetThreadPool(ThreadPool* p_pool)
-{
-  // Look for override in webconfig
-  if(p_pool)
-  {
-    int minThreads = p_pool->GetMinThreads();
-    int maxThreads = p_pool->GetMaxThreads();
-    int stackSize  = p_pool->GetStackSize();
-
-    // Dependent on the type of server
-    InitThreadpoolLimits(minThreads,maxThreads,stackSize);
-
-    if(minThreads && minThreads >= NUM_THREADS_MINIMUM)
-    {
-      p_pool->TrySetMinimum(minThreads);
-    }
-    if(maxThreads && maxThreads <= NUM_THREADS_MAXIMUM)
-    {
-      p_pool->TrySetMaximum(maxThreads);
-    }
-    if(stackSize >= THREAD_STACKSIZE)
-    {
-      p_pool->SetStackSize(stackSize);
-    }
-  }
-  m_pool = p_pool;
 }
 
 void
@@ -1037,11 +999,19 @@ HTTPServer::SendEvent(EventStream* p_stream
   // Produce the event string
   CString sendString = EventToString(p_event);
 
-  // Lock server as short as possible and Push to the stream
+  // Send the event to the client. This can take an I/O wait time
+  bool alive = SendResponseEventBuffer(p_stream->m_requestID,sendString.GetString(),sendString.GetLength(),p_continue);
+
+  // Lock server as short as possible to register the return status
+  // But we must now make sure the event stream still does exist
   {
     AutoCritSec lock(&m_eventLock);
-    p_stream->m_alive = SendResponseEventBuffer(p_stream->m_requestID,sendString.GetString(),sendString.GetLength(),p_continue);
+    if(HasEventStream(p_stream))
+    {
+      p_stream->m_alive = alive;
+    }
   }
+
   // Remember the time we sent the event pulse
   _time64(&(p_stream->m_lastPulse));
 

@@ -1188,7 +1188,7 @@ WSDLCache::ReadWSDLFile(LPCTSTR p_filename)
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
     m_exception ? EXCEPTION_EXECUTE_HANDLER :
-    (m_exception = true,
+   (m_exception = true,
     m_exception = ErrorReport::Report(GetExceptionCode(),GetExceptionInformation()),
     EXCEPTION_EXECUTE_HANDLER))
   {

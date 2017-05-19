@@ -332,6 +332,9 @@ ThreadPool::AssociateIOHandle(HANDLE p_handle,ULONG_PTR p_key)
     error = GetLastError();
     TP_TRACE1("Threadpool cannot register file handle for asynchroneous I/O completion. Error: %d",error);
   }
+
+  SetFileCompletionNotificationModes(p_handle,FILE_SKIP_SET_EVENT_ON_HANDLE);
+
   return error;
 }
 
@@ -387,6 +390,7 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     InterlockedDecrement(&m_bsyThreads);
     BOOL ok = GetQueuedCompletionStatus(m_completion,&bytes,&key,&overlapped,INFINITE);
     error = GetLastError();
+
     // Start executing again
     InterlockedIncrement(&m_bsyThreads);
 

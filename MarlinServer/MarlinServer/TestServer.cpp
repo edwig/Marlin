@@ -38,6 +38,7 @@
 #include "GetLastErrorAsString.h"
 #include "PrintToken.h"
 #include "Analysis.h"
+#include "AutoCritical.h"
 
 #define  NOGDI
 #define  NOMINMAX
@@ -64,12 +65,17 @@ static char THIS_FILE[] = __FILE__;
 // Global objects of this test program
 int  totalErrors = 0;
 bool doDetails   = false;
+bool doLogging   = true;
+// Global critical section to print to the 'stdio' stream
+CRITICAL_SECTION std_stream;
 
 // eXtended Printf: print only if doDetails is true
 void xprintf(const char* p_format, ...)
 {
   if (doDetails)
   {
+    AutoCritSec lock(&std_stream);
+
     va_list vl;
     va_start(vl, p_format);
     vprintf(p_format, vl);
@@ -98,6 +104,8 @@ void qprintf(const char* p_format,...)
   // Print the result to the logfile as INFO
   string = stringRegister + string;
   stringRegister.Empty();
+
+  AutoCritSec lock(&std_stream);
   printf(string);
 }
 
@@ -119,33 +127,18 @@ WaitForKey()
 }
 
 // Setting the filename of the logfile
-#ifdef _DEBUG
-#ifdef _M_X64
-CString g_baseDir = "..\\..\\BinDebug_x64\\";
-#else
-CString g_baseDir = "..\..\\BinDebug_x32\\";
-#endif // _M_X64
-#else // _DEBUG
-#ifdef _M_X64
-CString g_baseDir = "..\\..\\BinRelease_x64\\";
-#else
-CString g_baseDir = "..\\..\\BinRelease_x32\\";
-#endif // _M_X64
-#endif // _DEBUG
-
+CString g_baseDir = ".\\";
 extern ErrorReport g_report;
 
 // Starting our server
 //
 bool StartServer(HTTPServer*&  p_server
-                ,ThreadPool*&  p_pool
                 ,LogAnalysis*& p_logfile)
 {
   // This is the name of our test server
   CString naam("MarlinServer");
 
   // Start the base objects
-  p_pool    = new ThreadPool(4,10);
   p_server  = new HTTPServerMarlin(naam);
   p_logfile = new LogAnalysis(naam);
 
@@ -154,18 +147,17 @@ bool StartServer(HTTPServer*&  p_server
 
   // Put a logfile on the server
   p_logfile->SetLogFilename(logfileName,false);
-  p_logfile->SetDoLogging(true);
+  p_logfile->SetDoLogging(doLogging);
   p_logfile->SetDoEvents(false);
   p_logfile->SetDoTiming(true);
   p_logfile->SetCache(500);
   p_logfile->SetLogRotation(true);
-  p_server->SetDetailedLogging(true);
+  p_server->SetDetailedLogging(doLogging);
   // connect
   p_server->SetLogging(p_logfile);
 
   // SETTING THE MANDATORY MEMBERS
 
-  p_server->SetThreadPool(p_pool);               // Threadpool
   p_server->SetWebroot("C:\\WWW\\Marlin\\");     // WebConfig overrides
   p_server->SetErrorReport(&g_report);      // Error reporting
 
@@ -193,16 +185,11 @@ bool StartServer(HTTPServer*&  p_server
 // Stopping the server
 void 
 CleanupServer(HTTPServer*&  p_server
-             ,ThreadPool*&  p_pool
              ,LogAnalysis*& p_logfile)
 {
   if(p_server)
   {
     delete p_server;
-  }
-  if(p_pool)
-  {
-    delete p_pool;
   }
   if(p_logfile)
   {
@@ -217,6 +204,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
   int nRetCode = 0;
 
   HMODULE hModule = ::GetModuleHandle(NULL);
+  InitializeCriticalSection(&std_stream);
 
   if(hModule == NULL)
   {
@@ -258,10 +246,9 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
       else
       {
         HTTPServer*   server  = nullptr;
-        ThreadPool*   pool    = nullptr;
         LogAnalysis*  logfile = nullptr;
 
-        if(StartServer(server,pool,logfile))
+        if(StartServer(server,logfile))
         {
           // Fire up all of our test sites
           int errors = 0;
@@ -269,7 +256,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           // Individual tests
           errors += Test_CrackURL();
           errors += Test_HTTPTime();
-          errors += TestThreadPool(pool);
+          errors += TestThreadPool(server->GetThreadPool());
 
           // HTTP tests
           errors += TestBaseSite(server);
@@ -339,7 +326,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
                  ,server->GetLastError()
                  ,(LPCTSTR)GetLastErrorAsString(GetLastError()));
         }
-        CleanupServer(server,pool,logfile);
+        CleanupServer(server,logfile);
       }
     }
     printf("\n");
@@ -356,6 +343,8 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
     WaitForKey();
     WaitForKey();
   }
+  DeleteCriticalSection(&std_stream);
+
   return nRetCode;
 }
 

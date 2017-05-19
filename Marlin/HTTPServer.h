@@ -184,8 +184,6 @@ public:
  
   // MANDATORY: Set the webroot of the server
   void       SetWebroot(CString p_webroot);
-  // MANDATORY: Connect a threadpool to handle incoming requests
-  void       SetThreadPool(ThreadPool* p_pool);
   // MANDATORY: Set the ErrorReport object
   void       SetErrorReport(ErrorReport* p_report);
   // OPTIONAL: Set the client error page (range 400-417)
@@ -385,7 +383,7 @@ protected:
   CString                 m_clientErrorPage;        // Current client error
   HTTP_CACHE_POLICY_TYPE  m_policy   { HttpCachePolicyNocache };        // Cache policy
   ULONG                   m_secondsToLive  { 0 };   // Seconds to live in the cache
-  ThreadPool*             m_pool     { nullptr };   // Pointer to the threadpool
+  ThreadPool              m_pool;                   // Our threadpool for the server
   WebConfig               m_webConfig;              // Webconfig from current directory
   bool                    m_detail   { false   };   // Do detailed logging
   LogAnalysis*            m_log      { nullptr };   // Logging object
@@ -476,7 +474,7 @@ HTTPServer::GetSiteMap()
 inline ThreadPool* 
 HTTPServer::GetThreadPool()
 {
-  return m_pool;
+  return &m_pool;
 }
 
 inline void

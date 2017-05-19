@@ -416,7 +416,6 @@ WebServiceServer::Run()
   {
     m_httpServer  = new HTTPServerMarlin(m_name);
     m_serverOwner = true;
-    m_httpServer->SetThreadPool(m_pool);
     m_httpServer->SetWebroot(m_webroot);
     m_httpServer->SetLogging(m_log);
   }
@@ -566,7 +565,10 @@ WebServiceServer::Run()
   if(m_httpServer->GetLastError() == NO_ERROR)
   {
     // Go run our service!!
-    m_httpServer->Run();
+    if(m_httpServer->GetIsRunning() == false)
+    {
+      m_httpServer->Run();
+    }
   }
   else
   {

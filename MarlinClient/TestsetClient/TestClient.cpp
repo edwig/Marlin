@@ -157,7 +157,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestContract(client,true);
       errors += TestPatching(client);
       errors += TestCompression(client);
-//       errors += TestWebservices(*client);
+      errors += TestWebservices(*client);
     }
   
     printf("\n");

@@ -123,7 +123,7 @@ HTTPServerMarlin::Initialise()
 
   // STEP 6: SET UP FOR ASYNC I/O
   // Register the request queue for async I/O
-  retCode = m_pool->AssociateIOHandle(m_requestQueue,(ULONG_PTR)HandleAsynchroneousIO);
+  retCode = m_pool.AssociateIOHandle(m_requestQueue,(ULONG_PTR)HandleAsynchroneousIO);
   if(retCode != NO_ERROR)
   {
     ERRORLOG(retCode,"Associate request queue with the I/O completion port of the threadpool.");
@@ -637,13 +637,13 @@ HTTPServerMarlin::Run()
 
   // Registering the init for the threadpool
   // This get new threads started on a HTTPRequest
-  if(!m_pool->SetThreadInitFunction(StartHTTPRequest,CancelHTTPRequest,(void*)this))
+  if(m_pool.SetThreadInitFunction(StartHTTPRequest,CancelHTTPRequest,(void*)this))
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Threadpool already servicing another server!");
+    DETAILLOG1("HTTPServer registered for the threadpool init loop");
   }
   else
   {
-    DETAILLOG1("HTTPServer registered for the threadpool init loop");
+    ERRORLOG(ERROR_INVALID_PARAMETER,"Threadpool cannot service our request queue!");
   }
 
   // STARTED OUR MAIN LOOP
@@ -652,7 +652,7 @@ HTTPServerMarlin::Run()
 
   // Starting the pool will trigger the starting of the reading threads
   // Because we registered our init function to start on a HTTPRequest
-  m_pool->Run();
+  m_pool.Run();
 }
 
 // Running the main loop of the webserver

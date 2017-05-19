@@ -132,9 +132,8 @@ XMLMessage::XMLMessage()
 // XTOR from another message
 XMLMessage::XMLMessage(XMLMessage* p_orig)
 {
-  // Copy by reference
-  m_root = p_orig->m_root;
-  m_root->AddReference();
+  // Copy the element chain
+  m_root = new XMLElement(*p_orig->m_root);
   // Copy the contents
   m_version             = p_orig->m_version;
   m_encoding            = p_orig->m_encoding;

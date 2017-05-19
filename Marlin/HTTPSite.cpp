@@ -518,9 +518,9 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
     g_exception ? EXCEPTION_EXECUTE_HANDLER :
-    g_exception = true,
+   (g_exception = true,
     g_exception = ErrorReport::Report(GetExceptionCode(),GetExceptionInformation(),m_webroot,m_site),
-    EXCEPTION_EXECUTE_HANDLER)
+    EXCEPTION_EXECUTE_HANDLER))
   {
     if(g_exception)
     {
@@ -587,9 +587,9 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
     g_exception ? EXCEPTION_EXECUTE_HANDLER :
-    g_exception = true,
+   (g_exception = true,
     g_exception = ErrorReport::Report(GetExceptionCode(),GetExceptionInformation(),m_webroot,m_site),
-    EXCEPTION_EXECUTE_HANDLER)
+    EXCEPTION_EXECUTE_HANDLER))
   {
     if(g_exception)
     {

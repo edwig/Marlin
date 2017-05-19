@@ -135,14 +135,10 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
 {
   switch(p_action)
   {
-    case IO_Request: TRACE("Receive request\n");
-                     ReceivedRequest();  break;
-    case IO_Reading: TRACE("Do reading request body\n");
-                     ReceivedBodyPart(); break;
-    case IO_Response:TRACE("Send response body\n");
-                     SendResponseBody(); break;
-    case IO_Writing: TRACE("Did write response body part\n");
-                     SendBodyPart();     break;
+    case IO_Request: ReceivedRequest();  break;
+    case IO_Reading: ReceivedBodyPart(); break;
+    case IO_Response:SendResponseBody(); break;
+    case IO_Writing: SendBodyPart();     break;
     default:         ERRORLOG(ERROR_INVALID_PARAMETER,"Unexpected outstanding async I/O");
   }
 }
@@ -663,6 +659,8 @@ HTTPRequest::SendBodyPart()
   // Message is done. Break the connection with the HTTPRequest
   m_message->SetRequestHandle(NULL);
 
+  FlushFileBuffers(m_server->GetRequestQueue());
+
   // End of the line for the whole request
   // We did send everything as an answer
   Finalize();
@@ -676,8 +674,6 @@ void
 HTTPRequest::Finalize()
 {
   AutoCritSec lock(&m_critical);
-
-  TRACE("FINALIZE\n");
 
   // Reset th request id 
   HTTP_SET_NULL_ID(&m_requestID);

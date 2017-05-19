@@ -306,7 +306,7 @@ TestReliableMessaging(HTTPClient* p_client,CString p_namespace,CString p_action,
 int
 DoSendByQueue(HTTPClient& p_client,CString p_namespace,CString p_action,CString p_url)
 {
-  int times = 20;
+  int times = 50;
   CString name("TestNumber");
 
   for(int x = 1; x <= times; ++x)

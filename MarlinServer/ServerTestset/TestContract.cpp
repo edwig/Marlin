@@ -124,6 +124,7 @@ void
 TestContract::OnMarlinFirst(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MF);
+  UNREFERENCED_PARAMETER(p_code);
   
   m_language = p_message->GetParameter("Language");
   // --- "---------------------------------------------- - ------
@@ -141,7 +142,8 @@ void
 TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MS);
-  
+  UNREFERENCED_PARAMETER(p_code);
+
   m_translation = p_message->GetParameter("Translation");
   // --- "---------------------------------------------- - ------
   qprintf("WSDL Contract: Second: translation language    : OK\n");
@@ -171,6 +173,7 @@ void
 TestContract::OnMarlinThird(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MT);
+  UNREFERENCED_PARAMETER(p_code);
 
   CString word   = p_message->GetParameter("WordToTranslate");
   CString result = Translation(m_language,m_translation,word);
@@ -193,6 +196,8 @@ void
 TestContract::OnMarlinFourth(int p_code,SOAPMessage* /*p_message*/)
 {
   ASSERT(p_code == CONTRACT_M4);
+  UNREFERENCED_PARAMETER(p_code);
+
   // --- "---------------------------------------------- - ------
   qprintf("WSDL Contract: Wrong contract (Fourth)         : ERROR\n");
   xerror();
@@ -202,6 +207,8 @@ void
 TestContract::OnMarlinFifth(int p_code,SOAPMessage* /*p_message*/)
 {
   ASSERT(p_code == CONTRACT_MV);
+  UNREFERENCED_PARAMETER(p_code);
+
   // --- "---------------------------------------------- - ------
   qprintf("WSDL Contract: Wrong contract (Fifth)          : ERROR\n");
   xerror();
