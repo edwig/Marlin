@@ -306,7 +306,7 @@ TestReliableMessaging(HTTPClient* p_client,CString p_namespace,CString p_action,
 int
 DoSendByQueue(HTTPClient& p_client,CString p_namespace,CString p_action,CString p_url)
 {
-  int times = 50;
+  int times = 20;
   CString name("TestNumber");
 
   for(int x = 1; x <= times; ++x)
@@ -413,17 +413,17 @@ int TestWebservices(HTTPClient& client)
   client.SetSingleSignOn(false);
 
   // Test 7
-  xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n");
-  xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/Two/\n");
-  xprintf("============================================================\n");
-  CString url1 = CreateURL("TestToken/One");
-  CString url2 = CreateURL("TestToken/Two");
-  msg = CreateSoapMessage(namesp,command,url1);
-  client.SetSingleSignOn(true);
-  errors += DoSend(client,msg,"single sign on");
-  msg = CreateSoapMessage(namesp,command,url2);
-  errors += DoSend(client,msg,"single sign on");
-  client.SetSingleSignOn(false);
+//   xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n");
+//   xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/Two/\n");
+//   xprintf("============================================================\n");
+//   CString url1 = CreateURL("TestToken/One");
+//   CString url2 = CreateURL("TestToken/Two");
+//   msg = CreateSoapMessage(namesp,command,url1);
+//   client.SetSingleSignOn(true);
+//   errors += DoSend(client,msg,"single sign on");
+//   msg = CreateSoapMessage(namesp,command,url2);
+//   errors += DoSend(client,msg,"single sign on");
+//   client.SetSingleSignOn(false);
 
   // Test 8
   xprintf("TESTING SOAP FAULT TO /MarlinTest/Insecure/\n");

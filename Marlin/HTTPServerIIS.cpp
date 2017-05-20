@@ -500,7 +500,9 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
       stream->m_baseURL = rawUrl;
       DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s",stream->m_user.GetString(),rawUrl.GetString());
       // To do for this stream, not for a message
-      m_pool.SubmitWork(p_site->GetCallback(),(void*)stream);
+      p_site->HandleEventStream(stream);
+
+      // Return the fact that the request turned into a stream
       p_stream = stream;
       return nullptr;
     }

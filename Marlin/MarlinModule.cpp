@@ -61,7 +61,7 @@ static char THIS_FILE[] = __FILE__;
 IHttpServer*      g_iisServer   = nullptr;    // Pointer to the IIS Server
 LogAnalysis*      g_analysisLog = nullptr;    // Pointer to our logfile
 HTTPServerIIS*    g_marlin      = nullptr;    // Pointer to Marlin Server for IIS
-HTTPThreadPool*   g_pool        = nullptr;    // Threadpool for events and tasks
+ThreadPool*       g_pool        = nullptr;    // Threadpool for events and tasks
 ErrorReport       g_report;                   // Error reporting for Marlin
 WebConfigIIS      g_config;                   // Global ApplicationHost.config
 bool              g_abortServer = false;      // Abort HTTPServer before the ServerApp
@@ -272,7 +272,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     // Now run the marlin server
     g_marlin->Run();
     // Grab the threadpool
-    // g_pool = g_marlin->GetThreadPool();
+    g_pool = g_marlin->GetThreadPool();
 
     // Create a global ServerApp object
     if(g_server)

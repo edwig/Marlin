@@ -127,7 +127,7 @@ public:
   virtual void    ParseMessage(CString& p_message);
   // Parse incoming soap as new body of the message
   virtual void    ParseAsBody(CString& p_message);
-  // Parse incoming GET url to SOAP parameters
+  // Parse incoming GET URL to SOAP parameters
   virtual void    Url2SoapParameters(CrackedURL& p_url);
 
   // SETTERS

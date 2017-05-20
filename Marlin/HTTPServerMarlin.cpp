@@ -655,372 +655,6 @@ HTTPServerMarlin::Run()
   m_pool.Run();
 }
 
-// Running the main loop of the webserver
-// void
-// HTTPServerMarlin::RunHTTPServer()
-// {
-//   ULONG              result    = 0;
-//   DWORD              bytesRead = 0;
-//   bool               doReceive = true;
-//   HTTP_REQUEST_ID    requestId = NULL;
-//   PHTTP_REQUEST      request   = nullptr;
-//   PCHAR              requestBuffer = nullptr;
-//   ULONG              requestBufferLength = 0;
-//   HTTPMessage*       message = NULL;
-//   USES_CONVERSION;
-// 
-//   // Use counter
-//   m_counter.Start();
-// 
-//   Initialise();
-// 
-//   // See if we are in a state to receive requests
-//   if(GetLastError() || !m_initialized)
-//   {
-//     ERRORLOG(ERROR_INVALID_PARAMETER,"RunHTTPServer called too early");
-//     return;
-//   }
-//   DETAILLOG1("HTTPServer initialised and ready to go!");
-// 
-//   // Check if all sites were properly started
-//   // Catches programmers who forget to call HTTPSite::StartSite()
-//   CheckSitesStarted();
-// 
-//   // Allocate a 32 KB buffer. This size should work for most 
-//   // requests. The buffer size can be increased if required. Space
-//   // is also required for an HTTP_REQUEST structure.
-//   requestBufferLength = sizeof(HTTP_REQUEST) + INIT_HTTP_BUFFERSIZE;
-//   requestBuffer       = (PCHAR) new uchar[requestBufferLength];
-// 
-//   if(requestBuffer == NULL)
-//   {
-//     ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Out of memory");
-//     return;
-//   }
-//   DETAILLOGV("Request buffer allocated [%d] bytes",requestBufferLength);
-// 
-//   // Buffer where we receive our requests
-//   request = (PHTTP_REQUEST)requestBuffer;
-// 
-//   // Wait for a new request. This is indicated by a NULL request ID.
-//   HTTP_SET_NULL_ID(&requestId);
-// 
-//   // START OUR MAIN LOOP
-//   m_running = true;
-//   DETAILLOG1("HTTPServer entering main loop");
-// 
-//   while(m_running)
-//   {
-//     // New receive in the buffer
-//     RtlZeroMemory(request,requestBufferLength);
-// 
-//     // Use counter
-//     m_counter.Stop();
-//     // Sit tight for the next request
-//     result = HttpReceiveHttpRequest(m_requestQueue,     // Request Queue
-//                                     requestId,          // Request ID
-//                                     0,                  // Flags
-//                                     request,            // HTTP request buffer
-//                                     requestBufferLength,// request buffer length
-//                                     &bytesRead,         // bytes received
-//                                     NULL);              // LPOVERLAPPED
-//     // Use counter
-//     m_counter.Start();
-// 
-//     // Grab the senders content
-//     CString   acceptTypes    = request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
-//     CString   contentType    = request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
-//     CString   acceptEncoding = request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
-//     CString   cookie         = request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
-//     CString   authorize      = request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
-//     CString   modified       = request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
-//     CString   referrer       = request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
-//     CString   rawUrl         = CW2A(request->CookedUrl.pFullUrl);
-//     PSOCKADDR sender         = request->Address.pRemoteAddress;
-//     PSOCKADDR receiver       = request->Address.pLocalAddress;
-//     int       remDesktop     = FindRemoteDesktop(request->Headers.UnknownHeaderCount
-//                                                 ,request->Headers.pUnknownHeaders);
-// 
-//     // Log earliest as possible
-//     DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
-//               ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
-//               ,request->BytesReceived);
-// 
-//     // Test if server already stopped, and we are here because of the stopping
-//     if(m_running == false)
-//     {
-//       DETAILLOG1("HTTPServer stopped in mainloop.");
-//       break;
-//     }
-// 
-//     if(result == NO_ERROR)
-//     {
-//       HANDLE accessToken = NULL;
-//       // Log incoming request
-//       DETAILLOGS("Got a request for: ",rawUrl);
-// 
-//       // FInding the site
-//       bool eventStream = false;
-//       LPFN_CALLBACK callback = nullptr;
-//       HTTPSite* site = reinterpret_cast<HTTPSite*>(request->UrlContext);
-//       if(site)
-//       {
-//         callback    = site->GetCallback();
-//         eventStream = site->GetIsEventStream();
-//       }
-// 
-//       // See if we must substitute for a sub-site
-//       if(m_hasSubsites)
-//       {
-//         CString absPath = CW2A(request->CookedUrl.pAbsPath);
-//         site = FindHTTPSite(site,absPath);
-//       }
-// 
-//       if(request->RequestInfoCount > 0)
-//       {
-//         for(unsigned ind = 0; ind < request->RequestInfoCount; ++ind)
-//         {
-//           if(request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeAuth) 
-//           {
-//             // Default is failure
-//             doReceive = false;
-// 
-//             PHTTP_REQUEST_AUTH_INFO auth = (PHTTP_REQUEST_AUTH_INFO)request->pRequestInfo[ind].pInfo;
-//             if(auth->AuthStatus == HttpAuthStatusNotAuthenticated)
-//             {
-//               // Not (yet) authenticated. Back to the client for authentication
-//               DETAILLOGS("Not yet authenticated for: ",rawUrl);
-//               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-//               msg.SetRequestHandle(request->RequestId);
-//               result = RespondWithClientError(site,&msg,HTTP_STATUS_DENIED,"Not authenticated",site->GetAuthenticationScheme());
-//             }
-//             else if(auth->AuthStatus == HttpAuthStatusFailure)
-//             {
-//               // Second round. Still not authenticated. Drop the connection, better next time
-//               DETAILLOGS("Authentication failed for: ",rawUrl);
-//               DETAILLOGV("Authentication failed because of: %s",AuthenticationStatus(auth->SecStatus).GetString());
-//               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-//               msg.SetRequestHandle(request->RequestId);
-//               result = RespondWithClientError(site,&msg,HTTP_STATUS_DENIED,"Not authenticated",site->GetAuthenticationScheme());
-//               // Go to next request
-//               HTTP_SET_NULL_ID(&requestId);
-//             }
-//             else if(auth->AuthStatus == HttpAuthStatusSuccess)
-//             {
-//               // Authentication accepted: all is well
-//               DETAILLOGS("Authentication done for: ",rawUrl);
-//               accessToken = auth->AccessToken;
-//               doReceive   = true;
-//             }
-//             else
-//             {
-//               CString authError;
-//               authError.Format("Authentication mechanism failure. Unknown status: %d",auth->AuthStatus);
-//               ERRORLOG(ERROR_NOT_AUTHENTICATED,authError);
-//             }
-//           }
-//           else if(request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeSslProtocol)
-//           {
-//             // Only exists on Windows 10 / Server 2016
-//             if(m_detail)
-//             {
-//               PHTTP_SSL_PROTOCOL_INFO sslInfo = (PHTTP_SSL_PROTOCOL_INFO)request->pRequestInfo[ind].pInfo;
-//               LogSSLConnection(sslInfo);
-//             }
-//           }
-//         }
-//       }
-//       if(doReceive)
-//       {
-//         // Remember the context: easy in API 2.0
-//         if(callback == nullptr && site == nullptr)
-//         {
-//           HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
-//           msg.SetRequestHandle(request->RequestId);
-//           SendResponse(site
-//                       ,&msg
-//                       ,HTTP_STATUS_NOT_FOUND
-//                       ,"URL not found"
-//                       ,(PSTR)rawUrl.GetString()
-//                       ,site->GetAuthenticationScheme());
-//           // Ready with this request
-//           HTTP_SET_NULL_ID(&requestId);
-//           continue;
-//         }
-// 
-//         // Translate the command. Now reduced to just this switch
-//         HTTPCommand type = HTTPCommand::http_no_command;
-//         switch(request->Verb)
-//         {
-//           case HttpVerbOPTIONS:   type = HTTPCommand::http_options;    break;
-//           case HttpVerbGET:       type = HTTPCommand::http_get;        break;
-//           case HttpVerbHEAD:      type = HTTPCommand::http_head;       break;
-//           case HttpVerbPOST:      type = HTTPCommand::http_post;       break;
-//           case HttpVerbPUT:       type = HTTPCommand::http_put;        break;
-//           case HttpVerbDELETE:    type = HTTPCommand::http_delete;     break;
-//           case HttpVerbTRACE:     type = HTTPCommand::http_trace;      break;
-//           case HttpVerbCONNECT:   type = HTTPCommand::http_connect;    break;
-//           case HttpVerbMOVE:      type = HTTPCommand::http_move;       break;
-//           case HttpVerbCOPY:      type = HTTPCommand::http_copy;       break;
-//           case HttpVerbPROPFIND:  type = HTTPCommand::http_proppfind;  break;
-//           case HttpVerbPROPPATCH: type = HTTPCommand::http_proppatch;  break;
-//           case HttpVerbMKCOL:     type = HTTPCommand::http_mkcol;      break;
-//           case HttpVerbLOCK:      type = HTTPCommand::http_lock;       break;
-//           case HttpVerbUNLOCK:    type = HTTPCommand::http_unlock;     break;
-//           case HttpVerbSEARCH:    type = HTTPCommand::http_search;     break;
-//           default:                // Try to get a less known verb as 'last resort'
-//                                   type = GetUnknownVerb(request->pUnknownVerb);
-//                                   if(type == HTTPCommand::http_no_command)
-//                                   {
-//                                     // Non implemented like HttpVerbTRACK or other non-known verbs
-//                                     HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
-//                                     msg.SetRequestHandle(request->RequestId);
-//                                     RespondWithServerError(site,&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented","");
-//                                     // Ready with this request
-//                                     HTTP_SET_NULL_ID(&requestId);
-//                                     continue;
-//                                   }
-//                                   break;
-//         }
-// 
-//         // Receiving the initiation of an event stream for the server
-//         acceptTypes.Trim();
-//         if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
-//         {
-//           CString absolutePath = CW2A(request->CookedUrl.pAbsPath);
-//           EventStream* stream = SubscribeEventStream(site,site->GetSite(), absolutePath,request->RequestId,accessToken);
-//           if(stream)
-//           {
-//             stream->m_baseURL = rawUrl;
-//             m_pool->SubmitWork(callback,(void*)stream);
-//             HTTP_SET_NULL_ID(&requestId);
-//             continue;
-//           }
-//         }
-// 
-//         // For all types of requests: Create the HTTPMessage
-//         message = new HTTPMessage(type,site);
-//         message->SetURL(rawUrl);
-//         message->SetReferrer(referrer);
-//         message->SetAuthorization(authorize);
-//         message->SetRequestHandle(request->RequestId);
-//         message->SetConnectionID(request->ConnectionId);
-//         message->SetContentType(contentType);
-//         message->SetAccessToken(accessToken);
-//         message->SetRemoteDesktop(remDesktop);
-//         message->SetSender  ((PSOCKADDR_IN6)sender);
-//         message->SetReceiver((PSOCKADDR_IN6)receiver);
-//         message->SetCookiePairs(cookie);
-//         message->SetAcceptEncoding(acceptEncoding);
-//         if(site->GetAllHeaders())
-//         {
-//           // If requested so, copy all headers to the message
-//           message->SetAllHeaders(&request->Headers);
-//         }
-//         else
-//         {
-//           // As a minimum, always add the unknown headers
-//           // in case of a 'POST', as the SOAPAction header is here too!
-//           message->SetUnknownHeaders(&request->Headers);
-//         }
-// 
-//         // Handle modified-since 
-//         // Rest of the request is then not needed any more
-//         if(type == HTTPCommand::http_get && !modified.IsEmpty())
-//         {
-//           message->SetHTTPTime(modified);
-//           if(DoIsModifiedSince(message))
-//           {
-//             // Answer already sent, go on to the next request
-//             HTTP_SET_NULL_ID(&requestId);
-//             continue;
-//           }
-//         }
-// 
-//         // Find X-HTTP-Method VERB Tunneling
-//         if(type == HTTPCommand::http_post && site->GetVerbTunneling())
-//         {
-//           if(message->FindVerbTunneling())
-//           {
-//             DETAILLOGV("Request VERB changed to: %s",message->GetVerb().GetString());
-//           }
-//         }
-// 
-//         // Remember the fact that we should read the rest of the message
-//         message->SetReadBuffer(request->Flags & HTTP_REQUEST_FLAG_MORE_ENTITY_BODY_EXISTS);
-// 
-//         // Hit the thread pool with this message
-//         m_pool->SubmitWork(callback,(void*)message);
-// 
-//         // Ready with this request
-//         HTTP_SET_NULL_ID(&requestId);
-//       }
-//     }
-//     else if(result == ERROR_MORE_DATA)
-//     {
-//       // The input buffer was too small to hold the request headers.
-//       // Increase the buffer size and call the API again. 
-//       //
-//       // When calling the API again, handle the request
-//       // that failed by passing a RequestID.
-//       // This RequestID is read from the old buffer.
-//       requestId = request->RequestId;
-// 
-//       // Free the old buffer and allocate a new buffer.
-//       requestBufferLength = bytesRead;
-//       delete [] requestBuffer;
-//       requestBuffer = (PCHAR) new uchar[requestBufferLength];
-//       if(requestBuffer == NULL)
-//       {
-//         ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Out of memory");
-//         break;
-//       }
-//       request = (PHTTP_REQUEST)requestBuffer;
-// 
-//       DETAILLOGV("Request buffer length expanded to [%d] bytes",requestBufferLength);
-//     }
-//     else if(ERROR_CONNECTION_INVALID == result && !HTTP_IS_NULL_ID(&requestId))
-//     {
-//       // The TCP connection was corrupted by the peer when
-//       // attempting to handle a request with more buffer. 
-//       // Continue to the next request.
-//       HTTP_SET_NULL_ID(&requestId);
-//     }
-//     else if(result == ERROR_OPERATION_ABORTED)
-//     {
-//       if(m_running)
-//       {
-//         // Not called by StopServer
-//         ERRORLOG(result,"ReceiveHttpRequest aborted");
-//       }
-//     }
-//     else // ERROR_NO_ACCESS / ERROR_HANDLE_EOF / ERROR_INVALID_PARAMETER
-//     {
-//       // Any other error
-//       ERRORLOG(result,"ReceiveHttpRequest");
-//     }
-// 
-//     // Do error handler at the end of the mainloop
-//     if(GetLastError())
-//     {
-//       m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Mainloop: %d",GetLastError());
-//       SetError(NO_ERROR);
-//     }
-//   }
-//   // Free the request buffer
-//   if(requestBuffer)
-//   {
-//     delete [] requestBuffer;
-//     DETAILLOG1("Dropped request buffer");
-//   }
-// 
-//   // Use the counter
-//   m_counter.Stop();
-// 
-//   // Last action in the server thread
-//   m_serverThread = 0;
-// }
-
 //////////////////////////////////////////////////////////////////////////
 //
 // STOPPING THE SERVER
@@ -1100,187 +734,18 @@ HTTPServerMarlin::StopServer()
   Cleanup();
 }
 
-// DWORD
-// HTTPServerMarlin::SendResponse(HTTPSite*    p_site
-//                               ,HTTPMessage* p_message
-//                               ,USHORT       p_statusCode
-//                               ,PSTR         p_reason
-//                               ,PSTR         p_entityString
-//                               ,CString      p_authScheme
-//                               ,PSTR         p_cookie      /*=NULL*/
-//                               ,PSTR         p_contentType /*=NULL*/)
-// {
-//   HTTP_REQUEST_ID requestID = p_message->GetRequestHandle();
-//   HTTP_RESPONSE   response;
-//   HTTP_DATA_CHUNK dataChunk;
-//   DWORD           result;
-//   DWORD           bytesSent;
-//   CString         challenge;
-// 
-//   // Initialize the HTTP response structure.
-//   InitializeHttpResponse(&response,p_statusCode,p_reason);
-// 
-//   // Add a known header.
-//   if(p_contentType && strlen(p_contentType))
-//   {
-//     AddKnownHeader(response,HttpHeaderContentType,p_contentType);
-//   }
-//   else
-//   {
-//     AddKnownHeader(response,HttpHeaderContentType,"text/html");
-//   }
-//   // Adding authentication schema challenge
-//   if(p_statusCode == HTTP_STATUS_DENIED)
-//   {
-//     // Add authentication scheme
-//     challenge = BuildAuthenticationChallenge(p_authScheme,p_site->GetAuthenticationRealm());
-//     AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
-//   }
-//   else if (p_statusCode >= HTTP_STATUS_AMBIGUOUS)
-//   {
-//     // Log responding with error status code
-//     HTTPError(__FUNCTION__,p_statusCode,"Returning from: " + p_site->GetSite());
-//   }
-// 
-//   // Adding the body
-//   if(p_entityString && strlen(p_entityString) > 0)
-//   {
-//     // Add an entity chunk.
-//     dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-//     dataChunk.FromMemory.pBuffer      = p_entityString;
-//     dataChunk.FromMemory.BufferLength = (ULONG) strlen(p_entityString);
-//     response.EntityChunkCount         = 1;
-//     response.pEntityChunks            = &dataChunk;
-//   }
-// 
-//   // Adding a cookie
-//   if(p_cookie && strlen(p_cookie) > 0)
-//   {
-//     AddKnownHeader(response,HttpHeaderSetCookie,p_cookie);
-//   }
-// 
-//   // Prepare our cache-policy
-//   HTTP_CACHE_POLICY policy;
-//   policy.Policy        = m_policy;
-//   policy.SecondsToLive = m_secondsToLive;
-// 
-//   // Because the entity body is sent in one call, it is not
-//   // required to specify the Content-Length.
-//   result = HttpSendHttpResponse(m_requestQueue,    // ReqQueueHandle
-//                                 requestID,         // Request ID
-//                                 0,                 // Flags
-//                                 &response,         // HTTP response
-//                                 &policy,           // Policy
-//                                 &bytesSent,        // bytes sent  (OPTIONAL)
-//                                 NULL,              // pReserved2  (must be NULL)
-//                                 0,                 // Reserved3   (must be 0)
-//                                 NULL,              // LPOVERLAPPED(OPTIONAL)
-//                                 NULL               // pReserved4  (must be NULL)
-//                                 ); 
-//   if(result != NO_ERROR)
-//   {
-//     ERRORLOG(result,"SendHttpResponse");
-//   }
-//   else
-//   {
-//     DETAILLOGV("HTTP Send %d %s %s",p_statusCode,p_reason,p_entityString);
-//   }
-//   return result;
-// }
-
 // Used for canceling a WebSocket for an event stream
 void 
 HTTPServerMarlin::CancelRequestStream(HTTP_REQUEST_ID p_response)
 {
+  HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_response);
+
   // Cancel the outstanding request from the request queue
-  ULONG result = HttpCancelHttpRequest(m_requestQueue,p_response,NULL);
-  if(result == NO_ERROR)
+  if(request)
   {
-    DETAILLOG1("Event stream connection closed");
-  }
-  else
-  {
-    ERRORLOG(result,"Event stream incorrectly canceled");
+    request->CancelRequest();
   }
 }
-
-// Receive incoming HTTP request
-// bool
-// HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* p_message)
-// {
-//   bool   retval    = true;
-//   ULONG  bytesRead = 0;
-//   ULONG  entityBufferLength = INIT_HTTP_BUFFERSIZE;
-//   PUCHAR entityBuffer       = nullptr;
-// 
-//   // Create a buffer + 1 extra byte for the closing 0
-//   entityBuffer = new uchar[entityBufferLength + 1];
-//   if(entityBuffer == NULL)
-//   {
-//     ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Out of memory");
-//     return false;
-//   }
-// 
-//   // Reading loop
-//   bool reading = true;
-//   do 
-//   {
-//     bytesRead = 0; 
-//     DWORD result = HttpReceiveRequestEntityBody(m_requestQueue
-//                                                ,p_message->GetRequestHandle()
-//                                                ,HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER
-//                                                ,entityBuffer
-//                                                ,entityBufferLength
-//                                                ,&bytesRead
-//                                                ,NULL);
-//     switch(result)
-//     {
-//       case NO_ERROR:          // Regular incoming body part
-//                               entityBuffer[bytesRead] = 0;
-//                               p_message->AddBody(entityBuffer,bytesRead);
-//                               DETAILLOGV("ReceiveRequestEntityBody [%d] bytes",bytesRead);
-//                               break;
-//       case ERROR_HANDLE_EOF:  // Very last incoming body part
-//                               if(bytesRead)
-//                               {
-//                                 entityBuffer[bytesRead] = 0;
-//                                 p_message->AddBody(entityBuffer,bytesRead);
-//                                 DETAILLOGV("ReceiveRequestEntityBody [%d] bytes",bytesRead);
-//                               }
-//                               reading = false;
-//                               break;
-//       default:                ERRORLOG(result,"ReceiveRequestEntityBody");
-//                               reading = false;
-//                               retval  = false;
-//                               break;
-//                               
-//     }
-//   } 
-//   while(reading);
-// 
-//   // Clean up buffer after reading
-//   delete [] entityBuffer;
-//   entityBuffer = nullptr;
-// 
-//   // In case of a POST, try to convert character set before submitting to site
-//   if(p_message->GetCommand() == HTTPCommand::http_post)
-//   {
-//     if(p_message->GetContentType().Find("multipart") <= 0)
-//     {
-//       HandleTextContent(p_message);
-//     }
-//   }
-//   DETAILLOGV("Received %s message from: %s Size: %lu"
-//             ,headers[(unsigned)p_message->GetCommand()]
-//             ,(LPCTSTR)SocketToServer(p_message->GetSender())
-//             ,p_message->GetBodyLength());
-// 
-//   // This message is read!
-//   p_message->SetReadBuffer(false);
-// 
-//   // Receiving succeeded?
-//   return retval;
-// }
 
 // Create a new WebSocket in the subclass of our server
 WebSocket*
@@ -1297,127 +762,6 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* /*p_socket*/,HTTP_REQUEST_ID /*p_r
   // IT NEEDS TO BE REWRIITEN TO DO ASYNC I/O THROUGHOUT THE SERVER!
   return;
 
-
-
-//   // Increment thread count for the server while we are in the read loop
-//   AutoIncrementPoolMax inc(m_pool);
-// 
-//   BYTE* buffer  = nullptr;
-//   DWORD total   = 0;
-//   ULONG size    = p_socket->GetFragmentSize();
-//   bool  reading = true;
-//   WebSocketServer* websocket = reinterpret_cast<WebSocketServer*>(p_socket);
-// 
-//   if(buffer == nullptr)
-//   {
-//     buffer = (BYTE*)malloc(size + WS_OVERHEAD);
-//     total = 0;
-//   }
-
-
-  // testcode to receive right from the raw socket
-//   PSOCKADDR_IN6 address = websocket->GetReceiverAddress();
-//   SOCKET sock = socket(address->sin6_family,SOCK_STREAM,IPPROTO_TCP);
-//   if(sock)
-//   {
-//     BOOL reuse = TRUE;
-//     if(setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,(char*)&reuse,sizeof(BOOL)))
-//     {
-//       int error = WSAGetLastError();
-//       ERRORLOG(error,"Receive from websocket");
-//     }
-// 
-//     // Getting the socketaddress length
-//     int length = 0;
-//     if(address->sin6_family == AF_INET)
-//     {
-//       length = sizeof(SOCKADDR_IN);
-//     }
-//     else  // if(address->sin6_family == AF_INET6) 
-//     {
-//       length = sizeof(SOCKADDR_IN6);
-//     }
-// 
-//     // Bind to the socket
-//     if(bind(sock,(sockaddr*)address,length) == 0)
-//     {
-//       int bytes = recv(sock,(char*) buffer,size,0);
-// 
-//       if(bytes < 0)
-//       {
-//         int error = WSAGetLastError();
-//         ERRORLOG(error,"Receive from websocket");
-//       }
-//     }
-//     else
-//     {
-//       int error = WSAGetLastError();
-//       ERRORLOG(error,"Receive from websocket");
-//     }
-//   }
-
-//   do
-//   {
-//     DWORD bytesRead = 0;
-//     DWORD result = HttpReceiveRequestEntityBody(m_requestQueue
-//                                                ,p_request
-//                                                ,0
-//                                                ,&buffer[total]
-//                                                ,size
-//                                                ,&bytesRead
-//                                                ,NULL);
-//     switch(result)
-//     {
-//       case NO_ERROR:          // Regular incoming body part
-//                               DETAILLOGV("WebSocket receiving [%d] bytes",bytesRead);
-//                               break;
-//       case ERROR_HANDLE_EOF:  // Very last incoming body part
-//                               if(bytesRead)
-//                               {
-//                                 DETAILLOGV("WebSocket receiving [%d] bytes",bytesRead);
-//                               }
-//                               reading = false;
-//                               break;
-//       default:                ERRORLOG(result,"Receiving for WebSocket");
-//                               bytesRead = 0;
-//                               reading = false;
-//                               break;
-//     }
-//     if(bytesRead)
-//     {
-//       total += bytesRead;
-// 
-//       RawFrame* frame = new RawFrame();
-//       frame->m_data = buffer;
-//       if(websocket->DecodeFrameBuffer(frame,total))
-//       {
-//         // Shrink the buffer and store it for the socket
-//         frame->m_data = (BYTE*)realloc(buffer,total);
-//         buffer = nullptr;
-// 
-//         if(websocket->StoreFrameBuffer(frame) == false)
-//         {
-//           // closing channel on a close operator
-//           reading = false;
-//         }
-//       }
-//       else
-//       {
-//         // Incomplete buffer, expand buffer to receive some more
-//         buffer = (uchar*)realloc(buffer,total + size + WS_OVERHEAD);
-//         // Remove unused frame buffer
-//         frame->m_data = nullptr;
-//         delete frame;
-//       }
-//     }
-//   }
-//   while(reading);
-// 
-//   // Do not forget to free the buffer memory
-//   if(buffer)
-//   {
-//     free(buffer);
-//   }
 }
 
 bool       
@@ -1518,56 +862,16 @@ HTTPServerMarlin::SendResponseWebSocket(PHTTP_RESPONSE  /*p_response*/
 
 // Init the stream response
 bool
-HTTPServerMarlin::InitEventStream(EventStream& /*p_stream*/)
+HTTPServerMarlin::InitEventStream(EventStream& p_stream)
 {
-//   // First comment to push to the stream (not an event!)
-//   CString init = m_eventBOM ? ConstructBOM() : "";
-//   init += ":init event-stream\n";
-// 
-//   // Initialize the HTTP response structure.
-//   InitializeHttpResponse(&p_stream.m_response,HTTP_STATUS_OK,"OK");
-// 
-//   // Add a known header.
-//   AddKnownHeader(p_stream.m_response,HttpHeaderContentType,"text/event-stream");
-// 
-//   // Add an entity chunk.
-//   HTTP_DATA_CHUNK dataChunk;
-//   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-//   dataChunk.FromMemory.pBuffer      = (PVOID)init.GetString();
-//   dataChunk.FromMemory.BufferLength = (ULONG)init.GetLength();
-//   // Add chunk to response
-//   p_stream.m_response.EntityChunkCount = 1;
-//   p_stream.m_response.pEntityChunks    = &dataChunk;
-// 
-//   // Preparing the cache-policy
-//   HTTP_CACHE_POLICY policy;
-//   policy.Policy = HttpCachePolicyNocache;
-//   policy.SecondsToLive = 0;
-// 
-//   // Because the entity body is sent in one call, it is not
-//   // required to specify the Content-Length.
-//   DWORD bytesSent = 0;
-//   ULONG flags  = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
-//   DWORD result = HttpSendHttpResponse(m_requestQueue,         // ReqQueueHandle
-//                                       p_stream.m_requestID,   // Request ID
-//                                       flags,                  // Flags
-//                                       &p_stream.m_response,   // HTTP response
-//                                       &policy,                // Policy
-//                                       &bytesSent,             // bytes sent  (OPTIONAL)
-//                                       NULL,                   // pReserved2  (must be NULL)
-//                                       0,                      // Reserved3   (must be 0)
-//                                       NULL,                   // LPOVERLAPPED(OPTIONAL)
-//                                       NULL                    // pReserved4  (must be NULL)
-//                                       );
-//   if(result != NO_ERROR)
-//   {
-//     ERRORLOG(result,"SendHttpResponse for init of event-stream");
-//   }
-//   else
-//   {
-//     DETAILLOGS("HTTP Send 200 OK ",init);
-//   }
-  return NO_ERROR;
+  HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_stream.m_requestID);
+  if(request)
+  {
+    request->StartEventStreamResponse();
+    return true;
+  }
+  return false;
+
 }
 
 // Sending a chunk to an event stream
@@ -1577,81 +881,51 @@ HTTPServerMarlin::SendResponseEventBuffer(HTTP_REQUEST_ID  p_requestID
                                          ,size_t           p_length
                                          ,bool             p_continue /*=true*/)
 {
-  DWORD  result    = 0;
-  DWORD  bytesSent = 0;
-  HTTP_DATA_CHUNK dataChunk;
-
-  // Only if a buffer present
-  dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer      = (void*)p_buffer;
-  dataChunk.FromMemory.BufferLength = (ULONG)p_length;
-
-  ULONG flags =         HTTP_SEND_RESPONSE_FLAG_BUFFER_DATA;
-  flags += p_continue ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA
-                      : HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
-  result = HttpSendResponseEntityBody(m_requestQueue,      // ReqQueueHandle
-                                      p_requestID,         // Request ID
-                                      flags,               // Flags
-                                      1,                   // Entity chunk count
-                                      &dataChunk,          // Chunk to send
-                                      &bytesSent,          // bytes sent  (OPTIONAL)
-                                      NULL,                // pReserved1  (must be NULL)
-                                      0,                   // Reserved2   (must be 0)
-                                      NULL,                // LPOVERLAPPED(OPTIONAL)
-                                      NULL                 // pLogData
-  );
-  if(result != NO_ERROR)
+  HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_requestID);
+  if(request)
   {
-    ERRORLOG(result,"HttpSendResponseEntityBody failed for SendEvent");
+    request->SendResponseStream(p_buffer,p_length,p_continue);
+    return true;
   }
-  else
-  {
-    DETAILLOGV("HttpSendResponseEntityBody [%d] bytes sent",p_length);
-    // Final closing of the connection
-    if(p_continue == false)
-    {
-      DETAILLOG1("Event stream connection closed");
-    }
-  }
-  return (result == NO_ERROR);
+  return false;
 }
 
 // Send to a WebSocket
 bool
-HTTPServerMarlin::SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request)
+HTTPServerMarlin::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/)
 {
   DWORD  result    = 0;
-  DWORD  bytesSent = 0;
-  HTTP_DATA_CHUNK dataChunk;
-
-  // Only if a buffer present
-  dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer      = (void*)p_frame.m_data;
-  dataChunk.FromMemory.BufferLength = (ULONG)(p_frame.m_headerLength + p_frame.m_payloadLength);
-
-  // Keep the socket open!
-  ULONG flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
-
-  // Go send it
-  result = HttpSendResponseEntityBody(m_requestQueue,      // ReqQueueHandle
-                                      p_request,           // Request ID
-                                      flags,               // Flags
-                                      1,                   // Entity chunk count
-                                      &dataChunk,          // Chunk to send
-                                      &bytesSent,          // bytes sent  (OPTIONAL)
-                                      NULL,                // pReserved1  (must be NULL)
-                                      0,                   // Reserved2   (must be 0)
-                                      NULL,                // LPOVERLAPPED(OPTIONAL)
-                                      NULL                 // pLogData
-  );
-  if(result != NO_ERROR)
-  {
-    ERRORLOG(result,"HttpSendResponseEntityBody failed for WebSocket");
-  }
-  else
-  {
-    DETAILLOGV("HttpSendResponseEntityBody [%d] bytes sent",bytesSent);
-  }
+//   DWORD  bytesSent = 0;
+//   HTTP_DATA_CHUNK dataChunk;
+// 
+//   // Only if a buffer present
+//   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
+//   dataChunk.FromMemory.pBuffer      = (void*)p_frame.m_data;
+//   dataChunk.FromMemory.BufferLength = (ULONG)(p_frame.m_headerLength + p_frame.m_payloadLength);
+// 
+//   // Keep the socket open!
+//   ULONG flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+// 
+//   // Go send it
+//   result = HttpSendResponseEntityBody(m_requestQueue,      // ReqQueueHandle
+//                                       p_request,           // Request ID
+//                                       flags,               // Flags
+//                                       1,                   // Entity chunk count
+//                                       &dataChunk,          // Chunk to send
+//                                       &bytesSent,          // bytes sent  (OPTIONAL)
+//                                       NULL,                // pReserved1  (must be NULL)
+//                                       0,                   // Reserved2   (must be 0)
+//                                       NULL,                // LPOVERLAPPED(OPTIONAL)
+//                                       NULL                 // pLogData
+//   );
+//   if(result != NO_ERROR)
+//   {
+//     ERRORLOG(result,"HttpSendResponseEntityBody failed for WebSocket");
+//   }
+//   else
+//   {
+//     DETAILLOGV("HttpSendResponseEntityBody [%d] bytes sent",bytesSent);
+//   }
   return (result == NO_ERROR);
 }
 

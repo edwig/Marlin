@@ -61,6 +61,10 @@ MarlinServerApp::InitInstance()
   // Can only be called once if correctly started
   if(!CorrectlyStarted() || m_running)
   {
+    if(m_running)
+    {
+      g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,"InitInstance called more than once!");
+    }
     return;
   }
   // Instance is now running
@@ -69,7 +73,7 @@ MarlinServerApp::InitInstance()
   // Small local test
   Test_CrackURL();
   Test_HTTPTime();
-//TestThreadPool(m_appPool);
+  TestThreadPool(m_appPool);
 
   // Starting objects and sites
   TestPushEvents(m_appServer);

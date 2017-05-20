@@ -88,12 +88,30 @@ bool
 ServerApp::CorrectlyStarted()
 {
   // MINIMUM REQUIREMENT:
-  // If a derived class has been staticly declared
+  // If a derived class has been statically declared
   // and a IHttpServer and a HTTPServerIIS has been found
   // and a Threadpool is initialized, we are good to go
   if(m_correctInit && m_iis && m_appServer && m_appPool)
   {
     return true;
+  }
+
+  // Log the errors
+  if(!m_correctInit)
+  {
+    ERRORLOG(ERROR_NOT_FOUND,"There are more than one (1) ServerApp in your application!");
+  }
+  if(!m_iis)
+  {
+    ERRORLOG(ERROR_NOT_FOUND,"No connected IIS server found!");
+  }
+  if(!m_appServer)
+  {
+    ERRORLOG(ERROR_NOT_FOUND,"No connected MarlinIIS server found!");
+  }
+  if(!m_appPool)
+  {
+    ERRORLOG(ERROR_NOT_FOUND,"No connected threadpool found!");
   }
   return false;
 }

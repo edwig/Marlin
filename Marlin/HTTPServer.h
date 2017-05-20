@@ -251,6 +251,8 @@ public:
   ULONG       GetCacheSecondsToLive();
   // How we send our server name header
   SendHeader  GetSendServerHeader();
+  // Event stream starts with BOM
+  bool        GetEventBOM();
 
   // FUNCTIONS
 
@@ -583,4 +585,10 @@ inline SendHeader
 HTTPServer::GetSendServerHeader()
 {
   return m_sendHeader;
+}
+
+inline bool
+HTTPServer::GetEventBOM()
+{
+  return m_eventBOM;
 }

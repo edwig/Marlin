@@ -144,15 +144,17 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestNamespaces();
       errors += TestJSON();
       errors += TestFindClientCertificate();
+
 //       errors += TestWebSocketAccept();
 //       errors += TestWebSocket(g_log);
+
+      errors += TestEvents(client);
       errors += TestBaseSite(client);
       errors += TestSecureSite(client);
       errors += TestClientCertificate(client);
       errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestJsonData(client);
-//       errors += TestEvents(client);
       errors += TestContract(client,false);
       errors += TestContract(client,true);
       errors += TestPatching(client);

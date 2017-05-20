@@ -32,6 +32,7 @@
 #include "HTTPSite.h"
 #include "HTTPError.h"
 #include "AutoCritical.h"
+#include "ConvertWideString.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -110,6 +111,11 @@ HTTPRequest::ClearMemory()
     delete m_readBuffer;
     m_readBuffer = nullptr;
   }
+  if(m_sendBuffer)
+  {
+    free(m_sendBuffer);
+    m_sendBuffer = nullptr;
+  }
   if(m_unknown)
   {
     free(m_unknown);
@@ -135,11 +141,14 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
 {
   switch(p_action)
   {
-    case IO_Request: ReceivedRequest();  break;
-    case IO_Reading: ReceivedBodyPart(); break;
-    case IO_Response:SendResponseBody(); break;
-    case IO_Writing: SendBodyPart();     break;
-    default:         ERRORLOG(ERROR_INVALID_PARAMETER,"Unexpected outstanding async I/O");
+    case IO_Request:    ReceivedRequest();  break;
+    case IO_Reading:    ReceivedBodyPart(); break;
+    case IO_Response:   SendResponseBody(); break;
+    case IO_Writing:    SendBodyPart();     break;
+    case IO_StartStream:StartedStream();    break;
+    case IO_WriteStream:SendStreamPart();   break;
+    case IO_Cancel:     StartRequest();     break;
+    default:            ERRORLOG(ERROR_INVALID_PARAMETER,"Unexpected outstanding async I/O");
   }
 }
 
@@ -147,19 +156,20 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
 void 
 HTTPRequest::StartRequest()
 {
-  // Buffersize
+  // Buffer size for a new request
   DWORD size = INIT_HTTP_BUFFERSIZE;
 
   // Allocate the request object
   if(m_request == nullptr)
   {
-    m_request = (PHTTP_REQUEST) malloc(size + 1);
-    RtlZeroMemory(m_request,size);
+    m_request = (PHTTP_REQUEST) calloc(1,size + 1);
   }  
   // Set type of request
   m_incoming.m_action = IO_Request;
   // Get queue handle
   HANDLE queue = m_server->GetRequestQueue();
+  // Reset the request id
+  m_requestID  = HTTP_NULL_ID;
 
   // Sit tight for the next request
   ULONG result = HttpReceiveHttpRequest(queue,        // Request Queue
@@ -327,11 +337,11 @@ HTTPRequest::ReceivedRequest()
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = CW2A(m_request->CookedUrl.pAbsPath);
-    EventStream* stream  = m_server->SubscribeEventStream(m_site,m_site->GetSite(),absolutePath,m_request->RequestId,accessToken);
+    EventStream* stream  = m_server->SubscribeEventStream(m_site,m_site->GetSite(),absolutePath,(HTTP_REQUEST_ID)this,accessToken);
     if(stream)
     {
       stream->m_baseURL = rawUrl;
-      m_server->GetThreadPool()->SubmitWork(callback,(void*)stream);
+      m_site->HandleEventStream(stream);
       return;
     }
   }
@@ -499,7 +509,7 @@ HTTPRequest::StartSendResponse()
   m_writing.m_action = IO_Response;
 
   // Place HTTPMessage in the response structure
-  FillResponse();
+  FillResponse(m_message->GetStatus());
 
   // Prepare our cache-policy
   m_policy.Policy        = m_server->GetCachePolicy();
@@ -548,8 +558,8 @@ HTTPRequest::SendResponseBody()
   ULONG flags = HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
 
   // Prepare send buffer
-  memset(&m_sendBuffer,0,sizeof(HTTP_DATA_CHUNK));
-  PHTTP_DATA_CHUNK chunks = &m_sendBuffer;
+  memset(&m_sendChunk,0,sizeof(HTTP_DATA_CHUNK));
+  PHTTP_DATA_CHUNK chunks = &m_sendChunk;
   USHORT chunkcount = 1;
 
   // Find out which one of three actions we must do
@@ -563,9 +573,9 @@ HTTPRequest::SendResponseBody()
     size_t length = 0;
     filebuf->GetBufferPart(m_bufferpart,buffer,length);
 
-    m_sendBuffer.DataChunkType           = HttpDataChunkFromMemory;
-    m_sendBuffer.FromMemory.pBuffer      = buffer;
-    m_sendBuffer.FromMemory.BufferLength = (ULONG)length;
+    m_sendChunk.DataChunkType           = HttpDataChunkFromMemory;
+    m_sendChunk.FromMemory.pBuffer      = buffer;
+    m_sendChunk.FromMemory.BufferLength = (ULONG)length;
 
     // See if there are more buffer parts to come
     if(++m_bufferpart < filebuf->GetNumberOfParts())
@@ -578,10 +588,10 @@ HTTPRequest::SendResponseBody()
     // FILE BUFFER CONTAINS A FILE REFERENCE TO SENT
     // Send file in form of a file-handle to transmit
 
-    m_sendBuffer.DataChunkType = HttpDataChunkFromFileHandle;
-    m_sendBuffer.FromFileHandle.ByteRange.StartingOffset.QuadPart = 0;
-    m_sendBuffer.FromFileHandle.ByteRange.Length.QuadPart = HTTP_BYTE_RANGE_TO_EOF;
-    m_sendBuffer.FromFileHandle.FileHandle = m_file;
+    m_sendChunk.DataChunkType = HttpDataChunkFromFileHandle;
+    m_sendChunk.FromFileHandle.ByteRange.StartingOffset.QuadPart = 0;
+    m_sendChunk.FromFileHandle.ByteRange.Length.QuadPart = HTTP_BYTE_RANGE_TO_EOF;
+    m_sendChunk.FromFileHandle.FileHandle = m_file;
   }
   else if(filebuf->GetLength())
   {
@@ -591,9 +601,9 @@ HTTPRequest::SendResponseBody()
     size_t length = 0;
     filebuf->GetBuffer(buffer,length);
 
-    m_sendBuffer.DataChunkType           = HttpDataChunkFromMemory;
-    m_sendBuffer.FromMemory.pBuffer      = buffer;
-    m_sendBuffer.FromMemory.BufferLength = (ULONG)length;
+    m_sendChunk.DataChunkType           = HttpDataChunkFromMemory;
+    m_sendChunk.FromMemory.pBuffer      = buffer;
+    m_sendChunk.FromMemory.BufferLength = (ULONG)length;
   }
   else
   {
@@ -623,6 +633,8 @@ HTTPRequest::SendResponseBody()
   m_responding = (flags == HTTP_SEND_RESPONSE_FLAG_MORE_DATA);
 }
 
+// At least one body part has been sent
+// Now see if we are done, or start the next body part send
 void
 HTTPRequest::SendBodyPart()
 {
@@ -669,6 +681,182 @@ HTTPRequest::SendBodyPart()
   StartRequest();
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// OUTGOING STREAMS
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Start a response stream
+void 
+HTTPRequest::StartEventStreamResponse()
+{
+  // First comment to push to the stream (not an event!)
+  CString init = m_server->GetEventBOM() ? ConstructBOM() : "";
+  init += ":init event-stream\n";
+
+  // Initialize the HTTP response structure.
+  FillResponse(HTTP_STATUS_OK,true);
+
+  // Add a known header.
+  AddKnownHeader(HttpHeaderContentType,"text/event-stream");
+
+  // Set init in the send buffer
+  if(m_sendBuffer)
+  {
+    free(m_sendBuffer);
+  }
+  m_sendBuffer = (BYTE*) malloc(init.GetLength() + 1);
+  memcpy_s(m_sendBuffer,init.GetLength() + 1,init.GetString(),init.GetLength() + 1);
+
+  // Setup as a data-chunk info structure
+  memset(&m_sendChunk,0,sizeof(HTTP_DATA_CHUNK));
+  m_sendChunk.DataChunkType           = HttpDataChunkFromMemory;
+  m_sendChunk.FromMemory.pBuffer      = m_sendBuffer;
+  m_sendChunk.FromMemory.BufferLength = (ULONG)init.GetLength();
+
+  // Prepare send buffer
+  m_response->EntityChunkCount = 1;
+  m_response->pEntityChunks    = &m_sendChunk;
+
+  // Preparing the cache-policy
+  m_policy.Policy        = m_server->GetCachePolicy();
+  m_policy.SecondsToLive = m_server->GetCacheSecondsToLive();
+
+  // Because the entity body is sent in one call, it is not
+  // required to specify the Content-Length.
+  ULONG flags  = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+
+  ResetOutstanding(m_writing);
+  m_writing.m_action = IO_StartStream;
+
+  ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
+                                      m_requestID,       // Request ID
+                                      flags,             // Flags
+                                      m_response,        // HTTP response
+                                      &m_policy,         // Policy
+                                      nullptr,           // bytes sent  (OPTIONAL)
+                                      nullptr,           // pReserved2  (must be NULL)
+                                      0,                 // Reserved3   (must be 0)
+                                      &m_writing,        // LPOVERLAPPED(OPTIONAL)
+                                      nullptr);          // pReserved4  (must be NULL)
+
+  DETAILLOGV("HTTP Response %d %s",m_response->StatusCode,m_response->pReason);
+
+  // Check for error
+  if(result != ERROR_IO_PENDING && result != NO_ERROR)
+  {
+    ERRORLOG(result,"Sending HTTP Response for event stream");
+  }
+}
+
+void
+HTTPRequest::StartedStream()
+{
+  // Check status of the OVERLAPPED structure
+  DWORD error = m_writing.Internal & 0x0FFFF;
+  if(error)
+  {
+    ERRORLOG(error,"While starting HTTP stream");
+    CancelRequest();
+  }
+  else
+  {
+    // Simply reset this request for writing
+    ResetOutstanding(m_writing);
+  }
+}
+
+// Send a response stream buffer.
+void
+HTTPRequest::SendResponseStream(const char* p_buffer
+                               ,size_t      p_length
+                               ,bool        p_continue /*=true*/)
+{
+  // Now begin writing our response body parts
+  ResetOutstanding(m_writing);
+  m_writing.m_action = IO_WriteStream;
+
+  // Prepare send buffer
+  memset(&m_sendChunk,0,sizeof(HTTP_DATA_CHUNK));
+  PHTTP_DATA_CHUNK chunks = &m_sendChunk;
+  USHORT chunkcount = 1;
+
+  // Default is that we continue sending
+  ULONG flags = p_continue ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
+
+  // Set the send buffer
+  if(m_sendBuffer)
+  {
+    free(m_sendBuffer);
+  }
+  m_sendBuffer = (BYTE*) malloc(p_length + 1);
+  memcpy_s(m_sendBuffer,p_length + 1,p_buffer,p_length);
+  m_sendBuffer[p_length] = 0;
+
+  // Setup as a data-chunk info structure
+  m_sendChunk.DataChunkType           = HttpDataChunkFromMemory;
+  m_sendChunk.FromMemory.pBuffer      = m_sendBuffer;
+  m_sendChunk.FromMemory.BufferLength = (ULONG)p_length;
+
+  ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
+                                            m_requestID,    // Our request
+                                            flags,          // More/Last data
+                                            chunkcount,     // Entity Chunk Count.
+                                            chunks,         // CHUNCK
+                                            nullptr,        // Bytes
+                                            nullptr,        // Reserved1
+                                            0,              // Reserved2
+                                            &m_writing,     // OVERLAPPED
+                                            nullptr);       // LOGDATA
+
+  // Check for error
+  if(result != ERROR_IO_PENDING && result != NO_ERROR)
+  {
+    ERRORLOG(result,"Sending stream part");
+  }
+  else
+  {
+    DETAILLOGV("Stream part [%d] bytes sent",p_length);
+    // Final closing of the connection
+    if(p_continue == false)
+    {
+      DETAILLOG1("Stream connection closed");
+    }
+  }
+
+  // Still responding or done?
+  m_responding = p_continue;
+}
+
+void
+HTTPRequest::SendStreamPart()
+{
+  // Check status of the OVERLAPPED structure
+  DWORD error = m_writing.Internal & 0x0FFFF;
+  if(error)
+  {
+    ERRORLOG(error,"While sending HTTP stream part");
+    CancelRequest();
+  }
+  else
+  {
+    // Free the last send buffer
+    if(m_sendBuffer)
+    {
+      free(m_sendBuffer);
+      m_sendBuffer = nullptr;
+    }
+    // Nothing here. Return to the threadpool
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// SUB FUNCTIONS FOR RECEIVING AND SENDING
+//
+//////////////////////////////////////////////////////////////////////////
+
 // making the request ready for the next round!
 void
 HTTPRequest::Finalize()
@@ -696,8 +884,15 @@ HTTPRequest::Finalize()
     RtlZeroMemory(m_readBuffer,INIT_HTTP_BUFFERSIZE);
   }
 
+  // free the send buffer
+  if(m_sendBuffer)
+  {
+    free(m_sendBuffer);
+    m_sendBuffer = nullptr;
+  }
+
   // Free the sending buffer
-  RtlZeroMemory(&m_sendBuffer,sizeof(HTTP_DATA_CHUNK));
+  RtlZeroMemory(&m_sendChunk,sizeof(HTTP_DATA_CHUNK));
 
   // Remove unknown headers
   if(m_unknown)
@@ -724,12 +919,6 @@ HTTPRequest::Finalize()
   // Remove header strings
   m_strings.clear();
 }
-
-//////////////////////////////////////////////////////////////////////////
-//
-// SUB FUNCTIONS FOR RECEIVING AND SENDING
-//
-//////////////////////////////////////////////////////////////////////////
 
 // Sub procedures for the handlers
 bool 
@@ -858,7 +1047,7 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
 }
 
 void
-HTTPRequest::FillResponse()
+HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
 {
   // Initialize the response body
   if(m_response == nullptr)
@@ -866,12 +1055,17 @@ HTTPRequest::FillResponse()
     m_response = new HTTP_RESPONSE();
     RtlZeroMemory(m_response,sizeof(HTTP_RESPONSE));
   }
-  unsigned status  = m_message->GetStatus();
-  const char* text = GetHTTPStatusText(status);
+  const char* text = GetHTTPStatusText(p_status);
 
-  m_response->StatusCode   = (USHORT)status;
+  m_response->StatusCode   = (USHORT)p_status;
   m_response->pReason      = text;
   m_response->ReasonLength = (USHORT)strlen(text);
+
+  // See if we are done (for event and socket streams)
+  if(p_responseOnly)
+  {
+    return;
+  }
 
   // Add content type as a known header. (octet-stream or the message content type)
   CString contentType("application/octet-stream");
@@ -997,4 +1191,27 @@ HTTPRequest::ResetOutstanding(OutstandingIO& p_outstanding)
   p_outstanding.Internal     = 0;
   p_outstanding.InternalHigh = 0;
   p_outstanding.Pointer      = nullptr;
+}
+
+// Cancel the request at the HTTP driver
+void
+HTTPRequest::CancelRequest()
+{
+  if(m_requestID)
+  {
+    // IO_Cancel will restart a new request for this object
+    m_incoming.m_action = IO_Cancel;
+
+    // Request cancellation
+    ULONG result = HttpCancelHttpRequest(m_server->GetRequestQueue(),m_requestID,&m_incoming);
+    if(result == NO_ERROR)
+    {
+      DETAILLOG1("Event stream connection closed");
+    }
+    else if(result != ERROR_IO_PENDING)
+    {
+      ERRORLOG(result,"Event stream incorrectly canceled");
+    }
+    // m_requestID = HTTP_NULL_ID;
+  }
 }

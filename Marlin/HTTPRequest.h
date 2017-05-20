@@ -32,14 +32,18 @@ class HTTPMessage;
 class HTTPSite;
 class HTTPRequest;
 
-// Event action type for async I/O
+// Event action type for asynchronous I/O
 typedef enum _ioaction
 {
-  IO_Nothing   = 0
- ,IO_Request   = 1
- ,IO_Reading   = 2
- ,IO_Response  = 3
- ,IO_Writing   = 4
+  IO_Nothing     = 0    // Nothing done yet
+ ,IO_Request     = 1    // Receiving a new request
+ ,IO_Reading     = 2    // Receiving a request body part
+ ,IO_Response    = 3    // Did send a response
+ ,IO_Writing     = 4    // Did write a response body part
+ ,IO_StartStream = 5    // Did start an event stream
+ ,IO_WriteStream = 6    // Did write a stream part
+ ,IO_Cancel      = 7    // Cancel current request
+
 }
 IOAction;
 
@@ -60,7 +64,7 @@ public:
 void HandleAsynchroneousIO(OVERLAPPED* p_overlapped);
 
 // Strings for headers must be tied to the request, otherwise they do not
-// survive for the async I/O commands
+// survive for the asynchronous I/O commands
 using RequestStrings = std::vector<CString>;
 
 
@@ -77,6 +81,15 @@ public:
   void StartResponse(HTTPMessage* p_message);
   // Callback from I/O Completion port
   void HandleAsynchroneousIO(IOAction p_action);
+  // Cancel the request at the HTTP driver
+  void CancelRequest();
+  // Start a response stream
+  void StartEventStreamResponse();
+  // Send as a stream part to an existing stream
+  void SendResponseStream(const char* p_buffer
+                         ,size_t      p_length
+                         ,bool        p_continue = true);
+
 
   // GETTERS
 
@@ -95,6 +108,9 @@ private:
   void ReceivedBodyPart();         // 2) Receive trailing request body
   void SendResponseBody();         // 3) Start sending body parts
   void SendBodyPart();             // 4) Has send a body part
+  void StartedStream();            // 5) Has started event stream
+  void SendStreamPart();           // 6) Has send a stream part
+
   // Sub procedures for the handlers
   bool CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_token);
   // We have read the whole body of a message
@@ -104,7 +120,7 @@ private:
   // Add previously unknown HTTP headers
   void AddUnknownHeaders(UKHeaders& p_headers);
   // Fill response structure out of the HTTPMessage
-  void FillResponse();
+  void FillResponse(int p_status,bool p_responseOnly = false);
   // Reset outstanding OVERLAPPED
   void ResetOutstanding(OutstandingIO& p_outstanding);
   // Add a request string for a header
@@ -124,8 +140,9 @@ private:
   bool              m_mayreceive { false   };   // Authentication done: may receive
   bool              m_responding { false   };   // Response already started
   bool              m_logging    { false   };   // Do detailed logging
-  BYTE*             m_readBuffer { nullptr };   // Read buffer
-  HTTP_DATA_CHUNK   m_sendBuffer;               // Send buffer
+  BYTE*             m_readBuffer { nullptr };   // Read data buffer
+  BYTE*             m_sendBuffer { nullptr };   // Send data buffer
+  HTTP_DATA_CHUNK   m_sendChunk;                // Send buffer as a chunked info
   RequestStrings    m_strings;                  // Strings for headers and such
   HANDLE            m_file       { NULL    };   // File handle for sending a file
   int               m_bufferpart { 0       };   // Buffer part being sent

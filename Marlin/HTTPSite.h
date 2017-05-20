@@ -41,7 +41,7 @@ class SessionAddress
 {
 public:
   CString       m_userSID; // User in the SIDL form
-  SOCKADDR_IN6  m_address; // IP address of caller
+  ULONG         m_address; // sin6_flowinfo of IP address of caller
   UINT          m_desktop; // TerminalServices desktop
   CString       m_absPath; // Absolute path of session
 };
@@ -305,7 +305,7 @@ protected:
   void              RemoveSequence(SessionAddress& p_address);
   SessionSequence*  FindSequence  (SessionAddress& p_address);
   SessionSequence*  CreateSequence(SessionAddress& p_address);
-  void              DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address);
+//void              DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address);
 
   // Handle HTTP throttling
   CRITICAL_SECTION* StartThrottling(HTTPMessage* p_message);

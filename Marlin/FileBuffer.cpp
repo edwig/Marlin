@@ -301,15 +301,25 @@ FileBuffer::GetBufferCopy(uchar*& p_buffer,size_t& p_length)
 bool
 FileBuffer::OpenFile(bool p_reading)
 {
+  // Make sure previous handle is closed
   if(m_file)
   {
     CloseHandle(m_file);
     m_file = NULL;
   }
+
+  // If we are going to write a file for a WebServer, remove the old one first
+  if(!p_reading)
+  {
+    DeleteFile(m_fileName);
+  }
+
+  // Get our file modes
   DWORD readWrite   = p_reading ? GENERIC_READ    : GENERIC_WRITE;
   DWORD sharing     = p_reading ? FILE_SHARE_READ : FILE_SHARE_WRITE;
   DWORD disposition = p_reading ? OPEN_EXISTING   : CREATE_ALWAYS;
 
+  // Create or open the file
   m_file = CreateFile(m_fileName            // Filename
                      ,readWrite             // Access mode
                      ,sharing               // Share mode
@@ -318,7 +328,12 @@ FileBuffer::OpenFile(bool p_reading)
                      ,FILE_ATTRIBUTE_NORMAL // Attributes
                      ,NULL);                // Template file
 
-  return (m_file != INVALID_HANDLE_VALUE);
+  if(m_file == INVALID_HANDLE_VALUE)
+  {
+    m_file = NULL;
+    return false;
+  }
+  return true;
 }
 
 // Close file again

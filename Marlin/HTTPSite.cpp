@@ -673,9 +673,9 @@ HTTPSite::HandleEventStream(EventStream* p_stream)
   else
   {
     ERRORLOG(ERROR_INVALID_PARAMETER,"Event stream can only be initialized through a HTTP GET to a event-handling site.");
-    HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_BAD_REQUEST);
-    msg.SetRequestHandle(p_stream->m_requestID);
-    HandleHTTPMessageDefault(&msg);
+    HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_BAD_REQUEST);
+    msg->SetRequestHandle(p_stream->m_requestID);
+    HandleHTTPMessageDefault(msg);
   }
 }
 
@@ -785,7 +785,7 @@ HTTPSite::StartThrottling(HTTPMessage* p_message)
   SessionAddress address;
   address.m_userSID = GetStringSID(p_message->GetAccessToken());
   address.m_desktop = p_message->GetRemoteDesktop();
-  memcpy(&address.m_address,p_message->GetSender(),sizeof(SOCKADDR_IN6));
+  address.m_address = p_message->GetSender()->sin6_flowinfo;
 
   // Finding/creating the throttle
   ThrottlingMap::iterator it = m_throttels.find(address);
@@ -862,8 +862,8 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
   SessionAddress address;
   address.m_userSID = GetStringSID(p_message->GetAccessToken());
   address.m_desktop = p_message->GetRemoteDesktop();
+  address.m_address = p_message->GetSender()->sin6_flowinfo;
   address.m_absPath = p_message->GetAbsolutePath();
-  memcpy(&address.m_address,p_message->GetSender(),sizeof(SOCKADDR_IN6));
   address.m_absPath.MakeLower();
 
   if(p_message->GetInternalError() != XmlError::XE_NoError)
@@ -879,7 +879,7 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
   }
 
   // Handle the WS-ReliableMessaging protocol
-  if(p_message->GetNamespace() == NAMESPACE_RELIABLE)
+  if(p_message->GetNamespace().CompareNoCase(NAMESPACE_RELIABLE) == 0)
   {
     if(!GetReliable())
     {
@@ -1165,22 +1165,22 @@ HTTPSite::RM_HandleTerminateSequence(SessionAddress& p_address,SOAPMessage* p_me
   return true;
 }
 
-void
-HTTPSite::DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address)
-{
-  CString address;
-  for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
-  {
-    BYTE byte = ((BYTE*)&p_address.m_address)[ind];
-    address.AppendFormat("%2.2X",byte);
-  }
-  
-  DETAILLOGV("DEBUG ADDRESS AT   : %s",p_prefix.GetString());
-  DETAILLOGV("Session address    : %s",address .GetString());
-  DETAILLOGV("Session address SID: %s",p_address.m_userSID.GetString());
-  DETAILLOGV("Session desktop    : %d",p_address.m_desktop);
-  DETAILLOGV("Session abs. path  : %s",p_address.m_absPath.GetString());
-}
+// void
+// HTTPSite::DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address)
+// {
+//   CString address;
+//   for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
+//   {
+//     BYTE byte = ((BYTE*)&p_address.m_address)[ind];
+//     address.AppendFormat("%2.2X",byte);
+//   }
+//   
+//   DETAILLOGV("DEBUG ADDRESS AT   : %s",p_prefix.GetString());
+//   DETAILLOGV("Session address    : %s",address .GetString());
+//   DETAILLOGV("Session address SID: %s",p_address.m_userSID.GetString());
+//   DETAILLOGV("Session desktop    : %d",p_address.m_desktop);
+//   DETAILLOGV("Session abs. path  : %s",p_address.m_absPath.GetString());
+// }
 
 SessionSequence*
 HTTPSite::FindSequence(SessionAddress& p_address)
@@ -1335,7 +1335,7 @@ HTTPSite::HttpSecurityCheck(HTTPMessage* p_http,SOAPMessage* p_soap)
   SessionAddress address;
   address.m_userSID = GetStringSID(p_soap->GetAccessToken());
   address.m_desktop = p_soap->GetRemoteDesktop();
-  memcpy(&address.m_address,p_soap->GetSender(),sizeof(SOCKADDR));
+  address.m_address = p_soap->GetSender()->sin6_flowinfo;
 
   if(m_securityLevel != p_soap->GetSecurityLevel())
   {

@@ -266,7 +266,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestFormData(server);
           errors += TestJsonData(server);
           errors += TestInsecure(server);
-//           errors += TestPushEvents(server);
+          errors += TestPushEvents(server);
           errors += TestBodySigning(server);
           errors += TestBodyEncryption(server);
           errors += TestMessageEncryption(server);
