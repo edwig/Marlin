@@ -308,12 +308,6 @@ FileBuffer::OpenFile(bool p_reading)
     m_file = NULL;
   }
 
-  // If we are going to write a file for a WebServer, remove the old one first
-  if(!p_reading)
-  {
-    DeleteFile(m_fileName);
-  }
-
   // Get our file modes
   DWORD readWrite   = p_reading ? GENERIC_READ    : GENERIC_WRITE;
   DWORD sharing     = p_reading ? FILE_SHARE_READ : FILE_SHARE_WRITE;

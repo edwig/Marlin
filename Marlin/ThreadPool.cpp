@@ -125,12 +125,20 @@ ThreadPool::InitThreadPool()
   GetNativeSystemInfo(&info);
   m_processors = info.dwNumberOfProcessors;
 
-  // Adjust maximum of threads for the number of processors
-  if(m_maxThreads > 2 * m_processors)
+  if(m_processors > 0)
   {
-    m_maxThreads = 2 * m_processors;
-  }
+    // Adjust maximum of threads for the number of processors
+    if(m_minThreads < 2 * m_processors)
+    {
+      m_minThreads = 2 * m_processors;
+    }
 
+    // Adjust maximum of threads for the number of processors
+    if(m_maxThreads > 4 * m_processors)
+    {
+      m_maxThreads = 4 * m_processors;
+    }
+  }
   // Create IO Completion Port
   // Must be done before creating the threads!
   // But could already have been done by association of an I/O handle
@@ -196,6 +204,8 @@ ThreadPool::RemoveThreadPoolThread(unsigned p_threadID)
     if(th->m_threadId == p_threadID)
     {
       TP_TRACE0("Removing thread from threadpool by closing the handle\n");
+      CloseHandle(th->m_thread);
+
       // Erase from the threadpool, getting next thread
       it = m_threads.erase(it);
       // Free register memory

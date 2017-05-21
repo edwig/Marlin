@@ -33,7 +33,7 @@
 #pragma once
 #include "HTTPServer.h"
 #include "WSDLCache.h"
-#include "HTTPThreadPool.h"
+#include "ThreadPool.h"
 #include "CreateURLPrefix.h"
 #include "HTTPMessage.h"
 #include "SOAPMessage.h"
@@ -115,7 +115,7 @@ public:
   // HIGHLY RECOMMENDED:  Set external WSDL Caching
   void    SetWsdlCache(WSDLCache* p_wsdl);
   // HIGHLY RECOMMENDED:  Set external ThreadPool
-  void    SetThreadPool(HTTPThreadPool* p_pool);
+  void    SetThreadPool(ThreadPool* p_pool);
   // HIGHLY RECOMMENDED:  Set the error report object
   void    SetErrorReport(ErrorReport* p_errorReport);
   // OPTIONAL:  Set a logfile name (if no LogAnalysis given)
@@ -259,7 +259,7 @@ protected:
   int             m_cacheSeconds      { 0 };
   // Complex objects
   MediaTypeMap    m_contentTypes;
-  HTTPThreadPool* m_pool              { nullptr };
+  ThreadPool*     m_pool              { nullptr };
   WSDLCache*      m_wsdl              { nullptr };
   HTTPServer*     m_httpServer        { nullptr };
   ErrorReport*    m_errorReport       { nullptr };

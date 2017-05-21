@@ -99,9 +99,6 @@
     <ClCompile Include="HTTPSite.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
-    <ClCompile Include="HTTPThreadPool.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="HTTPTime.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
@@ -300,6 +297,9 @@
     <ClCompile Include="ThreadPoolORG.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="HTTPServerSync.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -482,9 +482,6 @@
     <ClInclude Include="HTTPMessage.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="HTTPThreadPool.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="HTTPTime.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
@@ -613,6 +610,9 @@
     </ClInclude>
     <ClInclude Include="ThreadPoolORG.h">
       <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HTTPServerSync.h">
+      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

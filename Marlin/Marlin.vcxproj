@@ -182,10 +182,10 @@
     <ClCompile Include="HTTPServer.cpp" />
     <ClCompile Include="HTTPServerIIS.cpp" />
     <ClCompile Include="HTTPServerMarlin.cpp" />
+    <ClCompile Include="HTTPServerSync.cpp" />
     <ClCompile Include="HTTPSite.cpp" />
     <ClCompile Include="HTTPSiteIIS.cpp" />
     <ClCompile Include="HTTPSiteMarlin.cpp" />
-    <ClCompile Include="HTTPThreadPool.cpp" />
     <ClCompile Include="HTTPTime.cpp" />
     <ClCompile Include="HTTPURLGroup.cpp" />
     <ClCompile Include="IISDebug.cpp" />
@@ -336,10 +336,10 @@
     <ClInclude Include="HTTPServer.h" />
     <ClInclude Include="HTTPServerIIS.h" />
     <ClInclude Include="HTTPServerMarlin.h" />
+    <ClInclude Include="HTTPServerSync.h" />
     <ClInclude Include="HTTPSite.h" />
     <ClInclude Include="HTTPSiteIIS.h" />
     <ClInclude Include="HTTPSiteMarlin.h" />
-    <ClInclude Include="HTTPThreadPool.h" />
     <ClInclude Include="HTTPTime.h" />
     <ClInclude Include="HTTPURLGroup.h" />
     <ClInclude Include="IISDebug.h" />

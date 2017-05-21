@@ -78,10 +78,6 @@ HTTPSite::HTTPSite(HTTPServer*   p_server
   {
     m_isSubsite = true;
   }
-  if(p_callback == nullptr)
-  {
-    m_callback = (LPFN_CALLBACK) SITE_CALLBACK_HTTP;
-  }
   InitializeCriticalSection(&m_filterLock);
   InitializeCriticalSection(&m_sessionLock);
 }
@@ -100,9 +96,7 @@ void
 HTTPSite::SetCallback(LPFN_CALLBACK p_callback)
 {
   // Record a new callback.
-  // In case we try to set it to a NULL pointer -> Default to a 
-  // HTTPThreadpool callback mechanism.
-  m_callback = p_callback ? p_callback : (LPFN_CALLBACK) SITE_CALLBACK_HTTP;
+  m_callback = p_callback;
 }
 
 // Cleanup all site handlers
@@ -241,21 +235,6 @@ void
 HTTPSite::SetIsEventStream(bool p_stream)
 {
   m_isEventStream = p_stream;
-
-  if(p_stream)
-  {
-    if(m_callback == (LPFN_CALLBACK)SITE_CALLBACK_HTTP)
-    {
-      m_callback = (LPFN_CALLBACK)SITE_CALLBACK_EVENT;
-    }
-  }
-  else
-  {
-    if(m_callback == (LPFN_CALLBACK)SITE_CALLBACK_EVENT)
-    {
-      m_callback = (LPFN_CALLBACK)SITE_CALLBACK_HTTP;
-    }
-  }
 }
 
 // MANDATORY: Setting a handler for HTTP commands
@@ -435,6 +414,38 @@ HTTPSite::RemoveSiteFromGroup()
   return false;
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// THESE ARE THE DEFAULT CALLBACK HANDLERS FOR ASYNC EXECUTION
+// CALLBACK ADDRESS TO BE ADDED TO THE THREADPOOL
+//
+//////////////////////////////////////////////////////////////////////////
+
+void HTTPSiteCallbackMessage(void* p_argument)
+{
+  HTTPMessage* msg = reinterpret_cast<HTTPMessage*>(p_argument);
+  if(msg)
+  {
+    HTTPSite* site = msg->GetHTTPSite();
+    if(site)
+    {
+      site->HandleHTTPMessage(msg);
+    }
+  }
+}
+void HTTPSiteCallbackEvent(void* p_argument)
+{
+  EventStream* stream = reinterpret_cast<EventStream*>(p_argument);
+  if(stream)
+  {
+    HTTPSite* site = stream->m_site;
+    if(site)
+    {
+      site->HandleEventStream(stream);
+    }
+  }
+}
+
 // Come here to handle our HTTP message gotten from the server
 // through the HTTPThreadpool
 // This is the MAIN entry point for all traffic to this site.
@@ -557,7 +568,7 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
 {
   __try
   {
-    // If we did throtteling, remove the lock
+    // If we did throttling, remove the lock
     if(m_throttling)
     {
       EndThrottling(g_throttle);

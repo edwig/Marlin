@@ -271,7 +271,7 @@ WebServiceServer::SetWsdlCache(WSDLCache* p_wsdl)
 
 // OPTIONAL:  Set external ThreadPool
 void
-WebServiceServer::SetThreadPool(HTTPThreadPool* p_pool)
+WebServiceServer::SetThreadPool(ThreadPool* p_pool)
 {
   if(p_pool)
   {
@@ -384,7 +384,7 @@ WebServiceServer::Run()
   // Configure our threadpool
   if(m_pool == nullptr)
   {
-    m_pool = new HTTPThreadPool();
+    m_pool = new ThreadPool();
     m_poolOwner = true;
   }
   // Setting the correct parameters

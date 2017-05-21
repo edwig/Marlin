@@ -36,7 +36,7 @@
 #include "Analysis.h"
 #include "HTTPServerIIS.h"
 #include "HTTPSite.h"
-#include "HTTPThreadPool.h"
+#include "ThreadPool.h"
 #include "ErrorReport.h"
 #include "AutoCritical.h"
 #include "WebConfig.h"

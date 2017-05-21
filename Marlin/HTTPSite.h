@@ -92,8 +92,8 @@ enum class XFrameOption
 };
 
 // Special callback options for different handlers
-constexpr auto SITE_CALLBACK_HTTP  = ((DWORD_PTR)-1);
-constexpr auto SITE_CALLBACK_EVENT = ((DWORD_PTR)-2);
+void HTTPSiteCallbackMessage(void* p_argument);
+void HTTPSiteCallbackEvent  (void* p_argument);
 
 // Default maximum number of HTTP Throttling addresses
 constexpr long MAX_HTTP_THROTTLES = 1000;
