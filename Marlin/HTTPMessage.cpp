@@ -418,7 +418,15 @@ HTTPMessage::SetHTTPSite(HTTPSite* p_site)
 {
   // Only if it's a real site, and it's controlled
   // by the same HTTPServer object
-  if(p_site != nullptr && p_site->GetHTTPServer() == m_site->GetHTTPServer())
+  if(p_site != nullptr && 
+     m_site != nullptr &&
+     p_site->GetHTTPServer() == m_site->GetHTTPServer())
+  {
+    m_site = p_site;
+    return true;
+  }
+  // Otherwise only if we set it the first time
+  if(m_site == nullptr && p_site != nullptr)
   {
     m_site = p_site;
     return true;

@@ -35,20 +35,20 @@ public:
   virtual ~HTTPServerSync();
 
   // Running the server 
-  virtual void       Run();
+  virtual void Run();
   // Stop the server
-  virtual void       StopServer();
+  virtual void StopServer();
   // Initialise a HTTP server and server-session
-  virtual bool       Initialise();
+  virtual bool Initialise();
   // Receive (the rest of the) incoming HTTP request
-  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message);
+  virtual bool ReceiveIncomingRequest(HTTPMessage* p_message);
   // Sending response for an incoming message
-  virtual void       SendResponse(HTTPMessage* p_message);
+  virtual void SendResponse(HTTPMessage* p_message);
 
   // FUNCTIONS FOR STAND-ALONE SERVER
 
   // Running the main loop of the WebServer in same thread
-  void          RunHTTPServer();
+  void         RunHTTPServer();
 
 
 protected:
@@ -56,15 +56,6 @@ protected:
   virtual void Cleanup();
   // Init the stream response
   virtual bool InitEventStream(EventStream& p_stream);
-  // Send a response in one-go
-//   virtual DWORD SendResponse(HTTPSite*    p_site
-//                             ,HTTPMessage* p_message
-//                             ,USHORT       p_statusCode
-//                             ,PSTR         p_reason
-//                             ,PSTR         p_entityString
-//                             ,CString      p_authScheme
-//                             ,PSTR         p_cookie = NULL
-//                             ,PSTR         p_contentType = NULL);
   // Used for canceling a WebSocket for an event stream
   virtual void CancelRequestStream(HTTP_REQUEST_ID p_response);
 

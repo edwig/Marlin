@@ -32,9 +32,12 @@ FileTimeToInt64(const FILETIME & ft)
 // Returns 1.0f for "CPU fully pinned", 0.0f for "CPU idle", or somewhere in between
 // You'll need to call this at regular intervals, since it measures the load between
 // the previous call and the current one.  Returns -1.0 on error.
-float GetCPULoad()
+float GetCPULoad(CRITICAL_SECTION* m_lock)
 {
   FILETIME idleTime,kernelTime,userTime;
-  return GetSystemTimes(&idleTime,&kernelTime,&userTime) ?
-         CalculateCPULoad(FileTimeToInt64(idleTime),FileTimeToInt64(kernelTime) + FileTimeToInt64(userTime)) : -1.0f;
+  EnterCriticalSection(m_lock);
+  float load = GetSystemTimes(&idleTime,&kernelTime,&userTime) ?
+               CalculateCPULoad(FileTimeToInt64(idleTime),FileTimeToInt64(kernelTime) + FileTimeToInt64(userTime)) : -1.0f;
+  LeaveCriticalSection(m_lock);
+  return load;
 }

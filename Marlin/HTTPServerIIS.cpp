@@ -612,9 +612,11 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
     DWORD  total     = 0;
     DWORD  remaining = 0;
     BOOL   complete  = FALSE;
+    uchar* totbuffer = nullptr;
 
     // Get the just allocated buffer
     fbuffer->GetBuffer(buffer,size);
+    totbuffer = buffer;
 
     // Loop until we've got all data parts
     do
@@ -645,7 +647,9 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
     if(total < contentLength)
     {
       ERRORLOG(ERROR_INVALID_DATA,"Total received message shorter dan 'ContentLength' header.");
+      totbuffer[total] = 0;
     }
+    totbuffer[contentLength] = 0;
   }
   return true;
 }
@@ -877,19 +881,6 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // Respond to general HTTP status
   int status = p_message->GetStatus();
 
-//   if(HTTP_STATUS_SERVER_ERROR <= status && status <= HTTP_STATUS_LAST)
-//   {
-//     RespondWithServerError(p_message,status,"","");
-//     p_message->SetRequestHandle(NULL);
-//     return;
-//   }
-//   if(HTTP_STATUS_BAD_REQUEST <= status && status < HTTP_STATUS_SERVER_ERROR)
-//   {
-//     RespondWithClientError(p_message,status,"","");
-//     p_message->SetRequestHandle(NULL);
-//     return;
-//   }
-
   // Protocol switch must keep the channel open (here for: WebSocket!)
   if(status == HTTP_STATUS_SWITCH_PROTOCOLS)
   {
@@ -1001,80 +992,6 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // Do **NOT** send an answer twice
   p_message->SetRequestHandle(NULL);
 }
-
-// Send a response in one-go
-// DWORD 
-// HTTPServerIIS::SendResponse(HTTPSite*    p_site
-//                            ,HTTPMessage* p_message
-//                            ,USHORT       p_statusCode
-//                            ,PSTR         p_reason
-//                            ,PSTR         p_entityString
-//                            ,CString      p_authScheme
-//                            ,PSTR         p_cookie      /*= NULL*/
-//                            ,PSTR         p_contentType /*= NULL*/)
-// {
-//   IHttpContext*   context   = reinterpret_cast<IHttpContext*>(p_message->GetRequestHandle());
-//   IHttpResponse*  response  = context ? context->GetResponse() : nullptr;
-//   HTTP_DATA_CHUNK dataChunk;
-//   DWORD           result = 0L;
-//   CString         challenge;
-//   memset(&dataChunk,0,sizeof(HTTP_DATA_CHUNK));
-// 
-//   // Setting the response status
-//   SetResponseStatus(response,p_statusCode,p_reason);
-// 
-//   // Add a known header.
-//   if(p_contentType && strlen(p_contentType))
-//   {
-//     SetResponseHeader(response,HttpHeaderContentType,p_contentType,true);
-//   }
-//   else
-//   {
-//     SetResponseHeader(response,HttpHeaderContentType,"text/html",true);
-//   }
-//   // Adding authentication schema challenge
-//   if(p_statusCode == HTTP_STATUS_DENIED)
-//   {
-//     // Add authentication scheme
-//     challenge = BuildAuthenticationChallenge(p_authScheme,p_site->GetAuthenticationRealm());
-//     SetResponseHeader(response,HttpHeaderWwwAuthenticate,challenge,true);
-//   }
-//   else if (p_statusCode >= HTTP_STATUS_AMBIGUOUS)
-//   {
-//     // Log responding with error status code
-//     HTTPError(__FUNCTION__,p_statusCode,"Returning from: " + p_site->GetSite());
-//   }
-// 
-//   // Adding the body
-//   if(p_entityString && strlen(p_entityString) > 0)
-//   {
-//     // Add an entity chunk.
-//     dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-//     dataChunk.FromMemory.pBuffer      = p_entityString;
-//     dataChunk.FromMemory.BufferLength = (ULONG) strlen(p_entityString);
-//   }
-// 
-//   // Adding a cookie
-//   if(p_cookie && strlen(p_cookie) > 0)
-//   {
-//     SetResponseHeader(response,HttpHeaderSetCookie,p_cookie,false);
-//   }
-// 
-//   DWORD sent = 0L;
-//   BOOL  completion = false;
-//   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,false,false,&sent,&completion);
-// 
-//   if(SUCCEEDED(hr))
-//   {
-//     DETAILLOGV("HTTP Sent %d %s %s",p_statusCode,p_reason,p_entityString);
-//   }
-//   else
-//   {
-//     result = GetLastError();
-//     ERRORLOG(result,"SendHttpResponse");
-//   }
-//   return result;
-// }
 
 // Subfunctions for SendResponse
 bool
@@ -1313,8 +1230,7 @@ HTTPServerIIS::CancelRequestStream(HTTP_REQUEST_ID p_response)
     context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
     // Set disconnection
     response->SetNeedDisconnect();
-    // Now ready with this response
-    response->CloseConnection();
+
     DETAILLOG1("Event/Socket connection closed");
   }
   catch(...)

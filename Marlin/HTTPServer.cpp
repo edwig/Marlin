@@ -581,6 +581,7 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
 
   // Send the HTTP Message as response
   SendResponse(answer);
+  answer->DropReference();
 
   // Do **NOT** send an answer twice
   p_message->SetRequestHandle(NULL);
@@ -606,6 +607,7 @@ HTTPServer::SendResponse(JSONMessage* p_message)
     answer->SetStatus(HTTP_STATUS_BAD_REQUEST);
     answer->GetFileBuffer()->Reset();
     SendResponse(answer);
+    answer->DropReference();
   }
   else
   {
@@ -614,6 +616,7 @@ HTTPServer::SendResponse(JSONMessage* p_message)
     HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
     // Send the HTTP Message as response
     SendResponse(answer);
+    answer->DropReference();
   }
   // Do **NOT** send an answer twice
   p_message->SetRequestHandle(NULL);

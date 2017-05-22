@@ -264,7 +264,7 @@ private:
   HeaderMap           m_headers;                                      // All/Known headers
   bool                m_ifmodified    { false   };                    // Use "if-modified-since"
   SYSTEMTIME          m_systemtime;                                   // System time for m_modified
-  long                m_references    { 0       };                    // Referencing system
+  long                m_references    { 1       };                    // Referencing system
 };
 
 inline void

@@ -404,13 +404,13 @@ int TestWebservices(HTTPClient& client)
   errors += TestReliableMessaging(&client,namesp,command,url);
 
   // Test 6
-  xprintf("TESTING THE TOKEN FUNCTION TO /MarlinTest/TestToken/\n");
-  xprintf("====================================================\n");
-  url = CreateURL("TestToken");
-  msg = CreateSoapMessage(namesp,command,url);
-  client.SetSingleSignOn(true);
-  errors += DoSend(client,msg,"token testing");
-  client.SetSingleSignOn(false);
+//   xprintf("TESTING THE TOKEN FUNCTION TO /MarlinTest/TestToken/\n");
+//   xprintf("====================================================\n");
+//   url = CreateURL("TestToken");
+//   msg = CreateSoapMessage(namesp,command,url);
+//   client.SetSingleSignOn(true);
+//   errors += DoSend(client,msg,"token testing");
+//   client.SetSingleSignOn(false);
 
   // Test 7
 //   xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n");

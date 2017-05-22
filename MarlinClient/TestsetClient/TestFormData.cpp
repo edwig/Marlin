@@ -136,9 +136,35 @@ TestFormDataUE(HTTPClient* p_client)
   return result ? 0 : 1;
 }
 
+int TestFD()
+{
+  CString filename("C:\\TEMP\\mpbuffer.txt");
+  FILE* fp = nullptr;
+  char buffer[4004];
+  CString contenttype("multipart/form-data boundary=\"------WebKitFormBoundaryBFCjeYoxVSC92Luo\"");
+
+  fopen_s(&fp, filename, "rb");
+  if (fp)
+  {
+    fread(buffer, 1, 4000, fp);
+    buffer[2063] = 0;
+    FileBuffer fb;
+    // fb.AddBuffer((uchar*)buffer, 2063);
+    fb.SetBuffer((uchar*) buffer, 2063);
+
+    MultiPartBuffer mpb(FD_UNKNOWN);
+    mpb.ParseBuffer(contenttype, &fb);
+
+    printf("Number of parts: %d\n",(int) mpb.GetParts());
+  }
+  return 0;
+}
+
 int TestFormData(HTTPClient* p_client)
 {
   int errors = 0;
+
+  // errors += TestFD();
 
   errors += TestFormDataMP(p_client);
   errors += TestFormDataUE(p_client);

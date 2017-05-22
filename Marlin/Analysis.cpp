@@ -224,7 +224,7 @@ LogAnalysis::Initialisation()
                      ,FILE_SHARE_READ | FILE_SHARE_WRITE
                      ,NULL              // Security
                      ,CREATE_ALWAYS     // Always throw away old log
-                     ,FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED 
+                     ,FILE_ATTRIBUTE_NORMAL
                      ,NULL);
   if(m_file ==  INVALID_HANDLE_VALUE)
   {
@@ -242,7 +242,7 @@ LogAnalysis::Initialisation()
                          ,FILE_SHARE_READ | FILE_SHARE_WRITE
                          ,NULL              // Security
                          ,OPEN_ALWAYS       // Open existing, or create
-                         ,FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED 
+                         ,FILE_ATTRIBUTE_NORMAL
                          ,NULL);
       if(m_file == INVALID_HANDLE_VALUE)
       {

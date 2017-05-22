@@ -57,6 +57,7 @@ static unsigned _stdcall RunHeartbeat(void* p_pool);
 ThreadPool::ThreadPool()
 {
   InitializeCriticalSection(&m_critical);
+  InitializeCriticalSection(&m_cpuclock);
 }
 
 ThreadPool::ThreadPool(int p_minThreads,int p_maxThreads)
@@ -64,12 +65,14 @@ ThreadPool::ThreadPool(int p_minThreads,int p_maxThreads)
            ,m_maxThreads(p_maxThreads)
 {
   InitializeCriticalSection(&m_critical);
+  InitializeCriticalSection(&m_cpuclock);
 }
 
 ThreadPool::~ThreadPool()
 {
   StopThreadPool();
   DeleteCriticalSection(&m_critical);
+  DeleteCriticalSection(&m_cpuclock);
 }
 
 // Shutdown mode simply sets the code that
@@ -424,7 +427,7 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     // Should we add another thread to the pool?
     if((m_bsyThreads == m_curThreads) &&
        (m_bsyThreads  < m_maxThreads) &&
-       (GetCPULoad()  < 0.75) &&
+       (GetCPULoad(&m_cpuclock)  < 0.75) &&
        m_openForWork)
     {
       CreateThreadPoolThread();
@@ -465,7 +468,7 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     }
 
     // Find CPU load and see if we must remain in the threadpool
-    load = GetCPULoad();
+    load = GetCPULoad(&m_cpuclock);
     TP_TRACE1("CPU Load: %f\n",load);
     if((load > 0.9) && (m_curThreads > m_minThreads))
     {
@@ -932,20 +935,20 @@ ThreadPool::StopThreadPool()
 
   // Try stopping all threads, signaling to remove
   int number = (int)m_threads.size() + m_curThreads;
-  for(int num = 0;num < number;++num)
+  for (int num = 0; num < number; ++num)
   {
-    TP_TRACE1("Stopping thread: %d\n",ind);
+    TP_TRACE1("Stopping thread: %d\n", ind);
     StopThread(0);
   }
-  TP_TRACE1("Total items of work still in the work-queue: %d\n",m_work.size());
+  TP_TRACE1("Total items of work still in the work-queue: %d\n", m_work.size());
+
+  // Wait for the queue to become idle
+  bool idle = WaitingForIdle(WF_IDLE_THREADS);
 
   // Closing our completion port,
   // forcing threads out of the wait state (if any left)
   CloseHandle(m_completion);
   m_completion = nullptr;
-
-  // Wait for the queue to become idle
-  bool idle = WaitingForIdle(WF_IDLE_THREADS);
 
   // No longer initialize after this point
   AutoLockTP lock(&m_critical);

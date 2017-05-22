@@ -566,9 +566,11 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,CString& p
   void* result = nullptr;
 
   // Message buffer must end in "<BOUNDARY>--", so no need to seek to the exact end of the buffer
+  // Beware of WebKit (Chrome) that wil send "<BOUNDARY>--\r\n" at the end of the buffer
   int length = p_boundary.GetLength();
-  while(p_remaining-- > (size_t)(length + 1))
+  while(p_remaining > (size_t)(length + 4))
   {
+    --p_remaining;
     if(memcmp(p_finding,(char*)p_boundary.GetString(),length) == 0)
     {
       // Positioning of the boundary found
@@ -576,7 +578,7 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,CString& p
       p_remaining -= length + 2; // 2 is for cr/lf of the HTTP protocol 
       result       = p_finding;
 
-      while(p_remaining--)
+      while(p_remaining)
       {
         if(memcmp(p_finding,(char*) p_boundary.GetString(),length) == 0)
         {
@@ -587,6 +589,7 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,CString& p
           break;
         }
         ++p_finding;
+        --p_remaining;
       }
       break;
     }

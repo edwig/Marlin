@@ -198,6 +198,7 @@ private:
   WorkMap           m_work;                                     // Map with the backlog of work to do
   WorkMap           m_cleanup;                                  // Cleanup jobs after closing the queue
   CRITICAL_SECTION  m_critical;                                 // Locking synchronization object
+  CRITICAL_SECTION  m_cpuclock;                                 // Lock for CPULoad
   LPFN_CALLBACK     m_initialization   { nullptr };             // TP thread initialization
   LPFN_CALLBACK     m_abortfunction    { nullptr };             // TP thread abort function at closing of the handle
   void*             m_initParameter    { nullptr };             // TP thread initialization parameter

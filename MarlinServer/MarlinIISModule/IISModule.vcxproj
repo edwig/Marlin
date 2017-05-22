@@ -24,7 +24,7 @@
     <RootNamespace>BlockCrossLinks</RootNamespace>
     <ProjectGuid>{8D146F02-9019-BC45-06ED-27B4B4D44AAC}</ProjectGuid>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <ProjectName>MarlinIISModule</ProjectName>
+    <ProjectName>MarlinServerIIS</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

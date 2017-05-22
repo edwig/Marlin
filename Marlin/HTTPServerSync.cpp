@@ -264,6 +264,38 @@ HTTPServerSync::Cleanup()
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// THESE ARE THE DEFAULT CALLBACK HANDLERS FOR ASYNC EXECUTION
+// CALLBACK ADDRESS TO BE ADDED TO THE THREADPOOL
+//
+//////////////////////////////////////////////////////////////////////////
+
+void HTTPSiteCallbackMessage(void* p_argument)
+{
+  HTTPMessage* msg = reinterpret_cast<HTTPMessage*>(p_argument);
+  if (msg)
+  {
+    HTTPSite* site = msg->GetHTTPSite();
+    if (site)
+    {
+      site->HandleHTTPMessage(msg);
+    }
+  }
+}
+void HTTPSiteCallbackEvent(void* p_argument)
+{
+  EventStream* stream = reinterpret_cast<EventStream*>(p_argument);
+  if (stream)
+  {
+    HTTPSite* site = stream->m_site;
+    if (site)
+    {
+      site->HandleEventStream(stream);
+    }
+  }
+}
+
 static unsigned int
 __stdcall StartingTheServer(void* pParam)
 {
@@ -425,6 +457,7 @@ HTTPServerSync::RunHTTPServer()
               DETAILLOGS("Not yet authenticated for: ",rawUrl);
               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
               msg.SetRequestHandle(request->RequestId);
+              msg.SetHTTPSite(site);
               RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated",site->GetAuthenticationScheme());
               // Go to next request
               HTTP_SET_NULL_ID(&requestId);
@@ -436,6 +469,7 @@ HTTPServerSync::RunHTTPServer()
               DETAILLOGV("Authentication failed because of: %s",AuthenticationStatus(auth->SecStatus).GetString());
               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
               msg.SetRequestHandle(request->RequestId);
+              msg.SetHTTPSite(site);
               RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated",site->GetAuthenticationScheme());
               // Go to next request
               HTTP_SET_NULL_ID(&requestId);
@@ -472,6 +506,7 @@ HTTPServerSync::RunHTTPServer()
         {
           HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
           msg.SetRequestHandle(request->RequestId);
+          msg.SetHTTPSite(site);
           SendResponse(&msg);
           // Ready with this request
           HTTP_SET_NULL_ID(&requestId);
@@ -505,6 +540,7 @@ HTTPServerSync::RunHTTPServer()
                                     // Non implemented like HttpVerbTRACK or other non-known verbs
                                     HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
                                     msg.SetRequestHandle(request->RequestId);
+                                    msg.SetHTTPSite(site);
                                     RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented","");
                                     // Ready with this request
                                     HTTP_SET_NULL_ID(&requestId);
@@ -524,7 +560,7 @@ HTTPServerSync::RunHTTPServer()
             // Remember our URL
             stream->m_baseURL = rawUrl;
             // Check for a correct callback
-            callback = callback ? HTTPSiteCallbackEvent : callback;
+            callback = callback ? callback : HTTPSiteCallbackEvent;
             m_pool.SubmitWork(callback,(void*)stream);
             HTTP_SET_NULL_ID(&requestId);
             continue;
@@ -582,7 +618,7 @@ HTTPServerSync::RunHTTPServer()
         message->SetReadBuffer(request->Flags & HTTP_REQUEST_FLAG_MORE_ENTITY_BODY_EXISTS);
 
         // Hit the thread pool with this message
-        callback = callback ? HTTPSiteCallbackMessage : callback;
+        callback = callback ? callback : HTTPSiteCallbackMessage;
         m_pool.SubmitWork(callback,(void*)message);
 
         // Ready with this request
@@ -737,94 +773,6 @@ HTTPServerSync::InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status
   p_response->ReasonLength = (USHORT)strlen(p_reason);
 }
 
-// DWORD
-// HTTPServerSync::SendResponse(HTTPSite*    p_site
-//                               ,HTTPMessage* p_message
-//                               ,USHORT       p_statusCode
-//                               ,PSTR         p_reason
-//                               ,PSTR         p_entityString
-//                               ,CString      p_authScheme
-//                               ,PSTR         p_cookie      /*=NULL*/
-//                               ,PSTR         p_contentType /*=NULL*/)
-// {
-//   HTTP_REQUEST_ID requestID = p_message->GetRequestHandle();
-//   HTTP_RESPONSE   response;
-//   HTTP_DATA_CHUNK dataChunk;
-//   DWORD           result;
-//   DWORD           bytesSent;
-//   CString         challenge;
-// 
-//   // Initialize the HTTP response structure.
-//   InitializeHttpResponse(&response,p_statusCode,p_reason);
-// 
-//   // Add a known header.
-//   if(p_contentType && strlen(p_contentType))
-//   {
-//     AddKnownHeader(response,HttpHeaderContentType,p_contentType);
-//   }
-//   else
-//   {
-//     AddKnownHeader(response,HttpHeaderContentType,"text/html");
-//   }
-//   // Adding authentication schema challenge
-//   if(p_statusCode == HTTP_STATUS_DENIED)
-//   {
-//     // Add authentication scheme
-//     challenge = BuildAuthenticationChallenge(p_authScheme,p_site->GetAuthenticationRealm());
-//     AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
-//   }
-//   else if (p_statusCode >= HTTP_STATUS_AMBIGUOUS)
-//   {
-//     // Log responding with error status code
-//     HTTPError(__FUNCTION__,p_statusCode,"Returning from: " + p_site->GetSite());
-//   }
-// 
-//   // Adding the body
-//   if(p_entityString && strlen(p_entityString) > 0)
-//   {
-//     // Add an entity chunk.
-//     dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-//     dataChunk.FromMemory.pBuffer      = p_entityString;
-//     dataChunk.FromMemory.BufferLength = (ULONG) strlen(p_entityString);
-//     response.EntityChunkCount         = 1;
-//     response.pEntityChunks            = &dataChunk;
-//   }
-// 
-//   // Adding a cookie
-//   if(p_cookie && strlen(p_cookie) > 0)
-//   {
-//     AddKnownHeader(response,HttpHeaderSetCookie,p_cookie);
-//   }
-// 
-//   // Prepare our cache-policy
-//   HTTP_CACHE_POLICY policy;
-//   policy.Policy        = m_policy;
-//   policy.SecondsToLive = m_secondsToLive;
-// 
-//   // Because the entity body is sent in one call, it is not
-//   // required to specify the Content-Length.
-//   result = HttpSendHttpResponse(m_requestQueue,    // ReqQueueHandle
-//                                 requestID,         // Request ID
-//                                 0,                 // Flags
-//                                 &response,         // HTTP response
-//                                 &policy,           // Policy
-//                                 &bytesSent,        // bytes sent  (OPTIONAL)
-//                                 NULL,              // pReserved2  (must be NULL)
-//                                 0,                 // Reserved3   (must be 0)
-//                                 NULL,              // LPOVERLAPPED(OPTIONAL)
-//                                 NULL               // pReserved4  (must be NULL)
-//                                 ); 
-//   if(result != NO_ERROR)
-//   {
-//     ERRORLOG(result,"SendHttpResponse");
-//   }
-//   else
-//   {
-//     DETAILLOGV("HTTP Send %d %s %s",p_statusCode,p_reason,p_entityString);
-//   }
-//   return result;
-// }
-
 // Used for canceling a WebSocket for an event stream
 void 
 HTTPServerSync::CancelRequestStream(HTTP_REQUEST_ID p_response)
@@ -976,21 +924,9 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
 
   // Respond to general HTTP status
   int status = p_message->GetStatus();
-  if(HTTP_STATUS_SERVER_ERROR <= status && status <= HTTP_STATUS_LAST)
-  {
-    RespondWithServerError(p_message,status,"","");
-    p_message->SetRequestHandle(NULL);
-    return;
-  }
-  if(HTTP_STATUS_BAD_REQUEST <= status && status < HTTP_STATUS_SERVER_ERROR)
-  {
-    RespondWithClientError(p_message,status,"","");
-    p_message->SetRequestHandle(NULL);
-    return;
-  }
 
   // Initialize the HTTP response structure.
-  InitializeHttpResponse(&response,(USHORT)p_message->GetStatus(),(PSTR) GetHTTPStatusText(p_message->GetStatus()));
+  InitializeHttpResponse(&response,(USHORT)status,(PSTR) GetHTTPStatusText(status));
 
   // Add a known header. (octet-stream or the message content type)
   if(!p_message->GetContentType().IsEmpty())

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinServer", "MarlinServer\MarlinServer.vcxproj", "{3F12A6BF-2B42-4867-86B1-2F0E96C56835}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -20,12 +20,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Marlin", "..\Marlin\Marlin.vcxproj", "{3CC23320-1FF0-41AF-9F3A-960C5F657C81}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinIISModule", "MarlinIISModule\IISModule.vcxproj", "{8D146F02-9019-BC45-06ED-27B4B4D44AAC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinServerIIS", "MarlinIISModule\IISModule.vcxproj", "{8D146F02-9019-BC45-06ED-27B4B4D44AAC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HostedWebCore", "HostedWebCore\HostedWebCore.vcxproj", "{1EA161F3-2559-408D-952F-F78D655C0D3E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinServerIISWC", "HostedWebCore\HostedWebCore.vcxproj", "{1EA161F3-2559-408D-952F-F78D655C0D3E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinServerSync", "MarlinServerSync\MarlinServerSync.vcxproj", "{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
 	EndProjectSection
@@ -70,6 +75,14 @@ Global
 		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Release|x64.Build.0 = Release|x64
 		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Release|x86.ActiveCfg = Release|Win32
 		{1EA161F3-2559-408D-952F-F78D655C0D3E}.Release|x86.Build.0 = Release|Win32
+		{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}.Debug|x64.ActiveCfg = Debug|x64
+		{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}.Debug|x64.Build.0 = Debug|x64
+		{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}.Debug|x86.ActiveCfg = Debug|Win32
+		{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}.Debug|x86.Build.0 = Debug|Win32
+		{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}.Release|x64.ActiveCfg = Release|x64
+		{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}.Release|x64.Build.0 = Release|x64
+		{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}.Release|x86.ActiveCfg = Release|Win32
+		{FF5F09DA-A4DF-4059-901C-D7DAF6B0DE1D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

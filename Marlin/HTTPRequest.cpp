@@ -200,6 +200,7 @@ HTTPRequest::StartResponse(HTTPMessage* p_message)
       m_message->DropReference();
     }
     m_message = p_message;
+    m_message->AddReference();
   }
   // Start response
   StartSendResponse();
@@ -904,7 +905,6 @@ HTTPRequest::Finalize()
   // Free the message
   if(m_message)
   {
-    m_message->SetRequestHandle(NULL);
     m_message->DropReference();
     m_message = nullptr;
   }

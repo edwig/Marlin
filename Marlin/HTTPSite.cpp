@@ -414,38 +414,6 @@ HTTPSite::RemoveSiteFromGroup()
   return false;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//
-// THESE ARE THE DEFAULT CALLBACK HANDLERS FOR ASYNC EXECUTION
-// CALLBACK ADDRESS TO BE ADDED TO THE THREADPOOL
-//
-//////////////////////////////////////////////////////////////////////////
-
-void HTTPSiteCallbackMessage(void* p_argument)
-{
-  HTTPMessage* msg = reinterpret_cast<HTTPMessage*>(p_argument);
-  if(msg)
-  {
-    HTTPSite* site = msg->GetHTTPSite();
-    if(site)
-    {
-      site->HandleHTTPMessage(msg);
-    }
-  }
-}
-void HTTPSiteCallbackEvent(void* p_argument)
-{
-  EventStream* stream = reinterpret_cast<EventStream*>(p_argument);
-  if(stream)
-  {
-    HTTPSite* site = stream->m_site;
-    if(site)
-    {
-      site->HandleEventStream(stream);
-    }
-  }
-}
-
 // Come here to handle our HTTP message gotten from the server
 // through the HTTPThreadpool
 // This is the MAIN entry point for all traffic to this site.
@@ -457,9 +425,6 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
 
   __try
   {
-    // Keep message alive during this handler
-    p_message->AddReference();
-
     // HTTP Throttling is one call per calling address at the time
     if(m_throttling)
     {
@@ -687,6 +652,7 @@ HTTPSite::HandleEventStream(EventStream* p_stream)
     HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_BAD_REQUEST);
     msg->SetRequestHandle(p_stream->m_requestID);
     HandleHTTPMessageDefault(msg);
+    msg->DropReference();
   }
 }
 
