@@ -147,7 +147,6 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
 
 //       errors += TestWebSocketAccept();
 //       errors += TestWebSocket(g_log);
-
       errors += TestEvents(client);
       errors += TestBaseSite(client);
       errors += TestSecureSite(client);

@@ -459,25 +459,26 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       // In fact we might totally ignore it.
       AsyncResponse(p_message);
     }
-
-    // Call all site filters first, in priority order
-    // But only if we do have filters
-    if(!m_filters.empty())
-    {
-      CallFilters(p_message);
-    }
-
-    // Call the correct handler for this site
-    handler = GetSiteHandler(p_message->GetCommand());
-    if(handler)
-    {
-      handler->HandleMessage(p_message);
-    }
     else
     {
-      HandleHTTPMessageDefault(p_message);
-    }
+      // Call all site filters first, in priority order
+      // But only if we do have filters
+      if(!m_filters.empty())
+      {
+        CallFilters(p_message);
+      }
 
+      // Call the correct handler for this site
+      handler = GetSiteHandler(p_message->GetCommand());
+      if(handler)
+      {
+        handler->HandleMessage(p_message);
+      }
+      else
+      {
+        HandleHTTPMessageDefault(p_message);
+      }
+    }
     // Remove the throttling lock!
     if(m_throttling)
     {

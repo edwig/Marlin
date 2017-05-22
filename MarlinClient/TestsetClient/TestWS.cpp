@@ -404,26 +404,26 @@ int TestWebservices(HTTPClient& client)
   errors += TestReliableMessaging(&client,namesp,command,url);
 
   // Test 6
-//   xprintf("TESTING THE TOKEN FUNCTION TO /MarlinTest/TestToken/\n");
-//   xprintf("====================================================\n");
-//   url = CreateURL("TestToken");
-//   msg = CreateSoapMessage(namesp,command,url);
-//   client.SetSingleSignOn(true);
-//   errors += DoSend(client,msg,"token testing");
-//   client.SetSingleSignOn(false);
+  xprintf("TESTING THE TOKEN FUNCTION TO /MarlinTest/TestToken/\n");
+  xprintf("====================================================\n");
+  url = CreateURL("TestToken");
+  msg = CreateSoapMessage(namesp,command,url);
+  client.SetSingleSignOn(true);
+  errors += DoSend(client,msg,"token testing");
+  client.SetSingleSignOn(false);
 
   // Test 7
-//   xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n");
-//   xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/Two/\n");
-//   xprintf("============================================================\n");
-//   CString url1 = CreateURL("TestToken/One");
-//   CString url2 = CreateURL("TestToken/Two");
-//   msg = CreateSoapMessage(namesp,command,url1);
-//   client.SetSingleSignOn(true);
-//   errors += DoSend(client,msg,"single sign on");
-//   msg = CreateSoapMessage(namesp,command,url2);
-//   errors += DoSend(client,msg,"single sign on");
-//   client.SetSingleSignOn(false);
+  xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n");
+  xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/Two/\n");
+  xprintf("============================================================\n");
+  CString url1 = CreateURL("TestToken/One");
+  CString url2 = CreateURL("TestToken/Two");
+  msg = CreateSoapMessage(namesp,command,url1);
+  client.SetSingleSignOn(true);
+  errors += DoSend(client,msg,"single sign on");
+  msg = CreateSoapMessage(namesp,command,url2);
+  errors += DoSend(client,msg,"single sign on");
+  client.SetSingleSignOn(false);
 
   // Test 8
   xprintf("TESTING SOAP FAULT TO /MarlinTest/Insecure/\n");
