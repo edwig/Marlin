@@ -801,16 +801,27 @@ SOAPMessage::GetParameterMandatory(CString p_paramName)
   throw msg;
 }
 
-// Set/Add parameter to the header section (level 1 only)
+// Set/Add parameter to the header section (level 1.1 and 1.2 only!)
 XMLElement*  
 SOAPMessage::SetHeaderParameter(CString p_name,const char* p_value,bool p_first /*=false*/)
 {
+  if(!m_header && m_soapVersion > SoapVersion::SOAP_10)
+  {
+    CString header;
+    // Header must be the first child element of Envelope
+    if(!m_root->GetNamespace().IsEmpty())
+    {
+      header = m_root->GetNamespace() + ":";
+    }
+    header += "Header";
+    m_header = SetElement(m_root,header,XDT_String,"",true);
+  }
   if(m_header)
   {
     return SetElement(m_header,p_name,XDT_String,p_value,p_first);
   }
   CString error;
-  error.Format("Tried to set a header parameter [%s:%s], but no header present (yet)!",p_name.GetString(),p_value);
+  error.Format("Tried to set a header parameter [%s:%s], but no header present (SOAP 1.0)!",p_name.GetString(),p_value);
   throw error;
 }
 
