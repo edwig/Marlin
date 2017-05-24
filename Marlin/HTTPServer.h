@@ -320,15 +320,11 @@ public:
   // Response in the server error range (500-505)
   void       RespondWithServerError(HTTPMessage*    p_message
                                    ,int             p_error
-                                   ,CString         p_reason
-                                   ,CString         p_authScheme
-                                   ,CString         p_cookie = "");
+                                   ,CString         p_reason);
   // Response in the client error range (400-417)
   void       RespondWithClientError(HTTPMessage*    p_message
                                    ,int             p_error
-                                   ,CString         p_reason
-                                   ,CString         p_authScheme
-                                   ,CString         p_cookie = "");
+                                   ,CString         p_reason);
   // REQUEST HEADER METHODS
 
   // RFC 2616: paragraph 14.25: "if-modified-since"

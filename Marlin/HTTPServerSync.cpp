@@ -458,7 +458,7 @@ HTTPServerSync::RunHTTPServer()
               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
               msg.SetRequestHandle(request->RequestId);
               msg.SetHTTPSite(site);
-              RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated",site->GetAuthenticationScheme());
+              RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
               // Go to next request
               HTTP_SET_NULL_ID(&requestId);
             }
@@ -470,7 +470,7 @@ HTTPServerSync::RunHTTPServer()
               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
               msg.SetRequestHandle(request->RequestId);
               msg.SetHTTPSite(site);
-              RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated",site->GetAuthenticationScheme());
+              RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
               // Go to next request
               HTTP_SET_NULL_ID(&requestId);
             }
@@ -541,7 +541,7 @@ HTTPServerSync::RunHTTPServer()
                                     HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
                                     msg.SetRequestHandle(request->RequestId);
                                     msg.SetHTTPSite(site);
-                                    RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented","");
+                                    RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented");
                                     // Ready with this request
                                     HTTP_SET_NULL_ID(&requestId);
                                     continue;
@@ -911,6 +911,7 @@ void
 HTTPServerSync::SendResponse(HTTPMessage* p_message)
 {
   HTTP_RESPONSE   response;
+  CString         challenge;
   HTTP_REQUEST_ID requestID   = p_message->GetRequestHandle();
   FileBuffer*     buffer      = p_message->GetFileBuffer();
   CString         contentType("application/octet-stream"); 
@@ -934,6 +935,16 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
     contentType = p_message->GetContentType();
   }
   AddKnownHeader(response,HttpHeaderContentType,contentType);
+
+  // In case of a HTTP 401
+  if(status == HTTP_STATUS_DENIED)
+  {
+    // Add authentication scheme
+    HTTPSite* site = p_message->GetHTTPSite();
+    challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
+                                            ,site->GetAuthenticationRealm());
+    AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
+  }
 
   // Add the server header or suppress it
   switch(m_sendHeader)

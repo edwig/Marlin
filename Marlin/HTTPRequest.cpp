@@ -280,7 +280,7 @@ HTTPRequest::ReceivedRequest()
   }
 
   // Now check for authentication and possible send 401 back
-  if(CheckAuthentication(m_site,rawUrl,accessToken) == false)
+  if(CheckAuthentication(rawUrl,accessToken) == false)
   {
     // Not authenticated, go back for next request
     return;
@@ -470,7 +470,7 @@ HTTPRequest::ReceivedBodyPart()
   else
   {
     ERRORLOG(result,"Error receiving bodypart");
-    m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error","");
+    m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error");
   }
   PostReceive();
 }
@@ -922,7 +922,7 @@ HTTPRequest::Finalize()
 
 // Sub procedures for the handlers
 bool 
-HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_token)
+HTTPRequest::CheckAuthentication(CString& p_rawUrl,HANDLE& p_token)
 {
   bool doReceive = true;
 
@@ -941,9 +941,8 @@ HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_to
           // Not (yet) authenticated. Back to the client for authentication
           DETAILLOGS("Not yet authenticated for: ",p_rawUrl);
           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-          m_message->AddReference();
           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-          m_server->RespondWithClientError(m_message,HTTP_STATUS_DENIED,"Not authenticated",p_site->GetAuthenticationScheme());
+          m_server->RespondWithClientError(m_message,HTTP_STATUS_DENIED,"Not authenticated");
           break;
         }
         else if(auth->AuthStatus == HttpAuthStatusFailure)
@@ -952,9 +951,8 @@ HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_to
           DETAILLOGS("Authentication failed for: ",p_rawUrl);
           DETAILLOGV("Authentication failed because of: %s",m_server->AuthenticationStatus(auth->SecStatus).GetString());
           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-          m_message->AddReference();
           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-          m_server->RespondWithClientError(m_message,HTTP_STATUS_DENIED,"Not authenticated",p_site->GetAuthenticationScheme());
+          m_server->RespondWithClientError(m_message,HTTP_STATUS_DENIED,"Not authenticated");
           break;
         }
         else if(auth->AuthStatus == HttpAuthStatusSuccess)
@@ -970,9 +968,8 @@ HTTPRequest::CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_to
           authError.Format("Authentication mechanism failure. Unknown status: %d",auth->AuthStatus);
           ERRORLOG(ERROR_NOT_AUTHENTICATED,authError);
           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_FORBIDDEN);
-          m_message->AddReference();
           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-          m_server->RespondWithClientError(m_message,HTTP_STATUS_FORBIDDEN,"Forbidden","");
+          m_server->RespondWithClientError(m_message,HTTP_STATUS_FORBIDDEN,"Forbidden");
           break;
         }
       }

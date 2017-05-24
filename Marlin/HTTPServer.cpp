@@ -626,9 +626,7 @@ HTTPServer::SendResponse(JSONMessage* p_message)
 void
 HTTPServer::RespondWithServerError(HTTPMessage* p_message
                                   ,int          p_error
-                                  ,CString      p_reason
-                                  ,CString      p_authScheme
-                                  ,CString      p_cookie /*=""*/)
+                                  ,CString      p_reason)
 {
   HTTPERROR(p_error,"Respond with server error");
   CString page;
@@ -636,10 +634,7 @@ HTTPServer::RespondWithServerError(HTTPMessage* p_message
 
   p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
   p_message->SetStatus(p_error);
-  if(!p_cookie.IsEmpty())
-  {
-    p_message->SetCookie(p_cookie);
-  }
+
   SendResponse(p_message);
 }
 
@@ -647,9 +642,7 @@ HTTPServer::RespondWithServerError(HTTPMessage* p_message
 void
 HTTPServer::RespondWithClientError(HTTPMessage* p_message
                                   ,int          p_error
-                                  ,CString      p_reason
-                                  ,CString      p_authScheme
-                                  ,CString      p_cookie /*=""*/)
+                                  ,CString      p_reason)
 {
   HTTPERROR(p_error,"Respond with client error");
   CString page;
@@ -657,10 +650,7 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
 
   p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
   p_message->SetStatus(p_error);
-  if(!p_cookie.IsEmpty())
-  {
-    p_message->SetCookie(p_cookie);
-  }
+
   SendResponse(p_message);
 }
 

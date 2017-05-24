@@ -112,7 +112,7 @@ private:
   void SendStreamPart();           // 6) Has send a stream part
 
   // Sub procedures for the handlers
-  bool CheckAuthentication(HTTPSite* p_site,CString& p_rawUrl,HANDLE& p_token);
+  bool CheckAuthentication(CString& p_rawUrl,HANDLE& p_token);
   // We have read the whole body of a message
   void PostReceive();
   // Add a well known HTTP header to the response structure

@@ -214,10 +214,6 @@ public:
   MediaTypeMap&   GetContentTypeMap()               { return m_contentTypes;  };
   XMLEncryption   GetEncryptionLevel()              { return m_securityLevel; };
   CString         GetEncryptionPassword()           { return m_enc_password;  };
-  CString         GetAuthenticationScheme()         { return m_scheme;        };
-  bool            GetAuthenticationNTLMCache()      { return m_ntlmCache;     };
-  CString         GetAuthenticationRealm()          { return m_realm;         };
-  CString         GetAuthenticationDomain()         { return m_domain;        };
   bool            GetAllHeaders()                   { return m_allHeaders;    };
   bool            GetReliable()                     { return m_reliable;      };
   bool            GetReliableLogIn()                { return m_reliableLogIn; };
@@ -233,6 +229,10 @@ public:
   bool            GetUseCORS()                      { return m_useCORS;       };
   CString         GetCORSOrigin()                   { return m_allowOrigin;   };
   int             GetCORSMaxAge()                   { return m_corsMaxAge;    };
+  CString         GetAuthenticationScheme();
+  bool            GetAuthenticationNTLMCache();
+  CString         GetAuthenticationRealm();
+  CString         GetAuthenticationDomain();
   CString         GetAllowHandlers();
   CString         GetWebroot();
   SiteHandler*    GetSiteHandler(HTTPCommand p_command);

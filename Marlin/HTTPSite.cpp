@@ -414,6 +414,46 @@ HTTPSite::RemoveSiteFromGroup()
   return false;
 }
 
+CString
+HTTPSite::GetAuthenticationScheme() 
+{ 
+  if(m_scheme.IsEmpty() && m_mainSite)
+  {
+    return m_mainSite->GetAuthenticationScheme();
+  }
+  return m_scheme; 
+}
+
+bool
+HTTPSite::GetAuthenticationNTLMCache() 
+{
+  if(!m_ntlmCache && m_mainSite)
+  {
+    return m_mainSite->GetAuthenticationNTLMCache();
+  }
+  return m_ntlmCache; 
+}
+
+CString
+HTTPSite::GetAuthenticationRealm()
+{ 
+  if(m_realm.IsEmpty() && m_mainSite)
+  {
+    return m_mainSite->GetAuthenticationRealm();
+  }
+  return m_realm; 
+};
+
+CString
+HTTPSite::GetAuthenticationDomain() 
+{ 
+  if(m_domain.IsEmpty() && m_mainSite)
+  {
+    return m_mainSite->GetAuthenticationDomain();
+  }
+  return m_domain; 
+};
+
 // Come here to handle our HTTP message gotten from the server
 // through the HTTPThreadpool
 // This is the MAIN entry point for all traffic to this site.
@@ -459,26 +499,25 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       // In fact we might totally ignore it.
       AsyncResponse(p_message);
     }
+
+    // Call all site filters first, in priority order
+    // But only if we do have filters
+    if(!m_filters.empty())
+    {
+      CallFilters(p_message);
+    }
+
+    // Call the correct handler for this site
+    handler = GetSiteHandler(p_message->GetCommand());
+    if(handler)
+    {
+      handler->HandleMessage(p_message);
+    }
     else
     {
-      // Call all site filters first, in priority order
-      // But only if we do have filters
-      if(!m_filters.empty())
-      {
-        CallFilters(p_message);
-      }
-
-      // Call the correct handler for this site
-      handler = GetSiteHandler(p_message->GetCommand());
-      if(handler)
-      {
-        handler->HandleMessage(p_message);
-      }
-      else
-      {
-        HandleHTTPMessageDefault(p_message);
-      }
+      HandleHTTPMessageDefault(p_message);
     }
+
     // Remove the throttling lock!
     if(m_throttling)
     {
@@ -607,11 +646,18 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
 {
   // Send back an OK immediately, without waiting for
   // worker thread to process the message in the callback
-  p_message->Reset();
-  p_message->SetStatus(HTTP_STATUS_OK);
-  p_message->GetFileBuffer()->Reset();
-  m_server->SendResponse(p_message);
+  HTTPMessage* msg = new HTTPMessage(p_message);
+  msg->SetCommand(HTTPCommand::http_response);
+  msg->SetStatus(HTTP_STATUS_OK);
+  msg->GetFileBuffer()->Reset();
+  m_server->SendResponse(msg);
+  msg->DropReference();
+
+  // Log what we just did
   DETAILLOG1("Sent a HTTP status 200 = OK for asynchroneous message");
+
+  // This message is ready. Do not send again
+  p_message->SetRequestHandle(HTTP_NULL_ID);
 }
 
 // See that message has expected origin
@@ -664,6 +710,8 @@ void
 HTTPSite::HandleHTTPMessageDefault(HTTPMessage* p_message)
 {
   DETAILLOG1("Default HTTPSite repsonse HTTP_STATUS_BAD_REQUEST (400)");
+  p_message->Reset();
+  p_message->GetFileBuffer()->Reset();
   p_message->SetCommand(HTTPCommand::http_response);
   p_message->SetStatus(HTTP_STATUS_BAD_REQUEST);
   m_server->SendResponse(p_message);
