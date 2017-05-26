@@ -8,6 +8,25 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.3
+======================
+1) There are now 4 server setups. This is an overview:
+   - MarlinServer      : HTTPServerMarlin a-synchronous mode webserver without IIS
+   - MarlinServerSync  : HTTPServerSync old synchronous mode webserver without IIS
+   - MarlinServerIIS   : HTTPServerIIS running under IIS (production mode)
+   - MarlinServerIISWC : HTTPServerIIS running in Hosted WebCore as stand alone program
+2) The async server is now implemented on top of overlapping asynchronous I/O with the
+   IOCompletionPort mechanisms in the MS-Windows SDK. This is done for runtime scaling of
+   the server.
+3) The Threadpool object has been re-written to be used with the I/O completion port
+   mechanisms. The HTTPThreadpool object was removed from the project.
+4) The HTTPMessage and XML/SOAP Message objects now have a reference counting mechanism
+   Main reason for adding these is the a-sync mode server that scales better on runtime
+5) The a-sync server has a new object (HTTPRequest) that holds the status of each request
+   as it progresses through all the stages (receive, reading, response, writing) of the
+   HTTP call asynchroneously.
+6) WebSockets still needs to be implemented on the Marlin A-Sync server!
+
 CHANGES IN VERSION 4.2
 ======================
 1) WebSocket's have been implemented for the client side and for the IIS server side.
@@ -17,8 +36,6 @@ CHANGES IN VERSION 4.2
    OnMessage, OnBinary and OnError message handlers. The class has been tested against
    the standard "ws[s]://echo.websocket.org" service.
 3) WebSocketServerIIS can be used by any server and exposes all the standard message handlers.
-4) 
-
 
 CHANGES IN VERSION 4.1
 ======================
@@ -34,7 +51,6 @@ CHANGES IN VERSION 4.1
    https://www.rfc-editor.org/rfc/pdfrfc/rfc6455.txt.pdf
    A 'WebSocket' class with a 'Server' and 'Client' subclass have been added to the project.
    We now have two-way-communication between server and client.
-
 
 PATCH VERSION 4.0.3 (20-04-2017)
 --------------------------------
@@ -88,9 +104,9 @@ CHANGES IN VERSION 4.0
    If you do not wish to use the IIS option, derive your server from "HTTServerMarlin" when
    upgrading to this version of the Marlin software.
 
-	2) Due to the different workings of IIS, if you want to run in that mode, the web.config of Marlin
-	   will not be read. Instead the "ApplicationHost.Config" (on C:\Windows\System32\inetsrv\config)
-	   and the web.config (in C:\inetpub\wwwroot\YourSite\) will be read.
+2) Due to the different workings of IIS, if you want to run in that mode, the web.config of Marlin
+   will not be read. Instead the "ApplicationHost.Config" (on C:\Windows\System32\inetsrv\config)
+	 and the web.config (in C:\inetpub\wwwroot\YourSite\) will be read.
 
    Functionallity               Where to find
    -------------------------    --------------------------------------------
@@ -222,35 +238,35 @@ CHANGES IN VERSION 4.0
     0 or less means 'Optional', 1 and greater means 'manditory'.
 14) Added a 'cleanup job' to the threadpool. One or more cleanup jobs can be registered that will
     be called after the threadpool has been drained and stopped. The cleanup jobs will be called
-	from the mainthread of the threadpool, in order of registration.
+	  from the mainthread of the threadpool, in order of registration.
 15) A 'Command BUS' is implemented on top of the threadpool.
     Functionallity can subscribe to a command (a string keyword) to be called when needed with
-	their own thread to handle a function. Publishing of a command will call all subscribers
-	to that command with an argument that is passed on to the handler function as a result of 
-	the threadpool calling.
-	This command bus can be used if a single situation calls for multiple handlers to be 
-	started, each with their own unique thread of processing.
-	The bus is an extension of the standard MS-Windows messaging, which in general only goes
-	to the interface thread of an application. The bus is purely meant to be used by a server
-	application, such as a webserver.
+	  their own thread to handle a function. Publishing of a command will call all subscribers
+	  to that command with an argument that is passed on to the handler function as a result of 
+	  the threadpool calling.
+	  This command bus can be used if a single situation calls for multiple handlers to be 
+	  started, each with their own unique thread of processing.
+	  The bus is an extension of the standard MS-Windows messaging, which in general only goes
+	  to the interface thread of an application. The bus is purely meant to be used by a server
+	  application, such as a webserver.
 16) The following WSDL checks have been implemented
     - whiteSpace      Preserve/replace/collapse rules
-	- pattern         Regular expression matching
-	- totalDigits	  Max total digits of a number
-	- fractionDigits  Max total fractional digits of a number
-	- minInclusive    For all relevant datatypes
-	- minExclusive    For all relevant datatypes
-	- maxInclusive    For all relevant datatypes
-	- maxExclusive    For all relevant datatypes
-	In order to fullfill the min/max In/Ex-clusive rules, a new XMLTemporal class has been added.
-	this class contains a partial implementation of Date,Time,Timestamp and Durations.
-	The implementation only calculates a ordinal number to parse min/max values.
+	  - pattern         Regular expression matching
+	  - totalDigits	  Max total digits of a number
+	  - fractionDigits  Max total fractional digits of a number
+	  - minInclusive    For all relevant datatypes
+	  - minExclusive    For all relevant datatypes
+	  - maxInclusive    For all relevant datatypes
+	  - maxExclusive    For all relevant datatypes
+	  In order to fullfill the min/max In/Ex-clusive rules, a new XMLTemporal class has been added.
+	  this class contains a partial implementation of Date,Time,Timestamp and Durations.
+	  The implementation only calculates a ordinal number to parse min/max values.
 
 17) Hosted Web Core support for Marlin
     The hosted webcore is meant for development purposes to be able to run an IIS application 
-	outside the complete IIS infrastructure. The application can be run by pressing 'run' in Visual
-	Studio. Pre-requesites are the following
-	- Installation of "Hosted Web Core" as an OS feature (apart from IIS)
-	- Application image can be compiled as an EXE and deployed as a DLL
-	- The main wil call "HWC_main(argc,argv)" function to start the hosted webcore
-	  See the "HostedWebCore" project in the solution
+	  outside the complete IIS infrastructure. The application can be run by pressing 'run' in Visual
+  	Studio. Pre-requesites are the following
+	  - Installation of "Hosted Web Core" as an OS feature (apart from IIS)
+	  - Application image can be compiled as an EXE and deployed as a DLL
+	  - The main wil call "HWC_main(argc,argv)" function to start the hosted webcore
+	    See the "HostedWebCore" project in the solution
