@@ -93,6 +93,9 @@ public:
 
   // GETTERS
 
+  // Object still has outstanding I/O to handle
+  bool        GetIsActive()   { return m_active;  };
+  // The HTTPServer that handles this request
   HTTPServer* GetHTTPServer() { return m_server;  };
 
 private:
@@ -127,6 +130,7 @@ private:
   void AddRequestString(CString p_string,const char*& p_buffer,USHORT& p_size);
 
   HTTPServer*       m_server;                   // Our server
+  bool              m_active     { false   };   // Authentication done: may receive
   HTTP_REQUEST_ID   m_requestID  { NULL    };   // The request we are processing
   PHTTP_REQUEST     m_request    { nullptr };   // Pointer to the request  object
   PHTTP_RESPONSE    m_response   { nullptr };   // Pointer to the response object
@@ -137,7 +141,6 @@ private:
   OutstandingIO     m_incoming;                 // Incoming IO request
   OutstandingIO     m_reading;                  // Outstanding reading action
   OutstandingIO     m_writing;                  // Outstanding writing action
-  bool              m_mayreceive { false   };   // Authentication done: may receive
   bool              m_responding { false   };   // Response already started
   bool              m_logging    { false   };   // Do detailed logging
   BYTE*             m_readBuffer { nullptr };   // Read data buffer

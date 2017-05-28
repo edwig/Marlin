@@ -597,23 +597,51 @@ StartHTTPRequest(void* p_argument)
 }
 
 // Clean up our registered overlapping I/O object
-/*static*/ void
-CancelHTTPRequest(void* p_argument)
+// return true  -> Stay in the threadpool
+// return false -> Thread is leaving threadpool
+/*static*/ bool
+CancelHTTPRequest(void* p_argument,bool p_stayInThePool,bool p_forcedAbort)
 {
+  // Check if we have an OVERLAPPED argument
+  if(p_argument == INVALID_HANDLE_VALUE)
+  {
+    return p_stayInThePool;
+  }
+
   OutstandingIO* outstanding = reinterpret_cast<OutstandingIO*>(p_argument);
   if(outstanding)
   {
-    HTTPRequest* request = outstanding->m_request;
-    if(request)
+    DWORD status = (DWORD)(outstanding->Internal & 0x0FFFF);
+    if(status == 0 && outstanding->Offset == 0 && outstanding->OffsetHigh == 0)
     {
-      HTTPServer* server = request->GetHTTPServer();
-      if(server)
+      HTTPRequest* request = reinterpret_cast<HTTPRequest*>(outstanding->m_request);
+      if(request)
       {
-        server->UnRegisterHTTPRequest(request);
+        if((!request->GetIsActive() && !p_stayInThePool) || p_forcedAbort)
+        {
+          HTTPServer* server = request->GetHTTPServer();
+          if(server)
+          {
+            server->UnRegisterHTTPRequest(request);
+          }
+          delete request;
+          return false;
+        }
+        else if(p_stayInThePool && !request->GetIsActive())
+        {
+          // Start a new request, in case we completed the previous one
+          request->StartRequest();
+          return true;
+        }
+        else if(request->GetIsActive())
+        {
+          // Still processing, we must stay in the pool
+          return true;
+        }
       }
-      delete request;
     }
   }
+  return p_stayInThePool;
 }
 
 // Running the server on asynchronous I/O in the threadpool

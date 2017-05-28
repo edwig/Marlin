@@ -28,6 +28,7 @@
 #include "StdAfx.h"
 #include "ThreadPool.h"
 #include "CPULoad.h"
+#include "AutoCritical.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -353,7 +354,7 @@ ThreadPool::AssociateIOHandle(HANDLE p_handle,ULONG_PTR p_key)
 
 // Setting the thread initialization function
 bool
-ThreadPool::SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_CALLBACK p_abort,void* p_argument)
+ThreadPool::SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_TRYABORT p_abort,void* p_argument)
 {
   if(m_initialization == nullptr)
   {
@@ -386,6 +387,7 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
   // Check that there is a initialization routine
   if(m_initialization)
   {
+    AutoCritSec lock(&m_critical);
     TP_TRACE0("Running thread initialization routine\n");
     (*m_initialization)(m_initParameter);
   }
@@ -407,20 +409,19 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     // Start executing again
     InterlockedIncrement(&m_bsyThreads);
 
-    if(!ok && error == ERROR_OPERATION_ABORTED)
+    // Check for various stopping criteria
+    // 1) CloseHandle    -> ERROR_OPERATION_ABORTED
+    // 2) Posting a stop -> COMPLETION_STOP
+    if((!ok && error == ERROR_OPERATION_ABORTED) || key == COMPLETION_STOP)
     {
       // Asynchronous I/O was aborted (e.g: file handle was closed)
       // Call the abort function, so the caller can clean up the mess
       if(m_abortfunction)
       {
-        (*m_abortfunction)(overlapped);
+        AutoCritSec lock(&m_critical);
+        TP_TRACE0("Running thread abort routine\n");
+        (*m_abortfunction)(overlapped,false,true);
       }
-      break;
-    }
-
-    // Or a special case: WE stop a thread
-    if(key == COMPLETION_STOP)
-    {
       break;
     }
 
@@ -434,19 +435,21 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     }
 
     // Timeout from the completion port?
-    if(!ok && (error == WAIT_TIMEOUT))
-    {
-      // Thread timed out. Not much for the application to do
-      // thread can stop, even if it has some outstanding I/O
-      stayInThePool = false;
-    }
+    // We now always do a INFINITE wait
+    //   if(!ok && (error == WAIT_TIMEOUT))
+    //   {
+    //     // Thread timed out. Not much for the application to do
+    //     // thread can stop, even if it has some outstanding I/O
+    //     stayInThePool = false;
+    //   }
 
     // PROCESSING A ACTION IN THE THREADPOOL
     if(ok || overlapped)
     {
+      TP_TRACE0("Running thread routine\n");
       if(key == COMPLETION_WORK && overlapped == INVALID_HANDLE_VALUE)
       {
-        // Thread woke to do some interesting work....
+        // 1: Thread woke to do some interesting work....
         LPFN_CALLBACK callback = nullptr;
         void*         payload  = nullptr;
         if(WorkToDo(callback,payload))
@@ -456,12 +459,12 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
       }
       else if (key == COMPLETION_CALL)
       {
-        // Implement your overload of this special call
+        // 2: Implement your overload of this special call
         DoTheCallback(overlapped);
       }
       else
       {
-        // The completion key **IS** the callback mechanism
+        // 3: The completion key **IS** the callback mechanism
         LPFN_CALLBACK callback = (LPFN_CALLBACK)key;
         (*callback)(overlapped);
       }
@@ -473,6 +476,12 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
     if((load > 0.9) && (m_curThreads > m_minThreads))
     {
       stayInThePool = false;
+    }
+    if(m_abortfunction)
+    {
+      AutoCritSec lock(&m_critical);
+      TP_TRACE0("Running thread stay-in-the-pool routine\n");
+      stayInThePool = (*m_abortfunction)(overlapped,stayInThePool,false);
     }
   } 
   while(stayInThePool);

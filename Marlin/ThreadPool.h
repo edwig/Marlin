@@ -43,6 +43,7 @@ constexpr auto THREAD_STACKSIZE = (2 * 1024 * 1024);
 
 // Callbacks
 typedef void (* LPFN_CALLBACK)(void *);
+typedef bool (* LPFN_TRYABORT)(void *,bool p_stayInThePool,bool p_forcedAbort);
 
 // Forward declaration of our threadpool
 class ThreadPool;
@@ -106,7 +107,7 @@ public:
   // Associate I/O handle with the completion port
   DWORD AssociateIOHandle(HANDLE p_handle,ULONG_PTR p_key);
   // Setting the thread initialization function
-  bool SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_CALLBACK p_abort,void* p_argument);
+  bool SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_TRYABORT p_abort,void* p_argument);
   // Try setting (raising/decreasing) the minimum number of threads
   bool  TrySetMinimum(int p_minThreads);
   // Try setting (raising/decreasing) the maximum number of threads
@@ -200,7 +201,7 @@ private:
   CRITICAL_SECTION  m_critical;                                 // Locking synchronization object
   CRITICAL_SECTION  m_cpuclock;                                 // Lock for CPULoad
   LPFN_CALLBACK     m_initialization   { nullptr };             // TP thread initialization
-  LPFN_CALLBACK     m_abortfunction    { nullptr };             // TP thread abort function at closing of the handle
+  LPFN_TRYABORT     m_abortfunction    { nullptr };             // TP thread abort function at closing of the handle
   void*             m_initParameter    { nullptr };             // TP thread initialization parameter
   // Heartbeat section
   LPFN_CALLBACK     m_heartbeatCallback{ nullptr };             // HB callback function

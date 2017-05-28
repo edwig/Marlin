@@ -121,6 +121,7 @@ HTTPRequest::ClearMemory()
     free(m_unknown);
     m_unknown = nullptr;
   }
+  m_strings.clear();
 }
 
 // Callback from I/O Completion port right out of the threadpool
@@ -147,7 +148,7 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
     case IO_Writing:    SendBodyPart();     break;
     case IO_StartStream:StartedStream();    break;
     case IO_WriteStream:SendStreamPart();   break;
-    case IO_Cancel:     StartRequest();     break;
+    case IO_Cancel:     Finalize();         break;
     default:            ERRORLOG(ERROR_INVALID_PARAMETER,"Unexpected outstanding async I/O");
   }
 }
@@ -184,6 +185,11 @@ HTTPRequest::StartRequest()
   {
     // Error to the server log
     ERRORLOG(result,"Starting new HTTP Request");
+    Finalize();
+  }
+  else
+  {
+    m_active = true;
   }
 }
 
@@ -330,9 +336,6 @@ HTTPRequest::ReceivedRequest()
                             break;
   }
 
-  // From this point on we may receive the body
-  m_mayreceive = true;
-
   // Receiving the initiation of an event stream for the server
   acceptTypes.Trim();
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
@@ -437,12 +440,12 @@ HTTPRequest::StartReceiveRequest()
   if(result == ERROR_HANDLE_EOF)
   {
     // Ready reading the whole body
-    m_mayreceive = false;
     PostReceive();
   }
   else if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     ERRORLOG(result,"Error receiving HTTP request body");
+    Finalize();
   }
 }
 
@@ -471,6 +474,8 @@ HTTPRequest::ReceivedBodyPart()
   {
     ERRORLOG(result,"Error receiving bodypart");
     m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error");
+    Finalize();
+    return;
   }
   PostReceive();
 }
@@ -537,6 +542,7 @@ HTTPRequest::StartSendResponse()
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     ERRORLOG(result,"Sending HTTP Response");
+    Finalize();
   }
 }
 
@@ -548,7 +554,6 @@ HTTPRequest::SendResponseBody()
   {
     ERRORLOG(error,"Error sending HTTP headers");
     Finalize();
-    StartRequest();
     return;
   }
   // Now begin writing our response body parts
@@ -628,6 +633,9 @@ HTTPRequest::SendResponseBody()
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     ERRORLOG(result,"Sending response body part");
+    m_responding = false;
+    Finalize();
+    return;
   }
 
   // Still responding or done?
@@ -677,9 +685,6 @@ HTTPRequest::SendBodyPart()
   // End of the line for the whole request
   // We did send everything as an answer
   Finalize();
-
-  // Restart the request
-  StartRequest();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -748,6 +753,7 @@ HTTPRequest::StartEventStreamResponse()
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     ERRORLOG(result,"Sending HTTP Response for event stream");
+    Finalize();
   }
 }
 
@@ -815,6 +821,9 @@ HTTPRequest::SendResponseStream(const char* p_buffer
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     ERRORLOG(result,"Sending stream part");
+    m_responding = false;
+    CancelRequest();
+    return;
   }
   else
   {
@@ -842,13 +851,12 @@ HTTPRequest::SendStreamPart()
   }
   else
   {
-    // Free the last send buffer
+    // Free the last send buffer and continue to send
     if(m_sendBuffer)
     {
       free(m_sendBuffer);
       m_sendBuffer = nullptr;
     }
-    // Nothing here. Return to the threadpool
   }
 }
 
@@ -909,15 +917,17 @@ HTTPRequest::Finalize()
     m_message = nullptr;
   }
 
+  // Remove header strings
+  m_strings.clear();
+
   // Reset parameters
   m_site       = nullptr;
-  m_mayreceive = false;
   m_responding = false;
   m_file       = nullptr;
   m_bufferpart = 0;
 
-  // Remove header strings
-  m_strings.clear();
+  // Trigger next request for threadpool
+  m_active = false;
 }
 
 // Sub procedures for the handlers
@@ -1209,6 +1219,9 @@ HTTPRequest::CancelRequest()
     {
       ERRORLOG(result,"Event stream incorrectly canceled");
     }
-    // m_requestID = HTTP_NULL_ID;
+  }
+  else
+  {
+    Finalize();
   }
 }
