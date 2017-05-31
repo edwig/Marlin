@@ -31,6 +31,7 @@
 #include "EnsureFile.h"
 #include "HTTPTime.h"
 #include "HTTPMessage.h"
+#include "ConvertWideString.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -180,6 +181,10 @@ MultiPart::CreateHeader(CString p_boundary,bool p_extensions /*=false*/)
   // Add content type
   header += "\r\nContent-type: ";
   header += m_contentType;
+  if (!m_charset.IsEmpty())
+  {
+    header += " charset=\"" + m_charset + "\"";
+  }
   header += "\r\n\r\n";
   return header;
 }
@@ -325,16 +330,30 @@ MultiPartBuffer::SetFormDataType(FormDataType p_type)
 }
 
 MultiPart*   
-MultiPartBuffer::AddPart(CString p_name,CString p_contentType,CString p_data)
+MultiPartBuffer::AddPart(CString p_name,CString p_contentType,CString p_data,CString p_charset /*=""*/)
 {
+  // In case of double names, do nothing, but return the first part of that name
+  // The standard says that the result is undefined, so this makes perfectly sense
   MultiPart* part = GetPart(p_name);
   if(part)
   {
     return part;
   }
+
+  // Add the part
   part = new MultiPart(p_name,p_contentType);
+
+  // See to data conversion
+  CString charset = p_charset;
+  if(p_charset.CompareNoCase("windows-1252"))
+  {
+    p_data = EncodeStringForTheWire(p_data,charset);
+  }
+
+  // Add the data to the MultiPart
   part->SetData(p_data);
 
+  // Store the multipart
   m_parts.push_back(part);
   return part;
 }
@@ -618,6 +637,7 @@ void
 MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd)
 {
   MultiPart* part = new MultiPart();
+  CString charset;
 
   while(true)
   {
@@ -629,8 +649,9 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd)
     GetHeaderFromLine(line,header,value);
 
     // Finding the result for the header lines of the buffer part
-    if(header.CompareNoCase("Content-Type") == 0)
+    if(header.Left(12).CompareNoCase("Content-Type") == 0)
     {
+      charset = FindCharsetInContentType(header);
       part->SetContentType(value);
     }
     else if(header.CompareNoCase("Content-Disposition") == 0)
@@ -648,6 +669,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd)
   // Getting the contents
   if(part->GetFileName().IsEmpty())
   {
+    // PART
     // Buffer is the data component
     CString data;
     size_t length = p_partialEnd - p_partialBegin;
@@ -655,13 +677,21 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd)
     strncpy_s(buffer,length + 1,(const char*)p_partialBegin,length);
     buffer[length] = 0;
     data.ReleaseBuffer((int)length);
+
+    // Decoding the string, possible changing the length
+    data = DecodeStringFromTheWire(data,charset);
+
+    // Place in Multipart
     part->SetData(data);
   }
   else
   {
+    // FILE
     // Add buffer as my filebuffer in one go
     FileBuffer* buffer = part->GetBuffer();
     size_t length = p_partialEnd - p_partialBegin;
+
+    // Place in filebuffer
     buffer->SetBuffer(p_partialBegin,length);
   }
   // Do not forget to save this part

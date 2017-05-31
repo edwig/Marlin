@@ -29,6 +29,7 @@
 #include "JSONParser.h"
 #include "XMLParser.h"
 #include "DefuseBOM.h"
+#include "ConvertWideString.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -240,7 +241,7 @@ JSONParser::GetString()
   // Eventually decode UTF-8 encodings
   if(m_utf8)
   {
-    result = DecodeUTF8String(result);
+    result = DecodeStringFromTheWire(result);
   }
   return result;
 }

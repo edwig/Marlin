@@ -43,10 +43,6 @@ using uchar = unsigned char;
 // Current number of entities recognized
 constexpr auto NUM_ENTITY = 5;
 
-// Decoding a UTF-8 string
-CString DecodeUTF8String(const CString& p_string);
-// Encode to UTF-8 string
-CString EncodeUTF8String(const CString& p_string);
 // Print string with entities and optionally as UTF8 again
 CString PrintXmlString(const CString& p_string,bool p_utf8 = false);
 

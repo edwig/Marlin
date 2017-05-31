@@ -52,3 +52,7 @@ CString FindCharsetInContentType(CString p_contentType);
 CString FindMimeTypeInContentType(CString p_contentType);
 // Construct an UTF-8 Byte-Order-Mark
 CString ConstructBOM();
+// Decoding incoming strings from the internet. Defaults to UTF-8 encoding
+CString DecodeStringFromTheWire(CString p_string,CString p_charset = "utf-8");
+// Encode to string for internet. Defaults to UTF-8 encoding
+CString EncodeStringForTheWire (CString p_string,CString p_charset = "utf-8");

@@ -48,6 +48,7 @@ CString GetJsonString()
   {
     msg.AddElement(elem,"Fortune",XDT_Integer,"1000000");
     msg.AddElement(elem,"Glory",  XDT_String, "Indiana Jones");
+    msg.AddElement(elem,"Diacrit",XDT_String, "יבםףתכהןצüטאלעשךגמפû");
   }
   JSONMessage json(&msg);
   json.SetWhitespace(true);

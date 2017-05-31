@@ -50,50 +50,6 @@ Entity g_entity[NUM_ENTITY] =
   { "&apos;",6, '\''},
 };
 
-// Decoding UTF-8 strings while parsing
-CString
-DecodeUTF8String(const CString& p_string)
-{
-  CString encoded(p_string);
-  CString decoded;
-
-  // Now decode the UTF-8 in the encoded string, to decoded MBCS
-  uchar* buffer = nullptr;
-  int    length = 0;
-  if(TryCreateWideString(encoded,"utf-8",false,&buffer,length))
-  {
-    bool foundBom = false;
-    if(TryConvertWideString(buffer,length,"",decoded,foundBom))
-    {
-      encoded = decoded;
-    }
-  }
-  delete [] buffer;
-  return encoded;
-}
-
-// Encode to UTF-8 string
-CString
-EncodeUTF8String(const CString& p_string)
-{
-  CString uncoded(p_string);
-  CString encoded;
-
-  // Now encode MBCS to UTF-8 without a BOM
-  uchar*  buffer = nullptr;
-  int     length = 0;
-  if(TryCreateWideString(uncoded,"",false,&buffer,length))
-  {
-    bool foundBom = false;
-    if(TryConvertWideString(buffer,length,"utf-8",encoded,foundBom))
-    {
-      uncoded = encoded;
-    }
-  }
-  delete [] buffer;
-  return uncoded;
-}
-
 // Print string with entities and optionally as UTF8 again
 CString 
 PrintXmlString(const CString& p_string,bool p_utf8 /*=false*/)
@@ -104,7 +60,7 @@ PrintXmlString(const CString& p_string,bool p_utf8 /*=false*/)
   if(p_utf8)
   {
     // Now encode MBCS to UTF-8 without a BOM
-    uncoded = EncodeUTF8String(uncoded);
+    uncoded = EncodeStringForTheWire(uncoded,"utf-8");
   }
 
   unsigned char* pointer = (unsigned char*)uncoded.GetString();
@@ -471,7 +427,7 @@ XMLParser::ParseText()
   {
     if(m_utf8)
     {
-      value = DecodeUTF8String(value);
+      value = DecodeStringFromTheWire(value);
     }
     m_lastElement->SetValue(value);
   }
@@ -621,7 +577,7 @@ XMLParser::GetIdentifier(CString& p_identifier)
     }
     if(m_utf8)
     {
-      p_identifier = DecodeUTF8String(p_identifier);
+      p_identifier = DecodeStringFromTheWire(p_identifier);
     }
   }
   return result;
@@ -648,7 +604,7 @@ XMLParser::GetQuotedString()
 
     if(m_utf8)
     {
-      result = DecodeUTF8String(result);
+      result = DecodeStringFromTheWire(result);
     }
   }
   return result;

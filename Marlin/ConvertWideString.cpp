@@ -317,7 +317,7 @@ FindCharsetInContentType(CString p_contentType)
   {
     // Set after charset
     pos += 7;
-    // Skip withe space
+    // Skip white space
     while(pos < length && isspace(type.GetAt(pos))) ++pos;
     if(type.GetAt(pos) == '=')
     {
@@ -552,4 +552,60 @@ TryCreateWideString(const CString& p_string
     }
   }
   return result;
+}
+
+
+// Decoding incoming strings from the internet
+// Defaults to UTF-8 encoding
+CString
+DecodeStringFromTheWire(CString p_string,CString p_charset /*="utf-8"*/)
+{
+  // Check for empty charset
+  if(p_charset.IsEmpty())
+  {
+    p_charset = "utf-8";
+  }
+
+  // Now decode the UTF-8 in the encoded string, to decoded MBCS
+  uchar* buffer = nullptr;
+  int    length = 0;
+  if (TryCreateWideString(p_string,p_charset,false,&buffer,length))
+  {
+    CString decoded;
+    bool foundBom = false;
+
+    if (TryConvertWideString(buffer,length,"",decoded,foundBom))
+    {
+      p_string = decoded;
+    }
+  }
+  delete[] buffer;
+  return p_string;
+}
+
+// Encode to string for internet. Defaults to UTF-8 encoding
+CString
+EncodeStringForTheWire(CString p_string,CString p_charset /*="utf-8"*/)
+{
+  // Check for empty charset
+  if(p_charset.IsEmpty())
+  {
+    p_charset = "utf-8";
+  }
+
+  // Now encode MBCS to UTF-8 without a BOM
+  uchar*  buffer = nullptr;
+  int     length = 0;
+  if(TryCreateWideString(p_string,"",false,&buffer,length))
+  {
+    CString encoded;
+    bool foundBom = false;
+
+    if(TryConvertWideString(buffer,length,p_charset,encoded,foundBom))
+    {
+      p_string = encoded;
+    }
+  }
+  delete[] buffer;
+  return p_string;
 }

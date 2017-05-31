@@ -270,7 +270,7 @@ JSONvalue::FormatAsJsonString(CString p_string,bool p_utf8 /*=false*/)
   if(p_utf8)
   {
     // Convert to UTF-8
-    result = EncodeUTF8String(result);
+    result = EncodeStringForTheWire(result,"utf-8");
   }
 
   return result;

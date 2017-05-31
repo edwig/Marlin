@@ -55,6 +55,7 @@ public:
   void    SetName(CString p_name)             { m_name             = p_name;   };
   void    SetData(CString p_data)             { m_data             = p_data;   };
   void    SetContentType(CString p_type)      { m_contentType      = p_type;   };
+  void    SetCharset(CString p_charset)       { m_charset          = p_charset;};
   void    SetFileName(CString p_file)         { m_filename         = p_file;   };
   void    SetDateCreation(CString p_date)     { m_creationDate     = p_date;   };
   void    SetDateModification(CString p_date) { m_modificationDate = p_date;   };
@@ -67,6 +68,7 @@ public:
   CString GetName()             { return m_name;              };
   CString GetData()             { return m_data;              };
   CString GetContentType()      { return m_contentType;       };
+  CString GetCharset()          { return m_charset;           };
   CString GetFileName()         { return m_filename;          };
   CString GetDateCreation()     { return m_creationDate;      };
   CString GetDateModification() { return m_modificationDate;  };
@@ -86,6 +88,7 @@ private:
 
   // Content-Type: field
   CString m_contentType;
+  CString m_charset;
   // Content-disposition: fields
   CString m_name;
   CString m_filename;
@@ -117,7 +120,7 @@ public:
   void         Reset();
   bool         SetFormDataType(FormDataType p_type);
   // Creating a MultiPartBuffer
-  MultiPart*   AddPart(CString p_name,CString p_contentType,CString p_data);
+  MultiPart*   AddPart(CString p_name,CString p_contentType,CString p_data,CString p_charset = "");
   MultiPart*   AddFile(CString p_name,CString p_contentType,CString p_filename);
   // Getting a part of the MultiPartBuffer
   MultiPart*   GetPart(CString p_name);
