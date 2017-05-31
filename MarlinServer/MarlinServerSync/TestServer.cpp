@@ -276,6 +276,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestFilter(server);
           errors += TestPatch(server);
           errors += TestCompression(server);
+          errors += TestAsynchrone(server);
 
           // WEBSOCKETS DO NOT WORK IN THE SYNC SERVER!
           // errors += TestWebSocket(server);

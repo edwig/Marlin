@@ -120,7 +120,7 @@ public:
   void         Reset();
   bool         SetFormDataType(FormDataType p_type);
   // Creating a MultiPartBuffer
-  MultiPart*   AddPart(CString p_name,CString p_contentType,CString p_data,CString p_charset = "");
+  MultiPart*   AddPart(CString p_name,CString p_contentType,CString p_data,CString p_charset = "",bool p_conversion = false);
   MultiPart*   AddFile(CString p_name,CString p_contentType,CString p_filename);
   // Getting a part of the MultiPartBuffer
   MultiPart*   GetPart(CString p_name);
@@ -133,10 +133,10 @@ public:
   CString      CalculateBoundary();
   CString      CalculateAcceptHeader();
   // Re-create from an existing (incoming!) buffer
-  bool         ParseBuffer(CString p_contentType,FileBuffer* p_buffer);
+  bool         ParseBuffer(CString p_contentType,FileBuffer* p_buffer,bool p_conversion = false);
 
   // File times & size extensions used in the Content-Disposition header
-  // BEWARE: Some servers do not respect the filetimes attributes
+  // BEWARE: Some servers do not respect the file-times attributes
   //         or will even crash on it (WCF .NET returns HTTP status 500)
   void         SetFileExtensions(bool p_extens)    { m_extensions = p_extens; };
   bool         GetFileExtensions()                 { return m_extensions;     };
@@ -147,7 +147,7 @@ private:
   // Find the boundary in the content-type header
   CString      FindBoundaryInContentType(CString p_contentType);
   // Parsing different types
-  bool         ParseBufferFormData(CString p_contentType,FileBuffer* p_buffer);
+  bool         ParseBufferFormData(CString p_contentType,FileBuffer* p_buffer,bool p_conversion);
   bool         ParseBufferUrlEncoded(FileBuffer* p_buffer);
   // Finding a new partial message
   void*        FindPartBuffer(uchar*& p_vinding,size_t& p_remaining,CString& p_boundary);
@@ -155,9 +155,9 @@ private:
   bool         GetHeaderFromLine(CString& p_line,CString& p_header,CString& p_value);
   CString      GetAttributeFromLine(CString& p_line,CString p_name);
   // Adding a part from a raw buffer
-  void         AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd);
+  void         AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool p_conversion);
 
-  FormDataType m_type;                  // Url-encoded or form-data
+  FormDataType m_type;                  // URL-encoded or form-data
   CString      m_boundary;              // Form-Data boundary string
   MultiPartMap m_parts;                 // All parts
   bool         m_extensions { false };  // Show file times & size in the header

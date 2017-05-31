@@ -101,6 +101,9 @@
     <ClCompile Include="..\ServerTestset\TestWebSocket.cpp">
       <Filter>Testset</Filter>
     </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestAsynchrone.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Web.Config">

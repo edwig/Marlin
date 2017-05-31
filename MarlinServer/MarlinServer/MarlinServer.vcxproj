@@ -203,6 +203,7 @@ copy ..\..\Certificates\web.config $(OutDir)</Command>
     <ClInclude Include="TestPorts.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ServerTestset\TestAsynchrone.cpp" />
     <ClCompile Include="..\ServerTestset\TestBaseSite.cpp" />
     <ClCompile Include="..\ServerTestset\TestBodyEncryption.cpp" />
     <ClCompile Include="..\ServerTestset\TestBodySigning.cpp" />

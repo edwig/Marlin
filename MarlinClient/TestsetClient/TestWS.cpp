@@ -363,7 +363,7 @@ int TestWebservices(HTTPClient& client)
   SOAPMessage* msg = nullptr;
 
   // Testing cookie function
-  // errors += TestCookies(client);
+  errors += TestCookies(client);
 
   // Standard values for messages
   CString namesp("http://interface.marlin.org/services");

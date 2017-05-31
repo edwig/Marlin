@@ -71,9 +71,9 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 
   CString data = p_part->GetData();
   CString name = p_part->GetName();
-  qprintf("MULTI-PART DATA = Name : %s\n",(LPCTSTR)p_part->GetName());
-  qprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
-  qprintf("MULTI-PART\n%s\n",             (LPCTSTR)p_part->GetData());
+  xprintf("MULTI-PART DATA = Name : %s\n",(LPCTSTR)p_part->GetName());
+  xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
+  xprintf("MULTI-PART\n%s\n",             (LPCTSTR)p_part->GetData());
 
   // Remember the fact that we where called
   bool result = !data.IsEmpty() || !name.IsEmpty();

@@ -276,6 +276,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestFilter(server);
           errors += TestPatch(server);
           errors += TestCompression(server);
+          errors += TestAsynchrone(server);
 //           errors += TestWebSocket(server);
 
          // Test the WebServiceServer program generation
@@ -301,11 +302,11 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
             WaitForKey();
           }
 
-          // Try to stop the websocket
+          // Try to stop the WebSocket
 //           errors += StopWebSocket();
 // 
-//           // Try to stop the subsites
-//           errors += StopSubsites(server);
+          // Try to stop the subsites
+          errors += StopSubsites(server);
 
           // Testing the errorlog function
           server->ErrorLog(__FUNCTION__,5,"Not a real error message, but a test to see if it works :-)");

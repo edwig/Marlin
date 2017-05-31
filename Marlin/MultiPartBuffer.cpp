@@ -329,8 +329,19 @@ MultiPartBuffer::SetFormDataType(FormDataType p_type)
   return true;
 }
 
+// Adding a part to the multi-part buffer object
+// 1) p_name        : Name of the multi-part
+// 2) p_contentType : Content-type the part is in, or will be after conversion
+// 3) p_data        : The actual data string to be stored
+// 4) p_charset     : Character set to send it in (or is already in). Empty default = utf-8
+// 5) p_conversion  : If data is not delivered in designated charset, perform the conversion
+//
 MultiPart*   
-MultiPartBuffer::AddPart(CString p_name,CString p_contentType,CString p_data,CString p_charset /*=""*/)
+MultiPartBuffer::AddPart(CString p_name
+                        ,CString p_contentType
+                        ,CString p_data
+                        ,CString p_charset    /* = ""    */
+                        ,bool    p_conversion /* = false */)
 {
   // In case of double names, do nothing, but return the first part of that name
   // The standard says that the result is undefined, so this makes perfectly sense
@@ -345,7 +356,7 @@ MultiPartBuffer::AddPart(CString p_name,CString p_contentType,CString p_data,CSt
 
   // See to data conversion
   CString charset = p_charset;
-  if(p_charset.CompareNoCase("windows-1252"))
+  if(p_charset.CompareNoCase("windows-1252") && p_conversion)
   {
     p_data = EncodeStringForTheWire(p_data,charset);
   }
@@ -353,7 +364,14 @@ MultiPartBuffer::AddPart(CString p_name,CString p_contentType,CString p_data,CSt
   // Add the data to the MultiPart
   part->SetData(p_data);
 
-  // Store the multipart
+  // Loose string parts are UTF-8 by default
+  if(charset.IsEmpty())
+  {
+    charset = "utf-8";
+  }
+  part->SetCharset(charset);
+
+  // Store the MultiPart
   m_parts.push_back(part);
   return part;
 }
@@ -465,7 +483,7 @@ MultiPartBuffer::CalculateAcceptHeader()
 
 // Re-create from an existing (incoming!) buffer
 bool         
-MultiPartBuffer::ParseBuffer(CString p_contentType,FileBuffer* p_buffer)
+MultiPartBuffer::ParseBuffer(CString p_contentType,FileBuffer* p_buffer,bool p_conversion /*=false*/)
 {
   // Start anew
   Reset();
@@ -480,7 +498,7 @@ MultiPartBuffer::ParseBuffer(CString p_contentType,FileBuffer* p_buffer)
   switch(type)
   {
     case FD_URLENCODED: return ParseBufferUrlEncoded(p_buffer);
-    case FD_MULTIPART:  return ParseBufferFormData(p_contentType,p_buffer);
+    case FD_MULTIPART:  return ParseBufferFormData(p_contentType,p_buffer,p_conversion);
     case FD_UNKNOWN:    // Fall through
     default:            return false;
   }
@@ -488,7 +506,7 @@ MultiPartBuffer::ParseBuffer(CString p_contentType,FileBuffer* p_buffer)
 }
 
 bool
-MultiPartBuffer::ParseBufferFormData(CString p_contentType,FileBuffer* p_buffer)
+MultiPartBuffer::ParseBufferFormData(CString p_contentType,FileBuffer* p_buffer,bool p_conversion)
 {
   bool   result = false;
   uchar* buffer = nullptr;
@@ -517,7 +535,7 @@ MultiPartBuffer::ParseBufferFormData(CString p_contentType,FileBuffer* p_buffer)
     {
       break;
     }
-    AddRawBufferPart((uchar*)partBuffer,finding);
+    AddRawBufferPart((uchar*)partBuffer,finding,p_conversion);
     result = true;
   }
   // Release the buffer copy 
@@ -634,7 +652,7 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,CString& p
 // }
 // --#BOUNDARY#12345678901234
 void
-MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd)
+MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool p_conversion)
 {
   MultiPart* part = new MultiPart();
   CString charset;
@@ -653,6 +671,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd)
     {
       charset = FindCharsetInContentType(header);
       part->SetContentType(value);
+      part->SetCharset(charset);
     }
     else if(header.CompareNoCase("Content-Disposition") == 0)
     {
@@ -679,8 +698,10 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd)
     data.ReleaseBuffer((int)length);
 
     // Decoding the string, possible changing the length
-    data = DecodeStringFromTheWire(data,charset);
-
+    if(p_conversion)
+    {
+      data = DecodeStringFromTheWire(data,charset);
+    }
     // Place in Multipart
     part->SetData(data);
   }
