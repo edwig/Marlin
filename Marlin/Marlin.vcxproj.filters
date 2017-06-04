@@ -294,11 +294,11 @@
     <ClCompile Include="HTTPRequest.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
-    <ClCompile Include="ThreadPoolORG.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="HTTPServerSync.cpp">
       <Filter>MarlinServer</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadPoolED.cpp">
+      <Filter>MarlinGeneral</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -608,11 +608,11 @@
     <ClInclude Include="HTTPRequest.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="ThreadPoolORG.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="HTTPServerSync.h">
       <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadPoolED.h">
+      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

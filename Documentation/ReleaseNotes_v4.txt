@@ -26,6 +26,15 @@ CHANGES IN VERSION 4.3
    as it progresses through all the stages (receive, reading, response, writing) of the
    HTTP call asynchroneously.
 6) WebSockets still needs to be implemented on the Marlin A-Sync server!
+7) Adding a non-file part to a MultiPartBuffer has been extended with two extra parameters.
+   These were the parameters in previous versions:
+   a) p_name         : The name of the form-data multipart buffer
+   b) p_contentType  : The content type of this particular part
+   c) p_data         : The string data to add to the part
+   The next two parameters are new:
+   d) p_charset      : Character set of data, or the charset you want the data converted to!
+   e) p_conversion   : Perform the conversion (if data not already in p_charset)
+   Please be advised that if p_charset is empty, "utf-8" is assumed as of IETF RFC 7578
 
 CHANGES IN VERSION 4.2
 ======================

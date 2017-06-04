@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: ThreadPoolORG.cpp
+// SourceFile: ThreadPoolED.cpp
 //
 // Marlin Server: Internet server/client
 // 
@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "StdAfx.h"
-#include "ThreadPoolORG.h"
+#include "ThreadPoolED.h"
 #include "CPULoad.h"
 
 #ifdef _DEBUG
@@ -34,6 +34,17 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+//////////////////////////////////////////////////////////////////////////
+//
+// ThreadPool-Event-Driven (ED)
+//
+// This was also the original threadpool of the Marlin project
+// As long as threads are available, they are awoken on a wait-event
+// This threadpool was replaced by the Asynchronous I/O Completion port
+// threadpool that now bears the name 'ThreadPool'
+//
+//////////////////////////////////////////////////////////////////////////
 
 // A means to be free to debug the threadpool in debug mode
 #ifdef DEBUG_THREADPOOL
@@ -53,19 +64,19 @@ static unsigned _stdcall RunThread(void* p_myThread);
 //
 // The Threadpool
 //
-ThreadPoolORG::ThreadPoolORG()
+ThreadPoolED::ThreadPoolED()
 {
   InitializeCriticalSection(&m_critical);
 }
 
-ThreadPoolORG::ThreadPoolORG(int p_minThreads,int p_maxThreads)
+ThreadPoolED::ThreadPoolED(int p_minThreads,int p_maxThreads)
            :m_minThreads(p_minThreads)
            ,m_maxThreads(p_maxThreads)
 {
   InitializeCriticalSection(&m_critical);
 }
 
-ThreadPoolORG::~ThreadPoolORG()
+ThreadPoolED::~ThreadPoolED()
 {
   StopThreadPool();
   RunCleanupJobs();
@@ -74,20 +85,20 @@ ThreadPoolORG::~ThreadPoolORG()
 
 // Pool locking from a single thread state change
 void 
-ThreadPoolORG::LockPool()
+ThreadPoolED::LockPool()
 {
   EnterCriticalSection(&m_critical);
 }
 
 void 
-ThreadPoolORG::UnlockPool()
+ThreadPoolED::UnlockPool()
 {
   LeaveCriticalSection(&m_critical);
 }
 
 // Initialize our new threadpool
 void
-ThreadPoolORG::InitThreadPool()
+ThreadPoolED::InitThreadPool()
 {
   // See if we have already done this
   if(m_initialized)
@@ -129,7 +140,7 @@ ThreadPoolORG::InitThreadPool()
 
 // Stopping the thread pool
 void  
-ThreadPoolORG::StopThreadPool()
+ThreadPoolED::StopThreadPool()
 {
   TP_TRACE0("Stopping threadpool\n");
   m_openForWork = false;
@@ -200,7 +211,7 @@ ThreadPoolORG::StopThreadPool()
 
 // Create a thread in the threadpool
 ThreadRegister*
-ThreadPoolORG::CreateThreadPoolThread(DWORD p_hartbeat /*=INFINITE*/)
+ThreadPoolED::CreateThreadPoolThread(DWORD p_hartbeat /*=INFINITE*/)
 {
   AutoLockTP lock(&m_critical);
 
@@ -249,7 +260,7 @@ ThreadPoolORG::CreateThreadPoolThread(DWORD p_hartbeat /*=INFINITE*/)
 
 // Remove a thread from the threadpool
 void
-ThreadPoolORG::RemoveThreadPoolThread(HANDLE p_thread /*=NULL*/)
+ThreadPoolED::RemoveThreadPoolThread(HANDLE p_thread /*=NULL*/)
 {
   AutoLockTP lock(&m_critical);
 
@@ -285,7 +296,7 @@ ThreadPoolORG::RemoveThreadPoolThread(HANDLE p_thread /*=NULL*/)
 // Number of waiting threads
 // Threadpool must be locked
 int   
-ThreadPoolORG::WaitingThreads()
+ThreadPoolED::WaitingThreads()
 {
   int waiting = 0;
   for(auto& thread : m_threads)
@@ -301,7 +312,7 @@ ThreadPoolORG::WaitingThreads()
 // Try setting (raising/decreasing) the minimum number of threads
 // Can only succeed when not initialized yet
 bool
-ThreadPoolORG::TrySetMinimum(int p_minThreads)
+ThreadPoolED::TrySetMinimum(int p_minThreads)
 {
   if(!m_initialized)
   {
@@ -315,7 +326,7 @@ ThreadPoolORG::TrySetMinimum(int p_minThreads)
 
 // Try setting (raising/decreasing) the maximum number of threads
 bool
-ThreadPoolORG::TrySetMaximum(int p_maxThreads)
+ThreadPoolED::TrySetMaximum(int p_maxThreads)
 {
   // Check argument
   // Check the logic of maxThreads
@@ -350,7 +361,7 @@ ThreadPoolORG::TrySetMaximum(int p_maxThreads)
 // Intended for long running threads to call, just before entering 
 // the WaitForSingleObject API 
 void
-ThreadPoolORG::ExtendMaximumThreads(AutoIncrementPoolMax& p_increment)
+ThreadPoolED::ExtendMaximumThreads(AutoIncrementPoolMax& p_increment)
 {
   if(this == p_increment.m_pool)
   {
@@ -361,7 +372,7 @@ ThreadPoolORG::ExtendMaximumThreads(AutoIncrementPoolMax& p_increment)
 }
 
 void
-ThreadPoolORG::RestoreMaximumThreads(AutoIncrementPoolMax* p_increment)
+ThreadPoolED::RestoreMaximumThreads(AutoIncrementPoolMax* p_increment)
 {
   if(this == p_increment->m_pool)
   {
@@ -373,7 +384,7 @@ ThreadPoolORG::RestoreMaximumThreads(AutoIncrementPoolMax* p_increment)
 
 // Setting the stack size
 void 
-ThreadPoolORG::SetStackSize(int p_stackSize)
+ThreadPoolED::SetStackSize(int p_stackSize)
 {
   // Stack cannot be smaller than 1 MB
   if(p_stackSize > (1024 * 1024))
@@ -384,14 +395,14 @@ ThreadPoolORG::SetStackSize(int p_stackSize)
 }
 
 void
-ThreadPoolORG::SetUseCPULoad(bool p_useCpuLoad)
+ThreadPoolED::SetUseCPULoad(bool p_useCpuLoad)
 {
   m_useCPULoad = p_useCpuLoad;
 }
 
 // Try to shrink the threadpool
 void  
-ThreadPoolORG::ShrinkThreadPool(ThreadRegister* p_reg)
+ThreadPoolED::ShrinkThreadPool(ThreadRegister* p_reg)
 {
   TP_TRACE0("Threadpool shrinking requested\n");
   int waiting = WaitingThreads();
@@ -415,7 +426,7 @@ RunThread(void* p_myThread)
 }
 
 unsigned
-ThreadPoolORG::RunAThread(ThreadRegister* p_register)
+ThreadPoolED::RunAThread(ThreadRegister* p_register)
 {
   TP_TRACE0("Run thread main loop\n");
   unsigned exitCode = 0;
@@ -516,14 +527,14 @@ ThreadPoolORG::RunAThread(ThreadRegister* p_register)
 // This is the real callback.
 // You may overload this member
 void
-ThreadPoolORG::DoTheCallback(LPFN_CALLBACK p_callback,void* p_argument)
+ThreadPoolED::DoTheCallback(LPFN_CALLBACK p_callback,void* p_argument)
 {
   (*(p_callback))(p_argument);
 }
 
 // Running all cleanup jobs for the threadpool
 void 
-ThreadPoolORG::RunCleanupJobs()
+ThreadPoolED::RunCleanupJobs()
 {
   // Simply call all jobs from the main thread
   for(auto& job : m_cleanup)
@@ -536,7 +547,7 @@ ThreadPoolORG::RunCleanupJobs()
 // More work to do on a thread
 // Pool is/MUST BE already in a locked state
 bool 
-ThreadPoolORG::WorkToDo(ThreadRegister* p_reg)
+ThreadPoolED::WorkToDo(ThreadRegister* p_reg)
 {
   // Can only be called for a waiting thread or a stopping thread
   if(p_reg->m_state != ThreadState::THST_Waiting && 
@@ -564,7 +575,7 @@ ThreadPoolORG::WorkToDo(ThreadRegister* p_reg)
 // Find first waiting thread in the threadpool
 // That is NOT waiting for a timeout
 ThreadRegister*
-ThreadPoolORG::FindWaitingThread()
+ThreadPoolED::FindWaitingThread()
 {
   for(auto& threadreg : m_threads)
   {
@@ -579,7 +590,7 @@ ThreadPoolORG::FindWaitingThread()
 
 // Set a thread to do something in the future
 BOOL
-ThreadPoolORG::SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat)
+ThreadPoolED::SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat)
 {
   TP_TRACE2("Submitting work to threadpool [%X:%X]\n",p_callback,p_argument);
   // See if the slot is really free!
@@ -605,7 +616,7 @@ ThreadPoolORG::SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback
 
 // Stop a thread for good
 void  
-ThreadPoolORG::StopThread(ThreadRegister* p_reg)
+ThreadPoolED::StopThread(ThreadRegister* p_reg)
 {
   AutoLockTP lock(&m_critical);
 
@@ -626,7 +637,7 @@ ThreadPoolORG::StopThread(ThreadRegister* p_reg)
 
 // Stop a heartbeat thread
 void 
-ThreadPoolORG::StopHartbeat(LPFN_CALLBACK p_callback)
+ThreadPoolED::StopHartbeat(LPFN_CALLBACK p_callback)
 {
   AutoLockTP lock(&m_critical);
 
@@ -645,7 +656,7 @@ ThreadPoolORG::StopHartbeat(LPFN_CALLBACK p_callback)
 // OUR PRIMARY FUNCTION
 // TRY TO GET SOME WORK DONE
 void
-ThreadPoolORG::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat /*=INFINITE*/)
+ThreadPoolED::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat /*=INFINITE*/)
 {
   ThreadRegister* reg = nullptr;
   // Lock the pool
@@ -722,7 +733,7 @@ ThreadPoolORG::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hart
 
 // Submitting cleanup jobs
 void 
-ThreadPoolORG::SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument)
+ThreadPoolED::SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument)
 {
   ThreadWork job;
   job.m_callback = p_cleanup;
@@ -735,7 +746,7 @@ ThreadPoolORG::SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument)
 // Sleeping and waking-up a thread
 // Use an application global unique number!!
 void*
-ThreadPoolORG::SleepThread(DWORD_PTR p_unique,void* p_payload)
+ThreadPoolED::SleepThread(DWORD_PTR p_unique,void* p_payload)
 {
   bool found = false;
   ThreadRegister* reg = nullptr;
@@ -791,7 +802,7 @@ ThreadPoolORG::SleepThread(DWORD_PTR p_unique,void* p_payload)
 
 // Wake up the thread by pulsing it's event
 bool  
-ThreadPoolORG::WakeUpThread(DWORD_PTR p_unique,void* p_result /*=nullptr*/)
+ThreadPoolED::WakeUpThread(DWORD_PTR p_unique,void* p_result /*=nullptr*/)
 {
   AutoLockTP lock(&m_critical);
 
@@ -814,7 +825,7 @@ ThreadPoolORG::WakeUpThread(DWORD_PTR p_unique,void* p_result /*=nullptr*/)
 // Getting the payload
 // The intention is to leave an answer here for the waiting thread!
 void*
-ThreadPoolORG::GetSleepingThreadPayload(DWORD_PTR p_unique)
+ThreadPoolED::GetSleepingThreadPayload(DWORD_PTR p_unique)
 {
   AutoLockTP lock(&m_critical);
 
@@ -831,7 +842,7 @@ ThreadPoolORG::GetSleepingThreadPayload(DWORD_PTR p_unique)
 // Eliminate the sleeping thread.
 // REALLY: SHOULD YOU CALL THIS??
 void
-ThreadPoolORG::EliminateSleepingThread(DWORD_PTR p_unique)
+ThreadPoolED::EliminateSleepingThread(DWORD_PTR p_unique)
 {
   ThreadRegister* thread = nullptr;
   { AutoLockTP lock(&m_critical);

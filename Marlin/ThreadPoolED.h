@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: ThreadPoolORG.h
+// SourceFile: ThreadPoolED.h
 //
 // Marlin Server: Internet server/client
 // 
@@ -29,6 +29,17 @@
 #include <vector>
 #include <deque>
 
+//////////////////////////////////////////////////////////////////////////
+//
+// ThreadPool-Event-Driven (ED)
+//
+// This was also the original threadpool of the Marlin project
+// As long as threads are available, they are awoken on a wait-event
+// This threadpool was replaced by the Asynchronous I/O Completion port
+// threadpool that now bears the name 'ThreadPool'
+//
+//////////////////////////////////////////////////////////////////////////
+
 // Define this macro to debug the threadpool
 // #define DEBUG_THREADPOOL  1
 
@@ -45,7 +56,7 @@ constexpr auto THREAD_STACKSIZE = (2 * 1024 * 1024);
 typedef void (* LPFN_CALLBACK)(void *);
 
 // Forward declaration of our threadpool
-class ThreadPoolORG;
+class ThreadPoolED;
 class AutoIncrementPoolMax;
 
 // State that a thread can be in
@@ -62,7 +73,7 @@ enum class ThreadState
 class ThreadRegister
 {
 public:
-    ThreadPoolORG*   m_pool;
+    ThreadPoolED*   m_pool;
     HANDLE        m_thread;
     unsigned      m_threadId;
     HANDLE        m_event;
@@ -86,12 +97,12 @@ public:
 // Queue of work items still to process
 using WorkMap = std::deque<ThreadWork>;
 
-class ThreadPoolORG
+class ThreadPoolED
 {
 public:
-  ThreadPoolORG();
-  ThreadPoolORG(int p_minThreads,int p_maxThreads);
- ~ThreadPoolORG();
+  ThreadPoolED();
+  ThreadPoolED(int p_minThreads,int p_maxThreads);
+ ~ThreadPoolED();
 
   // OUR PRIMARY FUNCTION!
 
@@ -165,7 +176,7 @@ private:
   void RunCleanupJobs();
 
   // This is the real callback. 
-  // Overload for your needs, in your own class derived from ThreadPoolORG
+  // Overload for your needs, in your own class derived from ThreadPoolED
   virtual void DoTheCallback(LPFN_CALLBACK p_callback,void* p_argument);
 
   // DATA MEMBERS OF THE THREADPOOL
@@ -207,7 +218,7 @@ private:
 class AutoIncrementPoolMax
 {
 public:
-  AutoIncrementPoolMax(ThreadPoolORG* p_pool)
+  AutoIncrementPoolMax(ThreadPoolED* p_pool)
   {
     m_pool = p_pool;
     m_pool->ExtendMaximumThreads(*this);
@@ -217,6 +228,6 @@ public:
     m_pool->RestoreMaximumThreads(this);
   }
 private:
-  friend ThreadPoolORG;
-  ThreadPoolORG* m_pool;
+  friend ThreadPoolED;
+  ThreadPoolED* m_pool;
 };
