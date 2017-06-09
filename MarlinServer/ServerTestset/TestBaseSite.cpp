@@ -39,7 +39,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 1;
+static int totalChecks = 2;
 
 class SiteHandlerGetBase : public SiteHandlerGet
 {

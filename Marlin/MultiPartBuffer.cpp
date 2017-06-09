@@ -597,6 +597,7 @@ MultiPartBuffer::ParseBufferUrlEncoded(FileBuffer* p_buffer)
 }
 
 // Finding a new partial message
+// Finding a new partial message
 void*
 MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,CString& p_boundary)
 {

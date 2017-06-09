@@ -53,6 +53,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using std::wstring;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // GLOBALS
@@ -60,7 +62,7 @@ static char THIS_FILE[] = __FILE__;
 //////////////////////////////////////////////////////////////////////////
 
 // Handle on the 'hwebcore.dll' module
-HMODULE g_webcore = NULL;       // Web core module
+HMODULE g_webcore = nullptr;    // Web core module
 DWORD   g_hwcShutdownMode = 0;  // Shutdown mode 0=gracefull, 1=immediate
 
 // The Hosted Web Core API functions
@@ -108,7 +110,7 @@ FindIISRunning()
     printf("Cannot find the status of the IIS service!\n");
     return false;
   }
-  // Get a handle to the service.
+  // Get a handle to the service. IIS is actually called W3SVC
   SC_HANDLE service = OpenService(manager,"W3SVC",SERVICE_QUERY_STATUS);
   if(service)
   {
@@ -184,10 +186,10 @@ bool
 ActivateWebCore()
 {
   USES_CONVERSION;
-  bool result = false;
-  std::wstring apphost   = A2CW(g_applicationhost);
-  std::wstring webconfig = A2CW(g_webconfig);
-  std::wstring poolname  = A2CW(g_poolName);
+  bool    result    = false;
+  wstring apphost   = A2CW(g_applicationhost);
+  wstring webconfig = A2CW(g_webconfig);
+  wstring poolname  = A2CW(g_poolName);
 
   if(HWC_Activate)
   {
@@ -288,9 +290,9 @@ bool
 SetMetaData(CString p_datatype,CString p_value)
 {
   USES_CONVERSION;
-  bool result = false;
-  std::wstring type  = A2CW(p_datatype);
-  std::wstring value = A2CW(p_value);
+  bool    result = false;
+  wstring type   = A2CW(p_datatype);
+  wstring value  = A2CW(p_value);
 
   if(HWC_SetMetadata)
   {

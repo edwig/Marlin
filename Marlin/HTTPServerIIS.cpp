@@ -890,6 +890,16 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // Setting the response status
   SetResponseStatus(response,(USHORT) p_message->GetStatus(),GetHTTPStatusText(p_message->GetStatus()));
 
+  // In case of a 401, we challenge to the client to identify itself
+  if (p_message->GetStatus() == HTTP_STATUS_DENIED)
+  {
+    // Add authentication scheme
+    HTTPSite* site = p_message->GetHTTPSite();
+    CString challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
+                                                    ,site->GetAuthenticationRealm());
+    SetResponseHeader(response,HttpHeaderWwwAuthenticate, challenge,true);
+  }
+
   // Add a known header. (octet-stream or the message content type)
   if(!p_message->GetContentType().IsEmpty())
   {
