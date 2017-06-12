@@ -686,6 +686,14 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool
     }
   }
 
+  // RFC 7578: No charset = conversion to UTF-8
+  // UTF-8 is the default conversion of the conversion routines
+  // so an empty charset means: convert to UTF-8
+  if(charset.CompareNoCase("windows-1252") != 0)
+  {
+    p_conversion = true;
+  }
+
   // Getting the contents
   if(part->GetFileName().IsEmpty())
   {
