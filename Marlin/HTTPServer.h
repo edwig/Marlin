@@ -274,6 +274,8 @@ public:
   void         RegisterHTTPRequest(HTTPRequest* p_request);
   void       UnRegisterHTTPRequest(HTTPRequest* p_request);
 
+  // Check authentication of a HTTP request
+  bool       CheckAuthentication(PHTTP_REQUEST p_request,CString& p_rawUrl,CString p_authorize,HANDLE& p_token);
   // Sending response for an incoming message
   void       SendResponse(SOAPMessage* p_message);
   void       SendResponse(JSONMessage* p_message);

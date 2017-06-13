@@ -316,6 +316,13 @@ WebServiceClient::Send(SOAPMessage* p_message)
     PrepareForReliable(p_message);
   }
 
+  // If user/password not set in the message, user ours (if any)
+  if(p_message->GetUser().IsEmpty())
+  {
+    p_message->SetUser(m_user);
+    p_message->SetPassword(m_password);
+  }
+
   // Send by the HTTP client
   if(m_jsonTranslation)
   {
@@ -785,6 +792,10 @@ WebServiceClient::CreateSequence()
     message.SetSigningMethod   (m_signingMethod);
   }
 
+  // Set username-password combination
+  message.SetUser(m_user);
+  message.SetPassword(m_password);
+
   // Put in the logfile
   DETAILLOG1("*** Starting WS-ReliableMessaging protocol ***");
 
@@ -866,6 +877,10 @@ WebServiceClient::LastMessage()
   CString request("LastMessage");
   SOAPMessage message(m_rm,request,SoapVersion::SOAP_12,m_url);
 
+  // Set username-password combination
+  message.SetUser(m_user);
+  message.SetPassword(m_password);
+
   DETAILLOG1("*** Ending WS-ReliableMessaging protocol ***");
   try
   {
@@ -898,6 +913,10 @@ WebServiceClient::TerminateSequence()
   SOAPMessage message(m_rm,terminate,SoapVersion::SOAP_12,m_url);
   message.SetReliability(true,false);
   message.SetParameter("Identifier",m_guidSequenceServer);
+
+  // Set username-password combination
+  message.SetUser(m_user);
+  message.SetPassword(m_password);
 
   try
   {

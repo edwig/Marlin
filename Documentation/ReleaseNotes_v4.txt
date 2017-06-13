@@ -8,6 +8,24 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.4
+======================
+1) All auhtentication checking is now done by the HTTPServer main object. This means that the
+   checking is the same for the IIS, the sync server and the a-sync server.
+2) The HTTPServerIIS now also checks the authentication. Just in case no IIS module has been
+   configured to catch an unauthenticated call.
+3) In case of a www-authenticate header in the HTTP call, the server will pass on the authentication
+   to the handlers of the HTTPSite. It is the responsibility of these handlers to accept or reject
+   the total HTTP call. 
+   Tip: A good way to implement such a functionallity is the writing of a specialized HTTPFilter!
+4) The WebServiceClient now has methods to set and get the default username/password.
+   By using these, you can use basic-authentication and digest authentication on a reliable
+   messaging channel. The WebServiceClient needs this info to be able to set the authentication
+   for the opening 'CreateSequence' and the closing 'LastMessage' and 'TerminateSequence'
+   messages.
+5) Bug fix in the Analysis logfile object. The separate 'logfile.config' configuration is read
+   (again) correctly.
+
 CHANGES IN VERSION 4.3
 ======================
 1) There are now 4 server setups. This is an overview:

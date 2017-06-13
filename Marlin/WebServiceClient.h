@@ -31,7 +31,7 @@
 // Message numbers and Start/Terminate sequences ar kept here and the
 // needed protocols and namespaces are stored here.
 // 
-// Alsoo the handling of the WS-Security has been added with minimal:
+// Also the handling of the WS-Security has been added with minimal:
 // - Message signing in the header
 // - Message-body encryption
 // - Whole message encryption
@@ -93,7 +93,9 @@ public:
   bool      HasErrors()                  { return m_result == false;        };
   bool      GetIsOpen()                  { return m_isopen;                 };
   bool      GetWsdlCheck()               { return m_wsdlCheck;              };
-  int       GetMessageNumber()           { return ++m_clientMessageNumber;  }; // Automatisch ophogend!!
+  int       GetMessageNumber()           { return ++m_clientMessageNumber;  }; // Automatic increment!
+  CString   GetUser()                    { return m_user;                   };
+  CString   GetPassword()                { return m_password;               };
   CString   GetGuidSequenceServer()      { return m_guidSequenceServer;     };
   CString   GetGuidSequenceClient()      { return m_guidSequenceClient;     };
   CString   GetAddressing()              { return m_adr;                    };
@@ -117,6 +119,8 @@ public:
   void      SetLogAnalysis(LogAnalysis* p_log);
   void      SetReliable(bool p_reliable,ReliableType p_type = ReliableType::RELIABLE_ONCE);
   void      SetTimeouts(int p_resolve,int p_connect,int p_send,int p_receive);
+  void      SetUser(CString p_user)                         { m_user               = p_user;        };
+  void      SetPassword(CString p_password)                 { m_password           = p_password;    };
   void      SetWsdlCheck(bool p_check)                      { m_wsdlCheck          = p_check;       };
   void      SetLogFilename(CString p_logFilename)           { m_logFilename        = p_logFilename; };
   void      SetSigningMethod(unsigned p_method)             { m_signingMethod      = p_method;      };
@@ -160,6 +164,8 @@ private:
   CString       m_url;                                         // URL to send to
   CString       m_contract;                                    // Service contract
   CString       m_wsdlFile;                                    // URL/File for WSDL definitions
+  CString       m_user;                                        // User for RM messages
+  CString       m_password;                                    // Password for RM messages
   bool          m_reliable            { false     };           // Using WS-RM?
   bool          m_wsdlCheck           { false     };           // Using WSDL checks
   ReliableType  m_reliableType { ReliableType::RELIABLE_ONCE };// 0=AtMostOnce,1=ExactlyOnce,2=AtLeastOnce

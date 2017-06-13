@@ -327,7 +327,6 @@ HTTPServerSync::RunHTTPServer()
 {
   ULONG              result    = 0;
   DWORD              bytesRead = 0;
-  bool               doReceive = true;
   HTTP_REQUEST_ID    requestId = NULL;
   PHTTP_REQUEST      request   = nullptr;
   PCHAR              requestBuffer = nullptr;
@@ -441,189 +440,136 @@ HTTPServerSync::RunHTTPServer()
         site = FindHTTPSite(site,absPath);
       }
 
-      if(request->RequestInfoCount > 0)
+      // Check our authentication
+      if(!CheckAuthentication(request,rawUrl,authorize,accessToken))
       {
-        for(unsigned ind = 0; ind < request->RequestInfoCount; ++ind)
-        {
-          if(request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeAuth) 
-          {
-            // Default is failure
-            doReceive = false;
-
-            PHTTP_REQUEST_AUTH_INFO auth = (PHTTP_REQUEST_AUTH_INFO)request->pRequestInfo[ind].pInfo;
-            if(auth->AuthStatus == HttpAuthStatusNotAuthenticated)
-            {
-              // Not (yet) authenticated. Back to the client for authentication
-              DETAILLOGS("Not yet authenticated for: ",rawUrl);
-              HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-              msg.SetRequestHandle(request->RequestId);
-              msg.SetHTTPSite(site);
-              RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
-              // Go to next request
-              HTTP_SET_NULL_ID(&requestId);
-            }
-            else if(auth->AuthStatus == HttpAuthStatusFailure)
-            {
-              // Second round. Still not authenticated. Drop the connection, better next time
-              DETAILLOGS("Authentication failed for: ",rawUrl);
-              DETAILLOGV("Authentication failed because of: %s",AuthenticationStatus(auth->SecStatus).GetString());
-              HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-              msg.SetRequestHandle(request->RequestId);
-              msg.SetHTTPSite(site);
-              RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
-              // Go to next request
-              HTTP_SET_NULL_ID(&requestId);
-            }
-            else if(auth->AuthStatus == HttpAuthStatusSuccess)
-            {
-              // Authentication accepted: all is well
-              DETAILLOGS("Authentication done for: ",rawUrl);
-              accessToken = auth->AccessToken;
-              doReceive   = true;
-            }
-            else
-            {
-              CString authError;
-              authError.Format("Authentication mechanism failure. Unknown status: %d",auth->AuthStatus);
-              ERRORLOG(ERROR_NOT_AUTHENTICATED,authError);
-            }
-          }
-          else if(request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeSslProtocol)
-          {
-            // Only exists on Windows 10 / Server 2016
-            if(m_detail)
-            {
-              PHTTP_SSL_PROTOCOL_INFO sslInfo = (PHTTP_SSL_PROTOCOL_INFO)request->pRequestInfo[ind].pInfo;
-              LogSSLConnection(sslInfo);
-            }
-          }
-        }
+        // Ready with this request
+        HTTP_SET_NULL_ID(&requestId);
+        continue;
       }
-      if(doReceive)
+
+      // Remember the context: easy in API 2.0
+      if(callback == nullptr && site == nullptr)
       {
-        // Remember the context: easy in API 2.0
-        if(callback == nullptr && site == nullptr)
+        HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
+        msg.SetRequestHandle(request->RequestId);
+        msg.SetHTTPSite(site);
+        SendResponse(&msg);
+        // Ready with this request
+        HTTP_SET_NULL_ID(&requestId);
+        continue;
+      }
+
+      // Translate the command. Now reduced to just this switch
+      HTTPCommand type = HTTPCommand::http_no_command;
+      switch(request->Verb)
+      {
+        case HttpVerbOPTIONS:   type = HTTPCommand::http_options;    break;
+        case HttpVerbGET:       type = HTTPCommand::http_get;        break;
+        case HttpVerbHEAD:      type = HTTPCommand::http_head;       break;
+        case HttpVerbPOST:      type = HTTPCommand::http_post;       break;
+        case HttpVerbPUT:       type = HTTPCommand::http_put;        break;
+        case HttpVerbDELETE:    type = HTTPCommand::http_delete;     break;
+        case HttpVerbTRACE:     type = HTTPCommand::http_trace;      break;
+        case HttpVerbCONNECT:   type = HTTPCommand::http_connect;    break;
+        case HttpVerbMOVE:      type = HTTPCommand::http_move;       break;
+        case HttpVerbCOPY:      type = HTTPCommand::http_copy;       break;
+        case HttpVerbPROPFIND:  type = HTTPCommand::http_proppfind;  break;
+        case HttpVerbPROPPATCH: type = HTTPCommand::http_proppatch;  break;
+        case HttpVerbMKCOL:     type = HTTPCommand::http_mkcol;      break;
+        case HttpVerbLOCK:      type = HTTPCommand::http_lock;       break;
+        case HttpVerbUNLOCK:    type = HTTPCommand::http_unlock;     break;
+        case HttpVerbSEARCH:    type = HTTPCommand::http_search;     break;
+        default:                // Try to get a less known verb as 'last resort'
+                                type = GetUnknownVerb(request->pUnknownVerb);
+                                if(type == HTTPCommand::http_no_command)
+                                {
+                                  // Non implemented like HttpVerbTRACK or other non-known verbs
+                                  HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
+                                  msg.SetRequestHandle(request->RequestId);
+                                  msg.SetHTTPSite(site);
+                                  RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented");
+                                  // Ready with this request
+                                  HTTP_SET_NULL_ID(&requestId);
+                                  continue;
+                                }
+                                break;
+      }
+
+      // Receiving the initiation of an event stream for the server
+      acceptTypes.Trim();
+      if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
+      {
+        CString absolutePath = CW2A(request->CookedUrl.pAbsPath);
+        EventStream* stream = SubscribeEventStream(site,site->GetSite(),absolutePath,request->RequestId,accessToken);
+        if(stream)
         {
-          HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
-          msg.SetRequestHandle(request->RequestId);
-          msg.SetHTTPSite(site);
-          SendResponse(&msg);
-          // Ready with this request
+          // Remember our URL
+          stream->m_baseURL = rawUrl;
+          // Check for a correct callback
+          callback = callback ? callback : HTTPSiteCallbackEvent;
+          m_pool.SubmitWork(callback,(void*)stream);
           HTTP_SET_NULL_ID(&requestId);
           continue;
         }
-
-        // Translate the command. Now reduced to just this switch
-        HTTPCommand type = HTTPCommand::http_no_command;
-        switch(request->Verb)
-        {
-          case HttpVerbOPTIONS:   type = HTTPCommand::http_options;    break;
-          case HttpVerbGET:       type = HTTPCommand::http_get;        break;
-          case HttpVerbHEAD:      type = HTTPCommand::http_head;       break;
-          case HttpVerbPOST:      type = HTTPCommand::http_post;       break;
-          case HttpVerbPUT:       type = HTTPCommand::http_put;        break;
-          case HttpVerbDELETE:    type = HTTPCommand::http_delete;     break;
-          case HttpVerbTRACE:     type = HTTPCommand::http_trace;      break;
-          case HttpVerbCONNECT:   type = HTTPCommand::http_connect;    break;
-          case HttpVerbMOVE:      type = HTTPCommand::http_move;       break;
-          case HttpVerbCOPY:      type = HTTPCommand::http_copy;       break;
-          case HttpVerbPROPFIND:  type = HTTPCommand::http_proppfind;  break;
-          case HttpVerbPROPPATCH: type = HTTPCommand::http_proppatch;  break;
-          case HttpVerbMKCOL:     type = HTTPCommand::http_mkcol;      break;
-          case HttpVerbLOCK:      type = HTTPCommand::http_lock;       break;
-          case HttpVerbUNLOCK:    type = HTTPCommand::http_unlock;     break;
-          case HttpVerbSEARCH:    type = HTTPCommand::http_search;     break;
-          default:                // Try to get a less known verb as 'last resort'
-                                  type = GetUnknownVerb(request->pUnknownVerb);
-                                  if(type == HTTPCommand::http_no_command)
-                                  {
-                                    // Non implemented like HttpVerbTRACK or other non-known verbs
-                                    HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
-                                    msg.SetRequestHandle(request->RequestId);
-                                    msg.SetHTTPSite(site);
-                                    RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented");
-                                    // Ready with this request
-                                    HTTP_SET_NULL_ID(&requestId);
-                                    continue;
-                                  }
-                                  break;
-        }
-
-        // Receiving the initiation of an event stream for the server
-        acceptTypes.Trim();
-        if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
-        {
-          CString absolutePath = CW2A(request->CookedUrl.pAbsPath);
-          EventStream* stream = SubscribeEventStream(site,site->GetSite(),absolutePath,request->RequestId,accessToken);
-          if(stream)
-          {
-            // Remember our URL
-            stream->m_baseURL = rawUrl;
-            // Check for a correct callback
-            callback = callback ? callback : HTTPSiteCallbackEvent;
-            m_pool.SubmitWork(callback,(void*)stream);
-            HTTP_SET_NULL_ID(&requestId);
-            continue;
-          }
-        }
-
-        // For all types of requests: Create the HTTPMessage
-        message = new HTTPMessage(type,site);
-        message->SetURL(rawUrl);
-        message->SetReferrer(referrer);
-        message->SetAuthorization(authorize);
-        message->SetRequestHandle(request->RequestId);
-        message->SetConnectionID(request->ConnectionId);
-        message->SetContentType(contentType);
-        message->SetAccessToken(accessToken);
-        message->SetRemoteDesktop(remDesktop);
-        message->SetSender((PSOCKADDR_IN6)sender);
-        message->SetCookiePairs(cookie);
-        message->SetAcceptEncoding(acceptEncoding);
-        if(site->GetAllHeaders())
-        {
-          // If requested so, copy all headers to the message
-          message->SetAllHeaders(&request->Headers);
-        }
-        else
-        {
-          // As a minimum, always add the unknown headers
-          // in case of a 'POST', as the SOAPAction header is here too!
-          message->SetUnknownHeaders(&request->Headers);
-        }
-
-        // Handle modified-since 
-        // Rest of the request is then not needed any more
-        if(type == HTTPCommand::http_get && !modified.IsEmpty())
-        {
-          message->SetHTTPTime(modified);
-          if(DoIsModifiedSince(message))
-          {
-            // Answer already sent, go on to the next request
-            HTTP_SET_NULL_ID(&requestId);
-            continue;
-          }
-        }
-
-        // Find X-HTTP-Method VERB Tunneling
-        if(type == HTTPCommand::http_post && site->GetVerbTunneling())
-        {
-          if(message->FindVerbTunneling())
-          {
-            DETAILLOGV("Request VERB changed to: %s",message->GetVerb().GetString());
-          }
-        }
-
-        // Remember the fact that we should read the rest of the message
-        message->SetReadBuffer(request->Flags & HTTP_REQUEST_FLAG_MORE_ENTITY_BODY_EXISTS);
-
-        // Hit the thread pool with this message
-        callback = callback ? callback : HTTPSiteCallbackMessage;
-        m_pool.SubmitWork(callback,(void*)message);
-
-        // Ready with this request
-        HTTP_SET_NULL_ID(&requestId);
       }
+
+      // For all types of requests: Create the HTTPMessage
+      message = new HTTPMessage(type,site);
+      message->SetURL(rawUrl);
+      message->SetReferrer(referrer);
+      message->SetAuthorization(authorize);
+      message->SetRequestHandle(request->RequestId);
+      message->SetConnectionID(request->ConnectionId);
+      message->SetContentType(contentType);
+      message->SetAccessToken(accessToken);
+      message->SetRemoteDesktop(remDesktop);
+      message->SetSender((PSOCKADDR_IN6)sender);
+      message->SetCookiePairs(cookie);
+      message->SetAcceptEncoding(acceptEncoding);
+      if(site->GetAllHeaders())
+      {
+        // If requested so, copy all headers to the message
+        message->SetAllHeaders(&request->Headers);
+      }
+      else
+      {
+        // As a minimum, always add the unknown headers
+        // in case of a 'POST', as the SOAPAction header is here too!
+        message->SetUnknownHeaders(&request->Headers);
+      }
+
+      // Handle modified-since 
+      // Rest of the request is then not needed any more
+      if(type == HTTPCommand::http_get && !modified.IsEmpty())
+      {
+        message->SetHTTPTime(modified);
+        if(DoIsModifiedSince(message))
+        {
+          // Answer already sent, go on to the next request
+          HTTP_SET_NULL_ID(&requestId);
+          continue;
+        }
+      }
+
+      // Find X-HTTP-Method VERB Tunneling
+      if(type == HTTPCommand::http_post && site->GetVerbTunneling())
+      {
+        if(message->FindVerbTunneling())
+        {
+          DETAILLOGV("Request VERB changed to: %s",message->GetVerb().GetString());
+        }
+      }
+
+      // Remember the fact that we should read the rest of the message
+      message->SetReadBuffer(request->Flags & HTTP_REQUEST_FLAG_MORE_ENTITY_BODY_EXISTS);
+
+      // Hit the thread pool with this message
+      callback = callback ? callback : HTTPSiteCallbackMessage;
+      m_pool.SubmitWork(callback,(void*)message);
+
+      // Ready with this request
+      HTTP_SET_NULL_ID(&requestId);
     }
     else if(result == ERROR_MORE_DATA)
     {

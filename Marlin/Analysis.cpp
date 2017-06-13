@@ -442,7 +442,7 @@ LogAnalysis::ReadConfig()
   fopen_s(&file,fileName,"r");
   if(file)
   {
-    while(fread(buffer,255,1,file))
+    while(fgets(buffer,255,file))
     {
       size_t len = strlen(buffer);
       while(len)

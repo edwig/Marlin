@@ -452,6 +452,13 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
     p_site = FindHTTPSite(p_site,absPath);
   }
 
+  HANDLE token = NULL;
+  if(!CheckAuthentication(p_request,rawUrl,authorize,token))
+  {
+    // No authentication, answer already sent
+    return nullptr;
+  }
+
   // Translate the command. Now reduced to just this switch
   HTTPCommand type = HTTPCommand::http_no_command;
   switch(p_request->Verb)
@@ -477,7 +484,11 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                             if(type == HTTPCommand::http_no_command)
                             {
                               ERRORLOG(ERROR_INVALID_PARAMETER,"Unknown HTTP Verb");
-                              return false;
+                              HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
+                              msg.SetRequestHandle((HTTP_REQUEST_ID) p_context);
+                              msg.SetHTTPSite(p_site);
+                              RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented");
+                              return nullptr;
                             }
                             break;
   }

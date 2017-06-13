@@ -509,6 +509,79 @@ HTTPServer::FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers)
   return remDesktop;
 }
 
+// Check authentication of a HTTP request
+bool
+HTTPServer::CheckAuthentication(PHTTP_REQUEST p_request,CString& p_rawUrl,CString p_authorize,HANDLE& p_token)
+{
+  bool doReceive = true;
+
+  if(p_request->RequestInfoCount>0)
+  {
+    for(unsigned ind = 0; ind<p_request->RequestInfoCount; ++ind)
+    {
+      if(p_request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeAuth)
+      {
+        // Default is failure
+        doReceive = false;
+
+        PHTTP_REQUEST_AUTH_INFO auth = (PHTTP_REQUEST_AUTH_INFO) p_request->pRequestInfo[ind].pInfo;
+        if(auth->AuthStatus == HttpAuthStatusNotAuthenticated)
+        {
+          // Not (yet) authenticated. Back to the client for authentication
+          DETAILLOGS("Not yet authenticated for: ",p_rawUrl);
+          HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
+          msg.SetRequestHandle((HTTP_REQUEST_ID)this);
+          RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
+        }
+        else if(auth->AuthStatus == HttpAuthStatusFailure)
+        {
+          if(p_authorize.IsEmpty())
+          {
+            // Second round. Still not authenticated. Drop the connection, better next time
+            DETAILLOGS("Authentication failed for: ",p_rawUrl);
+            DETAILLOGS("Authentication failed because of: ",AuthenticationStatus(auth->SecStatus));
+            HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
+            msg.SetRequestHandle((HTTP_REQUEST_ID)this);
+            RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
+          }
+          else
+          {
+            // Site must do the authorization
+            DETAILLOGS("Authentication by HTTPSite: ",p_authorize);
+            doReceive = true;
+          }
+        }
+        else if(auth->AuthStatus == HttpAuthStatusSuccess)
+        {
+          // Authentication accepted: all is well
+          DETAILLOGS("Authentication done for: ",p_rawUrl);
+          p_token = auth->AccessToken;
+          doReceive = true;
+        }
+        else
+        {
+          CString authError;
+          authError.Format("Authentication mechanism failure. Unknown status: %d",auth->AuthStatus);
+          ERRORLOG(ERROR_NOT_AUTHENTICATED,authError);
+          HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_FORBIDDEN);
+          msg.SetRequestHandle((HTTP_REQUEST_ID)this);
+          RespondWithClientError(&msg,HTTP_STATUS_FORBIDDEN,"Forbidden");
+        }
+      }
+      else if (p_request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeSslProtocol)
+      {
+        // Only exists on Windows 10 / Server 2016
+        if (GetDetailedLogging())
+        {
+          PHTTP_SSL_PROTOCOL_INFO sslInfo = (PHTTP_SSL_PROTOCOL_INFO) p_request->pRequestInfo[ind].pInfo;
+          LogSSLConnection(sslInfo);
+        }
+      }
+    }
+  }
+  return doReceive;
+}
+
 // Build the www-auhtenticate challenge
 CString
 HTTPServer::BuildAuthenticationChallenge(CString p_authScheme,CString p_realm)
@@ -632,6 +705,8 @@ HTTPServer::RespondWithServerError(HTTPMessage* p_message
   CString page;
   page.Format(m_serverErrorPage,p_error,p_reason.GetString());
 
+  p_message->Reset();
+  p_message->GetFileBuffer()->Reset();
   p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
   p_message->SetStatus(p_error);
 
@@ -648,6 +723,8 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
   CString page;
   page.Format(m_clientErrorPage,p_error,p_reason.GetString());
 
+  p_message->Reset();
+  p_message->GetFileBuffer()->Reset();
   p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
   p_message->SetStatus(p_error);
 
