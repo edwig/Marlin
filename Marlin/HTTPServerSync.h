@@ -57,7 +57,7 @@ protected:
   // Init the stream response
   virtual bool InitEventStream(EventStream& p_stream);
   // Used for canceling a WebSocket for an event stream
-  virtual void CancelRequestStream(HTTP_REQUEST_ID p_response);
+  virtual void CancelRequestStream(HTTP_OPAQUE_ID p_response);
 
 private:
   // Preparing a response
@@ -65,13 +65,13 @@ private:
   void      AddKnownHeader        (HTTP_RESPONSE& p_response,HTTP_HEADER_ID p_header,const char* p_value);
   PHTTP_UNKNOWN_HEADER AddUnknownHeaders(UKHeaders& p_headers);
   // Sub-functions for SendResponse
-  bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
-  void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
-  void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer);
-  void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,CString& p_page,int p_error,const char* p_reason);
+  bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
+  void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
+  void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer);
+  void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,CString& p_page,int p_error,const char* p_reason);
 
   // For the handling of the event streams: Sending a chunk to an event stream
-  virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_request,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
+  virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_request,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
 
   // PRIVATE DATA of the stand-alone HTTPServer
   URLGroupMap  m_urlGroups;              // All URL Groups

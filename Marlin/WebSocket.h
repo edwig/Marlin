@@ -402,7 +402,7 @@ private:
 
   // Private data for the server variant of the WebSocket
   HTTPServer*     m_server  { nullptr };
-  HTTP_REQUEST_ID m_request { NULL    };
+  HTTP_OPAQUE_ID  m_request { NULL    };
   SOCKADDR_IN6    m_socket;
 };
 
@@ -448,7 +448,7 @@ protected:
   // Private data for the IIS WebSocket variant
   HTTPServer*         m_server    { nullptr };
   IWebSocketContext*  m_iis_socket{ nullptr };
-  HTTP_REQUEST_ID     m_request   { NULL    };
+  HTTP_OPAQUE_ID      m_request   { NULL    };
   HANDLE              m_listener  { NULL    };
   // Async write buffer
   WSFrameStack        m_writing;

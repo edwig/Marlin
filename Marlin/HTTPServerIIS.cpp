@@ -453,7 +453,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   }
 
   HANDLE token = NULL;
-  if(!CheckAuthentication(p_request,rawUrl,authorize,token))
+  if(!CheckAuthentication(p_request,(HTTP_OPAQUE_ID) p_context,p_site,rawUrl,authorize,token))
   {
     // No authentication, answer already sent
     return nullptr;
@@ -485,7 +485,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                             {
                               ERRORLOG(ERROR_INVALID_PARAMETER,"Unknown HTTP Verb");
                               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
-                              msg.SetRequestHandle((HTTP_REQUEST_ID) p_context);
+                              msg.SetRequestHandle((HTTP_OPAQUE_ID) p_context);
                               msg.SetHTTPSite(p_site);
                               RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented");
                               return nullptr;
@@ -499,7 +499,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
      (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
-    EventStream* stream = SubscribeEventStream(p_site,p_site->GetSite(),absolutePath,(HTTP_REQUEST_ID)p_context,NULL);
+    EventStream* stream = SubscribeEventStream(p_site,p_site->GetSite(),absolutePath,(HTTP_OPAQUE_ID)p_context,NULL);
     if(stream)
     {
       // Getting the impersonated user
@@ -530,7 +530,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   message->SetSender((PSOCKADDR_IN6)sender);
   message->SetCookiePairs(cookie);
   message->SetAcceptEncoding(acceptEncoding);
-  message->SetRequestHandle((HTTP_REQUEST_ID)p_context);
+  message->SetRequestHandle((HTTP_OPAQUE_ID)p_context);
 
   // Finding the impersonation access token (if any)
   FindingAccessToken(p_context,message);
@@ -680,7 +680,7 @@ HTTPServerIIS::CreateWebSocket(CString p_uri)
 
 // Receive the WebSocket stream and pass on the the WebSocket
 void
-HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID /*p_request*/)
+HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID /*p_request*/)
 {
   WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_socket);
   if(socket)
@@ -692,7 +692,7 @@ HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID /*p_request*
 
 // Send to a WebSocket
 bool
-HTTPServerIIS::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/)
+HTTPServerIIS::SendSocket(RawFrame& /*p_frame*/,HTTP_OPAQUE_ID /*p_request*/)
 {
 //   IHttpContext*   context  = reinterpret_cast<IHttpContext*>(p_request);
 //   IHttpResponse*  response = context->GetResponse();
@@ -725,7 +725,7 @@ HTTPServerIIS::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/)
 }
 
 bool
-HTTPServerIIS::FlushSocket(HTTP_REQUEST_ID p_request)
+HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request)
 {
   IHttpContext*     context  = reinterpret_cast<IHttpContext*>(p_request);
   IHttpResponse*    response = context->GetResponse();
@@ -1201,10 +1201,10 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
 
 // Sending a chunk to an event stream
 bool 
-HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
-                                      ,const char*     p_buffer
-                                      ,size_t          p_length
-                                      ,bool            p_continue /*= true*/)
+HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
+                                      ,const char*    p_buffer
+                                      ,size_t         p_length
+                                      ,bool           p_continue /*= true*/)
 {
   DWORD  bytesSent = 0;
   HTTP_DATA_CHUNK dataChunk;
@@ -1240,7 +1240,7 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_REQUEST_ID p_response
 
 // Used for canceling a WebSocket or an event stream
 void
-HTTPServerIIS::CancelRequestStream(HTTP_REQUEST_ID p_response)
+HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response)
 {
   IHttpContext*  context = (IHttpContext*)p_response;
   IHttpResponse* response = context->GetResponse();

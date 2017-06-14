@@ -325,13 +325,13 @@ HTTPServerSync::Run()
 void
 HTTPServerSync::RunHTTPServer()
 {
-  ULONG              result    = 0;
-  DWORD              bytesRead = 0;
-  HTTP_REQUEST_ID    requestId = NULL;
-  PHTTP_REQUEST      request   = nullptr;
-  PCHAR              requestBuffer = nullptr;
-  ULONG              requestBufferLength = 0;
-  HTTPMessage*       message = NULL;
+  ULONG          result    = 0;
+  DWORD          bytesRead = 0;
+  HTTP_OPAQUE_ID requestId = NULL;
+  PHTTP_REQUEST  request   = nullptr;
+  PCHAR          requestBuffer = nullptr;
+  ULONG          requestBufferLength = 0;
+  HTTPMessage*   message = NULL;
   USES_CONVERSION;
 
   // Use counter
@@ -441,7 +441,7 @@ HTTPServerSync::RunHTTPServer()
       }
 
       // Check our authentication
-      if(!CheckAuthentication(request,rawUrl,authorize,accessToken))
+      if(!CheckAuthentication(request,request->RequestId,site,rawUrl,authorize,accessToken))
       {
         // Ready with this request
         HTTP_SET_NULL_ID(&requestId);
@@ -721,7 +721,7 @@ HTTPServerSync::InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status
 
 // Used for canceling a WebSocket for an event stream
 void 
-HTTPServerSync::CancelRequestStream(HTTP_REQUEST_ID p_response)
+HTTPServerSync::CancelRequestStream(HTTP_OPAQUE_ID p_response)
 {
   // Cancel the outstanding request from the request queue
   ULONG result = HttpCancelHttpRequest(m_requestQueue,p_response,NULL);
@@ -858,7 +858,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
 {
   HTTP_RESPONSE   response;
   CString         challenge;
-  HTTP_REQUEST_ID requestID   = p_message->GetRequestHandle();
+  HTTP_OPAQUE_ID  requestID   = p_message->GetRequestHandle();
   FileBuffer*     buffer      = p_message->GetFileBuffer();
   CString         contentType("application/octet-stream"); 
 
@@ -991,10 +991,10 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
 }
 
 bool      
-HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE   p_response
-                                    ,HTTP_REQUEST_ID  p_requestID
-                                    ,FileBuffer*      p_buffer
-                                    ,size_t           p_totalLength)
+HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE p_response
+                                  ,HTTP_OPAQUE_ID p_requestID
+                                  ,FileBuffer*    p_buffer
+                                  ,size_t         p_totalLength)
 {
   uchar* entity       = NULL;
   DWORD  result       = 0;
@@ -1050,7 +1050,7 @@ HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE   p_response
 
 void      
 HTTPServerSync::SendResponseBufferParts(PHTTP_RESPONSE  p_response
-                                         ,HTTP_REQUEST_ID p_request
+                                         ,HTTP_OPAQUE_ID p_request
                                          ,FileBuffer*     p_buffer
                                          ,size_t          p_totalLength)
 {
@@ -1128,7 +1128,7 @@ HTTPServerSync::SendResponseBufferParts(PHTTP_RESPONSE  p_response
 
 void      
 HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE   p_response
-                                        ,HTTP_REQUEST_ID  p_request
+                                        ,HTTP_OPAQUE_ID  p_request
                                         ,FileBuffer*      p_buffer)
 {
   DWORD  result    = 0;
@@ -1217,7 +1217,7 @@ HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE   p_response
 
 void      
 HTTPServerSync::SendResponseError(PHTTP_RESPONSE  p_response
-                                   ,HTTP_REQUEST_ID p_request
+                                   ,HTTP_OPAQUE_ID p_request
                                    ,CString&        p_page
                                    ,int             p_error
                                    ,const char*     p_reason)
@@ -1327,7 +1327,7 @@ HTTPServerSync::InitEventStream(EventStream& p_stream)
 
 // Sending a chunk to an event stream
 bool
-HTTPServerSync::SendResponseEventBuffer(HTTP_REQUEST_ID  p_requestID
+HTTPServerSync::SendResponseEventBuffer(HTTP_OPAQUE_ID  p_requestID
                                          ,const char*      p_buffer
                                          ,size_t           p_length
                                          ,bool             p_continue /*=true*/)

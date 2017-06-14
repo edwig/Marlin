@@ -511,7 +511,12 @@ HTTPServer::FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers)
 
 // Check authentication of a HTTP request
 bool
-HTTPServer::CheckAuthentication(PHTTP_REQUEST p_request,CString& p_rawUrl,CString p_authorize,HANDLE& p_token)
+HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
+                               ,HTTP_OPAQUE_ID p_id
+                               ,HTTPSite*      p_site
+                               ,CString&       p_rawUrl
+                               ,CString        p_authorize
+                               ,HANDLE&        p_token)
 {
   bool doReceive = true;
 
@@ -530,7 +535,8 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST p_request,CString& p_rawUrl,CStrin
           // Not (yet) authenticated. Back to the client for authentication
           DETAILLOGS("Not yet authenticated for: ",p_rawUrl);
           HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-          msg.SetRequestHandle((HTTP_REQUEST_ID)this);
+          msg.SetHTTPSite(p_site);
+          msg.SetRequestHandle(p_id);
           RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
         }
         else if(auth->AuthStatus == HttpAuthStatusFailure)
@@ -541,7 +547,8 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST p_request,CString& p_rawUrl,CStrin
             DETAILLOGS("Authentication failed for: ",p_rawUrl);
             DETAILLOGS("Authentication failed because of: ",AuthenticationStatus(auth->SecStatus));
             HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-            msg.SetRequestHandle((HTTP_REQUEST_ID)this);
+            msg.SetHTTPSite(p_site);
+            msg.SetRequestHandle(p_id);
             RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
           }
           else
@@ -564,7 +571,8 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST p_request,CString& p_rawUrl,CStrin
           authError.Format("Authentication mechanism failure. Unknown status: %d",auth->AuthStatus);
           ERRORLOG(ERROR_NOT_AUTHENTICATED,authError);
           HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_FORBIDDEN);
-          msg.SetRequestHandle((HTTP_REQUEST_ID)this);
+          msg.SetHTTPSite(p_site);
+          msg.SetRequestHandle(p_id);
           RespondWithClientError(&msg,HTTP_STATUS_FORBIDDEN,"Forbidden");
         }
       }
@@ -933,7 +941,7 @@ EventStream*
 HTTPServer::SubscribeEventStream(HTTPSite*        p_site
                                 ,CString          p_url
                                 ,CString&         p_path
-                                ,HTTP_REQUEST_ID  p_requestId
+                                ,HTTP_OPAQUE_ID   p_requestId
                                 ,HANDLE           p_token)
 {
   AutoCritSec lock(&m_eventLock);

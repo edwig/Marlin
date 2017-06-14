@@ -170,13 +170,13 @@ public:
   // Create a new WebSocket in the subclass of our server
   virtual WebSocket* CreateWebSocket(CString p_uri) = 0;
   // Receive the WebSocket stream and pass on the the WebSocket
-  virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request) = 0;
+  virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request) = 0;
   // Send to a WebSocket
-  virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request) = 0;
+  virtual bool       SendSocket(RawFrame& p_frame,HTTP_OPAQUE_ID p_request) = 0;
   // Flushing a WebSocket intermediate
-  virtual bool       FlushSocket (HTTP_REQUEST_ID p_request) = 0;
+  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request) = 0;
   // Used for canceling a WebSocket for an event stream
-  virtual void       CancelRequestStream(HTTP_REQUEST_ID p_response) = 0;
+  virtual void       CancelRequestStream(HTTP_OPAQUE_ID p_response) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
 
@@ -275,7 +275,12 @@ public:
   void       UnRegisterHTTPRequest(HTTPRequest* p_request);
 
   // Check authentication of a HTTP request
-  bool       CheckAuthentication(PHTTP_REQUEST p_request,CString& p_rawUrl,CString p_authorize,HANDLE& p_token);
+  bool       CheckAuthentication(PHTTP_REQUEST  p_request
+                                ,HTTP_OPAQUE_ID p_id
+                                ,HTTPSite*      p_site
+                                ,CString&       p_rawUrl
+                                ,CString        p_authorize
+                                ,HANDLE&        p_token);
   // Sending response for an incoming message
   void       SendResponse(SOAPMessage* p_message);
   void       SendResponse(JSONMessage* p_message);
@@ -332,7 +337,7 @@ public:
   // RFC 2616: paragraph 14.25: "if-modified-since"
   bool          DoIsModifiedSince(HTTPMessage* p_msg);
   // Register server push event stream for this site
-  EventStream*  SubscribeEventStream(HTTPSite* p_site,CString p_url,CString& p_pad,HTTP_REQUEST_ID p_requestID,HANDLE p_token);
+  EventStream*  SubscribeEventStream(HTTPSite* p_site,CString p_url,CString& p_pad,HTTP_OPAQUE_ID p_requestID,HANDLE p_token);
 
 protected:
   // Cleanup the server
@@ -366,7 +371,7 @@ protected:
   // Set the error status
   void      SetError(int p_error);
   // For the handling of the event streams
-  virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
+  virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
 
   // Protected data
   CString                 m_name;                   // How the outside world refers to me

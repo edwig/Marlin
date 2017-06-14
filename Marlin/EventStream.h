@@ -43,7 +43,7 @@ public:
   CString         m_absPath;    // Absolute pathname of the URL
   HTTPSite*       m_site;       // HTTPSite that's handling the stream
   HTTP_RESPONSE   m_response;   // Response buffer
-  HTTP_REQUEST_ID m_requestID;  // Outstanding HTTP request ID
+  HTTP_OPAQUE_ID  m_requestID;  // Outstanding HTTP request ID
   UINT            m_lastID;     // Last ID of this connection
   bool            m_alive;      // Connection still alive after sending
   __time64_t      m_lastPulse;  // Time of last sent event

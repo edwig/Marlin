@@ -56,11 +56,11 @@ public:
   // Create a new WebSocket in the subclass of our server
   virtual WebSocket* CreateWebSocket(CString p_uri);
   // Receive the WebSocket stream and pass on the the WebSocket
-  virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request);
+  virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request);
   // Send to a WebSocket
-  virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request);
+  virtual bool       SendSocket(RawFrame& p_frame,HTTP_OPAQUE_ID p_request);
   // Flushing a WebSocket intermediate
-  virtual bool       FlushSocket(HTTP_REQUEST_ID p_request);
+  virtual bool       FlushSocket(HTTP_OPAQUE_ID p_request);
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
 
@@ -100,7 +100,7 @@ protected:
 //                             ,PSTR         p_cookie      = NULL
 //                             ,PSTR         p_contentType = NULL);
   // Used for canceling a WebSocket for an event stream
-  virtual void CancelRequestStream(HTTP_REQUEST_ID p_response);
+  virtual void CancelRequestStream(HTTP_OPAQUE_ID p_response);
 
 private:
   // Preparing a response
@@ -109,10 +109,10 @@ private:
   //   void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
   //   void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,bool p_more = false);
   //   void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,CString& p_page,int p_error,const char* p_reason);
-  bool      SendResponseWebSocket  (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,UKHeaders& p_headers);
+  bool      SendResponseWebSocket  (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,UKHeaders& p_headers);
 
   // For the handling of the event streams: Sending a chunk to an event stream
-  virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_request,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
+  virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_request,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
 
   // PRIVATE DATA of the stand-alone HTTPServer
   URLGroupMap             m_urlGroups;              // All URL Groups

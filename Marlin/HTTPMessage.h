@@ -136,7 +136,7 @@ public:
   void SetServer(CString& p_server)             { m_cracked.m_host     = p_server;    ReparseURL();  };
   void SetPort(unsigned p_port)                 { m_cracked.m_port     = p_port;      ReparseURL();  };
   void SetAbsolutePath(CString& p_path)         { m_cracked.m_path     = p_path;      ReparseURL();  };
-  void SetRequestHandle(HTTP_REQUEST_ID p_req)  { m_request            = p_req;       };
+  void SetRequestHandle(HTTP_OPAQUE_ID p_req)   { m_request            = p_req;       };
   void SetAccessToken(HANDLE p_token)           { m_token              = p_token;     };
   void SetRemoteDesktop(UINT p_desktop)         { m_desktop            = p_desktop;   };
   void SetContentType(CString p_type)           { m_contentType        = p_type;      };
@@ -171,7 +171,7 @@ public:
   unsigned            GetPort()                 { return m_cracked.m_port;            };
   CString             GetAbsolutePath()         { return m_cracked.AbsolutePath();    };
   CString             GetAbsoluteResource()     { return m_cracked.AbsoluteResource();};
-  HTTP_REQUEST_ID     GetRequestHandle()        { return m_request;                   };
+  HTTP_OPAQUE_ID      GetRequestHandle()        { return m_request;                   };
   HTTPSite*           GetHTTPSite()             { return m_site;                      };
   bool                GetReadBuffer()           { return m_readBuffer;                };
   size_t              GetContentLength()        { return m_contentLength;             };
@@ -243,7 +243,7 @@ private:
 
   HTTPCommand         m_command       { HTTPCommand::http_response};  // HTTP Command code 'get','post' etc
   unsigned            m_status        { HTTP_STATUS_OK };             // HTTP status return code
-  HTTP_REQUEST_ID     m_request       { NULL    };                    // Request handle for answering
+  HTTP_OPAQUE_ID      m_request       { NULL    };                    // Request handle for answering
   HTTP_CONNECTION_ID  m_connectID     { NULL    };                    // HTTP Connection ID
   HTTPSite*           m_site          { nullptr };                    // Site for which message is received
   CString             m_contentType;                                  // Carrying this content

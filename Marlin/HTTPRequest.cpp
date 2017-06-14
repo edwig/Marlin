@@ -286,7 +286,7 @@ HTTPRequest::ReceivedRequest()
   }
 
   // Now check for authentication and possible send 401 back
-  if(m_server->CheckAuthentication(m_request,rawUrl,authorize,accessToken) == false)
+  if(m_server->CheckAuthentication(m_request,(HTTP_OPAQUE_ID)this,m_site,rawUrl,authorize,accessToken) == false)
   {
     // Not authenticated, go back for next request
     return;
@@ -297,7 +297,7 @@ HTTPRequest::ReceivedRequest()
   {
     m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
     m_message->AddReference();
-    m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
+    m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
     StartSendResponse();
     return;
   }
@@ -329,7 +329,7 @@ HTTPRequest::ReceivedRequest()
                               // Non implemented like HttpVerbTRACK or other non-known verbs
                               m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
                               m_message->AddReference();
-                              m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
+                              m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
                               StartSendResponse();
                               return;
                             }
@@ -341,7 +341,7 @@ HTTPRequest::ReceivedRequest()
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = CW2A(m_request->CookedUrl.pAbsPath);
-    EventStream* stream  = m_server->SubscribeEventStream(m_site,m_site->GetSite(),absolutePath,(HTTP_REQUEST_ID)this,accessToken);
+    EventStream* stream  = m_server->SubscribeEventStream(m_site,m_site->GetSite(),absolutePath,(HTTP_OPAQUE_ID)this,accessToken);
     if(stream)
     {
       stream->m_baseURL = rawUrl;
@@ -352,7 +352,7 @@ HTTPRequest::ReceivedRequest()
 
   // For all types of requests: Create the HTTPMessage
   m_message = new HTTPMessage(type,m_site);
-  m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
+  m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
   m_message->AddReference();
   // Enter our primary information from the request
   m_message->SetURL(rawUrl);
@@ -929,80 +929,6 @@ HTTPRequest::Finalize()
   // Trigger next request for threadpool
   m_active = false;
 }
-
-// Sub procedures for the handlers
-// bool 
-// HTTPRequest::CheckAuthentication(CString& p_rawUrl,CString p_authorize,HANDLE& p_token)
-// {
-//   bool doReceive = true;
-// 
-//   if(m_request->RequestInfoCount > 0)
-//   {
-//     for(unsigned ind = 0; ind < m_request->RequestInfoCount; ++ind)
-//     {
-//       if(m_request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeAuth)
-//       {
-//         // Default is failure
-//         doReceive = false;
-// 
-//         PHTTP_REQUEST_AUTH_INFO auth = (PHTTP_REQUEST_AUTH_INFO)m_request->pRequestInfo[ind].pInfo;
-//         if(auth->AuthStatus == HttpAuthStatusNotAuthenticated)
-//         {
-//           // Not (yet) authenticated. Back to the client for authentication
-//           DETAILLOGS("Not yet authenticated for: ",p_rawUrl);
-//           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-//           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-//           m_server->RespondWithClientError(m_message,HTTP_STATUS_DENIED,"Not authenticated");
-//         }
-//         else if(auth->AuthStatus == HttpAuthStatusFailure)
-//         {
-//           if(p_authorize.IsEmpty())
-//           {
-//             // Second round. Still not authenticated. Drop the connection, better next time
-//             DETAILLOGS("Authentication failed for: ",p_rawUrl);
-//             DETAILLOGV("Authentication failed because of: %s",m_server->AuthenticationStatus(auth->SecStatus).GetString());
-//             m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_DENIED);
-//             m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-//             m_server->RespondWithClientError(m_message,HTTP_STATUS_DENIED,"Not authenticated");
-//           }
-//           else
-//           {
-//             // Site must do the authorization
-//             DETAILLOGS("Authentication by HTTPSite: ",p_authorize);
-//             doReceive = true;
-//           }
-//         }
-//         else if(auth->AuthStatus == HttpAuthStatusSuccess)
-//         {
-//           // Authentication accepted: all is well
-//           DETAILLOGS("Authentication done for: ",p_rawUrl);
-//           p_token = auth->AccessToken;
-//           doReceive = true;
-//         }
-//         else
-//         {
-//           CString authError;
-//           authError.Format("Authentication mechanism failure. Unknown status: %d",auth->AuthStatus);
-//           ERRORLOG(ERROR_NOT_AUTHENTICATED,authError);
-//           m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_FORBIDDEN);
-//           m_message->SetRequestHandle((HTTP_REQUEST_ID)this);
-//           m_server->RespondWithClientError(m_message,HTTP_STATUS_FORBIDDEN,"Forbidden");
-//           break;
-//         }
-//       }
-//       else if(m_request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeSslProtocol)
-//       {
-//         // Only exists on Windows 10 / Server 2016
-//         if(m_server->GetDetailedLogging())
-//         {
-//           PHTTP_SSL_PROTOCOL_INFO sslInfo = (PHTTP_SSL_PROTOCOL_INFO)m_request->pRequestInfo[ind].pInfo;
-//           m_server->LogSSLConnection(sslInfo);
-//         }
-//       }
-//     }
-//   }
-//   return doReceive;
-// }
 
 // Add a request string for a header
 void 

@@ -70,8 +70,8 @@ TestFormDataMP(HTTPClient* p_client)
   // Test if we created all parts
   if(part1 == nullptr || part2 == nullptr || part3 == nullptr)
   {
-    // --- "--------------------------- - ------\n"
-    printf("MultiPartBuffer creation    : ERROR\n");
+    // --- "---------------------------------------------- - ------
+    printf("MultiPartBuffer creation data+file check       : ERROR\n");
     return 1;
   }
   // Try to transport the filetimes to the server

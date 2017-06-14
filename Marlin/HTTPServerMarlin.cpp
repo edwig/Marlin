@@ -764,7 +764,7 @@ HTTPServerMarlin::StopServer()
 
 // Used for canceling a WebSocket for an event stream
 void 
-HTTPServerMarlin::CancelRequestStream(HTTP_REQUEST_ID p_response)
+HTTPServerMarlin::CancelRequestStream(HTTP_OPAQUE_ID p_response)
 {
   HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_response);
 
@@ -784,7 +784,7 @@ HTTPServerMarlin::CreateWebSocket(CString p_uri)
 
 // Receive the WebSocket stream and pass on the the WebSocket
 void
-HTTPServerMarlin::ReceiveWebSocket(WebSocket* /*p_socket*/,HTTP_REQUEST_ID /*p_request*/)
+HTTPServerMarlin::ReceiveWebSocket(WebSocket* /*p_socket*/,HTTP_OPAQUE_ID /*p_request*/)
 {
   // FOR WEBSOCKETS TO WORK ON THE STAND-ALONE MARLIN
   // IT NEEDS TO BE REWRIITEN TO DO ASYNC I/O THROUGHOUT THE SERVER!
@@ -818,7 +818,7 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
 }
 bool
 HTTPServerMarlin::SendResponseWebSocket(PHTTP_RESPONSE  /*p_response*/
-                                       ,HTTP_REQUEST_ID /*p_requestID*/
+                                       ,HTTP_OPAQUE_ID /*p_requestID*/
                                        ,UKHeaders&      /*p_headers*/)
 {
   // FOR WEBSOCKETS TO WORK ON THE STAND-ALONE MARLIN
@@ -904,10 +904,10 @@ HTTPServerMarlin::InitEventStream(EventStream& p_stream)
 
 // Sending a chunk to an event stream
 bool
-HTTPServerMarlin::SendResponseEventBuffer(HTTP_REQUEST_ID  p_requestID
-                                         ,const char*      p_buffer
-                                         ,size_t           p_length
-                                         ,bool             p_continue /*=true*/)
+HTTPServerMarlin::SendResponseEventBuffer(HTTP_OPAQUE_ID p_requestID
+                                         ,const char*    p_buffer
+                                         ,size_t         p_length
+                                         ,bool           p_continue /*=true*/)
 {
   HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_requestID);
   if(request)
@@ -920,7 +920,7 @@ HTTPServerMarlin::SendResponseEventBuffer(HTTP_REQUEST_ID  p_requestID
 
 // Send to a WebSocket
 bool
-HTTPServerMarlin::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/)
+HTTPServerMarlin::SendSocket(RawFrame& /*p_frame*/,HTTP_OPAQUE_ID /*p_request*/)
 {
   DWORD  result    = 0;
 //   DWORD  bytesSent = 0;
@@ -959,7 +959,7 @@ HTTPServerMarlin::SendSocket(RawFrame& /*p_frame*/,HTTP_REQUEST_ID /*p_request*/
 
 // Cancel and close a WebSocket
 bool
-HTTPServerMarlin::FlushSocket(HTTP_REQUEST_ID /*p_request*/)
+HTTPServerMarlin::FlushSocket(HTTP_OPAQUE_ID /*p_request*/)
 {
   return true;
 }

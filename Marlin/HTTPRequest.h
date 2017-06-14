@@ -67,7 +67,6 @@ void HandleAsynchroneousIO(OVERLAPPED* p_overlapped);
 // survive for the asynchronous I/O commands
 using RequestStrings = std::vector<CString>;
 
-
 // Our outstanding request in the server
 class HTTPRequest
 {
@@ -115,7 +114,7 @@ private:
   void SendStreamPart();           // 6) Has send a stream part
 
   // Sub procedures for the handlers
-  // bool CheckAuthentication(CString& p_rawUrl,CString p_authorize,HANDLE& p_token);
+
   // We have read the whole body of a message
   void PostReceive();
   // Add a well known HTTP header to the response structure
@@ -131,7 +130,7 @@ private:
 
   HTTPServer*       m_server;                   // Our server
   bool              m_active     { false   };   // Authentication done: may receive
-  HTTP_REQUEST_ID   m_requestID  { NULL    };   // The request we are processing
+  HTTP_OPAQUE_ID    m_requestID  { NULL    };   // The request we are processing
   PHTTP_REQUEST     m_request    { nullptr };   // Pointer to the request  object
   PHTTP_RESPONSE    m_response   { nullptr };   // Pointer to the response object
   HTTPSite*         m_site       { nullptr };   // Site from the HTTP context

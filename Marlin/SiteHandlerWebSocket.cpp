@@ -78,7 +78,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
     if(Handle(p_message,socket))
     {
       // Handler must **NOT** handle the response sending!
-      HTTP_REQUEST_ID request = p_message->GetRequestHandle();
+      HTTP_OPAQUE_ID request = p_message->GetRequestHandle();
       if(request)
       {
         // Send the response to the client side, confirming that we become a WebSocket

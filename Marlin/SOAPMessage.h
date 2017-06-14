@@ -150,7 +150,7 @@ public:
   void            SetCookie(CString p_name,CString p_value,CString p_metadata = "",bool p_secure = false);
   void            SetCookies(Cookies& p_cookies);
   // Set request Handle
-  void            SetRequestHandle(HTTP_REQUEST_ID p_request);
+  void            SetRequestHandle(HTTP_OPAQUE_ID p_request);
   // Set URL to send message to
   void            SetURL(CString& p_url);
   // Set parts of the URL
@@ -220,7 +220,7 @@ public:
   // Get URL destination
   CString         GetURL() const;
   // Get Request handle
-  HTTP_REQUEST_ID GetRequestHandle() const;
+  HTTP_OPAQUE_ID  GetRequestHandle() const;
   HTTPSite*       GetHTTPSite() const;
   // Get a header by name
   CString         GetHeader(CString p_name);
@@ -379,7 +379,7 @@ protected:
   bool            m_understand    { true  };              // Set "mustUnderstand" to true or false
   // DESTINATION
   CString         m_url;                                  // Full URL of the soap service
-  HTTP_REQUEST_ID m_request       { NULL  };              // Request it must answer
+  HTTP_OPAQUE_ID  m_request       { NULL  };              // Request it must answer
   HTTPSite*       m_site          { nullptr };            // Site for which message is received
   HeaderMap       m_headers;                              // Extra HTTP headers (incoming / outgoing)
   // URL PARTS
@@ -463,12 +463,12 @@ SOAPMessage::GetParameterCount() const
 }
 
 inline void
-SOAPMessage::SetRequestHandle(HTTP_REQUEST_ID p_request)
+SOAPMessage::SetRequestHandle(HTTP_OPAQUE_ID p_request)
 {
   m_request = p_request;
 }
 
-inline HTTP_REQUEST_ID
+inline HTTP_OPAQUE_ID
 SOAPMessage::GetRequestHandle() const
 {
   return m_request;

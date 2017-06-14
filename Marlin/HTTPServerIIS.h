@@ -59,11 +59,11 @@ public:
   // Create a new WebSocket in the subclass of our server
   virtual WebSocket* CreateWebSocket(CString p_uri);
   // Receive the WebSocket stream and pass on the the WebSocket
-  virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_REQUEST_ID p_request);
+  virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request);
   // Send to a WebSocket
-  virtual bool       SendSocket(RawFrame& p_frame,HTTP_REQUEST_ID p_request);
+  virtual bool       SendSocket(RawFrame& p_frame,HTTP_OPAQUE_ID p_request);
   // Flushing a WebSocket intermediate
-  virtual bool       FlushSocket (HTTP_REQUEST_ID p_request);
+  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request);
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
   
@@ -91,7 +91,7 @@ protected:
   // Initialise the servers webroot
   virtual void InitWebroot(CString p_webroot);
   // Used for canceling a WebSocket for an event stream
-  virtual void CancelRequestStream(HTTP_REQUEST_ID p_response);
+  virtual void CancelRequestStream(HTTP_OPAQUE_ID p_response);
 
 private:
   // Finding the impersonation access token
@@ -115,5 +115,5 @@ private:
   void SendResponseError      (IHttpResponse* p_response,CString& p_page,int p_error,const char* p_reason);
 
   // For the handling of the event streams
-  virtual bool SendResponseEventBuffer(HTTP_REQUEST_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
+  virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
 };
