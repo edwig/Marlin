@@ -191,7 +191,7 @@ HTTPURLGroup::StopGroup()
 void
 HTTPURLGroup::RegisterSite(HTTPSite* p_site)
 {
-  CString site = p_site->GetSite();
+  CString site = p_site->GetPrefixURL();
   UrlSiteMap::iterator it = m_sites.find(site);
   if(it != m_sites.end())
   {
@@ -206,7 +206,7 @@ HTTPURLGroup::RegisterSite(HTTPSite* p_site)
 void
 HTTPURLGroup::UnRegisterSite(HTTPSite* p_site)
 {
-  CString site = p_site->GetSite();
+  CString site = p_site->GetPrefixURL();
   UrlSiteMap::iterator it = m_sites.find(site);
   if(it != m_sites.end())
   {

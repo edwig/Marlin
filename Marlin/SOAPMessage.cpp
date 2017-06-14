@@ -944,6 +944,27 @@ SOAPMessage::SetParameter(CString p_name,double p_value)
   return SetParameter(p_name,value);
 }
 
+// Specialized URL: e.g. for Accept headers in RM-protocol
+CString
+SOAPMessage::GetUnAuthorisedURL() const
+{
+  CString url;
+  CString port;
+
+  if((m_secure && m_port!=INTERNET_DEFAULT_HTTPS_PORT)||
+    (!m_secure && m_port!=INTERNET_DEFAULT_HTTP_PORT))
+  {
+    port.Format(":%d",m_port);
+  }
+
+  url.Format("http%s://%s%s%s"
+            ,m_secure ? "s" : ""
+            ,m_server.GetString()
+            ,port.GetString()
+            ,m_absPath.GetString());
+  return url;
+}
+
 #pragma endregion Getting and setting members
 
 #pragma region XMLOutput

@@ -151,6 +151,7 @@ WebServiceClient::Open()
   if(m_logfile == NULL)
   {
     DETAILLOG1("Creating new logfile");
+    m_logOwner = true;
     m_logfile = new LogAnalysis("WebServiceClient");
     m_logfile->SetLogFilename(m_logFilename);
     m_logfile->SetDoLogging(true);

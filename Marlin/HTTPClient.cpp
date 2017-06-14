@@ -429,6 +429,12 @@ HTTPClient::InitializeSingleSignOn()
 void
 HTTPClient::InitLogging()
 {
+  // Something to be done?
+  if(m_initialized)
+  {
+    return;
+  }
+
   // Get parameters from webconfig
   CString file = m_webConfig.GetParameterString ("Logging","Logfile",  "");
   bool logging = m_webConfig.GetParameterBoolean("Logging","DoLogging",false);
@@ -1762,6 +1768,10 @@ bool
 HTTPClient::Send(CString& p_url)
 {
   AutoCritSec lock(&m_sendSection);
+
+  // Init logging. Log from here on
+  InitLogging();
+
   if(SetURL(p_url))
   {
     return Send();
@@ -1774,6 +1784,10 @@ bool
 HTTPClient::Send(CString& p_url,CString& p_body)
 {
   AutoCritSec lock(&m_sendSection);
+
+  // Init logging. Log from here on
+  InitLogging();
+
   if(SetURL(p_url))
   {
     SetBody((void*) p_body.GetString(),p_body.GetLength());
@@ -1789,6 +1803,10 @@ bool
 HTTPClient::Send(CString& p_url,void* p_buffer,unsigned p_length)
 {
   AutoCritSec lock(&m_sendSection);
+
+  // Init logging. Log from here on
+  InitLogging();
+
   if(SetURL(p_url))
   {
     // Test for a reconnect
@@ -1810,6 +1828,9 @@ HTTPClient::Send(CString&    p_url
 {
   AutoCritSec lock(&m_sendSection);
   bool result = false;
+
+  // Init logging. Log from here on
+  InitLogging();
 
   if(SetURL(p_url) == false)
   {
@@ -1861,6 +1882,9 @@ HTTPClient::Send(HTTPMessage* p_msg)
 {
   AutoCritSec lock(&m_sendSection);
   bool result = false;
+
+  // Init logging. Log from here on
+  InitLogging();
 
   if(!p_msg->GetServer().IsEmpty() &&
      !p_msg->GetAbsolutePath().IsEmpty() &&
@@ -1930,6 +1954,9 @@ bool
 HTTPClient::Send(SOAPMessage* p_msg)
 {
   AutoCritSec lock(&m_sendSection);
+
+  // Init logging. Log from here on
+  InitLogging();
 
   // Try to optimize and not re-parse the complete URL
   if(!p_msg->GetServer().IsEmpty() &&
@@ -2155,6 +2182,9 @@ HTTPClient::Send(JSONMessage* p_msg)
   AutoCritSec lock(&m_sendSection);
   bool result = false;
 
+  // Init logging. Log from here on
+  InitLogging();
+
   if(!p_msg->GetServer().IsEmpty() &&
      !p_msg->GetAbsolutePath().IsEmpty() &&
       p_msg->GetPort() != 0)
@@ -2360,6 +2390,9 @@ HTTPClient::SendAsJSON(SOAPMessage* p_msg)
 
   AutoCritSec lock(&m_sendSection);
   bool result = false;
+
+  // Init logging. Log from here on
+  InitLogging();
 
   if(SetURL(url) == false)
   {

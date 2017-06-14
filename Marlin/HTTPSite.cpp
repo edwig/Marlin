@@ -395,7 +395,7 @@ HTTPSite::RemoveSiteFromGroup()
       retCode = HttpRemoveUrlFromUrlGroup(group,uniURL.c_str(),0);
       if(retCode != NO_ERROR)
       {
-        ERRORLOG(retCode,"Cannot remove site from URL group: " + m_site);
+        ERRORLOG(retCode,"Cannot remove site from URL group: " + m_prefixURL);
       }
     }
     if(retCode == NO_ERROR)
@@ -403,7 +403,7 @@ HTTPSite::RemoveSiteFromGroup()
       // Unregister the site
       m_group->UnRegisterSite(this);
 
-      DETAILLOGS("Removed URL site: ",m_site);
+      DETAILLOGS("Removed URL site: ",m_prefixURL);
       return true;
     }
   }
@@ -1094,7 +1094,7 @@ HTTPSite::RM_HandleCreateSequence(SessionAddress& p_address,SOAPMessage* p_messa
   // Message body 
   p_message->SetParameter("Identifier",sequence->m_serverGUID);
   XMLElement* accept = p_message->SetParameter("Accept","");
-  p_message->SetElement(accept,"Address",p_message->GetURL());
+  p_message->SetElement(accept,"Address",p_message->GetUnAuthorisedURL());
 
   ReliableResponse(sequence,p_message);
   return true;

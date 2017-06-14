@@ -219,6 +219,7 @@ public:
   Cookies&        GetCookies();
   // Get URL destination
   CString         GetURL() const;
+  CString         GetUnAuthorisedURL() const;
   // Get Request handle
   HTTP_OPAQUE_ID  GetRequestHandle() const;
   HTTPSite*       GetHTTPSite() const;
