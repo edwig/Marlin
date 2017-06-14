@@ -331,6 +331,7 @@
     <ClInclude Include="HTTPClient.h" />
     <ClInclude Include="HTTPClientTracing.h" />
     <ClInclude Include="HTTPError.h" />
+    <ClInclude Include="HTTPLoglevel.h" />
     <ClInclude Include="HTTPMessage.h" />
     <ClInclude Include="HTTPRequest.h" />
     <ClInclude Include="HTTPServer.h" />

@@ -31,11 +31,12 @@
 // ANALYSIS
 //
 // Logs in the format:
-// YYYY-MM-DD HH:MM:SS Function_name..........Formattingstring
+// YYYY-MM-DD HH:MM:SS Function_name..........Formatted string with info
 //
 //////////////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "HTTPLoglevel.h"
 #include <deque>
 
 constexpr auto ANALYSIS_FUNCTION_SIZE = 48;                            // Size of prefix printing in logfile
@@ -46,6 +47,8 @@ constexpr auto LOGWRITE_CACHE         = 1000;                          // Median
 constexpr auto LOGWRITE_MINCACHE      = 100;                           // Minimum number of lines cached (below is not efficient)
 constexpr auto LOGWRITE_MAXCACHE      = 100000;                        // Maximum number of lines cached (above is too slow)
 constexpr auto LOGWRITE_FORCED        = 4;                             // Every x intervals we force a flush
+constexpr auto LOGWRITE_MAXHEXCHARS   = 64;                            // Max width of a hexadecimal dump view
+constexpr auto LOGWRITE_MAXHEXDUMP    = (32 * 1024);                   // First 32 K of a file or message
 
 // Various types of log events
 enum class LogType
@@ -54,16 +57,6 @@ enum class LogType
  ,LOG_INFO    = 1
  ,LOG_ERROR   = 2
  ,LOG_WARN    = 3
-};
-
-// Destiny for overlapped I/O
-class LogDest
-{
-public:
-  HANDLE   m_file;
-  HANDLE   m_wmiEvent;
-  DWORD*   m_requests;
-  CString* m_buffer;
 };
 
 // Caching list for log-lines
@@ -75,10 +68,16 @@ public:
   LogAnalysis(CString p_name);
  ~LogAnalysis();
 
-  // Log this line:
-  // Intended to be called as
+  // Log this line
+  // Intended to be called as:
   // AnalysisLog(__FUNCTION__,LOG_INFO,true,"My info for the logfile: %s %d",StringParam,IntParam);
   bool    AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,const char* p_format,...);
+
+  // Hexadecimal view of an object
+  // Intended to be called as:
+  // AnalysisHex(__FUNCTION__,"MyMessage",buffer,len);
+  bool    AnalysisHex(const char* p_function,CString p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength = 16);
+
   // Flushing the log file
   void    ForceFlush();
   // Reset to not-used
@@ -86,15 +85,15 @@ public:
 
   // SETTERS
   void    SetLogFilename(CString p_filename,bool p_perUser = false);
-  void    SetDoLogging(bool p_doLogging)       { m_doLogging   = p_doLogging;};
-  void    SetDoTiming (bool p_doTiming)        { m_doTiming    = p_doTiming; };
-  void    SetDoEvents (bool p_doEvents)        { m_doEvents    = p_doEvents; };
+  void    SetLogLevel(int p_logLevel)          { m_logLevel    = p_logLevel; };
+  void    SetDoTiming(bool p_doTiming)         { m_doTiming    = p_doTiming; };
+  void    SetDoEvents(bool p_doEvents)         { m_doEvents    = p_doEvents; };
   void    SetLogRotation(bool p_rotate)        { m_rotate      = p_rotate;   };
-  void    SetCache    (int  p_cache);
-  void    SetInterval (int  p_interval);
+  void    SetCache   (int  p_cache);
+  void    SetInterval(int  p_interval);
 
   // GETTERS
-  bool    GetDoLogging()                       { return m_doLogging;  };
+  bool    GetLogLevel()                        { return m_logLevel;   };
   bool    GetDoEvents()                        { return m_doEvents;   };
   bool    GetDoTiming()                        { return m_doTiming;   };
   CString GetLogFileName()                     { return m_logFileName;};
@@ -117,11 +116,11 @@ private:
   CString CreateUserLogfile(CString p_filename);
   // Writing out a log line
   void    Flush(bool p_all);
-  void    WriteLog(CString p_buffer);
+  void    WriteLog(CString& p_buffer);
 
   // Settings
   CString m_name;                               // For WMI Event viewer
-  bool    m_doLogging   { true  };              // Logging is active or not
+  int     m_logLevel    { HLL_NOLOG };          // Active logging level
   bool    m_doTiming    { true  };              // Prepend date-and-time to log-lines
   bool    m_doEvents    { false };              // Also write to WMI event log
   bool    m_rotate      { false };              // Log rotation for server solutions

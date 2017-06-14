@@ -189,7 +189,7 @@ LogAnalysis::GetCacheSize()
   return m_list.size();
 };
 
-// Intialize our logfile/log event
+// Initialize our logfile/log event
 void
 LogAnalysis::Initialisation()
 {
@@ -207,12 +207,12 @@ LogAnalysis::Initialisation()
   m_initialised = true;
 
   // See if we must do something
-  if(m_doLogging == false)
+  if(m_logLevel == HLL_NOLOG)
   {
     return;
   }
 
-  // Append date time to logfilename
+  // Append date time to log's filename
   if(m_rotate)
   {
     AppendDateTimeToFilename();
@@ -248,7 +248,7 @@ LogAnalysis::Initialisation()
       {
         // Give up. Cannot create a logfile
         m_file = NULL;
-        m_doLogging = false;
+        m_logLevel = HLL_NOLOG;
         return;
       }
     }
@@ -283,7 +283,7 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
   Initialisation();
 
   // Make sure we ARE logging
-  if(m_doLogging == false)
+  if(m_logLevel == HLL_NOLOG)
   {
     return result;
   }
@@ -373,6 +373,73 @@ LogAnalysis::WriteEvent(HANDLE p_eventLog,LogType p_type,CString& p_buffer)
   ReportEvent(p_eventLog,static_cast<WORD>(p_type),0,0,NULL,1,0,lpszStrings,0);
 }
 
+// Hexadecimal view of an object
+bool    
+LogAnalysis::AnalysisHex(const char* p_function,CString p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength /*=16*/)
+{
+  // Only dump in the logfile, not to the MS-Windows event log
+  if(!m_file || m_logLevel < HLL_TRACEDUMP)
+  {
+    return false;
+  }
+
+  // Check parameters
+  if(p_linelength > LOGWRITE_MAXHEXCHARS)
+  {
+    p_linelength = LOGWRITE_MAXHEXCHARS;
+  }
+  if(p_length > LOGWRITE_MAXHEXDUMP)
+  {
+    p_length = LOGWRITE_MAXHEXDUMP;
+  }
+
+  // Multi threaded protection
+  AutoCritSec lock(&m_lock);
+
+  // Name of the object
+  AnalysisLog(p_function,LogType::LOG_TRACE,true,"Hexadecimal view of: %s",p_name.GetString());
+
+  unsigned long  pos    = 0;
+  unsigned char* buffer = static_cast<unsigned char*>(p_buffer);
+
+  while(pos < p_length)
+  {
+    unsigned len = 0;
+    CString hexadLine;
+    CString asciiLine;
+
+    // Format one hexadecimal view line
+    while(pos < p_length && len < p_linelength)
+    {
+      // One byte at the time
+      hexadLine.AppendFormat("%2.2X ",*buffer);
+      if(*buffer)
+      {
+        asciiLine += *buffer;
+      }
+      // Next byte in the buffer
+      ++buffer;
+      ++pos;
+      ++len;
+    }
+
+    // In case of an incomplete last line
+    while(len++ < p_linelength)
+    {
+      hexadLine += "   ";
+    }
+
+    // Add to the list buffer
+    CString line(hexadLine + asciiLine + "\n");
+    m_list.push_back(line);
+  }
+  // Large object now written to the buffer. Force write it
+  ForceFlush();
+
+  return true;
+}
+
+// Force flushing of the logfile
 void
 LogAnalysis::ForceFlush()
 {
@@ -404,12 +471,10 @@ LogAnalysis::Flush(bool p_all)
       // Gather the list in the buffer, destroying the list
       while(!m_list.empty())
       {
-        CString line = m_list.front();
-        buffer += line;
+        buffer += m_list.front();
         m_list.pop_front();
       }
       // Write out the buffer
-      // Overlapped IO returns immediately, so we end the lock
       WriteLog(buffer);
     }
   }
@@ -417,7 +482,7 @@ LogAnalysis::Flush(bool p_all)
 
 // Write out a log line
 void
-LogAnalysis::WriteLog(CString p_buffer)
+LogAnalysis::WriteLog(CString& p_buffer)
 {
   DWORD written = 0L;
   if(!WriteFile(m_file
@@ -464,7 +529,7 @@ LogAnalysis::ReadConfig()
       }
       if(_strnicmp(buffer,"logging=",8) == 0)
       {
-        m_doLogging = atoi(&buffer[8]) > 0;
+        m_logLevel = atoi(&buffer[8]) > 0;
         continue;
       }
       if(_strnicmp(buffer,"rotate=",7) == 0)
@@ -493,6 +558,8 @@ LogAnalysis::ReadConfig()
     fclose(file);
 
     // Check what we just read
+    if(m_logLevel < HLL_NOLOG)             m_logLevel = HLL_NOLOG;
+    if(m_logLevel > HLL_HIGHEST)           m_logLevel = HLL_HIGHEST;
     if(m_cache    < LOGWRITE_MINCACHE)     m_cache    = LOGWRITE_MINCACHE;
     if(m_cache    > LOGWRITE_MAXCACHE)     m_cache    = LOGWRITE_MAXCACHE;
     if(m_interval < LOGWRITE_INTERVAL_MIN) m_interval = LOGWRITE_INTERVAL_MIN;
@@ -533,7 +600,6 @@ LogAnalysis::RunLog()
 }
 
 // Running the main thread of the logfile
-// Expects to see IO_COMPLETION
 void
 LogAnalysis::RunLogAnalysis()
 {
@@ -563,8 +629,8 @@ LogAnalysis::RunLogAnalysis()
   m_logThread = NULL;
 }
 
-// Append date time to logfilename
-// But only if logfile name ends in .txt
+// Append date time to log's filename
+// But only if logfile name ends in .TXT
 // So it is possible to restart a program many times a day
 // and not overwrite last times logging files
 void

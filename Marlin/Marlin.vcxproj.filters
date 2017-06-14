@@ -614,5 +614,8 @@
     <ClInclude Include="ThreadPoolED.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="HTTPLoglevel.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

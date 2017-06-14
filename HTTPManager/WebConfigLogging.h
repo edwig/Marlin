@@ -56,9 +56,7 @@ protected:
   bool        m_useLogging;
   bool        m_useLogTiming;
   bool        m_useLogEvents;
-  bool        m_useLogDetails;
-  bool        m_useTraceData;
-  bool        m_useTraceRequests;
+  bool        m_useLogLevel;
 
   // LOGFILE OVERRIDES
   CString     m_logfile;
@@ -66,25 +64,19 @@ protected:
   bool        m_doLogging;
   bool        m_doTiming;
   bool        m_doEvents;
-  bool        m_doDetails;
-  bool        m_traceData;
-  bool        m_traceRequests;
+  int         m_logLevel;
 
   // Interface items
   CButton     m_buttonLogging;
   CButton     m_buttonTiming;
   CButton     m_buttonEvents;
-  CButton     m_buttonDetails;
+  CComboBox   m_comboLogLevel;
   CButton     m_buttonUseLogfile;
   CButton     m_buttonUseLogCaching;
   CButton     m_buttonUseLogging;
   CButton     m_buttonUseLogTiming;
   CButton     m_buttonUseLogEvents;
-  CButton     m_buttonUseLogDetails;
-  CButton     m_buttonUseTraceData;
-  CButton     m_buttonUseTraceRequests;
-  CButton     m_buttonTraceData;
-  CButton     m_buttonTraceRequests;
+  CButton     m_buttonUseLogLevel;
 
 public:
   afx_msg void OnEnChangeLogfile();
@@ -93,16 +85,12 @@ public:
   afx_msg void OnBnClickedLogging();
   afx_msg void OnBnClickedLogTiming();
   afx_msg void OnBnClickedLogEvents();
-  afx_msg void OnBnClickedLogDetails();
-  afx_msg void OnBnClickedTraceData();
-  afx_msg void OnBnClickedTraceRequests();
+  afx_msg void OnCbnSelchangeLogLevel();
 
   afx_msg void OnBnClickedUseLogfile();
   afx_msg void OnBnClickedUseCaching();
   afx_msg void OnBnClickedUseLogging();
   afx_msg void OnBnClickedUseLogTiming();
   afx_msg void OnBnClickedUseLogEvents();
-  afx_msg void OnBnClickedUseLogDetails();
-  afx_msg void OnBnClickedUseTraceData();
-  afx_msg void OnBnClickedUseTraceRequests();
+  afx_msg void OnBnClickedUseLogLevel();
 };
