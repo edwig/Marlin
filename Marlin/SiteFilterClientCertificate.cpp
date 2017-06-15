@@ -222,7 +222,7 @@ SiteFilterClientCertificate::CheckClientCertificate()
     }
     byName = true;
   }
-  if(m_site->GetHTTPServer()->GetDetailedLogging())
+  if(m_site->GetHTTPServer()->GetLogLevel() >= HLL_LOGGING)
   {
     SITE_DETAILLOGV("Client Certificate is correct. Name: %s Thumbprint: %s",byName ? "OK" : "",byThumb ? "OK" : "");
   }

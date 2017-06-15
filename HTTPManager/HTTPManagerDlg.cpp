@@ -1073,7 +1073,7 @@ HTTPManagerDlg::OnBnClickedSiteWebConfig()
   CString filenm = WebConfig::GetSiteConfig(prefix);
 
   WebConfigDlg config;
-  config.SetSiteConfig(m_absPath,filenm);
+  config.SetSiteConfig(prefix,filenm);
   config.DoModal();
 }
 

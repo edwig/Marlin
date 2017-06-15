@@ -287,7 +287,7 @@ void
 HTTPSiteMarlin::LogSettings()
 {
   // Nothing to do
-  if(m_server->GetDetailedLogging() == false)
+  if(m_server->GetLogLevel() < HLL_LOGGING)
   {
     return;
   }

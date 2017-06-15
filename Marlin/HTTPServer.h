@@ -202,10 +202,13 @@ public:
   void       SetEventRetryConnection(ULONG p_milliseconds);
   // OPTIONAL: Set HTTP Queue length
   void       SetQueueLength(ULONG p_length);
-  // OPTIONAL: Set (detailed) logging of the server components
-  void       SetDetailedLogging(bool p_detail);
   // OPTIONAL: Sent a BOM in the event stream
   void       SetByteOrderMark(bool p_mark);
+  // OPTIONAL: Set (detailed) logging of the server components
+  // DEPRECATED: Do no longer use this interface!
+  void       SetDetailedLogging(bool p_detail);
+  // OPTIONAL: Set (detailed) logging of the server components
+  void       SetLogLevel(int p_logLevel);
 
   // GETTERS
 
@@ -242,6 +245,8 @@ public:
   // Getting the error report object
   ErrorReport* GetErrorReport();
   // Get the fact that we do detailed logging
+  int         GetLogLevel();
+  // DEPRECATED old method of gettin the logging
   bool        GetDetailedLogging();
   // Has sub-sites registered
   bool        GetHasSubsites();
@@ -372,6 +377,11 @@ protected:
   void      SetError(int p_error);
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
+  // Logging and tracing
+  void      TraceResponse(PHTTP_RESPONSE p_response);
+  void      TraceKnownHeader(unsigned p_number,const char* p_value);
+  void      LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer);
+  void      LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length);
 
   // Protected data
   CString                 m_name;                   // How the outside world refers to me
@@ -390,9 +400,9 @@ protected:
   ULONG                   m_secondsToLive  { 0 };   // Seconds to live in the cache
   ThreadPool              m_pool;                   // Our threadpool for the server
   WebConfig               m_webConfig;              // Webconfig from current directory
-  bool                    m_detail   { false   };   // Do detailed logging
   LogAnalysis*            m_log      { nullptr };   // Logging object
   bool                    m_logOwner { false   };   // Server owns the log
+  int                     m_logLevel { HLL_NOLOG }; // Detailed logging of the server
   HPFCounter              m_counter;                // High performance counter
   SendHeader              m_sendHeader { SendHeader::HTTP_SH_HIDESERVER }; // Server header to send
   CString                 m_configServerName;       // Server header name from web.config
@@ -536,16 +546,10 @@ HTTPServer::GetRequestQueue()
   return m_requestQueue;
 }
 
-inline void
-HTTPServer::SetDetailedLogging(bool p_detail)
+inline int
+HTTPServer::GetLogLevel()
 {
-  m_detail = p_detail;
-}
-
-inline bool
-HTTPServer::GetDetailedLogging()
-{
-  return m_detail;
+  return m_logLevel;
 }
 
 inline CRITICAL_SECTION* 

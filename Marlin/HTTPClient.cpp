@@ -61,10 +61,8 @@ static char THIS_FILE[] = __FILE__;
 // Logging macro's
 #undef  DETAILLOG
 #undef  ERRORLOG
-#undef  TRACELOG
-#define DETAILLOG(text,...)   if(m_detail    && m_log) m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, true, text,__VA_ARGS__)
-#define TRACELOG(text)        if(m_traceData && m_log) m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,text);
-#define ERRORLOG(text,...)    if(m_log) m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,true,text,__VA_ARGS__)
+#define DETAILLOG(text,...)   if(MUSTLOG(HLL_LOGGING) && m_log) m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, true,text,__VA_ARGS__)
+#define ERRORLOG(text,...)    if(MUSTLOG(HLL_ERRORS)  && m_log) m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,true,text,__VA_ARGS__)
 
 // HTTP_STATUS_CONTINUE        -> No server yet, or server (temporarily down)
 // HTTP_STATUS_OK              -> Server found
@@ -132,8 +130,6 @@ HTTPClient::Reset()
   m_relax           = 0;
   m_ssltls          = WINHTTP_FLAG_SECURE_PROTOCOL_MARLIN;
   m_soapCompress    = false;
-  m_traceData       = false;
-  m_traceRequest    = false;
   m_httpCompression = false;
   m_verbTunneling   = false;
   m_terminalServices= false;
@@ -192,6 +188,7 @@ HTTPClient::Reset()
     m_logOwner = false;
   }
   m_log = NULL;
+  m_logLevel = HLL_NOLOG;
 
   // Reset status
   m_initialized = false;
@@ -376,7 +373,7 @@ HTTPClient::Initialize()
   DETAILLOG("HTTP Timeouts set [%d/%d/%d/%d]",m_timeoutResolve,m_timeoutConnect,m_timeoutSend,m_timeoutReceive);
 
   // Prepare a tracing agent
-  if(m_traceRequest)
+  if(MUSTLOG(HLL_LOGBODY) && !m_trace)
   {
     m_trace = new HTTPClientTracing(this);
   }
@@ -441,7 +438,7 @@ HTTPClient::InitLogging()
   bool timing  = m_webConfig.GetParameterBoolean("Logging","DoTiming", true);
   bool events  = m_webConfig.GetParameterBoolean("Logging","DoEvents", false);
   int  cache   = m_webConfig.GetParameterInteger("Logging","Cache",    100);
-  bool detail  = m_webConfig.GetParameterBoolean("Logging","DoDetails",false);
+  int  level   = m_webConfig.GetParameterBoolean("Logging","LogLevel", m_logLevel);
 
   // Check for a logging object
   if(m_log == NULL && !file.IsEmpty() && logging)
@@ -472,9 +469,10 @@ HTTPClient::InitLogging()
   }
 
   // Detailed logging for client
-  if(detail)
+  if (m_webConfig.HasParameter("Logging","LogLevel"))
   {
-    m_detail = true;
+    m_logLevel = level;
+    m_log->SetLogLevel(m_logLevel);
   }
 
   // Now "Logging.config" can override these settings.
@@ -519,8 +517,6 @@ HTTPClient::InitSettings()
   m_certPreset     =             m_webConfig.GetParameterBoolean("Client","CertificatePreset",m_certPreset);
   m_certStore      =             m_webConfig.GetParameterString ("Client","CertificateStore", m_certStore);
   m_certName       =             m_webConfig.GetParameterString ("Client","CertificateName",  m_certName);
-  m_traceData      =             m_webConfig.GetParameterBoolean("Client","TraceData",        m_traceData);
-  m_traceRequest   =             m_webConfig.GetParameterBoolean("Client","TraceRequest",     m_traceRequest);
   m_corsOrigin     =             m_webConfig.GetParameterString ("Client","CORS_Origin",      m_corsOrigin);
 
   // Test environments must often do with relaxed certificate settings
@@ -590,7 +586,19 @@ HTTPClient::InitSettings()
                                      break;
   }
 
+  // Logging level
+  CString loglevel;
+  switch(m_logLevel)
+  {
+    case HLL_NOLOG:     loglevel = "No logging";          break;
+    case HLL_ERRORS:    loglevel = "Errors and warnings"; break;
+    case HLL_LOGGING:   loglevel = "Info logging";        break;
+    case HLL_TRACE:     loglevel = "Tracing and bodies";  break;
+    case HLL_TRACEDUMP: loglevel = "Tracing bodies, headers and hexdump"; break;
+  }
+
   // Logging of our settings
+  DETAILLOG("Client logging level                 : %s",loglevel.GetString());
   DETAILLOG("Client retry counts                  : %d",m_retries);
   DETAILLOG("Client agent string                  : %s",m_agent.GetString());
   DETAILLOG("CLient compresses soap output        : %s",m_soapCompress   ? "yes" : "no");
@@ -620,8 +628,6 @@ HTTPClient::InitSettings()
   DETAILLOG("Client forces sending in UTF-16      : %s",m_sendUnicode   ? "yes" : "no");
   DETAILLOG("Client forces sending of Unicode BOM : %s",m_sendBOM       ? "yes" : "no");
   DETAILLOG("Client forces HTTP VERB Tunneling    : %s",m_verbTunneling ? "yes" : "no");
-  DETAILLOG("Data will be traced in detail        : %s",m_traceData     ? "yes" : "no");
-  DETAILLOG("Requests will be traced in detail    : %s",m_traceRequest  ? "yes" : "no");
   DETAILLOG("Client will use CORS origin header   : %s",m_corsOrigin.GetString());
 }
 
@@ -775,6 +781,71 @@ HTTPClient::GetWebsocketHandle()
 }
 
 //////////////////////////////////////////////////////////////////////////
+// 
+// OLD logging interface
+//
+//////////////////////////////////////////////////////////////////////////
+
+bool
+HTTPClient::GetDetailLogging()
+{
+  TRACE("WARNING: Rewrite your program with GetLogLevel()\n");
+  return (m_logLevel > HLL_ERRORS);
+}
+
+bool
+HTTPClient::GetTraceRequest()
+{
+  TRACE("WARNING: Rewrite your program with GetLogLevel()\n");
+  return (m_logLevel >= HLL_TRACE);
+}
+
+bool
+HTTPClient::GetTraceData()
+{
+  TRACE("WARNING: Rewrite your program with GetLogLevel()\n");
+  return (m_logLevel >= HLL_TRACEDUMP);
+}
+
+void 
+HTTPClient::SetDetailLogging(bool p_detail)
+{
+  TRACE("WARNING: Rewrite your program with SetLogLevel()\n");
+  m_logLevel = p_detail ? HLL_LOGGING : HLL_NOLOG;
+}
+
+void 
+HTTPClient::SetTraceRequest(bool p_trace)
+{
+  TRACE("WARNING: Rewrite your program with SetLogLevel()\n");
+  m_logLevel = p_trace ? HLL_TRACE : HLL_LOGGING;
+}
+
+void
+HTTPClient::SetTraceData(bool p_trace)
+{
+  TRACE("WARNING: Rewrite your program with SetLogLevel()\n");
+  m_logLevel = p_trace ? HLL_TRACEDUMP : HLL_LOGGING;
+}
+
+// New interface for loglevel
+
+void 
+HTTPClient::SetLogLevel(int p_logLevel)
+{
+  // Check for boundaries
+  if(p_logLevel < HLL_NOLOG)   p_logLevel = HLL_NOLOG;
+  if(p_logLevel > HLL_HIGHEST) p_logLevel = HLL_HIGHEST;
+
+  // Remember our loglevel for the client AND the logfile
+  m_logLevel = p_logLevel;
+  if (m_log)
+  {
+    m_log->SetLogLevel(p_logLevel);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
 //
 // Sending our request, and everything it depends on
 // (authorization, proxies etc)
@@ -867,7 +938,7 @@ HTTPClient::AddSecurityOptions()
       ErrorLog(__FUNCTION__,"Security protocols NOT set. Error [%d] %s");
       return;
     }
-    if(m_detail)
+    if(MUSTLOG(HLL_LOGGING))
     {
       CString allow;
       if(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_SSL2)   allow  = "SSL 2.0, "; 
@@ -1605,11 +1676,10 @@ HTTPClient::ReceiveResponseDataBuffer()
   }
   while (dwSize > 0);
 
-  // DEBUGGING
+  // Handeling the result
   if(m_response)
   {
     m_response[m_responseLength] = 0;
-    TRACELOG((char*)m_response);
   }
 }
 
@@ -1655,13 +1725,6 @@ HTTPClient::ReceivePushEvents()
         // String ending
         response[dwRead] = 0;
 
-        // Receiving SSE event stream. Log if logging is 'on'
-        if(m_detail && m_log)
-        {
-          DETAILLOG("Reading response data block. Size: %d",dwRead);
-          m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,(const char*)response);
-        }
-
         // Store the read-in data
         if(m_response)
         {
@@ -1699,14 +1762,24 @@ HTTPClient::ReceivePushEvents()
                                return;
       }
 
-      // Receiving SSE event stream. Log if logging is 'on'
-      if(m_detail && m_log)
+      // Receiving SSE event stream. See if we must trace the results
+      if(MUSTLOG(HLL_LOGBODY) && m_log)
       {
-        m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,false,CString("SSE received: ") + CString(m_response));
+        m_trace->TraceBody("SSE",m_response,m_responseLength);
+        if(MUSTLOG(HLL_TRACEDUMP))
+        {
+          m_trace->TraceHexa("SSE",m_response,m_responseLength);
+        }
       }
 
       // Parse to event responses
       m_eventSource->Parse(m_response,m_responseLength);
+
+      // In case of logging, log the highest new event ID
+      if(MUSTLOG(HLL_LOGGING) && m_log)
+      {
+        m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"SSE received. Last ID = %u",m_eventSource->GetLastEventID());
+      }
 
       // Clean the queue if needed and parsed completely
       if(m_responseLength == 0 && m_response)
@@ -2076,7 +2149,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   m_cookies = p_msg->GetCookies();
   
   // Put in logfile
-  DETAILLOG("Outgoing SOAP message:\n%s",soap.GetString());
+  DETAILLOG("Outgoing SOAP message: %s",p_msg->GetSoapAction().GetString());
 
   // Now go send our XML
   bool result = Send();
@@ -2136,9 +2209,13 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
 
   // Keep response as new body. Might contain an error!!
-  DETAILLOG("Incoming SOAP answer:\n%s",answer.GetString());
   p_msg->ParseMessage(answer);
 
+  CString soapAction = p_msg->GetSoapAction();
+  if(!soapAction.IsEmpty())
+  {
+    DETAILLOG("Incoming SOAP answer: %s",soapAction.GetString());
+  }
   // Keep cookies
   p_msg->SetCookies(m_resultCookies);
 
@@ -2267,7 +2344,7 @@ HTTPClient::Send(JSONMessage* p_msg)
   m_cookies = p_msg->GetCookies();
 
   // Put in logfile
-  DETAILLOG("Outgoing JSON message:\n%s",json.GetString());
+  DETAILLOG("Outgoing JSON message");
   
   // NOW GO SEND IT
   result = Send();
@@ -2358,7 +2435,7 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   }
 
   // Keep response as new body. Might contain an error!!
-  DETAILLOG("Incoming JSON answer:\n%s",answer.GetString());
+  DETAILLOG("Incoming JSON answer");
   p_msg->ParseMessage(answer,encoding);
 
   // Keep cookies
@@ -2419,7 +2496,7 @@ HTTPClient::SendAsJSON(SOAPMessage* p_msg)
   m_cookies = p_msg->GetCookies();
 
   // Put in logfile
-  DETAILLOG("Outgoing SOAP->JSON 'GET'\n%s",url.GetString());
+  DETAILLOG("Outgoing SOAP->JSON: GET %s",url.GetString());
 
   // Go get our JSON response
   result = Send();
@@ -2522,7 +2599,7 @@ HTTPClient::Send()
   }
 
   // Before we try anything: let's log the connection in full
-  if(m_detail)
+  if(MUSTLOG(HLL_LOGGING))
   {
     LogTheSend(server,port);
   }
@@ -2611,9 +2688,9 @@ HTTPClient::Send()
   }
 
   // Request status is now known, trace it?
-  if(m_traceRequest)
+  if(MUSTLOG(HLL_LOGBODY))
   {
-    m_trace->Trace("BEFORE",m_session,m_request);
+    TraceTheSend();
   }
 
   // variables for the main loop
@@ -2808,11 +2885,6 @@ HTTPClient::Send()
         }
       }
     }
-    // Request status after the call (including security options)
-    if(m_traceRequest)
-    {
-      m_trace->Trace("AFTER",m_session,m_request);
-    }
   } // while retry
 
   // Log error after retries are up..
@@ -2843,6 +2915,16 @@ HTTPClient::Send()
     }
   }
 
+  // Response gotten: trace it?
+  if(MUSTLOG(HLL_LOGBODY) && m_response)
+  {
+    m_trace->TraceBody("Incoming response",(BYTE*) m_response,m_responseLength);
+    if(MUSTLOG(HLL_TRACEDUMP))
+    {
+      m_trace->TraceHexa("Incoming response",m_response,m_responseLength);
+    }
+  }
+
   // Close our request
   WinHttpCloseHandle(m_request);
   m_request = NULL;
@@ -2860,13 +2942,13 @@ HTTPClient::Send()
 void
 HTTPClient::LogTheSend(wstring& p_server,int p_port)
 {
-  USES_CONVERSION;
-
   // See if we have anything to do
-  if(m_log == nullptr || !m_detail)
+  if(m_log == nullptr || m_logLevel < HLL_LOGGING)
   {
     return;
   }
+
+  USES_CONVERSION;
   CString proxy;
   CString server = CW2A(p_server.c_str());
 
@@ -2885,6 +2967,52 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
                     ,m_port
                     ,m_url.GetString()
                     ,proxy.GetString());
+}
+
+void
+HTTPClient::TraceTheSend()
+{
+  // See if we have anything to do
+  if(m_log == nullptr || m_logLevel < HLL_LOGBODY)
+  {
+    return;
+  }
+
+  if(MUSTLOG(HLL_TRACE))
+  {
+    m_trace->Trace("BEFORE",m_session,m_request);
+  }
+
+  if(m_body)
+  {
+    m_trace->TraceBody("Outgoing request",(BYTE*) m_body,m_bodyLength);
+    if (MUSTLOG(HLL_TRACEDUMP))
+    {
+      m_trace->TraceHexa("Outgoing",m_body,m_bodyLength);
+    }
+  }
+  if(m_buffer && m_buffer->GetLength())
+  {
+    if(!m_buffer->GetFileName().IsEmpty())
+    {
+      DETAILLOG("Sending file: %s",m_buffer->GetFileName().GetString());
+    }
+    else
+    {
+      uchar* buffer = nullptr;
+      size_t length = 0;
+      m_buffer->GetBufferCopy(buffer,length);
+
+      m_trace->TraceBody("Outgoing request",(BYTE*) buffer,(unsigned long) length);
+      if (MUSTLOG(HLL_TRACEDUMP))
+      {
+        m_trace->TraceHexa("Outgoing",buffer,(unsigned long) length);
+      }
+
+      // Delete buffer copy
+      delete[] buffer;
+    }
+  }
 }
 
 bool

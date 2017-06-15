@@ -99,10 +99,10 @@ unsigned long g_streaming_limit = STREAMING_LIMIT;
 unsigned long g_compress_limit  = COMPRESS_LIMIT;
 
 // Logging macro's
-#define DETAILLOG1(text)          if(m_detail && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(m_detail && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(m_detail && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define WARNINGLOG(text,...)      if(m_detail && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
+#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
 #define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
 #define HTTPERROR(code,text)      HTTPError(__FUNCTION__,code,text)
 
@@ -181,9 +181,38 @@ HTTPServer::GetLastError()
 }
 
 void
+HTTPServer::SetLogLevel(int p_logLevel)
+{
+  // Check boundaries
+  if (p_logLevel < HLL_NOLOG)   p_logLevel = HLL_NOLOG;
+  if (p_logLevel > HLL_HIGHEST) p_logLevel = HLL_HIGHEST;
+
+  // Keep the loglevel
+  m_logLevel = p_logLevel;
+  if(m_log)
+  {
+    m_log->SetLogLevel(p_logLevel);
+  }
+}
+
+void
+HTTPServer::SetDetailedLogging(bool p_detail)
+{
+  TRACE("WARNING: Use SetLogLevel()\n");
+  m_logLevel = p_detail ? HLL_LOGGING : HLL_NOLOG;
+}
+
+bool
+HTTPServer::GetDetailedLogging()
+{
+  TRACE("WARNING: Use GetLogLevel()\n");
+  return (m_logLevel>=HLL_LOGGING);
+}
+
+void
 HTTPServer::DetailLog(const char* p_function,LogType p_type,const char* p_text)
 {
-  if(m_log && m_detail)
+  if(m_log && MUSTLOG(HLL_LOGGING))
   {
     m_log->AnalysisLog(p_function,p_type,false,p_text);
   }
@@ -192,7 +221,7 @@ HTTPServer::DetailLog(const char* p_function,LogType p_type,const char* p_text)
 void
 HTTPServer::DetailLogS(const char* p_function,LogType p_type,const char* p_text,const char* p_extra)
 {
-  if(m_log && m_detail)
+  if(m_log && MUSTLOG(HLL_LOGGING))
   {
     CString text(p_text);
     text += p_extra;
@@ -204,7 +233,7 @@ HTTPServer::DetailLogS(const char* p_function,LogType p_type,const char* p_text,
 void
 HTTPServer::DetailLogV(const char* p_function,LogType p_type,const char* p_text,...)
 {
-  if(m_log && m_detail)
+  if(m_log && MUSTLOG(HLL_LOGGING))
   {
     va_list varargs;
     va_start(varargs,p_text);
@@ -579,7 +608,7 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
       else if (p_request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeSslProtocol)
       {
         // Only exists on Windows 10 / Server 2016
-        if (GetDetailedLogging())
+        if (GetLogLevel() >= HLL_TRACE)
         {
           PHTTP_SSL_PROTOCOL_INFO sslInfo = (PHTTP_SSL_PROTOCOL_INFO) p_request->pRequestInfo[ind].pInfo;
           LogSSLConnection(sslInfo);
@@ -648,7 +677,7 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
       p_message->SetSecurityLevel   (site->GetEncryptionLevel());
       p_message->SetSecurityPassword(site->GetEncryptionPassword());
     }
-    DETAILLOGS("Send SOAP response:\n",p_message->GetSoapMessage());
+    DETAILLOG1("Send SOAP response");
   }
 
   // Convert to a HTTP response
@@ -657,7 +686,7 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
   if(p_message->GetErrorState())
   {
     answer->SetStatus(HTTP_STATUS_BAD_REQUEST);
-    DETAILLOGS("Send SOAP FAULT response:\n", p_message->GetSoapMessage());
+    DETAILLOG1("Send SOAP FAULT response");
   }
 
   // Send the HTTP Message as response
@@ -692,7 +721,7 @@ HTTPServer::SendResponse(JSONMessage* p_message)
   }
   else
   {
-    DETAILLOGS("Send JSON response:\n",p_message->GetJsonMessage());
+    DETAILLOG1("Send JSON response");
     // Convert to a HTTP response
     HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
     // Send the HTTP Message as response
@@ -1103,14 +1132,22 @@ HTTPServer::SendEvent(EventStream* p_stream
   ++p_stream->m_chunks;
 
   // Tell what we just did
-  if(m_detail && m_log && p_stream->m_alive)
+  if(MUSTLOG(HLL_LOGGING) && m_log && p_stream->m_alive)
   {
     CString text;
     text.Format("Sent event id: %d to client(s) on URL: ",p_event->m_id);
     text += p_stream->m_baseURL;
-    text += "\n";
-    text += p_event->m_data;
+    if(MUSTLOG(HLL_LOGBODY))
+    {
+      text += "\n";
+      text += p_event->m_data;
+    }
     DETAILLOG1(text);
+
+    if(MUSTLOG(HLL_TRACEDUMP))
+    {
+      m_log->AnalysisHex(__FUNCTION__,"SSE",(void*) p_event->m_data.GetString(),p_event->m_data.GetLength());
+    }
   }
 
   // Ready with the event
@@ -1606,6 +1643,102 @@ HTTPServer::UnRegisterHTTPRequest(HTTPRequest* p_request)
     {
       m_requests.erase(it);
       return;
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// BODY LOGGING & TRACING
+//
+//////////////////////////////////////////////////////////////////////////
+
+void
+HTTPServer::TraceKnownHeader(unsigned p_number,const char* p_value)
+{
+  // See if known header is 'given'
+  if(!p_value || *p_value == 0)
+  {
+    return;
+  }
+
+  // Header fields are defined in HTTPMessage.cpp!!
+  CString line = p_number < 20 ? header_fields[p_number] : header_response[p_number];
+  line += ": ";
+  line += p_value;
+  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,line);
+}
+
+void
+HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
+{
+  // Print the principal first protocol line
+  CString line;
+  line.Format("HTTP/%d.%d %d %s"
+             ,p_response->Version.MajorVersion
+             ,p_response->Version.MinorVersion
+             ,p_response->StatusCode
+             ,p_response->pReason);
+  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,line);
+
+  // Print all 'known' HTTP headers
+  for (unsigned ind = 0; ind < HttpHeaderResponseMaximum; ++ind)
+  {
+    TraceKnownHeader(ind,p_response->Headers.KnownHeaders[ind].pRawValue);
+  }
+
+  // Print all 'unknown' headers
+  for(unsigned ind = 0;ind < p_response->Headers.UnknownHeaderCount; ++ind)
+  {
+    CString uheader;
+    uheader  = p_response->Headers.pUnknownHeaders->pName;
+    uheader += ": ";
+    uheader += p_response->Headers.pUnknownHeaders->pRawValue;
+    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,uheader);
+  }
+}
+
+void
+HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer)
+{
+  if(MUSTLOG(HLL_TRACEDUMP) && m_log)
+  {
+    TraceResponse(p_response);
+  }
+  if(p_buffer->GetFileName().IsEmpty())
+  {
+    uchar* buffer = nullptr;
+    size_t length = 0;
+    p_buffer->GetBufferCopy(buffer,length);
+
+    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,(const char*) buffer);
+    if (MUSTLOG(HLL_TRACEDUMP))
+    {
+      m_log->AnalysisHex(__FUNCTION__,"Outgoing",buffer,(unsigned)length);
+    }
+
+    // Delete buffer copy
+    delete[] buffer;
+  }
+  else
+  {
+    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Uploading FILE: %s",p_buffer->GetFileName().GetString());
+  }
+}
+
+void
+HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length)
+{
+  if(MUSTLOG(HLL_TRACEDUMP) && m_log)
+  {
+    TraceResponse(p_response);
+  }
+  if(MUSTLOG(HLL_LOGBODY) && m_log)
+  {
+    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,(const char*)p_buffer);
+    if(MUSTLOG(HLL_TRACEDUMP))
+    {
+      m_log->AnalysisHex(__FUNCTION__,"Outgoing",p_buffer,p_length);
     }
   }
 }

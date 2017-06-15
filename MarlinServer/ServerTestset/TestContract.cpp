@@ -333,7 +333,7 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
 //////////////////////////////////////////////////////////////////////////
 
 int 
-TestJsonServer(HTTPServer* p_server,CString p_contract)
+TestJsonServer(HTTPServer* p_server,CString p_contract,int p_loglevel)
 {
   CString  url;
   CString  name("MarlinExtra");
@@ -367,7 +367,7 @@ TestJsonServer(HTTPServer* p_server,CString p_contract)
   AddOperations(*server,p_contract);
 
   // Do the logging
-  server->SetDetailedLogging(true);
+  server->SetLogLevel(p_loglevel);
 
   // Register for de-allocation
   p_server->RegisterService(server);
@@ -392,7 +392,7 @@ TestJsonServer(HTTPServer* p_server,CString p_contract)
 }
 
 int 
-TestWebServiceServer(HTTPServer* p_server,CString p_contract)
+TestWebServiceServer(HTTPServer* p_server,CString p_contract,int p_loglevel)
 {
   int result = 0;
 
@@ -420,7 +420,7 @@ TestWebServiceServer(HTTPServer* p_server,CString p_contract)
   }
 
   // Do the logging
-  server->SetDetailedLogging(true);
+  server->SetLogLevel(p_loglevel);
 
   // Checking of the field values of incoming services
   server->SetCheckFieldValues(true);

@@ -28,7 +28,6 @@
 #pragma once
 #include "TestPorts.h"
 
-// Printing details of the tests
 extern bool doDetails;
 
 // Forward declaration
@@ -44,8 +43,8 @@ void WaitForKey();
 // In detail files
 int Test_CrackURL(void);
 int Test_HTTPTime(void);
-int TestWebServiceServer (HTTPServer* p_server,CString p_contract);
-int TestJsonServer       (HTTPServer* p_server,CString p_contract); 
+int TestWebServiceServer (HTTPServer* p_server,CString p_contract,int p_loglevel);
+int TestJsonServer       (HTTPServer* p_server,CString p_contract,int p_loglevel); 
 int TestBaseSite         (HTTPServer* P_server);
 int TestPushEvents       (HTTPServer* p_server);
 int TestInsecure         (HTTPServer* p_server);

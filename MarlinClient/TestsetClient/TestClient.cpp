@@ -69,14 +69,14 @@ CString hostname("localhost");
 static LogAnalysis* g_log = nullptr;
 
 HTTPClient*
-StartClient()
+StartClient(int p_loglevel)
 {
   CString logfileName = WebConfig::GetExePath() + "ClientLog.txt";
 
   // Create log file and turn logging 'on'
   g_log = new LogAnalysis("TestHTTPClient");
   g_log->SetLogFilename(logfileName,true);
-  g_log->SetDoLogging(true);
+  g_log->SetLogLevel(p_loglevel);
   g_log->SetDoTiming(true);
   g_log->SetDoEvents(false);
   g_log->SetCache(1000);
@@ -84,7 +84,7 @@ StartClient()
   // Create client and connect logging object
   HTTPClient* client = new HTTPClient();
   client->SetLogging(g_log);
-  client->SetDetailLogging(true);
+  client->SetLogLevel(p_loglevel);
 
   return client;
 }
@@ -106,18 +106,19 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
 {
   int nRetCode = 0;
   int errors   = 0;
+  int loglevel = HLL_LOGBODY; // HLL_LOGGING / HLL_LOGBODY / HLL_TRACE / HLL_TRACEDUMP
 
   HMODULE hModule = ::GetModuleHandle(NULL);
   if(hModule == NULL)
   {
-    _tprintf(_T("Fatal Error: GetModuleHandle failed\n"));
+    printf("Fatal Error: GetModuleHandle failed\n");
     nRetCode = 1;
     return nRetCode;
   }
-  // initialize MFC and print and error on failure
+  // initialize MFC and print an error on failure
   if (!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
   {
-    _tprintf(_T("Fatal Error: MFC initialization failed\n"));
+    printf("Fatal Error: MFC initialization failed\n");
     nRetCode = 1;
   }
   else
@@ -126,7 +127,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     printf("=========================\n");
     printf("\n");
 
-    HTTPClient* client = StartClient();
+    HTTPClient* client = StartClient(loglevel);
 
     if(argc >= 2 && _stricmp(argv[1],"/ws") == 0)
     {

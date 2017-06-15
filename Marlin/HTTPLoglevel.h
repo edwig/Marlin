@@ -44,4 +44,4 @@
 // So you can write "   if(MUSTLOG(HLL_LOGBODY)) .... etc"
 // And thusly optimize the performance of your software
 
-#define MUSTLOG(x)  (m_loglevel >= (x))
+#define MUSTLOG(x)  (m_logLevel >= (x))

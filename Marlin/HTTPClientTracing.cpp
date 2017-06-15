@@ -56,7 +56,7 @@ void
 HTTPClientTracing::Trace(char* p_when,HINTERNET p_session,HINTERNET p_request)
 {
   // See if we can log our tracing work to the log file
-  if(m_log == nullptr || m_log->GetDoLogging() == false)
+  if(m_log == nullptr || m_log->GetLogLevel() < HLL_TRACE)
   {
     return;
   }
@@ -346,4 +346,20 @@ HTTPClientTracing::QueryString(HINTERNET p_handle,DWORD p_option,char* p_optionN
     TRACE("Cannot get the option name: %s",p_optionName);
   }
   return theString;
+}
+
+// Trace of incoming or outgoing body
+void
+HTTPClientTracing::TraceBody(CString p_name,BYTE* p_body,unsigned long p_length)
+{
+  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,p_name);
+  m_log->BareStringLog((const char*) p_body,p_length);
+}
+
+// Trace in HEXVIEW of the body of the first LOGWRITE_MAXHEXDUMP bytes of the object
+// Standard this is the first 32K of the message body
+void
+HTTPClientTracing::TraceHexa(CString p_name,void* p_body,unsigned long p_length)
+{
+  m_log->AnalysisHex(__FUNCTION__,p_name,p_body,p_length);
 }

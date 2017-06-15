@@ -208,7 +208,7 @@ int TestContract(HTTPClient* p_client,bool p_json)
     // Running in the context of an existing client
     client.SetHTTPClient(p_client);
     client.SetLogAnalysis(p_client->GetLogging());
-    client.SetDetailLogging(p_client->GetDetailLogging());
+    client.SetLogLevel(p_client->GetLogLevel());
   }
   else
   {
@@ -218,13 +218,13 @@ int TestContract(HTTPClient* p_client,bool p_json)
     // Create log file and turn logging 'on'
     LogAnalysis log("TestHTTPClient");
     log.SetLogFilename(logfileName,true);
-    log.SetDoLogging(true);
+    log.SetLogLevel(HLL_LOGGING);
     log.SetDoTiming(true);
     log.SetDoEvents(false);
     log.SetCache(1000);
 
     client.SetLogAnalysis(&log);
-    client.SetDetailLogging(true);
+    client.SetLogLevel(HLL_LOGGING);
   }
 
   // Do we do JSON translation

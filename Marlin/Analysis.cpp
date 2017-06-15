@@ -164,6 +164,20 @@ LogAnalysis::SetLogFilename(CString p_filename,bool p_perUser /*=false*/)
   }
 };
 
+// Old interface: Logging is on or off
+bool
+LogAnalysis::GetDoLogging()
+{
+  return m_logLevel >= HLL_ERRORS;
+}
+
+// Old interface, simply set logging or turn it of
+void
+LogAnalysis::SetDoLogging(bool p_logging)
+{
+  m_logLevel = p_logging ? HLL_LOGGING : HLL_NOLOG;
+}
+
 void
 LogAnalysis::SetCache(int p_cache)
 {
@@ -288,6 +302,12 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
     return result;
   }
 
+  // Check on the loglevel
+  if(m_logLevel == HLL_ERRORS && (p_type == LogType::LOG_INFO || p_type == LogType::LOG_TRACE))
+  {
+    return result;
+  }
+
   // Timing position in the buffer
   int position = 0;
 
@@ -325,7 +345,7 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
   logBuffer += p_function;
   if(logBuffer.GetLength() < position + ANALYSIS_FUNCTION_SIZE)
   {
-    logBuffer.Append("                                          "
+    logBuffer.Append("                                            "
                     ,position + ANALYSIS_FUNCTION_SIZE - logBuffer.GetLength());
   }
 
@@ -428,6 +448,8 @@ LogAnalysis::AnalysisHex(const char* p_function,CString p_name,void* p_buffer,un
     {
       hexadLine += "   ";
     }
+    asciiLine.Replace("\r","#");
+    asciiLine.Replace("\n","#");
 
     // Add to the list buffer
     CString line(hexadLine + asciiLine + "\n");
@@ -438,6 +460,31 @@ LogAnalysis::AnalysisHex(const char* p_function,CString p_name,void* p_buffer,un
 
   return true;
 }
+
+// Use sparringly!
+// Dump string buffer in the log
+void
+LogAnalysis::BareStringLog(const char* p_buffer,int p_length)
+{
+  // Multi threaded protection
+  AutoCritSec lock(&m_lock);
+
+  CString buffer;
+  char* pointer = buffer.GetBufferSetLength(p_length + 1);
+  memcpy_s(pointer,p_length+1,p_buffer,p_length);
+  pointer[p_length] = 0;
+  buffer.ReleaseBufferSetLength(p_length);
+
+  // Test for newline
+  if(buffer.Right(1) != "\n")
+  {
+    buffer += "\n";
+  }
+
+  // Keep the line
+  m_list.push_back(buffer);
+}
+
 
 // Force flushing of the logfile
 void

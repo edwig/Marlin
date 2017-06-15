@@ -108,6 +108,7 @@ public:
   bool        GetWithCredentials();
   ULONG       GetReconnectionTime();
   bool        GetSerialize();
+  ULONG       GetLastEventID();
 
   // Public standard listeners
   LPFN_EVENTHANDLER  m_onopen;      // OPTIONAL
@@ -190,4 +191,10 @@ inline bool
 EventSource::GetSerialize()
 {
   return m_serialize;
+}
+
+inline ULONG
+EventSource::GetLastEventID()
+{
+  return m_lastEventID;
 }

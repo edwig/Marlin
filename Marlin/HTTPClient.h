@@ -39,6 +39,7 @@
 #include "Cookie.h"
 #include "FindProxy.h"
 #include "HTTPMessage.h"
+#include "HTTPLoglevel.h"
 #include <winhttp.h>
 #include <vector>
 #include <string>
@@ -218,14 +219,11 @@ public:
   void SetEncryptionLevel(XMLEncryption p_level)  { m_securityLevel     = p_level;    };
   void SetEncryptionPassword(CString p_word)      { m_enc_password      = p_word;     };
   void SetSingleSignOn(bool p_sso)                { m_sso               = p_sso;      };
-  void SetDetailLogging(bool p_detail)            { m_detail            = p_detail;   };
   void SetSoapCompress(bool p_compress)           { m_soapCompress      = p_compress; };
   void SetReadAllHeaders(bool p_readAll)          { m_readAllHeaders    = p_readAll;  };
   void SetSslTlsSettings(unsigned p_ssltls)       { m_ssltls            = p_ssltls;   }; // WINHTTP_FLAG_SECURE_PROTOCOL_ALL
   void SetSendBOM(bool p_bom)                     { m_sendBOM           = p_bom;      };
   void SetVerbTunneling(bool p_tunnel)            { m_verbTunneling     = p_tunnel;   };
-  void SetTraceData(bool p_trace)                 { m_traceData         = p_trace;    };
-  void SetTraceRequest(bool p_trace)              { m_traceRequest      = p_trace;    };
   void SetClientCertificatePreset(bool p_preset)  { m_certPreset        = p_preset;   };
   void SetClientCertificateName(CString p_name)   { m_certName          = p_name;     };
   void SetClientCertificateStore(CString p_store) { m_certStore         = p_store;    };
@@ -235,6 +233,10 @@ public:
   bool SetClientCertificateThumbprint(CString p_store,CString p_thumbprint);
   void SetCORSOrigin(CString p_origin);
   bool SetCORSPreFlight(CString p_method,CString p_headers);
+  void SetLogLevel(int p_logLevel);
+  void SetDetailLogging(bool p_detail);
+  void SetTraceData(bool p_trace);
+  void SetTraceRequest(bool p_trace);
 
   // GETTERS
   CString       GetURL()                    { return m_url;               }; // Full URL
@@ -265,7 +267,6 @@ public:
   bool          GetTerminalServices()       { return m_terminalServices;  };
   XMLEncryption GetEncryptionLevel()        { return m_securityLevel;     };
   CString       GetEncryptionPassword()     { return m_enc_password;      };
-  bool          GetDetailLogging()          { return m_detail;            };
   bool          GetSingleSignOn()           { return m_sso;               };
   bool          GetSoapCompress()           { return m_soapCompress;      };
   bool          GetReadAllHeaders()         { return m_readAllHeaders;    };
@@ -278,12 +279,14 @@ public:
   bool          GetClientCertificatePreset(){ return m_certPreset;        };
   CString       GetClientCertificateName()  { return m_certName;          };
   CString       GetClientCertificateStore() { return m_certStore;         };
-  bool          GetTraceData()              { return m_traceData;         };
-  bool          GetTraceRequest()           { return m_traceRequest;      };
   bool          GetHTTPCompression()        { return m_httpCompression;   };
   CString       GetCORSOrigin()             { return m_corsOrigin;        };
   unsigned      GetWSClosingTimeout()       { return m_closingTimeout;    };
   unsigned      GetWSKeepAlive()            { return m_keepalive;         };
+  int           GetLogLevel()               { return m_logLevel;          };
+  bool          GetDetailLogging();
+  bool          GetTraceData();
+  bool          GetTraceRequest();
     
   // GETTERS ONLY
 
@@ -342,6 +345,7 @@ private:
   void     AddMessageHeaders(SOAPMessage* p_message);
   void     AddMessageHeaders(JSONMessage* p_message);
   void     LogTheSend(wstring& p_server,int p_port);
+  void     TraceTheSend();
   void     ProcessResultCookies();
   CString  GetResultHeader(DWORD p_header,DWORD p_index);
   DWORD    ChooseAuthScheme(DWORD p_dwSupportedSchemes);
@@ -458,10 +462,8 @@ private:
   WebConfig     m_webConfig;                                      // Current webconfig file
   LogAnalysis*  m_log             { nullptr };                    // Current logging
   bool          m_logOwner        { false   };                    // Owner of the current logging
-  bool          m_detail          { false   };                    // Detail logging or not
-  bool          m_traceData       { false   };                    // Tracing of data
+  int           m_logLevel        { HLL_NOLOG };                  // Loglevel of the client
   HPFCounter    m_counter;                                        // High Performance counter
-  bool          m_traceRequest    { false   };                    // Default no tracing of the request
   HTTPClientTracing* m_trace      { nullptr };                    // The tracing object
   // WebSocket
   bool          m_websocket       { false   };                    // Try WebSocket handshake

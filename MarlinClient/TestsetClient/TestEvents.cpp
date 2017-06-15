@@ -159,7 +159,7 @@ TestEvents(HTTPClient* p_client)
 
   HTTPClient client;
   client.SetLogging(p_client->GetLogging());
-  client.SetDetailLogging(p_client->GetDetailLogging());
+  client.SetLogLevel(p_client->GetLogLevel());
 
   EventSource* source = client.CreateEventSource(url);
   source->m_onopen    = OnOpen;

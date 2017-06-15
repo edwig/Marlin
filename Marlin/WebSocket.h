@@ -201,7 +201,7 @@ public:
   // Setting the logfile
   void SetLogfile(LogAnalysis* p_logfile);
   // Set logging to on or off
-  void SetLogging(bool p_logging);
+  void SetLogLevel(int p_logLevel);
   // Set the OnOpen handler
   void SetOnOpen   (LPFN_SOCKETHANDLER p_onOpen);
   // Set the OnMessage handler
@@ -223,7 +223,7 @@ public:
   CString GetExtensions()     { return m_extensions;   };
   USHORT  GetClosingError()   { return m_closingError; };
   CString GetClosingMessage() { return m_closing;      };
-  bool    GetDoLogging()      { return m_doLogging;    };
+  int     GetLogLevel()       { return m_logLevel;     };
   LogAnalysis* GetLogfile()   { return m_logfile;      };
 
   // Add a URI parameter
@@ -264,7 +264,7 @@ protected:
   CString m_closing;                  // Closing error text
   ULONG   m_pingTimeout { 30000 };    // How long we wait for a pong after a ping
   bool    m_pongSeen    { false };    // Seen a pong for a ping
-  bool    m_doLogging   { false };    // Do we do the logging?
+  int     m_logLevel  {HLL_NOLOG};    // Logging level for the websocket
   DWORD   m_messageNumber { 0   };    // Last message number
   // Complex objects
   FragmentStack m_stack;              // Incoming raw fragments (stand-alone)
@@ -309,9 +309,9 @@ WebSocket::SetLogfile(LogAnalysis* p_logfile)
 }
 
 inline void
-WebSocket::SetLogging(bool p_logging)
+WebSocket::SetLogLevel(int p_logLevel)
 {
-  m_doLogging = p_logging;
+  m_logLevel = p_logLevel;
 }
 
 inline void 

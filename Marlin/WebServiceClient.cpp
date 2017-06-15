@@ -118,6 +118,36 @@ WebServiceClient::SetHTTPClient(HTTPClient* p_client)
   m_owner = false;
 }
 
+void
+WebServiceClient::SetLogLevel(int p_logLevel)
+{
+  // Check boundaries
+  if(p_logLevel < HLL_NOLOG)   p_logLevel = HLL_NOLOG;
+  if(p_logLevel > HLL_HIGHEST) p_logLevel = HLL_HIGHEST;
+
+  // Setting the loglevel
+  m_logLevel = p_logLevel;
+  if (m_logfile)
+  {
+    m_logfile->SetLogLevel(p_logLevel);
+  }
+}
+
+// Old loglevel interface
+bool
+WebServiceClient::GetDetailLogging()
+{
+  TRACE("WARNING: Rewrite your program with GetLogLevel()\n");
+  return (m_logLevel > HLL_ERRORS);
+}
+
+void
+WebServiceClient::SetDetailLogging(bool p_detail)
+{
+  TRACE("WARNING: Rewrite your program with SetLogLevel()\n");
+  m_logLevel = p_detail ? HLL_LOGGING : HLL_NOLOG;
+}
+
 bool
 WebServiceClient::Open()
 {
@@ -147,20 +177,19 @@ WebServiceClient::Open()
     m_httpClient->SetTimeoutReceive(m_timeoutReceive);
   }
 
-
   if(m_logfile == NULL)
   {
     DETAILLOG1("Creating new logfile");
     m_logOwner = true;
     m_logfile = new LogAnalysis("WebServiceClient");
     m_logfile->SetLogFilename(m_logFilename);
-    m_logfile->SetDoLogging(true);
+    m_logfile->SetLogLevel(HLL_LOGGING);
     m_logfile->SetDoTiming(true);
     m_logfile->SetDoEvents(false);
     m_logfile->SetCache(1000);
 
     m_httpClient->SetLogging(m_logfile);
-    m_httpClient->SetDetailLogging(m_detail);
+    m_httpClient->SetLogLevel(m_logfile->GetLogLevel());
   }
 
   // Propagate URL

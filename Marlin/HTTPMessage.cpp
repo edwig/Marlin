@@ -742,6 +742,20 @@ char* header_fields[HttpHeaderMaximum] =
   /* 40 */  ,"user-agent"
 };
 
+char* header_response[10]
+{
+  /* 20 */   "accept-ranges"
+  /* 21 */  ,"age"
+  /* 22 */  ,"etag"
+  /* 23 */  ,"location"
+  /* 24 */  ,"proxy-authenticate"
+  /* 25 */  ,"retry-after"
+  /* 26 */  ,"server"
+  /* 27 */  ,"set-cookie"
+  /* 28 */  ,"vary"
+  /* 29 */  ,"www-authenticate"
+};
+
 void 
 HTTPMessage::SetAllHeaders(PHTTP_REQUEST_HEADERS p_headers)
 {

@@ -43,10 +43,10 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Logging macro's
-#define DETAILLOG1(text)          if(m_detail && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(m_detail && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(m_detail && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define WARNINGLOG(text,...)      if(m_detail && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
+#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
 #define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
 #define HTTPERROR(code,text)      HTTPError(__FUNCTION__,code,text)
 
@@ -299,7 +299,7 @@ HTTPServerMarlin::InitLogging()
   }
   CString file = m_log->GetLogFileName();
   int  cache   = m_log->GetCache();
-  bool logging = m_log->GetDoLogging();
+  int  logging = m_log->GetLogLevel();
   bool timing  = m_log->GetDoTiming();
   bool events  = m_log->GetDoEvents();
 
@@ -309,7 +309,7 @@ HTTPServerMarlin::InitLogging()
   timing   = m_webConfig.GetParameterBoolean("Logging","DoTiming", timing);
   events   = m_webConfig.GetParameterBoolean("Logging","DoEvents", events);
   cache    = m_webConfig.GetParameterInteger("Logging","Cache",    cache);
-  m_detail = m_webConfig.GetParameterBoolean("Logging","Detail",   m_detail);
+  logging  = m_webConfig.GetParameterInteger("Logging","LogLevel", m_logLevel);
 
   // Use if overridden in web.config
   if(!file.IsEmpty())
@@ -317,7 +317,7 @@ HTTPServerMarlin::InitLogging()
     m_log->SetLogFilename(file);
   }
   m_log->SetCache(cache);
-  m_log->SetDoLogging(logging);
+  m_log->SetLogLevel(m_logLevel = logging);
   m_log->SetDoTiming(timing);
   m_log->SetDoEvents(events);
 }

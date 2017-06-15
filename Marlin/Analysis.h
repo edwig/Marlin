@@ -78,6 +78,9 @@ public:
   // AnalysisHex(__FUNCTION__,"MyMessage",buffer,len);
   bool    AnalysisHex(const char* p_function,CString p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength = 16);
 
+  // Use sparringly!
+  void    BareStringLog(const char* p_buffer,int p_length);
+
   // Flushing the log file
   void    ForceFlush();
   // Reset to not-used
@@ -85,6 +88,7 @@ public:
 
   // SETTERS
   void    SetLogFilename(CString p_filename,bool p_perUser = false);
+  void    SetDoLogging(bool p_logging);
   void    SetLogLevel(int p_logLevel)          { m_logLevel    = p_logLevel; };
   void    SetDoTiming(bool p_doTiming)         { m_doTiming    = p_doTiming; };
   void    SetDoEvents(bool p_doEvents)         { m_doEvents    = p_doEvents; };
@@ -93,7 +97,8 @@ public:
   void    SetInterval(int  p_interval);
 
   // GETTERS
-  bool    GetLogLevel()                        { return m_logLevel;   };
+  bool    GetDoLogging();
+  int     GetLogLevel()                        { return m_logLevel;   };
   bool    GetDoEvents()                        { return m_doEvents;   };
   bool    GetDoTiming()                        { return m_doTiming;   };
   CString GetLogFileName()                     { return m_logFileName;};
@@ -110,9 +115,9 @@ public:
 
 private:
   void    Initialisation();
+  void    ReadConfig();
   void    AppendDateTimeToFilename();
   void    RemoveLastMonthsFiles(struct tm& today);
-  void    ReadConfig();
   CString CreateUserLogfile(CString p_filename);
   // Writing out a log line
   void    Flush(bool p_all);

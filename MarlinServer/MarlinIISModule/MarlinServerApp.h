@@ -44,6 +44,7 @@ private:
   bool CorrectlyStarted();
   void ReportAfterTesting();
 
+  int  m_logLevel  { HLL_LOGGING };  // HLL_NOLOG / HLL_ERRORS / HLL_LOGGING / HLL_LOGBODY / HLL_TRACE / HLL_TRACEDUMP
   int  m_errors    { 0     };
   bool m_doDetails { false };
   bool m_running   { false };

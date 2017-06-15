@@ -120,8 +120,6 @@ public:
   void    SetErrorReport(ErrorReport* p_errorReport);
   // OPTIONAL:  Set a logfile name (if no LogAnalysis given)
   void    SetLogFilename(CString p_logFilename);
-  // OPTIONAL:  Set detailed logging
-  void    SetDetailedLogging(bool p_logging);
   // OPTIONAL:  Set create as a subsite from another site
   void    SetSubsite(bool p_subsite)                 { m_subsite = p_subsite;              };
   // OPTIONAL:  Set the WSDLCache to generate a WSDL file
@@ -166,6 +164,11 @@ public:
   void    SetGetHandler(SiteHandler* p_handler);
   // OPTIONAL: Set a PUT handler, but beware!
   void    SetPutHandler(SiteHandler* p_handler);
+  // OPTIONAL:  Set detailed logging
+  // DEPRECATED:Old logging interface
+  void    SetDetailedLogging(bool p_logging);
+  // OPTIONAL: Set the log level
+  void    SetLogLevel(int p_logLevel);
 
   // GETTERS
 
@@ -187,7 +190,6 @@ public:
   bool          GetJsonSoapTranslation(){ return m_jsonTranslation;   };
   LogAnalysis*  GetLogfile()            { return m_log;               };
   ErrorReport*  GetErrorReport()        { return m_errorReport;       };
-  bool          GetDetailedLogging()    { return m_doDetailedLogging; };
   bool          GetAsynchronous()       { return m_asyncMode;         };
   CString       GetAuthentScheme()      { return m_authentScheme;     };
   CString       GetAuthentRealm()       { return m_authentRealm;      };
@@ -205,6 +207,7 @@ public:
   SiteHandler*  GetGetHandler()         { return m_getHandler;        };
   SiteHandler*  GetPutHandler()         { return m_putHandler;        };
   int           GetCommandCode(CString p_commandName);
+  bool          GetDetailedLogging();
 
   // CALLBACKS FOR THE SITEHANDLERS
 
@@ -244,7 +247,7 @@ protected:
   bool            m_logOwner          { false };
   bool            m_poolOwner         { false };
   bool            m_generateWsdl      { true  };
-  bool            m_doDetailedLogging { false };
+  int             m_logLevel          { HLL_NOLOG };
   CString         m_externalWsdl; 
   // Server settings
   bool            m_isRunning         { false };

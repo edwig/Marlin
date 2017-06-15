@@ -73,8 +73,8 @@ MarlinServerApp::InitInstance()
 
   // Starting objects and sites
   TestPushEvents(m_appServer);
-  TestWebServiceServer(m_appServer,contract);
-  TestJsonServer(m_appServer,contract);
+  TestWebServiceServer(m_appServer,contract,m_logLevel);
+  TestJsonServer(m_appServer,contract,m_logLevel);
   TestSecureSite(m_appServer);
   TestClientCertificate(m_appServer);
   TestCookies(m_appServer);

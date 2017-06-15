@@ -101,8 +101,8 @@ WebConfig::GetSiteConfig(CString p_prefixURL)
   {
     name = "Site" + name.Mid(pos + 2);
     name.Replace(':','-');
-    name.Replace('+','-');
-    name.Replace('*','-');
+//  name.Replace('+','-');    // Strong can appear in the filename
+    name.Replace('*','!');    // Weak appears as '!' in the filename
     name.Replace('.','_');
     name.Replace('/','-');
     name.Replace('\\','-');

@@ -104,7 +104,7 @@ public:
   CString   GetSecurityPassword()        { return m_encryptionPassword;     };
   bool      GetSoapCompress()            { return m_soapCompress;           };
   bool      GetJsonSoapTranslation()     { return m_jsonTranslation;        };
-  bool      GetDetailLogging()           { return m_detail;                 };
+  int       GetLogLevel()                { return m_logLevel;               };
   CString   GetLogFilename()             { return m_logFilename;            };
   ReliableType  GetReliableType()        { return m_reliableType;           };
   XMLEncryption GetSecurityLevel()       { return m_encryptionLevel;        };
@@ -112,6 +112,7 @@ public:
   HTTPClient*   GetHTTPClient()          { return m_httpClient;             };
   WSDLCache&    GetWSDLCache()           { return m_wsdl;                   };
   CString       GetWSDLFilename()        { return m_wsdlFile;               };
+  bool      GetDetailLogging();
 
   // General Setters
   void      SetHTTPClient(HTTPClient* p_client);
@@ -127,9 +128,10 @@ public:
   void      SetSecurityLevel(XMLEncryption p_encryption)    { m_encryptionLevel    = p_encryption;  };
   void      SetSecurityPassword(CString p_password)         { m_encryptionPassword = p_password;    };
   void      SetSoapCompress(bool p_compress)                { m_soapCompress       = p_compress;    };
-  void      SetDetailLogging(bool p_detail)                 { m_detail             = p_detail;      };
   void      SetWSDLFilename(CString p_file)                 { m_wsdlFile           = p_file;        };
   void      SetJsonSoapTranslation(bool p_json)             { m_jsonTranslation    = p_json;        };
+  void      SetLogLevel(int p_logLevel);
+  void      SetDetailLogging(bool p_detail);
 
 private:
   void      MinimumCheck();
@@ -176,7 +178,7 @@ private:
   LogAnalysis*  m_logfile             { nullptr   };           // Logfile
   CString       m_logFilename;                                 // Filename for creating our own logfile
   bool          m_logOwner            { false     };           // Owner of the logfile
-  bool          m_detail              { false     };           // Do detailed logging
+  int           m_logLevel            { HLL_NOLOG };           // Loglevel of the client
   bool          m_soapCompress        { false     };           // Compress SOAP webservices
 
   // Sendstatus

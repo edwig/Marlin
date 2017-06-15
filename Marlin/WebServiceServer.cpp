@@ -249,9 +249,38 @@ WebServiceServer::SetLogAnalysis(LogAnalysis* p_log)
       m_log = nullptr;
       m_logOwner = false;
     }
-    m_log = p_log;
+    m_log      = p_log;
+    m_logLevel = p_log->GetLogLevel();
   }
 }
+
+// OLD loglevel interface
+bool
+WebServiceServer::GetDetailedLogging()
+{
+  return m_logLevel >= HLL_LOGGING;
+}
+
+// OPTIONAL: Set the log level
+void
+WebServiceServer::SetLogLevel(int p_logLevel)
+{
+  // Check boundaries
+  if(p_logLevel < HLL_NOLOG)   p_logLevel = HLL_NOLOG;
+  if(p_logLevel > HLL_HIGHEST) p_logLevel = HLL_HIGHEST;
+
+  // keep the loglevel
+  m_logLevel = p_logLevel;
+  if(m_log)
+  {
+    m_log->SetLogLevel(p_logLevel);
+  }
+  if(m_httpServer)
+  {
+    m_httpServer->SetLogLevel(p_logLevel);
+  }
+}
+
 
 // OPTIONAL:  Set external WSDL Caching
 void
@@ -306,14 +335,14 @@ WebServiceServer::SetLogFilename(CString p_logFilename)
 void
 WebServiceServer::SetDetailedLogging(bool p_logging)
 {
-  m_doDetailedLogging = p_logging;
+  m_logLevel = p_logging ? HLL_LOGGING : HLL_NOLOG;
   if(m_log)
   {
-    m_log->SetDoLogging(p_logging);
+    m_log->SetLogLevel(m_logLevel);
   }
   if(m_httpServer)
   {
-    m_httpServer->SetDetailedLogging(p_logging);
+    m_httpServer->SetLogLevel(m_logLevel);
   }
 }
 
@@ -409,7 +438,7 @@ WebServiceServer::Run()
     }
   }
   // Default is logging in file, propagate that setting
-  m_log->SetDoLogging(m_doDetailedLogging);
+  m_log->SetLogLevel(m_logLevel);
 
   // Start right type of server if not already given.
   if(m_httpServer == nullptr)
@@ -426,7 +455,7 @@ WebServiceServer::Run()
   }
   // Try to set our caching policy
   m_httpServer->SetCachePolicy(m_cachePolicy,m_cacheSeconds);
-  m_httpServer->SetDetailedLogging(m_doDetailedLogging);
+  m_httpServer->SetLogLevel(m_logLevel);
   // Use our error reporting facility
   if(m_errorReport)
   {

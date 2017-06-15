@@ -128,8 +128,5 @@ int TestClientCertificate(HTTPClient* p_client)
   p_client->SetClientCertificateStore("");
   p_client->SetClientCertificateName("");
 
-  // Reset the tracing option
-  p_client->SetTraceRequest(false);
-
   return result ? 0 : 1;
 }

@@ -47,9 +47,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define DETAILLOG1(text)          if(m_doLogging && m_logfile) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(m_doLogging && m_logfile) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(m_doLogging && m_logfile) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
 #define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
 
 //////////////////////////////////////////////////////////////////////////
@@ -251,7 +251,7 @@ WebSocket::GetParameter(CString p_name)
 void
 WebSocket::DetailLog(const char* p_function,LogType p_type,const char* p_text)
 {
-  if(m_doLogging && m_logfile)
+  if(MUSTLOG(HLL_LOGGING) && m_logfile)
   {
     m_logfile->AnalysisLog(p_function,p_type,false,p_text);
   }
@@ -260,7 +260,7 @@ WebSocket::DetailLog(const char* p_function,LogType p_type,const char* p_text)
 void
 WebSocket::DetailLogS(const char* p_function,LogType p_type,const char* p_text,const char* p_extra)
 {
-  if(m_doLogging && m_logfile)
+  if(MUSTLOG(HLL_LOGGING) && m_logfile)
   {
     CString text(p_text);
     text += p_extra;
@@ -272,7 +272,7 @@ WebSocket::DetailLogS(const char* p_function,LogType p_type,const char* p_text,c
 void
 WebSocket::DetailLogV(const char* p_function,LogType p_type,const char* p_text,...)
 {
-  if(m_doLogging && m_logfile)
+  if(MUSTLOG(HLL_LOGGING) && m_logfile)
   {
     va_list varargs;
     va_start(varargs,p_text);
@@ -1590,7 +1590,7 @@ WebSocketClient::OpenSocket()
 
   // Connect the logging
   client.SetLogging(m_logfile);
-  client.SetDetailLogging(m_doLogging);
+  client.SetLogLevel(m_logLevel);
 
   // GET this URI (ws[s]://resource) !!
   client.SetVerb("GET");

@@ -65,7 +65,8 @@ static char THIS_FILE[] = __FILE__;
 // Global objects of this test program
 int  totalErrors = 0;
 bool doDetails   = false;
-bool doLogging   = true;
+int  logLevel    = HLL_LOGBODY;  // HLL_NOLOG / HLL_ERRORS / HLL_LOGGING / HLL_LOGBODY / HLL_TRACE / HLL_TRACEDUMP
+
 // Global critical section to print to the 'stdio' stream
 CRITICAL_SECTION std_stream;
 
@@ -147,14 +148,15 @@ bool StartServer(HTTPServerSync*& p_server
 
   // Put a logfile on the server
   p_logfile->SetLogFilename(logfileName,false);
-  p_logfile->SetDoLogging(doLogging);
+  p_logfile->SetLogLevel(logLevel);
   p_logfile->SetDoEvents(false);
   p_logfile->SetDoTiming(true);
   p_logfile->SetCache(500);
   p_logfile->SetLogRotation(true);
-  p_server->SetDetailedLogging(doLogging);
-  // connect
+
+  // connect log to the server
   p_server->SetLogging(p_logfile);
+  p_server->SetLogLevel(logLevel);
 
   // SETTING THE MANDATORY MEMBERS
 
@@ -240,7 +242,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           printf("\n");
 
           // Test the Interface
-          nRetCode = TestWebServiceServer(NULL,contract);
+          nRetCode = TestWebServiceServer(NULL,contract,logLevel);
         }
       }
       else
@@ -283,8 +285,8 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
 
          // Test the WebServiceServer program generation
          CString contract = "http://interface.marlin.org/testing/";
-         errors += TestJsonServer(server,contract);
-         errors += TestWebServiceServer(server,contract);
+         errors += TestJsonServer(server,contract,logLevel);
+         errors += TestWebServiceServer(server,contract,logLevel);
 
           // See if we should wait for testing to occur
           if(errors)

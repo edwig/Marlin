@@ -51,7 +51,7 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
   m_site->SetCleanup(this);
 
   // Show our SOAP message in the log
-  if(m_site->GetHTTPServer()->GetDetailedLogging())
+  if(m_site->GetHTTPServer()->GetLogLevel() >= HLL_LOGBODY)
   {
     SITE_DETAILLOGS("Received POST message:\n",p_message->GetBody());
   }

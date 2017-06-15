@@ -39,7 +39,12 @@ public:
   HTTPClientTracing(HTTPClient* p_client);
  ~HTTPClientTracing();
 
+  // Trace of all the settings of the session and the request handle
   void Trace(char* p_when,HINTERNET p_session,HINTERNET p_request);
+  // Trace of incoming or outgoing body
+  void TraceBody(CString p_name,BYTE* p_body,unsigned long p_length);
+  // Trace in HEXVIEW of the body
+  void TraceHexa(CString p_name,void* p_body,unsigned long p_length);
 
 private:
   bool    QueryBool  (HINTERNET p_handle,DWORD p_option,BOOL*  p_bool,   char* p_optionName);

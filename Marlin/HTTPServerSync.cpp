@@ -42,10 +42,10 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Logging macro's
-#define DETAILLOG1(text)          if(m_detail && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(m_detail && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(m_detail && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define WARNINGLOG(text,...)      if(m_detail && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
+#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
 #define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
 #define HTTPERROR(code,text)      HTTPError(__FUNCTION__,code,text)
 
@@ -1127,9 +1127,9 @@ HTTPServerSync::SendResponseBufferParts(PHTTP_RESPONSE  p_response
 }
 
 void      
-HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE   p_response
-                                        ,HTTP_OPAQUE_ID  p_request
-                                        ,FileBuffer*      p_buffer)
+HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE p_response
+                                      ,HTTP_OPAQUE_ID p_request
+                                      ,FileBuffer*    p_buffer)
 {
   DWORD  result    = 0;
   DWORD  bytesSent = 0;
@@ -1216,11 +1216,11 @@ HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE   p_response
 }
 
 void      
-HTTPServerSync::SendResponseError(PHTTP_RESPONSE  p_response
-                                   ,HTTP_OPAQUE_ID p_request
-                                   ,CString&        p_page
-                                   ,int             p_error
-                                   ,const char*     p_reason)
+HTTPServerSync::SendResponseError(PHTTP_RESPONSE p_response
+                                 ,HTTP_OPAQUE_ID p_request
+                                 ,CString&       p_page
+                                 ,int            p_error
+                                 ,const char*    p_reason)
 {
   DWORD result = 0;
   DWORD bytesSent = 0;
@@ -1320,7 +1320,14 @@ HTTPServerSync::InitEventStream(EventStream& p_stream)
   }
   else
   {
-    DETAILLOGS("HTTP Send 200 OK ",init);
+    if(MUSTLOG(HLL_LOGBODY))
+    {
+      DETAILLOGS("HTTP Send 200 OK ",init);
+    }
+    else
+    {
+      DETAILLOG1("HTTP Send 200 OK");
+    }
   }
   return (result == NO_ERROR);
 }

@@ -151,7 +151,7 @@ WebConfigLogging::ReadWebConfig(WebConfig& config)
   m_doLogging     = config.GetParameterBoolean("Logging","DoLogging",    false);
   m_doTiming      = config.GetParameterBoolean("Logging","DoTiming",     false);
   m_doEvents      = config.GetParameterBoolean("Logging","DoEvents",     false);
-  m_logLevel      = config.GetParameterBoolean("Logging","LogLevel",         0);
+  m_logLevel      = config.GetParameterInteger("Logging","LogLevel",         0);
 
   // INIT THE CHECKBOXES
   m_buttonLogging.SetCheck(m_doLogging);

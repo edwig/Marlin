@@ -183,7 +183,7 @@ TestWebSocket(LogAnalysis* p_log)
 
   // Connect our logging
   socket->SetLogfile(p_log);
-  socket->SetLogging(p_log->GetDoLogging());
+  socket->SetLogLevel(p_log->GetLogLevel());
 
   // Connect our handlers
   socket->SetOnOpen   (OnOpenWebsocket);
