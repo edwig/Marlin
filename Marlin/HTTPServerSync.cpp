@@ -983,6 +983,10 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
     // Reset the last error
     SetError(NO_ERROR);
   }
+
+  // Possibly log and trace what we just sent
+  LogTraceResponse(&response,buffer);
+
   // Remove unknown header information
   delete [] unknown;
 
@@ -1154,7 +1158,7 @@ HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE p_response
     SendResponseError(p_response,p_request,m_clientErrorPage,413,"Request entity too large");
     // Error state
     ERRORLOG(ERROR_INVALID_PARAMETER,"File to send is too big (>4G)");
-    // Close the filehandle
+    // Close the file handle
     p_buffer->CloseFile();
     return;
   }
@@ -1262,6 +1266,8 @@ HTTPServerSync::SendResponseError(PHTTP_RESPONSE p_response
   else
   {
     DETAILLOGV("SendHttpResponse (serverpage) Bytes sent: %d",bytesSent);
+    // Possibly log & trace what we just sent
+    LogTraceResponse(p_response,(unsigned char*)sending.GetString(),sending.GetLength());
   }
 }
 
@@ -1320,24 +1326,18 @@ HTTPServerSync::InitEventStream(EventStream& p_stream)
   }
   else
   {
-    if(MUSTLOG(HLL_LOGBODY))
-    {
-      DETAILLOGS("HTTP Send 200 OK ",init);
-    }
-    else
-    {
-      DETAILLOG1("HTTP Send 200 OK");
-    }
+    // Log & Trace what we just sent
+    LogTraceResponse(&p_stream.m_response,(unsigned char*) init.GetString(),init.GetLength());
   }
   return (result == NO_ERROR);
 }
 
 // Sending a chunk to an event stream
 bool
-HTTPServerSync::SendResponseEventBuffer(HTTP_OPAQUE_ID  p_requestID
-                                         ,const char*      p_buffer
-                                         ,size_t           p_length
-                                         ,bool             p_continue /*=true*/)
+HTTPServerSync::SendResponseEventBuffer(HTTP_OPAQUE_ID p_requestID
+                                       ,const char*    p_buffer
+                                       ,size_t         p_length
+                                       ,bool           p_continue /*=true*/)
 {
   DWORD  result    = 0;
   DWORD  bytesSent = 0;
@@ -1369,6 +1369,8 @@ HTTPServerSync::SendResponseEventBuffer(HTTP_OPAQUE_ID  p_requestID
   else
   {
     DETAILLOGV("HttpSendResponseEntityBody [%d] bytes sent",p_length);
+    LogTraceResponse(nullptr,(unsigned char*)p_buffer,p_length);
+
     // Final closing of the connection
     if(p_continue == false)
     {

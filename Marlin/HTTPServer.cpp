@@ -1649,12 +1649,99 @@ HTTPServer::UnRegisterHTTPRequest(HTTPRequest* p_request)
 
 //////////////////////////////////////////////////////////////////////////
 //
-// BODY LOGGING & TRACING
+// REQUEST: BODY LOGGING & TRACING
 //
 //////////////////////////////////////////////////////////////////////////
 
 void
-HTTPServer::TraceKnownHeader(unsigned p_number,const char* p_value)
+HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
+{
+  // _HTTP_REQUEST_V1
+
+  CString context;
+  context.Format("%lX",p_request->UrlContext);
+
+  CString httpVersion;
+  httpVersion.Format("HTTP/%d.%d",p_request->Version.MajorVersion,p_request->Version.MinorVersion);
+
+  //
+  // The request verb.
+  //
+  // HTTP_VERB Verb;
+
+  CString verb;
+  if(p_request->UnknownVerbLength)
+  {
+    verb = p_request->pUnknownVerb;
+  }
+
+  // The URL
+  CString rawURL(p_request->pRawUrl);
+
+
+//   //
+//   // The request headers.
+//   //
+// 
+//   HTTP_REQUEST_HEADERS Headers;
+// 
+//   //
+//   // The total number of bytes received from network for this request.
+//   //
+// 
+//   ULONGLONG BytesReceived;
+// 
+//   //
+//   // pEntityChunks is an array of EntityChunkCount HTTP_DATA_CHUNKs. The
+//   // entity body is copied only if HTTP_RECEIVE_REQUEST_FLAG_COPY_BODY
+//   // was passed to HttpReceiveHttpRequest().
+//   //
+// 
+//   USHORT           EntityChunkCount;
+//   PHTTP_DATA_CHUNK pEntityChunks;
+// 
+//   //
+//   // SSL connection information.
+//   //
+// 
+//   HTTP_RAW_CONNECTION_ID RawConnectionId;
+//   PHTTP_SSL_INFO         pSslInfo;
+
+}
+
+void
+HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer)
+{
+  if(MUSTLOG(HLL_TRACEDUMP) && m_log)
+  {
+    TraceRequest(p_request);
+  }
+
+  if(p_buffer->GetLength())
+  {
+    uchar* buffer = nullptr;
+    size_t length = 0;
+    p_buffer->GetBufferCopy(buffer,length);
+
+    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,(const char*)buffer);
+    if(MUSTLOG(HLL_TRACEDUMP))
+    {
+      m_log->AnalysisHex(__FUNCTION__,"Incoming",buffer,(unsigned)length);
+    }
+
+    // Delete buffer copy
+    delete[] buffer;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// RESPONSE: BODY LOGGING & TRACING
+//
+//////////////////////////////////////////////////////////////////////////
+
+void
+HTTPServer::TraceKnownResponseHeader(unsigned p_number,const char* p_value)
 {
   // See if known header is 'given'
   if(!p_value || *p_value == 0)
@@ -1672,6 +1759,12 @@ HTTPServer::TraceKnownHeader(unsigned p_number,const char* p_value)
 void
 HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
 {
+  // See if we have a response, or just did a ResponseEntityBody sent
+  if(p_response == nullptr)
+  {
+    return;
+  }
+
   // Print the principal first protocol line
   CString line;
   line.Format("HTTP/%d.%d %d %s"
@@ -1684,7 +1777,7 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
   // Print all 'known' HTTP headers
   for (unsigned ind = 0; ind < HttpHeaderResponseMaximum; ++ind)
   {
-    TraceKnownHeader(ind,p_response->Headers.KnownHeaders[ind].pRawValue);
+    TraceKnownResponseHeader(ind,p_response->Headers.KnownHeaders[ind].pRawValue);
   }
 
   // Print all 'unknown' headers

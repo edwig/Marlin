@@ -377,11 +377,14 @@ protected:
   void      SetError(int p_error);
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
-  // Logging and tracing
+  // Logging and tracing: The response
   void      TraceResponse(PHTTP_RESPONSE p_response);
-  void      TraceKnownHeader(unsigned p_number,const char* p_value);
+  void      TraceKnownResponseHeader(unsigned p_number,const char* p_value);
   void      LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer);
   void      LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length);
+  // Logging and tracing: The request
+  void      TraceRequest(PHTTP_REQUEST p_request);
+  void      LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer);
 
   // Protected data
   CString                 m_name;                   // How the outside world refers to me
