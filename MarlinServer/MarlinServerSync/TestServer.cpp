@@ -65,7 +65,7 @@ static char THIS_FILE[] = __FILE__;
 // Global objects of this test program
 int  totalErrors = 0;
 bool doDetails   = false;
-int  logLevel    = HLL_LOGBODY;  // HLL_NOLOG / HLL_ERRORS / HLL_LOGGING / HLL_LOGBODY / HLL_TRACE / HLL_TRACEDUMP
+int  logLevel    = HLL_TRACEDUMP;  // HLL_NOLOG / HLL_ERRORS / HLL_LOGGING / HLL_LOGBODY / HLL_TRACE / HLL_TRACEDUMP
 
 // Global critical section to print to the 'stdio' stream
 CRITICAL_SECTION std_stream;

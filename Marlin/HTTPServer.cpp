@@ -1654,79 +1654,141 @@ HTTPServer::UnRegisterHTTPRequest(HTTPRequest* p_request)
 //////////////////////////////////////////////////////////////////////////
 
 void
+HTTPServer::TraceKnownRequestHeader(unsigned p_number,const char* p_value)
+{
+  // See if known header is 'given'
+  if (!p_value||*p_value==0)
+  {
+    return;
+  }
+
+  // Header fields are defined in HTTPMessage.cpp!!
+  CString line = header_fields[p_number];
+  line += ": ";
+  line += p_value;
+  m_log->BareStringLog(line.GetString(),line.GetLength());
+}
+
+void
 HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
 {
-  // _HTTP_REQUEST_V1
-
-  CString context;
-  context.Format("%lX",p_request->UrlContext);
+  // Print HTTPSite context first before anything else of the call
+  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,true,"Incoming call for site context: %lX",p_request->UrlContext);
 
   CString httpVersion;
   httpVersion.Format("HTTP/%d.%d",p_request->Version.MajorVersion,p_request->Version.MinorVersion);
 
-  //
   // The request verb.
-  //
-  // HTTP_VERB Verb;
-
   CString verb;
-  if(p_request->UnknownVerbLength)
+  if(p_request->Verb == HttpVerbUnknown && p_request->UnknownVerbLength)
   {
     verb = p_request->pUnknownVerb;
   }
+  else
+  {
+    switch (p_request->Verb)
+    {
+      case HttpVerbOPTIONS:   verb = "OPTIONS";   break;
+      case HttpVerbGET:       verb = "GET";       break;
+      case HttpVerbHEAD:      verb = "HEAD";      break;
+      case HttpVerbPOST:      verb = "POST";      break;
+      case HttpVerbPUT:       verb = "PUT";       break;
+      case HttpVerbDELETE:    verb = "DELETE";    break;
+      case HttpVerbTRACE:     verb = "TRACE";     break;
+      case HttpVerbCONNECT:   verb = "CONNECT";   break;
+      case HttpVerbTRACK:     verb = "TRACK";     break;
+      case HttpVerbMOVE:      verb = "MOVE";      break;
+      case HttpVerbCOPY:      verb = "COPY";      break;
+      case HttpVerbPROPFIND:  verb = "PROPFIND";  break;
+      case HttpVerbPROPPATCH: verb = "PROPPATCH"; break;
+      case HttpVerbMKCOL:     verb = "MKCOL";     break;
+      case HttpVerbLOCK:      verb = "LOCK";      break;
+      case HttpVerbUNLOCK:    verb = "UNLOCK";    break;
+      case HttpVerbSEARCH:    verb = "SEARCH";    break;
+      default:                verb = "UNKNOWN";   break;
+    }
+  }
 
-  // The URL
-  CString rawURL(p_request->pRawUrl);
+  // THE PRINCIPAL HTTP PROTOCOL CALL LINE
+  CString httpLine;
+  httpLine.Format("%s %s %s",verb.GetString(),p_request->pRawUrl,httpVersion.GetString());
+  m_log->BareStringLog(httpLine.GetString(),httpLine.GetLength());
 
+  // Print all 'known' HTTP headers
+  for (unsigned ind = 0; ind < HttpHeaderMaximum; ++ind)
+  {
+    TraceKnownRequestHeader(ind,p_request->Headers.KnownHeaders[ind].pRawValue);
+  }
 
-//   //
-//   // The request headers.
-//   //
-// 
-//   HTTP_REQUEST_HEADERS Headers;
-// 
-//   //
-//   // The total number of bytes received from network for this request.
-//   //
-// 
-//   ULONGLONG BytesReceived;
-// 
-//   //
-//   // pEntityChunks is an array of EntityChunkCount HTTP_DATA_CHUNKs. The
-//   // entity body is copied only if HTTP_RECEIVE_REQUEST_FLAG_COPY_BODY
-//   // was passed to HttpReceiveHttpRequest().
-//   //
-// 
-//   USHORT           EntityChunkCount;
-//   PHTTP_DATA_CHUNK pEntityChunks;
-// 
-//   //
-//   // SSL connection information.
-//   //
-// 
-//   HTTP_RAW_CONNECTION_ID RawConnectionId;
-//   PHTTP_SSL_INFO         pSslInfo;
+  // Print all 'unknown' headers
+  for (unsigned ind = 0;ind < p_request->Headers.UnknownHeaderCount; ++ind)
+  {
+    CString uheader;
+    uheader  = p_request->Headers.pUnknownHeaders[ind].pName;
+    uheader += ": ";
+    uheader += p_request->Headers.pUnknownHeaders[ind].pRawValue;
+    m_log->BareStringLog(uheader.GetString(),uheader.GetLength());
+  }
 
+  // Print empty line between header and body (!!)
+  m_log->BareStringLog("",0);
+
+  // The following members are NOT used here
+
+  //   ULONGLONG              BytesReceived;
+  //   USHORT                 EntityChunkCount;
+  //   PHTTP_DATA_CHUNK       pEntityChunks;
+  //   HTTP_RAW_CONNECTION_ID RawConnectionId;
+  //   PHTTP_SSL_INFO         pSslInfo;
 }
 
 void
 HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer)
 {
-  if(MUSTLOG(HLL_TRACEDUMP) && m_log)
+  // Only if we have an attached logfile
+  if(!m_log)
   {
-    TraceRequest(p_request);
+    return;
   }
 
-  if(p_buffer->GetLength())
+  // Dump request + headers
+  if(MUSTLOG(HLL_TRACEDUMP))
   {
+    if(p_request)
+    {
+      TraceRequest(p_request);
+    }
+  }
+  // Dump the body
+  if(MUSTLOG(HLL_LOGBODY))
+  {
+    if(p_buffer && p_buffer->GetLength())
+    {
+      LogTraceRequestBody(p_buffer);
+    }
+  }
+}
+
+void
+HTTPServer::LogTraceRequestBody(FileBuffer* p_buffer)
+{
+  // Only if we have work to do
+  if(!p_buffer || !m_log)
+  {
+    return;
+  }
+
+  if(MUSTLOG(HLL_LOGBODY) && p_buffer->GetLength())
+  {
+    // Get copy of the body and dump in the logfile
     uchar* buffer = nullptr;
     size_t length = 0;
     p_buffer->GetBufferCopy(buffer,length);
 
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,(const char*)buffer);
+    m_log->BareStringLog((const char*) buffer,(int) length);
     if(MUSTLOG(HLL_TRACEDUMP))
     {
-      m_log->AnalysisHex(__FUNCTION__,"Incoming",buffer,(unsigned)length);
+      m_log->AnalysisHex(__FUNCTION__,"Incoming",buffer,(unsigned) length);
     }
 
     // Delete buffer copy
@@ -1750,10 +1812,10 @@ HTTPServer::TraceKnownResponseHeader(unsigned p_number,const char* p_value)
   }
 
   // Header fields are defined in HTTPMessage.cpp!!
-  CString line = p_number < 20 ? header_fields[p_number] : header_response[p_number];
+  CString line = p_number < HttpHeaderAcceptRanges ? header_fields[p_number] : header_response[p_number - HttpHeaderAcceptRanges];
   line += ": ";
   line += p_value;
-  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,line);
+  m_log->BareStringLog(line.GetString(),line.GetLength());
 }
 
 void
@@ -1772,7 +1834,8 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
              ,p_response->Version.MinorVersion
              ,p_response->StatusCode
              ,p_response->pReason);
-  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,line);
+  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,"Full HTTP protocol");
+  m_log->BareStringLog(line.GetString(),line.GetLength());
 
   // Print all 'known' HTTP headers
   for (unsigned ind = 0; ind < HttpHeaderResponseMaximum; ++ind)
@@ -1784,51 +1847,75 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
   for(unsigned ind = 0;ind < p_response->Headers.UnknownHeaderCount; ++ind)
   {
     CString uheader;
-    uheader  = p_response->Headers.pUnknownHeaders->pName;
+    uheader  = p_response->Headers.pUnknownHeaders[ind].pName;
     uheader += ": ";
-    uheader += p_response->Headers.pUnknownHeaders->pRawValue;
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,uheader);
+    uheader += p_response->Headers.pUnknownHeaders[ind].pRawValue;
+    m_log->BareStringLog(uheader.GetString(),uheader.GetLength());
   }
+  m_log->BareStringLog("",0);
 }
 
 void
 HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer)
 {
-  if(MUSTLOG(HLL_TRACEDUMP) && m_log)
+  // Only if we have a logfile
+  if(!m_log)
+  {
+    return;
+  }
+
+  // Trace the protocol and headers
+  if(MUSTLOG(HLL_TRACEDUMP))
   {
     TraceResponse(p_response);
   }
-  if(p_buffer->GetFileName().IsEmpty())
-  {
-    uchar* buffer = nullptr;
-    size_t length = 0;
-    p_buffer->GetBufferCopy(buffer,length);
 
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,(const char*) buffer);
-    if (MUSTLOG(HLL_TRACEDUMP))
+  // Log&Trace the body
+  if(MUSTLOG(HLL_LOGBODY))
+  {
+    if(p_buffer && p_buffer->GetLength())
     {
-      m_log->AnalysisHex(__FUNCTION__,"Outgoing",buffer,(unsigned)length);
-    }
+      if(p_buffer->GetFileName().IsEmpty())
+      {
+        uchar* buffer = nullptr;
+        size_t length = 0;
+        p_buffer->GetBufferCopy(buffer,length);
 
-    // Delete buffer copy
-    delete[] buffer;
-  }
-  else
-  {
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Uploading FILE: %s",p_buffer->GetFileName().GetString());
+        m_log->BareStringLog((const char*) buffer,(int) length);
+        if(MUSTLOG(HLL_TRACEDUMP))
+        {
+          m_log->AnalysisHex(__FUNCTION__,"Outgoing",buffer,(unsigned) length);
+        }
+        // Delete buffer copy
+        delete[] buffer;
+      }
+      else
+      {
+        m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Uploading FILE: %s",p_buffer->GetFileName().GetString());
+      }
+    }
   }
 }
 
 void
 HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length)
 {
-  if(MUSTLOG(HLL_TRACEDUMP) && m_log)
+  // Only if we have a logfile
+  if(!m_log)
+  {
+    return;
+  }
+
+  // Trace the protocol and headers
+  if(MUSTLOG(HLL_TRACEDUMP))
   {
     TraceResponse(p_response);
   }
-  if(MUSTLOG(HLL_LOGBODY) && m_log)
+
+  // Log&Trace the body
+  if(MUSTLOG(HLL_LOGBODY) && p_buffer)
   {
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,(const char*)p_buffer);
+    m_log->BareStringLog((const char*)p_buffer,p_length);
     if(MUSTLOG(HLL_TRACEDUMP))
     {
       m_log->AnalysisHex(__FUNCTION__,"Outgoing",p_buffer,p_length);

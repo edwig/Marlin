@@ -50,12 +50,6 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
   // Guarantee to return to this 'Cleanup', even if we do a SEH!!
   m_site->SetCleanup(this);
 
-  // Show our SOAP message in the log
-  if(m_site->GetHTTPServer()->GetLogLevel() >= HLL_LOGBODY)
-  {
-    SITE_DETAILLOGS("Received POST message:\n",p_message->GetBody());
-  }
-
   // Create a soap message for this thread
   // Remove old message in case of re-entrancy
   if(g_soapMessage)
@@ -71,8 +65,12 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
     g_soapMessage->Reset();
     g_soapMessage->SetFault("XML","Client","XML parsing error",msg);
     SITE_ERRORLOG(ERROR_BAD_ARGUMENTS,"Expected a SOAP message, but no valid XML message found");
+    m_site->SendResponse(g_soapMessage);
+    p_message->SetRequestHandle(NULL);
     return false;
   }
+
+  SITE_DETAILLOGS("Received SOAP message: ",g_soapMessage->GetSoapAction());
 
   if(m_site && (m_site->GetEncryptionLevel() != XMLEncryption::XENC_Plain))
   {

@@ -445,6 +445,12 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
              ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
              ,contentLength.GetString());
 
+  // Log incoming request
+  DETAILLOGS("Got a request for: ",rawUrl);
+
+  // Trace the request in full
+  LogTraceRequest(p_request,nullptr);
+
   // See if we must substitute for a sub-site
   if(m_hasSubsites)
   {
@@ -602,6 +608,8 @@ HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
                                                break;
     }
   }
+  // Log & Trace the chunks that we just read 
+  LogTraceRequestBody(p_message->GetFileBuffer());
 }
 
 // Receive incoming HTTP request (p_request->Flags > 0)
@@ -662,6 +670,10 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
     }
     totbuffer[contentLength] = 0;
   }
+
+  // Now also trace the request body of the message
+  LogTraceRequestBody(fbuffer);
+
   return true;
 }
 
@@ -815,7 +827,8 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
     ++p_stream.m_chunks;
 
     DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",bytesSent);
-    DETAILLOG1("Event stream initialized");
+    // Possibly log and trace what we just sent
+    LogTraceResponse(response->GetRawHttpResponse(),(unsigned char*)init.GetString(),init.GetLength());
 
     hr = response->Flush(false,true,&bytesSent);
   }
@@ -1010,6 +1023,9 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     SetError(NO_ERROR);
   }
 
+  // Possibly log and trace what we just sent
+  LogTraceResponse(response->GetRawHttpResponse(),buffer);
+
   // Do **NOT** send an answer twice
   p_message->SetRequestHandle(NULL);
 }
@@ -1191,6 +1207,8 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
     {
       ERRORLOG(ERROR_INVALID_FUNCTION,"ResponseFileHandle: But IIS does not expect to deliver the contents!!");
     }
+    // Possibly log and trace what we just sent
+    LogTraceResponse(p_response->GetRawHttpResponse(),(unsigned char*)sending.GetString(),sending.GetLength());
   }
   else
   {
@@ -1229,6 +1247,8 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
     {
       ERRORLOG(GetLastError(),"Flushing event stream failed!");
     }
+    // Possibly log and trace what we just sent
+    LogTraceResponse(nullptr,(unsigned char*) p_buffer,(int) p_length);
   }
   // Final closing of the connection
   if(p_continue == false)

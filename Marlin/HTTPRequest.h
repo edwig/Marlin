@@ -141,7 +141,7 @@ private:
   OutstandingIO     m_reading;                  // Outstanding reading action
   OutstandingIO     m_writing;                  // Outstanding writing action
   bool              m_responding { false   };   // Response already started
-  bool              m_logging    { false   };   // Do detailed logging
+  int               m_logLevel   { HLL_NOLOG }; // Logging level of the server
   BYTE*             m_readBuffer { nullptr };   // Read data buffer
   BYTE*             m_sendBuffer { nullptr };   // Send data buffer
   HTTP_DATA_CHUNK   m_sendChunk;                // Send buffer as a chunked info

@@ -264,7 +264,6 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     g_marlin = new HTTPServerIIS(appName);
     // Connect the logging file
     g_marlin->SetLogging(g_analysisLog);
-    g_marlin->SetDetailedLogging(true);
     // Provide an error reporting object
     g_marlin->SetErrorReport(&g_report);
     // Setting the base webroot

@@ -40,11 +40,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define DETAILLOG1(text)          if(m_logging && m_server) { m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(m_logging && m_server) { m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(m_logging && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define WARNINGLOG(text,...)      if(m_logging && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
-#define ERRORLOG(code,text)       if(m_server) m_server->ErrorLog (__FUNCTION__,(code),(text))
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
+#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
+#define ERRORLOG(code,text)       if(MUSTLOG(HLL_ERRORS)  && m_server) { m_server->ErrorLog (__FUNCTION__,(code),(text)); }
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +73,7 @@ HTTPRequest::HTTPRequest(HTTPServer* p_server)
             ,m_writing(this)
 {
   // Derive logging from the server
-  m_logging = m_server->GetDetailedLogging();
+  m_logLevel = m_server->GetLogLevel();
 
   InitializeCriticalSection(&m_critical);
 }
@@ -257,13 +257,20 @@ HTTPRequest::ReceivedRequest()
   int       remDesktop      = m_server->FindRemoteDesktop(m_request->Headers.UnknownHeaderCount
                                                          ,m_request->Headers.pUnknownHeaders);
 
-  // Log earliest as possible
-  DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
-            ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
-            ,m_request->BytesReceived);
+  // If positive request ID received
+  if(m_request->RequestId)
+  {
+    // Log earliest as possible
+    DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
+               ,SocketToServer((PSOCKADDR_IN6) sender).GetString()
+               ,m_request->BytesReceived);
 
-  // Log incoming request
-  DETAILLOGS("Got a request for: ",rawUrl);
+    // Log incoming request
+    DETAILLOGS("Got a request for: ",rawUrl);
+
+    // Trace the request in full
+    m_server->LogTraceRequest(m_request,nullptr);
+  }
 
   // Recording expected content length
   m_expect = atol(contentLength);
@@ -485,7 +492,8 @@ HTTPRequest::ReceivedBodyPart()
 void
 HTTPRequest::PostReceive()
 {
-  // ASSERT(m_message);
+  // Now also trace the request body of the message
+  m_server->LogTraceRequestBody(m_message->GetFileBuffer());
 
   // In case of a POST, try to convert character set before submitting to site
   if(m_message->GetCommand() == HTTPCommand::http_post)
@@ -535,8 +543,9 @@ HTTPRequest::StartSendResponse()
                                       0,                 // Reserved3   (must be 0)
                                       &m_writing,        // LPOVERLAPPED(OPTIONAL)
                                       nullptr);          // pReserved4  (must be NULL)
-  
-  DETAILLOGV("HTTP Response %d %s",m_response->StatusCode,m_response->pReason);
+
+  // Trace the principal response
+  m_server->LogTraceResponse(m_response,nullptr);
 
   // Check for error
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
@@ -675,6 +684,8 @@ HTTPRequest::SendBodyPart()
         return;
       }
     }
+    // Possibly log and trace what we just sent
+    m_server->LogTraceResponse(nullptr,filebuf);
   }
 
   // Message is done. Break the connection with the HTTPRequest
@@ -755,6 +766,9 @@ HTTPRequest::StartEventStreamResponse()
     ERRORLOG(result,"Sending HTTP Response for event stream");
     Finalize();
   }
+
+  // Log&Trace what we just send
+  m_server->LogTraceResponse(m_response,m_sendBuffer,init.GetLength());
 }
 
 void
@@ -806,6 +820,9 @@ HTTPRequest::SendResponseStream(const char* p_buffer
   m_sendChunk.FromMemory.pBuffer      = m_sendBuffer;
   m_sendChunk.FromMemory.BufferLength = (ULONG)p_length;
 
+  DETAILLOGV("Stream part [%d] bytes to send",p_length);
+  m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length);
+
   ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
                                             m_requestID,    // Our request
                                             flags,          // More/Last data
@@ -827,7 +844,6 @@ HTTPRequest::SendResponseStream(const char* p_buffer
   }
   else
   {
-    DETAILLOGV("Stream part [%d] bytes sent",p_length);
     // Final closing of the connection
     if(p_continue == false)
     {
@@ -996,6 +1012,8 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   }
   const char* text = GetHTTPStatusText(p_status);
 
+  m_response->Version.MajorVersion = 1;
+  m_response->Version.MinorVersion = 1;
   m_response->StatusCode   = (USHORT)p_status;
   m_response->pReason      = text;
   m_response->ReasonLength = (USHORT)strlen(text);

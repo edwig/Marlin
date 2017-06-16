@@ -41,6 +41,7 @@
 #include "GetLastErrorAsString.h"
 #include "AutoCritical.h"
 #include "EnsureFile.h"
+#include "ConvertWideString.h"
 #include <string.h>
 #include <sys/timeb.h>
 #include <io.h>
@@ -277,12 +278,15 @@ LogAnalysis::Initialisation()
     }
   }
 
+  // Write a BOM to the logfile, so we can read logged UTF-8 strings
+  CString bom = ConstructBOM();
+  WriteFile(m_file,bom.GetString(),bom.GetLength(),nullptr,nullptr);
+
   // Starting the log writing thread
   RunLog();
 
   // Tell that we are now running
-  CString name = "Logfile for: " + m_name;
-  AnalysisLog(name.GetString(), LogType::LOG_INFO,false,"Running");
+  AnalysisLog("Logfile now running for:", LogType::LOG_INFO,false,m_name);
 }
 
 bool

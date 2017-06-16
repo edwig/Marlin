@@ -275,6 +275,13 @@ public:
   HTTPSite*  FindHTTPSite(int p_port,CString& p_url);
   HTTPSite*  FindHTTPSite(HTTPSite* p_default,CString& p_url);
 
+  // Logging and tracing: The response
+  void      LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer);
+  void      LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length);
+  // Logging and tracing: The request
+  void      LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer);
+  void      LogTraceRequestBody(FileBuffer* p_buffer);
+
   // Outstanding asynchronous I/O requests
   void         RegisterHTTPRequest(HTTPRequest* p_request);
   void       UnRegisterHTTPRequest(HTTPRequest* p_request);
@@ -380,11 +387,9 @@ protected:
   // Logging and tracing: The response
   void      TraceResponse(PHTTP_RESPONSE p_response);
   void      TraceKnownResponseHeader(unsigned p_number,const char* p_value);
-  void      LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer);
-  void      LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length);
   // Logging and tracing: The request
   void      TraceRequest(PHTTP_REQUEST p_request);
-  void      LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer);
+  void      TraceKnownRequestHeader(unsigned p_number,const char* p_value);
 
   // Protected data
   CString                 m_name;                   // How the outside world refers to me

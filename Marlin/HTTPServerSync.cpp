@@ -405,10 +405,20 @@ HTTPServerSync::RunHTTPServer()
     int       remDesktop     = FindRemoteDesktop(request->Headers.UnknownHeaderCount
                                                 ,request->Headers.pUnknownHeaders);
 
-    // Log earliest as possible
-    DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
-              ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
-              ,request->BytesReceived);
+    // If positive request ID received
+    if(request->RequestId)
+    {
+      // Log earliest as possible
+      DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
+                 ,SocketToServer((PSOCKADDR_IN6) sender).GetString()
+                 ,request->BytesReceived);
+
+       // Log incoming request
+      DETAILLOGS("Got a request for: ",rawUrl);
+
+      // Trace the request in full
+      LogTraceRequest(request,nullptr);
+    }
 
     // Test if server already stopped, and we are here because of the stopping
     if(m_running == false)
@@ -420,8 +430,6 @@ HTTPServerSync::RunHTTPServer()
     if(result == NO_ERROR)
     {
       HANDLE accessToken = NULL;
-      // Log incoming request
-      DETAILLOGS("Got a request for: ",rawUrl);
 
       // FInding the site
       bool eventStream = false;
@@ -714,8 +722,10 @@ void
 HTTPServerSync::InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status,PSTR p_reason)
 {
   RtlZeroMemory(p_response,sizeof(HTTP_RESPONSE));
-  p_response->StatusCode = p_status;
-  p_response->pReason = p_reason;
+  p_response->Version.MajorVersion = 1;
+  p_response->Version.MinorVersion = 1;
+  p_response->StatusCode   = p_status;
+  p_response->pReason      = p_reason;
   p_response->ReasonLength = (USHORT)strlen(p_reason);
 }
 
@@ -809,6 +819,9 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
 
   // This message is read!
   p_message->SetReadBuffer(false);
+
+  // Now also trace the request body of the message
+  LogTraceRequestBody(p_message->GetFileBuffer());
 
   // Receiving succeeded?
   return retval;
@@ -1369,7 +1382,7 @@ HTTPServerSync::SendResponseEventBuffer(HTTP_OPAQUE_ID p_requestID
   else
   {
     DETAILLOGV("HttpSendResponseEntityBody [%d] bytes sent",p_length);
-    LogTraceResponse(nullptr,(unsigned char*)p_buffer,p_length);
+    LogTraceResponse(nullptr,(unsigned char*)p_buffer,(unsigned) p_length);
 
     // Final closing of the connection
     if(p_continue == false)
