@@ -197,6 +197,30 @@ LogAnalysis::SetInterval(int p_interval)
   if(m_interval > LOGWRITE_INTERVAL_MAX) m_interval = LOGWRITE_INTERVAL_MAX;
 }
 
+// Setting our logging level
+void
+LogAnalysis::SetLogLevel(int p_logLevel)
+{
+  // Check for correct boundaries
+  if(p_logLevel < HLL_NOLOG)   p_logLevel = HLL_NOLOG;
+  if(p_logLevel > HLL_HIGHEST) p_logLevel = HLL_HIGHEST;
+
+  // Remember our loglevel;
+  m_logLevel = p_logLevel;
+
+  CString level;
+  switch(p_logLevel)
+  {
+    case HLL_NOLOG:     level = "No logging";        break;
+    case HLL_ERRORS:    level = "Errors & warnings"; break;
+    case HLL_LOGGING:   level = "Standard logging";  break;
+    case HLL_LOGBODY:   level = "Logging bodies";    break;
+    case HLL_TRACE:     level = "Tracing";           break;
+    case HLL_TRACEDUMP: level = "Tracing & hexdump"; break;
+  }
+  AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Logging level set to [%d:%s]",m_logLevel,level.GetString());
+}
+
 size_t
 LogAnalysis::GetCacheSize()
 {

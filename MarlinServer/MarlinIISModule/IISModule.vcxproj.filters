@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
@@ -13,81 +9,88 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Testset">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{ce24b247-b0f6-4b06-9fb2-734b79dd55c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ServerTestset\TestBaseSite.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestBodyEncryption.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestBodySigning.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestClientCert.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestCompression.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestContract.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestCookies.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestCrackUrl.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestEvents.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestFilter.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestFormData.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestInsecure.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestJsonData.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestMessageEncryption.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestPatch.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestReliable.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestSubSites.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestThreadpool.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestTime.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestToken.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestAsynchrone.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestSecureSite.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ServerTestset\TestWebSocket.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
     <ClCompile Include="MarlinServerApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestBaseSite.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestBodyEncryption.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestBodySigning.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestClientCert.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestCompression.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestContract.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestCookies.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestCrackUrl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestEvents.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestFormData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestInsecure.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestJsonData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestMessageEncryption.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestPatch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestReliable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestSubSites.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestThreadpool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestTime.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestToken.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestAsynchrone.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestSecureSite.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ServerTestset\TestWebSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

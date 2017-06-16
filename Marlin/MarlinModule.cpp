@@ -186,7 +186,7 @@ StartLog(DWORD p_version)
 
     // Create the logfile
     g_analysisLog = new LogAnalysis(MODULE_NAME);
-    g_analysisLog->SetDoLogging(g_config.GetDoLogging());
+    g_analysisLog->SetLogLevel(g_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
     g_analysisLog->SetLogFilename(logfile);
     g_analysisLog->SetLogRotation(true);
   }
@@ -264,6 +264,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     g_marlin = new HTTPServerIIS(appName);
     // Connect the logging file
     g_marlin->SetLogging(g_analysisLog);
+    g_marlin->SetLogLevel(g_analysisLog->GetLogLevel());
     // Provide an error reporting object
     g_marlin->SetErrorReport(&g_report);
     // Setting the base webroot
@@ -337,7 +338,7 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   if(m_applications <= 0)
   {
     // See if Application has requested to stop the HTTPServer
-    // in advance of the ServerApp. Simular to 'abort()' :-)
+    // in advance of the ServerApp. Similar to 'abort()' :-)
     if(g_abortServer)
     {
       g_marlin->StopServer();
@@ -363,10 +364,10 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   return GL_NOTIFICATION_CONTINUE;
 };
 
-// RE-Construct the webroot from thse two settings
+// RE-Construct the webroot from these two settings
 // Configuration path : MACHINE/WEBROOT/APPHOST/SECURETEST
 // Physical path      : C:\inetpub\wwwroot\SecureTest\
-// WEBROOT wil be     : C:\inetpub\wwwroot
+// WEBROOT will be    : C:\inetpub\wwwroot
 //
 CString
 MarlinGlobalFactory::ExtractWebroot(CString p_configPath,CString p_physicalPath)
@@ -376,7 +377,7 @@ MarlinGlobalFactory::ExtractWebroot(CString p_configPath,CString p_physicalPath)
   // Make same case
   config.MakeLower();
   physic.MakeLower();
-  // Remove trailing directory seperator (if any)
+  // Remove trailing directory separator (if any)
   physic.TrimRight('\\');
 
   // Find last marker pos

@@ -70,6 +70,9 @@ MarlinServerApp::InitInstance()
   // Instance is now running
   m_running = true;
 
+  // Set our logging level
+  SetLogLevel(HLL_TRACEDUMP);  // NOLOG / ERRORS / LOGGING / LOGBODY / TRACE / TRACEDUMP
+
   // Small local test
   Test_CrackURL();
   Test_HTTPTime();

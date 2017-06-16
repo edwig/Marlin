@@ -116,6 +116,21 @@ ServerApp::CorrectlyStarted()
   return false;
 }
 
+// Setting the logging level
+void 
+ServerApp::SetLogLevel(int p_logLevel)
+{
+  m_logLevel = p_logLevel;
+  if(m_appServer)
+  {
+    m_appServer->SetLogLevel(p_logLevel);
+  }
+  if(m_appLogfile)
+  {
+    m_appLogfile->SetLogLevel(p_logLevel);
+  }
+}
+
 // Start our sites from the IIS configuration
 void 
 ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)

@@ -89,7 +89,7 @@ public:
   // SETTERS
   void    SetLogFilename(CString p_filename,bool p_perUser = false);
   void    SetDoLogging(bool p_logging);
-  void    SetLogLevel(int p_logLevel)          { m_logLevel    = p_logLevel; };
+  void    SetLogLevel(int p_logLevel);
   void    SetDoTiming(bool p_doTiming)         { m_doTiming    = p_doTiming; };
   void    SetDoEvents(bool p_doEvents)         { m_doEvents    = p_doEvents; };
   void    SetLogRotation(bool p_rotate)        { m_rotate      = p_rotate;   };

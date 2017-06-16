@@ -29,6 +29,7 @@
 #include "HTTPServerIIS.h"
 #include "IISSiteConfig.h"
 #include "ThreadPool.h"
+#include "HTTPLoglevel.h"
 #include "Analysis.h"
 #include "ErrorReport.h"
 
@@ -61,10 +62,14 @@ public:
   // Server app was correctly started by MarlinIISModule
   bool CorrectlyStarted();
 
+  // Setting the logging level
+  void SetLogLevel(int p_logLevel);
+
   // GETTERS
 
   HTTPServer*    GetHTTPServer() { return m_appServer; };
   ThreadPool*    GetThreadPool() { return m_appPool;   };
+  int            GetLogLevel()   { return m_logLevel;  };
 
 protected:
   // Read the site's configuration from the IIS internal structures
@@ -74,12 +79,13 @@ protected:
   // General way to read a property
   CString GetProperty(IAppHostElement* p_elem,CString p_property);
 
-  bool           m_correctInit;
-  IHttpServer*   m_iis;
-  HTTPServerIIS* m_appServer;
-  ThreadPool*    m_appPool;
-  LogAnalysis*   m_appLogfile;
-  ErrorReport*   m_appReport;
+  bool           m_correctInit  { false   };    // ServerApp correctly initialized
+  IHttpServer*   m_iis          { nullptr };    // Main ISS application
+  HTTPServerIIS* m_appServer    { nullptr };    // Our Marlin HTTPServer for IIS
+  ThreadPool*    m_appPool      { nullptr };    // Pointer to our own threadpool
+  LogAnalysis*   m_appLogfile   { nullptr };    // Logfile object
+  ErrorReport*   m_appReport    { nullptr };    // Error reporting object
+  int            m_logLevel     { HLL_NOLOG };  // Logging level of server and logfile
 };
 
 // Declare your own server app as a derived class!
