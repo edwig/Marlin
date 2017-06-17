@@ -175,7 +175,7 @@ TestWebSocket(LogAnalysis* p_log)
   // Independent 3th party test website, to check whether our WebSocket works correct
   // Comment out to test against our own Marlin server sockets
   // Works only for IIS Marlin, not for stand-alone Marlin
-  uri = "ws://echo.websocket.org";
+  // uri = "ws://echo.websocket.org";
 
   // Declare a WebSocket
   WebSocketClient* socket = new WebSocketClient(uri);

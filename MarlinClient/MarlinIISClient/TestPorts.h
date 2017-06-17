@@ -29,6 +29,8 @@
 
 #define TEST_WEBSOCKETS
 
+#define CLIENT_CONFIG "IIS/HWCore"
+
 // All tests running on these ports in Marlin IIS mode
 const int TESTING_HTTP_PORT   = 80;
 const int TESTING_HTTPS_PORT  = 443;

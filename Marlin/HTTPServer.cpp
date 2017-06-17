@@ -1570,11 +1570,8 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
   SocketMap::iterator it = m_sockets.find(uri);
   if(it != m_sockets.end())
   {
-    // Drop the double socket
+    // Drop the double socket. Removes socket from the mapping!
     it->second->CloseSocket();
-    delete it->second;
-    it->second = p_socket;
-    return true;
   }
   m_sockets.insert(std::make_pair(uri,p_socket));
   return true;

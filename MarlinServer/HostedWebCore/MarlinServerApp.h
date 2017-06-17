@@ -28,6 +28,8 @@
 #pragma once
 #include "ServerApp.h"
 
+// This is the ServerApp of the Hosted Web Core server variant (running as EXE)
+
 class MarlinServerApp : public ServerApp
 {
 public:

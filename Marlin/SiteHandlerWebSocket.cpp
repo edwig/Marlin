@@ -103,6 +103,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
             SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,"Socket listener not started");
           }
         }
+        p_message->SetRequestHandle(NULL);
       }
       else
       {

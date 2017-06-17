@@ -27,6 +27,8 @@
 //
 #pragma once
 
+#define CLIENT_CONFIG "STAND ALONE"
+
 // All tests running on these ports in Marlin Standalone
 const int TESTING_HTTP_PORT   = 1200;  // For site "/MarlinTest/" 
 const int TESTING_HTTPS_PORT  = 1201;  // For site "/SecureTest/" 

@@ -123,8 +123,8 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
   }
   else
   {
-    printf("TESTING THE MARLIN CLIENT\n");
-    printf("=========================\n");
+    printf("TESTING THE MARLIN CLIENT %s\n",CLIENT_CONFIG);
+    printf("====================================\n");
     printf("\n");
 
     HTTPClient* client = StartClient(loglevel);

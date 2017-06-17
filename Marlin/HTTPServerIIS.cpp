@@ -404,6 +404,7 @@ HTTPServerIIS::DeleteSite(int p_port,CString p_baseURL,bool p_force /*=false*/)
       }
     }
     // And remove from the site map
+    DETAILLOGS("Removed site: ",site->GetPrefixURL());
     delete site;
     m_allsites.erase(it);
     result = true;

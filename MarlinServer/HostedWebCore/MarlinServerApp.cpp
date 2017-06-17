@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// This is the ServerApp of the Hosted Web Core server variant (running as EXE)
+
 // The one and only server object
 MarlinServerApp theServer;
 

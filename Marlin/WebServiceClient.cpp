@@ -865,7 +865,12 @@ WebServiceClient::CreateSequence()
     CString clientURL = m_url;
     acceptURL.MakeLower();
     clientURL.MakeLower();
-    if(clientURL.Find(acceptURL) < 0)
+
+    // De-normalize the URL's to remove redundant ":80/" and ":443" ports and the-like
+    CrackedURL normAccept(acceptURL);
+    CrackedURL normClient(clientURL);
+
+    if(normClient.URL().Find(normAccept.URL()) < 0)
     {
       CString error("Received a 'CreateSequenceResponse' that does not answer to our URL address.");
       DETAILLOG1(error);

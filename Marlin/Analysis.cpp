@@ -251,7 +251,19 @@ LogAnalysis::Initialisation()
     return;
   }
 
+  // Try to register the MS-Windows event log  for writing
+  if(m_doEvents)
+  {
+    // Use standard application event log
+    m_eventLog = RegisterEventSource(NULL,m_name);
+    if(m_eventLog == NULL)
+    {
+      m_doEvents = false;
+    }
+  }
+
   // Append date time to log's filename
+  // And also clean up logfiles that are too old.
   if(m_rotate)
   {
     AppendDateTimeToFilename();
@@ -280,7 +292,7 @@ LogAnalysis::Initialisation()
                          ,GENERIC_WRITE
                          ,FILE_SHARE_READ | FILE_SHARE_WRITE
                          ,NULL              // Security
-                         ,OPEN_ALWAYS       // Open existing, or create
+                         ,CREATE_ALWAYS     // Always throw away old log
                          ,FILE_ATTRIBUTE_NORMAL
                          ,NULL);
       if(m_file == INVALID_HANDLE_VALUE)
@@ -292,27 +304,21 @@ LogAnalysis::Initialisation()
       }
     }
   }
-  if(m_doEvents)
+
+  if(m_file)
   {
-    // Use standard application event log
-    m_eventLog = RegisterEventSource(NULL,m_name);
-    if(m_eventLog == NULL)
-    {
-      m_doEvents = false;
-    }
+    // Write a BOM to the logfile, so we can read logged UTF-8 strings
+    CString bom = ConstructBOM();
+    WriteFile(m_file,bom.GetString(),bom.GetLength(),nullptr,nullptr);
+
+    // Starting the log writing thread
+    RunLog();
   }
-
-  // Write a BOM to the logfile, so we can read logged UTF-8 strings
-  CString bom = ConstructBOM();
-  WriteFile(m_file,bom.GetString(),bom.GetLength(),nullptr,nullptr);
-
-  // Starting the log writing thread
-  RunLog();
-
   // Tell that we are now running
   AnalysisLog("Logfile now running for:", LogType::LOG_INFO,false,m_name);
 }
 
+// PRIMARY FUNCTION TO WRITE A LINE TO THE LOGFILE
 bool
 LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,const char* p_format,...)
 {
@@ -412,6 +418,7 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
   return result;
 }
 
+// PRIMARY FUNCTION TO WRITE A LINE TO THE MS-WINDOWS EVENT LOG
 void
 LogAnalysis::WriteEvent(HANDLE p_eventLog,LogType p_type,CString& p_buffer)
 {
@@ -421,7 +428,7 @@ LogAnalysis::WriteEvent(HANDLE p_eventLog,LogType p_type,CString& p_buffer)
   ReportEvent(p_eventLog,static_cast<WORD>(p_type),0,0,NULL,1,0,lpszStrings,0);
 }
 
-// Hexadecimal view of an object
+// Hexadecimal view of an object added to the logfile
 bool    
 LogAnalysis::AnalysisHex(const char* p_function,CString p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength /*=16*/)
 {
@@ -489,7 +496,7 @@ LogAnalysis::AnalysisHex(const char* p_function,CString p_name,void* p_buffer,un
   return true;
 }
 
-// Use sparringly!
+// Use sparingly!
 // Dump string buffer in the log
 void
 LogAnalysis::BareStringLog(const char* p_buffer,int p_length)
@@ -602,7 +609,7 @@ LogAnalysis::ReadConfig()
         m_logFileName = &buffer[8];
         continue;
       }
-      if(_strnicmp(buffer,"logging=",8) == 0)
+      if(_strnicmp(buffer,"loglevel=",8) == 0)
       {
         m_logLevel = atoi(&buffer[8]) > 0;
         continue;

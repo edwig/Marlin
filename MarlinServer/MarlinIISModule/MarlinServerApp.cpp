@@ -36,6 +36,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// This is the ServerApp of the IIS server variant (running in W3SVC)
+
 // The one and only server object
 MarlinServerApp theServer;
 
