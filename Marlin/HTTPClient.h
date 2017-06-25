@@ -228,8 +228,6 @@ public:
   void SetClientCertificateName(CString p_name)   { m_certName          = p_name;     };
   void SetClientCertificateStore(CString p_store) { m_certStore         = p_store;    };
   void SetWebsocketHandshake(bool p_socket)       { m_websocket         = p_socket;   };
-  void SetWSClosingTimeout(unsigned p_closing)    { m_closingTimeout    = p_closing;  };
-  void SetWSKeepAlive(unsigned p_keepalive)       { m_keepalive         = p_keepalive;};
   bool SetClientCertificateThumbprint(CString p_store,CString p_thumbprint);
   void SetCORSOrigin(CString p_origin);
   bool SetCORSPreFlight(CString p_method,CString p_headers);
@@ -281,8 +279,6 @@ public:
   CString       GetClientCertificateStore() { return m_certStore;         };
   bool          GetHTTPCompression()        { return m_httpCompression;   };
   CString       GetCORSOrigin()             { return m_corsOrigin;        };
-  unsigned      GetWSClosingTimeout()       { return m_closingTimeout;    };
-  unsigned      GetWSKeepAlive()            { return m_keepalive;         };
   int           GetLogLevel()               { return m_logLevel;          };
   bool          GetDetailLogging();
   bool          GetTraceData();
@@ -339,7 +335,7 @@ private:
   void     AddCORSHeaders();
   void     AddExtraHeaders();
   void     AddCookieHeaders();
-  void     AddWebSocketHeaders();
+  void     AddWebSocketUpgrade();
   void     AddProxyAuthorization();
   void     AddMessageHeaders(HTTPMessage* p_message);
   void     AddMessageHeaders(SOAPMessage* p_message);
@@ -467,8 +463,6 @@ private:
   HTTPClientTracing* m_trace      { nullptr };                    // The tracing object
   // WebSocket
   bool          m_websocket       { false   };                    // Try WebSocket handshake
-  unsigned      m_closingTimeout  { 10000   };                    // WebSocket closing timeout in milliseconds
-  unsigned      m_keepalive       { 30000   };                    // WebSocket keep-alive interval
   // For syncing threads
   CRITICAL_SECTION m_queueSection;  // Synchronizing queue adding/sending
   CRITICAL_SECTION m_sendSection;   // Synchronizing sending for multiple threads

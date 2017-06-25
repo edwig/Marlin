@@ -703,40 +703,6 @@ HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID /*p_request*/
   }
 }
 
-// Send to a WebSocket
-bool
-HTTPServerIIS::SendSocket(RawFrame& /*p_frame*/,HTTP_OPAQUE_ID /*p_request*/)
-{
-//   IHttpContext*   context  = reinterpret_cast<IHttpContext*>(p_request);
-//   IHttpResponse*  response = context->GetResponse();
-//   HTTP_DATA_CHUNK dataChunk;
-//   DWORD  bytesSent = 0;
-// 
-//   // Only if a buffer present
-//   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-//   dataChunk.FromMemory.pBuffer      = (void*)p_frame.m_data;
-//   dataChunk.FromMemory.BufferLength = (ULONG)(p_frame.m_headerLength + p_frame.m_payloadLength);
-// 
-//   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,TRUE,&bytesSent);
-//   if(hr != S_OK)
-//   {
-//     ERRORLOG(GetLastError(),"WriteEntityChunks failed for WebSocket");
-//     CancelRequestStream(p_request);
-//   }
-//   else
-//   {
-//     DETAILLOGV("WriteEntityChunks for WebSocket sent [%d] bytes",bytesSent);
-//     hr = response->Flush(FALSE,TRUE,&bytesSent);
-//     if(hr != S_OK)
-//     {
-//       ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
-//       CancelRequestStream(p_request);
-//     }
-//   }
-//   return (hr == S_OK);
-  return false;
-}
-
 bool
 HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request)
 {

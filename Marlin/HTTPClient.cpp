@@ -1135,7 +1135,7 @@ HTTPClient::AddProxyAuthorization()
 }
 
 void
-HTTPClient::AddWebSocketHeaders()
+HTTPClient::AddWebSocketUpgrade()
 {
   // Look if we have work to do
   if(!m_websocket)
@@ -1143,19 +1143,14 @@ HTTPClient::AddWebSocketHeaders()
     return;
   }
   // Principal WebSocket handshake
-  if(!::WinHttpSetOption(m_request,WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET,NULL,0))
+  if(::WinHttpSetOption(m_request,WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET,NULL,0))
+  {
+    DETAILLOG("Prepared for WebSocket upgrade.");
+  }
+  else
   {
     ErrorLog(__FUNCTION__,"Cannot set option to upgrade to WebSocket. Error [%d] %s");
   }
-  if(!::WinHttpSetOption(m_request,WINHTTP_OPTION_WEB_SOCKET_CLOSE_TIMEOUT,(LPVOID)((__int64)m_closingTimeout),sizeof(unsigned)))
-  {
-    ErrorLog(__FUNCTION__,"Cannot set WebSocket closing timeout interval. Error [%d] %s");
-  }
-  if(!::WinHttpSetOption(m_request,WINHTTP_OPTION_WEB_SOCKET_KEEPALIVE_INTERVAL ,(LPVOID)((__int64)m_keepalive),sizeof(unsigned)))
-  {
-    ErrorLog(__FUNCTION__,"Cannot set WebSocket keep-alive interval. Error [%d] %s");
-  }
-  DETAILLOG("Prepared for WebSocket upgrade. Timeout: %d Keep-alive: %d",m_closingTimeout,m_keepalive);
 }
 
 CString
@@ -2673,8 +2668,8 @@ HTTPClient::Send()
   AddCORSHeaders();
   // Add all recorded external header lines (e.g. SOAPAction)
   AddExtraHeaders();
-  // Add WebSocket headers (if any)
-  AddWebSocketHeaders();
+  // Add WebSocket preparation
+  AddWebSocketUpgrade();
   
   // If always using a client certificate, set it upfront
   if(m_certPreset)

@@ -148,11 +148,11 @@ bool StartServer(HTTPServer*&  p_server
 
   // Put a logfile on the server
   p_logfile->SetLogFilename(logfileName,false);
-  p_logfile->SetLogLevel(logLevel);
+  p_logfile->SetLogRotation(true);
   p_logfile->SetDoEvents(false);
   p_logfile->SetDoTiming(true);
   p_logfile->SetCache(500);
-  p_logfile->SetLogRotation(true);
+  p_logfile->SetLogLevel(logLevel);
 
   // connect log to the server
   p_server->SetLogging(p_logfile);
@@ -279,7 +279,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestPatch(server);
           errors += TestCompression(server);
           errors += TestAsynchrone(server);
-//           errors += TestWebSocket(server);
+          errors += TestWebSocket(server);
 
          // Test the WebServiceServer program generation
          CString contract = "http://interface.marlin.org/testing/";

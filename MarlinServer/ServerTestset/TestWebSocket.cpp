@@ -119,10 +119,8 @@ TestWebSocket(HTTPServer* p_server)
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if(site)
   {
-    // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf("HTTPSite for base 'get' test: OK : %s\n",site->GetPrefixURL().GetString());
-    qprintf("HTTPSite for base 'put' test: OK : %s\n",site->GetPrefixURL().GetString());
+    // --- "---------------------------- - ------
+    qprintf("HTTPSite for WebSockets     : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {

@@ -100,7 +100,7 @@ int TestSubSites(HTTPServer* p_server)
   if(site1)
   {
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
+    // ---- "--------------------------- - ------\n"
     qprintf("HTTP subsite TestToken/One  : OK : %s\n",(LPCTSTR)site1->GetPrefixURL());
   }
   else
@@ -114,8 +114,8 @@ int TestSubSites(HTTPServer* p_server)
   if(site2)
   {
     // SUMMARY OF THE TEST
-    // --- "--------------------------- - ------\n"
-    qprintf("HTTP subsite TestToken two  : OK : %s\n",(LPCTSTR)site2->GetPrefixURL());
+    // ---- "--------------------------- - ------\n"
+    qprintf("HTTP subsite TestToken/Two  : OK : %s\n",(LPCTSTR)site2->GetPrefixURL());
   }
   else
   {

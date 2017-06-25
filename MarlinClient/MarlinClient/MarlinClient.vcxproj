@@ -134,7 +134,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
+      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib;websocket.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>

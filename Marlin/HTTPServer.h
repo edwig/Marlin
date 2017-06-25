@@ -171,8 +171,6 @@ public:
   virtual WebSocket* CreateWebSocket(CString p_uri) = 0;
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request) = 0;
-  // Send to a WebSocket
-  virtual bool       SendSocket(RawFrame& p_frame,HTTP_OPAQUE_ID p_request) = 0;
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request) = 0;
   // Used for canceling a WebSocket for an event stream

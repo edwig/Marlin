@@ -816,70 +816,6 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
     request->StartResponse(p_message);
   }
 }
-bool
-HTTPServerMarlin::SendResponseWebSocket(PHTTP_RESPONSE  /*p_response*/
-                                       ,HTTP_OPAQUE_ID /*p_requestID*/
-                                       ,UKHeaders&      /*p_headers*/)
-{
-  // FOR WEBSOCKETS TO WORK ON THE STAND-ALONE MARLIN
-  // IT NEEDS TO BE REWRIITEN TO DO ASYNC I/O THROUGHOUT THE SERVER!
-
-  return false;
-  
-//   // Build protocol headers
-//   CString response = "HTTP/1.1 101 Switching protocols\r\n";
-//   for(auto& header : p_headers)
-//   {
-//     CString line;
-//     line.Format("%s: %s\r\n",header.first.GetString(),header.second.GetString());
-//     response += line;
-//   }
-//   response += "\r\n";
-// 
-//   // Put the response in a data chunk
-//   HTTP_DATA_CHUNK dataChunk;
-//   dataChunk.DataChunkType      = HttpDataChunkFromMemory;
-//   dataChunk.FromMemory.pBuffer = (void*) response.GetString();
-//   dataChunk.FromMemory.BufferLength = (ULONG)response.GetLength();
-//   p_response->EntityChunkCount = 1;
-//   p_response->pEntityChunks    = &dataChunk;
-// 
-// 
-//   // Preparing our cache-policy
-//   HTTP_CACHE_POLICY policy;
-//   policy.Policy        = m_policy;
-//   policy.SecondsToLive = m_secondsToLive;
-// 
-//   ULONG flags = HTTP_SEND_RESPONSE_FLAG_OPAQUE;
-//              // HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
-//              // HTTP_SEND_RESPONSE_FLAG_BUFFER_DATA;
-//   DWORD bytesSent = 0;
-// 
-//   OVERLAPPED ov;
-//   RtlZeroMemory(&ov,sizeof(OVERLAPPED));
-// 
-//   DWORD result = HttpSendHttpResponse(m_requestQueue,      // ReqQueueHandle
-//                                       p_requestID,         // Request ID
-//                                       flags,               // Flags
-//                                       p_response,          // HTTP response
-//                                       &policy,             // Cache policy
-//                                       &bytesSent,          // bytes sent  (OPTIONAL)
-//                                       NULL,                // pReserved2  (must be NULL)
-//                                       0,                   // Reserved3   (must be 0)
-//                                       &ov,                 // LPOVERLAPPED(OPTIONAL)
-//                                       NULL                 // pReserved4  (must be NULL)
-//                                       );
-//   if(result != NO_ERROR)
-//   {
-//     ERRORLOG(result,"Send WebSockets handshake");
-//   }
-//   else
-//   {
-//     DETAILLOGV("Send WebSocket handshake: [%d] bytes sent",bytesSent);
-//   }
-//   return (result == NO_ERROR);
-}
-
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -916,45 +852,6 @@ HTTPServerMarlin::SendResponseEventBuffer(HTTP_OPAQUE_ID p_requestID
     return true;
   }
   return false;
-}
-
-// Send to a WebSocket
-bool
-HTTPServerMarlin::SendSocket(RawFrame& /*p_frame*/,HTTP_OPAQUE_ID /*p_request*/)
-{
-  DWORD  result    = 0;
-//   DWORD  bytesSent = 0;
-//   HTTP_DATA_CHUNK dataChunk;
-// 
-//   // Only if a buffer present
-//   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-//   dataChunk.FromMemory.pBuffer      = (void*)p_frame.m_data;
-//   dataChunk.FromMemory.BufferLength = (ULONG)(p_frame.m_headerLength + p_frame.m_payloadLength);
-// 
-//   // Keep the socket open!
-//   ULONG flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
-// 
-//   // Go send it
-//   result = HttpSendResponseEntityBody(m_requestQueue,      // ReqQueueHandle
-//                                       p_request,           // Request ID
-//                                       flags,               // Flags
-//                                       1,                   // Entity chunk count
-//                                       &dataChunk,          // Chunk to send
-//                                       &bytesSent,          // bytes sent  (OPTIONAL)
-//                                       NULL,                // pReserved1  (must be NULL)
-//                                       0,                   // Reserved2   (must be 0)
-//                                       NULL,                // LPOVERLAPPED(OPTIONAL)
-//                                       NULL                 // pLogData
-//   );
-//   if(result != NO_ERROR)
-//   {
-//     ERRORLOG(result,"HttpSendResponseEntityBody failed for WebSocket");
-//   }
-//   else
-//   {
-//     DETAILLOGV("HttpSendResponseEntityBody [%d] bytes sent",bytesSent);
-//   }
-  return (result == NO_ERROR);
 }
 
 // Cancel and close a WebSocket

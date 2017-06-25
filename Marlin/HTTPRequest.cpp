@@ -30,9 +30,12 @@
 #include "HTTPMessage.h"
 #include "HTTPServer.h"
 #include "HTTPSite.h"
+#include "HTTPWebSocket.h"
 #include "HTTPError.h"
+#include "WebSocket.h"
 #include "AutoCritical.h"
 #include "ConvertWideString.h"
+#include <WebSocket.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -44,7 +47,7 @@ static char THIS_FILE[] = __FILE__;
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
 #define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
 #define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
-#define ERRORLOG(code,text)       if(MUSTLOG(HLL_ERRORS)  && m_server) { m_server->ErrorLog (__FUNCTION__,(code),(text)); }
+#define ERRORLOG(code,text)       if(MUSTLOG(HLL_ERRORS)  && m_server) { m_server->ErrorLog  (__FUNCTION__,(code),(text)); }
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -124,6 +127,20 @@ HTTPRequest::ClearMemory()
   m_strings.clear();
 }
 
+// Setting a WebSocket
+void 
+HTTPRequest::RegisterWebSocket(WebSocketServer* p_socket)
+{
+  if(!m_socket)
+  {
+    // Remember our socket
+    m_socket = p_socket;
+
+    // Get it started with a read request
+    StartSocketReceiveRequest();
+  }
+}
+
 // Callback from I/O Completion port right out of the threadpool
 /*static*/ void
 HandleAsynchroneousIO(OVERLAPPED* p_overlapped)
@@ -142,12 +159,15 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
 {
   switch(p_action)
   {
+    case IO_Nothing:    break;
     case IO_Request:    ReceivedRequest();  break;
     case IO_Reading:    ReceivedBodyPart(); break;
     case IO_Response:   SendResponseBody(); break;
     case IO_Writing:    SendBodyPart();     break;
     case IO_StartStream:StartedStream();    break;
     case IO_WriteStream:SendStreamPart();   break;
+    case IO_ReadSocket: ReceivedWebSocket();break;
+    case IO_WriteSocket:SendWebSocket();    break;
     case IO_Cancel:     Finalize();         break;
     default:            ERRORLOG(ERROR_INVALID_PARAMETER,"Unexpected outstanding async I/O");
   }
@@ -258,7 +278,7 @@ HTTPRequest::ReceivedRequest()
                                                          ,m_request->Headers.pUnknownHeaders);
 
   // If positive request ID received
-  if(m_request->RequestId)
+  if(m_requestID)
   {
     // Log earliest as possible
     DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
@@ -522,15 +542,23 @@ HTTPRequest::StartSendResponse()
   ResetOutstanding(m_writing);
   m_writing.m_action = IO_Response;
 
+  // We promise to always call HttpSendResponseEntityBody
+  ULONG flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+
   // Place HTTPMessage in the response structure
   FillResponse(m_message->GetStatus());
+
+  // Special case for WebSockets protocol
+  if(m_response->StatusCode == HTTP_STATUS_SWITCH_PROTOCOLS)
+  {
+    m_writing.m_action = IO_Nothing;
+//     m_ws = new HTTPWebSocket(this);
+//     m_ws->BeginServerHandshake(m_request->Headers.UnknownHeaderCount,m_request->Headers.pUnknownHeaders);
+  }
 
   // Prepare our cache-policy
   m_policy.Policy        = m_server->GetCachePolicy();
   m_policy.SecondsToLive = m_server->GetCacheSecondsToLive();
-
-  // We promise to always call HttpSendResponseEntityBody
-  ULONG flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
 
   // Send the response
   ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
@@ -878,6 +906,181 @@ HTTPRequest::SendStreamPart()
 
 //////////////////////////////////////////////////////////////////////////
 //
+// READING AND WRITING for WEBSOCKET
+//
+//////////////////////////////////////////////////////////////////////////
+
+void 
+HTTPRequest::StartSocketReceiveRequest()
+{
+  ULONG size = m_socket->GetFragmentSize() + WS_OVERHEAD;
+
+  // Make sure we have a buffer
+  if(!m_readBuffer)
+  {
+    m_readBuffer = new BYTE[size];
+  }
+  // Set reading action
+  ResetOutstanding(m_reading);
+  m_reading.m_action = IO_ReadSocket;
+
+  // Use these flags while reading the request body
+  ULONG flags = 0;
+
+  // Issue the asynchronous read request
+  DWORD result = HttpReceiveRequestEntityBody(m_server->GetRequestQueue()
+                                             ,m_requestID
+                                             ,flags
+                                             ,m_readBuffer
+                                             ,size
+                                             ,NULL
+                                             ,&m_reading);
+  if(result != ERROR_IO_PENDING && result != NO_ERROR)
+  {
+    m_socket->CloseForReading();
+    ERRORLOG(result,"Error receiving WebSocket request stream");
+    if(!m_socket->IsOpenForWriting())
+    {
+      Finalize();
+    }
+  }
+}
+
+void
+HTTPRequest::ReceivedWebSocket()
+{
+  DWORD result = (DWORD)(m_reading.Internal & 0x0FFFF);
+  if(result == ERROR_HANDLE_EOF || result == NO_ERROR)
+  {
+    // Store the result of the read action
+    DWORD bytes = (DWORD)m_reading.InternalHigh;
+    if(bytes)
+    {
+      m_readBuffer[bytes] = 0;
+
+      // Transfer buffer to socket 
+      RawFrame* frame = new RawFrame();
+      frame->m_data   = m_readBuffer;
+      m_readBuffer    = nullptr;
+
+      // Decode the frame buffer
+      if(m_socket->DecodeFrameBuffer(frame,bytes))
+      {
+        if(!m_socket->StoreFrameBuffer(frame))
+        {
+          // Closing of the read channel
+        }
+      }
+      else
+      {
+        // Error on decoding the incoming frame
+      }
+    }
+    if(result == NO_ERROR)
+    {
+      // (Re)start the next read request for the socket
+      StartSocketReceiveRequest();
+    }
+  }
+  else
+  {
+    m_socket->CloseForReading();
+    ERRORLOG(result,"Error while receiving WebSocket");
+    if(!m_socket->IsOpenForWriting())
+    {
+      Finalize();
+    }
+  }
+}
+
+// Flush the WebSocket stream
+// Re-start the writing process on the socket stream
+void 
+HTTPRequest::FlushWebSocketStream()
+{
+  // See if there is more in the send queue of the socket
+  WSFrame* frame = m_socket->GetFrameToWrite();
+  if(frame == nullptr)
+  {
+    return;
+  }
+
+  // Set writing action
+  ResetOutstanding(m_writing);
+  m_writing.m_action = IO_WriteSocket;
+
+  // Send more data, or this was the last in the channel
+  ULONG flags = frame->m_final ? HTTP_SEND_RESPONSE_FLAG_DISCONNECT :
+                                 HTTP_SEND_RESPONSE_FLAG_MORE_DATA  ;
+
+  // Remember our send buffer
+  m_sendBuffer = frame->m_data;
+
+  // Transfer data to the send chunk
+  USHORT chunkcount = 1;
+  m_sendChunk.DataChunkType           = HttpDataChunkFromMemory;
+  m_sendChunk.FromMemory.BufferLength = (ULONG)frame->m_length;
+  m_sendChunk.FromMemory.pBuffer      = m_sendBuffer;
+
+  // Free the WSFrame buffer, data is now held by the sendBuffer
+  frame->m_data = nullptr;
+  delete frame;
+
+  // Write the frame 
+  ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
+                                            m_requestID,    // Our request
+                                            flags,          // More/Last data
+                                            chunkcount,     // Entity Chunk Count.
+                                            &m_sendChunk,   // CHUNCK
+                                            nullptr,        // Bytes
+                                            nullptr,        // Reserved1
+                                            0,              // Reserved2
+                                            &m_writing,     // OVERLAPPED
+                                            nullptr);       // LOGDATA
+  // Check for error
+  if(result != ERROR_IO_PENDING && result != NO_ERROR)
+  {
+    m_socket->CloseForWriting();
+    ERRORLOG(result,"Writing to the WebSocket stream");
+    if(!m_socket->IsOpenForReading())
+    {
+      Finalize();
+    }
+  }
+}
+
+void
+HTTPRequest::SendWebSocket()
+{
+  // After sending to a WebSocket, we must free the RawFrame data member
+  if(m_sendBuffer)
+  {
+    free(m_sendBuffer);
+    m_sendBuffer = nullptr;
+  }
+
+  // Get the status word
+  DWORD result = (DWORD)(m_writing.Internal & 0x0FFFF);
+  if(result == ERROR_HANDLE_EOF || result == NO_ERROR)
+  {
+    // Log correct writing to the WebSocket
+
+    // Re-issue a write command from the queue?
+    FlushWebSocketStream();
+  }
+  else
+  {
+    m_socket->CloseForWriting();
+    ERRORLOG(result,"Error while writing to WebSocket");
+    if(!m_socket->IsOpenForReading())
+    {
+      Finalize();
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
 // SUB FUNCTIONS FOR RECEIVING AND SENDING
 //
 //////////////////////////////////////////////////////////////////////////
@@ -887,6 +1090,14 @@ void
 HTTPRequest::Finalize()
 {
   AutoCritSec lock(&m_critical);
+
+  // We might end up here sometimes twice, as a WebSocket can have 2 (TWO!) 
+  // outstanding I/O requests (reading and writing). And a 'Cancel' on both
+  // might trigger the finalize twice
+  if(m_requestID == NULL)
+  {
+    return;
+  }
 
   // Reset th request id 
   HTTP_SET_NULL_ID(&m_requestID);
@@ -1025,12 +1236,15 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   }
 
   // Add content type as a known header. (octet-stream or the message content type)
-  CString contentType("application/octet-stream");
-  if(!m_message->GetContentType().IsEmpty())
+  if(p_status != HTTP_STATUS_SWITCH_PROTOCOLS)
   {
-    contentType = m_message->GetContentType();
+    CString contentType("application/octet-stream");
+    if(!m_message->GetContentType().IsEmpty())
+    {
+      contentType = m_message->GetContentType();
+    }
+    AddKnownHeader(HttpHeaderContentType,contentType);
   }
-  AddKnownHeader(HttpHeaderContentType,contentType);
 
   // In case of a 401, we challenge to the client to identify itself
   if(m_message->GetStatus() == HTTP_STATUS_DENIED)
@@ -1130,15 +1344,47 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     totalLength = buffer ? buffer->GetLength() : 0;
   }
 
-  // Now after the compression, and after the calculation of the file length
-  // add the total content length in the form of the content-length header
-  CString contentLength;
+  if(p_status != HTTP_STATUS_SWITCH_PROTOCOLS)
+  {
+    // Now after the compression, and after the calculation of the file length
+    // add the total content length in the form of the content-length header
+    CString contentLength;
 #ifdef _WIN64
-  contentLength.Format("%I64u",totalLength);
+    contentLength.Format("%I64u",totalLength);
 #else
-  contentLength.Format("%lu",totalLength);
+    contentLength.Format("%lu",totalLength);
 #endif
-  AddKnownHeader(HttpHeaderContentLength,contentLength);
+    AddKnownHeader(HttpHeaderContentLength,contentLength);
+  }
+}
+
+// E.G. for a WebSocket we need the bare response string in a buffer
+CString
+HTTPRequest::ResponseToString()
+{
+  CString string;
+  string.Format("HTTP/%d.%d %d %s\r\n"
+               ,m_response->Version.MajorVersion
+               ,m_response->Version.MinorVersion
+               ,m_response->StatusCode
+               ,m_response->pReason);
+
+  for(USHORT ind = 0; ind < m_response->Headers.UnknownHeaderCount; ++ind)
+  {
+    string.AppendFormat("%s: %s\r\n"
+                       ,m_response->Headers.pUnknownHeaders[ind].pName
+                       ,m_response->Headers.pUnknownHeaders[ind].pRawValue);
+  }
+
+  string += "\r\n";
+
+  // And we remove the info from the request, to make it a 'bare' request
+  delete  [] m_unknown;
+  m_unknown = nullptr;
+  m_response->Headers.pUnknownHeaders = nullptr;
+  m_response->Headers.UnknownHeaderCount = 0;
+
+  return string;
 }
 
 // Reset outstanding OVERLAPPED

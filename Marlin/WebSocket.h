@@ -170,7 +170,12 @@ public:
   // Decoded close connection (use in 'OnClose')
   bool GetCloseSocket(USHORT& p_code,CString& p_reason);
   // Socket still open?
-  bool IsOpen();
+  bool IsOpenForReading();
+  bool IsOpenForWriting();
+  // Close the reading side (status only, does not send a 'close')
+  void CloseForReading();
+  // Close the writing side (status only, does not send a 'close')
+  void CloseForWriting();
 
   // HIGH LEVEL INTERFACE
 
@@ -254,7 +259,8 @@ protected:
 
   // GENERAL SOCKET DATA
   CString m_uri;                      // ws[s]://resource URI for the socket
-  bool    m_open        { false };    // WebSocket is opened and alive
+  bool    m_openReading { false };    // WebSocket is opened and alive for reading
+  bool    m_openWriting { false };    // WebSocket is opened and alive for writing
   ULONG   m_keepalive;                // Keep alive time of the socket
   ULONG   m_closingTimeout;           // Timeout for answering 'close' message
   ULONG   m_fragmentsize;             // Max fragment size
@@ -264,7 +270,7 @@ protected:
   CString m_closing;                  // Closing error text
   ULONG   m_pingTimeout { 30000 };    // How long we wait for a pong after a ping
   bool    m_pongSeen    { false };    // Seen a pong for a ping
-  int     m_logLevel  {HLL_NOLOG};    // Logging level for the websocket
+  int     m_logLevel  {HLL_NOLOG};    // Logging level for the WebSocket
   DWORD   m_messageNumber { 0   };    // Last message number
   // Complex objects
   FragmentStack m_stack;              // Incoming raw fragments (stand-alone)
@@ -285,9 +291,27 @@ protected:
 };
 
 inline bool
-WebSocket::IsOpen()
+WebSocket::IsOpenForReading()
 {
-  return m_open;
+  return m_openReading;
+}
+
+inline bool
+WebSocket::IsOpenForWriting()
+{
+  return m_openWriting;
+}
+
+inline void 
+WebSocket::CloseForReading()
+{
+  m_openReading = false;
+}
+
+inline void 
+WebSocket::CloseForWriting()
+{
+  m_openWriting = false;
 }
 
 inline void 
@@ -384,17 +408,15 @@ public:
   // Perform the server handshake
   virtual bool ServerHandshake(HTTPMessage* p_message);
   // Generate a server key-answer
-  CString ServerAcceptKey(CString p_clientKey);
+  CString   ServerAcceptKey(CString p_clientKey);
   // Encode raw frame buffer
-  bool    EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE* p_buffer,int64 p_length,bool p_last);
+  bool      EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE* p_buffer,int64 p_length,bool p_last);
   // Decode raw frame buffer (only m_data is filled)
-  bool    DecodeFrameBuffer(RawFrame* p_frame,int64 p_length);
+  bool      DecodeFrameBuffer(RawFrame* p_frame,int64 p_length);
   // Store incoming raw frame buffer
-  bool    StoreFrameBuffer(RawFrame* p_frame);
-  // Async starting a socket listener on the HTTPServer
-  void    StartSocket();
-  // THe receiver address
-  PSOCKADDR_IN6 GetReceiverAddress() { return &m_socket;  };
+  bool      StoreFrameBuffer(RawFrame* p_frame);
+  // Get next frame to write to the stream
+  WSFrame*  GetFrameToWrite();
 
 private:
   // Decode the incoming closing fragment before we call 'OnClose'
@@ -403,7 +425,8 @@ private:
   // Private data for the server variant of the WebSocket
   HTTPServer*     m_server  { nullptr };
   HTTP_OPAQUE_ID  m_request { NULL    };
-  SOCKADDR_IN6    m_socket;
+  // Asynchronous write buffer
+  WSFrameStack    m_writing;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -495,6 +518,8 @@ protected:
   bool         StartClientListner();
   // Decode the incoming close socket message
   bool         ReceiveCloseSocket();
+  // Setting parameters for the client socket
+  void         AddWebSocketHeaders();
 
   // WinHTTP Client version of the WebSocket
   HINTERNET    m_socket   { NULL };   // Our socket handle for WinHTTP

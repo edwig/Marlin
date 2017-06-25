@@ -57,8 +57,6 @@ public:
   virtual WebSocket* CreateWebSocket(CString p_uri);
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request);
-  // Send to a WebSocket
-  virtual bool       SendSocket(RawFrame& p_frame,HTTP_OPAQUE_ID p_request);
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket(HTTP_OPAQUE_ID p_request);
   // Sending response for an incoming message
@@ -90,27 +88,10 @@ protected:
   virtual void InitWebroot(CString p_webroot);
   // Init the stream response
   virtual bool InitEventStream(EventStream& p_stream);
-  // Send a response in one-go
-//   virtual DWORD SendResponse(HTTPSite*    p_site
-//                             ,HTTPMessage* p_message
-//                             ,USHORT       p_statusCode
-//                             ,PSTR         p_reason
-//                             ,PSTR         p_entityString
-//                             ,CString      p_authScheme
-//                             ,PSTR         p_cookie      = NULL
-//                             ,PSTR         p_contentType = NULL);
   // Used for canceling a WebSocket for an event stream
   virtual void CancelRequestStream(HTTP_OPAQUE_ID p_response);
 
 private:
-  // Preparing a response
-  // Subfunctions for SendResponse
-  //   bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
-  //   void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
-  //   void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,FileBuffer* p_buffer,bool p_more = false);
-  //   void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_REQUEST_ID p_request,CString& p_page,int p_error,const char* p_reason);
-  bool      SendResponseWebSocket  (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,UKHeaders& p_headers);
-
   // For the handling of the event streams: Sending a chunk to an event stream
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_request,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
 

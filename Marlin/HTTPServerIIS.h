@@ -60,8 +60,6 @@ public:
   virtual WebSocket* CreateWebSocket(CString p_uri);
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request);
-  // Send to a WebSocket
-  virtual bool       SendSocket(RawFrame& p_frame,HTTP_OPAQUE_ID p_request);
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request);
   // Sending response for an incoming message

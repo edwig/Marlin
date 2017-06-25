@@ -123,7 +123,7 @@ GetHTTPStatusText(int p_status)
   {
     // 100
     case HTTP_STATUS_CONTINUE:           return "Continue";
-    case HTTP_STATUS_SWITCH_PROTOCOLS:   return "Switch protocols";
+    case HTTP_STATUS_SWITCH_PROTOCOLS:   return "Switching protocols";
     // 200
     case HTTP_STATUS_OK:                 return "OK";
     case HTTP_STATUS_CREATED:            return "Created";
