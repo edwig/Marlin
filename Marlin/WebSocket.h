@@ -244,6 +244,8 @@ public:
 
   // Perform the server handshake
   virtual bool ServerHandshake(HTTPMessage* p_message);
+  // Generate a server key-answer
+  CString   ServerAcceptKey(CString p_clientKey);
 
 protected:
   // Completely close the connection
@@ -407,8 +409,6 @@ public:
 
   // Perform the server handshake
   virtual bool ServerHandshake(HTTPMessage* p_message);
-  // Generate a server key-answer
-  CString   ServerAcceptKey(CString p_clientKey);
   // Encode raw frame buffer
   bool      EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE* p_buffer,int64 p_length,bool p_last);
   // Decode raw frame buffer (only m_data is filled)

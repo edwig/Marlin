@@ -300,9 +300,6 @@
     <ClCompile Include="ThreadPoolED.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="HTTPWebSocket.cpp">
-      <Filter>MarlinServer</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -619,9 +616,6 @@
     </ClInclude>
     <ClInclude Include="HTTPLoglevel.h">
       <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="HTTPWebSocket.h">
-      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

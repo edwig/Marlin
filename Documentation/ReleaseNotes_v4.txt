@@ -8,6 +8,27 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.5
+======================
+1) All logging is now done in 5 loglevels. These are the loglevels:
+   0) No logging
+   1) Errors
+   2) Logging of actions
+   3) Logging of actions and bodies
+   4) Tracing of settings + level 3
+   5) Tracing of hexdumps of messages + level 4
+   Of course the higher settings (3,4,5) have serious impact on the production level performance,
+   so they should be used sparingly. 
+   The old members of all objects that have a SetLoggging or SetDetailLogging will translate those
+   member calls to a loggin in level 2 (logging of actions).
+
+   REVIEW YOUR PROGRAMMING LOGIC TO ADJUST THE LOGGING SETTINGS!
+
+2) The WebSocket implementation on IIS seems to be broken. It is not used anywhere.
+   The implementation on the stand-alone servers is not working at all. So this remains a feature
+   that is 'in development'.
+   The HTTPClient implmentation of the WebSockets is completly tested and working!
+
 CHANGES IN VERSION 4.4
 ======================
 1) All auhtentication checking is now done by the HTTPServer main object. This means that the

@@ -137,31 +137,32 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     else
     {
       // Do Unit testing
-//       errors += TestUnicode();
-//       errors += TestURLChars();
-//       errors += TestCryptography();
-//       errors += TestReader();
-//       errors += TestConvert();
-//       errors += TestNamespaces();
-//       errors += TestJSON();
-//       errors += TestFindClientCertificate();
+      errors += TestUnicode();
+      errors += TestURLChars();
+      errors += TestCryptography();
+      errors += TestReader();
+      errors += TestConvert();
+      errors += TestNamespaces();
+      errors += TestJSON();
+      errors += TestFindClientCertificate();
 
-// #ifdef TEST_WEBSOCKETS
-//      errors += TestWebSocketAccept();
+#ifdef TEST_WEBSOCKETS
+      errors += TestWebSocketAccept();
       errors += TestWebSocket(g_log);
-// #endif
-//       errors += TestEvents(client);
-//       errors += TestBaseSite(client);
-//       errors += TestSecureSite(client);
-//       errors += TestClientCertificate(client);
-//       errors += TestCookies(*client);
-//       errors += TestFormData(client);
-//       errors += TestJsonData(client);
-//       errors += TestContract(client,false);
-//       errors += TestContract(client,true);
-//       errors += TestPatching(client);
-//       errors += TestCompression(client);
-//       errors += TestWebservices(*client);
+#endif
+
+      errors += TestEvents(client);
+      errors += TestBaseSite(client);
+      errors += TestSecureSite(client);
+      errors += TestClientCertificate(client);
+      errors += TestCookies(*client);
+      errors += TestFormData(client);
+      errors += TestJsonData(client);
+      errors += TestContract(client,false);
+      errors += TestContract(client,true);
+      errors += TestPatching(client);
+      errors += TestCompression(client);
+      errors += TestWebservices(*client);
     }
   
     printf("\n");

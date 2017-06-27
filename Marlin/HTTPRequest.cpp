@@ -30,7 +30,6 @@
 #include "HTTPMessage.h"
 #include "HTTPServer.h"
 #include "HTTPSite.h"
-#include "HTTPWebSocket.h"
 #include "HTTPError.h"
 #include "WebSocket.h"
 #include "AutoCritical.h"

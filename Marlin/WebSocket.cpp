@@ -639,6 +639,18 @@ WebSocket::ServerHandshake(HTTPMessage* /*p_message*/)
   return true;
 }
 
+// Generate a server key-answer
+CString
+WebSocket::ServerAcceptKey(CString p_clientKey)
+{
+  // Step 1: Append WebSocket GUID. See RFC 6455. It's hard coded!!
+  CString key = p_clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+  // Step 2: Take the SHA1 hash of the resulting string
+  Crypto crypt;
+  return crypt.Digest(key.GetString(),(size_t) key.GetLength(),CALG_SHA1);
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // SERVER MARLIN WebSocket
@@ -844,18 +856,6 @@ WebSocketServer::SendPong(RawFrame* p_ping)
   {
     // Log a ping-pong
   }
-}
-
-// Generate a server key-answer
-CString
-WebSocketServer::ServerAcceptKey(CString p_clientKey)
-{
-  // Step 1: Append WebSocket GUID. See RFC 6455. It's hard coded!!
-  CString key = p_clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-
-  // Step 2: Take the SHA1 hash of the resulting string
-  Crypto crypt;
-  return crypt.Digest(key.GetString(),(size_t)key.GetLength(),CALG_SHA1);
 }
 
 // Encode raw frame buffer
@@ -1128,7 +1128,7 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
   CString clientKey = p_message->GetHeader("Sec-WebSocket-Key");
   CString serverKey = ServerAcceptKey(clientKey);
   // Get optional extensions
-  m_protocols = p_message->GetHeader("Sec-WebSocket-Protocol");
+  m_protocols  = p_message->GetHeader("Sec-WebSocket-Protocol");
   m_extensions = p_message->GetHeader("Sec-WebSocket-Extensions");
 
   // Change header fields
@@ -1610,9 +1610,33 @@ WebSocketServerIIS::RegisterSocket(HTTPMessage*  p_message)
 
 // Perform the server handshake
 bool 
-WebSocketServerIIS::ServerHandshake(HTTPMessage* /*p_message*/)
+WebSocketServerIIS::ServerHandshake(HTTPMessage* p_message)
 {
   // Does nothing for IIS
+  CString version   = p_message->GetHeader("Sec-WebSocket-Version");
+  CString clientKey = p_message->GetHeader("Sec-WebSocket-Key");
+  CString serverKey = ServerAcceptKey(clientKey);
+  // Get optional extensions
+  m_protocols  = p_message->GetHeader("Sec-WebSocket-Protocol");
+  m_extensions = p_message->GetHeader("Sec-WebSocket-Extensions");
+
+  // Change header fields
+  p_message->DelHeader("Sec-WebSocket-Key");
+  p_message->AddHeader("Sec-WebSocket-Accept",serverKey,false);
+
+  // Remove general headers
+  p_message->DelHeader("Sec-WebSocket-Version");
+  p_message->DelHeader("cache-control");
+  p_message->DelHeader("trailer");
+  p_message->DelHeader("user-agent");
+  p_message->DelHeader("host");
+
+  // By default we accept all protocols and extensions
+  // All versions of 13 (RFC 6455) and above
+  if(atoi(version) < 13 || clientKey.IsEmpty())
+  {
+    return false;
+  }
   return true;
 }
 
@@ -1722,7 +1746,7 @@ WebSocketClient::OpenSocket()
         DWORD error = GetLastError();
         CString message;
         message.Format("Socket upgrade to WinSocket failed [%d] %s\n",error,GetHTTPErrorText(error).GetString());
-        ERRORLOG(ERROR_PROTOCOL_UNREACHABLE,message);
+        ERRORLOG(error,message);
       }
     }
     else
