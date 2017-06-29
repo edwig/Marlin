@@ -186,9 +186,9 @@ StartLog(DWORD p_version)
 
     // Create the logfile
     g_analysisLog = new LogAnalysis(MODULE_NAME);
-    g_analysisLog->SetLogLevel(g_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
     g_analysisLog->SetLogFilename(logfile);
     g_analysisLog->SetLogRotation(true);
+    g_analysisLog->SetLogLevel(g_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
   }
   // Tell that we started the logfile
   g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true

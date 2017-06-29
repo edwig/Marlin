@@ -279,16 +279,15 @@ LogAnalysis::Initialisation()
                      ,NULL);
   if(m_file ==  INVALID_HANDLE_VALUE)
   {
-    char buffer[MAX_PATH+1];
-    if(GetEnvironmentVariable("TMP",buffer,MAX_PATH))
+    CString file;
+    if(file.GetEnvironmentVariable("TMP"))
     {
-      CString file(buffer);
       if(file.Right(1) != "\\") file += "\\";
       file += "Analysis.log";
 
       // Open the logfile in shared writing mode
       // more applications can write to the file
-      m_file = CreateFile(m_logFileName
+      m_file = CreateFile(file
                          ,GENERIC_WRITE
                          ,FILE_SHARE_READ | FILE_SHARE_WRITE
                          ,NULL              // Security
@@ -301,6 +300,11 @@ LogAnalysis::Initialisation()
         m_file = NULL;
         m_logLevel = HLL_NOLOG;
         return;
+      }
+      else
+      {
+        // Alternative file created
+        m_logFileName = file;
       }
     }
   }

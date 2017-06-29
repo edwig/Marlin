@@ -183,7 +183,7 @@ WebServiceClient::Open()
     m_logOwner = true;
     m_logfile = new LogAnalysis("WebServiceClient");
     m_logfile->SetLogFilename(m_logFilename);
-    m_logfile->SetLogLevel(HLL_LOGGING);
+    m_logfile->SetLogLevel(m_logLevel);
     m_logfile->SetDoTiming(true);
     m_logfile->SetDoEvents(false);
     m_logfile->SetCache(1000);
