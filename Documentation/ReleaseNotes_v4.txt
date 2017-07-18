@@ -8,6 +8,17 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.5.1
+========================
+1) The Reset() method of SOAPMessage has been extended. You can now choose between 3 modes of reset
+   1) RESP_ACTION_NAME : The body is cleared and the parameter node gets the name of the soapaction
+                         This is the default behaviour of the previous versions
+   2) RESP_EMPTY_BODY  : The body is cleared and the parameter object is set to the body node
+                         In this situation you have an absolute clean soap body.
+   3) RESP_ACTION_RESP : The body is cleared and the parameter node is filled with then action name
+                         and appended to that is the "Response" postfix.
+                         This method is a much used practice 'on the web'.
+
 CHANGES IN VERSION 4.5
 ======================
 1) All logging is now done in 5 loglevels. These are the loglevels:

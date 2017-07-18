@@ -405,7 +405,8 @@ SOAPMessage::SetSoapActionFromHTTTP(CString p_action)
 
 // Reset parameters, transforming it in an answer
 void 
-SOAPMessage::Reset(CString p_namespace /*=""*/)
+SOAPMessage::Reset(ResponseType p_responseType  /* = ResponseType::RESP_ACTION_NAME */
+                  ,CString      p_namespace     /* = "" */)
 {
   XMLMessage::Reset();
 
@@ -428,7 +429,7 @@ SOAPMessage::Reset(CString p_namespace /*=""*/)
 
   // Re-Create the XML parts
   CreateHeaderAndBody();
-  CreateParametersObject();
+  CreateParametersObject(p_responseType);
 
   // Reset sender!!
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
@@ -1600,21 +1601,29 @@ SOAPMessage::CreateHeaderAndBody()
 
 // Create the parameters object
 void
-SOAPMessage::CreateParametersObject()
+SOAPMessage::CreateParametersObject(ResponseType p_responseType)
 {
   if(m_body)
   {
     m_paramObject = GetElementFirstChild(m_body);
     if(m_paramObject == nullptr)
     {
-      switch(m_soapVersion)
+      if(m_soapVersion == SoapVersion::SOAP_10)
       {
-        case SoapVersion::SOAP_10:  m_paramObject = m_root;
-                                    break;
-        default:
-        case SoapVersion::SOAP_11:  // Fall through
-        case SoapVersion::SOAP_12:  m_paramObject = SetElement(m_body,m_soapAction,"");
-                                    break;
+        m_paramObject = m_root;
+      }
+      else
+      {
+        // When soapVersion = 1.1 or 1.2
+        switch(p_responseType)
+        {
+	        case ResponseType::RESP_ACTION_NAME: m_paramObject = SetElement(m_body,m_soapAction,"");
+	                                             break;
+	        case ResponseType::RESP_EMPTY_BODY:  m_paramObject = m_body;
+	                                             break;
+	        case ResponseType::RESP_ACTION_RESP: m_paramObject = SetElement(m_body,m_soapAction + "Response","");
+	                                             break;
+        }
       }
     }
   }
