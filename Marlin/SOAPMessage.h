@@ -78,6 +78,15 @@ public:
   int m_upper;
 };
 
+// ResponseType controls the behaviour of the Reset() method
+//
+enum class ResponseType
+{
+   RESP_ACTION_NAME = 0   // Action name is the RequestResponse node
+  ,RESP_EMPTY_BODY  = 1   // Leave body empty after Reset(), body = parameter-body
+  ,RESP_ACTION_RESP = 2   // Try to compose "<name>Response" node
+};
+
 // Different types of maps for the server message
 using RangeMap = std::deque<RelRange>;
 
@@ -122,7 +131,7 @@ public:
   virtual ~SOAPMessage();
 
   // Reset parameters, transforming it in an answer, preferable in our namespace
-  virtual void    Reset(CString p_namespace = "");
+  virtual void    Reset(ResponseType p_responseType = ResponseType::RESP_ACTION_NAME,CString p_namespace = "");
   // Parse incoming message to members
   virtual void    ParseMessage(CString& p_message);
   // Parse incoming soap as new body of the message
@@ -314,7 +323,7 @@ protected:
   // Create header and body accordingly to SOAP version
   void            CreateHeaderAndBody();
   // Create the parameters object
-  void            CreateParametersObject();
+  void            CreateParametersObject(ResponseType p_responseType = ResponseType::RESP_ACTION_NAME);
   // Find Header and Body after a parsed message is coming in
   void            FindHeaderAndBody();
   // TO do after we set parts of the URL in setters
