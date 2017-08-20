@@ -115,7 +115,7 @@ SiteHandlerSoapFiltering::Handle(SOAPMessage* p_message)
   xprintf("Incoming message in XML:\n%s\n", p_message->GetSoapMessage().GetString());
 
   CString param = p_message->GetParameter("Price");
-  p_message->Reset();
+  p_message->Reset(ResponseType::RESP_ACTION_NAME);
   double price = atof(param);
   price *= 1.21; // VAT percentage in the Netherlands
   p_message->SetParameter("PriceInclusive", price);
