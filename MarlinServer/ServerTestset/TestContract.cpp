@@ -132,7 +132,7 @@ TestContract::OnMarlinFirst(int p_code,SOAPMessage* p_message)
 
   CString resp("ResponseFirst");
   p_message->SetSoapAction(resp);
-  p_message->Reset(m_targetNamespace);
+  p_message->Reset(ResponseType::RESP_ACTION_NAME,m_targetNamespace);
   p_message->SetParameter("Accepted",m_language == "Dutch");
 
   --totalChecks;
@@ -150,7 +150,7 @@ TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
 
   CString resp("ResponseSecond");
   p_message->SetSoapAction(resp);
-  p_message->Reset(m_targetNamespace);
+  p_message->Reset(ResponseType::RESP_ACTION_NAME,m_targetNamespace);
   bool cando = false;
   if(m_translation == "English"  ||
      m_translation == "Français" ||
@@ -182,7 +182,7 @@ TestContract::OnMarlinThird(int p_code,SOAPMessage* p_message)
 
   CString resp("ResponseThird");
   p_message->SetSoapAction(resp);
-  p_message->Reset(m_targetNamespace);
+  p_message->Reset(ResponseType::RESP_ACTION_NAME,m_targetNamespace);
   // Optional parameter, need not be set!
   if(!result.IsEmpty())
   {
