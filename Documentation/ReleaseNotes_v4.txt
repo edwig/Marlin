@@ -296,6 +296,7 @@ CHANGES IN VERSION 4.0
 13) Correction in the interpretation of the WSDL "minOccurs" and "maxOccurs" attributes.
     For the interpretation of the 'mandatory' status, only the 'minOccurs' attribute is used now.
     0 or less means 'Optional', 1 and greater means 'manditory'.
+    Tested in a live environment.
 14) Added a 'cleanup job' to the threadpool. One or more cleanup jobs can be registered that will
     be called after the threadpool has been drained and stopped. The cleanup jobs will be called
 	  from the mainthread of the threadpool, in order of registration.
