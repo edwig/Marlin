@@ -8,6 +8,14 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.5.2
+========================
+1) The registration of the object EventStream in the server now also takse into account to
+   new members, to be exact:
+   - The senders socket address (and thus the IP adres of the initiator)
+   - The Citrix desktop numer from the desktop header
+   This is done so the server sessions can distingish to which desktop each stream is going.
+
 CHANGES IN VERSION 4.5.1
 ========================
 1) The Reset() method of SOAPMessage has been extended. You can now choose between 3 modes of reset

@@ -509,7 +509,13 @@ HTTPServerSync::RunHTTPServer()
       if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
       {
         CString absolutePath = CW2A(request->CookedUrl.pAbsPath);
-        EventStream* stream = SubscribeEventStream(site,site->GetSite(),absolutePath,request->RequestId,accessToken);
+        EventStream* stream = SubscribeEventStream((PSOCKADDR_IN6) sender
+                                                   ,remDesktop
+                                                   ,site
+                                                   ,site->GetSite()
+                                                   ,absolutePath
+                                                   ,request->RequestId
+                                                   ,accessToken);
         if(stream)
         {
           // Remember our URL

@@ -506,7 +506,13 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
      (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
-    EventStream* stream = SubscribeEventStream(p_site,p_site->GetSite(),absolutePath,(HTTP_OPAQUE_ID)p_context,NULL);
+    EventStream* stream = SubscribeEventStream((PSOCKADDR_IN6) sender
+                                               ,remDesktop
+                                               ,p_site
+                                               ,p_site->GetSite()
+                                               ,absolutePath
+                                               ,(HTTP_OPAQUE_ID) p_context
+                                               ,NULL);
     if(stream)
     {
       // Getting the impersonated user

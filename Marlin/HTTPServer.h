@@ -347,7 +347,13 @@ public:
   // RFC 2616: paragraph 14.25: "if-modified-since"
   bool          DoIsModifiedSince(HTTPMessage* p_msg);
   // Register server push event stream for this site
-  EventStream*  SubscribeEventStream(HTTPSite* p_site,CString p_url,CString& p_pad,HTTP_OPAQUE_ID p_requestID,HANDLE p_token);
+  EventStream*  SubscribeEventStream(PSOCKADDR_IN6   p_sender
+                                    ,int             p_desktop
+                                    ,HTTPSite*       p_site
+                                    ,CString         p_url
+                                    ,CString&        p_pad
+                                    ,HTTP_OPAQUE_ID  p_requestID
+                                    ,HANDLE          p_token);
 
 protected:
   // Cleanup the server

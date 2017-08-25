@@ -367,7 +367,13 @@ HTTPRequest::ReceivedRequest()
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = CW2A(m_request->CookedUrl.pAbsPath);
-    EventStream* stream  = m_server->SubscribeEventStream(m_site,m_site->GetSite(),absolutePath,(HTTP_OPAQUE_ID)this,accessToken);
+    EventStream* stream = m_server->SubscribeEventStream((PSOCKADDR_IN6) sender
+                                                         ,remDesktop
+                                                         ,m_site
+                                                         ,m_site->GetSite()
+                                                         ,absolutePath
+                                                         ,(HTTP_OPAQUE_ID) this
+                                                         ,accessToken);
     if(stream)
     {
       stream->m_baseURL = rawUrl;

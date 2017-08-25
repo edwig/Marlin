@@ -38,6 +38,8 @@ constexpr auto MAX_DATACHUNKS = 65530;
 class EventStream
 {
 public:
+  SOCKADDR_IN6    m_sender;     // Stream originates from this address
+  int             m_desktop;    // Stream originates from this desktop
   int             m_port;       // Port of the base URL of the stream
   CString         m_baseURL;    // Base URL of the stream
   CString         m_absPath;    // Absolute pathname of the URL
