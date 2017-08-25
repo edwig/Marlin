@@ -8,6 +8,14 @@ Version 3.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 3.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 3.8.5
+========================
+1) The registration of the object EventStream in the server now also takse into account to
+   new members, to be exact:
+   - The senders socket address (and thus the IP adres of the initiator)
+   - The Citrix desktop numer from the desktop header
+   This is done so the server sessions can distingish to which desktop each stream is going.
+
 CHANGES IN VERSION 3.8.4
 ========================
 1) Correction in the WSDL cache for 'in sequence' ordered SOAP Messages. In the case an optional

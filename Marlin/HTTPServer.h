@@ -107,6 +107,8 @@ HTTP_SSL_PROTOCOL_INFO,*PHTTP_SSL_PROTOCOL_INFO;
 class EventStream
 {
 public:
+  SOCKADDR_IN6    m_sender;     // Stream originates from this address
+  int             m_desktop;    // Stream originates from this desktop
   int             m_port;       // Port of the base URL of the stream
   CString         m_baseURL;    // Base URL of the stream
   CString         m_absPath;    // Absolute pathname of the URL
@@ -334,7 +336,13 @@ private:
                         ,LPFN_CALLBACK  p_context
                         ,HTTPSite*      p_mainSite = nullptr);
   // Register server push event stream for this site
-  EventStream* SubscribeEventStream(HTTPSite* p_site,CString p_url,CString& p_pad,HTTP_REQUEST_ID p_requestID,HANDLE p_token);
+  EventStream* SubscribeEventStream(PSOCKADDR_IN6   p_sender
+                                   ,int             p_desktop
+                                   ,HTTPSite*       p_site
+                                   ,CString         p_url
+                                   ,CString&        p_pad
+                                   ,HTTP_REQUEST_ID p_requestID
+                                   ,HANDLE          p_token);
   // General checks before starting
   bool      GeneralChecks();
   // Checks if all sites are started

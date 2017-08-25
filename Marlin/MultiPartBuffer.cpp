@@ -579,7 +579,7 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,CString& p
       p_remaining -= length + 2; // 2 is for cr/lf of the HTTP protocol
       result       = p_finding;
 
-      while(p_remaining-- > (size_t)(length + 1))
+      while(p_remaining--)
       {
         if(memcmp(p_finding,(char*) p_boundary.GetString(),length) == 0)
         {

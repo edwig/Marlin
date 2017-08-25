@@ -1153,7 +1153,13 @@ HTTPServer::RunHTTPServer()
         if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
         {
           CString absolutePath = CW2A(request->CookedUrl.pAbsPath);
-          EventStream* stream = SubscribeEventStream(site,site->GetSite(), absolutePath,request->RequestId,accessToken);
+          EventStream* stream = SubscribeEventStream((PSOCKADDR_IN6) sender
+                                                     ,remDesktop
+                                                     ,site
+                                                     ,site->GetSite()
+                                                     ,absolutePath
+                                                     ,request->RequestId
+                                                     ,accessToken);
           if(stream)
           {
             stream->m_baseURL = rawUrl;
@@ -2414,7 +2420,9 @@ HTTPServer::GetStatusText(int p_status)
 
 // Register server push event stream for this site
 EventStream*
-HTTPServer::SubscribeEventStream(HTTPSite*        p_site
+HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
+                                ,int              p_desktop
+                                ,HTTPSite*        p_site
                                 ,CString          p_url
                                 ,CString&         p_path
                                 ,HTTP_REQUEST_ID  p_requestId
@@ -2444,6 +2452,8 @@ HTTPServer::SubscribeEventStream(HTTPSite*        p_site
 
   // ADD NEW STREAM
   EventStream* stream = new EventStream();
+  memcpy(&stream->m_sender,p_sender,sizeof(SOCKADDR_IN6));
+  stream->m_desktop   = p_desktop;
   stream->m_port      = p_site->GetPort();
   stream->m_requestID = p_requestId;
   stream->m_baseURL   = p_url;
