@@ -76,16 +76,19 @@ extern unsigned long g_compress_limit;  // = COMPRESS_LIMIT;
 #define STATUS_LOGON_FAILURE  ((LONG)0xC000006DL)
 #endif
 
+#ifndef _WIN32_WINNT_WIN10
 // Windows 10 extension on HTTP_REQUEST_INFO_TYPE
 typedef enum _HTTP_REQUEST_INFO_TYPE_W10
 {
-//HttpRequestInfoTypeAuth,           // Already in HTTP_REQUEST_INFO_TYPE
-//HttpRequestInfoTypeChannelBind,    // Already in HTTP_REQUEST_INFO_TYPE
+//HttpRequestInfoTypeAuth,           = 0   // Already in HTTP_REQUEST_INFO_TYPE
+//HttpRequestInfoTypeChannelBind,    = 1   // Already in HTTP_REQUEST_INFO_TYPE
   HttpRequestInfoTypeSslProtocol     = 2,
   HttpRequestInfoTypeSslTokenBinding = 3
 } 
 HTTP_REQUEST_INFO_TYPE_W10,*PHTTP_REQUEST_INFO_TYPE_W10;
+#endif
 
+#ifndef _WIN32_WINNT_WIN10
 // From the Windows 10 SDK
 typedef struct _HTTP_SSL_PROTOCOL_INFO
 {
@@ -98,6 +101,7 @@ typedef struct _HTTP_SSL_PROTOCOL_INFO
   ULONG KeyExchangeStrength;
 } 
 HTTP_SSL_PROTOCOL_INFO,*PHTTP_SSL_PROTOCOL_INFO;
+#endif
 
 enum class SendHeader
 {

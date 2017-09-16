@@ -115,15 +115,21 @@ public:
   JSONvalue&  operator=(JSONvalue& p_other);
   static
   CString     FormatAsJsonString(CString p_string,bool p_utf8 = false);
+
+  // JSONvalue's can be stored elsewhere. Use the reference mechanism to add/drop references
+  // With the drop of the last reference, the object WILL destroy itself
+  void        AddReference();
+  void        DropReference();
 private:
   // What's in there: the data type
-  JsonType   m_type     { JsonType::JDT_const };
+  JsonType   m_type       { JsonType::JDT_const };
   // Depending on m_type: one of these
   CString    m_string;
-  JSONnumber m_number;
+  JSONnumber m_number     { 0 };
   JSONarray  m_array;
   JSONobject m_object;
-  JsonConst  m_constant { JsonConst::JSON_NONE };
+  JsonConst  m_constant   { JsonConst::JSON_NONE };
+  long       m_references { 0 };   // Externally referenced
 };
 
 // Objects are made of pairs
@@ -164,7 +170,7 @@ public:
   // GETTERS
   CString         GetJsonMessage       (JsonEncoding p_encoding = JsonEncoding::JENC_Plain);
   CString         GetJsonMessageWithBOM(JsonEncoding p_encoding = JsonEncoding::JENC_UTF8);
-  JSONvalue&      GetValue()          { return m_value;                 };
+  JSONvalue&      GetValue()          { return *m_value;                };
   CString         GetURL()            { return m_url;                   };
   CrackedURL&     GetCrackedURL()     { return m_cracked;               };
   HTTP_OPAQUE_ID  GetRequestHandle()  { return m_request;               };
@@ -220,6 +226,11 @@ public:
   // Use POST method for PUT/MERGE/PATCH/DELETE
   bool            UseVerbTunneling();
 
+  // JSONMessages can be stored elsewhere. Use the reference mechanism to add/drop references
+  // With the drop of the last reference, the object WILL destroy itself
+  void            AddReference();
+  void            DropReference();
+
 private:
   // Parse the URL, true if legal
   bool ParseURL(CString p_url);
@@ -227,7 +238,7 @@ private:
   void ReparseURL();
 
   // The message is contained in a JSON value
-  JSONvalue       m_value;
+  JSONvalue*      m_value;
 
   // Parser for the XML texts
   friend          JSONParser;
@@ -239,7 +250,7 @@ private:
   CString         m_lastError;                                  // Error as text
   JsonEncoding    m_encoding    { JsonEncoding::JENC_UTF8 };    // Encoding details
   bool            m_sendUnicode { false };                      // Send message in UTF-16 Unicode
-  bool            m_sendBOM     { false };                      // Prepend message with UTF-8 or UTF-16 Byte-Order-Mark
+  bool            m_sendBOM     { false };                      // Pre-pend message with UTF-8 or UTF-16 Byte-Order-Mark
   bool            m_verbTunnel  { false };                      // HTTP-VERB Tunneling used
   // DESTINATION
   CString         m_url;                                        // Full URL of the JSON service
@@ -255,4 +266,6 @@ private:
   HANDLE          m_token       { NULL };                       // Security access token
   SOCKADDR_IN6    m_sender;                                     // Senders address
   UINT            m_desktop     { 0 };                          // Senders remote desktop
+  long            m_references  { 0 };                          // Externally referenced
 };
+

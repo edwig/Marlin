@@ -1845,13 +1845,16 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
   }
 
   // Print all 'unknown' headers
-  for(unsigned ind = 0;ind < p_response->Headers.UnknownHeaderCount; ++ind)
+  if(p_response->Headers.pUnknownHeaders)
   {
-    CString uheader;
-    uheader  = p_response->Headers.pUnknownHeaders[ind].pName;
-    uheader += ": ";
-    uheader += p_response->Headers.pUnknownHeaders[ind].pRawValue;
-    m_log->BareStringLog(uheader.GetString(),uheader.GetLength());
+    for(unsigned ind = 0;ind < p_response->Headers.UnknownHeaderCount; ++ind)
+    {
+      CString uheader;
+      uheader = p_response->Headers.pUnknownHeaders[ind].pName;
+      uheader += ": ";
+      uheader += p_response->Headers.pUnknownHeaders[ind].pRawValue;
+      m_log->BareStringLog(uheader.GetString(),uheader.GetLength());
+    }
   }
   m_log->BareStringLog("",0);
 }

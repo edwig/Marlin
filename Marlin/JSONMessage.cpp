@@ -276,6 +276,24 @@ JSONvalue::FormatAsJsonString(CString p_string,bool p_utf8 /*=false*/)
   return result;
 }
 
+// JSONvalues can be stored elsewhere. Use the reference mechanism to add/drop references
+// With the drop of the last reference, the object WILL destroy itself
+
+void
+JSONvalue::AddReference()
+{
+  InterlockedIncrement(&m_references);
+}
+
+void
+JSONvalue::DropReference()
+{
+  if(InterlockedDecrement(&m_references) <= 0)
+  {
+    delete this;
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // JSONMessage object
@@ -284,6 +302,9 @@ JSONvalue::FormatAsJsonString(CString p_string,bool p_utf8 /*=false*/)
 
 JSONMessage::JSONMessage()
 {
+  // Set empty value
+  m_value = new JSONvalue();
+
   // Set sender to null
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
 }
@@ -292,6 +313,9 @@ JSONMessage::JSONMessage()
 // Incoming string , no whitespace preservation, expect it to be UTF-8
 JSONMessage::JSONMessage(CString p_message)
 {
+  // Set empty value
+  m_value = new JSONvalue();
+
   // Overrides from the declaration
   m_incoming = true; // INCOMING!!
 
@@ -305,6 +329,9 @@ JSONMessage::JSONMessage(CString p_message)
 // XTOR: From an internal string with explicit space and encoding
 JSONMessage::JSONMessage(CString p_message,bool p_whitespace,JsonEncoding p_encoding)
 {
+  // Set empty value
+  m_value = new JSONvalue();
+
   // Preserve whitespace setting
   m_whitespace = p_whitespace;
 
@@ -318,6 +345,9 @@ JSONMessage::JSONMessage(CString p_message,bool p_whitespace,JsonEncoding p_enco
 // XTOR: Outgoing message + url
 JSONMessage::JSONMessage(CString p_message,CString p_url)
 {
+  // Set empty value
+  m_value = new JSONvalue();
+
   // Set sender to null
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
 
@@ -334,11 +364,12 @@ JSONMessage::JSONMessage(CString p_message,CString p_url)
 // XTOR: From another message
 JSONMessage::JSONMessage(JSONMessage* p_other)
 {
-  // Copy the primary message value
-  m_value      = p_other->m_value;
-  m_whitespace = p_other->m_whitespace;
+  // Copy the primary message value, and reference it
+  m_value = p_other->m_value;
+  m_value->AddReference();
 
   // Copy all other data members
+  m_whitespace = p_other->m_whitespace;
   m_incoming    = p_other->m_incoming;
   m_errorstate  = p_other->m_errorstate;
   m_lastError   = p_other->m_lastError;
@@ -379,6 +410,9 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
 
 JSONMessage::JSONMessage(HTTPMessage* p_message)
 {
+  // Set empty value
+  m_value          = new JSONvalue();
+
   // Copy all parts
   m_url            = p_message->GetURL();
   m_request        = p_message->GetRequestHandle();
@@ -469,6 +503,9 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
 
 JSONMessage::JSONMessage(SOAPMessage* p_message)
 {
+  // Set empty value
+  m_value = new JSONvalue();
+
   // Copy all parts
   m_url             = p_message->GetURL();
   ParseURL(m_url);
@@ -518,13 +555,20 @@ JSONMessage::~JSONMessage()
     CloseHandle(m_token);
     m_token = NULL;
   }
+
+  // Drop reference, deleting it if it's the last
+  m_value->DropReference();
 }
 
 void
 JSONMessage::Reset()
 {
-  // Clear the message
-  m_value.SetValue(JsonConst::JSON_NULL);
+  // Let go of the value
+  m_value->DropReference();
+
+  // Set empty value
+  m_value = new JSONvalue();
+
   m_incoming = false;
   // Reset error
   m_errorstate = false;
@@ -561,7 +605,7 @@ JSONMessage::GetContentType()
   return m_contentType;
 }
 
-// JSON messages mostly get's send as a POST
+// JSON messages mostly gets send as a POST
 // But you can override it for e.g. OData 
 CString
 JSONMessage::GetVerb()
@@ -603,7 +647,7 @@ JSONMessage::GetHeader(CString p_name)
 
 // Addressing the message's has three levels
 // 1) The complete url containing both server and port number
-// 2) Setting server/port/absolutepath separately
+// 2) Setting server/port/absolute path separately
 // 3) By remembering the requestID of the caller
 void
 JSONMessage::SetURL(CString& p_url)
@@ -656,7 +700,7 @@ JSONMessage::ParseMessage(CString p_message,JsonEncoding p_encoding /*=JsonEncod
 CString 
 JSONMessage::GetJsonMessage(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/)
 {
-  return m_value.GetAsJsonString(m_whitespace,(p_encoding == JsonEncoding::JENC_UTF8));
+  return m_value->GetAsJsonString(m_whitespace,(p_encoding == JsonEncoding::JENC_UTF8));
 }
 
 CString 
@@ -691,3 +735,25 @@ JSONMessage::UseVerbTunneling()
   }
   return false;
 }
+
+#pragma region References
+
+// XMLElements can be stored elsewhere. Use the reference mechanism to add/drop references
+// With the drop of the last reference, the object WILL destroy itself
+
+void
+JSONMessage::AddReference()
+{
+  InterlockedIncrement(&m_references);
+}
+
+void
+JSONMessage::DropReference()
+{
+  if(InterlockedDecrement(&m_references) <= 0)
+  {
+    delete this;
+  }
+}
+
+#pragma endregion References

@@ -66,7 +66,7 @@ JSONParser::ParseMessage(CString& p_message,bool& p_whitespace,JsonEncoding p_en
 
   // Initializing the parser
   m_pointer    = (uchar*) p_message.GetString();
-  m_valPointer = &m_message->m_value;
+  m_valPointer = m_message->m_value;
   m_lines      = 0;
   m_objects    = 0;
   m_utf8       = p_encoding == JsonEncoding::JENC_UTF8;
@@ -530,7 +530,7 @@ JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap)
   // Construct the correct contents!!
   p_soap->GetSoapMessage();
 
-  JSONvalue&  valPointer = m_message->m_value;
+  JSONvalue&  valPointer = *m_message->m_value;
   XMLElement& element    = *m_soap->m_paramObject;
 
   ParseMain(valPointer,element);
