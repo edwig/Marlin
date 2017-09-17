@@ -43,6 +43,8 @@ XMLRestriction::XMLRestriction(CString p_name)
 {
 }
 
+// SETTING RESTRICTIONS
+
 void
 XMLRestriction::AddEnumeration(CString p_enum,CString p_displayValue /*=""*/)
 {
@@ -50,6 +52,38 @@ XMLRestriction::AddEnumeration(CString p_enum,CString p_displayValue /*=""*/)
   {
     m_enums.insert(std::make_pair(p_enum,p_displayValue));
   }
+}
+
+void
+XMLRestriction::AddMaxExclusive(CString p_max) 
+{ 
+  m_maxExclusive        = p_max; 
+  m_maxExclusiveDouble  =  atof(p_max);
+  m_maxExclusiveInteger = _atoi64(p_max);
+}
+
+void
+XMLRestriction::AddMaxInclusive(CString p_max)
+{ 
+  m_maxInclusive        = p_max; 
+  m_maxInclusiveDouble  =  atof(p_max);
+  m_maxInclusiveInteger = _atoi64(p_max);
+}
+
+void
+XMLRestriction::AddMinExclusive(CString p_max)
+{ 
+  m_minExclusive        = p_max; 
+  m_minExclusiveDouble  =  atof(p_max);
+  m_minExclusiveInteger = _atoi64(p_max);
+}
+
+void
+XMLRestriction::AddMinInclusive(CString p_max)
+{ 
+  m_minInclusive        = p_max; 
+  m_minInclusiveDouble  =  atof(p_max);
+  m_minInclusiveInteger = _atoi64(p_max);
 }
 
 bool 
@@ -279,21 +313,39 @@ XMLRestrictions::GiveDisplayValue(CString p_name,CString p_enum)
 CString   
 XMLRestriction::CheckRangeFloat(CString p_value)
 {
+  double value = atof(p_value);
+  if(errno == ERANGE)
+  {
+    return "Floating point overflow";
+  }
+
   if(!m_minInclusive.IsEmpty())
   {
-    if(atof(p_value) < atof(m_minInclusive)) return "Value too small. < minInclusive";
+    if(value < m_minInclusiveDouble)
+    {
+      return "Value too small. < minInclusive";
+    }
   }
   if(!m_minExclusive.IsEmpty())
   {
-    if(atof(p_value) <= atof(m_minExclusive)) return "Value too small. <= minExclusive";
+    if(value <= m_minExclusiveDouble)
+    {
+      return "Value too small. <= minExclusive";
+    }
   }
   if(!m_maxInclusive.IsEmpty())
   {
-    if(atof(p_value) > atof(m_maxInclusive)) return "Value too big. > maxInclusive";
+    if(value > m_maxInclusiveDouble)
+    {
+      return "Value too big. > maxInclusive";
+    }
   }
   if(!m_maxExclusive.IsEmpty())
   {
-    if(atof(p_value) >= atof(m_maxExclusive)) return "Value too big. >= maxExclusive";
+    if(value >= m_maxExclusiveDouble)
+    {
+      return "Value too big. >= maxExclusive";
+    }
   }
   return "";
 }
@@ -301,21 +353,39 @@ XMLRestriction::CheckRangeFloat(CString p_value)
 CString   
 XMLRestriction::CheckRangeDecimal(CString p_value)
 {
+  INT64 value = _atoi64(p_value);
+  if(errno == ERANGE)
+  {
+    return "Numeric overflow";
+  }
+
   if(!m_minInclusive.IsEmpty())
   {
-    if(_atoi64(p_value) < _atoi64(m_minInclusive)) return "Value too small. < minInclusive";
+    if(value < m_minInclusiveInteger)
+    {
+      return "Value too small. < minInclusive";
+    }
   }
   if(!m_minExclusive.IsEmpty())
   {
-    if(_atoi64(p_value) <= _atoi64(m_minExclusive)) return "Value too small. <= minExclusive";
+    if(value <= m_minExclusiveInteger)
+    {
+      return "Value too small. <= minExclusive";
+    }
   }
   if(!m_maxInclusive.IsEmpty())
   {
-    if(_atoi64(p_value) > _atoi64(m_maxInclusive)) return "Value too big. > maxInclusive";
+    if(value > m_maxInclusiveInteger)
+    {
+      return "Value too big. > maxInclusive";
+    }
   }
   if(!m_maxExclusive.IsEmpty())
   {
-    if(_atoi64(p_value) >= _atoi64(m_maxExclusive)) return "Value too big. >= maxExclusive";
+    if(value >= m_maxExclusiveInteger)
+    {
+      return "Value too big. >= maxExclusive";
+    }
   }
   return "";
 }
@@ -571,6 +641,8 @@ XMLRestriction::CheckBase64(CString p_value)
   return "";
 }
 
+
+// Number can be: nnnnn[.nnnnnn][[+|-]{E|e}nnn]
 CString
 XMLRestriction::CheckDouble(CString p_value,bool p_specials)
 {
@@ -588,7 +660,7 @@ XMLRestriction::CheckDouble(CString p_value,bool p_specials)
   for(int ind = 0; ind < p_value.GetLength(); ++ind)
   {
     unsigned char ch = p_value.GetAt(ind);
-    if(!isspace(ch) && !isdigit(ch) && ch != '+' && ch != '-' && toupper(ch) != 'E')
+    if(!isspace(ch) && !isdigit(ch) && ch != '.' && ch != '+' && ch != '-' && toupper(ch) != 'E')
     {
       result  = "Not a number: ";
       result += p_value;

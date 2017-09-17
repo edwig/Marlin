@@ -158,8 +158,8 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestJsonData(client);
-      errors += TestContract(client,false);
       errors += TestContract(client,true);
+      errors += TestContract(client,false);
       errors += TestPatching(client);
       errors += TestCompression(client);
       errors += TestWebservices(*client);

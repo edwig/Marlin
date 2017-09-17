@@ -8,6 +8,16 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.6.0
+========================
+1) The JSONMessage is now derivable from other objects. Just as the HTTPMessage and XMLMessage this
+   is done by adding a reference count system to JSONMessage and JSONvalue;
+2) The floating point number check bug in the WSDL system has been fixed. 
+   For testing, the MarlinFifth service of the test contract has been expanded with the number of PI
+   this extra optional parameter is tested for a correct and incorrect number in the test framework.
+3) The testing of floating point numbers and integers in the WSDL XMLRestriction system has been 
+   optimized for speed. This is done by pre-converting all range restrictions.
+
 CHANGES IN VERSION 4.5.2
 ========================
 1) The registration of the object EventStream in the server now also takse into account to

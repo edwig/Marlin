@@ -177,9 +177,76 @@ TestWSDLDatatype(WebServiceClient& p_client,CString p_contract)
   return error;
 }
 
+bool
+TestWSDLFloating(WebServiceClient& p_client,CString p_contract)
+{
+  CString command("MarlinFifth");
+  CString pi = "3.141592653589793";
+  SOAPMessage msg(p_contract,command);
+  XMLElement* param = msg.SetParameter("Parameters","");
+  msg.AddElement(param,"Dialect", XDT_String,"Math");
+  msg.AddElement(param,"Region",  XDT_String,"Europe");
+  msg.AddElement(param,"PiApprox",XDT_Double,pi);
+  XMLElement* data = msg.AddElement(param,"DataTypes",XDT_Complex,"");
+  msg.AddElement(data,"MinLength",  XDT_Integer, "4");
+  msg.AddElement(data,"MaxLength",  XDT_Integer,"20");
+  msg.AddElement(data,"MaxDecimals",XDT_Integer,"16");
+
+  XMLElement* dword = msg.SetParameter("DoubleWord","");
+  msg.AddElement(dword,"Word",XDT_String,"PI");
+
+  bool error = true;
+
+  if(p_client.Send(&msg))
+  {
+    if(msg.GetParameter("TranslatedWord") == "pi")
+    {
+      error = false;
+    }
+  }
+  // --- "---------------------------------------------- - ------
+  printf("Service contract: Testing WSDL floating point 1: %s\n",error ? "ERROR" : "OK");
+  return error;
+}
+
+bool
+TestWSDLFloatingWrong(WebServiceClient& p_client,CString p_contract)
+{
+  CString command("MarlinFifth");
+  CString pi = "3,141592653589793"; // THIS IS THE WRONG NUMBER !!
+  SOAPMessage msg(p_contract,command);
+  XMLElement* param = msg.SetParameter("Parameters","");
+  msg.AddElement(param,"Dialect", XDT_String,"Math");
+  msg.AddElement(param,"Region",  XDT_String,"Europe");
+  msg.AddElement(param,"PiApprox",XDT_Double,pi);
+  XMLElement* data = msg.AddElement(param,"DataTypes",XDT_Complex,"");
+  msg.AddElement(data,"MinLength",  XDT_Integer,"4");
+  msg.AddElement(data,"MaxLength",  XDT_Integer,"20");
+  msg.AddElement(data,"MaxDecimals",XDT_Integer,"16");
+
+  XMLElement* dword = msg.SetParameter("DoubleWord","");
+  msg.AddElement(dword,"Word",XDT_String,"PI");
+
+  bool error = true;
+
+  if(p_client.Send(&msg))
+  {
+    // MUST GET A SOAP FAULT with this detailed information
+    if(msg.GetFaultDetail().Find("Datatype check failed! Field: PiApprox") >= 0)
+    {
+      error = false;
+    }
+  }
+  // --- "---------------------------------------------- - ------
+  printf("Service contract: Testing WSDL floating point 2: %s\n",error ? "ERROR" : "OK");
+  return error;
+}
+
+
+
 int TestContract(HTTPClient* p_client,bool p_json)
 {
-  int errors = 4;
+  int errors = 6;
   CString logfileName = WebConfig::GetExePath() + "ClientLog.txt";
 
   CString url;
@@ -248,6 +315,24 @@ int TestContract(HTTPClient* p_client,bool p_json)
           if(Translate(client,contract,"altijd", "toujours")) --errors;
           if(Translate(client,contract,"maandag","lundi"   )) --errors;
           if(Translate(client,contract,"dinsdag",""        )) --errors;
+        }
+      }
+
+      if(p_json)
+      {
+        errors -= 2;
+      }
+      else
+      {
+        // Test floating point correctly sent
+        if(TestWSDLFloating(client,contract) == false)
+        {
+          --errors;
+        }
+        // Test with a wrong floating point
+        if(TestWSDLFloatingWrong(client,contract) == false)
+        {
+          --errors;
         }
       }
     }

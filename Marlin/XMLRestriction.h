@@ -48,12 +48,12 @@ public:
   void    AddMaxLength(int p_length)      { m_maxLength      = p_length; };
   void    AddTotalDigits(int p_digits)    { m_totalDigits    = p_digits; };
   void    AddFractionDigits(int p_digits) { m_fractionDigits = p_digits; };
-  void    AddMaxExclusive(CString p_max)  { m_maxExclusive   = p_max;    };
-  void    AddMaxInclusive(CString p_max)  { m_maxInclusive   = p_max;    };
-  void    AddMinExclusive(CString p_max)  { m_minExclusive   = p_max;    };
-  void    AddMinInclusive(CString p_max)  { m_minInclusive   = p_max;    };
   void    AddPattern(CString p_pattern)   { m_pattern        = p_pattern;};
   void    AddWhitespace(int p_white)      { m_whiteSpace     = p_white;  };
+  void    AddMaxExclusive(CString p_max);
+  void    AddMaxInclusive(CString p_max);
+  void    AddMinExclusive(CString p_max);
+  void    AddMinInclusive(CString p_max);
 
   // Get restrictions
   bool    HasEnumeration  (CString p_enum);
@@ -143,12 +143,21 @@ private:
   int       m_minLength      { 0   };   // Min allowed length of the field
   int       m_totalDigits    { 0   };   // Exact number of digits allowed
   int       m_fractionDigits { 0   };   // Number of decimal places
+  int       m_whiteSpace     { 0   };   // 1=preserve, 2=replace, 3=collapse
+  CString   m_pattern;                  // Pattern for pattern matching
   CString   m_maxExclusive;             // Max value upto      this value
   CString   m_maxInclusive;             // Max value including this value
   CString   m_minExclusive;             // Min value downto    this value
   CString   m_minInclusive;             // Min value including this value
-  CString   m_pattern;                  // Pattern for pattern matching
-  int       m_whiteSpace     { 0   };   // 1=preserve, 2=replace, 3=collapse
+  // Redundant optimalisation
+  double    m_maxExclusiveDouble  { 0.0 };
+  double    m_maxInclusiveDouble  { 0.0 };
+  double    m_minExclusiveDouble  { 0.0 };
+  double    m_minInclusiveDouble  { 0.0 };
+  INT64     m_maxExclusiveInteger { 0   };
+  INT64     m_maxInclusiveInteger { 0   };
+  INT64     m_minExclusiveInteger { 0   };
+  INT64     m_minInclusiveInteger { 0   };
 };
 
 using AllRestrictions = std::map<CString,XMLRestriction>;

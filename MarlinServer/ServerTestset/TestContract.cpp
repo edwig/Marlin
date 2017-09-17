@@ -204,14 +204,41 @@ TestContract::OnMarlinFourth(int p_code,SOAPMessage* /*p_message*/)
 }
 
 void
-TestContract::OnMarlinFifth(int p_code,SOAPMessage* /*p_message*/)
+TestContract::OnMarlinFifth(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MV);
   UNREFERENCED_PARAMETER(p_code);
 
-  // --- "---------------------------------------------- - ------
-  qprintf("WSDL Contract: Wrong contract (Fifth)          : ERROR\n");
-  xerror();
+  CString pi;
+  XMLElement* pielem = p_message->FindElement("PiApprox");
+  if(pielem)
+  {
+    pi = pielem->GetValue();
+  }
+  p_message->Reset(ResponseType::RESP_ACTION_NAME,m_targetNamespace);
+
+  if(!pi.IsEmpty())
+  {
+    if(pi.Find("3.141592653589") >= 0)
+    {
+      // --- "---------------------------------------------- - ------
+      qprintf("WSDL Contract: Found the value of PI as        : OK\n");
+
+      p_message->SetParameter("TranslatedWord","pi");
+    }
+    else
+    {
+      // --- "---------------------------------------------- - ------
+      qprintf("WSDL Contract: Wrong value of PI              : ERROR\n");
+      xerror();
+    }
+  }
+  else
+  {
+    // --- "---------------------------------------------- - ------
+    qprintf("WSDL Contract: Wrong contract (Fifth)          : ERROR\n");
+    xerror();
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -288,7 +315,7 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   // Fourth. Recursive parameters and answers
   XMLElement* param   = input4.AddElement(NULL, "Parameters",   WSDL_Mandatory|XDT_Complex,"");
   XMLElement* lanFrom = input4.AddElement(param,"LanguageFrom", WSDL_Mandatory|XDT_String, "language");
-  XMLElement* lanTo   = input4.AddElement(param,"LanguageTo",   WSDL_Mandatory|XDT_String, "langauge");
+  XMLElement* lanTo   = input4.AddElement(param,"LanguageTo",   WSDL_Mandatory|XDT_String, "language");
   XMLElement* datatp  = input4.AddElement(param,"DataTypes",    WSDL_Mandatory|XDT_Complex,"");
   input4.AddElement(datatp,"String",  WSDL_Optional|XDT_String,"string");
   input4.AddElement(datatp,"Diacrits",WSDL_Optional|XDT_String,"diacritics");
@@ -305,7 +332,8 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   // Fifth. Has another "Parameters" node and "DoubleWord"
   XMLElement* param5   = input5.AddElement(NULL, "Parameters",   WSDL_Mandatory|XDT_Complex,"");
   input5.AddElement(param5,"Dialect",      WSDL_Mandatory|XDT_String, "Dialect");
-  input5.AddElement(param5,"Regio",        WSDL_Mandatory|XDT_String, "Regio");
+  input5.AddElement(param5,"Region",       WSDL_Mandatory|XDT_String, "Region");
+  input5.AddElement(param5,"PiApprox",     WSDL_Optional |XDT_Float,  "Approximation of PI");
   XMLElement* datatyp  = input5.AddElement(param5,"DataTypes", WSDL_Optional|XDT_Complex,"");
   input5.AddElement(datatyp,"MinLength",  WSDL_Mandatory|XDT_Integer,"int");
   input5.AddElement(datatyp,"MaxLength",  WSDL_Mandatory|XDT_Integer,"int");
