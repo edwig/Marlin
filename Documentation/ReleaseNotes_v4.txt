@@ -17,6 +17,11 @@ CHANGES IN VERSION 4.6.0
    this extra optional parameter is tested for a correct and incorrect number in the test framework.
 3) The testing of floating point numbers and integers in the WSDL XMLRestriction system has been 
    optimized for speed. This is done by pre-converting all range restrictions.
+4) Added SOAPSecurity class to perform OASIS WS-Security user-token-profile 1.1.1 authentication
+   To use this class, Provide a user/password and digest boolean on the calling side
+   On the server side you can likewise provide a user/password, or you can use a settable function
+   with SOAPSecurity::SetUserPasswordFinder to find a password for every incoming user.
+   All digests are calculated (accoring to the standard) as SHA1(nonce + timestamp + password)
 
 CHANGES IN VERSION 4.5.2
 ========================

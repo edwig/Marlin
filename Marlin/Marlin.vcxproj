@@ -221,6 +221,7 @@
     <ClCompile Include="SiteHandlerWebDAV.cpp" />
     <ClCompile Include="SiteHandlerWebSocket.cpp" />
     <ClCompile Include="SOAPMessage.cpp" />
+    <ClCompile Include="SOAPSecurity.cpp" />
     <ClCompile Include="StackTrace.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -378,6 +379,7 @@
     <ClInclude Include="SiteHandlerWebDAV.h" />
     <ClInclude Include="SiteHandlerWebSocket.h" />
     <ClInclude Include="SOAPMessage.h" />
+    <ClInclude Include="SOAPSecurity.h" />
     <ClInclude Include="SoapTypes.h" />
     <ClInclude Include="StackTrace.h" />
     <ClInclude Include="stdafx.h" />

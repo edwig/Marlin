@@ -135,12 +135,15 @@ public:
                    ,int p_hour,int p_minute,int p_second
                    ,int p_fraction = 0);
   void SetFraction(int p_fraction) { m_fraction = p_fraction; };
+  void SetCurrentTimestamp(bool p_fraction = false);
   XMLTimestamp AddDays   (int p_number) const;
   XMLTimestamp AddMinutes(int p_number) const;
 
   int  Year()  { return m_timestamp.m_year;  };
   int  Month() { return m_timestamp.m_month; };
   int  Day()   { return m_timestamp.m_day;   };
+
+  CString AsString();
 private:
   void ParseMoment(CString p_value);
   void RecalculateValue();

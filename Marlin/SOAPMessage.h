@@ -58,8 +58,8 @@ constexpr auto NAMESPACE_RELIABLE   = "http://schemas.xmlsoap.org/ws/2005/02/rm"
 // WS-Security
 constexpr auto NAMESPACE_SIGNATURE  = "http://www.w3.org/2000/09/xmldsig#";
 constexpr auto NAMESPACE_ENCODING   = "http://www.w3.org/2001/04/xmlenc#";
-constexpr auto NAMESPACE_SECEXT     = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wsswssecurity-secext-1.0.xsd";
-constexpr auto NAMESPACE_SECUTILITY = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wsswssecurity-utility-1.0.xsd";
+constexpr auto NAMESPACE_SECEXT     = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd";
+constexpr auto NAMESPACE_SECUTILITY = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd";
 // Must have a default namespace
 #ifndef DEFAULT_NAMESPACE 
 #define DEFAULT_NAMESPACE "http://www.marlinserver.org/Services"

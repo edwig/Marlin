@@ -300,6 +300,9 @@
     <ClCompile Include="ThreadPoolED.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="SOAPSecurity.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -615,6 +618,9 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="HTTPLoglevel.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SOAPSecurity.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>

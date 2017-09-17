@@ -901,6 +901,47 @@ XMLTimestamp::AddMinutes(int p_number) const
   return *this;
 }
 
+CString 
+XMLTimestamp::AsString()
+{
+  CString string;
+  string.Format("%04d-%02d-%02dT%02d:%02d:%02d"
+               ,m_timestamp.m_year
+               ,m_timestamp.m_month
+               ,m_timestamp.m_day
+               ,m_timestamp.m_hour
+               ,m_timestamp.m_minute
+               ,m_timestamp.m_second);
+  if(m_fraction)
+  {
+    string.AppendFormat(".%d",m_fraction);
+    string.TrimRight("0");
+  }
+  return string;
+}
+
+void
+XMLTimestamp::SetCurrentTimestamp(bool p_fraction)
+{
+  // Getting the current date-and-time
+  SYSTEMTIME sys;
+  ::GetLocalTime(&sys);
+
+  long nanoseconds = 0;
+
+  if(p_fraction)
+  {
+    // Getting high-resolution time in 100-nanosecond resolution
+    FILETIME ftime;
+    ::GetSystemTimeAsFileTime(&ftime);
+    nanoseconds = (ftime.dwLowDateTime % 10000000);
+  }
+  // Construct timestamp
+  SetTimestamp(sys.wYear,sys.wMonth, sys.wDay
+              ,sys.wHour,sys.wMinute,sys.wSecond
+              ,100 * nanoseconds);
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // XMLDuration
