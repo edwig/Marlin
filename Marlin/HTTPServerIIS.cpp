@@ -897,6 +897,19 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     SetResponseHeader(response,HttpHeaderWwwAuthenticate, challenge,true);
   }
 
+  // In case we want IIS to handle the response, and we do nothing!
+  // This status get's caught in the MarlinModule::GetCompletionStatus
+  if(status == HTTP_STATUS_CONTINUE)
+  {
+    // Log that we do not do this message, but we pass it on to IIS
+    DETAILLOGV("We do **NOT** handle this url: ",p_message->GetURL());
+
+    // Do **NOT** send an answer twice
+    p_message->SetRequestHandle(NULL);
+
+    return;
+  }
+
   // Add a known header. (octet-stream or the message content type)
   if(!p_message->GetContentType().IsEmpty())
   {

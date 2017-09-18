@@ -626,6 +626,10 @@ MarlinModule::GetCompletionStatus(IHttpResponse* p_response)
   {
     return RQ_NOTIFICATION_PENDING;
   }
+  if(status == HTTP_STATUS_CONTINUE)
+  {
+    return RQ_NOTIFICATION_CONTINUE;
+  }
   return RQ_NOTIFICATION_FINISH_REQUEST;
 }
 

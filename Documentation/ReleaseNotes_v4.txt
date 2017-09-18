@@ -22,6 +22,12 @@ CHANGES IN VERSION 4.6.0
    On the server side you can likewise provide a user/password, or you can use a settable function
    with SOAPSecurity::SetUserPasswordFinder to find a password for every incoming user.
    All digests are calculated (accoring to the standard) as SHA1(nonce + timestamp + password)
+5) You now can choose in the HTTPServerIIS to **NOT** handle a message, but to pass it on to the
+   next IIS handler in the module chain. To do this set the status of the HTTPMessage to the
+   HTTP_STATUS_CONTINUE (100) number and do the "SendResponse(message)".
+   Beware 1: You cannot do this on the SOAPMessage or the JSONMessage.
+   Beware 2: You cannot do this on the HTTPServerMarlin or the HTTServerSync. Those servers must
+             handle all messages in some way or another, as they are stand-alone by nature!
 
 CHANGES IN VERSION 4.5.2
 ========================
