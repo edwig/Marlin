@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "WebServiceClient.h"
 #include "GenerateGUID.h"
+#include "SOAPSecurity.h"
 #include <objbase.h>
 #include <rpc.h>
 #include <wincrypt.h>
@@ -207,6 +208,16 @@ WebServiceClient::Open()
     DETAILLOG("WSDL checks out: %s",res ? "OK" : "WITH ERRORS!");
   }
 
+  // See if we must create a token profile provider
+  if(m_tokenProfile && m_soapSecurity == nullptr)
+  {
+    m_soapSecurity = new SOAPSecurity();
+
+    m_soapSecurity->SetUser(m_user);
+    m_soapSecurity->SetPassword(m_password);
+    m_soapSecurity->SetDigesting(true);
+  }
+
   // Currently not sending
   m_isSending = false;
 
@@ -282,6 +293,13 @@ WebServiceClient::Close()
     m_logfile = nullptr;
     m_logOwner = false;
   }
+
+  // Destroy SOAPSecurity
+  if(m_soapSecurity)
+  {
+    delete m_soapSecurity;
+    m_soapSecurity = nullptr;
+  }
 }
 
 void
@@ -346,9 +364,19 @@ WebServiceClient::Send(SOAPMessage* p_message)
     PrepareForReliable(p_message);
   }
 
-  // If user/password not set in the message, user ours (if any)
-  if(p_message->GetUser().IsEmpty())
+  // Provide the authentication of this message
+  if(m_tokenProfile)
   {
+    m_soapSecurity->SetSecurity(p_message);
+
+    // Remove user/password from the message
+    CString empty;
+    p_message->SetUser(empty);
+    p_message->SetPassword(empty);
+  }
+  else if(p_message->GetUser().IsEmpty())
+  {
+    // If user/password not set in the message, user ours (if any)
     p_message->SetUser(m_user);
     p_message->SetPassword(m_password);
   }
@@ -823,8 +851,15 @@ WebServiceClient::CreateSequence()
   }
 
   // Set username-password combination
-  message.SetUser(m_user);
-  message.SetPassword(m_password);
+  if(m_tokenProfile)
+  {
+    m_soapSecurity->SetSecurity(&message);
+  }
+  else
+  {
+    message.SetUser(m_user);
+    message.SetPassword(m_password);
+  }
 
   // Put in the logfile
   DETAILLOG1("*** Starting WS-ReliableMessaging protocol ***");
@@ -913,8 +948,15 @@ WebServiceClient::LastMessage()
   SOAPMessage message(m_rm,request,SoapVersion::SOAP_12,m_url);
 
   // Set username-password combination
-  message.SetUser(m_user);
-  message.SetPassword(m_password);
+  if(m_tokenProfile)
+  {
+    m_soapSecurity->SetSecurity(&message);
+  }
+  else
+  {
+    message.SetUser(m_user);
+    message.SetPassword(m_password);
+  }
 
   DETAILLOG1("*** Ending WS-ReliableMessaging protocol ***");
   try
@@ -950,8 +992,15 @@ WebServiceClient::TerminateSequence()
   message.SetParameter("Identifier",m_guidSequenceServer);
 
   // Set username-password combination
-  message.SetUser(m_user);
-  message.SetPassword(m_password);
+  if(m_tokenProfile)
+  {
+    m_soapSecurity->SetSecurity(&message);
+  }
+  else
+  {
+    message.SetUser(m_user);
+    message.SetPassword(m_password);
+  }
 
   try
   {

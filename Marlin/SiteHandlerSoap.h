@@ -27,6 +27,7 @@
 //
 #pragma once
 #include "SiteHandler.h"
+#include "SOAPSecurity.h"
 
 // Remember SOAPMessage for this thread
 extern __declspec(thread) SOAPMessage* g_soapMessage;
@@ -42,11 +43,19 @@ class SOAPMessage;
 class SiteHandlerSoap: public SiteHandler
 {
 public:
+  virtual ~SiteHandlerSoap();
+
   virtual bool      Handle(SOAPMessage* p_message);
+
+  // Handle WS-Security token profile tokens
+  virtual void  SetTokenProfile(bool p_token);
+  SOAPSecurity* GetSOAPSecurity();
 protected:
   // Handlers: Override and return 'true' if handling is ready
   virtual bool   PreHandle(HTTPMessage* p_message) override;
   virtual bool      Handle(HTTPMessage* p_message) override;
   virtual void  PostHandle(HTTPMessage* p_message) override;
   virtual void  CleanUp   (HTTPMessage* p_message) override;
+
+  SOAPSecurity* m_soapSecurity { nullptr };
 };

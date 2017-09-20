@@ -22,7 +22,13 @@ CHANGES IN VERSION 4.6.0
    On the server side you can likewise provide a user/password, or you can use a settable function
    with SOAPSecurity::SetUserPasswordFinder to find a password for every incoming user.
    All digests are calculated (accoring to the standard) as SHA1(nonce + timestamp + password)
-5) You now can choose in the HTTPServerIIS to **NOT** handle a message, but to pass it on to the
+5) WebServiceClient has been extended to make use of the SOAPSecurity standard and automatically
+   enhance the outgoing SOAPMessages with a user/password node in the header for safe basic 
+   authentication with a token profile.
+6) On the server side the standard "SiteHandlerSoap" has been extended to handle the extra 
+   WS-Security token profile tokens. Also WS-ReliableMessaging handlers have been extended to 
+   take advantage of the token-profile authenticated user code.
+7) You now can choose in the HTTPServerIIS to **NOT** handle a message, but to pass it on to the
    next IIS handler in the module chain. To do this set the status of the HTTPMessage to the
    HTTP_STATUS_CONTINUE (100) number and do the "SendResponse(message)".
    Beware 1: You cannot do this on the SOAPMessage or the JSONMessage.

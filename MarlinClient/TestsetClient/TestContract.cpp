@@ -244,7 +244,7 @@ TestWSDLFloatingWrong(WebServiceClient& p_client,CString p_contract)
 
 
 
-int TestContract(HTTPClient* p_client,bool p_json)
+int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
 {
   int errors = 6;
   CString logfileName = WebConfig::GetExePath() + "ClientLog.txt";
@@ -255,7 +255,7 @@ int TestContract(HTTPClient* p_client,bool p_json)
 
   url .Format("http://%s:%d/MarlinTest/TestInterface/",              MARLIN_HOST,TESTING_HTTP_PORT);
   wsdl.Format("http://%s:%d/MarlinTest/TestInterface/MarlinWeb.wsdl",MARLIN_HOST,TESTING_HTTP_PORT);
-  // Json is simultane on different site
+  // JSON is simultaneous on different site
   if(p_json)
   {
     url += "Extra/";
@@ -270,6 +270,13 @@ int TestContract(HTTPClient* p_client,bool p_json)
 
   WebServiceClient client(contract,url,wsdl);
 
+  if(p_tokenProfile)
+  {
+    client.SetUser("marlin");
+    client.SetPassword("M@rl!nS3cr3t");
+    client.SetTokenProfile(true);
+  }
+
   if(p_client)
   {
     // Running in the context of an existing client
@@ -279,7 +286,7 @@ int TestContract(HTTPClient* p_client,bool p_json)
   }
   else
   {
-    // Running a stand-alone testset
+    // Running a stand-alone test set
     // Need a logfile before the call to "Open()"
 
     // Create log file and turn logging 'on'

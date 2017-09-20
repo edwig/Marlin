@@ -52,6 +52,7 @@ int TestBodySigning      (HTTPServer* p_server);
 int TestBodyEncryption   (HTTPServer* p_server);
 int TestMessageEncryption(HTTPServer* p_server);
 int TestReliable         (HTTPServer* p_server);
+int TestReliableBA       (HTTPServer* p_server);
 int TestCookies          (HTTPServer* p_server);
 int TestToken            (HTTPServer* p_server);
 int TestSubSites         (HTTPServer* p_server);

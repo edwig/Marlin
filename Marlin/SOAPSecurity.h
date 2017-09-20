@@ -59,7 +59,7 @@ public:
   // Add security header to an outgoing message
   bool    SetSecurity(SOAPMessage* p_message);
   // Check security header of an incoming message, returning the user or nullptr
-  CString CheckSecurity(SOAPMessage* p_message);
+  bool    CheckSecurity(SOAPMessage* p_message);
 
 private:
   // Make sure the message has the correct namespace for the header

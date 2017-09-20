@@ -57,7 +57,7 @@ extern int TestWebSocket(LogAnalysis* p_log);
 extern int TestCloseWebSocket(void);
 extern int TestEvents(HTTPClient* p_client);
 extern int TestCookies(HTTPClient& p_client);
-extern int TestContract(HTTPClient* p_client,bool p_json);
+extern int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile);
 extern int TestJsonData(HTTPClient* p_client);
 extern int TestPatching(HTTPClient* p_client);
 extern int TestFormData(HTTPClient* p_client);

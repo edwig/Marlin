@@ -132,7 +132,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     if(argc >= 2 && _stricmp(argv[1],"/ws") == 0)
     {
       // Testing WebServiceClient standalone
-      errors += TestContract(nullptr,false);
+      errors += TestContract(nullptr,false,false);
     }
     else
     {
@@ -158,8 +158,9 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestJsonData(client);
-      errors += TestContract(client,true);
-      errors += TestContract(client,false);
+      errors += TestContract(client,true, false);  // JSON No authentication
+      errors += TestContract(client,false,false);  // WS   No authentication
+      errors += TestContract(client,false,true);   // WS   WS-Secure token-profile
       errors += TestPatching(client);
       errors += TestCompression(client);
       errors += TestWebservices(*client);

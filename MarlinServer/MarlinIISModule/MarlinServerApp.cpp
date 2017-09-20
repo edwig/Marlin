@@ -89,6 +89,7 @@ MarlinServerApp::InitInstance()
   TestBodyEncryption(m_appServer);
   TestMessageEncryption(m_appServer);
   TestReliable(m_appServer);
+  TestReliableBA(m_appServer);
   TestToken(m_appServer);
   TestSubSites(m_appServer);
   TestJsonData(m_appServer);

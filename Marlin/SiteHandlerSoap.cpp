@@ -37,13 +37,23 @@ static char THIS_FILE[] = __FILE__;
 // Remember SOAPMessage for this thread
 __declspec(thread) SOAPMessage* g_soapMessage = nullptr;
 
+// Destructor
+SiteHandlerSoap::~SiteHandlerSoap()
+{
+  if(m_soapSecurity)
+  {
+    delete m_soapSecurity;
+    m_soapSecurity = nullptr;
+  }
+}
+
 // A SOAP handler is an override for the HTTP POST handler
 // Most likely you need to write an overload of this one
 // and provide a 'Handle' method yourself,
 // as long as you leave the PreHandle here intact
 // or copy the workings of the PreHandle
 //
-bool  
+bool
 SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
 {
   // Setting the cleanup handler. 
@@ -71,6 +81,20 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
   }
 
   SITE_DETAILLOGS("Received SOAP message: ",g_soapMessage->GetSoapAction());
+
+  // Check WS-Security token profile
+  if(m_soapSecurity)
+  {
+    if(!m_soapSecurity->CheckSecurity(g_soapMessage))
+    {
+      // Invalid user. Status denied message returned
+      SITE_ERRORLOG(ERROR_ACCESS_DENIED,"SOAP Message with WS-Security token profile, but no valid access");
+      p_message->SetStatus(HTTP_STATUS_DENIED);
+      m_site->SendResponse(p_message);
+      g_soapMessage->SetRequestHandle(NULL);
+      return false;
+    }
+  }
 
   if(m_site && (m_site->GetEncryptionLevel() != XMLEncryption::XENC_Plain))
   {
@@ -151,4 +175,36 @@ SiteHandlerSoap::CleanUp(HTTPMessage* /*p_message*/)
     delete g_soapMessage;
     g_soapMessage = nullptr;
   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Handle WS-Security token profile tokens
+void  
+SiteHandlerSoap::SetTokenProfile(bool p_token)
+{
+  if(p_token)
+  {
+    if(m_soapSecurity == nullptr)
+    {
+      m_soapSecurity = new SOAPSecurity();
+    }
+  }
+  else
+  {
+    if(m_soapSecurity)
+    {
+      delete m_soapSecurity;
+      m_soapSecurity = nullptr;
+    }
+  }
+}
+
+SOAPSecurity* 
+SiteHandlerSoap::GetSOAPSecurity()
+{
+  return m_soapSecurity;
 }

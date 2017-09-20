@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 3;
+static int totalChecks = 6;
 
 class SiteHandlerSoapReliable: public SiteHandlerSoap
 {
@@ -135,6 +135,65 @@ TestReliable(HTTPServer* p_server)
     ++error;
     xerror();
     qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR) url);
+  }
+  return error;
+}
+
+int
+TestReliableBA(HTTPServer* p_server)
+{
+  int error = 0;
+
+  // If errors, change detail level
+  doDetails = false;
+
+  xprintf("TESTING RELIABLE MESSAGING FUNCTIONS OF THE HTTP SERVER with BASIC AUTHENTICATION\n");
+  xprintf("=================================================================================\n");
+
+  // Create URL channel to listen to "http://+:port/MarlinTest/ReliableBA/"
+  // But WebConfig can override all values except for the callback function address
+  CString url("/MarlinTest/ReliableBA/");
+  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  if(site)
+  {
+    // SUMMARY OF THE TEST
+    // --- "--------------------------- - ------\n"
+    qprintf("HTTPSite reliable messaging : OK : %s\n",(LPCTSTR)site->GetPrefixURL());
+  }
+  else
+  {
+    ++error;
+    xerror();
+    qprintf("ERROR: Cannot register a HTTP site for: %s\n",(LPCTSTR)url);
+    return error;
+  }
+
+  SiteHandlerSoapReliable* handler = new SiteHandlerSoapReliable();
+  
+  // Create and set handler
+  handler->SetTokenProfile(true);
+  // Getting the resulting soap-security object
+  SOAPSecurity* secure = handler->GetSOAPSecurity();
+  secure->SetUser("marlin");
+  secure->SetPassword("M@rl!nS3cr3t");
+
+  site->SetHandler(HTTPCommand::http_post,handler);
+
+  // Modify the standard settings for this site
+  site->AddContentType("","text/xml");
+  site->AddContentType("xml","application/soap+xml");
+  site->SetReliable(true);
+
+  // new: Start the site explicitly
+  if(site->StartSite())
+  {
+    xprintf("Site started correctly\n");
+  }
+  else
+  {
+    ++error;
+    xerror();
+    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
   }
   return error;
 }

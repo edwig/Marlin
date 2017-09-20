@@ -974,6 +974,11 @@ XMLMessage::FindElement(XMLElement* p_base, CString p_name,bool p_recurse /*=tru
   CString namesp = SplitNamespace(elementName);
   XMLElement* base = p_base ? p_base : m_root;
 
+  if(base->GetName().Compare(elementName) == 0)
+  {
+    return base;
+  }
+
   for(auto& element : base->GetChildren())
   {
     if(element->GetName().Compare(elementName) == 0)

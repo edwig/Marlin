@@ -273,6 +273,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestBodyEncryption(server);
           errors += TestMessageEncryption(server);
           errors += TestReliable(server);
+          errors += TestReliableBA(server);
           errors += TestToken(server);
           errors += TestSubSites(server);
           errors += TestFilter(server);

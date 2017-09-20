@@ -48,6 +48,9 @@ constexpr auto MESSAGESTORE_MINIMUM = 0;
 constexpr auto MESSAGESTORE_DEFAULT = 10;
 constexpr auto MESSAGESTORE_MAXIMUM = 256;
 
+// Forward declaration
+class SOAPSecurity;
+
 enum class ReliableType
 {
   RELIABLE_NONE      = 0 // Just soap message
@@ -100,6 +103,7 @@ public:
   CString   GetGuidSequenceClient()      { return m_guidSequenceClient;     };
   CString   GetAddressing()              { return m_adr;                    };
   CString   GetErrorText()               { return m_errorText;              };
+  bool      GetTokenProfile()            { return m_tokenProfile;           };
   bool      GetReliable()                { return m_reliable;               };
   CString   GetSecurityPassword()        { return m_encryptionPassword;     };
   bool      GetSoapCompress()            { return m_soapCompress;           };
@@ -112,7 +116,8 @@ public:
   HTTPClient*   GetHTTPClient()          { return m_httpClient;             };
   WSDLCache&    GetWSDLCache()           { return m_wsdl;                   };
   CString       GetWSDLFilename()        { return m_wsdlFile;               };
-  bool      GetDetailLogging();
+  SOAPSecurity* GetSOAPSecurity()        { return m_soapSecurity;           };
+  bool          GetDetailLogging();
 
   // General Setters
   void      SetHTTPClient(HTTPClient* p_client);
@@ -122,6 +127,7 @@ public:
   void      SetTimeouts(int p_resolve,int p_connect,int p_send,int p_receive);
   void      SetUser(CString p_user)                         { m_user               = p_user;        };
   void      SetPassword(CString p_password)                 { m_password           = p_password;    };
+  void      SetTokenProfile(bool p_token)                   { m_tokenProfile       = p_token;       };
   void      SetWsdlCheck(bool p_check)                      { m_wsdlCheck          = p_check;       };
   void      SetLogFilename(CString p_logFilename)           { m_logFilename        = p_logFilename; };
   void      SetSigningMethod(unsigned p_method)             { m_signingMethod      = p_method;      };
@@ -168,6 +174,7 @@ private:
   CString       m_wsdlFile;                                    // URL/File for WSDL definitions
   CString       m_user;                                        // User for RM messages
   CString       m_password;                                    // Password for RM messages
+  bool          m_tokenProfile;                                // Use WS-Security tokenProfile authentication
   bool          m_reliable            { false     };           // Using WS-RM?
   bool          m_wsdlCheck           { false     };           // Using WSDL checks
   ReliableType  m_reliableType { ReliableType::RELIABLE_ONCE };// 0=AtMostOnce,1=ExactlyOnce,2=AtLeastOnce
@@ -179,9 +186,9 @@ private:
   CString       m_logFilename;                                 // Filename for creating our own logfile
   bool          m_logOwner            { false     };           // Owner of the logfile
   int           m_logLevel            { HLL_NOLOG };           // Loglevel of the client
-  bool          m_soapCompress        { false     };           // Compress SOAP webservices
+  bool          m_soapCompress        { false     };           // Compress SOAP web services
 
-  // Sendstatus
+  // Send status
   bool          m_isSending           { false     };           // Currently in a send
   CString       m_errorText;                                   // Error fault stack
   bool          m_result              { true      };           // Correct result(true) or error(false)
@@ -194,6 +201,8 @@ private:
   CString       m_request;                                     // Current request name 
   bool          m_retransmitLast      { false     };           // Do again for ReliableType = RELIABLE_ATLEAST1
   bool          m_inLastMessage       { false     };           // Final termination
+  // WS-Security 
+  SOAPSecurity* m_soapSecurity         { nullptr  };           // Where we fill the SOAPMessage with the <Security> header
   // Messages in store for retransmit
   MessageStore  m_messages;                                    // All messages          
   int           m_storeSize           { MESSAGESTORE_DEFAULT };// Max number of messages to store

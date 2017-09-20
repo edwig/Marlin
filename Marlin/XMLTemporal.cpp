@@ -942,6 +942,29 @@ XMLTimestamp::SetCurrentTimestamp(bool p_fraction)
               ,100 * nanoseconds);
 }
 
+void
+XMLTimestamp::SetSystemTimestamp(bool p_fraction)
+{
+  // Getting the current date-and-time
+  SYSTEMTIME sys;
+  ::GetSystemTime(&sys);
+
+  long nanoseconds = 0;
+
+  if(p_fraction)
+  {
+    // Getting high-resolution time in 100-nanosecond resolution
+    FILETIME ftime;
+    ::GetSystemTimeAsFileTime(&ftime);
+    nanoseconds = (ftime.dwLowDateTime % 10000000);
+  }
+  // Construct timestamp
+  SetTimestamp(sys.wYear,sys.wMonth, sys.wDay
+              ,sys.wHour,sys.wMinute,sys.wSecond
+              ,100 * nanoseconds);
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // XMLDuration

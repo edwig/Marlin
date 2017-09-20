@@ -892,6 +892,12 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
   address.m_absPath = p_message->GetAbsolutePath();
   address.m_absPath.MakeLower();
 
+  // In case of Token-profile authentication: use that!
+  if(address.m_userSID.IsEmpty() && !p_message->GetUser().IsEmpty())
+  {
+    address.m_userSID = p_message->GetUser();
+  }
+
   if(p_message->GetInternalError() != XmlError::XE_NoError)
   {
     // Must at least get a SOAP/XML message
@@ -1362,6 +1368,12 @@ HTTPSite::HttpSecurityCheck(HTTPMessage* p_http,SOAPMessage* p_soap)
   address.m_userSID = GetStringSID(p_soap->GetAccessToken());
   address.m_desktop = p_soap->GetRemoteDesktop();
   address.m_address = p_soap->GetSender()->sin6_flowinfo;
+
+  // In case of Token-profile authentication: use that!
+  if(address.m_userSID.IsEmpty() && !p_soap->GetUser().IsEmpty())
+  {
+    address.m_userSID = p_soap->GetUser();
+  }
 
   if(m_securityLevel != p_soap->GetSecurityLevel())
   {

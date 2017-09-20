@@ -38,6 +38,12 @@
 #include "Base64.h"
 #include "Crypto.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 SOAPSecurity::SOAPSecurity()
 {
 }
@@ -81,7 +87,8 @@ SOAPSecurity::SetSecurity(SOAPMessage* p_message)
     bool OKCreat = false;
 
     // Set a new timestamp for the message
-    m_timestamp.SetCurrentTimestamp();
+    // Timestamp must be in UTC, so we can worldwide synchronize our webservices
+    m_timestamp.SetSystemTimestamp();
 
     // Set user in the message
     OKUser = SetUsernameInMessage(p_message,secure);
@@ -126,15 +133,16 @@ SOAPSecurity::SetSecurity(SOAPMessage* p_message)
 // m_digest              -> if true,  do **NOT** accept uncoded passwords
 //                       -> if false, also allow coded passwords
 //
-CString 
+bool 
 SOAPSecurity::CheckSecurity(SOAPMessage* p_message)
 {
   XMLElement* security = p_message->GetHeaderParameterNode("Security");
 
   if(security)
   {
-    // Set a new timestamp for the message
-    m_timestamp.SetCurrentTimestamp();
+    // Set a new timestamp for checking the message
+    // Be aware that we set it in UTC format !!
+    m_timestamp.SetSystemTimestamp();
 
     // Get relevant security header fields, if any at all
     CString username = FindHeaderField(p_message,security,"Username");
@@ -164,7 +172,8 @@ SOAPSecurity::CheckSecurity(SOAPMessage* p_message)
       XMLTimestamp stamp(created);
       if((m_timestamp.GetValue() - stamp.GetValue()) > m_freshness)
       {
-        return "";
+        // Invalid timestamp
+        return false;
       }
 
       Crypto  crypt;
@@ -175,10 +184,15 @@ SOAPSecurity::CheckSecurity(SOAPMessage* p_message)
     // Try if passwords do match
     if(password.Compare(shouldbePassword) == 0)
     {
-      return username;
+      p_message->SetUser(username);
+      return true;
     }
+
+    // <Security> present but **NOT** valid!
+    return false;
   }
-  return "";
+  // No WS-Security present
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -252,7 +266,13 @@ SOAPSecurity::SetUsernameInMessage(SOAPMessage* p_message,XMLElement* p_secure)
 {
   if(p_message && p_secure)
   {
-    if(p_message->AddElement(p_secure,"wsse:Username",XDT_String,m_username))
+    XMLElement* username = p_message->FindElement(p_secure,"Username",false);
+    if(username)
+    {
+      username->SetValue(m_username);
+      return true;
+    }
+    else if(p_message->AddElement(p_secure,"wsse:Username",XDT_String,m_username))
     {
       return true;
     }
@@ -265,13 +285,18 @@ SOAPSecurity::SetPasswordInMessage(SOAPMessage* p_message,XMLElement* p_secure,C
 {
   if(p_message && p_secure)
   {
-    XMLElement* pwd = p_message->AddElement(p_secure,"wsse:Password",XDT_String,p_password);
-    if(pwd)
+    XMLElement* password = p_message->FindElement(p_secure,"Password",false);
+    if(password)
     {
-      if(m_digest)
-      {
-        p_message->SetAttribute(pwd,"Type","#PasswordDigest");
-      }
+      password->SetValue(p_password);
+    }
+    else
+    {
+      password = p_message->AddElement(p_secure,"wsse:Password",XDT_String,p_password);
+    }
+    if(password)
+    {
+      p_message->SetAttribute(password,"Type",m_digest ? "wsse:PasswordDigest" : "wsse:PasswordText");
       return true;
     }
   }
@@ -284,7 +309,13 @@ SOAPSecurity::SetNonceInMessage(SOAPMessage* p_message,XMLElement* p_secure)
 {
   if(p_message && p_secure)
   {
-    if(p_message->AddElement(p_secure,"wsse:Nonce",XDT_String,m_nonce))
+    XMLElement* nonce = p_message->FindElement(p_secure,"Nonce",false);
+    if(nonce)
+    {
+      nonce->SetValue(m_nonce);
+      return true;
+    }
+    else if(p_message->AddElement(p_secure,"wsse:Nonce",XDT_String,m_nonce))
     {
       return true;
     }
@@ -297,9 +328,18 @@ SOAPSecurity::SetCreatedInMessage(SOAPMessage* p_message,XMLElement* p_secure)
 {
   if(p_message && p_secure)
   {
-    CString timestamp = m_timestamp.AsString();
-    if(p_message->AddElement(p_secure,"wsse:Created",XDT_String,timestamp))
+    // Timestamp in timezone 'Z' (Zebra) for UTC
+    CString timestamp = m_timestamp.AsString() + "Z";
+    XMLElement* stamp = p_message->FindElement(p_secure,"Created",false);
+    if(stamp)
     {
+      stamp->SetValue(timestamp);
+      return true;
+    }
+    stamp = p_message->AddElement(p_secure,"wsu:Created",XDT_String,timestamp);
+    if(stamp)
+    {
+      p_message->SetAttribute(stamp,"xmlns:wsu","http://schemas.xmlsoap.org/ws/2002/07/utility");
       return true;
     }
   }
@@ -315,7 +355,7 @@ SOAPSecurity::DigestPassword()
   GenerateNonce(nonce);
 
   // According to the standard. This is how we scramble the password
-  CString encrypted = nonce + m_timestamp.AsString() + m_password;
+  CString encrypted = nonce + m_timestamp.AsString() + "Z" + m_password;
 
   Crypto crypt;
   return crypt.Digest(encrypted,encrypted.GetLength(),CALG_SHA1);
@@ -324,11 +364,12 @@ SOAPSecurity::DigestPassword()
 void
 SOAPSecurity::GenerateNonce(CString p_nonce)
 {
-  Base64 base;
+  CString nonce;
+  Base64  base;
   int    len = (int) base.B64_length(p_nonce.GetLength());
   char* dest = m_nonce.GetBufferSetLength(len + 1);
 
-  base.Encrypt((const unsigned char*)p_nonce.GetString(),len,(unsigned char*)dest);
+  base.Encrypt((const unsigned char*)p_nonce.GetString(),p_nonce.GetLength(),(unsigned char*)dest);
   m_nonce.ReleaseBuffer();
 }
 
@@ -356,7 +397,7 @@ SOAPSecurity::DeBase64(CString p_field)
   CString string;
   int len = (int)base.Ascii_length(p_field.GetLength());
   char* dest = string.GetBufferSetLength(len + 1);
-  base.Decrypt((const unsigned char*) p_field.GetString(),len,(unsigned char*)dest);
+  base.Decrypt((const unsigned char*) p_field.GetString(),p_field.GetLength(),(unsigned char*)dest);
   string.ReleaseBuffer();
 
   return string;

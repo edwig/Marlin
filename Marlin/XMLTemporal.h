@@ -135,7 +135,11 @@ public:
                    ,int p_hour,int p_minute,int p_second
                    ,int p_fraction = 0);
   void SetFraction(int p_fraction) { m_fraction = p_fraction; };
+  // Setting the local time (local time zone)
   void SetCurrentTimestamp(bool p_fraction = false);
+  // Setting the UTC (GMT) time as in Greenwich without summertime
+  void SetSystemTimestamp (bool p_fraction = false);
+
   XMLTimestamp AddDays   (int p_number) const;
   XMLTimestamp AddMinutes(int p_number) const;
 
