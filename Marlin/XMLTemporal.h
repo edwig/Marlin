@@ -31,10 +31,13 @@
 #define ONE_MINUTE (60)        // One minute in seconds
 #define ONE_HOUR   (60*60)     // One hour in seconds
 #define ONE_DAY    (24*60*60)  // One day in seconds
-#define NANOSECONDS_PER_SEC 1000
+
+#ifndef NANOSECONDS_PER_SEC
+#define NANOSECONDS_PER_SEC 1000000000
+#endif
 
 // Storage of the time in hours,minutes & seconds
-struct TimeStorage
+struct XmlTimeStorage
 {
   int m_hour;
   int m_minute;
@@ -48,9 +51,9 @@ typedef struct _Date
   char  m_month;  // 1 - 12   maanden
   char  m_day;    // 1 - 31   dagen
 }
-DateStorage;
+XmlDateStorage;
 
-struct StampStorage
+struct XmlStampStorage
 {
   short m_year;      // 1 - 9999  year
   char  m_month;     // 1 - 12    months
@@ -98,7 +101,7 @@ private:
   void SetTime();
   void Normalise();
 
-  TimeStorage m_theTime;
+  XmlTimeStorage m_theTime;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -119,7 +122,7 @@ private:
   bool SetDate(int p_year,int p_month,int p_day);
   bool SetMJD();
 
-  DateStorage m_date;
+  XmlDateStorage m_date;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -154,8 +157,8 @@ private:
   void Normalise();
   void Validate();
 
-  StampStorage m_timestamp;
-  int          m_fraction;
+  XmlStampStorage m_timestamp;
+  int          		m_fraction;
 };
 
 //////////////////////////////////////////////////////////////////////////

@@ -117,6 +117,8 @@ public:
   // Extend the maximum for a period of time
   void  ExtendMaximumThreads (AutoIncrementPoolMax& p_increment);
   void  RestoreMaximumThreads(AutoIncrementPoolMax& p_increment);
+  // Number of current running threads
+  long  GetCurrentThreads();
 
   // Sleeping and waking-up a thread
   // Sleeps ANY thread. Also threads not originating in this threadpool
@@ -129,7 +131,7 @@ public:
   // Create a hartbeat thread (Can be called **ONCE**)
   bool  CreateHartbeat(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat);
   // Stop a heartbeat thread
-  void  StopHeartbeat();
+  void  StopHartbeat();
 
   // Stopping the threadpool from the application
   // No more work is to be accepted
@@ -147,7 +149,7 @@ public:
   // from within the static work functions of the threadpool itself, to get things working
   // Do **NOT** call from your application!!
   DWORD RunAThread(ThreadRegister* p_register);
-  DWORD RunHeartbeat();
+  DWORD RunHartbeat();
 
 private:
   // CONTROLING THE THREADPOOL
@@ -204,11 +206,18 @@ private:
   LPFN_TRYABORT     m_abortfunction    { nullptr };             // TP thread abort function at closing of the handle
   void*             m_initParameter    { nullptr };             // TP thread initialization parameter
   // Heartbeat section
-  LPFN_CALLBACK     m_heartbeatCallback{ nullptr };             // HB callback function
-  void*             m_heartbeatPayload { nullptr };             // HB callback parameter to use
-  DWORD             m_heartbeat        { 0       };             // HB milliseconds between heartbeats
-  HANDLE            m_heartbeatEvent   { nullptr };             // HB event to wake up the heartbeat
+  LPFN_CALLBACK     m_hartbeatCallback { nullptr };             // HB callback function
+  void*             m_hartbeatPayload  { nullptr };             // HB callback parameter to use
+  DWORD             m_hartbeat         { 0       };             // HB milliseconds between heartbeats
+  HANDLE            m_hartbeatEvent    { nullptr };             // HB event to wake up the heartbeat
 };
+
+// Number of current running threads
+inline long
+ThreadPool::GetCurrentThreads()
+{
+  return m_curThreads;
+}
 
 // Auto locking mechanism for the threadpool
 class AutoLockTP

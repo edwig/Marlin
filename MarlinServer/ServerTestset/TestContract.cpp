@@ -402,7 +402,7 @@ TestJsonServer(HTTPServer* p_server,CString p_contract,int p_loglevel)
 
   qprintf("\n");
   // Try running the service
-  if(server->Run())
+  if(server->RunService())
   {
     qprintf("WebServiceServer [%s] is now running OK\n",(LPCTSTR)name);
     qprintf("Running contract      : %s\n",(LPCTSTR)p_contract);
@@ -473,7 +473,7 @@ TestWebServiceServer(HTTPServer* p_server,CString p_contract,int p_loglevel)
   }
 
   // Try running the service
-  if(server->Run())
+  if(server->RunService())
   {
     qprintf("WebServiceServer [%s] is now running OK\n",(LPCTSTR)name);
     qprintf("Running contract      : %s\n",       (LPCTSTR)p_contract);

@@ -408,7 +408,7 @@ WebServiceServer::ReadingWebconfig(CString p_webconfig)
 }
 // Running the service
 bool
-WebServiceServer::Run()
+WebServiceServer::RunService()
 {
   // Configure our threadpool
   if(m_pool == nullptr)
@@ -452,6 +452,8 @@ WebServiceServer::Run()
   {
     // Use the webroot of the existing server!
     m_webroot = m_httpServer->GetWebroot();
+    // Make sure the server is initialized
+    m_httpServer->Initialise();
   }
   // Try to set our caching policy
   m_httpServer->SetCachePolicy(m_cachePolicy,m_cacheSeconds);

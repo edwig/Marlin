@@ -94,7 +94,7 @@ public:
   // Add SOAP message call and answer. Call once for all messages in the service
   bool            AddOperation(int p_code,CString p_name,SOAPMessage* p_input,SOAPMessage* p_output);
   // Running the service
-  virtual bool    Run();
+  virtual bool    RunService();
   // Stopping the service
   virtual void    Stop();
   // Is service running

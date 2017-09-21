@@ -403,7 +403,7 @@ XMLMessage::PrintElements(XMLElement* p_element
     temp.Format("<%s><![CDATA[%s]]>",PrintXmlString(name,p_utf8).GetString(),value.GetString());
     message += spaces + temp;
   }
-  if(p_element->GetType() & XDT_Complex)
+  else if(p_element->GetType() & XDT_Complex)
   {
     // Other XML data 
     temp.Format("<%s>%s",PrintXmlString(name,p_utf8).GetString(),value.GetString());

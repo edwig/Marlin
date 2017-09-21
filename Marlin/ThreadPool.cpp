@@ -567,16 +567,16 @@ bool
 ThreadPool::CreateHartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_hartbeat)
 {
   // See if a heartbeat was already running
-  if(m_heartbeat)
+  if(m_hartbeat)
   {
     return false;
   }
-  m_heartbeatCallback = p_callback;
-  m_heartbeatPayload  = p_argument;
-  m_heartbeat         = p_hartbeat;
-  m_heartbeatEvent    = CreateEvent(NULL,FALSE,FALSE,NULL);
+  m_hartbeatCallback = p_callback;
+  m_hartbeatPayload  = p_argument;
+  m_hartbeat         = p_hartbeat;
+  m_hartbeatEvent    = CreateEvent(NULL,FALSE,FALSE,NULL);
 
-  if(m_heartbeatEvent)
+  if(m_hartbeatEvent)
   {
     HANDLE thread = (HANDLE)_beginthreadex(nullptr,m_stackSize,::RunHeartbeat,(void*)this,0,NULL);
     if(thread)
@@ -593,18 +593,18 @@ ThreadPool::CreateHartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_h
 /*static */unsigned _stdcall RunHeartbeat(void* p_pool)
 {
   ThreadPool* pool = reinterpret_cast<ThreadPool*>(p_pool);
-  return pool->RunHeartbeat();
+  return pool->RunHartbeat();
 }
 
 // Running the heartbeat thread
 DWORD
-ThreadPool::RunHeartbeat()
+ThreadPool::RunHartbeat()
 {
   bool running = true;
   do 
   {
     TP_TRACE0("Hartbeat thread sleeping after hartbeat\n");
-    DWORD result = WaitForSingleObject(m_heartbeatEvent,m_heartbeat);
+    DWORD result = WaitForSingleObject(m_hartbeatEvent,m_hartbeat);
     switch(result)
     {
       case WAIT_ABANDONED:  // Fall through
@@ -616,7 +616,7 @@ ThreadPool::RunHeartbeat()
                             break;
       case WAIT_TIMEOUT:    // Hart beat! Do the call
                             TP_TRACE0("Hartbeat waking up\n");
-                            (*m_heartbeatCallback)(m_heartbeatPayload);
+                            (*m_hartbeatCallback)(m_hartbeatPayload);
                             break;
     }
   } 
@@ -624,24 +624,24 @@ ThreadPool::RunHeartbeat()
 
   TP_TRACE0("Hartbeat thread stopping\n");
   // At the end of the heartbeat
-  CloseHandle(m_heartbeatEvent);
-  m_heartbeatEvent    = nullptr;
-  m_heartbeatCallback = nullptr;
-  m_heartbeatPayload  = nullptr;
+  CloseHandle(m_hartbeatEvent);
+  m_hartbeatEvent    = nullptr;
+  m_hartbeatCallback = nullptr;
+  m_hartbeatPayload  = nullptr;
   // Create heartbeat can be called again!
-  m_heartbeat = 0;
+  m_hartbeat = 0;
 
   return 0;
 }
 
 // Stop a heartbeat thread
 void 
-ThreadPool::StopHeartbeat()
+ThreadPool::StopHartbeat()
 {
-  if(m_heartbeatEvent)
+  if(m_hartbeatEvent)
   {
     TP_TRACE0("Stopping the hartbeat externally\n");
-    SetEvent(m_heartbeatEvent);
+    SetEvent(m_hartbeatEvent);
   }
 }
 
@@ -900,7 +900,7 @@ ThreadPool::WaitingForIdle(int p_part)
       {
         case WF_IDLE_SLEEP:   if(m_sleeping.empty())idle = true;
                               break;
-        case WF_IDLE_HEART:   if(m_heartbeat == 0)  idle = true;
+        case WF_IDLE_HEART:   if(m_hartbeat == 0)  idle = true;
                               break;
         case WF_IDLE_CLEAN:   if(m_cleanup.empty()) idle = true;
                               break;
@@ -931,7 +931,7 @@ ThreadPool::StopThreadPool()
   WaitingForIdle(WF_IDLE_SLEEP);
 
   // Stop the heartbeat (if any)
-  StopHeartbeat();
+  StopHartbeat();
   WaitingForIdle(WF_IDLE_HEART);
 
   // Run the cleanup jobs first (if any)

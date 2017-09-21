@@ -129,7 +129,7 @@ WaitForKey()
 
 // Setting the filename of the logfile
 CString g_baseDir = ".\\";
-extern ErrorReport g_report;
+extern ErrorReport* g_report;
 
 // Starting our server
 //
@@ -158,10 +158,15 @@ bool StartServer(HTTPServerSync*& p_server
   p_server->SetLogging(p_logfile);
   p_server->SetLogLevel(logLevel);
 
-  // SETTING THE MANDATORY MEMBERS
+  // Error reporting
+  if(!g_report)
+  {
+    g_report = new ErrorReport();
+  }
+  p_server->SetErrorReport(g_report);
 
+  // SETTING THE MANDATORY MEMBERS
   p_server->SetWebroot("C:\\WWW\\Marlin\\");     // WebConfig overrides
-  p_server->SetErrorReport(&g_report);      // Error reporting
 
   bool result = false;
   if(p_server->GetLastError() == NO_ERROR)
@@ -192,10 +197,17 @@ CleanupServer(HTTPServerSync*& p_server
   if(p_server)
   {
     delete p_server;
+    p_server = nullptr;
   }
   if(p_logfile)
   {
     delete p_logfile;
+    p_logfile = nullptr;
+  }
+  if(g_report)
+  {
+    delete g_report;
+    g_report = nullptr;
   }
 }
 
