@@ -565,6 +565,10 @@ HTTPRequest::StartSendResponse()
   m_policy.Policy        = m_server->GetCachePolicy();
   m_policy.SecondsToLive = m_server->GetCacheSecondsToLive();
 
+  // Trace the principal response, before sending
+  // Sometimes the async is so quick, we cannot trace it after the sending
+  m_server->LogTraceResponse(m_response,nullptr);
+
   // Send the response
   ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
                                       m_requestID,       // Request ID
@@ -576,9 +580,6 @@ HTTPRequest::StartSendResponse()
                                       0,                 // Reserved3   (must be 0)
                                       &m_writing,        // LPOVERLAPPED(OPTIONAL)
                                       nullptr);          // pReserved4  (must be NULL)
-
-  // Trace the principal response
-  m_server->LogTraceResponse(m_response,nullptr);
 
   // Check for error
   if(result != ERROR_IO_PENDING && result != NO_ERROR)

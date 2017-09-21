@@ -475,7 +475,14 @@ int TestWebservices(HTTPClient& client)
   url = CreateURL("Asynchrone");
   errors += DoSendAsyncQueue(client,namesp,url);
 
-  printf("\nWait for last test to complete. Type a word and ENTER\n");
+  // Waiting for the queue to drain
+  printf("\nWait for last test to complete.\n");
+  while(client.GetQueueSize())
+  {
+    Sleep(200);
+  }
+
+  printf("\n**READY**\n\nType a word and ENTER\n");
 
   // Wait for key to occur
   // so the messages can be send and debugged :-)

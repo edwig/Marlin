@@ -295,6 +295,7 @@ public:
   ResponseMap&  GetResponseHeaders()        { return m_respHeaders;       };
   bool          GetPushEvents()             { return m_pushEvents;        };
   bool          GetOnCloseSeen()            { return m_onCloseSeen;       };
+  int           GetQueueSize()              { return (int)m_queue.size(); };
   int           GetError(CString* p_message = NULL);
   CString       GetStatusText();
   void          GetBody(void*& p_body,unsigned& p_length);
