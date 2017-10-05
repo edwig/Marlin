@@ -249,10 +249,10 @@ WebServiceServer::SetLogAnalysis(LogAnalysis* p_log)
       m_log = nullptr;
       m_logOwner = false;
     }
+  }
     m_log      = p_log;
     m_logLevel = p_log->GetLogLevel();
   }
-}
 
 // OLD loglevel interface
 bool
@@ -387,6 +387,12 @@ WebServiceServer::ReadingWebconfig(CString p_webconfig)
 {
   WebConfig config(p_webconfig);
 
+  // Only process the config if it's filled
+  if(config.IsFilled() == false)
+  {
+    return;
+  }
+
   m_checkIncoming    = config.GetParameterBoolean("WebServices","CheckWSDLIncoming", m_checkIncoming);
   m_checkOutgoing    = config.GetParameterBoolean("WebServices","CheckWSDLOutgoing", m_checkOutgoing);
   m_checkFieldvalues = config.GetParameterBoolean("WebServices","CheckFieldValues",  m_checkFieldvalues);
@@ -395,15 +401,15 @@ WebServiceServer::ReadingWebconfig(CString p_webconfig)
   // Log it
   if(m_log)
   {
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Checking incoming webservices against WSDL: ",m_checkIncoming ? "YES" : "NO");
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Checking outgoing webservices against WSDL: ",m_checkOutgoing ? "YES" : "NO");
+    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Checking incoming webservices against WSDL: %s",m_checkIncoming ? "YES" : "NO");
+    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Checking outgoing webservices against WSDL: %s",m_checkOutgoing ? "YES" : "NO");
     if(m_checkIncoming || m_checkOutgoing)
     {
       m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Field values checked  : %s",m_checkFieldvalues ? "YES" : "NO");
       m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Webconfig file checked: %s",p_webconfig.GetString());
       m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"WSDL to check against : %s",m_wsdl->GetWSDLFilename().GetString());
     }
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Support GET-SOAP-JSON rountrip translation: ",m_jsonTranslation ? "YES" : "NO");
+    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Support GET-SOAP-JSON roundtrip translation: %s",m_jsonTranslation ? "YES" : "NO");
   }
 }
 // Running the service

@@ -488,6 +488,7 @@ HTTPClient::SetLogging(LogAnalysis* p_log)
   }
   // Remember the setting or resetting of the logfile
   m_log = p_log;
+  m_logLevel = p_log->GetLogLevel();
 
   // In case we just gotten a new logfile, init it!
   if(m_log)

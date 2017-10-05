@@ -312,8 +312,9 @@ LogAnalysis::Initialisation()
   if(m_file)
   {
     // Write a BOM to the logfile, so we can read logged UTF-8 strings
+    DWORD written = 0;		// Not optional for MS-Windows Server 2012!!
     CString bom = ConstructBOM();
-    WriteFile(m_file,bom.GetString(),bom.GetLength(),nullptr,nullptr);
+    WriteFile(m_file,bom.GetString(),bom.GetLength(),&written,nullptr);
 
     // Starting the log writing thread
     RunLog();

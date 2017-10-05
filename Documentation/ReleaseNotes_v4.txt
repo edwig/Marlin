@@ -34,10 +34,14 @@ CHANGES IN VERSION 4.6.0
    Beware 1: You cannot do this on the SOAPMessage or the JSONMessage.
    Beware 2: You cannot do this on the HTTPServerMarlin or the HTTServerSync. Those servers must
              handle all messages in some way or another, as they are stand-alone by nature!
+8) A bug has been fixed in the CRedirect class for starting programs in the background. The reading
+   of the redirected standard output could hang forever under certain conditions.
+9) A bug has been fixed in XMLMessage for the printing of attributes on complex datatype nodes.
+  
 
 CHANGES IN VERSION 4.5.2
 ========================
-1) The registration of the object EventStream in the server now also takse into account to
+1) The registration of the object EventStream in the server now also takes into account to
    new members, to be exact:
    - The senders socket address (and thus the IP adres of the initiator)
    - The Citrix desktop numer from the desktop header

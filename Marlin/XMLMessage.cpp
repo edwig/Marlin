@@ -403,12 +403,6 @@ XMLMessage::PrintElements(XMLElement* p_element
     temp.Format("<%s><![CDATA[%s]]>",PrintXmlString(name,p_utf8).GetString(),value.GetString());
     message += spaces + temp;
   }
-  else if(p_element->GetType() & XDT_Complex)
-  {
-    // Other XML data 
-    temp.Format("<%s>%s",PrintXmlString(name,p_utf8).GetString(),value.GetString());
-    message += spaces + temp;
-  }
   else if(value.IsEmpty() && p_element->GetAttributes().size() == 0 && p_element->GetChildren().size() == 0)
   {
     // A 'real' empty node
