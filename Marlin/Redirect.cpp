@@ -340,7 +340,7 @@ CRedirect::StdOutThread(HANDLE hStdOutRead)
 {
   DWORD nBytesRead;
   CHAR  lpszBuffer[10];
-  CHAR  lineBuffer[BUFFER_SIZE+1];
+  CHAR  lineBuffer[BUFFER_SIZE+10];
   char* linePointer = lineBuffer;
 
   while(true)
@@ -373,6 +373,12 @@ CRedirect::StdOutThread(HANDLE hStdOutRead)
     }
     else
     {
+      // Partial input line left hanging?
+      if(linePointer != lineBuffer)
+      {
+        *linePointer = 0;
+        OnChildStdOutWrite(lineBuffer);
+      }
       m_eof_input = 1;
       break;
     }
