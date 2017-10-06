@@ -802,7 +802,6 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
                               break;
                               
     }
-
   } 
   while(reading);
 

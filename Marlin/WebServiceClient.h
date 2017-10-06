@@ -174,7 +174,7 @@ private:
   CString       m_wsdlFile;                                    // URL/File for WSDL definitions
   CString       m_user;                                        // User for RM messages
   CString       m_password;                                    // Password for RM messages
-  bool          m_tokenProfile;                                // Use WS-Security tokenProfile authentication
+  bool          m_tokenProfile        { false     };           // Use WS-Security tokenProfile authentication
   bool          m_reliable            { false     };           // Using WS-RM?
   bool          m_wsdlCheck           { false     };           // Using WSDL checks
   ReliableType  m_reliableType { ReliableType::RELIABLE_ONCE };// 0=AtMostOnce,1=ExactlyOnce,2=AtLeastOnce

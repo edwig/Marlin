@@ -138,21 +138,6 @@ WebServiceServer::Reset()
   }
 
 
-  // If it's ours, clean up the HTTP server and logfile
-  if(m_httpServer && m_serverOwner)
-  {
-    m_httpServer->StopServer();
-    delete m_httpServer;
-    m_httpServer  = nullptr;
-    m_serverOwner = false;
-  }
-  if(m_log && m_logOwner)
-  {
-    delete m_log;
-    m_log = nullptr;
-    m_logOwner = false;
-  }
-
   if(m_wsdl && m_wsdlOwner)
   {
     delete m_wsdl;
@@ -175,6 +160,21 @@ WebServiceServer::Reset()
       // Last thing we do, after this the object is invalid
       m_httpServer->UnRegisterService(m_name);
     }
+  }
+
+  // If it's ours, clean up the HTTP server and logfile
+  if(m_httpServer && m_serverOwner)
+  {
+    m_httpServer->StopServer();
+    delete m_httpServer;
+    m_httpServer = nullptr;
+    m_serverOwner = false;
+  }
+  if(m_log && m_logOwner)
+  {
+    delete m_log;
+    m_log = nullptr;
+    m_logOwner = false;
   }
 
   // SoapHandler & GetHandler
@@ -437,11 +437,6 @@ WebServiceServer::RunService()
     {
       m_log->SetLogFilename(m_logFilename);
     }
-    if(m_serverOwner)
-    {
-      // We now have a logfile for sure
-      m_httpServer->SetLogging(m_log);
-    }
   }
   // Default is logging in file, propagate that setting
   m_log->SetLogLevel(m_logLevel);
@@ -452,23 +447,26 @@ WebServiceServer::RunService()
     m_httpServer  = new HTTPServerMarlin(m_name);
     m_serverOwner = true;
     m_httpServer->SetWebroot(m_webroot);
-    m_httpServer->SetLogging(m_log);
   }
   else
   {
     // Use the webroot of the existing server!
     m_webroot = m_httpServer->GetWebroot();
-    // Make sure the server is initialized
-    m_httpServer->Initialise();
   }
   // Try to set our caching policy
   m_httpServer->SetCachePolicy(m_cachePolicy,m_cacheSeconds);
+
+  // Set our logfile
+  m_httpServer->SetLogging(m_log);
   m_httpServer->SetLogLevel(m_logLevel);
   // Use our error reporting facility
   if(m_errorReport)
   {
     m_httpServer->SetErrorReport(m_errorReport);
   }
+
+  // Make sure the server is initialized
+  m_httpServer->Initialise();
 
   // Starting a WSDL 
   StartWsdl();

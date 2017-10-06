@@ -10,34 +10,35 @@ will need checking on the logic and functionality to make version 4.x correctly 
 
 CHANGES IN VERSION 4.6.0
 ========================
-1) The JSONMessage is now derivable from other objects. Just as the HTTPMessage and XMLMessage this
-   is done by adding a reference count system to JSONMessage and JSONvalue;
-2) The floating point number check bug in the WSDL system has been fixed. 
-   For testing, the MarlinFifth service of the test contract has been expanded with the number of PI
-   this extra optional parameter is tested for a correct and incorrect number in the test framework.
-3) The testing of floating point numbers and integers in the WSDL XMLRestriction system has been 
-   optimized for speed. This is done by pre-converting all range restrictions.
-4) Added SOAPSecurity class to perform OASIS WS-Security user-token-profile 1.1.1 authentication
-   To use this class, Provide a user/password and digest boolean on the calling side
-   On the server side you can likewise provide a user/password, or you can use a settable function
-   with SOAPSecurity::SetUserPasswordFinder to find a password for every incoming user.
-   All digests are calculated (accoring to the standard) as SHA1(nonce + timestamp + password)
-5) WebServiceClient has been extended to make use of the SOAPSecurity standard and automatically
-   enhance the outgoing SOAPMessages with a user/password node in the header for safe basic 
-   authentication with a token profile.
-6) On the server side the standard "SiteHandlerSoap" has been extended to handle the extra 
-   WS-Security token profile tokens. Also WS-ReliableMessaging handlers have been extended to 
-   take advantage of the token-profile authenticated user code.
-7) You now can choose in the HTTPServerIIS to **NOT** handle a message, but to pass it on to the
-   next IIS handler in the module chain. To do this set the status of the HTTPMessage to the
-   HTTP_STATUS_CONTINUE (100) number and do the "SendResponse(message)".
-   Beware 1: You cannot do this on the SOAPMessage or the JSONMessage.
-   Beware 2: You cannot do this on the HTTPServerMarlin or the HTTServerSync. Those servers must
-             handle all messages in some way or another, as they are stand-alone by nature!
-8) A bug has been fixed in the CRedirect class for starting programs in the background. The reading
-   of the redirected standard output could hang forever under certain conditions.
-9) A bug has been fixed in XMLMessage for the printing of attributes on complex datatype nodes.
-  
+1)  The JSONMessage is now derivable from other objects. Just as the HTTPMessage and XMLMessage this
+    is done by adding a reference count system to JSONMessage and JSONvalue;
+2)  The floating point number check bug in the WSDL system has been fixed. 
+    For testing, the MarlinFifth service of the test contract has been expanded with the number of PI
+    this extra optional parameter is tested for a correct and incorrect number in the test framework.
+3)  The testing of floating point numbers and integers in the WSDL XMLRestriction system has been 
+    optimized for speed. This is done by pre-converting all range restrictions.
+4)  Added SOAPSecurity class to perform OASIS WS-Security user-token-profile 1.1.1 authentication
+    To use this class, Provide a user/password and digest boolean on the calling side
+    On the server side you can likewise provide a user/password, or you can use a settable function
+    with SOAPSecurity::SetUserPasswordFinder to find a password for every incoming user.
+    All digests are calculated (accoring to the standard) as SHA1(nonce + timestamp + password)
+5)  WebServiceClient has been extended to make use of the SOAPSecurity standard and automatically
+    enhance the outgoing SOAPMessages with a user/password node in the header for safe basic 
+    authentication with a token profile.
+6)  On the server side the standard "SiteHandlerSoap" has been extended to handle the extra 
+    WS-Security token profile tokens. Also WS-ReliableMessaging handlers have been extended to 
+    take advantage of the token-profile authenticated user code.
+7)  You now can choose in the HTTPServerIIS to **NOT** handle a message, but to pass it on to the
+    next IIS handler in the module chain. To do this set the status of the HTTPMessage to the
+    HTTP_STATUS_CONTINUE (100) number and do the "SendResponse(message)".
+    Beware 1: You cannot do this on the SOAPMessage or the JSONMessage.
+    Beware 2: You cannot do this on the HTTPServerMarlin or the HTTServerSync. Those servers must
+              handle all messages in some way or another, as they are stand-alone by nature!
+8)  A bug has been fixed in the CRedirect class for starting programs in the background. The reading
+    of the redirected standard output could hang forever under certain conditions.
+9)  A bug has been fixed in XMLMessage for the printing of attributes on complex datatype nodes.
+10) Fixed little bugs in the connection of the logging to the WebServiceServer to initiate the
+    correct logging files.
 
 CHANGES IN VERSION 4.5.2
 ========================

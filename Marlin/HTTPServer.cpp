@@ -322,6 +322,7 @@ HTTPServer::SetLogging(LogAnalysis* p_log)
   if(m_log && m_logOwner)
   {
     delete m_log;
+    m_logOwner = false;
   }
   m_log = p_log;
   InitLogging();

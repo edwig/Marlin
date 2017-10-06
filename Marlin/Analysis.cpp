@@ -402,7 +402,7 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
   }
 
   // Add end-of line
-  logBuffer += "\n";
+  logBuffer += "\r\n";
 
   if(m_file)
   {
