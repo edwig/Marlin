@@ -241,18 +241,23 @@ WebServiceServer::SetHTTPServer(HTTPServer* p_server)
 void
 WebServiceServer::SetLogAnalysis(LogAnalysis* p_log)
 {
-  if(p_log)
-  { 
+  // Remove our own logfile
     if(m_log && m_logOwner)
     {
       delete m_log;
       m_log = nullptr;
       m_logOwner = false;
     }
-  }
+
+  // Take this logfile
     m_log      = p_log;
+  
+  // If not reset, copy the loglevel
+  if(p_log)
+  {
     m_logLevel = p_log->GetLogLevel();
   }
+}
 
 // OLD loglevel interface
 bool
