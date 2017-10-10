@@ -185,9 +185,9 @@ HTTPClient::Reset()
   if(m_log && m_logOwner)
   {
     delete m_log;
+    m_log      = NULL;
     m_logOwner = false;
   }
-  m_log = NULL;
   m_logLevel = HLL_NOLOG;
 
   // Reset status
@@ -276,7 +276,7 @@ HTTPClient::ErrorLog(const char* p_function,const char* p_logText)
   CString msg = GetLastErrorAsString(m_lastError);
 
   // ERRORLOG macro
-  if(m_log)
+  if(m_log && m_logLevel)
   {
     m_log->AnalysisLog(p_function, LogType::LOG_ERROR,true,p_logText,m_lastError,msg.GetString());
   }
@@ -472,7 +472,10 @@ HTTPClient::InitLogging()
   if (m_webConfig.HasParameter("Logging","LogLevel"))
   {
     m_logLevel = level;
+    if(m_log)
+    {
     m_log->SetLogLevel(m_logLevel);
+  }
   }
 
   // Now "Logging.config" can override these settings.
@@ -484,6 +487,7 @@ HTTPClient::SetLogging(LogAnalysis* p_log)
   if(m_log && m_logOwner)
   {
     delete m_log;
+    m_log = nullptr;
     m_logOwner = false;
   }
   // Remember the setting or resetting of the logfile
