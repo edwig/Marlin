@@ -406,14 +406,18 @@ SOAPMessage::SetSoapActionFromHTTTP(CString p_action)
 // Reset parameters, transforming it in an answer
 void 
 SOAPMessage::Reset(ResponseType p_responseType  /* = ResponseType::RESP_ACTION_NAME */
-                  ,CString      p_namespace     /* = "" */)
+                   ,CString      p_namespace     /* = "" */)
 {
   XMLMessage::Reset();
 
   // Reset pointers
-  m_body        = m_root;
-  m_header      = nullptr;
+  m_body = m_root;
+  m_header = nullptr;
   m_paramObject = nullptr;
+
+  // Reset the error status
+  m_internalError = XmlError::XE_NoError;
+  m_internalErrorString.Empty();
 
   // it is now no longer an incoming message
   m_incoming = false;
@@ -434,13 +438,18 @@ SOAPMessage::Reset(ResponseType p_responseType  /* = ResponseType::RESP_ACTION_N
   // Reset sender!!
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
 
+  // Reset the SOAP Fault status
+  m_soapFaultCode.Empty();
+  m_soapFaultActor.Empty();
+  m_soapFaultString.Empty();
+  m_soapFaultDetail.Empty();
+
   // Leave request handle untouched !!
   // Leave access  token  untouched !!
   // Leave reliable       untouched !!
   // Leave encryption     untouched !!
   // Leave cookies        untouched !!
   // Leave server handle  untouched !!
-  // Leave SOAP Fault     untouched !!
 }
 
 void

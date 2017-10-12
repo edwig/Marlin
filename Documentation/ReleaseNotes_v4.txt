@@ -39,6 +39,14 @@ CHANGES IN VERSION 4.6.0
 9)  A bug has been fixed in XMLMessage for the printing of attributes on complex datatype nodes.
 10) Fixed little bugs in the connection of the logging to the WebServiceServer to initiate the
     correct logging files.
+11) The ::Reset() method of the SOAPMessage has been extended to reset the errorstate members
+    when performing a reset. This comes down to resetting the following members:
+    - m_internalError
+    - m_internalErrorString
+    - m_soapFaultCode
+    - m_soapFaultActor
+    - m_soapFaultString
+    - m_soapFaultDetail
 
 CHANGES IN VERSION 4.5.2
 ========================
