@@ -357,13 +357,12 @@ CrackedURL::DecodeURLChars(CString p_text,bool p_queryValue /*=false*/)
 {
   CString encoded;
   CString decoded;
-  unsigned char ch = 0;
   bool  convertUTF = false;
 
   // Whole string decoded for %XX strings
   for(int ind = 0;ind < p_text.GetLength(); ++ind)
   {
-    ch = GetHexcodedChar(p_text,ind,p_queryValue);
+    unsigned char ch = GetHexcodedChar(p_text,ind,p_queryValue);
     decoded += ch;
     if(ch > 0x7F)
     {

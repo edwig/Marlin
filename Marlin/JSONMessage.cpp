@@ -187,7 +187,7 @@ JSONvalue::GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level /*=0*/)
                                     }
                                     break;
     case JsonType::JDT_string:      return FormatAsJsonString(m_string,p_utf8);
-    case JsonType::JDT_number_int:  result.Format("%d",m_number.m_intNumber);
+    case JsonType::JDT_number_int:  result.Format("%ld",m_number.m_intNumber);
                                     break;
     case JsonType::JDT_number_dbl:  result.Format("%.15g",m_number.m_dblNumber);
                                     break;
@@ -234,13 +234,12 @@ CString
 JSONvalue::FormatAsJsonString(CString p_string,bool p_utf8 /*=false*/)
 {
   CString result("\"");
-  char ch = 0;
   unsigned char buffer[3];
   buffer[2] = 0;
 
   for(int ind = 0; ind < p_string.GetLength(); ++ind)
   {
-    ch = p_string.GetAt(ind);
+    char ch = p_string.GetAt(ind);
 
     if(ch < 0x80)
     {

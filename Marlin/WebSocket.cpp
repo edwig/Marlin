@@ -1590,7 +1590,7 @@ WebSocketServerIIS::RegisterSocket(HTTPMessage*  p_message)
   if(SUCCEEDED(hr))
   {
     // Get Pointer to IWebSocketContext
-    m_iis_socket = (IWebSocketContext *)context3->GetNamedContextContainer()->GetNamedContext(IIS_WEBSOCKET);
+    m_iis_socket = reinterpret_cast<IWebSocketContext*>(context3->GetNamedContextContainer()->GetNamedContext(IIS_WEBSOCKET));
     if(!m_iis_socket)
     {
       ERRORLOG(ERROR_FILE_NOT_FOUND,"Cannot upgrade to websocket!");

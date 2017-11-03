@@ -126,7 +126,6 @@ SiteFilterClientCertificate::ReceiveClientCertificate(HTTPMessage* p_message)
 {
   DWORD answer        = 0;
   ULONG bytesReceived = 0;
-  DWORD size          = 0;
   HANDLE requestQueue = m_site->GetHTTPServer()->GetRequestQueue();
   HTTP_CONNECTION_ID id = p_message->GetConnectionID();
   g_certificate = new HTTP_SSL_CLIENT_CERT_INFO[1];
@@ -143,7 +142,7 @@ SiteFilterClientCertificate::ReceiveClientCertificate(HTTPMessage* p_message)
   {
     // A somewhat larger Client certificate has been found
     // Allocate memory for the client certificate
-    size = sizeof(HTTP_SSL_CLIENT_CERT_INFO) + g_certificate->CertEncodedSize;
+    DWORD size = sizeof(HTTP_SSL_CLIENT_CERT_INFO) + g_certificate->CertEncodedSize;
     delete [] g_certificate;
     g_certificate = (PHTTP_SSL_CLIENT_CERT_INFO) new uchar[size];
     // Requery the client certificate. Now for real!!

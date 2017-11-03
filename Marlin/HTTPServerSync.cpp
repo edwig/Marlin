@@ -758,10 +758,9 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
   bool   retval    = true;
   ULONG  bytesRead = 0;
   ULONG  entityBufferLength = INIT_HTTP_BUFFERSIZE;
-  PUCHAR entityBuffer       = nullptr;
 
   // Create a buffer + 1 extra byte for the closing 0
-  entityBuffer = new uchar[entityBufferLength + 1];
+  PUCHAR entityBuffer = new uchar[entityBufferLength + 1];
   if(entityBuffer == NULL)
   {
     ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Out of memory");

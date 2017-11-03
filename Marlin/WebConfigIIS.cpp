@@ -50,11 +50,9 @@ WebConfigIIS::~WebConfigIIS()
 bool
 WebConfigIIS::ReadConfig()
 {
-  bool result = false;
-
   // Reads the central IIS appliction host configuration file first
   // this file contains the defaults for IIS.
-  result = ReadConfig("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config");
+  bool result = ReadConfig("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config");
   if(!m_application.IsEmpty())
   {
     SetApplication(m_application);
@@ -344,11 +342,8 @@ WebConfigIIS::ReadSites(XMLMessage& p_msg)
 }
 
 void 
-WebConfigIIS::ReadStreamingLimit(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem)
+WebConfigIIS::ReadStreamingLimit(IISSite& /*p_site*/,XMLMessage& p_msg,XMLElement* p_elem)
 {
-  UNREFERENCED_PARAMETER(p_site);
-  m_streamingLimit = STREAMING_LIMIT;
-
   XMLElement* webserv = p_msg.FindElement(p_elem,"system.webServer");
   if(webserv)
   {

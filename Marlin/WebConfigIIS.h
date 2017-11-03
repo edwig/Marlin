@@ -27,6 +27,7 @@
 //
 #pragma once
 #include "XMLMessage.h"
+#include "FileBuffer.h"
 #include <map>
 
 // What we want to remember about an IIS HTTP site
@@ -96,6 +97,6 @@ private:
 
   IISSites  m_sites;
   CString   m_logpath;
-  bool      m_logging { false };
-  ULONG     m_streamingLimit;
+  bool      m_logging        { false };
+  ULONG     m_streamingLimit { STREAMING_LIMIT };
 };

@@ -382,7 +382,6 @@ TryConvertWideString(const uchar* p_buffer
                     ,bool&        p_foundBOM)
 {
   UINT codePage = GetACP(); // Default is to use the current codepage
-  DWORD dwFlag  = 0;        // WC_COMPOSITECHECK | WC_DISCARDNS;
   int   iLength = -1;       // I think it will be null terminated
   bool  result  = false;
   BYTE* extraBuffer = nullptr;
@@ -449,6 +448,7 @@ TryConvertWideString(const uchar* p_buffer
     char* buffer = new char[iLength];
     if(buffer != NULL)
     {
+      DWORD dwFlag = 0; // WC_COMPOSITECHECK | WC_DISCARDNS;
       memset(buffer, 0, iLength * sizeof(char));
       iLength = ::WideCharToMultiByte(codePage,
                                       dwFlag, 

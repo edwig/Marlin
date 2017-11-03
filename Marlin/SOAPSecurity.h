@@ -85,7 +85,7 @@ private:
   bool          m_digest    { true };                 // Digest the security header
   int           m_freshness { SECURITY_FRESHNESS };   // Number of minutes before timestamps expire
   XMLTimestamp  m_timestamp;                          // Timestamp of the security header
-  void*         m_context;                            // Context of the user/password finder
+  void*         m_context      { nullptr };           // Context of the user/password finder
   UserPassword  m_findPassword { nullptr };           // Function to find the user's password
 };
 

@@ -329,7 +329,7 @@ HTTPClientTracing::QueryString(HINTERNET p_handle,DWORD p_option,char* p_optionN
 {
   DWORD bufLength = 0L;
   CString theString;
-  BOOL  result = WinHttpQueryOption(p_handle,p_option,&theString,&bufLength);
+  bool result = WinHttpQueryOption(p_handle,p_option,&theString,&bufLength);
   if(result == false && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
   {
     wchar_t* name = new wchar_t[bufLength + 1];

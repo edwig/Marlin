@@ -421,7 +421,7 @@ ThreadPoolED::ShrinkThreadPool(ThreadRegister* p_reg)
 RunThread(void* p_myThread)
 {
   // If we come to here, we exist!
-  ThreadRegister* reg = (ThreadRegister*) p_myThread;
+  ThreadRegister* reg = reinterpret_cast<ThreadRegister*>(p_myThread);
   return reg->m_pool->RunAThread(reg);
 }
 

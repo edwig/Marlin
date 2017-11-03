@@ -80,18 +80,12 @@ SOAPSecurity::SetSecurity(SOAPMessage* p_message)
 
   if(namesp && secure)
   {
-    // Prepare booleans
-    bool OKUser  = false;
-    bool OKPaswd = false;
-    bool OKNonce = false;
-    bool OKCreat = false;
-
     // Set a new timestamp for the message
     // Timestamp must be in UTC, so we can worldwide synchronize our webservices
     m_timestamp.SetSystemTimestamp();
 
     // Set user in the message
-    OKUser = SetUsernameInMessage(p_message,secure);
+    bool OKUser = SetUsernameInMessage(p_message,secure);
 
     // Set coded or unencoded password in the message
     CString password(m_password);
@@ -106,13 +100,13 @@ SOAPSecurity::SetSecurity(SOAPMessage* p_message)
     {
       password = DigestPassword();
     }
-    OKPaswd = SetPasswordInMessage(p_message,secure,password);
+    bool OKPaswd = SetPasswordInMessage(p_message,secure,password);
 
     // For encoding, provide Nonce and Created time
     if(m_digest)
     {
-      OKNonce = SetNonceInMessage  (p_message,secure);
-      OKCreat = SetCreatedInMessage(p_message,secure);
+      bool OKNonce = SetNonceInMessage  (p_message,secure);
+      bool OKCreat = SetCreatedInMessage(p_message,secure);
 
       return (OKUser && OKPaswd && OKNonce && OKCreat);
     }

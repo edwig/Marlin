@@ -327,7 +327,7 @@ ErrorReport::Report(DWORD p_errorCode
   }
   if (subject.IsEmpty())
   {
-    subject.Format("Unknown error (0x%08x)", p_errorCode);
+    subject.Format("Unknown error (0x%08x)",(unsigned int) p_errorCode);
   }
 
   // Getting the name of a C++ exception

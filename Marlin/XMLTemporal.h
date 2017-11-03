@@ -101,7 +101,7 @@ private:
   void SetTime();
   void Normalise();
 
-  XmlTimeStorage m_theTime;
+  XmlTimeStorage m_theTime{0,0,0};
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ private:
   bool SetDate(int p_year,int p_month,int p_day);
   bool SetMJD();
 
-  XmlDateStorage m_date;
+  XmlDateStorage m_date{0,0,0};
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -157,8 +157,8 @@ private:
   void Normalise();
   void Validate();
 
-  XmlStampStorage m_timestamp;
-  int          		m_fraction;
+  XmlStampStorage m_timestamp{ 0,0,0,0,0,0 };
+  int          		m_fraction { 0 };
 };
 
 //////////////////////////////////////////////////////////////////////////

@@ -55,7 +55,9 @@ public:
   // Construct and init
   EventStream()
   {
+    m_desktop   = 0;
     m_port      = 0;
+    m_site      = nullptr;
     m_requestID = NULL;
     m_lastID    = 0;
     m_alive     = false;
