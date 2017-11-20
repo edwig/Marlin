@@ -238,7 +238,7 @@ HTTPSiteMarlin::InitSite(WebConfig& p_config)
   m_reliable      = p_config.GetParameterBoolean("Server",    "Reliable",       m_reliable);
   m_verbTunneling = p_config.GetParameterBoolean("Server",    "VerbTunneling",  m_verbTunneling);
   m_compression   = p_config.GetParameterBoolean("Server",    "HTTPCompression",m_compression);
-  m_throttling   = p_config.GetParameterBoolean("Server",    "HTTPThrotteling",m_throttling);
+  m_throttling    = p_config.GetParameterBoolean("Server",    "HTTPThrotteling",m_throttling);
 
   // Now set the resulting security level
        if(level == "sign")    m_securityLevel = XMLEncryption::XENC_Signing;
@@ -347,11 +347,13 @@ HTTPSiteMarlin::LogSettings()
   DETAILLOGS("Site IFRAME options header         : ",       option);
   DETAILLOGS("Site allows to be IFRAME'd from    : ",       m_xFrameAllowed);
   DETAILLOGV("Site is HTTPS-only for at least    : %d seconds",m_hstsMaxAge);
-  DETAILLOGS("Site does allow HTTPS subdomains   : ",       m_hstsSubDomains ? "YES" : "NO");
+  DETAILLOGS("Site does allow HTTPS subdomains   : ",       m_hstsSubDomains ? "YES":  "NO");
   DETAILLOGS("Site does allow content sniffing   : ",       m_xNoSniff       ? "NO" : "YES");
   DETAILLOGS("Site has XSS Protection set to     : ",       m_xXSSProtection ? "ON" : "OFF");
   DETAILLOGS("Site has XSS Protection block mode : ",       m_xXSSBlockMode  ? "ON" : "OFF");
   DETAILLOGS("Site blocking the browser caching  : ",       m_blockCache     ? "ON" : "OFF");
+  DETAILLOGS("Site Cross-Origin-Resource-Sharing : ",       m_useCORS        ? "ON" : "OFF");
+  DETAILLOGS("Site allows cross-origin(s)        : %s",     m_allowOrigin.IsEmpty() ? "*" : m_allowOrigin);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -376,14 +378,16 @@ HTTPSiteMarlin::SetAutomaticHeaders(WebConfig& p_config)
   }
 
   // Read everything from the webconfig
-  option            = p_config.GetParameterString ("Security", "XFrameOption",   option);
-  m_xFrameAllowed   = p_config.GetParameterString ("Security", "XFrameAllowed",  m_xFrameAllowed);
-  m_hstsMaxAge      = p_config.GetParameterInteger("Security", "HSTSMaxAge",     m_hstsMaxAge);
-  m_hstsSubDomains  = p_config.GetParameterBoolean("Security", "HSTSSubDomains", m_hstsSubDomains);
-  m_xNoSniff        = p_config.GetParameterBoolean("Security", "ContentNoSniff", m_xNoSniff);
-  m_xXSSProtection  = p_config.GetParameterBoolean("Security", "XSSProtection",  m_xXSSProtection);
-  m_xXSSBlockMode   = p_config.GetParameterBoolean("Security", "XSSBlockMode",   m_xXSSBlockMode);
-  m_blockCache      = p_config.GetParameterBoolean("Security", "NoCacheControl", m_blockCache);
+  option            = p_config.GetParameterString ("Security", "XFrameOption",    option);
+  m_xFrameAllowed   = p_config.GetParameterString ("Security", "XFrameAllowed",   m_xFrameAllowed);
+  m_allowOrigin     = p_config.GetParameterString ("Security", "CORS_AllowOrigin",m_allowOrigin);
+  m_hstsMaxAge      = p_config.GetParameterInteger("Security", "HSTSMaxAge",      m_hstsMaxAge);
+  m_hstsSubDomains  = p_config.GetParameterBoolean("Security", "HSTSSubDomains",  m_hstsSubDomains);
+  m_xNoSniff        = p_config.GetParameterBoolean("Security", "ContentNoSniff",  m_xNoSniff);
+  m_xXSSProtection  = p_config.GetParameterBoolean("Security", "XSSProtection",   m_xXSSProtection);
+  m_xXSSBlockMode   = p_config.GetParameterBoolean("Security", "XSSBlockMode",    m_xXSSBlockMode);
+  m_blockCache      = p_config.GetParameterBoolean("Security", "NoCacheControl",  m_blockCache);
+  m_useCORS         = p_config.GetParameterBoolean("Security", "CORS",            m_useCORS);
 
   // Translate X-Frame options back
        if(option.CompareNoCase("DENY")        == 0) m_xFrameOption = XFrameOption::XFO_DENY;

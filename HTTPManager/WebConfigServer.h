@@ -89,6 +89,7 @@ protected:
   bool        m_useXssProtect;
   bool        m_useXssBlock;
   bool        m_useNoCache;
+  bool        m_useCORS;
 
   CString     m_webroot;
   CString     m_baseURL;
@@ -109,12 +110,14 @@ protected:
   // Server headers
   CString     m_xFrameOption;
   CString     m_xFrameAllowed;
+  CString     m_allowOrigin;
   unsigned    m_hstsMaxAge;
   bool        m_hstsSubDomain;
   bool        m_xNoSniff;
   bool        m_XSSProtection;
   bool        m_XSSBlockMode;
   bool        m_noCacheControl;
+  bool        m_cors;
 
   // Interface items
   HICON       m_hIcon;

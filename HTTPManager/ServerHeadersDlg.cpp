@@ -31,7 +31,6 @@
 #include "WebConfigServer.h"
 #include "afxdialogex.h"
 
-
 // ServerHeadersDlg dialog
 
 IMPLEMENT_DYNAMIC(ServerHeadersDlg, CDialog)
@@ -58,6 +57,7 @@ void ServerHeadersDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_USE_HSTS,         m_buttonUseHstsMaxAge);
   DDX_Control(pDX,IDC_USE_HSTSSUB,      m_buttonUseHstsSubDomain);
   DDX_Control(pDX,IDC_USE_NOSNIFF,      m_buttonUseNoSniff);
+  DDX_Control(pDX,IDC_USE_CORS,         m_buttonUseCORS);
 
   DDX_Control(pDX,IDC_XFRAME,           m_comboXFrameOptions);
   DDX_Control(pDX,IDC_NOCACHE,          m_buttonNoCacheControl);
@@ -65,24 +65,27 @@ void ServerHeadersDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_XSSBLOCK,         m_buttonXssBlockMode);
   DDX_Control(pDX,IDC_NOSNIFF,          m_buttonNoSniff);
   DDX_Control(pDX,IDC_HSTSSUB,          m_buttonHstsSubDomain);
+  DDX_Control(pDX,IDC_CORS,             m_buttonCORS);
   DDX_Text   (pDX,IDC_XFURL,            m_XFrameURL);
   DDX_Text   (pDX,IDC_HSTS,             m_hstsMaxAge);
+  DDX_Text   (pDX,IDC_ALLOW_ORIGIN,     m_allowOrigin);
 
   if(pDX->m_bSaveAndValidate == FALSE)
   {
     CWnd* w = nullptr;
 
-    w = GetDlgItem(IDC_NOCACHE);    w->EnableWindow(m_config->m_useNoCache);
-    w = GetDlgItem(IDC_XFRAME);     w->EnableWindow(m_config->m_useXFrameOpt);
-    w = GetDlgItem(IDC_XFURL);      w->EnableWindow(m_config->m_useXFrameAllow);
-    w = GetDlgItem(IDC_XSSPROTECT); w->EnableWindow(m_config->m_useXssProtect);
-    w = GetDlgItem(IDC_XSSBLOCK);   w->EnableWindow(m_config->m_useXssBlock);
-    w = GetDlgItem(IDC_HSTS);       w->EnableWindow(m_config->m_useHstsMaxAge);
-    w = GetDlgItem(IDC_HSTSSUB);    w->EnableWindow(m_config->m_useHstsDomain);
-    w = GetDlgItem(IDC_NOSNIFF);    w->EnableWindow(m_config->m_useNoSniff);
+    w = GetDlgItem(IDC_NOCACHE);      w->EnableWindow(m_config->m_useNoCache);
+    w = GetDlgItem(IDC_XFRAME);       w->EnableWindow(m_config->m_useXFrameOpt);
+    w = GetDlgItem(IDC_XFURL);        w->EnableWindow(m_config->m_useXFrameAllow);
+    w = GetDlgItem(IDC_XSSPROTECT);   w->EnableWindow(m_config->m_useXssProtect);
+    w = GetDlgItem(IDC_XSSBLOCK);     w->EnableWindow(m_config->m_useXssBlock);
+    w = GetDlgItem(IDC_HSTS);         w->EnableWindow(m_config->m_useHstsMaxAge);
+    w = GetDlgItem(IDC_HSTSSUB);      w->EnableWindow(m_config->m_useHstsDomain);
+    w = GetDlgItem(IDC_NOSNIFF);      w->EnableWindow(m_config->m_useNoSniff);
+    w = GetDlgItem(IDC_CORS);         w->EnableWindow(m_config->m_useCORS);
+    w = GetDlgItem(IDC_ALLOW_ORIGIN); w->EnableWindow(m_config->m_useCORS);
   }
 }
-
 
 BEGIN_MESSAGE_MAP(ServerHeadersDlg, CDialog)
   ON_BN_CLICKED(IDC_USE_NOCACHE,    &ServerHeadersDlg::OnBnClickedUseNocache)
@@ -92,6 +95,7 @@ BEGIN_MESSAGE_MAP(ServerHeadersDlg, CDialog)
   ON_BN_CLICKED(IDC_USE_HSTS,       &ServerHeadersDlg::OnBnClickedUseHsts)
   ON_BN_CLICKED(IDC_USE_HSTSSUB,    &ServerHeadersDlg::OnBnClickedUseHstssub)
   ON_BN_CLICKED(IDC_USE_NOSNIFF,    &ServerHeadersDlg::OnBnClickedUseNosniff)
+  ON_BN_CLICKED(IDC_USE_CORS,       &ServerHeadersDlg::OnBnClickedUseCORS)
   ON_BN_CLICKED(IDC_NOCACHE,        &ServerHeadersDlg::OnBnClickedNocache)
   ON_CBN_SELCHANGE(IDC_XFRAME,      &ServerHeadersDlg::OnCbnSelchangeXframe)
   ON_EN_CHANGE (IDC_XFURL,          &ServerHeadersDlg::OnEnChangeXfurl)
@@ -100,6 +104,8 @@ BEGIN_MESSAGE_MAP(ServerHeadersDlg, CDialog)
   ON_EN_CHANGE (IDC_HSTS,           &ServerHeadersDlg::OnEnChangeHsts)
   ON_BN_CLICKED(IDC_HSTSSUB,        &ServerHeadersDlg::OnBnClickedHstssub)
   ON_BN_CLICKED(IDC_NOSNIFF,        &ServerHeadersDlg::OnBnClickedNosniff)
+  ON_BN_CLICKED(IDC_CORS,           &ServerHeadersDlg::OnBnClickedCORS)
+  ON_EN_CHANGE (IDC_ALLOW_ORIGIN,   &ServerHeadersDlg::OnEnChangeAllowOrigin)
   ON_BN_CLICKED(IDOK,               &ServerHeadersDlg::OnOK)
 END_MESSAGE_MAP()
 
@@ -128,16 +134,19 @@ ServerHeadersDlg::OnInitDialog()
   m_buttonUseXssProtection .SetCheck(m_config->m_useXssProtect);
   m_buttonUseXssBlockMode  .SetCheck(m_config->m_useXssBlock);
   m_buttonUseNoCacheControl.SetCheck(m_config->m_useNoCache);
+  m_buttonUseCORS          .SetCheck(m_config->m_useCORS);
 
   // Init the fields
-  m_XFrameURL  = m_config->m_xFrameAllowed;
-  m_hstsMaxAge = m_config->m_hstsMaxAge;
+  m_XFrameURL   = m_config->m_xFrameAllowed;
+  m_hstsMaxAge  = m_config->m_hstsMaxAge;
+  m_allowOrigin = m_config->m_allowOrigin;
 
   m_buttonHstsSubDomain .SetCheck(m_config->m_hstsSubDomain);
   m_buttonNoSniff       .SetCheck(m_config->m_xNoSniff);
   m_buttonXssProtection .SetCheck(m_config->m_XSSProtection);
   m_buttonXssBlockMode  .SetCheck(m_config->m_XSSBlockMode);
   m_buttonNoCacheControl.SetCheck(m_config->m_noCacheControl);
+  m_buttonCORS          .SetCheck(m_config->m_cors);
 
   // Set correct combo entry
   CorrectXFrameOption();
@@ -243,6 +252,13 @@ ServerHeadersDlg::OnBnClickedUseNosniff()
   UpdateData(FALSE);
 }
 
+void
+ServerHeadersDlg::OnBnClickedUseCORS()
+{
+  m_config->m_useCORS = m_buttonUseCORS.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // VELD HANDLERS
@@ -302,6 +318,25 @@ void
 ServerHeadersDlg::OnBnClickedNosniff()
 {
   m_config->m_xNoSniff = m_buttonNoSniff.GetCheck() > 0;
+}
+
+void
+ServerHeadersDlg::OnBnClickedCORS()
+{
+  m_config->m_cors = m_buttonCORS.GetCheck() > 0;
+  if(!m_config->m_cors)
+  {
+    m_allowOrigin.Empty();
+    m_config->m_allowOrigin.Empty();
+    UpdateData(FALSE);
+  }
+}
+
+void
+ServerHeadersDlg::OnEnChangeAllowOrigin()
+{
+  UpdateData();
+  m_config->m_allowOrigin = m_allowOrigin;
 }
 
 void

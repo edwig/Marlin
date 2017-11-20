@@ -69,6 +69,7 @@ WebConfigServer::WebConfigServer(CWnd* pParent /*=NULL*/)
   m_useStreamingLimit = false;
   m_useCompressLimit  = false;
   m_useThrotteling    = false;
+  m_useCORS           = false;
 
   // SERVER OVERRIDES
   m_port            = 0;
@@ -80,6 +81,7 @@ WebConfigServer::WebConfigServer(CWnd* pParent /*=NULL*/)
   m_stackSize       = 0;
   m_serverUnicode   = false;
   m_gzip            = false;
+  m_cors            = false;
   m_streamingLimit  = STREAMING_LIMIT;
   m_compressLimit   = COMPRESS_LIMIT;
   m_throtteling     = false;
@@ -294,15 +296,18 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
   m_useXssProtect     = config.HasParameter("Security","XSSProtection");
   m_useXssBlock       = config.HasParameter("Security","XSSBlockMode");
   m_useNoCache        = config.HasParameter("Security","NoCacheControl");
+  m_useCORS           = config.HasParameter("Security","CORS");
 
   m_xFrameOption      = config.GetParameterString ("Security","XFrameOption",     "");
   m_xFrameAllowed     = config.GetParameterString ("Security","XFrameAllowed",    "");
+  m_allowOrigin       = config.GetParameterString ("Security","CORS_AllowOrigin", "");
   m_hstsMaxAge        = config.GetParameterInteger("Security","HSTSMaxAge",        0);
   m_hstsSubDomain     = config.GetParameterBoolean("Security","HSTSSubDomains",false);
   m_xNoSniff          = config.GetParameterBoolean("Security","ContentNoSniff",false);
   m_XSSProtection     = config.GetParameterBoolean("Security","XSSProtection", false);
   m_XSSBlockMode      = config.GetParameterBoolean("Security","XSSBlockMode",  false);
   m_noCacheControl    = config.GetParameterBoolean("Security","NoCacheControl",false);
+  m_cors              = config.GetParameterBoolean("Security","CORS",          false);
 
   // INIT THE COMBO BOXES
   m_comboProtocol.SetCurSel(m_secureProtocol ? 1 : 0);
@@ -405,6 +410,10 @@ WebConfigServer::WriteWebConfig(WebConfig& config)
   else                  config.RemoveParameter("Security","XSSBlockMode");
   if(m_useNoCache)      config.SetParameter   ("Security","NoCacheControl", m_noCacheControl);
   else                  config.RemoveParameter("Security","NoCacheControl");
+  if(m_useCORS)         config.SetParameter   ("Security","CORS",           m_cors);
+  else                  config.RemoveParameter("Security","CORS");
+  if(m_useCORS)         config.SetParameter   ("Security","CORS_AllowOrigin",m_allowOrigin);
+  else                  config.RemoveParameter("Security","CORS_AllowOrigin");
 }
 
 // WebConfigDlg message handlers

@@ -8,6 +8,11 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.6.1
+========================
+1)  The use of the Cross-Origin-Resource-Sharing header (CORS) can now be set from within the
+    web.config (HTTPManager) for the Marlin standalone server
+
 CHANGES IN VERSION 4.6.0
 ========================
 1)  The JSONMessage is now derivable from other objects. Just as the HTTPMessage and XMLMessage this

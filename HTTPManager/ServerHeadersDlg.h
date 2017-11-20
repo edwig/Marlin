@@ -55,6 +55,7 @@ private:
   CString       m_warning;
   CString       m_XFrameURL;
   int           m_hstsMaxAge;
+  CString       m_allowOrigin;
 
   CButton       m_buttonUseXFrame;
   CButton       m_buttonUseHstsMaxAge;
@@ -63,6 +64,7 @@ private:
   CButton       m_buttonUseXssProtection;
   CButton       m_buttonUseXssBlockMode;
   CButton       m_buttonUseNoCacheControl;
+  CButton       m_buttonUseCORS;
 
   CComboBox     m_comboXFrameOptions;
   CButton       m_buttonHstsSubDomain;
@@ -70,6 +72,7 @@ private:
   CButton       m_buttonXssProtection;
   CButton       m_buttonXssBlockMode;
   CButton       m_buttonNoCacheControl;
+  CButton       m_buttonCORS;
 
 public:
   afx_msg void OnBnClickedUseNocache();
@@ -79,6 +82,7 @@ public:
   afx_msg void OnBnClickedUseHsts();
   afx_msg void OnBnClickedUseHstssub();
   afx_msg void OnBnClickedUseNosniff();
+  afx_msg void OnBnClickedUseCORS();
   afx_msg void OnBnClickedNocache();
   afx_msg void OnCbnSelchangeXframe();
   afx_msg void OnEnChangeXfurl();
@@ -87,5 +91,7 @@ public:
   afx_msg void OnEnChangeHsts();
   afx_msg void OnBnClickedHstssub();
   afx_msg void OnBnClickedNosniff();
+  afx_msg void OnBnClickedCORS();
+  afx_msg void OnEnChangeAllowOrigin();
   afx_msg void OnOK();
 };
