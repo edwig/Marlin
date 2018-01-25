@@ -1649,11 +1649,13 @@ WebSocketServerIIS::ServerHandshake(HTTPMessage* p_message)
 WebSocketClient::WebSocketClient(CString p_uri)
                 :WebSocket(p_uri)
 {
+  LoadHTTPLibrary();
 }
 
 WebSocketClient::~WebSocketClient()
 {
   CloseSocket();
+  FreeHTTPLibrary();
 }
 
 void
@@ -1667,6 +1669,42 @@ WebSocketClient::Reset()
   m_listener = NULL;
   m_socketKey.Empty();
 }
+
+// Load function pointers from WinHTTP library
+void
+WebSocketClient::LoadHTTPLibrary()
+{
+  m_winhttp = LoadLibrary("WinHTTP.dll");
+  if(m_winhttp)
+  {
+    m_websocket_complete    = (WSOCK_COMPLETE)  GetProcAddress(m_winhttp,"WinHttpWebSocketCompleteUpgrade");
+    m_websocket_close       = (WSOCK_CLOSE)     GetProcAddress(m_winhttp,"WinHttpWebSocketClose");
+    m_websocket_queryclose  = (WSOCK_QUERYCLOSE)GetProcAddress(m_winhttp,"WinHttpWebSocketQueryCloseStatus");  
+    m_websocket_send        = (WSOCK_SEND)      GetProcAddress(m_winhttp,"WinHttpWebSocketSend");
+    m_websocket_receive     = (WSOCK_RECEIVE)   GetProcAddress(m_winhttp,"WinHttpWebSocketReceive");
+  }
+
+  if(m_websocket_complete   == nullptr ||
+     m_websocket_close      == nullptr ||
+     m_websocket_queryclose == nullptr ||
+     m_websocket_send       == nullptr ||
+     m_websocket_receive    == nullptr)
+  {
+    // Mark for OpenSocket to fail on a websocket
+    m_websocket_complete = nullptr;
+  }
+}
+
+void
+WebSocketClient::FreeHTTPLibrary()
+{
+  if(m_winhttp)
+  {
+    FreeLibrary(m_winhttp);
+    m_winhttp = nullptr;
+  }
+}
+
 
 // Setting parameters for the client socket
 void
@@ -1693,6 +1731,14 @@ WebSocketClient::OpenSocket()
   // Connect the logging
   client.SetLogging(m_logfile);
   client.SetLogLevel(m_logLevel);
+
+  // Check if WINHTTP library was loaded
+  if(m_websocket_complete == nullptr)
+  {
+    ERRORLOG(ERROR_DLL_INIT_FAILED,"Could not load WebSocket functions from WINHTTP.DLL");
+    return false;
+  }
+
 
   // GET this URI (ws[s]://resource) !!
   client.SetVerb("GET");
@@ -1722,7 +1768,7 @@ WebSocketClient::OpenSocket()
     {
       // Switch the handles from WinHTTP to WinSocket
       HINTERNET handle = client.GetWebsocketHandle();
-      m_socket = WinHttpWebSocketCompleteUpgrade(handle,NULL);
+      m_socket = m_websocket_complete(handle,NULL); // WinHttpWebSocketCompleteUpgrade
       if(m_socket)
       {
         // Close client handle first. HTTP is no longer needed
@@ -1800,7 +1846,7 @@ WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
       length = WS_CLOSE_MAXIMUM;
     }
     DETAILLOGV("Send close WebSocket [%d:%s] for: %s",p_code,p_reason.GetString(),m_uri.GetString());
-    DWORD error = WinHttpWebSocketClose(m_socket,p_code,(void*)p_reason.GetString(),length);
+    DWORD error = m_websocket_close(m_socket,p_code,(void*)p_reason.GetString(),length); // WinHttpWebSocketClose
     if(error)
     {
       // We could be in a tight spot (socket already closed)
@@ -1842,11 +1888,12 @@ WebSocketClient::ReceiveCloseSocket()
 
   if(m_socket)
   {
-    DWORD error = WinHttpWebSocketQueryCloseStatus(m_socket
-                                                  ,&m_closingError
-                                                  ,&reason
-                                                  ,WS_CLOSE_MAXIMUM + 1
-                                                  ,&received);
+    // WinHttpWebSocketQueryCloseStatus
+    DWORD error = m_websocket_queryclose(m_socket
+                                        ,&m_closingError
+                                        ,&reason
+                                        ,WS_CLOSE_MAXIMUM + 1
+                                        ,&received);
     if(error == ERROR_INVALID_OPERATION)
     {
       // No closing frame received yet
@@ -1892,7 +1939,8 @@ WebSocketClient::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,boo
     type = WINHTTP_WEB_SOCKET_CLOSE_BUFFER_TYPE;
   }
 
-  DWORD error = WinHttpWebSocketSend(m_socket,type,p_buffer,p_length);
+  // WinHttpWebSocketSend
+  DWORD error = m_websocket_send(m_socket,type,p_buffer,p_length);
   if(error)
   {
     ERRORLOG(error,"ERROR while sending to WebSocket: " + m_uri);
@@ -1936,11 +1984,12 @@ WebSocketClient::SocketListener()
 
     DWORD bytesRead = 0;
     WINHTTP_WEB_SOCKET_BUFFER_TYPE type;
-    DWORD error = WinHttpWebSocketReceive(m_socket
-                                         ,&m_reading->m_data[m_reading->m_length]
-                                         ,m_fragmentsize
-                                         ,&bytesRead
-                                         ,&type);
+    // WinHttpWebSocketReceive
+    DWORD error = m_websocket_receive(m_socket
+                                     ,&m_reading->m_data[m_reading->m_length]
+                                     ,m_fragmentsize
+                                     ,&bytesRead
+                                     ,&type);
     if(error)
     {
       if(error == ERROR_WINHTTP_OPERATION_CANCELLED)

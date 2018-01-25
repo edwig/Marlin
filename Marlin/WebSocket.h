@@ -479,6 +479,18 @@ protected:
 
 //////////////////////////////////////////////////////////////////////////
 //
+// FUNCTION PROTOTYPES for WebSocketClient
+// Enables the dynamic loading on Windows8 and Windows10
+// and fails silently on Windows 2008 / Windows 7
+//
+typedef HINTERNET(CALLBACK* WSOCK_COMPLETE)  (HINTERNET,DWORD_PTR);
+typedef DWORD    (CALLBACK* WSOCK_CLOSE)     (HINTERNET,USHORT,PVOID,DWORD);
+typedef DWORD    (CALLBACK* WSOCK_QUERYCLOSE)(HINTERNET,USHORT*,PVOID,DWORD,DWORD*);
+typedef DWORD    (CALLBACK* WSOCK_SEND)      (HINTERNET,WINHTTP_WEB_SOCKET_BUFFER_TYPE,PVOID,DWORD);
+typedef DWORD    (CALLBACK* WSOCK_RECEIVE)   (HINTERNET,PVOID,DWORD,DWORD*,WINHTTP_WEB_SOCKET_BUFFER_TYPE*);
+
+//////////////////////////////////////////////////////////////////////////
+//
 // CLIENT WebSocket
 //
 //////////////////////////////////////////////////////////////////////////
@@ -520,11 +532,22 @@ protected:
   bool         ReceiveCloseSocket();
   // Setting parameters for the client socket
   void         AddWebSocketHeaders();
+  // Load function pointers from WinHTTP library
+  void         LoadHTTPLibrary();
+  void         FreeHTTPLibrary();
 
   // WinHTTP Client version of the WebSocket
   HINTERNET    m_socket   { NULL };   // Our socket handle for WinHTTP
   HANDLE       m_listener { NULL };   // Listener thread
   CString      m_socketKey;           // Given at the start
+  HMODULE      m_winhttp  { NULL };   // Handle to the extended library
+
+  // Pointers to the extended functions on Windows 8 / Windows 10
+  WSOCK_COMPLETE    m_websocket_complete  { nullptr };
+  WSOCK_CLOSE       m_websocket_close     { nullptr };
+  WSOCK_QUERYCLOSE  m_websocket_queryclose{ nullptr };
+  WSOCK_SEND        m_websocket_send      { nullptr };
+  WSOCK_RECEIVE     m_websocket_receive   { nullptr };
 };
 
 inline CString
@@ -540,3 +563,5 @@ WebSocketClient::RegisterSocket(HTTPMessage* /*p_message*/)
   // NO-OP for the client side
   return true;
 }
+
+
