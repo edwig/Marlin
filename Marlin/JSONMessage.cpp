@@ -350,9 +350,6 @@ JSONMessage::JSONMessage(CString p_message,CString p_url)
   // Set sender to null
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
 
-  // Set sender to null
-  memset(&m_sender,0,sizeof(SOCKADDR_IN6));
-
   // To this URL
   SetURL(p_url);
 

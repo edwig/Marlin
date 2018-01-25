@@ -137,7 +137,7 @@ HTTPSiteMarlin::StartSite()
       wstring uniURL = A2CW(m_prefixURL);
       HTTP_URL_GROUP_ID group = m_group->GetUrlGroupID();
       ULONG retCode = HttpAddUrlToUrlGroup(group,uniURL.c_str(),(HTTP_URL_CONTEXT)this,0);
-      if(retCode != NO_ERROR)
+      if(retCode != NO_ERROR && retCode != ERROR_ALREADY_EXISTS)
       {
         CString error;
         error.Format("Cannot add URL to the URL-Group: %s",m_prefixURL.GetString());
@@ -353,7 +353,7 @@ HTTPSiteMarlin::LogSettings()
   DETAILLOGS("Site has XSS Protection block mode : ",       m_xXSSBlockMode  ? "ON" : "OFF");
   DETAILLOGS("Site blocking the browser caching  : ",       m_blockCache     ? "ON" : "OFF");
   DETAILLOGS("Site Cross-Origin-Resource-Sharing : ",       m_useCORS        ? "ON" : "OFF");
-  DETAILLOGS("Site allows cross-origin(s)        : %s",     m_allowOrigin.IsEmpty() ? "*" : m_allowOrigin);
+  DETAILLOG1(CString("Site allows cross-origin(s)        : ") + (m_allowOrigin.IsEmpty() ? CString("*") : m_allowOrigin));
 }
 
 //////////////////////////////////////////////////////////////////////////

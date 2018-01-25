@@ -120,6 +120,9 @@ LogAnalysis::Reset()
     DeregisterEventSource(m_eventLog);
     m_eventLog = NULL;
   }
+
+  // Reset loglevel
+  m_logLevel = HLL_NOLOG;
 }
 
 CString

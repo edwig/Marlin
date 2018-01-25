@@ -395,9 +395,9 @@ HTTPServer::RegisterSite(HTTPSite* p_site,CString p_urlPrefix)
   {
     if(p_urlPrefix.CompareNoCase(it->second->GetPrefixURL()) == 0)
     {
-      // Duplicate site found
-      ERRORLOG(ERROR_ALIAS_EXISTS,base);
-      return false;
+      // Duplicate site found: Not necesseraly an error
+      WARNINGLOG("Site was already registered: %s",base.GetString());
+      return true;
     }
   }
 
@@ -683,6 +683,10 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
 
   // Convert to a HTTP response
   HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
+  if(answer->GetContentType().Find("soap") < 0)
+  {
+    answer->SetContentType("application/soap+xml");
+  }
   // Set status in case of an error
   if(p_message->GetErrorState())
   {
@@ -725,6 +729,10 @@ HTTPServer::SendResponse(JSONMessage* p_message)
     DETAILLOG1("Send JSON response");
     // Convert to a HTTP response
     HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
+    if(answer->GetContentType().Find("json") < 0)
+    {
+      answer->SetContentType("application/text+json");
+    }
     // Send the HTTP Message as response
     SendResponse(answer);
     answer->DropReference();

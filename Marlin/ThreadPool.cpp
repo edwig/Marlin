@@ -643,6 +643,13 @@ ThreadPool::StopHartbeat()
     TP_TRACE0("Stopping the hartbeat externally\n");
     SetEvent(m_hartbeatEvent);
   }
+
+  // Wait for a maximum of 1 second to stop the hartbeat
+  int wait = 100;
+  while(m_hartbeat && wait--)
+  {
+    Sleep(10);
+  }
 }
 
 // OUR PRIMARY FUNCTION
