@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,6 +49,7 @@ static char THIS_FILE[] = __FILE__;
 
 // Error report running
 __declspec(thread) bool g_exception = false;
+__declspec(thread) bool g_reportException = true;
 
 static ErrorReport* s_instance = NULL;
 
@@ -263,6 +264,7 @@ ErrorReport::~ErrorReport()
 {
   assert(s_instance == this);
   s_instance = NULL;
+  DeleteCriticalSection(&m_lock);
 }
 
 /*static*/ void
@@ -308,6 +310,11 @@ ErrorReport::Report(DWORD p_errorCode
                    ,CString& p_directory
                    ,CString& p_url)
 {
+  if (!g_reportException)
+  {
+    g_reportException = true;
+    return false;
+  }
   assert(s_instance != NULL);
 
   // One thread at the time
@@ -343,7 +350,7 @@ ErrorReport::Report(DWORD p_errorCode
   {
     const _s__ThrowInfo *throwInfo = reinterpret_cast<const _s__ThrowInfo *>(p_exception->ExceptionRecord->ExceptionInformation[2]);
     
-    if (throwInfo && throwInfo->pCatchableTypeArray->nCatchableTypes > 0)
+    if (throwInfo && throwInfo->pCatchableTypeArray && throwInfo->pCatchableTypeArray->nCatchableTypes > 0)
     {
       const std::type_info *typeInfo=reinterpret_cast<const std::type_info *>((*(throwInfo->pCatchableTypeArray->arrayOfCatchableTypes)[0]).pType);
 

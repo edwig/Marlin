@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,10 +45,14 @@
 // DEFINED JUST AS THE INTERFACE MAPPING IN MFC
 #define WEBSERVICE_MAP_BEGIN(cl)    void cl::OnProcessPost(int p_code,SOAPMessage* p_message)\
                                     {\
+                                      if(PreProcessPost(p_message))\
                                       switch(p_code){
 #define WEBSERVICE(id,method)         case id: method(id,p_message); break;
-#define WEBSERVICE_MAP_END          }}
+#define WEBSERVICE_MAP_END            }\
+                                    PostProcessPost(p_message);}
+// DECLARE ONCE IN YOUR DERIVED CLASS
 #define WEBSERVICE_MAP              virtual void OnProcessPost(int p_code,SOAPMessage* p_message);
+// DECLARE A WEBSERVICE METHOD
 #define WEBSERVICE_DECLARE(method)  void  method(int p_id,SOAPMessage* p_message);
 
 
@@ -215,6 +219,10 @@ public:
   bool          ProcessPost(SOAPMessage* p_message);
   // Process a GET HTTPMessage
   bool          ProcessGet(HTTPMessage* p_message);
+
+  // You can override these to pre/post process a SOAPMessage
+  virtual bool  PreProcessPost (SOAPMessage* p_message);
+  virtual void  PostProcessPost(SOAPMessage* p_message);
 
 protected:
   // Start WSDL

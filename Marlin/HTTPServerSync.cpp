@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -648,6 +648,9 @@ HTTPServerSync::RunHTTPServer()
 
   // Last action in the server thread
   m_serverThread = 0;
+
+	// Cleaning up the thread
+  _endthreadex(0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -661,6 +664,8 @@ HTTPServerSync::StopServer()
 {
   AutoCritSec lock(&m_eventLock);
   DETAILLOG1("Received a StopServer request");
+
+  HANDLE close = m_serverThread;
 
   // See if we are running at all
   if(m_running == false)
@@ -717,6 +722,8 @@ HTTPServerSync::StopServer()
     // Wait till the breaking of the mainloop
     if(m_serverThread == nullptr)
     {
+      Sleep(100);
+      CloseHandle(close);
       break;
     }
   }

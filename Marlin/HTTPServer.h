@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -260,6 +260,8 @@ public:
   SendHeader  GetSendServerHeader();
   // Event stream starts with BOM
   bool        GetEventBOM();
+  // Exposes the server-sent-event lock
+  CRITICAL_SECTION* GetEventLock();
 
   // FUNCTIONS
 
@@ -614,4 +616,10 @@ inline bool
 HTTPServer::GetEventBOM()
 {
   return m_eventBOM;
+}
+
+inline CRITICAL_SECTION*
+HTTPServer::GetEventLock()
+{
+  return &m_eventLock;
 }

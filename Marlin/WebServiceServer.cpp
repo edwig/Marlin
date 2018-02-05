@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -664,6 +664,19 @@ WebServiceServer::OnProcessPost(int p_code,SOAPMessage* p_message)
   p_message->SetFault("Critical","Server",fault,"Derive your own handler class from WebServiceServer!");
 }
 
+bool  
+WebServiceServer::PreProcessPost(SOAPMessage* /*p_message*/)
+{
+  // NO-OP: Does nothing if derived class does not define this interface
+  return true;
+}
+
+void  
+WebServiceServer::PostProcessPost(SOAPMessage* /*p_message*/)
+{
+  // NO-OP: Does nothing if derived class does not define this interface
+}
+
 // Process as a SOAP message
 bool
 WebServiceServer::ProcessPost(SOAPMessage* p_message)
@@ -792,6 +805,10 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
       }
     }
   }
+
+  // Preset an error
+  p_message->SetStatus(HTTP_STATUS_BAD_REQUEST);
+
   // Maybe luck in the next handler
   return false;
 }

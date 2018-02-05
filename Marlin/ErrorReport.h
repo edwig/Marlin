@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,6 +32,7 @@ class  HTTPMessage;
 struct _EXCEPTION_POINTERS;
 
 extern __declspec(thread) bool g_exception;
+extern __declspec(thread) bool g_reportException;
 
 // To be called before program begins running
 void PrepareProcessForSEH();

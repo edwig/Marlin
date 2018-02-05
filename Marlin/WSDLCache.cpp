@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -658,7 +658,7 @@ bool
 WSDLCache::CheckOutgoingMessage(SOAPMessage* p_msg,bool p_checkFields)
 {
   CString name = p_msg->GetSoapAction();
-  OperationMap::iterator it;
+  
 
   // Check if we are already in error state
   // So we can send already generated errors.
@@ -668,13 +668,11 @@ WSDLCache::CheckOutgoingMessage(SOAPMessage* p_msg,bool p_checkFields)
   }
 
   // See if it is an registered operation in this WSDL
-  for(it = m_operations.begin();it != m_operations.end(); ++it)
-  {
-    if(it->second.m_output->GetSoapAction().Compare(name) == 0)
+  OperationMap::iterator it = m_operations.find(name);
+  if(it != m_operations.end())
     {
       return CheckMessage(it->second.m_output,p_msg,"Server",p_checkFields);
     }
-  }
   // No valid operation found
   p_msg->Reset();
   p_msg->SetFault("No operation","Server","No operation [" + p_msg->GetSoapAction() + "] found","While testing against WSDL");
@@ -735,7 +733,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     CString orgName = orgParam->GetName();
     type = orgParam->GetType();
     // If the ordering is choice, instead of sequence: do a free search
-    if(type & WSDL_Choice)
+    if(!(type & WSDL_Sequence))
     {
       checkParam = p_check->FindElement(p_checkBase,orgName,false);
     }
@@ -792,13 +790,20 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     type     = orgParam ? orgParam->GetType() : 0;
   }
   // See if we've got something extra left
-  if(checkParam)
+  checkParam = p_check->GetElementFirstChild(p_checkBase);
+  while(checkParam)
   {
-    CString extra_field = checkParam->GetName();
+    CString checkName = checkParam->GetName();
+    if(p_orig->FindElement(p_orgBase,checkName,false) == nullptr)
+  {
     p_check->Reset();
-    p_check->SetFault("Extra field found",p_who,"Message has unexpected parameter",extra_field);
+      p_check->SetFault("Extra field found",p_who,"Message has unexpected parameter",checkName);
     return false;
   }
+    // Get next parameter in sequence list
+    checkParam = p_check->GetElementSibling(checkParam);
+  }
+
   // Gotten to the end, it's OK
   return true;
 }

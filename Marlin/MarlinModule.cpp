@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -604,12 +604,16 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   {
     // GO! Let the site handle the message
     site->HandleHTTPMessage(msg);
+  
+    // If handled (Marlin has resetted the request handle)
+    if(msg->GetRequestHandle() == NULL)
+    {
+       // Ready for IIS!
+       p_context->SetRequestHandled();
 
-    // Ready for IIS!
-    p_context->SetRequestHandled();
-
-    // This request is now completely handled
-    status = GetCompletionStatus(response);
+      // This request is now completely handled
+      status = GetCompletionStatus(response);
+    }
   }
   else if(stream)
   {

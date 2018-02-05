@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2017 ir. W.E. Huisman
+// Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1356,6 +1356,7 @@ HTTPServer::CheckEventStreams()
       // Remove request from the request queue, closing the connection
       CancelRequestStream(stream->m_requestID);
       // Erase stream, it's out of chunks now
+      delete it->second;
       it = m_eventStreams.erase(it);
     }
     else if(stream->m_alive == false)
@@ -1365,6 +1366,7 @@ HTTPServer::CheckEventStreams()
       // Remove request from the request queue, closing the connection
       CancelRequestStream(stream->m_requestID);
       // Erase dead stream, and goto next
+      delete it->second;
       it = m_eventStreams.erase(it);
     }
     else

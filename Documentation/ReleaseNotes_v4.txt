@@ -8,6 +8,37 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.7.0
+========================
+1)  Corrections in the checking of incoming and outgoing SOAP services against the WSDL in the
+    WSDLCache. Namely, the following are now working correct
+    - the <all> ordering in the XSD of elements. Fails no longer if elements are in a different order
+    - the checking of an extra element, not described i the WSDL
+2)  Greatly increased the speed of the checking of the outgoing SOAPMessages
+3)  The CRITICAL_SECTION lock for the sending of SSE (Server-Sent-Events) has been exposed by a 
+    new public "GetEventLock()" method on the HTTPServer object
+4)  IIS Status in MarlinModule has been corrected for HTTPMessages that are handled by Marlin
+5)  Corrections on cleaning up thread handles, and cleaning up the threads
+6)  Stopping the hartbeat in the threadpool has been corrected to wait till the harbeat has stopped.
+7)  WebSocket has a set of dynamic load functions for the WebSocket. This enables the library to
+    work again on "MS-Windows Server 2008".
+8)  Correction on the Analysis log: in a reset, the loglevel is also reset.
+9)  Content types for SOAP and JSON are corrected on a HTTP answer without a soap or json type.
+    If the correct content types are missing the following corrections take place:
+    SOAP -> ContentType=application/soap+xml
+    JSON -> ContentType=application/text+json
+10) Re-Registering a HTTP URL-Prefix is no longer an error, but a warning will appear in the logging.
+11) Logging of the CORS headers in the logfile has been corrected
+12) The WebServiceServer has two extra method in the WEBSERVICE_MAP, these are
+    - PreProcessPost(SOAPMessage*)
+    - PostProcessPost(SOAPMessage*)
+    These methods do as their names suggest, the pre- and post-process a message before and after
+    the correct SOAP handler from the webservice mapping has been called. The methods are virtual,
+    so you can write your own override in the overriding class of WebServiceServer.
+
+    This greatly enhances the possibility to act on the same way on each and every message received.
+
+
 CHANGES IN VERSION 4.6.1
 ========================
 1)  The use of the Cross-Origin-Resource-Sharing header (CORS) can now be set from within the
