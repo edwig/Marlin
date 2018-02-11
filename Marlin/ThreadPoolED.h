@@ -107,7 +107,7 @@ public:
   // OUR PRIMARY FUNCTION!
 
   // Submit an item, starting a thread on it
-  void SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat = INFINITE);
+  void SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heartbeat = INFINITE);
 
   // Try setting (raising/decreasing) the minimum number of threads
   bool TrySetMinimum(int p_minThreads);
@@ -129,7 +129,7 @@ public:
   void* GetSleepingThreadPayload(DWORD_PTR p_unique);
   void  EliminateSleepingThread (DWORD_PTR p_unique);
   // Stop a heartbeat thread
-  void  StopHartbeat(LPFN_CALLBACK p_callback);
+  void  StopHeartbeat(LPFN_CALLBACK p_callback);
 
   // GETTERS
 
@@ -165,13 +165,13 @@ private:
   // Stopping the thread pool
   void StopThreadPool();
   // Set a thread to do something in the future
-  BOOL SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat);
+  BOOL SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heartbeat);
   // Number of waiting threads
   int  WaitingThreads();
   // Find first waiting thread in the threadpool
   ThreadRegister* FindWaitingThread();
   // Create a thread in the threadpool
-  ThreadRegister* CreateThreadPoolThread(DWORD p_hartbeat = INFINITE);
+  ThreadRegister* CreateThreadPoolThread(DWORD p_heartbeat = INFINITE);
   // Running all cleanup jobs for the threadpool
   void RunCleanupJobs();
 
@@ -187,8 +187,8 @@ private:
   int               m_maxThreads      { NUM_THREADS_MAXIMUM };  // TP maximum number of threads
   int               m_stackSize       { THREAD_STACKSIZE    };  // TP size of SP stack of each thread
   bool              m_useCPULoad      { false   };              // TP uses CPU load for work throttling
-  LPFN_CALLBACK     m_hartbeat        { nullptr };              // Main heartbeat callback function
-  void*             m_hartbeatContext { nullptr };              // Pointer to the context of the heartbeat
+  LPFN_CALLBACK     m_heartbeat       { nullptr };              // Main heartbeat callback function
+  void*             m_heartbeatContext{ nullptr };              // Pointer to the context of the heartbeat
   ThreadMap         m_threads;                                  // Map with all running and waiting threads
   WorkMap           m_work;                                     // Map with the backlog of work to do
   WorkMap           m_cleanup;                                  // Cleanup jobs after closing the queue

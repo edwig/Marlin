@@ -152,31 +152,36 @@ WebServiceServer::Reset()
     m_poolOwner = false;
   }
 
+  if (m_log && m_logOwner)
+  {
+	  delete m_log;
+	  m_log = nullptr;
+	  m_logOwner = false;
+  }
+
   // De-register ourselves with the server
   if(m_httpServer)
   {
+    // Put ownership and server pointer on the stack
+	  bool owner = m_serverOwner;
+    HTTPServer* server = m_httpServer;
+    m_serverOwner = false;
+
     if(m_httpServer->FindService(m_name))
     {
       // Last thing we do, after this the object is invalid
       m_httpServer->UnRegisterService(m_name);
     }
-  }
 
-  // If it's ours, clean up the HTTP server and logfile
-  if(m_httpServer && m_serverOwner)
-  {
-    m_httpServer->StopServer();
-    delete m_httpServer;
-    m_httpServer = nullptr;
-    m_serverOwner = false;
+    // OBJECT & "this" IS INVALID!!
+    // The only way to clean out the server
+    // is by doing it from the stack variables
+    if(owner)
+    {
+      // If it's ours, clean up the HTTP server
+      delete server;
+    }
   }
-  if(m_log && m_logOwner)
-  {
-    delete m_log;
-    m_log = nullptr;
-    m_logOwner = false;
-  }
-
   // SoapHandler & GetHandler
   // are cleaned up by the HTTPSite!
 }
@@ -652,7 +657,7 @@ WebServiceServer::SendResponse(SOAPMessage* p_response,int p_httpStatus)
   answer->DropReference();
 
   // Do not respond with the original message
-  p_response->SetRequestHandle(NULL);
+  p_response->SetHasBeenAnswered();
 }
 
 // SHOULD NEVER COME HERE. DEFINE YOUR OWN DERIVED CLASS!!!

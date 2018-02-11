@@ -387,7 +387,7 @@ protected:
     // Form event to a stream string
   CString   EventToString(ServerEvent* p_event);
   // Try to start the even heartbeat monitor
-  void      TryStartEventHartbeat();
+  void      TryStartEventHeartbeat();
   // Check all event streams for the heartbeat monitor
   UINT      CheckEventStreams();
   // Set the error status

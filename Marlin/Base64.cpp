@@ -59,7 +59,7 @@ const char base64_map[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0
 unsigned char*
 Base64::Encrypt(const unsigned char* srcp,int len,unsigned char* dstp)
 {
-  register int i = 0;
+  int i = 0;
   unsigned char *dst = dstp;
 
   for (i = 0; i < len - 2; i += 3)
@@ -93,7 +93,7 @@ Base64::Encrypt(const unsigned char* srcp,int len,unsigned char* dstp)
 void*
 Base64::Decrypt(const unsigned char* srcp,int len,unsigned char* dstp)
 {
-  register int i = 0;
+  int i = 0;
   void *dst = dstp;
 
   while(i < len)

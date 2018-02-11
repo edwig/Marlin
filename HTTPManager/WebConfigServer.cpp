@@ -475,7 +475,7 @@ WebConfigServer::OnCbnSelchangeBinding()
   {
     switch(sel)
     {
-      default:// Fall through
+      default:[[fallthrough]];
       case 0: m_binding.Empty();
               break;
       case 1: m_binding = "strong";

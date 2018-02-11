@@ -105,7 +105,7 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
 void
 SiteHandlerGet::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message->GetRequestHandle())
+  if(!p_message->GetHasBeenAnswered())
   {
     m_site->SendResponse(p_message);
   }

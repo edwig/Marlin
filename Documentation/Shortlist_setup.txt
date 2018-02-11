@@ -1,0 +1,84 @@
+Testing Marlin setup shortlist
+==============================
+
+Use the HTTPManager to reserve these sites
+------------------------------------------
+1) reserve http://+:1200/MarlinTest/
+2) reserve https://+:1201/SecureTest/        + Set ServerCertificate
+3) reserve https://+:1202/SecureClientCert/  + Set ServerCertificate + enable client certs
+
+Copy ExtraParts\FileOne.html   \WWW\Marlin\MarlinTest\Site
+Copy ExtraParts\FileTwo.html   \WWW\Marlin\MarlinTest\Site
+Copy codes.html                \WWW\Marlin\SecureClientCert\codes.html
+
+
+These are all the files in the testset and there usage:
+------------------------------------------------------------------------------
+File: TestAsynchrone     -> http://<localhost>:1200/Marlintest/Asynchrone
+Test:                       POST: Asynchrone SOAP 
+
+File: TestBaseSite       -> http://<localhost>:1200/MarlinTest/Site
+Test:                       GET/PUT
+                            Webroot: "virtual://" + root
+						
+File: TestBodyEncryption -> http://<localhost>:1200/MarlinTest/BodyEncrypt/
+Test:                       POST SOAP + body encryption
+
+File: TestBodySigning    -> http://<localhost>:1200/MarlinTest/BodySigning/
+Test:                       POST SOAP + body signing
+
+File: TestClientCert     -> https://<localhost>:1202/SecureClientCert/
+Test:                       GET file (through site filter with prio 10)
+
+File: TestCompression    -> http://<localhost>:1200/MarlinTest/Compression/
+Test:                       GET file (with compression (sic.))
+
+File: TestContract       -> http://<localhost>:1200/MarlinTest/TestInterface/
+Test:                       POST SOAP by WSDL (MarlinFirst upto MarlinFifth)
+
+File: TestCookies        -> http://<localhost>:1200/MarlinTest/CookieTest/
+Test:                       PUT file + cookies + cookie testing
+
+File: TestCrackURL       -> Function test only
+
+File: TestEvents         -> http://<localhost>:1200/MarlinTest/Events/
+Test:                       test outgoing SSE Event streams
+
+File: TestFilter         -> http://<localhost>:1200/MarlinTest/Filter/
+Test:                       SOAP handler + 2 filters
+
+File: TestFormData       -> http://<localhost>:1200/MarlinTest/FormData/
+Test:                       POST Handler receiving FD blocks
+
+File: TestInsecure       -> http://<localhost>:1200/MarlinTest/Insecure/
+Test:                       POST soap / GET file on an insecure site
+
+File: TestJsonData       -> http://<localhost>:1200/MarlinTest/Data/
+Test:                       POST json data body
+
+File: TestMessageEncryption http://<localhost>:1200/MarlinTest/MessageEncrypt/
+Test:                       POST soap message with FULL encryption
+
+File: TestPatch          -> http://<localhost>:1200/MarlinTest/PatchMe/
+Test:                       PATCH: through VERB TUNNELING
+
+File: TestReliable       -> http://<localhost>:1200/MarlinTest/ReliableBA/
+Test:                       POST reliable messaging with basic authentication
+
+File: TestSecureSite     -> https://<localhost>:1201/SecureTest/
+Test:                       GET / PUT file through TLS 
+
+File: TestSubSites       -> http://<localhost>:1200/MarlinTest/TestToken/One
+                            http://<localhost>:1200/MarlinTest/TestToken/Two
+Test:                       POST soap en testing on stopping the server for the order of removal
+
+File: TestThreadpool     -> Function test only -> Callbacks from the threadpool
+
+File: TestTime           -> Function test only -> HTTP times functions
+
+File: TestToken          -> http://<localhost>:1200/MarlinTest/TestToken/
+Test:                       POST soap + testing received Windows token
+
+File: TestWebSocket      -> http://<localhost>:1200/MarlinTest/Sockets/
+Test:                       GET incoming websockets
+

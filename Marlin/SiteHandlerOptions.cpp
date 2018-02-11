@@ -102,7 +102,7 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
 void
 SiteHandlerOptions::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message && p_message->GetRequestHandle())
+  if(p_message && !p_message->GetHasBeenAnswered())
   {
     p_message->SetCommand(HTTPCommand::http_response);
     m_site->SendResponse(p_message);

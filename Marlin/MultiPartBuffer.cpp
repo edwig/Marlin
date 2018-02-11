@@ -499,7 +499,7 @@ MultiPartBuffer::ParseBuffer(CString p_contentType,FileBuffer* p_buffer,bool p_c
   {
     case FD_URLENCODED: return ParseBufferUrlEncoded(p_buffer);
     case FD_MULTIPART:  return ParseBufferFormData(p_contentType,p_buffer,p_conversion);
-    case FD_UNKNOWN:    // Fall through
+    case FD_UNKNOWN:    [[fallthrough]];
     default:            return false;
   }
   return false;

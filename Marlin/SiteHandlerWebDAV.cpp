@@ -71,7 +71,7 @@ SiteHandlerWebDAV::Handle(HTTPMessage* p_message)
 void 
 SiteHandlerWebDAV::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message->GetRequestHandle())
+  if(!p_message->GetHasBeenAnswered())
   {
     // send our answer 
     p_message->SetCommand(HTTPCommand::http_response);

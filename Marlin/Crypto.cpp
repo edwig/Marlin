@@ -101,7 +101,7 @@ Crypto::Digest(CString& p_buffer,CString& p_password)
                         hashMethod = CALG_SHA; 
                         keyHash    = CALG_CYLINK_MEK;
                         break;
-    case CALG_SHA_256:  // Fall through
+    case CALG_SHA_256:  [[fallthrough]];
     case CALG_RSA_SIGN: // RSA-Labratories Signature
                         provider   = PROV_RSA_AES;
                         hashMethod = CALG_SHA_256;
@@ -536,7 +536,7 @@ Crypto::GetHashMethod(unsigned p_hash)
   switch(p_hash)
   {
     // Standard ds-sign
-    default:            // Fall through
+    default:            [[fallthrough]];
     case CALG_SHA1:     return "sha1";      // WERKT
     case CALG_HMAC:     return "hmac-sha1"; // WERKT Synonym for SHA1
     case CALG_DSS_SIGN: return "dsa-sha1";  // WERKT

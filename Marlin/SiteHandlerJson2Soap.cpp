@@ -105,13 +105,13 @@ void
 SiteHandlerJson2Soap::PostHandle(HTTPMessage* p_message)
 {
   // CONVERT SOAP Message to JSON message
-  if(g_soapMessage && g_soapMessage->GetRequestHandle())
+  if(g_soapMessage && !g_soapMessage->GetHasBeenAnswered())
   {
     JSONMessage jsonMessage(g_soapMessage);
     if(m_site->SendResponse(&jsonMessage))
     {
-      p_message->SetRequestHandle(NULL);
-      g_soapMessage->SetRequestHandle(NULL);
+      p_message    ->SetHasBeenAnswered();
+      g_soapMessage->SetHasBeenAnswered();
     }
   }
 }
@@ -122,7 +122,7 @@ SiteHandlerJson2Soap::CleanUp(HTTPMessage* p_message)
   // Cleanup the TLS handle of the soap message
   if(g_soapMessage)
   {
-    if(g_soapMessage->GetRequestHandle())
+    if(!g_soapMessage->GetHasBeenAnswered())
     {
       JSONMessage jsonMessage(g_soapMessage);
       m_site->SendResponse(&jsonMessage);
@@ -134,7 +134,7 @@ SiteHandlerJson2Soap::CleanUp(HTTPMessage* p_message)
   else
   {
     // Be really sure we did send a response!
-    if(p_message->GetRequestHandle())
+    if(!p_message->GetHasBeenAnswered())
     {
       p_message->Reset();
       p_message->SetStatus(HTTP_STATUS_BAD_REQUEST);

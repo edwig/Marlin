@@ -148,6 +148,7 @@ public:
   void SetSendBOM(bool p_bom)                   { m_sendBOM            = p_bom;       };
   void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    };
   void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        };
+  void SetHasBeenAnswered()                     { m_request            = NULL;        };
   void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
   void SetReceiver(PSOCKADDR_IN6 p_address);
@@ -192,14 +193,16 @@ public:
   bool                GetVerbTunneling()        { return m_verbTunnel;                };
   HTTP_CONNECTION_ID  GetConnectionID()         { return m_connectID;                 };
   CString             GetAcceptEncoding()       { return m_acceptEncoding;            };
+  Cookies&            GetCookies()              { return m_cookies;                   };
   CString             GetBody();
   size_t              GetBodyLength();
   CString             GetVerb();
+  CString             GetHeader(CString p_name);
   void                GetRawBody(uchar** p_body,size_t& p_length);
   Cookie*             GetCookie(unsigned p_ind);
   CString             GetCookieValue(unsigned p_ind = 0,CString p_metadata = "");
   CString             GetCookieValue(CString p_name,    CString p_metadata = "");
-  Cookies&            GetCookies();
+  bool                GetHasBeenAnswered();
 
   // EXTRA FUNCTIONS
 
@@ -209,21 +212,19 @@ public:
   void    AddBody(const char* p_body);
   // Add a body from a binary BLOB
   void    AddBody(void* p_body,unsigned p_length);
-  // Add a headername/headervalue pair
+  // Add a header-name / header-value pair
   void    AddHeader(CString p_name,CString p_value,bool p_lower = true);
   // Add a header by known header-id
   void    AddHeader(HTTP_HEADER_ID p_id,CString p_value);
   // Delete a header by name
   void    DelHeader(CString p_name);
-  // Get a header by name
-  CString GetHeader(CString p_name);
   // Convert system time to HTTP time string
   CString HTTPTimeFormat(PSYSTEMTIME p_systime = NULL);
   // Convert HTTP time string to system time
   bool    SetHTTPTime(CString p_timestring);
-  // Change POST method to PUT/MERGE/PATCH/DELETE
+  // Change POST method to PUT/MERGE/PATCH/DELETE (Incoming!)
   bool    FindVerbTunneling();
-  // Use POST method for PUT/MERGE/PATCH/DELETE
+  // Use POST method for PUT/MERGE/PATCH/DELETE (Outgoing!)
   bool    UseVerbTunneling();
   // Accept a MultiPartBuffer in this message
   bool    SetMultiPartFormData(MultiPartBuffer* p_buffer);
@@ -236,7 +237,7 @@ private:
   bool    ParseURL(CString p_url);
   // Check for minimal sending requirements
   void    CheckServer();
-  // Reparse URL after setting a part of the URL
+  // Re-parse URL after setting a part of the URL
   void    ReparseURL();
   // Fill message with FormData buffer
   bool    SetMultiPartBuffer (MultiPartBuffer* p_buffer);
@@ -314,12 +315,6 @@ HTTPMessage::AddBody(void* p_body,unsigned p_length)
   m_buffer.AddBuffer((uchar*)p_body,p_length);
 }
 
-inline Cookies&
-HTTPMessage::GetCookies()
-{
-  return m_cookies;
-}
-
 inline void 
 HTTPMessage::SetCookie(Cookie& p_cookie)
 {
@@ -338,3 +333,8 @@ HTTPMessage::ResetCookies()
   m_cookies.Clear();
 }
 
+inline bool
+HTTPMessage::GetHasBeenAnswered()
+{
+  return m_request == NULL;
+}

@@ -103,7 +103,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
             SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,"Socket listener not started");
           }
         }
-        p_message->SetRequestHandle(NULL);
+        p_message->SetHasBeenAnswered();
       }
       else
       {
@@ -146,7 +146,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message,WebSocket* /*p_socket*/)
 void
 SiteHandlerWebSocket::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message->GetRequestHandle())
+  if(!p_message->GetHasBeenAnswered())
   {
     // If we come here, we are most definitely in error
     p_message->Reset();

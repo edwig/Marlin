@@ -29,14 +29,14 @@
 #include <vector>
 #include <deque>
 
-// Define this macro to debug the threadpool
+// Define this macro to debug the ThreadPool
 // #define DEBUG_THREADPOOL  1
 
 // Threads minimum and maximum
-constexpr auto NUM_THREADS_MINIMUM =  4;   // No use for a threadpool below this number
+constexpr auto NUM_THREADS_MINIMUM =  4;   // No use for a ThreadPool below this number
 constexpr auto NUM_THREADS_DEFAULT = 10;   // Default max threads
 constexpr auto NUM_THREADS_MAXIMUM = 20;   // More than this is not wise under Windows-OS
-                                           // Theoretically on a deca-core machine with hyperthreading
+                                           // Theoretically on a deca-core machine with hyper-threading
 
 // Standard stack size of a thread in 64 bits architectures
 constexpr auto THREAD_STACKSIZE = (2 * 1024 * 1024);
@@ -45,7 +45,7 @@ constexpr auto THREAD_STACKSIZE = (2 * 1024 * 1024);
 typedef void (* LPFN_CALLBACK)(void *);
 typedef bool (* LPFN_TRYABORT)(void *,bool p_stayInThePool,bool p_forcedAbort);
 
-// Forward declaration of our threadpool
+// Forward declaration of our ThreadPool
 class ThreadPool;
 class AutoIncrementPoolMax;
 
@@ -77,7 +77,7 @@ public:
 
 using SleepingMap = std::vector<SleepingThread*>;
 
-// The queue of work items for submitting work to the threadpool
+// The queue of work items for submitting work to the ThreadPool
 class ThreadWork
 {
 public:
@@ -94,20 +94,20 @@ public:
   ThreadPool();
   ThreadPool(int p_minThreads,int p_maxThreads);
  ~ThreadPool();
-  // Running the threadpool
+  // Running the ThreadPool
   void Run();
   
   // OUR PRIMARY FUNCTION!
 
   // Submit an item, starting a thread on it
   void  SubmitWork(LPFN_CALLBACK p_callback,void* p_argument);
-  // Submitting cleanup jobs. Runs when threadpool stops
+  // Submitting cleanup jobs. Runs when ThreadPool stops
   void  SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument);
 
   // Associate I/O handle with the completion port
   DWORD AssociateIOHandle(HANDLE p_handle,ULONG_PTR p_key);
   // Setting the thread initialization function
-  bool SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_TRYABORT p_abort,void* p_argument);
+  bool  SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_TRYABORT p_abort,void* p_argument);
   // Try setting (raising/decreasing) the minimum number of threads
   bool  TrySetMinimum(int p_minThreads);
   // Try setting (raising/decreasing) the maximum number of threads
@@ -117,58 +117,65 @@ public:
   // Extend the maximum for a period of time
   void  ExtendMaximumThreads (AutoIncrementPoolMax& p_increment);
   void  RestoreMaximumThreads(AutoIncrementPoolMax& p_increment);
-  // Number of current running threads
-  long  GetCurrentThreads();
 
   // Sleeping and waking-up a thread
-  // Sleeps ANY thread. Also threads not originating in this threadpool
+  // Sleeps ANY thread. Also threads not originating in this ThreadPool
   void* SleepThread (DWORD_PTR p_unique,void* p_payload = nullptr);
   bool  WakeUpThread(DWORD_PTR p_unique,void* p_result  = nullptr);
   void* GetSleepingThreadPayload(DWORD_PTR p_unique);
-  // REALLY? Should you? This will leek memory in the Async I/O model
+  // REALLY? Should you? This will leek memory in the Asynchronous I/O model
   bool  EliminateSleepingThread (DWORD_PTR p_unique);
 
-  // Create a hartbeat thread (Can be called **ONCE**)
-  bool  CreateHartbeat(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat);
+  // Create a heartbeat thread (Can be called **ONCE**)
+  bool  CreateHeartbeat(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heartbeat);
   // Stop a heartbeat thread
-  void  StopHartbeat();
+  void  StopHeartbeat();
+  // Perform a single heartbeat extra
+  void  DoExtraHeartbeat();
 
-  // Stopping the threadpool from the application
+  // Stopping the ThreadPool from the application
   // No more work is to be accepted
   void  Shutdown();
 
   // GETTERS
 
+  bool GetIsInitialized()       { return m_initialized;         };
+  bool GetIsOpenForWork()       { return m_openForWork;         };
+  long GetBusyThreads()         { return m_bsyThreads;          };   // NOT STABLE while running !!
   int  GetMinThreads()          { return m_minThreads;          };
   int  GetMaxThreads()          { return m_maxThreads;          };
   int  GetStackSize()           { return m_stackSize;           };
+  int  GetProcessors()          { return m_processors;          };
   int  GetWorkOverflow()        { return (int)m_work.size();    };
   int  GetCleanupJobs()         { return (int)m_cleanup.size(); };
+  int  GetHeartBeatTime()       { return m_heartbeat;            };
+  // Number of current running threads
+  long GetCurrentThreads();
 
   // These running-a-thread methods are public, but really should only be called 
-  // from within the static work functions of the threadpool itself, to get things working
+  // from within the static work functions of the ThreadPool itself, to get things working
   // Do **NOT** call from your application!!
   DWORD RunAThread(ThreadRegister* p_register);
-  DWORD RunHartbeat();
+  DWORD RunHeartbeat();
 
 private:
   // CONTROLING THE THREADPOOL
 
-  // Initialize our new threadpool
+  // Initialize our new ThreadPool
   void InitThreadPool();
   // Stopping the thread pool
   void StopThreadPool();
-  // Create a thread in the threadpool
+  // Create a thread in the ThreadPool
   ThreadRegister* CreateThreadPoolThread();
   // Stop a thread for good
   void StopThread(ThreadRegister* p_reg);
-  // Remove a thread from the threadpool
+  // Remove a thread from the ThreadPool
   void RemoveThreadPoolThread(unsigned p_threadID);
-  // Does the thread belong to our threadpool?
+  // Does the thread belong to our ThreadPool?
   bool IsThreadInThreadPool(unsigned p_threadID);
   // More work to do on a thread  (pool must be locked!!)
   bool WorkToDo(LPFN_CALLBACK& p_callback,void*& p_argument);
-  // Running all cleanup jobs for the threadpool
+  // Running all cleanup jobs for the ThreadPool
   void RunCleanupJobs();
   // Wake up all sleeping threads as part of the shutdown
   void WakeUpAllSleepers();
@@ -206,10 +213,11 @@ private:
   LPFN_TRYABORT     m_abortfunction    { nullptr };             // TP thread abort function at closing of the handle
   void*             m_initParameter    { nullptr };             // TP thread initialization parameter
   // Heartbeat section
-  LPFN_CALLBACK     m_hartbeatCallback { nullptr };             // HB callback function
-  void*             m_hartbeatPayload  { nullptr };             // HB callback parameter to use
-  DWORD             m_hartbeat         { 0       };             // HB milliseconds between heartbeats
-  HANDLE            m_hartbeatEvent    { nullptr };             // HB event to wake up the heartbeat
+  LPFN_CALLBACK     m_heartbeatCallback{ nullptr };             // HB callback function
+  void*             m_heartbeatPayload { nullptr };             // HB callback parameter to use
+  DWORD             m_heartbeat        { 0       };             // HB milliseconds between heartbeats
+  HANDLE            m_heartbeatEvent   { nullptr };             // HB event to wake up the heartbeat
+  bool              m_extraHeartbeat   { false   };             // HB Extra event?
 };
 
 // Number of current running threads
@@ -219,7 +227,7 @@ ThreadPool::GetCurrentThreads()
   return m_curThreads;
 }
 
-// Auto locking mechanism for the threadpool
+// Auto locking mechanism for the ThreadPool
 class AutoLockTP
 {
 public:
@@ -235,7 +243,7 @@ private:
   CRITICAL_SECTION* m_lock;
 };
 
-// Mechanism to increment the poolsize for a period of time
+// Mechanism to increment the pool size for a period of time
 // Intended for long running threads to call, just before entering 
 // the WaitForSingleObject API or before calling "SleepThread"
 //

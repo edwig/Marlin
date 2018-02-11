@@ -605,8 +605,8 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
     // GO! Let the site handle the message
     site->HandleHTTPMessage(msg);
   
-    // If handled (Marlin has resetted the request handle)
-    if(msg->GetRequestHandle() == NULL)
+    // If handled (Marlin has reset the request handle)
+    if(msg->GetHasBeenAnswered())
     {
        // Ready for IIS!
        p_context->SetRequestHandled();

@@ -615,7 +615,7 @@ SOAPMessage::GetContentType() const
   {
     switch(m_soapVersion)
     {
-      case SoapVersion::SOAP_10: // Fall through
+      case SoapVersion::SOAP_10: [[fallthrough]];
       case SoapVersion::SOAP_11: return "text/xml";
       case SoapVersion::SOAP_12: return "application/soap+xml";
     }

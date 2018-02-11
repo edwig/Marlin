@@ -727,7 +727,7 @@ HTTPServerMarlin::StopServer()
   {
     // Explicitly pulse the event heartbeat monitor
     // this abandons the monitor in one go!
-    DETAILLOG1("Abandon the server-push-events hartbeat monitor");
+    DETAILLOG1("Abandon the server-push-events heartbeat monitor");
     SetEvent(m_eventEvent);
   }
 
@@ -810,7 +810,7 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
   {
     // Reset the request handle here. The response will continue async from here
     // so the next handlers cannot find a request handle to answer to
-    p_message->SetRequestHandle(NULL);
+    p_message->SetHasBeenAnswered();
 
     // Go send the response ASYNC
     request->StartResponse(p_message);

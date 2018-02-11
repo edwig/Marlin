@@ -76,7 +76,7 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
     g_soapMessage->SetFault("XML","Client","XML parsing error",msg);
     SITE_ERRORLOG(ERROR_BAD_ARGUMENTS,"Expected a SOAP message, but no valid XML message found");
     m_site->SendResponse(g_soapMessage);
-    p_message->SetRequestHandle(NULL);
+    p_message->SetHasBeenAnswered();
     return false;
   }
 
@@ -91,7 +91,7 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
       SITE_ERRORLOG(ERROR_ACCESS_DENIED,"SOAP Message with WS-Security token profile, but no valid access");
       p_message->SetStatus(HTTP_STATUS_DENIED);
       m_site->SendResponse(p_message);
-      g_soapMessage->SetRequestHandle(NULL);
+      g_soapMessage->SetHasBeenAnswered();
       return false;
     }
   }
@@ -152,23 +152,24 @@ void
 SiteHandlerSoap::PostHandle(HTTPMessage* p_message)
 {
   // Check that we did send something
-  if(g_soapMessage && g_soapMessage->GetRequestHandle())
+  if(g_soapMessage && !g_soapMessage->GetHasBeenAnswered())
   {
     m_site->SendResponse(g_soapMessage);
-    p_message->SetRequestHandle(NULL);
+    p_message->SetHasBeenAnswered();
   }
 }
 
 void
-SiteHandlerSoap::CleanUp(HTTPMessage* /*p_message*/)
+SiteHandlerSoap::CleanUp(HTTPMessage* p_message)
 {
   // Cleanup the TLS handle of the soap message
   if(g_soapMessage)
   {
     // Check that we did send something
-    if(g_soapMessage->GetRequestHandle())
+    if(!g_soapMessage->GetHasBeenAnswered())
     {
       m_site->SendResponse(g_soapMessage);
+      p_message->SetHasBeenAnswered();
     }
 
     // Cleanup the SOAP message

@@ -8,6 +8,36 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.7.1
+========================
+1)  Marlin now compiles with the "/std:c++17" switch only!
+    - The use of "std::auto_ptr" has been moved to "std::unique_ptr"
+    - The "[[fallthrough]]" attribute is used in switch statements where appropriate
+2)  All project files reverted from MS-Windows SDK 10.x.y.z to SDK 8.1
+    Due to the ever quick succesion of new MS-Windows SDK in the 10-range we had to recompile and
+    reconfigure al project files every few months. SDK 8.1 is enough and the project is stable.
+3)  Detection if a request has been handled was always with the test if "GetRequestHandle" returned
+    an explicit NULL value. This was not clear for a lot of programmers, so a new method has been
+    added "GetHasBeenAnswered()". This method was added to the following objects:
+    - HTTPMessage
+    - SOAPMessage
+    - JSONMessage
+    All occurences in the Marlin library itself has been reprogrammed to the new method.
+4)  Flagging that a message indeed has been answered was done by setting the request handle to NULL
+    by using an explicit "SetRequestHandle(NULL)". Why this was done was not always completely clear
+    to all programmes, so a new method has been introduced "SetHasBeenAnswered()". This metho was 
+    added to the following objects:
+    - HTTPMessage
+    - SOAPMessage
+    - JSONMessage
+    All occurences in the Marlin library itself has been reprogrammed to the new method.
+5)  All spellings of "hartbeat" have been moved to "heartbeat". Sorry :-(
+6)  The ThreadPool has a new method for the heartbeat function. This is "DoExtraHearbeat()"
+    This makes it possible to call the configured heartbeat function out-of-line inbetween the times
+    that the heartbeat would regularly wake up
+7)  Fixed a bug in the closing of the WebServiceServer, in case the HTTPServer was not ownwed by this
+    object, but an indenpendent server.
+
 CHANGES IN VERSION 4.7.0
 ========================
 1)  Corrections in the checking of incoming and outgoing SOAP services against the WSDL in the

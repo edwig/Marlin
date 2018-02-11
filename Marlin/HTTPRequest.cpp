@@ -221,7 +221,7 @@ HTTPRequest::StartResponse(HTTPMessage* p_message)
   {
     if(m_message)
     {
-      m_message->SetRequestHandle(NULL);
+      m_message->SetHasBeenAnswered();
       m_message->DropReference();
     }
     m_message = p_message;
@@ -723,7 +723,7 @@ HTTPRequest::SendBodyPart()
   }
 
   // Message is done. Break the connection with the HTTPRequest
-  m_message->SetRequestHandle(NULL);
+  m_message->SetHasBeenAnswered();
 
   FlushFileBuffers(m_server->GetRequestQueue());
 

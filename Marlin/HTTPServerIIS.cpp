@@ -301,7 +301,7 @@ HTTPServerIIS::StopServer()
   {
     // Explicitly pulse the event heartbeat monitor
     // this abandons the monitor in one go!
-    DETAILLOG1("Abandon the server-push-events hartbeat monitor");
+    DETAILLOG1("Abandon the server-push-events heartbeat monitor");
     SetEvent(m_eventEvent);
   }
 
@@ -610,7 +610,8 @@ HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
                                                                                     ,chunk->FromMemory.BufferLength);
                                                break;
       case HttpDataChunkFromFileHandle:        // Should not happen upon receive
-      case HttpDataChunkFromFragmentCache:     // Fall through
+                                               [[fallthrough]];
+      case HttpDataChunkFromFragmentCache:     [[fallthrough]];
       case HttpDataChunkFromFragmentCacheEx:   ERRORLOG(87,"Unhandled HTTP chunk type from IIS");
                                                break;
     }
@@ -905,7 +906,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     DETAILLOGV("We do **NOT** handle this url: ",p_message->GetURL().GetString());
 
     // Do **NOT** send an answer twice
-    p_message->SetRequestHandle(NULL);
+    p_message->SetHasBeenAnswered();
 
     return;
   }
@@ -1013,7 +1014,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   LogTraceResponse(response->GetRawHttpResponse(),buffer);
 
   // Do **NOT** send an answer twice
-  p_message->SetRequestHandle(NULL);
+  p_message->SetHasBeenAnswered();
 }
 
 // Subfunctions for SendResponse

@@ -660,7 +660,7 @@ void
 HTTPServer::SendResponse(SOAPMessage* p_message)
 {
   // This message already sent, or not able to send: no request is known
-  if(p_message->GetRequestHandle() == NULL)
+  if(p_message->GetHasBeenAnswered())
   {
     ERRORLOG(ERROR_INVALID_PARAMETER,"SendResponse: nothing to send");
     return;
@@ -699,7 +699,7 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
   answer->DropReference();
 
   // Do **NOT** send an answer twice
-  p_message->SetRequestHandle(NULL);
+  p_message->SetHasBeenAnswered();
 }
 
 // Sending response for an incoming message
@@ -707,7 +707,7 @@ void
 HTTPServer::SendResponse(JSONMessage* p_message)
 {
   // This message already sent, or not able to send: no request is known
-  if(p_message->GetRequestHandle() == NULL)
+  if(p_message->GetHasBeenAnswered())
   {
     ERRORLOG(ERROR_INVALID_PARAMETER,"SendResponse: nothing to send");
     return;
@@ -738,7 +738,7 @@ HTTPServer::SendResponse(JSONMessage* p_message)
     answer->DropReference();
   }
   // Do **NOT** send an answer twice
-  p_message->SetRequestHandle(NULL);
+  p_message->SetHasBeenAnswered();
 }
 
 // Response in the server error range (500-505)
@@ -1024,7 +1024,7 @@ HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
   if(stream->m_alive)
   {
     m_eventStreams.insert(std::make_pair(p_url,stream));
-    TryStartEventHartbeat();
+    TryStartEventHeartbeat();
   }
   else
   {
@@ -1250,7 +1250,7 @@ RunEventMonitor(void* p_server)
 
 // Try to start the even heartbeat monitor
 void
-HTTPServer::TryStartEventHartbeat()
+HTTPServer::TryStartEventHeartbeat()
 {
   // If already started, do not start again
   if(m_eventMonitor)
@@ -1267,7 +1267,7 @@ HTTPServer::EventMonitor()
   DWORD streams  = 0;
   bool  startNew = false;
 
-  DETAILLOG1("Event hartbeat monitor started");
+  DETAILLOG1("Event heartbeat monitor started");
   do
   {
     DWORD waited = WaitForSingleObjectEx(m_eventEvent,m_eventKeepAlive,true);
@@ -1294,12 +1294,12 @@ HTTPServer::EventMonitor()
   CloseHandle(m_eventEvent);
   m_eventEvent   = nullptr;
   m_eventMonitor = nullptr;
-  DETAILLOG1("Event hartbeat monitor stopped");
+  DETAILLOG1("Event heartbeat monitor stopped");
 
   if(startNew)
   {
     // Retry starting a new thread/event
-    TryStartEventHartbeat();
+    TryStartEventHeartbeat();
   }
 }
 
@@ -1319,7 +1319,7 @@ HTTPServer::CheckEventStreams()
   // Create keep alive buffer
   CString keepAlive = ":keepalive\r\n\r\n";
 
-  DETAILLOG1("Starting event hartbeat");
+  DETAILLOG1("Starting event heartbeat");
 
   // Pulse event stream with a comment
   for(auto& str : m_eventStreams)
@@ -1338,7 +1338,7 @@ HTTPServer::CheckEventStreams()
   }
 
   // What we just did
-  DETAILLOGV("Sent hartbeat to %d push-event clients.",number);
+  DETAILLOGV("Sent heartbeat to %d push-event clients.",number);
 
   // Clean up dead event streams
   EventMap::iterator it = m_eventStreams.begin();

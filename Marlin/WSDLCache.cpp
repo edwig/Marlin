@@ -302,7 +302,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
   CString order;
   switch(p_order)
   {
-    default:                     // Fall through
+    default:                     [[fallthrough]];
     case WsdlOrder::WS_All:      order = "all";      break;
     case WsdlOrder::WS_Choice:   order = "choice";   break;
     case WsdlOrder::WS_Sequence: order = "sequence"; break;
@@ -331,11 +331,11 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     // Do occurrence type
     switch(param->GetType() & WSDL_Mask)
     {
-      default:             // Fall through
-      case WSDL_OnceOnly:  // Fall through
+      default:             [[fallthrough]];
+      case WSDL_OnceOnly:  [[fallthrough]];
       case WSDL_Mandatory: temp.Empty(); 
                            break;
-      case WSDL_ZeroOne:   // Fall through
+      case WSDL_ZeroOne:   [[fallthrough]];
       case WSDL_Optional:  temp  = "minOccurs=\"0\" "; 
                            break;
       case WSDL_ZeroMany:  temp  = "minOccurs=\"0\" maxOccurs=\"unbounded\" "; 
@@ -354,8 +354,8 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     // Do data type
     switch(param->GetType() & XDT_Mask)
     {
-      case XDT_CDATA:         // Fall through
-      case (XDT_String|XDT_CDATA): // Fall through
+      case XDT_CDATA:             [[fallthrough]];
+      case (XDT_String|XDT_CDATA):[[fallthrough]];
       case XDT_String:            temp = " type=\"s:string\"";              break;
       case XDT_Integer:           temp = " type=\"s:integer\"";             break;
       case XDT_Double:            temp = " type=\"s:double\"";              break;

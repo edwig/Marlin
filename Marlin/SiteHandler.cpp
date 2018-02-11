@@ -114,7 +114,7 @@ SiteHandler::Handle(HTTPMessage* p_message)
 void
 SiteHandler::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message && p_message->GetRequestHandle())
+  if(p_message && !p_message->GetHasBeenAnswered())
   {
     p_message->SetCommand(HTTPCommand::http_response);
     m_site->SendResponse(p_message);
@@ -125,7 +125,7 @@ void
 SiteHandler::CleanUp(HTTPMessage* p_message)
 {
   // Be really sure we did send a response!
-  if(p_message->GetRequestHandle())
+  if(!p_message->GetHasBeenAnswered())
   {
     p_message->SetCommand(HTTPCommand::http_response);
     m_site->SendResponse(p_message);

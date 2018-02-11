@@ -151,6 +151,8 @@ public:
   void            SetSoapVersion(SoapVersion p_version);
   // Reset incoming to outgoing
   void            SetIncoming(bool p_incoming);
+  // Use after answer on message has been sent
+  void            SetHasBeenAnswered();
   // Set the content type
   void            SetContentType(CString p_contentType);
   void            SetAcceptEncoding(CString p_encoding);
@@ -280,6 +282,7 @@ public:
   CString         GetBodyPart();
   CString         GetCanonicalForm(XMLElement* p_element);
   bool            GetHasInitialAction() const;
+  bool            GetHasBeenAnswered();
 
   // PARAMETER INTERFACE
   // Most of it now is in XMLMessage in the Set/Get-Element interface
@@ -873,6 +876,18 @@ inline XMLElement*
 SOAPMessage::GetXMLBodyPart() const
 {
   return m_body;
+}
+
+inline bool
+SOAPMessage::GetHasBeenAnswered()
+{
+  return m_request == NULL;
+}
+
+inline void
+SOAPMessage::SetHasBeenAnswered()
+{ 
+  m_request = NULL; 
 }
 
 //////////////////////////////////////////////////////////////////////////

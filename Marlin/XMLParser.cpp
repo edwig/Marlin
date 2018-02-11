@@ -74,10 +74,10 @@ PrintXmlString(const CString& p_string,bool p_utf8 /*=false*/)
       case '>': result += "&gt;";   break;
       case '\'':result += "&apos;"; break;
       case '\"':result += "&quot;"; break;
-      // Performance optimalization
-      case ' ' :// Fall through
-      case '\t':// Fall through
-      case '\r':// Fall through
+      // Performance optimization
+      case ' ' :[[fallthrough]];
+      case '\t':[[fallthrough]];
+      case '\r':[[fallthrough]];
       case '\n':result += *pointer; break;
       // Standard chars here
       default:  if(*pointer < ' ')

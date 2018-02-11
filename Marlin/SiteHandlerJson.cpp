@@ -96,24 +96,26 @@ SiteHandlerJson::Handle(JSONMessage* p_message)
 
 // Post handler sends the JSON message back, not the HTTPMessage
 void
-SiteHandlerJson::PostHandle(HTTPMessage* /*p_message*/)
+SiteHandlerJson::PostHandle(HTTPMessage* p_message)
 {
-  if(g_jsonMessage && g_jsonMessage->GetRequestHandle())
+  if(g_jsonMessage && !g_jsonMessage->GetHasBeenAnswered())
   {
     m_site->SendResponse(g_jsonMessage);
+    p_message->SetHasBeenAnswered();
   }
 }
 
 void
-SiteHandlerJson::CleanUp(HTTPMessage* /*p_message*/)
+SiteHandlerJson::CleanUp(HTTPMessage* p_message)
 {
   // Cleanup the TLS handle of the JSON message
   if(g_jsonMessage)
   {
     // Check that we did send something
-    if(g_jsonMessage->GetRequestHandle())
+    if(!g_jsonMessage->GetHasBeenAnswered())
     {
       m_site->SendResponse(g_jsonMessage);
+      p_message->SetHasBeenAnswered();
     }
 
     // Cleanup the JSON message

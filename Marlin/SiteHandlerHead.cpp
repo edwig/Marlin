@@ -71,7 +71,7 @@ SiteHandlerHead::Handle(HTTPMessage* p_message)
 void
 SiteHandlerHead::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message && p_message->GetRequestHandle())
+  if(p_message && !p_message->GetHasBeenAnswered())
   {
     // send our answer straight away
     p_message->SetCommand(HTTPCommand::http_response);

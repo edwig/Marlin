@@ -211,7 +211,7 @@ ThreadPoolED::StopThreadPool()
 
 // Create a thread in the threadpool
 ThreadRegister*
-ThreadPoolED::CreateThreadPoolThread(DWORD p_hartbeat /*=INFINITE*/)
+ThreadPoolED::CreateThreadPoolThread(DWORD p_heartbeat /*=INFINITE*/)
 {
   AutoLockTP lock(&m_critical);
 
@@ -223,7 +223,7 @@ ThreadPoolED::CreateThreadPoolThread(DWORD p_hartbeat /*=INFINITE*/)
     th->m_state    = ThreadState::THST_Init;
     th->m_callback = nullptr;
     th->m_argument = nullptr;
-    th->m_timeout  = p_hartbeat;
+    th->m_timeout  = p_heartbeat;
     th->m_event    = CreateEvent(nullptr,FALSE,FALSE,nullptr);
 
     if(th->m_event == nullptr)
@@ -590,7 +590,7 @@ ThreadPoolED::FindWaitingThread()
 
 // Set a thread to do something in the future
 BOOL
-ThreadPoolED::SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat)
+ThreadPoolED::SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heartbeat)
 {
   TP_TRACE2("Submitting work to threadpool [%X:%X]\n",p_callback,p_argument);
   // See if the slot is really free!
@@ -601,10 +601,10 @@ ThreadPoolED::SubmitWorkToThread(ThreadRegister* p_reg,LPFN_CALLBACK p_callback,
   // Recall what to do
   p_reg->m_callback = p_callback;
   p_reg->m_argument = p_argument;
-  p_reg->m_timeout  = p_hartbeat;
+  p_reg->m_timeout  = p_heartbeat;
 
   // If no heartbeat, start work as soon as possible
-  if(p_hartbeat == INFINITE)
+  if(p_heartbeat == INFINITE)
   {
     // Wake the thread
     TP_TRACE0("Waking the thread\n");
@@ -637,7 +637,7 @@ ThreadPoolED::StopThread(ThreadRegister* p_reg)
 
 // Stop a heartbeat thread
 void 
-ThreadPoolED::StopHartbeat(LPFN_CALLBACK p_callback)
+ThreadPoolED::StopHeartbeat(LPFN_CALLBACK p_callback)
 {
   AutoLockTP lock(&m_critical);
 
@@ -656,7 +656,7 @@ ThreadPoolED::StopHartbeat(LPFN_CALLBACK p_callback)
 // OUR PRIMARY FUNCTION
 // TRY TO GET SOME WORK DONE
 void
-ThreadPoolED::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartbeat /*=INFINITE*/)
+ThreadPoolED::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heartbeat /*=INFINITE*/)
 {
   ThreadRegister* reg = nullptr;
   // Lock the pool
@@ -674,13 +674,13 @@ ThreadPoolED::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartb
   }
 
   // Special case: try to create heartbeat thread
-  if(p_hartbeat != INFINITE)
+  if(p_heartbeat != INFINITE)
   {
     TP_TRACE0("Create a heartbeat thread\n");
-    reg = CreateThreadPoolThread(p_hartbeat);
+    reg = CreateThreadPoolThread(p_heartbeat);
     if(reg)
     {
-      if(SubmitWorkToThread(reg,p_callback,p_argument,p_hartbeat))
+      if(SubmitWorkToThread(reg,p_callback,p_argument,p_heartbeat))
       {
         return;
       }
@@ -692,7 +692,7 @@ ThreadPoolED::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartb
   if(reg)
   {
     TP_TRACE0("Found a waiting thread. Submitting.\n");
-    if(SubmitWorkToThread(reg,p_callback,p_argument,p_hartbeat))
+    if(SubmitWorkToThread(reg,p_callback,p_argument,p_heartbeat))
     {
       return;
     }
@@ -714,7 +714,7 @@ ThreadPoolED::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartb
     reg = CreateThreadPoolThread();
     if(reg)
     {
-      if(SubmitWorkToThread(reg,p_callback,p_argument,p_hartbeat))
+      if(SubmitWorkToThread(reg,p_callback,p_argument,p_heartbeat))
       {
         return;
       }
@@ -726,7 +726,7 @@ ThreadPoolED::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_hartb
   ThreadWork work;
   work.m_callback = p_callback;
   work.m_argument = p_argument;
-  work.m_timeout  = p_hartbeat;
+  work.m_timeout  = p_heartbeat;
   m_work.push_back(work);
   TP_TRACE1("Work queue now [%d] items\n",m_work.size());
 }

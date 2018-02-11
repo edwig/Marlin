@@ -440,8 +440,8 @@ XMLMessage::PrintElements(XMLElement* p_element
       {
         default:                    temp.Format("\"%s\"",attrib.m_value.GetString());
                                     break;
-        case XDT_String:            // Fall through
-        case XDT_AnyURI:            // Fall through
+        case XDT_String:            [[fallthrough]];
+        case XDT_AnyURI:            [[fallthrough]];
         case XDT_NormalizedString:  temp.Format("\"%s\"",PrintXmlString(attrib.m_value,p_utf8).GetString());
                                     break;
       }
@@ -484,7 +484,7 @@ XMLMessage::PrintWSDLComment(XMLElement* p_element)
   switch(p_element->GetType() & WSDL_MaskField)
   {
     case WSDL_Mandatory: comment += "Mandatory";    break;
-    case WSDL_Optional:  // Fall through
+    case WSDL_Optional:  [[fallthrough]];
     case WSDL_ZeroOne:   comment += "Optional";     break;
     case WSDL_OnceOnly:  comment += "Exactly ONE";  break;
     case WSDL_ZeroMany:  comment += "ZERO or more"; break;
@@ -563,9 +563,9 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   {
     default:                    temp.Format("%s",value.GetString());
                                 break;
-    case XDT_CDATA:             // Fall through
-    case XDT_String:            // Fall through
-    case XDT_AnyURI:            // Fall through
+    case XDT_CDATA:             [[fallthrough]];
+    case XDT_String:            [[fallthrough]];
+    case XDT_AnyURI:            [[fallthrough]];
     case XDT_NormalizedString:  temp = JSONvalue::FormatAsJsonString(value,p_utf8);
                                 break;
   }

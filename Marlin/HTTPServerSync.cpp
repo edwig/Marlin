@@ -693,7 +693,7 @@ HTTPServerSync::StopServer()
   {
     // Explicitly pulse the event heartbeat monitor
     // this abandons the monitor in one go!
-    DETAILLOG1("Abandon the server-push-events hartbeat monitor");
+    DETAILLOG1("Abandon the server-push-events heartbeat monitor");
     SetEvent(m_eventEvent);
   }
 
@@ -1015,7 +1015,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   delete [] unknown;
 
   // Do **NOT** send an answer twice
-  p_message->SetRequestHandle(NULL);
+  p_message->SetHasBeenAnswered();
 }
 
 bool      

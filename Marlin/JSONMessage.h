@@ -195,6 +195,7 @@ public:
   bool            GetSendUnicode()    { return m_sendUnicode;           };
   bool            GetVerbTunneling()  { return m_verbTunnel;            };
   bool            GetIncoming()       { return m_incoming;              };
+  bool            GetHasBeenAnswered(){ return m_request == NULL;       };
   CString         GetHeader(CString p_name);
   CString         GetContentType();
   CString         GetVerb();
@@ -218,6 +219,7 @@ public:
   void            SetWhitespace(bool p_white)             { m_whitespace         = p_white;    };
   void            SetSendBOM(bool p_bom)                  { m_sendBOM            = p_bom;      };
   void            SetVerbTunneling(bool p_tunnel)         { m_verbTunnel         = p_tunnel;   };
+  void            SetHasBeenAnswered()                    { m_request            = NULL;       };
   void            SetAcceptEncoding(CString p_encoding);
   void            AddHeader(CString p_name,CString p_value);
   void            SetEncoding(JsonEncoding p_encoding);
@@ -234,7 +236,7 @@ public:
 private:
   // Parse the URL, true if legal
   bool ParseURL(CString p_url);
-    // Reparse URL after setting a part of the URL
+    // Re-parse URL after setting a part of the URL
   void ReparseURL();
 
   // The message is contained in a JSON value
@@ -268,4 +270,3 @@ private:
   UINT            m_desktop     { 0 };                          // Senders remote desktop
   long            m_references  { 0 };                          // Externally referenced
 };
-

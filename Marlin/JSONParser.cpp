@@ -209,8 +209,8 @@ JSONParser::GetString()
       int ch = *m_pointer++;
       switch(ch)
       {
-        case '\"': // Fall through
-        case '\\': // Fall through
+        case '\"': [[fallthrough]];
+        case '\\': [[fallthrough]];
         case '/':  result += (char)ch; break;
         case 'b':  result += '\b'; break;
         case 'f':  result += '\f'; break;

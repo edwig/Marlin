@@ -657,7 +657,7 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
   DETAILLOG1("Sent a HTTP status 200 = OK for asynchroneous message");
 
   // This message is ready. Do not send again
-  p_message->SetRequestHandle(HTTP_NULL_ID);
+  p_message->SetHasBeenAnswered();
 }
 
 // See that message has expected origin
@@ -1391,7 +1391,7 @@ HTTPSite::HttpSecurityCheck(HTTPMessage* p_http,SOAPMessage* p_soap)
     case XMLEncryption::XENC_Signing: return CheckBodySigning   (address,p_soap);
     case XMLEncryption::XENC_Body:    return CheckBodyEncryption(address,p_soap,p_http->GetBody());
     case XMLEncryption::XENC_Message: return CheckMesgEncryption(address,p_soap,p_http->GetBody());
-    case XMLEncryption::XENC_Plain:   // Fall through
+    case XMLEncryption::XENC_Plain:   [[fallthrough]];
     default:                          break;
   }
   // Noting done

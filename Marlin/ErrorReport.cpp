@@ -427,7 +427,7 @@ ErrorReport::DoReport(const CString&    p_subject
                      ,const CString&    p_url) const
 {
   // Getting proces information
-  std::auto_ptr<ProcInfo> procInfo(new ProcInfo);
+  std::unique_ptr<ProcInfo> procInfo(new ProcInfo);
   FILETIME creationTime, exitTime, kernelTime, userTime;
   GetProcessTimes(GetCurrentProcess(),
                   &creationTime,

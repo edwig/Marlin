@@ -1184,7 +1184,7 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
   request->RegisterWebSocket(this);
 
   // Reset request handle in the message
-  p_message->SetRequestHandle(NULL);
+  p_message->SetHasBeenAnswered();
 
   return true;
 }

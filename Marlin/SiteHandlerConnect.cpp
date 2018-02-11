@@ -71,7 +71,7 @@ void
 SiteHandlerConnect::PostHandle(HTTPMessage* p_message)
 {
   // send our answer straight away, if not already done
-  if(p_message && p_message->GetRequestHandle())
+  if(p_message && !p_message->GetHasBeenAnswered())
   {
     p_message->SetCommand(HTTPCommand::http_response);
     m_site->SendResponse(p_message);

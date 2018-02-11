@@ -317,7 +317,7 @@ HTTPClient::Initialize()
   // Prepare for the fallback proxy in the OPEN call
   switch(m_useProxy)
   {
-    case ProxyType::PROXY_IEPROXY:     // Fall through. Use proxy finder
+    case ProxyType::PROXY_IEPROXY:     [[fallthrough]];
     case ProxyType::PROXY_AUTOPROXY:   // Use proxy finder for overrides
                                        totalURL.Format("%s%s://%s:%d%s"
                                                       ,m_scheme.GetString()
@@ -1799,8 +1799,8 @@ HTTPClient::ReceivePushEvents()
         case ERROR_WINHTTP_INCORRECT_HANDLE_TYPE:     m_status = HTTP_STATUS_PRECOND_FAILED;    break;
         case ERROR_WINHTTP_INTERNAL_ERROR:            m_status = HTTP_STATUS_NONE_ACCEPTABLE;   break;
         case ERROR_NOT_ENOUGH_MEMORY:                 m_status = HTTP_STATUS_REQUEST_TOO_LARGE; break;
-        case ERROR_WINHTTP_TIMEOUT:                   // Fall through
-        case ERROR_WINHTTP_OPERATION_CANCELLED:       // Fall through
+        case ERROR_WINHTTP_TIMEOUT:                   [[fallthrough]];
+        case ERROR_WINHTTP_OPERATION_CANCELLED:       [[fallthrough]];
         default:                                      m_status = HTTP_STATUS_SERVICE_UNAVAIL;   break;
       }
 
@@ -2777,7 +2777,7 @@ HTTPClient::Send()
         // What to do with the status code
         switch(m_status)
         {
-          default:                // Fall through
+          default:                [[fallthrough]];
           case HTTP_STATUS_OK:    getReponseSucceed = true;
                                   // Get the content type header
                                   m_contentType = ReadHeaderField(WINHTTP_QUERY_CONTENT_TYPE);
@@ -3401,7 +3401,7 @@ HTTPClient::CheckAnswerSecurity(SOAPMessage* p_msg,CString p_answer,XMLEncryptio
     case XMLEncryption::XENC_Signing: CheckBodySigning(p_password,p_msg);          break;
     case XMLEncryption::XENC_Body:    DecodeBodyEncryption(p_password,p_msg,p_answer); break;
     case XMLEncryption::XENC_Message: DecodeMesgEncryption(p_password,p_msg,p_answer); break;
-    case XMLEncryption::XENC_Plain:   // Fall through, nothing to do
+    case XMLEncryption::XENC_Plain:   [[fallthrough]];
     default:                          break;
   }
 }
