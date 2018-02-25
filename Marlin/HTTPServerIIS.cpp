@@ -891,10 +891,15 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // In case of a 401, we challenge to the client to identify itself
   if (p_message->GetStatus() == HTTP_STATUS_DENIED)
   {
-    // Add authentication scheme
-    HTTPSite* site = p_message->GetHTTPSite();
-    CString challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
-                                                    ,site->GetAuthenticationRealm());
+    // See if the message already has an authentication scheme header
+    CString challenge = p_message->GetHeader("AuthenticationScheme");
+    if(challenge.IsEmpty())
+    {
+      // Add authentication scheme
+      HTTPSite* site = p_message->GetHTTPSite();
+      challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
+                                              ,site->GetAuthenticationRealm());
+    }
     SetResponseHeader(response,HttpHeaderWwwAuthenticate, challenge,true);
   }
 

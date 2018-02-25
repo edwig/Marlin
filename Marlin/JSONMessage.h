@@ -236,7 +236,7 @@ public:
 private:
   // Parse the URL, true if legal
   bool ParseURL(CString p_url);
-    // Re-parse URL after setting a part of the URL
+  // Re-parse URL after setting a part of the URL
   void ReparseURL();
 
   // The message is contained in a JSON value

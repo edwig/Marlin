@@ -39,6 +39,7 @@ public:
   virtual void InitInstance();
   virtual void ExitInstance();
   virtual bool LoadSite(IISSiteConfig& p_config);
+  virtual ErrorReport* GetErrorReport();
 
   void IncrementError() { ++m_errors; };
 

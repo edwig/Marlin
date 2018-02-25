@@ -101,13 +101,18 @@ MarlinServerApp::InitInstance()
   TestWebSocket(m_appServer);
 }
 
+ErrorReport*
+MarlinServerApp::GetErrorReport()
+{
+  return nullptr;
+}
+
 bool 
 MarlinServerApp::LoadSite(IISSiteConfig& p_config)
 {
   // Already done in the InitInstance
   return true;
 }
-
 
 void
 MarlinServerApp::ExitInstance()

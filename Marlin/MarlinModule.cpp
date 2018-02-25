@@ -65,6 +65,7 @@ ThreadPool*       g_pool        = nullptr;    // Threadpool for events and tasks
 ErrorReport*      g_report      = nullptr;    // Error reporting for Marlin
 WebConfigIIS      g_config;                   // Global ApplicationHost.config
 bool              g_abortServer = false;      // Abort HTTPServer before the ServerApp
+bool              g_reportOwner = false;      // Dow we ownn the report
 
 // Logging macro for this file only
 #define DETAILLOG(text)    if(g_analysisLog) { g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text)); }
@@ -93,6 +94,12 @@ RegisterModule(DWORD                        p_version
               ,IHttpModuleRegistrationInfo* p_moduleInfo
               ,IHttpServer*                 p_server)
 {
+  // FIRST MOMENT OF DEBUG
+  // WAIT HERE FOR IIS
+  // Sleep(20000);
+
+  TRACE("REGISTER MODULE\n");
+
   // Declaration of the start log function
   void StartLog(DWORD p_version);
 
@@ -266,9 +273,14 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     g_marlin->SetLogging(g_analysisLog);
     g_marlin->SetLogLevel(g_analysisLog->GetLogLevel());
     // Provide an error reporting object
-    if(!g_report)
+    if(g_server->GetErrorReport())
+    {
+      g_report = g_server->GetErrorReport();
+    }
+    else
     {
       g_report = new ErrorReport();
+      g_reportOwner = true;
     }
     g_marlin->SetErrorReport(g_report);
     // Setting the base webroot
@@ -365,7 +377,8 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
       g_marlin = nullptr;
     }
 
-    if(g_report)
+    // If we own the report, destroy it
+    if(g_report && g_reportOwner)
     {
       delete g_report;
       g_report = nullptr;
@@ -603,6 +616,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   if(msg)
   {
     // GO! Let the site handle the message
+    msg->AddReference();
     site->HandleHTTPMessage(msg);
   
     // If handled (Marlin has reset the request handle)
@@ -614,6 +628,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
       // This request is now completely handled
       status = GetCompletionStatus(response);
     }
+    msg->DropReference();
   }
   else if(stream)
   {

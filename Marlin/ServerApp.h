@@ -48,6 +48,7 @@ public:
   virtual void InitInstance() = 0;
   virtual void ExitInstance() = 0;
   virtual bool LoadSite(IISSiteConfig& p_config) = 0;
+  virtual ErrorReport* GetErrorReport() = 0;
 
   // Connecting the application to the IIS and Marlin server
   void ConnectServerApp(IHttpServer*   p_iis

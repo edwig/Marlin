@@ -763,7 +763,9 @@ HTTPServer::RespondWithServerError(HTTPMessage* p_message
 void
 HTTPServer::RespondWithClientError(HTTPMessage* p_message
                                   ,int          p_error
-                                  ,CString      p_reason)
+                                  ,CString      p_reason
+                                  ,CString      p_authScheme
+                                  ,CString      p_realm)
 {
   HTTPERROR(p_error,"Respond with client error");
   CString page;
@@ -773,6 +775,12 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
   p_message->GetFileBuffer()->Reset();
   p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
   p_message->SetStatus(p_error);
+
+  CString challenge = BuildAuthenticationChallenge(p_authScheme,p_realm);
+  if(!challenge.IsEmpty())
+  {
+    p_message->AddHeader("AuthenticationScheme",challenge);
+  }
 
   SendResponse(p_message);
 }

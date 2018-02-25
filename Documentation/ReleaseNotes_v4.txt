@@ -8,6 +8,19 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.7.2
+========================
+1)  In case of an HTTP 401 error, the carrying message already could have a authentication challenge
+    request header. In that case, the servers (HTTPServerSync, HTTPServerMarlin, HTTPServerIIS) will
+    not overwrite the authentication challenge. Only if no such challenge exists will it add a 
+    challenge of it's own.
+2)  The IIS ServerApp can now prescribe a overriding ErrorReport object. In this case the MarlinModule
+    will not enforce the ErrorReport object, but will use the one from the ServerApp. This makes it 
+    possible / easier to put a different error reporting object in place. For instance, one that does
+    not just save the error report, but also e-mails it.
+3)  Fixed a bug in the messsage handling in the MarlinModule by adding an extra reference to the
+    handled HTTPMessage
+
 CHANGES IN VERSION 4.7.1
 ========================
 1)  Marlin now compiles with the "/std:c++17" switch only!

@@ -136,6 +136,11 @@ MarlinServerApp::LoadSite(IISSiteConfig& /*p_config*/)
   return true;
 }
 
+ErrorReport*
+MarlinServerApp::GetErrorReport()
+{
+  return nullptr;
+}
 
 bool
 MarlinServerApp::CorrectlyStarted()

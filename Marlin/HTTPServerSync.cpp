@@ -665,8 +665,6 @@ HTTPServerSync::StopServer()
   AutoCritSec lock(&m_eventLock);
   DETAILLOG1("Received a StopServer request");
 
-  HANDLE close = m_serverThread;
-
   // See if we are running at all
   if(m_running == false)
   {
@@ -722,8 +720,8 @@ HTTPServerSync::StopServer()
     // Wait till the breaking of the mainloop
     if(m_serverThread == nullptr)
     {
-      Sleep(100);
-      CloseHandle(close);
+      //Sleep(100);
+      //CloseHandle(close);
       break;
     }
   }
@@ -909,10 +907,15 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   // In case of a HTTP 401
   if(status == HTTP_STATUS_DENIED)
   {
-    // Add authentication scheme
-    HTTPSite* site = p_message->GetHTTPSite();
-    challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
-                                            ,site->GetAuthenticationRealm());
+    // See if the message already has an authentication scheme header
+    challenge = p_message->GetHeader("AuthenticationScheme");
+    if(challenge.IsEmpty())
+    {
+      // Add authentication scheme challenge
+      HTTPSite* site = p_message->GetHTTPSite();
+      challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
+                                              ,site->GetAuthenticationRealm());
+    }
     AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
   }
 

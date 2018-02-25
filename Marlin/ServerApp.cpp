@@ -116,6 +116,13 @@ ServerApp::CorrectlyStarted()
   return false;
 }
 
+// Default implementation. Use the Marlin error report
+ErrorReport*
+ServerApp::GetErrorReport()
+{
+  return nullptr;
+}
+
 // Setting the logging level
 void 
 ServerApp::SetLogLevel(int p_logLevel)

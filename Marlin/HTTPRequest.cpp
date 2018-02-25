@@ -1255,9 +1255,14 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // In case of a 401, we challenge to the client to identify itself
   if(m_message->GetStatus() == HTTP_STATUS_DENIED)
   {
-    // Add authentication scheme
-    CString challenge = m_server->BuildAuthenticationChallenge(m_site->GetAuthenticationScheme()
-                                                              ,m_site->GetAuthenticationRealm());
+    // See if the message already has an authentication scheme header
+    CString challenge = m_message->GetHeader("AuthenticationScheme");
+    if(challenge.IsEmpty())
+    {
+      // Add authentication scheme
+      challenge = m_server->BuildAuthenticationChallenge(m_site->GetAuthenticationScheme()
+                                                        ,m_site->GetAuthenticationRealm());
+    }
     AddKnownHeader(HttpHeaderWwwAuthenticate,challenge);
   }
 

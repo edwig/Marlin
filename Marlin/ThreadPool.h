@@ -117,6 +117,8 @@ public:
   // Extend the maximum for a period of time
   void  ExtendMaximumThreads (AutoIncrementPoolMax& p_increment);
   void  RestoreMaximumThreads(AutoIncrementPoolMax& p_increment);
+  // Number of current running threads
+  long  GetCurrentThreads();
 
   // Sleeping and waking-up a thread
   // Sleeps ANY thread. Also threads not originating in this ThreadPool
@@ -148,9 +150,7 @@ public:
   int  GetProcessors()          { return m_processors;          };
   int  GetWorkOverflow()        { return (int)m_work.size();    };
   int  GetCleanupJobs()         { return (int)m_cleanup.size(); };
-  int  GetHeartBeatTime()       { return m_heartbeat;            };
-  // Number of current running threads
-  long GetCurrentThreads();
+  int  GetHeartBeatTime()       { return m_heartbeat;           };
 
   // These running-a-thread methods are public, but really should only be called 
   // from within the static work functions of the ThreadPool itself, to get things working

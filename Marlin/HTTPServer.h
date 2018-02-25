@@ -347,7 +347,9 @@ public:
   // Response in the client error range (400-417)
   void       RespondWithClientError(HTTPMessage*    p_message
                                    ,int             p_error
-                                   ,CString         p_reason);
+                                   ,CString         p_reason
+                                   ,CString         p_authScheme = ""
+                                   ,CString         p_realm      = "");
   // REQUEST HEADER METHODS
 
   // RFC 2616: paragraph 14.25: "if-modified-since"
