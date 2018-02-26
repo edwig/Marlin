@@ -126,7 +126,12 @@ SiteHandlerSoap::Handle(HTTPMessage* p_message)
 {
   if(g_soapMessage)
   {
-    return Handle(g_soapMessage);
+    bool result = Handle(g_soapMessage);
+    if(g_soapMessage->GetHasBeenAnswered())
+    {
+      p_message->SetHasBeenAnswered();
+    }
+    return result;
   }
   // Do the default handler (BAD REQUEST)
   return SiteHandler::Handle(p_message);

@@ -134,30 +134,32 @@ WebServiceServer::Reset()
       m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
       delete m_site;
     }
-    m_site = nullptr;
   }
+    m_site = nullptr;
 
-
+  // Remove WSDL
   if(m_wsdl && m_wsdlOwner)
   {
     delete m_wsdl;
-    m_wsdl = nullptr;
     m_wsdlOwner = false;
   }
+  m_wsdl = nullptr;
 
+  // Remove Threadpool
   if(m_pool && m_poolOwner)
   {
     delete m_pool;
-    m_pool = nullptr;
     m_poolOwner = false;
   }
+  m_pool = nullptr;
 
+  // Remove Logfile
   if (m_log && m_logOwner)
   {
 	  delete m_log;
-	  m_log = nullptr;
 	  m_logOwner = false;
   }
+  m_log = nullptr;
 
   // De-register ourselves with the server
   if(m_httpServer)

@@ -20,6 +20,10 @@ CHANGES IN VERSION 4.7.2
     not just save the error report, but also e-mails it.
 3)  Fixed a bug in the messsage handling in the MarlinModule by adding an extra reference to the
     handled HTTPMessage
+4)  Fixed a bug in the SiteHandlerSoap. The sent status of the message was not forwarded from the 
+    SOAPMessage to the original HTTPMessage. This triggerd a 404 error in IIS.
+5)  Fixed a bug in the close-down of the WebServiceServer, in the case that the HTTPServer was not
+    owned by the service
 
 CHANGES IN VERSION 4.7.1
 ========================
