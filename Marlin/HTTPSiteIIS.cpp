@@ -171,8 +171,17 @@ HTTPSiteIIS::SetWebroot(CString p_webroot)
 CString 
 HTTPSiteIIS::GetIISSiteDir()
 {
-  CString dir(m_site);
+  // Follow the main site chain to the site
+  HTTPSite* mainsite = this;
+  while(mainsite->GetIsSubsite())
+  {
+    mainsite = mainsite->GetMainSite();
+  }
 
+  // This is the mainsite
+  CString dir = mainsite->GetSite();
+
+  // Transpose site URL to directory name
   int pos1 = dir.Find('/',1);
   if(pos1 < dir.GetLength() - 1)
   {

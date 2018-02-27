@@ -720,8 +720,6 @@ HTTPServerSync::StopServer()
     // Wait till the breaking of the mainloop
     if(m_serverThread == nullptr)
     {
-      //Sleep(100);
-      //CloseHandle(close);
       break;
     }
   }

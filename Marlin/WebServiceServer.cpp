@@ -141,25 +141,25 @@ WebServiceServer::Reset()
   if(m_wsdl && m_wsdlOwner)
   {
     delete m_wsdl;
+    m_wsdl = nullptr;
     m_wsdlOwner = false;
   }
-  m_wsdl = nullptr;
 
   // Remove Threadpool
   if(m_pool && m_poolOwner)
   {
     delete m_pool;
+    m_pool = nullptr;
     m_poolOwner = false;
   }
-  m_pool = nullptr;
 
   // Remove Logfile
   if (m_log && m_logOwner)
   {
 	  delete m_log;
+    m_log = nullptr;
 	  m_logOwner = false;
   }
-  m_log = nullptr;
 
   // De-register ourselves with the server
   if(m_httpServer)
@@ -169,6 +169,7 @@ WebServiceServer::Reset()
     HTTPServer* server = m_httpServer;
     m_serverOwner = false;
 
+    // Be sure we unregister ourselves
     if(m_httpServer->FindService(m_name))
     {
       // Last thing we do, after this the object is invalid

@@ -209,8 +209,14 @@ LogAnalysis::SetLogLevel(int p_logLevel)
   if(p_logLevel > HLL_HIGHEST) p_logLevel = HLL_HIGHEST;
 
   // Remember our loglevel;
+  if(m_logLevel != p_logLevel)
+  {
+    // Record new loglevel
   m_logLevel = p_logLevel;
 
+    // Only show new loglevel if logfile was already started
+    if(m_initialised)
+    {
   CString level;
   switch(p_logLevel)
   {
@@ -222,6 +228,8 @@ LogAnalysis::SetLogLevel(int p_logLevel)
     case HLL_TRACEDUMP: level = "Tracing & hexdump"; break;
   }
   AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Logging level set to [%d:%s]",m_logLevel,level.GetString());
+}
+  }
 }
 
 size_t
@@ -236,7 +244,7 @@ void
 LogAnalysis::Initialisation()
 {
   // Still something to do?
-  if(m_initialised)
+  if(m_initialised || m_logLevel == HLL_NOLOG)
   {
     return;
   }
@@ -247,12 +255,6 @@ LogAnalysis::Initialisation()
   // We are now initialized
   // Must do this here, otherwise an endless loop will occur..
   m_initialised = true;
-
-  // See if we must do something
-  if(m_logLevel == HLL_NOLOG)
-  {
-    return;
-  }
 
   // Try to register the MS-Windows event log  for writing
   if(m_doEvents)

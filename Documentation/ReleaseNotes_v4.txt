@@ -24,6 +24,10 @@ CHANGES IN VERSION 4.7.2
     SOAPMessage to the original HTTPMessage. This triggerd a 404 error in IIS.
 5)  Fixed a bug in the close-down of the WebServiceServer, in the case that the HTTPServer was not
     owned by the service
+6)  Fixed a bug in the initialisation of the AnalysisLog class. It is now possible to set the filename
+    and loglevel before starting the logfile.
+7)  The webroot of a subsite should use the webroot of the mainsite under IIS. This is why the method
+    to set the webroot of the HTTPSiteIIS has been changed to look at the name of the mainsite!
 
 CHANGES IN VERSION 4.7.1
 ========================
