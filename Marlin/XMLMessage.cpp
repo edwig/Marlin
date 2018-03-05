@@ -312,20 +312,18 @@ XMLMessage::Print()
 CString
 XMLMessage::PrintHeader()
 {
-  CString temp;
   CString header("<?xml");
 
   // Check what we should do
   if(m_version.IsEmpty() && m_encoding == XMLEncoding::ENC_Plain && m_standalone.IsEmpty())
   {
-    return temp;
+    return "";
   }
 
   // Construct the header
   if(!m_version.IsEmpty())
   {
-    temp.Format(" version=\"%s\"",m_version.GetString());
-    header += temp;
+    header.AppendFormat(" version=\"%s\"",m_version.GetString());
   }
   // Take care of character encoding
   int acp = -1;
@@ -339,11 +337,13 @@ XMLMessage::PrintHeader()
   }
   header.AppendFormat(" encoding=\"%s\"",CodepageToCharset(acp).GetString());
 
+  // Add spaceing
+  header.AppendFormat(" space=\"%s\"",m_whitespace ? "default" : "preserve");
+
   // Add standalone?
   if(!m_standalone.IsEmpty())
   {
-    temp.Format(" standalone=\"%s\"",m_standalone.GetString());
-    header += temp;
+    header.AppendFormat(" standalone=\"%s\"",m_standalone.GetString());
   }
   // Closing of the header
   header += "?>";

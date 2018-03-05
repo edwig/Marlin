@@ -8,6 +8,24 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.7.3
+========================
+1)  The SOAPMessage object has been extended with overrides on "AddElement" for the following datatypes
+    - const char*
+    - int
+    - bool
+    - double
+    This makes it much easier to add elements to a SOAP message straight from internal variables
+2)  The heartbeat function in the threadpool has been extended. Every time the heartbeat wakes up and
+    makes a call to a heartbeat function, this calling is now done from within a safe-exception-handler.
+    This garantuees that the called functions are done from within a handler that will create reports 
+    and **not** crash the entire server.
+3)  The XML parser and generator have been extended to read and create XML files with the attribute
+    "xml:space=preserve" in the header. This removes 80% of the need to generate CDATA blocks, in the case
+    that we 'just' want to preserve the spacing.
+    Programmers should test their services before removing CDATA sections from production servers, 
+    as this attribute is not widely supported in the world!
+
 CHANGES IN VERSION 4.7.2
 ========================
 1)  In case of an HTTP 401 error, the carrying message already could have a authentication challenge

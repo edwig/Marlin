@@ -27,6 +27,7 @@
 //
 #include "StdAfx.h"
 #include "ThreadPool.h"
+#include "ErrorReport.h"
 #include "CPULoad.h"
 #include "AutoCritical.h"
 
@@ -625,7 +626,7 @@ ThreadPool::RunHeartbeat()
 
       case WAIT_TIMEOUT:    // Heartbeat! Do the call!
                             TP_TRACE0("Heartbeat waking up\n");
-                            (*m_heartbeatCallback)(m_heartbeatPayload);
+                            SafeCallHeartbeat(m_heartbeatCallback,m_heartbeatPayload);
                             break;
     }
   } 
@@ -641,6 +642,42 @@ ThreadPool::RunHeartbeat()
   m_heartbeat = 0;
 
   return 0;
+}
+
+// Safe SEH calling of a heartbeat function
+void
+ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
+{
+  __try
+  { 
+    // Calling our heartbeat function from within a SEH
+    (*p_function)(p_payload);
+  }
+  __except( //#ifdef _DEBUG
+            // See if we are live debugging in Visual Studio
+            // IsDebuggerPresent() ? EXCEPTION_CONTINUE_SEARCH :
+            //#endif // _DEBUG
+            // After calling the Error::Send method, the Windows stack get unwinded
+            // We need to detect the fact that a second exception can occur,
+            // so we do **not** call the error report method again
+            // Otherwise we would end into an infinite loop
+            g_exception ? EXCEPTION_EXECUTE_HANDLER :
+           (g_exception = true,
+            g_exception = ErrorReport::Report(GetExceptionCode(),GetExceptionInformation()),
+            EXCEPTION_EXECUTE_HANDLER))
+  {
+    if(g_exception)
+    {
+      // Error while sending an error report
+      // This error can originate from another thread, OR from the sending of this error report
+      TP_TRACE0("HeartBeat: DOUBLE INTERNAL ERROR while making an error report.!!");
+      g_exception = false;
+    }
+    else
+    {
+      TP_TRACE0("CRASH in HeartBeat: Errorreport has been made");
+    }
+  }
 }
 
 // Perform a single heartbeat extra

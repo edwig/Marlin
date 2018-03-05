@@ -179,6 +179,8 @@ private:
   void RunCleanupJobs();
   // Wake up all sleeping threads as part of the shutdown
   void WakeUpAllSleepers();
+  // Safe SEH calling of a heartbeat function
+  void SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload);
 
   // This is the real callback. 
   // Overload for your needs, in your own class derived from ThreadPool

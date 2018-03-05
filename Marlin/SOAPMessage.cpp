@@ -854,6 +854,38 @@ SOAPMessage::AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,CSt
   return XMLMessage::AddElement(node,p_name,p_type,p_value,p_front);
 }
 
+// Override for an integer
+XMLElement*
+SOAPMessage::AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,int p_value,bool p_front /*=false*/)
+{
+  CString value;
+  value.Format("%d",p_value);
+  return AddElement(p_base,p_name,p_type,value,p_front);
+}
+
+XMLElement*
+SOAPMessage::AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,const char* p_value,bool p_front /*=false*/)
+{
+  CString value(p_value);
+  return AddElement(p_base,p_name,p_type,value,p_front);
+}
+
+XMLElement*
+SOAPMessage::AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,bool p_value,bool p_front /*=false*/)
+{
+  CString value = p_value ? "true" : "false";
+  return AddElement(p_base,p_name,p_type,value,p_front);
+}
+
+XMLElement*
+SOAPMessage::AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,double p_value,bool p_front /*=false*/)
+{
+  CString value;
+  value.Format("16.16%g",p_value);
+  value = value.TrimRight('0');
+  return AddElement(p_base,p_name,p_type,value,p_front);
+}
+
 // Get parameter from the header
 CString
 SOAPMessage::GetHeaderParameter(CString p_paramName)

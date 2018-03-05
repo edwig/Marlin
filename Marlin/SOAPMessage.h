@@ -297,6 +297,10 @@ public:
   XMLElement*     SetHeaderParameter(CString p_paramName, const char* p_value, bool p_first = false);
   // General add a parameter (always adds, so multiple parameters of same name can be added)
   XMLElement*     AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,CString p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,const char* p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,int         p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,bool        p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,CString p_name,XmlDataType p_type,double      p_value,bool p_front = false);
 
   CString         GetParameter       (CString p_name);
   int             GetParameterInteger(CString p_name);

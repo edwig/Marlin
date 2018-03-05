@@ -277,7 +277,7 @@ XMLParser::SkipOuterWhiteSpace()
 }
 
 // Parse the declaration of form:
-// <?xml version="1.0" encoding="utf-8" standalone="yes"?>
+// <?xml version="1.0" encoding="utf-8" space="preserve" standalone="yes"?>
 void
 XMLParser::ParseDeclaration()
 {
@@ -299,6 +299,9 @@ XMLParser::ParseDeclaration()
     NeedToken('=');
     CString value = GetQuotedString();
     SkipWhiteSpace();
+
+    // Remove possibly "xml" namespace
+    CString namesp = SplitNamespace(attributeName);
 
     if(attributeName.Compare("version") == 0)
     {
@@ -340,6 +343,17 @@ XMLParser::ParseDeclaration()
         }
       }
     }
+    else if(attributeName.Compare("space") == 0)
+    {
+      if(value.CompareNoCase("preserve") == 0)
+      {
+        m_message->m_whitespace = true; // WhiteSpace::PRESERVE_WHITESPACE;
+      }
+      else if(value.CompareNoCase("default") == 0)
+      {
+        m_message->m_whitespace = false; // WhiteSpace::COLLAPSE_WHITESPACE
+      }
+    }
     else if(attributeName.Compare("standalone") == 0)
     {
       if(value.CompareNoCase("yes") == 0 || value.CompareNoCase("no") == 0)
@@ -351,6 +365,12 @@ XMLParser::ParseDeclaration()
     {
       CString message;
       message.Format("Unknown header attributes [%s=%s]",attributeName.GetString(),value.GetString());
+      SetError(XmlError::XE_HeaderAttribs,(uchar*)message.GetString());
+    }
+    if(!namesp.IsEmpty() && namesp.Compare("xml"))
+    {
+      CString message;
+      message.Format("Unknown root namespace [%s] for attribute [%s]",namesp.GetString(),attributeName.GetString());
       SetError(XmlError::XE_HeaderAttribs,(uchar*)message.GetString());
     }
   }
@@ -841,7 +861,7 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arr
     case JsonType::JDT_const:       switch(p_value.GetConstant())
                                     {
                                       case JsonConst::JSON_NONE:  break; // Do nothing: empty string!!
-                                      case JsonConst::JSON_NULL:  p_element->SetValue("null");  break;
+                                      case JsonConst::JSON_NULL:  p_element->SetValue("");      break;
                                       case JsonConst::JSON_FALSE: p_element->SetValue("false"); break;
                                       case JsonConst::JSON_TRUE:  p_element->SetValue("true");  break;
                                     }
