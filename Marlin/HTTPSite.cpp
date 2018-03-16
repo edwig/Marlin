@@ -485,13 +485,6 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       }
     }
 
-    // Control Origin Resource Sharing
-    if(m_useCORS)
-    {
-      // See that message has expected origin
-      CheckCorsOrigin(p_message);
-    }
-
     // If site in asynchronous SOAP/XML mode
     if(m_async)
     {
@@ -658,29 +651,6 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
 
   // This message is ready. Do not send again
   p_message->SetHasBeenAnswered();
-}
-
-// See that message has expected origin
-void
-HTTPSite::CheckCorsOrigin(HTTPMessage* p_message)
-{
-  if(!m_allowOrigin.IsEmpty() && m_useCORS)
-  {
-    CString comesFrom = p_message->GetHeader("Origin");
-    if(m_allowOrigin.CompareNoCase(comesFrom))
-    {
-      ERRORLOG(ERROR_ACCESS_DENIED,"CORS origin server error: " + comesFrom);
-      // Message is not allowed
-      p_message->Reset();
-      // Empty the response part. Just to be sure!
-      CString empty;
-      p_message->GetFileBuffer()->Reset();
-      p_message->SetFile(empty);
-      // Answer with error
-      p_message->SetStatus(HTTP_STATUS_DENIED);
-      m_server->SendResponse(p_message);
-    }
-  }
 }
 
 // Call the correct EventStream handler
@@ -1710,11 +1680,5 @@ HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
     p_headers.insert(std::make_pair("Cache-Control","no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0"));
     p_headers.insert(std::make_pair("Pragma","no-cache"));
     p_headers.insert(std::make_pair("Expires","0"));
-  }
-
-  // If we use CORS, make sure we advertise the origin
-  if(m_useCORS)
-  {
-    p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? "*" : m_allowOrigin));
   }
 }

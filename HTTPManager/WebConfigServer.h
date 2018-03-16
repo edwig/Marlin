@@ -110,7 +110,6 @@ protected:
   // Server headers
   CString     m_xFrameOption;
   CString     m_xFrameAllowed;
-  CString     m_allowOrigin;
   unsigned    m_hstsMaxAge;
   bool        m_hstsSubDomain;
   bool        m_xNoSniff;
@@ -118,6 +117,10 @@ protected:
   bool        m_XSSBlockMode;
   bool        m_noCacheControl;
   bool        m_cors;
+  CString     m_allowOrigin;
+  CString     m_allowHeaders;
+  int         m_allowMaxAge;
+  bool        m_corsCredentials;
 
   // Interface items
   HICON       m_hIcon;

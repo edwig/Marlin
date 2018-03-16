@@ -225,10 +225,12 @@ public:
   bool            GetSendJsonBOM()                  { return m_sendJsonBOM;   };
   bool            GetVerbTunneling()                { return m_verbTunneling; };
   bool            GetHTTPCompression()              { return m_compression;   };
-  bool            GetHTTPThrotteling()              { return m_throttling;   };
+  bool            GetHTTPThrotteling()              { return m_throttling;    };
   bool            GetUseCORS()                      { return m_useCORS;       };
   CString         GetCORSOrigin()                   { return m_allowOrigin;   };
+  CString         GetCORSHeaders()                  { return m_allowHeaders;  };
   int             GetCORSMaxAge()                   { return m_corsMaxAge;    };
+  bool            GetCORSAllowCredentials()         { return m_corsCredentials; };
   CString         GetAuthenticationScheme();
   bool            GetAuthenticationNTLMCache();
   CString         GetAuthenticationRealm();
@@ -283,8 +285,6 @@ protected:
   void              HandleHTTPMessageDefault(HTTPMessage* p_message);
   // Direct asynchronous response
   void              AsyncResponse(HTTPMessage* p_message);
-  // See that message has expected origin
-  void              CheckCorsOrigin(HTTPMessage* p_message);
   // Handle the error after an error report
   void              PostHandle(HTTPMessage* p_message);
     // Check that m_reliable and m_async do not mix
@@ -336,12 +336,14 @@ protected:
   bool              m_sendSoapBOM     { false   };        // Prepend UTF-16 SOAP message with BOM 
   bool              m_sendJsonBOM     { false   };        // Prepend UTF-16 JSON message with BOM
   bool              m_compression     { false   };        // Allows for HTTP gzip compression
-  bool              m_throttling     { false   };        // Perform throttling per address
+  bool              m_throttling      { false   };        // Perform throttling per address
   // CORS Cross Origin Resource Sharing
   bool              m_useCORS         { false   };        // Use CORS header methods
   CString           m_allowOrigin;                        // Client that can call us or '*' for everyone
-  HeaderMap         m_exposeHeaders;                      // White-listing of exposed headers
+  CString           m_allowHeaders;                       // White-listing of exposed headers
   unsigned          m_corsMaxAge      { 86400   };        // Pre-flight results are valid this long (1 day in seconds)
+  bool              m_corsCredentials { false   };        // CORS allows credentials to be sent
+                                                          // CORS methods comes from the m_handlers map !!!
   // Authentication
   ULONG             m_authScheme      { 0       };        // Authentication scheme's
   CString           m_scheme;                             // Authentication scheme names

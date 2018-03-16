@@ -69,44 +69,53 @@ void ServerHeadersDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text   (pDX,IDC_XFURL,            m_XFrameURL);
   DDX_Text   (pDX,IDC_HSTS,             m_hstsMaxAge);
   DDX_Text   (pDX,IDC_ALLOW_ORIGIN,     m_allowOrigin);
+  DDX_Text   (pDX,IDC_ALLOW_HEADERS,    m_allowHeaders);
+  DDX_Text   (pDX,IDC_ALLOW_MAXAGE,     m_allowMaxAge);
+  DDX_Control(pDX,IDC_ALLOW_CREDENTIALS,m_buttonCORSCredentials);
 
   if(pDX->m_bSaveAndValidate == FALSE)
   {
     CWnd* w = nullptr;
 
-    w = GetDlgItem(IDC_NOCACHE);      w->EnableWindow(m_config->m_useNoCache);
-    w = GetDlgItem(IDC_XFRAME);       w->EnableWindow(m_config->m_useXFrameOpt);
-    w = GetDlgItem(IDC_XFURL);        w->EnableWindow(m_config->m_useXFrameAllow);
-    w = GetDlgItem(IDC_XSSPROTECT);   w->EnableWindow(m_config->m_useXssProtect);
-    w = GetDlgItem(IDC_XSSBLOCK);     w->EnableWindow(m_config->m_useXssBlock);
-    w = GetDlgItem(IDC_HSTS);         w->EnableWindow(m_config->m_useHstsMaxAge);
-    w = GetDlgItem(IDC_HSTSSUB);      w->EnableWindow(m_config->m_useHstsDomain);
-    w = GetDlgItem(IDC_NOSNIFF);      w->EnableWindow(m_config->m_useNoSniff);
-    w = GetDlgItem(IDC_CORS);         w->EnableWindow(m_config->m_useCORS);
-    w = GetDlgItem(IDC_ALLOW_ORIGIN); w->EnableWindow(m_config->m_useCORS);
+    w = GetDlgItem(IDC_NOCACHE);            w->EnableWindow(m_config->m_useNoCache);
+    w = GetDlgItem(IDC_XFRAME);             w->EnableWindow(m_config->m_useXFrameOpt);
+    w = GetDlgItem(IDC_XFURL);              w->EnableWindow(m_config->m_useXFrameAllow);
+    w = GetDlgItem(IDC_XSSPROTECT);         w->EnableWindow(m_config->m_useXssProtect);
+    w = GetDlgItem(IDC_XSSBLOCK);           w->EnableWindow(m_config->m_useXssBlock);
+    w = GetDlgItem(IDC_HSTS);               w->EnableWindow(m_config->m_useHstsMaxAge);
+    w = GetDlgItem(IDC_HSTSSUB);            w->EnableWindow(m_config->m_useHstsDomain);
+    w = GetDlgItem(IDC_NOSNIFF);            w->EnableWindow(m_config->m_useNoSniff);
+    w = GetDlgItem(IDC_CORS);               w->EnableWindow(m_config->m_useCORS);
+    w = GetDlgItem(IDC_ALLOW_ORIGIN);       w->EnableWindow(m_config->m_useCORS);
+    w = GetDlgItem(IDC_ALLOW_HEADERS);      w->EnableWindow(m_config->m_useCORS);
+    w = GetDlgItem(IDC_ALLOW_MAXAGE);       w->EnableWindow(m_config->m_useCORS);
+    w = GetDlgItem(IDC_ALLOW_CREDENTIALS);  w->EnableWindow(m_config->m_useCORS);
   }
 }
 
 BEGIN_MESSAGE_MAP(ServerHeadersDlg, CDialog)
-  ON_BN_CLICKED(IDC_USE_NOCACHE,    &ServerHeadersDlg::OnBnClickedUseNocache)
-  ON_BN_CLICKED(IDC_USE_XFRAME,     &ServerHeadersDlg::OnBnClickedUseXframe)
-  ON_BN_CLICKED(IDC_USE_XSSPROTECT, &ServerHeadersDlg::OnBnClickedUseXssprotect)
-  ON_BN_CLICKED(IDC_USE_XSSBLOCK,   &ServerHeadersDlg::OnBnClickedUseXssblock)
-  ON_BN_CLICKED(IDC_USE_HSTS,       &ServerHeadersDlg::OnBnClickedUseHsts)
-  ON_BN_CLICKED(IDC_USE_HSTSSUB,    &ServerHeadersDlg::OnBnClickedUseHstssub)
-  ON_BN_CLICKED(IDC_USE_NOSNIFF,    &ServerHeadersDlg::OnBnClickedUseNosniff)
-  ON_BN_CLICKED(IDC_USE_CORS,       &ServerHeadersDlg::OnBnClickedUseCORS)
-  ON_BN_CLICKED(IDC_NOCACHE,        &ServerHeadersDlg::OnBnClickedNocache)
-  ON_CBN_SELCHANGE(IDC_XFRAME,      &ServerHeadersDlg::OnCbnSelchangeXframe)
-  ON_EN_CHANGE (IDC_XFURL,          &ServerHeadersDlg::OnEnChangeXfurl)
-  ON_BN_CLICKED(IDC_XSSPROTECT,     &ServerHeadersDlg::OnBnClickedXssprotect)
-  ON_BN_CLICKED(IDC_XSSBLOCK,       &ServerHeadersDlg::OnBnClickedXssblock)
-  ON_EN_CHANGE (IDC_HSTS,           &ServerHeadersDlg::OnEnChangeHsts)
-  ON_BN_CLICKED(IDC_HSTSSUB,        &ServerHeadersDlg::OnBnClickedHstssub)
-  ON_BN_CLICKED(IDC_NOSNIFF,        &ServerHeadersDlg::OnBnClickedNosniff)
-  ON_BN_CLICKED(IDC_CORS,           &ServerHeadersDlg::OnBnClickedCORS)
-  ON_EN_CHANGE (IDC_ALLOW_ORIGIN,   &ServerHeadersDlg::OnEnChangeAllowOrigin)
-  ON_BN_CLICKED(IDOK,               &ServerHeadersDlg::OnOK)
+  ON_BN_CLICKED(IDC_USE_NOCACHE,      &ServerHeadersDlg::OnBnClickedUseNocache)
+  ON_BN_CLICKED(IDC_USE_XFRAME,       &ServerHeadersDlg::OnBnClickedUseXframe)
+  ON_BN_CLICKED(IDC_USE_XSSPROTECT,   &ServerHeadersDlg::OnBnClickedUseXssprotect)
+  ON_BN_CLICKED(IDC_USE_XSSBLOCK,     &ServerHeadersDlg::OnBnClickedUseXssblock)
+  ON_BN_CLICKED(IDC_USE_HSTS,         &ServerHeadersDlg::OnBnClickedUseHsts)
+  ON_BN_CLICKED(IDC_USE_HSTSSUB,      &ServerHeadersDlg::OnBnClickedUseHstssub)
+  ON_BN_CLICKED(IDC_USE_NOSNIFF,      &ServerHeadersDlg::OnBnClickedUseNosniff)
+  ON_BN_CLICKED(IDC_USE_CORS,         &ServerHeadersDlg::OnBnClickedUseCORS)
+  ON_BN_CLICKED(IDC_NOCACHE,          &ServerHeadersDlg::OnBnClickedNocache)
+  ON_CBN_SELCHANGE(IDC_XFRAME,        &ServerHeadersDlg::OnCbnSelchangeXframe)
+  ON_EN_CHANGE (IDC_XFURL,            &ServerHeadersDlg::OnEnChangeXfurl)
+  ON_BN_CLICKED(IDC_XSSPROTECT,       &ServerHeadersDlg::OnBnClickedXssprotect)
+  ON_BN_CLICKED(IDC_XSSBLOCK,         &ServerHeadersDlg::OnBnClickedXssblock)
+  ON_EN_CHANGE (IDC_HSTS,             &ServerHeadersDlg::OnEnChangeHsts)
+  ON_BN_CLICKED(IDC_HSTSSUB,          &ServerHeadersDlg::OnBnClickedHstssub)
+  ON_BN_CLICKED(IDC_NOSNIFF,          &ServerHeadersDlg::OnBnClickedNosniff)
+  ON_BN_CLICKED(IDC_CORS,             &ServerHeadersDlg::OnBnClickedCORS)
+  ON_EN_CHANGE (IDC_ALLOW_ORIGIN,     &ServerHeadersDlg::OnEnChangeAllowOrigin)
+  ON_EN_CHANGE (IDC_ALLOW_HEADERS,    &ServerHeadersDlg::OnEnChangeAllowHeaders)
+  ON_EN_CHANGE (IDC_ALLOW_MAXAGE,     &ServerHeadersDlg::OnEnChangeAllowMaxAge)
+  ON_BN_CLICKED(IDC_ALLOW_CREDENTIALS,&ServerHeadersDlg::OnBnClickedAllowCredentials)
+  ON_BN_CLICKED(IDOK,                 &ServerHeadersDlg::OnOK)
 END_MESSAGE_MAP()
 
 BOOL
@@ -137,16 +146,19 @@ ServerHeadersDlg::OnInitDialog()
   m_buttonUseCORS          .SetCheck(m_config->m_useCORS);
 
   // Init the fields
-  m_XFrameURL   = m_config->m_xFrameAllowed;
-  m_hstsMaxAge  = m_config->m_hstsMaxAge;
-  m_allowOrigin = m_config->m_allowOrigin;
+  m_XFrameURL    = m_config->m_xFrameAllowed;
+  m_hstsMaxAge   = m_config->m_hstsMaxAge;
+  m_allowOrigin  = m_config->m_allowOrigin;
+  m_allowHeaders = m_config->m_allowHeaders;
+  m_allowMaxAge  = m_config->m_allowMaxAge;
 
-  m_buttonHstsSubDomain .SetCheck(m_config->m_hstsSubDomain);
-  m_buttonNoSniff       .SetCheck(m_config->m_xNoSniff);
-  m_buttonXssProtection .SetCheck(m_config->m_XSSProtection);
-  m_buttonXssBlockMode  .SetCheck(m_config->m_XSSBlockMode);
-  m_buttonNoCacheControl.SetCheck(m_config->m_noCacheControl);
-  m_buttonCORS          .SetCheck(m_config->m_cors);
+  m_buttonHstsSubDomain  .SetCheck(m_config->m_hstsSubDomain);
+  m_buttonNoSniff        .SetCheck(m_config->m_xNoSniff);
+  m_buttonXssProtection  .SetCheck(m_config->m_XSSProtection);
+  m_buttonXssBlockMode   .SetCheck(m_config->m_XSSBlockMode);
+  m_buttonNoCacheControl .SetCheck(m_config->m_noCacheControl);
+  m_buttonCORS           .SetCheck(m_config->m_cors);
+  m_buttonCORSCredentials.SetCheck(m_config->m_corsCredentials);
 
   // Set correct combo entry
   CorrectXFrameOption();
@@ -194,6 +206,16 @@ ServerHeadersDlg::CheckFields()
   if(m_config->m_hstsSubDomain && m_config->m_hstsMaxAge <= 0)
   {
     MessageBox("In order to allow HSTS sub-domains, specify a HSTS max-age (standard value = 16070400)","Server headers",MB_OK|MB_ICONERROR);
+    return false;
+  }
+  if(m_config->m_cors && m_config->m_allowMaxAge <= 0)
+  {
+    MessageBox("In order to allow CORS security, specifiy a CORS max-age (standard value = 86400 seconds)","Server headers",MB_OK | MB_ICONERROR);
+    return false;
+  }
+  if(m_config->m_cors && m_config->m_allowOrigin.IsEmpty())
+  {
+    MessageBox("In order to allow CORS security, specify one (1) site as an allowed origin, or specifiy '*' (all sites)","Server headers",MB_OK | MB_ICONERROR);
     return false;
   }
   return true;
@@ -337,6 +359,26 @@ ServerHeadersDlg::OnEnChangeAllowOrigin()
 {
   UpdateData();
   m_config->m_allowOrigin = m_allowOrigin;
+}
+
+void
+ServerHeadersDlg::OnEnChangeAllowHeaders()
+{
+  UpdateData();
+  m_config->m_allowHeaders = m_allowHeaders;
+}
+
+void
+ServerHeadersDlg::OnEnChangeAllowMaxAge()
+{
+  UpdateData();
+  m_config->m_allowMaxAge = m_allowMaxAge;
+}
+
+void
+ServerHeadersDlg::OnBnClickedAllowCredentials()
+{
+  m_config->m_corsCredentials = m_buttonCORSCredentials.GetCheck();
 }
 
 void

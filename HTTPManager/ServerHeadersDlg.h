@@ -56,6 +56,8 @@ private:
   CString       m_XFrameURL;
   int           m_hstsMaxAge;
   CString       m_allowOrigin;
+  CString       m_allowHeaders;
+  int           m_allowMaxAge;
 
   CButton       m_buttonUseXFrame;
   CButton       m_buttonUseHstsMaxAge;
@@ -73,6 +75,7 @@ private:
   CButton       m_buttonXssBlockMode;
   CButton       m_buttonNoCacheControl;
   CButton       m_buttonCORS;
+  CButton       m_buttonCORSCredentials;
 
 public:
   afx_msg void OnBnClickedUseNocache();
@@ -93,5 +96,8 @@ public:
   afx_msg void OnBnClickedNosniff();
   afx_msg void OnBnClickedCORS();
   afx_msg void OnEnChangeAllowOrigin();
+  afx_msg void OnEnChangeAllowHeaders();
+  afx_msg void OnEnChangeAllowMaxAge();
+  afx_msg void OnBnClickedAllowCredentials();
   afx_msg void OnOK();
 };

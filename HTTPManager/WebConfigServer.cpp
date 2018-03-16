@@ -300,7 +300,6 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
 
   m_xFrameOption      = config.GetParameterString ("Security","XFrameOption",     "");
   m_xFrameAllowed     = config.GetParameterString ("Security","XFrameAllowed",    "");
-  m_allowOrigin       = config.GetParameterString ("Security","CORS_AllowOrigin", "");
   m_hstsMaxAge        = config.GetParameterInteger("Security","HSTSMaxAge",        0);
   m_hstsSubDomain     = config.GetParameterBoolean("Security","HSTSSubDomains",false);
   m_xNoSniff          = config.GetParameterBoolean("Security","ContentNoSniff",false);
@@ -308,6 +307,10 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
   m_XSSBlockMode      = config.GetParameterBoolean("Security","XSSBlockMode",  false);
   m_noCacheControl    = config.GetParameterBoolean("Security","NoCacheControl",false);
   m_cors              = config.GetParameterBoolean("Security","CORS",          false);
+  m_allowOrigin       = config.GetParameterString ("Security","CORS_AllowOrigin", "");
+  m_allowHeaders      = config.GetParameterString ("Security","CORS_AllowHeaders","");
+  m_allowMaxAge       = config.GetParameterInteger("Security","CORS_MaxAge",   86400);
+  m_corsCredentials   = config.GetParameterBoolean("Security","CORS_AllowCredentials",false);
 
   // INIT THE COMBO BOXES
   m_comboProtocol.SetCurSel(m_secureProtocol ? 1 : 0);
@@ -414,6 +417,12 @@ WebConfigServer::WriteWebConfig(WebConfig& config)
   else                  config.RemoveParameter("Security","CORS");
   if(m_useCORS)         config.SetParameter   ("Security","CORS_AllowOrigin",m_allowOrigin);
   else                  config.RemoveParameter("Security","CORS_AllowOrigin");
+  if(m_useCORS)         config.SetParameter   ("Security","CORS_AllowHeaders",m_allowHeaders);
+  else                  config.RemoveParameter("Security","CORS_AllowHeaders");
+  if(m_useCORS)         config.SetParameter   ("Security","CORS_MaxAge",      m_allowMaxAge);
+  else                  config.RemoveParameter("Security","CORS_MaxAge");
+  if(m_useCORS)         config.SetParameter   ("Security","CORS_AllowCredentials",m_corsCredentials);
+  else                  config.RemoveParameter("Security","CORS_AllowCredentials");
 }
 
 // WebConfigDlg message handlers

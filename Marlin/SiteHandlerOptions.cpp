@@ -136,6 +136,11 @@ SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
     maxAge.Format("%d",m_site->GetCORSMaxAge());
     p_message->AddHeader("Access-Control-Max-Age",maxAge,false);
   }
+
+  if(m_site->GetCORSAllowCredentials())
+  {
+    p_message->AddHeader("Access-Control-Allow-Credentials","true",false);
+  }
 }
 
 // Check that we have same origin
@@ -143,7 +148,7 @@ bool
 SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,CString p_origin)
 {
   CString origin = m_site->GetCORSOrigin();
-  if(!origin.IsEmpty())
+  if(!origin.IsEmpty() && origin != "*")
   {
     if(p_origin.CompareNoCase(origin))
     {
@@ -152,11 +157,21 @@ SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,CString p_origin)
       SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: Not same CORS origin");
       return false;
     }
+    p_message->AddHeader("Access-Control-Allow-Origin",origin,false);
+    return true;
   }
-  // All sites are allowed, or only the origin
-  // Header "Access-Control-Allow-Origin" will be set by the site!
 
-  return true;
+  // If all sites are allowed, just reflect the requested origin
+  if(origin == "*")
+  {
+    p_message->AddHeader("Access-Control-Allow-Origin",p_origin,false);
+    return true;
+  }
+
+  // No origin given
+  p_message->SetStatus(HTTP_STATUS_DENIED);
+  SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: No CORS origin configured by the server");
+  return false;
 }
 
 // Check that the site has this HTTP Method
@@ -170,26 +185,43 @@ SiteHandlerOptions::CheckCORSMethod(HTTPMessage* p_message,CString p_method)
     {
       // This method is NOT allowed
       p_message->SetStatus(HTTP_STATUS_DENIED);
-      SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: CORS method not allowed");
+      SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: CORS method not implemented by the server");
       return false;
     }
     // These are the allowed methods for this site
-    p_message->AddHeader("Access-Control-Allow-Methods",handlers,false);
+    p_message->AddHeader("Access-Control-Allow-Methods",p_method,false);
+    return true;
   }
-  return true;
+  // No method was requested
+  p_message->SetStatus(HTTP_STATUS_DENIED);
+  SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: No method requested by the origin");
+  return false;
 }
 
 // Check that we can handle these headers
 bool 
 SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,CString p_headers)
 {
-  if(!p_headers.IsEmpty())
+  CString allowed = m_site->GetCORSHeaders();
+  allowed.MakeLower();
+  p_headers.MakeLower();
+
+  // See if headers where requested
+  if(p_headers.IsEmpty())
   {
-    // CURRENTLY THERE IS NO MECHANISME TO CHECK THE ALLOWED HEADERS
-    // SO WE JUST REFLECT WHAT WE'VE GOTTEN
-    // Note 1: To implement all handlers must register there headers
-    // Note 2: Checking on 'official' HTTP headers defies the protocol!
-    p_message->AddHeader("Access-Control-Allow-Headers",p_headers,false);
+    p_message->AddHeader("Access-Control-Allow-Headers",allowed,false);
+    return true;
   }
-  return true;
+
+  // If no restriction is set or we find the header, allow it
+  if(allowed.IsEmpty() || allowed.Find(p_headers) >= 0)
+  {
+    p_message->AddHeader("Access-Control-Allow-Headers",p_headers,false);
+    return true;
+  }
+
+  // No method was requested
+  p_message->SetStatus(HTTP_STATUS_DENIED);
+  SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: header not allowed by the server");
+  return false;
 }
