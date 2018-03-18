@@ -116,7 +116,7 @@ HTTPServerSync::Initialise()
 
   // STEP 7: SET THE LENGTH OF THE BACKLOG QUEUE FOR INCOMING TRAFFIC
   // Overrides for the HTTP Site. Test min/max via SetQueueLength
-  int queueLength = m_webConfig.GetParameterInteger("Server","QueueLength",m_queueLength);
+  int queueLength = m_webConfig->GetParameterInteger("Server","QueueLength",m_queueLength);
   SetQueueLength(queueLength);
   
   // Set backlog queue: using HttpSetRequestQueueProperty
@@ -158,6 +158,9 @@ HTTPServerSync::Initialise()
 
   // STEP 10: Init the response headers to send
   InitHeaders();
+
+  // STEP 11: Init the ThreadPool
+  InitThreadPool();
 
   // We are airborne!
   return (m_initialized = true);

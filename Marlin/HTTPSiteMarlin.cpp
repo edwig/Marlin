@@ -216,42 +216,15 @@ HTTPSiteMarlin::SetWebroot(CString p_webroot)
 void
 HTTPSiteMarlin::InitSite(WebConfig& p_config)
 {
-  // Get the webroot
-  m_webroot     = p_config.GetParameterString ("Server","WebRoot",m_webroot);
-  // Check Unicode forcing
-  m_sendUnicode = p_config.GetParameterBoolean("Server","RespondUnicode",m_sendUnicode);
-  m_sendSoapBOM = p_config.GetParameterBoolean("Server","RespondSoapBOM",m_sendSoapBOM);
-  m_sendJsonBOM = p_config.GetParameterBoolean("Server","RespondJsonBOM",m_sendJsonBOM);
-
-  // Read XML Signing en encryption from the config
-  CString level;
-  switch(m_securityLevel)
-  {
-    case XMLEncryption::XENC_Plain:   level = "";        break;
-    case XMLEncryption::XENC_Signing: level = "sign";    break;
-    case XMLEncryption::XENC_Body:    level = "body";    break;
-    case XMLEncryption::XENC_Message: level = "message"; break;
-  }
-  // Getting various settings
-  level           = p_config.GetParameterString ("Encryption","Level",          level);
-  m_enc_password  = p_config.GetEncryptedString ("Encryption","Password",       m_enc_password);
-  m_reliable      = p_config.GetParameterBoolean("Server",    "Reliable",       m_reliable);
-  m_verbTunneling = p_config.GetParameterBoolean("Server",    "VerbTunneling",  m_verbTunneling);
-  m_compression   = p_config.GetParameterBoolean("Server",    "HTTPCompression",m_compression);
-  m_throttling    = p_config.GetParameterBoolean("Server",    "HTTPThrotteling",m_throttling);
-
-  // Now set the resulting security level
-       if(level == "sign")    m_securityLevel = XMLEncryption::XENC_Signing;
-  else if(level == "body")    m_securityLevel = XMLEncryption::XENC_Body;
-  else if(level == "message") m_securityLevel = XMLEncryption::XENC_Message;
-  else                        m_securityLevel = XMLEncryption::XENC_Plain;
+  // Call our main class InitSite
+  HTTPSite::InitSite(p_config);
 
   // AUTHENTICATION
   // Setup the authentication of the URL group
-  CString scheme    = p_config.GetParameterString ("Authentication","Scheme",           m_scheme);
-  bool    ntlmCache = p_config.GetParameterBoolean("Authentication","NTLMCache",        m_ntlmCache);
-  CString realm     = p_config.GetParameterString ("Authentication","Realm",            m_realm);
-  CString domain    = p_config.GetParameterString ("Authentication","Domain",           m_domain);
+  CString scheme    = p_config.GetParameterString ("Authentication","Scheme",   m_scheme);
+  bool    ntlmCache = p_config.GetParameterBoolean("Authentication","NTLMCache",m_ntlmCache);
+  CString realm     = p_config.GetParameterString ("Authentication","Realm",    m_realm);
+  CString domain    = p_config.GetParameterString ("Authentication","Domain",   m_domain);
 
   // CHECK AND FIND the Authentication scheme
   ULONG authScheme = 0;
@@ -276,9 +249,6 @@ HTTPSiteMarlin::InitSite(WebConfig& p_config)
   m_realm      = realm;
   m_domain     = domain;
   m_ntlmCache  = ntlmCache;
-
-  // Add and report the automatic headers as a last resort for responsive app's
-  SetAutomaticHeaders(p_config);
 }
 
 // Write the settings to the logfile
@@ -338,7 +308,7 @@ HTTPSiteMarlin::LogSettings()
   DETAILLOGS("Site accepting Server-Sent-Events  : ",       m_isEventStream ? "ON" : "OFF");
   DETAILLOGS("Site retaining all headers         : ",       m_allHeaders    ? "ON" : "OFF");
   DETAILLOGS("Site allows for HTTP-VERB Tunneling: ",       m_verbTunneling ? "ON" : "OFF");
-  DETAILLOGS("Site uses HTTP Throtteling         : ",       m_throttling   ? "ON" : "OFF");
+  DETAILLOGS("Site uses HTTP Throtteling         : ",       m_throttling    ? "ON" : "OFF");
   DETAILLOGS("Site forces response to UTF-16     : ",       m_sendUnicode   ? "ON" : "OFF");
   DETAILLOGS("Site forces SOAP response UTF BOM  : ",       m_sendSoapBOM   ? "ON" : "OFF");
   DETAILLOGS("Site forces JSON response UTF BOM  : ",       m_sendJsonBOM   ? "ON" : "OFF");
@@ -357,48 +327,5 @@ HTTPSiteMarlin::LogSettings()
   DETAILLOGS("Site CORS allows headers           : ",       m_allowHeaders);
   DETAILLOGV("Site CORS max age of pre-flight    : %d",     m_corsMaxAge);
   DETAILLOGS("Site CORS allows credentials       : %s",     m_corsCredentials ? "YES" : "NO");
-}
-
-//////////////////////////////////////////////////////////////////////////
-//
-// Standard headers added by call responses from this site
-//
-//////////////////////////////////////////////////////////////////////////
-
-// Set automatic headers upon starting site
-void
-HTTPSiteMarlin::SetAutomaticHeaders(WebConfig& p_config)
-{
-  // Find default value for xFrame options
-  CString option;
-  switch(m_xFrameOption)
-  {
-    case XFrameOption::XFO_NO_OPTION: option = "NOT-SET";     break;
-    case XFrameOption::XFO_DENY:      option = "DENY";        break;
-    case XFrameOption::XFO_SAMEORIGIN:option = "SAME-ORIGIN"; break;
-    case XFrameOption::XFO_ALLOWFROM: option = "ALLOW-FROM";  break;
-    default:                          option = "Unknown";     break;
-  }
-
-  // Read everything from the webconfig
-  option            = p_config.GetParameterString ("Security", "XFrameOption",          option);
-  m_xFrameAllowed   = p_config.GetParameterString ("Security", "XFrameAllowed",         m_xFrameAllowed);
-  m_hstsMaxAge      = p_config.GetParameterInteger("Security", "HSTSMaxAge",            m_hstsMaxAge);
-  m_hstsSubDomains  = p_config.GetParameterBoolean("Security", "HSTSSubDomains",        m_hstsSubDomains);
-  m_xNoSniff        = p_config.GetParameterBoolean("Security", "ContentNoSniff",        m_xNoSniff);
-  m_xXSSProtection  = p_config.GetParameterBoolean("Security", "XSSProtection",         m_xXSSProtection);
-  m_xXSSBlockMode   = p_config.GetParameterBoolean("Security", "XSSBlockMode",          m_xXSSBlockMode);
-  m_blockCache      = p_config.GetParameterBoolean("Security", "NoCacheControl",        m_blockCache);
-  m_useCORS         = p_config.GetParameterBoolean("Security", "CORS",                  m_useCORS);
-  m_allowOrigin     = p_config.GetParameterString ("Security", "CORS_AllowOrigin",      m_allowOrigin);
-  m_allowHeaders    = p_config.GetParameterString ("Security", "CORS_AllowHeaders",     m_allowHeaders);
-  m_corsMaxAge      = p_config.GetParameterInteger("Security", "CORS_MaxAge",           m_corsMaxAge);
-  m_corsCredentials = p_config.GetParameterBoolean("Security", "CORS_AllowCredentials", m_corsCredentials);
-
-  // Translate X-Frame options back
-       if(option.CompareNoCase("DENY")        == 0) m_xFrameOption = XFrameOption::XFO_DENY;
-  else if(option.CompareNoCase("SAME-ORIGIN") == 0) m_xFrameOption = XFrameOption::XFO_SAMEORIGIN;
-  else if(option.CompareNoCase("ALLOW-FROM")  == 0) m_xFrameOption = XFrameOption::XFO_ALLOWFROM;
-  else                                              m_xFrameOption = XFrameOption::XFO_NO_OPTION;
 }
 

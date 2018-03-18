@@ -56,7 +56,7 @@ class HTTPManagerDlg : public CDialogEx
 {
 // Construction
 public:
-  HTTPManagerDlg(CWnd* pParent = NULL);	// standard constructor
+  HTTPManagerDlg(bool p_iis,CWnd* pParent = NULL);
 
   // Dialog Data
   enum { IDD = IDD_HTTPMANAGER };
@@ -67,6 +67,7 @@ public:
 
 // Implementation
 protected:
+  void        ConfigureForIIS();
   CString     GetSiteConfig(CString p_prefix);
   void        CheckPortRange();
   void        MessagePump();
@@ -81,6 +82,9 @@ protected:
                        ,CString   p_prefix3 = ""
                        ,CString   p_prefix4 = "");
     
+  // Runmode: true for Microsoft-IIS, false for Marlin stand-alone
+  bool        m_iis;
+  // Info
   bool        m_secure;
   PrefixType  m_binding;
   int         m_port;
@@ -102,7 +106,7 @@ protected:
   CEdit       m_editCertificate;
   CEdit	      m_editStatus;
 
-  CButton     m_buttonListner;
+  CButton     m_buttonListener;
   CButton     m_buttonListen;
   CButton		  m_buttonAskURL;
   CButton	    m_buttonCreate;
@@ -114,6 +118,8 @@ protected:
   CButton     m_buttonAskCERT;
   CButton	    m_buttonConnect;
   CButton     m_buttonDisconnect;
+  CButton     m_buttonWebConfig;
+  CButton     m_buttonSiteConfig;
   CButton	    m_buttonOK;
   CButton	    m_buttonCancel;
 

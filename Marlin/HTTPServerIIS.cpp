@@ -63,6 +63,8 @@ HTTPServerIIS::HTTPServerIIS(CString p_name)
               :HTTPServer(p_name)
 {
   m_counter.Start();
+
+  m_webConfig = new WebConfig("Marlin.config");
 }
 
 HTTPServerIIS::~HTTPServerIIS()
@@ -104,6 +106,9 @@ HTTPServerIIS::Initialise()
 
   // STEP 4: Init the response headers to send
   InitHeaders();
+
+  // STEP 5: Init the threadpool
+  InitThreadPool();
 
   // We are airborne!
   return (m_initialized = true);
@@ -153,22 +158,9 @@ HTTPServerIIS::Cleanup()
     m_log = NULL;
   }
 }
-void
-HTTPServerIIS::InitLogging()
-{
-  // Check for a logging object
-  if(m_log == NULL)
-  {
-    // Create a new one
-    m_log = new LogAnalysis(m_name);
-    m_logOwner = true;
-  }
-  // If you want to tweak the loglevel
-  // you will need a "Logfile.config" in your logging directory
-}
 
 // Initialise general server header settings
-// Can only be overriden from within your ServerApp.
+// Can only be overridden from within your ServerApp.
 void
 HTTPServerIIS::InitHeaders()
 {
@@ -182,58 +174,6 @@ HTTPServerIIS::InitHeaders()
     case SendHeader::HTTP_SH_HIDESERVER:  headertype = "Hide server response header";     break;
   }
   DETAILLOGV("Header type: %s",headertype.GetString());
-}
-
-// Initialise the hard server limits in bytes
-// You can only change the hard limits from within your ServerApp
-void
-HTTPServerIIS::InitHardLimits()
-{
-  // Cannot be bigger than 2 GB, otherwise use indirect file access!
-  if(g_streaming_limit > (0x7FFFFFFF))
-  {
-    g_streaming_limit = 0x7FFFFFFF;
-  }
-  // Should not be smaller than 1MB
-  if(g_streaming_limit < (1024 * 1024))
-  {
-    g_streaming_limit = (1024 * 1024);
-  }
-  // Should not be bigger than 25 4K pages
-  if(g_compress_limit > (25 * 4 * 1024))
-  {
-    g_compress_limit = (25 * 4 * 1024);
-  }
-
-  DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
-  DETAILLOGV("Server hard-limit compression threshold: %d",    g_compress_limit);
-}
-
-// Initialise the threadpool limits
-void  
-HTTPServerIIS::InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize)
-{
-  // Does nothing. Cannot get the limits from a web.config!
-  // If you want to change the limits, do this from within your ServerApp!
-  UNREFERENCED_PARAMETER(p_maxThreads);
-  UNREFERENCED_PARAMETER(p_minThreads);
-  UNREFERENCED_PARAMETER(p_stackSize);
-}
-
-// Initialise the servers webroot
-void 
-HTTPServerIIS::InitWebroot(CString p_webroot)
-{
-  // Directly set webroot from IIS
-  // If you want to change the webroot, do this from within your ServerApp!
-
-  EnsureFile ensure(p_webroot);
-  int er = ensure.CheckCreateDirectory();
-  if(er)
-  {
-    ERRORLOG(er,"Cannot reach server root directory: " + p_webroot);
-  }
-  m_webroot = p_webroot;
 }
 
 // Running the server 

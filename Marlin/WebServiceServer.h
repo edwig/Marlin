@@ -264,6 +264,7 @@ protected:
   CString         m_authentRealm;
   CString         m_authentDomain;
   bool            m_reliable          { false };
+  bool            m_reliableLogin     { true  };
   XMLEncryption   m_securityLevel     { XMLEncryption::XENC_Plain };
   CString         m_enc_password;
   CachePolicy     m_cachePolicy       { HttpCachePolicyNocache };

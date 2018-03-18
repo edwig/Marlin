@@ -368,18 +368,16 @@ protected:
   virtual void  Cleanup() = 0;
   // Init the stream response
   virtual bool  InitEventStream(EventStream& p_stream) = 0;
-  // Initialise the logging and error mechanism
-  virtual void  InitLogging() = 0;
   // Initialise general server header settings
   virtual void  InitHeaders() = 0;
   // Initialise the hard server limits in bytes
-  virtual void  InitHardLimits() = 0;
-  // Initialise the servers WebRoot
-  virtual void  InitWebroot(CString p_webroot) = 0;
-  // Initialise the threadpool limits
-  virtual void  InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize) = 0;
+  virtual void  InitHardLimits();
+  // Initialise the logging and error mechanism
+  virtual void  InitLogging();
+  // Initialise the ThreadPool
+  virtual void  InitThreadPool();
   // Register a URL to listen on
-  bool          RegisterSite(HTTPSite* p_site,CString p_urlPrefix);
+  bool      RegisterSite(HTTPSite* p_site,CString p_urlPrefix);
   // General checks before starting
   bool      GeneralChecks();
   // Checks if all sites are started
@@ -419,7 +417,7 @@ protected:
   HTTP_CACHE_POLICY_TYPE  m_policy   { HttpCachePolicyNocache };        // Cache policy
   ULONG                   m_secondsToLive  { 0 };   // Seconds to live in the cache
   ThreadPool              m_pool;                   // Our threadpool for the server
-  WebConfig               m_webConfig;              // Webconfig from current directory
+  WebConfig*              m_webConfig;              // Web.config or Marlin.Config in our current directory
   LogAnalysis*            m_log      { nullptr };   // Logging object
   bool                    m_logOwner { false   };   // Server owns the log
   int                     m_logLevel { HLL_NOLOG }; // Detailed logging of the server
@@ -545,7 +543,7 @@ HTTPServer::SetByteOrderMark(bool p_mark)
 inline WebConfig&
 HTTPServer::GetWebConfig()
 {
-  return m_webConfig;
+  return *m_webConfig;
 }
 
 inline LogAnalysis* 

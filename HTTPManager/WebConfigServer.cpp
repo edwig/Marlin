@@ -44,8 +44,9 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(WebConfigServer, CDialogEx)
 
-WebConfigServer::WebConfigServer(CWnd* pParent /*=NULL*/)
+WebConfigServer::WebConfigServer(bool p_iis,CWnd* pParent /*=NULL*/)
                 :CDialog(WebConfigServer::IDD, pParent)
+                ,m_iis(p_iis)
                 ,m_port(80)
                 ,m_minThreads(0)
                 ,m_maxThreads(0)
@@ -58,7 +59,6 @@ WebConfigServer::WebConfigServer(CWnd* pParent /*=NULL*/)
   m_useProtocol       = false;
   m_useBinding        = false;
   m_usePort           = false;
-  m_useReliable       = false;
   m_useBacklog        = false;
   m_useTunneling      = false;
   m_useMinThreads     = false;
@@ -73,7 +73,6 @@ WebConfigServer::WebConfigServer(CWnd* pParent /*=NULL*/)
 
   // SERVER OVERRIDES
   m_port            = 0;
-  m_reliable        = false;
   m_backlogQueue    = 0;
   m_tunneling       = false;
   m_minThreads      = 0;
@@ -100,7 +99,6 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_USE_PROTOCOL,   m_buttonUseProtocol);
   DDX_Control(pDX,IDC_USE_BINDING,    m_buttonUseBinding);
   DDX_Control(pDX,IDC_USE_PORT,       m_buttonUsePort);
-  DDX_Control(pDX,IDC_USE_RELIABLE,   m_buttonUseReliable);
   DDX_Control(pDX,IDC_USE_BACKLOG,    m_buttonUseBacklog);
   DDX_Control(pDX,IDC_USE_VERBTUNNEL, m_buttonUseTunneling);
   DDX_Control(pDX,IDC_USE_MIN_THREADS,m_buttonUseMinThreads);
@@ -117,7 +115,6 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
   DDX_Text   (pDX,IDC_BASE_URL,       m_baseURL);
   DDX_Control(pDX,IDC_PROTOCOL,       m_comboProtocol);
   DDX_Control(pDX,IDC_BINDING,        m_comboBinding);
-  DDX_Control(pDX,IDC_RELIABLE,       m_comboReliable);
   DDX_Control(pDX,IDC_STACKSIZE,      m_comboStack);
   DDX_Text   (pDX,IDC_PORT,           m_port);
   DDX_Text   (pDX,IDC_BACKLOG,        m_backlogQueue);
@@ -147,7 +144,6 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
 
     m_comboProtocol      .EnableWindow(m_useProtocol);
     m_comboBinding       .EnableWindow(m_useBinding);
-    m_comboReliable      .EnableWindow(m_useReliable);
     m_comboStack         .EnableWindow(m_useStacksize);
     m_buttonTunneling    .EnableWindow(m_useTunneling);
     m_buttonServerUnicode.EnableWindow(m_useServerUnicode);
@@ -173,7 +169,6 @@ BEGIN_MESSAGE_MAP(WebConfigServer, CDialog)
   ON_CBN_KILLFOCUS(IDC_STACKSIZE,     &WebConfigServer::OnEnChangeStacksize)
   ON_BN_CLICKED   (IDC_SERVUNI,       &WebConfigServer::OnBnClickedServerUnicode)
   ON_BN_CLICKED   (IDC_GZIP,          &WebConfigServer::OnBnClickedGzip)
-  ON_CBN_SELCHANGE(IDC_RELIABLE,      &WebConfigServer::OnCbnSelchangeReliable)
   ON_EN_CHANGE    (IDC_STREAM_LIMIT,  &WebConfigServer::OnEnChangeStreamingLimit)
   ON_EN_CHANGE    (IDC_COMP_LIMIT,    &WebConfigServer::OnEnChangeCompressLimit)
   ON_BN_CLICKED   (IDC_THROTTLE,      &WebConfigServer::OnBnClickedThrotteling)
@@ -183,7 +178,6 @@ BEGIN_MESSAGE_MAP(WebConfigServer, CDialog)
   ON_BN_CLICKED(IDC_USE_PROTOCOL,     &WebConfigServer::OnBnClickedUseProtocol)
   ON_BN_CLICKED(IDC_USE_BINDING,      &WebConfigServer::OnBnClickedUseBinding)
   ON_BN_CLICKED(IDC_USE_PORT,         &WebConfigServer::OnBnClickedUsePort)
-  ON_BN_CLICKED(IDC_USE_RELIABLE,     &WebConfigServer::OnBnClickedUseReliable)
   ON_BN_CLICKED(IDC_USE_BACKLOG,      &WebConfigServer::OnBnClickedUseBacklog)
   ON_BN_CLICKED(IDC_USE_VERBTUNNEL,   &WebConfigServer::OnBnClickedUseTunneling)
   ON_BN_CLICKED(IDC_USE_MIN_THREADS,  &WebConfigServer::OnBnClickedUseMinThreads)
@@ -207,6 +201,7 @@ WebConfigServer::OnInitDialog()
   SetIcon(m_hIcon, FALSE);		// Set small icon
 
   InitComboboxes();
+  InitIIS();
 
   UpdateData(FALSE);
   return TRUE;
@@ -234,10 +229,6 @@ WebConfigServer::InitComboboxes()
   m_comboBinding.AddString("Full DNS Name");
   m_comboBinding.AddString("Weak (*)");
 
-  // WS-Reliable messaging
-  m_comboReliable.AddString("Normal");
-  m_comboReliable.AddString("WS-Reliable");
-
   // Stacksize
   m_comboStack.AddString("1048576");
   m_comboStack.AddString("2097152");
@@ -250,6 +241,22 @@ WebConfigServer::InitComboboxes()
 }
 
 void
+WebConfigServer::InitIIS()
+{
+  if(m_iis)
+  {
+    m_buttonUseBaseURL   .EnableWindow(false);
+    m_buttonUseProtocol  .EnableWindow(false);
+    m_buttonUseBinding   .EnableWindow(false);
+    m_buttonUsePort      .EnableWindow(false);
+    m_buttonUseBacklog   .EnableWindow(false);
+    m_buttonUseMinThreads.EnableWindow(false);
+    m_buttonUseMaxThreads.EnableWindow(false);
+    m_buttonUseStacksize .EnableWindow(false);
+  }
+}
+
+void
 WebConfigServer::ReadWebConfig(WebConfig& config)
 {
   // READ THE SERVER OVERRIDES
@@ -258,7 +265,6 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
   m_useProtocol       = config.HasParameter("Server","Secure");
   m_useBinding        = config.HasParameter("Server","ChannelType");
   m_usePort           = config.HasParameter("Server","Port");
-  m_useReliable       = config.HasParameter("Server","Reliable");
   m_useBacklog        = config.HasParameter("Server","QueueLength");
   m_useTunneling      = config.HasParameter("Server","VerbTunneling");
   m_useMinThreads     = config.HasParameter("Server","MinThreads");
@@ -275,7 +281,6 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
   m_secureProtocol    = config.GetParameterBoolean("Server","Secure",         false);
   m_port              = config.GetParameterInteger("Server","Port",              80);
   m_binding           = config.GetParameterString ("Server","ChannelType",       "");
-  m_reliable          = config.GetParameterBoolean("Server","Reliable",       false);
   m_backlogQueue      = config.GetParameterInteger("Server","QueueLength",       64);
   m_tunneling         = config.GetParameterBoolean("Server","VerbTunneling",  false);
   m_minThreads        = config.GetParameterInteger("Server","MinThreads",         4);
@@ -314,7 +319,6 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
 
   // INIT THE COMBO BOXES
   m_comboProtocol.SetCurSel(m_secureProtocol ? 1 : 0);
-  m_comboReliable.SetCurSel(m_reliable       ? 1 : 0);
 
   // Protocol
   if(m_binding.CompareNoCase("strong")  == 0) m_comboBinding.SetCurSel(1);
@@ -335,7 +339,6 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
   m_buttonUseProtocol      .SetCheck(m_useProtocol);
   m_buttonUseBinding       .SetCheck(m_useBinding);
   m_buttonUsePort          .SetCheck(m_usePort);
-  m_buttonUseReliable      .SetCheck(m_useReliable);
   m_buttonUseBacklog       .SetCheck(m_useBacklog);
   m_buttonUseTunneling     .SetCheck(m_useTunneling);
   m_buttonUseMinThreads    .SetCheck(m_useMinThreads);
@@ -362,6 +365,7 @@ WebConfigServer::WriteWebConfig(WebConfig& config)
   // WRITE THE CONFIG PARAMETERS
   config.SetSection("Server");
 
+  // STANDALONE SERVER
   if(m_useWebroot)        config.SetParameter   ("Server","WebRoot",      m_webroot);
   else                    config.RemoveParameter("Server","WebRoot");
   if(m_useBaseURL)        config.SetParameter   ("Server","BaseURL",      m_baseURL);
@@ -372,29 +376,29 @@ WebConfigServer::WriteWebConfig(WebConfig& config)
   else                    config.RemoveParameter("Server","Port");
   if(m_useBinding)        config.SetParameter   ("Server","ChannelType",  m_binding);
   else                    config.RemoveParameter("Server","ChannelType");
-  if(m_useReliable)       config.SetParameter   ("Server","Reliable",     m_reliable);
-  else                    config.RemoveParameter("Server","Reliable");
   if(m_useBacklog)        config.SetParameter   ("Server","QueueLength",  m_backlogQueue);
   else                    config.RemoveParameter("Server","QueueLength");
-  if(m_useTunneling)      config.SetParameter   ("Server","VerbTunneling",m_tunneling);
-  else                    config.RemoveParameter("Server","VerbTunneling");
   if(m_useMinThreads)     config.SetParameter   ("Server","MinThreads",   minThreads);
   else                    config.RemoveParameter("Server","MinThreads");
   if(m_useMaxThreads)     config.SetParameter   ("Server","MaxThreads",   maxThreads);
   else                    config.RemoveParameter("Server","MaxThreads");
   if(m_useStacksize)      config.SetParameter   ("Server","StackSize",    stackSize);
   else                    config.RemoveParameter("Server","StackSize");
+  // STANDALONE + IIS
   if(m_useServerUnicode)  config.SetParameter   ("Server","RespondUnicode", m_serverUnicode);
   else                    config.RemoveParameter("Server","RespondUnicode");
   if(m_useGzip)           config.SetParameter   ("Server","HTTPCompression",m_gzip);
   else                    config.RemoveParameter("Server","HTTPCompression");
-  if(m_useStreamingLimit) config.SetParameter   ("Server","StreamingLimit",(int)m_streamingLimit);
+  if(m_useStreamingLimit) config.SetParameter   ("Server","StreamingLimit", (int)m_streamingLimit);
   else                    config.RemoveParameter("Server","StreamingLimit");
-  if(m_useCompressLimit)  config.SetParameter   ("Server","CompressLimit",(int)m_compressLimit);
+  if(m_useCompressLimit)  config.SetParameter   ("Server","CompressLimit",  (int)m_compressLimit);
   else                    config.RemoveParameter("Server","CompressLimit");
-  if(m_useThrotteling)    config.SetParameter   ("Server","HTTPThrotteling", m_throtteling);
+  if(m_useThrotteling)    config.SetParameter   ("Server","HTTPThrotteling",m_throtteling);
   else                    config.RemoveParameter("Server","HTTPThrotteling");
+  if(m_useTunneling)      config.SetParameter   ("Server","VerbTunneling",  m_tunneling);
+  else                    config.RemoveParameter("Server","VerbTunneling");
 
+  // SECURITY HEADERS
   config.SetSection("Security");
 
   if(m_useXFrameOpt)    config.SetParameter   ("Security","XFrameOption",   m_xFrameOption);
@@ -508,16 +512,6 @@ WebConfigServer::OnEnChangePort()
 }
 
 void 
-WebConfigServer::OnCbnSelchangeReliable()
-{
-  int sel = m_comboReliable.GetCurSel();
-  if(sel >= 0)
-  {
-    m_reliable = (sel > 0);
-  }
-}
-
-void 
 WebConfigServer::OnEnChangeBacklogQueue()
 {
   UpdateData();
@@ -627,13 +621,6 @@ void
 WebConfigServer::OnBnClickedUsePort()
 {
   m_usePort = m_buttonUsePort.GetCheck() > 0;
-  UpdateData(FALSE);
-}
-
-void 
-WebConfigServer::OnBnClickedUseReliable()
-{
-  m_useReliable = m_buttonUseReliable.GetCheck() > 0;
   UpdateData(FALSE);
 }
 

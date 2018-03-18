@@ -53,6 +53,8 @@ static char THIS_FILE[] = __FILE__;
 HTTPServerMarlin::HTTPServerMarlin(CString p_name)
                  :HTTPServer(p_name)
 {
+  // Default web.config
+  m_webConfig = new WebConfig();
 }
 
 HTTPServerMarlin::~HTTPServerMarlin()
@@ -133,7 +135,7 @@ HTTPServerMarlin::Initialise()
 
   // STEP 7: SET THE LENGTH OF THE BACKLOG QUEUE FOR INCOMING TRAFFIC
   // Overrides for the HTTP Site. Test min/max via SetQueueLength
-  int queueLength = m_webConfig.GetParameterInteger("Server","QueueLength",m_queueLength);
+  int queueLength = m_webConfig->GetParameterInteger("Server","QueueLength",m_queueLength);
   SetQueueLength(queueLength);
   // Set backlog queue: using HttpSetRequestQueueProperty
   retCode = HttpSetRequestQueueProperty(m_requestQueue
@@ -174,6 +176,9 @@ HTTPServerMarlin::Initialise()
 
   // STEP 10: Init the response headers to send
   InitHeaders();
+
+  // STEP 11: Init the ThreadPool
+  InitThreadPool();
 
   // We are airborne!
   return (m_initialized = true);
@@ -287,47 +292,12 @@ HTTPServerMarlin::Cleanup()
   }
 }
 
-void
-HTTPServerMarlin::InitLogging()
-{
-  // Check for a logging object
-  if(m_log == NULL)
-  {
-    // Create a new one
-    m_log = new LogAnalysis(m_name);
-    m_logOwner = true;
-  }
-  CString file = m_log->GetLogFileName();
-  int  cache   = m_log->GetCache();
-  int  logging = m_log->GetLogLevel();
-  bool timing  = m_log->GetDoTiming();
-  bool events  = m_log->GetDoEvents();
-
-  // Get parameters from web.config
-  file     = m_webConfig.GetParameterString ("Logging","Logfile",  file);
-  logging  = m_webConfig.GetParameterBoolean("Logging","DoLogging",logging);
-  timing   = m_webConfig.GetParameterBoolean("Logging","DoTiming", timing);
-  events   = m_webConfig.GetParameterBoolean("Logging","DoEvents", events);
-  cache    = m_webConfig.GetParameterInteger("Logging","Cache",    cache);
-  logging  = m_webConfig.GetParameterInteger("Logging","LogLevel", m_logLevel);
-
-  // Use if overridden in web.config
-  if(!file.IsEmpty())
-  {
-    m_log->SetLogFilename(file);
-  }
-  m_log->SetCache(cache);
-  m_log->SetLogLevel(m_logLevel = logging);
-  m_log->SetDoTiming(timing);
-  m_log->SetDoEvents(events);
-}
-
 // Initialise general server header settings
 void
 HTTPServerMarlin::InitHeaders()
 {
-  CString name = m_webConfig.GetParameterString("Server","ServerName","");
-  CString type = m_webConfig.GetParameterString("Server","TypeServerName","Hide");
+  CString name = m_webConfig->GetParameterString("Server","ServerName","");
+  CString type = m_webConfig->GetParameterString("Server","TypeServerName","Hide");
 
   // Server name combo
   if(type.CompareNoCase("Microsoft")   == 0) m_sendHeader = SendHeader::HTTP_SH_MICROSOFT;
@@ -345,49 +315,6 @@ HTTPServerMarlin::InitHeaders()
   {
     DETAILLOGS("Server sends 'server' response header: ",type);
   }
-}
-
-// Initialise the hard server limits in bytes
-void
-HTTPServerMarlin::InitHardLimits()
-{
-  g_streaming_limit = m_webConfig.GetParameterInteger("Server","StreamingLimit",g_streaming_limit);
-  g_compress_limit  = m_webConfig.GetParameterInteger("Server","CompressLimit", g_compress_limit);
-
-  // Cannot be bigger than 2 GB, otherwise use indirect file access!
-  if(g_streaming_limit > (0x7FFFFFFF))
-  {
-    g_streaming_limit = 0x7FFFFFFF;
-  }
-  // Should not be smaller than 1MB
-  if(g_streaming_limit < (1024 * 1024))
-  {
-    g_streaming_limit = (1024 * 1024);
-  }
-  // Should not be bigger than 25 4K pages
-  if(g_compress_limit > (25 * 4 * 1024))
-  {
-    g_compress_limit = (25 * 4 * 1024);
-  }
-
-  DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
-  DETAILLOGV("Server hard-limit compression threshold: %d",    g_compress_limit);
-}
-
-// Initialise the threadpool limits
-void
-HTTPServerMarlin::InitThreadpoolLimits(int& p_minThreads,int& p_maxThreads,int& p_stackSize)
-{
-  p_minThreads = m_webConfig.GetParameterInteger("Server","MinThreads",p_minThreads);
-  p_maxThreads = m_webConfig.GetParameterInteger("Server","MaxThreads",p_maxThreads);
-  p_stackSize  = m_webConfig.GetParameterInteger("Server","StackSize", p_stackSize);
-}
-
-// Initialise the servers webroot
-void
-HTTPServerMarlin::InitWebroot(CString p_webroot)
-{
-  m_webroot = m_webConfig.GetParameterString("Server","WebRoot",p_webroot);
 }
 
 // Create a site to bind the traffic to
@@ -418,10 +345,10 @@ HTTPServerMarlin::CreateSite(PrefixType    p_type
   }
 
   // Getting the settings from the web.config, use parameters as defaults
-  chanType      = m_webConfig.GetParameterString ("Server","ChannelType",chanType);
-  chanSecure    = m_webConfig.GetParameterBoolean("Server","Secure",     p_secure);
-  chanPort      = m_webConfig.GetParameterInteger("Server","Port",       p_port);
-  chanBase      = m_webConfig.GetParameterString ("Server","BaseURL",    p_baseURL);
+  chanType      = m_webConfig->GetParameterString ("Server","ChannelType",chanType);
+  chanSecure    = m_webConfig->GetParameterBoolean("Server","Secure",     p_secure);
+  chanPort      = m_webConfig->GetParameterInteger("Server","Port",       p_port);
+  chanBase      = m_webConfig->GetParameterString ("Server","BaseURL",    p_baseURL);
 
   // Recalculate the type
        if(chanType.CompareNoCase("strong")  == 0) p_type = PrefixType::URLPRE_Strong;

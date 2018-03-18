@@ -41,7 +41,7 @@ class WebConfigDlg : public CDialogEx
   DECLARE_DYNAMIC(WebConfigDlg)
 
 public:
-  WebConfigDlg(CWnd* pParent = NULL);   // standard constructor
+  WebConfigDlg(bool p_iis,CWnd* pParent = NULL);   // standard constructor
   virtual ~WebConfigDlg();
   BOOL     OnInitDialog();
   void     SetSiteConfig(CString p_urlPrefix,CString p_fileName);
@@ -56,20 +56,22 @@ protected:
   void ReadWebConfig();
   bool WriteWebConfig();
   void InitTabs();
+  void RemoveLogTab();
 
   DECLARE_MESSAGE_MAP()
 
+  bool     m_iis;
   CString  m_url;
   CString  m_siteConfigFile;
   CString  m_title;
   CTabCtrl m_tab;
   HICON    m_hIcon;
 
-  WebConfigServer         m_page1;
-  WebConfigClient         m_page2;
-  WebConfigAuthentication m_page3;
-  WebConfigWServices      m_page4;
-  WebConfigLogging        m_page5;
+  WebConfigServer         m_page1 { m_iis,this };
+  WebConfigClient         m_page2 { m_iis,this };
+  WebConfigAuthentication m_page3 { m_iis,this };
+  WebConfigWServices      m_page4 { m_iis,this };
+  WebConfigLogging        m_page5 { m_iis,this };
 
   WebConfig* m_webconfig { nullptr };
 public:

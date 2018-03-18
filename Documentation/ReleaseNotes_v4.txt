@@ -8,6 +8,24 @@ Version 4.x contains functional breaks with the past and previous version and yo
 will need checking on the logic and functionality to make version 4.x correctly working.
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 4.8.0
+========================
+1)  The HTTPServerIIS now has an extra config file "marlin.config", that is the counterpart of the
+    web.config of the standalone server.
+	This is done, so that we can configure all of the parameters that where no longer reachable.
+2)  All web.config parameters have been checked for definition in the HTTPManager and in the objects
+    where they are read. Some where missed in one of these places. In the documentation directory
+	there now is a spreadsheet "AllConfigParameters.xlsx" that holds all these parameters.
+	Corrections are in yellow.
+	Places where IIS cannot use these parameters are marked in red.
+3)  The HTTPManager now can be started in two modi: IIS and STANDALONE.
+    You can start the program with the "/ISS" switch or the "/STANDALONE" switch.
+	If you use neither, you will presented with a message box to choose one of these.
+	IIS-Mode  : You cannot create a new URL reservation, but you can remove old ones
+	            You cannot bind a SSL certificate to an URL, use IIS-Admin for this
+	            The config buttons now lead to the "Marlin.config" file editor
+    Standalone: Everything works as before. The buttons lead to the "web.config" file editor.
+
 CHANGES IN VERSION 4.7.3
 ========================
 1)  The SOAPMessage object has been extended with overrides on "AddElement" for the following datatypes

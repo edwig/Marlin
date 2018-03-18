@@ -80,8 +80,9 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 // HTTPManagerDlg dialog
-HTTPManagerDlg::HTTPManagerDlg(CWnd* pParent /*=NULL*/)
+HTTPManagerDlg::HTTPManagerDlg(bool p_iis,CWnd* pParent /*=NULL*/)
                :CDialogEx(HTTPManagerDlg::IDD, pParent)
+               ,m_iis(p_iis)
 {
   m_hIcon    = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   m_secure   = false;
@@ -111,7 +112,7 @@ void HTTPManagerDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_DEL_FIREWALL, m_buttonRemoveFWR);
   DDX_Control(pDX,IDC_CERTSTORE,    m_comboStore);
   DDX_Control(pDX,IDC_CLIENTCERT,   m_buttonClientCert);
-  DDX_Control(pDX,IDC_LISTNER,      m_buttonListner);
+  DDX_Control(pDX,IDC_LISTNER,      m_buttonListener);
   DDX_Control(pDX,IDC_LISTEN,       m_buttonListen);
 
   DDX_Control(pDX,IDC_THUMBPRINT,   m_editCertificate);
@@ -120,14 +121,18 @@ void HTTPManagerDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_DELCERT,      m_buttonDisconnect);
 
   DDX_Control(pDX,IDC_RESULT,       m_editStatus);
+  DDX_Control(pDX,IDC_WEBCONFIG,    m_buttonWebConfig);
+  DDX_Control(pDX,IDC_SITECONFIG,   m_buttonSiteConfig);
 
   if(pDX->m_bSaveAndValidate == FALSE)
   {
     // Activate certificate buttons
-    m_editCertificate .EnableWindow(m_secure);
-    m_buttonAskCERT   .EnableWindow(m_secure);
-    m_buttonConnect   .EnableWindow(m_secure);
-    m_buttonDisconnect.EnableWindow(m_secure);
+    m_comboStore      .EnableWindow(m_secure && !m_iis);
+    m_buttonClientCert.EnableWindow(m_secure && !m_iis);
+    m_editCertificate .EnableWindow(m_secure && !m_iis);
+    m_buttonAskCERT   .EnableWindow(m_secure && !m_iis);
+    m_buttonConnect   .EnableWindow(m_secure && !m_iis);
+    m_buttonDisconnect.EnableWindow(m_secure && !m_iis);
     m_buttonSecurity  .EnableWindow(m_secure);
 
     CString prefix = "URL Prefix: " + CreateURLPrefix(m_binding,m_secure,m_port,m_absPath);
@@ -239,6 +244,17 @@ HTTPManagerDlg::OnInitDialog()
   text.Format("%d",m_portUpto);
   m_editPortUpto.SetWindowText(text);
 
+  // Do the IIS thing
+  if(m_iis)
+  {
+    ConfigureForIIS();
+    SetWindowText("HTTP Manager (Mode: IIS)");
+  }
+  else
+  {
+    SetWindowText("HTTP Manager (Mode: Standalone)");
+  }
+
   // Setting the values on screen
   UpdateData(FALSE);
 
@@ -270,6 +286,21 @@ HTTPManagerDlg::SetVersion()
   }
 }
 #pragma warning(pop)
+
+void
+HTTPManagerDlg::ConfigureForIIS()
+{
+  // IP Listener
+  m_buttonListener.EnableWindow(FALSE);
+  // Listen on IP
+  m_buttonListen.EnableWindow(FALSE);
+  // Create URLACL reservation
+  m_buttonCreate.EnableWindow(FALSE);
+  // Server WEB.CONFIG
+  m_buttonWebConfig.SetWindowText("Server Marlin.Config");
+  // Site Web.Config
+  m_buttonSiteConfig.SetWindowText("Site Marlin.Config");
+}
 
 void 
 HTTPManagerDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -1056,7 +1087,7 @@ HTTPManagerDlg::GetSiteConfig(CString p_prefix)
 void 
 HTTPManagerDlg::OnBnClickedWebconfig()
 {
-  WebConfigDlg config;
+  WebConfigDlg config(m_iis);
   config.DoModal();
 }
 
@@ -1072,7 +1103,7 @@ HTTPManagerDlg::OnBnClickedSiteWebConfig()
   CString prefix = CreateURLPrefix(m_binding, m_secure, m_port, m_absPath);
   CString filenm = WebConfig::GetSiteConfig(prefix);
 
-  WebConfigDlg config;
+  WebConfigDlg config(m_iis);
   config.SetSiteConfig(prefix,filenm);
   config.DoModal();
 }

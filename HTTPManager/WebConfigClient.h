@@ -38,7 +38,7 @@ class WebConfigClient : public CDialog
   DECLARE_DYNAMIC(WebConfigClient)
 
 public:
-  WebConfigClient(CWnd* pParent = NULL);   // standard constructor
+  WebConfigClient(bool p_iis,CWnd* pParent = NULL);   // standard constructor
  ~WebConfigClient();
   BOOL OnInitDialog();
   void ReadWebConfig (WebConfig& p_config);
@@ -56,6 +56,7 @@ protected:
   // Sub dialog uses our members
   friend      SecureClientDlg;
 
+  bool        m_iis;
   // USE CLIENT OVERRIDES
   bool        m_useClientUnicode;
   bool        m_useUseProxy;
@@ -69,6 +70,7 @@ protected:
   bool        m_useCertStore;
   bool        m_useCertName;
   bool        m_useCertPreset;
+  bool        m_useOrigin;
   bool        m_useResolve;
   bool        m_useConnect;
   bool        m_useSend;
@@ -79,6 +81,7 @@ protected:
   bool        m_useRelaxUsage;
   bool        m_useForceTunnel;
   bool        m_useGzip;
+  bool        m_useSendBOM;
 
   // CLIENT OVERRIDES
   CString     m_agent;
@@ -93,6 +96,7 @@ protected:
   CString     m_certStore;
   CString     m_certName;
   bool        m_certPreset;
+  CString     m_origin;
   int         m_TO_resolve;
   int         m_TO_connect;
   int         m_TO_send;
@@ -103,6 +107,7 @@ protected:
   bool        m_relaxUsage;
   bool        m_forceTunnel;
   bool        m_gzip;
+  bool        m_sendBOM;
 
   bool        m_useSSL20;
   bool        m_useSSL30;
@@ -127,6 +132,7 @@ protected:
   CButton     m_buttonSoap;
   CButton     m_buttonForceTunnel;
   CButton     m_buttonGzip;
+  CButton     m_buttonSendBOM;
 
   CButton     m_buttonUseClientUnicode;
   CButton     m_buttonUseUseProxy;
@@ -140,6 +146,7 @@ protected:
   CButton     m_buttonUseCertStore;
   CButton     m_buttonUseCertName;
   CButton     m_buttonUseCertPreset;
+  CButton     m_buttonUseOrigin;
   CButton     m_buttonUseResolve;
   CButton     m_buttonUseConnect;
   CButton     m_buttonUseSend;
@@ -150,6 +157,7 @@ protected:
   CButton     m_buttonUseRelaxUsage;
   CButton     m_buttonUseForceTunnel;
   CButton     m_buttonUseGzip;
+  CButton     m_buttonUseSendBOM;
 
 public:
   afx_msg void OnBnClickedClientUnicode();
@@ -164,6 +172,7 @@ public:
   afx_msg void OnCbnSelchangeCertStore();
   afx_msg void OnEnChangeCertName();
   afx_msg void OnBnClickedCertPreset();
+  afx_msg void OnEnChangeOrigin();
   afx_msg void OnEnChangeOutResolve();
   afx_msg void OnEnChangeOutConnect();
   afx_msg void OnEnChangeOutSend();
@@ -175,6 +184,7 @@ public:
   afx_msg void OnBnClickedForceTunnel();
   afx_msg void OnBnClickedClientSecure();
   afx_msg void OnBnClickedGzip();
+  afx_msg void OnBnClickedSendBOM();
 
   afx_msg void OnBnClickedUseClientUnicode();
   afx_msg void OnBnClickedUseUseProxy();
@@ -188,6 +198,7 @@ public:
   afx_msg void OnBnClickedUseCertStore();
   afx_msg void OnBnClickedUseCertName();
   afx_msg void OnBnClickedUseCertPreset();
+  afx_msg void OnBnClickedUseOrigin();
   afx_msg void OnBnClickedUseResolve();
   afx_msg void OnBnClickedUseConnect();
   afx_msg void OnBnClickedUseSend();
@@ -198,4 +209,5 @@ public:
   afx_msg void OnBnClickedUseCertUsage();
   afx_msg void OnBnClickedUseForceTunnel();
   afx_msg void OnBnClickedUseGzip();
+  afx_msg void OnBnClickedUseSendBOM();
 };

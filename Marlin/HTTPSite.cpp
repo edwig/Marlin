@@ -350,6 +350,46 @@ HTTPSite::CheckReliable()
   return true;
 }
 
+// Init parameters from web.config
+void
+HTTPSite::InitSite(WebConfig& p_config)
+{
+  // Get the WebRoot
+  m_webroot = p_config.GetParameterString("Server", "WebRoot", m_webroot);
+
+  // Read XML Signing en encryption from the config
+  CString level;
+  switch(m_securityLevel)
+  {
+    case XMLEncryption::XENC_Plain:   level = "";        break;
+    case XMLEncryption::XENC_Signing: level = "sign";    break;
+    case XMLEncryption::XENC_Body:    level = "body";    break;
+    case XMLEncryption::XENC_Message: level = "message"; break;
+  }
+  // Getting various settings
+  level           = p_config.GetParameterString ("Encryption","Level",          level);
+  m_enc_password  = p_config.GetEncryptedString ("Encryption","Password",       m_enc_password);
+
+  // Now set the resulting security level
+       if(level == "sign")    m_securityLevel = XMLEncryption::XENC_Signing;
+  else if(level == "body")    m_securityLevel = XMLEncryption::XENC_Body;
+  else if(level == "message") m_securityLevel = XMLEncryption::XENC_Message;
+  else                        m_securityLevel = XMLEncryption::XENC_Plain;
+
+  // Check Unicode forcing
+  m_sendUnicode = p_config.GetParameterBoolean("Server","RespondUnicode",m_sendUnicode);
+  m_sendSoapBOM = p_config.GetParameterBoolean("Server","RespondSoapBOM",m_sendSoapBOM);
+  m_sendJsonBOM = p_config.GetParameterBoolean("Server","RespondJsonBOM",m_sendJsonBOM);
+
+  // Getting various settings
+  m_verbTunneling = p_config.GetParameterBoolean("Server","VerbTunneling",  m_verbTunneling);
+  m_compression   = p_config.GetParameterBoolean("Server","HTTPCompression",m_compression);
+  m_throttling    = p_config.GetParameterBoolean("Server","HTTPThrotteling",m_throttling);
+
+  // Add and report the automatic headers as a last resort for responsive app's
+  SetAutomaticHeaders(p_config);
+}
+
 bool
 HTTPSite::StopSite(bool p_force /*=false*/)
 {
@@ -1627,6 +1667,49 @@ void
 HTTPSite::SetBlockCacheControl(bool p_block)
 {
   m_blockCache = p_block;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Standard headers added by call responses from this site
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Set automatic headers upon starting site
+void
+HTTPSite::SetAutomaticHeaders(WebConfig& p_config)
+{
+  // Find default value for xFrame options
+  CString option;
+  switch(m_xFrameOption)
+  {
+    case XFrameOption::XFO_NO_OPTION: option = "NOT-SET";     break;
+    case XFrameOption::XFO_DENY:      option = "DENY";        break;
+    case XFrameOption::XFO_SAMEORIGIN:option = "SAME-ORIGIN"; break;
+    case XFrameOption::XFO_ALLOWFROM: option = "ALLOW-FROM";  break;
+    default:                          option = "Unknown";     break;
+  }
+
+  // Read everything from the webconfig
+  option            = p_config.GetParameterString ("Security", "XFrameOption",          option);
+  m_xFrameAllowed   = p_config.GetParameterString ("Security", "XFrameAllowed",         m_xFrameAllowed);
+  m_hstsMaxAge      = p_config.GetParameterInteger("Security", "HSTSMaxAge",            m_hstsMaxAge);
+  m_hstsSubDomains  = p_config.GetParameterBoolean("Security", "HSTSSubDomains",        m_hstsSubDomains);
+  m_xNoSniff        = p_config.GetParameterBoolean("Security", "ContentNoSniff",        m_xNoSniff);
+  m_xXSSProtection  = p_config.GetParameterBoolean("Security", "XSSProtection",         m_xXSSProtection);
+  m_xXSSBlockMode   = p_config.GetParameterBoolean("Security", "XSSBlockMode",          m_xXSSBlockMode);
+  m_blockCache      = p_config.GetParameterBoolean("Security", "NoCacheControl",        m_blockCache);
+  m_useCORS         = p_config.GetParameterBoolean("Security", "CORS",                  m_useCORS);
+  m_allowOrigin     = p_config.GetParameterString ("Security", "CORS_AllowOrigin",      m_allowOrigin);
+  m_allowHeaders    = p_config.GetParameterString ("Security", "CORS_AllowHeaders",     m_allowHeaders);
+  m_corsMaxAge      = p_config.GetParameterInteger("Security", "CORS_MaxAge",           m_corsMaxAge);
+  m_corsCredentials = p_config.GetParameterBoolean("Security", "CORS_AllowCredentials", m_corsCredentials);
+
+  // Translate X-Frame options back
+       if(option.CompareNoCase("DENY")        == 0) m_xFrameOption = XFrameOption::XFO_DENY;
+  else if(option.CompareNoCase("SAME-ORIGIN") == 0) m_xFrameOption = XFrameOption::XFO_SAMEORIGIN;
+  else if(option.CompareNoCase("ALLOW-FROM")  == 0) m_xFrameOption = XFrameOption::XFO_ALLOWFROM;
+  else                                              m_xFrameOption = XFrameOption::XFO_NO_OPTION;
 }
 
 // Add all necessary extra headers to the response

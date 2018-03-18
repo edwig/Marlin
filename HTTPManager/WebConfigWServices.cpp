@@ -44,12 +44,15 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(WebConfigWServices, CDialogEx)
 
-WebConfigWServices::WebConfigWServices(CWnd* pParent /*=NULL*/)
+WebConfigWServices::WebConfigWServices(bool p_iis,CWnd* pParent /*=NULL*/)
                    :CDialogEx(WebConfigWServices::IDD, pParent)
+                   ,m_iis(p_iis)
 {
-  m_checkWSDLin     = false;
-  m_checkWSDLout    = false;
-  m_fieldCheck      = false;
+  m_checkWSDLin   = false;
+  m_checkWSDLout  = false;
+  m_fieldCheck    = false;
+  m_reliable      = false;
+  m_reliableLogin = true;
 }
 
 WebConfigWServices::~WebConfigWServices()
@@ -62,6 +65,8 @@ void WebConfigWServices::DoDataExchange(CDataExchange* pDX)
   // USING FIELDS
   DDX_Control(pDX,IDC_USE_WS_ENCRYPT, m_buttonUseEncLevel);
   DDX_Control(pDX,IDC_USE_WSENC_PW,   m_buttonUseEncPassword);
+  DDX_Control(pDX,IDC_USE_RELIABLE,   m_buttonUseReliable);
+  DDX_Control(pDX,IDC_USE_RMLOGIN,    m_buttonUseReliableLogin);
   DDX_Control(pDX,IDC_USE_CHECK_IN,   m_buttonUseCheckWSDLin);
   DDX_Control(pDX,IDC_USE_CHECK_OUT,  m_buttonUseCheckWSDLout);
   DDX_Control(pDX,IDC_USE_FIELDCHECK, m_buttonUseFieldCheck);
@@ -69,6 +74,8 @@ void WebConfigWServices::DoDataExchange(CDataExchange* pDX)
   // WEBSERVICE OVERRIDES
   DDX_Control(pDX,IDC_WS_ENCRYPT,     m_comboEncryption);
   DDX_Text   (pDX,IDC_WSENC_PASSWORD, m_encPassword);
+  DDX_Control(pDX,IDC_RELIABLE,       m_buttonReliable);
+  DDX_Control(pDX,IDC_RMLOGIN,        m_buttonReliableLogin);
   DDX_Control(pDX,IDC_CHECK_IN,       m_buttonCheckWSDLin);
   DDX_Control(pDX,IDC_CHECK_OUT,      m_buttonCheckWSDLout);
   DDX_Control(pDX,IDC_FIELDCHECK,     m_buttonFieldCheck);
@@ -79,6 +86,8 @@ void WebConfigWServices::DoDataExchange(CDataExchange* pDX)
     
     w = GetDlgItem(IDC_WSENC_PASSWORD); w->EnableWindow(m_useEncPassword);
     m_comboEncryption    .EnableWindow(m_useEncLevel);
+    m_buttonReliable     .EnableWindow(m_useReliable);
+    m_buttonReliableLogin.EnableWindow(m_useReliableLogin);
     m_buttonCheckWSDLin  .EnableWindow(m_useCheckWSDLIn);
     m_buttonCheckWSDLout .EnableWindow(m_useCheckWSDLOut);
     m_buttonFieldCheck   .EnableWindow(m_useFieldCheck);
@@ -89,6 +98,8 @@ BEGIN_MESSAGE_MAP(WebConfigWServices, CDialogEx)
   // WEBSERVICE OVERRIDES
   ON_CBN_SELCHANGE(IDC_WS_ENCRYPT,    &WebConfigWServices::OnCbnSelchangeWsEncrypt)
   ON_EN_CHANGE    (IDC_WSENC_PASSWORD,&WebConfigWServices::OnEnChangeWsencPassword)
+  ON_BN_CLICKED   (IDC_RELIABLE,      &WebConfigWServices::OnBnClickedReliable)
+  ON_BN_CLICKED   (IDC_RMLOGIN,       &WebConfigWServices::OnBnClickedReliableLogin)
   ON_BN_CLICKED   (IDC_CHECK_IN,      &WebConfigWServices::OnBnClickedCheckWSDLin)
   ON_BN_CLICKED   (IDC_CHECK_OUT,     &WebConfigWServices::OnBnClickedCheckWSDLout)
   ON_BN_CLICKED   (IDC_FIELDCHECK,    &WebConfigWServices::OnBnClickedFieldCheck)
@@ -96,6 +107,8 @@ BEGIN_MESSAGE_MAP(WebConfigWServices, CDialogEx)
   // USING BUTTONS
   ON_BN_CLICKED(IDC_USE_WS_ENCRYPT,   &WebConfigWServices::OnBnClickedUseWsEncrypt)
   ON_BN_CLICKED(IDC_USE_WSENC_PW,     &WebConfigWServices::OnBnClickedUseWsencPw)
+  ON_BN_CLICKED(IDC_USE_RELIABLE,     &WebConfigWServices::OnBnClickedUseReliable)
+  ON_BN_CLICKED(IDC_USE_RMLOGIN,      &WebConfigWServices::OnBnClickedUseReliableLogin)
   ON_BN_CLICKED(IDC_USE_CHECK_IN,     &WebConfigWServices::OnBnClickedUseCheckWSDLin)
   ON_BN_CLICKED(IDC_USE_CHECK_OUT,    &WebConfigWServices::OnBnClickedUseCheckWSDLout)
   ON_BN_CLICKED(IDC_USE_FIELDCHECK,   &WebConfigWServices::OnBnClickedUseFieldCheck)
@@ -127,12 +140,16 @@ WebConfigWServices::ReadWebConfig(WebConfig& config)
   // WEBSERVICE OVERRIDES
   m_useEncLevel       = config.HasParameter("Encryption", "Level");
   m_useEncPassword    = config.HasParameter("Encryption", "Password");
+  m_useReliable       = config.HasParameter("WebServices","Reliable");
+  m_useReliableLogin  = config.HasParameter("WebServices","ReliableLogin");
   m_useCheckWSDLIn    = config.HasParameter("WebServices","CheckWSDLIncoming");
   m_useCheckWSDLOut   = config.HasParameter("WebServices","CheckWSDLOutgoing");
   m_useFieldCheck     = config.HasParameter("WebServices","CheckFieldValues");
 
   m_encLevel          = config.GetParameterString ("Encryption", "Level",   "");
   m_encPassword       = config.GetEncryptedString ("Encryption", "Password","");
+  m_reliable          = config.GetParameterBoolean("WebServices","Reliable",         false);
+  m_reliableLogin     = config.GetParameterBoolean("WebServices","ReliableLogin",    true);
   m_checkWSDLin       = config.GetParameterBoolean("WebServices","CheckWSDLIncoming",false);
   m_checkWSDLout      = config.GetParameterBoolean("WebServices","CheckWSDLOutgoing",false);
   m_fieldCheck        = config.GetParameterBoolean("WebServices","CheckFieldValues", false);
@@ -147,6 +164,8 @@ WebConfigWServices::ReadWebConfig(WebConfig& config)
   m_buttonCheckWSDLin  .SetCheck(m_checkWSDLin);
   m_buttonCheckWSDLout .SetCheck(m_checkWSDLout);
   m_buttonFieldCheck   .SetCheck(m_fieldCheck);
+  m_buttonReliable     .SetCheck(m_reliable);
+  m_buttonReliableLogin.SetCheck(m_reliableLogin);
 
   // INIT ALL USING FIELDS
   m_buttonUseEncLevel     .SetCheck(m_useEncLevel);
@@ -154,6 +173,8 @@ WebConfigWServices::ReadWebConfig(WebConfig& config)
   m_buttonUseCheckWSDLin  .SetCheck(m_useCheckWSDLIn);
   m_buttonUseCheckWSDLout .SetCheck(m_useCheckWSDLOut);
   m_buttonUseFieldCheck   .SetCheck(m_useFieldCheck);
+  m_buttonUseReliable     .SetCheck(m_useReliable);
+  m_buttonUseReliableLogin.SetCheck(m_useReliableLogin);
 
   UpdateData(FALSE);
 }
@@ -179,7 +200,10 @@ WebConfigWServices::WriteWebConfig(WebConfig& config)
   else                  config.RemoveParameter("WebServices","CheckWSDLOutgoing");
   if(m_useFieldCheck)   config.SetParameter   ("WebServices","CheckFieldValues",  m_fieldCheck);
   else                  config.RemoveParameter("WebServices","CheckFieldValues");
-
+  if(m_useReliable)     config.SetParameter   ("WebServices","Reliable",          m_reliable);
+  else                  config.RemoveParameter("WebServices","Reliable");
+  if(m_useReliableLogin)config.SetParameter   ("WebServices","ReliableLogin",     m_reliableLogin);
+  else                  config.RemoveParameter("WebServices","ReliableLogin");
 }
 
 // WebConfigDlg message handlers
@@ -232,6 +256,16 @@ void WebConfigWServices::OnEnChangeWsencPassword()
 //
 //////////////////////////////////////////////////////////////////////////
 
+void WebConfigWServices::OnBnClickedReliable()
+{
+  m_reliable = m_buttonReliable.GetCheck() > 0;
+}
+
+void WebConfigWServices::OnBnClickedReliableLogin()
+{
+  m_reliableLogin = m_buttonReliableLogin.GetCheck() > 0;
+}
+
 void WebConfigWServices::OnBnClickedCheckWSDLin()
 {
   m_checkWSDLin = m_buttonCheckWSDLin.GetCheck() > 0;
@@ -271,6 +305,20 @@ void
 WebConfigWServices::OnBnClickedUseWsencPw()
 {
   m_useEncPassword = m_buttonUseEncPassword.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
+void
+WebConfigWServices::OnBnClickedUseReliable()
+{
+  m_useReliable = m_buttonUseReliable.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
+void
+WebConfigWServices::OnBnClickedUseReliableLogin()
+{
+  m_useReliableLogin = m_buttonUseReliableLogin.GetCheck() > 0;
   UpdateData(FALSE);
 }
 

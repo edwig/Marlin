@@ -36,7 +36,7 @@ class WebConfigAuthentication : public CDialogEx
   DECLARE_DYNAMIC(WebConfigAuthentication)
 
 public:
-  WebConfigAuthentication(CWnd* pParent = NULL);   // standard constructor
+  WebConfigAuthentication(bool p_iis,CWnd* pParent = NULL);   // standard constructor
  ~WebConfigAuthentication();
   BOOL OnInitDialog();
   void ReadWebConfig(WebConfig& config);
@@ -48,9 +48,11 @@ public:
 protected:
   void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
   void InitComboboxes();
+  void InitIIS();
 
   DECLARE_MESSAGE_MAP()
 
+  bool        m_iis;
   // USE OVERRIDES
   bool        m_useScheme;
   bool        m_useRealm;

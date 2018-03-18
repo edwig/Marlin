@@ -34,8 +34,9 @@
 // WebConfigDlg dialog
 IMPLEMENT_DYNAMIC(WebConfigDlg, CDialogEx)
 
-WebConfigDlg::WebConfigDlg(CWnd* pParent)
+WebConfigDlg::WebConfigDlg(bool p_iis,CWnd* pParent)
              :CDialogEx(IDD_WEBCONFIG, pParent)
+             ,m_iis(p_iis)
              ,m_page1(this)
              ,m_page2(this)
              ,m_page3(this)
@@ -82,14 +83,19 @@ WebConfigDlg::OnInitDialog()
   InitTabs();
   ReadWebConfig();
 
+  // Setting the type of editor
+  CString base = m_iis ? "Marlin.Config" : "Web.Config";
   if(m_siteConfigFile.IsEmpty())
   {
-    m_title = "Web.Config Editor for: web.config";
+    m_title = base + " Editor for: web.config";
   }
   else
   {
-    m_title = "Web.Config Editor for: " + m_url;
+    CString subject = m_url.IsEmpty() ? "server" : m_url;
+    m_title = base + " Editor for: " + subject;
   }
+  SetWindowText(m_iis ? "Marlin.Config" : "Web.Config");
+
   UpdateData(FALSE);
   return TRUE;
 }
@@ -133,6 +139,14 @@ WebConfigDlg::InitTabs()
   TabCtrl_SetCurSel(m_tab.GetSafeHwnd(), 0);
 }
 
+// All sites log in the server log
+// and do not have their own logfile
+void
+WebConfigDlg::RemoveLogTab()
+{
+  m_tab.DeleteItem(4);
+}
+
 void
 WebConfigDlg::SetSiteConfig(CString p_urlPrefix,CString p_fileName)
 {
@@ -145,6 +159,14 @@ WebConfigDlg::ReadWebConfig()
 {
   if(m_webconfig == nullptr)
   {
+    if(m_siteConfigFile.IsEmpty())
+    {
+      m_siteConfigFile = m_iis ? "marlin.config" : "web.config";
+    }
+    else
+    {
+      RemoveLogTab();
+    }
     m_webconfig = new WebConfig(m_siteConfigFile);
   }
   m_page1.ReadWebConfig(*m_webconfig);
@@ -159,6 +181,10 @@ WebConfigDlg::WriteWebConfig()
 {
   if(m_webconfig == nullptr)
   {
+    if(m_siteConfigFile.IsEmpty())
+    {
+      m_siteConfigFile = m_iis ? "marlin.config" : "web.config";
+    }
     m_webconfig = new WebConfig(m_siteConfigFile);
   }
 

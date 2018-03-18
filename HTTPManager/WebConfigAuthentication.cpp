@@ -44,8 +44,9 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(WebConfigAuthentication, CDialogEx)
 
-WebConfigAuthentication::WebConfigAuthentication(CWnd* pParent /*=NULL*/)
+WebConfigAuthentication::WebConfigAuthentication(bool p_iis,CWnd* pParent /*=NULL*/)
                         :CDialogEx(WebConfigAuthentication::IDD, pParent)
+                        ,m_iis(p_iis)
 {
   m_useScheme       = false;
   m_useRealm        = false;
@@ -147,9 +148,25 @@ WebConfigAuthentication::OnInitDialog()
   CDialogEx::OnInitDialog();
 
   InitComboboxes();
+  InitIIS();
 
   UpdateData(FALSE);
   return TRUE;
+}
+
+void
+WebConfigAuthentication::InitIIS()
+{
+  if(m_iis)
+  {
+    m_buttonUseScheme        .EnableWindow(false);
+    m_buttonUseRealm         .EnableWindow(false);
+    m_buttonUseDomain        .EnableWindow(false);
+    m_buttonUseNTLMCache     .EnableWindow(false);
+    m_buttonUseRequestCert   .EnableWindow(false);
+    m_buttonUseCertName      .EnableWindow(false);
+    m_buttonUseCertThumbprint.EnableWindow(false);
+  }
 }
 
 void

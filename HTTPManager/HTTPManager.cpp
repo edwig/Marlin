@@ -72,7 +72,6 @@ BOOL HTTPManagerApp::InitInstance()
 
 	CWinApp::InitInstance();
 
-
 	AfxEnableControlContainer();
 
 	// Create the shell manager, in case the dialog contains
@@ -89,9 +88,22 @@ BOOL HTTPManagerApp::InitInstance()
 	// Change the registry key under which our settings are stored
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+	SetRegistryKey(_T("Marlin\\HTTPManager"));
 
-	HTTPManagerDlg dlg;
+  int mode = ParseCommandLine();
+  if(mode == MODE_NONE)
+  {
+    if (::MessageBox(NULL, "Start the HTTPManager in the Microsoft-IIS mode?", "Start mode", MB_YESNO | MB_ICONINFORMATION) == IDYES)
+    {
+      mode = MODE_IIS;
+    }
+    else
+    {
+      mode = MODE_STANDALONE;
+    }
+  }
+	HTTPManagerDlg dlg(mode == 1);
+
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
@@ -120,3 +132,29 @@ BOOL HTTPManagerApp::InitInstance()
 	return FALSE;
 }
 
+// Simple way to get to the command line
+// HTTPManager [/IIS] [/STANDALONE]
+//
+int
+HTTPManagerApp::ParseCommandLine()
+{
+  int result = MODE_NONE;
+
+  for (int i = 1; i < __argc; i++)
+  {
+    LPCSTR lpszParam = __argv[i];
+
+    if (lpszParam[0] == '-' || lpszParam[0] == '/')
+    {
+      if (_strnicmp(&lpszParam[1], "IIS", 3) == 0)
+      {
+        result = MODE_IIS;
+      }
+      else if (_strnicmp(&lpszParam[1], "STANDALONE", 10) == 0)
+      {
+        result = MODE_STANDALONE;
+      }
+    }
+  }
+  return result;
+}

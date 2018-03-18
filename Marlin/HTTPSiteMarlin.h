@@ -46,10 +46,8 @@ public:
   // OPTIONAL: Set the webroot of the site
   virtual bool SetWebroot(CString p_webroot);
 
-private:
+protected:
   // Initialize the site from automatic settings in the config
   void         InitSite(WebConfig& p_config);
   void         LogSettings();
-  // Set automatic headers upon starting site
-  void         SetAutomaticHeaders(WebConfig& p_config);
 };

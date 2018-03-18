@@ -273,7 +273,11 @@ public:
   bool SendResponse(JSONMessage* p_message);
 
 protected:
-  // Cleanup the site when stopping
+  // Init parameters from web.config
+  void              InitSite(WebConfig& p_config);
+  // Set automatic headers upon starting site
+  void              SetAutomaticHeaders(WebConfig& p_config);
+    // Cleanup the site when stopping
   void              CleanupHandlers();
   void              CleanupFilters();
   void              CleanupThrotteling();

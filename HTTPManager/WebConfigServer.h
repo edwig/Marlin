@@ -38,7 +38,7 @@ class WebConfigServer : public CDialog
   DECLARE_DYNAMIC(WebConfigServer)
 
 public:
-  WebConfigServer(CWnd* pParent = NULL);   // standard constructor
+  WebConfigServer(bool p_iis,CWnd* pParent = NULL);   // standard constructor
  ~WebConfigServer();
   BOOL OnInitDialog();
   void SetSiteConfig(CString p_urlPrefix,CString m_fileName);
@@ -51,7 +51,7 @@ public:
 protected:
   void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
   void InitComboboxes();
-
+  void InitIIS();
 
   DECLARE_MESSAGE_MAP()
 
@@ -63,13 +63,13 @@ protected:
   CString     m_url;
   CString     m_siteConfigFile;
 
+  bool        m_iis;
   // SERVER OVERRIDES
   bool        m_useWebroot;
   bool        m_useBaseURL;
   bool        m_useProtocol;
   bool        m_useBinding;
   bool        m_usePort;
-  bool        m_useReliable;
   bool        m_useBacklog;
   bool        m_useTunneling;
   bool        m_useMinThreads;
@@ -96,7 +96,6 @@ protected:
   bool        m_secureProtocol;
   CString     m_binding;
   int         m_port;
-  bool        m_reliable;
   int         m_backlogQueue;
   bool        m_tunneling;
   int         m_minThreads;
@@ -126,7 +125,6 @@ protected:
   HICON       m_hIcon;
   CComboBox   m_comboProtocol;
   CComboBox   m_comboBinding;
-  CComboBox   m_comboReliable;
   CComboBox   m_comboStack;
   CComboBox   m_comboUseProxy;
   CButton     m_buttonTunneling;
@@ -139,7 +137,6 @@ protected:
   CButton     m_buttonUseProtocol;
   CButton     m_buttonUseBinding;
   CButton     m_buttonUsePort;
-  CButton     m_buttonUseReliable;
   CButton     m_buttonUseBacklog;
   CButton     m_buttonUseTunneling;
   CButton     m_buttonUseMinThreads;
@@ -158,7 +155,6 @@ public:
   afx_msg void OnCbnSelchangeProtocol();
   afx_msg void OnCbnSelchangeBinding();
   afx_msg void OnEnChangePort();
-  afx_msg void OnCbnSelchangeReliable();
   afx_msg void OnEnChangeBacklogQueue();
   afx_msg void OnBnClickedTunneling();
   afx_msg void OnEnChangeMinThreads();
@@ -177,7 +173,6 @@ public:
   afx_msg void OnBnClickedUseProtocol();
   afx_msg void OnBnClickedUseBinding();
   afx_msg void OnBnClickedUsePort();
-  afx_msg void OnBnClickedUseReliable();
   afx_msg void OnBnClickedUseBacklog();
   afx_msg void OnBnClickedUseTunneling();
   afx_msg void OnBnClickedUseMinThreads();

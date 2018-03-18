@@ -36,7 +36,7 @@ class WebConfigLogging : public CDialogEx
   DECLARE_DYNAMIC(WebConfigLogging)
 
 public:
-  WebConfigLogging(CWnd* pParent = NULL);   // standard constructor
+  WebConfigLogging(bool p_iis,CWnd* pParent = NULL);   // standard constructor
  ~WebConfigLogging();
   BOOL OnInitDialog();
   void ReadWebConfig (WebConfig& p_config);
@@ -50,6 +50,7 @@ protected:
 
   DECLARE_MESSAGE_MAP()
 
+  bool        m_iis;
   // SERVER OVERRIDES
   bool        m_useLogfile;
   bool        m_useLogCaching;

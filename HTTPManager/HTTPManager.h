@@ -34,6 +34,10 @@
 #include "resource.h"		// main symbols
 
 
+#define MODE_NONE       0
+#define MODE_IIS        1
+#define MODE_STANDALONE 2
+
 // HTTPManagerApp:
 // See HTTPManager.cpp for the implementation of this class
 //
@@ -50,6 +54,8 @@ public:
 // Implementation
 
 	DECLARE_MESSAGE_MAP()
+private:
+  int ParseCommandLine();
 };
 
 extern HTTPManagerApp theApp;

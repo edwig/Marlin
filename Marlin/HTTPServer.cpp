@@ -145,11 +145,96 @@ HTTPServer::~HTTPServer()
   }
   m_requests.clear();
 
+  // Clean out the web.config
+  if(m_webConfig)
+  {
+    delete m_webConfig;
+    m_webConfig = nullptr;
+  }
+
+  // Free CS to the OS
   DeleteCriticalSection(&m_eventLock);
   DeleteCriticalSection(&m_sitesLock);
 
   // Resetting the signal handlers
   ResetProcessAfterSEH();
+}
+
+void
+HTTPServer::InitLogging()
+{
+  // Check for a logging object
+  if(m_log == NULL)
+  {
+    // Create a new one
+    m_log = new LogAnalysis(m_name);
+    m_logOwner = true;
+  }
+
+  CString file    = m_log->GetLogFileName();
+  int  cache      = m_log->GetCache();
+  int  logging    = m_log->GetLogLevel();
+  bool timing     = m_log->GetDoTiming();
+  bool events     = m_log->GetDoEvents();
+  bool doLogging  = m_log->GetDoLogging();
+
+  // Get parameters from web.config
+  file      = m_webConfig->GetParameterString ("Logging","Logfile",  file);
+  doLogging = m_webConfig->GetParameterBoolean("Logging","DoLogging",doLogging);
+  logging   = m_webConfig->GetParameterInteger("Logging","LogLevel", logging);
+  timing    = m_webConfig->GetParameterBoolean("Logging","DoTiming", timing);
+  events    = m_webConfig->GetParameterBoolean("Logging","DoEvents", events);
+  cache     = m_webConfig->GetParameterInteger("Logging","Cache",    cache);
+
+  // Use if overridden in web.config
+  if(!file.IsEmpty())
+  {
+    m_log->SetLogFilename(file);
+  }
+  m_log->SetCache(cache);
+  m_log->SetLogLevel(m_logLevel = logging);
+  m_log->SetDoTiming(timing);
+  m_log->SetDoEvents(events);
+}
+
+// Initialise the ThreadPool
+void
+HTTPServer::InitThreadPool()
+{
+  int minThreads = m_webConfig->GetParameterInteger("Server","MinThreads",NUM_THREADS_MINIMUM);
+  int maxThreads = m_webConfig->GetParameterInteger("Server","MaxThreads",NUM_THREADS_MAXIMUM);
+  int stackSize  = m_webConfig->GetParameterInteger("Server","StackSize", THREAD_STACKSIZE);
+
+  m_pool.TrySetMinimum(minThreads);
+  m_pool.TrySetMaximum(maxThreads);
+  m_pool.SetStackSize(stackSize);
+}
+
+// Initialise the hard server limits in bytes
+void
+HTTPServer::InitHardLimits()
+{
+  g_streaming_limit = m_webConfig->GetParameterInteger("Server","StreamingLimit",g_streaming_limit);
+  g_compress_limit  = m_webConfig->GetParameterInteger("Server","CompressLimit", g_compress_limit);
+
+  // Cannot be bigger than 2 GB, otherwise use indirect file access!
+  if(g_streaming_limit > (0x7FFFFFFF))
+  {
+    g_streaming_limit = 0x7FFFFFFF;
+  }
+  // Should not be smaller than 1MB
+  if(g_streaming_limit < (1024 * 1024))
+  {
+    g_streaming_limit = (1024 * 1024);
+  }
+  // Should not be bigger than 25 4K pages
+  if(g_compress_limit > (25 * 4 * 1024))
+  {
+    g_compress_limit = (25 * 4 * 1024);
+  }
+
+  DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
+  DETAILLOGV("Server hard-limit compression threshold: %d",    g_compress_limit);
 }
 
 void
@@ -331,8 +416,17 @@ HTTPServer::SetLogging(LogAnalysis* p_log)
 void
 HTTPServer::SetWebroot(CString p_webroot)
 {
-  // Look for override in webconfig
-  InitWebroot(p_webroot);
+  // Check WebRoot against your config
+  m_webroot = m_webConfig->GetParameterString("Server","WebRoot",p_webroot);
+
+  // Directly set WebRoot
+  EnsureFile ensure(p_webroot);
+  int er = ensure.CheckCreateDirectory();
+  if(er)
+  {
+    ERRORLOG(er,"Cannot reach server root directory: " + p_webroot);
+  }
+  m_webroot = p_webroot;
 }
 
 CString

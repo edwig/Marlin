@@ -218,6 +218,11 @@ ServerHeadersDlg::CheckFields()
     MessageBox("In order to allow CORS security, specify one (1) site as an allowed origin, or specifiy '*' (all sites)","Server headers",MB_OK | MB_ICONERROR);
     return false;
   }
+  if(m_config->m_cors && m_config->m_corsCredentials && m_config->m_allowOrigin == "*")
+  {
+    MessageBox("In order to let credentials through in CORS situations, an explicit origin must be set. '*' cannot be used!", "Server headers", MB_OK | MB_ICONERROR);
+    return false;
+  }
   return true;
 }
 

@@ -406,14 +406,16 @@ WebServiceServer::ReadingWebconfig(CString p_webconfig)
     return;
   }
 
+  m_reliable         = config.GetParameterBoolean("WebServices","Reliable",          m_reliable);
+  m_reliableLogin    = config.GetParameterBoolean("WebServices","ReliableLogin",     m_reliableLogin);
   m_checkIncoming    = config.GetParameterBoolean("WebServices","CheckWSDLIncoming", m_checkIncoming);
   m_checkOutgoing    = config.GetParameterBoolean("WebServices","CheckWSDLOutgoing", m_checkOutgoing);
   m_checkFieldvalues = config.GetParameterBoolean("WebServices","CheckFieldValues",  m_checkFieldvalues);
-  m_jsonTranslation  = config.GetParameterBoolean("WebServices","JSONTranslations",  m_jsonTranslation);
 
   // Log it
   if(m_log)
   {
+    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Webservices in WS-Reliable mode only: %s",      m_reliable      ? "YES" : "NO");
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Checking incoming webservices against WSDL: %s",m_checkIncoming ? "YES" : "NO");
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Checking outgoing webservices against WSDL: %s",m_checkOutgoing ? "YES" : "NO");
     if(m_checkIncoming || m_checkOutgoing)
@@ -556,6 +558,10 @@ WebServiceServer::RunService()
   m_site->SetAuthenticationRealm(m_authentRealm);
   m_site->SetAuthenticationDomain(m_authentDomain);
   m_site->SetReliable(m_reliable);
+  if(m_reliable)
+  {
+    m_site->SetReliableLogIn(m_reliableLogin);
+  }
 
   // If already set, pass on the SOAP handler
   // It's always the POST handler!

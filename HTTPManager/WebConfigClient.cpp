@@ -44,8 +44,9 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(WebConfigClient, CDialog)
 
-WebConfigClient::WebConfigClient(CWnd* pParent /*=NULL*/)
+WebConfigClient::WebConfigClient(bool p_iis,CWnd* pParent /*=NULL*/)
                 :CDialog(WebConfigClient::IDD, pParent)
+                ,m_iis(p_iis)
 {
   m_useClientUnicode= false;
   m_useUseProxy     = false;
@@ -59,6 +60,7 @@ WebConfigClient::WebConfigClient(CWnd* pParent /*=NULL*/)
   m_useCertStore    = false;
   m_useCertName     = false;
   m_useCertPreset   = false;
+  m_useOrigin       = false;
   m_useResolve      = false;
   m_useConnect      = false;
   m_useSend         = false;
@@ -69,6 +71,7 @@ WebConfigClient::WebConfigClient(CWnd* pParent /*=NULL*/)
   m_useRelaxUsage   = false;
   m_useForceTunnel  = false;
   m_useGzip         = false;
+  m_useSendBOM      = false;
 
   // CLIENT OVERRIDES
   m_retry           = 0;
@@ -94,6 +97,7 @@ WebConfigClient::WebConfigClient(CWnd* pParent /*=NULL*/)
   m_tls12           = false;
   m_forceTunnel     = false;
   m_gzip            = false;
+  m_sendBOM         = false;
 }
 
 WebConfigClient::~WebConfigClient()
@@ -116,6 +120,7 @@ void WebConfigClient::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_USE_CERTSTORE,  m_buttonUseCertStore);
   DDX_Control(pDX,IDC_USE_CERTNAME,   m_buttonUseCertName);
   DDX_Control(pDX,IDC_USE_PRESETCERT, m_buttonUseCertPreset);
+  DDX_Control(pDX,IDC_USE_ORIGIN,     m_buttonUseOrigin);
   DDX_Control(pDX,IDC_USE_RESOLVE,    m_buttonUseResolve);
   DDX_Control(pDX,IDC_USE_CONNECT,    m_buttonUseConnect);
   DDX_Control(pDX,IDC_USE_SEND,       m_buttonUseSend);
@@ -126,6 +131,7 @@ void WebConfigClient::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_USE_CERT_USAGE, m_buttonUseRelaxUsage);
   DDX_Control(pDX,IDC_USE_FORCETUNNEL,m_buttonUseForceTunnel);
   DDX_Control(pDX,IDC_USE_GZIP,       m_buttonUseGzip);
+  DDX_Control(pDX,IDC_USE_SENDBOM,    m_buttonUseSendBOM);
 
   // CLIENT OVERRIDES
   DDX_Control(pDX,IDC_USEPROXY,       m_comboUseProxy);
@@ -140,6 +146,7 @@ void WebConfigClient::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_CERTSTORE,      m_comboCertStore);
   DDX_Text   (pDX,IDC_CERTNAME,       m_certName);
   DDX_Control(pDX,IDC_PRESETCERT,     m_buttonCertPreset);
+  DDX_Text   (pDX,IDC_ORIGIN,         m_origin);
   DDX_Text   (pDX,IDC_OUT_RESOLVE,    m_TO_resolve);
   DDX_Text   (pDX,IDC_OUT_CONNECT,    m_TO_connect);
   DDX_Text   (pDX,IDC_OUT_SEND,       m_TO_send);
@@ -150,6 +157,7 @@ void WebConfigClient::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_CERT_USAGE,     m_buttonRelaxUsage);
   DDX_Control(pDX,IDC_FORCETUNNEL,    m_buttonForceTunnel);
   DDX_Control(pDX,IDC_GZIP,           m_buttonGzip);
+  DDX_Control(pDX,IDC_SENDBOM,        m_buttonSendBOM);
 
   if(pDX->m_bSaveAndValidate == FALSE)
   {
@@ -163,6 +171,7 @@ void WebConfigClient::DoDataExchange(CDataExchange* pDX)
     w = GetDlgItem(IDC_CERTNAME);       w->EnableWindow(m_useCertName);
     w = GetDlgItem(IDC_AGENT);          w->EnableWindow(m_useAgent);
     w = GetDlgItem(IDC_RETRY);          w->EnableWindow(m_useRetry);
+    w = GetDlgItem(IDC_ORIGIN);         w->EnableWindow(m_useOrigin);
     w = GetDlgItem(IDC_OUT_RESOLVE);    w->EnableWindow(m_useResolve);
     w = GetDlgItem(IDC_OUT_CONNECT);    w->EnableWindow(m_useConnect);
     w = GetDlgItem(IDC_OUT_SEND);       w->EnableWindow(m_useSend);
@@ -178,6 +187,7 @@ void WebConfigClient::DoDataExchange(CDataExchange* pDX)
     m_buttonSoap         .EnableWindow(m_useSoap);
     m_buttonForceTunnel  .EnableWindow(m_useForceTunnel);
     m_buttonGzip         .EnableWindow(m_useGzip);
+    m_buttonSendBOM      .EnableWindow(m_useSendBOM);
   }
 }
 
@@ -195,6 +205,7 @@ BEGIN_MESSAGE_MAP(WebConfigClient, CDialog)
   ON_CBN_SELCHANGE(IDC_CERTSTORE,     &WebConfigClient::OnCbnSelchangeCertStore)
   ON_EN_CHANGE    (IDC_CERTNAME,      &WebConfigClient::OnEnChangeCertName)
   ON_BN_CLICKED   (IDC_PRESETCERT,    &WebConfigClient::OnBnClickedCertPreset)
+  ON_EN_CHANGE    (IDC_ORIGIN,        &WebConfigClient::OnEnChangeOrigin)
   ON_EN_CHANGE    (IDC_OUT_RESOLVE,   &WebConfigClient::OnEnChangeOutResolve)
   ON_EN_CHANGE    (IDC_OUT_CONNECT,   &WebConfigClient::OnEnChangeOutConnect)
   ON_EN_CHANGE    (IDC_OUT_SEND,      &WebConfigClient::OnEnChangeOutSend)
@@ -206,6 +217,7 @@ BEGIN_MESSAGE_MAP(WebConfigClient, CDialog)
   ON_BN_CLICKED   (IDC_CLIENT_SECURE, &WebConfigClient::OnBnClickedClientSecure)
   ON_BN_CLICKED   (IDC_FORCETUNNEL,   &WebConfigClient::OnBnClickedForceTunnel)
   ON_BN_CLICKED   (IDC_GZIP,          &WebConfigClient::OnBnClickedGzip)
+  ON_BN_CLICKED   (IDC_SENDBOM,       &WebConfigClient::OnBnClickedSendBOM)
 
   ON_BN_CLICKED(IDC_USE_CLIENTUNI,    &WebConfigClient::OnBnClickedUseClientUnicode)
   ON_BN_CLICKED(IDC_USE_USEPROXY,     &WebConfigClient::OnBnClickedUseUseProxy)
@@ -219,6 +231,7 @@ BEGIN_MESSAGE_MAP(WebConfigClient, CDialog)
   ON_BN_CLICKED(IDC_USE_CERTSTORE,    &WebConfigClient::OnBnClickedUseCertStore)
   ON_BN_CLICKED(IDC_USE_CERTNAME,     &WebConfigClient::OnBnClickedUseCertName)
   ON_BN_CLICKED(IDC_USE_PRESETCERT,   &WebConfigClient::OnBnClickedUseCertPreset)
+  ON_BN_CLICKED(IDC_USE_ORIGIN,       &WebConfigClient::OnBnClickedUseOrigin)
   ON_BN_CLICKED(IDC_USE_RESOLVE,      &WebConfigClient::OnBnClickedUseResolve)
   ON_BN_CLICKED(IDC_USE_CONNECT,      &WebConfigClient::OnBnClickedUseConnect)
   ON_BN_CLICKED(IDC_USE_SEND,         &WebConfigClient::OnBnClickedUseSend)
@@ -229,6 +242,7 @@ BEGIN_MESSAGE_MAP(WebConfigClient, CDialog)
   ON_BN_CLICKED(IDC_USE_CERT_USAGE,   &WebConfigClient::OnBnClickedUseCertUsage)
   ON_BN_CLICKED(IDC_USE_FORCETUNNEL,  &WebConfigClient::OnBnClickedUseForceTunnel)
   ON_BN_CLICKED(IDC_USE_GZIP,         &WebConfigClient::OnBnClickedUseGzip)
+  ON_BN_CLICKED(IDC_USE_SENDBOM,      &WebConfigClient::OnBnClickedUseSendBOM)
 END_MESSAGE_MAP()
 
 BOOL
@@ -277,6 +291,7 @@ WebConfigClient::ReadWebConfig(WebConfig& config)
   m_useCertStore      = config.HasParameter("Client","CertificateStore");
   m_useCertName       = config.HasParameter("Client","CertificateName");
   m_useCertPreset     = config.HasParameter("Client","CertificatePreset");
+  m_useOrigin         = config.HasParameter("Client","CORS_Origin");
   m_useResolve        = config.HasParameter("Client","TimeoutResolve");
   m_useConnect        = config.HasParameter("Client","TimeoutConnect");
   m_useSend           = config.HasParameter("Client","TimeoutSend");
@@ -287,6 +302,7 @@ WebConfigClient::ReadWebConfig(WebConfig& config)
   m_useRelaxUsage     = config.HasParameter("Client","RelaxCertificateUsage");
   m_useForceTunnel    = config.HasParameter("Client","VerbTunneling");
   m_useGzip           = config.HasParameter("Client","HTTPCompression");
+  m_useSendBOM        = config.HasParameter("Client","SendBOM");
   
   m_proxyType         = config.GetParameterInteger("Client","UseProxy",         1);
   m_proxy             = config.GetParameterString ("Client","Proxy",           "");
@@ -301,6 +317,7 @@ WebConfigClient::ReadWebConfig(WebConfig& config)
   m_certStore         = config.GetParameterString ("Client","CertificateStore","");
   m_certName          = config.GetParameterString ("Client","CertificateName", "");
   m_certPreset        = config.GetParameterBoolean("Client","CertificatePreset",false);
+  m_origin            = config.GetParameterString ("Client","CORS_Origin",     "");
   m_TO_resolve        = config.GetParameterInteger("Client","TimeoutResolve",  DEF_TIMEOUT_RESOLVE);
   m_TO_connect        = config.GetParameterInteger("Client","TimeoutConnect",  DEF_TIMEOUT_CONNECT);
   m_TO_send           = config.GetParameterInteger("Client","TimeoutSend",     DEF_TIMEOUT_SEND);
@@ -310,6 +327,7 @@ WebConfigClient::ReadWebConfig(WebConfig& config)
   m_relaxAuthor     = ! config.GetParameterBoolean("Client","RelaxCertificateAuthor", false);
   m_relaxUsage      = ! config.GetParameterBoolean("Client","RelaxCertificateUsage",  false);
   m_gzip              = config.GetParameterBoolean("Client","HTTPCompression",        false);
+  m_sendBOM           = config.GetParameterBoolean("Client","SendBOM",                false);
 
   m_useSSL20          = config.HasParameter("Client","SecureSSL20");
   m_useSSL30          = config.HasParameter("Client","SecureSSL30");
@@ -342,6 +360,7 @@ WebConfigClient::ReadWebConfig(WebConfig& config)
   m_buttonForceTunnel  .SetCheck(m_forceTunnel);
   m_buttonCertPreset   .SetCheck(m_certPreset);
   m_buttonGzip         .SetCheck(m_gzip);
+  m_buttonSendBOM      .SetCheck(m_sendBOM);
 
   // INIT ALL USING FIELDS
   m_buttonUseClientUnicode.SetCheck(m_useClientUnicode);
@@ -356,6 +375,7 @@ WebConfigClient::ReadWebConfig(WebConfig& config)
   m_buttonUseCertStore    .SetCheck(m_useCertStore);
   m_buttonUseCertName     .SetCheck(m_useCertName);
   m_buttonUseCertPreset   .SetCheck(m_useCertPreset);
+  m_buttonUseOrigin       .SetCheck(m_useOrigin);
   m_buttonUseResolve      .SetCheck(m_useResolve);
   m_buttonUseConnect      .SetCheck(m_useConnect);
   m_buttonUseSend         .SetCheck(m_useSend);
@@ -366,6 +386,7 @@ WebConfigClient::ReadWebConfig(WebConfig& config)
   m_buttonUseRelaxUsage   .SetCheck(m_useRelaxUsage);
   m_buttonUseForceTunnel  .SetCheck(m_useForceTunnel);
   m_buttonUseGzip         .SetCheck(m_useGzip);
+  m_buttonUseSendBOM      .SetCheck(m_useSendBOM);
 
   UpdateData(FALSE);
 }
@@ -403,6 +424,8 @@ WebConfigClient::WriteWebConfig(WebConfig& config)
   else                  config.RemoveParameter("Client","SOAPCompress");
   if(m_useGzip)         config.SetParameter   ("Client","HTTPCompression",  m_gzip);
   else                  config.RemoveParameter("Client","HTTPCompression");
+  if(m_useSendBOM)      config.SetParameter   ("Client","SendBOM",          m_sendBOM);
+  else                  config.RemoveParameter("Client","SendBOM");
   if(m_useForceTunnel)  config.SetParameter   ("Client","VerbTunneling",    m_forceTunnel);
   else                  config.RemoveParameter("Client","VerbTunneling");
   if(m_useCertStore)    config.SetParameter   ("Client","CertificateStore", m_certStore);
@@ -411,6 +434,8 @@ WebConfigClient::WriteWebConfig(WebConfig& config)
   else                  config.RemoveParameter("Client","CertificateName");
   if(m_useCertPreset)   config.SetParameter   ("Client","CertificatePreset",m_certPreset);
   else                  config.RemoveParameter("Client","CertificatePreset");
+  if(m_useOrigin)       config.SetParameter   ("Client","CORS_Origin",      m_origin);
+  else                  config.RemoveParameter("Client","CORS_Origin");
   if(m_useResolve)      config.SetParameter   ("Client","TimeoutResolve",   toResolve);
   else                  config.RemoveParameter("Client","TimeoutResolve");
   if(m_useConnect)      config.SetParameter   ("Client","TimeoutConnect",   toConnect);
@@ -510,6 +535,11 @@ void WebConfigClient::OnBnClickedCertPreset()
   m_certPreset = m_buttonCertPreset.GetCheck() > 0;
 }
 
+void WebConfigClient::OnEnChangeOrigin()
+{
+  UpdateData();
+}
+
 void WebConfigClient::OnEnChangeOutResolve()
 {
   UpdateData();
@@ -572,6 +602,12 @@ void
 WebConfigClient::OnBnClickedGzip()
 {
   m_gzip = m_buttonGzip.GetCheck() > 0;
+}
+
+void
+WebConfigClient::OnBnClickedSendBOM()
+{
+  m_sendBOM = m_buttonSendBOM.GetCheck() > 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -664,6 +700,13 @@ WebConfigClient::OnBnClickedUseCertPreset()
   UpdateData(FALSE);
 }
 
+void
+WebConfigClient::OnBnClickedUseOrigin()
+{
+  m_useOrigin = m_buttonUseOrigin.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
 void 
 WebConfigClient::OnBnClickedUseResolve()
 {
@@ -731,5 +774,12 @@ void
 WebConfigClient::OnBnClickedUseGzip()
 {
   m_useGzip = m_buttonUseGzip.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
+void
+WebConfigClient::OnBnClickedUseSendBOM()
+{
+  m_useSendBOM = m_buttonUseSendBOM.GetCheck() > 0;
   UpdateData(FALSE);
 }

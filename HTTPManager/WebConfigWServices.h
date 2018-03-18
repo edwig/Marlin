@@ -36,7 +36,7 @@ class WebConfigWServices : public CDialogEx
   DECLARE_DYNAMIC(WebConfigWServices)
 
 public:
-  WebConfigWServices(CWnd* pParent = NULL);   // standard constructor
+  WebConfigWServices(bool p_iis,CWnd* pParent = NULL);   // standard constructor
  ~WebConfigWServices();
   BOOL OnInitDialog();
   void ReadWebConfig (WebConfig& config);
@@ -51,9 +51,12 @@ protected:
 
   DECLARE_MESSAGE_MAP()
 
+  bool        m_iis;
   // USING OVERRIDES
   bool        m_useEncLevel;
   bool        m_useEncPassword;
+  bool        m_useReliable;
+  bool        m_useReliableLogin;
   bool        m_useCheckWSDLIn;
   bool        m_useCheckWSDLOut;
   bool        m_useFieldCheck;
@@ -61,18 +64,24 @@ protected:
   // WEBSERVICE OVERRIDES
   CString     m_encLevel;
   CString     m_encPassword;
+  bool        m_reliable;
+  bool        m_reliableLogin;
   bool        m_checkWSDLin;
   bool        m_checkWSDLout;
   bool        m_fieldCheck;
 
   // Interface items
   CComboBox   m_comboEncryption;
+  CButton     m_buttonReliable;
+  CButton     m_buttonReliableLogin;
   CButton     m_buttonCheckWSDLin;
   CButton     m_buttonCheckWSDLout;
   CButton     m_buttonFieldCheck;
 
   CButton     m_buttonUseEncLevel;
   CButton     m_buttonUseEncPassword;
+  CButton     m_buttonUseReliable;
+  CButton     m_buttonUseReliableLogin;
   CButton     m_buttonUseCheckWSDLin;
   CButton     m_buttonUseCheckWSDLout;
   CButton     m_buttonUseFieldCheck;
@@ -80,12 +89,16 @@ protected:
 public:
   afx_msg void OnCbnSelchangeWsEncrypt();
   afx_msg void OnEnChangeWsencPassword();
+  afx_msg void OnBnClickedReliable();
+  afx_msg void OnBnClickedReliableLogin();
   afx_msg void OnBnClickedCheckWSDLin();
   afx_msg void OnBnClickedCheckWSDLout();
   afx_msg void OnBnClickedFieldCheck();
 
   afx_msg void OnBnClickedUseWsEncrypt();
   afx_msg void OnBnClickedUseWsencPw();
+  afx_msg void OnBnClickedUseReliable();
+  afx_msg void OnBnClickedUseReliableLogin();
   afx_msg void OnBnClickedUseCheckWSDLin();
   afx_msg void OnBnClickedUseCheckWSDLout();
   afx_msg void OnBnClickedUseFieldCheck();

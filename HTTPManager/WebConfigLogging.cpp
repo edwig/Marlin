@@ -45,8 +45,9 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(WebConfigLogging, CDialogEx)
 
-WebConfigLogging::WebConfigLogging(CWnd* pParent /*=NULL*/)
+WebConfigLogging::WebConfigLogging(bool p_iis,CWnd* pParent /*=NULL*/)
                  :CDialogEx(WebConfigLogging::IDD, pParent)
+                 ,m_iis(p_iis)
 {
   m_useLogfile      = false;
   m_useLogCaching   = false;
