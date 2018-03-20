@@ -1764,4 +1764,10 @@ HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
     p_headers.insert(std::make_pair("Pragma","no-cache"));
     p_headers.insert(std::make_pair("Expires","0"));
   }
+
+  // If we use CORS, make sure we advertise the origin
+  if(m_useCORS)
+  {
+    p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? "*" : m_allowOrigin));
+  }
 }

@@ -77,7 +77,12 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
     CString reqHeader = p_message->GetHeader("Access-Control-Request-Headers");
     p_message->Reset();
 
-    CheckCrossOriginSettings(p_message,comesFrom,reqMethod,reqHeader);
+    if(CheckCrossOriginSettings(p_message,comesFrom,reqMethod,reqHeader) == false)
+    {
+      p_message->SetCommand(HTTPCommand::http_response);
+      m_site->SendResponse(p_message);
+      return false;
+    }
   }
   else
   {
@@ -102,7 +107,7 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
 void
 SiteHandlerOptions::PostHandle(HTTPMessage* p_message)
 {
-  if(p_message && !p_message->GetHasBeenAnswered())
+  if(p_message && p_message->GetRequestHandle())
   {
     p_message->SetCommand(HTTPCommand::http_response);
     m_site->SendResponse(p_message);
@@ -118,16 +123,16 @@ SiteHandlerOptions::PostHandle(HTTPMessage* p_message)
 //
 //////////////////////////////////////////////////////////////////////////
 
-void
+bool
 SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
                                             ,CString      p_origin
                                             ,CString      p_method
                                             ,CString      p_headers)
 {
   // Check all requested header methods
-  if(!CheckCORSOrigin (p_message,p_origin))  return;
-  if(!CheckCORSMethod (p_message,p_method))  return;
-  if(!CheckCORSHeaders(p_message,p_headers)) return;
+  if(!CheckCORSOrigin (p_message,p_origin))  return false;
+  if(!CheckCORSMethod (p_message,p_method))  return false;
+  if(!CheckCORSHeaders(p_message,p_headers)) return false;
 
   // Adding the max age if any
   if(m_site->GetCORSMaxAge() > 0)
@@ -141,6 +146,7 @@ SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
   {
     p_message->AddHeader("Access-Control-Allow-Credentials","true",false);
   }
+  return true;
 }
 
 // Check that we have same origin
@@ -148,29 +154,23 @@ bool
 SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,CString p_origin)
 {
   CString origin = m_site->GetCORSOrigin();
-  if(!origin.IsEmpty() && origin != "*")
-  {
-    if(p_origin.CompareNoCase(origin))
-    {
-      // This call is NOT allowed
-      p_message->SetStatus(HTTP_STATUS_DENIED);
-      SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: Not same CORS origin");
-      return false;
-    }
-    p_message->AddHeader("Access-Control-Allow-Origin",origin,false);
-    return true;
-  }
+  p_origin.MakeLower();
+  origin.MakeLower();
 
   // If all sites are allowed, just reflect the requested origin
   if(origin == "*")
   {
-    p_message->AddHeader("Access-Control-Allow-Origin",p_origin,false);
     return true;
   }
-
-  // No origin given
+  else if(origin.Find(p_origin) == 0)
+  {
+    return true;
+  }
+  // This call is NOT allowed
   p_message->SetStatus(HTTP_STATUS_DENIED);
-  SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: No CORS origin configured by the server");
+  CString error;
+  error.Format("Call refused: Not same CORS origin. Site allows [%s] but call was from: %s",origin.GetString(),p_origin.GetString());
+  SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
   return false;
 }
 
@@ -178,50 +178,84 @@ SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,CString p_origin)
 bool 
 SiteHandlerOptions::CheckCORSMethod(HTTPMessage* p_message,CString p_method)
 {
+  CString handlers = m_site->GetAllowHandlers();
   if(!p_method.IsEmpty())
   {
-    CString handlers = m_site->GetAllowHandlers();
     if(handlers.Find(p_method) < 0)
     {
       // This method is NOT allowed
       p_message->SetStatus(HTTP_STATUS_DENIED);
-      SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: CORS method not implemented by the server");
+      CString error;
+      error.Format("Call refused: CORS method [%s] not implemented by the server.",p_method.GetString());
+      SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
       return false;
     }
-    // These are the allowed methods for this site
-    p_message->AddHeader("Access-Control-Allow-Methods",p_method,false);
-    return true;
   }
-  // No method was requested
-  p_message->SetStatus(HTTP_STATUS_DENIED);
-  SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: No method requested by the origin");
-  return false;
+  // These are the allowed methods for this site
+  p_message->AddHeader("Access-Control-Allow-Methods",handlers,false);
+  return true;
 }
 
 // Check that we can handle these headers
 bool 
 SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,CString p_headers)
 {
+  // Make requested and allowed headers lower case to compare them
   CString allowed = m_site->GetCORSHeaders();
   allowed.MakeLower();
   p_headers.MakeLower();
 
+  // Split all headers
+  std::vector<CString> map;
+  SplitHeaders(p_headers,map);
+
   // See if headers where requested
   if(p_headers.IsEmpty())
   {
-    p_message->AddHeader("Access-Control-Allow-Headers",allowed,false);
     return true;
   }
 
-  // If no restriction is set or we find the header, allow it
-  if(allowed.IsEmpty() || allowed.Find(p_headers) >= 0)
+  // Check all headers
+  for(auto& header : map)
   {
-    p_message->AddHeader("Access-Control-Allow-Headers",p_headers,false);
-    return true;
+    if(!header.IsEmpty() && allowed.Find(header) < 0)
+    {
+      p_message->SetStatus(HTTP_STATUS_DENIED);
+      CString error;
+      error.Format("Call refused: header [%s] not allowed by the server",p_headers.GetString());
+      SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
+      return false;
+    }
   }
+  // These are the allowed methods for this site
+  p_message->AddHeader("Access-Control-Allow-Headers",m_site->GetCORSHeaders(),false);
+  return true;
+}
 
-  // No method was requested
-  p_message->SetStatus(HTTP_STATUS_DENIED);
-  SITE_ERRORLOG(ERROR_ACCESS_DENIED,"Call refused: header not allowed by the server");
-  return false;
+void 
+SiteHandlerOptions::SplitHeaders(CString p_headers,std::vector<CString>& p_map)
+{
+  while(!p_headers.IsEmpty())
+  {
+    int pos = p_headers.Find(',');
+    if(pos > 0)
+    {
+      CString header = p_headers.Left(pos);
+      p_headers = p_headers.Mid(pos + 1);
+      header.Trim();
+      if(!header.IsEmpty())
+      {
+        p_map.push_back(header);
+      }
+    }
+    else
+    {
+      p_headers.Trim();
+      if(!p_headers.IsEmpty())
+      {
+        p_map.push_back(p_headers);
+      }
+      return;
+    }
+  }
 }
