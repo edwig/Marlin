@@ -282,7 +282,7 @@ HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /
     {
       handler = handler->GetNextHandler();
     }
-    handler->SetNextHandler(p_handler);
+    handler->SetNextHandler(p_handler,p_owner);
   }
   else
   {

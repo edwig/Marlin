@@ -33,6 +33,9 @@
 
 #define SERVERNAME_BUFFERSIZE 256
 
+// First x characters of the apppool distinguish the application
+#define APPPOOL_MAX 10
+
 // Forward reference
 class ServerApp;
 class LogAnalysis;
@@ -42,6 +45,9 @@ class HTTPServerIIS;
 extern IHttpServer*   g_iisServer;
 extern LogAnalysis*   g_analysisLog;
 extern HTTPServerIIS* g_marlin;
+
+// Get the first APPPOOL_MAX characters of our DLL
+CString GetDLLName();
 
 // Create the module class
 // Hooking into the 'integrated pipeline' of IIS

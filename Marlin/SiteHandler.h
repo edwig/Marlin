@@ -47,8 +47,8 @@ public:
 
   // Connect to this site / to be called from HTTPSite
   void         SetSite(HTTPSite* p_site)            { m_site = p_site; }
-  void         SetNextHandler(SiteHandler* p_next)  { m_next = p_next; }
   SiteHandler* GetNextHandler()                     { return m_next;   }
+  void         SetNextHandler(SiteHandler* p_next,bool p_owner);
 
   // When starting the site
   virtual void OnStartSite();
@@ -69,5 +69,6 @@ protected:
 
   HTTPSite*    m_site { nullptr };  // Parent site of the handler
   SiteHandler* m_next { nullptr };  // Next handler for this HTTP command
+  bool         m_nextowner{false};  // Owner of next handler
 };
 

@@ -42,7 +42,7 @@ SiteHandler::SiteHandler()
 // Delete the complete site handler chain
 SiteHandler::~SiteHandler()
 {
-  if(m_next)
+  if(m_next && m_nextowner)
   {
     delete m_next;
     m_next = nullptr;
@@ -131,4 +131,11 @@ SiteHandler::CleanUp(HTTPMessage* p_message)
     m_site->SendResponse(p_message);
   }
   // Nothing to do for memory cleanup
+}
+
+void         
+SiteHandler::SetNextHandler(SiteHandler* p_next,bool p_owner)
+{
+  m_next      = p_next;
+  m_nextowner = p_owner;
 }

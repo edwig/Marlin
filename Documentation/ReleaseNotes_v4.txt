@@ -12,19 +12,29 @@ CHANGES IN VERSION 4.8.0
 ========================
 1)  The HTTPServerIIS now has an extra config file "marlin.config", that is the counterpart of the
     web.config of the standalone server.
-	This is done, so that we can configure all of the parameters that where no longer reachable.
+	  This is done, so that we can configure all of the parameters that where no longer reachable.
 2)  All web.config parameters have been checked for definition in the HTTPManager and in the objects
     where they are read. Some where missed in one of these places. In the documentation directory
-	there now is a spreadsheet "AllConfigParameters.xlsx" that holds all these parameters.
-	Corrections are in yellow.
-	Places where IIS cannot use these parameters are marked in red.
+	  there now is a spreadsheet "AllConfigParameters.xlsx" that holds all these parameters.
+	  Corrections are in yellow.
+	  Places where IIS cannot use these parameters are marked in red.
 3)  The HTTPManager now can be started in two modi: IIS and STANDALONE.
     You can start the program with the "/ISS" switch or the "/STANDALONE" switch.
-	If you use neither, you will presented with a message box to choose one of these.
-	IIS-Mode  : You cannot create a new URL reservation, but you can remove old ones
-	            You cannot bind a SSL certificate to an URL, use IIS-Admin for this
-	            The config buttons now lead to the "Marlin.config" file editor
+	  If you use neither, you will presented with a message box to choose one of these.
+	  IIS-Mode  : You cannot create a new URL reservation, but you can remove old ones
+	              You cannot bind a SSL certificate to an URL, use IIS-Admin for this
+	              The config buttons now lead to the "Marlin.config" file editor
     Standalone: Everything works as before. The buttons lead to the "web.config" file editor.
+4)  The IIS module must have a unique name in the first 10 characters. This name must correspond with
+    the application pool name!!!
+    This new requirement is to fix a bug in the IIS registration of modules. You cannnot exclude a 
+    module from a website/application-pool if the modules do not all reside in the same subdirectory.
+    The MarlinModule will now check in the "RegisterModule" function wether to register itself. It will
+    do so only if you meet this new requirement.
+    Without this requirement, multiple native C++ handlers on the same IIS will crash randomly!
+5)  Fixed a bug in the registration of SiteHandlers if the handler gets registered in the chain. The
+    ownership of the handler will be forewarded to the next handler in the chain. This fixed a memory leak!
+
 
 CHANGES IN VERSION 4.7.3
 ========================

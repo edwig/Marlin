@@ -100,6 +100,16 @@ RegisterModule(DWORD                        p_version
 
   TRACE("REGISTER MODULE\n");
 
+  // Do not register module from another program
+  // Be aware that the DLL must have a system-wide unique name!!
+  PCWSTR pool = p_server->GetAppPoolName();
+  CString poolname = CW2A(pool);
+  CString dllname = GetDLLName();
+  if(poolname.Find(dllname) != 0)
+  {
+    return S_OK;
+  }
+
   // Declaration of the start log function
   void StartLog(DWORD p_version);
 
@@ -217,6 +227,45 @@ StopLog()
 }
 
 // End of Extern "C" calls
+}
+
+// Find the name of this DLL
+// Only start OUR dll !!
+CString GetDLLName()
+{
+  char buffer[_MAX_PATH + 1];
+
+  // Getting the module handle, if any
+  // If it fails, the process names will be retrieved
+  // Thus we get the *.DLL handle in IIS instead of a
+  // %systemdrive\system32\inetsrv\w3wp.exe path
+  HMODULE module = NULL;
+  GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT
+                   ,(LPCSTR)(&g_abortServer)
+                   ,&module);
+
+  // Retrieve the path
+  GetModuleFileName(module,buffer,_MAX_PATH);
+  CString filename = buffer;
+
+  // Remove *.dll or *.exe
+  int pointPosition = filename.ReverseFind('.');
+  if(pointPosition >= 0)
+  {
+    filename = filename.Left(pointPosition);
+  }
+
+  // Remove pathname (always a path name)
+  int slashPosition = filename.ReverseFind('\\');
+  filename = filename.Mid(slashPosition + 1);
+
+  // Max characters by convention
+  if(filename.GetLength() > APPPOOL_MAX)
+  {
+    filename = filename.Left(APPPOOL_MAX);
+  }
+  return filename;
 }
 
 //////////////////////////////////////////////////////////////////////////
