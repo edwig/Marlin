@@ -337,9 +337,6 @@ XMLMessage::PrintHeader()
   }
   header.AppendFormat(" encoding=\"%s\"",CodepageToCharset(acp).GetString());
 
-  // Add spaceing
-  header.AppendFormat(" space=\"%s\"",m_whitespace ? "default" : "preserve");
-
   // Add standalone?
   if(!m_standalone.IsEmpty())
   {

@@ -25,8 +25,13 @@ CHANGES IN VERSION 4.8.0
 	              You cannot bind a SSL certificate to an URL, use IIS-Admin for this
 	              The config buttons now lead to the "Marlin.config" file editor
     Standalone: Everything works as before. The buttons lead to the "web.config" file editor.
-4)  The IIS module must have a unique name in the first 10 characters. This name must correspond with
-    the application pool name!!!
+4)  The IIS module must have a unique. This name must correspond with the application pool name!!!
+    The beginning of the application pool name must match with the filename of your module. 
+    Example:
+    - The module name is "C:\MyTestDir\Version12\My_Marlin_12.DLL"
+    - The application pool must start with "My_Marlin_12", so an application pool name of
+      "My_Marlin_12_website" is ok.
+    You must be aware that all DLL modules that you create must have a system wide unique name!
     This new requirement is to fix a bug in the IIS registration of modules. You cannnot exclude a 
     module from a website/application-pool if the modules do not all reside in the same subdirectory.
     The MarlinModule will now check in the "RegisterModule" function wether to register itself. It will
@@ -34,7 +39,33 @@ CHANGES IN VERSION 4.8.0
     Without this requirement, multiple native C++ handlers on the same IIS will crash randomly!
 5)  Fixed a bug in the registration of SiteHandlers if the handler gets registered in the chain. The
     ownership of the handler will be forewarded to the next handler in the chain. This fixed a memory leak!
-
+6)  The reading and logging of the site configuration has been moved (back) to the HTTPSite main object.
+    This is to support the "Marlin.config" file for the IIS configuration
+7)  The handling of requests in the MarlinModule has changed!
+    Instead of handling the whole request at once in the integrated pipeline at the "OnResolveRequestCache"
+    it is now done in two stages:
+    - OnResolveRequestCache:   Only handles the event streams
+    - OnExecuteRequestHandler: Handles the 'regular' HTTP calls like POST and GET/PUT etc.
+    This splitting has a number of advantages:
+    - Streams and resource requests are seperated
+    - Events will not be mixed with the "StaticFileHandler" from IIS
+    - The "StaticFileHandler" can now be used intermixed with your module server. Files then get serviced
+      by default by IIS itself, and you can concentrate e.g. on only servicing application POST's.
+8)  The new handling in the MarinModule makes it mandatory to register at least one handler registration
+    in IIS-Admin on your site. This handler must have at least the following settings:
+    - Request path: *
+    - Module: "<the name of your module>"
+    - Executable script: <leave this empty!>
+    - Restrictions (button) : Remove the check in the checkbox on the first tab!!
+    Without this registration the "OnExecuteRequestHandler" (see point 7) will never be called!!
+9)  The preservering of the whitespace has been moved out of the header of the XMLMessage and is moved to
+    the "SetPreserveWhitespace" method of the SOAPMessage. This ensures that the main parameter node of the
+    SOAPMessage gets the "xml:space=preserve" attribute.
+    The XMLScanner has been modified to react recursively on this attribute, as is supposed to be defined 
+    by the W3C XML 1.1 standard.
+10) The <Webservices><JSONTranslation> setting has been removed from the web.config. There is no real way
+    to support this by settings alone, as you have to make a JSON/SOAP handler in your code. It cannot be
+    defined from the outside.
 
 CHANGES IN VERSION 4.7.3
 ========================

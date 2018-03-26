@@ -419,6 +419,81 @@ HTTPSite::StopSite(bool p_force /*=false*/)
   return true;
 }
 
+// Write the settings to the logfile
+// But only after we read all the config files
+void
+HTTPSite::LogSettings()
+{
+  // Nothing to do
+  if(m_server->GetLogLevel() < HLL_LOGGING)
+  {
+    return;
+  }
+
+  // Read XML Signing en encryption from the config
+  CString level;
+  switch(m_securityLevel)
+  {
+    case XMLEncryption::XENC_Plain:   level = "plain";   break;
+    case XMLEncryption::XENC_Signing: level = "sign";    break;
+    case XMLEncryption::XENC_Body:    level = "body";    break;
+    case XMLEncryption::XENC_Message: level = "message"; break;
+    default:                          level = "UNKNOWN"; break;
+  }
+
+  // Translate X-Frame options back
+  CString option;
+  switch(m_xFrameOption)
+  {
+    case XFrameOption::XFO_DENY:      option = "DENY";        break;
+    case XFrameOption::XFO_SAMEORIGIN:option = "SAME-ORIGIN"; break;
+    case XFrameOption::XFO_ALLOWFROM: option = "ALLOW-FROM";  break;
+    case XFrameOption::XFO_NO_OPTION: option = "";            break;
+    default:                          option = "UNKNOWN";     break;
+  }
+
+  // Authentication scheme
+  CString schemes;
+  if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)     schemes += "Basic/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)    schemes += "Digest/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_NTLM)      schemes += "NTLM/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_NEGOTIATE) schemes += "Negotiate/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_KERBEROS)  schemes += "Kerberos/";
+  if(m_authScheme == 0)                         schemes += "Anonymous/";
+  schemes.TrimRight('/');
+
+  // List other settings of the site
+  //         "---------------------------------- : ------------"
+  DETAILLOGV("Site HTTP port set to              : %d",     m_port);
+  DETAILLOGS("Site SOAP WS-Security level        : ",       level);
+  DETAILLOGS("Site authentication scheme         : ",       schemes);
+  DETAILLOGV("Site authentication realm/domain   : %s/%s",  m_realm.GetString(),m_domain.GetString());
+  DETAILLOGS("Site NT-LanManager caching         : ",       m_ntlmCache     ? "ON" : "OFF");
+  DETAILLOGV("Site a-synchronious SOAP setting to: %sSYNC", m_async         ? "A-" : ""   );
+  DETAILLOGS("Site accepting Server-Sent-Events  : ",       m_isEventStream ? "ON" : "OFF");
+  DETAILLOGS("Site retaining all headers         : ",       m_allHeaders    ? "ON" : "OFF");
+  DETAILLOGS("Site allows for HTTP-VERB Tunneling: ",       m_verbTunneling ? "ON" : "OFF");
+  DETAILLOGS("Site uses HTTP Throtteling         : ",       m_throttling    ? "ON" : "OFF");
+  DETAILLOGS("Site forces response to UTF-16     : ",       m_sendUnicode   ? "ON" : "OFF");
+  DETAILLOGS("Site forces SOAP response UTF BOM  : ",       m_sendSoapBOM   ? "ON" : "OFF");
+  DETAILLOGS("Site forces JSON response UTF BOM  : ",       m_sendJsonBOM   ? "ON" : "OFF");
+  DETAILLOGS("Site WS-ReliableMessaging setting  : ",       m_reliable      ? "ON" : "OFF");
+  DETAILLOGS("Site WS-RM needs logged in user    : ",       m_reliableLogIn ? "ON" : "OFF");
+  DETAILLOGS("Site IFRAME options header         : ",       option);
+  DETAILLOGS("Site allows to be IFRAME'd from    : ",       m_xFrameAllowed);
+  DETAILLOGV("Site is HTTPS-only for at least    : %d seconds",m_hstsMaxAge);
+  DETAILLOGS("Site does allow HTTPS subdomains   : ",       m_hstsSubDomains ? "YES":  "NO");
+  DETAILLOGS("Site does allow content sniffing   : ",       m_xNoSniff       ? "NO" : "YES");
+  DETAILLOGS("Site has XSS Protection set to     : ",       m_xXSSProtection ? "ON" : "OFF");
+  DETAILLOGS("Site has XSS Protection block mode : ",       m_xXSSBlockMode  ? "ON" : "OFF");
+  DETAILLOGS("Site blocking the browser caching  : ",       m_blockCache     ? "ON" : "OFF");
+  DETAILLOGS("Site Cross-Origin-Resource-Sharing : ",       m_useCORS        ? "ON" : "OFF");
+  DETAILLOG1(CString("Site allows cross-origin           : ") + (m_allowOrigin.IsEmpty() ? "*" : m_allowOrigin));
+  DETAILLOGS("Site CORS allows headers           : ",       m_allowHeaders);
+  DETAILLOGV("Site CORS max age of pre-flight    : %d",     m_corsMaxAge);
+  DETAILLOGS("Site CORS allows credentials       : %s",     m_corsCredentials ? "YES" : "NO");
+}
+
 // Remove the site from the URL group
 bool
 HTTPSite::RemoveSiteFromGroup()

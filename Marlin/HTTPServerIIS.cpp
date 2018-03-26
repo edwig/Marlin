@@ -358,17 +358,66 @@ HTTPServerIIS::DeleteSite(int p_port,CString p_baseURL,bool p_force /*=false*/)
 //
 //////////////////////////////////////////////////////////////////////////
 
+EventStream*
+HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
+                                        ,HTTPSite*     p_site
+                                        ,PHTTP_REQUEST p_request)
+{
+  // Grab the senders accepted types
+  CString acceptTypes = p_request->Headers.KnownHeaders[HttpHeaderAccept].pRawValue;
+  acceptTypes.Trim();
+
+  // Receiving the initiation of an event stream for the server ?
+  if((p_request->Verb == HttpVerbGET) &&
+     (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
+  {
+    USES_CONVERSION;
+
+    // Grab the rest of the needed content out of the request
+    PSOCKADDR sender       = p_request->Address.pRemoteAddress;
+    CString   rawUrl       = CW2A(p_request->CookedUrl.pFullUrl);
+    int       remDesktop   = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
+                                              ,p_request->Headers.pUnknownHeaders);
+    CString   absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
+
+    // Open an event stream
+    EventStream* stream = SubscribeEventStream((PSOCKADDR_IN6)sender
+                                               ,remDesktop
+                                               ,p_site
+                                               ,p_site->GetSite()
+                                               ,absolutePath
+                                               ,(HTTP_OPAQUE_ID)p_context
+                                               ,NULL);
+    if(stream)
+    {
+      // Getting the impersonated user
+      IHttpUser* user = p_context->GetUser();
+      if(user)
+      {
+        stream->m_user = CW2A(user->GetRemoteUserName());
+      }
+      stream->m_baseURL = rawUrl;
+      DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s",stream->m_user.GetString(),rawUrl.GetString());
+      // To do for this stream, not for a message
+      p_site->HandleEventStream(stream);
+
+      // Return the fact that the request turned into a stream
+      return stream;
+    }
+  }
+  // Not a stream request or stream not initiated
+  return nullptr;
+}
+
 // Building the essential HTTPMessage from the request area
 HTTPMessage* 
 HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                                         ,HTTPSite*     p_site
-                                        ,PHTTP_REQUEST p_request
-                                        ,EventStream*& p_stream)
+                                        ,PHTTP_REQUEST p_request)
 {
   USES_CONVERSION;
 
   // Grab the senders content
-  CString   acceptTypes    = p_request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
   CString   contentType    = p_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
   CString   contentLength  = p_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
   CString   acceptEncoding = p_request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
@@ -438,38 +487,6 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                               return nullptr;
                             }
                             break;
-  }
-
-  // Receiving the initiation of an event stream for the server
-  acceptTypes.Trim();
-  if((type == HTTPCommand::http_get) && 
-     (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
-  {
-    CString absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
-    EventStream* stream = SubscribeEventStream((PSOCKADDR_IN6) sender
-                                               ,remDesktop
-                                               ,p_site
-                                               ,p_site->GetSite()
-                                               ,absolutePath
-                                               ,(HTTP_OPAQUE_ID) p_context
-                                               ,NULL);
-    if(stream)
-    {
-      // Getting the impersonated user
-      IHttpUser* user = p_context->GetUser();
-      if(user)
-      {
-        stream->m_user = CW2A(user->GetRemoteUserName());
-      }
-      stream->m_baseURL = rawUrl;
-      DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s",stream->m_user.GetString(),rawUrl.GetString());
-      // To do for this stream, not for a message
-      p_site->HandleEventStream(stream);
-
-      // Return the fact that the request turned into a stream
-      p_stream = stream;
-      return nullptr;
-    }
   }
 
   // For all types of requests: Create the HTTPMessage
@@ -829,7 +846,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   SetResponseStatus(response,(USHORT) p_message->GetStatus(),GetHTTPStatusText(p_message->GetStatus()));
 
   // In case of a 401, we challenge to the client to identify itself
-  if (p_message->GetStatus() == HTTP_STATUS_DENIED)
+  if (status == HTTP_STATUS_DENIED)
   {
     // See if the message already has an authentication scheme header
     CString challenge = p_message->GetHeader("AuthenticationScheme");

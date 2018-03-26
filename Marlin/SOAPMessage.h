@@ -156,6 +156,8 @@ public:
   // Set the content type
   void            SetContentType(CString p_contentType);
   void            SetAcceptEncoding(CString p_encoding);
+  // Set the whitespace preserving (instead of CDATA sections)
+  bool            SetPreserveWhitespace(bool p_preserve = true);
   // Set the cookies
   void            SetCookie(Cookie& p_cookie);
   void            SetCookie(CString p_name,CString p_value,CString p_metadata = "",bool p_secure = false);

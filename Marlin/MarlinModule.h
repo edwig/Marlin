@@ -33,9 +33,6 @@
 
 #define SERVERNAME_BUFFERSIZE 256
 
-// First x characters of the apppool distinguish the application
-#define APPPOOL_MAX 10
-
 // Forward reference
 class ServerApp;
 class LogAnalysis;
@@ -46,7 +43,7 @@ extern IHttpServer*   g_iisServer;
 extern LogAnalysis*   g_analysisLog;
 extern HTTPServerIIS* g_marlin;
 
-// Get the first APPPOOL_MAX characters of our DLL
+// Get the base name of the module DLL
 CString GetDLLName();
 
 // Create the module class
@@ -65,9 +62,8 @@ public:
   // after the authenticate and the authorize request are handled
   virtual REQUEST_NOTIFICATION_STATUS OnResolveRequestCache     (IN IHttpContext*        p_httpContext,
                                                                  IN IHttpEventProvider*  p_provider);
-  // The Pre-Execute stage is too late: cannot implement our own subsites
-//virtual REQUEST_NOTIFICATION_STATUS OnPreExecuteRequestHandler(IN IHttpContext*        p_httpContext,
-//                                                               IN IHttpEventProvider* p_provider);
+  virtual REQUEST_NOTIFICATION_STATUS OnExecuteRequestHandler(   IN IHttpContext*        p_httpContext,
+                                                                 IN IHttpEventProvider*  p_provider);
   virtual REQUEST_NOTIFICATION_STATUS OnAsyncCompletion         (IN IHttpContext*        pHttpContext,
                                                                  IN DWORD                dwNotification,
                                                                  IN BOOL                 fPostNotification,

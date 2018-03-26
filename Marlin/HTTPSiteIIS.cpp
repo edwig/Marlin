@@ -81,26 +81,7 @@ HTTPSiteIIS::InitSite()
   HTTPSite::InitSite(m_server->GetWebConfig());
 }
 
-void
-HTTPSiteIIS::LogSettings()
-{
-  // Authentication scheme
-  CString schemes;
-  if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)     schemes += "Basic/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)    schemes += "Digest/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_NTLM)      schemes += "NTLM/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_NEGOTIATE) schemes += "Negotiate/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_KERBEROS)  schemes += "Kerberos/";
-  schemes.TrimRight('/');
 
-  // List settings of the site
-  //         "------------------------------------------ : ------------"
-  DETAILLOGV("Site HTTP port set to                      : %d",m_port);
-  DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
-  DETAILLOGS("Site authentication scheme(s)              : ",schemes);
-  DETAILLOGV("Site authentication realm/domain           : %s/%s",m_realm.GetString(),m_domain.GetString());
-  DETAILLOGS("Site NT-LanManager caching                 : ",m_ntlmCache ? "ON" : "OFF");
-}
 
 bool
 HTTPSiteIIS::StartSite()
@@ -194,4 +175,3 @@ HTTPSiteIIS::GetIISSiteDir()
   dir.Replace("/","\\");
   return dir;
 }
-

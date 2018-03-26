@@ -67,11 +67,15 @@ public:
   
   // FUNCTIONS FOR IIS
 
+  // Building a EventStream from the request area
+  EventStream* GetHTTPStreamFromRequest(IHttpContext* p_context
+                                       ,HTTPSite*     p_site
+                                       ,PHTTP_REQUEST p_request);
+
   // Building the essential HTTPMessage from the request area
   HTTPMessage* GetHTTPMessageFromRequest(IHttpContext*  p_context
                                         ,HTTPSite*      p_site
-                                        ,PHTTP_REQUEST  p_request
-                                        ,EventStream*&  p_stream);
+                                        ,PHTTP_REQUEST  p_request);
 
 protected:
   // Cleanup the server

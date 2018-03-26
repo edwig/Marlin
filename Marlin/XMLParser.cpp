@@ -343,17 +343,6 @@ XMLParser::ParseDeclaration()
         }
       }
     }
-    else if(attributeName.Compare("space") == 0)
-    {
-      if(value.CompareNoCase("preserve") == 0)
-      {
-        m_message->m_whitespace = true; // WhiteSpace::PRESERVE_WHITESPACE;
-      }
-      else if(value.CompareNoCase("default") == 0)
-      {
-        m_message->m_whitespace = false; // WhiteSpace::COLLAPSE_WHITESPACE
-      }
-    }
     else if(attributeName.Compare("standalone") == 0)
     {
       if(value.CompareNoCase("yes") == 0 || value.CompareNoCase("no") == 0)
@@ -474,6 +463,7 @@ XMLParser::ParseElement()
 {
   CString elementName;
   CString attributeName;
+  WhiteSpace elemspace = m_whiteSpace;
   // Skip leading '<'
   m_pointer++;
 
@@ -496,6 +486,13 @@ XMLParser::ParseElement()
 
         // Adding an attribute
         m_message->SetAttribute(m_lastElement,attributeName,value);
+
+        // In special case "[xml:]space", we must change whitespace preserving
+        if(attributeName.Compare("space") == 0)
+        {
+          elemspace = value.Compare("preserve") == 0 ? WhiteSpace::PRESERVE_WHITESPACE 
+                                                     : WhiteSpace::COLLAPSE_WHITESPACE;
+        }
       }
     }
     if(*m_pointer && strncmp((const char*)m_pointer,"/>",2) == 0)
@@ -511,11 +508,15 @@ XMLParser::ParseElement()
       SkipOuterWhiteSpace();
       if(*m_pointer && *m_pointer == '<')
       {
-        // Push element and parse next level
+        // Push element and space-preserving and parse next level
         XMLElement* level = m_element;
+        WhiteSpace  space = m_whiteSpace;
+
+        m_whiteSpace = elemspace;
         m_element = m_lastElement;
         ParseLevel();
         m_element = level;
+        m_whiteSpace = space;
       }
       else
       {

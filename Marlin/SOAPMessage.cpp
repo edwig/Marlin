@@ -1007,6 +1007,19 @@ SOAPMessage::GetUnAuthorisedURL() const
   return url;
 }
 
+// Set the whitespace preserving (instead of CDATA sections)
+bool
+SOAPMessage::SetPreserveWhitespace(bool p_preserve /*= true*/)
+{
+  XMLElement* parm = GetParameterObjectNode();
+  if(parm)
+  {
+    SetAttribute(parm,"xml:space",p_preserve ? "preserve" : "default");
+    return true;
+  }
+  return false;
+}
+
 #pragma endregion Getting and setting members
 
 #pragma region XMLOutput

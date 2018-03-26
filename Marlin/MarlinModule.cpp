@@ -117,7 +117,8 @@ RegisterModule(DWORD                        p_version
   DWORD globalEvents = GL_APPLICATION_START |     // Starting application pool
                        GL_APPLICATION_STOP;       // Stopping application pool
   DWORD moduleEvents = RQ_BEGIN_REQUEST |         // First point to intercept the IIS integrated pipeline
-                       RQ_RESOLVE_REQUEST_CACHE;  // Request is authenticated, ready for processing
+                       RQ_RESOLVE_REQUEST_CACHE |
+                       RQ_EXECUTE_REQUEST_HANDLER;  // Request is authenticated, ready for processing
 
   // Start/Restart the logfile.
   // First moment IIS is calling us. So start logging first!
@@ -230,7 +231,7 @@ StopLog()
 }
 
 // Find the name of this DLL
-// Only start OUR dll !!
+// The objective is to start only OUR dll !!
 CString GetDLLName()
 {
   char buffer[_MAX_PATH + 1];
@@ -260,11 +261,6 @@ CString GetDLLName()
   int slashPosition = filename.ReverseFind('\\');
   filename = filename.Mid(slashPosition + 1);
 
-  // Max characters by convention
-  if(filename.GetLength() > APPPOOL_MAX)
-  {
-    filename = filename.Left(APPPOOL_MAX);
-  }
   return filename;
 }
 
@@ -660,8 +656,99 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
     return RQ_NOTIFICATION_CONTINUE;
   }
 
-  EventStream* stream = nullptr;
-  HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(p_context,site,rawRequest,stream);
+  // Grab an event stream, if it was present, otherwise continue to the next handler
+  EventStream* stream = g_marlin->GetHTTPStreamFromRequest(p_context,site,rawRequest);
+  if(stream != nullptr)
+  {
+    // If we turn into a stream, more notifications are pending
+    // This means the context of this request will **NOT** end
+    status = RQ_NOTIFICATION_PENDING;
+  }
+
+  // Now completely ready. We did everything!
+  g_marlin->GetCounter()->Stop();
+  return status;
+}
+
+REQUEST_NOTIFICATION_STATUS 
+MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
+                                      IN IHttpEventProvider* p_provider)
+{
+  UNREFERENCED_PARAMETER(p_provider);
+  REQUEST_NOTIFICATION_STATUS status = RQ_NOTIFICATION_CONTINUE;
+  char  buffer1[SERVERNAME_BUFFERSIZE + 1];
+  char  buffer2[SERVERNAME_BUFFERSIZE + 1];
+  DWORD size = SERVERNAME_BUFFERSIZE;
+  PCSTR serverName = buffer1;
+  PCSTR referrer = buffer2;
+
+  // See if we are correctly initialized (by global application start)
+  // Otherwise we have no reason to be here!
+  if (g_marlin == nullptr)
+  {
+    return status;
+  }
+
+  // Starting the performance counter
+  g_marlin->GetCounter()->Start();
+
+  // Getting the request/response objects
+  IHttpRequest*  request = p_context->GetRequest();
+  IHttpResponse* response = p_context->GetResponse();
+  if (request == nullptr || response == nullptr)
+  {
+    DETAILLOG("No request or response objects");
+    g_marlin->GetCounter()->Stop();
+    return status;
+  }
+
+  // Detect Cross Site Scripting (XSS)
+  HRESULT hr = p_context->GetServerVariable("SERVER_NAME", &serverName, &size);
+  if (hr == S_OK)
+  {
+    hr = p_context->GetServerVariable("HTTP_REFERER", &referrer, &size);
+    if (hr == S_OK)
+    {
+      if (strstr(referrer, serverName) == 0)
+      {
+        DETAILLOG("XSS Detected!! Deferrer not our server!");
+        response->SetStatus(HTTP_STATUS_BAD_REQUEST, "XSS Detected");
+      }
+    }
+  }
+
+  // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
+  const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
+  if (request == nullptr)
+  {
+    ERRORLOG("Abort: IIS did not provide a raw request object!");
+    g_marlin->GetCounter()->Stop();
+    return status;
+  }
+
+  // This is the call we are getting
+  PCSTR url = rawRequest->pRawUrl;
+  DETAILLOG(url);
+
+  // Getting the HTTPSite through the server port/absPath combination
+  int  serverPort = GetServerPort(p_context);
+  HTTPSite* site = g_marlin->FindHTTPSite(serverPort, rawRequest->CookedUrl.pAbsPath);
+
+  // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
+  if (site == nullptr)
+  {
+    // Not our request: Other app running on this machine!
+    // This is why it is wasteful to use IIS for our internet server!
+    CString message("Rejected HTTP call: ");
+    message += rawRequest->pRawUrl;
+    DETAILLOG(message);
+    g_marlin->GetCounter()->Stop();
+    // Let someone else handle this call (if any :-( )
+    return RQ_NOTIFICATION_CONTINUE;
+  }
+
+  // Grab a message from the raw request
+  HTTPMessage* msg = g_marlin->GetHTTPMessageFromRequest(p_context, site, rawRequest);
   if(msg)
   {
     // GO! Let the site handle the message
@@ -679,15 +766,9 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
     }
     msg->DropReference();
   }
-  else if(stream)
-  {
-    // If we turn into a stream, more notifications are pending
-    // This means the context of this request will **NOT** end
-    status = RQ_NOTIFICATION_PENDING;
-  }
   else
   {
-    ERRORLOG("Cannot handle the request: IIS did not provide enough info for a HTTPMessage or an event stream.");
+    ERRORLOG("Cannot handle the request: IIS did not provide enough info for a HTTPMessage.");
     status = RQ_NOTIFICATION_CONTINUE;
   }
   // Now completely ready. We did everything!

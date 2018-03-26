@@ -49,5 +49,4 @@ public:
 protected:
   // Initialize the site from automatic settings in the config
   void         InitSite(WebConfig& p_config);
-  void         LogSettings();
 };

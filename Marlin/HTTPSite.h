@@ -277,7 +277,9 @@ protected:
   void              InitSite(WebConfig& p_config);
   // Set automatic headers upon starting site
   void              SetAutomaticHeaders(WebConfig& p_config);
-    // Cleanup the site when stopping
+  // Log all settings to the site
+  void              LogSettings();
+  // Cleanup the site when stopping
   void              CleanupHandlers();
   void              CleanupFilters();
   void              CleanupThrotteling();
