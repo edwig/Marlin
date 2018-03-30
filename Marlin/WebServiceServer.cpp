@@ -390,9 +390,14 @@ WebServiceServer::ReadingWebconfig()
   {
     // Read the general settings first
     ReadingWebconfig("web.config");
-    CString siteConfigFile = WebConfig::GetSiteConfig(m_site->GetPrefixURL());
-    ReadingWebconfig(siteConfigFile);
   }
+  else
+  {
+    // Or the settings for IIS
+    ReadingWebconfig("marlin.config");
+  }
+  CString siteConfigFile = WebConfig::GetSiteConfig(m_site->GetPrefixURL());
+  ReadingWebconfig(siteConfigFile);
 }
 
 void
