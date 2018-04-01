@@ -68,7 +68,7 @@ SiteHandlerGetClientCert::PostHandle(HTTPMessage* p_message)
   }
 }
 
-int TestClientCertificate(HTTPServer* p_server)
+int TestClientCertificate(HTTPServer* p_server,bool p_standalone)
 {
   int error = 0;
 
@@ -100,8 +100,8 @@ int TestClientCertificate(HTTPServer* p_server)
   // Setting the POST handler for this site
   site->SetHandler(HTTPCommand::http_get,new SiteHandlerGetClientCert());
 
-  // If the ServerApp pointer is NULL, we are a standalone Marlin server!
-  if(g_server == nullptr)
+  // Standalone servers must filter on Client certificates
+  if(p_standalone)
   {
     CString certName   = "marlin";
     CString thumbprint = "db344064f2fac21318dd90f507fe78e81b031600";

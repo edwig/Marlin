@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "ServerApp.h"
 #include "MarlinModule.h"
+#include "WebConfigIIS.h"
+#include "EnsureFile.h"
 #include <string>
 
 #ifdef _DEBUG
@@ -36,51 +38,128 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define DETAILLOGV(text,...)    m_appServer->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__)
-#define WARNINGLOG(text,...)    m_appServer->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__)
-#define ERRORLOG(code,text)     m_appServer->ErrorLog  (__FUNCTION__,code,text)
-
-
-// Pointer to the one and only server object
-// Meant to be run in IIS and not as a stand alone HTTP server!!
-ServerApp* g_server = nullptr;
+#define DETAILLOGV(text,...)    m_httpServer->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__)
+#define WARNINGLOG(text,...)    m_httpServer->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__)
+#define ERRORLOG(code,text)     m_httpServer->ErrorLog  (__FUNCTION__,code,text)
 
 //XTOR
-ServerApp::ServerApp()
+ServerApp::ServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot)
+          :m_iis(p_iis)
+          ,m_applicationName(p_appName)
+          ,m_webroot(p_webroot)
 {
-  if(g_server)
-  {
-    // Cannot run more than one ServerApp
-    m_correctInit = false;     
-  }
-  else
-  {
-    // First registration of the ServerApp derived class
-    m_correctInit = true;
-    g_server = this;
-  }
 }
 
 // DTOR
 ServerApp::~ServerApp()
 {
+  // Just to be sure
+  ExitInstance();
 }
 
-// Called by the MarlinModule at startup of the application pool.
-// Will be called **BEFORE** the "InitInstance" of the ServerApp.
+// Init our server app.
+// Overrides should call this method first!
 void 
-ServerApp::ConnectServerApp(IHttpServer*   p_iis
-                           ,HTTPServerIIS* p_server
-                           ,ThreadPool*    p_pool
-                           ,LogAnalysis*   p_logfile
-                           ,ErrorReport*   p_report)
+ServerApp::InitInstance()
 {
-  // Simply remember our registration
-  m_iis        = p_iis;
-  m_appServer  = p_server;
-  m_appPool    = p_pool;
-  m_appLogfile = p_logfile;
-  m_appReport  = p_report;
+  // Create a marlin HTTPServer object for IIS
+  m_httpServer = new HTTPServerIIS(m_applicationName);
+  m_httpServer->SetWebroot(m_webroot);
+
+  // Start our own logging file
+  StartLogging();
+  m_httpServer->SetLogging(m_logfile);
+  m_httpServer->SetLogLevel(m_logfile->GetLogLevel());
+
+  // Create our error report
+  if(g_report == nullptr)
+  {
+    m_errorReport = new ErrorReport();
+    m_ownReport   = true;
+    m_httpServer->SetErrorReport(m_errorReport);
+  }
+  else
+  {
+    m_errorReport = g_report;
+    m_httpServer->SetErrorReport(g_report);
+  }
+
+  // Now run the marlin server
+  m_httpServer->Run();
+
+  // Grab the ThreadPool
+  m_threadPool = m_httpServer->GetThreadPool();
+}
+
+// Exit our server app
+// Overrides should call this method last!
+void 
+ServerApp::ExitInstance()
+{
+  // Ready with the HTTPServerIIS
+  if(m_httpServer)
+  {
+    // Stop the server and wait for exit processing
+    m_httpServer->StopServer();
+
+    delete m_httpServer;
+    m_httpServer = nullptr;
+  }
+
+  // Stopping our logfile
+  if(m_logfile)
+  {
+    m_logfile->AnalysisLog(__FUNCTION__, LogType::LOG_INFO, true, "%s closed",m_applicationName.GetString());
+
+    delete m_logfile;
+    m_logfile = nullptr;
+  }
+
+  // Destroy the general error report
+  if(m_errorReport && m_ownReport)
+  {
+    delete m_errorReport;
+    m_errorReport = nullptr;
+  }
+}
+
+// The performance counter
+void 
+ServerApp::StartCounter()
+{
+  if(m_httpServer)
+  {
+    m_httpServer->GetCounter()->Start();
+  }
+}
+
+void 
+ServerApp::StopCounter()
+{
+  if(m_httpServer)
+  {
+    m_httpServer->GetCounter()->Stop();
+  }
+}
+
+// Start the logging file for this application
+void  
+ServerApp::StartLogging()
+{
+  // Create the directory for the logfile
+  CString logfile = g_config.GetLogfilePath() + "\\" + m_applicationName + "\\Logfile.txt";
+  EnsureFile ensure(logfile);
+  ensure.CheckCreateDirectory();
+
+  // Create the logfile
+  m_logfile = new LogAnalysis(m_applicationName);
+  m_logfile->SetLogFilename(logfile);
+  m_logfile->SetLogRotation(true);
+  m_logfile->SetLogLevel(g_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
+
+  // Tell that we started the logfile
+  m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
+                           ,"Started the application: %s",m_applicationName.GetString());
 }
 
 // Server app was correctly started by MarlinIISModule
@@ -90,26 +169,22 @@ ServerApp::CorrectlyStarted()
   // MINIMUM REQUIREMENT:
   // If a derived class has been statically declared
   // and a IHttpServer and a HTTPServerIIS has been found
-  // and a Threadpool is initialized, we are good to go
-  if(m_correctInit && m_iis && m_appServer && m_appPool)
+  // and a ThreadPool is initialized, we are good to go
+  if(m_iis && m_httpServer && m_threadPool && m_logfile)
   {
     return true;
   }
 
   // Log the errors
-  if(!m_correctInit)
-  {
-    ERRORLOG(ERROR_NOT_FOUND,"There are more than one (1) ServerApp in your application!");
-  }
   if(!m_iis)
   {
     ERRORLOG(ERROR_NOT_FOUND,"No connected IIS server found!");
   }
-  if(!m_appServer)
+  if(!m_httpServer)
   {
     ERRORLOG(ERROR_NOT_FOUND,"No connected MarlinIIS server found!");
   }
-  if(!m_appPool)
+  if(!m_threadPool)
   {
     ERRORLOG(ERROR_NOT_FOUND,"No connected threadpool found!");
   }
@@ -120,7 +195,7 @@ ServerApp::CorrectlyStarted()
 ErrorReport*
 ServerApp::GetErrorReport()
 {
-  return nullptr;
+  return m_errorReport;
 }
 
 // Setting the logging level
@@ -128,14 +203,21 @@ void
 ServerApp::SetLogLevel(int p_logLevel)
 {
   m_logLevel = p_logLevel;
-  if(m_appServer)
+  if(m_httpServer)
   {
-    m_appServer->SetLogLevel(p_logLevel);
+    m_httpServer->SetLogLevel(p_logLevel);
   }
-  if(m_appLogfile)
+  if(m_logfile)
   {
-    m_appLogfile->SetLogLevel(p_logLevel);
+    m_logfile->SetLogLevel(p_logLevel);
   }
+}
+
+bool
+ServerApp::LoadSite(IISSiteConfig& /*p_config*/)
+{
+  // Already done in LoadSites
+  return true;
 }
 
 // Start our sites from the IIS configuration
@@ -280,7 +362,7 @@ ServerApp::ReadBinding(IAppHostElementCollection* p_bindings,int p_item,IISBindi
     default:  p_binding.m_prefix = PrefixType::URLPRE_Address; break;
   }
 
-  // Portnumber
+  // Port number
   p_binding.m_port = INTERNET_DEFAULT_HTTP_PORT;
   int pos = info.Find(':');
   if(pos >= 0)
@@ -309,3 +391,31 @@ ServerApp::GetProperty(IAppHostElement* p_elem,CString p_property)
   }
   return "";
 }
+
+//////////////////////////////////////////////////////////////////////////
+//
+// SERVER APP FACTORY
+// Override to create your own "ServerApp derived class object"
+//
+//////////////////////////////////////////////////////////////////////////
+
+ServerAppFactory::ServerAppFactory()
+{
+  if(appFactory)
+  {
+    TRACE("You can only have ONE singleton ServerAppFactory in your program logic");
+    ASSERT(FALSE);
+  }
+  else
+  {
+    appFactory = this;
+  }
+}
+
+ServerApp* 
+ServerAppFactory::CreateServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot)
+{
+  return new ServerApp(p_iis,p_appName,p_webroot);
+}
+
+ServerAppFactory* appFactory = nullptr;

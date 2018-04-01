@@ -70,6 +70,8 @@ int  logLevel    = HLL_TRACEDUMP;  // HLL_NOLOG / HLL_ERRORS / HLL_LOGGING / HLL
 // Global critical section to print to the 'stdio' stream
 CRITICAL_SECTION std_stream;
 
+HTTPServer* g_server = nullptr;
+
 // eXtended Printf: print only if doDetails is true
 void xprintf(const char* p_format, ...)
 {
@@ -275,7 +277,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           // HTTP tests
           errors += TestBaseSite(server);
           errors += TestSecureSite(server);
-          errors += TestClientCertificate(server);
+          errors += TestClientCertificate(server,true);
           errors += TestCookies(server);
           errors += TestFormData(server);
           errors += TestJsonData(server);

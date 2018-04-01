@@ -136,34 +136,35 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     }
     else
     {
-      // Do Unit testing
-      errors += TestUnicode();
-      errors += TestURLChars();
-      errors += TestCryptography();
-      errors += TestReader();
-      errors += TestConvert();
-      errors += TestNamespaces();
-      errors += TestJSON();
-      errors += TestFindClientCertificate();
+//       // Do Unit testing
+//       errors += TestUnicode();
+//       errors += TestURLChars();
+//       errors += TestCryptography();
+//       errors += TestReader();
+//       errors += TestConvert();
+//       errors += TestNamespaces();
+//       errors += TestJSON();
+//       errors += TestFindClientCertificate();
+// 
+// // #ifdef TEST_WEBSOCKETS
+//       errors += TestWebSocketAccept();
+//       errors += TestWebSocket(g_log);
+// // #endif
+// 
+//        errors += TestEvents(client);
+//        errors += TestBaseSite(client);
 
-#ifdef TEST_WEBSOCKETS
-      errors += TestWebSocketAccept();
-      errors += TestWebSocket(g_log);
-#endif
-
-      errors += TestEvents(client);
-      errors += TestBaseSite(client);
-      errors += TestSecureSite(client);
-      errors += TestClientCertificate(client);
-      errors += TestCookies(*client);
-      errors += TestFormData(client);
-      errors += TestJsonData(client);
-      errors += TestContract(client,true, false);  // JSON No authentication
-      errors += TestContract(client,false,false);  // WS   No authentication
-      errors += TestContract(client,false,true);   // WS   WS-Secure token-profile
-      errors += TestPatching(client);
-      errors += TestCompression(client);
-      errors += TestWebservices(*client);
+       errors += TestSecureSite(client);
+       errors += TestClientCertificate(client);
+//        errors += TestCookies(*client);
+//        errors += TestFormData(client);
+//        errors += TestJsonData(client);
+//        errors += TestContract(client,true, false);  // JSON No authentication
+//        errors += TestContract(client,false,false);  // WS   No authentication
+//        errors += TestContract(client,false,true);   // WS   WS-Secure token-profile
+//        errors += TestPatching(client);
+//        errors += TestCompression(client);
+//        errors += TestWebservices(*client);
     }
   
     printf("\n");

@@ -73,7 +73,6 @@ PFN_WEB_CORE_SHUTDOWN               HWC_Shutdown    = nullptr;
 // Names of the application config files
 CString g_applicationhost;      // ApplicationHost.config file to use
 CString g_webconfig;            // Web.config file to use
-CString g_poolName;             // The application pool name
 
 // Server callbacks
 PFN_SERVERSTATUS g_ServerStatus = nullptr;

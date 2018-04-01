@@ -40,7 +40,6 @@ typedef void(*PFN_SETMETADATA)(void);
 // taken from the command line of the application
 extern CString g_applicationhost;      // ApplicationHost.config file to use
 extern CString g_webconfig;            // Web.config file to use
-extern CString g_poolName;             // The application pool name
 
 // Shutdown mode (0=gracefull, 1=immediate forced)
 extern DWORD g_hwcShutdownMode;

@@ -191,7 +191,10 @@
     <ClCompile Include="..\ServerTestset\TestTime.cpp" />
     <ClCompile Include="..\ServerTestset\TestToken.cpp" />
     <ClCompile Include="..\ServerTestset\TestWebSocket.cpp" />
+    <ClCompile Include="MarlinClientCertServerApp.cpp" />
+    <ClCompile Include="MarlinSecureServerApp.cpp" />
     <ClCompile Include="MarlinServerApp.cpp" />
+    <ClCompile Include="MarlinServerAppFactory.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -201,7 +204,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ServerTestset\TestServer.h" />
+    <ClInclude Include="MarlinClientCertServerApp.h" />
+    <ClInclude Include="MarlinSecureServerApp.h" />
     <ClInclude Include="MarlinServerApp.h" />
+    <ClInclude Include="MarlinServerAppFactory.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TestPorts.h" />

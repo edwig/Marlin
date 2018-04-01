@@ -47,35 +47,31 @@ TestGet(HTTPClient* p_client)
   // Prepare client for CORS checking
   p_client->SetCORSOrigin("http://localhost");
 
-  // Test Mozilla CORS for this site
-  if(PreFlight(p_client,pre,"GET","X-K2B-Authenticate"))
+  // Send our message
+  bool sendResult = p_client->Send(&msg);
+
+  // If OK and file does exists now!
+  if(sendResult)
   {
-    // Send our message
-    bool sendResult = p_client->Send(&msg);
-
-    // If OK and file does exists now!
-    if(sendResult)
+    msg.GetFileBuffer()->SetFileName(filename);
+    msg.GetFileBuffer()->WriteFile();
+    if(_access(filename,0) == 0)
     {
-      msg.GetFileBuffer()->SetFileName(filename);
-      msg.GetFileBuffer()->WriteFile();
-      if(_access(filename,0) == 0)
-      {
-        result = true;
-      }
+      result = true;
     }
-    else
-    {
-      xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-      xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+  }
+  else
+  {
+    xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
+    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
 
-      BYTE*  response = nullptr;
-      unsigned length = 0;
-      p_client->GetResponse(response,length);
-      if(response && length)
-      {
-        response[length] = 0;
-        printf((char*)response);
-      }
+    BYTE*  response = nullptr;
+    unsigned length = 0;
+    p_client->GetResponse(response,length);
+    if(response && length)
+    {
+      response[length] = 0;
+      printf((char*)response);
     }
   }
   // SUMMARY OF THE TEST

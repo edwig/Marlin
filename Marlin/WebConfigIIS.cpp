@@ -82,6 +82,17 @@ WebConfigIIS::SetApplication(CString p_application)
 }
 
 CString
+WebConfigIIS::GetSiteName(CString p_site)
+{
+  IISSite* site = GetSite(p_site);
+  if (site)
+  {
+    return site->m_name;
+  }
+  return "";
+}
+
+CString
 WebConfigIIS::GetSiteBinding(CString p_site,CString p_default)
 {
   IISSite* site = GetSite(p_site);

@@ -179,7 +179,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ServerTestset\TestServer.h" />
+    <ClInclude Include="MarlinClientCertServerApp.h" />
+    <ClInclude Include="MarlinSecureServerApp.h" />
     <ClInclude Include="MarlinServerApp.h" />
+    <ClInclude Include="MarlinServerAppFactory.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TestPorts.h" />
@@ -209,6 +212,9 @@
     <ClCompile Include="..\ServerTestset\TestTime.cpp" />
     <ClCompile Include="..\ServerTestset\TestToken.cpp" />
     <ClCompile Include="..\ServerTestset\TestWebSocket.cpp" />
+    <ClCompile Include="MarlinClientCertServerApp.cpp" />
+    <ClCompile Include="MarlinSecureServerApp.cpp" />
+    <ClCompile Include="MarlinServerAppFactory.cpp" />
     <ClCompile Include="TestHWC.cpp" />
     <ClCompile Include="MarlinServerApp.cpp" />
     <ClCompile Include="stdafx.cpp">

@@ -29,6 +29,7 @@
 #include "MarlinServerApp.h"
 #include "MarlinModule.h"
 #include "TestServer.h"
+#include "WebSocket.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -36,10 +37,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// This is the ServerApp of the Hosted Web Core server variant (running as EXE)
+// Total number of errors registered while testing
+int g_errors = 0;
 
-// The one and only server object
-MarlinServerApp theServer;
+// This is a ServerApp of the IIS server variant (running in W3SVC)
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -47,7 +48,8 @@ MarlinServerApp theServer;
 //
 //////////////////////////////////////////////////////////////////////////
 
-MarlinServerApp::MarlinServerApp()
+MarlinServerApp::MarlinServerApp(IHttpServer* p_iis, CString p_appName, CString p_webroot)
+                :ServerApp(p_iis,p_appName,p_webroot)
 {
 }
 
@@ -58,15 +60,15 @@ MarlinServerApp::~MarlinServerApp()
 void
 MarlinServerApp::InitInstance()
 {
+  // First always call the main class 
+  // Must init for the HTTPServer and other objects
+  ServerApp::InitInstance();
+
   CString contract = "http://interface.marlin.org/testing/";
 
   // Can only be called once if correctly started
   if(!CorrectlyStarted() || m_running)
   {
-    if(m_running)
-    {
-      g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,"InitInstance called more than once!");
-    }
     return;
   }
   // Instance is now running
@@ -78,33 +80,35 @@ MarlinServerApp::InitInstance()
   // Small local test
   Test_CrackURL();
   Test_HTTPTime();
-  TestThreadPool(m_appPool);
 
   // Starting objects and sites
-  TestPushEvents(m_appServer);
-  TestWebServiceServer(m_appServer,contract,m_logLevel);
-  TestJsonServer(m_appServer,contract,m_logLevel);
-  TestSecureSite(m_appServer);
-  TestClientCertificate(m_appServer);
-  TestCookies(m_appServer);
-  TestInsecure(m_appServer);
-  TestBaseSite(m_appServer);
-  TestBodySigning(m_appServer);
-  TestBodyEncryption(m_appServer);
-  TestMessageEncryption(m_appServer);
-  TestReliable(m_appServer);
-  TestReliableBA(m_appServer);
-  TestToken(m_appServer);
-  TestSubSites(m_appServer);
-  TestJsonData(m_appServer);
-  TestFilter(m_appServer);
-  TestPatch(m_appServer);
-  TestFormData(m_appServer);
-  TestStreams(m_appServer);
-  TestForms(m_appServer);
-  TestCompression(m_appServer);
-  TestAsynchrone(m_appServer);
-  TestWebSocket(m_appServer);
+  TestPushEvents(m_httpServer);
+  TestWebServiceServer(m_httpServer,contract,m_logLevel);
+  TestJsonServer(m_httpServer,contract,m_logLevel);
+  TestCookies(m_httpServer);
+  TestInsecure(m_httpServer);
+  TestBaseSite(m_httpServer);
+  TestBodySigning(m_httpServer);
+  TestBodyEncryption(m_httpServer);
+  TestMessageEncryption(m_httpServer);
+  TestReliable(m_httpServer);
+  TestReliableBA(m_httpServer);
+  TestToken(m_httpServer);
+  TestSubSites(m_httpServer);
+  TestJsonData(m_httpServer);
+  TestFilter(m_httpServer);
+  TestPatch(m_httpServer);
+  TestFormData(m_httpServer);
+  TestCompression(m_httpServer);
+  TestAsynchrone(m_httpServer);
+  TestWebSocket(m_httpServer);
+}
+
+bool 
+MarlinServerApp::LoadSite(IISSiteConfig& /*p_config*/)
+{
+  // Already done in the InitInstance
+  return true;
 }
 
 void
@@ -112,14 +116,14 @@ MarlinServerApp::ExitInstance()
 {
   if(m_running)
   {
-    // Testing the errorlog function
-    m_appServer->ErrorLog(__FUNCTION__,0,"Not a real error message, but a test to see if the errorlog works :-)");
+    // Testing the error log function
+    m_httpServer->ErrorLog(__FUNCTION__,0,"Not a real error message, but a test to see if the error logging works :-)");
 
-    // Stopping our websocket
+    // Stopping our WebSocket
     StopWebSocket();
 
-    // Stopping all subsites
-    StopSubsites(m_appServer);
+    // Stopping all sub-sites
+    StopSubsites(m_httpServer);
 
     // Report all tests
     ReportAfterTesting();
@@ -127,19 +131,10 @@ MarlinServerApp::ExitInstance()
     // Stopped running
     m_running = false;
   }
-}
 
-bool 
-MarlinServerApp::LoadSite(IISSiteConfig& /*p_config*/)
-{
-  // Already done in InitInstance
-  return true;
-}
-
-ErrorReport*
-MarlinServerApp::GetErrorReport()
-{
-  return nullptr;
+  // Always call the ExitInstance of the main class last
+  // Will destroy the HTTPServer and all other objects
+  ServerApp::ExitInstance();
 }
 
 bool
@@ -150,11 +145,6 @@ MarlinServerApp::CorrectlyStarted()
     qprintf("ServerApp incorrectly started. Review your program logic");
     return false;
   }
-  if(m_correctInit == false)
-  {
-    qprintf("Server instance incorrectly started. Review your IIS application pool settings!");
-    return false;
-  }
   return true;
 }
 
@@ -163,10 +153,7 @@ MarlinServerApp::ReportAfterTesting()
 {
   AfterTestCrackURL();
   AfterTestTime();
-//AfterTestThreadpool();
-  AfterTestSecureSite();
   AfterTestBaseSite();
-  AfterTestClientCert();
   AfterTestFilter();
   AfterTestAsynchrone();
   AfterTestBodyEncryption();
@@ -187,7 +174,21 @@ MarlinServerApp::ReportAfterTesting()
 
   // SUMMARY OF ALL THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("TOTAL number of errors after all tests are run : %d",m_errors);
+  qprintf("TOTAL number of errors after all tests are run : %d",g_errors);
+}
+
+void
+MarlinServerApp::StopWebSocket()
+{
+  WebSocket* socket = m_httpServer->FindWebSocket("/MarlinTest/Socket/socket_123");
+  if(socket)
+  {
+    if(socket->CloseSocket() == false)
+    {
+      ++g_errors;
+    }
+  }
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -201,7 +202,7 @@ bool doDetails = false;
 // Increment the total global number of errors while testing
 void xerror()
 {
-  theServer.IncrementError();
+  ++g_errors;
 }
 
 // Suppressed printing. Only print when doDetails = true
@@ -222,7 +223,7 @@ void xprintf(const char* p_format,...)
   }
 }
 
-// Printing to the logfile for testresults
+// Printing to the logfile for test results
 // "String to the logfile"   -> Will be printed to logfile including terminating newline
 // "Another string <+>"      -> Will be printed WITHOUT terminating newline
 void qprintf(const char* p_format,...)

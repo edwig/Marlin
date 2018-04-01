@@ -41,38 +41,39 @@
 class ServerApp
 {
 public:
-  ServerApp();
+  ServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot);
   virtual ~ServerApp();
 
   // Starting and stopping the server
-  virtual void InitInstance() = 0;
-  virtual void ExitInstance() = 0;
-  virtual bool LoadSite(IISSiteConfig& p_config) = 0;
-  virtual ErrorReport* GetErrorReport() = 0;
+  virtual void InitInstance();
+  virtual void ExitInstance();
+  virtual bool LoadSite(IISSiteConfig& p_config);
+  virtual ErrorReport* GetErrorReport();
 
-  // Connecting the application to the IIS and Marlin server
-  void ConnectServerApp(IHttpServer*   p_iis
-                       ,HTTPServerIIS* p_server
-                       ,ThreadPool*    p_pool
-                       ,LogAnalysis*   p_logfile
-                       ,ErrorReport*   p_report);
-
-  // Start our sites from the IIS configuration
-  void LoadSites(IHttpApplication* p_app,CString p_physicalPath);
-
-  // Server app was correctly started by MarlinIISModule
-  bool CorrectlyStarted();
+  // The performance counter
+  virtual void StartCounter();
+  virtual void StopCounter();
 
   // Setting the logging level
-  void SetLogLevel(int p_logLevel);
+  virtual void SetLogLevel(int p_logLevel);
+
+  // Start our sites from the IIS configuration
+  virtual void LoadSites(IHttpApplication* p_app,CString p_physicalPath);
+
+  // Server app was correctly started by MarlinIISModule
+  virtual bool CorrectlyStarted();
 
   // GETTERS
-
-  HTTPServer*    GetHTTPServer() { return m_appServer; };
-  ThreadPool*    GetThreadPool() { return m_appPool;   };
-  int            GetLogLevel()   { return m_logLevel;  };
+  // Never virtual. Derived classes should use these!!
+  HTTPServerIIS* GetHTTPServer()  { return m_httpServer;  };
+  ThreadPool*    GetThreadPool()  { return m_threadPool;  };
+  LogAnalysis*   GetLogfile()     { return m_logfile;     };
+  int            GetLogLevel()    { return m_logLevel;    };
 
 protected:
+  // Start the logging file for this application
+  void  StartLogging();
+
   // Read the site's configuration from the IIS internal structures
   bool  ReadSite   (IAppHostElementCollection* p_sites,CString p_site,int p_num,IISSiteConfig& p_config);
   bool  ReadBinding(IAppHostElementCollection* p_bindings,int p_item,IISBinding& p_binding);
@@ -80,16 +81,27 @@ protected:
   // General way to read a property
   CString GetProperty(IAppHostElement* p_elem,CString p_property);
 
-  bool           m_correctInit  { false   };    // ServerApp correctly initialized
+  // DATA
+  CString        m_applicationName;             // Name of our application / IIS Site
+  CString        m_webroot;                     // WebRoot of our application
   IHttpServer*   m_iis          { nullptr };    // Main ISS application
-  HTTPServerIIS* m_appServer    { nullptr };    // Our Marlin HTTPServer for IIS
-  ThreadPool*    m_appPool      { nullptr };    // Pointer to our own threadpool
-  LogAnalysis*   m_appLogfile   { nullptr };    // Logfile object
-  ErrorReport*   m_appReport    { nullptr };    // Error reporting object
+  HTTPServerIIS* m_httpServer   { nullptr };    // Our Marlin HTTPServer for IIS
+  ThreadPool*    m_threadPool   { nullptr };    // Pointer to our own ThreadPool
+  LogAnalysis*   m_logfile      { nullptr };    // Logfile object
+  ErrorReport*   m_errorReport  { nullptr };    // Error reporting object
+  bool           m_ownReport    { false   };    // Owning the error report
   int            m_logLevel     { HLL_NOLOG };  // Logging level of server and logfile
 };
 
-// Declare your own server app as a derived class!
-// This pointer will then point to the one-and-only instance
-extern ServerApp* g_server;
+// Factory for your application to create a new class derived from the ServerApp
+// Implement your own server app factory or use this default one
+class ServerAppFactory
+{
+public:
+  ServerAppFactory();
+
+  virtual ServerApp* CreateServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot);
+};
+
+extern ServerAppFactory* appFactory;
 

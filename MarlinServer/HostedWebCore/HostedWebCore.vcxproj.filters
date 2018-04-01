@@ -36,6 +36,15 @@
     <ClInclude Include="..\ServerTestset\TestServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MarlinClientCertServerApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MarlinSecureServerApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MarlinServerAppFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ServerTestset\TestAsynchrone.cpp">
@@ -117,6 +126,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MarlinClientCertServerApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MarlinSecureServerApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MarlinServerAppFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

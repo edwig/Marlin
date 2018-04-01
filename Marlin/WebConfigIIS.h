@@ -67,6 +67,7 @@ public:
   ULONG       GetStreamingLimit() { return m_streamingLimit;  };
 
   // Getting information of a site
+  CString     GetSiteName     (CString p_site);
   CString     GetSiteBinding  (CString p_site,CString p_default);
   CString     GetSiteProtocol (CString p_site,CString p_default);
   int         GetSitePort     (CString p_site,int     p_default);
@@ -92,7 +93,7 @@ private:
   void        ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem);
   void        ReadAuthentication(IISSite& p_site,XMLMessage& p_msg);
 
-  // For specific web application, or juist defaults
+  // For specific web application, or just defaults
   CString   m_application;
 
   IISSites  m_sites;

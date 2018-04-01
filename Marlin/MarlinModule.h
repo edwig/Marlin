@@ -30,6 +30,7 @@
 #pragma warning (disable:4091)
 #include <httpserv.h>
 #pragma warning (error:4091)
+#include <map>
 
 #define SERVERNAME_BUFFERSIZE 256
 
@@ -37,13 +38,22 @@
 class ServerApp;
 class LogAnalysis;
 class HTTPServerIIS;
+class WebConfigIIS;
+class ErrorReport;
 
-// Global objects: The one and only IIS Server
-extern IHttpServer*   g_iisServer;
+// All applications in the application pool
+using AppPool = std::map<int, ServerApp*>;
+
+// Global objects: The one and only IIS Server application pool
+extern AppPool        g_IISApplicationPool;
 extern LogAnalysis*   g_analysisLog;
-extern HTTPServerIIS* g_marlin;
+extern IHttpServer*   g_iisServer;
+extern CString        g_poolName;
+extern WebConfigIIS   g_config;
+extern ErrorReport*   g_report;
 
 // Get the base name of the module DLL
+CString GetDLLBaseName();
 CString GetDLLName();
 
 // Create the module class
@@ -99,10 +109,11 @@ public:
 
   // Extract webroot from config/physical combination
   CString ExtractWebroot(CString p_configPath,CString p_physicalPath);
+  // Extract site from the config combination
+  CString ExtractAppSite(CString p_configPath);
 
   // Stopping the global factory
   virtual void Terminate();
 private:
   CRITICAL_SECTION m_lock;
-  int              m_applications;
 };

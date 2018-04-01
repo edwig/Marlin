@@ -31,8 +31,8 @@
 extern bool doDetails;
 
 // Forward declaration
-class HTTPServer;
-class ThreadPool;
+class  HTTPServer;
+class  ThreadPool;
 
 // In TestServer.cpp
 void xerror();
@@ -61,7 +61,7 @@ int TestJsonData         (HTTPServer* p_server);
 int TestFilter           (HTTPServer* p_server);
 int TestPatch            (HTTPServer* p_server);
 int TestFormData         (HTTPServer* p_server);
-int TestClientCertificate(HTTPServer* p_server);
+int TestClientCertificate(HTTPServer* p_server,bool p_standalone);
 int TestCompression      (HTTPServer* p_server);
 int TestAsynchrone       (HTTPServer* p_server);
 int TestSecureSite       (HTTPServer* p_server);
@@ -69,7 +69,6 @@ int TestStreams          (HTTPServer* p_server);
 int TestForms            (HTTPServer* p_server);
 int TestWebSocket        (HTTPServer* p_server);
 int TestThreadPool       (ThreadPool* p_pool);
-int StopWebSocket(void);
 
 int AfterTestBaseSite();
 int AfterTestFilter();

@@ -28,26 +28,25 @@
 #pragma once
 #include "ServerApp.h"
 
-// This is the ServerApp of the Hosted Web Core server variant (running as EXE)
+extern int g_errors;
+
+// This is the ServerApp of the IIS server variant (running in W3SVC)
 
 class MarlinServerApp : public ServerApp
 {
 public:
-  MarlinServerApp();
+  MarlinServerApp(IHttpServer* p_iis, CString p_appName, CString p_webroot);
   virtual ~MarlinServerApp();
 
   virtual void InitInstance();
   virtual void ExitInstance();
   virtual bool LoadSite(IISSiteConfig& p_config);
-  virtual ErrorReport* GetErrorReport();
-
-  void IncrementError() { ++m_errors; };
 
 private:
   bool CorrectlyStarted();
+  void StopWebSocket();
   void ReportAfterTesting();
 
-  int  m_errors    { 0     };
   bool m_doDetails { false };
   bool m_running   { false };
 };

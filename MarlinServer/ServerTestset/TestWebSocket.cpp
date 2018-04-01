@@ -149,26 +149,6 @@ TestWebSocket(HTTPServer* p_server)
   return error;
 }
 
-int
-StopWebSocket(void)
-{
-  int errors = 0;
-
-  // Only done for the IIS server
-  if(g_server)
-  {
-    WebSocket* socket = g_server->GetHTTPServer()->FindWebSocket("/MarlinTest/Socket/socket_123");
-    if(socket)
-    {
-      if(socket->CloseSocket() == false)
-      {
-        ++errors;
-      }
-    }
-  }
-  return errors;
-}
-
 int 
 AfterTestWebSocket(void)
 {
