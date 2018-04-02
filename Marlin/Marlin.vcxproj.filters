@@ -533,9 +533,6 @@
     <ClInclude Include="ThreadPool.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Version.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="WebConfig.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
@@ -623,5 +620,6 @@
     <ClInclude Include="SOAPSecurity.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Version.h" />
   </ItemGroup>
 </Project>

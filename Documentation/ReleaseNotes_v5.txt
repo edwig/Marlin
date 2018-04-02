@@ -1,0 +1,39 @@
+RELEASENOTES MARLIN VERSION 5.x
+===============================
+
+For releasenotes of the previous main version (4.x), see the separate file "Releasenotes_v4.txt".
+This document contains all release notes and remarks beginning with version 5.0. The document
+would otherwise grow to large and complex.
+Version 5.x contains NO real function breaks but adds IIS capabilities for the application pool
+and further maturity changes for IIS in general
+----------------------------------------------------------------------------------------------
+
+CHANGES IN VERSION 5.0.0
+========================
+1)  The MarlinModule can now support multiple applications in one IIS application pool. There is 
+    not just one ServerApp (g_server is gone!) but rather a new "ServerApp" derived object in the 
+	"OnApplicationStart" will be made. And likewise destroyed in "OnApplicationStop".
+	In order to make use of this version of Marlin, you must program the following changes in your
+	existing "ServerApp" derived application:
+
+	a)   Create "ServerAppFactory" derived class with one member "CreateServerApp". 
+	     This factory now controls which ServerApp to create. Most possibly only one;
+		 The factory removes the need for a global 'g_server' declaration.
+    b)   Change the constructor of your class to have the following three parameters
+	     -  A pointer to the "IHttpServer" class of IIS
+		 -  A CString with the application name (the name of the site in IIS)
+		 -  A CString with the pathname to the webroot
+		 You must pass these parameters on to the ServerApp in your constructor;
+    c)   Change the implementation of your "ServerApp". Change the implementation of the
+	     "InitInstance" method to call it's main class "Serverapp::InitInstance()" 
+		 BEFORE anything else;
+    d)   Change the implementation of your "ServerApp". Change the implementation of the
+	     "ExitInstance" method to call it's main class "Serverapp::ExitInstance()" 
+		 AFTER anything else;
+
+    You can find examples of these in the test framework in the "MarlinServerIIS" and in the
+	MarlinServerIISWC projects.
+	To accomodate these changes the "MarlinModule" implementation to link the framework to IIS
+	has been extensively updated.
+
+*** End of file ***
