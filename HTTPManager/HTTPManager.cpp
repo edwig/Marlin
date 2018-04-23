@@ -102,7 +102,7 @@ BOOL HTTPManagerApp::InitInstance()
       mode = MODE_STANDALONE;
     }
   }
-	HTTPManagerDlg dlg(mode == 1);
+	HTTPManagerDlg dlg(mode == MODE_IIS);
 
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();

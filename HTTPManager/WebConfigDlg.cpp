@@ -37,11 +37,11 @@ IMPLEMENT_DYNAMIC(WebConfigDlg, CDialogEx)
 WebConfigDlg::WebConfigDlg(bool p_iis,CWnd* pParent)
              :CDialogEx(IDD_WEBCONFIG, pParent)
              ,m_iis(p_iis)
-             ,m_page1(this)
-             ,m_page2(this)
-             ,m_page3(this)
-             ,m_page4(this)
-             ,m_page5(this)
+             ,m_page1(p_iis,this)
+             ,m_page2(p_iis,this)
+             ,m_page3(p_iis,this)
+             ,m_page4(p_iis,this)
+             ,m_page5(p_iis,this)
 {
   m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
