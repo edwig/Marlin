@@ -37,7 +37,7 @@ class SecureClientDlg : public CDialogEx
 
 public:
 	SecureClientDlg(CWnd* p_parent);   // standard constructor
- ~SecureClientDlg();
+  virtual ~SecureClientDlg();
   BOOL OnInitDialog();
 
 // Dialog Data

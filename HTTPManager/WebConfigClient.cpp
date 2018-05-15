@@ -79,6 +79,7 @@ WebConfigClient::WebConfigClient(bool p_iis,CWnd* pParent /*=NULL*/)
   m_TO_connect      = 0;
   m_TO_send         = 0;
   m_TO_receive      = 0;
+  m_proxyType       = 0;
   m_clientUnicode   = false;
   m_certPreset      = false;
   m_relaxValid      = false;
@@ -98,6 +99,7 @@ WebConfigClient::WebConfigClient(bool p_iis,CWnd* pParent /*=NULL*/)
   m_forceTunnel     = false;
   m_gzip            = false;
   m_sendBOM         = false;
+  m_soapCompress    = false;
 }
 
 WebConfigClient::~WebConfigClient()

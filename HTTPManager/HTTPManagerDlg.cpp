@@ -93,6 +93,11 @@ HTTPManagerDlg::HTTPManagerDlg(bool p_iis,CWnd* pParent /*=NULL*/)
   m_version  = OSVERSIE_UNKNOWN;
 }
 
+HTTPManagerDlg::~HTTPManagerDlg()
+{
+  // Shut up SonarQube
+}
+
 void HTTPManagerDlg::DoDataExchange(CDataExchange* pDX)
 {
   CDialogEx::DoDataExchange(pDX);
