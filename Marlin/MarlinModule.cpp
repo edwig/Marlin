@@ -95,7 +95,7 @@ RegisterModule(DWORD                        p_version
 {
   // FIRST MOMENT OF DEBUG
   // WAIT HERE FOR IIS
-  Sleep(20000);
+  // Sleep(20000);
 
   TRACE("REGISTER MODULE\n");
 

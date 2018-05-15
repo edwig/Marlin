@@ -171,7 +171,8 @@ SiteHandlerSoap::CleanUp(HTTPMessage* p_message)
   if(g_soapMessage)
   {
     // Check that we did send something
-    if(!g_soapMessage->GetHasBeenAnswered())
+    if(!g_soapMessage->GetHasBeenAnswered() &&
+       !p_message->GetHasBeenAnswered())
     {
       m_site->SendResponse(g_soapMessage);
       p_message->SetHasBeenAnswered();

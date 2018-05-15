@@ -1557,7 +1557,7 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
                  ,"Client"
                  ,"Configuration"
                  ,"No signing"
-                 ,"SOAP message should have a signed body. Singing is incorrect or missing.");
+                 ,"SOAP message should have a signed body. Signing is incorrect or missing.");
   }
   // ALL OK?
   return ready;

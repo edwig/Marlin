@@ -43,7 +43,7 @@ class ErrorReport
 {
 public:
   ErrorReport();
- ~ErrorReport();
+  virtual ~ErrorReport();
 
   // Send an error report
   static void Report(const CString& p_subject,unsigned int p_skip,      CString  p_directory,CString  p_url);
