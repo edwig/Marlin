@@ -8,6 +8,12 @@ Version 5.x contains NO real function breaks but adds IIS capabilities for the a
 and further maturity changes for IIS in general
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 5.0.2
+------------------------
+1)  Various maintainability changes (virtual destructors), code cleanup, to shut up SonarQube
+    quality analyzer.
+2)  Stacktrace analyzer has lowered the access rights to IIS.
+
 CHANGES IN VERSION 5.0.1
 ------------------------
 1)  Aborting an event stream after 64K chunks must be done, instead of a close. This ensures that
