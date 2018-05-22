@@ -49,7 +49,7 @@ HTTPError http_errors[] =
   ,{ 12011, "Option not settable"                     }
   ,{ 12012, "Shutdown"                                }
   ,{ 12015, "Login failure"                           }
-  ,{ 12017, "Operation cancelled"                     }
+  ,{ 12017, "Operation canceled"                      }
   ,{ 12018, "Incorrect handle type"                   }
   ,{ 12019, "Incorrect handle state"                  }
   ,{ 12029, "Cannot connect"                          }
@@ -59,11 +59,11 @@ HTTPError http_errors[] =
   ,{ 12038, "Certificate common name invalid"         }
   ,{ 12044, "Client authentication certificate needed"}
   ,{ 12045, "Invalid certificate authority"           }
-  ,{ 12057, "Certificate revokation failed"           }
+  ,{ 12057, "Certificate revocation failed"           }
   ,{ 12100, "Cannot call before open"                 }
   ,{ 12101, "Cannot call before send"                 }
   ,{ 12102, "Cannot call after send"                  }
-  ,{ 12103, "Cannot call aftaer open"                 }
+  ,{ 12103, "Cannot call after open"                  }
   ,{ 12150, "Header not found"                        }
   ,{ 12152, "Invalid server response"                 }
   ,{ 12153, "Invalid header"                          }

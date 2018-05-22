@@ -551,24 +551,33 @@ LogAnalysis::Flush(bool p_all)
   // Multi threaded protection
   AutoCritSec lock(&m_lock);
 
-  // See if we have log-lines
-  if(!m_list.empty())
+  try
   {
-    // See if list has become to long
-    if(((int)m_list.size() > m_cache) || p_all)
+    // See if we have log-lines
+    if(!m_list.empty())
     {
-      // Collecting the buffered list in a string
-      CString buffer;
-
-      // Gather the list in the buffer, destroying the list
-      while(!m_list.empty())
+      // See if list has become to long
+      if(((int)m_list.size() > m_cache) || p_all)
       {
-        buffer += m_list.front();
-        m_list.pop_front();
+        // Collecting the buffered list in a string
+        CString buffer;
+
+        // Gather the list in the buffer, destroying the list
+        while(!m_list.empty())
+        {
+          buffer += m_list.front();
+          m_list.pop_front();
+        }
+        // Write out the buffer
+        WriteLog(buffer);
       }
-      // Write out the buffer
-      WriteLog(buffer);
     }
+  }
+  catch (StdException* er)
+  {
+    // Logfile failed. Where to log this??
+    TRACE("%s\n",er->GetErrorMessage().GetString());
+    er->Delete();
   }
 }
 
@@ -695,6 +704,9 @@ LogAnalysis::RunLog()
 void
 LogAnalysis::RunLogAnalysis()
 {
+  // Install SEH to regular exception translator
+  _set_se_translator(SeTranslator);
+
   DWORD sync = 0;
 
   while(m_initialised)

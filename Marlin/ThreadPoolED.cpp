@@ -428,6 +428,9 @@ RunThread(void* p_myThread)
 unsigned
 ThreadPoolED::RunAThread(ThreadRegister* p_register)
 {
+  // Install SEH to regular exception translator
+  _set_se_translator(SeTranslator);
+
   TP_TRACE0("Run thread main loop\n");
   unsigned exitCode = 0;
 

@@ -1179,24 +1179,18 @@ baseTypes[] =
 bool
 WSDLCache::ReadWSDLFile(LPCTSTR p_filename)
 {
-  __try
+  try
   {
     return ReadWSDLFileSafe(p_filename);
   }
-  __except(
-#ifdef _DEBUG
-    // See if we are live debugging in Visual Studio
-    // IsDebuggerPresent() ? EXCEPTION_CONTINUE_SEARCH :
-#endif // _DEBUG
-    // After calling the Error::Send method, the Windows stack get unwinded
+  catch(StdException* er)
+  {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
-    m_exception ? EXCEPTION_EXECUTE_HANDLER :
-   (m_exception = true,
-    m_exception = ErrorReport::Report(GetExceptionCode(),GetExceptionInformation()),
-    EXCEPTION_EXECUTE_HANDLER))
-  {
+    m_exception = true,
+    m_exception = ErrorReport::Report(er->GetSafeExceptionCode(),er->GetExceptionPointers());
+
     if(m_exception)
     {
       // Error while sending an error report

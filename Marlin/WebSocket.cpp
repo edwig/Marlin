@@ -1250,9 +1250,11 @@ WebSocketServerIIS::CloseSocket()
     {
       m_iis_socket->CloseTcpConnection();
     }
-    catch(...)
+    catch(CException* er)
     {
       // result = false;
+      ERRORLOG(12102,MessageFromException(er).GetString());
+      er->Delete();
     }
 
     // Cancel the outstanding request altogether
@@ -1963,6 +1965,9 @@ WebSocketClient::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,boo
 void
 WebSocketClient::SocketListener()
 {
+  // Install SEH to regular exception translator
+  _set_se_translator(SeTranslator);
+
   // Wait a short time for the OnOpen event to have been handled
   // Immediately after the OnOpen, the "m_open" goes to 'true'
   for(unsigned wait = 10; wait <= 320; wait *= 2)

@@ -198,7 +198,7 @@ MediaTypes::CheckValid()
 #ifdef _DEBUG
   if(g_mt_instance == nullptr)
   {
-    throw CString("INTERNAL: No MediaTypes object found/initialized");
+    throw new StdException("INTERNAL: No MediaTypes object found/initialized");
   }
 #endif
 }

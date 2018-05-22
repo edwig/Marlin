@@ -737,12 +737,13 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
       }
     }
   }
-  catch(CString& fault)
+  catch(StdException* fault)
   {
-    m_errorMessage.Format("Error in processing the message: %s : %s",action.GetString(),fault.GetString());
+    m_errorMessage.Format("Error in processing the message: %s : %s",action.GetString(),fault->GetErrorMessage().GetString());
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
     p_message->Reset();
     p_message->SetFault("Critical","Server","Failed to process the message.",m_errorMessage);
+    fault->Delete();
     return false;
   }
   // Try next handler

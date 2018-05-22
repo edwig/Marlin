@@ -328,6 +328,9 @@ HTTPServerSync::Run()
 void
 HTTPServerSync::RunHTTPServer()
 {
+  // Install SEH to regular exception translator
+  _set_se_translator(SeTranslator);
+
   ULONG          result    = 0;
   DWORD          bytesRead = 0;
   HTTP_OPAQUE_ID requestId = NULL;

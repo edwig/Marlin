@@ -27,6 +27,7 @@
 //
 #pragma once
 #include "TestPorts.h"
+#include "StdException.h"
 
 #define NUM_RM_TESTS 3
 

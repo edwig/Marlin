@@ -578,7 +578,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
   bool didError = false;
   SiteHandler* handler  = nullptr;
 
-  __try
+  try
   {
     // HTTP Throttling is one call per calling address at the time
     if(m_throttling)
@@ -632,20 +632,14 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       EndThrottling(g_throttle);
     }
   }
-  __except(
-//#ifdef _DEBUG
-    // See if we are live debugging in Visual Studio
-    // IsDebuggerPresent() ? EXCEPTION_CONTINUE_SEARCH :
-//#endif // _DEBUG
-    // After calling the Error::Send method, the Windows stack get unwinded
+  catch(StdException* er)
+  {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
-    g_exception ? EXCEPTION_EXECUTE_HANDLER :
-   (g_exception = true,
-    g_exception = ErrorReport::Report(GetExceptionCode(),GetExceptionInformation(),m_webroot,m_site),
-    EXCEPTION_EXECUTE_HANDLER))
-  {
+    g_exception = true,
+    g_exception = ErrorReport::Report(er->GetSafeExceptionCode(),er->GetExceptionPointers(),m_webroot,m_site);
+
     if(g_exception)
     {
       // Error while sending an error report
@@ -679,7 +673,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
 void
 HTTPSite::PostHandle(HTTPMessage* p_message)
 {
-  __try
+  try
   {
     // If we did throttling, remove the lock
     if(m_throttling)
@@ -701,20 +695,14 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
       g_cleanup->CleanUp(p_message);
     }
   }
-  __except(
-//#ifdef _DEBUG
-    // See if we are live debugging in Visual Studio
-    // IsDebuggerPresent() ? EXCEPTION_CONTINUE_SEARCH :
-//#endif // _DEBUG
-    // After calling the Error::Send method, the Windows stack get unwinded
+  catch(StdException* er)
+  {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
-    g_exception ? EXCEPTION_EXECUTE_HANDLER :
-   (g_exception = true,
-    g_exception = ErrorReport::Report(GetExceptionCode(),GetExceptionInformation(),m_webroot,m_site),
-    EXCEPTION_EXECUTE_HANDLER))
-  {
+    g_exception = true,
+    g_exception = ErrorReport::Report(er->GetSafeExceptionCode(),er->GetExceptionPointers(),m_webroot,m_site);
+
     if(g_exception)
     {
       // Error while sending an error report

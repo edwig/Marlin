@@ -280,23 +280,23 @@ XMLTime::ParseTime(CString p_value)
                   ,&m_theTime.m_second);
   if(n < 2)
   {
-    throw CString("Wrong format for conversion to time. Must be in the format: hh:mm[:ss]");
+    throw new StdException("Wrong format for conversion to time. Must be in the format: hh:mm[:ss]");
   }
 
   // Check for correct values
   if(m_theTime.m_hour < 0 || m_theTime.m_hour > 23)
   {
-    throw CString("Incorrect time format: the value of the hour must be between 0 and 23 (inclusive)");
+    throw new StdException("Incorrect time format: the value of the hour must be between 0 and 23 (inclusive)");
   }
 
   if(m_theTime.m_minute < 0 || m_theTime.m_minute > 59)
   {
-    throw CString("Incorrect time format: the value of minutes must be between 0 and 59 (inclusive)");
+    throw new StdException("Incorrect time format: the value of minutes must be between 0 and 59 (inclusive)");
   }
 
   if(m_theTime.m_second < 0 || m_theTime.m_second > 59)
   {
-    throw CString("Incorrect time format: the value of the seconds must be between 0 and 59 (inclusive)");
+    throw new StdException("Incorrect time format: the value of the seconds must be between 0 and 59 (inclusive)");
   }
   SetTime();
 }
@@ -445,7 +445,7 @@ XMLTime::SetTime()
     error.Format("Incorrect time %02d:%02d:%02d",m_theTime.m_hour,m_theTime.m_minute,m_theTime.m_second);
     // Reset the time to NULL
     // Then throw the error
-    throw error;
+    throw new StdException(error);
   }
 }
 
@@ -516,7 +516,7 @@ XMLDate::ParseDate(CString p_value)
     if(!ParseDate(datum,&jaar,&maand,&dag))
     {
       // Wrong formatted date
-      throw CString("Date has a wrong format");
+      throw new StdException("Date has a wrong format");
     }
     // Speciaal geval: Pronto doet dit
     // 00-00-00 -> wordt vandaag
@@ -765,7 +765,7 @@ XMLTimestamp::RecalculateValue()
     m_value = 0;
     CString error;
     error.Format("Day of the month must be between 1 and %d inclusive.",daysInMonth);
-    throw error;
+    throw new StdException(error);
   }
   // Calculate the Astronomical Julian Day Number (JD)
   // Method P.D-Smith: Practical Astronomy
@@ -852,32 +852,32 @@ XMLTimestamp::Validate()
   if(m_timestamp.m_year <= 0 || m_timestamp.m_year >= 10000)
   {
     m_value = 0;
-    throw CString("Year must be between 1 and 9999 inclusive.");
+    throw new StdException("Year must be between 1 and 9999 inclusive.");
   }
   if(m_timestamp.m_month <= 0 || m_timestamp.m_month >= 13)
   {
     m_value = 0;
-    throw CString("Month must be between 1 and 12 inclusive.");
+    throw new StdException("Month must be between 1 and 12 inclusive.");
   }
   if(m_timestamp.m_hour < 0 || m_timestamp.m_hour >= 24)
   {
     m_value = 0;
-    throw CString("Hour must be between 0 and 23 inclusive.");
+    throw new StdException("Hour must be between 0 and 23 inclusive.");
   }
   if(m_timestamp.m_minute < 0 || m_timestamp.m_minute >= 60)
   {
     m_value = 0;
-    throw CString("Minute must be between 0 and 59 inclusive.");
+    throw new StdException("Minute must be between 0 and 59 inclusive.");
   }
   if(m_timestamp.m_second < 0 || m_timestamp.m_second >= 62)
   {
     m_value = 0;
-    throw CString("Number of seconds must be between 0 and 61 inclusive.");
+    throw new StdException("Number of seconds must be between 0 and 61 inclusive.");
   }
   if(m_fraction < 0 || m_fraction > NANOSECONDS_PER_SEC)
   {
     m_value = 0;
-    throw CString("Fraction of seconds must be between 0 and 999,999,999");
+    throw new StdException("Fraction of seconds must be between 0 and 999,999,999");
   }
 }
 
@@ -1020,7 +1020,7 @@ XMLDuration::ParseDuration(CString p_duration)
                 break;
       case 'H': if(!didTime)
                 {
-                  throw CString("Illegal duriation period (hours without a 'T')");
+                  throw new StdException("Illegal duriation period (hours without a 'T')");
                 }
                 m_interval.intval.day_second.hour = value;
                 break;
@@ -1036,7 +1036,7 @@ XMLDuration::ParseDuration(CString p_duration)
                 break;
       case 'S': if(!didTime)
                 {
-                  throw CString("Illegal duration period (seconds without a 'T')");
+                  throw new StdException("Illegal duration period (seconds without a 'T')");
                 }
                 m_interval.intval.day_second.second   = value;
                 m_interval.intval.day_second.fraction = fraction;
@@ -1072,7 +1072,7 @@ XMLDuration::ParseDuration(CString p_duration)
     // with the SQL definition of an interval, like Month-to-Day
     CString error;
     error.Format("XML duration period not compatible with SQL (%c to %c)",firstMarker,lastMarker);
-    throw error;
+    throw new StdException(error);
   }
 
   // Found everything: wrap up
@@ -1306,13 +1306,13 @@ XMLGregorianMD::ParseGregorianMD(CString p_value)
   if(num != 2)
   {
     CString result = "Not a Gregorian month-day value: " + p_value;
-    throw result;
+    throw new StdException(result);
   }
   else if(month < 1 || month > 12 ||
           day   < 1 || day   > 31)
   {
     CString result = "Gregorian month-day overflow: " + p_value;
-    throw result;
+    throw new StdException(result);
   }
   m_value = month * 31 + day;
   if(negative)
@@ -1352,13 +1352,13 @@ XMLGregorianYM::ParseGregorianYM(CString p_value)
   if(num != 2)
   {
     result = "Not a Gregorian year-month value: " + p_value;
-    throw result;
+    throw new StdException(result);
   }
   else if(year  < 0 || year  > 9999 ||
           month < 1 || month >   12  )
   {
     result = "Gregorian year-month overflow: " + p_value;
-    throw result;
+    throw new StdException(result);
   }
   m_value = year * 12 + month;
   if(negative)

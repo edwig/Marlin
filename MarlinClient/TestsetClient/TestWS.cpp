@@ -298,11 +298,12 @@ TestReliableMessaging(HTTPClient* p_client,CString p_namespace,CString p_action,
     // Must be closed to complete RM protocol
     client.Close();
   }
-  catch(CString& error)
+  catch(StdException* error)
   {
     ++errors;
-    printf("ERROR received      : %s\n",error.GetString());
+    printf("ERROR received      : %s\n",error->GetErrorMessage().GetString());
     printf("ERROR from WS Client: %s\n",client.GetErrorText().GetString());
+    error->Delete();
   }
   if(message)
   {

@@ -379,6 +379,9 @@ RunThread(void* p_myThread)
 DWORD
 ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
 {
+  // Install SEH to regular exception translator
+  _set_se_translator(SeTranslator);
+
   bool stayInThePool = true;
 
   TP_TRACE0("Thread is entering the pool\n");
@@ -601,6 +604,9 @@ ThreadPool::CreateHeartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_
 DWORD
 ThreadPool::RunHeartbeat()
 {
+  // Install SEH to regular exception translator
+  _set_se_translator(SeTranslator);
+
   bool running = true;
   do 
   {
@@ -648,24 +654,19 @@ ThreadPool::RunHeartbeat()
 void
 ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
 {
-  __try
+  try
   { 
-    // Calling our heartbeat function from within a SEH
+    // Calling our heartbeat function from within a try/catch loop
     (*p_function)(p_payload);
   }
-  __except( //#ifdef _DEBUG
-            // See if we are live debugging in Visual Studio
-            // IsDebuggerPresent() ? EXCEPTION_CONTINUE_SEARCH :
-            //#endif // _DEBUG
-            // After calling the Error::Send method, the Windows stack get unwinded
-            // We need to detect the fact that a second exception can occur,
-            // so we do **not** call the error report method again
-            // Otherwise we would end into an infinite loop
-            g_exception ? EXCEPTION_EXECUTE_HANDLER :
-           (g_exception = true,
-            g_exception = ErrorReport::Report(GetExceptionCode(),GetExceptionInformation()),
-            EXCEPTION_EXECUTE_HANDLER))
+  catch(StdException* er)
   {
+    // We need to detect the fact that a second exception can occur,
+    // so we do **not** call the error report method again
+    // Otherwise we would end into an infinite loop
+    g_exception = true,
+    g_exception = ErrorReport::Report(er->GetSafeExceptionCode(),er->GetExceptionPointers());
+
     if(g_exception)
     {
       // Error while sending an error report

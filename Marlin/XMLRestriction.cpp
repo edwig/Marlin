@@ -1534,10 +1534,11 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,CString p_value)
       default:                    break;
     }
   }
-  catch(CString& str)
+  catch(StdException* er)
   {
     // Primary datatype conversion went wrong
-    result = str;
+    result = er->GetErrorMessage();
+    er->Delete();
   }
   return result;
 }

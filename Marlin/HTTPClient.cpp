@@ -3730,6 +3730,9 @@ HTTPClient::StartQueue()
 void
 HTTPClient::QueueRunning()
 {
+  // Installing our SEH to exception translator
+  _set_se_translator(SeTranslator);
+
   HTTPMessage* message1 = NULL;
   SOAPMessage* message2 = NULL;
   JSONMessage* message3 = NULL;
@@ -3832,6 +3835,9 @@ HTTPClient::StartEventStreamingThread()
 void
 HTTPClient::EventThreadRunning()
 {
+  // Installing our SEH to exception translator
+  _set_se_translator(SeTranslator);
+
   // Tell we are running
   m_running = true;
   // We are an event-stream handler

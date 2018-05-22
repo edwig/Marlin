@@ -58,13 +58,16 @@ static char THIS_FILE[] = __FILE__;
 #define MODULE_NAME "MarlinIISModule"
 
 // GLOBALS Needed for the module
-IHttpServer*   g_iisServer   = nullptr;    // Pointer to the IIS Server
-WebConfigIIS   g_config;                   // Global ApplicationHost.config
-LogAnalysis*   g_analysisLog = nullptr;    // Pointer to our logfile
-AppPool        g_IISApplicationPool;       // All applications in the application pool
-CString        g_poolName;                 // Name of the application pool
-ErrorReport*   g_report      = nullptr;    // Error reporting for Marlin
-bool           g_reportOwner = false;      // Do we own the report
+IHttpServer* g_iisServer   = nullptr;    // Pointer to the IIS Server
+WebConfigIIS g_config;                   // Global ApplicationHost.config
+LogAnalysis* g_analysisLog = nullptr;    // Pointer to our logfile
+AppPool      g_IISApplicationPool;       // All applications in the application pool
+CString      g_poolName;                 // Name of the application pool
+ErrorReport* g_report      = nullptr;    // Error reporting for Marlin
+bool         g_reportOwner = false;      // Do we own the report
+
+// Our SEH translator
+__declspec(thread) SeTranslatorFunc  g_translator = nullptr;
 
 // Logging macro for this file only
 #define DETAILLOG(text)    if(g_analysisLog) { g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text)); }
@@ -296,6 +299,9 @@ MarlinGlobalFactory::~MarlinGlobalFactory()
 GLOBAL_NOTIFICATION_STATUS
 MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider* p_provider)
 {
+  // Install SEH to regular exception translator
+  g_translator = _set_se_translator(SeTranslator);
+
   AutoCritSec lock(&m_lock);
   USES_CONVERSION;
 
@@ -369,12 +375,16 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   // Ready, so stop the timer
   app->StopCounter();
 
+  _set_se_translator(g_translator);
   return GL_NOTIFICATION_HANDLED;
 };
 
 GLOBAL_NOTIFICATION_STATUS
 MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider* p_provider)
 {
+  // Install SEH to regular exception translator
+  g_translator = _set_se_translator(SeTranslator);
+
   AutoCritSec lock(&m_lock);
   USES_CONVERSION;
 
@@ -414,6 +424,8 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
     delete g_report;
     g_report = nullptr;
   }
+
+  _set_se_translator(g_translator);
   return GL_NOTIFICATION_HANDLED;
 };
 
@@ -581,6 +593,9 @@ REQUEST_NOTIFICATION_STATUS
 MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
                                     IN IHttpEventProvider* p_provider)
 {
+  // Install SEH to regular exception translator
+  g_translator = _set_se_translator(SeTranslator);
+
   UNREFERENCED_PARAMETER(p_provider);
   REQUEST_NOTIFICATION_STATUS status = RQ_NOTIFICATION_CONTINUE;
   char  buffer1[SERVERNAME_BUFFERSIZE + 1];
@@ -670,6 +685,8 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
 
   // Now completely ready. We did everything!
   app->StopCounter();
+
+  _set_se_translator(g_translator);
   return status;
 }
 
@@ -677,6 +694,9 @@ REQUEST_NOTIFICATION_STATUS
 MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
                                       IN IHttpEventProvider* p_provider)
 {
+  // Install SEH to regular exception translator
+  g_translator = _set_se_translator(SeTranslator);
+
   UNREFERENCED_PARAMETER(p_provider);
   REQUEST_NOTIFICATION_STATUS status = RQ_NOTIFICATION_CONTINUE;
   char  buffer1[SERVERNAME_BUFFERSIZE + 1];
@@ -781,6 +801,8 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   }
   // Now completely ready. We did everything!
   app->StopCounter();
+
+  _set_se_translator(g_translator);
   return status;
 }
 

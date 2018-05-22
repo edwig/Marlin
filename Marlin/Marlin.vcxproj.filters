@@ -303,6 +303,9 @@
     <ClCompile Include="SOAPSecurity.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="StdException.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -621,5 +624,8 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="Version.h" />
+    <ClInclude Include="StdException.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -152,7 +152,7 @@ Cookie::GetSetCookieText()
     {
       CString error;
       error.Format("Error %u in WinHttpTimeFromSystemTime.\n",GetLastError());
-      throw error;
+      throw new StdException(error);
     }
     CString expires = CW2A((LPCWSTR)&pwszTimeStr);
     cookie.AppendFormat("; Expires=%s",expires.GetString());
@@ -197,7 +197,7 @@ Cookie::SetExpires(CString p_expires)
   {
     CString error;
     error.Format("Error %u in HTTPTimeToSystemTime.\n",GetLastError());
-    throw error;
+    throw new StdException(error);
   }
 }
 
@@ -282,7 +282,7 @@ Cookie::CheckName()
     unsigned char ch = m_name.GetAt(ind);
     if((ch < MIN_COOKIE_CHAR || ch > MAX_COOKIE_CHAR) || (ch == '=') || (ch == ';'))
     {
-      throw CString("Cookie name characters out of range 0x21-0x7E");
+      throw new StdException("Cookie name characters out of range 0x21-0x7E");
     }
   }
 }
@@ -296,7 +296,7 @@ Cookie::CheckValue()
     unsigned char ch = m_value.GetAt(ind);
     if((ch < MIN_COOKIE_CHAR || ch > MAX_COOKIE_CHAR) || (ch == ';'))
     {
-      throw CString("Cookie value characters out of range 0x21-0x7E");
+      throw new StdException("Cookie value characters out of range 0x21-0x7E");
     }
   }
 }

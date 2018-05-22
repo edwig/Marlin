@@ -1223,9 +1223,10 @@ HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response)
 
     DETAILLOG1("Event/Socket connection closed");
   }
-  catch(...)
+  catch(StdException* er)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Cannot close Event/WebSocket stream!");
+    ERRORLOG(ERROR_INVALID_PARAMETER,"Cannot close Event/WebSocket stream! " + er->GetErrorMessage());
+    er->Delete();
   }
 }
 
