@@ -3473,7 +3473,7 @@ HTTPClient::CheckBodySigning(CString p_password,SOAPMessage* p_message)
     }
   }
   p_message->SetFault("Server","WS-Security","Incorrect signing",
-                      "SOAP message should have a signed body. Singing is incorrect or missing.");
+                      "SOAP message should have a signed body. Signing is incorrect or missing.");
 }
 
 void

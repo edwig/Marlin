@@ -8,6 +8,27 @@ Version 5.x contains NO real function breaks but adds IIS capabilities for the a
 and further maturity changes for IIS in general
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 5.0.3
+------------------------
+1)  The framework now makes use of the "_set_se_translator" functionality to translate SEH
+    exceptions to regular exceptions. This makes programming with this framework far more robust.
+    BEWARE: Change all the "catch(CString& str)" functionality in your programs to the new
+    "catch(StdException* er)" type of catching exceptions.
+
+    As a second best, you can also try to catch the regular "CException" from the MFC framework!!
+
+CHANGES IN VERSION 5.0.2
+------------------------
+1)  Various maintainability changes (virtual destructors), code cleanup, to shut up SonarQube
+    quality analyzer.
+2)  Stacktrace analyzer has lowered the access rights to IIS.
+
+CHANGES IN VERSION 5.0.1
+------------------------
+1)  Aborting an event stream after 64K chunks must be done, instead of a close. This ensures that
+    the client will try to reconnect in the EventSource to the server.
+2)  Correction for Firefox for reading chunks in the general "ReceiveIncomingRequest" for IIS.
+
 CHANGES IN VERSION 5.0.0
 ========================
 1)  The MarlinModule can now support multiple applications in one IIS application pool. There is 
@@ -35,12 +56,5 @@ CHANGES IN VERSION 5.0.0
     MarlinServerIISWC projects.
     To accomodate these changes the "MarlinModule" implementation to link the framework to IIS
     has been extensively updated.
-
-2)  The framework now makes use of the "_set_se_translator" functionality to translate SEH
-    exceptions to regular exceptions. This makes programming with this framework far more robust.
-    BEWARE: Change all the "catch(CString& str)" functionality in your programs to the new
-    "catch(StdException* er)" type of catching exceptions.
-
-    As a second best, you can also try to catch the regular "CException" from the MFC framework!!
 
 *** End of file ***

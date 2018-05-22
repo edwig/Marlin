@@ -556,6 +556,7 @@ void
 HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
 {
   unsigned count = p_request->EntityChunkCount;
+  FileBuffer* buffer = p_message->GetFileBuffer();
 
   // Read all chunks
   for(unsigned ind = 0; ind < count; ++ind)
@@ -563,8 +564,9 @@ HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
     PHTTP_DATA_CHUNK chunk = &p_request->pEntityChunks[ind];
     switch(chunk->DataChunkType)
     {
-      case HttpDataChunkFromMemory:            p_message->GetFileBuffer()->AddBuffer((uchar*)chunk->FromMemory.pBuffer
-                                                                                    ,chunk->FromMemory.BufferLength);
+      case HttpDataChunkFromMemory:            buffer->AddBuffer((uchar*)
+                                                                 chunk->FromMemory.pBuffer
+                                                                ,chunk->FromMemory.BufferLength);
                                                break;
       case HttpDataChunkFromFileHandle:        // Should not happen upon receive
                                                [[fallthrough]];
@@ -574,10 +576,11 @@ HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
     }
   }
   // Log & Trace the chunks that we just read 
-  LogTraceRequestBody(p_message->GetFileBuffer());
+  LogTraceRequestBody(buffer);
 }
 
 // Receive incoming HTTP request (p_request->Flags > 0)
+// But only reading extra buffer parts into an already partially filled buffer
 bool
 HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
 {
@@ -587,57 +590,44 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   size_t      contentLength = p_message->GetContentLength();
 
   // Reading the buffer
-  FileBuffer* fbuffer = p_message->GetFileBuffer();
-  if(fbuffer->AllocateBuffer(contentLength))
+  FileBuffer* fbuffer    = p_message->GetFileBuffer();
+  BYTE*       bytebuffer = new BYTE[INIT_HTTP_BUFFERSIZE + 1];
+
+  // Main loop: as long as we must read extra bytes
+  while(httpRequest->GetRemainingEntityBytes() > 0)
   {
-    uchar* buffer    = nullptr;
-    size_t size      = 0;
     DWORD  received  = 0;
-    DWORD  total     = 0;
-    DWORD  remaining = 0;
-    BOOL   complete  = FALSE;
-    uchar* totbuffer = nullptr;
-
-    // Get the just allocated buffer
-    fbuffer->GetBuffer(buffer,size);
-    totbuffer = buffer;
-
-    // Loop until we've got all data parts
-    do
+    HRESULT hr = httpRequest->ReadEntityBody(bytebuffer,(DWORD)INIT_HTTP_BUFFERSIZE,FALSE,&received,NULL);
+    if(HRESULT_CODE(hr) == ERROR_HANDLE_EOF)
     {
-      received = 0;
-      HRESULT hr = httpRequest->ReadEntityBody(buffer,(DWORD)size,FALSE,&received,&complete);
-      if(!SUCCEEDED(hr))
-      {
-        if(HRESULT_CODE(hr) == ERROR_MORE_DATA)
-        {
-          // Strange, but this code is used to determine that there is NO more data
-          // The boolean 'complete' status is **NOT** used! (that one is for async completion!)
-          break;
-        }
-        ERRORLOG(HRESULT_CODE(hr),"Cannot read incoming HTTP buffer");
-        return false;
-      }
-      total  += received; // Total received bytes
-      buffer += received; // Advance buffer pointer
-      size   -= received; // Size left in the buffer
-
-      // Still to be received from the IIS request
-      remaining = httpRequest->GetRemainingEntityBytes();
+      // Ready reading the message
+      break;
     }
-    while(remaining && received);
+    if(!SUCCEEDED(hr) && HRESULT_CODE(hr) != ERROR_MORE_DATA)
+    {
+      ERRORLOG(HRESULT_CODE(hr),"Cannot read incoming HTTP buffer");
+      return false;
+    }
+    // Add to filebuffer
+    if(received > 0)
+    {
+      fbuffer->AddBuffer(bytebuffer,received);
+    }
+  }
+  delete[] bytebuffer;
 
     // Check if we received the total predicted message
-    if(total < contentLength)
-    {
+  // This includes all blocks from initial chunk and extra reads
+  if(fbuffer->GetLength() < contentLength)
+  {
       ERRORLOG(ERROR_INVALID_DATA,"Total received message shorter dan 'ContentLength' header.");
-      totbuffer[total] = 0;
-    }
-    totbuffer[contentLength] = 0;
   }
 
   // Now also trace the request body of the message
   LogTraceRequestBody(fbuffer);
+
+  // Now everything has been read for this message
+  p_message->SetReadBuffer(false,0);
 
   return true;
 }

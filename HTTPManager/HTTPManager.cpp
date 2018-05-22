@@ -46,10 +46,13 @@ END_MESSAGE_MAP()
 
 HTTPManagerApp::HTTPManagerApp()
 {
-	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
 }
 
+HTTPManagerApp::~HTTPManagerApp()
+{
+  // Virtual destructor
+}
 
 // The one and only HTTPManagerApp object
 
@@ -102,19 +105,13 @@ BOOL HTTPManagerApp::InitInstance()
       mode = MODE_STANDALONE;
     }
   }
-	HTTPManagerDlg dlg(mode == 1);
+	HTTPManagerDlg dlg(mode == MODE_IIS);
 
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
-	if (nResponse == IDOK)
+	if (nResponse == IDOK || nResponse == IDCANCEL)
 	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with OK
-	}
-	else if (nResponse == IDCANCEL)
-	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with Cancel
+		// Handled OK
 	}
 	else if (nResponse == -1)
 	{

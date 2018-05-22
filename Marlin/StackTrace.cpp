@@ -70,11 +70,13 @@ namespace
     DbgHelp()
     {
       // Load the dbghelp library
+      CString debugHelper = WebConfig::GetExePath();
 #ifdef _WIN64
-      m_module = LoadLibrary("DBGHELP64.DLL");
+      debugHelper += "dbghelp64.dll";
 #else
-      m_module = LoadLibrary("DBGHELP32.DLL");
+      debugHelper += "dbghelp32.dll";
 #endif
+      m_module = LoadLibrary(debugHelper);
       if(m_module)
       {
         // Find our entry points
@@ -181,8 +183,8 @@ StackTrace::StackTrace(unsigned int p_skip /* = 0 */)
 void
 StackTrace::Process(CONTEXT *context, unsigned int overslaan)
 {
-  HANDLE process = GetCurrentProcess();
   HANDLE thread  = GetCurrentThread();
+  HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION,FALSE,GetCurrentProcessId());
 
   // Open dbghelp
   DbgHelp dbgHelp;
@@ -298,6 +300,8 @@ StackTrace::Process(CONTEXT *context, unsigned int overslaan)
   }
   // Ready with symbol handling
   dbgHelp.fnSymCleanup(process);
+
+  CloseHandle(process);
 }
 
 // Convert to string
@@ -306,19 +310,17 @@ CString
 StackTrace::AsString(bool p_path /* = true */) const
 {
   // Bouw een stringrepresentatie op
+  CString tmp;
   CString result = "Address     Module            Function\n"
-                   "-------     ------            --------\n", tmp;
-  for (Trace::const_iterator iter = m_trace.begin(), end = m_trace.end();
-       iter != end;
-       ++iter)
-  {
-    const Frame &frame = *iter;
+                   "-------      ------                --------\n";
 
+  for(auto& frame : m_trace)
+  {
     // Add address and function
 #ifdef _WIN64
-    tmp.Format("0x%I64X  %-16.16s", frame.m_address, frame.m_module.GetString());
+    tmp.Format("0x%I64X  %-20.20s", frame.m_address, frame.m_module.GetString());
 #else
-    tmp.Format("0x%lX  %-16.16s",frame.m_address,frame.m_module.GetString());
+    tmp.Format("0x%lX  %-20.20s",frame.m_address,frame.m_module.GetString());
 #endif
     result += tmp;
     if (frame.m_function.IsEmpty())

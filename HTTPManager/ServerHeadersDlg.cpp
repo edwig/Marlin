@@ -37,6 +37,8 @@ IMPLEMENT_DYNAMIC(ServerHeadersDlg, CDialog)
 
 ServerHeadersDlg::ServerHeadersDlg(CWnd* p_parent)
                  :CDialog(ServerHeadersDlg::IDD, p_parent)
+                 ,m_hstsMaxAge(0)
+                 ,m_allowMaxAge(0)
 {
   m_config = reinterpret_cast<WebConfigServer*>(p_parent);
 }

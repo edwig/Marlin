@@ -48,11 +48,18 @@ WebConfigWServices::WebConfigWServices(bool p_iis,CWnd* pParent /*=NULL*/)
                    :CDialogEx(WebConfigWServices::IDD, pParent)
                    ,m_iis(p_iis)
 {
-  m_checkWSDLin   = false;
-  m_checkWSDLout  = false;
-  m_fieldCheck    = false;
-  m_reliable      = false;
-  m_reliableLogin = true;
+  m_checkWSDLin       = false;
+  m_checkWSDLout      = false;
+  m_fieldCheck        = false;
+  m_reliable          = false;
+  m_reliableLogin     = true;
+  m_useEncLevel       = false;
+  m_useEncPassword    = false;
+  m_useReliable       = false;
+  m_useReliableLogin  = false;
+  m_useCheckWSDLIn    = false;
+  m_useCheckWSDLOut   = false;
+  m_useFieldCheck     = false;
 }
 
 WebConfigWServices::~WebConfigWServices()
