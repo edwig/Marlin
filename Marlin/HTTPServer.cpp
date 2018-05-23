@@ -1204,6 +1204,16 @@ HTTPServer::SendEvent(EventStream* p_stream
     return false;
   }
 
+  // But we must now make sure the event stream still does exist
+  // and has not been closed by the event monitor
+  {
+    AutoCritSec lock(&m_eventLock);
+    if(!HasEventStream(p_stream))
+    {
+      return false;
+    }
+  }
+
   // Set next stream id
   ++p_stream->m_lastID;
 

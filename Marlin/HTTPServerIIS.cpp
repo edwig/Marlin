@@ -1163,10 +1163,23 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
                                       ,size_t         p_length
                                       ,bool           p_continue /*= true*/)
 {
+  // Check if we have something to send
+  if(p_response == NULL || p_buffer == nullptr)
+  {
+    return false;
+  }
+
+  // Getting our context
   DWORD  bytesSent = 0;
   HTTP_DATA_CHUNK dataChunk;
   IHttpContext*   context  = (IHttpContext*)p_response;
   IHttpResponse*  response = context->GetResponse();
+
+  // Check that we have a response object
+  if(response == nullptr)
+  {
+    return false;
+  }
 
   // Only if a buffer present
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
