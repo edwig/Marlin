@@ -111,8 +111,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy utf8file.txt $(OutDir)</Command>
@@ -136,8 +136,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib;websocket.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib;websocket.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy utf8file.txt $(OutDir)</Command>
@@ -164,8 +164,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy utf8file.txt $(OutDir)</Command>
@@ -196,8 +196,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>marlin.lib;winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Marlin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winhttp.lib;Rpcrt4.lib;secur32.lib;pdh.lib;crypt32.lib;httpapi.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy utf8file.txt $(OutDir)</Command>

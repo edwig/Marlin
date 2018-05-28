@@ -20,4 +20,5 @@
 #include <afxext.h>         // MFC extensions
 #include <iostream>
 
-// TODO: reference additional headers your program requires here
+// For autolinking with the Marlin framework
+#include <Marlin.h>

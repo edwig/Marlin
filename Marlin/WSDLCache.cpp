@@ -352,7 +352,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     p_wsdlcontent += temp;
 
     // Do data type
-    switch(param->GetType() & XDT_Mask)
+    switch(param->GetType() & XDT_MaskTypes & ~XDT_Type)
     {
       case XDT_CDATA:             [[fallthrough]];
       case (XDT_String|XDT_CDATA):[[fallthrough]];
@@ -819,7 +819,7 @@ WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
   CString         result;
   XMLRestriction  restrict("empty");
   XMLRestriction* restriction = p_checkParam->GetRestriction();
-  XmlDataType     type = p_origParam->GetType() & XDT_Mask;
+  XmlDataType     type = p_origParam->GetType() & XDT_MaskTypes;
 
   // Use the restriction, or an empty one
   if(restriction)

@@ -1488,7 +1488,7 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,CString p_value)
   {
     // Checking only base datatypes
     // String and CDATA are never checked!
-    switch(p_type & XDT_Mask)
+    switch(p_type & XDT_MaskTypes)
     {
       case XDT_AnyURI:            result = CheckAnyURI   (p_value);       break;
       case XDT_Base64Binary:      result = CheckBase64   (p_value);       break;

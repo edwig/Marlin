@@ -73,16 +73,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)\lib\</OutDir>
+    <TargetName>$(ProjectName)_x64R</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)lib\</OutDir>
+    <TargetName>$(ProjectName)_x64D</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)\lib\</OutDir>
+    <TargetName>$(ProjectName)_x86D</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)\lib\</OutDir>
+    <TargetName>$(ProjectName)_x86R</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -254,6 +258,7 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="WSDLCache.cpp" />
+    <ClCompile Include="XMLDataType.cpp" />
     <ClCompile Include="XMLMessage.cpp" />
     <ClCompile Include="XMLParser.cpp" />
     <ClCompile Include="XMLParserImport.cpp" />
@@ -357,6 +362,7 @@
     <ClInclude Include="IISSiteConfig.h" />
     <ClInclude Include="JSONMessage.h" />
     <ClInclude Include="JSONParser.h" />
+    <ClInclude Include="Marlin.h" />
     <ClInclude Include="MarlinModule.h" />
     <ClInclude Include="MediaType.h" />
     <ClInclude Include="MultiPartBuffer.h" />

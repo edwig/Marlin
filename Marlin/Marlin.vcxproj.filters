@@ -306,6 +306,9 @@
     <ClCompile Include="StdException.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="XMLDataType.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -627,5 +630,6 @@
     <ClInclude Include="StdException.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Marlin.h" />
   </ItemGroup>
 </Project>

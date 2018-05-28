@@ -103,8 +103,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;marlin.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Marlin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
     </Link>
@@ -123,8 +123,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;marlin.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Marlin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -145,8 +145,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;marlin.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Marlin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -167,8 +167,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;marlin.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Marlin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

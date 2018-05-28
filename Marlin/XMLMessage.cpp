@@ -407,17 +407,13 @@ XMLMessage::PrintElements(XMLElement* p_element
     message += spaces + temp;
     return message;
   }
-  else if(p_element->GetAttributes().size() == 0)
-  {
-    // Exact string with escapes
-    temp.Format("<%s>%s",PrintXmlString(name,p_utf8).GetString(),PrintXmlString(value,p_utf8).GetString());
-    message += spaces + temp;
-  }
   else
   {
     // Parameter printing with attributes
     temp.Format("<%s",PrintXmlString(name,p_utf8).GetString());
     message += spaces + temp;
+
+    // Print all of our attributes
     for(auto& attrib : p_element->GetAttributes())
     {
       CString attribute = attrib.m_name;
@@ -433,7 +429,7 @@ XMLMessage::PrintElements(XMLElement* p_element
       }
       message += temp;
 
-      switch(attrib.m_type & XDT_Mask)
+      switch(attrib.m_type & XDT_Mask & ~XDT_Type)
       {
         default:                    temp.Format("\"%s\"",attrib.m_value.GetString());
                                     break;
@@ -444,6 +440,15 @@ XMLMessage::PrintElements(XMLElement* p_element
       }
       message += temp;
     }
+
+    // Mandatory type in the xml
+    if(p_element->GetType() & XDT_Type)
+    {
+      temp.Format(" type=\"%s\"",XmlDataTypeToString(p_element->GetType() & XDT_MaskTypes).GetString());
+      message += temp;
+    }
+
+    // After the attributes, empty value or value
     if(value.IsEmpty() && p_element->GetChildren().empty())
     {
       message += "/>" + newline;
@@ -556,7 +561,7 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   }
 
   // print element value
-  switch(p_element->GetType() & XDT_Mask)
+  switch(p_element->GetType() & XDT_Mask & ~XDT_Type)
   {
     default:                    temp.Format("%s",value.GetString());
                                 break;

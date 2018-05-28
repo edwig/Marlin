@@ -725,6 +725,8 @@ LogAnalysis::RunLogAnalysis()
                                 break;
     }
   }
+  // Flush out the rest
+  Flush(true);
   // Closing our event
   CloseHandle(m_event);
   m_event = NULL;

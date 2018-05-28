@@ -21,3 +21,6 @@
 
 // Using our exentsion of CException
 #include "StdException.h"
+
+// Do not autolink with Marlin from within the library itself
+#define MARLIN_NOAUTOLINK

@@ -8,6 +8,20 @@ Version 5.x contains NO real function breaks but adds IIS capabilities for the a
 and further maturity changes for IIS in general
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 5.1.0
+------------------------
+1)  Applications can now autolink the Marlin.lib library by including <Marlin.h> in their general
+    stdafx.h file. All you need to do for the linker is specifying the "$(SolutionDir)lib\" path.
+2)  XMLdatatype for adding a XMLElement can now specify and extra "XDT_Type" mask on the datatype
+    as in "AddElement(base,"elemname",XDT_String|XDT_Type,"my-message");"
+    This will automatically add the XML datatype to a node as an extra attribute. In this example
+    the node will become:
+
+    <elemname type="string">my-message</elemename>
+
+3)  The logfile has an extra flush just before the destruction of the writer-thread. This is to 
+    flush last closing messages in the log message queue.
+
 CHANGES IN VERSION 5.0.3
 ------------------------
 1)  The framework now makes use of the "_set_se_translator" functionality to translate SEH
