@@ -344,6 +344,8 @@ public:
   void       RespondWithServerError(HTTPMessage*    p_message
                                    ,int             p_error
                                    ,CString         p_reason);
+  void       RespondWithServerError(HTTPMessage*    p_message
+                                   ,int             p_error);
   // Response in the client error range (400-417)
   void       RespondWithClientError(HTTPMessage*    p_message
                                    ,int             p_error

@@ -366,6 +366,7 @@ XMLParser::ParseDeclaration()
   // Skip over end of declaration
   NeedToken('?');
   NeedToken('>');
+  SkipWhiteSpace();
 }
 
 void
@@ -380,6 +381,7 @@ XMLParser::ParseComment()
   NeedToken('-');
   NeedToken('-');
   NeedToken('>');
+  SkipWhiteSpace();
 }
 
 void 
@@ -405,6 +407,7 @@ XMLParser::ParseCDATA()
     m_lastElement->SetValue(value);
     m_lastElement->SetType(XDT_CDATA);
   }
+  SkipWhiteSpace();
 }
 
 void
@@ -454,6 +457,7 @@ XMLParser::ParseDTD()
     m_pointer++;
   }
   NeedToken('>');
+  SkipWhiteSpace();
 }
 
 // Parse element node

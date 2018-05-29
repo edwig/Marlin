@@ -21,6 +21,7 @@ CHANGES IN VERSION 5.1.0
 
 3)  The logfile has an extra flush just before the destruction of the writer-thread. This is to 
     flush last closing messages in the log message queue.
+4)  Fix for a bug in HTTPServerIIS while reading a mixture of short and longer messages
 
 CHANGES IN VERSION 5.0.3
 ------------------------

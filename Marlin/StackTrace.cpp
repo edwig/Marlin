@@ -301,7 +301,7 @@ StackTrace::Process(CONTEXT *context, unsigned int overslaan)
   // Ready with symbol handling
   dbgHelp.fnSymCleanup(process);
 
-  CloseHandle(process);
+  // CloseHandle(process);
 }
 
 // Convert to string

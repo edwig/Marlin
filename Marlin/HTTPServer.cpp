@@ -853,6 +853,13 @@ HTTPServer::RespondWithServerError(HTTPMessage* p_message
   SendResponse(p_message);
 }
 
+void
+HTTPServer::RespondWithServerError(HTTPMessage*    p_message
+                                  ,int             p_error)
+{
+  RespondWithServerError(p_message,p_error,"General server error");
+}
+
 // Response in the client error range (400-417)
 void
 HTTPServer::RespondWithClientError(HTTPMessage* p_message

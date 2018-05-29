@@ -631,5 +631,11 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="Marlin.h" />
+    <ClInclude Include="Version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ZLib\deflate.d">
+      <Filter>Zip</Filter>
+    </None>
   </ItemGroup>
 </Project>
