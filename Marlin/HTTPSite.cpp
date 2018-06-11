@@ -632,13 +632,13 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       EndThrottling(g_throttle);
     }
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
     g_exception = true,
-    g_exception = ErrorReport::Report(er->GetSafeExceptionCode(),er->GetExceptionPointers(),m_webroot,m_site);
+    g_exception = ErrorReport::Report(er.GetSafeExceptionCode(),er.GetExceptionPointers(),m_webroot,m_site);
 
     if(g_exception)
     {
@@ -695,13 +695,13 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
       g_cleanup->CleanUp(p_message);
     }
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
     g_exception = true,
-    g_exception = ErrorReport::Report(er->GetSafeExceptionCode(),er->GetExceptionPointers(),m_webroot,m_site);
+    g_exception = ErrorReport::Report(er.GetSafeExceptionCode(),er.GetExceptionPointers(),m_webroot,m_site);
 
     if(g_exception)
     {

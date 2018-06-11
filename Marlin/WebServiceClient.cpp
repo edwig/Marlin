@@ -919,11 +919,11 @@ WebServiceClient::CreateSequence()
       throw new StdException(error);
     }
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     CString error;
     error  = "WebService CreateSequence in WS-ReliableMessage protocol failed.\n";
-    error += er->GetErrorMessage();
+    error += er.GetErrorMessage();
 
     error += "\n";
     error += message.GetFault();
@@ -931,7 +931,6 @@ WebServiceClient::CreateSequence()
     DETAILLOG1(error);
     m_errorText += error;
 
-    er->Delete();
     throw new StdException(error);
   }
   // CreateSequence did work
@@ -971,14 +970,13 @@ WebServiceClient::LastMessage()
       throw new StdException(error);
     }
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     CString msg;
     msg  = "WebService LastMessage in WS-ReliableMessage protocol did fail.\n";
-    msg += er->GetErrorMessage();
+    msg += er.GetErrorMessage();
     DETAILLOG1(msg);
     m_errorText += msg;
-    er->Delete();
     throw new StdException(msg);
   }
 }
@@ -1033,13 +1031,12 @@ WebServiceClient::TerminateSequence()
       throw new StdException(error);
     }
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     CString msg;
     msg  = "WebService TerminateSequence in WS-ReliableMessage protocol failed.\n";
-    msg += er->GetErrorMessage();
+    msg += er.GetErrorMessage();
     DETAILLOG1(msg);
-    er->Delete();
     throw new StdException(msg);
   }
   DETAILLOG1("*** WS-ReliableMessaging protocol terminated correctly ***");

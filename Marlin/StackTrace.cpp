@@ -184,7 +184,7 @@ void
 StackTrace::Process(CONTEXT *context, unsigned int overslaan)
 {
   HANDLE thread  = GetCurrentThread();
-  HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION,FALSE,GetCurrentProcessId());
+  HANDLE process = GetCurrentProcess();
 
   // Open dbghelp
   DbgHelp dbgHelp;
@@ -300,8 +300,6 @@ StackTrace::Process(CONTEXT *context, unsigned int overslaan)
   }
   // Ready with symbol handling
   dbgHelp.fnSymCleanup(process);
-
-  // CloseHandle(process);
 }
 
 // Convert to string
@@ -314,8 +312,9 @@ StackTrace::AsString(bool p_path /* = true */) const
   CString result = "Address     Module            Function\n"
                    "-------      ------                --------\n";
 
-  for(auto& frame : m_trace)
+  for(Trace::const_iterator iter = m_trace.begin(),end = m_trace.end();iter != end;++iter)
   {
+    const Frame& frame = *iter;
     // Add address and function
 #ifdef _WIN64
     tmp.Format("0x%I64X  %-20.20s", frame.m_address, frame.m_module.GetString());

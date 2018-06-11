@@ -345,14 +345,13 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
     }
     client.Close();
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     ++errors;
     // --- "---------------------------------------------- - ------
     printf("Service contract: errors received              : ERROR\n");
-    xprintf("%s\n",er->GetErrorMessage().GetString());
+    xprintf("%s\n",er.GetErrorMessage().GetString());
     xprintf("ERROR from WS Client: %s\n",client.GetErrorText().GetString());
-    er->Delete();
   }
 
   if(errors == 0)

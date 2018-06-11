@@ -729,11 +729,10 @@ TestReader(void)
     errors += Soap12_NS_response();
     errors += Soap12_ADR_MDS();
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     ++errors;
-    printf("Error while reading the SOAP message: %s\n",er->GetErrorMessage().GetString());
-    er->Delete();
+    printf("Error while reading the SOAP message: %s\n",er.GetErrorMessage().GetString());
   }
   return errors;
 }

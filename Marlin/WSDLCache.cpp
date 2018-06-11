@@ -1183,13 +1183,13 @@ WSDLCache::ReadWSDLFile(LPCTSTR p_filename)
   {
     return ReadWSDLFileSafe(p_filename);
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
     m_exception = true,
-    m_exception = ErrorReport::Report(er->GetSafeExceptionCode(),er->GetExceptionPointers());
+    m_exception = ErrorReport::Report(er.GetSafeExceptionCode(),er.GetExceptionPointers());
 
     if(m_exception)
     {

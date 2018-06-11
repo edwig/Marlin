@@ -8,6 +8,10 @@ Version 5.x contains NO real function breaks but adds IIS capabilities for the a
 and further maturity changes for IIS in general
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 5.1.1
+------------------------
+1)  Changed all catching of exceptions from "StdException*" to "StdException&"
+
 CHANGES IN VERSION 5.1.0
 ------------------------
 1)  Applications can now autolink the Marlin.lib library by including <Marlin.h> in their general

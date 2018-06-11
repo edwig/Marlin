@@ -659,13 +659,13 @@ ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
     // Calling our heartbeat function from within a try/catch loop
     (*p_function)(p_payload);
   }
-  catch(StdException* er)
+  catch(StdException& er)
   {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
     g_exception = true,
-    g_exception = ErrorReport::Report(er->GetSafeExceptionCode(),er->GetExceptionPointers());
+    g_exception = ErrorReport::Report(er.GetSafeExceptionCode(),er.GetExceptionPointers());
 
     if(g_exception)
     {

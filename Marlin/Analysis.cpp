@@ -573,11 +573,10 @@ LogAnalysis::Flush(bool p_all)
       }
     }
   }
-  catch (StdException* er)
+  catch(StdException& er)
   {
     // Logfile failed. Where to log this??
-    TRACE("%s\n",er->GetErrorMessage().GetString());
-    er->Delete();
+    TRACE("%s\n",er.GetErrorMessage().GetString());
   }
 }
 
