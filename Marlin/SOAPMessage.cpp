@@ -2052,6 +2052,10 @@ CString
 SOAPMessage::GetBodyPart()
 {
   bool utf8 = m_encoding == XMLEncoding::ENC_UTF8;
+  if(m_body == nullptr)
+  {
+    FindHeaderAndBody();
+  }
   return PrintElements(m_body, utf8);
 }
 
