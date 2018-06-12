@@ -107,7 +107,7 @@ DocFileDialog::DoModal()
   }
   catch(...)
   {
-    ::MessageBox(NULL,"Kan geen bestand dialoog maken","PDF Fout",MB_OK|MB_ICONERROR);
+    ::MessageBox(NULL,"Cannot make a file dialog","ERROR",MB_OK|MB_ICONERROR);
   }
   return res;
 }

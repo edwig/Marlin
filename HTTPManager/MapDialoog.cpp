@@ -27,6 +27,7 @@
 //
 #include "StdAfx.h"
 #include "MapDialoog.h"
+#include "StdException.h"
 #include <direct.h>
 #include <SHLOBJ.H>
 
@@ -78,7 +79,7 @@ CString PidlToPath(LPITEMIDLIST pidl, bool deletePidl = false)
   BOOL cvtResult = SHGetPathFromIDList(pidl, szPath);
   if(!cvtResult) 
   {
-    throw CString("Cannot translate a PIDL to a pathname");
+    throw StdException("Cannot translate a PIDL to a pathname");
   }
   //  Store in string
   CString result = szPath;

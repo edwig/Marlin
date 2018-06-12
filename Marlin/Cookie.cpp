@@ -30,6 +30,7 @@
 #include "Crypto.h"
 #include "Winhttp.h"
 #include "HTTPTime.h"
+#include "StdException.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -152,7 +153,7 @@ Cookie::GetSetCookieText()
     {
       CString error;
       error.Format("Error %u in WinHttpTimeFromSystemTime.\n",GetLastError());
-      throw new StdException(error);
+      throw StdException(error.GetString());
     }
     CString expires = CW2A((LPCWSTR)&pwszTimeStr);
     cookie.AppendFormat("; Expires=%s",expires.GetString());
@@ -197,7 +198,7 @@ Cookie::SetExpires(CString p_expires)
   {
     CString error;
     error.Format("Error %u in HTTPTimeToSystemTime.\n",GetLastError());
-    throw new StdException(error);
+    throw StdException(error);
   }
 }
 
@@ -282,7 +283,7 @@ Cookie::CheckName()
     unsigned char ch = m_name.GetAt(ind);
     if((ch < MIN_COOKIE_CHAR || ch > MAX_COOKIE_CHAR) || (ch == '=') || (ch == ';'))
     {
-      throw new StdException("Cookie name characters out of range 0x21-0x7E");
+      throw StdException("Cookie name characters out of range 0x21-0x7E");
     }
   }
 }
@@ -296,7 +297,7 @@ Cookie::CheckValue()
     unsigned char ch = m_value.GetAt(ind);
     if((ch < MIN_COOKIE_CHAR || ch > MAX_COOKIE_CHAR) || (ch == ';'))
     {
-      throw new StdException("Cookie value characters out of range 0x21-0x7E");
+      throw StdException("Cookie value characters out of range 0x21-0x7E");
     }
   }
 }

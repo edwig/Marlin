@@ -3,27 +3,27 @@
 // StdException. Catches Safe Exceptions and normal exceptions alike
 //
 // Code based on original idea of "Martin Ziacek" on www.codeproject.com
+// Exception class is now **NOT** based on any base class
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __SEEXCEPTION_H__
-#define __SEEXCEPTION_H__
+#ifndef __STDEXCEPTION_H__
+#define __STDEXCEPTION_H__
 
-#include <eh.h>
+#include <exception>
 
-class StdException : public CException
+class StdException 
 {
-	DECLARE_DYNAMIC(StdException)
 public:
   // Application type constructors
   StdException(int p_errorCode);
   StdException(const char* p_fault);
+  StdException(const CString& p_fault);
   StdException(int p_errorCode,const char* p_fault);
   // Construct from a SafeExceptionHandler (SEH)
 	StdException(UINT p_safe,_EXCEPTION_POINTERS* p_exceptionPointers);
-	StdException(StdException& p_other);
+	StdException(const StdException& p_other);
 
-  void                 Delete();
   UINT                 GetSafeExceptionCode();
 	_EXCEPTION_POINTERS* GetExceptionPointers();
 	PVOID                GetExceptionAddress();
@@ -36,14 +36,27 @@ private:
   UINT                 m_safeExceptionCode { 0 };
 	_EXCEPTION_POINTERS* m_exceptionPointers { nullptr };
   UINT                 m_applicationCode   { 0 };
-  CString              m_fault;
+  CString              m_applicationFault;
 };
-
-// Easily get an string from a CException
-CString MessageFromException(CException* p_exception);
-
-typedef void(*SeTranslatorFunc)(UINT, _EXCEPTION_POINTERS*);
 
 void SeTranslator(UINT p_safe,_EXCEPTION_POINTERS* p_exceptionPointers);
 
-#endif //__SEEXCEPTION_H__
+// Auto class to store the SE translator function
+// Of an original source system, while setting our own
+class AutoSeTranslator
+{
+public:
+  AutoSeTranslator(_se_translator_function p_func)
+  {
+    m_original = _set_se_translator(p_func);
+  }
+  ~AutoSeTranslator()
+  {
+    _set_se_translator(m_original);
+  }
+
+private:
+  _se_translator_function m_original;
+};
+
+#endif //__STDEXCEPTION_H__

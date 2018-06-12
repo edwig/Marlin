@@ -158,7 +158,7 @@ WebServiceClient::Open()
     error.Format("WebServiceClient is already open for: %s",m_contract.GetString());
     DETAILLOG1(error);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
   }
   DETAILLOG1("WebServiceClient starting");
 
@@ -250,11 +250,10 @@ WebServiceClient::Close()
       // Send a TerminateSequence
       TerminateSequence();
     }
-    catch(CException* error)
+    catch(StdException& error)
     {
-      CString er = "ERROR in closing the ReliableMessaging protocol: " + MessageFromException(error);
+      CString er = "ERROR in closing the ReliableMessaging protocol: " + error.GetErrorMessage();
       ERRORLOG(er);
-      error->Delete();
     }
   }
   // Ended RM without a throw
@@ -441,7 +440,7 @@ WebServiceClient::ReliabilityChecks(SOAPMessage* p_message)
     CString error("Webservice calls under reliability protocol must be of SOAP XML version 1.2");
     DETAILLOG1(error);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
   }
 
   // Override of "text/xml"
@@ -503,7 +502,7 @@ WebServiceClient::SetReliable(bool p_reliable,ReliableType p_type /*= RELIABLE_O
   CString error("WebServiceClient: Cannot set attribute 'reliable' after opening.");
   DETAILLOG1(error);
   m_errorText += error;
-  throw new StdException(error);
+  throw StdException(error);
 }
 
 void      
@@ -521,12 +520,12 @@ WebServiceClient::SetStoreSize(int p_size)
     error.Format("WebServiceClient: Message store size out of range [%d:%d]",MESSAGESTORE_MINIMUM,MESSAGESTORE_MAXIMUM);
     DETAILLOG1(error);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
   }
   CString error("WebServiceClient: Cannot set message store size after 'Open' for: " + m_contract);
   DETAILLOG1(error);
   m_errorText += error;
-  throw new StdException(error);
+  throw StdException(error);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -573,7 +572,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
     error.Format("Incorrect Sequence Identifier in header on WS-ReliableMessaging for call [%s/%s]",m_contract.GetString(),p_message->GetSoapAction().GetString());
     DETAILLOG1(error);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
   }
 
   int answerNumber = p_message->GetServerMessageNumber();
@@ -594,7 +593,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
       error.Format("WS-ReliableMessaging server message number out-of-sequence for call [%s/%s]",m_contract.GetString(),p_message->GetSoapAction().GetString());
       DETAILLOG1(error);
       m_errorText += error;
-      throw new StdException(error);
+      throw StdException(error);
     }
     if(m_reliableType == ReliableType::RELIABLE_1ATMOST)
     {
@@ -610,7 +609,7 @@ WebServiceClient::CheckHeaderHasSequence(SOAPMessage* p_message)
       error.Format("Incorrect Sequence response. No correct 'LastMessage' response in WS-ReliableMessaging for call [%s/%s]",m_contract.GetString(),p_message->GetSoapAction().GetString());
       DETAILLOG1(error);
       m_errorText += error;
-      throw new StdException(error);
+      throw StdException(error);
     }
   }
 }
@@ -626,7 +625,7 @@ WebServiceClient::CheckHeaderHasAcknowledgement(SOAPMessage* p_message)
     error.Format("Sequence Acknowledgment requested is not for [%s/%s]",m_contract.GetString(),p_message->GetSoapAction().GetString());
     DETAILLOG1(error);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
   }
   // Find ranges
   RangeMap& ranges = p_message->GetRangeMap();
@@ -653,7 +652,7 @@ WebServiceClient::CheckHeaderRelatesTo(SOAPMessage* p_message)
     error.Format("Out of band answer on call from [%s/%s]. Wrong message ID",m_contract.GetString(),p_message->GetSoapAction().GetString());
     DETAILLOG1(error);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
   }
 }
 
@@ -761,7 +760,7 @@ WebServiceClient::MinimumCheck()
     CString error("WebServiceClient without an endpoint URL definition.");
     DETAILLOG1(error);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
 
   }
   // Contract is in the SOAP-header for the WS-ReliableMessaging protocol
@@ -770,7 +769,7 @@ WebServiceClient::MinimumCheck()
     CString error("WebServiceClient without a contract definition, needed for reliable messaging.");
     DETAILLOG1(error);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
   }
 
   // JSON Translation cannot be done in reliable messaging mode or in encryption modes!
@@ -779,7 +778,7 @@ WebServiceClient::MinimumCheck()
     CString error("WebServiceClient cannot do SOAP->JSON->SOAP translation when in reliable messaging or encryption mode!");
     DETAILLOG1(ERROR);
     m_errorText += error;
-    throw new StdException(error);
+    throw StdException(error);
   }
 }
 
@@ -871,7 +870,7 @@ WebServiceClient::CreateSequence()
       // Throw
       ErrorHandling(&message);
       DETAILLOG1(m_errorText);
-      throw new StdException(m_errorText);
+      throw StdException(m_errorText);
     }
 
     CString acceptURL;
@@ -890,7 +889,7 @@ WebServiceClient::CreateSequence()
         CString error("Received a 'CreateSequenceResponse' on another message from another program/process or thread.");
         DETAILLOG1(error);
         m_errorText += error;
-        throw new StdException(error);
+        throw StdException(error);
     }
 
     // Check that the server accepts our URL
@@ -907,7 +906,7 @@ WebServiceClient::CreateSequence()
       CString error("Received a 'CreateSequenceResponse' that does not answer to our URL address.");
       DETAILLOG1(error);
       m_errorText += error;
-      throw new StdException(error);
+      throw StdException(error);
     }
 
     // Check that we have both
@@ -916,7 +915,7 @@ WebServiceClient::CreateSequence()
       CString error("Received a 'CreateSequenceResponse' without an proper 'Accept'");
       DETAILLOG1(error);
       m_errorText += error;
-      throw new StdException(error);
+      throw StdException(error);
     }
   }
   catch(StdException& er)
@@ -931,7 +930,7 @@ WebServiceClient::CreateSequence()
     DETAILLOG1(error);
     m_errorText += error;
 
-    throw new StdException(error);
+    throw StdException(error);
   }
   // CreateSequence did work
   // Remember the GUID of the sequence
@@ -967,7 +966,7 @@ WebServiceClient::LastMessage()
       CString error("No answer on 'LastMessage' call");
       DETAILLOG1(error);
       m_errorText += error;
-      throw new StdException(error);
+      throw StdException(error);
     }
   }
   catch(StdException& er)
@@ -977,7 +976,7 @@ WebServiceClient::LastMessage()
     msg += er.GetErrorMessage();
     DETAILLOG1(msg);
     m_errorText += msg;
-    throw new StdException(msg);
+    throw StdException(msg);
   }
 }
 
@@ -1018,7 +1017,7 @@ WebServiceClient::TerminateSequence()
         error.Format("Wrong TerminateSequence in answer on call from [%s/%s].",m_rm.GetString(),request.GetString());
         DETAILLOG1(error);
         m_errorText += error;
-        throw new StdException(error);
+        throw StdException(error);
       }
       // End reached: no throw
     }
@@ -1028,7 +1027,7 @@ WebServiceClient::TerminateSequence()
       error.Format("No correct answer on [%s%s]",m_rm.GetString(),request.GetString());
       DETAILLOG1(error);
       m_errorText += error;
-      throw new StdException(error);
+      throw StdException(error);
     }
   }
   catch(StdException& er)
@@ -1037,7 +1036,7 @@ WebServiceClient::TerminateSequence()
     msg  = "WebService TerminateSequence in WS-ReliableMessage protocol failed.\n";
     msg += er.GetErrorMessage();
     DETAILLOG1(msg);
-    throw new StdException(msg);
+    throw StdException(msg);
   }
   DETAILLOG1("*** WS-ReliableMessaging protocol terminated correctly ***");
 }

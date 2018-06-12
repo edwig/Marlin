@@ -1253,8 +1253,14 @@ WebSocketServerIIS::CloseSocket()
     catch(CException* er)
     {
       // result = false;
-      ERRORLOG(12102,MessageFromException(er).GetString());
+      char buffer[_MAX_PATH];
+      er->GetErrorMessage(buffer,_MAX_PATH);
+      ERRORLOG(12102,buffer);
       er->Delete();
+    }
+    catch(StdException& er)
+    {
+      ERRORLOG(12102,er.GetErrorMessage().GetString());
     }
 
     // Cancel the outstanding request altogether

@@ -3,23 +3,21 @@
 // StdException. Catches Safe Exceptions and normal exceptions alike
 //
 // Code based on original idea of "Martin Ziacek" on www.codeproject.com
+// Exception class is now **NOT** based on any base class
 //
 //////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "StdException.h"
 
-#ifndef __SEEXCEPTION_IMPL__
-#define __SEEXCEPTION_IMPL__
+#ifndef __STDEXCEPTION_IMPL__
+#define __STDEXCEPTION_IMPL__
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-// Get this max string length from an exception
-#define EXCEPTION_BUFFER 1024
 
 // Macro to help with the display switch in GetErrorMessage()
 #define CASE(seCode,errorstring) case EXCEPTION_##seCode: \
@@ -31,10 +29,8 @@ static char THIS_FILE[] = __FILE__;
 void 
 SeTranslator(UINT p_safeExceptionCode,_EXCEPTION_POINTERS* pExcPointers)
 {
-	throw new StdException(p_safeExceptionCode,pExcPointers);
+	throw StdException(p_safeExceptionCode,pExcPointers);
 }
-
-IMPLEMENT_DYNAMIC(StdException,CException)
 
 // CTOR: Create exception from Safe-Exception
 StdException::StdException(UINT p_safeExceptionCode,_EXCEPTION_POINTERS* p_exceptionPointers)
@@ -44,7 +40,7 @@ StdException::StdException(UINT p_safeExceptionCode,_EXCEPTION_POINTERS* p_excep
 }
 
 // CTOR: Create exception from another one
-StdException::StdException(StdException& p_other)
+StdException::StdException(const StdException& p_other)
 {
   m_safeExceptionCode = p_other.m_safeExceptionCode;
 	m_exceptionPointers = p_other.m_exceptionPointers;
@@ -52,7 +48,12 @@ StdException::StdException(StdException& p_other)
 
 // CTOR: Create exception from static text or CString
 StdException::StdException(const char* p_fault)
-             :m_fault(p_fault)
+             :m_applicationFault(p_fault)
+{
+}
+
+StdException::StdException(const CString& p_fault)
+            :m_applicationFault(p_fault)
 {
 }
 
@@ -64,18 +65,8 @@ StdException::StdException(int p_errorCode)
 
 StdException::StdException(int p_errorCode, const char* p_fault)
              :m_applicationCode(p_errorCode)
-             ,m_fault(p_fault)
+             ,m_applicationFault(p_fault)
 {
-}
-
-// DTOR Function like CException from MFC
-void
-StdException::Delete(void)
-{
-#ifdef _DEBUG
-  m_bReadyForDelete = TRUE;
-#endif
-  delete this;
 }
 
 // Return the Safe-Exception code
@@ -96,7 +87,7 @@ StdException::GetApplicationCode()
 CString
 StdException::GetApplicationFault()
 {
-  return m_fault;
+  return m_applicationFault;
 }
 
 // Return the exception pointers (build stack traces etcetera)
@@ -154,7 +145,7 @@ StdException::GetErrorMessage()
               {
                 errorstring.Format("Error: %d ",m_applicationCode);
               }
-              errorstring += m_fault;
+              errorstring += m_applicationFault;
               break;
 	  default:  errorstring = "Unknown exception.";
 		          break;
@@ -162,7 +153,7 @@ StdException::GetErrorMessage()
 	return errorstring;
 }
 
-// Override of the CException way of getting an error message
+// The CException way of getting an error message
 // By copying it out of the object through a string pointer
 BOOL
 StdException::GetErrorMessage(LPTSTR p_error,UINT p_maxSize,PUINT p_helpContext /*= NULL*/)
@@ -179,18 +170,4 @@ StdException::GetErrorMessage(LPTSTR p_error,UINT p_maxSize,PUINT p_helpContext 
   return TRUE;
 }
 
-// Easily get an string from a CException
-CString MessageFromException(CException* p_exception)
-{
-  CString buffer;
-  char* pointer = buffer.GetBufferSetLength(EXCEPTION_BUFFER + 1);
-  if (p_exception->GetErrorMessage(pointer, EXCEPTION_BUFFER))
-  {
-    buffer.ReleaseBuffer();
-    return buffer;
-  }
-  return CString();
-}
-
-
-#endif // __SEEXCEPTION_IMPL__
+#endif // __STDEXCEPTION_IMPL__
