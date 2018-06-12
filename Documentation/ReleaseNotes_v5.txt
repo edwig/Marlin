@@ -13,6 +13,7 @@ CHANGES IN VERSION 5.1.1
 1)  Changed all catching of exceptions from "StdException*" to "StdException&"
     StdException is now an exception class without a base class
     AutoSeTranslator is an auto-object around the previous held translator function
+    Added CException translator to StdException
 
 CHANGES IN VERSION 5.1.0
 ------------------------

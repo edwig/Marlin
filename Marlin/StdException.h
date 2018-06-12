@@ -10,7 +10,7 @@
 #ifndef __STDEXCEPTION_H__
 #define __STDEXCEPTION_H__
 
-#include <exception>
+#include <eh.h>
 
 class StdException 
 {
@@ -40,6 +40,9 @@ private:
 };
 
 void SeTranslator(UINT p_safe,_EXCEPTION_POINTERS* p_exceptionPointers);
+
+// Translate CException to CString
+CString MessageFromException(CException& p_exception);
 
 // Auto class to store the SE translator function
 // Of an original source system, while setting our own

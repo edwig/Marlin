@@ -170,4 +170,12 @@ StdException::GetErrorMessage(LPTSTR p_error,UINT p_maxSize,PUINT p_helpContext 
   return TRUE;
 }
 
+CString
+MessageFromException(CException& p_exception)
+{
+  char buffer[4 * _MAX_PATH + 1];
+  p_exception.GetErrorMessage(buffer,4 * _MAX_PATH);
+  return CString(buffer);
+}
+
 #endif // __STDEXCEPTION_IMPL__
