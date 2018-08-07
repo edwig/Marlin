@@ -212,23 +212,23 @@ LogAnalysis::SetLogLevel(int p_logLevel)
   if(m_logLevel != p_logLevel)
   {
     // Record new loglevel
-  m_logLevel = p_logLevel;
+    m_logLevel = p_logLevel;
 
     // Only show new loglevel if logfile was already started
     if(m_initialised)
     {
-  CString level;
-  switch(p_logLevel)
-  {
-    case HLL_NOLOG:     level = "No logging";        break;
-    case HLL_ERRORS:    level = "Errors & warnings"; break;
-    case HLL_LOGGING:   level = "Standard logging";  break;
-    case HLL_LOGBODY:   level = "Logging bodies";    break;
-    case HLL_TRACE:     level = "Tracing";           break;
-    case HLL_TRACEDUMP: level = "Tracing & hexdump"; break;
-  }
-  AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Logging level set to [%d:%s]",m_logLevel,level.GetString());
-}
+      CString level;
+      switch(p_logLevel)
+      {
+        case HLL_NOLOG:     level = "No logging";        break;
+        case HLL_ERRORS:    level = "Errors & warnings"; break;
+        case HLL_LOGGING:   level = "Standard logging";  break;
+        case HLL_LOGBODY:   level = "Logging bodies";    break;
+        case HLL_TRACE:     level = "Tracing";           break;
+        case HLL_TRACEDUMP: level = "Tracing & hexdump"; break;
+      }
+      AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Logging level set to [%d:%s]",m_logLevel,level.GetString());
+    }
   }
 }
 
