@@ -462,7 +462,7 @@ LogAnalysis::AnalysisHex(const char* p_function,CString p_name,void* p_buffer,un
   AutoCritSec lock(&m_lock);
 
   // Name of the object
-  AnalysisLog(p_function,LogType::LOG_TRACE,true,"Hexadecimal view of: %s",p_name.GetString());
+  AnalysisLog(p_function,LogType::LOG_TRACE,true,"Hexadecimal view of: %s. Length: %d",p_name.GetString(),p_length);
 
   unsigned long  pos    = 0;
   unsigned char* buffer = static_cast<unsigned char*>(p_buffer);

@@ -8,6 +8,22 @@ Version 5.x contains NO real function breaks but adds IIS capabilities for the a
 and further maturity changes for IIS in general
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 5.2.0
+------------------------
+1)  HTTPClient will search for a 'Marlin.config', if no 'web.config' file has been found.
+2)  The WebConfigIIS now reads the handlers as configured in the IIS admin tool. You can read the 
+    handler definitions by requesting them from the IISSite within the config with:
+      
+    IISHandlers* GetAllHandlers (CString p_site);
+    IISHandler*  GetHandler     (CString p_site,CString p_handler);
+
+    You can find sites with "GetSiteConfig(ind)"
+
+3)  The trace/logging of the HTTPClient has been extended for multi-part buffers
+    Tracing is now done on a per-bufferpart basis, so that each part can have it's own hexdump
+4)  Multipart buffer data do no longer have a default charset of "utf-8".
+    The Microsoft .NET framework no logers accepts these in a multipart buffer message.
+
 CHANGES IN VERSION 5.1.1
 ------------------------
 1)  Changed all catching of exceptions from "StdException*" to "StdException&"

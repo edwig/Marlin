@@ -269,6 +269,7 @@ WebConfigIIS::ReadConfig(CString p_configFile,IISSite* p_site /*=nullptr*/)
   {
     ReadStreamingLimit(*p_site,msg,nullptr);
     ReadAuthentication(*p_site,msg);
+    ReadHandlerMapping(*p_site,msg);
   }
 
   return true;
@@ -475,6 +476,79 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
       }
     }
   }
+}
+
+void
+WebConfigIIS::ReadHandlerMapping(IISSite& p_site, XMLMessage& p_msg)
+{
+  XMLElement* location = p_msg.FindElement("location");
+
+  while(location)
+  {
+    CString path = p_msg.GetAttribute(location, "path");
+    if (path.CompareNoCase(p_site.m_name) == 0)
+    {
+      ReadHandlerMapping(p_site,p_msg,location);
+      return;
+    }
+    // Next location
+    location = p_msg.GetElementSibling(location);
+  }
+}
+
+// 1e manier om handlermappings uit IIS te halen
+// (via ReadConfig/ReadSites)
+//
+void
+WebConfigIIS::ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem)
+{
+  XMLElement* sws = p_msg.FindElement(p_elem,"system.webServer");
+  if (!sws) return;
+  XMLElement* handlers = p_msg.FindElement(sws,"handlers");
+  if (!handlers) return;
+  XMLElement* add = p_msg.FindElement(handlers,"add");
+  while (add)
+  {
+    IISHandler handler;
+
+    CString name           = p_msg.GetAttribute(add,"name");
+    handler.m_path         = p_msg.GetAttribute(add,"path");
+    handler.m_verb         = p_msg.GetAttribute(add,"verb");
+    handler.m_modules      = p_msg.GetAttribute(add,"modules");
+    handler.m_resourceType = p_msg.GetAttribute(add,"resourceType");
+    handler.m_precondition = p_msg.GetAttribute(add,"preCondition");
+
+    p_site.m_handlers.insert(std::make_pair(name,handler));
+
+    // Next handler mapping
+    add = p_msg.GetElementSibling(add);
+  }
+}
+
+IISHandlers*
+WebConfigIIS::GetAllHandlers(CString p_site)
+{
+  IISSite* site = GetSite(p_site);
+  if(site)
+  {
+    return &(site->m_handlers);
+  }
+  return nullptr;
+}
+
+IISHandler*
+WebConfigIIS::GetHandler(CString p_site,CString p_handler)
+{
+  IISSite* site = GetSite(p_site);
+  if(site)
+  {
+    IISHandlers::iterator it = site->m_handlers.find(p_handler);
+    if(it != site->m_handlers.end())
+    {
+      return &(it->second);
+    }
+  }
+  return nullptr;
 }
 
 // Finding a site registration

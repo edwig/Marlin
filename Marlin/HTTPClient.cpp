@@ -297,6 +297,24 @@ HTTPClient::Initialize()
   DETAILLOG("Initializing HTTP Client");
   m_initialized = true;
 
+  // If no "web.config" read, fall back to "Marlin.config" for IIS mode applications
+  if(m_webConfig.IsFilled())
+  {
+    DETAILLOG("Configuration file \'web.config\' has been read!");
+  }
+  else
+  {
+    m_webConfig.ReadConfig("Marlin.config");
+    if(m_webConfig.IsFilled())
+    {
+      DETAILLOG("Configuration file \'marlin.config\' has been read!");
+    }
+    else
+    {
+      ERRORLOG("No configuration files found (marlin.config; web.config)!");
+    }
+  }
+
   // Init logging. Log from here on
   InitLogging();
 
@@ -1433,11 +1451,11 @@ HTTPClient::SendBodyData()
       m_buffer->GetBuffer(buffer,length);
       if(buffer)
       {
+        DWORD dwWritten = 0;
         if(length)
         {
           // PART 2: SEND In 1 GO FROM FileBUFFER
           // Only 1 GetBufer required
-          DWORD dwWritten = 0;
           if (!::WinHttpWriteData(m_request
                                  ,buffer
                                  ,(DWORD)length
@@ -1446,7 +1464,7 @@ HTTPClient::SendBodyData()
             ErrorLog(__FUNCTION__,"Write body: File buffer. Error [%d] %s");
           }
         }
-        DETAILLOG("Write body. File buffer. Size: %d",length);
+        DETAILLOG("Write body. File buffer. Size: %d. Written: %d",length,dwWritten);
       }
       else
       {
@@ -2999,18 +3017,22 @@ HTTPClient::TraceTheSend()
     }
     else
     {
+      int    part   = 0;
       uchar* buffer = nullptr;
       size_t length = 0;
-      m_buffer->GetBufferCopy(buffer,length);
 
-      m_trace->TraceBody("Outgoing request",(BYTE*) buffer,(unsigned long) length);
-      if (MUSTLOG(HLL_TRACEDUMP))
+      while(m_buffer->GetBufferPart(part++,buffer,length))
       {
-        m_trace->TraceHexa("Outgoing",buffer,(unsigned long) length);
+        m_trace->TraceBody("Outgoing bufferpart", (BYTE*)buffer, (unsigned long)length);
       }
-
-      // Delete buffer copy
-      delete[] buffer;
+      if(MUSTLOG(HLL_TRACEDUMP))
+      {
+        part = 0;
+        while(m_buffer->GetBufferPart(part++, buffer, length))
+        {
+          m_trace->TraceHexa("Outgoing", buffer, (unsigned long)length);
+        }
+      }
     }
   }
 }

@@ -31,6 +31,7 @@
 #include "WebConfigIIS.h"
 #include "EnsureFile.h"
 #include <string>
+#include <set>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -53,6 +54,12 @@ ServerApp::ServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot)
 // DTOR
 ServerApp::~ServerApp()
 {
+  // Free all site configs
+  for(auto& site : m_sites)
+  {
+    delete site;
+  }
+
   // Just to be sure
   ExitInstance();
 }
@@ -220,6 +227,17 @@ ServerApp::LoadSite(IISSiteConfig& /*p_config*/)
   return true;
 }
 
+IISSiteConfig* 
+ServerApp::GetSiteConfig(int ind)
+{
+  if(ind >= 0 && ind < (int)m_sites.size())
+  {
+    return m_sites[ind];
+  }
+  return nullptr;
+}
+
+
 // Start our sites from the IIS configuration
 void 
 ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
@@ -233,6 +251,10 @@ ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
   CComBSTR siteCollection = L"system.applicationHost/sites";
   CComBSTR configPath = A2CW(config);
 
+  // Lees eerst de globale modules van de IIS installatie
+  ReadModules(configPath);
+
+
   IAppHostElement*      element = nullptr;
   IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
   if(manager->GetAdminSection(siteCollection,configPath,&element) == S_OK)
@@ -245,25 +267,146 @@ ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
       sites->get_Count(&count);
       for(int i = 0; i < (int)count; ++i)
       {
-        IISSiteConfig iisConfig;
-        iisConfig.m_id       = 0;
-        iisConfig.m_physical = p_physicalPath;
+        IISSiteConfig* iisConfig = new IISSiteConfig();
+        iisConfig->m_id       = 0;
+        iisConfig->m_physical = p_physicalPath;
         
         // Now read in the rest of the configuration
-        if(ReadSite(sites,configSite,i,iisConfig))
+        if(ReadSite(sites,configSite,i,*iisConfig))
         {
-          if(LoadSite(iisConfig))
+          // Get Handlers from global site config
+          ReadHandlers(configPath,*iisConfig);
+
+          if(LoadSite(*iisConfig))
           {
             DETAILLOGV("Loaded IIS Site: %s",config.GetString());
             return;
           }
         }
+        // Save the site config
+        m_sites.push_back(iisConfig);
       }
     }
   }
   CString text("ERROR Loading IIS Site: ");
   text += config;
   ERRORLOG(ERROR_NO_SITENAME,text);
+}
+
+void
+ServerApp::ReadModules(CComBSTR& p_configPath)
+{
+  USES_CONVERSION;
+  IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+
+  // Eerst de namen van deze prontomodules met deze DLL bepalen;
+  IAppHostElement* modulesElement = nullptr;
+  if (manager->GetAdminSection(CComBSTR(L"system.webServer/globalModules"),p_configPath,&modulesElement) == S_OK)
+  {
+    IAppHostElementCollection* modulesCollection = nullptr;
+    modulesElement->get_Collection(&modulesCollection);
+    if (modulesCollection)
+    {
+      DWORD dwElementCount = 0;
+      modulesCollection->get_Count(&dwElementCount);
+
+      for (USHORT dwElement = 0; dwElement < dwElementCount; ++dwElement)
+      {
+        VARIANT vtItemIndex;
+        vtItemIndex.vt = VT_I2;
+        vtItemIndex.iVal = dwElement;
+
+        IAppHostElement* childElement = nullptr;
+        if (modulesCollection->get_Item(vtItemIndex, &childElement) == S_OK)
+        {
+          IAppHostProperty* prop = nullptr;
+          VARIANT vvar;
+          vvar.bstrVal = 0;
+
+          if (childElement->GetPropertyByName(CComBSTR(L"image"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+          {
+            CString image = W2A(vvar.bstrVal);
+            if (image.CompareNoCase(GetDLLName()) == 0)
+            {
+              if (childElement->GetPropertyByName(CComBSTR(L"name"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+              {
+                m_modules.insert(CString(W2A(vvar.bstrVal)).MakeLower());
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void  
+ServerApp::ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config)
+{
+  USES_CONVERSION;
+  IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+
+  // Dan de handlers met prontomodule opzoeken
+  IAppHostElement* handlersElement = nullptr;
+  if (manager->GetAdminSection(CComBSTR(L"system.webServer/handlers"), p_configPath, &handlersElement) == S_OK)
+  {
+    IAppHostElementCollection* handlersCollection = nullptr;
+    handlersElement->get_Collection(&handlersCollection);
+    if (handlersCollection)
+    {
+      DWORD dwElementCount = 0;
+      handlersCollection->get_Count(&dwElementCount);
+      for (USHORT dwElement = 0; dwElement < dwElementCount; ++dwElement)
+      {
+        VARIANT vtItemIndex;
+        vtItemIndex.vt = VT_I2;
+        vtItemIndex.iVal = dwElement;
+
+        IAppHostElement* childElement = nullptr;
+        if (handlersCollection->get_Item(vtItemIndex, &childElement) == S_OK)
+        {
+          IAppHostProperty* prop = nullptr;
+          VARIANT vvar;
+          vvar.bstrVal = 0;
+
+          CString name;
+          CString modules;
+          IISHandler handler;
+
+          if (childElement->GetPropertyByName(CComBSTR(L"modules"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+          {
+            modules = W2A(vvar.bstrVal);
+          }
+          if (m_modules.find(modules.MakeLower()) == m_modules.end())
+          {
+            continue;
+          }
+          if (childElement->GetPropertyByName(CComBSTR(L"name"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+          {
+            name = W2A(vvar.bstrVal);
+          }
+          if (childElement->GetPropertyByName(CComBSTR(L"path"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+          {
+            handler.m_path = W2A(vvar.bstrVal);
+          }
+          if (childElement->GetPropertyByName(CComBSTR(L"verb"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+          {
+            handler.m_verb = W2A(vvar.bstrVal);
+          }
+          if (childElement->GetPropertyByName(CComBSTR(L"resourceType"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_I4)
+          {
+            handler.m_resourceType.Format("%d",vvar.intVal);
+          }
+          if (childElement->GetPropertyByName(CComBSTR(L"preCondition"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+          {
+            handler.m_precondition = W2A(vvar.bstrVal);
+          }
+          // Add handler mapping to site
+          p_config.m_handlers.insert(std::make_pair(name,handler));
+        }
+      }
+    }
+  }
 }
 
 // Read the site's configuration from the IIS internal structures

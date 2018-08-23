@@ -365,11 +365,10 @@ MultiPartBuffer::AddPart(CString p_name
   part->SetData(p_data);
 
   // Loose string parts are UTF-8 by default
-  if(charset.IsEmpty())
+  if(!charset.IsEmpty())
   {
-    charset = "utf-8";
+    part->SetCharset(charset);
   }
-  part->SetCharset(charset);
 
   // Store the MultiPart
   m_parts.push_back(part);

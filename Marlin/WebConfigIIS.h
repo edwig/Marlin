@@ -30,19 +30,32 @@
 #include "FileBuffer.h"
 #include <map>
 
+typedef struct _iisHandler
+{
+  CString   m_path;
+  CString   m_verb;
+  CString   m_modules;
+  CString   m_resourceType;
+  CString   m_precondition;
+}
+IISHandler;
+
+using IISHandlers = std::map<CString,IISHandler>;
+
 // What we want to remember about an IIS HTTP site
 typedef struct _iisSite
 {
-  CString m_name;
-  CString m_binding;
-  CString m_protocol;
-  int     m_port;
-  bool    m_secure;
-  CString m_path;
-  ULONG   m_authScheme;
-  CString m_realm;
-  CString m_domain;
-  bool    m_ntlmCache;
+  CString     m_name;
+  CString     m_binding;
+  CString     m_protocol;
+  int         m_port;
+  bool        m_secure;
+  CString     m_path;
+  ULONG       m_authScheme;
+  CString     m_realm;
+  CString     m_domain;
+  bool        m_ntlmCache;
+  IISHandlers m_handlers;
 }
 IISSite;
 
@@ -79,6 +92,9 @@ public:
   CString     GetSiteDomain   (CString p_site,CString p_default);
   bool        GetSiteNTLMCache(CString p_site,bool    p_default);
 
+  IISHandlers* GetAllHandlers (CString p_site);
+  IISHandler*  GetHandler     (CString p_site,CString p_handler);
+
 private:
   // Read one config file
   bool        ReadConfig(CString p_configFile,IISSite* p_site = nullptr);
@@ -92,6 +108,8 @@ private:
   void        ReadStreamingLimit(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem);
   void        ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem);
   void        ReadAuthentication(IISSite& p_site,XMLMessage& p_msg);
+  void        ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg);
+  void        ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem);
 
   // For specific web application, or just defaults
   CString   m_application;
