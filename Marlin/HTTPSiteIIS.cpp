@@ -31,6 +31,7 @@
 #include "HTTPURLGroup.h"
 #include "EnsureFile.h"
 #include "WebConfigIIS.h"
+#include "GetUserAccount.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -175,3 +176,58 @@ HTTPSiteIIS::GetIISSiteDir()
   dir.Replace("/","\\");
   return dir;
 }
+
+// IIS servers always have a token
+bool
+HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
+{
+  // If no token: always anonymous
+  if(p_token == NULL)
+  {
+    return true;
+  }
+
+  // Getting the size of the TOKEN_OWNER block
+  DWORD size = 0;
+  GetTokenInformation(p_token,TokenOwner,NULL,0,&size);
+  if(!size)
+  {
+    CString text;
+    text.Format("Error getting token owner: error code0x%lx\n", GetLastError());
+    ERRORLOG(ENOMEM,text);
+    return false;
+  }
+
+  // Get owner information
+  TOKEN_OWNER* owner = (TOKEN_OWNER *)new uchar[size];
+  GetTokenInformation(p_token,TokenOwner,owner,size,&size);
+  if(owner == nullptr)
+  {
+    ERRORLOG(EACCES,"Error getting token information of logged user");
+    return false;
+  }
+
+  // Get a copy of the SID
+  size = GetLengthSid(owner->Owner);
+  SID* sid = (SID *) new uchar[size];
+  CopySid(size,sid,owner->Owner);
+
+  TCHAR userName  [MAX_USER_NAME];
+  TCHAR domainName[MAX_DOMAIN_NAME_LEN];
+
+  DWORD userSize   = (sizeof userName   / sizeof *userName) - 1;
+  DWORD domainSize = (sizeof domainName / sizeof *domainName) - 1;
+  SID_NAME_USE  sidType = SidTypeUser;
+
+  LookupAccountSid(NULL,sid,userName,&userSize,domainName,&domainSize,&sidType);
+  delete[] sid;
+
+  // Test for "NT AUTHORITY\IUSR" code of IIS
+  if((_strnicmp(domainName,"NT AUTHORITY", MAX_DOMAIN_NAME_LEN) == 0) &&
+     (_strnicmp(userName,  "IUSR",         MAX_USER_NAME)       == 0))
+  {
+    return true;
+  }
+  return false;
+}
+

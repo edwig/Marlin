@@ -23,6 +23,9 @@ CHANGES IN VERSION 5.2.0
     Tracing is now done on a per-bufferpart basis, so that each part can have it's own hexdump
 4)  Multipart buffer data do no longer have a default charset of "utf-8".
     The Microsoft .NET framework no logers accepts these in a multipart buffer message.
+5)  The sites (HTTPSite & HTTPSiteIIS) have a new method to check whether the IIS server site
+    runs in Anonymous authentication mode or not. The method is:
+    "bool GetHasAnonymousAuthentication(HANDLE p_token);"
 
 CHANGES IN VERSION 5.1.1
 ------------------------

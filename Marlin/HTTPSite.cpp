@@ -331,6 +331,13 @@ HTTPSite::GetWebroot()
   return m_webroot;
 }
 
+// Standalone servers have a NULL for a token in a message
+bool
+HTTPSite::GetHasAnonymousAuthentication(HANDLE p_token)
+{
+  return p_token == NULL;
+}
+
 bool
 HTTPSite::CheckReliable()
 {

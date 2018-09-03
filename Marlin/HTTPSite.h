@@ -241,6 +241,7 @@ public:
   SiteFilter*     GetFilter(unsigned p_priority);
   CString         GetContentType(CString p_extension);
   CString         GetContentTypeByResourceName(CString p_pathname);
+  virtual bool    GetHasAnonymousAuthentication(HANDLE p_token);
 
   // FUNCTIONS
 

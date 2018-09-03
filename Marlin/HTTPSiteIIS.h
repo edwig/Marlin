@@ -45,6 +45,8 @@ public:
 
   // OPTIONAL: Set the webroot of the site
   virtual bool SetWebroot(CString p_webroot);
+  // Anonymous authentication?
+  virtual bool GetHasAnonymousAuthentication(HANDLE p_token);
 
 private:
   // Getting the sites directory within the IIS rootdir
