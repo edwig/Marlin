@@ -76,9 +76,10 @@
 #define XDT_ENTITIES            0x0000002D
 #define XDT_IDREFS              0x0000002E
 #define XDT_NMTOKENS            0x0000002F
-// End - new in version 4
-#define XDT_Type                0x00002000 // Show type in XML always
-#define XDT_CDATA               0x00004000
+// End - new in version 4 and 5
+#define XDT_Type                0x00001000 // Show type in XML always
+#define XDT_CDATA               0x00002000
+#define XDT_Array               0x00004000
 #define XDT_Complex             0x00008000
 
 #define XDT_Mask                0x0000ffff

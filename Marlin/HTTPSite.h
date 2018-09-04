@@ -68,9 +68,8 @@ struct AddressCompare
     if(cmp < 0) return true;
     if(cmp > 0) return false;
     // Compare desktops
-    cmp = p_left.m_desktop < p_right.m_desktop;
-    if(cmp < 0) return true;
-    if(cmp > 0) return false;
+    if(p_left.m_desktop < p_right.m_desktop) return true;
+    if(p_left.m_desktop > p_right.m_desktop) return false;
     // Compare absolute paths
     cmp = p_left.m_absPath.Compare(p_right.m_absPath);
     if(cmp < 0) return true;
@@ -130,7 +129,7 @@ public:
           ,CString        p_prefix
           ,HTTPSite*      p_mainSite = nullptr
           ,LPFN_CALLBACK  p_callback = nullptr);
- ~HTTPSite();
+  virtual ~HTTPSite();
 
   // MANDATORY: Explicitly starting after configuration of the site
   virtual bool StartSite() = 0;
@@ -312,7 +311,7 @@ protected:
   void              RemoveSequence(SessionAddress& p_address);
   SessionSequence*  FindSequence  (SessionAddress& p_address);
   SessionSequence*  CreateSequence(SessionAddress& p_address);
-//void              DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address);
+  void              DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address);
 
   // Handle HTTP throttling
   CRITICAL_SECTION* StartThrottling(HTTPMessage* p_message);

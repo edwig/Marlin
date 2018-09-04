@@ -226,12 +226,18 @@ XMLMessage::LoadFile(const CString& p_fileName,XMLEncoding p_encoding)
 
 // Save to file
 bool
-XMLMessage::SaveFile(const CString& p_fileName)
+XMLMessage::SaveFile(const CString& p_fileName,bool p_withBom /*= false*/)
 {
   bool result = false;
   FILE* file = nullptr;
   if(fopen_s(&file,p_fileName,"w") == 0 && file)
   {
+    if(p_withBom)
+    {
+      CString bom = ConstructBOM(m_encoding);
+      fwrite(bom.GetString(),bom.GetLength(),1,file);
+    }
+
     CString inhoud = Print();
     if(fwrite(inhoud.GetString(),inhoud.GetLength(),1,file) == 1)
     {
@@ -245,10 +251,10 @@ XMLMessage::SaveFile(const CString& p_fileName)
 
 // Save to file in pre-known encoding
 bool
-XMLMessage::SaveFile(const CString& p_fileName,XMLEncoding p_encoding)
+XMLMessage::SaveFile(const CString& p_fileName,XMLEncoding p_encoding,bool p_withBom /*= false*/)
 {
   m_encoding = p_encoding;
-  return SaveFile(p_fileName);
+  return SaveFile(p_fileName,p_withBom);
 }
 
 #pragma endregion File_Load_Save

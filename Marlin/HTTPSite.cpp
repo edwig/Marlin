@@ -282,7 +282,10 @@ HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /
     {
       handler = handler->GetNextHandler();
     }
+    if(handler)
+    {
     handler->SetNextHandler(p_handler,p_owner);
+  }
   }
   else
   {
@@ -346,14 +349,11 @@ HTTPSite::CheckReliable()
     ERRORLOG(ERROR_INVALID_PARAMETER,"Asynchrone modus en reliable-messaging gaan niet samen");
     return false;
   }
-  if(m_reliable)
+  if(m_reliable && m_scheme.IsEmpty())
   {
-    if(m_scheme.IsEmpty())
-    {
       // Not strictly an error, but issue a serious warning against using RM without authorization
       WARNINGLOG("ReliableMessaging protocol used without an authorization scheme.");
     }
-  }
   return true;
 }
 
@@ -596,16 +596,13 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
     // Try to read the body / rest of the message
     // This is now done by the threadpool thread, so the central
     // server has more time to handle the incoming requests.
-    if(p_message->GetReadBuffer())
-    {
-      if(m_server->ReceiveIncomingRequest(p_message) == false)
+    if(p_message->GetReadBuffer() && m_server->ReceiveIncomingRequest(p_message) == false)
       {
         // Error already report to log, EOF or stream not read
         p_message->Reset();
         p_message->SetStatus(HTTP_STATUS_GONE);
         SendResponse(p_message);
       }
-    }
 
     // If site in asynchronous SOAP/XML mode
     if(m_async)
@@ -639,13 +636,15 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       EndThrottling(g_throttle);
     }
   }
-  catch(StdException& er)
+  catch(StdException& ex)
   {
+    if(ex.GetSafeExceptionCode())
+    {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
-    g_exception = true,
-    g_exception = ErrorReport::Report(er.GetSafeExceptionCode(),er.GetExceptionPointers(),m_webroot,m_site);
+      g_exception = true;
+      g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),m_webroot,m_site);
 
     if(g_exception)
     {
@@ -657,6 +656,12 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
     else
     {
       CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport has been made");
+    }
+    }
+    else
+    {
+      // 'Normale' C++ exception: Maar we hebben hem vergeten af te vangen
+      ErrorReport::Report(ex.GetErrorMessage(),0,m_webroot,m_site);
     }
     didError = true;
   }  
@@ -702,13 +707,15 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
       g_cleanup->CleanUp(p_message);
     }
   }
-  catch(StdException& er)
+  catch(StdException& ex)
   {
+    if(ex.GetSafeExceptionCode())
+    {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
-    g_exception = true,
-    g_exception = ErrorReport::Report(er.GetSafeExceptionCode(),er.GetExceptionPointers(),m_webroot,m_site);
+      g_exception = true;
+      g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),m_webroot,m_site);
 
     if(g_exception)
     {
@@ -720,6 +727,12 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
     else
     {
       CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport has been made");
+    }
+  }
+    else
+    {
+      // 'Normale' C++ exception: Maar we hebben hem vergeten af te vangen
+      ErrorReport::Report(ex.GetErrorMessage(),0,m_webroot,m_site);
     }
   }
 }
@@ -1124,7 +1137,7 @@ HTTPSite::RM_HandleMessage(SessionAddress& p_address,SOAPMessage* p_message)
   p_message->SetClientMessageNumber(sequence->m_serverMessageID);
   p_message->SetServerMessageNumber(sequence->m_clientMessageID);
   // DO NOT FILL IN THE NONCE, WE ARE RESPONDING ON THIS ID!!
-  // p_message->SetMessageNonce(m_messageGuidID);
+  // p_message->SetMessageNonce(m_messageGuidID)
   p_message->SetAddressing(true);
 
   // Server yet to handle real message content
@@ -1277,22 +1290,22 @@ HTTPSite::RM_HandleTerminateSequence(SessionAddress& p_address,SOAPMessage* p_me
   return true;
 }
 
-// void
-// HTTPSite::DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address)
-// {
-//   CString address;
-//   for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
-//   {
-//     BYTE byte = ((BYTE*)&p_address.m_address)[ind];
-//     address.AppendFormat("%2.2X",byte);
-//   }
-//   
-//   DETAILLOGV("DEBUG ADDRESS AT   : %s",p_prefix.GetString());
-//   DETAILLOGV("Session address    : %s",address .GetString());
-//   DETAILLOGV("Session address SID: %s",p_address.m_userSID.GetString());
-//   DETAILLOGV("Session desktop    : %d",p_address.m_desktop);
-//   DETAILLOGV("Session abs. path  : %s",p_address.m_absPath.GetString());
-// }
+void
+HTTPSite::DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address)
+{
+  CString address;
+  for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
+  {
+    BYTE byte = ((BYTE*)&p_address.m_address)[ind];
+    address.AppendFormat("%2.2X",byte);
+  }
+  
+  DETAILLOGV("DEBUG ADDRESS AT   : %s",p_prefix.GetString());
+  DETAILLOGV("Session address    : %s",address .GetString());
+  DETAILLOGV("Session address SID: %s",p_address.m_userSID.GetString());
+  DETAILLOGV("Session desktop    : %d",p_address.m_desktop);
+  DETAILLOGV("Session abs. path  : %s",p_address.m_absPath.GetString());
+}
 
 SessionSequence*
 HTTPSite::FindSequence(SessionAddress& p_address)
@@ -1301,7 +1314,7 @@ HTTPSite::FindSequence(SessionAddress& p_address)
   AutoCritSec lock(&m_sessionLock);
 
 // #ifdef _DEBUG
-//   DebugPrintSessionAddress("Find sequence",p_address);
+//   DebugPrintSessionAddress("Find sequence",p_address)
 // #endif
 
   ReliableMap::iterator it = m_sequences.find(p_address);
@@ -1319,7 +1332,7 @@ HTTPSite::CreateSequence(SessionAddress& p_address)
   AutoCritSec lock(&m_sessionLock);
 
 // #ifdef _DEBUG
-//   DebugPrintSessionAddress("CreateSequence",p_address);
+//   DebugPrintSessionAddress("CreateSequence",p_address)
 // #endif
 
   SessionSequence sequence;
@@ -1344,7 +1357,7 @@ HTTPSite::RemoveSequence(SessionAddress& p_address)
   AutoCritSec lock(&m_sessionLock);
 
 // #ifdef _DEBUG
-//   DebugPrintSessionAddress("RemoveSequence",p_address);
+//   DebugPrintSessionAddress("RemoveSequence",p_address)
 // #endif
 
   ReliableMap::iterator it = m_sequences.find(p_address);
@@ -1386,7 +1399,7 @@ HTTPSite::ReliableResponse(SessionSequence* p_sequence,SOAPMessage* p_message)
   p_message->SetClientMessageNumber(p_sequence->m_serverMessageID);
   p_message->SetServerMessageNumber(p_sequence->m_clientMessageID);
   // DO NOT FILL IN THE NONCE, WE ARE RESPONDING ON THIS ID!!
-  // p_message->SetMessageNonce(m_messageGuidID);
+  // p_message->SetMessageNonce(m_messageGuidID)
   p_message->SetAddressing(true);
 
   // Adding Encryption 

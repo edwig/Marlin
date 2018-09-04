@@ -659,13 +659,15 @@ ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
     // Calling our heartbeat function from within a try/catch loop
     (*p_function)(p_payload);
   }
-  catch(StdException& er)
+  catch(StdException& ex)
   {
+    if(ex.GetSafeExceptionCode())
+    {
     // We need to detect the fact that a second exception can occur,
     // so we do **not** call the error report method again
     // Otherwise we would end into an infinite loop
-    g_exception = true,
-    g_exception = ErrorReport::Report(er.GetSafeExceptionCode(),er.GetExceptionPointers());
+      g_exception = true;
+      g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers());
 
     if(g_exception)
     {
@@ -677,6 +679,13 @@ ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
     else
     {
       TP_TRACE0("CRASH in HeartBeat: Errorreport has been made");
+    }
+  }
+    else
+    {
+      // 'Normale' C++ exception: Maar we hebben hem vergeten af te vangen
+      CString empty;
+      ErrorReport::Report(ex.GetErrorMessage(),0,empty,empty);
     }
   }
 }

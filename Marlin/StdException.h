@@ -12,6 +12,9 @@
 
 #include <eh.h>
 
+// Macro to re-throw a safe exception
+#define ReThrowSafeException(ex) if(ex.GetSafeExceptionCode()) throw ex;
+
 class StdException 
 {
 public:

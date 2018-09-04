@@ -1250,17 +1250,14 @@ WebSocketServerIIS::CloseSocket()
     {
       m_iis_socket->CloseTcpConnection();
     }
-    catch(CException* er)
+    catch(CException& er)
     {
-      // result = false;
-      char buffer[_MAX_PATH];
-      er->GetErrorMessage(buffer,_MAX_PATH);
-      ERRORLOG(12102,buffer);
-      er->Delete();
+      ERRORLOG(12102,MessageFromException(er).GetString());
     }
-    catch(StdException& er)
+    catch(StdException& ex)
     {
-      ERRORLOG(12102,er.GetErrorMessage().GetString());
+      ReThrowSafeException(ex);
+      ERRORLOG(12102,ex.GetErrorMessage().GetString());
     }
 
     // Cancel the outstanding request altogether

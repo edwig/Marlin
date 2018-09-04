@@ -60,11 +60,17 @@ JSONvalue::~JSONvalue()
 JSONvalue&
 JSONvalue::operator=(JSONvalue& p_other)
 {
+  // Check if we do not assign ourselves
+  if(&p_other == this)
+  {
+    return *this;
+  }
+  // Copy values
   m_type     = p_other.m_type;
   m_string   = p_other.m_string;
   m_constant = p_other.m_constant;
   m_number   = p_other.m_number;
-  // objects
+  // Copy objects
   m_array.clear();
   m_object.clear();
   std::copy(p_other.m_object.begin(),p_other.m_object.end(),back_inserter(m_object));

@@ -321,6 +321,12 @@ Cookie::IsExpired()
 Cookie&
 Cookie::operator=(Cookie& p_other)
 {
+  // Check if we are not assigning to ourselves
+  if(&p_other == this)
+  {
+    return *this;
+  }
+  // Assign all values
   m_name     = p_other.m_name;
   m_value    = p_other.m_value;
   m_secure   = p_other.m_secure;

@@ -310,14 +310,14 @@ StackTrace::AsString(bool p_path /* = true */) const
   // Bouw een stringrepresentatie op
   CString tmp;
   CString result = "Address     Module            Function\n"
-                   "-------      ------                --------\n";
+                   "--------------- --------------------- ------------------------\n";
 
   for(Trace::const_iterator iter = m_trace.begin(),end = m_trace.end();iter != end;++iter)
   {
     const Frame& frame = *iter;
     // Add address and function
 #ifdef _WIN64
-    tmp.Format("0x%I64X  %-20.20s", frame.m_address, frame.m_module.GetString());
+    tmp.Format("0x%012I64X  %-20.20s", frame.m_address, frame.m_module.GetString());
 #else
     tmp.Format("0x%lX  %-20.20s",frame.m_address,frame.m_module.GetString());
 #endif

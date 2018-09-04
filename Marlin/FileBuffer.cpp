@@ -27,7 +27,7 @@
 //
 #include "stdafx.h"
 #include "FileBuffer.h"
-#include "Zlib\gzip.h"
+#include "gzip.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

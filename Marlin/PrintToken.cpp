@@ -491,7 +491,7 @@ BOOL DumpToken(CString& p_list,HANDLE p_token)
 
 		sid = (SID *) new uchar[size];
 		CopySid(size, sid, groups->Groups[i].Sid);
-		userSize = (sizeof userName / sizeof userName) - 1;
+		userSize = (sizeof userName / sizeof TCHAR) - 1;
 		domainSize = (sizeof domainName / sizeof *domainName) - 1;
 		LookupAccountSid(NULL, sid, userName, &userSize, domainName, &domainSize, &sidType);
 		delete [] sid;

@@ -190,8 +190,8 @@ public:
   bool            LoadFile(const CString& p_fileName);
   bool            LoadFile(const CString& p_fileName, XMLEncoding p_encoding);
   // Save to file
-  bool            SaveFile(const CString& p_fileName);
-  bool            SaveFile(const CString& p_fileName, XMLEncoding p_encoding);
+  bool            SaveFile(const CString& p_fileName,bool p_withBom = false);
+  bool            SaveFile(const CString& p_fileName,XMLEncoding p_encoding,bool p_withBom = false);
 
   // SETTERS
   // Set the output encoding of the message

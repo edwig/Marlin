@@ -27,6 +27,7 @@
 //
 #include "stdafx.h"
 #include "ConvertWideString.h"
+#include "XMLMessage.h"
 #include <map>
 #include <string>
 
@@ -371,6 +372,37 @@ CString ConstructBOM()
   bom.SetAt(3,0);
   bom.ReleaseBuffer(3);
 
+  return bom;
+}
+
+// Construct a UTF-16 Byte-Order-Mark
+CString ConstructBOMUTF16()
+{
+  CString bom;
+
+  // 2 BYTE UTF-16 Byte-order-Mark "\0xFE\0xFF"
+  bom.GetBufferSetLength(3);
+  bom.SetAt(0,(unsigned char)0xFE);
+  bom.SetAt(1,(unsigned char)0xFF);
+  bom.SetAt(2,0);
+  bom.ReleaseBuffer(2);
+
+  return bom;
+}
+
+// Construct a BOM
+CString ConstructBOM(XMLEncoding p_encoding)
+{
+  CString bom;
+
+  switch (p_encoding)
+  {
+    case XMLEncoding::ENC_UTF8:    bom = ConstructBOM();      break;
+    case XMLEncoding::ENC_UTF16:   bom = ConstructBOMUTF16(); break;
+    case XMLEncoding::ENC_ISO88591:// Fall through
+    case XMLEncoding::ENC_Plain:   // Fall through
+    default:                       break;
+  }
   return bom;
 }
 

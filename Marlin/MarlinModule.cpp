@@ -311,7 +311,6 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   CString physical   = W2A(httpapp->GetApplicationPhysicalPath());
   CString webroot    = ExtractWebroot(configPath,physical);
   CString appSite    = ExtractAppSite(configPath);
-  CString showroot;
 
   // IIS Guarantees that every app site is on an unique port
   int applicationPort = g_config.GetSitePort(appSite,INTERNET_DEFAULT_HTTPS_PORT);
@@ -645,7 +644,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
 
   // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
   const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
-  if(request == nullptr)
+  if(rawRequest == nullptr)
   {
     ERRORLOG("Abort: IIS did not provide a raw request object!");
     app->StopCounter();
@@ -733,19 +732,16 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   if (hr == S_OK)
   {
     hr = p_context->GetServerVariable("HTTP_REFERER", &referrer, &size);
-    if (hr == S_OK)
-    {
-      if (strstr(referrer, serverName) == 0)
+    if((hr == S_OK) && (strstr(referrer, serverName) == 0))
       {
         DETAILLOG("XSS Detected!! Deferrer not our server!");
         response->SetStatus(HTTP_STATUS_BAD_REQUEST, "XSS Detected");
       }
     }
-  }
 
   // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
   const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
-  if (request == nullptr)
+  if(rawRequest == nullptr)
   {
     ERRORLOG("Abort: IIS did not provide a raw request object!");
     app->StopCounter();

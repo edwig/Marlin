@@ -1536,6 +1536,7 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,CString p_value)
   }
   catch(StdException& er)
   {
+    ReThrowSafeException(er);
     // Primary datatype conversion went wrong
     result = er.GetErrorMessage();
   }

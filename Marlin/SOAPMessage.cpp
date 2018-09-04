@@ -500,8 +500,6 @@ CString
 SOAPMessage::GetHeader(CString p_name)
 {
   p_name.MakeLower();
-  // This does not work: creates illegal entries
-  // return m_headers[p_name];
   for(auto& header : m_headers)
   {
     if(header.first.Compare(p_name) == 0)
@@ -742,8 +740,8 @@ SOAPMessage::SetSigningMethod(unsigned p_method)
 {
   // Record only if it yields a valid signing method
   // by the signing standard: "http://www.w3.org/2000/09/xmldsig#" + p_method
-  Crypto crypt(p_method);
-  if(!crypt.GetHashMethod(p_method).IsEmpty())
+  Crypto crypted(p_method);
+  if(!crypted.GetHashMethod(p_method).IsEmpty())
   {
     m_signingMethod = p_method;
     return true;
@@ -1299,9 +1297,7 @@ SOAPMessage::AddToHeaderAcknowledgement()
 void
 SOAPMessage::AddToHeaderMessageNumber()
 {
-  if(m_clientMessageNumber)
-  {
-    if(FindElement(m_header,"rm:Sequence") == NULL)
+  if(m_clientMessageNumber && FindElement(m_header,"rm:Sequence") == NULL)
     {
       XMLElement* seq = SetHeaderParameter("rm:Sequence","");
       SetAttribute(seq,"s:mustUnderstand",1);
@@ -1313,7 +1309,6 @@ SOAPMessage::AddToHeaderMessageNumber()
       }
     }
   }
-}
 
 void
 SOAPMessage::AddToHeaderMessageID()
@@ -1734,7 +1729,6 @@ SOAPMessage::CheckHeaderHasSequence()
 void
 SOAPMessage::CheckHeaderHasAcknowledgement()
 {
-  CString error;
   XMLElement* acknow = FindElement(m_header,"SequenceAcknowledgement");
   if(acknow == NULL)
   {
@@ -1754,7 +1748,7 @@ SOAPMessage::CheckHeaderHasAcknowledgement()
 
     // Range incomplete -> Retransmit
     m_ranges.push_back(relrange);
-    // CheckMessageRange(lower,upper);
+    // CheckMessageRange(lower,upper)
     // Next sibling of AckRange.
     // Skip past Microsoft extensions ("netrm" buffering)
     do 
@@ -1820,7 +1814,6 @@ SOAPMessage::CheckHeaderAction()
       // Not what we expected. See if it is a fault
       int pos = response.ReverseFind('/');
       CString fault = response.Mid(pos + 1);
-      CString responseNS = response.Left(pos);
       if(fault.CompareNoCase("fault") == 0)
       {
         // Some sort of a SOAP Fault response is ok
@@ -1890,7 +1883,7 @@ SOAPMessage::HandleSoapFault(XMLElement* p_fault)
     XMLElement* fmess  = FindElement(p_fault,"faultstring");
     XMLElement* detail = FindElement(p_fault,"detail");
 
-    m_soapFaultCode   = fcode  ? fcode ->GetValue() : "";
+    m_soapFaultCode   =          fcode ->GetValue();
     m_soapFaultActor  = actor  ? actor ->GetValue() : "";
     m_soapFaultString = fmess  ? fmess ->GetValue() : "";
     m_soapFaultDetail = detail ? detail->GetValue() : "";
@@ -2071,8 +2064,8 @@ void
 SOAPMessage::EncryptNode(CString& p_node)
 {
   // Encrypt
-  Crypto crypt(m_signingMethod);
-  p_node = crypt.Encryptie(p_node,m_enc_password);
+  Crypto crypted(m_signingMethod);
+  p_node = crypted.Encryptie(p_node,m_enc_password);
 }
 
 // Encrypt the body: yielding a new body

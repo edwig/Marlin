@@ -26,6 +26,14 @@ CHANGES IN VERSION 5.2.0
 5)  The sites (HTTPSite & HTTPSiteIIS) have a new method to check whether the IIS server site
     runs in Anonymous authentication mode or not. The method is:
     "bool GetHasAnonymousAuthentication(HANDLE p_token);"
+6)  XML/SOAP messages can now be saved to file with their intrinsic BOM (Byte-Order-Mark) through
+    an extra optional parameter in SaveFile()
+7)  You can now create BOM's (Byte-Order-Mark) with a XMLEncoding parameter in "ConstructBOM(encoding)"
+8)  Stacktraces have been more nicely formatted for 64 bits function addresses.
+9)  Handling of StdExceptions now make the distinction between safe-exception-handling and regular
+    C++ language exceptions
+10) Command redirection has been optimized in the "Redirect" class
+11) Minor SonarQube quality checks have been reworked in the code.
 
 CHANGES IN VERSION 5.1.1
 ------------------------

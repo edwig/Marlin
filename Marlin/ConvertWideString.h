@@ -27,6 +27,7 @@
 //
 #pragma once
 
+enum class XMLEncoding;
 using uchar = unsigned char;
 
 // Convert strings from/to Unicode
@@ -52,6 +53,10 @@ CString FindCharsetInContentType(CString p_contentType);
 CString FindMimeTypeInContentType(CString p_contentType);
 // Construct an UTF-8 Byte-Order-Mark
 CString ConstructBOM();
+// Construct a UTF-16 Byte-Order-Mark
+CString ConstructBOMUTF16();
+// Construct a BOM
+CString ConstructBOM(XMLEncoding p_encoding);
 // Decoding incoming strings from the internet. Defaults to UTF-8 encoding
 CString DecodeStringFromTheWire(CString p_string,CString p_charset = "utf-8");
 // Encode to string for internet. Defaults to UTF-8 encoding

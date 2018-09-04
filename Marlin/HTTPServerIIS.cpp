@@ -948,11 +948,11 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
 
   // Dependent on the filling of FileBuffer
   // Send 1 or more buffers or the file
-  if(buffer->GetHasBufferParts())
+  if(buffer && buffer->GetHasBufferParts())
   {
     SendResponseBufferParts(response,buffer,totalLength,moredata);
   }
-  else if(buffer->GetFileName().IsEmpty())
+  else if(buffer && buffer->GetFileName().IsEmpty())
   {
     SendResponseBuffer(response,buffer,totalLength,moredata);
   }
@@ -1235,6 +1235,7 @@ HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response)
   }
   catch(StdException& er)
   {
+    ReThrowSafeException(er);
     ERRORLOG(ERROR_INVALID_PARAMETER,"Cannot close Event/WebSocket stream! " + er.GetErrorMessage());
   }
 }

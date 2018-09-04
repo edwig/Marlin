@@ -999,11 +999,11 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
 
   // Dependent on the filling of FileBuffer
   // Send 1 or more buffers or the file
-  if(buffer->GetHasBufferParts())
+  if(buffer && buffer->GetHasBufferParts())
   {
     SendResponseBufferParts(&response,requestID,buffer,totalLength);
   }
-  else if(buffer->GetFileName().IsEmpty())
+  else if(buffer && buffer->GetFileName().IsEmpty())
   {
     SendResponseBuffer(&response,requestID,buffer,totalLength);
   }
@@ -1230,7 +1230,7 @@ HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE p_response
   // Send entity body from a file handle.
   dataChunk.DataChunkType = HttpDataChunkFromFileHandle;
   dataChunk.FromFileHandle.ByteRange.StartingOffset.QuadPart = 0;
-  dataChunk.FromFileHandle.ByteRange.Length.QuadPart = fileSize; // HTTP_BYTE_RANGE_TO_EOF;
+  dataChunk.FromFileHandle.ByteRange.Length.QuadPart = fileSize; // HTTP_BYTE_RANGE_TO_EOF
   dataChunk.FromFileHandle.FileHandle = file;
 
   result = HttpSendResponseEntityBody(m_requestQueue,

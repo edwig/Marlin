@@ -1327,7 +1327,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // See if this request must send a file as part of a 'GET'
   // Or if the content comes from the buffer
   size_t totalLength = 0;
-  if(!buffer->GetFileName().IsEmpty())
+  if(buffer && !buffer->GetFileName().IsEmpty())
   {
     // FILE BUFFER CONTAINS A FILE REFERENCE TO SENT
     // Send file in form of a file-handle to transmit

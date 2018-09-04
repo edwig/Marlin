@@ -349,11 +349,15 @@ CRedirect::StdOutThread(HANDLE hStdOutRead)
     if (!::ReadFile(hStdOutRead, lpszBuffer, 1, &nBytesRead, NULL) || !nBytesRead)
     {
       // pipe done - normal exit path.
+      // Partial input line left hanging?
+      if(linePointer != lineBuffer)
+      {
+        *linePointer = 0;
+        OnChildStdOutWrite(lineBuffer);
+      }
       m_eof_input = 1;
       break;			
     }
-    if (nBytesRead)
-    {
       if(lpszBuffer[0] == '\004')
       {
         // EOT encountered: End of transmission channel
@@ -371,18 +375,6 @@ CRedirect::StdOutThread(HANDLE hStdOutRead)
         linePointer = lineBuffer;
       }
     }
-    else
-    {
-      // Partial input line left hanging?
-      if(linePointer != lineBuffer)
-      {
-        *linePointer = 0;
-        OnChildStdOutWrite(lineBuffer);
-      }
-      m_eof_input = 1;
-      break;
-    }
-  }
   return 0;
 }
 
@@ -401,10 +393,14 @@ CRedirect::StdErrThread(HANDLE hStdErrRead)
     if (!::ReadFile(hStdErrRead, lpszBuffer, 1,	&nBytesRead, NULL) || !nBytesRead)
     {
       // pipe done - normal exit path.
+      // Partial input line left hanging?
+      if(linePointer != lineBuffer)
+      {
+        *linePointer = 0;
+        OnChildStdErrWrite(lineBuffer);
+      }
       break;			
     }
-    if (nBytesRead)
-    {
       if(lpszBuffer[0] == '\004')
       {
         // EOT encountered: End of transmission channel
@@ -421,11 +417,6 @@ CRedirect::StdErrThread(HANDLE hStdErrRead)
         linePointer = lineBuffer;
       }
     }
-    else
-    {
-      break;
-    }
-  }
   return 0;
 }
 
@@ -495,12 +486,12 @@ CRedirect::WriteChildStdIn(LPCSTR lpszInput)
     {
       if(::GetLastError() == ERROR_NO_DATA)
       {
-        ;				// Pipe was closed (do nothing).
+        // Pipe was closed (do nothing).
+        return 0;
       }
       else
       {
-        ASSERT(FALSE);	// Something bad happened.
-        // Call GetLastError() to get error
+        // Call GetLastError() to get the error
         return -1;
       }
     }

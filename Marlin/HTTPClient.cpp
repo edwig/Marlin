@@ -41,7 +41,7 @@
 #include "HTTPCertificate.h"
 #include "HTTPClientTracing.h"
 #include "HTTPError.h"
-#include "ZLib\gzip.h"
+#include "gzip.h"
 #include <winerror.h>
 #include <wincrypt.h>
 #include <atlconv.h>
