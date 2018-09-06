@@ -30,6 +30,13 @@
 #include "FileBuffer.h"
 #include <map>
 
+typedef enum _iisConfigError
+{
+  IISER_NoError = 0
+ ,IISER_AuthenticationConflict
+}
+IISError;
+
 typedef struct _iisHandler
 {
   CString   m_path;
@@ -55,6 +62,7 @@ typedef struct _iisSite
   CString     m_realm;
   CString     m_domain;
   bool        m_ntlmCache;
+  IISError    m_error;
   IISHandlers m_handlers;
 }
 IISSite;
@@ -91,6 +99,7 @@ public:
   CString     GetSiteRealm    (CString p_site,CString p_default);
   CString     GetSiteDomain   (CString p_site,CString p_default);
   bool        GetSiteNTLMCache(CString p_site,bool    p_default);
+  IISError    GetSiteError    (CString p_site);
 
   IISHandlers* GetAllHandlers (CString p_site);
   IISHandler*  GetHandler     (CString p_site,CString p_handler);

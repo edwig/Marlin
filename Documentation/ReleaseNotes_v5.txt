@@ -34,6 +34,13 @@ CHANGES IN VERSION 5.2.0
     C++ language exceptions
 10) Command redirection has been optimized in the "Redirect" class
 11) Minor SonarQube quality checks have been reworked in the code.
+12) During the reading of the IIS WebConfig inherent conflicting options on a site are found.
+    The IISite definition now has a new member (m_error) that can be queried with IISWebConfig.GetError()
+    First conflict that has been defined now is the case where both "anonymous" and other authentication
+    methods are defined for a site. Those other authentication methods will never be used by IIS, as 
+    long as a site has anonymous authentication defined.
+    Products can now decide on the outcome of the IISWebConfig.GetError() wether to continue or not.
+    The place where to do this check is typically in the ServerApp derived class in "InitInstance"
 
 CHANGES IN VERSION 5.1.1
 ------------------------

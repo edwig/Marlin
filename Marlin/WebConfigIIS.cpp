@@ -202,6 +202,17 @@ WebConfigIIS::GetSiteNTLMCache(CString p_site,bool p_default)
   return p_default;
 }
 
+IISError
+WebConfigIIS::GetSiteError(CString p_site)
+{
+  IISSite* site = GetSite(p_site);
+  if (site)
+  {
+    return site->m_error;
+  }
+  return IISER_NoError;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // PRIVATE METHODS
@@ -312,6 +323,7 @@ WebConfigIIS::ReadSites(XMLMessage& p_msg)
       theSite.m_ntlmCache  = true;
       theSite.m_secure     = false;
       theSite.m_authScheme = 0;
+      theSite.m_error      = IISER_NoError;
       CString name = p_msg.GetAttribute(site,"name");
       theSite.m_name = name;
 
@@ -393,8 +405,25 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg)
 void
 WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem)
 {
+  bool anonymousFound = false;
+
   XMLElement* auth = p_msg.FindElement(p_elem,"authentication");
   if(!auth) return;
+
+  // Check anonymous autenthication
+  XMLElement* anonymous = p_msg.FindElement(auth,"anonymousAuthentication");
+  if(anonymous)
+  {
+    CString enable = p_msg.GetAttribute(anonymous,"enabled");
+    if(enable.CompareNoCase("true") == 0)
+    {
+      // Anonymous authentication IS enabled
+      // No other authentication will EVER BE DONE
+      // Do not read all the other authentications
+      p_site.m_authScheme = 0;
+      anonymousFound = true;
+    }
+  }
 
   // Check basic authentication
   XMLElement* basic = p_msg.FindElement(auth,"basicAuthentication");
@@ -475,6 +504,13 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
         }
       }
     }
+  }
+
+  if(p_site.m_authScheme && anonymousFound)
+  {
+    // ERROR on this site. Authentication will **NOT** work
+    // Both anonymous and some other authentication found!!
+    p_site.m_error = IISER_AuthenticationConflict;
   }
 }
 
