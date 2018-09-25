@@ -127,7 +127,7 @@ SocketToServer(PSOCKADDR_IN6 p_address)
                        ,NI_MAXHOST
                        ,NULL  // No service name
                        ,0
-                       ,NI_NUMERICHOST);
+                       ,NI_NUMERICHOST | NI_NUMERICSERV);
 
   if(res == WSANOTINITIALISED)
   {
@@ -145,14 +145,24 @@ SocketToServer(PSOCKADDR_IN6 p_address)
                       ,NI_MAXHOST
                       ,NULL  // No service name
                       ,0
-                      ,NI_NUMERICHOST);
+                      ,NI_NUMERICHOST | NI_NUMERICSERV);
   }
   if(res == 0)
   {
-    // See if we need to make a Teredo address of this
+    // See if we need to make a FULL Teredo address of this
     if(p_address && p_address->sin6_family == AF_INET6)
     {
-      return CString("[") + CString(host) + CString("]");
+      CString hostname;
+      hostname.Format("[%x:%x:%x:%x:%x:%x:%x:%x]"
+                     ,ntohs(p_address->sin6_addr.u.Word[0])
+                     ,ntohs(p_address->sin6_addr.u.Word[1])
+                     ,ntohs(p_address->sin6_addr.u.Word[2])
+                     ,ntohs(p_address->sin6_addr.u.Word[3])
+                     ,ntohs(p_address->sin6_addr.u.Word[4])
+                     ,ntohs(p_address->sin6_addr.u.Word[5])
+                     ,ntohs(p_address->sin6_addr.u.Word[6])
+                     ,ntohs(p_address->sin6_addr.u.Word[7]));
+      return hostname;
     }
     return CString(host);
   }

@@ -8,6 +8,14 @@ Version 5.x contains NO real function breaks but adds IIS capabilities for the a
 and further maturity changes for IIS in general
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 5.2.1
+------------------------
+1) Fixed a serious bug in the "SocketToServer" base function in case of a IP6 address. Local addresses
+   are delivered in short ip6 format and cannot be reused to send messages. General HTTP functions and
+   browsers cannot use these shortened versions of IP6 adresses with adapter postfixes like "%eth0".
+   So the full IP6 adress of 8 hexadecimal numbers is reconstructed there to make sure the client or host 
+   on the other side of the socket can be reached.
+
 CHANGES IN VERSION 5.2.0
 ------------------------
 1)  HTTPClient will search for a 'Marlin.config', if no 'web.config' file has been found.
