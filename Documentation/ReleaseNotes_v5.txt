@@ -15,6 +15,11 @@ CHANGES IN VERSION 5.2.1
    browsers cannot use these shortened versions of IP6 adresses with adapter postfixes like "%eth0".
    So the full IP6 adress of 8 hexadecimal numbers is reconstructed there to make sure the client or host 
    on the other side of the socket can be reached.
+2) Fixed a memory leak in ServerApp for the IIS configurations
+3) WebConfig: it's possible to 'ForgetChanges', so an in-memory copy of the web.config is not sync'ed 
+   back to file in case of an override.
+4) Secure/not-secure versions of HTTP connections in HTTClient now correctly logged
+5) Fixed a memory leak in HTTPServerSync for SSE (Server-Sent-Events) event streams.
 
 CHANGES IN VERSION 5.2.0
 ------------------------

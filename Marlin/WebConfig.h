@@ -80,6 +80,7 @@ public:
   bool    HasParameter(CString p_section,CString p_parameter);
   bool    HasAttribute(CString p_section,CString p_parameter,CString p_attribute);
   bool    IsChanged();
+  void    ForgetChanges(); // Thread with care!
 
 private:
   // Find section with this name

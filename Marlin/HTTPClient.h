@@ -372,6 +372,10 @@ private:
   void     ProcessJSONResult(JSONMessage* p_msg,bool& p_result);
   // Setting a client certificate on the request handle
   bool     SetClientCertificate(HINTERNET p_request);
+  // Running the queue
+  void     ProcessQueueMessage(HTTPMessage* p_message);
+  void     ProcessQueueMessage(SOAPMessage* p_message);
+  void     ProcessQueueMessage(JSONMessage* p_message);
 
   // PRIVATE DATA
 

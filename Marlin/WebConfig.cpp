@@ -203,6 +203,14 @@ WebConfig::WriteConfig()
   return XMLMessage::SaveFile(m_fileName);
 }
 
+// In case we want to make in-memory changes that may never
+// be written back to disk
+void
+WebConfig::ForgetChanges()
+{
+  m_changed = false;
+}
+
 // Find section with this name
 XMLElement* 
 WebConfig::FindSection(CString p_section)

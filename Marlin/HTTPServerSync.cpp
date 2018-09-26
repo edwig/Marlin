@@ -1334,10 +1334,11 @@ HTTPServerSync::InitEventStream(EventStream& p_stream)
     p_stream.m_site->AddSiteOptionalHeaders(ukheaders);
   }
 
-  // Now add all unknown headers to the response
-  PHTTP_UNKNOWN_HEADER unknown = AddUnknownHeaders(ukheaders);
-  p_stream.m_response.Headers.UnknownHeaderCount = (USHORT)ukheaders.size();
-  p_stream.m_response.Headers.pUnknownHeaders    = unknown;
+//   COMMENTED OUT: Leaks memory at logoff
+//   // Now add all unknown headers to the response
+//   PHTTP_UNKNOWN_HEADER unknown = AddUnknownHeaders(ukheaders);
+//   p_stream.m_response.Headers.UnknownHeaderCount = (USHORT)ukheaders.size();
+//   p_stream.m_response.Headers.pUnknownHeaders    = unknown;
 
   // Add an entity chunk.
   HTTP_DATA_CHUNK dataChunk;

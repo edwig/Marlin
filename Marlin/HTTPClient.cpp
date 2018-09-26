@@ -2975,12 +2975,16 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
   {
     proxy.Format(" through proxy [%s:%d]",server.GetString(),p_port);
   }
+
+  // Find secure call
+  CString secure = m_secure && m_scheme.Right(1) != "s" ? "s" : "";
+
   // Log in full, do the raw logging call directly
   m_log->AnalysisLog("HTTPClient::Send",LogType::LOG_INFO,true
                     ,"%s %s%s://%s:%d%s%s"
                     ,m_verb.GetString()
                     ,m_scheme.GetString()
-                    ,m_secure ? "s" : ""
+                    ,secure.GetString()
                     ,m_server.GetString()
                     ,m_port
                     ,m_url.GetString()
@@ -3773,20 +3777,17 @@ HTTPClient::QueueRunning()
       // Fire and forget. No return status processed
       if(message1)
       {
-        Send(message1);
-        delete message1;
+        ProcessQueueMessage(message1);
         message1 = NULL;
       }
       else if(message2)
       {
-        Send(message2);
-        delete message2;
+        ProcessQueueMessage(message2);
         message2 = NULL;
       }
       else if(message3)
       {
-        Send(message3);
-        delete message3;
+        ProcessQueueMessage(message3);
         message3 = NULL;
       }
     }
@@ -3816,6 +3817,52 @@ HTTPClient::QueueRunning()
   // Last thing the queue is doing
   m_queueThread = NULL;
 }
+
+void
+HTTPClient::ProcessQueueMessage(HTTPMessage* p_message)
+{
+  if(Send(p_message))
+  {
+    DETAILLOG("Did send queued HTTPMessage to: %s",p_message->GetURL().GetString());
+  }
+  else
+  {
+    ERRORLOG("Error while sending queued HTTPMessage to: %s",p_message->GetURL().GetString());
+  }
+  // End of the line: Remove the queue message
+  delete p_message;
+}
+
+void
+HTTPClient::ProcessQueueMessage(SOAPMessage* p_message)
+{
+  if(Send(p_message))
+  {
+    DETAILLOG("Did send queued SOAPMessage [%s] to: %s",p_message->GetSoapAction().GetString(),p_message->GetURL().GetString());
+  }
+  else
+  {
+    ERRORLOG("Error while sending queued SOAPMessage [%s] to: %s", p_message->GetSoapAction().GetString(),p_message->GetURL().GetString());
+  }
+  // End of the line: Remove the queue message
+  delete p_message;
+}
+
+void
+HTTPClient::ProcessQueueMessage(JSONMessage* p_message)
+{
+  if(Send(p_message))
+  {
+    DETAILLOG("Did send queued JSONMessage to: %s",p_message->GetURL().GetString());
+  }
+  else
+  {
+    ERRORLOG("Error while sending queued JSONMessage to: %s", p_message->GetURL().GetString());
+  }
+  // End of the line: Remove the queue message
+  delete p_message;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //
