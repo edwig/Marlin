@@ -777,10 +777,26 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
 
   // Convert to a HTTP response
   HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
-  if(answer->GetContentType().Find("soap") < 0)
+
+  // Check if Content-type was correctly set
+  if(answer->GetContentType().IsEmpty())
   {
-    answer->SetContentType("application/soap+xml");
+    switch(p_message->GetSoapVersion())
+    {
+      case SoapVersion::SOAP_10: // Fall Through
+      case SoapVersion::SOAP_11: answer->SetContentType("text/xml");             break;
+      case SoapVersion::SOAP_12: answer->SetContentType("application/soap+xml"); break;
+    }
   }
+
+  // Check if we have a SOAPAction header for SOAP 1.1 situations
+  if(p_message->GetSoapVersion() == SoapVersion::SOAP_11 &&
+    !p_message->GetSoapAction().IsEmpty() &&
+     answer->GetHeader("SOAPAction").IsEmpty())
+  {
+    answer->AddHeader("SOAPAction", "\"" + p_message->GetNamespace() + p_message->GetSoapAction() + "\"", false);
+  }
+
   // Set status in case of an error
   if(p_message->GetErrorState())
   {
