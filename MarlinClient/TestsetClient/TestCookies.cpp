@@ -162,3 +162,38 @@ TestCookies(HTTPClient& p_client)
  
   return errors;
 }
+
+int 
+TestCookie(HTTPMessage* p_msg,CString p_meta,CString p_expect)
+{
+  CString value = p_msg->GetCookieValue("SESSIONCOOKIE",p_meta);
+  return value.Compare(p_expect) != 0;
+}
+
+
+int 
+TestCookiesOverwrite()
+{
+  int errors = 0;
+
+  // Standard values
+  CString url;
+  url.Format("http://%s:%d/MarlinTest/CookieTest/",MARLIN_HOST,TESTING_HTTP_PORT);
+
+  // Test 1
+  xprintf("TESTING HTTP COOKIES ON /MarlinTest/CookieTest/\n");
+  xprintf("===============================================\n");
+  HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_put,url);
+
+  msg->SetCookie("SESSIONCOOKIE","123456","meta",false,true);
+  errors += TestCookie(msg,"meta","123456");
+
+  msg->SetCookie("SESSIONCOOKIE","","",false,true);
+  errors += TestCookie(msg,"","");
+
+  msg->SetCookie("SESSIONCOOKIE","654321","",false,true);
+  errors += TestCookie(msg,"","654321");
+
+  return errors;
+}
+

@@ -35,7 +35,7 @@ extern int g_errors;
 class MarlinClientCertServerApp : public ServerApp
 {
 public:
-  MarlinClientCertServerApp(IHttpServer* p_iis, CString p_appName, CString p_webroot);
+  MarlinClientCertServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName, CString p_webroot);
   virtual ~MarlinClientCertServerApp();
 
   virtual void InitInstance();

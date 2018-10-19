@@ -44,6 +44,7 @@ public:
   bool   ReadConfig(CString p_filename);
   bool   WriteConfig();
   static CString GetExePath();
+  static CString GetExeModule();
   static CString GetSiteConfig(CString p_prefixURL);
   static CString GetURLConfig(CString p_url);
 

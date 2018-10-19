@@ -39,21 +39,21 @@ MarlinServerAppFactory factory;
 // So we can have multiple applications in the same IIS application pool
 //
 ServerApp* 
-MarlinServerAppFactory::CreateServerApp(IHttpServer* p_iis, CString p_appName, CString p_webroot)
+MarlinServerAppFactory::CreateServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName, CString p_webroot)
 {
   if(p_appName.CompareNoCase("MarlinTest") == 0)
   {
-    return new MarlinServerApp(p_iis,p_appName,p_webroot);
+    return new MarlinServerApp(p_iis,p_logfile,p_appName,p_webroot);
   }
 
   if(p_appName.CompareNoCase("SecureTest") == 0)
   {
-    return new MarlinSecureServerApp(p_iis,p_appName,p_webroot);
+    return new MarlinSecureServerApp(p_iis,p_logfile,p_appName,p_webroot);
   }
 
   if(p_appName.CompareNoCase("SecureClientCert") == 0)
   {
-    return new MarlinClientCertServerApp(p_iis,p_appName,p_webroot);
+    return new MarlinClientCertServerApp(p_iis,p_logfile,p_appName,p_webroot);
   }
 
   return nullptr;

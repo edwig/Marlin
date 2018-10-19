@@ -334,7 +334,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
 
   // Let the server app factory create a new one for us
   // And store it in our representation of the active application pool
-  ServerApp* app = appFactory->CreateServerApp(g_iisServer,application,webroot);
+  ServerApp* app = appFactory->CreateServerApp(g_iisServer,g_analysisLog,application,webroot);
   if (app == nullptr)
   {
     ERRORLOG("NO APP CREATED IN APP FACTORY!");

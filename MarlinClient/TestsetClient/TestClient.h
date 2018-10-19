@@ -52,6 +52,7 @@ extern int TestCryptography(void);
 extern int TestReader(void);
 extern int TestConvert(void);
 extern int TestNamespaces(void);
+extern int TestCookiesOverwrite(void);
 extern int TestFindClientCertificate(void);
 extern int TestWebSocketAccept(void);
 extern int TestWebSocket(LogAnalysis* p_log);

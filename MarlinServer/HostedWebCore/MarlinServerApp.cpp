@@ -48,8 +48,8 @@ int g_errors = 0;
 //
 //////////////////////////////////////////////////////////////////////////
 
-MarlinServerApp::MarlinServerApp(IHttpServer* p_iis, CString p_appName, CString p_webroot)
-                :ServerApp(p_iis,p_appName,p_webroot)
+MarlinServerApp::MarlinServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot)
+                :ServerApp(p_iis,p_logfile,p_appName,p_webroot)
 {
 }
 

@@ -46,8 +46,8 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
-MarlinClientCertServerApp::MarlinClientCertServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot)
-                          :ServerApp(p_iis,p_appName,p_webroot)
+MarlinClientCertServerApp::MarlinClientCertServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot)
+                          :ServerApp(p_iis,p_logfile,p_appName,p_webroot)
 {
 }
 

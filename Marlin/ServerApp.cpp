@@ -44,8 +44,9 @@ static char THIS_FILE[] = __FILE__;
 #define ERRORLOG(code,text)     m_httpServer->ErrorLog  (__FUNCTION__,code,text)
 
 //XTOR
-ServerApp::ServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot)
+ServerApp::ServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot)
           :m_iis(p_iis)
+          ,m_logfile(p_logfile)
           ,m_applicationName(p_appName)
           ,m_webroot(p_webroot)
 {
@@ -114,12 +115,13 @@ ServerApp::ExitInstance()
   }
 
   // Stopping our logfile
-  if(m_logfile)
+  if(m_logfile && m_ownLogfile)
   {
     m_logfile->AnalysisLog(__FUNCTION__, LogType::LOG_INFO, true, "%s closed",m_applicationName.GetString());
 
     delete m_logfile;
     m_logfile = nullptr;
+    m_ownLogfile = false;
   }
 
   // Destroy the general error report
@@ -153,6 +155,8 @@ ServerApp::StopCounter()
 void  
 ServerApp::StartLogging()
 {
+  if(m_logfile == nullptr)
+  {
   // Create the directory for the logfile
   CString logfile = g_config.GetLogfilePath() + "\\" + m_applicationName + "\\Logfile.txt";
   EnsureFile ensure(logfile);
@@ -163,6 +167,24 @@ ServerApp::StartLogging()
   m_logfile->SetLogFilename(logfile);
   m_logfile->SetLogRotation(true);
   m_logfile->SetLogLevel(g_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
+    m_ownLogfile = true;
+  }
+  else
+  {
+    // Create path name for our application logfile
+    EnsureFile ensure;
+    CString completeLogfile = m_logfile->GetLogFileName();
+    CString logfile = ensure.FilenamePart(completeLogfile);
+    CString symlink = g_config.GetLogfilePath() + "\\" + m_applicationName + "\\" + logfile;
+    ensure.SetFilename(symlink);
+    ensure.CheckCreateDirectory();
+
+    // Create symbolic link to the marlin logfile.
+    // No real new logfile has been created or started
+    BOOLEAN res = CreateSymbolicLink(symlink,completeLogfile,0);
+    m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
+                          ,"Created symbolic link file [%s] %s",symlink.GetString(),res ? "OK" : "FAILED");
+  }
 
   // Tell that we started the logfile
   m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
@@ -555,9 +577,9 @@ ServerAppFactory::ServerAppFactory()
 }
 
 ServerApp* 
-ServerAppFactory::CreateServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot)
+ServerAppFactory::CreateServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot)
 {
-  return new ServerApp(p_iis,p_appName,p_webroot);
+  return new ServerApp(p_iis,p_logfile,p_appName,p_webroot);
 }
 
 ServerAppFactory* appFactory = nullptr;

@@ -44,7 +44,10 @@ using IISModules = std::set<CString>;
 class ServerApp
 {
 public:
-  ServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot);
+  ServerApp(IHttpServer* p_iis
+           ,LogAnalysis* p_logfile
+           ,CString      p_appName
+           ,CString      p_webroot);
   virtual ~ServerApp();
 
   // Starting and stopping the server
@@ -98,6 +101,7 @@ protected:
   LogAnalysis*   m_logfile      { nullptr };    // Logfile object
   ErrorReport*   m_errorReport  { nullptr };    // Error reporting object
   bool           m_ownReport    { false   };    // Owning the error report
+  bool           m_ownLogfile   { false   };    // Owning the logfile
   int            m_logLevel     { HLL_NOLOG };  // Logging level of server and logfile
 };
 
@@ -108,7 +112,7 @@ class ServerAppFactory
 public:
   ServerAppFactory();
 
-  virtual ServerApp* CreateServerApp(IHttpServer* p_iis,CString p_appName,CString p_webroot);
+  virtual ServerApp* CreateServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot);
 };
 
 extern ServerAppFactory* appFactory;

@@ -10,8 +10,8 @@ and further maturity changes for IIS in general
 
 CHANGES IN VERSION 5.2.2
 ------------------------
-1) Fixed a bug in the response of a SOAP 1.1 message, where a wrong content-type was sent to the
-   caller.
+1) Fixed a bug in the response of a SOAP 1.1 message, where a wrong content-type was sent to the caller.
+2) Logfiles under IIS are restructured to use only 1 (one) logfile per application.
 
 CHANGES IN VERSION 5.2.1
 ------------------------
