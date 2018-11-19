@@ -8,6 +8,14 @@ Version 5.x contains NO real function breaks but adds IIS capabilities for the a
 and further maturity changes for IIS in general
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 5.3.0
+------------------------
+1) Reading of the bodypart of a HTTPMessage now only reads "ContentLength" bytes.
+   This is done so we do not read past EOF, in preparation for WebSockets support.
+   As a part of this "SetReadBuffer()"  of the server now just sets the boolean and not the remaining
+   contentLength. So the ContentLength() of the HTTPMessage now always is the correct length.
+2) Fixed memory leaks in the Client testing code (TestCookiesOverwrite)
+
 CHANGES IN VERSION 5.2.2
 ------------------------
 1) Fixed a bug in the response of a SOAP 1.1 message, where a wrong content-type was sent to the caller.

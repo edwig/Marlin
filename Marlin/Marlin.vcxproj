@@ -258,6 +258,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="WinSocket.cpp" />
     <ClCompile Include="WSDLCache.cpp" />
     <ClCompile Include="XMLDataType.cpp" />
     <ClCompile Include="XMLMessage.cpp" />
@@ -410,6 +411,7 @@
     <ClInclude Include="WebServiceServer.h" />
     <ClInclude Include="WebSocket.h" />
     <ClInclude Include="WinINETError.h" />
+    <ClInclude Include="WinSocket.h" />
     <ClInclude Include="WSDLCache.h" />
     <ClInclude Include="XMLDataType.h" />
     <ClInclude Include="XMLMessage.h" />

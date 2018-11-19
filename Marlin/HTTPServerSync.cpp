@@ -406,6 +406,7 @@ HTTPServerSync::RunHTTPServer()
     CString   authorize      = request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
     CString   modified       = request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
     CString   referrer       = request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
+    CString   contentLength  = request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
     CString   rawUrl         = CW2A(request->CookedUrl.pFullUrl);
     PSOCKADDR sender         = request->Address.pRemoteAddress;
     int       remDesktop     = FindRemoteDesktop(request->Headers.UnknownHeaderCount
@@ -541,12 +542,13 @@ HTTPServerSync::RunHTTPServer()
       message->SetAuthorization(authorize);
       message->SetRequestHandle(request->RequestId);
       message->SetConnectionID(request->ConnectionId);
-      message->SetContentType(contentType);
       message->SetAccessToken(accessToken);
       message->SetRemoteDesktop(remDesktop);
       message->SetSender((PSOCKADDR_IN6)sender);
       message->SetCookiePairs(cookie);
       message->SetAcceptEncoding(acceptEncoding);
+      message->SetContentType(contentType);
+      message->SetContentLength(atoll(contentLength));
       if(site->GetAllHeaders())
       {
         // If requested so, copy all headers to the message
@@ -770,7 +772,10 @@ bool
 HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
 {
   bool   retval    = true;
+  bool   reading   = true;
   ULONG  bytesRead = 0;
+  size_t totalRead = 0;
+  size_t mustRead  = p_message->GetContentLength();
   ULONG  entityBufferLength = INIT_HTTP_BUFFERSIZE;
 
   // Create a buffer + 1 extra byte for the closing 0
@@ -782,23 +787,22 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
   }
 
   // Reading loop
-  bool reading = true;
-  do 
+  while(reading && totalRead < mustRead)
   {
-    bytesRead = 0; 
-    DWORD result = HttpReceiveRequestEntityBody(m_requestQueue
-                                                ,p_message->GetRequestHandle()
-                                                ,HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER
-                                                ,entityBuffer
-                                                ,entityBufferLength
-                                                ,&bytesRead
-                                                ,NULL);
+    ULONG result = HttpReceiveRequestEntityBody(m_requestQueue
+                                               ,p_message->GetRequestHandle()
+                                               ,HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER
+                                               ,entityBuffer
+                                               ,entityBufferLength
+                                               ,&bytesRead
+                                               ,NULL);
     switch(result)
     {
       case NO_ERROR:          // Regular incoming body part
                               entityBuffer[bytesRead] = 0;
                               p_message->AddBody(entityBuffer,bytesRead);
                               DETAILLOGV("ReceiveRequestEntityBody [%d] bytes",bytesRead);
+                              totalRead += bytesRead;
                               break;
       case ERROR_HANDLE_EOF:  // Very last incoming body part
                               if(bytesRead)
@@ -806,17 +810,17 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
                                 entityBuffer[bytesRead] = 0;
                                 p_message->AddBody(entityBuffer,bytesRead);
                                 DETAILLOGV("ReceiveRequestEntityBody [%d] bytes",bytesRead);
+                                totalRead += bytesRead;
                               }
                               reading = false;
                               break;
-      default:                ERRORLOG(result,"ReceiveRequestEntityBody");
+      default:                ERRORLOG(result,"HTTP Receive-request (entity body)");
                               reading = false;
                               retval  = false;
                               break;
                               
     }
-  } 
-  while(reading);
+  }
 
   // Clean up buffer after reading
   delete [] entityBuffer;

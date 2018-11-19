@@ -392,6 +392,7 @@ HTTPRequest::ReceivedRequest()
   m_message->SetAuthorization(authorize);
   m_message->SetConnectionID(m_request->ConnectionId);
   m_message->SetContentType(contentType);
+  m_message->SetContentLength(atoll(contentLength));
   m_message->SetAccessToken(accessToken);
   m_message->SetRemoteDesktop(remDesktop);
   m_message->SetSender  ((PSOCKADDR_IN6)sender);
@@ -495,7 +496,12 @@ HTTPRequest::ReceivedBodyPart()
       m_readBuffer[bytes] = 0;
       m_message->GetFileBuffer()->AddBuffer(m_readBuffer,bytes);
     }
-    if(result == NO_ERROR)
+
+    // See how far we have come, so we do not read past EOF
+    size_t readSofar = m_message->GetFileBuffer()->GetLength();
+    size_t mustRead  = m_message->GetContentLength();
+
+    if(result == NO_ERROR && readSofar < mustRead)
     {
       // (Re)start the next read request
       StartReceiveRequest();

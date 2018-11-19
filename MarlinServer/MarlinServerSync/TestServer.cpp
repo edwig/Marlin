@@ -39,6 +39,7 @@
 #include "PrintToken.h"
 #include "Analysis.h"
 #include "AutoCritical.h"
+#include "WinSocket.h"
 
 #define  NOGDI
 #define  NOMINMAX
@@ -244,6 +245,8 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
       printf("----------------------------------\n");
       printf("\n");
 
+      MarlinStartupWinsocket();
+
       // See if we must do the standalone WebServiceServer test
       // Or that we should do the flat HTTPServer tests
       if(argc >= 2)
@@ -296,7 +299,7 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           errors += TestAsynchrone(server);
 
           // WEBSOCKETS DO NOT WORK IN THE SYNC SERVER!
-          // errors += TestWebSocket(server);
+          errors += TestWebSocket(server);
 
          // Test the WebServiceServer program generation
          CString contract = "http://interface.marlin.org/testing/";

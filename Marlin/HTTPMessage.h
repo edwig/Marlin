@@ -144,12 +144,13 @@ public:
   void SetAccessToken(HANDLE p_token)           { m_token              = p_token;     };
   void SetRemoteDesktop(UINT p_desktop)         { m_desktop            = p_desktop;   };
   void SetContentType(CString p_type)           { m_contentType        = p_type;      };
+  void SetContentLength(size_t p_length)        { m_contentLength      = p_length;    };
   void SetUseIfModified(bool p_ifmodified)      { m_ifmodified         = p_ifmodified;};
   void SetSendBOM(bool p_bom)                   { m_sendBOM            = p_bom;       };
   void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    };
   void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        };
   void SetHasBeenAnswered()                     { m_request            = NULL;        };
-  void SetReadBuffer(bool p_read,size_t p_length = 0);
+  void SetReadBuffer(bool p_read);
   void SetSender  (PSOCKADDR_IN6 p_address);
   void SetReceiver(PSOCKADDR_IN6 p_address);
   void SetFile(CString& p_fileName);
@@ -338,3 +339,10 @@ HTTPMessage::GetHasBeenAnswered()
 {
   return m_request == NULL;
 }
+
+inline void
+HTTPMessage::SetReadBuffer(bool p_read)
+{
+  m_readBuffer = p_read;
+};
+

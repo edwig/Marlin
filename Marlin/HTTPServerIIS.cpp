@@ -495,12 +495,13 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   message->SetReferrer(referrer);
   message->SetAuthorization(authorize);
   message->SetConnectionID(p_request->ConnectionId);
-  message->SetContentType(contentType);
   message->SetRemoteDesktop(remDesktop);
   message->SetSender((PSOCKADDR_IN6)sender);
   message->SetCookiePairs(cookie);
   message->SetAcceptEncoding(acceptEncoding);
   message->SetRequestHandle((HTTP_OPAQUE_ID)p_context);
+  message->SetContentType(contentType);
+  message->SetContentLength(atoll(contentLength));
 
   // Finding the impersonation access token (if any)
   FindingAccessToken(p_context,message);
@@ -543,7 +544,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   {
     // Remember the fact that we should read the rest of the message, and how much
     // We offload this to the HTTPSite handler for local servers and IIS alike
-    message->SetReadBuffer(true,atoi(contentLength));
+    message->SetReadBuffer(true);
   }
   else
   {
@@ -634,7 +635,7 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   LogTraceRequestBody(fbuffer);
 
   // Now everything has been read for this message
-  p_message->SetReadBuffer(false,0);
+  p_message->SetReadBuffer(false);
 
   return true;
 }

@@ -570,13 +570,6 @@ HTTPMessage::GetCookieValue(CString p_name /*=""*/,CString p_metadata /*=""*/)
   return "";
 }
 
-void 
-HTTPMessage::SetReadBuffer(bool p_read,size_t p_length)
-{
-  m_readBuffer    = p_read;
-  m_contentLength = p_length;
-};
-
 void
 HTTPMessage::SetSender(PSOCKADDR_IN6 p_address)
 {

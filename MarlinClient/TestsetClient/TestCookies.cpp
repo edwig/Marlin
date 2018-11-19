@@ -194,6 +194,8 @@ TestCookiesOverwrite()
   msg->SetCookie("SESSIONCOOKIE","654321","",false,true);
   errors += TestCookie(msg,"","654321");
 
+  delete msg;
+
   return errors;
 }
 
