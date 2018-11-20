@@ -27,7 +27,8 @@
 //
 #include "stdafx.h"
 #include "TestClient.h"
-#include "WebSocket.h"
+#include "WebSocketServer.h"
+#include "WebSocketClient.h"
 #include "Analysis.h"
 
 // Stand-alone test without client or server

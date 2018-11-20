@@ -34,6 +34,7 @@
 #include "HTTPError.h"
 #include "GetLastErrorAsString.h"
 #include "ConvertWideString.h"
+#include "WebSocketServerSync.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -738,6 +739,13 @@ HTTPServerSync::StopServer()
   }
   // Cleanup the sites and groups
   Cleanup();
+}
+
+// Create a new WebSocket in the subclass of our server
+WebSocket*
+HTTPServerSync::CreateWebSocket(CString p_uri)
+{
+  return new WebSocketServerSync(p_uri);
 }
 
 void

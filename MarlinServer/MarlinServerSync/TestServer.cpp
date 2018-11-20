@@ -301,10 +301,10 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
           // WEBSOCKETS DO NOT WORK IN THE SYNC SERVER!
           errors += TestWebSocket(server);
 
-         // Test the WebServiceServer program generation
-         CString contract = "http://interface.marlin.org/testing/";
-         errors += TestJsonServer(server,contract,logLevel);
-         errors += TestWebServiceServer(server,contract,logLevel);
+          // Test the WebServiceServer program generation
+          CString contract = "http://interface.marlin.org/testing/";
+          errors += TestJsonServer(server,contract,logLevel);
+          errors += TestWebServiceServer(server,contract,logLevel);
 
           // See if we should wait for testing to occur
           if(errors)

@@ -148,7 +148,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestCookiesOverwrite();
       //#ifdef TEST_WEBSOCKETS
       errors += TestWebSocketAccept();
-      //errors += TestWebSocket(g_log);
+      errors += TestWebSocket(g_log);
       //#endif
       errors += TestEvents(client);
       errors += TestBaseSite(client);

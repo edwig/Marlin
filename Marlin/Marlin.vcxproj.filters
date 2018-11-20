@@ -312,6 +312,18 @@
     <ClCompile Include="WinSocket.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="WebSocketClient.cpp">
+      <Filter>MarlinClient</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocketServerIIS.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocketServer.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocketServerSync.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -637,6 +649,18 @@
     <ClInclude Include="Version.h" />
     <ClInclude Include="WinSocket.h">
       <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketClient.h">
+      <Filter>MarlinClient\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketServerIIS.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketServer.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketServerSync.h">
+      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

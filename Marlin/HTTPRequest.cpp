@@ -31,7 +31,7 @@
 #include "HTTPServer.h"
 #include "HTTPSite.h"
 #include "HTTPError.h"
-#include "WebSocket.h"
+#include "WebSocketServer.h"
 #include "AutoCritical.h"
 #include "ConvertWideString.h"
 #include <WebSocket.h>

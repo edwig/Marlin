@@ -10,6 +10,7 @@ Use the HTTPManager to reserve these sites
 Copy ExtraParts\FileOne.html   \WWW\Marlin\MarlinTest\Site
 Copy ExtraParts\FileTwo.html   \WWW\Marlin\MarlinTest\Site
 Copy codes.html                \WWW\Marlin\SecureClientCert\codes.html
+Copy codes.html                \WWW\Marlin\SecureTest\codes.html
 
 
 These are all the files in the testset and there usage:

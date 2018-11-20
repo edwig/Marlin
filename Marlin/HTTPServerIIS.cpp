@@ -41,7 +41,7 @@
 #include "GetLastErrorAsString.h"
 #include "MarlinModule.h"
 #include "EnsureFile.h"
-#include "WebSocket.h"
+#include "WebSocketServerIIS.h"
 #include "ConvertWideString.h"
 #include <httpserv.h>
 

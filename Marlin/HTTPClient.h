@@ -332,6 +332,7 @@ private:
   // To be done inside a 'Send'
   void     AddProxyInfo();
   void     AddHostHeader();
+  void     AddLengthHeader();
   void     AddSecurityOptions();
   void     AddCORSHeaders();
   void     AddExtraHeaders();

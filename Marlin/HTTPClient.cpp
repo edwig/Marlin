@@ -930,6 +930,27 @@ HTTPClient::AddHostHeader()
   DETAILLOG("Host header set: %s",hostHeader.GetString());
 }
 
+// Add contentlength header
+void
+HTTPClient::AddLengthHeader()
+{
+  USES_CONVERSION;
+  CString length;
+  length.Format("Content-Length: %lu",m_bodyLength);
+  wstring header = A2CW(length);
+
+  if(!::WinHttpAddRequestHeaders(m_request
+                                ,header.c_str()
+                                ,(DWORD)header.size()
+                                ,WINHTTP_ADDREQ_FLAG_ADD |
+                                 WINHTTP_ADDREQ_FLAG_REPLACE))
+  {
+    ErrorLog(__FUNCTION__,"Host header NOT set. Error [%d] %s");
+    return;
+  }
+  DETAILLOG("Length set: %s",length.GetString());
+}
+
 void
 HTTPClient::AddSecurityOptions()
 {
@@ -2693,6 +2714,8 @@ HTTPClient::Send()
   AddExtraHeaders();
   // Add WebSocket preparation
   AddWebSocketUpgrade();
+  // Always add content length
+  AddLengthHeader();
   
   // If always using a client certificate, set it upfront
   if(m_certPreset)

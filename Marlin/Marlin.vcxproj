@@ -77,7 +77,7 @@
     <TargetName>$(ProjectName)_x64R</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)lib\</OutDir>
+    <OutDir>$(SolutionDir)..\lib\</OutDir>
     <TargetName>$(ProjectName)_x64D</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -258,6 +258,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="WebSocketClient.cpp" />
+    <ClCompile Include="WebSocketServer.cpp" />
+    <ClCompile Include="WebSocketServerIIS.cpp" />
+    <ClCompile Include="WebSocketServerSync.cpp" />
     <ClCompile Include="WinSocket.cpp" />
     <ClCompile Include="WSDLCache.cpp" />
     <ClCompile Include="XMLDataType.cpp" />
@@ -410,6 +414,10 @@
     <ClInclude Include="WebServiceClient.h" />
     <ClInclude Include="WebServiceServer.h" />
     <ClInclude Include="WebSocket.h" />
+    <ClInclude Include="WebSocketClient.h" />
+    <ClInclude Include="WebSocketServer.h" />
+    <ClInclude Include="WebSocketServerIIS.h" />
+    <ClInclude Include="WebSocketServerSync.h" />
     <ClInclude Include="WinINETError.h" />
     <ClInclude Include="WinSocket.h" />
     <ClInclude Include="WSDLCache.h" />

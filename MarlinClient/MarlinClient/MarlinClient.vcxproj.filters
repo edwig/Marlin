@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="TestSet">
+      <UniqueIdentifier>{6d8f6d7f-f2ae-4240-8251-976cc90606aa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -29,59 +32,59 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestClientCert.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestCompression.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestContract.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestConvert.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestCookies.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestCrypto.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestEvents.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestFormData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestJSON.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestNamespaces.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestPatch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestUnicode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TestsetClient\TestWS.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\TestsetClient\TestClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\TestsetClient\TestBaseSite.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestClientCert.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestCompression.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestContract.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestConvert.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestCookies.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestCrypto.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestEvents.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestFormData.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestJSON.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestNamespaces.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestPatch.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestReader.cpp">
+      <Filter>TestSet</Filter>
     </ClCompile>
     <ClCompile Include="..\TestsetClient\TestSecureSite.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestUnicode.cpp">
+      <Filter>TestSet</Filter>
     </ClCompile>
     <ClCompile Include="..\TestsetClient\TestWebSocket.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>TestSet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestWS.cpp">
+      <Filter>TestSet</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

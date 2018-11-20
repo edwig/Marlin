@@ -34,7 +34,7 @@
 #include "HTTPRequest.h"
 #include "GetLastErrorAsString.h"
 #include "ConvertWideString.h"
-#include "WebSocket.h"
+#include "WebSocketServer.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
