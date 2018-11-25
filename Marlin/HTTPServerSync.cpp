@@ -794,6 +794,12 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
     return false;
   }
 
+  // Check that we read accordingly to Content-Length or to EOF
+  if(mustRead == 0L)
+  {
+    mustRead = ULLONG_MAX;
+  }
+
   // Reading loop
   while(reading && totalRead < mustRead)
   {

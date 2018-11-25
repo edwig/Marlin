@@ -85,7 +85,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
         // Sending the switch protocols and handshake headers as a HTTP 101 status, 
         // but keep the channel OPEN
         m_site->SendResponse(p_message);
-        server->FlushSocket(request);
+        // server->FlushSocket(request);
 
         // Find the internal structures for the server
         p_message->SetRequestHandle(request);

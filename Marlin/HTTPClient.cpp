@@ -2770,6 +2770,7 @@ HTTPClient::Send()
       BOOL receivedResponse = WinHttpReceiveResponse(m_request,NULL);
       if(receivedResponse == FALSE)
       {
+        // Get last error and log it
         ErrorLog(__FUNCTION__,"Response from HTTP Server: [%d] %s");
 
         if(m_lastError == ERROR_WINHTTP_CLIENT_AUTH_CERT_NEEDED)

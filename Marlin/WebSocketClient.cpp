@@ -154,7 +154,6 @@ WebSocketClient::OpenSocket()
   {
     client.AddHeader("Sec-WebSocket-Extensions",m_extensions);
   }
-  client.AddHeader("Content-Length","0");
 
   // We need all response headers for the handshake
   client.SetReadAllHeaders(true);

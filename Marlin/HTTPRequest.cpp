@@ -563,8 +563,7 @@ HTTPRequest::StartSendResponse()
   if(m_response->StatusCode == HTTP_STATUS_SWITCH_PROTOCOLS)
   {
     m_writing.m_action = IO_Nothing;
-//     m_ws = new HTTPWebSocket(this);
-//     m_ws->BeginServerHandshake(m_request->Headers.UnknownHeaderCount,m_request->Headers.pUnknownHeaders);
+    flags  |= HTTP_SEND_RESPONSE_FLAG_OPAQUE;
   }
 
   // Prepare our cache-policy
