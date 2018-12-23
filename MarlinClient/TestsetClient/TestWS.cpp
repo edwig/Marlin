@@ -424,6 +424,10 @@ int TestWebservices(HTTPClient& client)
   url = CreateURL("TestToken");
   msg = CreateSoapMessage(namesp,command,url);
   client.SetSingleSignOn(true);
+  CString user("CERT6\\Beheerder");
+  CString password("altijd");
+  client.SetUser(user);
+  client.SetPassword(password);
   errors += DoSend(client,msg,"token testing");
   client.SetSingleSignOn(false);
 
@@ -434,7 +438,9 @@ int TestWebservices(HTTPClient& client)
   CString url1 = CreateURL("TestToken/One");
   CString url2 = CreateURL("TestToken/Two");
   msg = CreateSoapMessage(namesp,command,url1);
-  client.SetSingleSignOn(true);
+  // client.SetSingleSignOn(true);
+  client.SetUser(user);
+  client.SetPassword(password);
   errors += DoSend(client,msg,"single sign on");
   msg = CreateSoapMessage(namesp,command,url2);
   errors += DoSend(client,msg,"single sign on");

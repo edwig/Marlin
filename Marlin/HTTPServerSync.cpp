@@ -448,9 +448,13 @@ HTTPServerSync::RunHTTPServer()
         callback    = site->GetCallback();
         eventStream = site->GetIsEventStream();
       }
+      else
+      {
+        ERRORLOG(404,"Site not found by context: " + rawUrl);
+      }
 
       // See if we must substitute for a sub-site
-      if(m_hasSubsites)
+      if(site && m_hasSubsites)
       {
         CString absPath = CW2A(request->CookedUrl.pAbsPath);
         site = FindHTTPSite(site,absPath);
@@ -987,7 +991,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   }
 
   // Possible zip the contents, and add content-encoding header
-  if(p_message->GetHTTPSite()->GetHTTPCompression() && buffer)
+  if(p_message->GetHTTPSite() && p_message->GetHTTPSite()->GetHTTPCompression() && buffer)
   {
     // But only if the client side requested it
     if(p_message->GetAcceptEncoding().Find("gzip") >= 0)

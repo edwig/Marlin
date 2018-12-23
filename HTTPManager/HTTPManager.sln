@@ -1,14 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HTTPManager", "HTTPManager.vcxproj", "{8B77D5D7-1261-4ADD-AAAA-E873A95415FE}"
-	ProjectSection(ProjectDependencies) = postProject
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Marlin", "..\Marlin\Marlin.vcxproj", "{3CC23320-1FF0-41AF-9F3A-960C5F657C81}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,16 +21,11 @@ Global
 		{8B77D5D7-1261-4ADD-AAAA-E873A95415FE}.Release|Win32.Build.0 = Release|Win32
 		{8B77D5D7-1261-4ADD-AAAA-E873A95415FE}.Release|x64.ActiveCfg = Release|x64
 		{8B77D5D7-1261-4ADD-AAAA-E873A95415FE}.Release|x64.Build.0 = Release|x64
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Debug|Win32.Build.0 = Debug|Win32
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Debug|x64.ActiveCfg = Debug|x64
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Debug|x64.Build.0 = Debug|x64
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Release|Win32.ActiveCfg = Release|Win32
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Release|Win32.Build.0 = Release|Win32
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Release|x64.ActiveCfg = Release|x64
-		{3CC23320-1FF0-41AF-9F3A-960C5F657C81}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7262996F-4686-47DE-9D97-DBF7BD0CC17E}
 	EndGlobalSection
 EndGlobal

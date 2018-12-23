@@ -136,7 +136,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     }
     else
     {
-//       // Do Unit testing
+      // Do Unit testing of the client without connecting to the internet
       errors += TestUnicode();
       errors += TestURLChars();
       errors += TestCryptography();
@@ -146,14 +146,14 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestJSON();
       errors += TestFindClientCertificate();
       errors += TestCookiesOverwrite();
-#ifdef TEST_WEBSOCKETS
-      errors += TestWebSocketAccept();
-      errors += TestWebSocket(g_log);
-#endif
-      errors += TestEvents(client);
+// #ifdef TEST_WEBSOCKETS
+//       errors += TestWebSocketAccept();
+//       errors += TestWebSocket(g_log);
+// #endif
       errors += TestBaseSite(client);
       errors += TestSecureSite(client);
       errors += TestClientCertificate(client);
+      errors += TestEvents(client);
       errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestJsonData(client);

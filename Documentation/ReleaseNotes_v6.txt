@@ -1,0 +1,34 @@
+RELEASENOTES MARLIN VERSION 6.x
+===============================
+
+For releasenotes of the previous main version (5.x), see the separate file "Releasenotes_v5.txt".
+This document contains all release notes and remarks beginning with version 6.0. The document
+would otherwise grow to large and complex.
+
+Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replacement
+It is tested through the "MarlinServerSync" test program only
+----------------------------------------------------------------------------------------------
+
+CHANGES IN VERSION 6.0.0 Pre-Alpha
+----------------------------------
+1) The HTTPSYS driver has been added to the project. It is a user mode implementation of the
+   standard MS-Windows HTTP-Server-API as serviced by the "HTTP.SYS" kernel mode driver.
+   It supports version 2.0 of the HTTPServer-API only.
+   The driver was created for various reasons:
+   - Educational purposes
+   - Non-disclosed functions (websockets)
+   - Because it can be done :-)
+   Not implemented features of HTTP.SYS are:
+   - Asynchronous I/O
+   - HTTP 2.0 Server push
+   - HTTP-Server-API release 1.0 functions.
+
+   Applications can use the HTTPSYS driver just by altering the LINK input from "httpapi.lib" to "httpsys.lib"
+   Nothing else is required to use the driver!
+
+2) Yet to be implemented before we reach the definitive 6.0.0 stage are:
+   - NTLM authentication
+   - Digest authentication
+   - Negotiate/Kerberos authentication
+   
+   Basic authentication IS working

@@ -476,28 +476,35 @@ WebConfig::GetEncryptedString (CString p_section,CString p_parameter,CString p_d
   Crypto crypt;
   CString decrypted;
 
-  CString encrypted = GetParameterString(p_section,p_parameter,"");
-  if(!encrypted.IsEmpty())
+  try
   {
-    decrypted = crypt.Decryptie(encrypted,WEBCONFIG_WACHTWOORD);
-    int pos = decrypted.Find(':');
-    if(pos > 0)
+    CString encrypted = GetParameterString(p_section,p_parameter,"");
+    if(!encrypted.IsEmpty())
     {
-      CString reversed = decrypted.Left(pos);
-      decrypted = decrypted.Mid(pos + 1);
-      reversed.MakeReverse();
-      if(reversed != decrypted)
+      decrypted = crypt.Decryptie(encrypted,WEBCONFIG_WACHTWOORD);
+      int pos = decrypted.Find(':');
+      if(pos > 0)
+      {
+        CString reversed = decrypted.Left(pos);
+        decrypted = decrypted.Mid(pos + 1);
+        reversed.MakeReverse();
+        if(reversed != decrypted)
+        {
+          // pre-empt invalid results
+          decrypted.Empty();
+        }
+      }
+      else
       {
         // pre-empt invalid results
         decrypted.Empty();
       }
+      return decrypted;
     }
-    else
-    {
-      // pre-empt invalid results
-      decrypted.Empty();
-    }
-    return decrypted;
+  }
+  catch(StdException& er)
+  {
+    UNREFERENCED_PARAMETER(er);
   }
   return p_default;
 }

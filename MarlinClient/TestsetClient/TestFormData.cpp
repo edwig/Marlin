@@ -168,7 +168,7 @@ int TestFormData(HTTPClient* p_client)
   // errors += TestFD();
 
   errors += TestFormDataMP(p_client);
-  errors += TestFormDataUE(p_client);
+  // errors += TestFormDataUE(p_client);
 
   return errors;
 }

@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="HTTP_API">
+      <UniqueIdentifier>{fb4a00af-4ab5-433b-977b-4d7bf311255c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="http_private.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UrlGroup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerSession.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HTTPLoglevel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Logfile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GetUserAccount.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Listener.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SSLUtilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Logging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CreateCertificate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SocketStream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlainSocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SecureServerSocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SSLTracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="URL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CertificateInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CodeBase64.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RequestQueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UrlGroup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerSession.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitUrlPrefix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Logfile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GetUserAccount.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpAddUrlToUrlGroup.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpCancelHttpRequest.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpCloseRequestQueue.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpCloseServerSession.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpCloseUrlGroup.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpCreateRequestQueue.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpCreateServerSession.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpCreateUrlGroup.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpInitialize.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpReceiveHttpRequest.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpSetRequestQueueProperty.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpSetUrlGroupProperty.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpTerminate.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpReceiveRequestEntityBody.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpSendHttpResponse.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpSendResponseEntityBody.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpCreateHttpHandle.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpDeclarePush.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpAddFragmentToCache.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpFlushResponseCache.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpReadFragmentFromCache.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpReceiveClientCertificate.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpRemoveUrl.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpRemoveUrlFromUrlGroup.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpShutdownRequestQueue.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorPages.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Listener.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SSLUtilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CreateCertificate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlainSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SecureServerSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SSLTracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CertificateInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CodeBase64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

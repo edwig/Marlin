@@ -411,7 +411,7 @@ Crypto::Decryptie(CString p_input,CString p_password)
 
   // Create a data string of the base64 string
   dwBuffLen = (DWORD) base64.Ascii_length(dwDataLen);
-  pbData    = new BYTE[dwBuffLen + 1];
+  pbData    = new BYTE[dwBuffLen + 16];
   base64.Decrypt((const unsigned char*) p_input.GetString(),dwDataLen,(unsigned char*)pbData);
 
   // TRACING

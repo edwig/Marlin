@@ -52,6 +52,9 @@ rmdir /q /s binDebug_Win32
 rmdir /q /s binDebug_x64
 rmdir /q /s binRelease_Win32
 rmdir /q /s binRelease_x64
+rmdir /q /s HTTPSYS\x64
+rmdir /q /s HTTPSYS\Debug
+rmdir /q /s HTTPSYS\Release
 rmdir /q /s x64
 rmdir /q /s Debug
 rmdir /q /s Release

@@ -108,10 +108,10 @@ HTTPURLGroup::StartGroup()
 
   HTTP_SERVER_AUTHENTICATION_INFO authInfo;
   memset(&authInfo,0,sizeof(authInfo));
-  authInfo.Flags.Present = 1;
-  authInfo.ExFlags       = (m_authScheme & HTTP_AUTH_ENABLE_KERBEROS) ? HTTP_AUTH_EX_FLAG_ENABLE_KERBEROS_CREDENTIAL_CACHING : 0;
-  authInfo.AuthSchemes   = m_authScheme;
-  authInfo.ReceiveMutualAuth = true;
+  authInfo.Flags.Present        = 1;
+  authInfo.ExFlags              = (m_authScheme & HTTP_AUTH_ENABLE_KERBEROS) ? HTTP_AUTH_EX_FLAG_ENABLE_KERBEROS_CREDENTIAL_CACHING : 0;
+  authInfo.AuthSchemes          = m_authScheme;
+  authInfo.ReceiveMutualAuth    = true;
   authInfo.ReceiveContextHandle = true;
   authInfo.DisableNTLMCredentialCaching = !m_ntlmCache;
   if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)

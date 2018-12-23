@@ -141,7 +141,6 @@ TestPut(HTTPClient* p_client)
   return result ? 0 : 1;
 }
 
-
 int
 TestBaseSite(HTTPClient* p_client)
 {

@@ -597,12 +597,12 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
     // This is now done by the threadpool thread, so the central
     // server has more time to handle the incoming requests.
     if(p_message->GetReadBuffer() && m_server->ReceiveIncomingRequest(p_message) == false)
-      {
-        // Error already report to log, EOF or stream not read
-        p_message->Reset();
-        p_message->SetStatus(HTTP_STATUS_GONE);
-        SendResponse(p_message);
-      }
+    {
+      // Error already report to log, EOF or stream not read
+      p_message->Reset();
+      p_message->SetStatus(HTTP_STATUS_GONE);
+      SendResponse(p_message);
+    }
 
     // If site in asynchronous SOAP/XML mode
     if(m_async)
