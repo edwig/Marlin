@@ -32,6 +32,7 @@
 #include "WebServiceServer.h"
 #include "HTTPURLGroup.h"
 #include "HTTPError.h"
+#include "HTTPTime.h"
 #include "GetLastErrorAsString.h"
 #include "ConvertWideString.h"
 #include "WebSocketServerSync.h"
@@ -924,6 +925,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
 
   // Respond to general HTTP status
   int status = p_message->GetStatus();
+  CString date = HTTPGetSystemTime();
 
   // Initialize the HTTP response structure.
   InitializeHttpResponse(&response,(USHORT)status,(PSTR) GetHTTPStatusText(status));
@@ -948,6 +950,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
                                               ,site->GetAuthenticationRealm());
     }
     AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
+    AddKnownHeader(response,HttpHeaderDate,date);
   }
 
   // Add the server header or suppress it

@@ -38,6 +38,7 @@
 #include "WebServiceServer.h"
 #include "HTTPURLGroup.h"
 #include "HTTPError.h"
+#include "HTTPTime.h"
 #include "GetLastErrorAsString.h"
 #include "MarlinModule.h"
 #include "EnsureFile.h"
@@ -833,6 +834,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
 
   // Respond to general HTTP status
   int status = p_message->GetStatus();
+  CString date = HTTPGetSystemTime();
 
   // Protocol switch must keep the channel open (here for: WebSocket!)
   if(status == HTTP_STATUS_SWITCH_PROTOCOLS)
@@ -856,6 +858,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
                                               ,site->GetAuthenticationRealm());
     }
     SetResponseHeader(response,HttpHeaderWwwAuthenticate, challenge,true);
+    SetResponseHeader(response,HttpHeaderDate,date,true);
   }
 
   // In case we want IIS to handle the response, and we do nothing!

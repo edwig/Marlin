@@ -31,6 +31,7 @@
 #include "HTTPServer.h"
 #include "HTTPSite.h"
 #include "HTTPError.h"
+#include "HTTPTime.h"
 #include "WebSocketServer.h"
 #include "AutoCritical.h"
 #include "ConvertWideString.h"
@@ -1233,6 +1234,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     RtlZeroMemory(m_response,sizeof(HTTP_RESPONSE));
   }
   const char* text = GetHTTPStatusText(p_status);
+  CString date = HTTPGetSystemTime();
 
   m_response->Version.MajorVersion = 1;
   m_response->Version.MinorVersion = 1;
@@ -1269,6 +1271,8 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
                                                         ,m_site->GetAuthenticationRealm());
     }
     AddKnownHeader(HttpHeaderWwwAuthenticate,challenge);
+    AddKnownHeader(HttpHeaderDate,date);
+
   }
 
   // Add the server header or suppress it

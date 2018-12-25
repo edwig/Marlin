@@ -9,6 +9,12 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.0.0 Beta 1
+-------------------------------
+1) NTLM/Digest/Kerberos authtentication working through standard SSPI interfaces
+2) Rudementary implementation of keep-alive connections
+3) HTTPServer now does send "Date" response header for authentication purposes
+
 CHANGES IN VERSION 6.0.0 Pre-Alpha
 ----------------------------------
 1) The HTTPSYS driver has been added to the project. It is a user mode implementation of the

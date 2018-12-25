@@ -37,5 +37,6 @@
 // Namely the MS-Exchange 2010 server sends dates that do not conform strictly to the RFC.
 // So in order to be able to interpret mixed definitions, we created a much looser implementation
 
-bool HTTPTimeFromSystemTime(const SYSTEMTIME* p_systemTime,CString& p_string);
-bool HTTPTimeToSystemTime  (const CString p_string,SYSTEMTIME* p_systemtime);
+bool    HTTPTimeFromSystemTime(const SYSTEMTIME* p_systemTime,CString& p_string);
+bool    HTTPTimeToSystemTime  (const CString p_string,SYSTEMTIME* p_systemtime);
+CString HTTPGetSystemTime();

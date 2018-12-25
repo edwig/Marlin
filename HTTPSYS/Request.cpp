@@ -39,6 +39,8 @@ Request::Request(RequestQueue* p_queue
 {
   // HTTP_REQUEST_V1 && V2
   ZeroMemory(&m_request,sizeof(HTTP_REQUEST_V2));
+  // Reset the context handle for authentication
+  ZeroMemory(&m_context,sizeof(CtxtHandle));
 
   // Setting other members
   m_status        = RQ_CREATED;
@@ -66,30 +68,55 @@ Request::~Request()
 void
 Request::ReceiveRequest()
 {
+  // Try to establish a SSL/TLS connection (if so necessary)
   try
   {
     InitiateSSL();
-    ReceiveHeaders();
-    CheckAuthentication();
-    m_queue->AddIncomingRequest(this);
   }
-  catch(int error)
+  catch (int error)
   {
-    if(error == HTTP_STATUS_DENIED)
+    UNREFERENCED_PARAMETER(error);
+    ReplyClientError();
+    return;
+  }
+
+  bool looping = false;
+
+  // Receive the headers and an initial body part
+  // Loop for authentication challenging if needed
+  do
+  {
+    try
     {
-      ReplyClientError(error,"Not authenticated");
+      ReceiveHeaders();
+      if(CheckAuthentication())
+      {
+        m_queue->AddIncomingRequest(this);
+        looping = false;
+      }
+      else
+      {
+        looping = true;
+        DrainRequest();
+        ReplyClientError(HTTP_STATUS_DENIED,"Not authenticated");
+        ResetRequestV1();
+      }
     }
-    else if(error == HTTP_STATUS_SERVICE_UNAVAIL)
+    catch(int error)
     {
-      ReplyServerError(error,"Service temporarily unavailable");
-    }
-    else
-    {
-      LogError("Illegal HTTP client call. Error: %d", error);
-      ReplyClientError();
-      delete this;
+      if(error == HTTP_STATUS_SERVICE_UNAVAIL)
+      {
+        ReplyServerError(error,"Service temporarily unavailable");
+      }
+      else
+      {
+        LogError("Illegal HTTP client call. Error: %d", error);
+        ReplyClientError();
+        delete this;
+      }
     }
   }
+  while(looping);
 }
 
 // Close the request when we're done with this request
@@ -110,6 +137,43 @@ Request::CloseRequest()
     delete m_socket;
     m_socket = nullptr;
   }
+
+  // Addresses
+  if(m_request.Address.pLocalAddress)
+  {
+    free((void*)m_request.Address.pLocalAddress);
+    m_request.Address.pLocalAddress = nullptr;
+  }
+  if(m_request.Address.pRemoteAddress)
+  {
+    free((void*)m_request.Address.pRemoteAddress);
+    m_request.Address.pRemoteAddress = nullptr;
+  }
+}
+
+// Drain our request, so we can get busy with a new one 
+// Done for the sake of authentication
+void
+Request::DrainRequest()
+{
+  unsigned char* drain_buffer = new unsigned char[MESSAGE_BUFFER_LENGTH + 1];
+
+  ULONGLONG readin = m_contentLength;
+
+  while(readin > 0)
+  {
+    ULONG read = 0L;
+    if(ReceiveBuffer(drain_buffer,MESSAGE_BUFFER_LENGTH,&read,false) > 0)
+    {
+      if(read <= readin)
+      {
+        readin -= read;
+      }
+      else readin = 0;
+    }
+    else break;
+  }
+  delete [] drain_buffer;
 }
 
 // Reading the body of the HTTP call
@@ -285,11 +349,39 @@ void
 Request::Reset()
 {
   // HTTP_REQUEST_V1
+  // Headers and other structures
+  ResetRequestV1();
 
+  // HTTP_REQUEST_V2
+  // Can have 1 (authentication) or 2 (SSL) records
+  ResetRequestV2();
+
+  // Free the headers line
+  FreeInitialBuffer();
+}
+
+void
+Request::ResetRequestV1()
+{
   // VERB & URL
-  if(m_request.pUnknownVerb)       free((void*)m_request.pUnknownVerb);
-  if(m_request.pRawUrl)            free((void*)m_request.pRawUrl);
-  if(m_request.CookedUrl.pFullUrl) free((void*)m_request.CookedUrl.pFullUrl);
+  if(m_request.pUnknownVerb)
+  {
+    free((void*)m_request.pUnknownVerb);
+    m_request.pUnknownVerb = nullptr;
+    m_request.UnknownVerbLength = 0;
+  }
+  if(m_request.pRawUrl)
+  {
+    free((void*)m_request.pRawUrl);
+    m_request.pRawUrl = nullptr;
+    m_request.RawUrlLength = 0;
+  }
+  if(m_request.CookedUrl.pFullUrl)
+  {
+    free((void*)m_request.CookedUrl.pFullUrl);
+    m_request.CookedUrl.pFullUrl = nullptr;
+    m_request.CookedUrl.FullUrlLength = 0;
+  }
 
   // Unknown headers/trailers
   if(m_request.Headers.pUnknownHeaders)
@@ -298,8 +390,12 @@ Request::Reset()
     {
       free((void*)m_request.Headers.pUnknownHeaders[ind].pName);
       free((void*)m_request.Headers.pUnknownHeaders[ind].pRawValue);
+      m_request.Headers.pUnknownHeaders[ind].NameLength = 0;
+      m_request.Headers.pUnknownHeaders[ind].RawValueLength = 0;
     }
     free(m_request.Headers.pUnknownHeaders);
+    m_request.Headers.pUnknownHeaders = nullptr;
+    m_request.Headers.UnknownHeaderCount = 0;
   }
   if(m_request.Headers.pTrailers)
   {
@@ -307,7 +403,12 @@ Request::Reset()
     {
       free((void*)m_request.Headers.pTrailers[ind].pName);
       free((void*)m_request.Headers.pTrailers[ind].pRawValue);
+      m_request.Headers.pTrailers[ind].NameLength = 0;
+      m_request.Headers.pTrailers[ind].RawValueLength = 0;
     }
+    free(m_request.Headers.pTrailers);
+    m_request.Headers.pTrailers = nullptr;
+    m_request.Headers.TrailerCount = 0;
   }
 
   // Known headers
@@ -316,23 +417,16 @@ Request::Reset()
     if(m_request.Headers.KnownHeaders[ind].pRawValue)
     {
       free((void*)m_request.Headers.KnownHeaders[ind].pRawValue);
+      m_request.Headers.KnownHeaders[ind].RawValueLength = 0;
     }
-  }
-
-  // Addresses
-  if(m_request.Address.pLocalAddress)
-  {
-    free((void*)m_request.Address.pLocalAddress);
-  }
-  if(m_request.Address.pRemoteAddress)
-  {
-    free((void*)m_request.Address.pRemoteAddress);
   }
 
   // Entity chunks
   if(m_request.pEntityChunks)
   {
     free(m_request.pEntityChunks);
+    m_request.pEntityChunks = nullptr;
+    m_request.EntityChunkCount = 0;
     // Data buffers are allocated by the calling program!!
     // They are never free-ed here!
   }
@@ -341,40 +435,42 @@ Request::Reset()
   if(m_request.pSslInfo)
   {
     free((void*)m_request.pSslInfo->pServerCertIssuer);
+    m_request.pSslInfo->pServerCertIssuer = nullptr;
+    m_request.pSslInfo->ServerCertIssuerSize = 0;
+
     free((void*)m_request.pSslInfo->pServerCertSubject);
+    m_request.pSslInfo->pServerCertSubject = nullptr;
+    m_request.pSslInfo->ServerCertSubjectSize = 0;
 
     if(m_request.pSslInfo->pClientCertInfo)
     {
       free((void*)m_request.pSslInfo->pClientCertInfo->pCertEncoded);
+      m_request.pSslInfo->pClientCertInfo->pCertEncoded = nullptr;
+      m_request.pSslInfo->pClientCertInfo->CertEncodedSize = 0;
     }
-
     free(m_request.pSslInfo);
+    m_request.pSslInfo = nullptr;
   }
+}
 
-  // HTTP_REQUEST_V2
-  // Can have 1 (authentication) or 2 (SSL) records
+// Reset HTTP_REQUEST_V2
+// Can have 1 (authentication) or 2 (SSL) records
+void
+Request::ResetRequestV2()
+{
   if(m_request.pRequestInfo)
   {
-    if(m_request.RequestInfoCount >= 1)
+    for(int index = 0;index < m_request.RequestInfoCount; ++index)
     {
-      PHTTP_REQUEST_AUTH_INFO info = (PHTTP_REQUEST_AUTH_INFO)m_request.pRequestInfo[0].pInfo;
-//       if(info->AccessToken)
-//       {
-//         CloseHandle(info->AccessToken);
-//       }
-      free(info);
-    }
-    if(m_request.RequestInfoCount >= 2)
-    {
-      free(m_request.pRequestInfo[1].pInfo);
+      if(m_request.pRequestInfo[index].InfoType == HttpRequestInfoTypeAuth)
+      {
+        free(m_request.pRequestInfo[index].pInfo);
+      }
     }
     free(m_request.pRequestInfo);
   }
-  m_request.pRequestInfo     = nullptr;
+  m_request.pRequestInfo = nullptr;
   m_request.RequestInfoCount = 0;
-
-  // Free the headers line
-  FreeInitialBuffer();
 }
 
 // Create a socket for this request
@@ -519,6 +615,9 @@ Request::ReceiveHeaders()
   // Correct URL with host header
   CorrectFullURL();
 
+  // Checking for keep-alive roundtrips
+  FindKeepAlive();
+
   // Reset number of bytes read. We will now go read the body
   m_bytesRead = 0;
 }
@@ -528,23 +627,23 @@ Request::ReceiveHeaders()
 void
 Request::ReadInitialMessage()
 {
+  FreeInitialBuffer();
   m_initialBuffer = (char*) malloc(MESSAGE_BUFFER_LENGTH + 1);
-  m_initialLength = 0;
 
   int length = m_socket->RecvPartial(m_initialBuffer,MESSAGE_BUFFER_LENGTH);
   if (length > 0)
   {
     m_initialBuffer[length] = 0;
     m_initialLength = length;
-    m_bytesRead += length;
+    m_bytesRead    += length;
     return;
   }
   throw ERROR_HANDLE_EOF;
 }
 
-// Find the next line int he initial buffers upto the "\r\n"
+// Find the next line in the initial buffers upto the "\r\n"
 // Mark that the HTTP IETF RFC clearly states that all header
-// lines must and in a <CR><LF> sequence!!
+// lines must end in a <CR><LF> sequence!!
 CString
 Request::ReadTextLine()
 {
@@ -930,7 +1029,7 @@ static const char* all_responses[] =
  ,"Server"                //  HttpHeaderServer                = 26,   // response-header [section 6.2]
  ,"Set-Cookie"            //  HttpHeaderSetCookie             = 27,   // response-header [not in rfc]
  ,"Header-Vary"           //  HttpHeaderVary                  = 28,   // response-header [section 6.2]
- ,"Www-Authenticate"      //  HttpHeaderWwwAuthenticate       = 29,   // response-header [section 6.2]
+ ,"WWW-Authenticate"      //  HttpHeaderWwwAuthenticate       = 29,   // response-header [section 6.2]
 };
 
 // Finding a 'known' header on the current header line.
@@ -953,24 +1052,47 @@ Request::FindKnownHeader(CString p_header)
   return -1;
 }
 
+void
+Request::FindKeepAlive()
+{
+  CString connection = m_request.Headers.KnownHeaders[HttpHeaderConnection].pRawValue;
+  connection.Trim();
+  m_keepAlive = connection.CompareNoCase("keep-alive") == 0;
+}
+
 // Reply with a client error in the range 400 - 499
 void
 Request::ReplyClientError(int p_error, CString p_errorText)
 {
+  bool retry = false;
+
   CString header;
   header.Format("HTTP/1.1 %d %s\r\n",p_error,p_errorText);
+  header += "Content-Type: text/html; charset=us-ascii\r\n";
 
   CString body;
   body.Format(http_client_error,p_error,p_errorText);
 
+  if(m_challenge)
+  {
+    header += "WWW-Authenticate: " + m_challenge + "\r\n";
+    m_challenge.Empty();
+    retry   = true;
+  }
+
   header.AppendFormat("Content-Length: %d\r\n",body.GetLength());
+  header.AppendFormat("Date: %s\r\n", HTTPSystemTime());
   header += "\r\n";
   header += body;
 
   // Write out to the client:
   WriteBuffer((PVOID)header.GetString(),header.GetLength());
-  // And be done with this request;
-  CloseRequest();
+
+  if(!retry)
+  {
+    // And be done with this request;
+    CloseRequest();
+  }
 }
 
 // General Client error 400 (Client did something stupid)
@@ -986,11 +1108,13 @@ Request::ReplyServerError(int p_error,CString p_errorText)
 {
   CString header;
   header.Format("HTTP/1.1 %d %s\r\n", p_error, p_errorText);
+  header += "Content-Type: text/html; charset=us-ascii\r\n";
 
   CString body;
   body.Format(http_server_error, p_error, p_errorText);
 
   header.AppendFormat("Content-Length: %d\r\n", body.GetLength());
+  header.AppendFormat("Date: %s\r\n",HTTPSystemTime());
   header += "\r\n";
   header += body;
 
@@ -1006,25 +1130,6 @@ void
 Request::ReplyServerError()
 {
   ReplyServerError(HTTP_STATUS_SERVER_ERROR,"General server error");
-}
-
-void
-Request::ReplyAuthorizationRequired()
-{
-  CString body;
-  body.Format(http_client_error,401,"Not authenticated");
-
-  CString line("HTTP/1.1 401 Access denied\r\n");
-  line += "Content-Type: application/octet-stream\r\n";
-  line.AppendFormat("Content-Length: %d\r\n", body.GetLength());
-  line.AppendFormat("WWW-Authenticate: %s\r\n");
-  line += "\r\n";
-  line += body;
-
-  // Write out to the client:
-  WriteBuffer((PVOID)line.GetString(), line.GetLength());
-  // And be done with this request;
-  CloseRequest();
 }
 
 // Copy the part of the first initial read to this read buffer
@@ -1061,7 +1166,9 @@ Request::CopyInitialBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 }
 
 // Authentication of the request
-void 
+// Return 'true'  if continue to application
+// Return 'false' if more authentication is needed in a loop
+bool 
 Request::CheckAuthentication()
 {
   ULONG scheme = m_url->m_urlGroup->GetAuthenticationScheme();
@@ -1069,24 +1176,12 @@ Request::CheckAuthentication()
   // No authentication requested for this URL. So we do nothing
   if(scheme == 0)
   {
-    return;
+    return true;
   }
 
   // This is our authorization
   CString authorization(m_request.Headers.KnownHeaders[HttpHeaderAuthorization].pRawValue);
-
-  // Create AUTH_INFO object with defaults
-  USHORT size = ++m_request.RequestInfoCount;
-  m_request.pRequestInfo = (PHTTP_REQUEST_INFO) realloc(m_request.pRequestInfo,size * sizeof(HTTP_REQUEST_INFO));
-
-  m_request.pRequestInfo[size-1].InfoType   = HttpRequestInfoTypeAuth;
-  m_request.pRequestInfo[size-1].InfoLength = sizeof(HTTP_REQUEST_AUTH_INFO);
-  m_request.pRequestInfo[size-1].pInfo      = (PHTTP_REQUEST_AUTH_INFO) calloc(1,sizeof(HTTP_REQUEST_AUTH_INFO));
-
-  PHTTP_REQUEST_AUTH_INFO info = (PHTTP_REQUEST_AUTH_INFO) m_request.pRequestInfo[size-1].pInfo;
-  info->AuthStatus = HttpAuthStatusNotAuthenticated;
-  info->AuthType   = HttpRequestAuthTypeNone;
-
+  PHTTP_REQUEST_AUTH_INFO info = GetAuthenticationInfoRecord();
 
   // Find method and payload of that method
   CString method;
@@ -1098,21 +1193,54 @@ Request::CheckAuthentication()
   else if(method.CompareNoCase("Negotiate") == 0)  info->AuthType = HttpRequestAuthTypeNegotiate;
   else if(method.CompareNoCase("Digest")    == 0)  info->AuthType = HttpRequestAuthTypeDigest;
   else if(method.CompareNoCase("Kerberos")  == 0)  info->AuthType = HttpRequestAuthTypeKerberos;
-  else return; // ???  throw HTTP_STATUS_DENIED;
+  else
+  {
+    // Leave it to the serviced application to return a HTTP_STATUS_DENIED
+    return true; 
+  }
 
-  if(info->AuthType = HttpRequestAuthTypeBasic)
+  if(info->AuthType == HttpRequestAuthTypeBasic)
   {
     // Base64 encryption of the "username:password" combination
-    CheckBasicAuthentication(info,payload);
+    return CheckBasicAuthentication(info,payload);
   }
   else
   {
     // All done through "secur32.dll"
-    CheckAuthenticationProvider(info,payload);
+    return CheckAuthenticationProvider(info,payload,method);
   }
 }
 
-void
+PHTTP_REQUEST_AUTH_INFO
+Request::GetAuthenticationInfoRecord()
+{
+  // See if we already have the record
+  int number = m_request.RequestInfoCount;
+  for(int index = 0;index < number;++index)
+  {
+    if(m_request.pRequestInfo[index].InfoType == HttpRequestInfoTypeAuth)
+    {
+      // Already defined: reuse it!
+      return (PHTTP_REQUEST_AUTH_INFO) m_request.pRequestInfo[index].pInfo;
+    }
+  }
+
+  // Create AUTH_INFO object with defaults
+  int size = ++m_request.RequestInfoCount;
+  m_request.pRequestInfo = (PHTTP_REQUEST_INFO)realloc(m_request.pRequestInfo, size * sizeof(HTTP_REQUEST_INFO));
+
+  m_request.pRequestInfo[number].InfoType = HttpRequestInfoTypeAuth;
+  m_request.pRequestInfo[number].InfoLength = sizeof(HTTP_REQUEST_AUTH_INFO);
+  m_request.pRequestInfo[number].pInfo = (PHTTP_REQUEST_AUTH_INFO)calloc(1, sizeof(HTTP_REQUEST_AUTH_INFO));
+
+  PHTTP_REQUEST_AUTH_INFO info = (PHTTP_REQUEST_AUTH_INFO)m_request.pRequestInfo[number].pInfo;
+  info->AuthStatus = HttpAuthStatusNotAuthenticated;
+  info->AuthType   = HttpRequestAuthTypeNone;
+
+  return info;
+}
+
+bool
 Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload)
 {
   // Prepare decoding the base64 payload
@@ -1152,13 +1280,120 @@ Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,CString p_paylo
   {
     p_info->AuthStatus = HttpAuthStatusFailure;
   }
+  return true;
 }
 
-void
-Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info, CString p_payload)
+bool
+Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload,CString p_provider)
 {
-  // try to authenticate only this need to be filled in
-  p_info->AccessToken = 0L;
+  // Prepare decoding the base64 payload
+  CodeBase64 base;
+  int len = (int)base.Ascii_length(p_payload.GetLength());
+
+  // Decode in a buffer
+  unsigned char* buffer = new unsigned char[len + 1];
+  // Decrypt into a string
+  base.Decrypt((const unsigned char*)p_payload.GetString(),p_payload.GetLength(),buffer);
+
+  CredHandle credentials;
+  TimeStamp  lifetime;
+  ULONG      contextAttributes = 0;
+  ZeroMemory(&credentials,sizeof(CredHandle));
+  ZeroMemory(&lifetime,sizeof(TimeStamp));
+
+  SECURITY_STATUS ss = AcquireCredentialsHandle(NULL,(LPSTR)"NTLM",SECPKG_CRED_INBOUND,NULL,NULL,NULL,NULL,&credentials,&lifetime);
+  if(ss >= 0)
+  {
+    TimeStamp         lifetime;
+    SecBufferDesc     OutBuffDesc;
+    SecBuffer         OutSecBuff;
+    SecBufferDesc     InBuffDesc;
+    SecBuffer         InSecBuff;
+    ULONG             Attribs = 0;
+    PBYTE             pOut    = new BYTE[2024];
+    DWORD             cbOut   = 2024;
+
+    //  Prepare output buffers.
+    OutBuffDesc.ulVersion = 0;
+    OutBuffDesc.cBuffers  = 1;
+    OutBuffDesc.pBuffers  = &OutSecBuff;
+
+    OutSecBuff.cbBuffer   = cbOut;
+    OutSecBuff.BufferType = SECBUFFER_TOKEN;
+    OutSecBuff.pvBuffer   = pOut;
+
+    //  Prepare input buffers.
+    InBuffDesc.ulVersion = 0;
+    InBuffDesc.cBuffers  = 1;
+    InBuffDesc.pBuffers  = &InSecBuff;
+
+    InSecBuff.cbBuffer   = len;
+    InSecBuff.BufferType = SECBUFFER_TOKEN;
+    InSecBuff.pvBuffer   = buffer;
+
+    bool contextNew = m_context.dwLower == 0 && m_context.dwUpper == 0;
+
+    ss = AcceptSecurityContext(&credentials
+                              ,contextNew ? NULL : &m_context
+                              ,&InBuffDesc
+                              ,contextAttributes
+                              ,SECURITY_NATIVE_DREP
+                              ,&m_context
+                              ,&OutBuffDesc
+                              ,&contextAttributes
+                              ,&lifetime);
+    if(ss >= 0)
+    {
+      // See if the return code has the SECURITY in the FACILITY position
+      if(((ss >> 16) & 0xF) == FACILITY_SECURITY)
+      {
+        // Continuation 
+        len = (int) base.B64_length(OutSecBuff.cbBuffer);
+        unsigned char* challenge = new unsigned char[len + 1];
+        base.Encrypt((unsigned char*)pOut,OutSecBuff.cbBuffer,challenge);
+        challenge[len] = 0;
+
+        // Send 401 with the correct provider challenge
+        m_challenge = p_provider + " " + challenge;
+        delete [] challenge;
+      }
+      else
+      {
+        // Possibly completion needed for the provider?
+        if((SEC_I_COMPLETE_NEEDED == ss) || (SEC_I_COMPLETE_AND_CONTINUE == ss))
+        {
+          ss = CompleteAuthToken(&m_context, &OutBuffDesc);
+        }
+        // OK: We must be able to retrieve the impersonation token
+        if(ss >= 0)
+        {
+          SecPkgContext_AccessToken token;
+          token.AccessToken = NULL;
+          ss = QueryContextAttributes(&m_context,SECPKG_ATTR_ACCESS_TOKEN,&token);
+          if(ss >= 0)
+          {
+            p_info->AccessToken = (HANDLE)token.AccessToken;
+            p_info->AuthStatus  = HttpAuthStatusSuccess;
+          }
+        }
+      }
+    }
+    // And free the handle again
+    FreeCredentialsHandle(&credentials);
+    delete[] pOut;
+  }
+  // Free the buffer again
+  delete[] buffer;
+
+
+  // See if it did work out!
+  if(p_info->AccessToken == NULL)
+  {
+    p_info->AuthStatus = HttpAuthStatusFailure;
+  }
+
+  // Trigger the drivers 401 response
+  return m_challenge.IsEmpty();
 }
 
 // Create the general HTTP response status line to the output buffer
@@ -1404,6 +1639,38 @@ Request::SendEntityChunkFromFragmentEx(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
   // Log error : Chunk not found
   LogError("Data chunk [%s] not found",prefix);
   return ERROR_INVALID_PARAMETER;
+}
+
+const char* weekday_short[7] =
+{
+  "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
+};
+
+const char* month[12] =
+{
+  "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
+};
+
+
+// Print HTTP time in RFC 1123 format (Preferred standard)
+// as in "Tue, 8 Dec 2015 21:26:32 GMT"
+CString
+Request::HTTPSystemTime()
+{
+  CString    time;
+  SYSTEMTIME systemtime;
+  GetSystemTime(&systemtime);
+
+  time.Format("%s, %02d %s %04d %2.2d:%2.2d:%2.2d GMT"
+             ,weekday_short[systemtime.wDayOfWeek]
+             ,systemtime.wDay
+             ,month[systemtime.wMonth - 1]
+             ,systemtime.wYear
+             ,systemtime.wHour
+             ,systemtime.wMinute
+             ,systemtime.wSecond);
+
+  return time;
 }
 
 //////////////////////////////////////////////////////////////////////////

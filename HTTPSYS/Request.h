@@ -8,7 +8,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
+#define SECURITY_WIN32
+#include <sspi.h>
 
 // For header lines
 #define MESSAGE_BUFFER_LENGTH (16*1024)
@@ -68,10 +69,11 @@ public:
   void              ReplyClientError(int p_error,CString p_errorText);
   void              ReplyServerError();
   void              ReplyServerError(int p_error, CString p_errorText);
-  void              ReplyAuthorizationRequired();
 
 private:
   void              Reset();
+  void              ResetRequestV1();
+  void              ResetRequestV2();
   void              SetSocket(Listener* p_listener,SOCKET p_socket,HANDLE p_stop);
   void              SetAddresses(SOCKET p_socket);
   void              SetTimings();
@@ -86,17 +88,23 @@ private:
   void              CorrectFullURL();
   int               CopyInitialBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes);
   void              FreeInitialBuffer();
+
+
   // Cooking the URL
   void              FindVerb(char* p_verb);
   void              FindURL (char* p_url);
   void              FindProtocol(char* p_protocol);
   // Finding the known header names
   int               FindKnownHeader(CString p_header);
+  void              FindKeepAlive();
   // Authentication of the request
-  void              CheckAuthentication();
-  void              CheckBasicAuthentication   (PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload);
-  void              CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload);
+  bool              CheckAuthentication();
+  bool              CheckBasicAuthentication   (PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload);
+  bool              CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload,CString p_provider);
+  PHTTP_REQUEST_AUTH_INFO GetAuthenticationInfoRecord();
+  void              DrainRequest();
   // Sending the response
+  CString           HTTPSystemTime();
   void              AddResponseLine  (CString& p_buffer,PHTTP_RESPONSE p_response);
   void              AddAllKnownResponseHeaders  (CString& p_buffer,PHTTP_KNOWN_HEADER   p_headers);
   void              AddAllUnknownResponseHeaders(CString& p_buffer,PHTTP_UNKNOWN_HEADER p_headers,int p_count);
@@ -125,7 +133,11 @@ private:
   SocketStream*     m_socket;         // Socket used to communicate with the client
   USHORT            m_port;           // Port the request came from
   ULONGLONG         m_contentLength;  // Content length to be read or write
+  bool              m_keepAlive;      // Keep connection alive
   URL*              m_url;            // URL with longest matching absolute path
+  // SSPI authentication handlers
+  CString           m_challenge;      // Authentication challenge
+  CtxtHandle        m_context;        // Authentication context
   // Initial buffer (Header and optional first body part) are cached here
   char*             m_initialBuffer { nullptr };
   ULONG             m_initialLength { 0 };

@@ -292,3 +292,25 @@ HTTPTimeToSystemTime(const CString p_time,SYSTEMTIME* p_systemtime)
   CheckYearImplementation(p_systemtime);
   return true;
 }
+
+// Print HTTP time in RFC 1123 format (Preferred standard)
+// as in "Tue, 8 Dec 2015 21:26:32 GMT"
+CString
+HTTPGetSystemTime()
+{
+  CString    time;
+  SYSTEMTIME systemtime;
+  GetSystemTime(&systemtime);
+
+  time.Format("%s, %02d %s %04d %2.2d:%2.2d:%2.2d GMT"
+             ,weekday_short[systemtime.wDayOfWeek]
+             ,systemtime.wDay
+             ,month[systemtime.wMonth - 1]
+             ,systemtime.wYear
+             ,systemtime.wHour
+             ,systemtime.wMinute
+             ,systemtime.wSecond);
+
+  return time;
+}
+

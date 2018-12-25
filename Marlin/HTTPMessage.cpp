@@ -737,16 +737,16 @@ char* header_fields[HttpHeaderMaximum] =
 
 char* header_response[10]
 {
-  /* 20 */   "accept-ranges"
-  /* 21 */  ,"age"
-  /* 22 */  ,"etag"
-  /* 23 */  ,"location"
-  /* 24 */  ,"proxy-authenticate"
-  /* 25 */  ,"retry-after"
-  /* 26 */  ,"server"
-  /* 27 */  ,"set-cookie"
-  /* 28 */  ,"vary"
-  /* 29 */  ,"www-authenticate"
+  /* 20 */   "Accept-Ranges"
+  /* 21 */  ,"Age"
+  /* 22 */  ,"Etag"
+  /* 23 */  ,"Location"
+  /* 24 */  ,"Proxy-Authenticate"
+  /* 25 */  ,"Retry-After"
+  /* 26 */  ,"Server"
+  /* 27 */  ,"Set-Cookie"
+  /* 28 */  ,"Vary"
+  /* 29 */  ,"WWW-Authenticate"
 };
 
 void 
