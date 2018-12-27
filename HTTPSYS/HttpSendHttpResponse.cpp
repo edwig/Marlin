@@ -62,8 +62,11 @@ HttpSendHttpResponse(IN HANDLE              RequestQueueHandle
     {
       if(request->GetResponseComplete() || (Flags & HTTP_SEND_RESPONSE_FLAG_DISCONNECT))
       {
-        // Request/Response now complete
-        queue->RemoveRequest(request);
+        if(request->RestartConnection() == false)
+        {
+          // Request/Response now complete
+          queue->RemoveRequest(request);
+        }
       }
     }
   }

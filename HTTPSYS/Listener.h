@@ -53,11 +53,11 @@ public:
 
   std::function<SECURITY_STATUS(PCCERT_CONTEXT & pCertContext, LPCTSTR p_certSTore,PTCHAR p_thumbprint)> m_selectServerCert;
   std::function<bool(PCCERT_CONTEXT pCertContext, const bool trusted)>                  m_clientCertAcceptable;
+  static UINT __cdecl Worker(void *);
 
-  int       m_workerThreadCount;
+  ULONGLONG m_workerThreadCount;
   CEvent    m_stopEvent;
 private:
-  static UINT __cdecl Worker(void *);
   static UINT __cdecl ListenerWorker(LPVOID);
   void                Listen(void);
 

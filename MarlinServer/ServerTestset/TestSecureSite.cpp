@@ -56,6 +56,7 @@ SiteHandlerGetSecure::Handle(HTTPMessage* p_message)
   {
     ++g_gotten;
   }
+  qprintf("File gotten with GET from secure site          : %s\n", g_gotten > 0 ? "OK" : "ERROR");
   return result;
 }
 
@@ -74,6 +75,7 @@ SiteHandlerPutSecure::Handle(HTTPMessage* p_message)
   {
     ++g_placed;
   }
+  qprintf("File sent with PUT to secure site              : %s\n", g_placed > 0 ? "OK" : "ERROR");
   return result;
 }
 

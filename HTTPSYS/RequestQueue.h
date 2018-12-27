@@ -66,6 +66,7 @@ public:
   Listener* FindListener (USHORT p_port);
 
   void      AddIncomingRequest(Request* p_request);
+  bool      ResetToServicing  (Request* p_request);
   URL*      FindLongestURL(USHORT p_port,CString p_abspath);
   void      RemoveRequest(Request* p_request);
   void      ClearIncomingWaiters();

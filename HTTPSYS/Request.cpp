@@ -8,6 +8,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include <afxwin.h>
 #include "http_private.h"
 #include "URL.h"
 #include "Request.h"
@@ -34,6 +35,7 @@ Request::Request(RequestQueue* p_queue
                 ,HANDLE        p_stopEvent)
         :m_queue(p_queue)
         ,m_listener(p_listener)
+        ,m_handshakeDone(false)
         ,m_secure(false)
         ,m_url(nullptr)
 {
@@ -46,6 +48,10 @@ Request::Request(RequestQueue* p_queue
   m_status        = RQ_CREATED;
   m_bytesRead     = 0L;
   m_contentLength = 0L;
+  m_bytesRead     = 0L;
+  m_bytesWritten  = 0L;
+  m_timestamp     = 0L;
+  m_token         = NULL;
 
   // Create a socket, conforming to the security mode
   SetSocket(p_listener,p_socket,p_stopEvent);
@@ -91,15 +97,15 @@ Request::ReceiveRequest()
       ReceiveHeaders();
       if(CheckAuthentication())
       {
-        m_queue->AddIncomingRequest(this);
-        looping = false;
+        looping = true;
+        DrainRequest();
+        ReplyClientError(HTTP_STATUS_DENIED, "Not authenticated");
+        ResetRequestV1();
       }
       else
       {
-        looping = true;
-        DrainRequest();
-        ReplyClientError(HTTP_STATUS_DENIED,"Not authenticated");
-        ResetRequestV1();
+        m_queue->AddIncomingRequest(this);
+        looping = false;
       }
     }
     catch(int error)
@@ -107,6 +113,12 @@ Request::ReceiveRequest()
       if(error == HTTP_STATUS_SERVICE_UNAVAIL)
       {
         ReplyServerError(error,"Service temporarily unavailable");
+      }
+      else if(error == ERROR_HANDLE_EOF)
+      {
+        // Channel closed
+        m_queue->RemoveRequest(this);
+        return;
       }
       else
       {
@@ -138,7 +150,7 @@ Request::CloseRequest()
     m_socket = nullptr;
   }
 
-  // Addresses
+  // Free the addresses here
   if(m_request.Address.pLocalAddress)
   {
     free((void*)m_request.Address.pLocalAddress);
@@ -152,28 +164,78 @@ Request::CloseRequest()
 }
 
 // Drain our request, so we can get busy with a new one 
-// Done for the sake of authentication
+// Done for the sake of an authentication round trip request
 void
 Request::DrainRequest()
 {
-  unsigned char* drain_buffer = new unsigned char[MESSAGE_BUFFER_LENGTH + 1];
-
-  ULONGLONG readin = m_contentLength;
-
-  while(readin > 0)
+  // We have no business here if we are not a keep-alive connection
+  // In that case we just dis-regard the incoming buffers.
+  if(m_keepAlive == false)
   {
-    ULONG read = 0L;
-    if(ReceiveBuffer(drain_buffer,MESSAGE_BUFFER_LENGTH,&read,false) > 0)
-    {
-      if(read <= readin)
-      {
-        readin -= read;
-      }
-      else readin = 0;
-    }
-    else break;
+    return;
   }
-  delete [] drain_buffer;
+
+  // Calculate the amount we must read from the stream to reach the next 
+  // HTTP header position of the next command
+  ULONGLONG readin = m_contentLength;
+  if(m_bytesRead < m_contentLength)
+  {
+    readin -= m_bytesRead;
+  }
+
+  // drain the incoming request body
+  if(readin > 0)
+  {
+    // Temporary read buffer
+    unsigned char* drain_buffer = new unsigned char[MESSAGE_BUFFER_LENGTH + 1];
+
+    // Loop until the end of the content (the body)
+    while(readin > 0)
+    {
+      ULONG read = 0L;
+      if(ReceiveBuffer(drain_buffer,MESSAGE_BUFFER_LENGTH,&read,false) > 0)
+      {
+        if(read <= readin)
+        {
+          readin -= read;
+        }
+        else readin = 0;
+      }
+      else break;
+    }
+    delete [] drain_buffer;
+  }
+}
+
+// If it was a keep-alive connection, reset to receive new request
+// on the same socket channel. Remove from servicing queue first!!
+bool
+Request::RestartConnection()
+{
+  // No keep-alive stated by the request. We will throw this object away!
+  if(!m_keepAlive)
+  {
+    return false;
+  }
+
+  // Application might not have read all of our payload body content
+  if((m_status == RQ_READING) && (m_bytesRead < m_contentLength))
+  {
+    DrainRequest();
+  }
+
+  // Prepare for the next request
+  ResetRequestV1();
+
+  // Do **NOT** reset the HTTP_REQUEST_V2, we want the retain the authentication!!
+
+  // Remove from servicing queue and restart a worker
+  m_queue->ResetToServicing(this);
+  m_status = RQ_CREATED;
+
+  // Start new thread, like the listener would do
+  AfxBeginThread(m_listener->Worker,this);
+  return true;
 }
 
 // Reading the body of the HTTP call
@@ -184,12 +246,22 @@ Request::ReceiveBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes,bool p_all)
   ULONG totalRead = 0L;
   int   result    = 0;
 
+
   // Initial buffer left?
   if(m_bufferPosition < m_initialLength)
   {
     return CopyInitialBuffer(p_buffer,p_size,p_bytes);
   }
 
+  // Restrict the number of bytes to read if a keep-alive situation
+  if(m_status == RQ_READING && m_keepAlive &&
+     m_contentLength && (m_bytesRead < m_contentLength) &&
+     m_contentLength - m_bytesRead < p_size)
+  {
+    p_size = (ULONG) m_contentLength;
+  }
+
+  // Reading loop
   while (reading)
   {
     // Did we read the entire body already?
@@ -234,6 +306,8 @@ Request::ReceiveBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes,bool p_all)
   return result;
 }
 
+// Preset a receive chunk from the applications buffer
+// Only done within the HttpReceiveHttpRequest if we also want a first buffer
 void
 Request::ReceiveChunk(PVOID p_buffer,ULONG p_size)
 {
@@ -262,12 +336,17 @@ Request::ReceiveChunk(PVOID p_buffer,ULONG p_size)
 int
 Request::SendResponse(PHTTP_RESPONSE p_response,PULONG p_bytes)
 {
-  CString buffer;
+  // Drain any body not read in by the application
+  DrainRequest();
+
+  // Start answering the request
+  m_status = RQ_ANSWERING;
 
   // Reset bytes written
   m_bytesWritten = 0;
 
   // Create the response line
+  CString buffer;
   AddResponseLine(buffer,p_response);
 
   // Add all response headers
@@ -279,31 +358,32 @@ Request::SendResponse(PHTTP_RESPONSE p_response,PULONG p_bytes)
   buffer += "\r\n";
 
   // Perform one write of all header lines in one go!
-  int result = WriteBuffer((PVOID)buffer.GetString(),buffer.GetLength());
+  int result = WriteBuffer((PVOID)buffer.GetString(),buffer.GetLength(),p_bytes);
   if(result == NO_ERROR)
   {
-    *p_bytes = m_bytesWritten;
-  }
+    // Reset byte pointers
+    m_bytesWritten  = 0;
+    m_contentLength = 0;
+    // Set status to writing the body
+    m_status = RQ_WRITING;
 
-  // Reset byte pointers
-  m_bytesWritten  = 0;
-  m_contentLength = 0;
-  if(p_response->Headers.KnownHeaders[HttpHeaderContentLength].pRawValue)
-  {
-    m_contentLength = atoi(p_response->Headers.KnownHeaders[HttpHeaderContentLength].pRawValue);
-  }
-
-  // Also send our body right away
-  if(p_response->EntityChunkCount)
-  {
-    ULONG bytes = 0;
-    int  result = SendEntityChunks(p_response->pEntityChunks,p_response->EntityChunkCount,&bytes);
-    if (result == NO_ERROR)
+    // Grab the content length of the body
+    if(p_response->Headers.KnownHeaders[HttpHeaderContentLength].pRawValue)
     {
-      *p_bytes += bytes;
+      m_contentLength = atoi(p_response->Headers.KnownHeaders[HttpHeaderContentLength].pRawValue);
+    }
+
+    // Also send our body right away, if any chunks given
+    if(p_response->EntityChunkCount)
+    {
+      ULONG bytes = 0;
+      int  result = SendEntityChunks(p_response->pEntityChunks,p_response->EntityChunkCount,&bytes);
+      if (result == NO_ERROR)
+      {
+        *p_bytes += bytes;
+      }
     }
   }
-
   // Ready
   return result;
 }
@@ -344,7 +424,7 @@ Request::GetResponseComplete()
 //////////////////////////////////////////////////////////////////////////
 
 // Totally resetting the object, freeing all memory
-//
+// Normally only done when destructing the object
 void
 Request::Reset()
 {
@@ -358,11 +438,31 @@ Request::Reset()
 
   // Free the headers line
   FreeInitialBuffer();
+
+  // Primary authentication token
+  if(m_token)
+  {
+    CloseHandle(m_token);
+    m_token = NULL;
+  }
 }
 
+// Reset the object so that we may receive a new request on the same socket
 void
 Request::ResetRequestV1()
 {
+  // Reset parameters of HTTP_REQUEST_V1
+  m_request.Flags = 0;
+
+  // ConnectionId / RequestId are untouched: linking us to the program
+
+  m_request.UrlContext            = 0L;
+  m_request.Version.MajorVersion  = 0;
+  m_request.Version.MinorVersion  = 0;
+  m_request.Verb                  = HttpVerbUnparsed;
+  m_request.BytesReceived         = 0;
+  m_request.RawConnectionId       = 0;
+
   // VERB & URL
   if(m_request.pUnknownVerb)
   {
@@ -379,8 +479,14 @@ Request::ResetRequestV1()
   if(m_request.CookedUrl.pFullUrl)
   {
     free((void*)m_request.CookedUrl.pFullUrl);
-    m_request.CookedUrl.pFullUrl = nullptr;
-    m_request.CookedUrl.FullUrlLength = 0;
+    m_request.CookedUrl.pFullUrl          = nullptr;
+    m_request.CookedUrl.pHost             = nullptr;
+    m_request.CookedUrl.pAbsPath          = nullptr;
+    m_request.CookedUrl.pQueryString      = nullptr;
+    m_request.CookedUrl.FullUrlLength     = 0;
+    m_request.CookedUrl.HostLength        = 0;
+    m_request.CookedUrl.AbsPathLength     = 0;
+    m_request.CookedUrl.QueryStringLength = 0;
   }
 
   // Unknown headers/trailers
@@ -417,6 +523,7 @@ Request::ResetRequestV1()
     if(m_request.Headers.KnownHeaders[ind].pRawValue)
     {
       free((void*)m_request.Headers.KnownHeaders[ind].pRawValue);
+      m_request.Headers.KnownHeaders[ind].pRawValue = nullptr;
       m_request.Headers.KnownHeaders[ind].RawValueLength = 0;
     }
   }
@@ -451,6 +558,14 @@ Request::ResetRequestV1()
     free(m_request.pSslInfo);
     m_request.pSslInfo = nullptr;
   }
+
+  // Also reset general parameters
+  m_status        = RQ_CREATED;
+  m_bytesRead     = 0L;
+  m_bytesWritten  = 0L;
+  m_contentLength = 0L;
+  m_keepAlive     = false;
+  m_url           = nullptr;
 }
 
 // Reset HTTP_REQUEST_V2
@@ -564,17 +679,23 @@ Request::SetTimings()
   sock->SetSendTimeoutSeconds(timeout);
 }
 
+// Do the handshake for a SSL/TLS connection
+// For a keep-alive connection only done for the first request!
 void
 Request::InitiateSSL()
 {
   if(m_secure)
   {
-    // Go do the SSL handshake
-    SecureServerSocket* secure = reinterpret_cast<SecureServerSocket*>(m_socket);
-    if(secure->InitializeSSL() != S_OK)
+    if(!m_handshakeDone)
     {
-      throw ERROR_INTERNET_SECURITY_CHANNEL_ERROR;
+      // Go do the SSL handshake
+      SecureServerSocket* secure = reinterpret_cast<SecureServerSocket*>(m_socket);
+      if(secure->InitializeSSL() != S_OK)
+      {
+        throw ERROR_INTERNET_SECURITY_CHANNEL_ERROR;
+      }
     }
+    m_handshakeDone = true;
   }
 }
 
@@ -615,7 +736,7 @@ Request::ReceiveHeaders()
   // Correct URL with host header
   CorrectFullURL();
 
-  // Checking for keep-alive roundtrips
+  // Checking for keep-alive round trips
   FindKeepAlive();
 
   // Reset number of bytes read. We will now go read the body
@@ -638,10 +759,10 @@ Request::ReadInitialMessage()
     m_bytesRead    += length;
     return;
   }
-  throw ERROR_HANDLE_EOF;
+  throw (int)ERROR_HANDLE_EOF;
 }
 
-// Find the next line in the initial buffers upto the "\r\n"
+// Find the next line in the initial buffers up to the "\r\n"
 // Mark that the HTTP IETF RFC clearly states that all header
 // lines must end in a <CR><LF> sequence!!
 CString
@@ -1052,6 +1173,9 @@ Request::FindKnownHeader(CString p_header)
   return -1;
 }
 
+// Find our connection settings. can have two values:
+// keep-alive  -> Keep socket connection open
+// close       -> Close connection after servicing the request
 void
 Request::FindKeepAlive()
 {
@@ -1064,6 +1188,10 @@ Request::FindKeepAlive()
 void
 Request::ReplyClientError(int p_error, CString p_errorText)
 {
+  // Drain the request first
+  DrainRequest();
+  m_status = RQ_ANSWERING;
+
   bool retry = false;
 
   CString header;
@@ -1086,11 +1214,13 @@ Request::ReplyClientError(int p_error, CString p_errorText)
   header += body;
 
   // Write out to the client:
-  WriteBuffer((PVOID)header.GetString(),header.GetLength());
+  ULONG written = 0;
+  WriteBuffer((PVOID)header.GetString(),header.GetLength(),&written);
 
   if(!retry)
   {
     // And be done with this request;
+    m_keepAlive = false;
     CloseRequest();
   }
 }
@@ -1106,6 +1236,11 @@ Request::ReplyClientError()
 void
 Request::ReplyServerError(int p_error,CString p_errorText)
 {
+  // Drain the request first
+  DrainRequest();
+  m_status = RQ_ANSWERING;
+
+  // The answer
   CString header;
   header.Format("HTTP/1.1 %d %s\r\n", p_error, p_errorText);
   header += "Content-Type: text/html; charset=us-ascii\r\n";
@@ -1119,8 +1254,10 @@ Request::ReplyServerError(int p_error,CString p_errorText)
   header += body;
 
   // Write out to the client:
-  WriteBuffer((PVOID)header.GetString(), header.GetLength());
-  // And be done with this request;
+  ULONG written = 0;
+  WriteBuffer((PVOID)header.GetString(),header.GetLength(),&written);
+  // And be done with this request. Always close the request
+  m_keepAlive = false;
   CloseRequest();
 }
 
@@ -1166,8 +1303,8 @@ Request::CopyInitialBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 }
 
 // Authentication of the request
-// Return 'true'  if continue to application
-// Return 'false' if more authentication is needed in a loop
+// Return 'false' if continue to application
+// Return 'true'  if more authentication is needed in a loop
 bool 
 Request::CheckAuthentication()
 {
@@ -1176,12 +1313,18 @@ Request::CheckAuthentication()
   // No authentication requested for this URL. So we do nothing
   if(scheme == 0)
   {
-    return true;
+    return false;
   }
 
-  // This is our authorization
-  CString authorization(m_request.Headers.KnownHeaders[HttpHeaderAuthorization].pRawValue);
+  // See if we have a cached authentication token
   PHTTP_REQUEST_AUTH_INFO info = GetAuthenticationInfoRecord();
+  if(AlreadyAuthenticated(info))
+  {
+    return false;
+  }
+
+  // This is our authorization (if any)
+  CString authorization(m_request.Headers.KnownHeaders[HttpHeaderAuthorization].pRawValue);
 
   // Find method and payload of that method
   CString method;
@@ -1196,9 +1339,10 @@ Request::CheckAuthentication()
   else
   {
     // Leave it to the serviced application to return a HTTP_STATUS_DENIED
-    return true; 
+    return false; 
   }
 
+  // BASIC is a special case. Others through SSPI
   if(info->AuthType == HttpRequestAuthTypeBasic)
   {
     // Base64 encryption of the "username:password" combination
@@ -1206,11 +1350,12 @@ Request::CheckAuthentication()
   }
   else
   {
-    // All done through "secur32.dll"
+    // All done through the SSPI provider through "secur32.dll"
     return CheckAuthenticationProvider(info,payload,method);
   }
 }
 
+// Get present record, or create a new one
 PHTTP_REQUEST_AUTH_INFO
 Request::GetAuthenticationInfoRecord()
 {
@@ -1238,6 +1383,45 @@ Request::GetAuthenticationInfoRecord()
   info->AuthType   = HttpRequestAuthTypeNone;
 
   return info;
+}
+
+// See if we have a cached authentication token
+bool
+Request::AlreadyAuthenticated(PHTTP_REQUEST_AUTH_INFO p_info)
+{
+  if(p_info->AuthStatus  == HttpAuthStatusSuccess   && 
+     p_info->AuthType    == HttpRequestAuthTypeNTLM && 
+     p_info->AccessToken != NULL)
+  {
+    int  seconds = (clock() - m_timestamp) / CLOCKS_PER_SEC;
+    bool caching = m_url->m_urlGroup->GetAuthenticationCaching();
+    int  timeout = m_url->m_urlGroup->GetTimeoutIdleConnection();
+
+    // Re-use the authentication token if caching is 'on' and it was
+    // less than 'timeout' seconds ago that we've gotten the token
+    if(caching && seconds < timeout)
+    {
+      return true;
+    }
+
+    // Flush the authentication status
+    p_info->AuthStatus  = HttpAuthStatusNotAuthenticated;
+    p_info->AuthType    = HttpRequestAuthTypeNone;
+    p_info->AccessToken = NULL;
+    // Flush SSPI context
+    m_context.dwLower   = 0;
+    m_context.dwUpper   = 0;
+    m_timestamp         = 0;
+
+    // Remove primary token!
+    if(m_token)
+    {
+      CloseHandle(m_token);
+      m_token = NULL;
+    }
+  }
+  // Not authenticated (any more...)
+  return false;
 }
 
 bool
@@ -1274,13 +1458,15 @@ Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,CString p_paylo
   {
     p_info->AuthStatus  = HttpAuthStatusSuccess;
     p_info->AccessToken = token;
+    m_token     = token;
+    m_timestamp = clock();
     RevertToSelf();
   }
   else
   {
     p_info->AuthStatus = HttpAuthStatusFailure;
   }
-  return true;
+  return false;
 }
 
 bool
@@ -1295,13 +1481,15 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
   // Decrypt into a string
   base.Decrypt((const unsigned char*)p_payload.GetString(),p_payload.GetLength(),buffer);
 
+  bool       continuation = false;
   CredHandle credentials;
   TimeStamp  lifetime;
   ULONG      contextAttributes = 0;
   ZeroMemory(&credentials,sizeof(CredHandle));
   ZeroMemory(&lifetime,sizeof(TimeStamp));
+  DWORD      maxTokenLength = GetProviderMaxTokenLength(p_provider);
 
-  SECURITY_STATUS ss = AcquireCredentialsHandle(NULL,(LPSTR)"NTLM",SECPKG_CRED_INBOUND,NULL,NULL,NULL,NULL,&credentials,&lifetime);
+  SECURITY_STATUS ss = AcquireCredentialsHandle(NULL,(LPSTR)p_provider.GetString(),SECPKG_CRED_INBOUND,NULL,NULL,NULL,NULL,&credentials,&lifetime);
   if(ss >= 0)
   {
     TimeStamp         lifetime;
@@ -1310,17 +1498,8 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
     SecBufferDesc     InBuffDesc;
     SecBuffer         InSecBuff;
     ULONG             Attribs = 0;
-    PBYTE             pOut    = new BYTE[2024];
-    DWORD             cbOut   = 2024;
-
-    //  Prepare output buffers.
-    OutBuffDesc.ulVersion = 0;
-    OutBuffDesc.cBuffers  = 1;
-    OutBuffDesc.pBuffers  = &OutSecBuff;
-
-    OutSecBuff.cbBuffer   = cbOut;
-    OutSecBuff.BufferType = SECBUFFER_TOKEN;
-    OutSecBuff.pvBuffer   = pOut;
+    PBYTE             pOut    = new BYTE[maxTokenLength + 1];
+    DWORD             cbOut   = maxTokenLength;
 
     //  Prepare input buffers.
     InBuffDesc.ulVersion = 0;
@@ -1331,8 +1510,19 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
     InSecBuff.BufferType = SECBUFFER_TOKEN;
     InSecBuff.pvBuffer   = buffer;
 
+    //  Prepare output buffers.
+    OutBuffDesc.ulVersion = 0;
+    OutBuffDesc.cBuffers  = 1;
+    OutBuffDesc.pBuffers  = &OutSecBuff;
+
+    OutSecBuff.cbBuffer   = cbOut;
+    OutSecBuff.BufferType = SECBUFFER_TOKEN;
+    OutSecBuff.pvBuffer   = pOut;
+
+    // See if we are continuing on a security conversation
     bool contextNew = m_context.dwLower == 0 && m_context.dwUpper == 0;
 
+    // Work on the buffer. Accept it or not
     ss = AcceptSecurityContext(&credentials
                               ,contextNew ? NULL : &m_context
                               ,&InBuffDesc
@@ -1347,7 +1537,7 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
       // See if the return code has the SECURITY in the FACILITY position
       if(((ss >> 16) & 0xF) == FACILITY_SECURITY)
       {
-        // Continuation 
+        // Continuation of the conversation
         len = (int) base.B64_length(OutSecBuff.cbBuffer);
         unsigned char* challenge = new unsigned char[len + 1];
         base.Encrypt((unsigned char*)pOut,OutSecBuff.cbBuffer,challenge);
@@ -1356,6 +1546,7 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
         // Send 401 with the correct provider challenge
         m_challenge = p_provider + " " + challenge;
         delete [] challenge;
+        continuation = true;
       }
       else
       {
@@ -1372,8 +1563,10 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
           ss = QueryContextAttributes(&m_context,SECPKG_ATTR_ACCESS_TOKEN,&token);
           if(ss >= 0)
           {
+            m_token             = (HANDLE)token.AccessToken;
             p_info->AccessToken = (HANDLE)token.AccessToken;
             p_info->AuthStatus  = HttpAuthStatusSuccess;
+            m_timestamp = clock();
           }
         }
       }
@@ -1387,13 +1580,31 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
 
 
   // See if it did work out!
-  if(p_info->AccessToken == NULL)
+  if(!continuation && p_info->AccessToken == NULL)
   {
     p_info->AuthStatus = HttpAuthStatusFailure;
   }
 
-  // Trigger the drivers 401 response
-  return m_challenge.IsEmpty();
+  // Trigger the drivers 401 response if needed
+  return continuation;
+}
+
+// Getting the maximum security token buffer length
+// of the connected SSPI provider package
+DWORD
+Request::GetProviderMaxTokenLength(CString p_provider)
+{
+  PSecPkgInfo pkgInfo = nullptr;
+
+  SECURITY_STATUS ss = QuerySecurityPackageInfo((LPSTR)p_provider.GetString(),&pkgInfo);
+  if(ss == SEC_E_OK && pkgInfo)
+  {
+    DWORD size = pkgInfo->cbMaxToken;
+    FreeContextBuffer(pkgInfo);
+    return size;
+  }
+  // Return something on the safe side.
+  return SSPI_BUFFER_DEFAULT;
 }
 
 // Create the general HTTP response status line to the output buffer
@@ -1453,73 +1664,75 @@ Request::SendEntityChunk(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
 int
 Request::SendEntityChunkFromMemory(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
 {
-  int result = WriteBuffer(p_chunk->FromMemory.pBuffer,p_chunk->FromMemory.BufferLength);
+  ULONG written = 0;
+  int result = WriteBuffer(p_chunk->FromMemory.pBuffer,p_chunk->FromMemory.BufferLength,&written);
   if (result == NO_ERROR)
   {
-    p_bytes += result;
+    *p_bytes += written;
   }
   return result;
 }
 
 // Sending one (1) file from opened file handle in the chunk to the socket
+// int
+// Request::SendEntityChunkFromFile(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
+// {
+//   if(m_listener->GetSecureMode())
+//   {
+//     return SendFileByMemoryBlocks(p_chunk, p_bytes);
+//   }
+//   else
+//   {
+//     return SendFileByTransmitFunction(p_chunk, p_bytes);
+//   }
+// }
+// 
+// int
+// Request::SendFileByTransmitFunction(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
+// {
+//   SOCKET actual = reinterpret_cast<PlainSocket*>(m_socket)->GetActualSocket();
+//   PointTransmitFile transmit = m_queue->GetTransmitFile(actual);
+// 
+//   DWORD high = 0;
+//   DWORD size = GetFileSize(p_chunk->FromFileHandle.FileHandle,&high);
+// 
+//   // But we restrict on this much if possible
+//   if(p_chunk->FromFileHandle.ByteRange.Length.LowPart > 0 && 
+//      p_chunk->FromFileHandle.ByteRange.Length.LowPart < size)
+//   {
+//     size = p_chunk->FromFileHandle.ByteRange.Length.LowPart;
+//   }
+// 
+//   if(transmit)
+//   {
+//     if((*transmit)(actual
+//                   ,p_chunk->FromFileHandle.FileHandle
+//                   ,(DWORD)p_chunk->FromFileHandle.ByteRange.Length.LowPart
+//                   ,0
+//                   ,NULL
+//                   ,NULL
+//                   ,TF_DISCONNECT) == FALSE)
+//     {
+//       int error = WSAGetLastError();
+//       LogError("Error while sending a file: %d", error);
+//       return error;
+//     }
+//   }
+//   else
+//   {
+//     LogError("Could not send a file. Injected 'TransmitFile' functionality not found");
+//     return ERROR_CONNECTION_ABORTED;
+//   }
+// 
+//   // Record the fact that we have written this much
+//   m_bytesWritten += size;
+//   *p_bytes       += size;
+// 
+//   return NO_ERROR;
+// }
+
 int
 Request::SendEntityChunkFromFile(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
-{
-  if(m_listener->GetSecureMode())
-  {
-    return SendFileByMemoryBlocks(p_chunk, p_bytes);
-  }
-  else
-  {
-    return SendFileByTransmitFunction(p_chunk, p_bytes);
-  }
-}
-
-int
-Request::SendFileByTransmitFunction(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
-{
-  SOCKET actual = reinterpret_cast<PlainSocket*>(m_socket)->GetActualSocket();
-  PointTransmitFile transmit = m_queue->GetTransmitFile(actual);
-
-  DWORD high = 0;
-  DWORD size = GetFileSize(p_chunk->FromFileHandle.FileHandle,&high);
-
-  // But we restrict on this much if possible
-  if(p_chunk->FromFileHandle.ByteRange.Length.LowPart > 0 && 
-     p_chunk->FromFileHandle.ByteRange.Length.LowPart < size)
-  {
-    size = p_chunk->FromFileHandle.ByteRange.Length.LowPart;
-  }
-
-  if(transmit)
-  {
-    if((*transmit)(actual
-                  ,p_chunk->FromFileHandle.FileHandle
-                  ,(DWORD)p_chunk->FromFileHandle.ByteRange.Length.LowPart
-                  ,0
-                  ,NULL
-                  ,NULL
-                  ,TF_DISCONNECT) == FALSE)
-    {
-      int error = WSAGetLastError();
-      LogError("Error while sending a file: %d", error);
-      return error;
-    }
-  }
-  else
-  {
-    LogError("Could not send a file. Injected 'TransmitFile' functionallity not found");
-    return ERROR_CONNECTION_ABORTED;
-  }
-
-  // Record the fact that we have written this much
-  m_bytesWritten += size;
-
-  return NO_ERROR;
-}
-
-int
-Request::SendFileByMemoryBlocks(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
 {
   char buffer[MESSAGE_BUFFER_LENGTH];
 
@@ -1569,18 +1782,19 @@ Request::SendFileByMemoryBlocks(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
     }
 
     // Send next block size
-    int result = WriteBuffer(buffer,didread);
+    ULONG written = 0;
+    int result = WriteBuffer(buffer,didread,&written);
     if (result != NO_ERROR)
     {
       return result;
     }
 
     // Keep record of how much we already did
-    size += didread;
+    size += written;
   }
 
   // Tell the result
-  if (p_bytes)
+  if(p_bytes)
   {
     *p_bytes = (ULONG)size;
   }
@@ -1626,10 +1840,11 @@ Request::SendEntityChunkFromFragmentEx(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
        end   < chunk->FromMemory.BufferLength &&
        start < end)
     {
-      int result = WriteBuffer((PVOID)&(((char*)chunk->FromMemory.pBuffer)[start]),end - start);
+      ULONG written = 0;
+      int result = WriteBuffer((PVOID)&(((char*)chunk->FromMemory.pBuffer)[start]),end - start,&written);
       if (result == NO_ERROR)
       {
-        p_bytes += result;
+        *p_bytes += written;
       }
       return result;
     }
@@ -1701,7 +1916,7 @@ Request::ReadBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 
 // Low level write to socket
 int
-Request::WriteBuffer(PVOID p_buffer, ULONG p_size)
+Request::WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 {
   int result = m_socket->SendPartial(p_buffer,p_size);
   if (result == SOCKET_ERROR)
@@ -1716,6 +1931,13 @@ Request::WriteBuffer(PVOID p_buffer, ULONG p_size)
   if (result > 0)
   {
     m_bytesWritten += result;
+    *p_bytes       += result;
+  }
+
+  // Keep track of service status
+  if((m_status == RQ_WRITING) && m_bytesWritten >= m_contentLength)
+  {
+    m_status = RQ_SERVICED;
   }
 
   return NO_ERROR;;

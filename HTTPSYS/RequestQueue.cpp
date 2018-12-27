@@ -15,6 +15,7 @@
 #include <malloc.h>
 #include <algorithm>
 #include <winhttp.h>
+#include <algorithm>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -180,6 +181,9 @@ RequestQueue::AddIncomingRequest(Request* p_request)
     return;
   }
 
+  // Headers now fully received
+  p_request->SetStatus(RQ_RECEIVED);
+
   // See if there is space in the queue
   if(m_incoming.size() < m_queueLength)
   {
@@ -192,6 +196,21 @@ RequestQueue::AddIncomingRequest(Request* p_request)
     // Report queue overflow = Server overflow
     throw HTTP_STATUS_SERVICE_UNAVAIL;
   }
+}
+
+// Put the request back in the servicing queue
+bool
+RequestQueue::ResetToServicing(Request* p_request)
+{
+  AutoCritSec lock(&m_lock);
+
+  Requests::iterator it = std::find(m_servicing.begin(),m_servicing.end(),p_request);
+  if(it != m_servicing.end())
+  {
+    m_servicing.erase(it);
+    return true;
+  }
+  return false;
 }
 
 // Our workhorse. Implementations call this to get the next HTTP request
@@ -232,6 +251,31 @@ RequestQueue::GetNextRequest(HTTP_REQUEST_ID  RequestId
 
     // BitBlitting our request!
     memcpy_s(RequestBuffer,RequestBufferLength,request->GetV2Request(),sizeof(HTTP_REQUEST_V2));
+
+    for(int index = 0;index < RequestBuffer->RequestInfoCount;++index)
+    {
+      if(RequestBuffer->pRequestInfo[index].InfoType == HttpRequestInfoTypeAuth)
+      {
+        PHTTP_REQUEST_AUTH_INFO info = (PHTTP_REQUEST_AUTH_INFO)RequestBuffer->pRequestInfo[index].pInfo;
+        if(info->AccessToken)
+        {
+          // Taking a duplicate token
+          HANDLE token = NULL;
+          if(DuplicateTokenEx(request->GetAccessToken()
+                             ,TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_ALL_ACCESS | TOKEN_READ | TOKEN_WRITE
+                             ,NULL
+                             ,SecurityImpersonation
+                             ,TokenImpersonation
+                             ,&token) == FALSE)
+          {
+            token = NULL;
+          }
+          // Set cloned token in the request buffer
+          info->AccessToken = token;
+        }
+      }
+    }
+
   }
   else
   {
@@ -326,7 +370,12 @@ RequestQueue::RemoveRequest(Request* p_request)
   {
     delete p_request;
     m_incoming.erase(it);
+    return;
   }
+
+  // Request was not found in any queue
+  // Delete it all the while
+  delete p_request;
 }
 
 // Add a fragment to the fragment cache
@@ -474,8 +523,6 @@ RequestQueue::RequestStillInService(Request* p_request)
 void
 RequestQueue::StopAllListeners()
 {
-  AutoCritSec lock(&m_lock);
-
   for(auto& listener : m_listeners)
   {
     listener.second->StopListener();

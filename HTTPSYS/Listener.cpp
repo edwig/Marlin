@@ -89,9 +89,9 @@ UINT __cdecl Listener::Worker(void* p_argument)
 	SetThreadName("Request worker");
 
   // Doing our work
-  listener->m_workerThreadCount++;
+  InterlockedIncrement(&listener->m_workerThreadCount);
   request->ReceiveRequest();
-  listener->m_workerThreadCount--;
+  InterlockedDecrement(&listener->m_workerThreadCount);
 
   return 0;
 }

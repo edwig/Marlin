@@ -249,8 +249,8 @@ TestToken(HTTPServer* p_server)
 
   // Set site to use NTLM authentication for the "MerlinTest" user
   // So we can get a different token, then the current server token
-  site->SetAuthenticationScheme("Basic"); //  "NTLM");
-  // site->SetAuthenticationNTLMCache(true);
+  site->SetAuthenticationScheme("NTLM");
+  site->SetAuthenticationNTLMCache(true);
 
   // Start the site explicitly
   if(site->StartSite())

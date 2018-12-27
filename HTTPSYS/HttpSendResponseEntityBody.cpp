@@ -61,10 +61,13 @@ HttpSendResponseEntityBody(IN HANDLE          RequestQueueHandle
 
     if ((Flags & (HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE)) == 0)
     {
-      if (request->GetResponseComplete() || (Flags & HTTP_SEND_RESPONSE_FLAG_DISCONNECT))
+      if(request->GetResponseComplete() || (Flags & HTTP_SEND_RESPONSE_FLAG_DISCONNECT))
       {
-        // Request/Response now complete
-        queue->RemoveRequest(request);
+        if(request->RestartConnection() == false)
+        {
+          // Request/Response now complete
+          queue->RemoveRequest(request);
+        }
       }
     }
   }

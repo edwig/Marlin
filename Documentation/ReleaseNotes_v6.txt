@@ -9,6 +9,10 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.0.0 Beta 2
+-------------------------------
+1) Keep-alive connections fully operational
+
 CHANGES IN VERSION 6.0.0 Beta 1
 -------------------------------
 1) NTLM/Digest/Kerberos authtentication working through standard SSPI interfaces

@@ -15,13 +15,16 @@
 #define MESSAGE_BUFFER_LENGTH (16*1024)
 // Minimum timeout for HTTP body receiving in seconds
 #define HTTP_MINIMUM_TIMEOUT 10 
+// Default space for a SSPI authentication provider buffer
+#define SSPI_BUFFER_DEFAULT (8*1024)
 
 typedef enum _rq_status
 {
   RQ_CREATED    // Object created and initialized
  ,RQ_RECEIVED   // Fully received + headers. Waiting to be serviced
- ,RQ_READING    // Server is busy reading the request
- ,RQ_ANSWERING  // Server is busy answering with a response
+ ,RQ_READING    // Server is busy reading the request body
+ ,RQ_ANSWERING  // Server is busy answering with a response header
+ ,RQ_WRITING    // Server is busy writing response body
  ,RQ_SERVICED   // Server is ready with the request
 }
 RQ_Status;
@@ -53,6 +56,7 @@ public:
   PCSTR             GetURL()            { return m_request.pRawUrl;     };
   ULONGLONG         GetContentLength()  { return m_contentLength;       };
   Listener*         GetListener()       { return m_listener;            };
+  HANDLE            GetAccessToken()    { return m_token;               };
   bool              GetResponseComplete();
 
   // FUNCTIONS
@@ -63,6 +67,7 @@ public:
   void              ReceiveChunk(PVOID p_buffer, ULONG p_size);
   int               SendResponse(PHTTP_RESPONSE p_response,PULONG p_bytes);
   int               SendEntityChunks(PHTTP_DATA_CHUNK p_chunks,int p_count,PULONG p_bytes);
+  bool              RestartConnection();
   void              CloseRequest();
   // Reply with an error
   void              ReplyClientError();
@@ -71,6 +76,11 @@ public:
   void              ReplyServerError(int p_error, CString p_errorText);
 
 private:
+
+  //////////////////////////////////////////////////////////////////////////
+  // PRIVATE
+  //////////////////////////////////////////////////////////////////////////
+
   void              Reset();
   void              ResetRequestV1();
   void              ResetRequestV2();
@@ -99,11 +109,13 @@ private:
   void              FindKeepAlive();
   // Authentication of the request
   bool              CheckAuthentication();
+  bool              AlreadyAuthenticated       (PHTTP_REQUEST_AUTH_INFO p_info);
   bool              CheckBasicAuthentication   (PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload);
   bool              CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload,CString p_provider);
   PHTTP_REQUEST_AUTH_INFO GetAuthenticationInfoRecord();
-  void              DrainRequest();
+  DWORD             GetProviderMaxTokenLength(CString p_provider);
   // Sending the response
+  void              DrainRequest();
   CString           HTTPSystemTime();
   void              AddResponseLine  (CString& p_buffer,PHTTP_RESPONSE p_response);
   void              AddAllKnownResponseHeaders  (CString& p_buffer,PHTTP_KNOWN_HEADER   p_headers);
@@ -114,12 +126,12 @@ private:
   int               SendEntityChunkFromFragment  (PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
   int               SendEntityChunkFromFragmentEx(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
   // File sending sub functions
-  int               SendFileByTransmitFunction(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
-  int               SendFileByMemoryBlocks    (PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
+//int               SendFileByTransmitFunction(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
+//int               SendFileByMemoryBlocks    (PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
 
   // Reading and writing
   int               ReadBuffer (PVOID p_buffer,ULONG p_size,PULONG p_bytes);
-  int               WriteBuffer(PVOID p_buffer,ULONG p_size);
+  int               WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes);
 
   // Private data
   RequestQueue*     m_queue;          // Main request queue where we reside
@@ -128,6 +140,7 @@ private:
   HTTP_REQUEST_V2   m_request;        // Standard HTTP driver structure
   RQ_Status         m_status;         // Current status of the request (by our driver)
   bool              m_secure;         // HTTPS (secure) or not (HTTP)
+  bool              m_handshakeDone;  // HTTPS initial handshake done for socket
   ULONG             m_bytesRead;      // Total number of bytes read so far
   ULONG             m_bytesWritten;   // Total number of bytes written so far
   SocketStream*     m_socket;         // Socket used to communicate with the client
@@ -138,6 +151,8 @@ private:
   // SSPI authentication handlers
   CString           m_challenge;      // Authentication challenge
   CtxtHandle        m_context;        // Authentication context
+  clock_t           m_timestamp;      // Time of the authentication
+  HANDLE            m_token;          // Primary authentication token
   // Initial buffer (Header and optional first body part) are cached here
   char*             m_initialBuffer { nullptr };
   ULONG             m_initialLength { 0 };
