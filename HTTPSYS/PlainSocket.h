@@ -72,6 +72,9 @@ public:
   int     GetKeepaliveInterval()    { return m_keepaliveInterval;   };
   SOCKET  GetActualSocket()         { return m_actualSocket;        };
 
+  // Waiting for this socket to disconnect
+  ULONG   RegisterForDisconnect();
+
 protected:
 	DWORD   m_lastError  { 0       };  // Last WSA socket error or OS error
   CString m_hostName;                // Connected to this host
@@ -96,6 +99,7 @@ private:
   int             m_sendTimeoutSeconds  { 1       };  // Send timeout in seconds
   int             m_recvTimeoutSeconds  { 1       };  // Receive timeout in seconds
 	HANDLE          m_stopEvent           { nullptr };  // Stopping a reading side of a socket
+  HANDLE          m_extraStop           { nullptr };  // Event for HttpWaitForDisconnect
   // Keep alive
   bool            m_useKeepalive        { false   };  // Use the WSA socket keepalive 
   int             m_keepaliveTime       { 15      };  // Keepalive time     in seconds

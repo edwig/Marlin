@@ -503,7 +503,7 @@ RequestQueue::ClearIncomingWaiters()
 }
 
 // Find out if a request is still in the servicing queue
-// so we know wheter still to destroy it.
+// so we know whether still to destroy it.
 bool
 RequestQueue::RequestStillInService(Request* p_request)
 {
@@ -513,13 +513,40 @@ RequestQueue::RequestStillInService(Request* p_request)
   return it != m_servicing.end();
 }
 
+// Demand start
+ULONG     
+RequestQueue::RegisterDemandStart()
+{
+  if(m_start)
+  {
+    return ERROR_ALREADY_EXISTS;
+  }
+  m_start = ::CreateEvent(nullptr,FALSE,FALSE,nullptr);
+  DWORD result = WaitForSingleObject(m_start,INFINITE);
+
+  CloseHandle(m_start);
+  m_start = NULL;
+
+  return result == WAIT_OBJECT_0 ? NO_ERROR : ERROR_CONNECTION_ABORTED;
+}
+
+// Turn the application loose!
+void
+RequestQueue::DemandStart()
+{
+  if(m_start)
+  {
+    SetEvent(m_start);
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // PRIVATE
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Stopping al registered listeners
+// Stopping all registered listeners
 void
 RequestQueue::StopAllListeners()
 {
@@ -562,7 +589,12 @@ RequestQueue::CloseEvent()
   if(m_event)
   {
     CloseHandle(m_event);
-    m_event = 0L;
+    m_event = NULL;
+  }
+  if(m_start)
+  {
+    CloseHandle(m_start);
+    m_start = NULL;
   }
 }
 

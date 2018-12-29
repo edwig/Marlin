@@ -91,6 +91,8 @@ SetUrlGroupAuthentication(UrlGroup* p_group,PHTTP_SERVER_AUTHENTICATION_INFO p_i
     bool ntlmcache = !(p_info->DisableNTLMCredentialCaching);
     CString domain;
     CString realm;
+    wstring domainWide;
+    wstring realmWide;
 
     // Check if one of these authentication schemes (or multiple) are given
     if((scheme & HTTP_AUTH_ENABLE_BASIC)     == 0 &&
@@ -108,21 +110,26 @@ SetUrlGroupAuthentication(UrlGroup* p_group,PHTTP_SERVER_AUTHENTICATION_INFO p_i
     if(scheme & HTTP_AUTH_ENABLE_DIGEST)
     {
       domain = W2A(p_info->DigestParams.DomainName);
+      domainWide = p_info->DigestParams.DomainName;
       realm  = W2A(p_info->DigestParams.Realm);
-
+      realmWide  = p_info->DigestParams.Realm;
     }
     if(scheme & HTTP_AUTH_ENABLE_BASIC)
     {
       realm = W2A(p_info->BasicParams.Realm);
+      realmWide = p_info->BasicParams.Realm;
     }
 
     // Let the group know
     p_group->SetAuthentication(scheme,domain,realm,ntlmcache);
+    p_group->SetAuthenticationWide(domainWide,realmWide);
   }
   else
   {
     // Reset the authentication of the URL group
+    wstring empty;
     p_group->SetAuthentication(0,"","",false);
+    p_group->SetAuthenticationWide(empty, empty);
   }
   return NO_ERROR;
 }
@@ -151,7 +158,7 @@ SetUrlGroupEnabledState(UrlGroup* p_group, PHTTP_STATE_INFO p_info)
   }
   else
   {
-    p_group->SetEnabledState(HttpEnabledStateInactive);
+    p_group->SetEnabledState(HttpEnabledStateActive);
   }
   return NO_ERROR;
 }

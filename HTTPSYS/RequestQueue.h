@@ -71,6 +71,9 @@ public:
   void      RemoveRequest(Request* p_request);
   void      ClearIncomingWaiters();
   bool      RequestStillInService(Request* p_request);
+  // Demand start
+  ULONG     RegisterDemandStart();
+  void      DemandStart();
 
   // Our workhorse. Implementations call this to get the next HTTP request
   ULONG     GetNextRequest(HTTP_REQUEST_ID RequestId,ULONG Flags,PHTTP_REQUEST RequestBuffer,ULONG RequestBufferLength,PULONG Bytes);
@@ -108,6 +111,7 @@ private:
 
   PointTransmitFile           m_transmitFile { nullptr };
   // Synchronization
+  HANDLE                      m_start { NULL }; // Demand start event
   CRITICAL_SECTION            m_lock;           // Queue synchronization
   HANDLE                      m_event { 0L };   // Queue waiting event
 };

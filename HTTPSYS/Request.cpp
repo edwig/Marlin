@@ -74,6 +74,9 @@ Request::~Request()
 void
 Request::ReceiveRequest()
 {
+  // Wake up any application that will service me!
+  m_queue->DemandStart();
+
   // Try to establish a SSL/TLS connection (if so necessary)
   try
   {
@@ -348,6 +351,9 @@ Request::SendResponse(PHTTP_RESPONSE p_response,PULONG p_bytes)
   // Create the response line
   CString buffer;
   AddResponseLine(buffer,p_response);
+
+  // Create server header (or not!!)
+  CreateServerHeader(p_response);
 
   // Add all response headers
   AddAllKnownResponseHeaders  (buffer,p_response->Headers.KnownHeaders);
@@ -887,8 +893,15 @@ Request::FindUrlContext()
   URL* url = m_queue->FindLongestURL(m_port,abspath);
   if(url)
   {
+    // Keep the URL and the context pointer
     m_url = url;
     m_request.UrlContext = url->m_context;
+
+    // Check if the URL is part of an active URL group
+    if (url->m_urlGroup->GetEnabledState() == HttpEnabledStateInactive)
+    {
+      throw HTTP_STATUS_SERVICE_UNAVAIL;
+    }
     return;
   }
   // Weird: no context found
@@ -1616,6 +1629,27 @@ Request::AddResponseLine(CString& p_buffer,PHTTP_RESPONSE p_response)
                                         ,p_response->Version.MinorVersion
                                         ,p_response->StatusCode
                                         ,p_response->pReason);
+}
+
+// Add a server header (only if server header not yet set)
+void
+Request::CreateServerHeader(PHTTP_RESPONSE p_response)
+{
+  if(m_url && m_url->m_urlGroup)
+  {
+    ServerSession* session = m_url->m_urlGroup->GetServerSession();
+    LPCSTR         version = session->GetServerVersion();
+    int            disable = session->GetDisableServerHeader();
+
+    if(disable == 0 || (disable == 1 && p_response->StatusCode < HTTP_STATUS_BAD_REQUEST))
+    {
+      if(p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue == nullptr)
+      {
+        p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue = version;
+        p_response->Headers.KnownHeaders[HttpHeaderServer].RawValueLength = (USHORT) strlen(version);
+      }
+    }
+  }
 }
 
 // Add all known response headers to the output buffer

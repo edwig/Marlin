@@ -13,6 +13,7 @@
 #include "UrlGroup.h"
 #include "Logfile.h"
 #include "Logging.h"
+#include "HTTPReadRegister.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -25,6 +26,7 @@ ServerSession::ServerSession()
 {
   ASSERT(g_session == nullptr);
 
+  ReadRegistrySettings();
   CreateLogfile();
   InitializeCriticalSection(&m_lock);
 }
@@ -55,20 +57,13 @@ ServerSession::~ServerSession()
   DeleteCriticalSection(&m_lock);
 }
 
-void
-ServerSession::CreateLogfile()
+LPCSTR
+ServerSession::GetServerVersion()
 {
-  CString name = ("HTTP_Server");
-  m_logfile = new Logfile(name);
-  m_logfile->SetLogRotation(true);
-  m_logfile->SetLogLevel(m_socketLogging = SOCK_LOGGING_FULLTRACE);
-
-  CString filename;
-  filename.GetEnvironmentVariable("WINDIR");
-  filename += "\\TEMP\\HTTP_Server.txt";
-
-  m_logfile->SetLogFilename(filename);
+  m_server.Format("Marlin HTTPAPI/%s Version: %s",VERSION_HTTPAPI,VERSION_HTTPSYS);
+  return m_server.GetString();
 }
+
 
 ULONG
 ServerSession::AddUrlGroup(UrlGroup* p_group)
@@ -96,6 +91,18 @@ ServerSession::RemoveUrlGroup(UrlGroup* p_group)
   return false;
 }
 
+// Changing our state means changing the state of all URL groups!
+void
+ServerSession::SetEnabledState(HTTP_ENABLED_STATE p_state)
+{
+  AutoCritSec lock(&m_lock);
+
+  for(auto& group : m_groups)
+  {
+    group->SetEnabledState(p_state);
+  }
+  m_state = p_state;
+}
 
 void 
 ServerSession::SetSocketLogging(int p_logging)
@@ -103,6 +110,90 @@ ServerSession::SetSocketLogging(int p_logging)
   if(p_logging >= SOCK_LOGGING_OFF && p_logging <= SOCK_LOGGING_FULLTRACE)
   {
     m_socketLogging = p_logging;
+  }
+}
+
+void 
+ServerSession::SetTimeoutEntityBody(USHORT p_timeout)
+{ 
+  AutoCritSec lock(&m_lock);
+
+  for(auto& group : m_groups)
+  {
+    group->SetTimeoutEntityBody(p_timeout);
+  }
+  m_timeoutEntityBody = p_timeout;
+}
+
+void 
+ServerSession::SetTimeoutDrainBody(USHORT p_timeout)
+{ 
+  AutoCritSec lock(&m_lock);
+
+  for(auto& group : m_groups)
+  {
+    group->SetTimeoutDrainBody(p_timeout);
+  }
+  m_timeoutDrainEntityBody = p_timeout;
+}
+
+void 
+ServerSession::SetTimeoutRequestQueue(USHORT p_timeout)
+{ 
+  AutoCritSec lock(&m_lock);
+
+  for(auto& group : m_groups)
+  {
+    group->SetTimeoutRequestQueue(p_timeout);
+  }
+  m_timeoutRequestQueue = p_timeout;
+}
+
+void 
+ServerSession::SetTimeoutIdleConnection(USHORT p_timeout)
+{ 
+  AutoCritSec lock(&m_lock);
+
+  for(auto& group : m_groups)
+  {
+    group->SetTimeoutIdleConnection(p_timeout);
+  }
+  m_timeoutIdleConnection = p_timeout;
+}
+
+void 
+ServerSession::SetTimeoutHeaderWait(USHORT p_timeout)
+{ 
+  AutoCritSec lock(&m_lock);
+
+  for(auto& group : m_groups)
+  {
+    group->SetTimeoutHeaderWait(p_timeout);
+  }
+  m_timeoutHeaderWait = p_timeout; 
+}
+
+void 
+ServerSession::SetTimeoutMinSendRate(ULONG  p_rate) 
+{
+  AutoCritSec lock(&m_lock);
+
+  for(auto& group : m_groups)
+  {
+    group->SetTimeoutMinSendRate(p_rate);
+  }
+  m_timeoutMinSendRate = p_rate;
+}
+
+void     
+ServerSession::SetAuthentication(ULONG p_scheme,CString p_domain,CString p_realm,wstring p_domainW,wstring p_realmW,bool p_caching)
+{
+  AutoCritSec lock(&m_lock);
+
+  for(auto& group : m_groups)
+  {
+    group->SetAuthentication(p_scheme,p_domain,p_realm,p_caching);
+    group->SetAuthenticationWide(p_domainW,p_realmW);
   }
 }
 
@@ -178,5 +269,53 @@ void PrintHexDump(DWORD p_length, const void* p_buffer)
   if(g_session && g_session->GetSocketLogging() >= SOCK_LOGGING_TRACE)
   {
     PrintHexDumpActual(p_length,p_buffer);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// PRIVATE
+//
+//////////////////////////////////////////////////////////////////////////
+
+void
+ServerSession::CreateLogfile()
+{
+  CString name = ("HTTP_Server");
+  m_logfile = new Logfile(name);
+  m_logfile->SetLogRotation(true);
+  m_logfile->SetLogLevel(m_socketLogging = SOCK_LOGGING_FULLTRACE);
+
+  CString filename;
+  filename.GetEnvironmentVariable("WINDIR");
+  filename += "\\TEMP\\HTTP_Server.txt";
+
+  m_logfile->SetLogFilename(filename);
+}
+
+// Reading the general registry settings
+void    
+ServerSession::ReadRegistrySettings()
+{
+  CString value1;
+  CString sectie;
+  DWORD   value2 = 0;
+  TCHAR   value3[BUFF_LEN];
+  DWORD   size3 = BUFF_LEN;
+
+  if(HTTPReadRegister(sectie,"DisableServerHeader",REG_DWORD,value1,&value2,value3,&size3))
+  {
+    if(value2 >= 0 && value2 <= 2)
+    {
+      m_disableServerHeader = value2;
+    }
+  }
+
+  if(HTTPReadRegister(sectie,"MaxConnections",REG_DWORD,value1,&value2,value3,&size3))
+  {
+    if(value2 >= SESSION_MIN_CONNECTIONS && value2 <= SESSION_MAX_CONNECTIONS)
+    {
+      m_maxConnections = value2;
+    }
   }
 }

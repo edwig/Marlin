@@ -117,6 +117,7 @@ private:
   // Sending the response
   void              DrainRequest();
   CString           HTTPSystemTime();
+  void              CreateServerHeader(PHTTP_RESPONSE p_response);
   void              AddResponseLine  (CString& p_buffer,PHTTP_RESPONSE p_response);
   void              AddAllKnownResponseHeaders  (CString& p_buffer,PHTTP_KNOWN_HEADER   p_headers);
   void              AddAllUnknownResponseHeaders(CString& p_buffer,PHTTP_UNKNOWN_HEADER p_headers,int p_count);

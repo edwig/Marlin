@@ -9,12 +9,14 @@
 
 #pragma once
 #include <map>
+#include <string>
 
 class ServerSession;
 class RequestQueue;
 
 // Mappings of URLS in the URL group
 using URLNames = std::multimap<CString,URL>;
+using std::wstring;
 
 class UrlGroup
 {
@@ -38,31 +40,30 @@ public:
   void SetTimeoutHeaderWait    (USHORT p_timeout) { m_timeoutHeaderWait      = p_timeout; };
   void SetTimeoutMinSendRate   (ULONG  p_rate)    { m_timeoutMinSendRate     = p_rate;    };
   void SetAuthentication(ULONG p_scheme,CString p_domain,CString p_realm,bool p_caching);
+  void SetAuthenticationWide(wstring p_domain,wstring p_realm);
 
   // GETTERS
-  ServerSession*      GetServerSession()          { return m_session;                 };
-  RequestQueue*       GetRequestQueue()           { return m_queue;                   };
-  LONG                GetNumberOfUrls()           { return (LONG)m_urls.size();       };
-  HTTP_ENABLED_STATE  GetEnabledState()           { return m_state;                   };
-  USHORT              GetTimeoutEntityBody()      { return m_timeoutEntityBody;       };
-  USHORT              GetTimeoutDrainEntityBody() { return m_timeoutDrainEntityBody;  };
-  USHORT              GetTimeoutRequestQueue()    { return m_timeoutRequestQueue;     };
-  USHORT              GetTimeoutIdleConnection()  { return m_timeoutIdleConnection;   };
-  USHORT              GetTimeoutHeaderWait()      { return m_timeoutHeaderWait;       };
-  ULONG               GetTimeoutMinSendRate()     { return m_timeoutMinSendRate;      };
-  ULONG               GetAuthenticationScheme()   { return m_scheme;                  };
-  CString             GetAuthenticationDomain()   { return m_domain;                  };
-  CString             GetAuthenticationRealm()    { return m_realm;                   };
-  bool                GetAuthenticationCaching()  { return m_ntlmCaching;             };
+  ServerSession*      GetServerSession()            { return m_session;                 };
+  RequestQueue*       GetRequestQueue()             { return m_queue;                   };
+  LONG                GetNumberOfUrls()             { return (LONG)m_urls.size();       };
+  HTTP_ENABLED_STATE  GetEnabledState()             { return m_state;                   };
+  USHORT              GetTimeoutEntityBody()        { return m_timeoutEntityBody;       };
+  USHORT              GetTimeoutDrainEntityBody()   { return m_timeoutDrainEntityBody;  };
+  USHORT              GetTimeoutRequestQueue()      { return m_timeoutRequestQueue;     };
+  USHORT              GetTimeoutIdleConnection()    { return m_timeoutIdleConnection;   };
+  USHORT              GetTimeoutHeaderWait()        { return m_timeoutHeaderWait;       };
+  ULONG               GetTimeoutMinSendRate()       { return m_timeoutMinSendRate;      };
+  ULONG               GetAuthenticationScheme()     { return m_scheme;                  };
+  CString             GetAuthenticationDomain()     { return m_domain;                  };
+  CString             GetAuthenticationRealm()      { return m_realm;                   };
+  bool                GetAuthenticationCaching()    { return m_ntlmCaching;             };
+  wstring             GetAuthenticationDomainWide() { return m_domainWide;              };
+  wstring             GetAuthenticationRealmWide()  { return m_realmWide;               };
 
 private:
   int                 SegmentedCompare(const char* p_left,const char* p_right);
   bool                UrlIsRegistered(CString p_prefix);
   bool                GetURLSettings(URL& p_url);
-  bool                ReadRegister(CString  p_sectie,CString p_key,DWORD p_type
-                                  ,CString& p_value1
-                                  ,PDWORD   p_value2
-                                  ,PTCHAR   p_value3,PDWORD p_size3);
 
   // Primary identity
   ServerSession*     m_session;
@@ -81,6 +82,8 @@ private:
   ULONG              m_scheme { 0 };
   CString            m_domain;
   CString            m_realm;
+  wstring            m_domainWide;
+  wstring            m_realmWide;
   bool               m_ntlmCaching { true };
   // Locking
   CRITICAL_SECTION   m_lock;

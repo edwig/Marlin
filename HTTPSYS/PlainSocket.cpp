@@ -39,6 +39,8 @@ PlainSocket::PlainSocket(SOCKET p_socket,HANDLE p_stopEvent)
 PlainSocket::~PlainSocket()
 {
   Close();
+
+  // Close all pending events
   if(m_read_event)
   {
     WSACloseEvent(m_read_event);
@@ -48,6 +50,11 @@ PlainSocket::~PlainSocket()
   {
     WSACloseEvent(m_write_event);
     m_write_event = nullptr;
+  }
+  if(m_stopEvent)
+  {
+    CloseHandle(m_stopEvent);
+    m_stopEvent = NULL;
   }
 }
 
@@ -362,6 +369,13 @@ PlainSocket::Disconnect(int p_how)
 bool 
 PlainSocket::Close(void)
 {
+  // Possibly notify a waiting application for HttpWaitForDisconnect
+  if(m_stopEvent)
+  {
+    SetEvent(m_stopEvent);
+  }
+
+  // If initialized: close the underlying system socket
   if(m_initDone)
   {
     // Shutdown both sides of the socket
@@ -383,6 +397,25 @@ PlainSocket::Close(void)
   return true;
 }
 
+// Waiting for this socket to disconnect
+ULONG   
+PlainSocket::RegisterForDisconnect()
+{
+  if(m_stopEvent)
+  {
+    return ERROR_ALREADY_EXISTS;
+  }
+  m_stopEvent = ::CreateEvent(nullptr,FALSE,FALSE,nullptr);
+  DWORD result = WaitForSingleObject(m_stopEvent,INFINITE);
+  
+  // Ready with stop event
+  CloseHandle(m_stopEvent);
+  m_stopEvent = NULL;
+
+  // Result
+  return result == WAIT_OBJECT_0 ? NO_ERROR : ERROR_CONNECTION_ABORTED;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // RECEIVING AND SENDING DATA
@@ -390,7 +423,8 @@ PlainSocket::Close(void)
 //////////////////////////////////////////////////////////////////////////
 
 // Receives up to Len bytes of data and returns the amount received - or SOCKET_ERROR if it times out
-int PlainSocket::RecvPartial(LPVOID p_buffer, const ULONG p_length)
+int 
+PlainSocket::RecvPartial(LPVOID p_buffer, const ULONG p_length)
 {
 	WSABUF    buffer;
 	WSAEVENT  hEvents[2] = { m_stopEvent,m_read_event };

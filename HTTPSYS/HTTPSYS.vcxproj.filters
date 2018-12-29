@@ -84,6 +84,9 @@
     <ClInclude Include="CodeBase64.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HTTPReadRegister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -210,6 +213,30 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CodeBase64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpAddUrl.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpDeleteServiceConfiguration.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpQueryUrlGroupProperty.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpSetServerSessionProperty.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpQueryRequestQueueProperty.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpWaitForDemandStart.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpWaitForDisconnect.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="HTTPReadRegister.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

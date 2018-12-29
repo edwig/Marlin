@@ -170,7 +170,8 @@ Listener::Initialize(int p_tcpListenPort)
 		}
 
     // Listen a-sync on this socket
-    if(listen(m_listenSockets[i],10))
+    // Let the provider decide on the maximum connections (SOMAXCONN)
+    if(listen(m_listenSockets[i],SOMAXCONN))
     {
       return SocketUnusable;
     }
