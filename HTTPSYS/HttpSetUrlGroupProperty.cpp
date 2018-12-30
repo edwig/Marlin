@@ -29,13 +29,17 @@ HttpSetUrlGroupProperty(IN HTTP_URL_GROUP_ID    UrlGroupId
                        ,IN ULONG                PropertyInformationLength)
 {
   // Check that these are provided
-  if(UrlGroupId == 0 || PropertyInformation == 0 || PropertyInformationLength == 0)
+  if(PropertyInformation == 0 || PropertyInformationLength == 0)
   {
     return ERROR_INVALID_PARAMETER;
   }
 
   // Find the URL group
-  UrlGroup* group = reinterpret_cast<UrlGroup*>(UrlGroupId);
+  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  if(group == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   // Do the properties
   if(Property == HttpServerAuthenticationProperty ||

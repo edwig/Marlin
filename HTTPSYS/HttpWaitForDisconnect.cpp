@@ -48,7 +48,12 @@ HttpWaitForDisconnect(IN HANDLE             RequestQueueHandle
   }
 
   // WHY?
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if (queue == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   // Grab our socket
   PlainSocket* socket = reinterpret_cast<PlainSocket*>(ConnectionId);

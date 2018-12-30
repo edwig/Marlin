@@ -22,22 +22,20 @@ static char THIS_FILE[] = __FILE__;
 ULONG WINAPI
 HttpShutdownRequestQueue(IN HANDLE RequestQueueHandle)
 {
-  // Make sure we have a handle
-  if(RequestQueueHandle == nullptr)
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if (queue == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }
-
-  // Finding our request queue
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
 
   // Remove from global queue if possible
   RequestQueues::iterator it = std::find(g_requestQueues.begin(),g_requestQueues.end(),queue);
   if(it != g_requestQueues.end())
   {
     (*it)->ClearIncomingWaiters();
+    return NO_ERROR;
   }
 
-  
-  return NO_ERROR;
+  return ERROR_INVALID_PARAMETER;
 }

@@ -23,8 +23,13 @@ HttpCreateUrlGroup(IN  HTTP_SERVER_SESSION_ID ServerSessionId
                   ,OUT PHTTP_URL_GROUP_ID     pUrlGroupId
                   ,_Reserved_ IN ULONG        Reserved)
 {
-  // See if it is our server session
-  ServerSession* session = (ServerSession*)ServerSessionId;
+  // Getting the server session
+  ServerSession* session = GetServerSessionFromHandle(ServerSessionId);
+  if(session == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
+  // See if it is **OUR** server session
   if(session != g_session)
   {
     return ERROR_INVALID_PARAMETER;

@@ -41,8 +41,12 @@ HttpFlushResponseCache(IN HANDLE        RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  // Finding our queue object
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if(queue == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   // Prefix name of the object to flush
   USES_CONVERSION;

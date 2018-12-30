@@ -32,19 +32,16 @@ HttpAddFragmentToCache(IN HANDLE              RequestQueueHandle
   }
 
   // Mandatory needed for this function
-  if(RequestQueueHandle == nullptr || UrlPrefix == nullptr || DataChunk == nullptr)
+  if(UrlPrefix == nullptr || DataChunk == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }
 
   // Only user invalidated fragments are accepted in the fragment cache
   // Time-to-live parameter not yet implemented
-  if(CachePolicy)
+  if(CachePolicy && CachePolicy->Policy != HttpCachePolicyUserInvalidates)
   {
-    if (CachePolicy->Policy != HttpCachePolicyUserInvalidates)
-    {
-      return ERROR_INVALID_PARAMETER;
-    }
+    return ERROR_INVALID_PARAMETER;
   }
 
   // Only memory fragments are accepted into the fragment cache
@@ -53,8 +50,12 @@ HttpAddFragmentToCache(IN HANDLE              RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  // Find our queue
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if (queue == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   USES_CONVERSION;
   CString prefix(W2A(UrlPrefix));

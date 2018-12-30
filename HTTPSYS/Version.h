@@ -1,7 +1,7 @@
 #pragma once
 
 #define VERSION_HTTPAPI  "2.0"      // What we implement here
-#define VERSION_HTTPSYS  "1.0.1"    // Version number of our own driver
+#define VERSION_HTTPSYS  "1.0.3"    // Version number of our own driver
 
 // Selecting the right library to link with automatically
 // So we do not need to worry about which library to use in the linker settings

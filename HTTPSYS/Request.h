@@ -11,6 +11,9 @@
 #define SECURITY_WIN32
 #include <sspi.h>
 
+// Test to see if it is still a request object
+#define HTTP_REQUEST_IDENT 0x00EDED0000EDED00
+
 // For header lines
 #define MESSAGE_BUFFER_LENGTH (16*1024)
 // Minimum timeout for HTTP body receiving in seconds
@@ -48,6 +51,7 @@ public:
   void              SetBytesRead(ULONG p_bytes)               { m_request.BytesReceived = p_bytes;   };
 
   // GETTERS
+  ULONGLONG         GetIdent()          { return m_ident;               };
   RQ_Status         GetStatus()         { return m_status;              };
   SocketStream*     GetSocket()         { return m_socket;              };
   ULONG             GetBytes()          { return m_bytesRead;           };
@@ -134,6 +138,8 @@ private:
   int               ReadBuffer (PVOID p_buffer,ULONG p_size,PULONG p_bytes);
   int               WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes);
 
+  // Identification of the request 
+  ULONGLONG         m_ident{ HTTP_REQUEST_IDENT };
   // Private data
   RequestQueue*     m_queue;          // Main request queue where we reside
   Listener*         m_listener;       // Listener that accepted our call
@@ -159,3 +165,21 @@ private:
   ULONG             m_initialLength { 0 };
   ULONG             m_bufferPosition{ 0 };
 };
+
+inline Request*
+GetRequestFromHandle(HTTP_REQUEST_ID p_handle)
+{
+  try
+  {
+    Request* request = reinterpret_cast<Request*>(p_handle);
+    if(request && request->GetIdent() == HTTP_REQUEST_IDENT)
+    {
+      return request;
+    }
+  }
+  catch(...)
+  {
+    // Error in application: Not a Request handle
+  }
+  return nullptr;
+}

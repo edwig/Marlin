@@ -18,7 +18,6 @@
 
 #define HTTP_QUEUE_IDENT 0xEDED0000EDED0000
 
-
 #define HTTP_REQUEST_QUEUE_MINIMUM    200   // As long as the WinSock backlog
 #define HTTP_REQUEST_QUEUE_DEFAULT    400   // Twice the standard WinSock backlog
 #define HTTP_REQUEST_QUEUE_MAXIMUM  64000   // Seriously overloaded server?
@@ -29,7 +28,6 @@ using UrlGroups = std::vector<UrlGroup*>;
 using Listeners = std::map<USHORT,Listener*>;
 using Requests  = std::deque<Request*>;
 using Fragments = std::map<CString,PHTTP_DATA_CHUNK>;
-
 
 typedef BOOL (* PointTransmitFile)(SOCKET hSocket,
                                    HANDLE hFile,
@@ -122,3 +120,21 @@ private:
 using RequestQueues = std::vector<RequestQueue *>;
 
 extern RequestQueues g_requestQueues;
+
+inline RequestQueue*
+GetRequestQueueFromHandle(HANDLE p_handle)
+{
+  try
+  {
+    RequestQueue* queue = reinterpret_cast<RequestQueue*>(p_handle);
+    if (queue && queue->GetIdent() == HTTP_QUEUE_IDENT)
+    {
+      return queue;
+    }
+  }
+  catch (...)
+  {
+    // Error in application: Not a RequestQueue handle
+  }
+  return nullptr;
+}

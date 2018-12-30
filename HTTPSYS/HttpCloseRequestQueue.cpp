@@ -21,8 +21,9 @@ static char THIS_FILE[] = __FILE__;
 ULONG WINAPI
 HttpCloseRequestQueue(IN HANDLE RequestQueueHandle)
 {
-  RequestQueue* queue = (RequestQueue*)RequestQueueHandle;
-  if (queue->GetIdent() != HTTP_QUEUE_IDENT)
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if (queue == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }

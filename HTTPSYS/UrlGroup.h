@@ -11,6 +11,9 @@
 #include <map>
 #include <string>
 
+// Test to see if it is still a UrlGroup object
+#define HTTP_URLGROUP_IDENT 0x0000EDED0000EDED
+
 class ServerSession;
 class RequestQueue;
 
@@ -43,6 +46,7 @@ public:
   void SetAuthenticationWide(wstring p_domain,wstring p_realm);
 
   // GETTERS
+  ULONGLONG           GetIdent()                    { return m_ident;                   };
   ServerSession*      GetServerSession()            { return m_session;                 };
   RequestQueue*       GetRequestQueue()             { return m_queue;                   };
   LONG                GetNumberOfUrls()             { return (LONG)m_urls.size();       };
@@ -66,6 +70,7 @@ private:
   bool                GetURLSettings(URL& p_url);
 
   // Primary identity
+  ULONGLONG          m_ident { HTTP_URLGROUP_IDENT };
   ServerSession*     m_session;
   RequestQueue*      m_queue { NULL };
   HTTP_ENABLED_STATE m_state;
@@ -88,3 +93,21 @@ private:
   // Locking
   CRITICAL_SECTION   m_lock;
 };
+
+inline UrlGroup*
+GetUrlGroupFromHandle(HTTP_URL_GROUP_ID p_handle)
+{
+  try
+  {
+    UrlGroup* group = reinterpret_cast<UrlGroup*>(p_handle);
+    if(group && group->GetIdent() == HTTP_URLGROUP_IDENT)
+    {
+      return group;
+    }
+  }
+  catch(...)
+  {
+    // Error in application: Not a Request handle
+  }
+  return nullptr;
+}

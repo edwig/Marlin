@@ -54,7 +54,11 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
   }
 
   // Find the request queue
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if(queue == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   // Get the next request from the queue
   ULONG bytes  = 0;

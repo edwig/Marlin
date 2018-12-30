@@ -21,10 +21,15 @@ static char THIS_FILE[] = __FILE__;
 ULONG WINAPI
 HttpCloseUrlGroup(IN HTTP_URL_GROUP_ID UrlGroupId)
 {
-  UrlGroup* group = (UrlGroup*)UrlGroupId;
+  // Find the URL group
+  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  if(group == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   ServerSession* session = group->GetServerSession();
-  if (session->RemoveUrlGroup(group))
+  if(session->RemoveUrlGroup(group))
   {
     return NO_ERROR;
   }

@@ -24,13 +24,17 @@ HttpAddUrlToUrlGroup(IN HTTP_URL_GROUP_ID UrlGroupId
                     ,_Reserved_ IN ULONG  Reserved)
 {
   // Test if reserved is zero
-  if (Reserved)
+  if(Reserved)
   {
     return ERROR_INVALID_PARAMETER;
   }
 
-  // Find our group
-  UrlGroup* group = (UrlGroup*)UrlGroupId;
+  // Find the URL group
+  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  if (group == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   USES_CONVERSION;
   CString prefix = W2A(pFullyQualifiedUrl);

@@ -28,12 +28,12 @@ HttpWaitForDemandStart(IN HANDLE        RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  // Getting our request queue
-  if (RequestQueueHandle == NULL)
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if (queue == nullptr)
   {
-    return ERROR_INVALID_HANDLE;
+    return ERROR_INVALID_PARAMETER;
   }
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
 
   // Try to wait on a first request in the queue
   return queue->RegisterDemandStart();

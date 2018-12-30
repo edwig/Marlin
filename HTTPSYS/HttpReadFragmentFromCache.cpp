@@ -38,8 +38,12 @@ HttpReadFragmentFromCache(IN HANDLE           RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  // Finding our primary object
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if(queue == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   USES_CONVERSION;
   CString prefix(W2A(UrlPrefix));

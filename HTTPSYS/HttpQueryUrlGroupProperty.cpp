@@ -29,7 +29,12 @@ ULONG WINAPI HttpQueryUrlGroupProperty(IN HTTP_URL_GROUP_ID     UrlGroupId
                                       ,IN ULONG                 PropertyInformationLength
                                       ,_Out_opt_ PULONG         ReturnLength)
 {
-  UrlGroup* group = reinterpret_cast<UrlGroup*>(UrlGroupId);
+  // Find the URL group
+  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  if (group == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   switch (Property)
   {

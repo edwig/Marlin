@@ -33,7 +33,7 @@ HttpReceiveRequestEntityBody(IN HANDLE          RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  // We do not (yet) support async I/O.
+  // We do not (yet) support asynchronous I/O.
   if(Overlapped)
   {
     return ERROR_INVALID_PARAMETER;
@@ -46,12 +46,21 @@ HttpReceiveRequestEntityBody(IN HANDLE          RequestQueueHandle
   }
 
   // Getting the elementary objects
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
-  Request*    request = reinterpret_cast<Request*>(RequestId);
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  Request*    request = GetRequestFromHandle(RequestId);
 
+  if(queue == nullptr || request == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
+
+  // Try to receive for this request
   if(queue->RequestStillInService(request))
   {
-    return request->ReceiveBuffer(EntityBuffer, EntityBufferLength, BytesReturned, Flags == HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER);
+    return request->ReceiveBuffer(EntityBuffer
+                                 ,EntityBufferLength
+                                 ,BytesReturned
+                                 ,Flags == HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER);
   }
   return ERROR_HANDLE_EOF;
 }

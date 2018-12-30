@@ -20,7 +20,13 @@ static char THIS_FILE[] = __FILE__;
 ULONG WINAPI
 HttpCloseServerSession(IN HTTP_SERVER_SESSION_ID ServerSessionId)
 {
-  ServerSession* session = (ServerSession*)ServerSessionId;
+  ServerSession* session = GetServerSessionFromHandle(ServerSessionId);
+  if (session == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
+
+  // Check if it was OUR session
   if(session == g_session)
   {
     delete session;

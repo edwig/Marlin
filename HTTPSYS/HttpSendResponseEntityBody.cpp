@@ -42,11 +42,16 @@ HttpSendResponseEntityBody(IN HANDLE          RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  // Get elementary objects
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
-  Request*    request = reinterpret_cast<Request*>(RequestId);
+  // Finding the elementary object
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  Request*    request = GetRequestFromHandle(RequestId);
   ULONG        result = ERROR_HANDLE_EOF;
-  
+
+  if (queue == nullptr || request == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
+
   if(queue->RequestStillInService(request))
   {
     ULONG bytes;

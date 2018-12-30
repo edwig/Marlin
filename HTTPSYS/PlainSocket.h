@@ -21,7 +21,7 @@ class PlainSocket : public SocketStream
 {
 public:
   // Constructor for an active connection, socket created later
-	// PlainSocket(HANDLE p_stopEvent);
+	PlainSocket(HANDLE p_stopEvent);
   // Constructor for an already connected socket
   PlainSocket(SOCKET p_socket,HANDLE p_stopEvent);
   // Destructor

@@ -19,7 +19,7 @@ static char THIS_FILE[] = __FILE__;
 
 HTTPAPI_LINKAGE
 ULONG WINAPI
-HttpQueryRequestQueueProperty(_In_ HANDLE                 RequestQueueProperty
+HttpQueryRequestQueueProperty(_In_ HANDLE                 RequestQueueHandle
                              ,_In_ HTTP_SERVER_PROPERTY   Property
                              ,_Out_writes_bytes_to_opt_(PropertyInformationLength, *ReturnLength) PVOID PropertyInformation
                              ,_In_ ULONG                  PropertyInformationLength
@@ -34,13 +34,17 @@ HttpQueryRequestQueueProperty(_In_ HANDLE                 RequestQueueProperty
   }
 
   // Parameters must be given
-  if(RequestQueueProperty == NULL || PropertyInformationLength == 0)
+  if(PropertyInformationLength == 0)
   {
     return ERROR_INVALID_PARAMETER;
   }
 
-  // Find our request queue
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueProperty);
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if (queue == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   if(Property == HttpServer503VerbosityProperty)
   {

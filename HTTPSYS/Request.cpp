@@ -36,6 +36,7 @@ Request::Request(RequestQueue* p_queue
         :m_queue(p_queue)
         ,m_listener(p_listener)
         ,m_handshakeDone(false)
+        ,m_ident(HTTP_REQUEST_IDENT)
         ,m_secure(false)
         ,m_url(nullptr)
 {
@@ -116,6 +117,7 @@ Request::ReceiveRequest()
       if(error == HTTP_STATUS_SERVICE_UNAVAIL)
       {
         ReplyServerError(error,"Service temporarily unavailable");
+        return;
       }
       else if(error == ERROR_HANDLE_EOF)
       {
@@ -128,6 +130,7 @@ Request::ReceiveRequest()
         LogError("Illegal HTTP client call. Error: %d", error);
         ReplyClientError();
         delete this;
+        return;
       }
     }
   }

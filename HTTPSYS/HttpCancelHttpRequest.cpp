@@ -30,17 +30,23 @@ HttpCancelHttpRequest(IN HANDLE           RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  // FInd queue and request
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
-  Request*    request = reinterpret_cast<Request*>(RequestId);
+  // Finding the elementary object
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  Request*    request = GetRequestFromHandle(RequestId);
+  if (queue == nullptr || request == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
+  // Handle our request
   if(queue->RequestStillInService(request))
   {
-    // Remove request from servicing queue
-    if(request->RestartConnection() == false)
-    {
+//     // Try restart on a keep-alive
+//     if(request->RestartConnection() == false)
+//     {
+      // If not: Remove request from servicing queue
       queue->RemoveRequest(request);
-    }
+//    }
   }
   return NO_ERROR;
 }

@@ -21,11 +21,12 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// PlainSocket::PlainSocket(HANDLE p_stopEvent)
-//             :m_stopEvent(p_stopEvent)
-// {
-//   Initialize();
-// }
+// Constructor for an active connection, socket created later
+PlainSocket::PlainSocket(HANDLE p_stopEvent)
+            :m_stopEvent(p_stopEvent)
+{
+  Initialize();
+}
 
 // Constructor for an already connected socket
 PlainSocket::PlainSocket(SOCKET p_socket,HANDLE p_stopEvent)
@@ -51,10 +52,10 @@ PlainSocket::~PlainSocket()
     WSACloseEvent(m_write_event);
     m_write_event = nullptr;
   }
-  if(m_stopEvent)
+  if(m_extraStop)
   {
-    CloseHandle(m_stopEvent);
-    m_stopEvent = NULL;
+    CloseHandle(m_extraStop);
+    m_extraStop = NULL;
   }
 }
 
@@ -370,9 +371,9 @@ bool
 PlainSocket::Close(void)
 {
   // Possibly notify a waiting application for HttpWaitForDisconnect
-  if(m_stopEvent)
+  if(m_extraStop)
   {
-    SetEvent(m_stopEvent);
+    SetEvent(m_extraStop);
   }
 
   // If initialized: close the underlying system socket
@@ -401,16 +402,16 @@ PlainSocket::Close(void)
 ULONG   
 PlainSocket::RegisterForDisconnect()
 {
-  if(m_stopEvent)
+  if(m_extraStop)
   {
     return ERROR_ALREADY_EXISTS;
   }
-  m_stopEvent = ::CreateEvent(nullptr,FALSE,FALSE,nullptr);
-  DWORD result = WaitForSingleObject(m_stopEvent,INFINITE);
+  m_extraStop = ::CreateEvent(nullptr,FALSE,FALSE,nullptr);
+  DWORD result = WaitForSingleObject(m_extraStop,INFINITE);
   
   // Ready with stop event
-  CloseHandle(m_stopEvent);
-  m_stopEvent = NULL;
+  CloseHandle(m_extraStop);
+  m_extraStop = NULL;
 
   // Result
   return result == WAIT_OBJECT_0 ? NO_ERROR : ERROR_CONNECTION_ABORTED;

@@ -49,9 +49,14 @@ HttpSendHttpResponse(IN HANDLE              RequestQueueHandle
   *BytesSent = 0L;
 
   // Finding the elementary object
-  RequestQueue* queue = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
-  Request*    request = reinterpret_cast<Request*>(RequestId);
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  Request*    request = GetRequestFromHandle(RequestId);
   ULONG        result = ERROR_HANDLE_EOF;
+
+  if (queue == nullptr || request == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   if(queue->RequestStillInService(request))
   {

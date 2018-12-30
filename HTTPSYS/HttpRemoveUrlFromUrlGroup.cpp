@@ -35,8 +35,12 @@ HttpRemoveUrlFromUrlGroup(IN HTTP_URL_GROUP_ID  UrlGroupId
     return ERROR_INVALID_PARAMETER;
   }
 
-  // Find our URL group
-  UrlGroup* group = reinterpret_cast<UrlGroup*>(UrlGroupId);
+  // Find the URL group
+  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  if(group == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   // Find the prefix of the URL registration
   USES_CONVERSION;

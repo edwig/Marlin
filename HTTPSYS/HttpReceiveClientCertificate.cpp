@@ -46,9 +46,19 @@ HttpReceiveClientCertificate(IN HANDLE              RequestQueueHandle
   }
 
   // Get our queue
-  RequestQueue*       queue  = reinterpret_cast<RequestQueue*>(RequestQueueHandle);
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if(queue == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
+
   // Get our server socket
   SecureServerSocket* socket = reinterpret_cast<SecureServerSocket*>(ConnectionId);
+  if(socket == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   // Decide on which certificate to return
   CertificateInfo* info = Flags ? socket->GetServerCertificate() : socket->GetClientCertificate();
