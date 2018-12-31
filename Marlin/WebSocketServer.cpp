@@ -198,7 +198,7 @@ WebSocketServer::ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,b
   RawFrame* frame = m_stack.front();
 
   // Find the data pointer
-  int   begin = frame->m_headerLength;
+  int   begin  = frame->m_headerLength;
   int64 length = frame->m_payloadLength;
 
   // Copy to the outside world

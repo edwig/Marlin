@@ -61,7 +61,7 @@ HttpSendHttpResponse(IN HANDLE              RequestQueueHandle
   if(queue->RequestStillInService(request))
   {
     // Create and send the response
-    result = request->SendResponse(HttpResponse,BytesSent);
+    result = request->SendResponse(HttpResponse,Flags,BytesSent);
 
     if((Flags & (HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE)) == 0)
     {

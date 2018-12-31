@@ -489,7 +489,7 @@ PlainSocket::RecvPartial(LPVOID p_buffer, const ULONG p_length)
 	if(IOCompleted)
 	{
 		m_recvInitiated = false;
-		if (WSAGetOverlappedResult(m_actualSocket, &m_os, &bytes_read, true, &msg_flags) && (bytes_read > 0))
+		if(WSAGetOverlappedResult(m_actualSocket,&m_os,&bytes_read,true,&msg_flags) && (bytes_read > 0))
 		{
       if(!InSecureMode())
       {

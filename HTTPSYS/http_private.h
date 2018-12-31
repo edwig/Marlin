@@ -11,7 +11,7 @@
 // - Asynchronous I/O
 // - HTTP 2.0 Server push
 //
-// 2018 (c) ir. W.E. Huisman
+// Copyright 2018 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////

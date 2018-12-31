@@ -28,6 +28,7 @@ typedef enum _rq_status
  ,RQ_READING    // Server is busy reading the request body
  ,RQ_ANSWERING  // Server is busy answering with a response header
  ,RQ_WRITING    // Server is busy writing response body
+ ,RQ_OPAQUE     // Request is in 'opaque' mode
  ,RQ_SERVICED   // Server is ready with the request
 }
 RQ_Status;
@@ -69,7 +70,7 @@ public:
   void              FindUrlContext();
   int               ReceiveBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes,bool p_all);
   void              ReceiveChunk(PVOID p_buffer, ULONG p_size);
-  int               SendResponse(PHTTP_RESPONSE p_response,PULONG p_bytes);
+  int               SendResponse(PHTTP_RESPONSE p_response,ULONG p_flags,PULONG p_bytes);
   int               SendEntityChunks(PHTTP_DATA_CHUNK p_chunks,int p_count,PULONG p_bytes);
   bool              RestartConnection();
   void              CloseRequest();

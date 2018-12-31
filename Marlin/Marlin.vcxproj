@@ -262,7 +262,6 @@
     <ClCompile Include="WebSocketServer.cpp" />
     <ClCompile Include="WebSocketServerIIS.cpp" />
     <ClCompile Include="WebSocketServerSync.cpp" />
-    <ClCompile Include="WinSocket.cpp" />
     <ClCompile Include="WSDLCache.cpp" />
     <ClCompile Include="XMLDataType.cpp" />
     <ClCompile Include="XMLMessage.cpp" />
@@ -419,7 +418,6 @@
     <ClInclude Include="WebSocketServerIIS.h" />
     <ClInclude Include="WebSocketServerSync.h" />
     <ClInclude Include="WinINETError.h" />
-    <ClInclude Include="WinSocket.h" />
     <ClInclude Include="WSDLCache.h" />
     <ClInclude Include="XMLDataType.h" />
     <ClInclude Include="XMLMessage.h" />

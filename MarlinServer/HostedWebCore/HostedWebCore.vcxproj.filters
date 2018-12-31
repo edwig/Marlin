@@ -113,9 +113,6 @@
     <ClCompile Include="..\ServerTestset\TestToken.cpp">
       <Filter>Testset</Filter>
     </ClCompile>
-    <ClCompile Include="TestHWC.cpp">
-      <Filter>Testset</Filter>
-    </ClCompile>
     <ClCompile Include="..\ServerTestset\TestManualEvents.cpp">
       <Filter>Testset</Filter>
     </ClCompile>
@@ -135,6 +132,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MarlinServerAppFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestHWC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

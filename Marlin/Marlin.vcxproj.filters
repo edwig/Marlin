@@ -309,9 +309,6 @@
     <ClCompile Include="XMLDataType.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="WinSocket.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="WebSocketClient.cpp">
       <Filter>MarlinClient</Filter>
     </ClCompile>
@@ -647,9 +644,6 @@
     </ClInclude>
     <ClInclude Include="Marlin.h" />
     <ClInclude Include="Version.h" />
-    <ClInclude Include="WinSocket.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="WebSocketClient.h">
       <Filter>MarlinClient\Headers</Filter>
     </ClInclude>

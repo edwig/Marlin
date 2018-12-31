@@ -252,17 +252,32 @@ Request::ReceiveBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes,bool p_all)
   ULONG totalRead = 0L;
   int   result    = 0;
 
+  // If all of the content was received, return END OF FILE
+  if(m_status == RQ_RECEIVED)
+  {
+    return ERROR_HANDLE_EOF;
+  }
 
-  // Initial buffer left?
+  // Receiving only takes place after reading the headers
+  // and before we start answering with a response
+  // Can occur with out-of-band HttpReceiveRequestEntityBody requests from the application
+  if(m_status != RQ_READING && m_status != RQ_OPAQUE)
+  {
+    return ERROR_CONNECTION_INVALID;
+  }
+
+  // Initial buffer left?, so use it!
   if(m_bufferPosition < m_initialLength)
   {
     return CopyInitialBuffer(p_buffer,p_size,p_bytes);
   }
 
   // Restrict the number of bytes to read if a keep-alive situation
-  if(m_status == RQ_READING && m_keepAlive &&
-     m_contentLength && (m_bytesRead < m_contentLength) &&
-     m_contentLength - m_bytesRead < p_size)
+  // and we know the designated content-length of the request
+  // So we do not read past this request into the following request
+  if(m_keepAlive && m_contentLength && 
+    (m_bytesRead < m_contentLength) &&
+    (m_contentLength - m_bytesRead) < p_size)
   {
     p_size = (ULONG) m_contentLength;
   }
@@ -340,7 +355,7 @@ Request::ReceiveChunk(PVOID p_buffer,ULONG p_size)
 // - Any entity chunks given in the first response as first body part
 //
 int
-Request::SendResponse(PHTTP_RESPONSE p_response,PULONG p_bytes)
+Request::SendResponse(PHTTP_RESPONSE p_response,ULONG p_flags,PULONG p_bytes)
 {
   // Drain any body not read in by the application
   DrainRequest();
@@ -376,6 +391,14 @@ Request::SendResponse(PHTTP_RESPONSE p_response,PULONG p_bytes)
     // Set status to writing the body
     m_status = RQ_WRITING;
 
+    // Switching out of HTTP protocol to a different protocol?
+    // Request goes to opaque mode (reading AND writing allowed)
+    if((p_flags & HTTP_SEND_RESPONSE_FLAG_OPAQUE) && p_response->StatusCode == HTTP_STATUS_SWITCH_PROTOCOLS)
+    {
+      m_status = RQ_OPAQUE;
+      m_keepAlive = false;
+    }
+
     // Grab the content length of the body
     if(p_response->Headers.KnownHeaders[HttpHeaderContentLength].pRawValue)
     {
@@ -404,6 +427,13 @@ Request::SendResponse(PHTTP_RESPONSE p_response,PULONG p_bytes)
 int
 Request::SendEntityChunks(PHTTP_DATA_CHUNK p_chunks,int p_count,PULONG p_bytes)
 {
+  // May only occur after a HttpSendHttpResponse
+  // Otherwise could occur with a out-of-band HttpSendResponseEntityBody from the application
+  if(m_status != RQ_WRITING && m_status != RQ_OPAQUE)
+  {
+    return ERROR_CONNECTION_INVALID;
+  }
+
   for(int index = 0; index < p_count; ++index)
   {
     int result = SendEntityChunk(&p_chunks[index],p_bytes);
@@ -1972,7 +2002,8 @@ Request::WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
   }
 
   // Keep track of service status
-  if((m_status == RQ_WRITING) && m_bytesWritten >= m_contentLength)
+  // Does **not** happen for RQ_OPAQUE mode!!
+  if((m_status == RQ_WRITING) && m_contentLength && m_bytesWritten >= m_contentLength)
   {
     m_status = RQ_SERVICED;
   }
