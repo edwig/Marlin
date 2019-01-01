@@ -45,6 +45,7 @@ public:
 
   // GETTERS
   ULONGLONG                   GetIdent()        { return m_ident;       };
+  HANDLE                      GetHandle()       { return m_handle;      };
   CString                     GetName()         { return m_name;        };
   HTTP_503_RESPONSE_VERBOSITY GetVerbosity()    { return m_verbosity;   };
   ULONG                       GetQueueLength()  { return m_queueLength; };
@@ -63,6 +64,7 @@ public:
   ULONG     StopListener (USHORT p_port);
   Listener* FindListener (USHORT p_port);
 
+  HANDLE    CreateHandle();
   void      AddIncomingRequest(Request* p_request);
   bool      ResetToServicing  (Request* p_request);
   URL*      FindLongestURL(USHORT p_port,CString p_abspath);
@@ -89,9 +91,11 @@ private:
   void        DeleteAllFragments();
   void        CreateEvent();
   void        CloseEvent();
+  void        CloseQueueHandle();
 
   // Identification of the request queue
   ULONGLONG                   m_ident       { HTTP_QUEUE_IDENT };
+  HANDLE                      m_handle      { NULL };
   CString                     m_name;
   // Request queue properties
   HTTP_503_RESPONSE_VERBOSITY m_verbosity   { Http503ResponseVerbosityBasic };
@@ -117,7 +121,7 @@ private:
 // All request queues are held globally
 // There will always be a very low number of these in any server application
 // We just keep them in a vector
-using RequestQueues = std::vector<RequestQueue *>;
+using RequestQueues = std::map<HANDLE,RequestQueue *>;
 
 extern RequestQueues g_requestQueues;
 
@@ -126,10 +130,14 @@ GetRequestQueueFromHandle(HANDLE p_handle)
 {
   try
   {
-    RequestQueue* queue = reinterpret_cast<RequestQueue*>(p_handle);
-    if (queue && queue->GetIdent() == HTTP_QUEUE_IDENT)
+    RequestQueues::iterator it = g_requestQueues.find(p_handle);
+    if(it != g_requestQueues.end())
     {
-      return queue;
+      RequestQueue* queue = it->second;
+      if (queue && queue->GetIdent() == HTTP_QUEUE_IDENT)
+      {
+        return queue;
+      }
     }
   }
   catch (...)

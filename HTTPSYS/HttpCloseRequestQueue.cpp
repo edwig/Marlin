@@ -31,7 +31,7 @@ HttpCloseRequestQueue(IN HANDLE RequestQueueHandle)
   // Find this queue in our global queues registration
   for(RequestQueues::iterator it = g_requestQueues.begin(); it != g_requestQueues.end(); ++it)
   {
-    if(*it != queue)
+    if(it->second != queue)
     {
       delete queue;
       g_requestQueues.erase(it);

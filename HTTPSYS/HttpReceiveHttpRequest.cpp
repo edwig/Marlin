@@ -21,7 +21,6 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
                       ,IN LPOVERLAPPED    Overlapped OPTIONAL)
 {
   // VARIOUS CHECKS
-
   // Both cannot be supplied (sync I/O or Async I/O must be performed)
   if(BytesReturned && Overlapped)
   {

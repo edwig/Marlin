@@ -39,7 +39,6 @@
 #include "PrintToken.h"
 #include "Analysis.h"
 #include "AutoCritical.h"
-#include "WinSocket.h"
 
 #define  NOGDI
 #define  NOMINMAX
@@ -244,8 +243,6 @@ main(int argc,TCHAR* argv[], TCHAR* /*envp[]*/)
       printf("Version string: %s\n",MARLIN_SERVER_VERSION);
       printf("----------------------------------\n");
       printf("\n");
-
-      MarlinStartupWinsocket();
 
       // See if we must do the standalone WebServiceServer test
       // Or that we should do the flat HTTPServer tests

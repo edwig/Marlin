@@ -25,8 +25,9 @@ HttpSetRequestQueueProperty(_In_ HANDLE               RequestQueueHandle
                            ,_Reserved_ _In_ ULONG     Reserved1
                            ,_Reserved_ _In_ PVOID     Reserved2)
 {
-  RequestQueue* queue = (RequestQueue*)RequestQueueHandle;
-  if (queue->GetIdent() != HTTP_QUEUE_IDENT)
+  // Finding our request queue
+  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  if (queue == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }

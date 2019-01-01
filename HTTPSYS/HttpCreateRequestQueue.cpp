@@ -55,14 +55,20 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
 
   USES_CONVERSION;
   CString name = W2A(Name);
+  if(name.IsEmpty())
+  {
+    name = "HTTPServer";
+  }
 
   // Create the request queue
-  RequestQueue* queue = new RequestQueue(Name);
-  *RequestQueueHandle = (HANDLE)queue;
+  RequestQueue* queue = new RequestQueue(name);
+  HANDLE handle = queue->CreateHandle();
 
   // Remember our queue
-  g_requestQueues.push_back(queue);
+  g_requestQueues.insert(std::make_pair(handle, queue));
 
+  // Tell it our application
+  *RequestQueueHandle = handle;
   return NO_ERROR;
 }
 

@@ -42,7 +42,12 @@ UrlGroup::SetRequestQueue(HANDLE p_requestQueue)
 
   if(p_requestQueue)
   {
-    m_queue = (RequestQueue*)p_requestQueue;
+    // Finding our request queue
+    m_queue = GetRequestQueueFromHandle(p_requestQueue);
+    if(m_queue == nullptr)
+    {
+      return;
+    }
     m_queue->AddURLGroup(this);
   }
   else if(m_queue)

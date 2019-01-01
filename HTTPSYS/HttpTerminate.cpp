@@ -37,7 +37,7 @@ HttpTerminate(IN ULONG Flags,_Reserved_ IN OUT PVOID pReserved)
   {
     for(auto& queue : g_requestQueues)
     {
-      delete queue;
+      delete queue.second;
     }
     g_requestQueues.clear();
   }

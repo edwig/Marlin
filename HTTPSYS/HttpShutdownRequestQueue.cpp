@@ -30,12 +30,6 @@ HttpShutdownRequestQueue(IN HANDLE RequestQueueHandle)
   }
 
   // Remove from global queue if possible
-  RequestQueues::iterator it = std::find(g_requestQueues.begin(),g_requestQueues.end(),queue);
-  if(it != g_requestQueues.end())
-  {
-    (*it)->ClearIncomingWaiters();
-    return NO_ERROR;
-  }
-
-  return ERROR_INVALID_PARAMETER;
+  queue->ClearIncomingWaiters();
+  return NO_ERROR;
 }

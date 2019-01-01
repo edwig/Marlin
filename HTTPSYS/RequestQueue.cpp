@@ -40,6 +40,33 @@ RequestQueue::~RequestQueue()
   DeleteAllFragments();
   DeleteCriticalSection(&m_lock);
   CloseEvent();
+  CloseQueueHandle();
+}
+
+HANDLE
+RequestQueue::CreateHandle()
+{
+  if(m_handle)
+  {
+    return NULL;
+  }
+  CString tempFilename;
+  tempFilename.GetEnvironmentVariable("WINDIR");
+  tempFilename += "\\TEMP\\RequestQueue_";
+  tempFilename += m_name;
+
+  m_handle = CreateFile(tempFilename
+                       ,GENERIC_READ|GENERIC_WRITE
+                       ,FILE_SHARE_READ|FILE_SHARE_WRITE
+                       ,NULL  // Security
+                       ,OPEN_ALWAYS
+                       ,FILE_ATTRIBUTE_NORMAL| FILE_FLAG_RANDOM_ACCESS | FILE_FLAG_OVERLAPPED | FILE_FLAG_DELETE_ON_CLOSE
+                       ,NULL);
+  if(m_handle == INVALID_HANDLE_VALUE)
+  {
+    return NULL;
+  }
+  return m_handle;
 }
 
 // Add an URL-Group to the queue
@@ -595,6 +622,16 @@ RequestQueue::CloseEvent()
   {
     CloseHandle(m_start);
     m_start = NULL;
+  }
+}
+
+void
+RequestQueue::CloseQueueHandle()
+{
+  if(m_handle)
+  {
+    CloseHandle(m_handle);
+    m_handle = nullptr;
   }
 }
 
