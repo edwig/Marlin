@@ -51,10 +51,25 @@ DoTestApplication(HTTPMessage* p_msg)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Getting applciation cookie                     : %s\n",error1 ? "ERROR" : "OK");
+  printf("Getting application cookie                     : %s\n",error1 ? "ERROR" : "OK");
   printf("Getting secured application cookie             : %s\n",error2 ? "ERROR" : "OK");
 
   return error1 + error2;
+}
+
+int
+TestDecryptCookie(void)
+{
+  int errors = 0;
+
+  HTTPMessage msg;
+  msg.SetCookie("MYCOOKIE","ea415e3b69bc8383ff4342ad736d8f3d","webenab-03-01-2019 10:02:43",true,true);
+  CString val = msg.GetCookieValue("MYCOOKIE","webenab-03-01-2019 10:02:43");
+
+  errors += val.Compare("ea415e3b69bc8383ff4342ad736d8f3d") != 0;
+  printf("Testing decryption of the cookie               : %s\n",errors ? "ERROR" : "OK");
+
+  return errors;
 }
 
 int

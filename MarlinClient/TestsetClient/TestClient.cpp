@@ -146,6 +146,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestJSON();
       errors += TestFindClientCertificate();
       errors += TestCookiesOverwrite();
+      errors += TestDecryptCookie();
 // #ifdef TEST_WEBSOCKETS
 //       errors += TestWebSocketAccept();
 //       errors += TestWebSocket(g_log);

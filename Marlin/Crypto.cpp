@@ -299,6 +299,12 @@ Crypto::Encryptie(CString p_input,CString p_password)
   CString    result;
   Base64     base64;
 
+  // Check for max password length
+  if(p_password.GetLength() > CRYPTO_MAXLEN_PASSWORD)
+  {
+    p_password = p_password.Left(CRYPTO_MAXLEN_PASSWORD);
+  }
+
   // Build data buffer that's large enough
   dwDataLen = p_input.GetLength();
   dwBuffLen = p_input.GetLength() + ENCRYPT_BLOCK_SIZE;
@@ -403,6 +409,12 @@ Crypto::Decryptie(CString p_input,CString p_password)
   if(dwDataLen < 3)
   {
     return result;
+  }
+
+  // Check for max password length
+  if(p_password.GetLength() > CRYPTO_MAXLEN_PASSWORD)
+  {
+    p_password = p_password.Left(CRYPTO_MAXLEN_PASSWORD);
   }
 
   // TRACING

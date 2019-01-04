@@ -44,6 +44,9 @@
 // sha2-384  CALG_SHA_384  PROV_RSA_AES   CALG_AES_256
 // sha2-512  CALG_SHA_512  PROV_RSA_AES   CALG_AES_256
 
+// Passwords cannot be longer than a SHA1 hash!!
+#define CRYPTO_MAXLEN_PASSWORD 16
+
 class Crypto
 {
 public:
