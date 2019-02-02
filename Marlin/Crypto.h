@@ -44,8 +44,8 @@
 // sha2-384  CALG_SHA_384  PROV_RSA_AES   CALG_AES_256
 // sha2-512  CALG_SHA_512  PROV_RSA_AES   CALG_AES_256
 
-// Passwords cannot be longer than a SHA1 hash!!
-#define CRYPTO_MAXLEN_PASSWORD 16
+// Extra memory might be needed in a decryption buffer
+#define MEMORY_PARAGRAPH 16
 
 class Crypto
 {

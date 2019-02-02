@@ -299,12 +299,6 @@ Crypto::Encryptie(CString p_input,CString p_password)
   CString    result;
   Base64     base64;
 
-  // Check for max password length
-  if(p_password.GetLength() > CRYPTO_MAXLEN_PASSWORD)
-  {
-    p_password = p_password.Left(CRYPTO_MAXLEN_PASSWORD);
-  }
-
   // Build data buffer that's large enough
   dwDataLen = p_input.GetLength();
   dwBuffLen = p_input.GetLength() + ENCRYPT_BLOCK_SIZE;
@@ -411,19 +405,13 @@ Crypto::Decryptie(CString p_input,CString p_password)
     return result;
   }
 
-  // Check for max password length
-  if(p_password.GetLength() > CRYPTO_MAXLEN_PASSWORD)
-  {
-    p_password = p_password.Left(CRYPTO_MAXLEN_PASSWORD);
-  }
-
   // TRACING
   // TRACE("DECRYPT PASSW: %s\n",p_password);
   // TRACE("DECRYPT INPUT: %s\n",p_input);
 
   // Create a data string of the base64 string
   dwBuffLen = (DWORD) base64.Ascii_length(dwDataLen);
-  pbData    = new BYTE[dwBuffLen + 16];
+  pbData    = new BYTE[dwBuffLen + MEMORY_PARAGRAPH];
   base64.Decrypt((const unsigned char*) p_input.GetString(),dwDataLen,(unsigned char*)pbData);
 
   // TRACING
@@ -431,16 +419,11 @@ Crypto::Decryptie(CString p_input,CString p_password)
   // {
   //   TRACE("DECRYPT: %02X\n",pbData[ind]);
   // }
-  // Maximum of 2 times a trailing zero at a base64
-  // You MUST take them of, otherwise decrypting will not work
-  // as the block size of the algorithm is incorrect.
-  if(!pbData[dwBuffLen - 1]) --dwBuffLen;
-  if(!pbData[dwBuffLen - 1]) --dwBuffLen;
-  
+
   // Decrypt by way of a cryptographic provider
   if(!CryptAcquireContext(&hCryptProv,NULL,NULL,ENCRYPT_PROVIDER,CRYPT_VERIFYCONTEXT))
   {
-    m_error.Format("Crypto context not aquired: 0x%08x",GetLastError());
+    m_error.Format("Crypto context not acquired: 0x%08x",GetLastError());
     goto error_exit;
   }
   if(!CryptCreateHash(hCryptProv,ENCRYPT_PASSWORD,0,0,&hCryptHash)) // MD5?

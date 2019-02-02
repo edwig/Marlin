@@ -138,7 +138,7 @@ copy ..\..\Certificates\web.config $(OutDir)</Command>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>httpsys.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\lib\;$(SolutionDir)..\Bin$(Configuration)_$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
