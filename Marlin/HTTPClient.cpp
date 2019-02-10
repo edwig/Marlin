@@ -3534,7 +3534,7 @@ HTTPClient::DecodeBodyEncryption(CString p_password,SOAPMessage* p_msg,CString p
 
   // Decrypt
   Crypto crypting;
-  CString newBody = crypting.Decryptie(crypt,p_password);
+  CString newBody = crypting.Decryption(crypt,p_password);
 
   int beginPos = p_answer.Find("Body>");
   int endPos = p_answer.Find("Body>",beginPos + 2);
@@ -3589,7 +3589,7 @@ HTTPClient::DecodeMesgEncryption(CString p_password,SOAPMessage* p_msg,CString p
 
   // Decrypt
   Crypto crypting;
-  CString newBody = crypting.Decryptie(crypt,p_password);
+  CString newBody = crypting.Decryption(crypt,p_password);
 
   int beginPos = p_answer.Find("Envelope>");
   int endPos = p_answer.Find("Envelope>",beginPos + 2);

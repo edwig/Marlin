@@ -316,7 +316,7 @@ WebConfig::SetEncrypted(CString p_section,CString p_parameter,CString p_value)
     CString reverse(p_value);
     reverse.MakeReverse();
     CString value = reverse + ":" + p_value;
-    encrypted = crypt.Encryptie(value,WEBCONFIG_WACHTWOORD);
+    encrypted = crypt.Encryption(value,WEBCONFIG_WACHTWOORD);
   }
   return SetParameter(p_section,p_parameter,encrypted);
 }
@@ -481,7 +481,7 @@ WebConfig::GetEncryptedString (CString p_section,CString p_parameter,CString p_d
     CString encrypted = GetParameterString(p_section,p_parameter,"");
     if(!encrypted.IsEmpty())
     {
-      decrypted = crypt.Decryptie(encrypted,WEBCONFIG_WACHTWOORD);
+      decrypted = crypt.Decryption(encrypted,WEBCONFIG_WACHTWOORD);
       int pos = decrypted.Find(':');
       if(pos > 0)
       {

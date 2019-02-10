@@ -204,12 +204,12 @@ int  TestEncryption(void)
   xprintf("\n");
 
 
-  result = crypt.Encryptie(buffer,password);
+  result = crypt.Encryption(buffer,password);
 
   xprintf("Expected       : iCby8h4MjErrm3rj4EwKsKVb5/Gt+EyNrDwE2ZG7pAqTgvzZwAMZ+D0045WhM2+5NqVYBrdGQmr+Xhn/ufq5Kw==\n");
   xprintf("ENCRYPTION     : %s\n",result.GetString());
 
-  result = crypt.Decryptie(result,password);
+  result = crypt.Decryption(result,password);
 
   xprintf("DECRYPTION     : %s\n",result.GetString());
   xprintf("\n");
@@ -221,12 +221,51 @@ int  TestEncryption(void)
   return (result == buffer) ? 0 : 1;
 }
 
+int TestEncryptionLongerStrings()
+{
+  Crypto  crypt;
+  CString result;
+  CString password("V3ryL0ngP@$$w03dL0ng3rTh@n16Ch@r$"); // 38 chars long!
+  int     errors = 0;
+
+  xprintf("TESTING THE MICROSOFT ENCYRPTION PROVIDER FOR ALL SORTS OF STRING\n");
+  xprintf("=================================================================\n");
+
+
+  for(int length = 1; length <= 300; ++length)
+  {
+    // Construct original string
+    CString original;
+    for (int index = 0; index < length; ++index)
+    {
+      original += (char) ('A' + index % 26);
+    }
+
+    CString encrypted = crypt.Encryption(original, password);
+    CString decrypted = crypt.Decryption(encrypted,password);
+
+    if(original != decrypted)
+    {
+      ++errors;
+      xprintf("Encryption failed at: %d ",length);
+      xprintf("Error: %s\n",crypt.GetError().GetString());
+    }
+  }
+
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("Test MS Cryptographic provider for lengths     : %s\n", (errors == 0) ? "OK" : "ERROR");
+  return errors;
+}
+
 int  TestCryptography(void)
 {
   int errors = 0;
 
   errors += TestHashing();
   errors += TestEncryption();
+  errors += TestEncryptionLongerStrings();
 
   return errors;
 }

@@ -83,7 +83,7 @@ Cookie::SetCookie(CString p_name,CString p_value,CString p_metadata)
   Crypto crypt;
 
   m_name     = p_name;
-  m_value    = crypt.Encryptie(p_value,p_metadata);
+  m_value    = crypt.Encryption(p_value,p_metadata);
   m_secure   = true;   // Secure encoded trough HTTPS or by our encryption
   m_httpOnly = true;   // Intended for browser only, do not expose to JavaScript
   memset(&m_expires,0,sizeof(SYSTEMTIME));
@@ -98,7 +98,7 @@ Cookie::SetCookie(CString p_name,CString p_value,CString p_metadata,bool p_secur
   Crypto crypt;
 
   m_name     = p_name;
-  m_value    = p_metadata.IsEmpty() ? p_value : crypt.Encryptie(p_value,p_metadata);
+  m_value    = p_metadata.IsEmpty() ? p_value : crypt.Encryption(p_value,p_metadata);
   m_secure   = p_secure;
   m_httpOnly = p_httpOnly;
   memset(&m_expires,0,sizeof(SYSTEMTIME));
@@ -113,7 +113,7 @@ Cookie::GetValue(CString p_metadata /*=""*/)
   if(m_secure || !p_metadata.IsEmpty())
   {
     Crypto crypt;
-    return crypt.Decryptie(m_value,p_metadata);
+    return crypt.Decryption(m_value,p_metadata);
   }
   else
   {

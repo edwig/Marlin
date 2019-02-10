@@ -1583,7 +1583,7 @@ HTTPSite::CheckBodyEncryption(SessionAddress& p_address
 
   // Decrypt
   Crypto crypting;
-  CString newBody = crypting.Decryptie(crypt,m_enc_password);
+  CString newBody = crypting.Decryption(crypt,m_enc_password);
 
   int beginPos = p_body.Find("Body>");
   int endPos   = p_body.Find("Body>",beginPos + 5);
@@ -1650,7 +1650,7 @@ HTTPSite::CheckMesgEncryption(SessionAddress& p_address
 
   // Decrypt
   Crypto crypting;
-  CString newBody = crypting.Decryptie(crypt,m_enc_password);
+  CString newBody = crypting.Decryption(crypt,m_enc_password);
 
   int beginPos = p_body.Find("Envelope>");
   int endPos   = p_body.Find("Envelope>",beginPos + 2);

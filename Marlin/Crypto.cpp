@@ -28,6 +28,8 @@
 #include "Stdafx.h"
 #include "Crypto.h"
 #include "Base64.h"
+#include "GetLastErrorAsString.h"
+#include "AutoCritical.h"
 #include <wincrypt.h>
 #include <schannel.h>
 #include <vector>
@@ -35,10 +37,9 @@
 // Encryption providers support password-hashing and encryption algorithms
 // See the documentation on: "Cryptographic Provider Types"
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa380244(v=vs.85).aspx
-#define ENCRYPT_PROVIDER    PROV_RSA_AES  // PROV_RSA_FULL
-#define ENCRYPT_PASSWORD    CALG_SHA_256  // CALG_MD5
-#define ENCRYPT_ALGORITHM   CALG_AES_256  // CALG_RC2
-#define ENCRYPT_BLOCK_SIZE  256 
+#define ENCRYPT_PROVIDER    PROV_RSA_AES
+#define ENCRYPT_PASSWORD    CALG_SHA_256
+#define ENCRYPT_ALGORITHM   CALG_AES_256
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -46,9 +47,17 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static bool m_crypt_init = false;
+CRITICAL_SECTION Crypto::m_lock;
+
 Crypto::Crypto()
        :m_hashMethod(CALG_SHA1)
 {
+  if(!m_crypt_init)
+  {
+    InitializeCriticalSection(&m_lock);
+    m_crypt_init = true;
+  }
 }
 
 Crypto::Crypto(unsigned p_hash)
@@ -67,6 +76,8 @@ Crypto::~Crypto()
 CString&
 Crypto::Digest(CString& p_buffer,CString& p_password)
 {
+  AutoCritSec lock(&m_lock);
+
   HCRYPTPROV hCryptProv = NULL; 
   HCRYPTHASH hHashPass  = NULL;
   HCRYPTHASH hHashData  = NULL;
@@ -229,6 +240,7 @@ error_exit:
 CString
 Crypto::Digest(const void* data,const size_t data_size,unsigned hashType)
 {
+  AutoCritSec lock(&m_lock);
   HCRYPTPROV hProv = NULL;
 
   if(!CryptAcquireContext(&hProv,NULL,NULL,PROV_RSA_AES,CRYPT_VERIFYCONTEXT))
@@ -288,9 +300,11 @@ Crypto::Digest(const void* data,const size_t data_size,unsigned hashType)
 
 // ENCRYPT a buffer
 CString 
-Crypto::Encryptie(CString p_input,CString p_password)
+Crypto::Encryption(CString p_input,CString p_password)
 {
-  HCRYPTPROV hCryptProv = NULL; 
+  AutoCritSec lock(&m_lock);
+
+  HCRYPTPROV hCryptProv = NULL;
   HCRYPTKEY  hCryptKey  = NULL;
   HCRYPTHASH hCryptHash = NULL;
   DWORD      dwDataLen  = 0;
@@ -299,13 +313,6 @@ Crypto::Encryptie(CString p_input,CString p_password)
   CString    result;
   Base64     base64;
 
-  // Build data buffer that's large enough
-  dwDataLen = p_input.GetLength();
-  dwBuffLen = p_input.GetLength() + ENCRYPT_BLOCK_SIZE;
-  pbData    = new BYTE[dwBuffLen];
-
-  strcpy_s((char*)pbData,dwBuffLen,p_input.GetString());
-
   // Encrypt by way of a cryptographic provider
   if(!CryptAcquireContext(&hCryptProv,NULL,NULL,ENCRYPT_PROVIDER,CRYPT_VERIFYCONTEXT))
   {
@@ -313,7 +320,7 @@ Crypto::Encryptie(CString p_input,CString p_password)
     goto error_exit;
   }
 
-  if(!CryptCreateHash(hCryptProv,ENCRYPT_PASSWORD,0,0,&hCryptHash)) // MD5?
+  if(!CryptCreateHash(hCryptProv,ENCRYPT_PASSWORD,0,0,&hCryptHash))
   {
     m_error.Format("Error creating encryption hash: 0x%08x",GetLastError());
     goto error_exit;
@@ -331,38 +338,70 @@ Crypto::Encryptie(CString p_input,CString p_password)
     goto error_exit;
   }
 
-  // TRACING
-  // TRACE("ENCRYPT PASSW: %s\n",p_password);
-  // TRACE("ENCRYPT INPUT: %s\n",pbData);
-
-  DWORD dwFlags = 0;
-  if(CryptEncrypt(hCryptKey
-                  ,NULL            // No hashing
-                  ,TRUE            // Final action
-                  ,dwFlags         // Reserved
-                  ,pbData          // The data
-                  ,&dwDataLen      // Pointer to data length
-                  ,dwBuffLen))     // Pointer to buffer length
+  DWORD blocklen = 0;
+  DWORD cbBlocklen = sizeof(DWORD);
+  if(!CryptGetKeyParam(hCryptKey,KP_BLOCKLEN,(BYTE*)&blocklen,&cbBlocklen,0))
   {
-    // TRACING
-    // for(unsigned ind = 0;ind < dwDataLen; ++ind)
-    // {
-    //   TRACE("ENCRYPT: %02X\n",pbData[ind]);
-    // }
-
-    // Create a base64 string of the hash data
-    int b64length = (int) base64.B64_length(dwDataLen);
-    char* buffer  = result.GetBufferSetLength(b64length);
-    base64.Encrypt((const unsigned char*)pbData,dwDataLen,(unsigned char*)buffer);
-    result.ReleaseBuffer(b64length);
-
-    // TRACING
-    // TRACE("ENCRYPT OUTPUT: %s\n",result);
+    m_error = "Cannot get the block length of the encryption method";
+    goto error_exit;
   }
-  else
+
+  // Build data buffer that's large enough
+  dwDataLen =   p_input.GetLength();
+  dwBuffLen = ((p_input.GetLength() + blocklen) / blocklen) * blocklen;
+  pbData = new BYTE[dwBuffLen];
+  strcpy_s((char*)pbData,dwBuffLen,p_input.GetString());
+
+  DWORD dwFlags   = 0;
+  BOOL  bFinal    = FALSE;
+  DWORD totallen  = 0;
+  BYTE* crypting  = pbData;
+  
+  do
   {
-    m_error.Format("Error encrypting data: 0x%08x",GetLastError());
+    // Calculate the part to encrypt, and if we do the final block!
+    DWORD dataLength = 0;
+    if(dwDataLen <= blocklen)
+    {
+      bFinal = TRUE;
+      dataLength = dwDataLen;
+    }
+    else
+    {
+      dataLength = blocklen;
+    }
+    
+    // Do the encryption of the block
+    if(CryptEncrypt(hCryptKey
+                   ,NULL            // No hashing
+                   ,bFinal          // Final action
+                   ,dwFlags         // Reserved
+                   ,crypting        // The data
+                   ,&dataLength     // Pointer to data length
+                   ,dwBuffLen))     // Pointer to buffer length
+    {
+      // Total encrypted bytes
+      totallen  += dataLength;
+      // This much space left in the receiving buffer
+      dwBuffLen -= blocklen;
+      dwDataLen -= blocklen;
+      // Next pointer to data to be encrypted
+      crypting += blocklen;
+    }
+    else
+    {
+      m_error.Format("Error encrypting data: 0x%08x : %s",GetLastError(),GetLastErrorAsString().GetString());
+      goto error_exit;
+    }
   }
+  while(bFinal == FALSE);
+
+  // Create a base64 string of the hash data
+  int b64length = (int)base64.B64_length(totallen);
+  char*  buffer = result.GetBufferSetLength(b64length);
+  base64.Encrypt((const unsigned char*)pbData,totallen,(unsigned char*)buffer);
+  result.ReleaseBuffer(b64length);
+
 error_exit:
   // Freeing everything
   if(hCryptKey)
@@ -386,13 +425,16 @@ error_exit:
 
 // DECRYPT a buffer
 CString 
-Crypto::Decryptie(CString p_input,CString p_password)
+Crypto::Decryption(CString p_input,CString p_password)
 {
-  HCRYPTPROV hCryptProv = NULL; 
+  AutoCritSec lock(&m_lock);
+
+  HCRYPTPROV hCryptProv = NULL;
   HCRYPTKEY  hCryptKey  = NULL;
   HCRYPTHASH hCryptHash = NULL;
   DWORD      dwDataLen  = 0;
-  DWORD      dwBuffLen  = 0;
+  DWORD      dataLength = 0;
+  DWORD      bufferSize = 0;
   BYTE*      pbData     = NULL;
   CString    result;
   Base64     base64;
@@ -404,21 +446,6 @@ Crypto::Decryptie(CString p_input,CString p_password)
   {
     return result;
   }
-
-  // TRACING
-  // TRACE("DECRYPT PASSW: %s\n",p_password);
-  // TRACE("DECRYPT INPUT: %s\n",p_input);
-
-  // Create a data string of the base64 string
-  dwBuffLen = (DWORD) base64.Ascii_length(dwDataLen);
-  pbData    = new BYTE[dwBuffLen + MEMORY_PARAGRAPH];
-  base64.Decrypt((const unsigned char*) p_input.GetString(),dwDataLen,(unsigned char*)pbData);
-
-  // TRACING
-  // for(unsigned ind = 0; ind < dwBuffLen; ++ind)
-  // {
-  //   TRACE("DECRYPT: %02X\n",pbData[ind]);
-  // }
 
   // Decrypt by way of a cryptographic provider
   if(!CryptAcquireContext(&hCryptProv,NULL,NULL,ENCRYPT_PROVIDER,CRYPT_VERIFYCONTEXT))
@@ -443,24 +470,73 @@ Crypto::Decryptie(CString p_input,CString p_password)
     m_error.Format("Error creating derived key for decryption: 0x%08x",GetLastError());
     goto error_exit;
   }
-  DWORD dwFlags = CRYPT_OAEP;
-  if(CryptDecrypt(hCryptKey
-                  ,NULL            // No hashing
-                  ,TRUE            // Final action
-                  ,dwFlags         // Reserved
-                  ,pbData          // The data
-                  ,&dwBuffLen))    // Pointer to data length
-  {
-    pbData[dwBuffLen] = 0;
-    result = pbData;
 
-    // TRACING
-    // TRACE("DECRYPT OUTPUT: %s\n",result);
-  }
-  else
+  DWORD blocklen = 0;
+  DWORD cbBlocklen = sizeof(DWORD);
+  if(!CryptGetKeyParam(hCryptKey,KP_BLOCKLEN,(BYTE*)&blocklen,&cbBlocklen,0))
   {
-    m_error.Format("Decrypting not done: 0x%08x",GetLastError());
+    m_error = "Cannot get the block length of the encryption method";
+    goto error_exit;
   }
+
+  // Create a data string of the base64 string
+  dataLength = (DWORD)base64.Ascii_length(dwDataLen);
+  bufferSize = ((dataLength + blocklen) / blocklen) * blocklen;
+  pbData = new BYTE[bufferSize];
+  base64.Decrypt((const unsigned char*)p_input.GetString(),dwDataLen,(unsigned char*)pbData);
+
+  // Maximum of 2 times a trailing zero at a base64 (because 64 is a multiple of 3!!)
+  // You MUST take them of, otherwise decrypting will not work
+  // as the block size of the algorithm is incorrect.
+  if (!pbData[dataLength - 1]) --dataLength;
+  if (!pbData[dataLength - 1]) --dataLength;
+
+  BOOL  bFinal     = FALSE;
+  DWORD dwFlags    = 0;
+  DWORD totallen   = 0;
+  BYTE* decrypting = pbData;
+
+  do 
+  {
+    // Calculate the part to decrypt, and if we do the final block!
+    DWORD data = 0;
+    if(dataLength <= blocklen)
+    {
+      data = dataLength;
+      bFinal = TRUE;
+    }
+    else
+    {
+      data = blocklen;
+    }
+
+    // Decrypt
+    if(CryptDecrypt(hCryptKey
+                   ,NULL            // No hashing
+                   ,bFinal          // Final action
+                   ,dwFlags         // Reserved
+                   ,decrypting      // The data
+                   ,&data))         // Pointer to data length
+    {
+      // Totally decrypted length
+      totallen   += data;
+      // Work the lengths
+      dataLength -= blocklen;
+      // Next block of data to be decrypted
+      decrypting += blocklen;
+    }
+    else
+    {
+      m_error.Format("Decrypting not done: 0x%08x : %s",GetLastError(),GetLastErrorAsString().GetString());
+      goto error_exit;
+    }
+  }
+  while(bFinal == FALSE);
+
+  // Getting our result
+  pbData[totallen] = 0;
+  result = pbData;
+
 error_exit:
   // Freeing everything
   if(hCryptKey)
@@ -509,7 +585,6 @@ void
 Crypto::SetHashMethod(unsigned p_hash)
 {
   if(p_hash == CALG_SHA         ||
-   //p_hash == CALG_SHA1        ||
      p_hash == CALG_HMAC        ||
      p_hash == CALG_DSS_SIGN    ||
      p_hash == CALG_RSA_SIGN    ||

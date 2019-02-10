@@ -2065,7 +2065,7 @@ SOAPMessage::EncryptNode(CString& p_node)
 {
   // Encrypt
   Crypto crypted(m_signingMethod);
-  p_node = crypted.Encryptie(p_node,m_enc_password);
+  p_node = crypted.Encryption(p_node,m_enc_password);
 }
 
 // Encrypt the body: yielding a new body
