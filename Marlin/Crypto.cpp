@@ -488,8 +488,9 @@ Crypto::Decryption(CString p_input,CString p_password)
   // Maximum of 2 times a trailing zero at a base64 (because 64 is a multiple of 3!!)
   // You MUST take them of, otherwise decrypting will not work
   // as the block size of the algorithm is incorrect.
-  if (!pbData[dataLength - 1]) --dataLength;
-  if (!pbData[dataLength - 1]) --dataLength;
+  if(p_input.GetAt(p_input.GetLength() - 1) == '=') --dataLength;
+  if(p_input.GetAt(p_input.GetLength() - 2) == '=') --dataLength;
+
 
   BOOL  bFinal     = FALSE;
   DWORD dwFlags    = 0;

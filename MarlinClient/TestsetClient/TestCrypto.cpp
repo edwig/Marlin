@@ -232,7 +232,7 @@ int TestEncryptionLongerStrings()
   xprintf("=================================================================\n");
 
 
-  for(int length = 1; length <= 300; ++length)
+  for(int length = 1; length <= 3000; ++length)
   {
     // Construct original string
     CString original;
