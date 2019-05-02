@@ -150,7 +150,7 @@ public:
   void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    };
   void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        };
   void SetHasBeenAnswered()                     { m_request            = NULL;        };
-  void SetReadBuffer(bool p_read);
+  void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
   void SetReceiver(PSOCKADDR_IN6 p_address);
   void SetFile(CString& p_fileName);
@@ -339,10 +339,3 @@ HTTPMessage::GetHasBeenAnswered()
 {
   return m_request == NULL;
 }
-
-inline void
-HTTPMessage::SetReadBuffer(bool p_read)
-{
-  m_readBuffer = p_read;
-};
-

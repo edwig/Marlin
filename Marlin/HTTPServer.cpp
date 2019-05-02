@@ -724,7 +724,7 @@ HTTPServer::BuildAuthenticationChallenge(CString p_authScheme,CString p_realm)
   {
     // Basic authentication
     // the real realm comes from the URL properties!
-    challenge = "Basic";
+    challenge = "Basic realm=\"BasicRealm\"";
   }
   else if(p_authScheme.CompareNoCase("NTLM") == 0)
   {

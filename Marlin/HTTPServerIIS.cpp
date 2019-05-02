@@ -545,7 +545,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   {
     // Remember the fact that we should read the rest of the message, and how much
     // We offload this to the HTTPSite handler for local servers and IIS alike
-    message->SetReadBuffer(true);
+    message->SetReadBuffer(true,atoi(contentLength));
   }
   else
   {
@@ -636,7 +636,7 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   LogTraceRequestBody(fbuffer);
 
   // Now everything has been read for this message
-  p_message->SetReadBuffer(false);
+  p_message->SetReadBuffer(false,0);
 
   return true;
 }

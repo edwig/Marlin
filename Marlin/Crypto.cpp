@@ -481,9 +481,6 @@ Crypto::Decryption(CString p_input,CString p_password)
 
   // Create a data string of the base64 string
   dataLength = (DWORD)base64.Ascii_length(dwDataLen);
-  bufferSize = ((dataLength + blocklen) / blocklen) * blocklen;
-  pbData = new BYTE[bufferSize];
-  base64.Decrypt((const unsigned char*)p_input.GetString(),dwDataLen,(unsigned char*)pbData);
 
   // Maximum of 2 times a trailing zero at a base64 (because 64 is a multiple of 3!!)
   // You MUST take them of, otherwise decrypting will not work
@@ -491,6 +488,9 @@ Crypto::Decryption(CString p_input,CString p_password)
   if(p_input.GetAt(p_input.GetLength() - 1) == '=') --dataLength;
   if(p_input.GetAt(p_input.GetLength() - 2) == '=') --dataLength;
 
+  bufferSize = ((dataLength + blocklen) / blocklen) * blocklen;
+  pbData = new BYTE[bufferSize];
+  base64.Decrypt((const unsigned char*)p_input.GetString(), dwDataLen, (unsigned char*)pbData);
 
   BOOL  bFinal     = FALSE;
   DWORD dwFlags    = 0;

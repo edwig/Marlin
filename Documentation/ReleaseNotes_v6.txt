@@ -9,6 +9,16 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.0.1
+------------------------
+1) Upgraded to Visual Studio 2019
+2) Small fixes for basic authentication of HTTP calls
+3) Default charset of a MultiPart Buffer HTTP Call is "UTF-8"
+
+CHANGES IN VERSION 6.0.0
+------------------------
+1) Nothing :-) Just a delivery
+
 CHANGES IN VERSION 6.0.0 Beta 2
 -------------------------------
 1) Keep-alive connections fully operational

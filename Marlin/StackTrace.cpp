@@ -309,7 +309,7 @@ StackTrace::AsString(bool p_path /* = true */) const
 {
   // Bouw een stringrepresentatie op
   CString tmp;
-  CString result = "Address     Module            Function\n"
+  CString result = "Address         Module                Function\n"
                    "--------------- --------------------- ------------------------\n";
 
   for(Trace::const_iterator iter = m_trace.begin(),end = m_trace.end();iter != end;++iter)

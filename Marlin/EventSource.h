@@ -30,7 +30,7 @@
 // 
 // MANUAL FOR EventSource
 //
-// 1: Define  your URL            e.g.  CString url("http://servermachine:1200/Key2Test/");
+// 1: Define  your URL            e.g.  CString url("http://servermachine:1200/TestApp/");
 // 2: Declare your HTTP Client    e.g.  HTTPClient client;
 // 3: Create  your eventsource as e.g.  EventSource* source = client.CreateEventSource(url);
 // 4: Set the OnOpen handler      e.g.  source->m_onopen    = OnOpen;
