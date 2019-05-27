@@ -352,7 +352,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     p_wsdlcontent += temp;
 
     // Do data type
-    switch(param->GetType() & XDT_MaskTypes & ~XDT_Type)
+    switch(param->GetType() & XDT_Type)
     {
       case XDT_CDATA:             [[fallthrough]];
       case (XDT_String|XDT_CDATA):[[fallthrough]];
