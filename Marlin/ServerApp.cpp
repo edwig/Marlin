@@ -149,8 +149,9 @@ ServerApp::ExitInstance()
     m_logfile->AnalysisLog(__FUNCTION__, LogType::LOG_INFO, true, "%s closed",m_applicationName.GetString());
 
     delete m_logfile;
-    m_logfile = nullptr;
-    m_ownLogfile = false;
+    m_logfile     = nullptr;
+    m_ownLogfile  = false;
+    g_analysisLog = nullptr;
   }
 
   // Destroy the general error report

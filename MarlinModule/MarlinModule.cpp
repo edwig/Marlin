@@ -206,9 +206,16 @@ StartLog(DWORD p_version)
                             ,p_version % 0x10000);
 }
 
+// Stopping the logging
 void
 StopLog()
 {
+  if(g_config)
+  {
+    delete g_config;
+    g_config = nullptr;
+  }
+
   if(g_analysisLog)
   {
     g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"%s closed",MODULE_NAME);
