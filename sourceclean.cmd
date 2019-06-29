@@ -8,9 +8,10 @@ attrib -h MarlinServer\.vs
 attrib -h MarlinClient\.vs
 attrib -h HTTPManager\.vs
 
-del marlin_4.rar
+del marlin_6.rar
 del /q /s /f *.sdf
 del /q /s /f *.VC.db
+rmdir /q /s lib
 rmdir /q /s Marlin\Debug
 rmdir /q /s Marlin\Release
 rmdir /q /s Marlin\x64
@@ -26,6 +27,10 @@ rmdir /q /s MarlinClient\.vs
 rmdir /q /s MarlinClient\x64
 rmdir /q /s MarlinClient\Debug
 rmdir /q /s MarlinClient\Release
+rmdir /q /s MarlinModule\.vs
+rmdir /q /s MarlinModule\x64
+rmdir /q /s MarlinModule\Debug
+rmdir /q /s MarlinModule\Release
 rmdir /q /s MarlinServer\ipch
 rmdir /q /s MarlinServer\MarlinServer\Debug
 rmdir /q /s MarlinServer\MarlinServer\Release

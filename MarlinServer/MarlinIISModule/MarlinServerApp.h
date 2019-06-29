@@ -35,7 +35,12 @@ extern int g_errors;
 class MarlinServerApp : public ServerApp
 {
 public:
-  MarlinServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot);
+  MarlinServerApp(IHttpServer*  p_iis
+                 ,WebConfigIIS* p_config
+                 ,LogAnalysis*  p_logfile
+                 ,ErrorReport*  p_report
+                 ,CString       p_appName
+                 ,CString       p_webroot);
   virtual ~MarlinServerApp();
 
   virtual void InitInstance();

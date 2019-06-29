@@ -554,7 +554,7 @@ HTTPServerSync::RunHTTPServer()
       message->SetCookiePairs(cookie);
       message->SetAcceptEncoding(acceptEncoding);
       message->SetContentType(contentType);
-      message->SetContentLength(atoll(contentLength));
+      message->SetContentLength((size_t)atoll(contentLength));
       if(site->GetAllHeaders())
       {
         // If requested so, copy all headers to the message
@@ -802,7 +802,11 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
   // Check that we read accordingly to Content-Length or to EOF
   if(mustRead == 0L)
   {
+#if defined _M_IX86
+    mustRead = ULONG_MAX;
+#else
     mustRead = ULLONG_MAX;
+#endif
   }
 
   // Reading loop

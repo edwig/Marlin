@@ -258,9 +258,6 @@
     <ClCompile Include="IISDebug.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
-    <ClCompile Include="MarlinModule.cpp">
-      <Filter>MarlinServer</Filter>
-    </ClCompile>
     <ClCompile Include="ServerApp.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
@@ -579,9 +576,6 @@
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
     <ClInclude Include="IISDebug.h">
-      <Filter>MarlinServer\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="MarlinModule.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ServerApp.h">

@@ -64,18 +64,18 @@ HTTPSiteIIS::HTTPSiteIIS(HTTPServerIIS* p_server
 void
 HTTPSiteIIS::InitSite()
 {
-  extern WebConfigIIS g_config;
+  extern WebConfigIIS* g_config;
 
   // Read for this site
-  g_config.SetApplication(m_site);
+  g_config->SetApplication(m_site);
 
   // Getting the port settings from IIS
-  g_streaming_limit = g_config.GetStreamingLimit();
-  m_port            = g_config.GetSitePort     (m_site,m_port);
-  m_ntlmCache       = g_config.GetSiteNTLMCache(m_site,m_ntlmCache);
-  m_realm           = g_config.GetSiteRealm    (m_site,m_realm);
-  m_domain          = g_config.GetSiteDomain   (m_site,m_domain);
-  m_authScheme      = g_config.GetSiteScheme   (m_site,m_authScheme);
+  g_streaming_limit = g_config->GetStreamingLimit();
+  m_port            = g_config->GetSitePort     (m_site,m_port);
+  m_ntlmCache       = g_config->GetSiteNTLMCache(m_site,m_ntlmCache);
+  m_realm           = g_config->GetSiteRealm    (m_site,m_realm);
+  m_domain          = g_config->GetSiteDomain   (m_site,m_domain);
+  m_authScheme      = g_config->GetSiteScheme   (m_site,m_authScheme);
 
 
   // Call our main class InitSite

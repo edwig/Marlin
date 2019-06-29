@@ -104,13 +104,13 @@ RegisterModule(DWORD                        p_version
 
   // Do not register module from another program
   // Be aware that the DLL must have a system-wide unique name!!
-  PCWSTR pool = p_server->GetAppPoolName();
-  g_poolName  = CW2A(pool);
-  CString dllname = GetDLLBaseName();
-  if(g_poolName.Find(dllname) != 0)
-  {
-    return S_OK;
-  }
+//   PCWSTR pool = p_server->GetAppPoolName();
+//   g_poolName  = CW2A(pool);
+//   CString dllname = GetDLLBaseName();
+//   if(g_poolName.Find(dllname) != 0)
+//   {
+//     return S_OK;
+//   }
 
   // Declaration of the start log function
   void StartLog(DWORD p_version);
@@ -237,44 +237,44 @@ StopLog()
 
 // Find the name of this DLL
 // The objective is to start only OUR dll !!
-CString GetDLLName()
-{
-  char buffer[_MAX_PATH + 1];
-
-  // Getting the module handle, if any
-  // If it fails, the process names will be retrieved
-  // Thus we get the *.DLL handle in IIS instead of a
-  // %windir%\system32\inetsrv\w3wp.exe path
-  HMODULE module = NULL;
-  GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT
-                   ,(LPCTSTR)&g_poolName
-                   ,&module);
-
-  // Retrieve the path
-  GetModuleFileName(module,buffer,_MAX_PATH);
-  CString filename = buffer;
-
-  return filename;
-}
-
-CString GetDLLBaseName()
-{
-  CString filename = GetDLLName();
-
-  // Remove *.dll or *.exe
-  int pointPosition = filename.ReverseFind('.');
-  if (pointPosition >= 0)
-  {
-    filename = filename.Left(pointPosition);
-  }
-
-  // Remove pathname (always a path name)
-  int slashPosition = filename.ReverseFind('\\');
-  filename = filename.Mid(slashPosition + 1);
-
-  return filename;
-}
+// CString GetDLLName()
+// {
+//   char buffer[_MAX_PATH + 1];
+// 
+//   // Getting the module handle, if any
+//   // If it fails, the process names will be retrieved
+//   // Thus we get the *.DLL handle in IIS instead of a
+//   // %windir%\system32\inetsrv\w3wp.exe path
+//   HMODULE module = NULL;
+//   GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+//                     GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT
+//                    ,(LPCTSTR)&g_poolName
+//                    ,&module);
+// 
+//   // Retrieve the path
+//   GetModuleFileName(module,buffer,_MAX_PATH);
+//   CString filename = buffer;
+// 
+//   return filename;
+// }
+// 
+// CString GetDLLBaseName()
+// {
+//   CString filename = GetDLLName();
+// 
+//   // Remove *.dll or *.exe
+//   int pointPosition = filename.ReverseFind('.');
+//   if (pointPosition >= 0)
+//   {
+//     filename = filename.Left(pointPosition);
+//   }
+// 
+//   // Remove pathname (always a path name)
+//   int slashPosition = filename.ReverseFind('\\');
+//   filename = filename.Mid(slashPosition + 1);
+// 
+//   return filename;
+// }
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -332,17 +332,30 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     return GL_NOTIFICATION_CONTINUE;
   }
 
+  // Create a new pool application
+  APP* poolapp = new APP();
+  poolapp->m_analysisLog = g_analysisLog;
+
+  // Read Web config from "physical" + "web.config"
+  CString baseWebConfig = physical + "web.config";
+  poolapp->m_config.ReadConfig(baseWebConfig);
+
+  CString dllLocation = g_config.GetSetting("MODULE");
+  poolapp->m_module = LoadLibrary(dllLocation);
+  poolapp->m_createServer = (CreateServerAppFunc) GetProcAddress(poolapp->m_module,"CreateServerApp");
+
   // Let the server app factory create a new one for us
   // And store it in our representation of the active application pool
-  ServerApp* app = appFactory->CreateServerApp(g_iisServer,g_analysisLog,application,webroot);
-  if (app == nullptr)
+  poolapp->m_application = (poolapp->m_createServer)(g_iisServer,g_analysisLog,application,webroot);
+  ServerApp* app = poolapp->m_application;
+  if(app == nullptr)
   {
     ERRORLOG("NO APP CREATED IN APP FACTORY!");
     return GL_NOTIFICATION_CONTINUE;
   }
   
   // Keep application in our IIS application pool
-  g_IISApplicationPool.insert(std::make_pair(applicationPort,app));
+  g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
 
   // Call the initialization
   app->InitInstance();
@@ -401,7 +414,8 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
     ERRORLOG("GLOBAL APPLICATION STOP: Not found: Could not stop application: " + application);
     return GL_NOTIFICATION_CONTINUE;
   }
-  ServerApp* app = it->second;
+  APP* poolapp = it->second;
+  ServerApp* app = poolapp->m_application;
 
   // Tell that we are stopping
   CString stopping("MarlinISSModule stopping application: ");
@@ -409,19 +423,28 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   DETAILLOG(stopping);
 
   // STOP!!
-  // Let the application stop itself and destroy it
+  // Let the application stop itself 
   app->ExitInstance();
+
+  // Unload the module
+  if(FreeLibrary(poolapp->m_module) == 0)
+  {
+    ERRORLOG("GLOBAL APPLICATION STOP: Cannot unload the appliation DLL");
+  }
+
+  // Destroy the application and the IIS pool app
   delete app;
+  delete poolapp;
 
   // Remove from our application pool
   g_IISApplicationPool.erase(it);
 
   // If we own the report, destroy it
-  if(g_report && g_reportOwner)
-  {
-    delete g_report;
-    g_report = nullptr;
-  }
+//   if(g_report && g_reportOwner)
+//   {
+//     delete g_report;
+//     g_report = nullptr;
+//   }
 
   return GL_NOTIFICATION_HANDLED;
 };
@@ -534,6 +557,14 @@ MarlinModuleFactory::Terminate()
   // Last function to be called from within IIS
   // So stop the log here
   StopLog();
+
+  // If we own the report, destroy it
+  if (g_report && g_reportOwner)
+  {
+    delete g_report;
+    g_report = nullptr;
+  }
+
 
   // Strange but true: See MSDN documentation
   delete this;

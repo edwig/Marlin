@@ -27,7 +27,6 @@
 //
 #include "stdafx.h"
 #include "MarlinServerApp.h"
-#include "MarlinModule.h"
 #include "TestServer.h"
 #include "WebSocket.h"
 
@@ -49,8 +48,13 @@ int g_errors = 0;
 //
 //////////////////////////////////////////////////////////////////////////
 
-MarlinServerApp::MarlinServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName, CString p_webroot)
-                :ServerApp(p_iis,p_logfile,p_appName,p_webroot)
+MarlinServerApp::MarlinServerApp(IHttpServer*   p_iis
+                                ,WebConfigIIS*  p_config
+                                ,LogAnalysis*   p_logfile
+                                ,ErrorReport*   p_report
+                                ,CString        p_appName
+                                ,CString        p_webroot)
+                :ServerApp(p_iis,p_config,p_logfile,p_report,p_appName,p_webroot)
 {
 }
 
@@ -220,7 +224,14 @@ void xprintf(const char* p_format,...)
 
     string.TrimRight("\n");
 
-    g_analysisLog->AnalysisLog("Testing details",LogType::LOG_INFO,false,string);
+    if(g_analysisLog)
+    {
+      g_analysisLog->AnalysisLog("Testing details",LogType::LOG_INFO,false,string);
+    }
+    else
+    {
+      TRACE(string);
+    }
   }
 }
 
@@ -248,6 +259,14 @@ void qprintf(const char* p_format,...)
 
   // Print the result to the logfile as INFO
   string = stringRegister + string;
-  g_analysisLog->AnalysisLog("Testing",LogType::LOG_INFO,false,string);
+
+  if(g_analysisLog)
+  {
+    g_analysisLog->AnalysisLog("Testing",LogType::LOG_INFO,false,string);
+  }
+  else
+  {
+    TRACE(string);
+  }
   stringRegister.Empty();
 }

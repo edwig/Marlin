@@ -393,7 +393,7 @@ HTTPRequest::ReceivedRequest()
   m_message->SetAuthorization(authorize);
   m_message->SetConnectionID(m_request->ConnectionId);
   m_message->SetContentType(contentType);
-  m_message->SetContentLength(atoll(contentLength));
+  m_message->SetContentLength((size_t)atoll(contentLength));
   m_message->SetAccessToken(accessToken);
   m_message->SetRemoteDesktop(remDesktop);
   m_message->SetSender  ((PSOCKADDR_IN6)sender);

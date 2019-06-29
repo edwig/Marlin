@@ -40,11 +40,12 @@
 #include "HTTPError.h"
 #include "HTTPTime.h"
 #include "GetLastErrorAsString.h"
-#include "MarlinModule.h"
 #include "EnsureFile.h"
 #include "WebSocketServerIIS.h"
 #include "ConvertWideString.h"
+#pragma warning (disable:4091)
 #include <httpserv.h>
+#pragma warning (error:4091)
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -502,7 +503,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   message->SetAcceptEncoding(acceptEncoding);
   message->SetRequestHandle((HTTP_OPAQUE_ID)p_context);
   message->SetContentType(contentType);
-  message->SetContentLength(atoll(contentLength));
+  message->SetContentLength((size_t)atoll(contentLength));
 
   // Finding the impersonation access token (if any)
   FindingAccessToken(p_context,message);

@@ -39,7 +39,7 @@
 
 #include "stdafx.h"
 #include "HostedWebCore.h"
-#include "MarlinModule.h"
+#include "ServerApp.h"
 #include "Analysis.h"
 #include "Version.h"
 #include <winsvc.h>
@@ -64,6 +64,7 @@ using std::wstring;
 // Handle on the 'hwebcore.dll' module
 HMODULE g_webcore = nullptr;    // Web core module
 DWORD   g_hwcShutdownMode = 0;  // Shutdown mode 0=gracefull, 1=immediate
+CString g_poolName;
 
 // The Hosted Web Core API functions
 PFN_WEB_CORE_ACTIVATE               HWC_Activate    = nullptr;
@@ -188,7 +189,7 @@ ActivateWebCore()
   bool    result    = false;
   wstring apphost   = A2CW(g_applicationhost);
   wstring webconfig = A2CW(g_webconfig);
-  wstring poolname  = A2CW(g_poolName);
+  wstring poolname  = L"POOLNAAM";
 
   if(HWC_Activate)
   {

@@ -28,7 +28,6 @@
 #include "stdafx.h"
 #include "MarlinClientCertServerApp.h"
 #include "MarlinServerApp.h"
-#include "MarlinModule.h"
 #include "TestServer.h"
 #include "WebSocket.h"
 
@@ -46,8 +45,13 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
-MarlinClientCertServerApp::MarlinClientCertServerApp(IHttpServer* p_iis,LogAnalysis*p_logfile,CString p_appName,CString p_webroot)
-                          :ServerApp(p_iis,p_logfile,p_appName,p_webroot)
+MarlinClientCertServerApp::MarlinClientCertServerApp(IHttpServer*   p_iis
+                                                    ,WebConfigIIS*  p_config
+                                                    ,LogAnalysis*   p_logfile
+                                                    ,ErrorReport*   p_report
+                                                    ,CString        p_appName
+                                                    ,CString        p_webroot)
+                          :ServerApp(p_iis,p_config,p_logfile,p_report,p_appName,p_webroot)
 {
 }
 

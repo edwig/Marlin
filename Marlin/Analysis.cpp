@@ -559,17 +559,12 @@ LogAnalysis::Flush(bool p_all)
       // See if list has become to long
       if(((int)m_list.size() > m_cache) || p_all)
       {
-        // Collecting the buffered list in a string
-        CString buffer;
-
         // Gather the list in the buffer, destroying the list
-        while(!m_list.empty())
+        for(auto& line : m_list)
         {
-          buffer += m_list.front();
-          m_list.pop_front();
+          WriteLog(line);
         }
-        // Write out the buffer
-        WriteLog(buffer);
+        m_list.clear();
       }
     }
   }

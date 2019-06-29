@@ -41,13 +41,29 @@
 
 using IISModules = std::set<CString>;
 
+class ServerApp;
+
+// Exported function that must be called first in the loaded Marlin application DLL
+typedef ServerApp* (CALLBACK* CreateServerAppFunc)(IHttpServer*,WebConfigIIS*,LogAnalysis*,ErrorReport*,CString,CString);
+
+extern IHttpServer*  g_iisServer;
+extern WebConfigIIS* g_config;
+extern LogAnalysis*  g_analysisLog;
+extern ErrorReport*  g_report;
+
+//////////////////////////////////////////////////////////////////////////
+//
+// THE SERVER APP
+//
 class ServerApp
 {
 public:
-  ServerApp(IHttpServer* p_iis
-           ,LogAnalysis* p_logfile
-           ,CString      p_appName
-           ,CString      p_webroot);
+  ServerApp(IHttpServer*  p_iis
+           ,WebConfigIIS* p_config
+           ,LogAnalysis*  p_logfile
+           ,ErrorReport*  p_report
+           ,CString       p_appName
+           ,CString       p_webroot);
   virtual ~ServerApp();
 
   // Starting and stopping the server
@@ -97,6 +113,7 @@ protected:
   IISSiteConfigs m_sites;                       // Configures sites, modules and handlers
   IHttpServer*   m_iis          { nullptr };    // Main ISS application
   HTTPServerIIS* m_httpServer   { nullptr };    // Our Marlin HTTPServer for IIS
+  WebConfigIIS*  m_config       { nullptr };    // Our web.config definition
   ThreadPool*    m_threadPool   { nullptr };    // Pointer to our own ThreadPool
   LogAnalysis*   m_logfile      { nullptr };    // Logfile object
   ErrorReport*   m_errorReport  { nullptr };    // Error reporting object
@@ -112,7 +129,12 @@ class ServerAppFactory
 public:
   ServerAppFactory();
 
-  virtual ServerApp* CreateServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot);
+  virtual ServerApp* CreateServerApp(IHttpServer*  p_iis
+                                    ,WebConfigIIS* p_config
+                                    ,LogAnalysis*  p_logfile
+                                    ,ErrorReport*  p_report
+                                    ,CString       p_appName
+                                    ,CString       p_webroot);
 };
 
 extern ServerAppFactory* appFactory;

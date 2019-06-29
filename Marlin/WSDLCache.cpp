@@ -352,7 +352,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     p_wsdlcontent += temp;
 
     // Do data type
-    switch(param->GetType() & XDT_Mask)
+    switch(param->GetType() & XDT_MaskTypes & ~XDT_Type)
     {
       case XDT_CDATA:             [[fallthrough]];
       case (XDT_String|XDT_CDATA):[[fallthrough]];
@@ -670,9 +670,9 @@ WSDLCache::CheckOutgoingMessage(SOAPMessage* p_msg,bool p_checkFields)
   // See if it is an registered operation in this WSDL
   OperationMap::iterator it = m_operations.find(name);
   if(it != m_operations.end())
-  {
-    return CheckMessage(it->second.m_output,p_msg,"Server",p_checkFields);
-  }
+    {
+      return CheckMessage(it->second.m_output,p_msg,"Server",p_checkFields);
+    }
   // No valid operation found
   p_msg->Reset();
   p_msg->SetFault("No operation","Server","No operation [" + p_msg->GetSoapAction() + "] found","While testing against WSDL");
@@ -727,14 +727,13 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
   XmlDataType type = 0;
   XMLElement* orgParam   = p_orig->GetElementFirstChild(p_orgBase);
   XMLElement* checkParam = p_check->GetElementFirstChild(p_checkBase);
-  bool        scanning   = false;
   while(orgParam)
   {
     // Name of node to find in the message to check
     CString orgName = orgParam->GetName();
     type = orgParam->GetType();
     // If the ordering is choice, instead of sequence: do a free search
-    if(!(type & WSDL_Sequence) && !scanning)
+    if(!(type & WSDL_Sequence))
     {
       checkParam = p_check->FindElement(p_checkBase,orgName,false);
     }
@@ -780,30 +779,27 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
         if(next && next->GetName().Compare(orgName) == 0)
         {
           checkParam = next;
-          scanning = true;
           continue;
         }
       }
       // Get next parameter in sequence list
-      scanning   = false;
       checkParam = p_check->GetElementSibling(checkParam);
     }
     // Next parameter in the template
     orgParam = p_orig ->GetElementSibling(orgParam);
     type     = orgParam ? orgParam->GetType() : 0;
   }
-
   // See if we've got something extra left
   checkParam = p_check->GetElementFirstChild(p_checkBase);
   while(checkParam)
   {
     CString checkName = checkParam->GetName();
     if(p_orig->FindElement(p_orgBase,checkName,false) == nullptr)
-    {
-      p_check->Reset();
+  {
+    p_check->Reset();
       p_check->SetFault("Extra field found",p_who,"Message has unexpected parameter",checkName);
-      return false;
-    }
+    return false;
+  }
     // Get next parameter in sequence list
     checkParam = p_check->GetElementSibling(checkParam);
   }
@@ -1191,22 +1187,22 @@ WSDLCache::ReadWSDLFile(LPCTSTR p_filename)
   {
     if(ex.GetSafeExceptionCode())
     {
-      // We need to detect the fact that a second exception can occur,
-      // so we do **not** call the error report method again
-      // Otherwise we would end into an infinite loop
+    // We need to detect the fact that a second exception can occur,
+    // so we do **not** call the error report method again
+    // Otherwise we would end into an infinite loop
       m_exception = true;
       m_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers());
 
-      if(m_exception)
-      {
-        // Error while sending an error report
-        // This error can originate from another thread, OR from the sending of this error report
-        CRASHLOG(0xFFFF,"DOUBLE INTERNAL ERROR while making an error report.!!");
-        m_exception = false;
-      }
-      else
-      {
-        CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport while reading WSDL has been made");
+    if(m_exception)
+    {
+      // Error while sending an error report
+      // This error can originate from another thread, OR from the sending of this error report
+      CRASHLOG(0xFFFF,"DOUBLE INTERNAL ERROR while making an error report.!!");
+      m_exception = false;
+    }
+    else
+    {
+      CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport while reading WSDL has been made");
       }
     }
     else

@@ -30,10 +30,9 @@
 #include "HTTPServerIIS.h"
 #include "HTTPMessage.h"
 #include "HTTPSite.h"
+#include "ServerApp.h"
 #include "AutoCritical.h"
 #include "ConvertWideString.h"
-#include "MarlinModule.h"
-#include <httpserv.h>
 #include <iiswebsocket.h>
 
 #ifdef _DEBUG

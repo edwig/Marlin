@@ -27,7 +27,6 @@
 //
 #include "stdafx.h"
 #include "ServerApp.h"
-#include "MarlinModule.h"
 #include "WebConfigIIS.h"
 #include "EnsureFile.h"
 #include <string>
@@ -43,13 +42,43 @@ static char THIS_FILE[] = __FILE__;
 #define WARNINGLOG(text,...)    m_httpServer->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__)
 #define ERRORLOG(code,text)     m_httpServer->ErrorLog  (__FUNCTION__,code,text)
 
+IHttpServer*  g_iisServer   = nullptr;
+WebConfigIIS* g_config      = nullptr;
+LogAnalysis*  g_analysisLog = nullptr;
+ErrorReport*  g_report      = nullptr;
+
+// IIS calls as a C program (no function decoration in object and linker)
+extern "C"
+{
+
+// RegisterModule must be exported from the DLL in one of three ways
+// 1) Through a *.DEF export file with a LIBRARY definition
+//    (but the module name can change!)
+// 2) Through the extra linker option "/EXPORT:RegisterModule" 
+//    (but can be forgotten if you build a different configuration)
+// 3) Through the __declspec(dllexport) modifier in the source
+//    This is the most stable way of exporting from a DLL
+//
+__declspec(dllexport)
+ServerApp* _stdcall CreateServerApp(IHttpServer* p_server,WebConfigIIS* p_config,LogAnalysis* p_log,ErrorReport* p_report,CString p_application,CString p_webroot)
+{
+  return appFactory->CreateServerApp(p_server,p_config,p_log,p_report,p_application,p_webroot);
+}
+
+}
+
 //XTOR
-ServerApp::ServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot)
+ServerApp::ServerApp(IHttpServer* p_iis,WebConfigIIS* p_config,LogAnalysis* p_logfile,ErrorReport* p_report,CString p_appName,CString p_webroot)
           :m_iis(p_iis)
+          ,m_config(p_config)
           ,m_logfile(p_logfile)
           ,m_applicationName(p_appName)
           ,m_webroot(p_webroot)
 {
+  g_iisServer   = p_iis;
+  g_config      = p_config;
+  g_analysisLog = p_logfile;
+  g_report      = p_report;
 }
 
 // DTOR
@@ -157,17 +186,20 @@ ServerApp::StartLogging()
 {
   if(m_logfile == nullptr)
   {
-  // Create the directory for the logfile
-  CString logfile = g_config.GetLogfilePath() + "\\" + m_applicationName + "\\Logfile.txt";
-  EnsureFile ensure(logfile);
-  ensure.CheckCreateDirectory();
+    // Create the directory for the logfile
+    CString logfile = m_config->GetLogfilePath() + "\\" + m_applicationName + "\\Logfile.txt";
+    EnsureFile ensure(logfile);
+    ensure.CheckCreateDirectory();
 
-  // Create the logfile
-  m_logfile = new LogAnalysis(m_applicationName);
-  m_logfile->SetLogFilename(logfile);
-  m_logfile->SetLogRotation(true);
-  m_logfile->SetLogLevel(g_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
+    // Create the logfile
+    m_logfile = new LogAnalysis(m_applicationName);
+    m_logfile->SetLogFilename(logfile);
+    m_logfile->SetLogRotation(true);
+    m_logfile->SetLogLevel(m_config->GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
     m_ownLogfile = true;
+
+    // Record for test classes
+    g_analysisLog = m_logfile;
   }
   else
   {
@@ -175,7 +207,7 @@ ServerApp::StartLogging()
     EnsureFile ensure;
     CString completeLogfile = m_logfile->GetLogFileName();
     CString logfile = ensure.FilenamePart(completeLogfile);
-    CString symlink = g_config.GetLogfilePath() + "\\" + m_applicationName + "\\" + logfile;
+    CString symlink = m_config->GetLogfilePath() + "\\" + m_applicationName + "\\" + logfile;
     ensure.SetFilename(symlink);
     ensure.CheckCreateDirectory();
 
@@ -273,9 +305,8 @@ ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
   CComBSTR siteCollection = L"system.applicationHost/sites";
   CComBSTR configPath = A2CW(config);
 
-  // Lees eerst de globale modules van de IIS installatie
+  // Reading all global modules of the IIS installation
   ReadModules(configPath);
-
 
   IAppHostElement*      element = nullptr;
   IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
@@ -315,50 +346,50 @@ ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
 }
 
 void
-ServerApp::ReadModules(CComBSTR& p_configPath)
+ServerApp::ReadModules(CComBSTR& /*p_configPath*/)
 {
-  USES_CONVERSION;
-  IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
-
-  // Eerst de namen van deze prontomodules met deze DLL bepalen;
-  IAppHostElement* modulesElement = nullptr;
-  if (manager->GetAdminSection(CComBSTR(L"system.webServer/globalModules"),p_configPath,&modulesElement) == S_OK)
-  {
-    IAppHostElementCollection* modulesCollection = nullptr;
-    modulesElement->get_Collection(&modulesCollection);
-    if (modulesCollection)
-    {
-      DWORD dwElementCount = 0;
-      modulesCollection->get_Count(&dwElementCount);
-
-      for (USHORT dwElement = 0; dwElement < dwElementCount; ++dwElement)
-      {
-        VARIANT vtItemIndex;
-        vtItemIndex.vt = VT_I2;
-        vtItemIndex.iVal = dwElement;
-
-        IAppHostElement* childElement = nullptr;
-        if (modulesCollection->get_Item(vtItemIndex, &childElement) == S_OK)
-        {
-          IAppHostProperty* prop = nullptr;
-          VARIANT vvar;
-          vvar.bstrVal = 0;
-
-          if (childElement->GetPropertyByName(CComBSTR(L"image"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
-          {
-            CString image = W2A(vvar.bstrVal);
-            if (image.CompareNoCase(GetDLLName()) == 0)
-            {
-              if (childElement->GetPropertyByName(CComBSTR(L"name"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
-              {
-                m_modules.insert(CString(W2A(vvar.bstrVal)).MakeLower());
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+//   USES_CONVERSION;
+//   IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+// 
+//   // Reading all names of the modules of our DLL
+//   IAppHostElement* modulesElement = nullptr;
+//   if (manager->GetAdminSection(CComBSTR(L"system.webServer/globalModules"),p_configPath,&modulesElement) == S_OK)
+//   {
+//     IAppHostElementCollection* modulesCollection = nullptr;
+//     modulesElement->get_Collection(&modulesCollection);
+//     if (modulesCollection)
+//     {
+//       DWORD dwElementCount = 0;
+//       modulesCollection->get_Count(&dwElementCount);
+// 
+//       for (USHORT dwElement = 0; dwElement < dwElementCount; ++dwElement)
+//       {
+//         VARIANT vtItemIndex;
+//         vtItemIndex.vt = VT_I2;
+//         vtItemIndex.iVal = dwElement;
+// 
+//         IAppHostElement* childElement = nullptr;
+//         if (modulesCollection->get_Item(vtItemIndex, &childElement) == S_OK)
+//         {
+//           IAppHostProperty* prop = nullptr;
+//           VARIANT vvar;
+//           vvar.bstrVal = 0;
+// 
+//           if (childElement->GetPropertyByName(CComBSTR(L"image"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+//           {
+//             CString image = W2A(vvar.bstrVal);
+//             if (image.CompareNoCase(GetDLLName()) == 0)
+//             {
+//               if (childElement->GetPropertyByName(CComBSTR(L"name"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+//               {
+//                 m_modules.insert(CString(W2A(vvar.bstrVal)).MakeLower());
+//               }
+//             }
+//           }
+//         }
+//       }
+//     }
+//   }
 }
 
 void  
@@ -367,7 +398,7 @@ ServerApp::ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config)
   USES_CONVERSION;
   IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
 
-  // Dan de handlers met prontomodule opzoeken
+  // Finding all HTTP Handlers in the configuration
   IAppHostElement* handlersElement = nullptr;
   if (manager->GetAdminSection(CComBSTR(L"system.webServer/handlers"), p_configPath, &handlersElement) == S_OK)
   {
@@ -577,9 +608,14 @@ ServerAppFactory::ServerAppFactory()
 }
 
 ServerApp* 
-ServerAppFactory::CreateServerApp(IHttpServer* p_iis,LogAnalysis* p_logfile,CString p_appName,CString p_webroot)
+ServerAppFactory::CreateServerApp(IHttpServer*  p_iis
+                                 ,WebConfigIIS* p_config
+                                 ,LogAnalysis*  p_logfile
+                                 ,ErrorReport*  p_report
+                                 ,CString       p_appName
+                                 ,CString       p_webroot)
 {
-  return new ServerApp(p_iis,p_logfile,p_appName,p_webroot);
+  return new ServerApp(p_iis,p_config,p_logfile,p_report,p_appName,p_webroot);
 }
 
 ServerAppFactory* appFactory = nullptr;

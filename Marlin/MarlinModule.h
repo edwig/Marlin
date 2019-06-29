@@ -30,19 +30,30 @@
 #pragma warning (disable:4091)
 #include <httpserv.h>
 #pragma warning (error:4091)
+#include "ServerApp.h"
 #include <map>
 
 #define SERVERNAME_BUFFERSIZE 256
 
 // Forward reference
-class ServerApp;
+
 class LogAnalysis;
 class HTTPServerIIS;
 class WebConfigIIS;
 class ErrorReport;
 
+typedef struct _application
+{
+  ServerApp*          m_application;
+  LogAnalysis*        m_analysisLog;
+  WebConfigIIS*       m_config;
+  HMODULE             m_module;
+  CreateServerAppFunc m_createServer;
+}
+APP;
+
 // All applications in the application pool
-using AppPool = std::map<int, ServerApp*>;
+using AppPool = std::map<int,APP*>;
 
 // Global objects: The one and only IIS Server application pool
 extern AppPool        g_IISApplicationPool;
@@ -53,8 +64,8 @@ extern WebConfigIIS   g_config;
 extern ErrorReport*   g_report;
 
 // Get the base name of the module DLL
-CString GetDLLBaseName();
-CString GetDLLName();
+// CString GetDLLBaseName();
+// CString GetDLLName();
 
 // Create the module class
 // Hooking into the 'integrated pipeline' of IIS
