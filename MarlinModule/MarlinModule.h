@@ -70,7 +70,7 @@ public:
 using AppPool = std::map<int,APP*>;
 
 // Global objects: The one and only IIS Server application pool
-extern AppPool        g_IISApplicationPool;
+extern AppPool g_IISApplicationPool;
 
 // Create the module class
 // Hooking into the 'integrated pipeline' of IIS
@@ -131,7 +131,9 @@ public:
   // Stopping the global factory
   virtual void Terminate();
 private:
-  bool   AlreadyLoaded(APP* p_app,CString p_path_to_dll);
+  CString ConstructDLLLocation(CString p_rootpath,CString p_dllPath);
+  bool    AlreadyLoaded(APP* p_app,CString p_path_to_dll);
+  GLOBAL_NOTIFICATION_STATUS Unhealthy(CString p_error,HRESULT p_code);
 
   CRITICAL_SECTION m_lock;
 };

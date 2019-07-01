@@ -39,5 +39,5 @@ HttpAddUrlToUrlGroup(IN HTTP_URL_GROUP_ID UrlGroupId
   USES_CONVERSION;
   CString prefix = W2A(pFullyQualifiedUrl);
 
-  return group->AddUrlPrefix(pFullyQualifiedUrl,UrlContext);
+  return group->AddUrlPrefix(prefix,UrlContext);
 }

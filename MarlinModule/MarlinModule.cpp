@@ -270,8 +270,8 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   // Be sure the logfile is there!
   StartLog(10 * 0x10000);
 
-  // First application starts all
-  DETAILLOG(CString("Starting: ") + MODULE_NAME);
+  // Starting the following application
+  DETAILLOG("Starting IIS Application");;
   DETAILLOG("IIS ApplicationID/name: " + appName);
   DETAILLOG("IIS Configuration path: " + configPath);
   DETAILLOG("IIS Physical path     : " + physical);
@@ -283,6 +283,11 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   if(it != g_IISApplicationPool.end())
   {
     // Already started this application
+    // Keep fingers crossed that another application implements this port!!!
+    CString logging;
+    logging.Format("Application [%s] on port [%d] already started.",application,applicationPort);
+    DETAILLOG(logging);
+    DETAILLOG("ANOTHER application must implement this port!!");
     return GL_NOTIFICATION_HANDLED;
   }
 
@@ -300,11 +305,12 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   if(dllLocation.IsEmpty())
   {
     delete poolapp;
-    ERRORLOG("MarlinModule could **NOT** locate MarlinModule in web.config: " + baseWebConfig);
-    return GL_NOTIFICATION_CONTINUE;
+    CString error("MarlinModule could **NOT** locate MarlinModule in web.config: " + baseWebConfig);
+    return Unhealthy(error,ERROR_NOT_FOUND);
   }
+  dllLocation = ConstructDLLLocation(physical,dllLocation);
 
-  // Already done!
+  // See if we must load the DLL application
   if(AlreadyLoaded(poolapp,dllLocation) == false)
   {
     // Try to load the DLL
@@ -317,18 +323,20 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     }
     else
     {
+      HRESULT code = GetLastError();
+      CString error("MarlinModule could **NOT** load DLL from: " + dllLocation);
       delete poolapp;
-      ERRORLOG("MarlinModule could **NOT** load DLL from: " + dllLocation);
-      return GL_NOTIFICATION_CONTINUE;
+      return Unhealthy(error,code);
     }
 
     // Getting the start address of the application factory
-    poolapp->m_createServer = (CreateServerAppFunc)GetProcAddress(poolapp->m_module, "CreateServerApp");
+    poolapp->m_createServer = (CreateServerAppFunc)GetProcAddress(poolapp->m_module,"CreateServerApp");
     if (poolapp->m_createServer == nullptr)
     {
+      HRESULT code = GetLastError();
+      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp'");
       delete poolapp;
-      ERRORLOG("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp'");
-      return GL_NOTIFICATION_CONTINUE;
+      return Unhealthy(error,code);
     }
   }
 
@@ -343,8 +351,8 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   if(app == nullptr)
   {
     delete poolapp;
-    ERRORLOG("NO APPLICATION CREATED IN THE APP-FACTORY!");
-    return GL_NOTIFICATION_CONTINUE;
+    CString error("NO APPLICATION CREATED IN THE APP-FACTORY!");
+    return Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
   }
 
   // Keep our application
@@ -363,8 +371,8 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   if(app->CorrectlyStarted() == false)
   {
     delete poolapp;
-    ERRORLOG("ERROR STARTING Application: " + application);
-    return GL_NOTIFICATION_CONTINUE;
+    CString error("ERROR STARTING Application: " + application);
+    return Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
   }
 
   // First made error report will be reused later by all others
@@ -403,8 +411,8 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   AppPool::iterator it = g_IISApplicationPool.find(applicationPort);
   if(it == g_IISApplicationPool.end())
   {
-    ERRORLOG("GLOBAL APPLICATION STOP: Not found: Could not stop application: " + application);
-    return GL_NOTIFICATION_CONTINUE;
+    CString error("GLOBAL APPLICATION STOP: Not found: Could not stop application: " + application);
+    return Unhealthy(error,ERROR_NOT_FOUND);
   }
   APP* poolapp = it->second;
   ServerApp* app = poolapp->m_application;
@@ -498,6 +506,43 @@ MarlinGlobalFactory::AlreadyLoaded(APP* p_app,CString p_path_to_dll)
   return false;
 }
 
+GLOBAL_NOTIFICATION_STATUS 
+MarlinGlobalFactory::Unhealthy(CString p_error,HRESULT p_code)
+{
+  USES_CONVERSION;
+
+  // Print to our logfile
+  ERRORLOG(p_error);
+  CComBSTR werr = A2W(p_error);
+  // Report to IIS to kill the application with **this** reason
+  g_iisServer->ReportUnhealthy(werr,p_code);
+  return GL_NOTIFICATION_HANDLED;
+}
+
+// If the given DLL begins with a '@' it is an absolute pathname
+// Othwerwise it is relative to the directory the 'web.config' is in
+CString 
+MarlinGlobalFactory::ConstructDLLLocation(CString p_rootpath,CString p_dllPath)
+{
+  CString pathname;
+
+  if(p_dllPath.GetAt(0) == '@')
+  {
+    pathname = p_dllPath.Mid(1);
+  }
+  else
+  {
+    pathname = p_rootpath;
+    if(pathname.Right(1) != "\\")
+    {
+      pathname += "\\";
+    }
+    pathname += p_dllPath;
+  }
+  return pathname;
+}
+
+// Stopping the global factory
 void 
 MarlinGlobalFactory::Terminate()
 {
@@ -514,6 +559,7 @@ MarlinGlobalFactory::Terminate()
     }
     DETAILLOG("GlobalFactory terminated");
   }
+  // Strange but true: See MSDN documentation
   delete this;
 };
 
@@ -551,6 +597,8 @@ MarlinModuleFactory::GetHttpModule(OUT CHttpModule**     p_module
   return S_OK;
 }
 
+// Last module factory stops AFTER the global factory
+// Very strange that global factory terminate is not the last
 void 
 MarlinModuleFactory::Terminate()
 {
