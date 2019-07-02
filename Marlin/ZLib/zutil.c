@@ -43,21 +43,21 @@ uLong ZEXPORT zlibCompileFlags()
     }
     switch ((int)(sizeof(uLong))) {
     case 2:     break;
-    case 4:     flags += 1 << 2;        break;
-    case 8:     flags += 2 << 2;        break;
-    default:    flags += 3 << 2;
+    case 4:     flags += (1 << 2);        break;
+    case 8:     flags += 8;               break; // (2 << 2). Shuts up SonarQube :-)
+    default:    flags += (3 << 2);        break;
     }
     switch ((int)(sizeof(voidpf))) {
     case 2:     break;
     case 4:     flags += 1 << 4;        break;
     case 8:     flags += 2 << 4;        break;
-    default:    flags += 3 << 4;
+    default:    flags += 3 << 4;        break;
     }
     switch ((int)(sizeof(z_off_t))) {
     case 2:     break;
     case 4:     flags += 1 << 6;        break;
     case 8:     flags += 2 << 6;        break;
-    default:    flags += 3 << 6;
+    default:    flags += 3 << 6;        break;
     }
 #ifdef DEBUG
     flags += 1 << 8;
@@ -300,7 +300,7 @@ extern void   free   OF((voidpf ptr));
 
 voidpf ZLIB_INTERNAL zcalloc (voidpf opaque,unsigned items,unsigned size)
 {
-    if (opaque) items += size - size; /* make compiler happy */
+    if(opaque) { } // Make compiler happy :-(
     return sizeof(uInt) > 2 ? (voidpf)malloc(items * size) :
                               (voidpf)calloc(items, size);
 }

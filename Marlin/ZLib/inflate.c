@@ -107,7 +107,9 @@ int ZEXPORT inflateResetKeep(z_streamp strm)
 
     if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
     state = (struct inflate_state FAR *)strm->state;
-    strm->total_in = strm->total_out = state->total = 0;
+    state->total    = 0;
+    strm->total_out = 0;
+    strm->total_in  = 0;
     strm->msg = Z_NULL;
     if (state->wrap)        /* to support ill-conceived Java test suite */
         strm->adler = state->wrap & 1;
@@ -118,7 +120,9 @@ int ZEXPORT inflateResetKeep(z_streamp strm)
     state->head = Z_NULL;
     state->hold = 0;
     state->bits = 0;
-    state->lencode = state->distcode = state->next = state->codes;
+    state->next     = state->codes;
+    state->distcode = state->codes;
+    state->lencode  = state->codes;
     state->sane = 1;
     state->back = -1;
     Tracev((stderr, "inflate: reset\n"));
@@ -659,7 +663,8 @@ int ZEXPORT inflate(z_streamp strm,int flush)
             }
             state->dmax = 1U << len;
             Tracev((stderr, "inflate:   zlib header ok\n"));
-            strm->adler = state->check = adler32(0L, Z_NULL, 0);
+            state->check = adler32(0L, Z_NULL, 0);
+            strm->adler = state->check;
             state->mode = hold & 0x200 ? DICTID : TYPE;
             INITBITS();
             break;
@@ -787,13 +792,15 @@ int ZEXPORT inflate(z_streamp strm,int flush)
                 state->head->hcrc = (int)((state->flags >> 9) & 1);
                 state->head->done = 1;
             }
-            strm->adler = state->check = crc32(0L, Z_NULL, 0);
+            state->check = crc32(0L, Z_NULL, 0);
+            strm->adler = state->check;
             state->mode = TYPE;
             break;
 #endif
         case DICTID:
             NEEDBITS(32);
-            strm->adler = state->check = ZSWAP32(hold);
+            state->check = ZSWAP32(hold);
+            strm->adler = state->check;
             INITBITS();
             state->mode = DICT;
         case DICT:
@@ -801,7 +808,8 @@ int ZEXPORT inflate(z_streamp strm,int flush)
                 RESTORE();
                 return Z_NEED_DICT;
             }
-            strm->adler = state->check = adler32(0L, Z_NULL, 0);
+            state->check = adler32(0L, Z_NULL, 0);
+            strm->adler = state->check;
             state->mode = TYPE;
         case TYPE:
             if (flush == Z_BLOCK || flush == Z_TREES) goto inf_leave;
@@ -1157,9 +1165,11 @@ int ZEXPORT inflate(z_streamp strm,int flush)
                 out -= left;
                 strm->total_out += out;
                 state->total += out;
-                if (out)
-                    strm->adler = state->check =
-                        UPDATE(state->check, put - out, out);
+                if(out)
+                {
+                  state->check = UPDATE(state->check,put - out,out);
+                  strm->adler = state->check;
+                }
                 out = left;
                 if ((
 #ifdef GUNZIP
@@ -1220,9 +1230,11 @@ int ZEXPORT inflate(z_streamp strm,int flush)
     strm->total_in += in;
     strm->total_out += out;
     state->total += out;
-    if (state->wrap && out)
-        strm->adler = state->check =
-            UPDATE(state->check, strm->next_out - out, out);
+    if(state->wrap && out)
+    {
+      state->check = UPDATE(state->check,strm->next_out - out,out);
+      strm->adler  = state->check;
+    }
     strm->data_type = state->bits + (state->last ? 64 : 0) +
                       (state->mode == TYPE ? 128 : 0) +
                       (state->mode == LEN_ || state->mode == COPY_ ? 256 : 0);

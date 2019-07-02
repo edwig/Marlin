@@ -248,6 +248,7 @@ void CRedirect::TerminateChildProcess()
     VERIFY(::TerminateProcess(m_hChildProcess, 1));
     VERIFY(::WaitForSingleObject(m_hChildProcess, 1000) != WAIT_TIMEOUT);
   }
+  CloseHandle(m_hChildProcess);
   m_hChildProcess = NULL;
 
   // cleanup the exit event
@@ -358,23 +359,23 @@ CRedirect::StdOutThread(HANDLE hStdOutRead)
       m_eof_input = 1;
       break;			
     }
-      if(lpszBuffer[0] == '\004')
-      {
-        // EOT encountered: End of transmission channel
-        // from redirected child
-        m_eof_input = 1;
-        break;
-      }
-      *linePointer++ = lpszBuffer[0];
-      if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
-      {
-        // Virtual function to notify derived class that
-        // characters are writted to stdout.
-        *linePointer = 0;
-        OnChildStdOutWrite(lineBuffer);
-        linePointer = lineBuffer;
-      }
+    if(lpszBuffer[0] == '\004')
+    {
+      // EOT encountered: End of transmission channel
+      // from redirected child
+      m_eof_input = 1;
+      break;
     }
+    *linePointer++ = lpszBuffer[0];
+    if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
+    {
+      // Virtual function to notify derived class that
+      // characters are writted to stdout.
+      *linePointer = 0;
+      OnChildStdOutWrite(lineBuffer);
+      linePointer = lineBuffer;
+    }
+  }
   return 0;
 }
 
@@ -401,22 +402,22 @@ CRedirect::StdErrThread(HANDLE hStdErrRead)
       }
       break;			
     }
-      if(lpszBuffer[0] == '\004')
-      {
-        // EOT encountered: End of transmission channel
-        // from redirected child
-        break;
-      }
-      *linePointer++ = lpszBuffer[0];
-      if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
-      {
-        // Virtual function to notify derived class that
-        // characters are writted to stdout.
-        *linePointer = 0;
-        OnChildStdErrWrite(lpszBuffer);
-        linePointer = lineBuffer;
-      }
+    if(lpszBuffer[0] == '\004')
+    {
+      // EOT encountered: End of transmission channel
+      // from redirected child
+      break;
     }
+    *linePointer++ = lpszBuffer[0];
+    if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
+    {
+      // Virtual function to notify derived class that
+      // characters are writted to stdout.
+      *linePointer = 0;
+      OnChildStdErrWrite(lpszBuffer);
+      linePointer = lineBuffer;
+    }
+  }
   return 0;
 }
 

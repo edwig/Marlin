@@ -119,10 +119,14 @@ public:
   XMLElement*     GetParent()       { return m_parent;      };
   XMLRestriction* GetRestriction()  { return m_restriction; };
 
+  // TESTERS
+  static bool     IsValidName(const CString& p_name);
+  static CString  InvalidNameMessage(const CString& p_name);
+
   // SETTERS
   void            SetParent(XMLElement* parent)  { m_parent    = parent;    };
   void            SetNamespace(CString p_namesp) { m_namespace = p_namesp;  };
-  void            SetName(CString p_name)        { m_name      = p_name;    };
+  void            SetName(CString p_name);
   void            SetType(XmlDataType p_type)    { m_type      = p_type;    };
   void            SetValue(CString p_value)      { m_value     = p_value;   };
   void            SetRestriction(XMLRestriction* p_restrict) { m_restriction = p_restrict; };

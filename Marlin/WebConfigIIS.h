@@ -67,9 +67,9 @@ typedef struct _iisSite
 }
 IISSite;
 
-using IISSites = std::map<CString,IISSite>;
-using WCFiles  = std::map<CString,int>;
-using Settings = std::map<CString,CString>;
+using IISSites    = std::map<CString,IISSite>;
+using WCFiles     = std::map<CString,int>;
+using AppSettings = std::map<CString,CString>;
 
 class WebConfigIIS
 {
@@ -126,15 +126,15 @@ private:
   void        ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem);
 
   // For specific web application, or just defaults
-  CString   m_application;
+  CString     m_application;
   // Base web.config file
-  CString   m_webconfig;
+  CString     m_webconfig;
   // Files already read in
-  WCFiles   m_files;
+  WCFiles     m_files;
 
-  Settings  m_settings;
-  IISSites  m_sites;
-  CString   m_logpath;
-  bool      m_logging        { false };
-  ULONG     m_streamingLimit { STREAMING_LIMIT };
+  AppSettings m_settings;
+  IISSites    m_sites;
+  CString     m_logpath;
+  bool        m_logging        { false };
+  ULONG       m_streamingLimit { STREAMING_LIMIT };
 };

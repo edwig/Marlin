@@ -663,24 +663,24 @@ ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
   {
     if(ex.GetSafeExceptionCode())
     {
-    // We need to detect the fact that a second exception can occur,
-    // so we do **not** call the error report method again
-    // Otherwise we would end into an infinite loop
+      // We need to detect the fact that a second exception can occur,
+      // so we do **not** call the error report method again
+      // Otherwise we would end into an infinite loop
       g_exception = true;
       g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers());
 
-    if(g_exception)
-    {
-      // Error while sending an error report
-      // This error can originate from another thread, OR from the sending of this error report
-      TP_TRACE0("HeartBeat: DOUBLE INTERNAL ERROR while making an error report.!!");
-      g_exception = false;
+      if(g_exception)
+      {
+        // Error while sending an error report
+        // This error can originate from another thread, OR from the sending of this error report
+        TP_TRACE0("HeartBeat: DOUBLE INTERNAL ERROR while making an error report.!!");
+        g_exception = false;
+      }
+      else
+      {
+        TP_TRACE0("CRASH in HeartBeat: Errorreport has been made");
+      }
     }
-    else
-    {
-      TP_TRACE0("CRASH in HeartBeat: Errorreport has been made");
-    }
-  }
     else
     {
       // 'Normale' C++ exception: Maar we hebben hem vergeten af te vangen

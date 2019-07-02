@@ -135,7 +135,7 @@ WebServiceServer::Reset()
       delete m_site;
     }
   }
-    m_site = nullptr;
+  m_site = nullptr;
 
   // Remove WSDL
   if(m_wsdl && m_wsdlOwner)
@@ -250,15 +250,15 @@ void
 WebServiceServer::SetLogAnalysis(LogAnalysis* p_log)
 {
   // Remove our own logfile
-    if(m_log && m_logOwner)
-    {
-      delete m_log;
-      m_log = nullptr;
-      m_logOwner = false;
-    }
+  if(m_log && m_logOwner)
+  {
+    delete m_log;
+    m_log = nullptr;
+    m_logOwner = false;
+  }
 
   // Take this logfile
-    m_log      = p_log;
+  m_log = p_log;
   
   // If not reset, copy the loglevel
   if(p_log)

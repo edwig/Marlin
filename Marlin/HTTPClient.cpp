@@ -97,6 +97,12 @@ HTTPClient::~HTTPClient()
 void
 HTTPClient::Reset()
 {
+  // Execute only once!
+  if(!m_initialized)
+  {
+    return;
+  }
+
   // Stopping the queue
   StopClient();
 
@@ -492,8 +498,8 @@ HTTPClient::InitLogging()
     m_logLevel = level;
     if(m_log)
     {
-    m_log->SetLogLevel(m_logLevel);
-  }
+      m_log->SetLogLevel(m_logLevel);
+    }
   }
 
   // Now "Logging.config" can override these settings.

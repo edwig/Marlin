@@ -177,7 +177,8 @@ int ZLIB_INTERNAL inflate_table(codetype type
     /* set up for code type */
     switch (type) {
     case CODES:
-        base = extra = work;    /* dummy value--not used */
+        extra = work;    /* dummy value--not used */
+        base = work;
         end = 19;
         break;
     case LENS:

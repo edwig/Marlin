@@ -351,9 +351,9 @@ HTTPSite::CheckReliable()
   }
   if(m_reliable && m_scheme.IsEmpty())
   {
-      // Not strictly an error, but issue a serious warning against using RM without authorization
-      WARNINGLOG("ReliableMessaging protocol used without an authorization scheme.");
-    }
+    // Not strictly an error, but issue a serious warning against using RM without authorization
+    WARNINGLOG("ReliableMessaging protocol used without an authorization scheme.");
+  }
   return true;
 }
 
@@ -640,23 +640,23 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
   {
     if(ex.GetSafeExceptionCode())
     {
-    // We need to detect the fact that a second exception can occur,
-    // so we do **not** call the error report method again
-    // Otherwise we would end into an infinite loop
+      // We need to detect the fact that a second exception can occur,
+      // so we do **not** call the error report method again
+      // Otherwise we would end into an infinite loop
       g_exception = true;
       g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),m_webroot,m_site);
 
-    if(g_exception)
-    {
-      // Error while sending an error report
-      // This error can originate from another thread, OR from the sending of this error report
-      CRASHLOG(310L,"DOUBLE INTERNAL ERROR while making an error report.!!");
-      g_exception = false;
-    }
-    else
-    {
-      CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport has been made");
-    }
+      if(g_exception)
+      {
+        // Error while sending an error report
+        // This error can originate from another thread, OR from the sending of this error report
+        CRASHLOG(310L,"DOUBLE INTERNAL ERROR while making an error report.!!");
+        g_exception = false;
+      }
+      else
+      {
+        CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport has been made");
+      }
     }
     else
     {
@@ -711,24 +711,24 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
   {
     if(ex.GetSafeExceptionCode())
     {
-    // We need to detect the fact that a second exception can occur,
-    // so we do **not** call the error report method again
-    // Otherwise we would end into an infinite loop
+      // We need to detect the fact that a second exception can occur,
+      // so we do **not** call the error report method again
+      // Otherwise we would end into an infinite loop
       g_exception = true;
       g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),m_webroot,m_site);
 
-    if(g_exception)
-    {
-      // Error while sending an error report
-      // This error can originate from another thread, OR from the sending of this error report
-      CRASHLOG(0xFFFF,"DOUBLE INTERNAL ERROR while making an error report.!!");
-      g_exception = false;
+      if(g_exception)
+      {
+        // Error while sending an error report
+        // This error can originate from another thread, OR from the sending of this error report
+        CRASHLOG(0xFFFF,"DOUBLE INTERNAL ERROR while making an error report.!!");
+        g_exception = false;
+      }
+      else
+      {
+        CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport has been made");
+      }
     }
-    else
-    {
-      CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport has been made");
-    }
-  }
     else
     {
       // 'Normale' C++ exception: Maar we hebben hem vergeten af te vangen
@@ -1809,7 +1809,7 @@ HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
       case XFrameOption::XFO_DENY:        value = "DENY";        break;
       case XFrameOption::XFO_SAMEORIGIN:  value = "SAMEORIGIN";  break;
       case XFrameOption::XFO_ALLOWFROM:   value = "ALLOW-FROM ";
-        value += m_xFrameAllowed;
+                                          value += m_xFrameAllowed;
       default:                            break;
     }
     p_headers.insert(std::make_pair("X-Frame-Options",value));

@@ -112,6 +112,54 @@ void XMLElement::DropReference()
   }
 }
 
+bool
+XMLElement::IsValidName(const CString& p_name)
+{
+  if (p_name.IsEmpty() ||
+      p_name.Left(3).CompareNoCase("XML") == 0)
+  {
+    return false;
+  }
+
+  for (int i = p_name.GetLength() - 1; i >= 0; --i)
+  {
+    char c = p_name[i];
+    if (c == '_' ||
+     // c == ':' || formeel geldig maar geeft ongewenste resultaten 
+       (c >= 'A' && c <= 'Z') ||
+       (c >= 'a' && c <= 'z'))
+    {
+      continue;
+    }
+    if (i == 0 || (c != '-' &&
+                   c != '.' &&
+                 !(c >= '0' && c <= '9')))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+CString
+XMLElement::InvalidNameMessage(const CString& p_name)
+{
+  CString message;
+  message.Format("Invalid XML element name: %s\n"
+                 "Names must start with a letter or underscore followed by more or hyphen, digit or dot.", p_name.GetString());
+  return message;
+}
+
+void
+XMLElement::SetName(CString p_name)
+{
+  if (!p_name.IsEmpty() && !IsValidName(p_name))
+  {
+    throw StdException(InvalidNameMessage(p_name));
+  }
+  m_name = p_name; 
+}
+
 #pragma endregion XMLElement
 
 #pragma region XMLMessage_XTOR

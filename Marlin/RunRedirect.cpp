@@ -42,6 +42,7 @@ RunRedirect::RunRedirect()
 
 RunRedirect::~RunRedirect()
 {
+  DeleteCriticalSection(&m_criticalSection);
 }
 
 void 

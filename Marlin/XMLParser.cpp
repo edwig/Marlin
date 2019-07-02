@@ -517,9 +517,9 @@ XMLParser::ParseElement()
         WhiteSpace  space = m_whiteSpace;
 
         m_whiteSpace = elemspace;
-        m_element = m_lastElement;
+        m_element    = m_lastElement;
         ParseLevel();
-        m_element = level;
+        m_element    = level;
         m_whiteSpace = space;
       }
       else

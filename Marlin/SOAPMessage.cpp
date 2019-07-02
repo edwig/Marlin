@@ -405,13 +405,13 @@ SOAPMessage::SetSoapActionFromHTTTP(CString p_action)
 // Reset parameters, transforming it in an answer
 void 
 SOAPMessage::Reset(ResponseType p_responseType  /* = ResponseType::RESP_ACTION_NAME */
-                   ,CString      p_namespace     /* = "" */)
+                  ,CString      p_namespace     /* = "" */)
 {
   XMLMessage::Reset();
 
   // Reset pointers
-  m_body = m_root;
-  m_header = nullptr;
+  m_body        = m_root;
+  m_header      = nullptr;
   m_paramObject = nullptr;
 
   // Reset the error status
@@ -1298,17 +1298,17 @@ void
 SOAPMessage::AddToHeaderMessageNumber()
 {
   if(m_clientMessageNumber && FindElement(m_header,"rm:Sequence") == NULL)
+  {
+    XMLElement* seq = SetHeaderParameter("rm:Sequence","");
+    SetAttribute(seq,"s:mustUnderstand",1);
+    SetElement  (seq,"Identifier",   m_guidSequenceServer);
+    SetElement  (seq,"MessageNumber",m_clientMessageNumber);
+    if(m_lastMessage)
     {
-      XMLElement* seq = SetHeaderParameter("rm:Sequence","");
-      SetAttribute(seq,"s:mustUnderstand",1);
-      SetElement  (seq,"Identifier",   m_guidSequenceServer);
-      SetElement  (seq,"MessageNumber",m_clientMessageNumber);
-      if(m_lastMessage)
-      {
-        SetElement(seq,"rm:LastMessage","");
-      }
+      SetElement(seq,"rm:LastMessage","");
     }
   }
+}
 
 void
 SOAPMessage::AddToHeaderMessageID()
