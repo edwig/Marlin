@@ -9,6 +9,25 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.1.0
+------------------------
+1) Added a new sub project "MarlinModule". This module is the one-and-only module to add to IIS
+   the *real* DLL with the ServerApp derived project will be loaded by this MarlinModule bij reading
+   the 'web.config' node <appSettings><add key="MarlinModule" value="path to the dll" />
+2) Added 32bits and 64bits installers for MarlinModule to extend your IIS environment
+3) Duplicate loading of DLL's is now prevented by the new MarlinModule.
+4) DLL's should always be in a subdirectory under the directory of your 'web.config' file!!
+5) Do not create any "web.config" with your HTTPManager any more. Always use "Marlin.config"
+   to prevent any confusion in your environment.
+6) Optionally by prepending a '@' to your DLL path, you can set any absolute path to a dll.
+   Please be advised that in this case duplicate DLL's or duplicate application pools are possible,
+   but not neccessarily working.
+7) Try to adhere to the following default scheme:
+   - 1 Application pool per website
+   - 1 web.config per website
+   - 1 DLL with a ServerApp derived application per website
+   - 1 unique port per website. Do not use duplicate ports in your environment
+
 CHANGES IN VERSION 6.0.1
 ------------------------
 1) Upgraded to Visual Studio 2019
