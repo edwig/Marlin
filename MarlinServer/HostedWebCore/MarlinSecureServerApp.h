@@ -36,11 +36,10 @@ class MarlinSecureServerApp : public ServerApp
 {
 public:
   MarlinSecureServerApp(IHttpServer*  p_iis
-                       ,WebConfigIIS* p_config
+                       ,const char*   p_webroot
+                       ,const char*   p_appName
                        ,LogAnalysis*  p_logfile
-                       ,ErrorReport*  p_report
-                       ,CString       p_appName
-                       ,CString       p_webroot);
+                       ,ErrorReport*  p_report);
   virtual ~MarlinSecureServerApp();
 
   virtual void InitInstance();

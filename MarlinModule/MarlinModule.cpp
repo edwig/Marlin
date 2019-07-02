@@ -58,11 +58,13 @@ static char THIS_FILE[] = __FILE__;
 #define MODULE_NAME "MarlinModule"
 
 // GLOBALS Needed for the module
-AppPool g_IISApplicationPool;   // All applications in the application pool
+AppPool       g_IISApplicationPool;   // All applications in the application pool
+WebConfigIIS* g_config  { nullptr };  // The ApplicationHost.config information only!
+LogAnalysis*  g_logfile { nullptr };  // Logfile for the MarlinModule only
 
 // Logging macro for this file only
-#define DETAILLOG(text)    if(g_analysisLog) { g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text)); }
-#define ERRORLOG(text)     if(g_analysisLog) { g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(text)); }
+#define DETAILLOG(text)    if(g_logfile) { g_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text)); }
+#define ERRORLOG(text)     if(g_logfile) { g_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(text)); }
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -178,28 +180,27 @@ StartLog(DWORD p_version)
 {
   // Depending on the application pool settings, we are sometimes
   // called more than once, so see if the log is not already started
-  if(g_analysisLog == nullptr)
+  if(g_logfile == nullptr)
   {
     if(g_config == nullptr)
     {
       g_config = new WebConfigIIS();
+      // Only reads system wide "ApplicationHost.Config"
+      g_config->ReadConfig();
     }
-    // Only reads system wide "ApplicationHost.Config"
-    g_config->ReadConfig();
-
     // Create the directory for the logfile
     CString logfile = g_config->GetLogfilePath() + "\\Marlin\\Logfile.txt";
     EnsureFile ensure(logfile);
     ensure.CheckCreateDirectory();
 
     // Create the logfile
-    g_analysisLog = new LogAnalysis(MODULE_NAME);
-    g_analysisLog->SetLogFilename(logfile);
-    g_analysisLog->SetLogRotation(true);
-    g_analysisLog->SetLogLevel(g_config->GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
+    g_logfile = new LogAnalysis(MODULE_NAME);
+    g_logfile->SetLogFilename(logfile);
+    g_logfile->SetLogRotation(true);
+    g_logfile->SetLogLevel(g_config->GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
   }
   // Tell that we started the logfile
-  g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
+  g_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
                             ,"%s called by IIS version %d.%d"
                             ,MODULE_NAME
                             ,p_version / 0x10000
@@ -216,11 +217,11 @@ StopLog()
     g_config = nullptr;
   }
 
-  if(g_analysisLog)
+  if(g_logfile)
   {
-    g_analysisLog->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"%s closed",MODULE_NAME);
-    delete g_analysisLog;
-    g_analysisLog = nullptr;
+    g_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"%s closed",MODULE_NAME);
+    delete g_logfile;
+    g_logfile = nullptr;
   }
 }
 
@@ -236,7 +237,7 @@ StopLog()
 MarlinGlobalFactory::MarlinGlobalFactory()
 {
   InitializeCriticalSection(&m_lock);
-  if(g_analysisLog)
+  if(g_logfile)
   {
     DETAILLOG("GlobalFactory started");
   }
@@ -293,7 +294,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
 
   // Create a new pool application
   APP* poolapp = new APP();
-  poolapp->m_analysisLog = g_analysisLog;
+  poolapp->m_analysisLog = g_logfile;
 
   // Read Web config from "physical-application-path" + "web.config"
   CString baseWebConfig = physical + "web.config";
@@ -343,11 +344,10 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   // Let the server app factory create a new one for us
   // And store it in our representation of the active application pool
   ServerApp* app = (*poolapp->m_createServer)(g_iisServer             // Microsoft IIS server object
-                                             ,&(poolapp->m_config)    // WebConfigIIS for this application
-                                             ,NULL                    // LogAnalysis to be reused
-                                             ,g_report                // ErrorReport to be reused
-                                             ,application             // Name of the application
-                                             ,webroot);               // Effective virtual webroot
+                                             ,webroot.GetString()     // The IIS registered webroot
+                                             ,application.GetString() // The application's name
+                                             ,g_analysisLog           // LogAnalysis to be reused
+                                             ,g_report);              // ErrorReport to be reused
   if(app == nullptr)
   {
     delete poolapp;
@@ -375,6 +375,11 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     return Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
   }
 
+  // First made logfile will be reused later by all others
+  if(g_analysisLog == nullptr)
+  {
+    g_analysisLog = app->GetLogfile();
+  }
   // First made error report will be reused later by all others
   if(g_report == nullptr)
   {
@@ -383,6 +388,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
 
   // Flush the results of starting the server to the logfile
   g_analysisLog->ForceFlush();
+  g_logfile->ForceFlush();
   
   // Ready, so stop the timer
   app->StopCounter();
@@ -549,7 +555,7 @@ MarlinGlobalFactory::Terminate()
   AutoCritSec lock(&m_lock);
 
   // Only log if log still there!
-  if(g_analysisLog)
+  if(g_logfile)
   {
     if(!g_IISApplicationPool.empty())
     {
@@ -648,7 +654,7 @@ MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
 
 // Here we can debug IIS variables, before other functionality is called!
 // #ifdef _DEBUG
-//     IISDebugAllVariables(p_context,g_analysisLog);
+//     IISDebugAllVariables(p_context,g_logfile);
 // #endif
   }
   // Just continue processing

@@ -44,10 +44,9 @@ using IISModules = std::set<CString>;
 class ServerApp;
 
 // Exported function that must be called first in the loaded Marlin application DLL
-typedef ServerApp* (CALLBACK* CreateServerAppFunc)(IHttpServer*,WebConfigIIS*,LogAnalysis*,ErrorReport*,CString,CString);
+typedef ServerApp* (CALLBACK* CreateServerAppFunc)(IHttpServer*,const char*,const char*,LogAnalysis*,ErrorReport*);
 
 extern IHttpServer*  g_iisServer;
-extern WebConfigIIS* g_config;
 extern LogAnalysis*  g_analysisLog;
 extern ErrorReport*  g_report;
 
@@ -59,11 +58,10 @@ class ServerApp
 {
 public:
   ServerApp(IHttpServer*  p_iis
-           ,WebConfigIIS* p_config
+           ,const char*   p_webroot
+           ,const char*   p_appName
            ,LogAnalysis*  p_logfile
-           ,ErrorReport*  p_report
-           ,CString       p_appName
-           ,CString       p_webroot);
+           ,ErrorReport*  p_report);
   virtual ~ServerApp();
 
   // Starting and stopping the server
@@ -111,9 +109,9 @@ protected:
   CString        m_webroot;                     // WebRoot of our application
   IISModules     m_modules;                     // Global IIS modules for this application
   IISSiteConfigs m_sites;                       // Configures sites, modules and handlers
+  WebConfigIIS   m_config;                      // Our web.config object
   IHttpServer*   m_iis          { nullptr };    // Main ISS application
   HTTPServerIIS* m_httpServer   { nullptr };    // Our Marlin HTTPServer for IIS
-  WebConfigIIS*  m_config       { nullptr };    // Our web.config definition
   ThreadPool*    m_threadPool   { nullptr };    // Pointer to our own ThreadPool
   LogAnalysis*   m_logfile      { nullptr };    // Logfile object
   ErrorReport*   m_errorReport  { nullptr };    // Error reporting object
@@ -130,11 +128,10 @@ public:
   ServerAppFactory();
 
   virtual ServerApp* CreateServerApp(IHttpServer*  p_iis
-                                    ,WebConfigIIS* p_config
+                                    ,const char*   p_webroot
+                                    ,const char*   p_appName
                                     ,LogAnalysis*  p_logfile
-                                    ,ErrorReport*  p_report
-                                    ,CString       p_appName
-                                    ,CString       p_webroot);
+                                    ,ErrorReport*  p_report);
 };
 
 extern ServerAppFactory* appFactory;

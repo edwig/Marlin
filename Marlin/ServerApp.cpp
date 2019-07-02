@@ -43,7 +43,6 @@ static char THIS_FILE[] = __FILE__;
 #define ERRORLOG(code,text)     m_httpServer->ErrorLog  (__FUNCTION__,code,text)
 
 IHttpServer*  g_iisServer   = nullptr;
-WebConfigIIS* g_config      = nullptr;
 LogAnalysis*  g_analysisLog = nullptr;
 ErrorReport*  g_report      = nullptr;
 
@@ -60,31 +59,39 @@ extern "C"
 //    This is the most stable way of exporting from a DLL
 //
 __declspec(dllexport)
-ServerApp* _stdcall CreateServerApp(IHttpServer* p_server,WebConfigIIS* p_config,LogAnalysis* p_log,ErrorReport* p_report,CString p_application,CString p_webroot)
+ServerApp* _stdcall CreateServerApp(IHttpServer* p_server
+                                   ,const char*  p_webroot
+                                   ,const char*  p_appName
+                                   ,LogAnalysis* p_log
+                                   ,ErrorReport* p_report)
 {
-  return appFactory->CreateServerApp(p_server,p_config,p_log,p_report,p_application,p_webroot);
+  return appFactory->CreateServerApp(p_server,p_webroot,p_appName,p_log,p_report);
 }
 
 }
 
 //XTOR
-ServerApp::ServerApp(IHttpServer* p_iis,WebConfigIIS* p_config,LogAnalysis* p_logfile,ErrorReport* p_report,CString p_appName,CString p_webroot)
+ServerApp::ServerApp(IHttpServer* p_iis
+                    ,const char*  p_webroot
+                    ,const char*  p_appName
+                    ,LogAnalysis* p_logfile
+                    ,ErrorReport* p_report)
           :m_iis(p_iis)
-          ,m_config(p_config)
           ,m_logfile(p_logfile)
-          ,m_applicationName(p_appName)
-          ,m_webroot(p_webroot)
 {
   g_iisServer   = p_iis;
-  g_config      = p_config;
   g_analysisLog = p_logfile;
   g_report      = p_report;
+
+  // Construct local MFC CStrings from char pointers
+  m_webroot         = p_webroot;
+  m_applicationName = p_appName;
 }
 
 // DTOR
 ServerApp::~ServerApp()
 {
-  // Free all site configs
+  // Free all site configuration info
   for(auto& site : m_sites)
   {
     delete site;
@@ -102,6 +109,9 @@ ServerApp::InitInstance()
   // Create a marlin HTTPServer object for IIS
   m_httpServer = new HTTPServerIIS(m_applicationName);
   m_httpServer->SetWebroot(m_webroot);
+
+  // Reading our web.config and ApplicationHost.config info
+  m_config.ReadConfig(m_applicationName);
 
   // Start our own logging file
   StartLogging();
@@ -188,7 +198,7 @@ ServerApp::StartLogging()
   if(m_logfile == nullptr)
   {
     // Create the directory for the logfile
-    CString logfile = m_config->GetLogfilePath() + "\\" + m_applicationName + "\\Logfile.txt";
+    CString logfile = m_config.GetLogfilePath() + "\\" + m_applicationName + "\\Logfile.txt";
     EnsureFile ensure(logfile);
     ensure.CheckCreateDirectory();
 
@@ -196,7 +206,7 @@ ServerApp::StartLogging()
     m_logfile = new LogAnalysis(m_applicationName);
     m_logfile->SetLogFilename(logfile);
     m_logfile->SetLogRotation(true);
-    m_logfile->SetLogLevel(m_config->GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
+    m_logfile->SetLogLevel(m_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
     m_ownLogfile = true;
 
     // Record for test classes
@@ -208,7 +218,7 @@ ServerApp::StartLogging()
     EnsureFile ensure;
     CString completeLogfile = m_logfile->GetLogFileName();
     CString logfile = ensure.FilenamePart(completeLogfile);
-    CString symlink = m_config->GetLogfilePath() + "\\" + m_applicationName + "\\" + logfile;
+    CString symlink = m_config.GetLogfilePath() + "\\" + m_applicationName + "\\" + logfile;
     ensure.SetFilename(symlink);
     ensure.CheckCreateDirectory();
 
@@ -221,7 +231,7 @@ ServerApp::StartLogging()
 
   // Tell that we started the logfile
   m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
-                           ,"Started the application: %s",m_applicationName.GetString());
+                        ,"Started the application: %s",m_applicationName.GetString());
 }
 
 // Server app was correctly started by MarlinIISModule
@@ -610,13 +620,12 @@ ServerAppFactory::ServerAppFactory()
 
 ServerApp* 
 ServerAppFactory::CreateServerApp(IHttpServer*  p_iis
-                                 ,WebConfigIIS* p_config
+                                 ,const char*   p_webroot
+                                 ,const char*   p_appName
                                  ,LogAnalysis*  p_logfile
-                                 ,ErrorReport*  p_report
-                                 ,CString       p_appName
-                                 ,CString       p_webroot)
+                                 ,ErrorReport*  p_report)
 {
-  return new ServerApp(p_iis,p_config,p_logfile,p_report,p_appName,p_webroot);
+  return new ServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report);
 }
 
 ServerAppFactory* appFactory = nullptr;

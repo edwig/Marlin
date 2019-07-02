@@ -40,25 +40,24 @@ MarlinServerAppFactory factory;
 //
 ServerApp* 
 MarlinServerAppFactory::CreateServerApp(IHttpServer*  p_iis
-                                       ,WebConfigIIS* p_config
+                                       ,const char*   p_webroot
+                                       ,const char*   p_appName
                                        ,LogAnalysis*  p_logfile
-                                       ,ErrorReport*  p_report
-                                       ,CString       p_appName
-                                       ,CString       p_webroot)
+                                       ,ErrorReport*  p_report)
 {
-  if(p_appName.CompareNoCase("MarlinTest") == 0)
+  if(_stricmp(p_appName,"MarlinTest") == 0)
   {
-    return new MarlinServerApp(p_iis,p_config,p_logfile,p_report,p_appName,p_webroot);
+    return new MarlinServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report);
   }
 
-  if(p_appName.CompareNoCase("SecureTest") == 0)
+  if(_stricmp(p_appName,"SecureTest") == 0)
   {
-    return new MarlinSecureServerApp(p_iis,p_config,p_logfile,p_report,p_appName,p_webroot);
+    return new MarlinSecureServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report);
   }
 
-  if(p_appName.CompareNoCase("SecureClientCert") == 0)
+  if(_stricmp(p_appName,"SecureClientCert") == 0)
   {
-    return new MarlinClientCertServerApp(p_iis,p_config,p_logfile,p_report,p_appName,p_webroot);
+    return new MarlinClientCertServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report);
   }
 
   return nullptr;

@@ -38,6 +38,7 @@ static char THIS_FILE[] = __FILE__;
 
 // Total number of errors registered while testing
 int g_errors = 0;
+WebConfigIIS* g_config = nullptr;
 
 
 // This is the ServerApp of the IIS server variant (running in W3SVC)
@@ -49,12 +50,11 @@ int g_errors = 0;
 //////////////////////////////////////////////////////////////////////////
 
 MarlinServerApp::MarlinServerApp(IHttpServer*   p_iis
-                                ,WebConfigIIS*  p_config
+                                ,const char*    p_webroot
+                                ,const char*    p_appName
                                 ,LogAnalysis*   p_logfile
-                                ,ErrorReport*   p_report
-                                ,CString        p_appName
-                                ,CString        p_webroot)
-                :ServerApp(p_iis,p_config,p_logfile,p_report,p_appName,p_webroot)
+                                ,ErrorReport*   p_report)
+                :ServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report)
 {
 }
 

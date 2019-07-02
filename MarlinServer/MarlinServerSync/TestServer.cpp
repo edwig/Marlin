@@ -39,6 +39,7 @@
 #include "PrintToken.h"
 #include "Analysis.h"
 #include "AutoCritical.h"
+#include "WebConfigIIS.h"
 
 #define  NOGDI
 #define  NOMINMAX
@@ -70,7 +71,8 @@ int  logLevel    = HLL_TRACEDUMP;  // HLL_NOLOG / HLL_ERRORS / HLL_LOGGING / HLL
 // Global critical section to print to the 'stdio' stream
 CRITICAL_SECTION std_stream;
 
-HTTPServer* g_server = nullptr;
+HTTPServer*   g_server = nullptr;
+WebConfigIIS* g_config = nullptr;
 
 // eXtended Printf: print only if doDetails is true
 void xprintf(const char* p_format, ...)

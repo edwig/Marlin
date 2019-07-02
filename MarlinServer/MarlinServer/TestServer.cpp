@@ -33,6 +33,7 @@
 #include "CreateURLPrefix.h"
 #include "ThreadPool.h"
 #include "HTTPServerMarlin.h"
+#include "WebConfigIIS.h"
 #include "ThreadPool.h"
 #include "SOAPMessage.h"
 #include "GetLastErrorAsString.h"
@@ -68,7 +69,8 @@ bool doDetails   = false;
 int  logLevel    = HLL_TRACEDUMP;  // HLL_NOLOG / HLL_ERRORS / HLL_LOGGING / HLL_LOGBODY / HLL_TRACE / HLL_TRACEDUMP
 
 // General server object
-HTTPServer* g_server = nullptr;
+HTTPServer*   g_server = nullptr;
+WebConfigIIS* g_config = nullptr;
 
 // Global critical section to print to the 'stdio' stream
 CRITICAL_SECTION std_stream;
