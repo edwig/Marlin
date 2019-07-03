@@ -30,6 +30,7 @@
 
 class IHttpContext;
 class IHttpResponse;
+class WebConfigIIS;
 
 class HTTPServerIIS : public HTTPServer
 {
@@ -77,6 +78,10 @@ public:
                                         ,HTTPSite*      p_site
                                         ,PHTTP_REQUEST  p_request);
 
+  // IIS Webconfig
+  void          SetWebConfigIIS(WebConfigIIS* p_config);
+  WebConfigIIS* GetWebConfigIIS();
+
 protected:
   // Cleanup the server
   virtual void Cleanup();
@@ -110,4 +115,6 @@ private:
 
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
+
+  WebConfigIIS* m_webConfigIIS { nullptr };
 };

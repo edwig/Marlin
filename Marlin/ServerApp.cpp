@@ -112,6 +112,7 @@ ServerApp::InitInstance()
 
   // Reading our web.config and ApplicationHost.config info
   m_config.ReadConfig(m_applicationName);
+  m_httpServer->SetWebConfigIIS(&m_config);
 
   // Start our own logging file
   StartLogging();

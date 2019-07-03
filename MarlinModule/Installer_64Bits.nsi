@@ -5,7 +5,7 @@
 ;
 ; Copyright (c) 2019 Edwig Huisman
 ;
-; Date of last change: 01-07-2019
+; Date of last change: 03-07-2019
 ; Version:             6.1
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 64Bits"
@@ -63,7 +63,7 @@ InstallDir "$WINDIR\system32\inetsrv\"
  !define MUI_LANGDLL_REGISTRY_KEY  "${PRODUCT_UNINST_KEY}"
  !define MUI_LANGDLL_REGISTRY_VALUENAME "NSIS:Language"
 ;--------------------------------------------------------------------------------------------------------
- ; Welkom page
+ ; Welcome page
  !insertmacro MUI_PAGE_WELCOME
 ;--------------------------------------------------------------------------------------------------------
  ; Directory page
@@ -84,7 +84,7 @@ InstallDir "$WINDIR\system32\inetsrv\"
 ; Really handy functions
 !include Logfile.nsh
 
-; Stuur logtext naar window én naar LogFile
+; Send logtext to window AND to the logfile
 ;--------------------------------------------------------------------------------------------------------
 !macro LogDetail LogLine
   DetailPrint      "${LogLine}"
@@ -153,7 +153,7 @@ functionend
 ;--------------------------------------------------------------------------------------------------------
 Section "MarlinModule"
 
- ; Expliciet overschrijven van files
+ ; Explicitly overwriting files
  SetOverwrite on
 
  SetOutPath "$INSTDIR"
@@ -181,8 +181,8 @@ Section -Post
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher"       "${PRODUCT_PUBLISHER}"
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "BuildNumber"     "${PRODUCT_BUILDNUMBER}"
 
- ; deze sectie wordt als laatste aangelopen
- ; nu kunnen we het LogFile afsluiten.
+ ; This was the last section
+ ; We can now close the logfile
  call CloseLogfile
  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "The installation of ${PRODUCT_NAME} ${PRODUCT_VERSION} is ready" /SD IDNO IDNO 
 SectionEnd
@@ -218,7 +218,7 @@ Section Uninstall
  !insertmacro LogDetail "Removing files from : $SYSDIR\inetsrv"
  Delete /REBOOTOK "$SYSDIR\inetsrv\MarlinModule.dll"
  
-  ;De-Registreren van het product.
+  ;De-Registration of the product.
  DetailPrint "De-register of ${PRODUCT_NAME}"
  Delete "$INSTDIR\Uninstall ${PRODUCT_NAME} $currentVersion.exe"
  DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
@@ -228,5 +228,5 @@ Section Uninstall
  Call Un.CloseLogfile
 SectionEnd
 ;--------------------------------------------------------------------------------------------------------
-; Einde script
+; End of the script
 

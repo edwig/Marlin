@@ -360,6 +360,18 @@ HTTPServerIIS::DeleteSite(int p_port,CString p_baseURL,bool p_force /*=false*/)
 //
 //////////////////////////////////////////////////////////////////////////
 
+void
+HTTPServerIIS::SetWebConfigIIS(WebConfigIIS* p_config)
+{
+  m_webConfigIIS = p_config;
+}
+
+WebConfigIIS* 
+HTTPServerIIS::GetWebConfigIIS()
+{
+  return m_webConfigIIS;
+}
+
 EventStream*
 HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
                                         ,HTTPSite*     p_site
