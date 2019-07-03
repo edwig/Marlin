@@ -56,6 +56,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define MODULE_NAME "MarlinModule"
+#define MODULE_PATH "DllDirectory"
 
 // GLOBALS Needed for the module
 AppPool       g_IISApplicationPool;   // All applications in the application pool
@@ -311,6 +312,17 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   }
   dllLocation = ConstructDLLLocation(physical,dllLocation);
 
+  CString dllPath = poolapp->m_config.GetSetting(MODULE_PATH);
+  if(!dllPath.IsEmpty())
+  {
+    if(SetDllDirectory(dllPath))
+    {
+      delete poolapp;
+      CString error("MarlinModule could **NOT** set the DLL directory path to: " + dllPath);
+      return Unhealthy(error,ERROR_NOT_FOUND);
+    }
+  }
+
   // See if we must load the DLL application
   if(AlreadyLoaded(poolapp,dllLocation) == false)
   {
@@ -326,6 +338,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     {
       HRESULT code = GetLastError();
       CString error("MarlinModule could **NOT** load DLL from: " + dllLocation);
+      SetDllDirectory(NULL);
       delete poolapp;
       return Unhealthy(error,code);
     }
@@ -384,6 +397,12 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   if(g_report == nullptr)
   {
     g_report = app->GetErrorReport();
+  }
+
+  // Restore the original DLL search order
+  if(!dllPath.IsEmpty())
+  {
+    SetDllDirectory(NULL);
   }
 
   // Flush the results of starting the server to the logfile
