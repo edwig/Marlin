@@ -316,7 +316,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   if(!dllPath.IsEmpty())
   {
     dllPath = ConstructDLLLocation(physical,dllPath);
-    if(SetDllDirectory(dllPath))
+    if(SetDllDirectory(dllPath) == FALSE)
     {
       delete poolapp;
       CString error("MarlinModule could **NOT** set the DLL directory path to: " + dllPath);
