@@ -372,9 +372,6 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   // Keep our application
   poolapp->m_application = app;
 
-  // Keep application in our IIS application pool
-  g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
-
   // Call the initialization
   app->InitInstance();
 
@@ -388,6 +385,9 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     CString error("ERROR STARTING Application: " + application);
     return Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
   }
+
+  // Keep application in our IIS application pool
+  g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
 
   // First made logfile will be reused later by all others
   if(g_analysisLog == nullptr)
