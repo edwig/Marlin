@@ -136,7 +136,7 @@ using RequestMap  = std::deque<HTTPRequest*>;
 extern __declspec(thread) ULONG tls_lastError;
 
 // All the media types
-extern MediaTypes g_media;
+extern MediaTypes* g_media;
 
 //////////////////////////////////////////////////////////////////////////
 //

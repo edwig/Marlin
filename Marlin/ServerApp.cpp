@@ -162,7 +162,6 @@ ServerApp::ExitInstance()
     delete m_logfile;
     m_logfile     = nullptr;
     m_ownLogfile  = false;
-    g_analysisLog = nullptr;
   }
 
   // Destroy the general error report
@@ -170,7 +169,12 @@ ServerApp::ExitInstance()
   {
     delete m_errorReport;
     m_errorReport = nullptr;
+    m_ownReport   = false;
   }
+
+  // Other objects cannot access these any more
+  g_analysisLog = nullptr;
+  g_report      = nullptr;
 }
 
 // The performance counter

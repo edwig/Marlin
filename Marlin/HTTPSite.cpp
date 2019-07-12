@@ -175,7 +175,11 @@ HTTPSite::GetContentType(CString p_extension)
   }
 
   // STEP 2: Finding the general default content type
-  return g_media.FindContentTypeByExtension(p_extension);
+  if(g_media == nullptr)
+  {
+    g_media = new MediaTypes();
+  }
+  return g_media->FindContentTypeByExtension(p_extension);
 }
 
 // Finding the registered content type from the full resource name

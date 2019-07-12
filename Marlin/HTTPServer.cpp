@@ -107,7 +107,7 @@ unsigned long g_compress_limit  = COMPRESS_LIMIT;
 #define HTTPERROR(code,text)      HTTPError(__FUNCTION__,code,text)
 
 // Media types are here
-MediaTypes g_media;
+MediaTypes* g_media = nullptr;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -150,6 +150,13 @@ HTTPServer::~HTTPServer()
   {
     delete m_webConfig;
     m_webConfig = nullptr;
+  }
+
+  // Clean out the media types
+  if(g_media)
+  {
+    delete g_media;
+    g_media = nullptr;
   }
 
   // Free CS to the OS
