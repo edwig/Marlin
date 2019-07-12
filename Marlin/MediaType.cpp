@@ -120,6 +120,12 @@ MediaTypes::MediaTypes()
   }
 }
 
+// DTOR: No more singleton in our address space
+MediaTypes::~MediaTypes()
+{
+  g_mt_instance = nullptr;
+}
+
 void
 MediaTypes::Init()
 {

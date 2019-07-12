@@ -57,6 +57,7 @@ class MediaTypes
 {
 public:
   MediaTypes();
+ ~MediaTypes();
   // Check for a valid object
   static void       CheckValid();
   // Registering your own content types

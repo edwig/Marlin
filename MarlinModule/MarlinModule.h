@@ -51,10 +51,12 @@ public:
     if(m_application)
     {
       delete m_application;
+      m_application = nullptr;
     }
     if(m_module && m_ownModule)
     {
       FreeLibrary(m_module);
+      m_module = NULL;
     }
   }
   WebConfigIIS        m_config;

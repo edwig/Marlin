@@ -452,17 +452,28 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   // Let the application stop itself 
   app->ExitInstance();
 
-  // Destroy the application and the IIS pool app
-  // And possibly unload the application DLL
-  delete poolapp;
+  // If the global objects got de-allocated, stop using them!
+  g_report      = app->GetErrorReport();
+  g_analysisLog = app->GetLogfile();
 
   // Remove from our application pool
+  it->second = nullptr;
   g_IISApplicationPool.erase(it);
 
-  if(g_IISApplicationPool.empty())
+  // Destroy the application and the IIS pool app
+  // And possibly unload the application DLL
+  // Can crash om various reasons, even in NT.DLL at the unload
+  try
   {
-    // So stop the log here
-    StopLog();
+    delete poolapp;
+  }
+  catch(StdException& ex)
+  {
+    ERRORLOG("Error removing pool-application: " + ex.GetErrorMessage());
+  }
+  catch(...)
+  {
+    ERRORLOG("Error removing poolapp and application DLL");
   }
 
   return GL_NOTIFICATION_HANDLED;
