@@ -91,7 +91,7 @@ SiteFilterClientCertificate::SetSite(HTTPSite* p_site)
 }
 
 // Override from SiteFilter::Handle
-void 
+bool 
 SiteFilterClientCertificate::Handle(HTTPMessage* p_message)
 {
   DWORD status = ReceiveClientCertificate(p_message);
@@ -102,7 +102,7 @@ SiteFilterClientCertificate::Handle(HTTPMessage* p_message)
       if(CheckClientCertificate())
       {
         FreeCertificate();
-        return;
+        return true;
       }
     }
   }
@@ -114,11 +114,11 @@ SiteFilterClientCertificate::Handle(HTTPMessage* p_message)
   p_message->SetStatus(HTTP_STATUS_DENIED);
   m_site->SendResponse(p_message);
   
-  // Do NOT process this message again
-  p_message->SetCommand(HTTPCommand::http_no_command);
-  
   // Free our certificate (if any)
   FreeCertificate();
+
+  // Do not execute the handlers 
+  return false;
 }
 
 DWORD    

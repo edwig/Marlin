@@ -43,7 +43,7 @@ public:
   virtual void OnStopSite();
 
   // Handle the filter
-  virtual void Handle(HTTPMessage* p_message);
+  virtual bool Handle(HTTPMessage* p_message);
   // Getters and setters
   virtual void SetSite(HTTPSite* p_site) { m_site = p_site;   };
   HTTPSite*    GetSite()                 { return m_site;     };

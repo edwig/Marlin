@@ -618,21 +618,26 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
 
     // Call all site filters first, in priority order
     // But only if we do have filters
+    bool doPerformHandlers = true;
     if(!m_filters.empty())
     {
-      CallFilters(p_message);
+      doPerformHandlers = CallFilters(p_message);
     }
 
     // Call the correct handler for this site
-    handler = GetSiteHandler(p_message->GetCommand());
-    if(handler)
+    if(doPerformHandlers)
     {
-      handler->HandleMessage(p_message);
+      handler = GetSiteHandler(p_message->GetCommand());
+      if(handler)
+      {
+        handler->HandleMessage(p_message);
+      }
+      else
+      {
+        HandleHTTPMessageDefault(p_message);
+      }
     }
-    else
-    {
-      HandleHTTPMessageDefault(p_message);
-    }
+    else didError = true;
 
     // Remove the throttling lock!
     if(m_throttling)
@@ -674,7 +679,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
   // But do that after the _except catching
   ::RevertToSelf();
 
-  // After the SEH: See if we need to post-Handle the error
+  // After the filters or the SEH: See if we need to post-Handle the error
   if(didError)
   {
     PostHandle(p_message);
@@ -742,7 +747,7 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
 }
 
 // Call the filters in priority order
-void
+bool
 HTTPSite::CallFilters(HTTPMessage* p_message)
 {
   FilterMap filters;
@@ -753,11 +758,16 @@ HTTPSite::CallFilters(HTTPMessage* p_message)
     filters = m_filters;
   }
 
-  // Now call all filters
+  // Now call all filters, stopping at first false reaction
+  bool result = true;
   for(FilterMap::iterator it = filters.begin(); it != filters.end();++it)
   {
-    it->second->Handle(p_message);
+    if(false == (result = it->second->Handle(p_message)))
+    {
+      break;
+    }
   }
+  return result;
 }
 
 // Direct asynchronous response

@@ -35,7 +35,7 @@ public:
   virtual ~SiteFilterXSS();
 
   // Handle the filter
-  virtual void Handle(HTTPMessage* p_message);
+  virtual bool Handle(HTTPMessage* p_message);
 
 private:
 

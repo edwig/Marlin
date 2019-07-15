@@ -9,6 +9,16 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.1.1
+------------------------
+1)  Changed the working of the SiteFilters. Must now return a boolean value (true) to keep going in
+    evaluating the SiteHandlers if you want to. So you can terminate the evaluation by:
+    - Sending a response
+    - Setting the status of the HTTPMessage
+    and then return a 'false'. The general handler of HTTPSite will then:
+    - Skip the HTTP handlers;
+    - Send the return message (if still needed).
+
 CHANGES IN VERSION 6.1.0
 ------------------------
 1)  Added a new sub project "MarlinModule". This module is the one-and-only module to add to IIS

@@ -63,10 +63,12 @@ SiteFilter::OnStopSite()
 // and to not send an answer to the client (although you can!)
 // Let the SiteHandler take the task of sending an answer
 // But you can do all kinds of interesting things with it
-void 
+bool
 SiteFilter::Handle(HTTPMessage* p_message)
 {
   UNREFERENCED_PARAMETER(p_message);
   // Nothing done
   TRACE("BEWARE: Incorrect implemented HTTP SiteFilter. Handle method not overriden!\n");
+
+  return true;
 }

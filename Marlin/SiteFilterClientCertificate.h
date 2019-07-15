@@ -35,7 +35,7 @@ public:
   virtual ~SiteFilterClientCertificate();
 
   // Handle the filter
-  virtual void Handle(HTTPMessage* p_message);
+  virtual bool Handle(HTTPMessage* p_message);
   virtual void SetSite(HTTPSite* p_site);
 
   // MANDATORY: Set Client certificate name and/or thumbprint to expect

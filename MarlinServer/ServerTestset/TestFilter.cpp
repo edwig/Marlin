@@ -48,7 +48,7 @@ class SiteFilterTester1 : public SiteFilter
 {
 public:
   SiteFilterTester1(unsigned p_priority,CString p_name);
-  virtual void Handle(HTTPMessage* p_message);
+  virtual bool Handle(HTTPMessage* p_message);
 };
 
 SiteFilterTester1::SiteFilterTester1(unsigned p_priority,CString p_name)
@@ -56,7 +56,7 @@ SiteFilterTester1::SiteFilterTester1(unsigned p_priority,CString p_name)
 {
 }
 
-void
+bool
 SiteFilterTester1::Handle(HTTPMessage* p_message)
 {
   xprintf("FILTER TESTER NR 1: %s FROM %s\n", (LPCTSTR)p_message->GetURL(),(LPCTSTR)SocketToServer(p_message->GetSender()));
@@ -67,13 +67,15 @@ SiteFilterTester1::Handle(HTTPMessage* p_message)
   qprintf("Filter handler with priority 1                 : OK\n");
 
   --totalChecks;
+
+  return true;
 }
 
 class SiteFilterTester23 : public SiteFilter
 {
 public:
   SiteFilterTester23(unsigned p_priority,CString p_name);
-  virtual void Handle(HTTPMessage* p_message);
+  virtual bool Handle(HTTPMessage* p_message);
 };
 
 SiteFilterTester23::SiteFilterTester23(unsigned p_priority,CString p_name)
@@ -82,7 +84,7 @@ SiteFilterTester23::SiteFilterTester23(unsigned p_priority,CString p_name)
 }
 
 // Not much useful things here, but hey: it's a test!
-void
+bool
 SiteFilterTester23::Handle(HTTPMessage* p_message)
 {
   HTTPMessage* msg = const_cast<HTTPMessage*>(p_message);
@@ -94,6 +96,8 @@ SiteFilterTester23::Handle(HTTPMessage* p_message)
   qprintf("Filter handler with priority 23                : OK\n");
 
   --totalChecks;
+
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////

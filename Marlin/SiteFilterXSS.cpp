@@ -45,7 +45,7 @@ SiteFilterXSS::~SiteFilterXSS()
 }
 
 // Override from SiteFilter::Handle
-void
+bool
 SiteFilterXSS::Handle(HTTPMessage* p_message)
 {
   CString referrer = p_message->GetReferrer();
@@ -54,7 +54,7 @@ SiteFilterXSS::Handle(HTTPMessage* p_message)
   // Unique call from the outside world is OK
   if(referrer.IsEmpty())
   {
-    return;
+    return true;
   }
 
   // Make comparable
@@ -74,7 +74,8 @@ SiteFilterXSS::Handle(HTTPMessage* p_message)
     m_site->SendResponse(p_message);
 
     // Do NOT process this message again
-    p_message->SetCommand(HTTPCommand::http_no_command);
+    return false;
   }
+  return true;
 }
 

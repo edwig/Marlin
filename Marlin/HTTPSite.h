@@ -286,7 +286,7 @@ protected:
   // Finding the SiteHandler registration
   RegHandler*       FindSiteHandler(HTTPCommand p_command);
   // Calling all filters
-  void              CallFilters(HTTPMessage* p_message);
+  bool              CallFilters(HTTPMessage* p_message);
   // All registered site handlers, and the default action
   void              HandleHTTPMessageDefault(HTTPMessage* p_message);
   // Direct asynchronous response
