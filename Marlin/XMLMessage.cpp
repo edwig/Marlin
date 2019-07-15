@@ -1026,7 +1026,10 @@ XMLMessage::FindElement(XMLElement* p_base, CString p_name,bool p_recurse /*=tru
 
   if(base->GetName().Compare(elementName) == 0)
   {
-    return base;
+    if(namesp.IsEmpty() || base->GetNamespace().Compare(namesp) == 0)
+    {
+      return base;
+    }
   }
 
   for(auto& element : base->GetChildren())
