@@ -637,7 +637,11 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
         HandleHTTPMessageDefault(p_message);
       }
     }
-    else didError = true;
+    else
+    {
+      // Post the results of the filters
+      PostHandle(p_message,false);
+    }
 
     // Remove the throttling lock!
     if(m_throttling)
@@ -692,7 +696,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
 
 // Handle the error after an error report
 void
-HTTPSite::PostHandle(HTTPMessage* p_message)
+HTTPSite::PostHandle(HTTPMessage* p_message,bool p_reset /*=true*/)
 {
   try
   {
@@ -704,10 +708,13 @@ HTTPSite::PostHandle(HTTPMessage* p_message)
 
     // Respond to the client with a server error in all cases. 
     // Do NOT send the error report to the client. No need to show the error-stack!!
-    p_message->Reset();
-    p_message->GetFileBuffer()->Reset();
-    p_message->GetFileBuffer()->ResetFilename();
-    p_message->SetStatus(HTTP_STATUS_SERVER_ERROR);
+    if(p_reset)
+    {
+      p_message->Reset();
+      p_message->GetFileBuffer()->Reset();
+      p_message->GetFileBuffer()->ResetFilename();
+      p_message->SetStatus(HTTP_STATUS_SERVER_ERROR);
+    }
     m_server->SendResponse(p_message);
 
     // See if we need to cleanup after the call for the site handler

@@ -292,7 +292,7 @@ protected:
   // Direct asynchronous response
   void              AsyncResponse(HTTPMessage* p_message);
   // Handle the error after an error report
-  void              PostHandle(HTTPMessage* p_message);
+  void              PostHandle(HTTPMessage* p_message,bool p_reset = true);
     // Check that m_reliable and m_async do not mix
   bool              CheckReliable();
   // Convert authentication token to SID string.

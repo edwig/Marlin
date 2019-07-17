@@ -18,6 +18,8 @@ CHANGES IN VERSION 6.1.1
     and then return a 'false'. The general handler of HTTPSite will then:
     - Skip the HTTP handlers;
     - Send the return message (if still needed).
+2)  Changed the processing of SiteFilters in HTTPSite. SiteFilters can return there own status in the
+    HTTPMessage, instead of always producing a status "500 Server error"
 
 CHANGES IN VERSION 6.1.0
 ------------------------
