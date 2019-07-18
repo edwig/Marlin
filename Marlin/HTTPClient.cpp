@@ -1184,6 +1184,46 @@ HTTPClient::AddProxyAuthorization()
   }
 }
 
+// Add authorization up-front before the call
+// Sparing an extra round-trip, if you know the site will ask for it!
+void
+HTTPClient::AddPreEmptiveAuthorization()
+{
+  if(m_preemtive && !m_user.IsEmpty() && !m_password.IsEmpty())
+  {
+    if(m_preemtive & (WINHTTP_AUTH_SCHEME_BASIC      |
+                      WINHTTP_AUTH_SCHEME_NTLM       |
+                      WINHTTP_AUTH_SCHEME_PASSPORT   |
+                      WINHTTP_AUTH_SCHEME_DIGEST     |
+                      WINHTTP_AUTH_SCHEME_NEGOTIATE  ))
+    {
+      USES_CONVERSION;
+
+      wstring user = A2CW(m_user);
+      wstring pass = A2CW(m_password);
+
+      if(!WinHttpSetCredentials(m_request
+                               ,WINHTTP_AUTH_TARGET_SERVER
+                               ,m_preemtive
+                               ,user.c_str()
+                               ,pass.c_str()
+                               ,NULL))
+      {
+        // Could not set the credentials
+        ErrorLog(__FUNCTION__,"Setting HTTP Credentials pre-emptively. Error [%d] %s");
+      }
+      else
+      {
+        DETAILLOG("Authentication set for user: %s",m_user.GetString());
+      }
+    }
+    else 
+    {
+      ERRORLOG("Illegal pre-emptive authorization setting: %d",m_preemtive);
+    }
+  }
+}
+
 void
 HTTPClient::AddWebSocketUpgrade()
 {
@@ -1379,7 +1419,7 @@ HTTPClient::AddAuthentication(bool p_ntlm3Step)
                              ,NULL))
     {
       // Could not set the credentials
-      ErrorLog(__FUNCTION__,"Setting HTTP Credentials. Error [%d] %s");
+      ErrorLog(__FUNCTION__,"Setting HTTP Credentials pre-emptively. Error [%d] %s");
       return false;
     }
     DETAILLOG("Authentication set for user: %s",m_user.GetString());
@@ -1422,7 +1462,7 @@ HTTPClient::AddProxyAuthentication()
                                ,NULL))
       {
         // Could not set the credentials
-        ErrorLog(__FUNCTION__,"Set proxy credentials. Error [%d] %s");
+        ErrorLog(__FUNCTION__,"Setting HTTP Credentials pre-emptively. Error [%d] %s");
         return false;
       }
       DETAILLOG("Proxy authentication set for user: %s",m_user.GetString());
@@ -2708,6 +2748,8 @@ HTTPClient::Send()
   AddProxyInfo();
   // Standard proxy authorization (if any)
   AddProxyAuthorization();
+  // Add authorization up-front before the call
+  AddPreEmptiveAuthorization();
   // Always add a host header
   AddHostHeader();
   // Add our recorded cookies
@@ -2722,7 +2764,7 @@ HTTPClient::Send()
   AddWebSocketUpgrade();
   // Always add content length
   AddLengthHeader();
-  
+
   // If always using a client certificate, set it upfront
   if(m_certPreset)
   {

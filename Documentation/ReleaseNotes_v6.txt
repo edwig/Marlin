@@ -20,6 +20,17 @@ CHANGES IN VERSION 6.1.1
     - Send the return message (if still needed).
 2)  Changed the processing of SiteFilters in HTTPSite. SiteFilters can return there own status in the
     HTTPMessage, instead of always producing a status "500 Server error"
+3)  Added the possibility to add pre-emptive authentication to the HTTPClient. So it doesn't do a
+    full round-trip to discover a HTTP status 401.
+	To use this feature You must set HTTPClient.SetPreEmptiveAuthorization(DWORD) to one of the 
+	following values for authentication:
+
+	#define WINHTTP_AUTH_SCHEME_BASIC      0x00000001
+	#define WINHTTP_AUTH_SCHEME_NTLM       0x00000002
+	#define WINHTTP_AUTH_SCHEME_PASSPORT   0x00000004
+	#define WINHTTP_AUTH_SCHEME_DIGEST     0x00000008
+	#define WINHTTP_AUTH_SCHEME_NEGOTIATE  0x00000010
+
 
 CHANGES IN VERSION 6.1.0
 ------------------------

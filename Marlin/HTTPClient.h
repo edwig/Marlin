@@ -215,6 +215,7 @@ public:
   void SetTimeoutReceive(int p_timeout)           { m_timeoutReceive    = p_timeout;  };
   void SetQueueRetention(int p_wait)              { m_queueRetention    = p_wait;     };
   void SetRelaxOptions(DWORD p_options)           { m_relax             = p_options;  };
+  void SetPreEmptiveAuthorization(DWORD p_pre)    { m_preemtive         = p_pre;      };
   void SetTerminalServices(bool p_term)           { m_terminalServices  = p_term;     };
   void SetEncryptionLevel(XMLEncryption p_level)  { m_securityLevel     = p_level;    };
   void SetEncryptionPassword(CString p_word)      { m_enc_password      = p_word;     };
@@ -262,6 +263,7 @@ public:
   unsigned      GetQueueRetention()         { return m_queueRetention;    };
   bool          GetQueueIsRunning()         { return m_queueThread!=NULL; };
   DWORD         GetRelaxOptions()           { return m_relax;             };
+  DWORD         GetPreEmptiveAuthorization(){ return m_preemtive;         };
   bool          GetTerminalServices()       { return m_terminalServices;  };
   XMLEncryption GetEncryptionLevel()        { return m_securityLevel;     };
   CString       GetEncryptionPassword()     { return m_enc_password;      };
@@ -339,6 +341,7 @@ private:
   void     AddCookieHeaders();
   void     AddWebSocketUpgrade();
   void     AddProxyAuthorization();
+  void     AddPreEmptiveAuthorization();
   void     AddMessageHeaders(HTTPMessage* p_message);
   void     AddMessageHeaders(SOAPMessage* p_message);
   void     AddMessageHeaders(JSONMessage* p_message);
@@ -409,6 +412,7 @@ private:
   CString       m_enc_password;                                   // Encryption password for SOAP messages
   bool          m_sso             { false   };                    // Use Windows Single-Sign-On
   unsigned      m_ssltls { WINHTTP_FLAG_SECURE_PROTOCOL_MARLIN }; // SSL / TLS settings of secure HTTPS
+  DWORD         m_preemtive       { 0       };                    // Pre-emptive authentication schema
   // Client Certificate
   bool          m_certPreset      { false   };                    // Pre-set client certificate prior to request
   CString       m_certStore       { "MY"    };                    // Certificate store of the current user
@@ -461,10 +465,10 @@ private:
   unsigned      m_queueRetention  { QUEUE_WAITTIME };             // Seconds before queue thread dies
   bool          m_running         { false   };                    // Queue is running
   // Logging & settings
-  WebConfig     m_webConfig;                                      // Current webconfig file
+  WebConfig     m_webConfig;                                      // Current web.config file
   LogAnalysis*  m_log             { nullptr };                    // Current logging
   bool          m_logOwner        { false   };                    // Owner of the current logging
-  int           m_logLevel        { HLL_NOLOG };                  // Loglevel of the client
+  int           m_logLevel        { HLL_NOLOG };                  // Logging level of the client
   HPFCounter    m_counter;                                        // High Performance counter
   HTTPClientTracing* m_trace      { nullptr };                    // The tracing object
   // WebSocket
