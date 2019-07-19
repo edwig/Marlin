@@ -1243,7 +1243,7 @@ WSDLCache::ReadWSDLFileSafe(LPCTSTR p_filename)
     // Remember the filename/URL
     m_filename = p_filename;
   }
-  return true;
+  return result;
 }
 
 bool
