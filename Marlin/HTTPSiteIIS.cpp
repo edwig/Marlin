@@ -26,6 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
+#include <IPTypes.h>//MAX_DOMAIN_NAME_LEN
 #include "HTTPSiteIIS.h"
 #include "HTTPServerIIS.h"
 #include "HTTPURLGroup.h"

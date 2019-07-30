@@ -170,6 +170,7 @@ StdException::GetErrorMessage(LPTSTR p_error,UINT p_maxSize,PUINT p_helpContext 
   return TRUE;
 }
 
+#ifndef MARLIN_USE_ATL_ONLY
 CString
 MessageFromException(CException& p_exception)
 {
@@ -177,5 +178,6 @@ MessageFromException(CException& p_exception)
   p_exception.GetErrorMessage(buffer,4 * _MAX_PATH);
   return CString(buffer);
 }
+#endif//MARLIN_USE_ATL_ONLY
 
 #endif // __STDEXCEPTION_IMPL__
