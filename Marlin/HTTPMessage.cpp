@@ -790,11 +790,11 @@ HTTPMessage::SetUnknownHeaders(PHTTP_REQUEST_HEADERS p_headers)
 void    
 HTTPMessage::AddHeader(HTTP_HEADER_ID p_id,CString p_value)
 {
-  int maximum = m_command == HTTPCommand::http_response ? HttpHeaderResponseMaximum : HttpHeaderMaximum;
+  int maximum = HttpHeaderMaximum;
 
   if(p_id >= 0 && p_id < maximum)
   {
-    CString name(header_fields[p_id]);
+    CString name = p_id < HttpHeaderAcceptRanges ? header_fields[p_id] : header_response[p_id - HttpHeaderAcceptRanges];
     AddHeader(name,p_value);
   }
 }
