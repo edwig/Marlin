@@ -106,10 +106,12 @@ WebSocketServerIIS::CloseSocket()
     {
       m_iis_socket->CloseTcpConnection();
     }
+#ifndef MARLIN_USE_ATL_ONLY
     catch(CException& er)
     {
       ERRORLOG(12102,MessageFromException(er).GetString());
     }
+#endif
     catch(StdException& ex)
     {
       ReThrowSafeException(ex);

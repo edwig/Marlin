@@ -428,7 +428,7 @@ CrackedURL::URL()
   CString url(m_scheme);
 
   // Secure HTTP 
-  if(m_secure)
+  if(m_secure && m_scheme.CompareNoCase("https") != 0)
   {
     url += "s";
   }
