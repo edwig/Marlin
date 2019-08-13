@@ -51,12 +51,6 @@ public:
     if(m_application)
     {
       delete m_application;
-      m_application = nullptr;
-    }
-    if(m_module && m_ownModule)
-    {
-      FreeLibrary(m_module);
-      m_module = NULL;
     }
   }
   WebConfigIIS        m_config;
@@ -64,7 +58,6 @@ public:
   ServerApp*          m_application  { nullptr };
   LogAnalysis*        m_analysisLog  { nullptr };
   HMODULE             m_module       { NULL    };
-  bool                m_ownModule    { false   };
   CreateServerAppFunc m_createServer { nullptr };
 };
 
@@ -133,8 +126,10 @@ public:
   // Stopping the global factory
   virtual void Terminate();
 private:
+  bool    ModuleInHandlers(const CString& p_configPath);
   CString ConstructDLLLocation(CString p_rootpath,CString p_dllPath);
-  bool    AlreadyLoaded(APP* p_app,CString p_path_to_dll);
+  bool    AlreadyLoaded(APP* p_app, CString p_path_to_dll);
+  bool    StillUsed(const HMODULE& p_module);
   GLOBAL_NOTIFICATION_STATUS Unhealthy(CString p_error,HRESULT p_code);
 
   CRITICAL_SECTION m_lock;

@@ -41,23 +41,21 @@ MarlinServerAppFactory factory;
 ServerApp* 
 MarlinServerAppFactory::CreateServerApp(IHttpServer*  p_iis
                                        ,const char*   p_webroot
-                                       ,const char*   p_appName
-                                       ,LogAnalysis*  p_logfile
-                                       ,ErrorReport*  p_report)
+                                       ,const char*   p_appName)
 {
   if(_stricmp(p_appName,"MarlinTest") == 0)
   {
-    return new MarlinServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report);
+    return new MarlinServerApp(p_iis,p_webroot,p_appName);
   }
 
   if(_stricmp(p_appName,"SecureTest") == 0)
   {
-    return new MarlinSecureServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report);
+    return new MarlinSecureServerApp(p_iis,p_webroot,p_appName);
   }
 
   if(_stricmp(p_appName,"SecureClientCert") == 0)
   {
-    return new MarlinClientCertServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report);
+    return new MarlinClientCertServerApp(p_iis,p_webroot,p_appName);
   }
 
   return nullptr;

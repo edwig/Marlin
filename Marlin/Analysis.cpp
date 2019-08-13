@@ -45,6 +45,8 @@
 #include <string.h>
 #include <sys/timeb.h>
 #include <io.h>
+#include <vector>
+#include <algorithm>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -198,6 +200,15 @@ LogAnalysis::SetInterval(int p_interval)
 
   if(m_interval < LOGWRITE_INTERVAL_MIN) m_interval = LOGWRITE_INTERVAL_MIN;
   if(m_interval > LOGWRITE_INTERVAL_MAX) m_interval = LOGWRITE_INTERVAL_MAX;
+}
+
+void
+LogAnalysis::SetKeepfiles(int p_keepfiles)
+{
+  m_keepfiles = p_keepfiles;
+
+  if(m_keepfiles < LOGWRITE_KEEPLOG_MIN) m_keepfiles = LOGWRITE_KEEPLOG_MIN;
+  if(m_keepfiles > LOGWRITE_KEEPLOG_MAX) m_keepfiles = LOGWRITE_KEEPLOG_MAX;
 }
 
 // Setting our logging level
@@ -511,23 +522,26 @@ LogAnalysis::AnalysisHex(const char* p_function,CString p_name,void* p_buffer,un
 void
 LogAnalysis::BareStringLog(const char* p_buffer,int p_length)
 {
-  // Multi threaded protection
-  AutoCritSec lock(&m_lock);
-
-  CString buffer;
-  char* pointer = buffer.GetBufferSetLength(p_length + 1);
-  memcpy_s(pointer,p_length+1,p_buffer,p_length);
-  pointer[p_length] = 0;
-  buffer.ReleaseBufferSetLength(p_length);
-
-  // Test for newline
-  if(buffer.Right(1) != "\n")
+  if (m_file)
   {
-    buffer += "\n";
-  }
+    // Multi threaded protection
+    AutoCritSec lock(&m_lock);
 
-  // Keep the line
-  m_list.push_back(buffer);
+    CString buffer;
+    char* pointer = buffer.GetBufferSetLength(p_length + 1);
+    memcpy_s(pointer, p_length + 1, p_buffer, p_length);
+    pointer[p_length] = 0;
+    buffer.ReleaseBufferSetLength(p_length);
+
+    // Test for newline
+    if (buffer.Right(1) != "\n")
+    {
+      buffer += "\n";
+    }
+
+    // Keep the line
+    m_list.push_back(buffer);
+  }
 }
 
 
@@ -649,16 +663,22 @@ LogAnalysis::ReadConfig()
       {
         m_interval = atoi(&buffer[9]) * CLOCKS_PER_SEC;
       }
+      if(_strnicmp(buffer,"keep=",5) == 0)
+      {
+        m_keepfiles = atoi(&buffer[5]);
+      }
     }
     fclose(file);
 
     // Check what we just read
-    if(m_logLevel < HLL_NOLOG)             m_logLevel = HLL_NOLOG;
-    if(m_logLevel > HLL_HIGHEST)           m_logLevel = HLL_HIGHEST;
-    if(m_cache    < LOGWRITE_MINCACHE)     m_cache    = LOGWRITE_MINCACHE;
-    if(m_cache    > LOGWRITE_MAXCACHE)     m_cache    = LOGWRITE_MAXCACHE;
-    if(m_interval < LOGWRITE_INTERVAL_MIN) m_interval = LOGWRITE_INTERVAL_MIN;
-    if(m_interval > LOGWRITE_INTERVAL_MAX) m_interval = LOGWRITE_INTERVAL_MAX;
+    if(m_logLevel  < HLL_NOLOG)             m_logLevel  = HLL_NOLOG;
+    if(m_logLevel  > HLL_HIGHEST)           m_logLevel  = HLL_HIGHEST;
+    if(m_cache     < LOGWRITE_MINCACHE)     m_cache     = LOGWRITE_MINCACHE;
+    if(m_cache     > LOGWRITE_MAXCACHE)     m_cache     = LOGWRITE_MAXCACHE;
+    if(m_interval  < LOGWRITE_INTERVAL_MIN) m_interval  = LOGWRITE_INTERVAL_MIN;
+    if(m_interval  > LOGWRITE_INTERVAL_MAX) m_interval  = LOGWRITE_INTERVAL_MAX;
+    if(m_keepfiles < LOGWRITE_KEEPLOG_MIN)  m_keepfiles = LOGWRITE_KEEPLOG_MIN;
+    if(m_keepfiles > LOGWRITE_KEEPLOG_MAX)  m_keepfiles = LOGWRITE_KEEPLOG_MAX;
   }
 }
 
@@ -698,9 +718,6 @@ LogAnalysis::RunLog()
 void
 LogAnalysis::RunLogAnalysis()
 {
-  // Install SEH to regular exception translator
-  _set_se_translator(SeTranslator);
-
   DWORD sync = 0;
 
   while(m_initialised)
@@ -759,6 +776,7 @@ LogAnalysis::AppendDateTimeToFilename()
   {
     m_logFileName = m_logFileName.Left(pos);
     RemoveLastMonthsFiles(today);
+    RemoveLogfilesKeeping();
     m_logFileName += append;
   }
 }
@@ -806,4 +824,54 @@ LogAnalysis::RemoveLastMonthsFiles(struct tm& p_today)
     while(_findnext(nHandle,&fileInfo) != -1);
   }
   _findclose(nHandle);
+}
+
+void
+LogAnalysis::RemoveLogfilesKeeping()
+{
+  std::vector<CString> map;
+
+  // Getting a pattern to read in a directory
+  CString pattern = m_logFileName + "*.txt";
+  EnsureFile ensure;
+  CString direct = ensure.DirectoryPart(pattern);
+
+  // Read in all files
+  intptr_t nHandle = 0;
+  struct _finddata_t fileInfo;
+  nHandle = _findfirst((LPCSTR)pattern,&fileInfo);
+  if(nHandle != -1)
+  {
+    do
+    {
+      // Only considder for delete if it's a 'real' file
+      if((fileInfo.attrib & _A_SUBDIR) == 0)
+      {
+        CString fileName = direct + fileInfo.name;
+        map.push_back(fileName);
+      }
+    }
+    while(_findnext(nHandle,&fileInfo) != -1);
+  }
+  _findclose(nHandle);
+
+  // Sort all files in ascending order
+  std::sort(map.begin(),map.end());
+
+  // Delete from the vector, beginning at the end. 
+  // Start deleting if number of files-to-keep has been reached
+  int total = 0;
+  std::vector<CString>::iterator it = map.end();
+  while(true)
+  {
+    if(it == map.begin())
+    {
+      break;
+    }
+    --it;
+    if(++total > m_keepfiles)
+    {
+      DeleteFile(*it);
+    }
+  }
 }

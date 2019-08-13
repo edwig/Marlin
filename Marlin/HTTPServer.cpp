@@ -184,6 +184,7 @@ HTTPServer::InitLogging()
   bool timing     = m_log->GetDoTiming();
   bool events     = m_log->GetDoEvents();
   bool doLogging  = m_log->GetDoLogging();
+  int  keepfiles  = m_log->GetKeepfiles();
 
   // Get parameters from web.config
   file      = m_webConfig->GetParameterString ("Logging","Logfile",  file);
@@ -192,6 +193,7 @@ HTTPServer::InitLogging()
   timing    = m_webConfig->GetParameterBoolean("Logging","DoTiming", timing);
   events    = m_webConfig->GetParameterBoolean("Logging","DoEvents", events);
   cache     = m_webConfig->GetParameterInteger("Logging","Cache",    cache);
+  keepfiles = m_webConfig->GetParameterInteger("Logging","Keep",     keepfiles);
 
   // Use if overridden in web.config
   if(!file.IsEmpty())
@@ -202,6 +204,7 @@ HTTPServer::InitLogging()
   m_log->SetLogLevel(m_logLevel = logging);
   m_log->SetDoTiming(timing);
   m_log->SetDoEvents(events);
+  m_log->SetKeepfiles(keepfiles);
 }
 
 // Initialise the ThreadPool

@@ -38,7 +38,6 @@
 #pragma once
 #include "HTTPLoglevel.h"
 #include <deque>
-#include <time.h>
 
 constexpr auto ANALYSIS_FUNCTION_SIZE = 48;                            // Size of prefix printing in logfile
 constexpr auto LOGWRITE_INTERVAL      = (CLOCKS_PER_SEC * 30);         // Median  is once per 30 seconds
@@ -50,6 +49,9 @@ constexpr auto LOGWRITE_MAXCACHE      = 100000;                        // Maximu
 constexpr auto LOGWRITE_FORCED        = 4;                             // Every x intervals we force a flush
 constexpr auto LOGWRITE_MAXHEXCHARS   = 64;                            // Max width of a hexadecimal dump view
 constexpr auto LOGWRITE_MAXHEXDUMP    = (32 * 1024);                   // First 32 K of a file or message
+constexpr auto LOGWRITE_KEEPFILES     = 128;                           // Keep last 128 logfiles in a directory (2 months, 2 per day)
+constexpr auto LOGWRITE_KEEPLOG_MIN   = 10;                            // Keep last 10 logfiles as a minimum
+constexpr auto LOGWRITE_KEEPLOG_MAX   = 500;                           // Keep no more than 500 logfiles of a server
 
 // Various types of log events
 enum class LogType
@@ -94,6 +96,7 @@ public:
   void    SetDoTiming(bool p_doTiming)         { m_doTiming    = p_doTiming; };
   void    SetDoEvents(bool p_doEvents)         { m_doEvents    = p_doEvents; };
   void    SetLogRotation(bool p_rotate)        { m_rotate      = p_rotate;   };
+  void    SetKeepfiles(int p_keepfiles);
   void    SetCache   (int  p_cache);
   void    SetInterval(int  p_interval);
 
@@ -106,6 +109,7 @@ public:
   int     GetCache()                           { return m_cache;      };
   int     GetInterval()                        { return m_interval;   };
   bool    GetLogRotation()                     { return m_rotate;     };
+  int     GetKeepfiles()                       { return m_keepfiles;  };
   size_t  GetCacheSize();
 
   // INTERNALS ONLY: DO NOT CALL EXTERNALLY
@@ -119,6 +123,7 @@ private:
   void    ReadConfig();
   void    AppendDateTimeToFilename();
   void    RemoveLastMonthsFiles(struct tm& today);
+  void    RemoveLogfilesKeeping();
   CString CreateUserLogfile(CString p_filename);
   // Writing out a log line
   void    Flush(bool p_all);
@@ -130,8 +135,9 @@ private:
   bool    m_doTiming    { true  };              // Prepend date-and-time to log-lines
   bool    m_doEvents    { false };              // Also write to WMI event log
   bool    m_rotate      { false };              // Log rotation for server solutions
-  int     m_cache       { LOGWRITE_CACHE };     // Number of cached lines
-  int     m_interval    { LOGWRITE_INTERVAL };  // Interval between writes (in seconds)
+  int     m_cache       { LOGWRITE_CACHE     }; // Number of cached lines
+  int     m_interval    { LOGWRITE_INTERVAL  }; // Interval between writes (in seconds)
+  int     m_keepfiles   { LOGWRITE_KEEPFILES }; // Keep a maximum of n files in a directory
 
   // Internal bookkeeping
   bool    m_initialised { false };              // Logging is initialized and ready

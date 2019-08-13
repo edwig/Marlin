@@ -33,7 +33,5 @@ class MarlinServerAppFactory : public ServerAppFactory
 public:
   virtual ServerApp* CreateServerApp(IHttpServer*   p_iis
                                     ,const char*    p_webroot
-                                    ,const char*    p_appName
-                                    ,LogAnalysis*   p_logfile
-                                    ,ErrorReport*   p_report);
+                                    ,const char*    p_appName);
 };

@@ -61,27 +61,21 @@ extern "C"
 __declspec(dllexport)
 ServerApp* _stdcall CreateServerApp(IHttpServer* p_server
                                    ,const char*  p_webroot
-                                   ,const char*  p_appName
-                                   ,LogAnalysis* p_log
-                                   ,ErrorReport* p_report)
+                                   ,const char*  p_appName)
 {
-  return appFactory->CreateServerApp(p_server,p_webroot,p_appName,p_log,p_report);
+  return appFactory->CreateServerApp(p_server,p_webroot,p_appName);
 }
 
 }
 
-//XTOR
+// XTOR
 ServerApp::ServerApp(IHttpServer* p_iis
                     ,const char*  p_webroot
-                    ,const char*  p_appName
-                    ,LogAnalysis* p_logfile
-                    ,ErrorReport* p_report)
+                    ,const char*  p_appName)
           :m_iis(p_iis)
-          ,m_logfile(p_logfile)
 {
-  g_iisServer   = p_iis;
-  g_analysisLog = p_logfile;
-  g_report      = p_report;
+  // Keep global pointer to the server
+  g_iisServer = p_iis;
 
   // Construct local MFC CStrings from char pointers
   m_webroot         = p_webroot;
@@ -120,17 +114,8 @@ ServerApp::InitInstance()
   m_httpServer->SetLogLevel(m_logfile->GetLogLevel());
 
   // Create our error report
-  if(g_report == nullptr)
-  {
-    m_errorReport = new ErrorReport();
-    m_ownReport   = true;
-    m_httpServer->SetErrorReport(m_errorReport);
-  }
-  else
-  {
-    m_errorReport = g_report;
-    m_httpServer->SetErrorReport(g_report);
-  }
+  m_errorReport = new ErrorReport();
+  m_httpServer->SetErrorReport(m_errorReport);
 
   // Now run the marlin server
   m_httpServer->Run();
@@ -155,21 +140,19 @@ ServerApp::ExitInstance()
   }
 
   // Stopping our logfile
-  if(m_logfile && m_ownLogfile)
+  if(m_logfile)
   {
     m_logfile->AnalysisLog(__FUNCTION__, LogType::LOG_INFO, true, "%s closed",m_applicationName.GetString());
 
     delete m_logfile;
     m_logfile     = nullptr;
-    m_ownLogfile  = false;
   }
 
   // Destroy the general error report
-  if(m_errorReport && m_ownReport)
+  if(m_errorReport)
   {
     delete m_errorReport;
     m_errorReport = nullptr;
-    m_ownReport   = false;
   }
 
   // Other objects cannot access these any more
@@ -212,26 +195,9 @@ ServerApp::StartLogging()
     m_logfile->SetLogFilename(logfile);
     m_logfile->SetLogRotation(true);
     m_logfile->SetLogLevel(m_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
-    m_ownLogfile = true;
 
     // Record for test classes
     g_analysisLog = m_logfile;
-  }
-  else
-  {
-    // Create path name for our application logfile
-    EnsureFile ensure;
-    CString completeLogfile = m_logfile->GetLogFileName();
-    CString logfile = ensure.FilenamePart(completeLogfile);
-    CString symlink = m_config.GetLogfilePath() + "\\" + m_applicationName + "\\" + logfile;
-    ensure.SetFilename(symlink);
-    ensure.CheckCreateDirectory();
-
-    // Create symbolic link to the marlin logfile.
-    // No real new logfile has been created or started
-    BOOLEAN res = CreateSymbolicLink(symlink,completeLogfile,0);
-    m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
-                          ,"Created symbolic link file [%s] %s",symlink.GetString(),res ? "OK" : "FAILED");
   }
 
   // Tell that we started the logfile
@@ -626,11 +592,9 @@ ServerAppFactory::ServerAppFactory()
 ServerApp* 
 ServerAppFactory::CreateServerApp(IHttpServer*  p_iis
                                  ,const char*   p_webroot
-                                 ,const char*   p_appName
-                                 ,LogAnalysis*  p_logfile
-                                 ,ErrorReport*  p_report)
+                                 ,const char*   p_appName)
 {
-  return new ServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report);
+  return new ServerApp(p_iis,p_webroot,p_appName);
 }
 
 ServerAppFactory* appFactory = nullptr;

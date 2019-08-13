@@ -51,10 +51,8 @@ WebConfigIIS* g_config = nullptr;
 
 MarlinServerApp::MarlinServerApp(IHttpServer*   p_iis
                                 ,const char*    p_webroot
-                                ,const char*    p_appName
-                                ,LogAnalysis*   p_logfile
-                                ,ErrorReport*   p_report)
-                :ServerApp(p_iis,p_webroot,p_appName,p_logfile,p_report)
+                                ,const char*    p_appName)
+                :ServerApp(p_iis,p_webroot,p_appName)
 {
 }
 

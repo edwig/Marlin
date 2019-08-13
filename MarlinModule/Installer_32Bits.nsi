@@ -9,8 +9,8 @@
 ; Version:             6.1
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 32Bits"
- !define PRODUCT_VERSION                      "6.1.0.0"
- !define PRODUCT_BUILDNUMBER                  "10"
+ !define PRODUCT_VERSION                      "6.1.2.0"
+ !define PRODUCT_BUILDNUMBER                  "11"
  !define PRODUCT_PUBLISHER                    "Edwig Huisman"
  !define PRODUCT_WEB_SITE                     "https://github.com/Edwig/Marlin"
  !define PRODUCT_DIR_REGKEY                   "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"

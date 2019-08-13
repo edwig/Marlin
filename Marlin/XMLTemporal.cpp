@@ -26,7 +26,6 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include <time.h>
 #include "XMLTemporal.h"
 
 #ifdef _DEBUG

@@ -9,6 +9,28 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.1.2
+------------------------
+1)  New parameter "keep" in the logfile.config definition. In case of server log rotation, this is 
+    the maximum number of logfiles to keep in one directory. This makes it possible to configure to 
+    retain less logfiles than all the logfiles of the last two months.
+2)  The "CreateServer" function for IIS applications has dropped two parameters (error-object and 
+    logfile object). These objects can no longer be shared between applications. Logfiles will now 
+    be separate for all application pools and the general MarlinModule in the inetpub/log directories.
+    The separation was needed to gain more stability in the co-creation of web applications.
+3)  It is now possible to place a debug version of the MarlinModule in the 'inetsrv' directory of 
+    MS-Windows, provided you place it under a different name. e.g. "MarlinModuleDebug.dll"
+    This makes it possible to integrate debug and release versions of applications within the same
+    IIS environment.
+4)  It is now mandatory to define a HTTP handler in an IIS site that relates to the MarlinModule you
+    are using. Without such an handler, the website can never be started.
+5)  Bug fix for CrackedURL when re-printing an URL. For the case when "m_secure" was set to true, 
+    but no "https" prefix was provided. In this case the prefix will be appended an 's' to fix this.
+6)  Bug fix in XMLMessage in finding an element with a namespace prefix. When searching WITH a 
+    namespace prefix, the same names in other namespaces will be ignored.
+7)  Bug fix in WSDL reading from a file, where the result of the read was not returned from the method.
+8)  Bug fix in JSON parser for the line number.
+
 CHANGES IN VERSION 6.1.1
 ------------------------
 1)  Changed the working of the SiteFilters. Must now return a boolean value (true) to keep going in

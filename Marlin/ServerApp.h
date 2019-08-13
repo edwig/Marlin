@@ -44,7 +44,7 @@ using IISModules = std::set<CString>;
 class ServerApp;
 
 // Exported function that must be called first in the loaded Marlin application DLL
-typedef ServerApp* (CALLBACK* CreateServerAppFunc)(IHttpServer*,const char*,const char*,LogAnalysis*,ErrorReport*);
+typedef ServerApp* (CALLBACK* CreateServerAppFunc)(IHttpServer*,const char*,const char*);
 
 extern IHttpServer*  g_iisServer;
 extern LogAnalysis*  g_analysisLog;
@@ -59,9 +59,7 @@ class ServerApp
 public:
   ServerApp(IHttpServer*  p_iis
            ,const char*   p_webroot
-           ,const char*   p_appName
-           ,LogAnalysis*  p_logfile
-           ,ErrorReport*  p_report);
+           ,const char*   p_appName);
   virtual ~ServerApp();
 
   // Starting and stopping the server
@@ -115,8 +113,6 @@ protected:
   ThreadPool*    m_threadPool   { nullptr };    // Pointer to our own ThreadPool
   LogAnalysis*   m_logfile      { nullptr };    // Logfile object
   ErrorReport*   m_errorReport  { nullptr };    // Error reporting object
-  bool           m_ownReport    { false   };    // Owning the error report
-  bool           m_ownLogfile   { false   };    // Owning the logfile
   int            m_logLevel     { HLL_NOLOG };  // Logging level of server and logfile
 };
 
@@ -129,9 +125,7 @@ public:
 
   virtual ServerApp* CreateServerApp(IHttpServer*  p_iis
                                     ,const char*   p_webroot
-                                    ,const char*   p_appName
-                                    ,LogAnalysis*  p_logfile
-                                    ,ErrorReport*  p_report);
+                                    ,const char*   p_appName);
 };
 
 extern ServerAppFactory* appFactory;

@@ -37,9 +37,7 @@ class MarlinServerApp : public ServerApp
 public:
   MarlinServerApp(IHttpServer*  p_iis
                  ,const char*   p_webroot
-                 ,const char*   p_appName
-                 ,LogAnalysis*  p_logfile
-                 ,ErrorReport*  p_report);
+                 ,const char*   p_appName);
   virtual ~MarlinServerApp();
 
   virtual void InitInstance();

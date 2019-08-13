@@ -123,7 +123,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;MarlinModule.lib</AdditionalDependencies>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\lib\;$(SolutionDir)..\Bin$(Configuration)_$(Platform)\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
