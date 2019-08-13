@@ -408,7 +408,6 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   }
 
   // Flush the results of starting the server to the logfile
-  g_analysisLog->ForceFlush();
   g_logfile->ForceFlush();
   
   // Ready, so stop the timer

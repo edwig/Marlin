@@ -114,7 +114,12 @@ ServerApp::InitInstance()
   m_httpServer->SetLogLevel(m_logfile->GetLogLevel());
 
   // Create our error report
-  m_errorReport = new ErrorReport();
+  if(g_report == nullptr)
+  {
+    g_report      = new ErrorReport();
+    m_errorReport = g_report;
+    m_ownReport   = true;
+  }
   m_httpServer->SetErrorReport(m_errorReport);
 
   // Now run the marlin server
@@ -149,11 +154,11 @@ ServerApp::ExitInstance()
   }
 
   // Destroy the general error report
-  if(m_errorReport)
+  if(m_errorReport && m_ownReport)
   {
     delete m_errorReport;
-    m_errorReport = nullptr;
   }
+  m_errorReport = nullptr;
 
   // Other objects cannot access these any more
   g_analysisLog = nullptr;

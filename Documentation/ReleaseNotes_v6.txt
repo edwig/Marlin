@@ -30,6 +30,7 @@ CHANGES IN VERSION 6.1.2
     namespace prefix, the same names in other namespaces will be ignored.
 7)  Bug fix in WSDL reading from a file, where the result of the read was not returned from the method.
 8)  Bug fix in JSON parser for the line number.
+9)  Bug fix for a report object in ServerApp.
 
 CHANGES IN VERSION 6.1.1
 ------------------------

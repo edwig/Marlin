@@ -113,6 +113,7 @@ protected:
   ThreadPool*    m_threadPool   { nullptr };    // Pointer to our own ThreadPool
   LogAnalysis*   m_logfile      { nullptr };    // Logfile object
   ErrorReport*   m_errorReport  { nullptr };    // Error reporting object
+  bool           m_ownReport    { false   };    // We made the error report
   int            m_logLevel     { HLL_NOLOG };  // Logging level of server and logfile
 };
 
