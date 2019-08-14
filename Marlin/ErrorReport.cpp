@@ -289,7 +289,7 @@ ErrorReport::Report(const CString& p_subject,const StackTrace& p_trace,CString p
   AutoCritSec lock(&(s_instance->m_lock));
 
   // Send the report
-  s_instance->DoReport(p_subject, p_trace,p_directory,p_url);
+  s_instance->DoReport(p_subject,p_trace,p_directory,p_url);
 }
 
 /*static*/ bool
@@ -519,7 +519,13 @@ SignalHandler(int signal)
   }
 #endif // _DEBUG
 
-  // Gather stack information. 
+  CString tempdir;
+  if(tempdir.GetEnvironmentVariable("TMP"))
+  {
+    // Gather stack information in our TMP directory
+    ErrorReport::Report(signal,0,tempdir,"Crash_");
+  }
+  // Gather stack information in the C:\ root directory
   ErrorReport::Report(signal,0,"","");
 }
 
@@ -550,7 +556,7 @@ PrepareProcessForSEH()
   // Install new signal handlers
   for (unsigned int i = 0; i < sizeof(SignalStop) / sizeof(SignalStop[0]); i++)
   {
-    signal(SignalStop[i], CallSignalHandler);
+    signal(SignalStop[i],CallSignalHandler);
   }
   // Change the behaviour of the abort() function to not show any messages
   // if it is being called. We are doing the messaging.
