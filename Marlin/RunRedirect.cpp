@@ -115,9 +115,9 @@ RunRedirect::Release()
 int 
 CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result)
 {
-#ifndef MARLIN_USE_ATL_ONLY
-  AFX_MANAGE_STATE(AfxGetStaticModuleState());
-#endif
+// #ifndef MARLIN_USE_ATL_ONLY
+//   AFX_MANAGE_STATE(AfxGetStaticModuleState());
+// #endif
   RunRedirect run;
 
   CString commandLine;
@@ -140,9 +140,9 @@ CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result
 int 
 CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result,int p_waittime)
 {
-#ifndef MARLIN_USE_ATL_ONLY
-  AFX_MANAGE_STATE(AfxGetStaticModuleState());
-#endif
+// #ifndef MARLIN_USE_ATL_ONLY
+//   AFX_MANAGE_STATE(AfxGetStaticModuleState());
+// #endif
   RunRedirect run;
 
   CString commandLine;

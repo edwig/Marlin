@@ -45,6 +45,7 @@
 #include "AutoCritical.h"
 #include "WebConfigIIS.h"
 #include "StdException.h"
+#include "RunRedirect.h"
 #ifdef _DEBUG
 #include "IISDebug.h"
 #endif
@@ -297,11 +298,10 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   {
     // Already started this application
     // Keep fingers crossed that another application implements this port!!!
-    CString logging;
-    logging.Format("Application [%s] on port [%d] already started.",application,applicationPort);
-    DETAILLOG(logging);
-    DETAILLOG("ANOTHER application must implement this port!!");
-    return GL_NOTIFICATION_HANDLED;
+    CString error;
+    error.Format("Application [%s] on port [%d] already started. ANOTHER application must implement this port!!"
+                 ,application,applicationPort);
+    return Unhealthy(error,ERROR_DUP_NAME);
   }
 
   // Create a new pool application
@@ -606,7 +606,25 @@ MarlinGlobalFactory::Unhealthy(CString p_error,HRESULT p_code)
   CComBSTR werr = A2W(p_error);
   // Report to IIS to kill the application with **this** reason
   g_iisServer->ReportUnhealthy(werr,p_code);
-  return GL_NOTIFICATION_HANDLED;
+
+  // Stopping the application pool
+  CString appPoolName = W2A(g_iisServer->GetAppPoolName());
+  CString command;
+  command.GetEnvironmentVariable("WINDIR");
+  command += "\\system32\\inetsrv\\appcmd.exe";
+  CString parameters;
+  parameters.Format("stop apppool \"%s\"",appPoolName);
+
+  // STOP!
+  CString result;
+  int res = CallProgram_For_String(command,parameters,result);
+
+  // Result of the stopping command
+  CString logging;
+  logging.Format("Called: %s %s -> Result: [%d] %s",command,parameters,res,result);
+  DETAILLOG(logging);
+
+  return GL_NOTIFICATION_CONTINUE;
 }
 
 // If the given DLL begins with a '@' it is an absolute pathname
