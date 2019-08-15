@@ -31,6 +31,9 @@ CHANGES IN VERSION 6.1.2
 7)  Bug fix in WSDL reading from a file, where the result of the read was not returned from the method.
 8)  Bug fix in JSON parser for the line number.
 9)  Bug fix for a report object in ServerApp.
+10) If the settings of the application DLL are wrong, or the DLL for the MarlinModule is missing,
+    the application pool will now be stopped in the "Unhealthy" method. This is a necessity, because
+    the pool would otherwise be restarted many times a second.
 
 CHANGES IN VERSION 6.1.1
 ------------------------
