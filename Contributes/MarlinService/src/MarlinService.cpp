@@ -21,11 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include "pch.h"
+#include "stdafx.h"
 #include <HTTPServerMarlin.h>
 #include <HTTPSite.h>
 #include <SiteHandlerGet.h>
 #include <SiteHandlerHead.h>
+
+#include <TestServer.h>
 #include "MarlinService.h"
 
 #ifdef _DEBUG
@@ -180,6 +182,7 @@ MarlinService::Start(DWORD /*dwArgc*/, PWSTR* /*pszArgv*/)
     if (!result)
       throw 2;
 
+#if 0
     CString siteUrl = "/marlin/";
     // create site and add get handler
     HTTPSite* site = m_marlinServer->CreateSite(PrefixType::URLPRE_Strong,false,80,siteUrl);
@@ -193,7 +196,9 @@ MarlinService::Start(DWORD /*dwArgc*/, PWSTR* /*pszArgv*/)
     // Start the site
     SetServiceStatus(SERVICE_START_PENDING);
     site->StartSite();
-
+#else
+	  runtestset(m_marlinServer);
+#endif
     SetServiceStatus(SERVICE_RUNNING);
   } catch (DWORD dwError) {
     m_logger.AnalysisLog(__FUNCTION__, LogType::LOG_INFO, true, "Service failed to start: %d.", dwError);
@@ -218,6 +223,8 @@ MarlinService::Stop()
     m_logger.AnalysisLog(__FUNCTION__, LogType::LOG_INFO, false, "MarlinService in OnStop");
 
     if (m_marlinServer) {
+			// Try to stop the subsites
+			StopSubsites(m_marlinServer);
       m_marlinServer->StopServer();
       delete m_marlinServer;
       m_marlinServer = NULL;
@@ -237,6 +244,41 @@ MarlinService::Stop()
 
     SetServiceStatus(dwOriginalState);
   }
+}
+
+void
+MarlinService::runtestset(HTTPServer* server)
+{
+	// Fire up all of our test sites
+	int errors = 0;
+
+	// Individual tests
+	errors += Test_CrackURL();
+	errors += Test_HTTPTime();
+	errors += TestThreadPool(server->GetThreadPool());
+
+	// HTTP tests
+	errors += TestBaseSite(server);
+	errors += TestSecureSite(server);
+	errors += TestClientCertificate(server,true);
+	errors += TestCookies(server);
+	errors += TestFormData(server);
+	errors += TestJsonData(server);
+	errors += TestInsecure(server);
+	errors += TestPushEvents(server);
+	errors += TestBodySigning(server);
+	errors += TestBodyEncryption(server);
+	errors += TestMessageEncryption(server);
+	errors += TestReliable(server);
+	errors += TestReliableBA(server);
+	errors += TestToken(server);
+	errors += TestSubSites(server);
+	errors += TestFilter(server);
+	errors += TestPatch(server);
+	errors += TestCompression(server);
+	errors += TestAsynchrone(server);
+	errors += TestWebSocket(server);
+
 }
 
 //

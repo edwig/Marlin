@@ -21,7 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include "pch.h"
+#include "stdafx.h"
+#include <AutoCritical.h>
 #include "MarlinService.h"
 #include "utils.h"
 
@@ -33,6 +34,60 @@ static void flushDebug();
 #define DEBUG_NEW new( _NORMAL_BLOCK, __FILE__, __LINE__)
 #define new DEBUG_NEW
 #endif
+// Global objects of this test program
+int  totalErrors = 0;
+bool doDetails   = false;
+int  logLevel    = HLL_TRACEDUMP;  // HLL_NOLOG / HLL_ERRORS / HLL_LOGGING / HLL_LOGBODY / HLL_TRACE / HLL_TRACEDUMP
+// Global critical section to print to the 'stdio' stream
+CRITICAL_SECTION std_stream;
+
+// eXtended Printf: print only if doDetails is true
+void
+xprintf(const char* p_format, ...)
+{
+  if (doDetails) {
+    AutoCritSec lock(&std_stream);
+
+    va_list vl;
+    va_start(vl, p_format);
+    vprintf(p_format, vl);
+    va_end(vl);
+  }
+}
+
+void
+qprintf(const char* p_format,...)
+{
+  CString string;
+  static CString stringRegister;
+
+  va_list vl;
+  va_start(vl,p_format);
+  string.FormatV(p_format,vl);
+  va_end(vl);
+
+
+  // See if we must just register the string
+  if(string.Right(3) == "<+>") {
+    stringRegister += string.Left(string.GetLength() - 3);
+    return;
+  }
+
+  // Print the result to the logfile as INFO
+  string = stringRegister + string;
+  stringRegister.Empty();
+
+  AutoCritSec lock(&std_stream);
+  printf(string);
+}
+
+
+// Record an error from on of the test functions
+void
+xerror()
+{
+  ++totalErrors;
+}
 
 // run as windows service
 
@@ -92,6 +147,7 @@ WinMain(HINSTANCE hInstance,
           int)
 {
   BOOL asservice = (utils::GetCurrentSessionId()==0) && utils::AmIWellKnown(SERVICE_ACCOUNT_T);
+  InitializeCriticalSection(&std_stream);
 
   int iRet = 0;
 #ifdef _DEBUG
@@ -114,6 +170,7 @@ WinMain(HINSTANCE hInstance,
     iRet = runAsApp(hInstance, lpCmdLine);
   }
 
+  DeleteCriticalSection(&std_stream);
   return iRet;
 }
 

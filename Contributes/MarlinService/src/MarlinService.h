@@ -80,6 +80,7 @@ private:
   // the service.
   static DWORD WINAPI ServiceCtrlHandler(DWORD dwCtrl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext);
 
+  void runtestset(HTTPServer* server);
 private:
   // The name of the service
   PWSTR m_name;

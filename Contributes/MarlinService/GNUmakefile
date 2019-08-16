@@ -32,6 +32,7 @@ PROJECT_NAME = MarlinWebServer
 
 vpath %.cpp $(SOURCE_DIR)
 vpath %.cpp $(MARLIN_DIR)/Marlin
+vpath %.cpp $(MARLIN_DIR)/MarlinServer/ServerTestset
 vpath %.cpp $(MARLIN_DIR)/Marlin/ZLib
 vpath %.c $(MARLIN_DIR)/Marlin/ZLib
 
@@ -46,7 +47,7 @@ INTDIR        = objs_server
 MARLIN_INTDIR = objs_marlin
 
 ifdef DEBUG
-CXXFLAGS        = -D_DEBUG /MTd /W4 /Zi /Fd$(INTDIR)/ $(CXXBASEFLAGS) -I $(MARLIN_DIR)/Marlin -DMARLIN_NOAUTOLINK
+CXXFLAGS        = -D_DEBUG /MTd /W4 /Zi /Fd$(INTDIR)/ $(CXXBASEFLAGS) -I $(MARLIN_DIR)/Marlin -I $(MARLIN_DIR)/MarlinServer/MarlinServer -I $(MARLIN_DIR)/MarlinServer/ServerTestset -DMARLIN_NOAUTOLINK
 MARLIN_CXX_FLAGS= -D_DEBUG /MTd /W4 /Zi /Fd$(MARLIN_INTDIR)/ $(CXXBASEFLAGS) -I $(MARLIN_DIR)/Marlin/ZLib
 LDFLAGS = /nologo /DEBUG /SUBSYSTEM:WINDOWS
 else
@@ -77,7 +78,31 @@ cleanall:clean
 MARLIN_SERVICE_SOURCES = $(SOURCE_DIR)/utils.cpp \
                          $(SOURCE_DIR)/MarlinService.cpp \
                          $(SOURCE_DIR)/WinMain.cpp
-
+SERVER_TEST_SOURCES = $(MARLIN_DIR)/MarlinServer/ServerTestset/TestAsynchrone.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestBaseSite.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestBodyEncryption.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestBodySigning.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestClientCert.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestCompression.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestContract.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestCookies.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestCrackUrl.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestEvents.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestFilter.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestFormData.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestInsecure.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestJsonData.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestManualEvents.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestMessageEncryption.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestPatch.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestReliable.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestSecureSite.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestSubSites.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestThreadpool.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestTime.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestToken.cpp \
+  $(MARLIN_DIR)/MarlinServer/ServerTestset/TestWebSocket.cpp
+	
 #not used Marlin sources
 #CommandBus.cpp ThreadPoolED.cpp
 MARLIN_SOURCES = $(MARLIN_DIR)/Marlin/Analysis.cpp \
@@ -173,6 +198,7 @@ GZIP_SOURCES = $(MARLIN_DIR)/Marlin/Zlib/gzip.cpp
 
 # obj files
 SERVICE_OBJS = $(addprefix $(INTDIR)/, $(addsuffix .obj,$(basename $(notdir $(MARLIN_SERVICE_SOURCES)))))
+SERVER_TEST_OBJS = $(addprefix $(INTDIR)/, $(addsuffix .obj,$(basename $(notdir $(SERVER_TEST_SOURCES)))))
 
 MARLIN_OBJS = $(addprefix $(MARLIN_INTDIR)/, $(addsuffix .obj,$(basename $(notdir $(MARLIN_SOURCES)))))
 GZIPOBJS = $(addprefix $(MARLIN_INTDIR)/, $(addsuffix .obj,$(basename $(notdir $(GZIP_SOURCES)))))
@@ -183,26 +209,29 @@ $(MARLIN_LIB): $(MARLIN_INTDIR) $(MARLIN_INTDIR)/stdafx.obj $(MARLIN_OBJS) $(ZLI
 	@echo creating Marlin static library
 	@LIB /nologo /out:$@ $(MARLIN_INTDIR)/stdafx.obj $(MARLIN_OBJS) $(ZLIBOBJS) $(GZIPOBJS)
 
-$(COMPONENT): $(INTDIR) $(INTDIR)/pch.obj $(SERVICE_OBJS) $(TEST_OBJS)
+$(COMPONENT): $(INTDIR) $(INTDIR)/stdafx.obj $(SERVICE_OBJS) $(TEST_OBJS) $(SERVER_TEST_OBJS)
 	@echo linking $@ ...
-	@$(LD) $(LDFLAGS) /out:$@ $(INTDIR)/pch.obj $(SERVICE_OBJS) $(TEST_OBJS) $(WINLIBS) $(MARLIN_LIB)
+	@$(LD) $(LDFLAGS) /out:$@ $(INTDIR)/stdafx.obj $(SERVICE_OBJS) $(TEST_OBJS) $(SERVER_TEST_OBJS) $(WINLIBS) $(MARLIN_LIB)
 	@if exist $(COMPONENT).manifest $(MT) -nologo -manifest $(COMPONENT).manifest -outputresource:$(COMPONENT);2
 	@if exist $(COMPONENT).manifest $(RM) $(COMPONENT).manifest
 
 # rules and actions
 $(INTDIR)/%.obj:%.cpp
-	@$(CC) $(CXXFLAGS) -c -Fo$@ /Yu"pch.h" /Fp$(INTDIR)/$(PROJECT_NAME).pch $<
+	@$(CC) $(CXXFLAGS) -c -Fo$@ /Yu"stdafx.h" /Fp$(INTDIR)/$(PROJECT_NAME).pch $<
 $(INTDIR)/%.res:%.rc
 	@echo compiling resources
 	@$(RC) /nologo /l 0x804 /fo"$@" $<
-$(INTDIR)/pch.obj:pch.cpp
-	@$(CC) $(CXXFLAGS) -c /Yc"pch.h" /Fp$(INTDIR)/$(PROJECT_NAME).pch /Fo$@ $<
+
+$(INTDIR)/stdafx.obj:$(SOURCE_DIR)/stdafx.cpp
+	@$(CC) $(CXXFLAGS) -c /Yc"stdafx.h" /Fp$(INTDIR)/$(PROJECT_NAME).pch /Fo$@ $<
 $(INTDIR)/$(PROJECT_NAME).res:$(PROJECT_NAME).rc
-$(MARLIN_INTDIR)/stdafx.obj:stdafx.cpp
-	@$(CC) $(MARLIN_CXX_FLAGS) -c /Yc"stdafx.h" /Fp$(MARLIN_INTDIR)/Marlin.pch /Fo$@ $<
-$(MARLIN_INTDIR)/gzip.obj:gzip.cpp
-	@$(CC) $(MARLIN_CXX_FLAGS) -c /wd5033 /wd4457 -Fo$@ $<
+
 $(MARLIN_INTDIR)/%.obj:%.cpp
 	@$(CC) $(MARLIN_CXX_FLAGS) -c -Fo$@ /Yu"stdafx.h" /Fp$(MARLIN_INTDIR)/Marlin.pch $<
 $(MARLIN_INTDIR)/%.obj:%.c
 	@$(CC) $(MARLIN_CXX_FLAGS) -c -Fo$@ $<
+
+$(MARLIN_INTDIR)/stdafx.obj:$(MARLIN_DIR)/Marlin/stdafx.cpp
+	@$(CC) $(MARLIN_CXX_FLAGS) -c /Yc"stdafx.h" /Fp$(MARLIN_INTDIR)/Marlin.pch /Fo$@ $<
+$(MARLIN_INTDIR)/gzip.obj:gzip.cpp
+	@$(CC) $(MARLIN_CXX_FLAGS) -c /wd5033 /wd4457 -Fo$@ $<
