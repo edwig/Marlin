@@ -615,15 +615,17 @@ MarlinGlobalFactory::Unhealthy(CString p_error,HRESULT p_code)
   CString parameters;
   parameters.Format("stop apppool \"%s\"",appPoolName);
 
-  // STOP!
-  CString result;
-  int res = CallProgram_For_String(command,parameters,result);
-
-  // Result of the stopping command
+  // Stopping the application pool will be called like this
   CString logging;
-  logging.Format("Called: %s %s -> Result: [%d] %s",command,parameters,res,result);
+  logging.Format("W3WP.EXE Stopped by: %s %s",command,parameters);
   DETAILLOG(logging);
 
+  // STOP!
+  CString result;
+  CallProgram_For_String(command,parameters,result);
+
+  // Program is dead after this point. 
+  // But lets return anyhow with the proper notification
   return GL_NOTIFICATION_CONTINUE;
 }
 
