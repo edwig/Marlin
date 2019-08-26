@@ -9,6 +9,15 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.2.0
+------------------------
+1)  All instrumentation of the libraries, executables and DLLS's have been altered from the 
+    static linking model to the dynamic linking model. This makes it neccesary to rely on the 
+    external C++ runtimers installed on the target machine.
+    This change was imminent through the implemention of the MarlinModule. The static memory model
+    did not work well with the WAS and the w3wp.exe started by IIS. It resulted in debug memory
+    crashes on every string.
+
 CHANGES IN VERSION 6.1.2
 ------------------------
 1)  New parameter "keep" in the logfile.config definition. In case of server log rotation, this is 
