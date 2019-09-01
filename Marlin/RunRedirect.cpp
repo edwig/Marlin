@@ -113,11 +113,11 @@ RunRedirect::Release()
 }
 
 int 
-CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result)
+CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result)
 {
-// #ifndef MARLIN_USE_ATL_ONLY
-//   AFX_MANAGE_STATE(AfxGetStaticModuleState());
-// #endif
+#ifndef MARLIN_USE_ATL_ONLY
+   AFX_MANAGE_STATE(AfxGetStaticModuleState());
+#endif
   RunRedirect run;
 
   CString commandLine;
@@ -126,7 +126,7 @@ CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result
   p_result.Empty();
 
   // Create a new command line
-  commandLine.Format("\"%s\" %s",p_programma,p_commandLine);
+  commandLine.Format("\"%s\" %s",p_program,p_commandLine);
 
   run.RunCommand(commandLine.GetString());
   while((run.IsEOF() == false) && (run.IsReady() == false))
@@ -138,20 +138,20 @@ CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result
 }
 
 int 
-CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result,int p_waittime)
+CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result,int p_waittime)
 {
-// #ifndef MARLIN_USE_ATL_ONLY
-//   AFX_MANAGE_STATE(AfxGetStaticModuleState());
-// #endif
+#ifndef MARLIN_USE_ATL_ONLY
+   AFX_MANAGE_STATE(AfxGetStaticModuleState());
+ #endif
   RunRedirect run;
 
   CString commandLine;
 
-  // Result is initieel leeg.
+  // Result is initially empty
   p_result = "";
 
-  // Creeer een command line 
-  commandLine.Format("\"%s\" %s",p_programma,p_commandLine);
+  // Create a new command line
+  commandLine.Format("\"%s\" %s",p_program,p_commandLine);
 
   run.RunCommand(commandLine.GetString());
   while((run.IsEOF() == false) && (run.IsReady() == false))
@@ -159,5 +159,25 @@ CallProgram_For_String(LPCSTR p_programma,LPCSTR p_commandLine,CString& p_result
     Sleep(p_waittime);
   }
   p_result = run.m_lines;
+  return run.m_exitCode;
+}
+
+int 
+CallProgram(LPCSTR p_program, LPCSTR p_commandLine)
+{
+#ifndef MARLIN_USE_ATL_ONLY
+  AFX_MANAGE_STATE(AfxGetStaticModuleState());
+#endif
+  RunRedirect run;
+  CString commandLine;
+
+  // Create a new command line
+  commandLine.Format("\"%s\" %s",p_program,p_commandLine);
+
+  run.RunCommand(commandLine.GetString());
+  while ((run.IsEOF() == false) && (run.IsReady() == false))
+  {
+    Sleep(WAITTIME_STATUS);
+  }
   return run.m_exitCode;
 }

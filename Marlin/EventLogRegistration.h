@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: RunRedirect.h
+// SourceFile: EventlogRegistration.h
 //
-// Marlin Component: Internet server/client
+// Marlin Server: Internet server/client
 // 
 // Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
@@ -26,38 +26,6 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "Redirect.h"
 
-// Milliseconds wait loop
-#define WAITTIME_STATUS 25
-
-int  CallProgram           (LPCSTR p_program,LPCSTR p_commandLine);
-int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result);
-int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result,int p_waittime);
-
-
-class RunRedirect : public CRedirect
-{
-  // INCLUDE_CLASSNAME(RunBriefRun)
-public:
-   RunRedirect();
-  ~RunRedirect();
-
-  void RunCommand(LPCSTR p_commandLine);
-
-  // Virtual interface. Derived class must implement this!!
-  void OnChildStarted    (LPCSTR lpszCmdLine);
-  void OnChildStdOutWrite(LPCSTR lpszOutput); 
-  void OnChildStdErrWrite(LPCSTR lpszOutput);
-  void OnChildTerminate  ();
-  bool IsReady();
-  bool IsEOF();
-
-  bool    m_ready;
-  CString m_lines;
-private:
-  void    Acquire();
-  void    Release();
-
-  CRITICAL_SECTION  m_criticalSection;
-};
+int    RegisterMessagesDllForService(CString p_serviceName,CString p_messageDLL,CString& p_error);
+bool UnRegisterMessagesDllForService(CString p_serviceName,CString& p_error);

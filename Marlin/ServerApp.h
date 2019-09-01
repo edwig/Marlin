@@ -53,6 +53,7 @@ extern ErrorReport*  g_report;
 //////////////////////////////////////////////////////////////////////////
 //
 // THE SERVER APP
+// For IIS Derive a class from this main ServerApp class
 //
 class ServerApp
 {

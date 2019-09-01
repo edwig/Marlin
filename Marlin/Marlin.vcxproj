@@ -168,8 +168,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Analysis.cpp" />
+    <ClCompile Include="AppConfig.cpp" />
     <ClCompile Include="Base64.cpp" />
     <ClCompile Include="CommandBus.cpp" />
+    <ClCompile Include="EventLogRegistration.cpp" />
     <ClCompile Include="HostedWebCore.cpp" />
     <ClCompile Include="HTTPCertificate.cpp" />
     <ClCompile Include="ConvertWideString.cpp" />
@@ -204,6 +206,7 @@
     <ClCompile Include="IISDebug.cpp" />
     <ClCompile Include="JSONMessage.cpp" />
     <ClCompile Include="JSONParser.cpp" />
+    <ClCompile Include="MarlinServer.cpp" />
     <ClCompile Include="MediaType.cpp" />
     <ClCompile Include="MultiPartBuffer.cpp" />
     <ClCompile Include="Namespace.cpp" />
@@ -212,6 +215,8 @@
     <ClCompile Include="Redirect.cpp" />
     <ClCompile Include="RunRedirect.cpp" />
     <ClCompile Include="ServerApp.cpp" />
+    <ClCompile Include="ServerMain.cpp" />
+    <ClCompile Include="ServiceReporting.cpp" />
     <ClCompile Include="SiteFilter.cpp" />
     <ClCompile Include="SiteFilterClientCertificate.cpp" />
     <ClCompile Include="SiteFilterXSS.cpp" />
@@ -325,9 +330,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Analysis.h" />
+    <ClInclude Include="AppConfig.h" />
     <ClInclude Include="AutoCritical.h" />
     <ClInclude Include="Base64.h" />
     <ClInclude Include="CommandBus.h" />
+    <ClInclude Include="EventLogRegistration.h" />
     <ClInclude Include="EventStream.h" />
     <ClInclude Include="HostedWebCore.h" />
     <ClInclude Include="HTTPCertificate.h" />
@@ -367,6 +374,7 @@
     <ClInclude Include="JSONMessage.h" />
     <ClInclude Include="JSONParser.h" />
     <ClInclude Include="Marlin.h" />
+    <ClInclude Include="MarlinServer.h" />
     <ClInclude Include="MediaType.h" />
     <ClInclude Include="MultiPartBuffer.h" />
     <ClInclude Include="Namespace.h" />
@@ -376,6 +384,8 @@
     <ClInclude Include="RunRedirect.h" />
     <ClInclude Include="ServerApp.h" />
     <ClInclude Include="ServerEvent.h" />
+    <ClInclude Include="ServerMain.h" />
+    <ClInclude Include="ServiceReporting.h" />
     <ClInclude Include="SiteFilter.h" />
     <ClInclude Include="SiteFilterClientCertificate.h" />
     <ClInclude Include="SiteFilterXSS.h" />

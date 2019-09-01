@@ -318,6 +318,21 @@
     <ClCompile Include="WebSocketServerSync.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
+    <ClCompile Include="ServerMain.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
+    <ClCompile Include="MarlinServer.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
+    <ClCompile Include="AppConfig.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
+    <ClCompile Include="EventLogRegistration.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceReporting.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -649,6 +664,21 @@
     </ClInclude>
     <ClInclude Include="WebSocketServerSync.h">
       <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerMain.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MarlinServer.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="AppConfig.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="EventLogRegistration.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceReporting.h">
+      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

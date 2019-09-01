@@ -9,6 +9,15 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.2.1
+------------------------
+1)  Added the following classes in order to build better servers that can devide between IIS, 
+    NT-Service or as a stand alone server.
+    - ServerMain:       This is the main class your stand-alone server should derive from
+    - MarlinServer:     The command line framework to start NT-Services and stand-alone servers
+    - ServiceReporting: Reporting to the MS-Windows WMI event log registration
+    - AppConfig:        This is the main class your application config should derive from
+
 CHANGES IN VERSION 6.2.0
 ------------------------
 1)  All instrumentation of the libraries, executables and DLLS's have been altered from the 
