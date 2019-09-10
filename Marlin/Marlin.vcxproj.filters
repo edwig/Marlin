@@ -333,6 +333,9 @@
     <ClCompile Include="ServiceReporting.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="ExecuteProcess.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -678,6 +681,9 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ServiceReporting.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ExecuteProcess.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>

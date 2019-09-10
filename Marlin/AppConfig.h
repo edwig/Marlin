@@ -13,17 +13,9 @@
 #define DEFAULT_INSTANCE         1          // Machine instance
 #define MAXIMUM_INSTANCE       100          // No more than 100 instances on 1 machine
 #define DEFAULT_SERVERPORT     443          // Default HTTPS port of the server
-#define DEFAULT_SPINCOUNT     2000
-#define MINIMUM_SPINCOUNT     1000
-#define MAXIMUM_SPINCOUNT   100000
-#define DEFAULT_TIMEOUTCONN   5000
-#define MINIMUM_TIMEOUTCONN   3000
-#define MAXIMUM_TIMEOUTCONN  60000
-#define DEFAULT_RETRYCOUNT       3
-#define MAXIMUM_RETRYCOUNT      10
-#define DEFAULT_CONNTIMEOUT  10000
-#define MINIMUM_CONNTIMEOUT   5000
-#define MAXIMUM_CONNTIMEOUT  30000
+#define RUNAS_STANDALONE         0          // Running as a one-time standalone program
+#define RUNAS_NTSERVICE          1          // Running as an integrated Windows-NT service
+#define RUNAS_IISAPPPOOL         2          // Running as an IIS application pool
 
 class AppConfig : public XMLMessage
 {
@@ -40,6 +32,8 @@ public:
 
   // The name of the server
   CString  GetName();
+  // Getting the role of the server
+  CString  GetRole();
   // Getting the host server
   CString  GetServer();
   // Server URL is not stored in this form
@@ -54,55 +48,30 @@ public:
   int      GetInstance();
   // The server logfile
   CString  GetServerLogfile();
-  // Should the client do logging
-  bool     GetClientLogging();
   // Should the server do extra logging
-  bool     GetServerLogging();
+  int      GetServerLoglevel();
   // Is the config file writable
   bool     GetConfigWritable();
   // The config file as an absolute pathname
   CString  GetConfigFilename();
   // Get the webroot
   CString  GetWebRoot();
-  // Get the base directory
-  CString  GetBaseDirectory();
-  // Get the CriticalSection's spin count
-  DWORD    GetSpinCount();
-  // Get timeout Connect
-  DWORD    GetTimeoutConnect();
   // Get run-as status
-  bool     GetRunAsService();
-  // Connection pulse timeout
-  int      GetConnectionTimeout();
-  // Lifetime of a connection in seconds
-  int      GetLifetimeConnection();
+  int      GetRunAsService();
 
   // SETTERS
 
   void  SetName(CString p_name);
+  void  SetRole(CString p_role);
   void  SetInstance(int p_instance);
   void  SetServer(CString p_server);
   void  SetBaseURL(CString p_baseURL);
   void  SetServerSecure(bool p_secure);
   void  SetWebRoot(CString p_webroot);
-  void  SetBaseDirectory(CString p_baseDirectory);
-  void  SetClientLog(CString p_logfile);
   void  SetServerLog(CString p_logfile);
-  void  SetUserAgent(CString p_agent);
   void  SetServerPort(unsigned p_port);
-  void  SetClientPort(unsigned p_port);
-  void  SetClientLogging(bool p_logging);
-  void  SetServerLogging(bool p_logging);
-  void  SetClientStartType(int p_startType);
-  void  SetSpinCount(DWORD p_spinCount);
-  void  SetPortOffsets(bool p_offsets);
-  void  SetPushInterface(bool p_push);
-  void  SetTimeoutConnect(DWORD p_timeout);
-  void  SetRunAsService(bool p_service);
-  void  SetCheckIncoming(bool p_check);
-  void  SetCheckOutgoing(bool p_check);
-  void  SetConnectionTimeout(int p_timeout);
-  void  SetLifetimeConnection(int p_seconds);
+  void  SetServerLoglevel(int p_loglevel);
+  void  SetRunAsService(int p_service);
 
 protected:
   // OVERRIDES FOR YOUR APPLICATION
@@ -122,21 +91,17 @@ protected:
   CString m_rootname;
 
 private:
-  CString  m_name;
-  int      m_instance;
-  CString  m_server;
-  bool     m_secure;
-  unsigned m_serverPort;
-  CString  m_baseUrl;
-  CString  m_serverLog;
-  bool     m_serverLogging;
-  CString  m_baseDirectory;
+  CString  m_name;               // Name of the server or IIS application-pool name
+  CString  m_role;               // Server / Client / Server&Client
+  int      m_instance;           // Between 1 and 100
+  CString  m_server;             // Server host name
+  bool     m_secure;             // HTTP or HTTPS
+  unsigned m_serverPort;         // Server input port number
+  CString  m_baseUrl;            // Base URL only
+  CString  m_serverLog;          // Server logfile path name
+  int      m_serverLoglevel;     // See HTTPLoglevel.h
   CString  m_webroot;
-  CString  m_agent;
-  DWORD    m_spinCount;
-  DWORD    m_timeoutConnect;
-  bool     m_runAsService;
-  int      m_connectionTimeout;
+  int      m_runAsService;       // Start method RUNAS_*
 };
 
 inline CString
@@ -169,10 +134,10 @@ AppConfig::GetServer()
   return m_server;
 }
 
-inline bool
-AppConfig::GetServerLogging()
+inline int
+AppConfig::GetServerLoglevel()
 {
-  return m_serverLogging;
+  return m_serverLoglevel;
 }
 
 inline void
@@ -188,9 +153,9 @@ AppConfig::SetServerPort(unsigned p_port)
 }
 
 inline void
-AppConfig::SetServerLogging(bool p_logging)
+AppConfig::SetServerLoglevel(int p_loglevel)
 {
-  m_serverLogging = p_logging;
+  m_serverLoglevel = p_loglevel;
 }
 
 inline void
@@ -205,18 +170,6 @@ AppConfig::GetWebRoot()
   return m_webroot;
 }
 
-inline DWORD
-AppConfig::GetSpinCount()
-{
-  return m_spinCount;
-}
-
-inline void
-AppConfig::SetSpinCount(DWORD p_spinCount)
-{
-  m_spinCount = p_spinCount;
-}
-
 inline CString
 AppConfig::GetServerLogfile()
 {
@@ -229,26 +182,14 @@ AppConfig::SetServerLog(CString p_logfile)
   m_serverLog = p_logfile;
 }
 
-inline DWORD
-AppConfig::GetTimeoutConnect()
-{
-  return m_timeoutConnect;
-}
-
-inline void
-AppConfig::SetTimeoutConnect(DWORD p_timeout)
-{
-  m_timeoutConnect = p_timeout;
-}
-
-inline bool
+inline int
 AppConfig::GetRunAsService()
 {
   return m_runAsService;
 }
 
 inline void
-AppConfig::SetRunAsService(bool p_service)
+AppConfig::SetRunAsService(int p_service)
 {
   m_runAsService = p_service;
 }
@@ -271,18 +212,6 @@ AppConfig::GetBaseURL()
   return m_baseUrl;
 }
 
-inline CString
-AppConfig::GetBaseDirectory()
-{
-  return m_baseDirectory;
-}
-
-inline void
-AppConfig::SetBaseDirectory(CString p_baseDirectory)
-{
-  m_baseDirectory = p_baseDirectory;
-}
-
 inline int
 AppConfig::GetServerPort()
 {
@@ -293,4 +222,16 @@ inline bool
 AppConfig::GetServerSecure()
 {
   return m_secure;
+}
+
+inline void
+AppConfig::SetRole(CString p_role)
+{
+  m_role = p_role;
+}
+
+inline CString
+AppConfig::GetRole()
+{
+  return m_role;
 }

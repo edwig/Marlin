@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "SiteHandlerPatch.h"
 #include "SiteHandlerOptions.h"
 #include "SiteFilter.h"
@@ -97,12 +97,12 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
 //////////////////////////////////////////////////////////////////////////
 
 int
-TestPatch(HTTPServer* p_server)
+TestMarlinServer::TestPatch()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/MarlinTest/Patching/");
 
@@ -111,7 +111,7 @@ TestPatch(HTTPServer* p_server)
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Patching/"
   // Callback function is no longer required!
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -130,7 +130,7 @@ TestPatch(HTTPServer* p_server)
   // And let the HTTP OPTIONS command reveal the fact that we handle patch calls
   site->SetHandler(HTTPCommand::http_patch,  new SiteHandlerPatchMe());
   site->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
-  // And alsoo handle verb tunneling requests for the HTTP PATCH command
+  // And also handle verb tunneling requests for the HTTP PATCH command
   // To test with or without verb tunneling, turn 'true' to 'false'
   site->SetVerbTunneling(true);
 
@@ -153,7 +153,7 @@ TestPatch(HTTPServer* p_server)
 }
 
 int
-AfterTestPatch()
+TestMarlinServer::AfterTestPatch()
 {
   // SUMMARY OF THE TEST
   //- --- "---------------------------------------------- - ------

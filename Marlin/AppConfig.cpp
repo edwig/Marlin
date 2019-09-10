@@ -15,14 +15,9 @@ AppConfig::AppConfig(CString p_rootname)
   m_serverPort         = INTERNET_DEFAULT_HTTP_PORT;
   m_baseUrl            = DEFAULT_URL;
   m_serverLog          = DEFAULT_SERVERLOG;
-  m_serverLogging      = false;
+  m_serverLoglevel      = false;
   m_webroot            = DEFAULT_WEBROOT;
-  m_spinCount          = DEFAULT_SPINCOUNT;
-  m_timeoutConnect     = DEFAULT_TIMEOUTCONN;
   m_runAsService       = false;
-  m_connectionTimeout  = DEFAULT_CONNTIMEOUT;
-
-  m_agent.Format("%s %s",PRODUCT_NAME,PRODUCT_VERSION);
 }
 
 AppConfig::~AppConfig()
@@ -126,20 +121,16 @@ AppConfig::WriteConfig()
   // Rebuild the XML structure
   Clean();
 
-  // General settings
-  SetElement("Server",        m_server);
-  SetElement("BaseURL",       m_baseUrl);
-  SetElement("Instance",      m_instance);
-  SetElement("ServerPort",    (int)m_serverPort);
-  SetElement("SpinCount",     (int)m_spinCount);
-  SetElement("TimeoutConnect",(int)m_timeoutConnect);
-
-  // Server settings. Not set for clients
   SetElement("Name",          m_name);
-  SetElement("ServerLogging", m_serverLogging);
-  SetElement("ServerLog",     m_serverLog);
+  SetElement("Role",          m_role);
+  SetElement("Instance",      m_instance);
+  SetElement("Server",        m_server);
+  SetElement("Secure",        m_secure);
+  SetElement("ServerPort",    (int)m_serverPort);
+  SetElement("BaseURL",       m_baseUrl);
+  SetElement("ServerLog", m_serverLog);
+  SetElement("ServerLogging", m_serverLoglevel);
   SetElement("WebRoot",       m_webroot);
-  SetElement("BaseDirectory", m_baseDirectory);
   SetElement("RunAsService",  m_runAsService);
 
   WriteConfigElements();
@@ -174,18 +165,17 @@ AppConfig::WriteConfigElements()
 bool
 AppConfig::AddParameter(CString& p_param,CString& p_value)
 {
-       if(p_param.Compare("Name")          == 0) m_name          = p_value;
-  else if(p_param.Compare("Instance")      == 0) m_instance      = atoi(p_value);
-  else if(p_param.Compare("Server")        == 0) m_server        = p_value;
-  else if(p_param.Compare("ServerPort")    == 0) m_serverPort    = atoi(p_value);
-  else if(p_param.Compare("BaseURL")       == 0) m_baseUrl       = p_value;
-  else if(p_param.Compare("ServerLog")     == 0) m_serverLog     = p_value;
-  else if(p_param.Compare("ServerLogging") == 0) m_serverLogging = (p_value.CompareNoCase("true") == 0);
-  else if(p_param.Compare("WebRoot")       == 0) m_webroot       = p_value;
-  else if(p_param.Compare("BaseDirectory") == 0) m_baseDirectory = p_value;
-  else if(p_param.Compare("Agent")         == 0) m_agent         = p_value;
-  else if(p_param.Compare("SpinCount")     == 0) m_spinCount     = atoi(p_value);
-  else if(p_param.Compare("RunAsService")  == 0) m_runAsService  = (p_value.CompareNoCase("true") == 0);
+       if(p_param.Compare("Name")          == 0) m_name           = p_value;
+  else if(p_param.Compare("Role")          == 0) m_role           = p_value;
+  else if(p_param.Compare("Instance")      == 0) m_instance       = atoi(p_value);
+  else if(p_param.Compare("Server")        == 0) m_server         = p_value;
+  else if(p_param.Compare("Secure")        == 0) m_secure         = (p_value.CompareNoCase("true") == 0);
+  else if(p_param.Compare("ServerPort")    == 0) m_serverPort     = atoi(p_value);
+  else if(p_param.Compare("BaseURL")       == 0) m_baseUrl        = p_value;
+  else if(p_param.Compare("ServerLog")     == 0) m_serverLog      = p_value;
+  else if(p_param.Compare("ServerLogging") == 0) m_serverLoglevel = (p_value.CompareNoCase("true") == 0);
+  else if(p_param.Compare("WebRoot")       == 0) m_webroot        = p_value;
+  else if(p_param.Compare("RunAsService")  == 0) m_runAsService   = atoi(p_value);
   else return false;
 
   return true;
@@ -231,10 +221,6 @@ AppConfig::CheckConsistency()
     m_serverLog = DEFAULT_SERVERLOG;
   }
 
-  // Check spincount
-  if(m_spinCount < MINIMUM_SPINCOUNT) m_spinCount = MINIMUM_SPINCOUNT;
-  if(m_spinCount > MAXIMUM_SPINCOUNT) m_spinCount = MAXIMUM_SPINCOUNT;
-  
   // Check webroot
   if(m_webroot.IsEmpty())
   {
@@ -248,10 +234,6 @@ AppConfig::CheckConsistency()
       m_webroot += "\\";
     }
   }
-
-  // Check TimeoutConnect between 3 and 60 seconds
-  if(m_timeoutConnect < MINIMUM_TIMEOUTCONN) m_timeoutConnect = MINIMUM_TIMEOUTCONN;
-  if(m_timeoutConnect > MAXIMUM_TIMEOUTCONN) m_timeoutConnect = MAXIMUM_TIMEOUTCONN;
 
   // Check for the base URL 
   // It needs to begin and end with an '/' marker

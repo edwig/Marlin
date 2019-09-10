@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerSoap.h"
 
@@ -130,12 +130,12 @@ SiteHandlerSoapMsgEncrypt::Handle(SOAPMessage* p_message)
 }
 
 int
-TestMessageEncryption(HTTPServer* p_server)
+TestMarlinServer::TestMessageEncryption()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   xprintf("TESTING MESSAGE ENCRYPTION OF A SOAP MESSAGE FUNCTIONS OF THE HTTP SITE\n");
   xprintf("=======================================================================\n");
@@ -143,7 +143,7 @@ TestMessageEncryption(HTTPServer* p_server)
   // Create URL channel to listen to "http://+:port/MarlinTest/MessageSigning/"
   // But WebConfig can override all values except for the callback function address
   CString url("/MarlinTest/MessageEncrypt/");
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {
     // SUMMARY OF THE TEST
@@ -181,7 +181,7 @@ TestMessageEncryption(HTTPServer* p_server)
 }
 
 int
-AfterTestMessageEncryption()
+TestMarlinServer::AfterTestMessageEncryption()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

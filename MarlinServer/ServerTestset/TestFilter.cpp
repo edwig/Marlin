@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "SiteHandlerSoap.h"
 #include "SiteFilter.h"
 
@@ -134,12 +134,12 @@ SiteHandlerSoapFiltering::Handle(SOAPMessage* p_message)
 //////////////////////////////////////////////////////////////////////////
 
 int
-TestFilter(HTTPServer* p_server)
+TestMarlinServer::TestFilter()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/MarlinTest/Filter/");
 
@@ -148,7 +148,7 @@ TestFilter(HTTPServer* p_server)
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Filter/"
   // Callback function is no longer required!
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {
     // SUMMARY OF THE TEST
@@ -190,7 +190,7 @@ TestFilter(HTTPServer* p_server)
 
 // At least both filters must show up in the results
 int
-AfterTestFilter()
+TestMarlinServer::AfterTestFilter()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

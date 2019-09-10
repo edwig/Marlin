@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerSoap.h"
 
@@ -96,12 +96,12 @@ SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
 }
 
 int
-TestAsynchrone(HTTPServer* p_server)
+TestMarlinServer::TestAsynchrone()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/MarlinTest/Asynchrone/");
 
@@ -110,7 +110,7 @@ TestAsynchrone(HTTPServer* p_server)
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Asynchrone/"
   // Callback function is no longer required!
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -133,7 +133,7 @@ TestAsynchrone(HTTPServer* p_server)
   site->AddContentType("","text/xml");
   site->AddContentType("xml","application/soap+xml");
 
-  // This is a asynchroneous test site
+  // This is a asynchronous test site
   site->SetAsync(true);
 
   // Start the site explicitly
@@ -152,7 +152,7 @@ TestAsynchrone(HTTPServer* p_server)
 
 // Completeness check already on receive of last message!
 int 
-AfterTestAsynchrone()
+TestMarlinServer::AfterTestAsynchrone()
 {
   // ---- "---------------------------------------------- - ------
   qprintf("Received all of the asynchronous SOAP messages : %s\n", highSpeed == 1 ? "OK" : "ERROR");

@@ -2,18 +2,19 @@
 #include "MarlinServer.h"
 #include <assert.h>
 
-static MarlinServer* s_instance = nullptr;
+// The one-and-only Marlin server
+MarlinServer* s_theServer = nullptr;
 
 MarlinServer::MarlinServer()
 {
-  assert(s_instance == nullptr);
-  s_instance = this;
+  assert(s_theServer == nullptr);
+  s_theServer = this;
 }
 
 MarlinServer::~MarlinServer()
 {
-  assert(s_instance == this);
-  s_instance = nullptr;
+  assert(s_theServer == this);
+  s_theServer = nullptr;
 }
 
 // Should not come to here!
@@ -21,6 +22,7 @@ MarlinServer::~MarlinServer()
 //
 bool MarlinServer::Startup()
 {
+  assert(s_theServer != nullptr);
   return false;
 }
 

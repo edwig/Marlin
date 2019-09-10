@@ -69,6 +69,7 @@ SvcFreeEventBuffer()
 void
 SvcAllocEventBuffer()
 {
+  SvcStartEventBuffer();
   // Lock against double allocation
   AutoCritSec lock(&g_eventBufferLock);
 

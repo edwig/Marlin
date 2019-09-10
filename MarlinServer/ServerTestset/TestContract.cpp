@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "WebServiceServer.h"
 #include "SiteHandlerSoap.h"
 #include "XMLRestriction.h"
@@ -56,56 +56,10 @@ XMLRestriction g_restrict("Language");
 #define CONTRACT_M4   4 // Fourth
 #define CONTRACT_MV   5 // Fifth
 
-// DERIVED CLASS FROM WebServiceServer
-
-class TestContract: public WebServiceServer
-{
-public:
-  TestContract(CString    p_name
-              ,CString    p_webroot
-              ,CString    p_url
-              ,PrefixType p_channelType
-              ,CString    p_targetNamespace
-              ,unsigned   p_maxThreads);
-  virtual ~TestContract();
-protected:
-  WEBSERVICE_MAP; // Using a WEBSERVICE mapping
-
-  // Declare all our webservice call names
-  // which will translate in the On.... methods
-  WEBSERVICE_DECLARE(OnMarlinFirst)
-  WEBSERVICE_DECLARE(OnMarlinSecond)
-  WEBSERVICE_DECLARE(OnMarlinThird)
-  WEBSERVICE_DECLARE(OnMarlinFourth)
-  WEBSERVICE_DECLARE(OnMarlinFifth)
-private:
-  // Our functionality
-  CString Translation(CString p_language,CString p_translation,CString p_word);
-  // Set input/output languages
-  CString m_language;
-  CString m_translation;
-
-};
-
-// Implementation of the TestContract class
-
-TestContract::TestContract(CString    p_name
-                          ,CString    p_webroot
-                          ,CString    p_url
-                          ,PrefixType p_channelType
-                          ,CString    p_targetNamespace
-                          ,unsigned   p_maxThreads)
-:WebServiceServer(p_name,p_webroot,p_url,p_channelType,p_targetNamespace,p_maxThreads)
-{
-}
-
-TestContract::~TestContract()
-{
-}
 
 // Mapping corresponding to the AddOperation of the WSDL
 // Binding ordinals to the service declarations for the On..... members
-WEBSERVICE_MAP_BEGIN(TestContract)
+WEBSERVICE_MAP_BEGIN(TestMarlinServer)
   WEBSERVICE(CONTRACT_MF,OnMarlinFirst)
   WEBSERVICE(CONTRACT_MS,OnMarlinSecond)
   WEBSERVICE(CONTRACT_MT,OnMarlinThird)
@@ -121,7 +75,7 @@ WEBSERVICE_MAP_END
 //////////////////////////////////////////////////////////////////////////
 
 void
-TestContract::OnMarlinFirst(int p_code,SOAPMessage* p_message)
+TestMarlinServer::OnMarlinFirst(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MF);
   UNREFERENCED_PARAMETER(p_code);
@@ -139,7 +93,7 @@ TestContract::OnMarlinFirst(int p_code,SOAPMessage* p_message)
 }
 
 void
-TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
+TestMarlinServer::OnMarlinSecond(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MS);
   UNREFERENCED_PARAMETER(p_code);
@@ -170,7 +124,7 @@ TestContract::OnMarlinSecond(int p_code,SOAPMessage* p_message)
 }
 
 void
-TestContract::OnMarlinThird(int p_code,SOAPMessage* p_message)
+TestMarlinServer::OnMarlinThird(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MT);
   UNREFERENCED_PARAMETER(p_code);
@@ -193,7 +147,7 @@ TestContract::OnMarlinThird(int p_code,SOAPMessage* p_message)
 }
 
 void
-TestContract::OnMarlinFourth(int p_code,SOAPMessage* /*p_message*/)
+TestMarlinServer::OnMarlinFourth(int p_code,SOAPMessage* /*p_message*/)
 {
   ASSERT(p_code == CONTRACT_M4);
   UNREFERENCED_PARAMETER(p_code);
@@ -204,7 +158,7 @@ TestContract::OnMarlinFourth(int p_code,SOAPMessage* /*p_message*/)
 }
 
 void
-TestContract::OnMarlinFifth(int p_code,SOAPMessage* p_message)
+TestMarlinServer::OnMarlinFifth(int p_code,SOAPMessage* p_message)
 {
   ASSERT(p_code == CONTRACT_MV);
   UNREFERENCED_PARAMETER(p_code);
@@ -246,7 +200,7 @@ TestContract::OnMarlinFifth(int p_code,SOAPMessage* p_message)
 // VERY LIMITED TRANSLATION FUNCTION :-)
 //
 CString 
-TestContract::Translation(CString p_language,CString p_translation,CString p_word)
+TestMarlinServer::Translation(CString p_language,CString p_translation,CString p_word)
 {
   if(p_language == "Dutch" && p_translation == "Français")
   {
@@ -263,7 +217,7 @@ TestContract::Translation(CString p_language,CString p_translation,CString p_wor
 //////////////////////////////////////////////////////////////////////////
 
 void
-AddOperations(WebServiceServer& p_server,CString p_contract)
+TestMarlinServer::AddOperations(CString p_contract)
 {
   // Defining the names of the operations
   CString first ("MarlinFirst");
@@ -347,11 +301,11 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
   output5.AddElement(NULL,"TranslationAlt",WSDL_Optional|XDT_String,"string");
 
   // Putting the operations in the WSDL Cache
-  p_server.AddOperation(CONTRACT_MF,first, &input1,&output1);
-  p_server.AddOperation(CONTRACT_MS,second,&input2,&output2);
-  p_server.AddOperation(CONTRACT_MT,third, &input3,&output3);
-  p_server.AddOperation(CONTRACT_M4,fourth,&input4,&output4);
-  p_server.AddOperation(CONTRACT_MV,fifth, &input5,&output5);
+  AddOperation(CONTRACT_MF,first, &input1,&output1);
+  AddOperation(CONTRACT_MS,second,&input2,&output2);
+  AddOperation(CONTRACT_MT,third, &input3,&output3);
+  AddOperation(CONTRACT_M4,fourth,&input4,&output4);
+  AddOperation(CONTRACT_MV,fifth, &input5,&output5);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -360,138 +314,8 @@ AddOperations(WebServiceServer& p_server,CString p_contract)
 //
 //////////////////////////////////////////////////////////////////////////
 
-int 
-TestJsonServer(HTTPServer* p_server,CString p_contract,int p_loglevel)
-{
-  CString  url;
-  CString  name("MarlinExtra");
-  CString  webroot("C:\\WWW\\Marlin");
-  unsigned threads = 4;
-  int      errors  = 0;
-
-  // Formatting the testing port
-  url.Format("http://localhost:%d/MarlinTest/TestInterface/Extra/",TESTING_HTTP_PORT);
-
-  // Defined in TestServer.cpp
-  extern CString logfileName;
-
-  // Defining the server and the handler
-  TestContract* server = new TestContract(name,webroot,url,PrefixType::URLPRE_Strong,p_contract,threads);
-  // If you want a different SOAP/GET handler, use
-  // server.GetHTTPSite()->SetHandler(....);
-
-  // See if we are running stand alone, or in the context of another server
-  server->SetHTTPServer(p_server);
-  server->SetLogAnalysis(p_server->GetLogfile());
-
-  // Checking of the field values of incoming services
-  server->SetCheckFieldValues(true);
-
-  // TESTING THE SOAP->JSON->SOAP roundtripping
-  server->SetGenerateWsdl(false);
-  server->SetJsonSoapTranslation(true);
-
-  // Allways adding the operations
-  AddOperations(*server,p_contract);
-
-  // Do the logging
-  server->SetLogLevel(p_loglevel);
-
-  // Register for de-allocation
-  p_server->RegisterService(server);
-
-  qprintf("\n");
-  // Try running the service
-  if(server->RunService())
-  {
-    qprintf("WebServiceServer [%s] is now running OK\n",(LPCTSTR)name);
-    qprintf("Running contract      : %s\n",(LPCTSTR)p_contract);
-    qprintf("JSON service on URL   : %s\n",(LPCTSTR)url);
-    qprintf("\n");
-  }
-  else
-  {
-    ++errors;
-    xerror();
-    qprintf("ERROR Starting WebServiceServer for: %s\n",(LPCTSTR)p_contract);
-    qprintf("ERROR Reported by the server: %s\n",(LPCTSTR)server->GetErrorMessage());
-  }
-  return errors;
-}
-
-int 
-TestWebServiceServer(HTTPServer* p_server,CString p_contract,int p_loglevel)
-{
-  int result = 0;
-
-  CString  url;
-  CString  name("MarlinWeb");
-  CString  webroot("C:\\WWW\\Marlin"); // If stand alone marlin server
-  unsigned threads = 4;
-
-  // Formatting the testing port
-  url.Format("http://localhost:%d/MarlinTest/TestInterface/",TESTING_HTTP_PORT);
-
-  // Defined in TestServer.cpp
-  extern CString logfileName;
-
-  // Defining the server and the handler
-  TestContract* server = new TestContract(name,webroot,url, PrefixType::URLPRE_Strong,p_contract,threads);
-  // If you want a different SOAP/GET handler, use
-  // server.GetHTTPSite()->SetHandler(....);
-
-  // See if we are running stand alone, or in the context of another server
-  server->SetHTTPServer(p_server);
-  if(p_server)
-  {
-    server->SetLogAnalysis(p_server->GetLogfile());
-  }
-
-  // Do the logging
-  server->SetLogLevel(p_loglevel);
-
-  // Checking of the field values of incoming services
-  server->SetCheckFieldValues(true);
-
-  // See if we must use an externally defined WSDL
-  if(test_external_wsdl)
-  {
-    server->SetExternalWsdl(EXTERN_CONTRACT);
-  }
-  else 
-  {
-    // Testing the skipping of the WSDL by commenting out next line
-    // server.SetGenerateWsdl(false);
-
-    // Setting operations for the WSDL
-    AddOperations(*server,p_contract);
-  }
-
-  if(p_server)
-  {
-    p_server->RegisterService(server);
-  }
-
-  // Try running the service
-  if(server->RunService())
-  {
-    qprintf("WebServiceServer [%s] is now running OK\n",(LPCTSTR)name);
-    qprintf("Running contract      : %s\n",       (LPCTSTR)p_contract);
-    qprintf("For WSDL download use : %s%s.wsdl\n",(LPCTSTR)url,(LPCTSTR)name);
-    qprintf("For interface page use: %s%s%s\n",   (LPCTSTR)url,(LPCTSTR)name,(LPCTSTR)server->GetServicePostfix());
-    qprintf("\n");
-  }
-  else
-  {
-    xerror();
-    qprintf("ERROR Starting WebServiceServer for: %s\n",(LPCTSTR)p_contract);
-    qprintf("ERROR Reported by the server: %s\n",(LPCTSTR)server->GetErrorMessage());
-  }
-  return result;
-}
-
 int
-AfterTestContract()
+TestMarlinServer::AfterTestContract()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

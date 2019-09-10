@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "ServerApp.h"
 #include "HTTPSite.h"
 #include "WebSocket.h"
@@ -103,12 +103,12 @@ SiteHandlerTestSocket::Handle(HTTPMessage* p_message,WebSocket* p_socket)
 }
 
 int
-TestWebSocket(HTTPServer* p_server)
+TestMarlinServer::TestWebSocket()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/MarlinTest/Sockets/");
 
@@ -116,7 +116,7 @@ TestWebSocket(HTTPServer* p_server)
   xprintf("==============================================\n");
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Sockets/"
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // --- "---------------------------- - ------
@@ -149,8 +149,22 @@ TestWebSocket(HTTPServer* p_server)
   return error;
 }
 
+void
+TestMarlinServer::StopWebSocket()
+{
+  WebSocket* socket = m_httpServer->FindWebSocket("/MarlinTest/Socket/socket_123");
+  if (socket)
+  {
+    if(socket->CloseSocket() == false)
+    {
+      xerror();
+    }
+  }
+}
+
+
 int 
-AfterTestWebSocket(void)
+TestMarlinServer::AfterTestWebSocket()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerGet.h"
 #include "SiteFilterClientCertificate.h"
@@ -68,12 +68,13 @@ SiteHandlerGetClientCert::PostHandle(HTTPMessage* p_message)
   }
 }
 
-int TestClientCertificate(HTTPServer* p_server,bool p_standalone)
+int 
+TestMarlinServer::TestClientCertificate(bool p_standalone)
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/SecureClientCert/");
 
@@ -82,7 +83,7 @@ int TestClientCertificate(HTTPServer* p_server,bool p_standalone)
 
   // Create HTTP site to listen to "https://+:1202/SecureClientCert/"
   // 
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,TESTING_CLCERT_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber + 2,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -134,7 +135,7 @@ int TestClientCertificate(HTTPServer* p_server,bool p_standalone)
 }
 
 int
-AfterTestClientCert()
+TestMarlinServer::AfterTestClientCert()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

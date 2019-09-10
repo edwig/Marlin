@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "SiteHandlerFormData.h"
 #include "MultiPartBuffer.h"
 
@@ -154,12 +154,13 @@ FormDataHandler::PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buff
 //
 //////////////////////////////////////////////////////////////////////////
 
-int TestFormData(HTTPServer* p_server)
+int 
+TestMarlinServer::TestFormData()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/MarlinTest/FormData/");
 
@@ -167,7 +168,7 @@ int TestFormData(HTTPServer* p_server)
   xprintf("===============================================================\n");
 
   // Create HTTP site to listen to "http://+:port/MarlinTest/FormData/"
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -203,7 +204,7 @@ int TestFormData(HTTPServer* p_server)
 }
 
 int
-AfterTestFormData()
+TestMarlinServer::AfterTestFormData()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

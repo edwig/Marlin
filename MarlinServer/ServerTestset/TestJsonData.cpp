@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerJson.h"
 
@@ -110,12 +110,12 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
 }
 
 int
-TestJsonData(HTTPServer* p_server)
+TestMarlinServer::TestJsonData()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/MarlinTest/Data/");
 
@@ -124,7 +124,7 @@ TestJsonData(HTTPServer* p_server)
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Data/"
   // Callback function is no longer required!
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -160,7 +160,7 @@ TestJsonData(HTTPServer* p_server)
 }
 
 int
-AfterTestJsonData()
+TestMarlinServer::AfterTestJsonData()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

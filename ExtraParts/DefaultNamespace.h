@@ -2,7 +2,7 @@
 //
 // SourceFile: DefaultNamespace.h
 //
-// Centric
-#define DEFAULT_NAMESPACE "http://www.centric.eu/Symphonies/Services"
-#define DEFAULT_TOKEN     ":symphonies:"
+// Marlin
+#define DEFAULT_NAMESPACE "http://www.marlin.eu/Services"
+#define DEFAULT_TOKEN     ":marlin:"
 

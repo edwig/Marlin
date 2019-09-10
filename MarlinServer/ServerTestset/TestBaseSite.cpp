@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerGet.h"
 #include "SiteHandlerPut.h"
@@ -94,12 +94,13 @@ SiteHandlerPutBase::Handle(HTTPMessage* p_message)
 // TESTING A BASE SITE.
 // RELIES ON THE DEFAULT 'GET' HANDLER OF THE SERVER
 
-int TestBaseSite(HTTPServer* p_server)
+int 
+TestMarlinServer::TestBaseSite()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/MarlinTest/Site/");
 
@@ -107,7 +108,7 @@ int TestBaseSite(HTTPServer* p_server)
   xprintf("=================================================\n");
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Site/"
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -160,7 +161,7 @@ int TestBaseSite(HTTPServer* p_server)
 }
 
 int 
-AfterTestBaseSite()
+TestMarlinServer::AfterTestBaseSite()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

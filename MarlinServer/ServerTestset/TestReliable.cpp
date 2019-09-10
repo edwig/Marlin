@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerSoap.h"
 
@@ -90,12 +90,12 @@ SiteHandlerSoapReliable::Handle(SOAPMessage* p_message)
 }
 
 int
-TestReliable(HTTPServer* p_server)
+TestMarlinServer::TestReliable()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   xprintf("TESTING RELIABLE MESSAGING FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=======================================================\n");
@@ -103,7 +103,7 @@ TestReliable(HTTPServer* p_server)
   // Create URL channel to listen to "http://+:port/MarlinTest/Reliable/"
   // But WebConfig can override all values except for the callback function address
   CString url("/MarlinTest/Reliable/");
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {
     // SUMMARY OF THE TEST
@@ -140,12 +140,12 @@ TestReliable(HTTPServer* p_server)
 }
 
 int
-TestReliableBA(HTTPServer* p_server)
+TestMarlinServer::TestReliableBA()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   xprintf("TESTING RELIABLE MESSAGING FUNCTIONS OF THE HTTP SERVER with BASIC AUTHENTICATION\n");
   xprintf("=================================================================================\n");
@@ -153,7 +153,7 @@ TestReliableBA(HTTPServer* p_server)
   // Create URL channel to listen to "http://+:port/MarlinTest/ReliableBA/"
   // But WebConfig can override all values except for the callback function address
   CString url("/MarlinTest/ReliableBA/");
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -199,7 +199,7 @@ TestReliableBA(HTTPServer* p_server)
 }
 
 int
-AfterTestReliable()
+TestMarlinServer::AfterTestReliable()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

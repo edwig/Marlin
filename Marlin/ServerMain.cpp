@@ -37,6 +37,7 @@
 #include "version.h"
 #include "GetLastErrorAsString.h"
 #include "AutoCritical.h"
+#include "ExecuteProcess.h"
 #include "RunRedirect.h"
 #include "EventLogRegistration.h"
 #include "ServiceReporting.h"
@@ -60,7 +61,9 @@ SERVICE_STATUS_HANDLE   g_svcStatusHandle;
 HANDLE                  g_svcStopEvent = NULL;
 SERVICE_STATUS_PROCESS  g_sspStatus; 
 char                    g_svcname[SERVICE_NAME_LENGTH];
-bool                    g_runAsService = true;
+int                     g_runAsService = RUNAS_IISAPPPOOL;
+CString                 g_serverName;
+CString                 g_baseURL;
 
 // Handle to service manager and service
 SC_HANDLE g_schSCManager = NULL;
@@ -119,35 +122,42 @@ int _tmain(int argc,TCHAR* argv[],TCHAR* /*envp[]*/)
         return 6;
       }
       PrintCopyright();
-      return SvcInstall(argv[2],argv[3]);
+      if(g_runAsService == RUNAS_NTSERVICE)
+      {
+        return SvcInstall(argv[2],argv[3]);
+      }
+      printf("Can only 'install' for an NT-Service configuration!\n");
+      return -1;
     }
     else if(lstrcmpi(argv[1],"uninstall") == 0)
     {
-      PrintCopyright();
-      return SvcDelete();
-    }
+       PrintCopyright();
+      if(g_runAsService == RUNAS_NTSERVICE)
+      {
+        return SvcDelete();
+      }
+      DeleteEventLogRegistration();
+      printf("Can only 'uninstall' for an NT-Service configuration!\n");
+      printf("But un-installed the WMI event-log registration.\n");
+      return -1;
+   }
     else if(lstrcmpi(argv[1],"start") == 0)
     {
       PrintCopyright();
-      if(g_runAsService)
+      switch(g_runAsService)
       {
-        return SvcStart();
-      }
-      else
-      {
-        return StandAloneStart();
+        case RUNAS_STANDALONE: return StandAloneStart();
+        case RUNAS_NTSERVICE:  return SvcStart();
+        case RUNAS_IISAPPPOOL: return StartIISApp();
       }
     }
     else if(lstrcmpi(argv[1],"stop") == 0)
     {
-      PrintCopyright();
-      if(g_runAsService)
+      switch(g_runAsService)
       {
-        return SvcStop();
-      }
-      else
-      {
-        return StandAloneStop();
+        case RUNAS_STANDALONE: return StandAloneStop();
+        case RUNAS_NTSERVICE:  return SvcStop();
+        case RUNAS_IISAPPPOOL: return StopIISApp();
       }
     }
     else if(lstrcmpi(argv[1],"query") == 0)
@@ -160,40 +170,46 @@ int _tmain(int argc,TCHAR* argv[],TCHAR* /*envp[]*/)
       // SERVICE_CONTINUE_PENDING  0x00000005
       // SERVICE_PAUSE_PENDING     0x00000006
       // SERVICE_PAUSED            0x00000007
-      if(g_runAsService)
+      switch(g_runAsService)
       {
-        return QueryService();
-      }
-      else
-      {
-        return QueryServiceStandAlone();
+        case RUNAS_STANDALONE: return QueryServiceStandAlone();
+        case RUNAS_NTSERVICE:  return QueryService();
+        case RUNAS_IISAPPPOOL: return QueryIISApp();
       }
     }
     else if(lstrcmpi(argv[1],"restart") == 0)
     {
       PrintCopyright();
-      if(g_runAsService)
+      switch(g_runAsService)
       {
-        if(SvcStop() == 0)
-        {
-          return SvcStart();
-        }
-      }
-      else
-      {
-        if(StandAloneStop() == 0)
-        {
-          return StandAloneStart();
-        }
+        case RUNAS_STANDALONE:if(StandAloneStop() == 0)
+                              {
+                                return StandAloneStart();
+                              }
+        case RUNAS_NTSERVICE: if(SvcStop() == 0)
+                              {
+                                return SvcStart();
+                              }
+                              break;
+        case RUNAS_IISAPPPOOL:if(StopIISApp() == 0)
+                              {
+                                return StartIISApp();
+                              }
+                              break;
       }
       // Error code from SvcStop
-      return 2;
+      return SERVICE_STOPPED;
     }
     else if(lstrcmpi(argv[1],g_svcname) == 0)
     {
       // Start argument is service name
       // Used for stand-alone service start
       standAloneStart = true;
+    }
+    else if (lstrcmpi(argv[1], "debug") == 0)
+    {
+      standAloneStart = true;
+      g_runAsService  = RUNAS_STANDALONE;
     }
   }
 
@@ -274,8 +290,12 @@ void ReadConfig()
   // Run as a service or as a stand-alone program?
   g_runAsService = config.GetRunAsService();
 
+  // Global server name = IIS application pool
+  g_serverName = config.GetName();
+  g_baseURL    = config.GetBaseURL();
+
   // Make the names?
-  if(g_runAsService == false)
+  if(g_runAsService == RUNAS_STANDALONE)
   {
     // Controlling event of the service
     strncpy_s(g_eventNameRunning,g_svcname,     SERVICE_NAME_LENGTH);
@@ -404,7 +424,7 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
   }
 
   // START THE SERVICE THREADS
-  if(theServer.Startup())
+  if(s_theServer->Startup())
   {
     // Tell we have started
     SvcReportSuccessEvent(CString(PRODUCT_NAME) + " server started.");
@@ -421,7 +441,7 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
 
       // Stop the server
       // STOP THE SERVICE THREADS
-      theServer.ShutDown();
+      s_theServer->ShutDown();
 
       SvcReportSuccessEvent(CString(PRODUCT_NAME) + " server is stopped.");
       ReportSvcStatus(SERVICE_STOPPED,NO_ERROR,0);
@@ -906,8 +926,8 @@ int SvcStart()
 // 
 int SvcStop()
 {
-  DWORD  dwStartTime = GetTickCount();
-  DWORD  dwTimeout = SVC_MAXIMUM_STOP_TIME; // 30-second time-out
+  ULONGLONG dwStartTime = GetTickCount64();
+  ULONGLONG dwTimeout   = SVC_MAXIMUM_STOP_TIME; // 30-second time-out
 
   OpenMarlinService(SERVICE_STOP | 
                     SERVICE_QUERY_STATUS | 
@@ -988,14 +1008,15 @@ BOOL StopDependentServices()
   DWORD i;
   DWORD dwBytesNeeded;
   DWORD dwCount;
+  BOOL  result = TRUE;
 
   LPENUM_SERVICE_STATUS   lpDependencies = NULL;
   ENUM_SERVICE_STATUS     ess;
   SC_HANDLE               hDepService;
   SERVICE_STATUS_PROCESS  ssp;
 
-  DWORD dwStartTime = GetTickCount();
-  DWORD dwTimeout   = SVC_MAXIMUM_STOP_TIME; // 30-second time-out
+  ULONGLONG dwStartTime = GetTickCount64();
+  ULONGLONG dwTimeout   = SVC_MAXIMUM_STOP_TIME; // 30-second time-out
 
   // Pass a zero-length buffer to get the required buffer size.
   if(EnumDependentServices(g_schService
@@ -1033,7 +1054,8 @@ BOOL StopDependentServices()
                                 ,&dwBytesNeeded
                                 ,&dwCount))
       {
-        return FALSE;
+        result = FALSE;
+        __leave;
       }
       for ( i = 0; i < dwCount; i++ ) 
       {
@@ -1044,7 +1066,8 @@ BOOL StopDependentServices()
                                   SERVICE_STOP | SERVICE_QUERY_STATUS );
         if ( !hDepService )
         {
-          return FALSE;
+          result = FALSE;
+          __leave;
         }
 
         __try 
@@ -1054,7 +1077,8 @@ BOOL StopDependentServices()
                               SERVICE_CONTROL_STOP,
                               (LPSERVICE_STATUS) &ssp ) )
           {
-            return FALSE;
+            result = FALSE;
+            __leave;
           }
           // Wait for the service to stop.
           while ( ssp.dwCurrentState != SERVICE_STOPPED ) 
@@ -1066,22 +1090,24 @@ BOOL StopDependentServices()
                                       sizeof(SERVICE_STATUS_PROCESS),
                                       &dwBytesNeeded ) )
             {
-              return FALSE;
+              result = FALSE;
+              __leave;
             }
             if ( ssp.dwCurrentState == SERVICE_STOPPED )
             {
               break;
             }
-            if ( GetTickCount() - dwStartTime > dwTimeout )
+            if(GetTickCount64() - dwStartTime > dwTimeout )
             {
-              return FALSE;
+              result = FALSE;
+              __leave;
             }
           }
         } 
         __finally 
         {
           // Always release the service handle.
-          CloseServiceHandle( hDepService );
+          CloseServiceHandle(hDepService);
         }
       }
     } 
@@ -1091,7 +1117,7 @@ BOOL StopDependentServices()
       HeapFree( GetProcessHeap(), 0, lpDependencies );
     }
   } 
-  return TRUE;
+  return result;
 }
 
 int QueryService()
@@ -1144,7 +1170,7 @@ int StandAloneStart()
   DWORD   dwStartTickCount = GetTickCount();
   DWORD   dwWaitTime;
   DWORD   dwWaited = 0;
-  CString emtpyString;
+  CString emptyString;
   CString program(APPLICATION_NAME);
   CString arguments(g_svcname);
 
@@ -1187,7 +1213,7 @@ int StandAloneStart()
   }
 
   // Attempt to start the service.
-  int startResult = CallProgram(program,arguments);
+  int startResult = ExecuteProcess(program,arguments,true,emptyString,SW_HIDE);
   if(startResult)
   {
     printf("StartService failed: %s\n",(LPCTSTR)GetLastErrorAsString());
@@ -1287,7 +1313,7 @@ BOOL SvcInitStandAlone()
   InstallMessageDLL();
 
   // START THE SERVICE THREADS
-  if(theServer.Startup())
+  if(s_theServer->Startup())
   {
     // Tell we have started
     SvcReportSuccessEvent(CString(PRODUCT_NAME) + "Server started.");
@@ -1308,7 +1334,7 @@ BOOL SvcInitStandAlone()
       ReportSvcStatusStandAlone(SERVICE_STOP_PENDING);
 
       // Stop the server
-      theServer.ShutDown();
+      s_theServer->ShutDown();
 
       SvcReportSuccessEvent(CString(PRODUCT_NAME) + "Server stopped.");
       ReportSvcStatusStandAlone(SERVICE_STOPPED);
@@ -1570,5 +1596,131 @@ int QueryServiceStandAlone()
   // But it's the only way to work with a stream
   fprintf(stdout,"\004");
   fprintf(stderr,"\004");
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// And yet again, but now for IIS
+//
+//////////////////////////////////////////////////////////////////////////
+
+CString applicationCommand;
+
+bool
+FindApplicationCommand()
+{
+  // See if we already had the MS-Windows application command
+  if(!applicationCommand.IsEmpty())
+  {
+    return true;
+  }
+
+  CString pathname;
+  pathname.GetEnvironmentVariable("windir");
+  pathname += "\\system32\\inetsrv";
+
+  DWORD attrib = GetFileAttributes(pathname);
+  if(attrib & FILE_ATTRIBUTE_DIRECTORY)
+  {
+    pathname += "\\appcmd.exe";
+    attrib = GetFileAttributes(pathname);
+    if(attrib != INVALID_FILE_ATTRIBUTES)
+    {
+      applicationCommand = pathname;
+      return true;
+    }
+  }
+  printf("MS-Windows directory for IIS not found: is the IIS system installed?\n");
+  return false;
+}
+
+// Starts the IIS application pool
+// Return value: 0 = OK, 1 = error
+int StartIISApp()
+{
+  int result = 1;
+
+  if(FindApplicationCommand())
+  {
+    CString fout("Cannot run program " + applicationCommand);
+ 
+    // STARTING THE APPLICATION POOL
+    // APPCMD.EXE start APPPOOL <name>
+    CString parameter("start APPPOOL ");
+    parameter += g_serverName;
+    result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
+
+    if(result == 0)
+    {
+      // STARTING THE SITE
+      CString site(g_baseURL);
+      site.Remove('/');
+      parameter = "start SITE " + site;
+      result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
+    }
+  }
+  return result;
+}
+
+// Stops the IIS application pool
+// Return value: 0 = OK, 1 = error
+int StopIISApp()
+{
+  int result = 1;
+
+  if(FindApplicationCommand())
+  {
+    CString fout("Cannot run program " + applicationCommand);
+
+    // STOP THE SITE
+    // APPCMD.EXE start SITE <name>
+    CString parameter("stop SITE ");
+    CString site(g_baseURL);
+    site.Remove('/');
+    parameter += site;
+    result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
+
+    // STOP THE APPLICATION POOL
+    // APPCMD.EXE start APPPOOL <name>
+    parameter = "stop APPPOOL ";
+    parameter += g_serverName;
+    result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
+  }
+  return result;
+}
+
+// Prints wheter the IIS server is running or not
+int QueryIISApp()
+{
+  int result = SERVICE_STOPPED;
+
+  if(FindApplicationCommand())
+  {
+    // APPCMD.EXE list APPPOOL <name>
+    CString parameter("list APPPOOL ");
+    parameter += g_serverName;
+    CString output;
+    int res = CallProgram_For_String(applicationCommand,parameter,output);
+    if(res == 0 && (output.Find("state:Started") >= 0))
+    {
+      // APPCMD.EXE list SITE <baseurl>
+      parameter = "list SITE ";
+      CString site(g_baseURL);
+      site.Remove('/');
+      parameter += site;
+      res = CallProgram_For_String(applicationCommand,parameter,output);
+      if(res == 0 && (output.Find("state:Started") >= 0))
+      {
+        result = SERVICE_RUNNING;
+      }
+    }
+  }
+
+  switch(result)
+  {
+    case SERVICE_STOPPED: printf("Service is stopped\n"); break;
+    case SERVICE_RUNNING: printf("Service is running\n"); break;
+  }
   return result;
 }

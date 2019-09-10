@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerSoap.h"
 
@@ -81,12 +81,13 @@ SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
   return true;
 }
 
-int TestSubSites(HTTPServer* p_server)
+int 
+TestMarlinServer::TestSubSites()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url1("/MarlinTest/TestToken/One");
   CString url2("/MarlinTest/TestToken/Two");
@@ -96,7 +97,7 @@ int TestSubSites(HTTPServer* p_server)
 
   // Create HTTP site to listen to "http://+:port/MarlinTest/TestToken/one or two"
   // This is a subsite of another one, so 5th parameter is set to true
-  HTTPSite* site1 = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url1,true);
+  HTTPSite* site1 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url1,true);
   if(site1)
   {
     // SUMMARY OF THE TEST
@@ -110,7 +111,7 @@ int TestSubSites(HTTPServer* p_server)
     qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url1);
     return error;
   }
-  HTTPSite* site2 = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url2,true);
+  HTTPSite* site2 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url2,true);
   if(site2)
   {
     // SUMMARY OF THE TEST
@@ -181,7 +182,7 @@ int TestSubSites(HTTPServer* p_server)
 
 // Testing whether we can correctly remove a subsite from the server
 int
-StopSubsites(HTTPServer* p_server)
+TestMarlinServer::StopSubsites()
 {
   int error = 0;
 
@@ -190,7 +191,7 @@ StopSubsites(HTTPServer* p_server)
   CString url3("/MarlinTest/TestToken/Two");
 
   // Testing the main site. Should not be removed!!
-  if(p_server->DeleteSite(TESTING_HTTP_PORT,url1))
+  if(m_httpServer->DeleteSite(m_inPortNumber,url1))
   {
     qprintf("ERROR Incorrectly removed a main site: %s\n",(LPCTSTR)url1);
     qprintf("ERROR Other sites are dependend on it\n");
@@ -199,13 +200,13 @@ StopSubsites(HTTPServer* p_server)
   }
 
   // Removing subsites. Should work
-  if(p_server->DeleteSite(TESTING_HTTP_PORT,url2) == false)
+  if(m_httpServer->DeleteSite(m_inPortNumber,url2) == false)
   {
     qprintf("ERROR Deleting site : %s\n",(LPCTSTR)url2);
     xerror();
     ++error;
   }
-  if(p_server->DeleteSite(TESTING_HTTP_PORT,url3) == false)
+  if(m_httpServer->DeleteSite(m_inPortNumber,url3) == false)
   {
     qprintf("ERROR Deleting site : %s\n",(LPCTSTR)url3);
     xerror();
@@ -213,7 +214,7 @@ StopSubsites(HTTPServer* p_server)
   }
 
   // Now removing main site
-  if(p_server->DeleteSite(TESTING_HTTP_PORT,url1) == false)
+  if(m_httpServer->DeleteSite(m_inPortNumber,url1) == false)
   {
     qprintf("ERROR Deleting site : %s\n",(LPCTSTR)url1);
     xerror();
@@ -223,7 +224,7 @@ StopSubsites(HTTPServer* p_server)
 }
 
 int
-AfterTestSubsites()
+TestMarlinServer::AfterTestSubSites()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

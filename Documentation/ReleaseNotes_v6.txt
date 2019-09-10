@@ -9,6 +9,46 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.3.0 Beta
+-----------------------------------
+This is an partly finished version!
+-----------------------------------
+1)  The project solution and project files for the server part have been re-organized. All projects
+    are now in one solution, apart from the client testers. This way we still can have two Visual
+    Studio's running and debug the server and client side together.
+    The HostedWebCore and the sync/async servers have now been integrated in the one and only  
+    "TestMarlinServer" object. That server can now be started in three ways:
+    - As a stand-alone program
+    - As a NT service
+    - As an IIS module plugin
+2)  A skeleton ServerApplet program has been integrated in the framework, as many workable programs
+    need such a server applet to configure a service and start it.
+3)  Running an IIS service is now simple. Register "MarlinModule.dll" or "MarlinModuleDebug.dll" within IIS.
+    and register two things in your website:
+    - A "*" handler for the module (MarlinModule or MarlinModuleDebug.dll)
+    - In the web config two "AppSettings"
+      1) MarlinModule (for the name of your DLL)
+      2) DllDirectory (for the directory where you keep your binaries)
+      Normally these should be under "C:\inetpub\wwwroot", but see the source in "MarlinModule.cpp"!!
+4)  The IIS testset is running again. Work is in progress to let everything work in all three configurations
+5)  A new "ServerMain.cpp" has been introduced to start an application from the command line. See the testserver
+    and consequently the commands that the "TestMarlinServer" has. In the testset you can now use:
+    - Marlinserver start          -> Starting your server (standalone, NT-Services, IIS)
+    - Marlinserver stop           -> Stopping your server (standalone, NT-Services, IIS)
+    - Marlinserver restart        -> Restarting (stopping and starting)   (standalone, NT-Services, IIS)
+    - Marlinserver query          -> Query whether the server is running  (standalone, NT-Services, IIS)
+    - Marlinserver install        -> Installing a NT-Service
+    - Marlinserver uninstall      -> Removing a NT-Service
+6)  Added some general classes to use when running the serverapplet or the servermain:
+    - MarlinServer
+    - ServerMain
+    - ServiceReporting
+    - BrowseForDirectory
+    - BrowseForFilename
+    - ExecuteProcess
+7)  A skeleton "MarlinServerMessages.mc" file for the WMI logging has been added to the server program
+
+
 CHANGES IN VERSION 6.2.1
 ------------------------
 1)  Added the following classes in order to build better servers that can devide between IIS, 

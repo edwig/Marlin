@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "ThreadPool.h"
 
 #ifdef _DEBUG
@@ -71,7 +71,8 @@ void callback1(void* p_pnt)
   // Ready with the thread
 }
 
-int TestThreadPool(ThreadPool* p_pool)
+int 
+TestMarlinServer::TestThreadPool(ThreadPool* p_pool)
 {
   pool = p_pool;
   int errors = 0;
@@ -120,7 +121,7 @@ int TestThreadPool(ThreadPool* p_pool)
 }
 
 int 
-AfterTestThreadpool()
+TestMarlinServer::AfterTestThreadpool()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

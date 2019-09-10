@@ -134,7 +134,9 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result)
     Sleep(WAITTIME_STATUS);
   }
   p_result = run.m_lines;
-  return run.m_exitCode;
+  run.TerminateChildProcess();
+  int exitcode = run.m_exitCode;
+  return exitcode;
 }
 
 int 
@@ -159,7 +161,9 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result,i
     Sleep(p_waittime);
   }
   p_result = run.m_lines;
-  return run.m_exitCode;
+  run.TerminateChildProcess();
+  int exitcode = run.m_exitCode;
+  return exitcode;
 }
 
 int 

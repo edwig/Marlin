@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "Stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPTime.h"
 #include "WinHttp.h"
 
@@ -44,7 +44,8 @@ static int totalChecks = 1;
 //
 //////////////////////////////////////////////////////////////////////////
 
-int  Test_HTTPTime()
+int  
+TestMarlinServer::TestHTTPTime()
 {
   int errors = 0;
   SYSTEMTIME result;
@@ -140,7 +141,7 @@ int  Test_HTTPTime()
 }
 
 int
-AfterTestTime()
+TestMarlinServer::AfterTestHTTPTime()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

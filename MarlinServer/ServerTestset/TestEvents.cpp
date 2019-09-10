@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPServer.h"
 #include "HTTPSite.h"
 
@@ -142,7 +142,7 @@ SiteHandlerStream::HandleStream(EventStream* p_stream)
 }
 
 int
-TestPushEvents(HTTPServer* p_server)
+TestMarlinServer::TestPushEvents()
 {
   int error = 0;
 
@@ -150,7 +150,7 @@ TestPushEvents(HTTPServer* p_server)
   xprintf("=====================================================================\n");
   CString url("/MarlinTest/Events/");
   // Create URL site to listen to events "http://+:port/MarlinTest/Events/"
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {
     // SUMMARY OF THE TEST
@@ -188,7 +188,7 @@ TestPushEvents(HTTPServer* p_server)
 
 
 int 
-AfterTestEvents()
+TestMarlinServer::AfterTestEvents()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

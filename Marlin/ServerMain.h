@@ -67,3 +67,8 @@ BOOL        SvcInitStandAlone();
 int         GetMarlinServiceStatusStandAlone(int& p_status);
 void        ReportSvcStatusStandAlone(int p_status);
 int         QueryServiceStandAlone();
+
+// Prototypes for the IIS server
+int         StartIISApp();
+int         StopIISApp();
+int         QueryIISApp();

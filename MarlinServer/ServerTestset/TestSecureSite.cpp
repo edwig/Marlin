@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerGet.h"
 #include "SiteHandlerPut.h"
@@ -82,12 +82,13 @@ SiteHandlerPutSecure::Handle(HTTPMessage* p_message)
 // TESTING A BASE SITE.
 // RELIES ON THE DEFAULT 'GET' HANDLER OF THE SERVER
 
-int TestSecureSite(HTTPServer* p_server)
+int 
+TestMarlinServer::TestSecureSite()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/SecureTest/");
 
@@ -95,7 +96,7 @@ int TestSecureSite(HTTPServer* p_server)
   xprintf("=================================================\n");
 
   // Create URL channel to listen to "https://+:port/SecureTest"
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,true,TESTING_HTTPS_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber + 1,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -142,7 +143,7 @@ int TestSecureSite(HTTPServer* p_server)
 
 // See if we did everything alright
 int
-AfterTestSecureSite()
+TestMarlinServer::AfterTestSecureSite()
 {
   // SUMMARY OF THE TEST
   //- --- "---------------------------------------------- - ------

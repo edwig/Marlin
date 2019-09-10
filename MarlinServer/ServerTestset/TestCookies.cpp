@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "HTTPMessage.h"
 #include "SiteHandlerPut.h"
@@ -125,11 +125,11 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
 }
 
 int 
-TestCookies(HTTPServer* p_server)
+TestMarlinServer::TestCookies()
 {
   int error = 0;
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   xprintf("TESTING HTTP RECEIVER COOKIE FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=========================================================\n");
@@ -137,7 +137,7 @@ TestCookies(HTTPServer* p_server)
   // Create URL channel to listen to "http://+:port/MarlinTest/CookieTest/"
   // Callback function is no longer required!
   CString webaddress = "/MarlinTest/CookieTest/";
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,webaddress);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -184,7 +184,7 @@ TestCookies(HTTPServer* p_server)
 }
 
 int
-AfterTestCookies()
+TestMarlinServer::AfterTestCookies()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

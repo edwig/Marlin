@@ -1,0 +1,48 @@
+//
+// ServerApplet.RC2 - resources Microsoft Visual C++ does not edit directly
+//
+#ifdef APSTUDIO_INVOKED
+#error this file is not editable by Microsoft Visual C++
+#endif //APSTUDIO_INVOKED
+
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    RES_VERSION_BIN
+ PRODUCTVERSION RES_VERSION_BIN
+ FILEFLAGSMASK 0x37L
+#ifdef _DEBUG
+ FILEFLAGS 0x21L
+#else
+ FILEFLAGS 0x20L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName",      "Marlin"
+            VALUE "FileDescription",  "ServerApplet voor a Marlin server"
+            VALUE "InternalName",     "ServerApplet.exe"
+            VALUE "OriginalFilename", "ServerApplet.exe"
+            VALUE "ProductVersion",   MARLIN_VERSION_NUMBER
+            VALUE "FileVersion",      MARLIN_VERSION_NUMBER
+            VALUE "BuildNumber",      MARLIN_VERSION_BUILD
+            VALUE "SpecialBuild",     MARLIN_VERSION_BUILD
+            VALUE "LegalCopyright",   "Marlin (c) 2010-2019 ir. W.E. Huisman"
+            VALUE "LegalTrademarks",  "Marlin"
+            VALUE "ProductName",      "Marlin"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END

@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="ServerTestset\TestAsynchrone.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestBaseSite.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestBodyEncryption.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestBodySigning.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestClientCert.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestCompression.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestContract.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestCookies.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestCrackUrl.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestEvents.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestFilter.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestFormData.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestInsecure.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestJsonData.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestMessageEncryption.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestPatch.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestReliable.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestSecureSite.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestSubSites.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestThreadpool.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestTime.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestToken.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerTestset\TestWebSocket.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestMarlinServerApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestMarlinServerAppFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestMarlinServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestMarlinServerApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestMarlinServerAppFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestMarlinServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Testset">
+      <UniqueIdentifier>{e94e379d-9abf-4b92-93df-11c9c4ec3534}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{d4bafd81-7970-4a62-baa3-eeb074a71f02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{c69ae080-ab14-4fa4-9cc8-dc276b56d04b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

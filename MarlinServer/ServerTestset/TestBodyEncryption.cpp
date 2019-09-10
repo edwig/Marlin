@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerSoap.h"
 
@@ -134,12 +134,12 @@ SiteHandlerSoapBodyEncrypt::Handle(SOAPMessage* p_message)
 }
 
 int
-TestBodyEncryption(HTTPServer* p_server)
+TestMarlinServer::TestBodyEncryption()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   xprintf("TESTING BODY ENCRYPTION OF A SOAP MESSAGE FUNCTIONS OF THE HTTP SITE\n");
   xprintf("====================================================================\n");
@@ -147,7 +147,7 @@ TestBodyEncryption(HTTPServer* p_server)
   // Create URL channel to listen to "http://+:port/MarlinTest/BodyEncrypt/"
   // But WebConfig can override all values except for the callback function address
   CString url("/MarlinTest/BodyEncrypt/");
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {
     // SUMMARY OF THE TEST
@@ -185,7 +185,7 @@ TestBodyEncryption(HTTPServer* p_server)
 }
 
 int 
-AfterTestBodyEncryption()
+TestMarlinServer::AfterTestBodyEncryption()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

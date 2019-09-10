@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "HTTPSite.h"
 #include "SiteHandlerSoap.h"
 #include "PrintToken.h"
@@ -212,12 +212,12 @@ END:
 }
 
 int 
-TestToken(HTTPServer* p_server)
+TestMarlinServer::TestToken()
 {
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   CString url("/MarlinTest/TestToken/");
 
@@ -225,7 +225,7 @@ TestToken(HTTPServer* p_server)
   xprintf("==============================================\n");
 
   // Create URL channel to listen to "http://+:port/MarlinTest/TestToken/"
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -267,7 +267,7 @@ TestToken(HTTPServer* p_server)
 }
 
 int
-AfterTestToken()
+TestMarlinServer::AfterTestToken()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

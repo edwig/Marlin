@@ -22,5 +22,7 @@ private:
 };
 
 // The one and only server instance!
-extern MarlinServer theServer;
+// Can be called from within ServerMain for standalone and NT-Service 
+// Can be called from within ServerApp  for IIS factored applications
+extern MarlinServer* s_theServer;
 

@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "Stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "CrackURL.h"
 #include "WinHttp.h"
 
@@ -44,7 +44,8 @@ static int totalChecks = 5;
 //
 //////////////////////////////////////////////////////////////////////////
 
-int  Test_CrackURL()
+int  
+TestMarlinServer::TestCrackURL()
 {
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
@@ -127,7 +128,7 @@ int  Test_CrackURL()
 }
 
 int
-AfterTestCrackURL()
+TestMarlinServer::AfterTestCrackURL()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------

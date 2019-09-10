@@ -1,0 +1,407 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 283, 69
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About ServerApplet"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,15,11,21,20
+    DEFPUSHBUTTON   "OK",IDOK,196,46,80,16,WS_GROUP
+    EDITTEXT        IDC_VERSIE,45,7,231,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_COPYRIGHT,45,24,231,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_SERVERAPPLET DIALOGEX 0, 0, 296, 158
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Marlin ServerApplet"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_ROLE,50,7,152,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "&Configuratie",IDC_CONFIG,211,7,78,14
+    EDITTEXT        IDC_STATUS,50,25,152,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "&Query",IDC_QUERY,211,25,78,14
+    PUSHBUTTON      "&Start",IDC_START,50,43,72,14
+    PUSHBUTTON      "S&top",IDC_STOP,132,43,70,14
+    PUSHBUTTON      "&Bounce",IDC_BOUNCE,211,43,78,14
+    EDITTEXT        IDC_LOGLINE2,50,77,152,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "[nothing]",IDC_FUNCTION1,211,77,78,14
+    PUSHBUTTON      "[nothing]",IDC_FUNCTION2,50,96,72,14
+    PUSHBUTTON      "[nothing]",IDC_FUNCTION3,132,96,70,14
+    PUSHBUTTON      "[nothing]",IDC_FUNCTION4,211,96,78,14
+    PUSHBUTTON      "[nothing]",IDC_FUNCTION5,50,115,72,14
+    PUSHBUTTON      "[nothing]",IDC_FUNCTION6,132,115,70,14
+    PUSHBUTTON      "[nothing]",IDC_FUNCTION7,211,115,78,14
+    DEFPUSHBUTTON   "OK",IDOK,211,135,78,16
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 276
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 62
+    END
+
+    IDD_SERVERAPPLET, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 289
+        VERTGUIDE, 50
+        VERTGUIDE, 122
+        VERTGUIDE, 132
+        VERTGUIDE, 202
+        VERTGUIDE, 211
+        VERTGUIDE, 289
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+        HORZGUIDE, 57
+        HORZGUIDE, 91
+        HORZGUIDE, 110
+        HORZGUIDE, 129
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_SERVERAPPLET AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_ABOUTBOX            "&About ServerApplet..."
+    IDS_CONFIG              "&Configuration..."
+    IDS_INSTALL             "&Installation..."
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Dutch (Netherlands) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_LOGIN DIALOGEX 0, 0, 199, 94
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Server login"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_TITEL,7,7,185,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Server URL",IDC_STATIC,7,26,52,8
+    EDITTEXT        IDC_URL,64,23,127,14,ES_AUTOHSCROLL
+    LTEXT           "Username",IDC_STATIC,7,42,52,8
+    EDITTEXT        IDC_USER,64,39,127,14,ES_AUTOHSCROLL
+    LTEXT           "Password",IDC_STATIC,7,58,52,8
+    EDITTEXT        IDC_PASSWORD,64,55,127,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,64,73,62,14
+    PUSHBUTTON      "Cancel",IDCANCEL,128,73,63,14
+END
+
+IDD_CONFIG DIALOGEX 0, 0, 629, 302
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Marlin server configuration"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "General",IDC_STATIC,7,7,303,145
+    LTEXT           "Machine role",IDC_STATIC,13,19,71,8
+    COMBOBOX        IDC_ROLE,88,17,214,81,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Full server URL",IDC_STATIC,13,36,72,8
+    EDITTEXT        IDC_SERVERADRES,88,33,214,14,ES_AUTOHSCROLL
+    LTEXT           "Security",IDC_STATIC,13,52,72,8
+    CONTROL         "Secure HTTPS internet server",IDC_SECURESERVER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,51,214,10
+    LTEXT           "Server host",IDC_STATIC,13,68,63,8
+    EDITTEXT        IDC_SERVER,88,65,91,14,ES_AUTOHSCROLL
+    LTEXT           "Server portnumber",IDC_STATIC,13,84,64,8
+    EDITTEXT        IDC_SERVERPORT,88,81,42,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Base URL",IDC_STATIC,13,100,72,8
+    EDITTEXT        IDC_BASE_URL,88,97,91,14,ES_AUTOHSCROLL
+    LTEXT           "Instance number",IDC_STATIC,13,116,70,8
+    EDITTEXT        IDC_INSTANTIE,88,113,42,14,ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX        "Error reporting",IDC_STATIC,7,157,304,118
+    LTEXT           "Send error reports",IDC_STATIC,13,170,67,8
+    CONTROL         "",IDC_FR_VERSTUUR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,169,42,10
+    LTEXT           "Sender",IDC_STATIC,13,187,63,8
+    EDITTEXT        IDC_FR_AFZENDER,88,184,214,14,ES_AUTOHSCROLL
+    LTEXT           "Send-to",IDC_STATIC,13,204,63,8
+    EDITTEXT        IDC_FR_ONTVANGER,88,201,214,14,ES_AUTOHSCROLL
+    LTEXT           "Mail server",IDC_STATIC,13,221,63,8
+    EDITTEXT        IDC_MAIL_SERVER,88,218,214,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Test e-mail",IDC_TESTMAIL,88,249,91,14
+    GROUPBOX        "Server",IDC_STATIC,317,7,304,145
+    LTEXT           "Name of the server",IDC_STATIC,323,20,70,8
+    EDITTEXT        IDC_NAAM,398,18,214,14,ES_AUTOHSCROLL
+    LTEXT           "Webroot directory",IDC_STATIC,323,38,71,8
+    EDITTEXT        IDC_WEBROOT,398,35,187,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "[...]",IDC_SEARCHROOT,588,35,24,14
+    LTEXT           "Server logging",IDC_STATIC,323,54,63,8
+    COMBOBOX        IDC_SERVERLOGGING,398,52,187,103,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Server logfile",IDC_STATIC,323,70,70,8
+    EDITTEXT        IDC_SERVERLOG,398,67,187,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "[...]",IDC_SEARCHSERVLOG,588,67,24,14
+    LTEXT           "Start method",IDC_STATIC,323,87,63,8
+    COMBOBOX        IDC_RUNAS,398,84,214,63,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "-",IDC_STATIC,317,157,303,118
+    DEFPUSHBUTTON   "&OK",IDOK,467,281,73,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,550,281,72,14
+END
+
+IDD_INSTALL DIALOGEX 0, 0, 237, 97
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NT-Service installation"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Domain",IDC_STATIC,7,10,48,8
+    EDITTEXT        IDC_DOMEIN,85,7,49,14,ES_AUTOHSCROLL
+    LTEXT           "Windows user",IDC_STATIC,7,26,78,8
+    EDITTEXT        IDC_GEBRUIKER,85,23,147,14,ES_AUTOHSCROLL
+    LTEXT           "Password",IDC_STATIC,7,41,48,8
+    EDITTEXT        IDC_WACHTWOORD,85,39,147,14,ES_AUTOHSCROLL
+    LTEXT           "Confirm password",IDC_STATIC,7,59,75,8
+    EDITTEXT        IDC_BEVESTIG,85,56,147,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&Install",IDC_INSTALLEER,7,76,71,14
+    PUSHBUTTON      "&Remove",IDC_VERWIJDER,85,76,71,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,162,76,71,14
+END
+
+IDD_RESULTS DIALOGEX 0, 0, 487, 466
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Results"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,414,445,66,14
+    EDITTEXT        IDC_RESULT,7,7,473,435,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_LOGIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 192
+        VERTGUIDE, 64
+        VERTGUIDE, 191
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 87
+    END
+
+    IDD_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 622
+        VERTGUIDE, 13
+        VERTGUIDE, 88
+        VERTGUIDE, 130
+        VERTGUIDE, 179
+        VERTGUIDE, 185
+        VERTGUIDE, 260
+        VERTGUIDE, 302
+        VERTGUIDE, 323
+        VERTGUIDE, 398
+        VERTGUIDE, 491
+        VERTGUIDE, 570
+        VERTGUIDE, 612
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 295
+        HORZGUIDE, 111
+        HORZGUIDE, 263
+    END
+
+    IDD_INSTALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        VERTGUIDE, 85
+        VERTGUIDE, 134
+        VERTGUIDE, 232
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 90
+        HORZGUIDE, 70
+    END
+
+    IDD_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 480
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 459
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_CONFIG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_INSTALL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_RESULTS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_LOGIN AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\ServerApplet.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""     // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\ServerApplet.ico"
+
+IDI_GROEN               ICON                    "res\\TRFFC10A.ICO"
+
+IDI_ORANJE              ICON                    "res\\TRFFC10B.ICO"
+
+IDI_ROOD                ICON                    "res\\TRFFC10C.ICO"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_ROOD                BITMAP                  "res\\bitmap1.bmp"
+
+IDB_ORANJE              BITMAP                  "res\\bmp00001.bmp"
+
+IDB_GROEN               BITMAP                  "res\\bmp00002.bmp"
+
+#endif    // Dutch (Netherlands) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\ServerApplet.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"     // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
 #include "SiteHandlerGet.h"
 #include <io.h>
 
@@ -68,11 +68,11 @@ SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
 }
 
 int
-TestCompression(HTTPServer* p_server)
+TestMarlinServer::TestCompression()
 {
   int error = 0;
   // If errors, change detail level
-  doDetails = false;
+  m_doDetails = false;
 
   xprintf("TESTING HTTP GZIP COMPRESSION OF THE HTTP SERVER\n");
   xprintf("================================================\n");
@@ -80,7 +80,7 @@ TestCompression(HTTPServer* p_server)
   // Create URL channel to listen to "http://+:port/MarlinTest/Compression/"
   // Callback function is no longer required!
   CString webaddress = "/MarlinTest/Compression/";
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,webaddress);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -119,7 +119,7 @@ TestCompression(HTTPServer* p_server)
 }
 
 int
-AfterTestCompression()
+TestMarlinServer::AfterTestCompression()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
