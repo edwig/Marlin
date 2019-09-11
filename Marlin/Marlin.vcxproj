@@ -382,6 +382,7 @@
     <ClInclude Include="PrintToken.h" />
     <ClInclude Include="ProcInfo.h" />
     <ClInclude Include="Redirect.h" />
+    <ClInclude Include="Routing.h" />
     <ClInclude Include="RunRedirect.h" />
     <ClInclude Include="ServerApp.h" />
     <ClInclude Include="ServerEvent.h" />

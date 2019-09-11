@@ -101,6 +101,9 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
   memcpy(&m_sender,p_msg->GetSender(),sizeof(SOCKADDR_IN6));
   m_desktop = p_msg->GetRemoteDesktop();
 
+  // Copy routing information
+  m_routing = p_msg->GetRouting();
+
   // Parse the body as a posted message
   CString message;
   CString charset = FindCharsetInContentType(m_contentType);
@@ -167,6 +170,9 @@ SOAPMessage::SOAPMessage(JSONMessage* p_msg)
 
   // Duplicate all cookies
   m_cookies = p_msg->GetCookies();
+
+  // Duplicate routing
+  m_routing = p_msg->GetRouting();
 
   // Copy all headers from the HTTPmessage
   HeaderMap* map = p_msg->GetHeaderMap();
@@ -319,6 +325,9 @@ SOAPMessage::SOAPMessage(SOAPMessage* p_orig)
 
   // Duplicate cookies
   m_cookies = p_orig->m_cookies;
+  // Duplicate routing
+  m_routing = p_orig->m_routing;
+
   // Duplicate the HTTP token for ourselves
   if(DuplicateTokenEx(p_orig->m_token
                      ,TOKEN_DUPLICATE|TOKEN_IMPERSONATE|TOKEN_ALL_ACCESS|TOKEN_READ|TOKEN_WRITE
@@ -449,6 +458,7 @@ SOAPMessage::Reset(ResponseType p_responseType  /* = ResponseType::RESP_ACTION_N
   // Leave encryption     untouched !!
   // Leave cookies        untouched !!
   // Leave server handle  untouched !!
+  // Leave routing        untouched !!
 }
 
 void
@@ -720,6 +730,16 @@ SOAPMessage::GetJSON_URL()
     ++count;
   }
   return url;
+}
+
+CString
+SOAPMessage::GetRoute(int p_index)
+{
+  if(p_index >= 0 && p_index < m_routing.size())
+  {
+    return m_routing[p_index];
+  }
+  return "";
 }
 
 // TO do after we set parts of the URL in setters

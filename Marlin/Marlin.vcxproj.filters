@@ -686,6 +686,9 @@
     <ClInclude Include="ExecuteProcess.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Routing.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ZLib\deflate.d">

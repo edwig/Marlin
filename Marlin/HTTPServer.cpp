@@ -610,6 +610,36 @@ HTTPServer::FindHTTPSite(int p_port,CString& p_url)
   return nullptr;
 }
 
+// Find routing information within the site
+void
+HTTPServer::CalculateRouting(HTTPSite* p_site,HTTPMessage* p_message)
+{
+  CString url = p_message->GetCrackedURL().AbsoluteResource();
+  CString known(p_site->GetSite());
+
+  CString route = url.Mid(known.GetLength());
+  route = route.Trim('/');
+  route = route.Trim('\\');
+
+  while(route.GetLength())
+  {
+    int pos = route.Find('/');
+    if (pos < 0) pos = route.Find('\\');
+
+    if(pos > 0)
+    {
+      p_message->AddRoute(route.Left(pos));
+      route = route.Mid(pos + 1);
+    }
+    else
+    {
+      // Last route part to add
+      p_message->AddRoute(route);
+      route.Empty();
+    }
+  }
+}
+
 // Find our extra header for RemoteDesktop (Citrix!) support
 int
 HTTPServer::FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers)

@@ -29,6 +29,7 @@
 #include "Cookie.h"
 #include "HTTPMessage.h"
 #include "XMLMessage.h"
+#include "Routing.h"
 #include "http.h"
 #include <vector>
 #include <xstring>
@@ -196,7 +197,9 @@ public:
   bool            GetVerbTunneling()  { return m_verbTunnel;            };
   bool            GetIncoming()       { return m_incoming;              };
   bool            GetHasBeenAnswered(){ return m_request == NULL;       };
+  Routing&        GetRouting()        { return m_routing;               };
   CString         GetHeader(CString p_name);
+  CString         GetRoute(int p_index);
   CString         GetContentType();
   CString         GetVerb();
 
@@ -269,4 +272,5 @@ private:
   SOCKADDR_IN6    m_sender;                                     // Senders address
   UINT            m_desktop     { 0 };                          // Senders remote desktop
   long            m_references  { 0 };                          // Externally referenced
+  Routing         m_routing;                                    // Routing information from HTTP
 };

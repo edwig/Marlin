@@ -129,6 +129,8 @@ TestMarlinServer::ShutDown()
   StopSubsites();
   // Stopping test websocket (if any)
   StopWebSocket();
+  // Reset all sites and services
+  Reset();
 
   // Get the results of our tests
   AfterTests();

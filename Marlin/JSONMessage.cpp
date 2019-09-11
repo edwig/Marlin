@@ -387,6 +387,8 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
   m_acceptEncoding = p_other->m_acceptEncoding;
   // Duplicate all cookies
   m_cookies = p_other->GetCookies();
+  // Duplicate all routing
+  m_routing = p_other->GetRouting();
 
   // Copy all headers from the HTTPmessage
   HeaderMap* map = p_other->GetHeaderMap();
@@ -435,6 +437,9 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
   {
     m_headers[it->first] = it->second;
   }
+
+  // Copy routing
+  m_routing = p_message->GetRouting();
 
   // Get sender (if any) from the HTTP message
   memcpy(&m_sender,p_message->GetSender(),sizeof(SOCKADDR_IN6));
@@ -522,6 +527,9 @@ JSONMessage::JSONMessage(SOAPMessage* p_message)
 
   // Duplicate all cookies
   m_cookies = p_message->GetCookies();
+
+  // Duplicate routing
+  m_routing = p_message->GetRouting();
 
   // Copy all headers from the HTTPmessage
   HeaderMap* map = p_message->GetHeaderMap();
@@ -617,6 +625,16 @@ JSONMessage::GetVerb()
     return "POST";
   }
   return m_verb;
+}
+
+CString
+JSONMessage::GetRoute(int p_index)
+{
+  if(p_index >= 0 && p_index < m_routing.size())
+  {
+    return m_routing[p_index];
+  }
+  return "";
 }
 
 void

@@ -424,6 +424,9 @@ HTTPRequest::ReceivedRequest()
     }
   }
 
+  // Find routing information within the site
+  m_server->CalculateRouting(m_site,m_message);
+
   // Find X-HTTP-Method VERB Tunneling
   if(type == HTTPCommand::http_post && m_site->GetVerbTunneling())
   {

@@ -328,6 +328,8 @@ public:
   int        FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers);
   // Authentication failed for this reason
   CString    AuthenticationStatus(SECURITY_STATUS p_secStatus);
+  // Find routing information within the site
+  void       CalculateRouting(HTTPSite* p_site,HTTPMessage* p_message);
   // Finding a previous registered service endpoint
   WebServiceServer* FindService(CString p_serviceName);
   // Finding a previous registered WebSocket
@@ -336,7 +338,7 @@ public:
   CRITICAL_SECTION* AcquireSitesLockObject();
   // Handle text-based content-type messages
   void       HandleTextContent(HTTPMessage* p_message);
-  // Build the www-auhtenticate challenge
+  // Build the WWW-authenticate challenge
   CString    BuildAuthenticationChallenge(CString p_authScheme,CString p_realm);
   // Find less known verb
   HTTPCommand GetUnknownVerb(PCSTR p_verb);

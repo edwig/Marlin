@@ -32,6 +32,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HTTPManager", "HTTPManager\HTTPManager.vcxproj", "{8B77D5D7-1261-4ADD-AAAA-E873A95415FE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinServerIIS", "MarlinServer\MarlinServerIIS.vcxproj", "{8D146F02-9019-BC45-06ED-27B4B4D44AAC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerApplet", "ServerApplet\ServerApplet.vcxproj", "{ABEDDA71-62C8-4098-B49F-1AC8068615F6}"
 	ProjectSection(ProjectDependencies) = postProject

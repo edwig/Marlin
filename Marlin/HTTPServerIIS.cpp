@@ -150,7 +150,10 @@ HTTPServerIIS::Cleanup()
   while(!m_allsites.empty())
   {
     SiteMap::iterator it = m_allsites.begin();
-    it->second->StopSite(true);
+    if (it->second->StopSite(true) == false)
+    {
+      m_allsites.erase(it);
+    };
   }
 
   // Closing the logging file
@@ -543,6 +546,9 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
       return nullptr;
     }
   }
+
+  // Find routing information within the site
+  CalculateRouting(p_site,message);
 
   // Find X-HTTP-Method VERB Tunneling
   if(type == HTTPCommand::http_post && p_site->GetVerbTunneling())

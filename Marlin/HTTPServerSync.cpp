@@ -580,6 +580,9 @@ HTTPServerSync::RunHTTPServer()
         }
       }
 
+      // Find routing information within the site
+      CalculateRouting(site,message);
+
       // Find X-HTTP-Method VERB Tunneling
       if(type == HTTPCommand::http_post && site->GetVerbTunneling())
       {

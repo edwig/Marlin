@@ -40,6 +40,7 @@
 #include "XMLMessage.h"
 #include "Cookie.h"
 #include "DefaultNamespace.h"
+#include "Routing.h"
 #include <winhttp.h>
 #include <http.h>
 #include <wincrypt.h>
@@ -187,6 +188,8 @@ public:
   // Set headers
   void            AddHeader(CString p_name,CString p_value);
   void            AddHeader(HTTP_HEADER_ID p_id,CString p_value);
+  // Routing
+  void            AddRoute(CString p_route);
   // Set Fault elements
   void            SetFault(CString p_code
                           ,CString p_actor
@@ -285,6 +288,8 @@ public:
   CString         GetCanonicalForm(XMLElement* p_element);
   bool            GetHasInitialAction() const;
   bool            GetHasBeenAnswered();
+  Routing&        GetRouting();
+  CString         GetRoute(int p_index);
 
   // PARAMETER INTERFACE
   // Most of it now is in XMLMessage in the Set/Get-Element interface
@@ -417,6 +422,7 @@ protected:
   HANDLE          m_token         { NULL  };              // Security access token
   SOCKADDR_IN6    m_sender;                               // Senders address
   UINT            m_desktop       { 0     };              // Senders remote desktop
+  Routing         m_routing;                              // Routing information from the WEB
   // Fault result                                         // 1.0,1.1         1.2
   bool            m_errorstate    { false };              // Internal for WSDL handling
   CString         m_soapFaultCode;                        // faultcode       Code
@@ -894,6 +900,18 @@ inline void
 SOAPMessage::SetHasBeenAnswered()
 { 
   m_request = NULL; 
+}
+
+inline void
+SOAPMessage::AddRoute(CString p_route)
+{
+  m_routing.push_back(p_route);
+}
+
+inline Routing&
+SOAPMessage::GetRouting()
+{
+  return m_routing;
 }
 
 //////////////////////////////////////////////////////////////////////////
