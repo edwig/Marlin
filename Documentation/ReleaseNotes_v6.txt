@@ -47,6 +47,8 @@ This is an partly finished version!
     - BrowseForFilename
     - ExecuteProcess
 7)  A skeleton "MarlinServerMessages.mc" file for the WMI logging has been added to the server program
+8)  Referer check in MarlinModule has been made more lenient. Just logs a warning in the Marlin.log that
+    a referer does not match with the requested server. This is necessary for HTTP rewriting in IIS.
 
 
 CHANGES IN VERSION 6.2.1

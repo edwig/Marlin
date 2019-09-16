@@ -777,7 +777,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   char  buffer2[SERVERNAME_BUFFERSIZE + 1];
   DWORD size  = SERVERNAME_BUFFERSIZE;
   PCSTR serverName = buffer1;
-  PCSTR referrer   = buffer2;
+  PCSTR referer    = buffer2;
 
   // Getting the HTTPSite through the server port/absPath combination
   int  serverPort = GetServerPort(p_context);
@@ -809,13 +809,15 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   HRESULT hr = p_context->GetServerVariable("SERVER_NAME",&serverName, &size);
   if(hr == S_OK)
   {
-    hr = p_context->GetServerVariable("HTTP_REFERER", &referrer, &size);
+    hr = p_context->GetServerVariable("HTTP_REFERER", &referer, &size);
     if(hr == S_OK)
     {
-      if(strstr(referrer,serverName) == 0)
+      if(strstr(referer,serverName) == 0)
       {
-        DETAILLOG("XSS Detected!! Deferrer not our server!");
-        response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
+        DETAILLOG("XSS Detected!! Referrer not our server!");
+        DETAILLOG(CString("SERVER_NAME : ") + serverName);
+        DETAILLOG(CString("HTTP_REFERER: ") + referer);
+        // response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
       }
     }
   }
@@ -874,7 +876,7 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   char  buffer2[SERVERNAME_BUFFERSIZE + 1];
   DWORD size = SERVERNAME_BUFFERSIZE;
   PCSTR serverName = buffer1;
-  PCSTR referrer   = buffer2;
+  PCSTR referer    = buffer2;
 
   // Getting the HTTPSite through the server port/absPath combination
   int  serverPort = GetServerPort(p_context);
@@ -906,13 +908,15 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   HRESULT hr = p_context->GetServerVariable("SERVER_NAME", &serverName, &size);
   if (hr == S_OK)
   {
-    hr = p_context->GetServerVariable("HTTP_REFERER", &referrer, &size);
-    if((hr == S_OK) && (strstr(referrer, serverName) == 0))
-      {
-        DETAILLOG("XSS Detected!! Deferrer not our server!");
-        response->SetStatus(HTTP_STATUS_BAD_REQUEST, "XSS Detected");
-      }
+    hr = p_context->GetServerVariable("HTTP_REFERER", &referer, &size);
+    if((hr == S_OK) && (strstr(referer, serverName) == 0))
+    {
+      DETAILLOG("XSS Detected!! Referrer not our server!");
+      DETAILLOG(CString("SERVER_NAME : ") + serverName);
+      DETAILLOG(CString("HTTP_REFERER: ") + referer);
+      // response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
     }
+  }
 
   // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
   const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
