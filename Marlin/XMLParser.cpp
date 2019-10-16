@@ -207,6 +207,10 @@ XMLParser::ParseLevel()
     {
       ParseDeclaration();
     }
+    else if(strncmp((const char*)m_pointer,"<?xml-stylesheet",16) == 0)
+    {
+      ParseStylesheet();
+    }
     else if(strncmp((const char*)m_pointer,"<!--",4) == 0)
     {
       ParseComment();
@@ -364,6 +368,47 @@ XMLParser::ParseDeclaration()
     }
   }
   // Skip over end of declaration
+  NeedToken('?');
+  NeedToken('>');
+  SkipWhiteSpace();
+}
+
+// For now we only parse the type and href attributes
+void
+XMLParser::ParseStylesheet()
+{
+  m_message->m_stylesheetType.Empty();
+  m_message->m_stylesheet.Empty();
+
+  // Skip over "<?xml-stylesheet"
+  m_pointer += 16;
+
+  CString attributeName;
+
+  SkipWhiteSpace();
+  while(GetIdentifier(attributeName))
+  {
+    SkipWhiteSpace();
+    NeedToken('=');
+    CString value = GetQuotedString();
+    SkipWhiteSpace();
+
+    if(attributeName.Compare("type") == 0)
+    {
+      m_message->m_stylesheetType = value;
+    }
+    else if(attributeName.Compare("href") == 0)
+    {
+      m_message->m_stylesheet = value;
+    }
+    else
+    {
+      CString message;
+      message.Format("Unknown stylesheet attributes [%s=%s]",attributeName.GetString(),value.GetString());
+      SetError(XmlError::XE_HeaderAttribs,(uchar*)message.GetString());
+    }
+  }
+  // Skip over end of the declaration
   NeedToken('?');
   NeedToken('>');
   SkipWhiteSpace();

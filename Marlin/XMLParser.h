@@ -68,6 +68,7 @@ protected:
   // Parsers
   void          ParseLevel();
   void          ParseDeclaration();
+  void          ParseStylesheet();
   void          ParseComment();
   void          ParseDTD();
   void          ParseCDATA();

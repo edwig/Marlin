@@ -355,6 +355,8 @@ XMLMessage::Print()
   bool utf8 = (m_encoding == XMLEncoding::ENC_UTF8);
 
   CString message = PrintHeader();
+
+  message += PrintStylesheet();
   message += PrintElements(m_root,utf8);
   if(m_condensed)
   {
@@ -401,6 +403,26 @@ XMLMessage::PrintHeader()
   if(m_condensed == false)
   {
     header += "\n";
+  }
+  return header;
+}
+
+CString
+XMLMessage::PrintStylesheet()
+{
+  CString header;
+  if(!m_stylesheetType.IsEmpty() || !m_stylesheet.IsEmpty())
+  {
+    header = "<?xml-stylesheet";
+    if(!m_stylesheetType.IsEmpty())
+    {
+      header.AppendFormat(" type=\"%s\"",m_stylesheetType.GetString());
+    }
+    if(!m_stylesheet.IsEmpty())
+    {
+      header.AppendFormat(" href=\"%s\"",m_stylesheet.GetString());
+    }
+    header += "?>";
   }
   return header;
 }

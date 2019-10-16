@@ -176,6 +176,7 @@ public:
   virtual CString Print();
   // Print the XML header
   CString         PrintHeader();
+  CString         PrintStylesheet();
   // Print the elements stack
   virtual CString PrintElements(XMLElement* p_element
                                ,bool        p_utf8  = true
@@ -208,6 +209,9 @@ public:
   // Set sending in Unicode
   void            SetSendUnicode(bool p_unicode);
   void            SetSendBOM(bool p_bom);
+  // Stylesheet info
+  void            SetStylesheetType(CString p_type);
+  void            SetStylesheet(CString p_sheet);
   // Setting an element
   XMLElement*     SetElement(CString p_name, CString&    p_value);
   XMLElement*     SetElement(CString p_name, const char* p_value);
@@ -261,6 +265,8 @@ public:
   int             GetAttributeInteger(XMLElement* p_elem,CString p_attribName);
   bool            GetAttributeBoolean(XMLElement* p_elem,CString p_attribName);
   double          GetAttributeDouble(XMLElement* p_elem,CString p_attribName);
+  CString         GetStylesheetType();
+  CString         GetStylesheet();
 
   // FINDING
   XMLElement*     FindElement(CString p_name, bool p_recurse = true);
@@ -306,6 +312,9 @@ protected:
   bool            m_sendUnicode     { false };                // Construct UTF-16 on sending out
   bool            m_sendBOM         { false };                // Prepend Byte-Order-Mark before message (UTF-8 / UTF-16)
   bool            m_printRestiction { false };                // Print restrictions as comment before node
+  // Stylesheet info
+  CString         m_stylesheetType;                           // Content type of the XSL stylesheet
+  CString         m_stylesheet;                               // Link tot he XSL stylesheet
   // Status and other info
   XmlError        m_internalError   { XmlError::XE_NoError }; // Internal error status
   CString         m_internalErrorString;                      // Human readable form of the error
@@ -391,4 +400,28 @@ inline void
 XMLMessage::SetPrintRestrictions(bool p_restrict)
 {
   m_printRestiction = p_restrict;
+}
+
+inline CString
+XMLMessage::GetStylesheetType()
+{
+  return m_stylesheetType;
+}
+
+inline CString
+XMLMessage::GetStylesheet()
+{
+  return m_stylesheet;
+}
+
+inline void
+XMLMessage::SetStylesheetType(CString p_type)
+{
+  m_stylesheetType = p_type;
+}
+
+inline void
+XMLMessage::SetStylesheet(CString p_sheet)
+{
+  m_stylesheet = p_sheet;
 }
