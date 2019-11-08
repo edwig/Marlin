@@ -735,7 +735,7 @@ SOAPMessage::GetJSON_URL()
 CString
 SOAPMessage::GetRoute(int p_index)
 {
-  if(p_index >= 0 && p_index < m_routing.size())
+  if(p_index >= 0 && p_index < (int)m_routing.size())
   {
     return m_routing[p_index];
   }

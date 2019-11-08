@@ -359,13 +359,21 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     }
 
     // Getting the start address of the application factory
-    poolapp->m_createServer = (CreateServerAppFunc)GetProcAddress(poolapp->m_module,"CreateServerApp");
-    if (poolapp->m_createServer == nullptr)
+    poolapp->m_createServer   = (CreateServerAppFunc)GetProcAddress(poolapp->m_module,"CreateServerApp");
+    poolapp->m_findSite       = (FindHTTPSiteFunc)   GetProcAddress(poolapp->m_module,"FindHTTPSite");
+    poolapp->m_getHttpStream  = (GetHTTPStreamFunc)  GetProcAddress(poolapp->m_module,"GetStreamFromRequest");
+    poolapp->m_getHttpMessage = (GetHTTPMessageFunc) GetProcAddress(poolapp->m_module,"GetHTTPMessageFromRequest");
+    poolapp->m_handleMessage  = (HandleMessageFunc)  GetProcAddress(poolapp->m_module,"HandleHTTPMessage");
+
+    if(poolapp->m_createServer   == nullptr ||
+       poolapp->m_findSite       == nullptr ||
+       poolapp->m_getHttpStream  == nullptr ||
+       poolapp->m_getHttpMessage == nullptr ||
+       poolapp->m_handleMessage  == nullptr)
     {
-      HRESULT code = GetLastError();
-      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp'");
+      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', 'GetHTTPMessageFromRequest' or 'HandleHTTPMessage'");
       delete poolapp;
-      return Unhealthy(error,code);
+      return Unhealthy(error,ERROR_NOT_FOUND);
     }
   }
 
@@ -790,10 +798,8 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   }
 
   // Find our app
-  ServerApp* app = it->second->m_application;
-
-  // Starting the performance counter
-  app->StartCounter();
+  APP* app = it->second;
+  ServerApp* serverapp = app->m_application;
 
   // Getting the request/response objects
   IHttpRequest*  request  = p_context->GetRequest();
@@ -801,7 +807,6 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   if(request == nullptr || response == nullptr)
   {
     DETAILLOG("No request or response objects");
-    app->StopCounter();
     return status;
   }
 
@@ -827,7 +832,6 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   if(rawRequest == nullptr)
   {
     ERRORLOG("Abort: IIS did not provide a raw request object!");
-    app->StopCounter();
     return status;
   }
 
@@ -836,7 +840,8 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   DETAILLOG(url);
 
   // Find our marlin representation of the site
-  HTTPSite* site =  app->GetHTTPServer()->FindHTTPSite(serverPort,rawRequest->CookedUrl.pAbsPath);
+  // Use HTTPServer()->FindHTTPSite of the application in the loaded DLL
+  HTTPSite* site =  (*app->m_findSite)(serverapp,serverPort,rawRequest->CookedUrl.pAbsPath);
 
   // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
   if(site == nullptr)
@@ -846,23 +851,19 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
     CString message("Rejected HTTP call: ");
     message += rawRequest->pRawUrl;
     DETAILLOG(message);
-    app->StopCounter();
     // Let someone else handle this call (if any :-( )
     return RQ_NOTIFICATION_CONTINUE;
   }
 
   // Grab an event stream, if it was present, otherwise continue to the next handler
-  EventStream* stream = app->GetHTTPServer()->GetHTTPStreamFromRequest(p_context,site,rawRequest);
-  if(stream != nullptr)
+  // Use the HTTPServer() method GetHTTPStreamFromRequest to see if we must turn it into a stream
+  bool stream = (*app->m_getHttpStream)(serverapp,p_context,site,rawRequest);
+  if(stream)
   {
     // If we turn into a stream, more notifications are pending
     // This means the context of this request will **NOT** end
     status = RQ_NOTIFICATION_PENDING;
   }
-
-  // Now completely ready. We did everything!
-  app->StopCounter();
-
   return status;
 }
 
@@ -889,10 +890,8 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   }
 
   // Find our app
-  ServerApp* app = it->second->m_application;
-
-  // Starting the performance counter
-  app->StartCounter();
+  APP* app = it->second;
+  ServerApp* serverapp = app->m_application;
 
   // Getting the request/response objects
   IHttpRequest*  request  = p_context->GetRequest();
@@ -900,7 +899,6 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   if (request == nullptr || response == nullptr)
   {
     DETAILLOG("No request or response objects");
-    app->StopCounter();
     return status;
   }
 
@@ -923,7 +921,6 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   if(rawRequest == nullptr)
   {
     ERRORLOG("Abort: IIS did not provide a raw request object!");
-    app->StopCounter();
     return status;
   }
 
@@ -932,7 +929,8 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   DETAILLOG(url);
 
   // Getting the HTTPSite through the server port/absPath combination
-  HTTPSite* site = app->GetHTTPServer()->FindHTTPSite(serverPort, rawRequest->CookedUrl.pAbsPath);
+  // Use the HTTPServer() method FindHTTPSite to grab the site
+  HTTPSite* site = (*app->m_findSite)(serverapp,serverPort,rawRequest->CookedUrl.pAbsPath);
 
   // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
   if (site == nullptr)
@@ -942,24 +940,18 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
     CString message("Rejected HTTP call: ");
     message += rawRequest->pRawUrl;
     DETAILLOG(message);
-    app->StopCounter();
     // Let someone else handle this call (if any :-( )
     return RQ_NOTIFICATION_CONTINUE;
   }
 
   // Grab a message from the raw request
-  HTTPMessage* msg = app->GetHTTPServer()->GetHTTPMessageFromRequest(p_context, site, rawRequest);
+  // Uste the HTTPServer() method GetHTTPMessageFromRequest to construct the message
+  HTTPMessage* msg = (*app->m_getHttpMessage)(serverapp,p_context,site,rawRequest);
   if(msg)
   {
-    // Install SEH to regular exception translator
-    AutoSeTranslator trans(SeTranslator);
-
-    // GO! Let the site handle the message
-    msg->AddReference();
-    site->HandleHTTPMessage(msg);
-  
-    // If handled (Marlin has reset the request handle)
-    if(msg->GetHasBeenAnswered())
+    // Call HTTPSite->HandleMessage
+    bool handled = (*app->m_handleMessage)(serverapp,site,msg);
+    if(handled)
     {
        // Ready for IIS!
        p_context->SetRequestHandled();
@@ -967,16 +959,12 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
       // This request is now completely handled
       status = GetCompletionStatus(response);
     }
-    msg->DropReference();
   }
   else
   {
     ERRORLOG("Cannot handle the request: IIS did not provide enough info for a HTTPMessage.");
     status = RQ_NOTIFICATION_CONTINUE;
   }
-  // Now completely ready. We did everything!
-  app->StopCounter();
-
   return status;
 }
 

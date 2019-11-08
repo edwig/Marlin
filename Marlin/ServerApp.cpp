@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "ServerApp.h"
 #include "WebConfigIIS.h"
+#include "HTTPSite.h"
 #include "EnsureFile.h"
 #include <string>
 #include <set>
@@ -66,7 +67,86 @@ ServerApp* _stdcall CreateServerApp(IHttpServer* p_server
   return appFactory->CreateServerApp(p_server,p_webroot,p_appName);
 }
 
+__declspec(dllexport)
+HTTPSite* _stdcall FindHTTPSite(ServerApp* p_application,int p_port, PCWSTR p_url)
+{
+  HTTPSite* site = nullptr;
+  if (p_application)
+  {
+    p_application->StartCounter();
+    site = p_application->GetHTTPServer()->FindHTTPSite(p_port,p_url);
+    p_application->StopCounter();
+  }
+  return site;
 }
+
+__declspec(dllexport)
+bool _stdcall GetStreamFromRequest(ServerApp* p_application, IHttpContext* p_context, HTTPSite* p_site, PHTTP_REQUEST p_request)
+{
+  bool gotstream = false;
+  if (p_application)
+  {
+    p_application->StartCounter();
+    gotstream = (p_application->GetHTTPServer()->GetHTTPStreamFromRequest(p_context,p_site,p_request) != nullptr);
+    p_application->StopCounter();
+  }
+  return gotstream;
+}
+
+__declspec(dllexport)
+HTTPMessage* _stdcall GetHTTPMessageFromRequest(ServerApp*    p_application
+                                               ,IHttpContext* p_context
+                                               ,HTTPSite*     p_site
+                                               ,PHTTP_REQUEST p_request)
+{
+  HTTPMessage* msg = nullptr;
+  if(p_application)
+  {
+    p_application->StartCounter();
+    HTTPServerIIS* server = p_application->GetHTTPServer();
+    if(server)
+    {
+      msg = server->GetHTTPMessageFromRequest(p_context,p_site,p_request);
+    }
+    p_application->StopCounter();
+  }
+  return msg;
+}
+
+__declspec(dllexport)
+bool _stdcall HandleHTTPMessage(ServerApp* p_application,HTTPSite* p_site,HTTPMessage* p_message)
+{
+  bool handled = false;
+
+  if(p_application && p_message)
+  {
+    // Install SEH to regular exception translator
+    AutoSeTranslator trans(SeTranslator);
+
+    p_application->StartCounter();
+
+    // GO! Let the site handle the message
+    p_message->AddReference();
+    p_site->HandleHTTPMessage(p_message);
+
+    // If handled (Marlin has reset the request handle)
+    if (p_message->GetHasBeenAnswered())
+    {
+      handled = true;
+    }
+    p_message->DropReference();
+    p_application->StopCounter();
+  }
+  return handled;
+}
+
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// THE GENERAL SERVER APP ROOT CLASS
+//
+//////////////////////////////////////////////////////////////////////////
 
 // XTOR
 ServerApp::ServerApp(IHttpServer* p_iis

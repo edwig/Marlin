@@ -9,7 +9,14 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
-CHANGES IN VERSION 6.3.0 Beta
+CHANGES IN VERSION 6.4.0
+------------------------
+1)  Rewrite of the 'MarlinModule'. All actions, memory allocations and de-allocations have been
+    redirected to the loaded appliction DLL. This way the MarlinModule can service a wider range
+    of applictions of different Marlin versions.
+
+
+CHANGES IN VERSION 6.3.0
 -----------------------------------
 This is an partly finished version!
 -----------------------------------

@@ -197,6 +197,7 @@ public:
   bool            GetVerbTunneling()  { return m_verbTunnel;            };
   bool            GetIncoming()       { return m_incoming;              };
   bool            GetHasBeenAnswered(){ return m_request == NULL;       };
+  CString         GetReferrer()       { return m_referrer;              };
   Routing&        GetRouting()        { return m_routing;               };
   CString         GetHeader(CString p_name);
   CString         GetRoute(int p_index);
@@ -265,6 +266,7 @@ private:
   HTTPSite*       m_site        { nullptr };                    // Site for which message is received
   HeaderMap       m_headers;                                    // Extra HTTP headers (incoming / outgoing)
   // Message details
+  CString         m_referrer;                                   // Referrer of the message
   CString         m_contentType;                                // Content type of JSON message
   CString         m_acceptEncoding;                             // Accepted HTTP compression encoding
   Cookies         m_cookies;                                    // Cookies

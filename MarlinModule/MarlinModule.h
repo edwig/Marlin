@@ -55,10 +55,15 @@ public:
   }
   WebConfigIIS        m_config;
   CString             m_marlinDLL;
-  ServerApp*          m_application  { nullptr };
-  LogAnalysis*        m_analysisLog  { nullptr };
-  HMODULE             m_module       { NULL    };
-  CreateServerAppFunc m_createServer { nullptr };
+  ServerApp*          m_application     { nullptr };
+  LogAnalysis*        m_analysisLog     { nullptr };
+  HMODULE             m_module          { NULL    };
+  // DLL Loaded functions
+  CreateServerAppFunc m_createServer    { nullptr };
+  FindHTTPSiteFunc    m_findSite        { nullptr };
+  GetHTTPStreamFunc   m_getHttpStream   { nullptr };
+  GetHTTPMessageFunc  m_getHttpMessage  { nullptr };
+  HandleMessageFunc   m_handleMessage   { nullptr };
 };
 
 // All applications in the application pool

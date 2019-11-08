@@ -43,8 +43,12 @@ using IISModules = std::set<CString>;
 
 class ServerApp;
 
-// Exported function that must be called first in the loaded Marlin application DLL
-typedef ServerApp* (CALLBACK* CreateServerAppFunc)(IHttpServer*,const char*,const char*);
+// Exported functions that can be called from the MarlinModule
+typedef ServerApp*    (CALLBACK* CreateServerAppFunc)(IHttpServer*,const char*,const char*);
+typedef HTTPSite*     (CALLBACK* FindHTTPSiteFunc)   (ServerApp*,int port,PCWSTR p_url);
+typedef bool          (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
+typedef HTTPMessage*  (CALLBACK* GetHTTPMessageFunc) (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
+typedef bool          (CALLBACK* HandleMessageFunc)  (ServerApp*,HTTPSite* p_site,HTTPMessage*);
 
 extern IHttpServer*  g_iisServer;
 extern LogAnalysis*  g_analysisLog;

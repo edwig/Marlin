@@ -38,7 +38,6 @@
 #pragma once
 #include "HTTPLoglevel.h"
 #include <deque>
-#include <time.h>
 
 constexpr auto ANALYSIS_FUNCTION_SIZE = 48;                            // Size of prefix printing in logfile
 constexpr auto LOGWRITE_INTERVAL      = (CLOCKS_PER_SEC * 30);         // Median  is once per 30 seconds

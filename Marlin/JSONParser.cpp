@@ -442,9 +442,10 @@ JSONParser::ParseNumber()
   }
 
   // Locals
-  int    factor    = 1;
-  int    intNumber = 0;
-  double dblNumber = 0.0;
+  int     factor    = 1;
+  __int64 number    = 0;
+  int     intNumber = 0;
+  double  dblNumber = 0.0;
   JsonType type = JsonType::JDT_number_int;
 
   // See if we find a negative number
@@ -457,27 +458,29 @@ JSONParser::ParseNumber()
   // Finding the integer part
   while(*m_pointer && isdigit(*m_pointer))
   {
-    intNumber *= 10; // JSON is always in radix 10!
-    intNumber += (*m_pointer - '0');
+    number *= 10; // JSON is always in radix 10!
+    number += (*m_pointer - '0');
     ++m_pointer;
   }
 
   // Finding a broken number
-  if(*m_pointer == '.')
+  if(*m_pointer == '.' || tolower(*m_pointer) == 'e')
   {
     // Prepare
-    ++m_pointer;
-    type = JsonType::JDT_number_dbl;
-    dblNumber = (double)intNumber;
-    double decimPart = 1;
-
-    while(*m_pointer && isdigit(*m_pointer))
+    if(*m_pointer == '.')
     {
-      decimPart *= 10;
-      dblNumber += (*m_pointer - '0') / decimPart;
       ++m_pointer;
-    }
+      type = JsonType::JDT_number_dbl;
+      dblNumber = (double)number;
+      double decimPart = 1;
 
+      while(*m_pointer && isdigit(*m_pointer))
+      {
+        decimPart *= 10;
+        dblNumber += (*m_pointer - '0') / decimPart;
+        ++m_pointer;
+      }
+    }
     // Do the exponential?
     if(tolower(*m_pointer) == 'e')
     {
@@ -502,20 +505,35 @@ JSONParser::ParseNumber()
       }
       dblNumber *= pow(10.0,exp * fac);
     }
+
+    // Do not forget the sign
+    dblNumber *= factor;
+  }
+  else
+  {
+    number *= factor;
+    if((number > MAXINT32) || (number < MININT32))
+    {
+      type = JsonType::JDT_number_dbl;
+      dblNumber = (double)number;
+    }
+    else
+    {
+      intNumber = (int)number;
+    }
   }
 
   // Preserving our findings
   if(type == JsonType::JDT_number_int)
   {
-    m_valPointer->SetValue(intNumber * factor);
+    m_valPointer->SetValue(intNumber);
   }
   else // if(type == JDT_number_dbl)
   {
-    m_valPointer->SetValue(dblNumber * factor);
+    m_valPointer->SetValue(dblNumber);
   }
   return true;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 //

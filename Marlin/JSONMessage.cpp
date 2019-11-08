@@ -426,6 +426,7 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
   m_contentType    = p_message->GetContentType();
   m_acceptEncoding = p_message->GetAcceptEncoding();
   m_verbTunnel     = p_message->GetVerbTunneling();
+  m_referrer       = p_message->GetReferrer();
   m_incoming       = (p_message->GetCommand() != HTTPCommand::http_response);
 
   // Duplicate all cookies
@@ -630,7 +631,7 @@ JSONMessage::GetVerb()
 CString
 JSONMessage::GetRoute(int p_index)
 {
-  if(p_index >= 0 && p_index < m_routing.size())
+  if(p_index >= 0 && p_index < (int) m_routing.size())
   {
     return m_routing[p_index];
   }
