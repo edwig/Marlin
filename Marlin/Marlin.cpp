@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: Marlin.h
+// SourceFile: Marlin.cpp
 // Marlin: Internet server/client C++ Framework
 // 
 //  ______    _          _         _    _       _                           
@@ -35,35 +35,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
-#include "Version.h"
+#include "stdafx.h"
+#include "Marlin.h"
 
-// Constants in ServerMain and ServerApp
-// Define in the derived class from "MarlinServer" in the "LoadConstants()" function
-//
-extern const char* APPLICATION_NAME;       // Name of the application EXE file!!
-extern const char* PRODUCT_NAME;           // Short name of the product (one word only)
-extern const char* PRODUCT_DISPLAY_NAME;   // "Service for PRODUCT_NAME: <description of the service>"
-extern const char* PRODUCT_COPYRIGHT;      // Copyright line of the product (c) <year> etc.
-extern const char* PRODUCT_VERSION;        // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
-extern const char* PRODUCT_MESSAGES_DLL;   // Filename of the WMI Messages dll.
-extern const char* PRODUCT_SITE;           // Standard base URL absolute path e.g. "/MarlinServer/"
+// Not much here: just the names of a bunch of things
 
-// Selecting the right library to link with automatically
-// So we do not need to worry about which library to use in the linker settings
-#if defined _M_IX86
-#define MARLIN_PLATFORM "x86"
-#else
-#define MARLIN_PLATFORM "x64"
-#endif
-
-#if defined _DEBUG
-#define MARLIN_CONFIGURATION "D"
-#else
-#define MARLIN_CONFIGURATION "R"
-#endif 
-
-#ifndef MARLIN_NOAUTOLINK
-#pragma comment(lib,"Marlin_"                        MARLIN_PLATFORM MARLIN_CONFIGURATION ".lib")
-#pragma message("Automatically linking with Marlin_" MARLIN_PLATFORM MARLIN_CONFIGURATION ".lib")
-#endif 
+// Global constants for an application
+// Actual values are set in LoadConstants() in:
+// StandAlone : ServerMain.cpp
+// IIS Server : MarlinServer derived class
+const char* APPLICATION_NAME     = nullptr;  // Name of the application EXE file!!
+const char* PRODUCT_NAME         = nullptr;  // Short name of the product (one word only). Also used in the WMI event log.
+const char* PRODUCT_DISPLAY_NAME = nullptr;  // "Service for PRODUCT_NAME: <description of the service>"
+const char* PRODUCT_COPYRIGHT    = nullptr;  // Copyright line of the product (c) <year> etc.
+const char* PRODUCT_VERSION      = nullptr;  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
+const char* PRODUCT_MESSAGES_DLL = nullptr;  // Filename of the WMI Messages dll.
+const char* PRODUCT_SITE         = nullptr;  // Standard base URL absolute path e.g. "/MarlinServer/"

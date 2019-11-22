@@ -30,6 +30,7 @@
 // Service can be run as a stand-alone server
 //
 #include "stdafx.h"
+#include "Marlin.h"
 #include "ServerMain.h"
 #include "AppConfig.h"
 #include "MarlinServer.h"
@@ -80,25 +81,31 @@ HANDLE g_mtxRunning  = NULL;
 HANDLE g_mtxStopping = NULL;
 HANDLE g_eventSource = NULL;
 
+// Using STL namespaces
 using namespace std;
 
-int _tmain(int argc,TCHAR* argv[],TCHAR* /*envp[]*/)
+// THE MAIN PROGRAM
+
+int main(int argc,char* argv[],char* /*envp[]*/)
 {
   HMODULE hModule = ::GetModuleHandle(NULL);
   bool standAloneStart = false;
 
   if(hModule == NULL)
   {
-    _tprintf(_T("Fatal error: Windows-OS GetModuleHandle failed\n"));
+    printf("Fatal error: Windows-OS GetModuleHandle failed\n");
     return 1;
   }
 
   // initialize MFC and print and error on failure
   if(!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
   {
-    _tprintf(_T("MFC Initialisation has failed\n"));
+    printf("MFC Initialisation has failed\n");
     return 1;
   }
+
+  // Load ServerApp constants before anything else
+  LoadConstants();
 
   // Read the products config file
   ReadConfig();

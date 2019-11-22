@@ -41,11 +41,15 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Default values
+const char* PROGRAM_NAME = nullptr;  // The current program
 
-const char* PROGRAM_NAME = "ServerApplet";     // The current program
-const char* PRODUCT_NAME = "MarlinServer";     // Our server executable / DLL
-const char* PRODUCT_SITE = "/MarlinTest/";     // Our default base-URL
+// Default values
+void LoadConstants()
+{
+  PROGRAM_NAME = "ServerApplet";     // The current program
+  PRODUCT_NAME = "MarlinServer";     // Our server executable / DLL
+  PRODUCT_SITE = "/MarlinTest/";     // Our default base-URL
+}
 
 // ServerAppletApp
 
@@ -85,6 +89,9 @@ BOOL ServerAppletApp::InitInstance()
   SetRegistryKey("Marlin\\ServerApplet");
 
   int res = ParseCommandLine();
+
+  // Load names for Marlin
+  LoadConstants();
 
   // Work to do for an installer program
   if(res > 0)

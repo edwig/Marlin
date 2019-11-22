@@ -33,13 +33,12 @@
 TestMarlinServerAppFactory factory;
 
 // Generally this will only create ONE object
-// But for the sake of explanation, we have three here!
-// So we can have multiple applications in the same IIS application pool
 //
 ServerApp* 
 TestMarlinServerAppFactory::CreateServerApp(IHttpServer*  p_iis
                                            ,const char*   p_webroot
                                            ,const char*   p_appName)
 {
+  LoadConstants();
   return new TestMarlinServerApp(p_iis,p_webroot,p_appName);
 }

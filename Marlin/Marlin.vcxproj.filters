@@ -336,6 +336,9 @@
     <ClCompile Include="ExecuteProcess.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="Marlin.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">

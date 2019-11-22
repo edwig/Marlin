@@ -67,6 +67,9 @@ public:
            ,const char*   p_appName);
   virtual ~ServerApp();
 
+  // BEWARE: MarlinModule uses VTABLE in this order
+  //         ONLY ADD NEW virtual overrides AT THE END!!
+
   // Starting and stopping the server
   virtual void InitInstance();
   virtual void ExitInstance();
@@ -85,6 +88,9 @@ public:
 
   // Server app was correctly started by MarlinIISModule
   virtual bool CorrectlyStarted();
+
+  // Add new MarlinModule used virtual overrides at this end of the table!
+  // END OF THE VTABLE
 
   // GETTERS
   // Never virtual. Derived classes should use these!!
@@ -135,4 +141,3 @@ public:
 };
 
 extern ServerAppFactory* appFactory;
-

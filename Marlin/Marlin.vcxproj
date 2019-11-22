@@ -119,6 +119,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
       <ProgramDataBaseFileName>$(OutDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -206,6 +207,7 @@
     <ClCompile Include="IISDebug.cpp" />
     <ClCompile Include="JSONMessage.cpp" />
     <ClCompile Include="JSONParser.cpp" />
+    <ClCompile Include="Marlin.cpp" />
     <ClCompile Include="MarlinServer.cpp" />
     <ClCompile Include="MediaType.cpp" />
     <ClCompile Include="MultiPartBuffer.cpp" />

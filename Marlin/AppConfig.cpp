@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Marlin.h"
 #include "AppConfig.h"
 #include "MarlinServer.h"
 #include "WebConfig.h"

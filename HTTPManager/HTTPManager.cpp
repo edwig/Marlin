@@ -35,6 +35,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// Does nothing for the HTTPManager application
+void LoadConstants()
+{
+}
+
 // HTTPManagerApp
 
 BEGIN_MESSAGE_MAP(HTTPManagerApp, CWinApp)

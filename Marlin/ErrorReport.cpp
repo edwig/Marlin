@@ -33,12 +33,12 @@
 #include "HTTPMessage.h"
 #include "AutoCritical.h"
 #include "Version.h"
+#include "ServiceReporting.h"
 #include <io.h>
 #include <iostream>
 #include <fstream>
 #include <exception>
 #include <signal.h>
-#include <assert.h>
 #include <memory>
 
 #ifdef _DEBUG
@@ -51,7 +51,7 @@ static char THIS_FILE[] = __FILE__;
 __declspec(thread) bool g_exception = false;
 __declspec(thread) bool g_reportException = true;
 
-static ErrorReport* s_theServer = NULL;
+static ErrorReport* g_instance = NULL;
 
 // Names for exceptions and signals
 //
@@ -77,7 +77,7 @@ Exceptions[] =
   { EXCEPTION_ARRAY_BOUNDS_EXCEEDED,    "Array bounds exceeded"                     },
   { EXCEPTION_BREAKPOINT,               "Breakpoint"                                },
   { EXCEPTION_DATATYPE_MISALIGNMENT,    "Datatype misalignment"                     },
-  { EXCEPTION_FLT_DENORMAL_OPERAND,     "Denormal floating-point operand"           },
+  { EXCEPTION_FLT_DENORMAL_OPERAND,     "Denormalized floating-point operand"       },
   { EXCEPTION_FLT_DIVIDE_BY_ZERO,       "Floating-point divide by zero"             },
   { EXCEPTION_FLT_INEXACT_RESULT,       "Inexact floating-point result"             },
   { EXCEPTION_FLT_INVALID_OPERATION,    "Invalid floating-point operation"          },
@@ -255,41 +255,56 @@ ErrorReportWriteToFile(const CString& p_filename
 //
 ErrorReport::ErrorReport()
 {
-  assert(s_theServer == NULL);
-  s_theServer = this;
+  if(g_instance != nullptr)
+  {
+    SvcReportErrorEvent(false,__FUNCTION__,"Double CTOR of ErrorReport");
+    abort();
+  }
+  g_instance = this;
   InitializeCriticalSection(&m_lock);
 }
 
 ErrorReport::~ErrorReport()
 {
-  assert(s_theServer == this);
-  s_theServer = NULL;
+  if(g_instance == nullptr)
+  {
+    SvcReportErrorEvent(false, __FUNCTION__, "No registered ErrorReport found in DTOR");
+  }
+  g_instance = nullptr;
   DeleteCriticalSection(&m_lock);
 }
 
 /*static*/ void
 ErrorReport::Report(const CString& p_subject, unsigned int p_skip /* = 0 */, CString p_directory, CString p_url)
 {
-  assert(s_theServer != NULL);
+  if(g_instance == nullptr)
+  {
+    SvcReportErrorEvent(false, __FUNCTION__, "Missing registered ErrorReport");
+    abort();
+  }
 
   // One thread at the time
-  AutoCritSec lock(&(s_theServer->m_lock));
+  AutoCritSec lock(&(g_instance->m_lock));
 
   // Send the report
   StackTrace trace(p_skip + 1);
-  s_theServer->DoReport(p_subject,trace,p_directory,p_url);
+  g_instance->DoReport(p_subject,trace,p_directory,p_url);
 }
 
 /*static*/ void
 ErrorReport::Report(const CString& p_subject,const StackTrace& p_trace,CString p_directory,CString p_url)
 {
-  assert(s_theServer != NULL);
+  if(g_instance == nullptr)
+  {
+    SvcReportErrorEvent(false, __FUNCTION__, "Missing registered ErrorReport");
+    abort();
+  }
 
   // One thread at the time
-  AutoCritSec lock(&(s_theServer->m_lock));
+  AutoCritSec lock(&(g_instance->m_lock));
 
   // Send the report
-  s_theServer->DoReport(p_subject,p_trace,p_directory,p_url);
+  g_instance->DoReport(p_subject,p_trace,p_directory,p_url);
 }
 
 /*static*/ bool
@@ -315,10 +330,14 @@ ErrorReport::Report(DWORD p_errorCode
     g_reportException = true;
     return false;
   }
-  assert(s_theServer != NULL);
+  if(g_instance == nullptr)
+  {
+    SvcReportErrorEvent(false, __FUNCTION__, "Missing registered ErrorReport");
+    abort();
+  }
 
   // One thread at the time
-  AutoCritSec lock(&(s_theServer->m_lock));
+  AutoCritSec lock(&(g_instance->m_lock));
 
   // Getting the subject
   CString subject;
@@ -383,7 +402,7 @@ ErrorReport::Report(DWORD p_errorCode
   StackTrace trace(p_exception->ContextRecord, p_errorCode == EXCEPTION_CPP ? 2 : 0);
 
   // Sending the report
-  s_theServer->DoReport(subject,trace,p_directory,p_url);
+  g_instance->DoReport(subject,trace,p_directory,p_url);
 
   // Reset the exception handler
   return false;
@@ -392,10 +411,14 @@ ErrorReport::Report(DWORD p_errorCode
 /*static*/ void
 ErrorReport::Report(int p_signal,unsigned int p_skip /* = 0 */,CString p_directory,CString p_url)
 {
-  assert(s_theServer != NULL);
+  if(g_instance == nullptr)
+  {
+    SvcReportErrorEvent(false, __FUNCTION__, "Missing registered ErrorReport");
+    abort();
+  }
 
   // One thread at the time
-  AutoCritSec lock(&(s_theServer->m_lock));
+  AutoCritSec lock(&(g_instance->m_lock));
 
   // Getting the subject
   CString subject;
@@ -415,7 +438,7 @@ ErrorReport::Report(int p_signal,unsigned int p_skip /* = 0 */,CString p_directo
   StackTrace trace(p_skip + 1);
 
   // Sending an error report
-  s_theServer->DoReport(subject,trace,p_directory,p_url);
+  g_instance->DoReport(subject,trace,p_directory,p_url);
 }
 
 // Standard crash report as a file on the webroot URL directory

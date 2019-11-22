@@ -26,6 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
+#include "Marlin.h"
 #include "ServiceReporting.h"
 #include "AutoCritical.h"
 #include "ServerMain.h"
@@ -42,9 +43,8 @@ static char THIS_FILE[] = __FILE__;
 // See MSDN: ReportEvent function
 #define EVENTBUFFER  (32 * 1024)
 
-char*            g_eventBuffer = NULL;
+char*            g_eventBuffer = nullptr;
 CRITICAL_SECTION g_eventBufferLock;
-extern char      g_svcname[];
 
 void
 SvcStartEventBuffer()
@@ -60,7 +60,7 @@ SvcFreeEventBuffer()
   if(g_eventBuffer)
   {
     free(g_eventBuffer);
-    g_eventBuffer = NULL;
+    g_eventBuffer = nullptr;
   }
 
   DeleteCriticalSection(&g_eventBufferLock);
@@ -79,7 +79,7 @@ SvcAllocEventBuffer()
     return;
   }
   g_eventBuffer = (char*)malloc(EVENTBUFFER + 1);
-  if(g_eventBuffer == NULL)
+  if(g_eventBuffer == nullptr)
   {
     SvcReportSuccessEvent("ERROR: Cannot make a buffer for errors and events");
   }
@@ -104,22 +104,22 @@ SvcReportInfoEvent(bool p_doFormat,LPCTSTR p_message,...)
     StringCchCopy(g_eventBuffer,EVENTBUFFER,p_message);
   }
 
-  hEventSource = OpenEventLog(NULL,g_svcname);
+  hEventSource = OpenEventLog(nullptr,PRODUCT_NAME);
 
-  if(hEventSource != NULL)
+  if(hEventSource != nullptr)
   {
-    lpszStrings[0] = g_svcname;
+    lpszStrings[0] = PRODUCT_NAME;
     lpszStrings[1] = g_eventBuffer;
 
     ReportEvent(hEventSource,                 // event log handle
                 EVENTLOG_INFORMATION_TYPE,    // event type
                 0,                            // event category
                 SVC_INFO,                     // event identifier
-                NULL,                         // no security identifier
+                nullptr,                      // no security identifier
                 2,                            // size of lpszStrings array
                 0,                            // no binary data
                 lpszStrings,                  // array of strings
-                NULL);                        // no binary data
+                nullptr);                     // no binary data
     CloseEventLog(hEventSource);
   }
 }
@@ -130,22 +130,22 @@ SvcReportSuccessEvent(LPCTSTR p_message)
   HANDLE hEventSource;
   LPCTSTR lpszStrings[2];
 
-  hEventSource = OpenEventLog(NULL,g_svcname);
+  hEventSource = OpenEventLog(nullptr,PRODUCT_NAME);
 
-  if(hEventSource != NULL)
+  if(hEventSource != nullptr)
   {
-    lpszStrings[0] = g_svcname;
+    lpszStrings[0] = PRODUCT_NAME;
     lpszStrings[1] = p_message;
 
     ReportEvent(hEventSource,        // event log handle
                 EVENTLOG_SUCCESS,    // event type
                 0,                   // event category
                 SVC_SUCCESS,         // event identifier
-                NULL,                // no security identifier
+                nullptr,             // no security identifier
                 2,                   // size of lpszStrings array
                 0,                   // no binary data
                 lpszStrings,         // array of strings
-                NULL);               // no binary data
+                nullptr);            // no binary data
 
     CloseEventLog(hEventSource);
   }
@@ -177,13 +177,13 @@ SvcReportErrorEvent(bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_message,...)
     StringCchCopy(g_eventBuffer,EVENTBUFFER,p_message);
   }
 
-  hEventSource = OpenEventLog(NULL,g_svcname);
+  hEventSource = OpenEventLog(nullptr,PRODUCT_NAME);
 
   if(hEventSource != nullptr)
   {
     StringCchPrintf(Buffer,256,"Function %s. Last OS error: [%d] %s",szFunction,lastError,GetLastErrorAsString(lastError).GetString());
 
-    lpszStrings[0] = g_svcname;
+    lpszStrings[0] = PRODUCT_NAME;
     lpszStrings[1] = g_eventBuffer;
     lpszStrings[2] = Buffer;
 
@@ -191,11 +191,11 @@ SvcReportErrorEvent(bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_message,...)
                 EVENTLOG_ERROR_TYPE, // event type
                 0,                   // event category
                 SVC_ERROR,           // event identifier
-                NULL,                // no security identifier
+                nullptr,             // no security identifier
                 3,                   // size of lpszStrings array
                 0,                   // no binary data
                 lpszStrings,         // array of strings
-                NULL);               // no binary data
+                nullptr);            // no binary data
     CloseEventLog(hEventSource);
   }
 }

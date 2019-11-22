@@ -34,7 +34,6 @@
 #define qprintf ((TestMarlinServer*)s_theServer)->Server_qprintf
 #define xerror  ((TestMarlinServer*)s_theServer)->Server_xerror
 
-
 class TestMarlinServer : public WebServiceServer, MarlinServer
 {
 public:

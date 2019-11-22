@@ -37,14 +37,18 @@
 #include "HTTPLoglevel.h"
 #include "AutoCritical.h"
 
-// Define in the derived class from "MarlinServer"
-const char* APPLICATION_NAME      = "MarlinServer.exe";                     // Name of the application EXE file!!
-const char* PRODUCT_NAME          = "MarlinServer";                         // Short name of the product (one word only)
-const char* PRODUCT_DISPLAY_NAME  = "Service for MarlinServer tester";      // "Service for PRODUCT_NAME: <description of the service>"
-const char* PRODUCT_COPYRIGHT     = "Copyright (c) 2019 ir. W.E. Huisman";  // Copyright line of the product (c) <year> etc.
-const char* PRODUCT_VERSION       = "6.3.0";                                // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
-const char* PRODUCT_MESSAGES_DLL  = "MarlinServerMessages.dll";             // Filename of the WMI Messages dll.
-const char* PRODUCT_SITE          = "/MarlinTest/";                         // Standard base URL absolute path e.g. "/MarlinServer/"
+// Load product and application constants
+void LoadConstants()
+{
+  // These constants reside in the "ServerMain"
+  APPLICATION_NAME      = "MarlinServer.exe";                     // Name of the application EXE file!!
+  PRODUCT_NAME          = "MarlinServer";                         // Short name of the product (one word only)
+  PRODUCT_DISPLAY_NAME  = "Service for MarlinServer tester";      // "Service for PRODUCT_NAME: <description of the service>"
+  PRODUCT_COPYRIGHT     = "Copyright (c) 2019 ir. W.E. Huisman";  // Copyright line of the product (c) <year> etc.
+  PRODUCT_VERSION       = "6.4.0";                                // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
+  PRODUCT_MESSAGES_DLL  = "MarlinServerMessages.dll";             // Filename of the WMI Messages dll.
+  PRODUCT_SITE          = "/MarlinTest/";                         // Standard base URL absolute path e.g. "/MarlinServer/"
+}
 
 // In case we do **NOT** use IIS and the application factory, This is the one and only server
 #ifndef MARLIN_IIS
