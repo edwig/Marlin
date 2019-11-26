@@ -24,6 +24,7 @@
   
  ; Directories containing our files
  !define InputDirectory64                     "C:\Develop\Marlin\BinRelease_x64"
+ !define ExtraDirectory                       "C:\Develop\Marlin\ExtraParts"
  !define RedistMap                            "C:\Develop\Marlin\Documentation"
 
 ;--------------------------------------------------------------------------------------------------------
@@ -162,6 +163,8 @@ Section "MarlinModule"
  !insertmacro LogDetail "Copiing files."
 
  File /r "${InputDirectory64}\MarlinModule${PRODUCT_EXT}.dll"
+ File /r "${InputDirectory64}\MarlinModule${PRODUCT_EXT}.pdb"
+ File /r "${ExtraDirectory}\dbghelp64.dll"
 
  ; Registering the module
  !insertmacro LogDetail "Registering the MarlinModule with IIS"
@@ -214,6 +217,7 @@ Section Uninstall
 
  !insertmacro LogDetail "Removing files from : $SYSDIR\inetsrv"
  Delete /REBOOTOK "$SYSDIR\inetsrv\MarlinModule${PRODUCT_EXT}.dll"
+ Delete /REBOOTOK "$SYSDIR\inetsrv\MarlinModule${PRODUCT_EXT}.pdb"
  
   ;De-Registration of the product.
  DetailPrint "De-register of ${PRODUCT_NAME}"
