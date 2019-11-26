@@ -14,14 +14,14 @@ CHANGES IN VERSION 6.4.0
 1)  Rewrite of the 'MarlinModule'. All actions, memory allocations and de-allocations have been
     redirected to the loaded appliction DLL. This way the MarlinModule can service a wider range
     of applictions of different Marlin versions.
-	BUT: See the interface header of "ServerApp". The order of the vtable with virtual methods
-	     there should stay stable for a long time in order to service later Marlin versions.
-		 You can add virtuals, but never remove or re-order the current "ServerApp.h" header.
+	  BUT: See the interface header of "ServerApp". The order of the vtable with virtual methods
+	       there should stay stable for a long time in order to service later Marlin versions.
+		     You can add virtuals, but never remove or re-order the current "ServerApp.h" header.
 2)  Remark the 'C' exported functions in "ServerApp.cpp" where the MarlinModule calls the 
     newly created application. This is where we handle the daily work for the application.
 3)  Smaller runtimers by rewriting the global constant names to a isolated object.
     Runtimers should implement a "LoadConstants()" function to set there names, if so required.
-	Mostly in the "MarlinServer" derived class or a main function.
+	  Mostly in the "MarlinServer" derived class or a main function.
 
 CHANGES IN VERSION 6.3.0
 -----------------------------------
