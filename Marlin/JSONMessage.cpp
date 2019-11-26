@@ -584,7 +584,17 @@ JSONMessage::Reset()
   // Reset error
   m_errorstate = false;
   m_lastError.Empty();
-  // leave the rest for the destination
+
+  // Routing is reset
+  m_routing.clear();
+
+  // Do not use incoming headers for outgoing headers
+  m_headers.clear();
+
+  // Leave the rest for the destination
+  // Leave access token untouched!
+  // Leave cookie cache untouched!
+  // Leave HTTPSite and HTTP_REQUEST for the answer
 }
 
 // Parse the URL, true if legal
