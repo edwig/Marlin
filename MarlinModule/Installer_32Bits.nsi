@@ -5,13 +5,13 @@
 ;
 ; Copyright (c) 2019 Edwig Huisman
 ;
-; Date of last change: 03-07-2019
-; Version:             6.1
+; Date of last change: 11-12-2019
+; Version:             6.4.1
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 32Bits"
- !define PRODUCT_VERSION                      "6.4.0.12"
+ !define PRODUCT_VERSION                      "6.4.1.14"
  !define PRODUCT_EXT                          "64"
- !define PRODUCT_BUILDNUMBER                  "12"
+ !define PRODUCT_BUILDNUMBER                  "14"
  !define PRODUCT_PUBLISHER                    "Edwig Huisman"
  !define PRODUCT_WEB_SITE                     "https://github.com/Edwig/Marlin"
  !define PRODUCT_DIR_REGKEY                   "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"

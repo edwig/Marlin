@@ -538,8 +538,13 @@ MarlinGlobalFactory::AlreadyLoaded(APP* p_app,CString p_path_to_dll)
   {
     if(p_path_to_dll.Compare(app.second->m_marlinDLL) == 0)
     {
-      p_app->m_module       = app.second->m_module;
+      p_app->m_module          = app.second->m_module;
       p_app->m_createServerApp = app.second->m_createServerApp;
+      p_app->m_findSite        = app.second->m_findSite;
+      p_app->m_getHttpStream   = app.second->m_getHttpStream;
+      p_app->m_getHttpMessage  = app.second->m_getHttpMessage;
+      p_app->m_handleMessage   = app.second->m_handleMessage;
+
       return true;
     }
   }

@@ -9,6 +9,12 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.4.1
+------------------------
+1)  Running multiple websites in IIS on the same application pool with the same MarlinModule
+    crashed our websites. This was due to a bug in the detection of the already loaded 
+    application DLL and the pointers to the functions in the DLL.
+
 CHANGES IN VERSION 6.4.0
 ------------------------
 1)  Rewrite of the 'MarlinModule'. All actions, memory allocations and de-allocations have been
