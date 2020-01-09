@@ -287,12 +287,17 @@ XMLMessage::SaveFile(const CString& p_fileName,bool p_withBom /*= false*/)
     }
 
     CString inhoud = Print();
+    // Allow derived classes (SOAP) to encrypt the whole message
+    EncryptMessage(inhoud);
     if(fwrite(inhoud.GetString(),inhoud.GetLength(),1,file) == 1)
     {
       result = true;
     }
     // Close and flush the file
-    fclose(file);
+    if(fclose(file))
+    {
+      return false;
+    }
   }
   return result;
 }
@@ -667,6 +672,14 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   }
 
   return message;
+}
+
+// Encrypt the whole message: yielding a new message
+void
+XMLMessage::EncryptMessage(CString& /*p_message*/)
+{
+  // Does nothing for now.
+  // Only used in derived classes
 }
 
 #pragma endregion Parsing

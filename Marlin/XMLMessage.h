@@ -192,11 +192,11 @@ public:
   // FILE OPERATIONS
 
   // Load from file
-  bool            LoadFile(const CString& p_fileName);
-  bool            LoadFile(const CString& p_fileName, XMLEncoding p_encoding);
+  virtual bool    LoadFile(const CString& p_fileName);
+  virtual bool    LoadFile(const CString& p_fileName, XMLEncoding p_encoding);
   // Save to file
-  bool            SaveFile(const CString& p_fileName,bool p_withBom = false);
-  bool            SaveFile(const CString& p_fileName,XMLEncoding p_encoding,bool p_withBom = false);
+  virtual bool    SaveFile(const CString& p_fileName,bool p_withBom = false);
+  virtual bool    SaveFile(const CString& p_fileName,XMLEncoding p_encoding,bool p_withBom = false);
 
   // SETTERS
   // Set the output encoding of the message
@@ -297,6 +297,8 @@ public:
   void            DropReference();
 
 protected:
+  // Encrypt the whole message: yielding a new message
+  virtual void    EncryptMessage(CString& p_message);
   // Print the WSDL Comments in the message
   CString         PrintWSDLComment(XMLElement* p_element);
   // Parser for the XML texts

@@ -140,6 +140,15 @@ public:
   // Parse incoming GET URL to SOAP parameters
   virtual void    Url2SoapParameters(CrackedURL& p_url);
 
+  // FILE OPERATIONS
+
+  // Load from file
+  virtual bool    LoadFile(const CString& p_fileName);
+  virtual bool    LoadFile(const CString& p_fileName, XMLEncoding p_encoding);
+  // Save to file
+  virtual bool    SaveFile(const CString& p_fileName, bool p_withBom = false);
+  virtual bool    SaveFile(const CString& p_fileName, XMLEncoding p_encoding, bool p_withBom = false);
+
   // SETTERS
 
   // Set the alternative namespace
@@ -327,8 +336,12 @@ public:
   // OPERATORS
   SOAPMessage* operator=(JSONMessage& p_json);
 
+  // Complete the message (members to XML)
+  void            CompleteTheMessage();
+
 protected:
-  friend          JSONParserSOAP;
+  // Encrypt the whole message: yielding a new message
+  virtual void    EncryptMessage(CString& p_message);
 
   // Set the SOAP 1.1 SOAPAction from the HTTP protocol
   void            SetSoapActionFromHTTTP(CString p_action);
@@ -378,8 +391,6 @@ protected:
   void            EncryptNode(CString& p_body);
   // Encrypt the body: yielding a new body
   void            EncryptBody();
-  // Encrypt the whole message: yielding a new message
-  void            EncryptMessage(CString& p_message);
   // Get body signing value from header
   CString         CheckBodySigning();
   // Get body encryption value from body

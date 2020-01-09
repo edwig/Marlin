@@ -546,10 +546,10 @@ JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap)
                ,m_soap(p_soap)
 {
   // Construct the correct contents!!
-  p_soap->GetSoapMessage();
+  p_soap->CompleteTheMessage();
 
   JSONvalue&  valPointer = *m_message->m_value;
-  XMLElement& element    = *m_soap->m_paramObject;
+  XMLElement& element    = *m_soap->GetParameterObjectNode();
 
   ParseMain(valPointer,element);
 }

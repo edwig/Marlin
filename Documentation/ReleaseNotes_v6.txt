@@ -9,6 +9,11 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.4.2 (Beta stage)
+------------------------
+1)  Saving and loading XMLMessages and SOAPMessages has been extended so that SOAPMessages
+    can be saved to file correctly and read back in the correct form.
+
 CHANGES IN VERSION 6.4.1
 ------------------------
 1)  Running multiple websites in IIS on the same application pool with the same MarlinModule

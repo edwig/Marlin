@@ -574,6 +574,46 @@ SOAPMessage::operator=(JSONMessage& p_json)
 
 #pragma endregion ReUse
 
+#pragma region File
+
+// Load from file
+bool
+SOAPMessage::LoadFile(const CString& p_fileName)
+{
+  if(XMLMessage::LoadFile(p_fileName))
+  {
+    CheckAfterParsing();
+    return true;
+  }
+  return false;
+}
+
+bool
+SOAPMessage::LoadFile(const CString& p_fileName,XMLEncoding p_encoding)
+{
+  m_encoding = p_encoding;
+  return LoadFile(p_fileName);
+}
+
+bool
+SOAPMessage::SaveFile(const CString& p_fileName,bool p_withBom /*= false*/)
+{
+  // Make sure all members are set to XML
+  CompleteTheMessage();
+
+  // Whole message encryption is done in the saving function!
+  return XMLMessage::SaveFile(p_fileName,p_withBom);
+}
+
+bool
+SOAPMessage::SaveFile(const CString& p_fileName,XMLEncoding p_encoding,bool p_withBom /*= false*/)
+{
+  m_encoding = p_encoding;
+  return SaveFile(p_fileName,p_withBom);
+}
+
+#pragma endregion File Loading and Saving
+
 #pragma region GettersSetters
 
 // Addressing relates to reliability
@@ -1048,40 +1088,46 @@ SOAPMessage::GetSoapMessage()
   // Printing the body of the message
   if(m_soapVersion > SoapVersion::SOAP_10)
   {
-    // Make sure we have the right envelope and header
-    // With the correct namespaces in it
-    SetSoapEnvelope();
-    SetSoapHeader();
-
-    if(!m_soapFaultCode.IsEmpty())
-    {
-      // Print the soap fault stack
-      SetBodyToFault();
-    }
-    else
-    {
-      SetSoapBody();
-
-      if(m_encryption == XMLEncryption::XENC_Signing)
-      {
-        AddToHeaderSigning();
-      }
-      else if(m_encryption == XMLEncryption::XENC_Body)
-      {
-        EncryptBody();
-      }
-    }
+    // Make sure all members are set to XML
+    CompleteTheMessage();
   }
 
   // Let the XML object print the message
   CString message = XMLMessage::Print();
 
   // Encryption of the whole-message comes last
-  if(m_encryption == XMLEncryption::XENC_Message)
-  {
-    EncryptMessage(message);
-  }
+  EncryptMessage(message);
+
   return message;
+}
+
+// Complete the message (members to XML)
+void
+SOAPMessage::CompleteTheMessage()
+{
+  // Make sure we have the right envelope and header
+  // With the correct namespaces in it
+  SetSoapEnvelope();
+  SetSoapHeader();
+
+  if(!m_soapFaultCode.IsEmpty())
+  {
+    // Print the soap fault stack
+    SetBodyToFault();
+  }
+  else
+  {
+    SetSoapBody();
+
+    if(m_encryption == XMLEncryption::XENC_Signing)
+    {
+      AddToHeaderSigning();
+    }
+    else if(m_encryption == XMLEncryption::XENC_Body)
+    {
+      EncryptBody();
+    }
+  }
 }
 
 CString
@@ -1102,22 +1148,11 @@ SOAPMessage::GetJsonMessage(bool p_full /*=false*/,bool p_attributes /*=false*/)
   // Printing the body of the message
   if(m_soapVersion > SoapVersion::SOAP_10)
   {
-    // Make sure we have the right envelope and header
-    // With the correct namespaces in it
-    SetSoapEnvelope();
-    SetSoapHeader();
-
-    if(!m_soapFaultCode.IsEmpty())
-    {
-      // Print the soap fault stack
-      SetBodyToFault();
-    }
-    else
-    {
-      SetSoapBody();
-    }
+    // Make sure all members are set to XML
+    CompleteTheMessage();
   }
   // Let the XML object print the message
+  // Full message encryption is NOT supported
   if(p_full)
   {
     return XMLMessage::PrintJson(p_attributes);
@@ -1585,7 +1620,6 @@ SOAPMessage::CheckAfterParsing()
   if(fault)
   {
     HandleSoapFault(fault);
-    return;
   }
 }
 
@@ -2144,6 +2178,12 @@ SOAPMessage::EncryptBody()
 void
 SOAPMessage::EncryptMessage(CString& p_message)
 {
+  // Only if we should encrypt it
+  if(m_encryption != XMLEncryption::XENC_Message)
+  {
+    return;
+  }
+
   // If we have a SOAP fault, return unencrypted
   if(!m_soapFaultCode  .IsEmpty() ||
      !m_soapFaultActor .IsEmpty() ||
