@@ -5,12 +5,12 @@
 ;
 ; Copyright (c) 2019 Edwig Huisman
 ;
-; Date of last change: 11-12-2019
+; Date of last change: 14-01-2020
 ; Version:             6.4.1
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 64Bits"
  !define PRODUCT_VERSION                      "6.4.1.14"
- !define PRODUCT_EXT                          "64"
+ !define PRODUCT_EXT                          "641"
  !define PRODUCT_BUILDNUMBER                  "14"
  !define PRODUCT_PUBLISHER                    "Edwig Huisman"
  !define PRODUCT_WEB_SITE                     "https://github.com/Edwig/Marlin"

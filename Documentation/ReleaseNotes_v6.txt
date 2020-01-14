@@ -13,6 +13,9 @@ CHANGES IN VERSION 6.4.2 (Beta stage)
 ------------------------
 1)  Saving and loading XMLMessages and SOAPMessages has been extended so that SOAPMessages
     can be saved to file correctly and read back in the correct form.
+2)  BruteForce attacks can now be detected on SSE streams. Applications can register a 
+    misbehaving stream (sender IP address and URL) and these will be locked out by the server
+    for a period of time (for now hard coded on 10 seconds)
 
 CHANGES IN VERSION 6.4.1
 ------------------------
