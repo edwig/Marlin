@@ -522,6 +522,10 @@ HTTPServerSync::RunHTTPServer()
       if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
       {
         CString absolutePath = CW2A(request->CookedUrl.pAbsPath);
+        if(CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
+        {
+          continue;
+        }
         EventStream* stream = SubscribeEventStream((PSOCKADDR_IN6) sender
                                                    ,remDesktop
                                                    ,site

@@ -65,6 +65,8 @@ constexpr auto INIT_HTTP_BUFFERSIZE   = (32 * 1024);
 // Initial HTTP backlog queue length
 constexpr auto INIT_HTTP_BACKLOGQUEUE = 64;
 constexpr auto MAXX_HTTP_BACKLOGQUEUE = 640;
+// Timout after bruteforce attack
+constexpr auto TIMEOUT_BRUTEFORCE     = (10 * CLOCKS_PER_SEC);
 
 // Static globals for the server as a whole
 // Can be set through the web.config reading of the HTTPServer
@@ -103,6 +105,7 @@ typedef struct _HTTP_SSL_PROTOCOL_INFO
 HTTP_SSL_PROTOCOL_INFO,*PHTTP_SSL_PROTOCOL_INFO;
 #endif
 
+// How to handle the "server" header
 enum class SendHeader
 {
   HTTP_SH_MICROSOFT = 1         // Send standard Microsoft server header
@@ -111,6 +114,15 @@ enum class SendHeader
  ,HTTP_SH_WEBCONFIG             // Send server from the web.config
  ,HTTP_SH_HIDESERVER            // Hide the server type - do not send header
 };
+
+// Registration of DDOS attacks on the server
+typedef struct
+{
+  SOCKADDR_IN6  m_sender;
+  CString       m_abspath;
+  clock_t       m_beginTime;
+}
+DDOS;
 
 // Forward declarations
 class LogAnalysis;
@@ -130,6 +142,7 @@ using URLGroupMap = std::vector<HTTPURLGroup*>;
 using UKHeaders   = std::multimap<CString,CString>;
 using SocketMap   = std::map<CString,WebSocket*>;;
 using RequestMap  = std::deque<HTTPRequest*>;
+using DDOSMap     = std::vector<DDOS>;
 
 // Global error variable in Thread-Local-Storage
 // Per-thread basis error status
@@ -366,6 +379,9 @@ public:
                                     ,CString&        p_pad
                                     ,HTTP_OPAQUE_ID  p_requestID
                                     ,HANDLE          p_token);
+  // DDOS Attack mechanism
+  void       RegisterDDOSAttack  (PSOCKADDR_IN6 p_sender,CString p_path);
+  bool       CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,CString p_path);
 
 protected:
   // Cleanup the server
@@ -380,6 +396,7 @@ protected:
   virtual void  InitLogging();
   // Initialise the ThreadPool
   virtual void  InitThreadPool();
+
   // Register a URL to listen on
   bool      RegisterSite(HTTPSite* p_site,CString p_urlPrefix);
   // General checks before starting
@@ -446,6 +463,8 @@ protected:
   CRITICAL_SECTION        m_eventLock;              // Pulsing events or accessing streams
   // WebSocket
   SocketMap               m_sockets;                // Registered WebSockets
+  // Registered DDOS Attacks
+  DDOSMap                 m_attacks;                // Registration of DDOS attacks
 };
 
 inline CString

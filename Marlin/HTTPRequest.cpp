@@ -368,6 +368,10 @@ HTTPRequest::ReceivedRequest()
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = CW2A(m_request->CookedUrl.pAbsPath);
+    if(m_server->CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
+    {
+      return;
+    }
     EventStream* stream = m_server->SubscribeEventStream((PSOCKADDR_IN6) sender
                                                          ,remDesktop
                                                          ,m_site

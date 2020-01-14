@@ -377,8 +377,8 @@ HTTPServerIIS::GetWebConfigIIS()
 
 EventStream*
 HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
-                                        ,HTTPSite*     p_site
-                                        ,PHTTP_REQUEST p_request)
+                                       ,HTTPSite*     p_site
+                                       ,PHTTP_REQUEST p_request)
 {
   // Grab the senders accepted types
   CString acceptTypes = p_request->Headers.KnownHeaders[HttpHeaderAccept].pRawValue;
@@ -391,20 +391,26 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
     USES_CONVERSION;
 
     // Grab the rest of the needed content out of the request
-    PSOCKADDR sender       = p_request->Address.pRemoteAddress;
+    PSOCKADDR_IN6 sender   = (PSOCKADDR_IN6)p_request->Address.pRemoteAddress;
+    CString   absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
+
+    if(CheckUnderDDOSAttack(sender,absolutePath))
+    {
+      return nullptr;
+    }
+
+    // Grab the raw URL and the dekstop for the stream
     CString   rawUrl       = CW2A(p_request->CookedUrl.pFullUrl);
     int       remDesktop   = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
                                               ,p_request->Headers.pUnknownHeaders);
-    CString   absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
-
     // Open an event stream
-    EventStream* stream = SubscribeEventStream((PSOCKADDR_IN6)sender
-                                               ,remDesktop
-                                               ,p_site
-                                               ,p_site->GetSite()
-                                               ,absolutePath
-                                               ,(HTTP_OPAQUE_ID)p_context
-                                               ,NULL);
+    EventStream* stream = SubscribeEventStream(sender
+                                              ,remDesktop
+                                              ,p_site
+                                              ,p_site->GetSite()
+                                              ,absolutePath
+                                              ,(HTTP_OPAQUE_ID)p_context
+                                              ,NULL);
     if(stream)
     {
       // Getting the impersonated user

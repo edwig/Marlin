@@ -2113,3 +2113,83 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,u
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// DDOS Attacks
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Applications may call this registration after serveral failed 
+// login attempts of serveral failed SSE stream registration events
+void
+HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,CString p_path)
+{
+  AutoCritSec lock(&m_sitesLock);
+
+  if(CheckUnderDDOSAttack(p_sender, p_path) == false)
+  {
+    DDOS attack;
+    memcpy(&attack.m_sender,p_sender,sizeof(SOCKADDR_IN6));
+    attack.m_abspath   = p_path;
+    attack.m_beginTime = clock();
+
+    m_attacks.push_back(attack);
+
+    // REGISTER THE ATTACK
+    CString sender = SocketToServer(p_sender);
+    ERRORLOG(ERROR_TOO_MANY_SESS,"DDOS ATTACK REGISTERED FOR: " + sender + " : " + p_path);
+
+    // If we have a logfile where administrators may look
+    // register the attack there for all to see!
+    if(m_log)
+    {
+      CString filename = m_log->GetLogFileName();
+      int pos = filename.ReverseFind('\\');
+      if(pos)
+      {
+        filename = filename.Left(pos) + "ALARM_DDOS_ATTACK.txt";
+        FILE* file = nullptr;
+        fopen_s(&file,filename,"a");
+        if(file)
+        {
+          fprintf(file,"%s: %s\n",sender.GetString(),p_path.GetString());
+          fclose(file);
+        }
+      }
+    }
+  }
+}
+
+bool
+HTTPServer::CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,CString p_path)
+{
+  AutoCritSec lock(&m_sitesLock);
+
+  // If no attacks registered: we are *NOT* under attack
+  if(m_attacks.empty())
+  {
+    return false;
+  }
+  // See if we find the attack vector.
+  for(DDOSMap::iterator it = m_attacks.begin(); it != m_attacks.end();++it)
+  {
+    if((memcmp(&it->m_sender,p_sender,sizeof(SOCKADDR_IN6)) == 0) &&
+       (it->m_abspath.CompareNoCase(p_path) == 0))
+    {
+      if(it->m_beginTime < (clock() - TIMEOUT_BRUTEFORCE))
+      {
+        // DDOS Attack is now offically over
+        m_attacks.erase(it);
+      }
+      else
+      {
+        // Extra attack: Bump the clock and wait an extra interval
+        it->m_beginTime = clock();
+        return true;
+      }
+    }
+  }
+  // Nothing found: we are *NOT* under attack
+  return false;
+}
+
