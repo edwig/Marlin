@@ -420,11 +420,6 @@ cleanup:
 bool    
 FileBuffer::WriteFile()
 {
-  // See if we have work to do
-  if(m_buffer == NULL && m_parts.size() == 0)
-  {
-    return false;
-  }
   // Create file to write to
   bool result = false;
 
