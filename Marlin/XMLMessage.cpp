@@ -115,8 +115,7 @@ void XMLElement::DropReference()
 bool
 XMLElement::IsValidName(const CString& p_name)
 {
-  if (p_name.IsEmpty() ||
-      p_name.Left(3).CompareNoCase("XML") == 0)
+  if(p_name.IsEmpty())
   {
     return false;
   }
@@ -125,7 +124,7 @@ XMLElement::IsValidName(const CString& p_name)
   {
     char c = p_name[i];
     if (c == '_' ||
-     // c == ':' || formeel geldig maar geeft ongewenste resultaten 
+     // c == ':' || Formally correct, but gives unwanted results
        (c >= 'A' && c <= 'Z') ||
        (c >= 'a' && c <= 'z'))
     {
