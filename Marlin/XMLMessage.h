@@ -251,6 +251,7 @@ public:
   bool            GetSendUnicode();
   bool            GetSendBOM();
   XMLElement*     GetRoot();
+  void            SetRoot(XMLElement* p_root);
   CString         GetElement(CString p_name);
   int             GetElementInteger(CString p_name);
   bool            GetElementBoolean(CString p_name);

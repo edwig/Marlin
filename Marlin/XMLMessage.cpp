@@ -194,7 +194,6 @@ XMLMessage::XMLMessage(XMLMessage* p_orig)
 
 XMLMessage::~XMLMessage()
 {
-  Reset();
   m_root->DropReference();
 }
 
@@ -202,6 +201,17 @@ void
 XMLMessage::Reset()
 {
   m_root->Reset();
+}
+
+void
+XMLMessage::SetRoot(XMLElement* p_root)
+{
+  if(m_root)
+  {
+    m_root->DropReference();
+  }
+  m_root = p_root;
+  m_root->AddReference();
 }
 
 #pragma endregion XMLMessage_XTOR
