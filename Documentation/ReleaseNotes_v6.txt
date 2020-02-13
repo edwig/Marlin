@@ -9,13 +9,18 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
-CHANGES IN VERSION 6.4.2 (Beta stage)
+CHANGES IN VERSION 6.4.2 
 ------------------------
 1)  Saving and loading XMLMessages and SOAPMessages has been extended so that SOAPMessages
     can be saved to file correctly and read back in the correct form.
 2)  BruteForce attacks can now be detected on SSE streams. Applications can register a 
     misbehaving stream (sender IP address and URL) and these will be locked out by the server
     for a period of time (for now hard coded on 10 seconds)
+3)  It is now possible to get/set the root XMLElement node of the XMLMessage
+4)  GET of a file can now end in an empty file on your filesystem, if the HTTP GET message
+    did contain an empty body with a ContentLength of 0 (zero).
+5)  XML node names of "<xml>" are incorrect by the XML standards, but again allowed as they
+    still occur 'in-the-wild' :-(
 
 CHANGES IN VERSION 6.4.1
 ------------------------
@@ -28,9 +33,9 @@ CHANGES IN VERSION 6.4.0
 1)  Rewrite of the 'MarlinModule'. All actions, memory allocations and de-allocations have been
     redirected to the loaded appliction DLL. This way the MarlinModule can service a wider range
     of applictions of different Marlin versions.
-	  BUT: See the interface header of "ServerApp". The order of the vtable with virtual methods
-	       there should stay stable for a long time in order to service later Marlin versions.
-		     You can add virtuals, but never remove or re-order the current "ServerApp.h" header.
+	BUT: See the interface header of "ServerApp". The order of the vtable with virtual methods
+	     there should stay stable for a long time in order to service later Marlin versions.
+	     You can add virtuals, but never remove or re-order the current "ServerApp.h" header.
 2)  Remark the 'C' exported functions in "ServerApp.cpp" where the MarlinModule calls the 
     newly created application. This is where we handle the daily work for the application.
 3)  Smaller runtimers by rewriting the global constant names to a isolated object.
