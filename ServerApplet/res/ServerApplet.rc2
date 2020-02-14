@@ -12,8 +12,8 @@
 // Version
 //
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION    RES_VERSION_BIN
- PRODUCTVERSION RES_VERSION_BIN
+ FILEVERSION    MARLIN_VERSION_BIN
+ PRODUCTVERSION MARLIN_VERSION_BIN
  FILEFLAGSMASK 0x37L
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -36,7 +36,7 @@ BEGIN
             VALUE "FileVersion",      MARLIN_VERSION_NUMBER
             VALUE "BuildNumber",      MARLIN_VERSION_BUILD
             VALUE "SpecialBuild",     MARLIN_VERSION_BUILD
-            VALUE "LegalCopyright",   "Marlin (c) 2010-2019 ir. W.E. Huisman"
+            VALUE "LegalCopyright",   "Marlin (c) 2010-2020 ir. W.E. Huisman"
             VALUE "LegalTrademarks",  "Marlin"
             VALUE "ProductName",      "Marlin"
         END

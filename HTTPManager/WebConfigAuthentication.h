@@ -49,6 +49,7 @@ protected:
   void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
   void InitComboboxes();
   void InitIIS();
+  void SetFields();
 
   DECLARE_MESSAGE_MAP()
 

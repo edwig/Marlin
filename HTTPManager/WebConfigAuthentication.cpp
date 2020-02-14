@@ -159,10 +159,10 @@ WebConfigAuthentication::InitIIS()
 {
   if(m_iis)
   {
-    m_buttonUseScheme        .EnableWindow(false);
+ // m_buttonUseScheme        .EnableWindow(false);
+//  m_buttonUseNTLMCache     .EnableWindow(false);
     m_buttonUseRealm         .EnableWindow(false);
     m_buttonUseDomain        .EnableWindow(false);
-    m_buttonUseNTLMCache     .EnableWindow(false);
     m_buttonUseRequestCert   .EnableWindow(false);
     m_buttonUseCertName      .EnableWindow(false);
     m_buttonUseCertThumbprint.EnableWindow(false);
@@ -207,14 +207,20 @@ WebConfigAuthentication::ReadWebConfig(WebConfig& config)
   m_certName          = config.GetParameterString ("Authentication","CertificateName",      "");
   m_certThumbprint    = config.GetParameterString ("Authentication","CertificateThumbprint","");
 
+  SetFields();
+}
+
+void
+WebConfigAuthentication::SetFields()
+{
   // INIT THE COMBO BOXES
   // authentication scheme's
-  if(m_scheme.CompareNoCase("anonymous") == 0) m_comboScheme.SetCurSel(0);
-  if(m_scheme.CompareNoCase("basic")     == 0) m_comboScheme.SetCurSel(1);
-  if(m_scheme.CompareNoCase("ntlm")      == 0) m_comboScheme.SetCurSel(2);
-  if(m_scheme.CompareNoCase("negotiate") == 0) m_comboScheme.SetCurSel(3);
-  if(m_scheme.CompareNoCase("digest")    == 0) m_comboScheme.SetCurSel(4);
-  if(m_scheme.CompareNoCase("kerberos")  == 0) m_comboScheme.SetCurSel(5);
+       if(m_scheme.CompareNoCase("anonymous") == 0) m_comboScheme.SetCurSel(0);
+  else if(m_scheme.CompareNoCase("basic")     == 0) m_comboScheme.SetCurSel(1);
+  else if(m_scheme.CompareNoCase("ntlm")      == 0) m_comboScheme.SetCurSel(2);
+  else if(m_scheme.CompareNoCase("negotiate") == 0) m_comboScheme.SetCurSel(3);
+  else if(m_scheme.CompareNoCase("digest")    == 0) m_comboScheme.SetCurSel(4);
+  else if(m_scheme.CompareNoCase("kerberos")  == 0) m_comboScheme.SetCurSel(5);
 
   // INIT THE CHECKBOXES
   m_buttonNtlmCache  .SetCheck(m_ntlmCache);
@@ -352,6 +358,18 @@ void
 WebConfigAuthentication::OnBnClickedUseScheme()
 {
   m_useScheme = m_buttonUseScheme.GetCheck() > 0;
+  if(m_useScheme == false)
+  {
+    m_user.Empty();
+    m_password.Empty();
+    m_scheme        = "Anonymous";
+    m_useNTLMCache  = false;
+    m_ntlmCache     = false;
+    m_useSSO        = false;
+    m_sso           = false;
+    SetFields();
+    return;
+  }
   UpdateData(FALSE);
 }
 
