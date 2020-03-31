@@ -174,7 +174,7 @@ AppConfig::AddParameter(CString& p_param,CString& p_value)
   else if(p_param.Compare("ServerPort")    == 0) m_serverPort     = atoi(p_value);
   else if(p_param.Compare("BaseURL")       == 0) m_baseUrl        = p_value;
   else if(p_param.Compare("ServerLog")     == 0) m_serverLog      = p_value;
-  else if(p_param.Compare("ServerLogging") == 0) m_serverLoglevel = (p_value.CompareNoCase("true") == 0);
+  else if(p_param.Compare("ServerLogging") == 0) m_serverLoglevel = atoi(p_value);
   else if(p_param.Compare("WebRoot")       == 0) m_webroot        = p_value;
   else if(p_param.Compare("RunAsService")  == 0) m_runAsService   = atoi(p_value);
   else return false;

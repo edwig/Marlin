@@ -31,6 +31,7 @@
 #include "XMLMessage.h"
 #include "Routing.h"
 #include "http.h"
+#include "bcd.h"
 #include <vector>
 #include <xstring>
 
@@ -57,7 +58,7 @@ enum class JsonType
 {
   JDT_string      = 1
  ,JDT_number_int  = 2
- ,JDT_number_dbl  = 3 
+ ,JDT_number_bcd  = 3 
  ,JDT_array       = 4
  ,JDT_object      = 5
  ,JDT_const       = 6
@@ -74,10 +75,10 @@ enum class JsonEncoding
 
 
 // Numbers are integers or exponentials
-typedef union _jsonNumber
+typedef struct _jsonNumber
 {
   long   m_intNumber;
-  double m_dblNumber;
+  bcd  m_bcdNumber;
 }
 JSONnumber;
 
@@ -100,13 +101,13 @@ public:
   void        SetValue(JSONobject p_value);
   void        SetValue(JSONarray  p_value);
   void        SetValue(int        p_value);
-  void        SetValue(double     p_value);
+  void        SetValue(bcd        p_value);
 
   // GETTERS
   JsonType    GetDataType()  { return m_type;     };
   CString     GetString()    { return m_string;   };
   int         GetNumberInt() { return m_number.m_intNumber;  };
-  double      GetNumberDbl() { return m_number.m_dblNumber;  };
+  bcd         GetNumberBcd() { return m_number.m_bcdNumber;  };
   JSONarray&  GetArray()     { return m_array;    };
   JSONobject& GetObject()    { return m_object;   };
   JsonConst   GetConstant()  { return m_constant; };

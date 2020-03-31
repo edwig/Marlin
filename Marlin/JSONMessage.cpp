@@ -69,7 +69,8 @@ JSONvalue::operator=(JSONvalue& p_other)
   m_type     = p_other.m_type;
   m_string   = p_other.m_string;
   m_constant = p_other.m_constant;
-  m_number   = p_other.m_number;
+  m_number.m_intNumber = p_other.m_number.m_intNumber;
+  m_number.m_bcdNumber = p_other.m_number.m_bcdNumber;
   // Copy objects
   m_array.clear();
   m_object.clear();
@@ -88,6 +89,7 @@ JSONvalue::SetDatatype(JsonType p_type)
   m_array .clear();
   m_string.Empty();
   m_number.m_intNumber = 0;
+  m_number.m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
   // Remember our type
   m_type = p_type;
@@ -102,6 +104,7 @@ JSONvalue::SetValue(CString p_value)
   m_array .clear();
   m_object.clear();
   m_number.m_intNumber = 0;
+  m_number.m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
 }
 
@@ -114,6 +117,7 @@ JSONvalue::SetValue(JsonConst p_value)
   m_array.clear();
   m_object.clear();
   m_number.m_intNumber = 0;
+  m_number.m_bcdNumber.Zero();
   m_string.Empty();
 }
 
@@ -126,7 +130,8 @@ JSONvalue::SetValue(JSONobject p_value)
   // Clear the rest
   m_array.clear();
   m_string.Empty();
-  m_number.m_dblNumber = 0;
+  m_number.m_intNumber = 0;
+  m_number.m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
 }
 
@@ -140,6 +145,7 @@ JSONvalue::SetValue(JSONarray p_value)
   m_object.clear();
   m_string.Empty();
   m_number.m_intNumber = 0;
+  m_number.m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
 }
 
@@ -148,6 +154,7 @@ JSONvalue::SetValue(int p_value)
 {
   m_type = JsonType::JDT_number_int;
   m_number.m_intNumber = p_value;
+  m_number.m_bcdNumber.Zero();
   // Clear the rest
   m_object.clear();
   m_array.clear();
@@ -156,10 +163,11 @@ JSONvalue::SetValue(int p_value)
 }
 
 void
-JSONvalue::SetValue(double p_value)
+JSONvalue::SetValue(bcd p_value)
 {
-  m_type = JsonType::JDT_number_dbl;
-  m_number.m_dblNumber = p_value;
+  m_type = JsonType::JDT_number_bcd;
+  m_number.m_bcdNumber = p_value;
+  m_number.m_intNumber = 0;
   // Clear the rest
   m_object.clear();
   m_array.clear();
@@ -195,7 +203,7 @@ JSONvalue::GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level /*=0*/)
     case JsonType::JDT_string:      return FormatAsJsonString(m_string,p_utf8);
     case JsonType::JDT_number_int:  result.Format("%ld",m_number.m_intNumber);
                                     break;
-    case JsonType::JDT_number_dbl:  result.Format("%.15g",m_number.m_dblNumber);
+    case JsonType::JDT_number_bcd:  result = m_number.m_bcdNumber.AsString();
                                     break;
     case JsonType::JDT_array:       result = newln + "[" + separ;
                                     for(unsigned ind = 0;ind < m_array.size();++ind)

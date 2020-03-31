@@ -27,6 +27,7 @@
 //
 #pragma once
 #include <map>
+#include "bcd.h"
 #include "XMLMessage.h"
 
 using XmlEnums = std::map<CString,CString>;
@@ -86,7 +87,7 @@ private:
   CString   CheckBoolean  (CString p_value);
   CString   CheckDate     (CString p_value);
   CString   CheckBase64   (CString p_value);
-  CString   CheckDouble   (CString p_value,bool p_specials);
+  CString   CheckNumber   (CString p_value,bool p_specials);
   CString   CheckDateTime (CString p_value,bool p_explicit);
   CString   CheckDatePart (CString p_value);
   CString   CheckDuration (CString p_value);
@@ -145,15 +146,15 @@ private:
   int       m_fractionDigits { 0   };   // Number of decimal places
   int       m_whiteSpace     { 0   };   // 1=preserve, 2=replace, 3=collapse
   CString   m_pattern;                  // Pattern for pattern matching
-  CString   m_maxExclusive;             // Max value upto      this value
+  CString   m_maxExclusive;             // Max value up-to     this value
   CString   m_maxInclusive;             // Max value including this value
-  CString   m_minExclusive;             // Min value downto    this value
+  CString   m_minExclusive;             // Min value down-to   this value
   CString   m_minInclusive;             // Min value including this value
   // Redundant optimalisation
-  double    m_maxExclusiveDouble  { 0.0 };
-  double    m_maxInclusiveDouble  { 0.0 };
-  double    m_minExclusiveDouble  { 0.0 };
-  double    m_minInclusiveDouble  { 0.0 };
+  bcd       m_maxExclusiveDouble;
+  bcd       m_maxInclusiveDouble;
+  bcd       m_minExclusiveDouble;
+  bcd       m_minInclusiveDouble;
   INT64     m_maxExclusiveInteger { 0   };
   INT64     m_maxInclusiveInteger { 0   };
   INT64     m_minExclusiveInteger { 0   };

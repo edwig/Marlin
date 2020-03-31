@@ -49,7 +49,8 @@ class APP
 public:
   ~APP()
   {
-    if(m_application)
+    // Only delete application if last site was deallocated
+    if(m_application && (*m_sitesInAppPool)(m_application) == 0)
     {
       delete m_application;
     }
@@ -65,6 +66,7 @@ public:
   GetHTTPStreamFunc   m_getHttpStream   { nullptr };
   GetHTTPMessageFunc  m_getHttpMessage  { nullptr };
   HandleMessageFunc   m_handleMessage   { nullptr };
+  SitesInApplicPool   m_sitesInAppPool  { nullptr };
 };
 
 // All applications in the application pool

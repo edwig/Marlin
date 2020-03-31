@@ -27,7 +27,7 @@
 //
 #pragma once
 
-#define TEST_WEBSOCKETS
+// #define TEST_WEBSOCKETS
 
 #define CLIENT_CONFIG "IIS/HWCore"
 

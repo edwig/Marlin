@@ -49,6 +49,7 @@ typedef HTTPSite*     (CALLBACK* FindHTTPSiteFunc)   (ServerApp*,int port,PCWSTR
 typedef bool          (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
 typedef HTTPMessage*  (CALLBACK* GetHTTPMessageFunc) (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
 typedef bool          (CALLBACK* HandleMessageFunc)  (ServerApp*,HTTPSite* p_site,HTTPMessage*);
+typedef int           (CALLBACK* SitesInApplicPool)  (ServerApp*);
 
 extern IHttpServer*  g_iisServer;
 extern LogAnalysis*  g_analysisLog;
@@ -89,6 +90,9 @@ public:
   // Server app was correctly started by MarlinIISModule
   virtual bool CorrectlyStarted();
 
+  // Number of IIS sites in this Application Pool
+  virtual int  SitesInThePool();
+
   // Add new MarlinModule used virtual overrides at this end of the table!
   // END OF THE VTABLE
 
@@ -119,6 +123,7 @@ protected:
   IISModules     m_modules;                     // Global IIS modules for this application
   IISSiteConfigs m_sites;                       // Configures sites, modules and handlers
   WebConfigIIS   m_config;                      // Our web.config object
+  int            m_numSites     { 0       };    // Reference counting of sites in the pool
   IHttpServer*   m_iis          { nullptr };    // Main ISS application
   HTTPServerIIS* m_httpServer   { nullptr };    // Our Marlin HTTPServer for IIS
   ThreadPool*    m_threadPool   { nullptr };    // Pointer to our own ThreadPool

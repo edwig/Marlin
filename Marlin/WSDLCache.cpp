@@ -1098,7 +1098,7 @@ WSDLCache::GetOperationPageSoap(SOAPMessage* p_msg,bool p_soapVersion)
   message.Replace("&gt;dateTime&lt;",     "&gt;<font class=value>dateTime</font>&lt;");
   message.Replace("&gt;base64Binary&lt;", "&gt;<font class=value>base64Binary</font>&lt;");
 
-  // Ending of pre-formatted section
+  // Ending of preformatted section
   message += "</pre>\n";
 
   return message;
@@ -1268,8 +1268,8 @@ WSDLCache::ReadWSDLFileFromURL(CString p_url)
       {
         result = ReadWSDL(wsdl);
       }
+      delete[] contents;
     }
-    delete [] contents;
   }
   return result;
 }

@@ -31,6 +31,7 @@
 #include "SiteHandlerGet.h"
 #include "SiteHandlerPut.h"
 #include "EnsureFile.h"
+#include "TestPorts.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -83,7 +84,7 @@ SiteHandlerPutSecure::Handle(HTTPMessage* p_message)
 // RELIES ON THE DEFAULT 'GET' HANDLER OF THE SERVER
 
 int 
-TestMarlinServer::TestSecureSite()
+TestMarlinServer::TestSecureSite(bool p_standalone)
 {
   int error = 0;
 
@@ -96,7 +97,8 @@ TestMarlinServer::TestSecureSite()
   xprintf("=================================================\n");
 
   // Create URL channel to listen to "https://+:port/SecureTest"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber + 1,url);
+  int port = p_standalone ? TESTING_HTTPS_PORT : 443;
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,port,url);
   if(site)
   {
     // SUMMARY OF THE TEST

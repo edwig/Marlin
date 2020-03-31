@@ -168,9 +168,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Alert.cpp" />
     <ClCompile Include="Analysis.cpp" />
     <ClCompile Include="AppConfig.cpp" />
+    <ClCompile Include="AutoCritical.cpp" />
     <ClCompile Include="Base64.cpp" />
+    <ClCompile Include="bcd.cpp" />
     <ClCompile Include="CommandBus.cpp" />
     <ClCompile Include="EventLogRegistration.cpp" />
     <ClCompile Include="HostedWebCore.cpp" />
@@ -332,10 +335,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Alert.h" />
     <ClInclude Include="Analysis.h" />
     <ClInclude Include="AppConfig.h" />
     <ClInclude Include="AutoCritical.h" />
     <ClInclude Include="Base64.h" />
+    <ClInclude Include="bcd.h" />
     <ClInclude Include="CommandBus.h" />
     <ClInclude Include="EventLogRegistration.h" />
     <ClInclude Include="EventStream.h" />

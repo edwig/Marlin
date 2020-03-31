@@ -9,33 +9,49 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
-CHANGES IN VERSION 6.4.2 
-------------------------
-1)  Saving and loading XMLMessages and SOAPMessages has been extended so that SOAPMessages
-    can be saved to file correctly and read back in the correct form.
-2)  BruteForce attacks can now be detected on SSE streams. Applications can register a 
-    misbehaving stream (sender IP address and URL) and these will be locked out by the server
-    for a period of time (for now hard coded on 10 seconds)
-3)  It is now possible to get/set the root XMLElement node of the XMLMessage
-4)  GET of a file can now end in an empty file on your filesystem, if the HTTP GET message
-    did contain an empty body with a ContentLength of 0 (zero).
-5)  XML node names of "<xml>" are incorrect by the XML standards, but again allowed as they
-    still occur 'in-the-wild' :-(
-
-CHANGES IN VERSION 6.4.1
-------------------------
-1)  Running multiple websites in IIS on the same application pool with the same MarlinModule
-    crashed our websites. This was due to a bug in the detection of the already loaded 
-    application DLL and the pointers to the functions in the DLL.
+CHANGES IN VERSIN 6.5.0 
+-----------------------
+1)  Renewed all certificates in the 'Certificate' directory. Dates of the certificates have been
+    extended from 1-1-2020 to 1-1-2030
+2)  Added an extra wrapper around the "CRITICAL_SECTION" lock. See the header "AutoCritical.h"
+3)  Replaced the "double" datatype in the JSONMessage by the 'bcd' class. This prevents JSON
+    messages from carrying rounding errors in decimal numbers. This has a serious impact on the
+    implementation of the JSON Message and the WSDL Cache!
+4)  Upgraded the MarlinModule to be able to run multiple websites in one applicationPool (again!)
+    This functionality was broken in some earlier version. 
+    The ServerApp now has an extra function for the MarlinModule: SitesInApplicationPool()
+    This prevents the MarlinModule from destructing the application to soon, when one of the 
+    websites is stopping.
+    Please upgrade your MarlinModule at the earliest possible moment!
+5)  The IIS testclient and testserver have been upgraded to be able to run again in one 
+    application pool (after point 4).
+    Please be aware that if you plan to run multiple websites in one application pool to have a 
+    look at the "TestMarlinServerAppFactory". The app factory now may only create as many
+    applications as there are application pools.
+    If you plan in your application to support more than one website: please upgrade your 
+    server application factory likewise.
+6)  Added the "AutoAttachToProcess" application. This allows us to directly debug a w3wp.exe
+    process right from the start, making it easier to debug an IIS server process such as the
+    MarlinModule.
+    Thanks to Eyal Rosner and this article on CodeProject
+    https://www.codeproject.com/Articles/1090417/How-to-Set-Debugger-to-Auto-Attach-on-Process-Star
+7)  An alert system has been added. SvcReportError will standard report to the zero (0) alert module.
+    Alerts can be created in an alerts directory.
+    New Alerts directory modules can be created by calling "ConfigureApplicationAlert("name")"
+    at the startup of your program. This registration function will return a alert number.
+8)  The message DLL registration and g_svcname (service name) for the WMI message system 
+    was fixed. The message DLL will now also get installed if you start the IIS server from 
+    within the "marlinserver start" mechanism. This includes the start from the server applet
+    as well.
 
 CHANGES IN VERSION 6.4.0
 ------------------------
 1)  Rewrite of the 'MarlinModule'. All actions, memory allocations and de-allocations have been
     redirected to the loaded appliction DLL. This way the MarlinModule can service a wider range
     of applictions of different Marlin versions.
-	BUT: See the interface header of "ServerApp". The order of the vtable with virtual methods
-	     there should stay stable for a long time in order to service later Marlin versions.
-	     You can add virtuals, but never remove or re-order the current "ServerApp.h" header.
+  	BUT: See the interface header of "ServerApp". The order of the vtable with virtual methods
+         there should stay stable for a long time in order to service later Marlin versions.
+         You can add virtuals, but never remove or re-order the current "ServerApp.h" header.
 2)  Remark the 'C' exported functions in "ServerApp.cpp" where the MarlinModule calls the 
     newly created application. This is where we handle the daily work for the application.
 3)  Smaller runtimers by rewriting the global constant names to a isolated object.

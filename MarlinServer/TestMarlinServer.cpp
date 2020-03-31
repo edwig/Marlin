@@ -36,16 +36,23 @@
 #include "ErrorReport.h"
 #include "HTTPLoglevel.h"
 #include "AutoCritical.h"
+#include "Version.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 // Load product and application constants
-void LoadConstants()
+void LoadConstants(char* p_app_name)
 {
   // These constants reside in the "ServerMain"
-  APPLICATION_NAME      = "MarlinServer.exe";                     // Name of the application EXE file!!
-  PRODUCT_NAME          = "MarlinServer";                         // Short name of the product (one word only)
+  APPLICATION_NAME      = p_app_name;                             // Name of the application EXE file!!
+  PRODUCT_NAME          = MARLIN_PRODUCT_NAME;                    // Short name of the product (one word only)
   PRODUCT_DISPLAY_NAME  = "Service for MarlinServer tester";      // "Service for PRODUCT_NAME: <description of the service>"
   PRODUCT_COPYRIGHT     = "Copyright (c) 2019 ir. W.E. Huisman";  // Copyright line of the product (c) <year> etc.
-  PRODUCT_VERSION       = "6.4.0";                                // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
+  PRODUCT_VERSION       = MARLIN_VERSION_NUMBER;                  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
   PRODUCT_MESSAGES_DLL  = "MarlinServerMessages.dll";             // Filename of the WMI Messages dll.
   PRODUCT_SITE          = "/MarlinTest/";                         // Standard base URL absolute path e.g. "/MarlinServer/"
 }
@@ -133,11 +140,11 @@ TestMarlinServer::ShutDown()
   StopSubsites();
   // Stopping test websocket (if any)
   StopWebSocket();
-  // Reset all sites and services
-  Reset();
-
   // Get the results of our tests
   AfterTests();
+
+  // Reset all sites and services and the logfiles
+  Reset();
 }
 
 
@@ -184,6 +191,7 @@ TestMarlinServer::Server_xprintf(const char* p_format, ...)
     info.FormatV(p_format, vl);
     va_end(vl);
 
+    info.TrimRight("\n");
     m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,info.GetString());
   }
 }
@@ -205,6 +213,10 @@ TestMarlinServer::Server_qprintf(const char* p_format, ...)
   {
     stringRegister += string.Left(string.GetLength() - 3);
     return;
+  }
+  else
+  {
+    string.TrimRight("\n");
   }
 
   // Print the result to the logfile as INFO
@@ -232,12 +244,19 @@ TestMarlinServer::ReadConfig()
   m_instance        =          config.GetInstance();
   m_serverName      =          config.GetName();
 
+  // Check instance number
   if(m_instance)
   {
     // Maximum of 100 servers on any one machine
     if(m_instance <   0) m_instance = 0;
     if(m_instance > 100) m_instance = 100;
   }
+  // Registered name for the WMI logging
+  if(g_svcname[0] == 0)
+  {
+    sprintf_s(g_svcname,SERVICE_NAME_LENGTH,"%s_%d_v%s",PRODUCT_NAME,m_instance,PRODUCT_VERSION);
+  }
+
   // Port numbers cannot be under the IANA border value of 1024
   // unless... they are the default 80/443 ports
   if((m_inPortNumber != INTERNET_DEFAULT_HTTP_PORT ) &&
@@ -246,7 +265,7 @@ TestMarlinServer::ReadConfig()
   {
     CString error;
     error.Format("%s Server port [%d] does not conform to IANA rules (80,443 or greater than 1024)",PRODUCT_NAME,m_inPortNumber);
-    SvcReportErrorEvent(false,__FUNCTION__,error);
+    SvcReportErrorEvent(0,false,__FUNCTION__,error);
     throw StdException(error);
   }
 
@@ -255,14 +274,14 @@ TestMarlinServer::ReadConfig()
   {
     CString error(PRODUCT_NAME);
     error += " Cannot start on an empty or illegal Base-URL";
-    SvcReportErrorEvent(false,__FUNCTION__,error);
+    SvcReportErrorEvent(0,false,__FUNCTION__,error);
     throw StdException(error);
   }
 
   // If not ok: Write to the WMI log. Our own logfile is not yet airborne
   if(readOK == false)
   {
-    SvcReportErrorEvent(true,__FUNCTION__,"Error reading '%s.config' file. Falling back to defaults",PRODUCT_NAME);
+    SvcReportErrorEvent(0,true,__FUNCTION__,"Error reading '%s.config' file. Falling back to defaults",PRODUCT_NAME);
   }
 }
 
@@ -356,7 +375,7 @@ void
 TestMarlinServer::StartWebServices()
 {
   // Make config setting
-  // SetJsonSoapTranslation(true);
+  SetJsonSoapTranslation(true);
 
 
   // Try running the service
@@ -386,14 +405,17 @@ TestMarlinServer::RegisterSiteHandlers()
   TestBaseSite();
   TestBodyEncryption();
   TestBodySigning();
-  TestClientCertificate(m_runAsService != RUNAS_IISAPPPOOL);
   TestCookies();
   TestCrackURL();
   TestPushEvents();
   TestFilter();
   TestFormData();
   TestInsecure();
+  TestSecureSite       (m_runAsService != RUNAS_IISAPPPOOL);
+  TestClientCertificate(m_runAsService != RUNAS_IISAPPPOOL);
   TestJsonData();
+  TestPatch();
+  TestCompression();
   TestMessageEncryption();
   TestReliable();
   TestReliableBA();
@@ -412,7 +434,6 @@ TestMarlinServer::AfterTests()
   AfterTestBaseSite();
   AfterTestBodyEncryption();
   AfterTestBodySigning();
-  AfterTestClientCert();
   AfterTestContract();
   AfterTestCookies();
   AfterTestCrackURL();
@@ -420,7 +441,11 @@ TestMarlinServer::AfterTests()
   AfterTestFilter();
   AfterTestFormData();
   AfterTestInsecure();
+  AfterTestSecureSite();
+  AfterTestClientCert();
   AfterTestJsonData();
+  AfterTestPatch();
+  AfterTestCompression();
   AfterTestMessageEncryption();
   AfterTestReliable();
   AfterTestSubSites();

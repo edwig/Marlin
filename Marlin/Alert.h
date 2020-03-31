@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: ServiceReporting.h
+// SourceFile: Alert.h
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 2015-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,14 +27,17 @@
 //
 #pragma once
 
-// Product_display_name cannot be longer than this
-#define SERVICE_NAME_LENGTH   50
-// Products service name is in this global variable
-extern char  g_svcname[];
+// Maximum number of alert modules possible
+#define MAX_ALERT_MODULES 10
 
-void  SvcStartEventBuffer();
-void  SvcAllocEventBuffer();
-void  SvcFreeEventBuffer();
-void  SvcReportSuccessEvent(LPCTSTR p_message);
-void  SvcReportInfoEvent (bool p_doFormat,LPCTSTR p_message,...);
-void  SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR p_function,LPCTSTR p_message, ...);
+extern bool g_alertConfigured;
+
+// Registers an alert log path for a module
+// Returns the module's alert number
+int     ConfigureApplicationAlerts(CString p_path);
+
+// Returns the alert log path for a module
+CString GetAlertlogPath(int p_module);
+
+// Create the alert. Returns the alert number (natural ordinal number)
+__int64 CreateAlert(LPCTSTR p_function, LPCTSTR p_oserror, LPCTSTR p_eventdata,int p_module = 0);

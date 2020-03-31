@@ -31,6 +31,7 @@
 #include "SiteHandlerGet.h"
 #include "SiteFilterClientCertificate.h"
 #include "ServerApp.h"
+#include "TestPorts.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -83,7 +84,8 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
 
   // Create HTTP site to listen to "https://+:1202/SecureClientCert/"
   // 
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber + 2,url);
+  int port = p_standalone ? TESTING_CLCERT_PORT : 1222;
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,port,url);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -104,8 +106,8 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
   // Standalone servers must filter on Client certificates
   if(p_standalone)
   {
-    CString certName   = "marlin";
-    CString thumbprint = "db344064f2fac21318dd90f507fe78e81b031600";
+    CString certName   = "MarlinClient";
+    CString thumbprint = "8e02b7fe7d0e6a356d996664a542897fbae4d27e";
 
     // Add a site filter for the client certificate
     SiteFilterClientCertificate* filter = new SiteFilterClientCertificate(10,"ClientCert");

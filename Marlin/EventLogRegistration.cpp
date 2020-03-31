@@ -28,17 +28,21 @@
 #include "stdafx.h"
 #include "EventLogRegistration.h"
 #include "GetLastErrorAsString.h"
+#include "ServiceReporting.h"
 #include "WebConfig.h"
 #include <strsafe.h>
 #include <io.h>
 
 // Name of the event log category in the WMI
-const char *g_eventLogCategory = "Application";
+static const char* eventLogCategory = "Application";
 
 int
 RegisterMessagesDllForService(CString p_serviceName,CString p_messageDLL,CString& p_error)
 {
   p_error.Empty();
+
+  // Record our service name for service reporting purposes
+  StringCchCopy(g_svcname,SERVICE_NAME_LENGTH,p_serviceName);
 
   // Construct absolute filename of the DLL
   CString pathname = WebConfig::GetExePath();
@@ -65,7 +69,7 @@ RegisterMessagesDllForService(CString p_serviceName,CString p_messageDLL,CString
   size_t cchSize = MAX_PATH;
 
   // Create the event source as a subkey of the log. 
-  StringCchPrintf(szBuf,cchSize,"SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s",g_eventLogCategory,p_serviceName.GetString()); 
+  StringCchPrintf(szBuf,cchSize,"SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s",eventLogCategory,g_svcname); 
 
   if (RegCreateKeyEx(HKEY_LOCAL_MACHINE
                     ,szBuf
@@ -122,7 +126,7 @@ UnRegisterMessagesDllForService(CString p_serviceName,CString& p_error)
   p_error.Empty();
 
   // Create the event source as a subkey of the log. 
-  StringCchPrintf(szBuf,cchSize,"SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s",g_eventLogCategory,p_serviceName.GetString());
+  StringCchPrintf(szBuf,cchSize,"SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s",eventLogCategory,g_svcname);
 
   // Windows Vista and higher: RegDeleteTree
   if(SHDeleteKey(HKEY_LOCAL_MACHINE,szBuf))

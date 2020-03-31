@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: ServiceReporting.h
+// SourceFile: AutoCritical.cpp
 //
 // Marlin Server: Internet server/client
 // 
@@ -25,16 +25,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
+#include "stdafx.h"
+#include "AutoCritical.h"
 
-// Product_display_name cannot be longer than this
-#define SERVICE_NAME_LENGTH   50
-// Products service name is in this global variable
-extern char  g_svcname[];
+Critical::Critical()
+{
+  InitializeCriticalSection(&m_critical);
+}
 
-void  SvcStartEventBuffer();
-void  SvcAllocEventBuffer();
-void  SvcFreeEventBuffer();
-void  SvcReportSuccessEvent(LPCTSTR p_message);
-void  SvcReportInfoEvent (bool p_doFormat,LPCTSTR p_message,...);
-void  SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR p_function,LPCTSTR p_message, ...);
+Critical::~Critical()
+{
+  DeleteCriticalSection(&m_critical);
+}
+
+void 
+Critical::Lock()
+{
+  EnterCriticalSection(&m_critical);
+}
+
+bool
+Critical::TryLock()
+{
+  return TryEnterCriticalSection(&m_critical);
+}
+
+void 
+Critical::Unlock()
+{
+  LeaveCriticalSection(&m_critical);
+}
+

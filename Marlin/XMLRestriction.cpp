@@ -58,7 +58,7 @@ void
 XMLRestriction::AddMaxExclusive(CString p_max) 
 { 
   m_maxExclusive        = p_max; 
-  m_maxExclusiveDouble  =  atof(p_max);
+  m_maxExclusiveDouble  = p_max;
   m_maxExclusiveInteger = _atoi64(p_max);
 }
 
@@ -66,7 +66,7 @@ void
 XMLRestriction::AddMaxInclusive(CString p_max)
 { 
   m_maxInclusive        = p_max; 
-  m_maxInclusiveDouble  =  atof(p_max);
+  m_maxInclusiveDouble  = p_max;
   m_maxInclusiveInteger = _atoi64(p_max);
 }
 
@@ -74,7 +74,7 @@ void
 XMLRestriction::AddMinExclusive(CString p_max)
 { 
   m_minExclusive        = p_max; 
-  m_minExclusiveDouble  =  atof(p_max);
+  m_minExclusiveDouble  = p_max;
   m_minExclusiveInteger = _atoi64(p_max);
 }
 
@@ -82,7 +82,7 @@ void
 XMLRestriction::AddMinInclusive(CString p_max)
 { 
   m_minInclusive        = p_max; 
-  m_minInclusiveDouble  =  atof(p_max);
+  m_minInclusiveDouble  = p_max;
   m_minInclusiveInteger = _atoi64(p_max);
 }
 
@@ -313,7 +313,7 @@ XMLRestrictions::GiveDisplayValue(CString p_name,CString p_enum)
 CString   
 XMLRestriction::CheckRangeFloat(CString p_value)
 {
-  double value = atof(p_value);
+  bcd value = atof(p_value);
   if(errno == ERANGE)
   {
     return "Floating point overflow";
@@ -644,7 +644,7 @@ XMLRestriction::CheckBase64(CString p_value)
 
 // Number can be: nnnnn[.nnnnnn][[+|-]{E|e}nnn]
 CString
-XMLRestriction::CheckDouble(CString p_value,bool p_specials)
+XMLRestriction::CheckNumber(CString p_value,bool p_specials)
 {
   CString result;
   p_value.TrimLeft('-');
@@ -1495,11 +1495,11 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,CString p_value)
       case XDT_Boolean:           result = CheckBoolean  (p_value);       break;
       case XDT_Date:              result = CheckDate     (p_value);       break;
       case XDT_Integer:           result = CheckInteger  (p_value);       break;
-      case XDT_Decimal:           result = CheckDouble   (p_value,false); break;
-      case XDT_Double:            result = CheckDouble   (p_value,true);  break;
+      case XDT_Decimal:           result = CheckNumber   (p_value,false); break;
+      case XDT_Double:            result = CheckNumber   (p_value,true);  break;
       case XDT_DateTime:          result = CheckDateTime (p_value,false); break;
       case XDT_DateTimeStamp:     result = CheckDateTime (p_value,true);  break;
-      case XDT_Float:             result = CheckDouble   (p_value,true);  break;
+      case XDT_Float:             result = CheckNumber   (p_value,true);  break;
       case XDT_Duration:          result = CheckDuration (p_value);       break;
       case XDT_DayTimeDuration:   result = CheckDaySecond(p_value);       break;
       case XDT_YearMonthDuration: result = CheckYearMonth(p_value);       break;

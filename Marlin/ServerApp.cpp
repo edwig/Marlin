@@ -140,6 +140,12 @@ bool _stdcall HandleHTTPMessage(ServerApp* p_application,HTTPSite* p_site,HTTPMe
   return handled;
 }
 
+__declspec(dllexport)
+int __stdcall SitesInApplicationPool(ServerApp* p_application)
+{
+  return p_application->SitesInThePool();
+}
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -317,6 +323,13 @@ ServerApp::CorrectlyStarted()
     ERRORLOG(ERROR_NOT_FOUND,"No connected threadpool found!");
   }
   return false;
+}
+
+// Number of IIS sites in this Application Pool
+int
+ServerApp::SitesInThePool()
+{
+  return m_numSites;
 }
 
 // Default implementation. Use the Marlin error report

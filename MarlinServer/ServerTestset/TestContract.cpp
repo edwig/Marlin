@@ -306,6 +306,9 @@ TestMarlinServer::AddOperations(CString p_contract)
   AddOperation(CONTRACT_MT,third, &input3,&output3);
   AddOperation(CONTRACT_M4,fourth,&input4,&output4);
   AddOperation(CONTRACT_MV,fifth, &input5,&output5);
+
+  // Check the field values in the WSDL
+  SetCheckFieldValues(true);
 }
 
 //////////////////////////////////////////////////////////////////////////

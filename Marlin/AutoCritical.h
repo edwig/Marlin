@@ -27,6 +27,38 @@
 //
 #pragma once
 
+class Critical
+{
+public:
+  Critical();
+ ~Critical();
+
+  void Lock();
+  bool TryLock();
+  void Unlock();
+
+private:
+  CRITICAL_SECTION m_critical;
+};
+
+// New type critical section recursive mutex lock
+class CriticalSection
+{
+public:
+  CriticalSection(Critical& p_section) : m_section(&p_section)
+  {
+    p_section.Lock();
+  }
+
+  ~CriticalSection()
+  {
+    m_section->Unlock();
+  }
+private:
+  Critical* m_section;
+};
+
+// Old type of critical section
 class AutoCritSec
 {
 public:

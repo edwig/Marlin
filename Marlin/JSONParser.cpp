@@ -26,6 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
+#include "bcd.h"
 #include "JSONParser.h"
 #include "XMLParser.h"
 #include "DefuseBOM.h"
@@ -442,10 +443,10 @@ JSONParser::ParseNumber()
   }
 
   // Locals
+  bcd     bcdNumber;
   int     factor    = 1;
   __int64 number    = 0;
   int     intNumber = 0;
-  double  dblNumber = 0.0;
   JsonType type = JsonType::JDT_number_int;
 
   // See if we find a negative number
@@ -470,14 +471,14 @@ JSONParser::ParseNumber()
     if(*m_pointer == '.')
     {
       ++m_pointer;
-      type = JsonType::JDT_number_dbl;
-      dblNumber = (double)number;
-      double decimPart = 1;
+      type = JsonType::JDT_number_bcd;
+      bcdNumber = number;
+      bcd decimPart = 1;
 
       while(*m_pointer && isdigit(*m_pointer))
       {
         decimPart *= 10;
-        dblNumber += (*m_pointer - '0') / decimPart;
+        bcdNumber += ((bcd)(*m_pointer - '0')) / decimPart;
         ++m_pointer;
       }
     }
@@ -503,23 +504,24 @@ JSONParser::ParseNumber()
         exp += (*m_pointer - '0');
         ++m_pointer;
       }
-      dblNumber *= pow(10.0,exp * fac);
+      bcdNumber *= pow(10.0,exp * fac);
     }
 
     // Do not forget the sign
-    dblNumber *= factor;
+    bcdNumber *= factor;
   }
   else
   {
     number *= factor;
     if((number > MAXINT32) || (number < MININT32))
     {
-      type = JsonType::JDT_number_dbl;
-      dblNumber = (double)number;
+      type = JsonType::JDT_number_bcd;
+      bcdNumber = number;
     }
     else
     {
-      intNumber = (int)number;
+      // Static cast allowed because test on MAXINT32/MININT32
+      intNumber = static_cast<int>(number);
     }
   }
 
@@ -530,7 +532,7 @@ JSONParser::ParseNumber()
   }
   else // if(type == JDT_number_dbl)
   {
-    m_valPointer->SetValue(dblNumber);
+    m_valPointer->SetValue(bcdNumber);
   }
   return true;
 }
@@ -546,7 +548,7 @@ JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap)
                ,m_soap(p_soap)
 {
   // Construct the correct contents!!
-  p_soap->CompleteTheMessage();
+  p_soap->GetSoapMessage();
 
   JSONvalue&  valPointer = *m_message->m_value;
   XMLElement& element    = *m_soap->GetParameterObjectNode();

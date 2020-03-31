@@ -257,7 +257,7 @@ ErrorReport::ErrorReport()
 {
   if(g_instance != nullptr)
   {
-    SvcReportErrorEvent(false,__FUNCTION__,"Double CTOR of ErrorReport");
+    SvcReportErrorEvent(0,false,__FUNCTION__,"Double CTOR of ErrorReport");
     abort();
   }
   g_instance = this;
@@ -268,7 +268,7 @@ ErrorReport::~ErrorReport()
 {
   if(g_instance == nullptr)
   {
-    SvcReportErrorEvent(false, __FUNCTION__, "No registered ErrorReport found in DTOR");
+    SvcReportErrorEvent(0,false, __FUNCTION__, "No registered ErrorReport found in DTOR");
   }
   g_instance = nullptr;
   DeleteCriticalSection(&m_lock);
@@ -279,7 +279,7 @@ ErrorReport::Report(const CString& p_subject, unsigned int p_skip /* = 0 */, CSt
 {
   if(g_instance == nullptr)
   {
-    SvcReportErrorEvent(false, __FUNCTION__, "Missing registered ErrorReport");
+    SvcReportErrorEvent(0,false, __FUNCTION__, "Missing registered ErrorReport");
     abort();
   }
 
@@ -296,7 +296,7 @@ ErrorReport::Report(const CString& p_subject,const StackTrace& p_trace,CString p
 {
   if(g_instance == nullptr)
   {
-    SvcReportErrorEvent(false, __FUNCTION__, "Missing registered ErrorReport");
+    SvcReportErrorEvent(0,false, __FUNCTION__, "Missing registered ErrorReport");
     abort();
   }
 
@@ -332,7 +332,7 @@ ErrorReport::Report(DWORD p_errorCode
   }
   if(g_instance == nullptr)
   {
-    SvcReportErrorEvent(false, __FUNCTION__, "Missing registered ErrorReport");
+    SvcReportErrorEvent(0,false, __FUNCTION__, "Missing registered ErrorReport");
     abort();
   }
 
@@ -413,7 +413,7 @@ ErrorReport::Report(int p_signal,unsigned int p_skip /* = 0 */,CString p_directo
 {
   if(g_instance == nullptr)
   {
-    SvcReportErrorEvent(false, __FUNCTION__, "Missing registered ErrorReport");
+    SvcReportErrorEvent(0,false, __FUNCTION__, "Missing registered ErrorReport");
     abort();
   }
 

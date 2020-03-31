@@ -49,6 +49,10 @@ extern const char* PRODUCT_VERSION;        // Short version string (e.g.: "3.2.0
 extern const char* PRODUCT_MESSAGES_DLL;   // Filename of the WMI Messages dll.
 extern const char* PRODUCT_SITE;           // Standard base URL absolute path e.g. "/MarlinServer/"
 
+// Load product and application constants
+// in the constants above
+void LoadConstants(char* p_app_name);
+
 // Selecting the right library to link with automatically
 // So we do not need to worry about which library to use in the linker settings
 #if defined _M_IX86

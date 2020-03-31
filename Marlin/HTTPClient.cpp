@@ -256,7 +256,7 @@ HTTPClient::GetError(CString* p_message /*=NULL*/)
 {
   if(p_message && m_lastError)
   {
-    *p_message = GetLastErrorAsString(m_lastError);
+    p_message->Format("[%d] %s",m_lastError,GetLastErrorAsString(m_lastError).GetString());
   }
   return m_lastError;
 }

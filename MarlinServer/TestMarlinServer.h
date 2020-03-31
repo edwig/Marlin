@@ -90,7 +90,6 @@ private:
   int TestBaseSite();
   int TestBodyEncryption();
   int TestBodySigning();
-  int TestClientCertificate(bool p_standalone);
   int TestCompression();
   int TestCookies();
   int TestCrackURL();
@@ -103,7 +102,8 @@ private:
   int TestPatch();
   int TestReliable();
   int TestReliableBA();
-  int TestSecureSite();
+  int TestSecureSite(bool p_standalone);
+  int TestClientCertificate(bool p_standalone);
   int TestSubSites();
   int TestThreadPool(ThreadPool* p_pool);
   int TestHTTPTime();

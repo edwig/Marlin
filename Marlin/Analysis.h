@@ -101,6 +101,7 @@ public:
   void    SetInterval(int  p_interval);
 
   // GETTERS
+  bool    GetIsOpen();
   bool    GetDoLogging();
   int     GetLogLevel()                        { return m_logLevel;   };
   bool    GetDoEvents()                        { return m_doEvents;   };

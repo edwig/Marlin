@@ -369,14 +369,17 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     poolapp->m_getHttpStream   = (GetHTTPStreamFunc)  GetProcAddress(poolapp->m_module,"GetStreamFromRequest");
     poolapp->m_getHttpMessage  = (GetHTTPMessageFunc) GetProcAddress(poolapp->m_module,"GetHTTPMessageFromRequest");
     poolapp->m_handleMessage   = (HandleMessageFunc)  GetProcAddress(poolapp->m_module,"HandleHTTPMessage");
+    poolapp->m_sitesInAppPool  = (SitesInApplicPool)  GetProcAddress(poolapp->m_module,"SitesInApplicationPool");
+
 
     if(poolapp->m_createServerApp == nullptr ||
        poolapp->m_findSite        == nullptr ||
        poolapp->m_getHttpStream   == nullptr ||
        poolapp->m_getHttpMessage  == nullptr ||
-       poolapp->m_handleMessage   == nullptr)
+       poolapp->m_handleMessage   == nullptr ||
+       poolapp->m_sitesInAppPool  == nullptr  )
     {
-      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', 'GetHTTPMessageFromRequest' or 'HandleHTTPMessage'");
+      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', 'GetHTTPMessageFromRequest', 'HandleHTTPMessage' or 'SitesInApplicPool'");
       delete poolapp;
       return Unhealthy(error,ERROR_NOT_FOUND);
     }
@@ -475,6 +478,7 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   if (hmodule != NULL && !StillUsed(hmodule))
   {
     FreeLibrary(hmodule);
+    DETAILLOG("Unloaded the application DLL");
   }
 
   return GL_NOTIFICATION_HANDLED;
@@ -530,7 +534,7 @@ MarlinGlobalFactory::ExtractAppSite(CString p_configPath)
 }
 
 // See if we already did load the module
-// For some reason refrence counting does not work from within IIS.
+// For some reason reference counting does not work from within IIS.
 bool
 MarlinGlobalFactory::AlreadyLoaded(APP* p_app,CString p_path_to_dll)
 {
@@ -538,13 +542,16 @@ MarlinGlobalFactory::AlreadyLoaded(APP* p_app,CString p_path_to_dll)
   {
     if(p_path_to_dll.Compare(app.second->m_marlinDLL) == 0)
     {
+      // Application module
       p_app->m_module          = app.second->m_module;
+      p_app->m_createServerApp = app.second->m_createServerApp;
+      // Function pointers
       p_app->m_createServerApp = app.second->m_createServerApp;
       p_app->m_findSite        = app.second->m_findSite;
       p_app->m_getHttpStream   = app.second->m_getHttpStream;
       p_app->m_getHttpMessage  = app.second->m_getHttpMessage;
       p_app->m_handleMessage   = app.second->m_handleMessage;
-
+      p_app->m_sitesInAppPool  = app.second->m_sitesInAppPool;
       return true;
     }
   }

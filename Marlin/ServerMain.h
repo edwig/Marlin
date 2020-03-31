@@ -25,13 +25,15 @@
 //
 #pragma once
 
-// Product_display_name cannot be longer than this
-#define SERVICE_NAME_LENGTH   50
-
 // Event log registration numbers
-#define SVC_ERROR   1
-#define SVC_INFO    2
-#define SVC_SUCCESS 3
+#define SVC_ERROR   ((DWORD)0xC0020001L)
+#define SVC_INFO    ((DWORD)0x40020002L)
+#define SVC_SUCCESS ((DWORD)0x00020003L)
+// BEWARE: To use, you must define
+// MessageId=0x1 as SymbolicName=SVC_ERROR
+// MessageId=0x2 as SymbolicName=SVC_INFO
+// MessageId=0x3 as SymbolicName=SVC_SUCCESS
+// in the *.MC file of your server application
 
 // Standard starting timing of services
 #define SVC_DEFAULT_SERVICE_START_PENDING    3000  // 3 seconds

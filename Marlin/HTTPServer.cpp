@@ -171,12 +171,15 @@ void
 HTTPServer::InitLogging()
 {
   // Check for a logging object
-  if(m_log == NULL)
+  if(m_log && !m_logOwner && m_log->GetIsOpen())
   {
-    // Create a new one
+    // Already opened somewhere else. Leave it alone!
+    return;
+  }
+
+  // Create a new one for ourselves
     m_log = new LogAnalysis(m_name);
     m_logOwner = true;
-  }
 
   CString file    = m_log->GetLogFileName();
   int  cache      = m_log->GetCache();

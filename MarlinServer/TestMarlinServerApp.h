@@ -31,13 +31,13 @@
 
 // This is the ServerApp of the IIS server variant (running in W3SVC)
 
-class TestMarlinServerApp : public ServerApp
+class TestMarlinServerAppPool : public ServerApp
 {
 public:
-  TestMarlinServerApp(IHttpServer*  p_iis
+  TestMarlinServerAppPool(IHttpServer*  p_iis
                      ,const char*   p_webroot
                      ,const char*   p_appName);
-  virtual ~TestMarlinServerApp();
+  virtual ~TestMarlinServerAppPool();
 
   virtual void InitInstance();
   virtual void ExitInstance();
@@ -48,7 +48,7 @@ private:
   // The real application 
   TestMarlinServer m_server;
 
-  bool m_doDetails { false };
-  bool m_running   { false };
+  bool m_doDetails { false };   // Logging details?
+  bool m_running   { false };   // Is the application pool running correctly
 };
 

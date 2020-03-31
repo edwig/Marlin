@@ -61,7 +61,6 @@ SERVICE_STATUS          g_svcStatus;
 SERVICE_STATUS_HANDLE   g_svcStatusHandle; 
 HANDLE                  g_svcStopEvent = NULL;
 SERVICE_STATUS_PROCESS  g_sspStatus; 
-char                    g_svcname[SERVICE_NAME_LENGTH];
 int                     g_runAsService = RUNAS_IISAPPPOOL;
 CString                 g_serverName;
 CString                 g_baseURL;
@@ -80,9 +79,6 @@ HANDLE g_mtxStarting = NULL;
 HANDLE g_mtxRunning  = NULL;
 HANDLE g_mtxStopping = NULL;
 HANDLE g_eventSource = NULL;
-
-// Using STL namespaces
-using namespace std;
 
 // THE MAIN PROGRAM
 
@@ -105,7 +101,10 @@ int main(int argc,char* argv[],char* /*envp[]*/)
   }
 
   // Load ServerApp constants before anything else
-  LoadConstants();
+  LoadConstants(argv[0]);
+
+  // Start the event buffer system
+  SvcStartEventBuffer();
 
   // Read the products config file
   ReadConfig();
@@ -160,6 +159,7 @@ int main(int argc,char* argv[],char* /*envp[]*/)
     }
     else if(lstrcmpi(argv[1],"stop") == 0)
     {
+      PrintCopyright();
       switch(g_runAsService)
       {
         case RUNAS_STANDALONE: return StandAloneStop();
@@ -223,7 +223,7 @@ int main(int argc,char* argv[],char* /*envp[]*/)
   // STARTED WITHOUT ARGUMENTS OR AS A STANDALONE SERVICE
   BOOL started = FALSE;
 
-  if(g_runAsService)
+  if(g_runAsService == RUNAS_NTSERVICE)
   {
     // This process has one (1) service
     SERVICE_TABLE_ENTRY DispatchTable[] = 
@@ -235,7 +235,7 @@ int main(int argc,char* argv[],char* /*envp[]*/)
     // The process should simply terminate when the call returns.
     started = StartServiceCtrlDispatcher(DispatchTable); 
   }
-  else
+  else if(g_runAsService == RUNAS_STANDALONE)
   {
     if(standAloneStart)
     {
@@ -248,6 +248,10 @@ int main(int argc,char* argv[],char* /*envp[]*/)
       started = FALSE;
       SetLastError(ERROR_INVALID_PARAMETER);
     }
+  }
+  else if(g_runAsService == RUNAS_IISAPPPOOL)
+  {
+    // Should not come to here
   }
 
   // If in error : Show what we know about it
@@ -275,7 +279,7 @@ int main(int argc,char* argv[],char* /*envp[]*/)
            break;
     }
     // Tell it to the WMI log
-    SvcReportErrorEvent(false,"main",error); 
+    SvcReportErrorEvent(0,false,"main",error); 
     // Tell it to the user
     printf("%s\n%s\n\n",PRODUCT_DISPLAY_NAME,PRODUCT_COPYRIGHT);
     printf("ERROR : %s\n"
@@ -377,7 +381,7 @@ VOID WINAPI SvcMain(DWORD dwArgc,LPTSTR *lpszArgv)
   g_svcStatusHandle = RegisterServiceCtrlHandler(g_svcname,SvcCtrlHandler);
   if(!g_svcStatusHandle)
   {
-    SvcReportErrorEvent(false,__FUNCTION__,"Cannot register a service handler for this service"); 
+    SvcReportErrorEvent(0,false,__FUNCTION__,"Cannot register a service handler for this service"); 
     return; 
   } 
 
@@ -1306,7 +1310,7 @@ BOOL SvcInitStandAlone()
 
   if(g_svcStopEvent == NULL)
   {
-    SvcReportErrorEvent(false,__FUNCTION__,"Server cannot start: cannot make a service event.");
+    SvcReportErrorEvent(0,false,__FUNCTION__,"Server cannot start: cannot make a service event.");
     ReportSvcStatusStandAlone(SERVICE_STOPPED);
     // Remove mutexes
     return FALSE;
@@ -1647,6 +1651,8 @@ FindApplicationCommand()
 int StartIISApp()
 {
   int result = 1;
+
+  InstallMessageDLL();
 
   if(FindApplicationCommand())
   {

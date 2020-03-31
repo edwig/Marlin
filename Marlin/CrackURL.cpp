@@ -603,11 +603,11 @@ CrackedURL::HasParameter(CString p_parameter)
 CString 
 CrackedURL::GetParameter(CString p_parameter)
 {
-  for(unsigned ind = 0;ind < m_parameters.size();++ind)
+  for(auto& param : m_parameters)
   {
-    if(p_parameter.CompareNoCase(m_parameters[ind].m_key) == 0)
+    if(param.m_key.CompareNoCase(p_parameter) == 0)
     {
-      return m_parameters[ind].m_value;
+      return param.m_value;
     }
   }
   return "";
@@ -616,6 +616,17 @@ CrackedURL::GetParameter(CString p_parameter)
 void    
 CrackedURL::SetParameter(CString p_parameter,CString p_value)
 {
+  // See if we already have this parameter name
+  for(auto& param : m_parameters)
+  {
+    if(param.m_key.CompareNoCase(p_parameter) == 0)
+    {
+      param.m_value = p_value;
+      return;
+    }
+  }
+
+  // Make a new parameter for the URL
   UriParam param;
   param.m_key   = p_parameter;
   param.m_value = p_value;

@@ -49,26 +49,34 @@ WebConfigIIS* g_config = nullptr;
 //
 //////////////////////////////////////////////////////////////////////////
 
-TestMarlinServerApp::TestMarlinServerApp(IHttpServer*   p_iis
+TestMarlinServerAppPool::TestMarlinServerAppPool(IHttpServer*   p_iis
                                         ,const char*    p_webroot
                                         ,const char*    p_appName)
                     :ServerApp(p_iis,p_webroot,p_appName)
 {
 }
 
-TestMarlinServerApp::~TestMarlinServerApp()
+TestMarlinServerAppPool::~TestMarlinServerAppPool()
 {
 }
 
 void
-TestMarlinServerApp::InitInstance()
+TestMarlinServerAppPool::InitInstance()
 {
+  // AppPool already running?
+  // If already started for another app in the application pool
+  if(m_running)
+  {
+    ++m_numSites;
+    return;
+  }
+
   // First always call the main class 
   // Must init for the HTTPServer and other objects
   ServerApp::InitInstance();
 
   // Can only be called once if correctly started
-  if(!CorrectlyStarted() || m_running)
+  if(!CorrectlyStarted())
   {
     return;
   }
@@ -77,27 +85,35 @@ TestMarlinServerApp::InitInstance()
   // so it will now it's not running standalone
   m_server.ConfigIISServer(m_applicationName,m_httpServer,m_threadPool,m_logfile);
 
+  // Set our logging level
+  SetLogLevel(HLL_TRACEDUMP);  // NOLOG / ERRORS / LOGGING / LOGBODY / TRACE / TRACEDUMP
+  m_server.SetLogLevel(HLL_TRACEDUMP);
+
   // Now starting our main application
   if(m_server.Startup())
   {
     // Instance is now running
     m_running = true;
+    ++m_numSites;
   }
-
-  // Set our logging level
-  SetLogLevel(HLL_TRACEDUMP);  // NOLOG / ERRORS / LOGGING / LOGBODY / TRACE / TRACEDUMP
 }
 
 bool 
-TestMarlinServerApp::LoadSite(IISSiteConfig& p_config)
+TestMarlinServerAppPool::LoadSite(IISSiteConfig& p_config)
 {
   // Already done in the InitInstance
   return true;
 }
 
 void
-TestMarlinServerApp::ExitInstance()
+TestMarlinServerAppPool::ExitInstance()
 {
+  // One less site in the application pool?
+  if(--m_numSites > 0)
+  {
+    return;
+  }
+
   if(m_running)
   {
     // Testing the error log function
@@ -116,7 +132,7 @@ TestMarlinServerApp::ExitInstance()
 }
 
 bool
-TestMarlinServerApp::CorrectlyStarted()
+TestMarlinServerAppPool::CorrectlyStarted()
 {
   if(ServerApp::CorrectlyStarted() == false)
   {

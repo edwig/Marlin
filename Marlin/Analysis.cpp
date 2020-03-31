@@ -177,6 +177,13 @@ LogAnalysis::GetDoLogging()
   return m_logLevel >= HLL_ERRORS;
 }
 
+// Logfile is currently correctly opened for business
+bool
+LogAnalysis::GetIsOpen()
+{
+  return m_initialised;
+}
+
 // Old interface, simply set logging or turn it of
 void
 LogAnalysis::SetDoLogging(bool p_logging)

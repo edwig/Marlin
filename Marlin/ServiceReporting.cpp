@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 2015-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,6 +31,7 @@
 #include "AutoCritical.h"
 #include "ServerMain.h"
 #include "GetLastErrorAsString.h"
+#include "Alert.h"
 #include "strsafe.h"
 
 #ifdef _DEBUG
@@ -39,12 +40,13 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Each buffer in a event buffer array has a limit of 32K characters
-// See MSDN: ReportEvent function
-#define EVENTBUFFER  (32 * 1024)
+// Each buffer in a event buffer array has a limit of 31K characters
+// See MSDN: ReportEvent function (31.839 characters)
+#define EVENTBUFFER  (31 * 1024)
 
 char*            g_eventBuffer = nullptr;
 CRITICAL_SECTION g_eventBufferLock;
+char             g_svcname[SERVICE_NAME_LENGTH];
 
 void
 SvcStartEventBuffer()
@@ -104,7 +106,7 @@ SvcReportInfoEvent(bool p_doFormat,LPCTSTR p_message,...)
     StringCchCopy(g_eventBuffer,EVENTBUFFER,p_message);
   }
 
-  hEventSource = OpenEventLog(nullptr,PRODUCT_NAME);
+  hEventSource = OpenEventLog(nullptr,g_svcname);
 
   if(hEventSource != nullptr)
   {
@@ -130,7 +132,7 @@ SvcReportSuccessEvent(LPCTSTR p_message)
   HANDLE hEventSource;
   LPCTSTR lpszStrings[2];
 
-  hEventSource = OpenEventLog(nullptr,PRODUCT_NAME);
+  hEventSource = OpenEventLog(nullptr,g_svcname);
 
   if(hEventSource != nullptr)
   {
@@ -157,11 +159,12 @@ SvcReportSuccessEvent(LPCTSTR p_message)
 // Remarks:       The service must have an entry in the Application event log.
 //
 void
-SvcReportErrorEvent(bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_message,...)
+SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_message,...)
 {
-  HANDLE  hEventSource;
-  LPCTSTR lpszStrings[3];
-  TCHAR   Buffer[256];
+  HANDLE  hEventSource = NULL;
+  LPCTSTR lpszStrings[4];
+  TCHAR   buffer1[256];
+  TCHAR   buffer2[256];
   int     lastError = GetLastError();
 
   SvcAllocEventBuffer();
@@ -176,26 +179,33 @@ SvcReportErrorEvent(bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_message,...)
   {
     StringCchCopy(g_eventBuffer,EVENTBUFFER,p_message);
   }
+  StringCchPrintf(buffer1, 256, "Function %s", szFunction);
+  StringCchPrintf(buffer2, 256, "Last OS error: [%d] %s", lastError, GetLastErrorAsString(lastError).GetString());
 
-  hEventSource = OpenEventLog(nullptr,PRODUCT_NAME);
+  hEventSource = OpenEventLog(nullptr,g_svcname);
 
   if(hEventSource != nullptr)
   {
-    StringCchPrintf(Buffer,256,"Function %s. Last OS error: [%d] %s",szFunction,lastError,GetLastErrorAsString(lastError).GetString());
-
     lpszStrings[0] = PRODUCT_NAME;
     lpszStrings[1] = g_eventBuffer;
-    lpszStrings[2] = Buffer;
+    lpszStrings[2] = buffer1;
+    lpszStrings[3] = buffer2;
 
     ReportEvent(hEventSource,        // event log handle
                 EVENTLOG_ERROR_TYPE, // event type
                 0,                   // event category
                 SVC_ERROR,           // event identifier
                 nullptr,             // no security identifier
-                3,                   // size of lpszStrings array
+                4,                   // size of lpszStrings array
                 0,                   // no binary data
                 lpszStrings,         // array of strings
                 nullptr);            // no binary data
     CloseEventLog(hEventSource);
+  }
+
+  // Create alert file if requested
+  if (g_alertConfigured)
+  {
+    CreateAlert(szFunction,buffer2,g_eventBuffer,p_module);
   }
 }

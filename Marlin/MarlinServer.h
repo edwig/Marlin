@@ -1,8 +1,5 @@
 #pragma once
 
-// Load product and application constants
-void LoadConstants();
-
 class MarlinServer
 {
 public:

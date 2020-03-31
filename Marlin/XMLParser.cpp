@@ -905,7 +905,7 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arr
     case JsonType::JDT_number_int:  value.Format("%d",p_value.GetNumberInt());
                                     p_element->SetValue(value);
                                     break;
-    case JsonType::JDT_number_dbl:  value.Format("%.15g",p_value.GetNumberDbl());
+    case JsonType::JDT_number_bcd:  value = p_value.GetNumberBcd().AsString();
                                     p_element->SetValue(value);
                                     break;
     case JsonType::JDT_const:       switch(p_value.GetConstant())

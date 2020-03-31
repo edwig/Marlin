@@ -45,7 +45,7 @@
 int TestFindClientCertificate()
 {
   HTTPClient client;
-  bool result = client.SetClientCertificateThumbprint("MY","db 34 40 64 f2 fa c2 13 18 dd 90 f5 07 fe 78 e8 1b 03 16 00");
+  bool result = client.SetClientCertificateThumbprint("MY","8e 02 b7 fe 7d 0e 6a 35 6d 99 66 64 a5 42 89 7f ba e4 d2 7e");
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
@@ -68,18 +68,18 @@ int TestClientCertificate(HTTPClient* p_client)
   xprintf("=========================================================\n");
 
   // Set the detailed request tracing here
-  // p_client->SetTraceRequest(true);
+  p_client->SetTraceRequest(true);
 
   // Setting to true:  No roundtrips, certificate always sent upfront
   // Setting to false: Certificate will be requested by a roundtrip
-  p_client->SetClientCertificatePreset(true);
+  p_client->SetClientCertificatePreset(false);
 
   // The client certificate comes from MY:MarlinClient
   p_client->SetClientCertificateStore("MY");
   p_client->SetClientCertificateName("MarlinClient");
 
   // Set both store and certificate and test if it exists!
-  result = p_client->SetClientCertificateThumbprint("MY","db344064f2fac21318dd90f507fe78e81b031600");
+  result = p_client->SetClientCertificateThumbprint("MY","8e02b7fe7d0e6a356d996664a542897fbae4d27e");
   if(result)
   {
     xprintf("Client certificate correctly set\n");
