@@ -355,7 +355,7 @@ MultiPartBuffer::AddPart(CString p_name
   part = new MultiPart(p_name,p_contentType);
 
   // See to data conversion
-  CString charset = p_charset;
+  const CString charset = p_charset;
   if(p_charset.CompareNoCase("windows-1252") && p_conversion)
   {
     p_data = EncodeStringForTheWire(p_data,charset);
@@ -365,11 +365,12 @@ MultiPartBuffer::AddPart(CString p_name
   part->SetData(p_data);
 
   // Loose string parts are UTF-8 by default
-  if(charset.IsEmpty())
+  // Revert from version 6.01
+  // REASON: Microsoft .NET stacks cannot handle the charset attribute and WILL crash!
+  if(!charset.IsEmpty() && charset.CompareNoCase("utf-8"))
   {
-    charset = "utf-8";
+    part->SetCharset(charset);
   }
-  part->SetCharset(charset);
 
   // Store the MultiPart
   m_parts.push_back(part);
