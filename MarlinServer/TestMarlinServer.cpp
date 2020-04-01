@@ -35,7 +35,9 @@
 #include "HTTPServerMarlin.h"
 #include "ErrorReport.h"
 #include "HTTPLoglevel.h"
+#include "EnsureFile.h"
 #include "AutoCritical.h"
+#include "Alert.h"
 #include "Version.h"
 
 #ifdef _DEBUG
@@ -94,6 +96,9 @@ TestMarlinServer::Startup()
     // Read our "*.config" file
     ReadConfig();
 
+    // Configure our alert logs
+    StartAlerts();
+
     // Translate the configuration to the server + create URL
     ConfigToServer();
 
@@ -121,11 +126,11 @@ TestMarlinServer::Startup()
   catch(CException& er)
   {
     CString error = MessageFromException(er);
-    SvcReportErrorEvent(true, __FUNCTION__, "Server initialization failed: %s",error.GetString());
+    SvcReportErrorEvent(0,true, __FUNCTION__, "Server initialization failed: %s",error.GetString());
   }
   catch(StdException& er)
   {
-    SvcReportErrorEvent(true,__FUNCTION__,"Server initialization failed: %s",er.GetErrorMessage().GetString());
+    SvcReportErrorEvent(0,true,__FUNCTION__,"Server initialization failed: %s",er.GetErrorMessage().GetString());
   }
   // Stop theClock
   m_counter.Stop();
@@ -140,6 +145,7 @@ TestMarlinServer::ShutDown()
   StopSubsites();
   // Stopping test websocket (if any)
   StopWebSocket();
+
   // Get the results of our tests
   AfterTests();
 
@@ -283,6 +289,33 @@ TestMarlinServer::ReadConfig()
   {
     SvcReportErrorEvent(0,true,__FUNCTION__,"Error reading '%s.config' file. Falling back to defaults",PRODUCT_NAME);
   }
+}
+
+// Start the alert log functionality
+void  
+TestMarlinServer::StartAlerts()
+{
+  EnsureFile ensure;
+  CString path = ensure.DirectoryPart(m_serverLogfile);
+  int pos = path.ReverseFind('\\');
+  if(pos > 0)
+  {
+    path = path.Left(pos + 1);
+    path += "Alerts\\";
+    ensure.SetFilename(path);
+    if(ensure.CheckCreateDirectory() == 0)
+    {
+      // Server registers the first module
+      // Should return the 'module = 0' value
+      m_alertModule = ConfigureApplicationAlerts(path);
+      if(m_alertModule > 0)
+      {
+        SvcReportInfoEvent(true,"Configured the 'Alerts' directory [%d] for the product [%s] in [%s]",m_alertModule,PRODUCT_NAME,path.GetString());
+        return;
+      }
+    }
+  }
+  SvcReportErrorEvent(0,true,__FUNCTION__,"Cannot configure the 'Alerts' directory for the product [%s] in [%s]",PRODUCT_NAME,path.GetString());
 }
 
 // Translate the configuration to the server + create URL

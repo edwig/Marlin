@@ -55,6 +55,8 @@ public:
 protected:
   // Reading our *.config file
   void  ReadConfig();
+  // Start the alert log functionality
+  void  StartAlerts();
   // Translate the configuration to the server + create URL
   void  ConfigToServer();
   // Start server log (if any)
@@ -153,6 +155,7 @@ private:
   CString         m_agent;                              // Agent's name (spoofing!!)
   int             m_instance    { 1  };                 // Instance number on this machine
   ushort          m_inPortNumber{ 80 };                 // Port number of incoming port
+  int             m_alertModule { -1 };                 // Server alert module
   // Others
   HPFCounter      m_counter;
   CString         m_serverLogfile;
