@@ -25,6 +25,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+
+// IMPLEMENTATION of IETF RFC 7578: Returning Values from Forms: multipart/form-data
+// Formal definition: https://tools.ietf.org/html/rfc7578
+//
 #include "stdafx.h"
 #include "MultiPartBuffer.h"
 #include "GenerateGUID.h"
@@ -183,7 +187,7 @@ MultiPart::CreateHeader(CString p_boundary,bool p_extensions /*=false*/)
   header += m_contentType;
   if (!m_charset.IsEmpty())
   {
-    header += " charset=\"" + m_charset + "\"";
+    header += "; charset=\"" + m_charset + "\"";
   }
   header += "\r\n\r\n";
   return header;
@@ -289,12 +293,11 @@ void
 MultiPartBuffer::Reset()
 {
   // Deallocate all parts
-  while(!m_parts.empty())
+  for(auto& part : m_parts)
   {
-    MultiPart* part = m_parts.back();
     delete part;
-    m_parts.pop_back();
   }
+  m_parts.clear();
 }
 
 CString
@@ -367,7 +370,7 @@ MultiPartBuffer::AddPart(CString p_name
   // Loose string parts are UTF-8 by default
   // Revert from version 6.01
   // REASON: Microsoft .NET stacks cannot handle the charset attribute and WILL crash!
-  if(!charset.IsEmpty() && charset.CompareNoCase("utf-8"))
+  if(!charset.IsEmpty() && charset.CompareNoCase("utf-8") && m_useCharset)
   {
     part->SetCharset(charset);
   }

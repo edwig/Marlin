@@ -25,6 +25,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+
+// IMPLEMENTATION of IETF RFC 7578: Returning Values from Forms: multipart/form-data
+// Formal definition: https://tools.ietf.org/html/rfc7578
+//
 #pragma once
 #include <vector>
 #include "FileBuffer.h"
@@ -105,7 +109,7 @@ private:
 using MultiPartMap = std::vector<MultiPart*>;
 using uchar        = unsigned char;
 
-// The MultiPartBuffer implements the RFC 2388 form-data multiparts
+// The MultiPartBuffer implements the RFC 7578 form-data multiparts
 // So that you can add a Content-Disposition part in a HTTP message
 //
 // Normally you only use AddPart/AddFile to create it, and
@@ -140,6 +144,11 @@ public:
   //         or will even crash on it (WCF .NET returns HTTP status 500)
   void         SetFileExtensions(bool p_extens)    { m_extensions = p_extens; };
   bool         GetFileExtensions()                 { return m_extensions;     };
+  // Use "charset" attribute in a non file buffer part
+  // BEWARE: Some servers do not respect the "charset" attribute in the Content-Type
+  //         or will even crash on it (WCF .NET returns HTTP status 500 on the NEXT buffer part
+  void         SetUseCharset(bool p_useCharset)    { m_useCharset = p_useCharset; };
+  bool         GetUseCharset()                     { return m_useCharset;         };
 
 private:
   // Find which type of formdata we are receiving
@@ -160,7 +169,8 @@ private:
   FormDataType m_type;                  // URL-encoded or form-data
   CString      m_boundary;              // Form-Data boundary string
   MultiPartMap m_parts;                 // All parts
-  bool         m_extensions { false };  // Show file times & size in the header
+  bool         m_extensions { true };   // Show file times & size in the header
+  bool         m_useCharset { true };   // Use 'charset' in the 'Content-Type' header
 };
 
 inline size_t
