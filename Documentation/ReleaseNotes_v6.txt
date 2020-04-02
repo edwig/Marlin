@@ -43,6 +43,8 @@ CHANGES IN VERSIN 6.5.0
     was fixed. The message DLL will now also get installed if you start the IIS server from 
     within the "marlinserver start" mechanism. This includes the start from the server applet
     as well.
+9)  The "EnsureFile" object now has an extra method "GrantFullAccess". With this method it is 
+    possible to set full access rights on a file or directory.
 
 CHANGES IN VERSION 6.4.0
 ------------------------

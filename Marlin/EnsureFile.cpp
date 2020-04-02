@@ -27,6 +27,7 @@
 //
 #include "Stdafx.h"
 #include "EnsureFile.h"
+#include <AclAPI.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -464,4 +465,72 @@ EnsureFile::FilenameParts(CString fullpath,CString& p_drive,CString& p_directory
   p_directory = CString(direct);
   p_filename  = CString(fname);
   p_extension = CString(extens);
+}
+
+// Grant full access on file or directory
+bool
+EnsureFile::GrantFullAccess()
+{
+  // Check if we have a filename to work on
+  if(m_filename.IsEmpty())
+  {
+    return false;
+  }
+
+  bool result      = false;
+  PSID SIDEveryone = nullptr;
+  PACL acl         = nullptr;
+  SID_IDENTIFIER_AUTHORITY SIDAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
+  EXPLICIT_ACCESS ea;
+
+  __try 
+  {
+    // Create a SID for the Everyone group.
+    if(AllocateAndInitializeSid(&SIDAuthWorld,1,SECURITY_WORLD_RID
+                               ,0,0,0,0,0,0,0
+                               ,&SIDEveryone) == 0)
+    {
+      // AllocateAndInitializeSid (Everyone) failed
+      __leave;
+    }
+    // Set full access for Everyone.
+    ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
+    ea.grfAccessPermissions = MAXIMUM_ALLOWED;
+    ea.grfAccessMode        = SET_ACCESS;
+    ea.grfInheritance       = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+    ea.Trustee.TrusteeForm  = TRUSTEE_IS_SID;
+    ea.Trustee.TrusteeType  = TRUSTEE_IS_WELL_KNOWN_GROUP;
+    ea.Trustee.ptstrName    = (LPTSTR)SIDEveryone;
+
+    if(ERROR_SUCCESS != SetEntriesInAcl(1,&ea,nullptr,&acl))
+    {
+      // SetEntriesInAcl failed
+      __leave;
+    }
+    // Try to modify the object's DACL.
+    if(ERROR_SUCCESS != SetNamedSecurityInfo((LPSTR)m_filename.GetString() // name of the object
+                                             ,SE_FILE_OBJECT               // type of object: file or directory
+                                             ,DACL_SECURITY_INFORMATION    // change only the object's DACL
+                                             ,nullptr,nullptr              // do not change owner or group
+                                             ,acl                          // DACL specified
+                                             ,nullptr))                    // do not change SACL
+    {
+      // SetNamedSecurityInfo failed to change the DACL Maximum Allowed Access
+      __leave;
+    }
+    // Full access granted!
+    result = true;
+  }
+  __finally 
+  {
+    if(SIDEveryone)
+    {
+      FreeSid(SIDEveryone);
+    }
+    if(acl)
+    {
+      LocalFree(acl);
+    }
+  }
+  return result;
 }

@@ -42,6 +42,8 @@ public:
   int      OpenFile(FILE** p_file,char* p_mode);
   // Create/check existence of a directory
   int      CheckCreateDirectory();
+  // Grant full access on file/directory
+  bool     GrantFullAccess();
 
   // Special optimized function to resolve %5C -> '\' in pathnames
   int      ResolveSpecialChars(CString& value);
