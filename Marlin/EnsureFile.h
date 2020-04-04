@@ -46,7 +46,9 @@ public:
   bool     GrantFullAccess();
 
   // Special optimized function to resolve %5C -> '\' in pathnames
-  int      ResolveSpecialChars(CString& value);
+  int      ResolveSpecialChars(CString& p_value);
+  // Encode a filename in special characters
+  int      EncodeSpecialChars(CString& p_value);
   // Create a file name from an HTTP resource name
   CString  FileNameFromResourceName(CString p_resource);
   // Reduce file path name for RE-BASE of directories, removing \..\ parts

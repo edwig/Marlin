@@ -28,6 +28,7 @@
 
 // IMPLEMENTATION of IETF RFC 7578: Returning Values from Forms: multipart/form-data
 // Formal definition: https://tools.ietf.org/html/rfc7578
+// Previous implementation: https://tools.ietf.org/html/rfc2388
 //
 #include "stdafx.h"
 #include "MultiPartBuffer.h"
@@ -69,11 +70,6 @@ MultiPart::SetFile(CString p_filename)
   m_modificationDate.Empty();
   m_readDate.Empty();
 
-  // New filetimes
-  FILETIME creation;
-  FILETIME modification;
-  FILETIME readtime;
-
   // Open file to read the filetimes from the filesystem
   HANDLE fileHandle = CreateFile(p_filename
                                 ,GENERIC_READ
@@ -84,6 +80,11 @@ MultiPart::SetFile(CString p_filename)
                                 ,NULL);
   if(fileHandle)
   {
+    // New filetimes
+    FILETIME creation     { 0, 0 };
+    FILETIME modification { 0, 0 };
+    FILETIME readtime     { 0, 0 };
+
     if(GetFileTime(fileHandle,&creation,&readtime,&modification))
     {
       m_creationDate     = FileTimeToString(&creation);
@@ -104,10 +105,13 @@ MultiPart::SetFile(CString p_filename)
     return false;
   }
 
-  // Record filename and size
+  // Record filename and size in this MultiPart
   EnsureFile ensure;
   m_filename = ensure.FilenamePart(p_filename);
-  m_size = m_file.GetLength();
+  m_size     = m_file.GetLength();
+
+  // Add % encoding in the name if so necessary
+  ensure.EncodeSpecialChars(m_filename);
 
   return true;
 }
@@ -298,6 +302,11 @@ MultiPartBuffer::Reset()
     delete part;
   }
   m_parts.clear();
+  m_boundary.Empty();
+  m_incomingCharset.Empty();
+  m_extensions = false;
+  m_useCharset = false;
+  // Leave m_type alone: otherwise create another MultiPartBuffer
 }
 
 CString
@@ -316,7 +325,7 @@ MultiPartBuffer::GetContentType()
 bool
 MultiPartBuffer::SetFormDataType(FormDataType p_type)
 {
-  // In case we 'reset'  to url encoded
+  // In case we 'reset'  to URL encoded
   // we cannot allow to any files entered as parts
   if(p_type == FD_URLENCODED)
   {
@@ -346,16 +355,14 @@ MultiPartBuffer::AddPart(CString p_name
                         ,CString p_charset    /* = ""    */
                         ,bool    p_conversion /* = false */)
 {
-  // In case of double names, do nothing, but return the first part of that name
-  // The standard says that the result is undefined, so this makes perfectly sense
-  MultiPart* part = GetPart(p_name);
-  if(part)
+  // Check that the name is a printable ASCII character string
+  if(!CheckName(p_name))
   {
-    return part;
+    return nullptr;
   }
 
   // Add the part
-  part = new MultiPart(p_name,p_contentType);
+  MultiPart* part = new MultiPart(p_name,p_contentType);
 
   // See to data conversion
   const CString charset = p_charset;
@@ -383,21 +390,26 @@ MultiPartBuffer::AddPart(CString p_name
 MultiPart*   
 MultiPartBuffer::AddFile(CString p_name,CString p_contentType,CString p_filename)
 {
-  MultiPart* part = GetPart(p_name);
-  if(part)
+  // Check that the name is a printable ASCII character string
+  if(!CheckName(p_name))
   {
-    return part;
+    return nullptr;
   }
-  part = new MultiPart(p_name,p_contentType);
+
+  // Create file part
+  MultiPart* part = new MultiPart(p_name,p_contentType);
   if(part->SetFile(p_filename) == false)
   {
     delete part;
     return nullptr;
   }
+  // Store the MultiPart
   m_parts.push_back(part);
   return part;
 }
 
+// Get part by name. Can fail as names may be duplicate
+// In case of duplicate names, you WILL get the FIRST one!
 MultiPart*   
 MultiPartBuffer::GetPart(CString p_name)
 {
@@ -411,6 +423,8 @@ MultiPartBuffer::GetPart(CString p_name)
   return nullptr;
 }
 
+// Get part by index number.
+// Can NOT fail in case of duplicate name parts
 MultiPart*   
 MultiPartBuffer::GetPart(int p_index)
 {
@@ -429,10 +443,15 @@ MultiPartBuffer::CalculateBoundary()
   bool exists = false;
   do
   {
+    // Create boundary by using a globally unique identifier
     m_boundary = GenerateGUID();
     m_boundary.Replace("-","");
     m_boundary = CString("#BOUNDARY#") + m_boundary + "#";
 
+    // Reset the search of the next boundary
+    exists = false;
+
+    // Search all parts for the existence of the boundary
     for(auto& part : m_parts)
     {
       if(part->CheckBoundaryExists(m_boundary))
@@ -608,16 +627,16 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,CString& p
   void* result = nullptr;
 
   // Message buffer must end in "<BOUNDARY>--", so no need to seek to the exact end of the buffer
-  // Beware of WebKit (Chrome) that wil send "<BOUNDARY>--\r\n" at the end of the buffer
-  int length = p_boundary.GetLength();
-  while(p_remaining > (size_t)(length + 4))
+  // Beware of WebKit (Chrome) that will send "<BOUNDARY>--\r\n" at the end of the buffer
+  size_t length = (size_t)p_boundary.GetLength();
+  while(p_remaining > (length + 4))
   {
     --p_remaining;
     if(memcmp(p_finding,(char*)p_boundary.GetString(),length) == 0)
     {
       // Positioning of the boundary found
-      p_finding   += length + 2; // 2 is for cr/lf of the HTTP protocol 
-      p_remaining -= length + 2; // 2 is for cr/lf of the HTTP protocol 
+      p_finding   += length + 2; // 2 is for CR/LF of the HTTP protocol 
+      p_remaining -= length + 2; // 2 is for CR/LF of the HTTP protocol 
       result       = p_finding;
 
       while(p_remaining)
@@ -677,6 +696,13 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool
       charset = FindCharsetInContentType(header);
       part->SetContentType(value);
       part->SetCharset(charset);
+
+      // In case we have no charset in the Content-Type and we already
+      // saw a incoming MultiPart with the name "_charset_"
+      if(charset.IsEmpty() && !m_incomingCharset.IsEmpty())
+      {
+        charset = m_incomingCharset;
+      }
     }
     else if(header.CompareNoCase("Content-Disposition") == 0)
     {
@@ -715,17 +741,23 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool
     {
       data = DecodeStringFromTheWire(data,charset);
     }
-    // Place in Multipart
+    // Place in MultiPart
     part->SetData(data);
+
+    // Special charset convention on incoming messages
+    if(part->GetName().CompareNoCase("_charset_") == 0)
+    {
+      m_incomingCharset = data;
+    }
   }
   else
   {
     // FILE
-    // Add buffer as my filebuffer in one go
+    // Add buffer as my file buffer in one go
     FileBuffer* buffer = part->GetBuffer();
     size_t length = p_partialEnd - p_partialBegin;
 
-    // Place in filebuffer
+    // Place in file buffer
     buffer->SetBuffer(p_partialBegin,length);
   }
   // Do not forget to save this part
@@ -809,7 +841,7 @@ MultiPartBuffer::GetAttributeFromLine(CString& p_line,CString p_name)
   return attribute;
 }
 
-// Find which type of formdata we are receiving
+// Find which type of FormData we are receiving
 // content-type: multipart/form-data; boundary="--#BOUNDARY#12345678901234"
 // content-type: application/x-www-form-urlencoded
 FormDataType
@@ -849,4 +881,18 @@ MultiPartBuffer::FindBoundaryInContentType(CString p_contentType)
     }
   }
   return boundary;
+}
+
+// Check that name is in the printable ASCII range for a data part
+bool
+MultiPartBuffer::CheckName(CString p_name)
+{
+  for(int index = 0;index < p_name.GetLength(); ++index)
+  {
+    if(!isprint(p_name.GetAt(index)))
+    {
+      return false;
+    }
+  }
+  return true;
 }

@@ -28,6 +28,7 @@
 
 // IMPLEMENTATION of IETF RFC 7578: Returning Values from Forms: multipart/form-data
 // Formal definition: https://tools.ietf.org/html/rfc7578
+// Previous implementation: https://tools.ietf.org/html/rfc2388
 //
 #pragma once
 #include <vector>
@@ -165,12 +166,15 @@ private:
   CString      GetAttributeFromLine(CString& p_line,CString p_name);
   // Adding a part from a raw buffer
   void         AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool p_conversion);
+  // Check that name is in the ASCII range for a data part
+  bool         CheckName(CString p_name);
 
   FormDataType m_type;                  // URL-encoded or form-data
   CString      m_boundary;              // Form-Data boundary string
+  CString      m_incomingCharset;       // Character set from "_charset_" part
   MultiPartMap m_parts;                 // All parts
-  bool         m_extensions { true };   // Show file times & size in the header
-  bool         m_useCharset { true };   // Use 'charset' in the 'Content-Type' header
+  bool         m_extensions { false };  // Show file times & size in the header
+  bool         m_useCharset { false };  // Use 'charset' in the 'Content-Type' header
 };
 
 inline size_t

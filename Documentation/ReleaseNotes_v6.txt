@@ -45,6 +45,16 @@ CHANGES IN VERSIN 6.5.0
     as well.
 9)  The "EnsureFile" object now has an extra method "GrantFullAccess". With this method it is 
     possible to set full access rights on a file or directory.
+10) Fully implemented the MultiPartBuffer for the formdata transport. Upgraded from the
+    IETF RFC 2388 to RFC 7578. This includes the following changes
+    - The "name" of the part is no longer unique. The same name can be included multiple times
+    - The "charset" attribute of the "Content-Type" is now optional, defaulting to "UTF-8"
+    - Support for the "_charset_" part. The data of this part contains the charset of message
+      parts *NOT* nameing a charset attribute in the Content-Type
+    - The "filename" attribute will be percent encoded if it contains characters out of the
+      ASCII alphanumeric range
+11) Rechecked all tests under IIS. All three testsites (MarlinTest, SecureTest, SecureClientCert)
+    are now running in one application pool. All tests both in server and client are 'in-the-green'
 
 CHANGES IN VERSION 6.4.0
 ------------------------

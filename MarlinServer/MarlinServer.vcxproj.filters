@@ -109,13 +109,13 @@
     <None Include="Web.Config">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="MarlinServerMessages.mc">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MarlinServer.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="MarlinServerMessages.mc" />
   </ItemGroup>
 </Project>

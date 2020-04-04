@@ -131,16 +131,16 @@ EnsureFile::CheckCreateDirectory()
 // Special optimized function to resolve %5C -> '\' in pathnames
 // Returns number of chars replaced
 int
-EnsureFile::ResolveSpecialChars(CString& value)
+EnsureFile::ResolveSpecialChars(CString& p_value)
 {
   int total = 0;
 
-  int pos = value.Find('%');
+  int pos = p_value.Find('%');
   while(pos >= 0)
   {
     ++total;
     int num = 0;
-    CString hexstring = value.Mid(pos + 1,2);
+    CString hexstring = p_value.Mid(pos + 1,2);
     hexstring.MakeUpper();
     if(isdigit(hexstring.GetAt(0)))
     {
@@ -159,10 +159,44 @@ EnsureFile::ResolveSpecialChars(CString& value)
     {
       num += hexstring.GetAt(1) - 'A' + 10;
     }
-    value.SetAt(pos,(char)num);
-    value = value.Left(pos + 1) + value.Mid(pos + 3);
-    pos = value.Find('%');
+    p_value.SetAt(pos,(char)num);
+    p_value = p_value.Left(pos + 1) + p_value.Mid(pos + 3);
+    pos = p_value.Find('%');
   }
+  return total;
+}
+
+// Encode a filename in special characters
+int
+EnsureFile::EncodeSpecialChars(CString& p_value)
+{
+  int total = 0;
+
+  int pos = 0;
+  while (pos < p_value.GetLength())
+  {
+    int ch = p_value.GetAt(pos);
+    if(!isalnum(ch) && ch != '/')
+    {
+      // Encoding in 2 chars HEX
+      CString hexstring;
+      hexstring.Format("%%%2.2X",ch);
+
+      // Take left and right of the special char
+      CString left  = p_value.Left(pos);
+      CString right = p_value.Mid(pos + 1);
+
+      // Create a new value with the encoded char in it
+      p_value = left + hexstring + right;
+
+      // Next position + 1 conversion done
+      pos += 2;
+      ++total;
+    }
+    // Look at next character
+    ++pos;
+  }
+
   return total;
 }
 

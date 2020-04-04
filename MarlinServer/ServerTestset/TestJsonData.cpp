@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 12;
+static int totalChecks = 8;
 
 class SiteHandlerJsonData: public SiteHandlerJson
 {
