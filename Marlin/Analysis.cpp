@@ -851,7 +851,7 @@ LogAnalysis::RemoveLogfilesKeeping()
   {
     do
     {
-      // Only considder for delete if it's a 'real' file
+      // Only consider for delete if it's a 'real' file
       if((fileInfo.attrib & _A_SUBDIR) == 0)
       {
         CString fileName = direct + fileInfo.name;
@@ -865,20 +865,16 @@ LogAnalysis::RemoveLogfilesKeeping()
   // Sort all files in ascending order
   std::sort(map.begin(),map.end());
 
-  // Delete from the vector, beginning at the end. 
+  // Delete from the vector, beginning with the oldest
   // Start deleting if number of files-to-keep has been reached
-  int total = 0;
-  std::vector<CString>::iterator it = map.end();
-  while(true)
+  int total = ((int)map.size()) - m_keepfiles;
+  std::vector<CString>::iterator file = map.begin();
+  while(file != map.end())
   {
-    if(it == map.begin())
+    if(total-- <= 0)
     {
       break;
     }
-    --it;
-    if(++total > m_keepfiles)
-    {
-      DeleteFile(*it);
-    }
+    DeleteFile(*file++);
   }
 }

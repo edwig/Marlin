@@ -55,6 +55,10 @@ CHANGES IN VERSIN 6.5.0
       ASCII alphanumeric range
 11) Rechecked all tests under IIS. All three testsites (MarlinTest, SecureTest, SecureClientCert)
     are now running in one application pool. All tests both in server and client are 'in-the-green'
+12) The number of logfiles to be kept in the logfile directory of the server can now be set with
+    the method "SetKeepfiles()". This can set the number of logfiles to keep between 10 and 500.
+    The default value for the number of files to keep is 128 (2 logfiles per day for 2 months).
+    This makes the logfile rotation more configurable.
 
 CHANGES IN VERSION 6.4.0
 ------------------------
