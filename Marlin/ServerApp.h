@@ -96,12 +96,16 @@ public:
   // Add new MarlinModule used virtual overrides at this end of the table!
   // END OF THE VTABLE
 
+  // Number of logfiles to keep
+  void SetKeepLogfiles(int p_keep);
+
   // GETTERS
   // Never virtual. Derived classes should use these!!
   HTTPServerIIS* GetHTTPServer()  { return m_httpServer;  };
   ThreadPool*    GetThreadPool()  { return m_threadPool;  };
   LogAnalysis*   GetLogfile()     { return m_logfile;     };
   int            GetLogLevel()    { return m_logLevel;    };
+  int            GetKeepLogfiles(){ return m_keepLogFiles;};
   IISSiteConfig* GetSiteConfig(int ind);
 
 protected:
@@ -131,6 +135,7 @@ protected:
   ErrorReport*   m_errorReport  { nullptr };    // Error reporting object
   bool           m_ownReport    { false   };    // We made the error report
   int            m_logLevel     { HLL_NOLOG };  // Logging level of server and logfile
+  int            m_keepLogFiles { LOGWRITE_KEEPFILES };  // Default number of logfiles to keep
 };
 
 // Factory for your application to create a new class derived from the ServerApp

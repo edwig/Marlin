@@ -42,6 +42,7 @@
 #include "AutoCritical.h"
 #include "EnsureFile.h"
 #include "ConvertWideString.h"
+#include "WebConfig.h"
 #include <string.h>
 #include <sys/timeb.h>
 #include <io.h>
@@ -617,7 +618,7 @@ void
 LogAnalysis::ReadConfig()
 {
   char buffer[256] = "";
-  CString fileName = "Logfile.config";
+  CString fileName = WebConfig::GetExePath() + "Logfile.config";
 
   FILE* file = NULL;
   fopen_s(&file,fileName,"r");
@@ -633,7 +634,9 @@ LogAnalysis::ReadConfig()
         {
           buffer[len] = 0;
         }
+        else break;
       }
+      // Look for a comment
       if(buffer[0] == ';' || buffer[0] == '#')
       {
         continue;
@@ -645,7 +648,8 @@ LogAnalysis::ReadConfig()
       }
       if(_strnicmp(buffer,"loglevel=",8) == 0)
       {
-        m_logLevel = atoi(&buffer[8]) > 0;
+        int logLevel = atoi(&buffer[8]) > 0;
+        SetLogLevel(logLevel);
         continue;
       }
       if(_strnicmp(buffer,"rotate=",7) == 0)
@@ -661,31 +665,28 @@ LogAnalysis::ReadConfig()
       if(_strnicmp(buffer,"events=",7) == 0)
       {
         m_doEvents = atoi(&buffer[7]) > 0;
+        continue;
       }
       if(_strnicmp(buffer,"cache=",6) == 0)
       {
-        m_cache = atoi(&buffer[6]);
+        int cache = atoi(&buffer[6]);
+        SetCache(cache);
+        continue;
       }
       if(_strnicmp(buffer,"interval=",9) == 0)
       {
-        m_interval = atoi(&buffer[9]) * CLOCKS_PER_SEC;
+        int interval = atoi(&buffer[9]) * CLOCKS_PER_SEC;
+        SetInterval(interval);
+        continue;
       }
       if(_strnicmp(buffer,"keep=",5) == 0)
       {
-        m_keepfiles = atoi(&buffer[5]);
+        int keep = atoi(&buffer[5]);
+        SetKeepfiles(keep);
+        continue;
       }
     }
     fclose(file);
-
-    // Check what we just read
-    if(m_logLevel  < HLL_NOLOG)             m_logLevel  = HLL_NOLOG;
-    if(m_logLevel  > HLL_HIGHEST)           m_logLevel  = HLL_HIGHEST;
-    if(m_cache     < LOGWRITE_MINCACHE)     m_cache     = LOGWRITE_MINCACHE;
-    if(m_cache     > LOGWRITE_MAXCACHE)     m_cache     = LOGWRITE_MAXCACHE;
-    if(m_interval  < LOGWRITE_INTERVAL_MIN) m_interval  = LOGWRITE_INTERVAL_MIN;
-    if(m_interval  > LOGWRITE_INTERVAL_MAX) m_interval  = LOGWRITE_INTERVAL_MAX;
-    if(m_keepfiles < LOGWRITE_KEEPLOG_MIN)  m_keepfiles = LOGWRITE_KEEPLOG_MIN;
-    if(m_keepfiles > LOGWRITE_KEEPLOG_MAX)  m_keepfiles = LOGWRITE_KEEPLOG_MAX;
   }
 }
 

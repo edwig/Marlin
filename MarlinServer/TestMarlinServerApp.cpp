@@ -71,6 +71,9 @@ TestMarlinServerAppPool::InitInstance()
     return;
   }
 
+  // TEST: See if we keep only 10 logfiles!
+  SetKeepLogfiles(10);
+
   // First always call the main class 
   // Must init for the HTTPServer and other objects
   ServerApp::InitInstance();

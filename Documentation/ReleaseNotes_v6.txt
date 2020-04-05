@@ -59,6 +59,8 @@ CHANGES IN VERSIN 6.5.0
     the method "SetKeepfiles()". This can set the number of logfiles to keep between 10 and 500.
     The default value for the number of files to keep is 128 (2 logfiles per day for 2 months).
     This makes the logfile rotation more configurable.
+    The ServerApp object has a new methode (SetKeepLogfiles()) to pre-set the number of logfiles,
+    before starting the server.
 
 CHANGES IN VERSION 6.4.0
 ------------------------

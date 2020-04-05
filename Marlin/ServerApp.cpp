@@ -251,6 +251,16 @@ ServerApp::ExitInstance()
   g_report      = nullptr;
 }
 
+// Number of logfiles to keep
+void 
+ServerApp::SetKeepLogfiles(int p_keep)
+{
+  m_keepLogFiles = p_keep;
+
+  if(m_keepLogFiles < LOGWRITE_KEEPLOG_MIN) m_keepLogFiles = LOGWRITE_KEEPLOG_MIN;
+  if(m_keepLogFiles > LOGWRITE_KEEPLOG_MAX) m_keepLogFiles = LOGWRITE_KEEPLOG_MAX;
+}
+
 // The performance counter
 void 
 ServerApp::StartCounter()
@@ -286,6 +296,7 @@ ServerApp::StartLogging()
     m_logfile->SetLogFilename(logfile);
     m_logfile->SetLogRotation(true);
     m_logfile->SetLogLevel(m_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);
+    m_logfile->SetKeepfiles(m_keepLogFiles);
 
     // Record for test classes
     g_analysisLog = m_logfile;
