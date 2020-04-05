@@ -323,6 +323,7 @@ void ReadConfig()
 void PrintCopyright()
 {
   printf("%s\n%s\n\n",PRODUCT_DISPLAY_NAME,PRODUCT_COPYRIGHT);
+  fflush(stdout);
   CheckPlatform();
 }
 

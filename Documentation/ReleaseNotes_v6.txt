@@ -61,6 +61,11 @@ CHANGES IN VERSIN 6.5.0
     This makes the logfile rotation more configurable.
     The ServerApp object has a new methode (SetKeepLogfiles()) to pre-set the number of logfiles,
     before starting the server.
+13) The "ServerMain.cpp" module and the ServerApplet have been fully tested.
+    The buttons on het ServerApplet contain no meaningfull functions. It's up to the programmer
+    that uses the framework to devise these functions. The skeleton applet starts and stops 
+    the IIS service, the NT service or the stand-alone server through means of the default
+    main() function in "ServerMain".
 
 CHANGES IN VERSION 6.4.0
 ------------------------
