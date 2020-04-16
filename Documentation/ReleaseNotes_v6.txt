@@ -66,6 +66,8 @@ CHANGES IN VERSIN 6.5.0
     that uses the framework to devise these functions. The skeleton applet starts and stops 
     the IIS service, the NT service or the stand-alone server through means of the default
     main() function in "ServerMain".
+14) The "FileBuffer" class used in a HTTPMessage now reads in the files in shared read AND write
+    mode, so more files opened by othere processes can be serviced.
 
 CHANGES IN VERSION 6.4.0
 ------------------------

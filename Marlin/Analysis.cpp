@@ -595,6 +595,7 @@ LogAnalysis::Flush(bool p_all)
     // Logfile failed. Where to log this??
     TRACE("%s\n",er.GetErrorMessage().GetString());
   }
+  FlushFileBuffers(m_file);
 }
 
 // Write out a log line
