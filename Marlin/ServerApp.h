@@ -74,7 +74,8 @@ public:
   // Starting and stopping the server
   virtual void InitInstance();
   virtual void ExitInstance();
-  virtual bool LoadSite(IISSiteConfig& p_config);
+  virtual bool LoadSite  (IISSiteConfig& p_config);
+  virtual bool UnloadSite(IISSiteConfig* p_config);
   virtual ErrorReport* GetErrorReport();
 
   // The performance counter
@@ -86,6 +87,8 @@ public:
 
   // Start our sites from the IIS configuration
   virtual void LoadSites(IHttpApplication* p_app,CString p_physicalPath);
+  // Stopping all of our sites in the IIS configuration
+  virtual void UnloadSites();
 
   // Server app was correctly started by MarlinIISModule
   virtual bool CorrectlyStarted();

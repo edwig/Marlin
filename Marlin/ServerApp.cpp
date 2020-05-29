@@ -365,10 +365,21 @@ ServerApp::SetLogLevel(int p_logLevel)
   }
 }
 
+// LoadSites will call LoadSite or its overloaded methods
+// Do not forget to call this one, or at least increment the number of sites
 bool
 ServerApp::LoadSite(IISSiteConfig& /*p_config*/)
 {
-  // Already done in LoadSites
+  ++m_numSites;
+  return true;
+}
+
+// When stopping the sites: calls the overloaded methods
+// Do not forget to call this one, or at least decrement the number of sites
+bool
+ServerApp::UnloadSite(IISSiteConfig* /*p_config*/)
+{
+  --m_numSites;
   return true;
 }
 
@@ -381,7 +392,6 @@ ServerApp::GetSiteConfig(int ind)
   }
   return nullptr;
 }
-
 
 // Start our sites from the IIS configuration
 void 
@@ -434,6 +444,16 @@ ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
   CString text("ERROR Loading IIS Site: ");
   text += config;
   ERRORLOG(ERROR_NO_SITENAME,text);
+}
+
+// Stopping all of our sites in the IIS configuration
+void 
+ServerApp::UnloadSites()
+{
+  for(auto& site : m_sites)
+  {
+    UnloadSite(site);
+  }
 }
 
 void

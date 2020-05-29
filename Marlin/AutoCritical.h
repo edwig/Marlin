@@ -42,15 +42,15 @@ private:
 };
 
 // New type critical section recursive mutex lock
-class CriticalSection
+class CritSection
 {
 public:
-  CriticalSection(Critical& p_section) : m_section(&p_section)
+  CritSection(Critical& p_section) : m_section(&p_section)
   {
     p_section.Lock();
   }
 
-  ~CriticalSection()
+  ~CritSection()
   {
     m_section->Unlock();
   }

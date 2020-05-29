@@ -2119,7 +2119,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   // Try to optimize and not re-parse the complete URL
   if(!p_msg->GetServer().IsEmpty() &&
      !p_msg->GetAbsolutePath().IsEmpty() &&
-      p_msg->GetPort() != 0)
+      p_msg->GetPort() != INTERNET_DEFAULT_HTTP_PORT)
   {
     ReplaceSetting(&m_user,    p_msg->GetUser());
     ReplaceSetting(&m_password,p_msg->GetPassword());

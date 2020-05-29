@@ -50,7 +50,9 @@ public:
   ~APP()
   {
     // Only delete application if last site was deallocated
-    if(m_application && (*m_sitesInAppPool)(m_application) == 0)
+    // If ServerApp::LoadSite() overloads forget to call base method
+    // the reference count can drop below zero
+    if(m_application && (*m_sitesInAppPool)(m_application) <= 0)
     {
       delete m_application;
     }
@@ -136,6 +138,7 @@ public:
 private:
   bool    ModuleInHandlers(const CString& p_configPath);
   CString ConstructDLLLocation(CString p_rootpath,CString p_dllPath);
+  bool    CheckApplicationPresent(CString& p_dllPath,CString& p_dllName);
   bool    AlreadyLoaded(APP* p_app, CString p_path_to_dll);
   bool    StillUsed(const HMODULE& p_module);
   GLOBAL_NOTIFICATION_STATUS Unhealthy(CString p_error,HRESULT p_code);

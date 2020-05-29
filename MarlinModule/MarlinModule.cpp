@@ -46,6 +46,7 @@
 #include "WebConfigIIS.h"
 #include "StdException.h"
 #include "RunRedirect.h"
+#include <io.h>
 #ifdef _DEBUG
 #include "IISDebug.h"
 #endif
@@ -56,8 +57,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define MODULE_NAME "MarlinModule"
-#define MODULE_PATH "DllDirectory"
+#define MODULE_NAME "Application"
+#define MODULE_PATH "Directory"
 #define MODULE_XSS  "XSSBlocking"
 
 // GLOBALS Needed for the module
@@ -95,11 +96,6 @@ RegisterModule(DWORD                        p_version
               ,IHttpServer*                 p_server)
 {
   USES_CONVERSION;
-
-  // FIRST MOMENT OF DEBUG
-  // WAIT HERE FOR IIS
-  // Sleep(20000);
-
   TRACE("REGISTER MODULE\n");
 
   // Global name for the WMI Service event registration
@@ -323,21 +319,29 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   if(dllLocation.IsEmpty())
   {
     delete poolapp;
-    CString error("MarlinModule could **NOT** locate MarlinModule in web.config: " + baseWebConfig);
-    return Unhealthy(error,ERROR_NOT_FOUND);
+    return Unhealthy("MarlinModule could **NOT** locate the 'Application' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
   }
-  dllLocation = ConstructDLLLocation(physical,dllLocation);
 
   CString dllPath = poolapp->m_config.GetSetting(MODULE_PATH);
-  if(!dllPath.IsEmpty())
+  if(dllPath.IsEmpty())
   {
-    dllPath = ConstructDLLLocation(physical,dllPath);
-    if(SetDllDirectory(dllPath) == FALSE)
-    {
-      delete poolapp;
-      CString error("MarlinModule could **NOT** set the DLL directory path to: " + dllPath);
-      return Unhealthy(error,ERROR_NOT_FOUND);
-    }
+    delete poolapp;
+    return Unhealthy("MarlinModule could **NOT** locate the 'Directory' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
+  }
+
+  // Tell MS-Windows where to look while loading our DLL
+  dllPath = ConstructDLLLocation(physical,dllPath);
+  if(SetDllDirectory(dllPath) == FALSE)
+  {
+    delete poolapp;
+    return Unhealthy("MarlinModule could **NOT** append DLL-loading search path with: " + dllPath,ERROR_NOT_FOUND);
+  }
+
+  // Ultimatly check that the directory exists and that we have read rights on the application's DLL
+  if(!CheckApplicationPresent(dllPath, dllLocation))
+  {
+    delete poolapp;
+    return Unhealthy("MarlinModule could not access the application module DLL: " + dllLocation,ERROR_ACCESS_DENIED);
   }
 
   // See if we must load the DLL application
@@ -358,7 +362,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     {
       HRESULT code = GetLastError();
       CString error("MarlinModule could **NOT** load DLL from: " + dllLocation);
-      SetDllDirectory(NULL);
+      SetDllDirectory(nullptr);
       delete poolapp;
       return Unhealthy(error,code);
     }
@@ -379,7 +383,8 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
        poolapp->m_handleMessage   == nullptr ||
        poolapp->m_sitesInAppPool  == nullptr  )
     {
-      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', 'GetHTTPMessageFromRequest', 'HandleHTTPMessage' or 'SitesInApplicPool'");
+      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', "
+                    "'GetHTTPMessageFromRequest', 'HandleHTTPMessage' or 'SitesInApplicPool'");
       delete poolapp;
       return Unhealthy(error,ERROR_NOT_FOUND);
     }
@@ -420,7 +425,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   // Restore the original DLL search order
   if(!dllPath.IsEmpty())
   {
-    SetDllDirectory(NULL);
+    SetDllDirectory(nullptr);
   }
 
   // Flush the results of starting the server to the logfile
@@ -464,6 +469,8 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   DETAILLOG(stopping);
 
   // STOP!!
+  app->UnloadSites();
+
   // Let the application stop itself 
   app->ExitInstance();
 
@@ -677,6 +684,35 @@ MarlinGlobalFactory::ConstructDLLLocation(CString p_rootpath,CString p_dllPath)
   return pathname;
 }
 
+// Checking for the presence of the application DLL
+bool
+MarlinGlobalFactory::CheckApplicationPresent(CString& p_dllPath,CString& p_dllName)
+{
+  // Check if the directory exists
+  if(_access(p_dllPath, 0) == -1)
+  {
+    ERRORLOG("The directory does not exist: " + p_dllPath);
+    return false;
+  }
+
+  // Check that dllName does not have a directory
+  int pos = p_dllName.Find('\\');
+  if (pos >= 0)
+  {
+    ERRORLOG("The variable 'Application' must only be the name of the application DLL: " + p_dllName);
+    return false;
+  }
+
+  // Construct the complete path and check for presence
+  p_dllName = p_dllPath + p_dllName;
+  if(_access(p_dllPath, 4) == -1)
+  {
+    ERRORLOG("The application DLL cannot be read: " + p_dllName);
+    return false;
+  }
+  return true;
+}
+
 // Stopping the global factory
 void 
 MarlinGlobalFactory::Terminate()
@@ -706,12 +742,16 @@ MarlinGlobalFactory::Terminate()
 
 MarlinModuleFactory::MarlinModuleFactory()
 {
+#ifdef _DEBUG
   DETAILLOG("Starting new module factory");
+#endif
 }
 
 MarlinModuleFactory::~MarlinModuleFactory()
 {
+#ifdef _DEBUG
   DETAILLOG("Stopping module factory");
+#endif
 }
   
 HRESULT 
@@ -753,12 +793,16 @@ MarlinModuleFactory::Terminate()
 
 MarlinModule::MarlinModule()
 {
+#ifdef _DEBUG
   DETAILLOG("Start Request");
+#endif
 }
 
 MarlinModule::~MarlinModule()
 {
+#ifdef _DEBUG
   DETAILLOG("Request ready");
+#endif
 }
 
 // On each request: Note the fact that we got it. 

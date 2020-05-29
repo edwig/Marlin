@@ -11,41 +11,56 @@ It is tested through the "MarlinServerSync" test program only
 
 CHANGES IN VERSIN 6.5.0 
 -----------------------
-1)  Renewed all certificates in the 'Certificate' directory. Dates of the certificates have been
-    extended from 1-1-2020 to 1-1-2030
-2)  Added an extra wrapper around the "CRITICAL_SECTION" lock. See the header "AutoCritical.h"
-3)  Replaced the "double" datatype in the JSONMessage by the 'bcd' class. This prevents JSON
-    messages from carrying rounding errors in decimal numbers. This has a serious impact on the
-    implementation of the JSON Message and the WSDL Cache!
-4)  Upgraded the MarlinModule to be able to run multiple websites in one applicationPool (again!)
+1)  For IIS the "AppSettings" in web.config have changed!
+    - MarlinModule   This variable now is renamed to "Application"
+    - DllDirectory   This variable now is renamed to "Directory"
+    Formerly the 'DllDirectory' was only used to call the windows function loading secundary
+    DLL's. and the 'MarlinModule' was the full path to the DLL to be loaded. There were two
+    major drawbacks in this approach:
+    - DllDirectory was sometimes missspelled as "DLLDirectory", which effectivly leaded to 
+      MS-Windows not being able to load the mentioned DLL
+    - DllDirectory always had to be the same as the first path in 'MarlinModule'
+    The usage of the new variables is such that "Application" can only hold an DLL filename
+    and "Directory" is the directory under the webroot where we will search for the DLL.
+2)  Upgraded the MarlinModule to be able to run multiple websites in one applicationPool (again!)
     This functionality was broken in some earlier version. 
     The ServerApp now has an extra function for the MarlinModule: SitesInApplicationPool()
     This prevents the MarlinModule from destructing the application to soon, when one of the 
     websites is stopping.
-    Please upgrade your MarlinModule at the earliest possible moment!
-5)  The IIS testclient and testserver have been upgraded to be able to run again in one 
+    Please upgrade your own ServerApp-derived program at the earliest possible moment!
+    If you run multiple sites in your application, the ServerApp.m_numSites reflects the 
+    number of running sites. If you stop a website, the application will only get unloaded if 
+    the ServerApp.m_numSites reaches 0 (zero) again.
+    This provides for an effective reference counting of websites for your application.
+3)  Renewed all certificates in the 'Certificate' directory. Dates of the certificates have been
+    extended from 1-1-2020 to 1-1-2030
+4)  Added an extra wrapper around the "CRITICAL_SECTION" lock. See the header "AutoCritical.h"
+5)  Replaced the "double" datatype in the JSONMessage by the 'bcd' class. This prevents JSON
+    messages from carrying rounding errors in decimal numbers. This has a serious impact on the
+    implementation of the JSON Message and the WSDL Cache!
+6)  The IIS testclient and testserver have been upgraded to be able to run again in one 
     application pool (after point 4).
     Please be aware that if you plan to run multiple websites in one application pool to have a 
     look at the "TestMarlinServerAppFactory". The app factory now may only create as many
     applications as there are application pools.
     If you plan in your application to support more than one website: please upgrade your 
     server application factory likewise.
-6)  Added the "AutoAttachToProcess" application. This allows us to directly debug a w3wp.exe
+7)  Added the "AutoAttachToProcess" application. This allows us to directly debug a w3wp.exe
     process right from the start, making it easier to debug an IIS server process such as the
     MarlinModule.
     Thanks to Eyal Rosner and this article on CodeProject
     https://www.codeproject.com/Articles/1090417/How-to-Set-Debugger-to-Auto-Attach-on-Process-Star
-7)  An alert system has been added. SvcReportError will standard report to the zero (0) alert module.
+8)  An alert system has been added. SvcReportError will standard report to the zero (0) alert module.
     Alerts can be created in an alerts directory.
     New Alerts directory modules can be created by calling "ConfigureApplicationAlert("name")"
     at the startup of your program. This registration function will return a alert number.
-8)  The message DLL registration and g_svcname (service name) for the WMI message system 
+9)  The message DLL registration and g_svcname (service name) for the WMI message system 
     was fixed. The message DLL will now also get installed if you start the IIS server from 
     within the "marlinserver start" mechanism. This includes the start from the server applet
     as well.
-9)  The "EnsureFile" object now has an extra method "GrantFullAccess". With this method it is 
+10) The "EnsureFile" object now has an extra method "GrantFullAccess". With this method it is 
     possible to set full access rights on a file or directory.
-10) Fully implemented the MultiPartBuffer for the formdata transport. Upgraded from the
+11) Fully implemented the MultiPartBuffer for the formdata transport. Upgraded from the
     IETF RFC 2388 to RFC 7578. This includes the following changes
     - The "name" of the part is no longer unique. The same name can be included multiple times
     - The "charset" attribute of the "Content-Type" is now optional, defaulting to "UTF-8"
@@ -53,20 +68,20 @@ CHANGES IN VERSIN 6.5.0
       parts *NOT* nameing a charset attribute in the Content-Type
     - The "filename" attribute will be percent encoded if it contains characters out of the
       ASCII alphanumeric range
-11) Rechecked all tests under IIS. All three testsites (MarlinTest, SecureTest, SecureClientCert)
+12) Rechecked all tests under IIS. All three testsites (MarlinTest, SecureTest, SecureClientCert)
     are now running in one application pool. All tests both in server and client are 'in-the-green'
-12) The number of logfiles to be kept in the logfile directory of the server can now be set with
+13) The number of logfiles to be kept in the logfile directory of the server can now be set with
     the method "SetKeepfiles()". This can set the number of logfiles to keep between 10 and 500.
     The default value for the number of files to keep is 128 (2 logfiles per day for 2 months).
     This makes the logfile rotation more configurable.
     The ServerApp object has a new methode (SetKeepLogfiles()) to pre-set the number of logfiles,
     before starting the server.
-13) The "ServerMain.cpp" module and the ServerApplet have been fully tested.
+14) The "ServerMain.cpp" module and the ServerApplet have been fully tested.
     The buttons on het ServerApplet contain no meaningfull functions. It's up to the programmer
     that uses the framework to devise these functions. The skeleton applet starts and stops 
     the IIS service, the NT service or the stand-alone server through means of the default
     main() function in "ServerMain".
-14) The "FileBuffer" class used in a HTTPMessage now reads in the files in shared read AND write
+15) The "FileBuffer" class used in a HTTPMessage now reads in the files in shared read AND write
     mode, so more files opened by othere processes can be serviced.
 
 CHANGES IN VERSION 6.4.0
