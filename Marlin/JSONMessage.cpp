@@ -775,6 +775,85 @@ JSONMessage::UseVerbTunneling()
   return false;
 }
 
+// Load from file
+bool
+JSONMessage::LoadFile(const CString& p_fileName)
+{
+  FILE* file = nullptr;
+  if(fopen_s(&file, p_fileName, "rb") == 0 && file)
+  {
+    // Find the length of a file
+    fseek(file, 0, SEEK_END);
+    unsigned long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Check for the streaming limit
+    if(length > g_streaming_limit)
+    {
+      fclose(file);
+      return false;
+    }
+
+    // Prepare buffer
+    // CString buffers are allocated on the heap
+    // so shut up the warning about stack overflow
+    CString inhoud;
+    char* buffer = inhoud.GetBufferSetLength(length + 1);
+
+    // Read the buffer
+    if(fread(buffer,1,length,file) < length)
+    {
+      fclose(file);
+      return false;
+    }
+    buffer[length] = 0;
+
+    // Buffer unlock
+    inhoud.ReleaseBuffer(length);
+
+    // Close the file
+    if(fclose(file))
+    {
+      return false;
+    }
+
+    // And parse it
+    ParseMessage(inhoud);
+    return true;
+  }
+  return false;
+}
+
+// Save to file
+bool
+JSONMessage::SaveFile(const CString& p_fileName, bool p_withBom /*= false*/)
+{
+  bool result = false;
+  FILE* file = nullptr;
+  if(fopen_s(&file, p_fileName, "w") == 0 && file)
+  {
+    CString inhoud;
+    if(p_withBom)
+    {
+      inhoud = GetJsonMessage(m_encoding);
+    }
+    else
+    {
+      inhoud = GetJsonMessageWithBOM(m_encoding);
+    }
+    if(fwrite(inhoud.GetString(),inhoud.GetLength(),1,file) == 1)
+    {
+      result = true;
+    }
+    // Close and flush the file
+    if(fclose(file))
+    {
+      result = false;
+    }
+  }
+  return result;
+}
+
 #pragma region References
 
 // XMLElements can be stored elsewhere. Use the reference mechanism to add/drop references

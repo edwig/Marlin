@@ -77,7 +77,7 @@ enum class JsonEncoding
 // Numbers are integers or exponentials
 typedef struct _jsonNumber
 {
-  long   m_intNumber;
+  long m_intNumber;
   bcd  m_bcdNumber;
 }
 JSONnumber;
@@ -168,6 +168,10 @@ public:
   void Reset();
   // Create from message stream
   bool ParseMessage(CString p_message,JsonEncoding p_encoding = JsonEncoding::JENC_Plain);
+  // Load from file
+  bool LoadFile(const CString& p_fileName);
+  // Save to file
+  bool SaveFile(const CString& p_fileName, bool p_withBom = false);
 
   // GETTERS
   CString         GetJsonMessage       (JsonEncoding p_encoding = JsonEncoding::JENC_Plain);
