@@ -854,6 +854,196 @@ JSONMessage::SaveFile(const CString& p_fileName, bool p_withBom /*= false*/)
   return result;
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Finding value nodes within the JSON structure
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Finding the first value of this name
+JSONvalue* 
+JSONMessage::FindValue(CString p_name,bool p_object /*= false*/)
+{
+  // Find from the root value
+  return FindValue(m_value,p_name,p_object);
+}
+
+// Finding the first value with this name AFTER the p_from value
+JSONvalue* 
+JSONMessage::FindValue(JSONvalue* p_from,CString p_name,bool p_object /*=false*/)
+{
+  // Stopping criterion: nothing more to find
+  if(p_from == nullptr)
+  {
+    return nullptr;
+  }
+
+  // Recurse through an array
+  if(p_from->GetDataType() == JsonType::JDT_array)
+  {
+    for(auto& val : p_from->GetArray())
+    {
+      JSONvalue* value = FindValue(&val,p_name,p_object);
+      if(value)
+      {
+        return value;
+      }
+    }
+  }
+
+  // Recurse through an object
+  if(p_from->GetDataType() == JsonType::JDT_object)
+  {
+    for(auto& val : p_from->GetObject())
+    {
+      // Stopping at this element
+      if(val.m_name.Compare(p_name) == 0)
+      {
+        // Return the object node instead of the pair
+        if(p_object)
+        {
+          return p_from;
+        }
+        return &val.m_value;
+      }
+      // Recurse for array and object
+      if(val.m_value.GetDataType() == JsonType::JDT_array ||
+         val.m_value.GetDataType() == JsonType::JDT_object)
+      {
+        JSONvalue* value = FindValue(&val.m_value,p_name,p_object);
+        if(value)
+        {
+          return value;
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
+// Finding the first name/value pair of this name
+JSONpair*
+JSONMessage::FindPair(CString p_name)
+{
+  if(m_value)
+  {
+    return FindPair(m_value, p_name);
+  }
+  return nullptr;
+}
+
+// Finding the first name/value pair AFTER this value
+JSONpair* 
+JSONMessage::FindPair(JSONvalue* p_value,CString p_name)
+{
+  if(p_value && p_value->GetDataType() == JsonType::JDT_object)
+  {
+    for(auto& pair : p_value->GetObject())
+    {
+      if(pair.m_name.Compare(p_name) == 0)
+      {
+        return &pair;
+      }
+    }
+  }
+  if(p_value && p_value->GetDataType() == JsonType::JDT_array)
+  {
+    for(auto& val : p_value->GetArray())
+    {
+      if(val.GetDataType() == JsonType::JDT_object ||
+         val.GetDataType() == JsonType::JDT_array  )
+      {
+        JSONpair* pair = FindPair(&val,p_name);
+        if(pair)
+        {
+          return pair;
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
+// Get an array element of an array value node
+JSONvalue* 
+JSONMessage::GetArrayElement(JSONvalue* p_array,int p_index)
+{
+  if(p_array->GetDataType() == JsonType::JDT_array)
+  {
+    if(0 <= p_index && p_index < (int)p_array->GetArray().size())
+    {
+      return &(p_array->GetArray()[p_index]);
+    }
+  }
+  return nullptr;
+}
+
+// Get an object element of an object value node
+JSONpair* 
+JSONMessage::GetObjectElement(JSONvalue* p_object, int p_index)
+{
+  if (p_object->GetDataType() == JsonType::JDT_object)
+  {
+    if (0 <= p_index && p_index < (int)p_object->GetObject().size())
+    {
+      return &(p_object->GetObject()[p_index]);
+    }
+  }
+  return nullptr;
+}
+
+// Getting a string value by an unique name
+CString
+JSONMessage::GetValueString(CString p_name)
+{
+  CString value;
+  JSONvalue* val = FindValue(p_name);
+  if(val && val->GetDataType() == JsonType::JDT_string)
+  {
+    value = val->GetString();
+  }
+  return value;
+}
+
+// Getting an integer value by an unique name
+long
+JSONMessage::GetValueInteger(CString p_name)
+{
+  long value = 0;
+  JSONvalue* val = FindValue(p_name);
+  if (val && val->GetDataType() == JsonType::JDT_number_int)
+  {
+    value = val->GetNumberInt();
+  }
+  return value;
+}
+
+// Getting a number value by an unique name
+bcd
+JSONMessage::GetValueNumber(CString p_name)
+{
+  bcd value;
+  JSONvalue* val = FindValue(p_name);
+  if (val && val->GetDataType() == JsonType::JDT_number_bcd)
+  {
+    value = val->GetNumberBcd();
+  }
+  return value;
+}
+
+// Getting a constant (boolean/null) by an unique name
+JsonConst
+JSONMessage::GetValueConstant(CString p_name)
+{
+  JSONvalue* val = FindValue(p_name);
+  if (val && val->GetDataType() == JsonType::JDT_const)
+  {
+    return val->GetConstant();
+  }
+  return JsonConst::JSON_NONE;
+}
+
+
 #pragma region References
 
 // XMLElements can be stored elsewhere. Use the reference mechanism to add/drop references

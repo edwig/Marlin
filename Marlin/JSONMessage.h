@@ -173,6 +173,18 @@ public:
   // Save to file
   bool SaveFile(const CString& p_fileName, bool p_withBom = false);
 
+  // Finding value nodes within the JSON structure
+  JSONvalue*      FindValue (CString    p_name,               bool p_object = false);
+  JSONvalue*      FindValue (JSONvalue* p_from,CString p_name,bool p_object = false);
+  JSONpair*       FindPair  (CString    p_name);
+  JSONpair*       FindPair  (JSONvalue* p_value, CString p_name);
+  JSONvalue*      GetArrayElement (JSONvalue* p_array, int p_index);
+  JSONpair*       GetObjectElement(JSONvalue* p_object,int p_index);
+  CString         GetValueString  (CString p_name);
+  long            GetValueInteger (CString p_name);
+  bcd             GetValueNumber  (CString p_name);
+  JsonConst       GetValueConstant(CString p_name);
+
   // GETTERS
   CString         GetJsonMessage       (JsonEncoding p_encoding = JsonEncoding::JENC_Plain);
   CString         GetJsonMessageWithBOM(JsonEncoding p_encoding = JsonEncoding::JENC_UTF8);

@@ -9,6 +9,21 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.5.1
+------------------------
+1)  Added various searching/finding functions to JSONMessage:
+    JSONvalue*      FindValue (CString    p_name,               bool p_object = false);
+    JSONvalue*      FindValue (JSONvalue* p_from,CString p_name,bool p_object = false);
+    JSONpair*       FindPair  (CString    p_name);
+    JSONpair*       FindPair  (JSONvalue* p_value, CString p_name);
+    JSONvalue*      GetArrayElement (JSONvalue* p_array, int p_index);
+    JSONpair*       GetObjectElement(JSONvalue* p_object,int p_index);
+    CString         GetValueString  (CString p_name);
+    long            GetValueInteger (CString p_name);
+    bcd             GetValueNumber  (CString p_name);
+    JsonConst       GetValueConstant(CString p_name);
+
+
 CHANGES IN VERSIN 6.5.0 
 -----------------------
 1)  For IIS the "AppSettings" in web.config have changed!

@@ -254,6 +254,60 @@ int MultiJSON()
   return errors;
 }
 
+
+int TestFindValue()
+{
+  int errors = 0;
+  CString jsonstring = "{ \n"
+                       "  \"name1\" : \"value1\"\n"
+                       " ,\"name2\" : \"value2\"\n"
+                       " ,\"name3\" : 33\n"
+                       "}\n";
+  JSONMessage json(jsonstring);
+
+  JSONvalue* val2 = json.FindValue("name2");
+  int val3 = json.GetValueInteger("name3");
+  JSONvalue* obj1 = json.FindValue("name2",true);
+  JSONpair*  pair = json.GetObjectElement(obj1,0);
+
+  if(val2->GetString().Compare("value2"))
+  {
+    xprintf("ERROR: JSON FindValue cannot find the value by name\n");
+    ++errors;
+  }
+  if(val3 != 33)
+  {
+    xprintf("ERROR: JSON GetValueInteger cannot find integer by name\n");
+    ++errors;
+  }
+  if(pair->m_name.Compare("name1") || pair->m_value.GetString().Compare("value1"))
+  {
+    xprintf("ERROR: JSON GetObjectElement cannot find element by index\n");
+    ++errors;
+  }
+
+  // Test arrays
+  jsonstring = "{  \"two\":[201,202,203,204.5,205.6789]\n"
+               ",\"three\":[301,302,303,304.5,305.6789]\n"
+               ",\"four\" :[401,402,403,404.5,405.6789]\n"
+               "}";
+  JSONMessage two(jsonstring);
+  JSONpair*  ar = two.FindPair("three");
+  JSONvalue* vv = two.GetArrayElement(&ar->m_value,3);
+  bcd   howmuch = vv->GetNumberBcd();
+
+  if(howmuch != bcd("304.5"))
+  {
+    xprintf("ERROR: JSON GetArrayElement cannot find element by index\n");
+    ++errors;
+  }
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("JSON messages find value functions             : %s\n", errors ? "ERROR" : "OK");
+  return errors;
+}
+
 int TestJSON(void)
 {
   int errors = 0;
@@ -342,6 +396,7 @@ int TestJSON(void)
   printf("Basic tests on JSON object messages            : %s\n",errors ? "ERROR" : "OK");
 
   errors += MultiJSON();
+  errors += TestFindValue();
 
   return errors;
 }
