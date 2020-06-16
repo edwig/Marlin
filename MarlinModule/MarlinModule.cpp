@@ -680,7 +680,10 @@ MarlinGlobalFactory::ConstructDLLLocation(CString p_rootpath,CString p_dllPath)
     pathname += "\\";
   }
   pathname += p_dllPath;
-
+  if(pathname.Right(1) != "\\")
+  {
+    pathname += "\\";
+  }
   return pathname;
 }
 

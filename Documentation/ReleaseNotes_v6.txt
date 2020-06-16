@@ -22,7 +22,12 @@ CHANGES IN VERSION 6.5.1
     long            GetValueInteger (CString p_name);
     bcd             GetValueNumber  (CString p_name);
     JsonConst       GetValueConstant(CString p_name);
-
+2)  Added the HTTPStatus also to JSONMessage and SOAPMessage. This comes in handy if we want
+    to answer a message with anything other than HTTP 200. The resulting HTTPMessage will 
+    inherit its status from the answered SOAP- or JSONMessage.
+3)  Fixed a small bug in the MarlinModule in case we forget a backslash behind the 
+    application directory variable.
+4)  Fixed the cleanup handlers for JSOAN and SOAP messages after in the site handlers
 
 CHANGES IN VERSIN 6.5.0 
 -----------------------

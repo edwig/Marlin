@@ -186,6 +186,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
   m_site          = p_msg->GetHTTPSite();
   m_sendBOM       = p_msg->GetSendBOM();
   m_acceptEncoding= p_msg->GetAcceptEncoding();
+  m_status        = p_msg->GetStatus();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Getting the URL of all parts
@@ -287,6 +288,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
   m_sendBOM        = p_msg->GetSendBOM();
   m_site           = p_msg->GetHTTPSite();
   m_verbTunnel     = p_msg->GetVerbTunneling();
+  m_status         = p_msg->GetStatus();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Getting the URL of all parts

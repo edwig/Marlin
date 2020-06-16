@@ -61,6 +61,7 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
   m_request       = p_msg->GetRequestHandle();
   m_site          = p_msg->GetHTTPSite();
   m_url           = p_msg->GetURL();
+  m_status        = p_msg->GetStatus();
   m_secure        = p_msg->GetSecure();
   m_user          = p_msg->GetUser();
   m_password      = p_msg->GetPassword();
@@ -157,6 +158,7 @@ SOAPMessage::SOAPMessage(JSONMessage* p_msg)
   m_request       = p_msg->GetRequestHandle();
   m_site          = p_msg->GetHTTPSite();
   m_url           = p_msg->GetURL();
+  m_status        = p_msg->GetStatus();
   m_secure        = p_msg->GetSecure();
   m_user          = p_msg->GetUser();
   m_password      = p_msg->GetPassword();
@@ -301,6 +303,7 @@ SOAPMessage::SOAPMessage(SOAPMessage* p_orig)
   m_sendUnicode   = p_orig->m_sendUnicode;
   m_sendBOM       = p_orig->m_sendBOM;
   m_url           = p_orig->m_url;
+  m_status        = p_orig->m_status;
   m_request       = p_orig->m_request;
   m_secure        = p_orig->m_secure;
   m_user          = p_orig->m_user;

@@ -176,6 +176,7 @@ public:
   void            SetRequestHandle(HTTP_OPAQUE_ID p_request);
   // Set URL to send message to
   void            SetURL(CString& p_url);
+  void            SetStatus(unsigned p_status);
   // Set parts of the URL
   void            SetSecure(bool p_secure);
   void            SetUser(CString& p_user);
@@ -245,6 +246,7 @@ public:
   // Get URL destination
   CString         GetURL() const;
   CString         GetUnAuthorisedURL() const;
+  unsigned        GetStatus();
   // Get Request handle
   HTTP_OPAQUE_ID  GetRequestHandle() const;
   HTTPSite*       GetHTTPSite() const;
@@ -414,6 +416,7 @@ protected:
   bool            m_understand    { true  };              // Set "mustUnderstand" to true or false
   // DESTINATION
   CString         m_url;                                  // Full URL of the soap service
+  unsigned        m_status        { HTTP_STATUS_OK };     // HTTP status return code
   HTTP_OPAQUE_ID  m_request       { NULL  };              // Request it must answer
   HTTPSite*       m_site          { nullptr };            // Site for which message is received
   HeaderMap       m_headers;                              // Extra HTTP headers (incoming / outgoing)
@@ -923,6 +926,18 @@ inline Routing&
 SOAPMessage::GetRouting()
 {
   return m_routing;
+}
+
+inline unsigned
+SOAPMessage::GetStatus() 
+{
+  return m_status; 
+};
+
+inline void
+SOAPMessage::SetStatus(unsigned p_status)
+{
+  m_status = p_status;
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -191,6 +191,7 @@ public:
   JSONvalue&      GetValue()          { return *m_value;                };
   CString         GetURL()            { return m_url;                   };
   CrackedURL&     GetCrackedURL()     { return m_cracked;               };
+  unsigned        GetStatus()         { return m_status;                };
   HTTP_OPAQUE_ID  GetRequestHandle()  { return m_request;               };
   HTTPSite*       GetHTTPSite()       { return m_site;                  };
   HeaderMap*      GetHeaderMap()      { return &m_headers;              };
@@ -232,6 +233,7 @@ public:
   void            SetServer(CString p_server)             { m_cracked.m_host     = p_server;   ReparseURL(); };
   void            SetPort(int p_port)                     { m_cracked.m_port     = p_port;     ReparseURL(); };
   void            SetAbsolutePath(CString p_path)         { m_cracked.m_path     = p_path;     ReparseURL(); };
+  void            SetStatus(unsigned p_status)            { m_status             = p_status;   };
   void            SetDesktop(UINT p_desktop)              { m_desktop            = p_desktop;  };
   void            SetRequestHandle(HTTP_OPAQUE_ID p_id)   { m_request            = p_id;       };
   void            SetVerb(CString p_verb)                 { m_verb               = p_verb;     };
@@ -277,6 +279,7 @@ private:
   bool            m_verbTunnel  { false };                      // HTTP-VERB Tunneling used
   // DESTINATION
   CString         m_url;                                        // Full URL of the JSON service
+  unsigned        m_status      { HTTP_STATUS_OK };             // HTTP status return code
   CrackedURL      m_cracked;                                    // Cracked down URL (all parts)
   CString         m_verb;                                       // HTTP verb, default = POST
   HTTP_OPAQUE_ID  m_request     { NULL };                       // Request it must answer

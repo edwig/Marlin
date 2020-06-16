@@ -175,12 +175,21 @@ SiteHandlerSoap::CleanUp(HTTPMessage* p_message)
        !p_message->GetHasBeenAnswered())
     {
       m_site->SendResponse(g_soapMessage);
-      p_message->SetHasBeenAnswered();
     }
+    p_message->SetHasBeenAnswered();
 
     // Cleanup the SOAP message
     delete g_soapMessage;
     g_soapMessage = nullptr;
+    return;
+  }
+  // Be really sure we did send a response!
+  if (!p_message->GetHasBeenAnswered())
+  {
+    p_message->Reset();
+    p_message->SetStatus(HTTP_STATUS_BAD_REQUEST);
+    p_message->SetCommand(HTTPCommand::http_response);
+    m_site->SendResponse(p_message);
   }
 }
 

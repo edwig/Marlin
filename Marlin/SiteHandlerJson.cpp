@@ -36,7 +36,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Remember JSONMessage for this thread in the TLS
-static __declspec(thread) JSONMessage* g_jsonMessage = nullptr;
+__declspec(thread) JSONMessage* g_jsonMessage = nullptr;
 
 // A JSON handler is an override for the HTTP POST handler
 // Most likely you need to write an overload of this one
@@ -112,14 +112,24 @@ SiteHandlerJson::CleanUp(HTTPMessage* p_message)
   if(g_jsonMessage)
   {
     // Check that we did send something
-    if(!g_jsonMessage->GetHasBeenAnswered())
+    if(!g_jsonMessage->GetHasBeenAnswered() &&
+       !p_message->GetHasBeenAnswered())
     {
       m_site->SendResponse(g_jsonMessage);
-      p_message->SetHasBeenAnswered();
     }
+    p_message->SetHasBeenAnswered();
 
     // Cleanup the JSON message
     delete g_jsonMessage;
     g_jsonMessage = nullptr;
+    return;
+  }
+  // Be really sure we did send a response!
+  if (!p_message->GetHasBeenAnswered())
+  {
+    p_message->Reset();
+    p_message->SetStatus(HTTP_STATUS_BAD_REQUEST);
+    p_message->SetCommand(HTTPCommand::http_response);
+    m_site->SendResponse(p_message);
   }
 }

@@ -408,7 +408,7 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
   logBuffer += p_function;
   if(logBuffer.GetLength() < position + ANALYSIS_FUNCTION_SIZE)
   {
-    logBuffer.Append("                                            "
+    logBuffer.Append("                                                "
                     ,position + ANALYSIS_FUNCTION_SIZE - logBuffer.GetLength());
   }
 

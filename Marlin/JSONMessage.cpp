@@ -375,7 +375,7 @@ JSONMessage::JSONMessage(CString p_message,CString p_url)
 JSONMessage::JSONMessage(JSONMessage* p_other)
 {
   // Copy the primary message value, and reference it
-  m_value = p_other->m_value;
+  m_value = new JSONvalue(p_other->m_value);
   m_value->AddReference();
 
   // Copy all other data members
@@ -385,6 +385,7 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
   m_lastError   = p_other->m_lastError;
   m_url         = p_other->m_url;
   m_cracked     = p_other->m_cracked;
+  m_status      = p_other->m_status;
   m_request     = p_other->m_request;
   m_site        = p_other->m_site;
   m_desktop     = p_other->m_desktop;
@@ -427,6 +428,7 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
 
   // Copy all parts
   m_url            = p_message->GetURL();
+  m_status         = p_message->GetStatus();
   m_request        = p_message->GetRequestHandle();
   m_site           = p_message->GetHTTPSite();
   m_cracked        = p_message->GetCrackedURL();
@@ -525,6 +527,7 @@ JSONMessage::JSONMessage(SOAPMessage* p_message)
   // Copy all parts
   m_url             = p_message->GetURL();
   ParseURL(m_url);
+  m_status          = p_message->GetStatus();
   m_request         = p_message->GetRequestHandle();
   m_site            = p_message->GetHTTPSite();
   m_desktop         = p_message->GetRemoteDesktop();
