@@ -2,9 +2,7 @@
 //
 // SourceFile: XMLParser.cpp
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 1998-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,9 +25,6 @@
 //
 #include "stdafx.h"
 #include "XMLParser.h"
-#include "XMLMessage.h"
-#include "SOAPMessage.h"
-#include "JSONMessage.h"
 #include "DefuseBOM.h"
 #include "ConvertWideString.h"
 #include "Namespace.h"
@@ -50,9 +45,10 @@ Entity g_entity[NUM_ENTITY] =
   { "&apos;",6, '\''},
 };
 
+// Static function to be called from the outside
 // Print string with entities and optionally as UTF8 again
 CString 
-PrintXmlString(const CString& p_string,bool p_utf8 /*=false*/)
+XMLParser::PrintXmlString(const CString& p_string,bool p_utf8 /*=false*/)
 {
   CString result;
   CString uncoded(p_string);
@@ -100,6 +96,53 @@ PrintXmlString(const CString& p_string,bool p_utf8 /*=false*/)
   }
   return result;
 }
+
+CString
+XMLParser::PrintJsonString(const CString& p_string,bool p_utf8 /*=false*/)
+{
+  CString result("\"");
+  unsigned char buffer[3];
+  buffer[2] = 0;
+
+  for(int ind = 0; ind < p_string.GetLength(); ++ind)
+  {
+    char ch = p_string.GetAt(ind);
+
+    if(ch < 0x80)
+    {
+      switch(ch = p_string.GetAt(ind))
+      {
+        case '\"': result += "\\\"";   break;
+        case '\\': result += "\\\\";   break;
+        case '/':  result += "\\/";    break;
+        case '\b': result += "\\b";    break;
+        case '\f': result += "\\f";    break;
+        case '\n': result += "\\n";    break;
+        case '\r': result += "\\r";    break;
+        case '\t': result += "\\t";    break;
+        default:   result += ch;       break;
+      }
+    }
+    else
+    {
+      // Plainly add the character
+      // Windows-1252 encoding or UTF-8 encoding
+      result += ch;
+    }
+  }
+  // Closing
+  result += "\"";
+
+  if(p_utf8)
+  {
+    // Convert to UTF-8
+    result = EncodeStringForTheWire(result,"utf-8");
+  }
+
+  return result;
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -168,6 +211,11 @@ XMLParser::ParseMessage(CString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_W
   {
     // Error message text already set
     m_message->m_internalError = error;
+  }
+  catch(StdException& ex)
+  {
+    m_message->m_internalError = XmlError::XE_NotAnXMLMessage;
+    m_message->m_internalErrorString = ex.GetErrorMessage();
   }
 
   // Conclusion of condensed level
@@ -251,7 +299,7 @@ XMLParser::SetError(XmlError p_error,const uchar* p_text,bool p_throw /*=true*/)
   // Passing it on
   if(p_throw)
   {
-    throw p_error;
+    throw StdException((int)p_error);
   }
 }
 
@@ -807,114 +855,4 @@ XMLParser::MakeElement(CString& p_namespace,CString& p_name)
     SetError(XmlError::XE_OutOfMemory,(uchar*)"OUT OF MEMORY");
   }
   m_lastElement->SetNamespace(p_namespace);
-}
-
-
-//////////////////////////////////////////////////////////////////////////
-//
-// XMLParserJSON XML(SOAP) -> JSON
-//
-//////////////////////////////////////////////////////////////////////////
-
-XMLParserJSON::XMLParserJSON(XMLMessage* p_xml,JSONMessage* p_json)
-              :XMLParser(p_xml)
-{
-  m_soap = reinterpret_cast<SOAPMessage*>(p_xml);
-  XMLElement* element = m_soap->GetParameterObjectNode();
-  JSONvalue&  value   = p_json->GetValue();
-
-  ParseMain(element,value);
-}
-
-void
-XMLParserJSON::ParseMain(XMLElement* p_element,JSONvalue& p_value)
-{
-  // finding the main node in the JSON
-  if(p_value.GetDataType() != JsonType::JDT_object)
-  {
-    return;
-  }
-  JSONpair&  pair  = p_value.GetObject()[0];
-  JSONvalue& value = pair.m_value;
-
-  // Detect the SOAP Envelope
-  if(pair.m_name == "Envelope")
-  {
-    if(value.GetDataType() != JsonType::JDT_object)
-    {
-      return;
-    }
-    pair = value.GetObject()[0];
-    value = pair.m_value;
-  
-  }
-
-  // Detect the SOAP Body
-  if(pair.m_name == "Body")
-  {
-    if(value.GetDataType() != JsonType::JDT_object)
-    {
-      return;
-    }
-    pair = value.GetObject()[0];
-    value = pair.m_value;
-  }
-
-  // Remember the action name
-  m_soap->SetParameterObject(pair.m_name);
-  m_soap->SetSoapAction(pair.m_name);
-
-  // Parse the message
-  ParseLevel(p_element,value);
-}
-
-void
-XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arrayName /*=""*/)
-{
-  JSONobject* object  = nullptr;
-  JSONarray*  array   = nullptr;
-  XMLElement* element = nullptr;
-  CString arrayName;
-  CString value;
-
-  switch(p_value.GetDataType())
-  {
-    case JsonType::JDT_object:      object = &p_value.GetObject();
-                                    for(auto& pair : *object)
-                                    {
-                                      if(pair.m_value.GetDataType() == JsonType::JDT_array)
-                                      {
-                                        ParseLevel(p_element,pair.m_value,pair.m_name);
-                                      }
-                                      else
-                                      {
-                                        element = m_soap->AddElement(p_element,pair.m_name,XDT_String,"");
-                                        ParseLevel(element,pair.m_value);
-                                      }
-                                    }
-                                    break;
-    case JsonType::JDT_array:       array = &p_value.GetArray();
-                                    for(auto& val : *array)
-                                    {
-                                      element = m_soap->AddElement(p_element,p_arrayName,XDT_String,"");
-                                      ParseLevel(element,val);
-                                    }
-                                    break;
-    case JsonType::JDT_string:      p_element->SetValue(p_value.GetString());
-                                    break;
-    case JsonType::JDT_number_int:  value.Format("%d",p_value.GetNumberInt());
-                                    p_element->SetValue(value);
-                                    break;
-    case JsonType::JDT_number_bcd:  value = p_value.GetNumberBcd().AsString();
-                                    p_element->SetValue(value);
-                                    break;
-    case JsonType::JDT_const:       switch(p_value.GetConstant())
-                                    {
-                                      case JsonConst::JSON_NONE:  break; // Do nothing: empty string!!
-                                      case JsonConst::JSON_NULL:  p_element->SetValue("");      break;
-                                      case JsonConst::JSON_FALSE: p_element->SetValue("false"); break;
-                                      case JsonConst::JSON_TRUE:  p_element->SetValue("true");  break;
-                                    }
-                                    break;
-  }
 }

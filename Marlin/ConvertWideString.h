@@ -2,9 +2,7 @@
 //
 // SourceFile: ConvertWideString.h
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 1998-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,11 +23,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
+#ifndef __CONVERTWIDESTRING__
+#define __CONVERTWIDESTRING__
 
 enum class XMLEncoding;
 using uchar = unsigned char;
 
+// Init the code page system
+void    InitCodePageNames();
 // Convert strings from/to Unicode
 bool    TryConvertWideString(const uchar* p_buffer
                             ,int          p_length
@@ -61,3 +62,5 @@ CString ConstructBOM(XMLEncoding p_encoding);
 CString DecodeStringFromTheWire(CString p_string,CString p_charset = "utf-8");
 // Encode to string for internet. Defaults to UTF-8 encoding
 CString EncodeStringForTheWire (CString p_string,CString p_charset = "utf-8");
+
+#endif // __CONVERTWIDESTRING__

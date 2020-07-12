@@ -2,9 +2,7 @@
 //
 // SourceFile: bcd.h
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 2015-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,7 +34,8 @@
 //
 // Version 1.2 of 18-12-2019
 //
-#pragma once
+#ifndef __BCD__
+#define __BCD__
 #include <sqltypes.h>   // Needed for conversions of SQL_NUMERIC_STRUCT
 
 // The ODBC standard has a maximum of 38 decimal places
@@ -95,6 +94,18 @@ bcd asin (bcd p_number);
 bcd acos (bcd p_number);
 bcd atan (bcd p_number);
 bcd atan2(bcd p_y,bcd p_x);
+
+// One-time initialization for printing numbers in the current locale
+void InitValutaString();
+
+// string format number and money format functions
+extern bool g_locale_valutaInit;
+extern char g_locale_decimalSep[];
+extern char g_locale_thousandSep[];
+extern char g_locale_strCurrency[];
+extern int  g_locale_decimalSepLen;
+extern int  g_locale_thousandSepLen;
+extern int  g_locale_strCurrencyLen;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -445,3 +456,4 @@ private:
   short  m_exponent;            // +/- 10E32767
   long   m_mantissa[bcdLength]; // Up to (bcdDigits * bcdLength) digits
 };
+#endif // __BCD__

@@ -2,9 +2,7 @@
 //
 // SourceFile: bcd.cpp
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 2015-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,6 +47,7 @@
 #include "StdException.h"   // Throwing exceptions
 #include <math.h>           // Still needed for conversions of double
 #include <intsafe.h>        // Min/Max sizes of integer datatypes
+#include <locale.h>         
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -165,7 +164,7 @@ bcd::bcd(const long p_value, const long p_restValue /*= 0*/)
   SetValueLong(p_value,p_restValue);
 }
 
-// bcd::bcd(value, value)
+// bcd::bcd(value,value)
 // Description: Construct a BCD from an unsigned long and an unsigned optional long
 // Technical:   See description of SetValueLong
 bcd::bcd(const unsigned long p_value, const unsigned long p_restValue /*= 0*/)

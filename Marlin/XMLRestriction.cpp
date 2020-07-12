@@ -2,8 +2,6 @@
 //
 // SourceFile: XMLRestriction.cpp
 //
-// Marlin Server: Internet server/client
-// 
 // Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
@@ -28,6 +26,7 @@
 #include "stdafx.h"
 #include "XMLRestriction.h"
 #include "XMLTemporal.h"
+#include "StdException.h"
 #include "CrackURL.h"
 #include <stdint.h>
 #include <regex>

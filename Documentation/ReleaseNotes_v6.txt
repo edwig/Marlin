@@ -28,6 +28,22 @@ CHANGES IN VERSION 6.5.1
 3)  Fixed a small bug in the MarlinModule in case we forget a backslash behind the 
     application directory variable.
 4)  Fixed the cleanup handlers for JSOAN and SOAP messages after in the site handlers
+5)  A number of classes has been moved out of the Marlin project, to make it possible to 
+    combine the project with others like SQLComponents. The interfaces are no longer
+    protected by '#pragma once' but by an #ifdef for the class name.
+    The implementations are synchronized over the projects> These classes are:
+    - bcd
+    - CrackedURL
+    - JSOMessage
+    - XMLMessge
+    - XMLParser
+    - XMLParserJSON
+    - XMLRestriction
+    - XMLTemporal
+6)  A new project "Deployment" has been added. Only build this project after all others
+    are build in all platform/configuration variants (x64,win86/Debug and release).
+    A zip will be created in the deployment directory containing the header files and the
+    build libraries. These can be used as a drop-in for other projects.
 
 CHANGES IN VERSIN 6.5.0 
 -----------------------

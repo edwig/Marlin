@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: Namespace.h
+// SourceFile: XMLParserJSON.h
 //
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 1998-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,18 +24,21 @@
 // THE SOFTWARE.
 //
 #pragma once
+#include "XMLParser.h"
 
-// Compares two namespaces
-// Returns strcmp values
-int CompareNamespaces(CString p_namespace1,CString p_namespace2);
+class SOAPMessage;
+class JSONMessage;
+class JSONvalue;
 
-// Can be used to split SOAPAction from the HTTP protocol
-// or from the Soap envelope <Action>  node
-bool SplitNamespaceAndAction(CString p_soapAction,CString& p_namespace,CString& p_action);
+class XMLParserJSON : public XMLParser
+{
+public:
+  XMLParserJSON(XMLMessage* p_xml,JSONMessage* p_json);
+private:
+  void ParseMain (XMLElement* p_element,JSONvalue& p_value);
+  void ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arrayName = "");
+private:
+  SOAPMessage* m_soap;
+};
 
-// Concatenate namespace and action to a soapaction entry
-// Can be used in HTTP and in SOAP messages
-CString CreateSoapAction(CString p_namespace,CString p_action);
 
-// Split namespace from an identifier
-CString SplitNamespace(CString& p_name);

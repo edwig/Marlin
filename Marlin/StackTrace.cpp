@@ -371,7 +371,7 @@ StackTrace::AsXMLString() const
     // Add module
     if (!frame.m_module.IsEmpty())
     {
-      tmp.Format("<module>%s</module>", PrintXmlString(frame.m_module).GetString());
+      tmp.Format("<module>%s</module>",XMLParser::PrintXmlString(frame.m_module).GetString());
       result += tmp;
     }
 
@@ -380,11 +380,11 @@ StackTrace::AsXMLString() const
     {
 #ifdef _WIN64
       tmp.Format("<symbool naam=\"%s\" offset=\"%I64d\" />",
-                 PrintXmlString(frame.m_function).GetString(),
+                 XMLParser::PrintXmlString(frame.m_function).GetString(),
                  frame.m_offset);
 #else
       tmp.Format("<symbool naam=\"%s\" offset=\"%d\" />",
-                 PrintXmlString(frame.m_function).GetString(),
+                 XMLParser::PrintXmlString(frame.m_function).GetString(),
                  frame.m_offset);
 #endif
       result += tmp;
@@ -394,7 +394,7 @@ StackTrace::AsXMLString() const
     if (!frame.m_fileName.IsEmpty())
     {
       tmp.Format("<regel bestand=\"%s\" nummer=\"%d\" />",
-                 PrintXmlString(frame.m_fileName).GetString(),
+                 XMLParser::PrintXmlString(frame.m_fileName).GetString(),
                  frame.m_line);
       result += tmp;
     }
@@ -445,5 +445,5 @@ StackTrace::FirstAsString() const
 CString
 StackTrace::FirstAsXMLString() const
 {
-  return PrintXmlString(FirstAsString());
+  return XMLParser::PrintXmlString(FirstAsString());
 }

@@ -115,8 +115,6 @@ public:
 
   // OPERATORS
   JSONvalue&  operator=(JSONvalue& p_other);
-  static
-  CString     FormatAsJsonString(CString p_string,bool p_utf8 = false);
 
   // JSONvalue's can be stored elsewhere. Use the reference mechanism to add/drop references
   // With the drop of the last reference, the object WILL destroy itself

@@ -2,9 +2,7 @@
 //
 // SourceFile: XMLDataType.h
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 1998-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +23,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
+#ifndef __XMLDataType__
+#define __XMLDataType__
 
 // XML DATA TYPES
 #define XDT_String              0x00000001
@@ -110,3 +109,4 @@ XmlDataType StringToXmlDataType(CString p_name);
 int         XmlDataTypeToODBC(XmlDataType p_type);
 XmlDataType ODBCToXmlDataType(int p_type);
 
+#endif // __XMLDataType__

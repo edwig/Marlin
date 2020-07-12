@@ -2,9 +2,7 @@
 //
 // SourceFile: ConvertWideString.cpp
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 1998-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -213,7 +211,7 @@ static CPIDNameMap cp_cpid_map;
 static NameCPIDMap cp_name_map;
 static CPIDNameMap cp_info_map;
 // 
-static void 
+void 
 InitCodePageNames()
 {
   // See if we are already initialized

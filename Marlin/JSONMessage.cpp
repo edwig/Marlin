@@ -200,7 +200,7 @@ JSONvalue::GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level /*=0*/)
                                       case JsonConst::JSON_TRUE:  return "true";
                                     }
                                     break;
-    case JsonType::JDT_string:      return FormatAsJsonString(m_string,p_utf8);
+    case JsonType::JDT_string:      return XMLParser::PrintJsonString(m_string,p_utf8);
     case JsonType::JDT_number_int:  result.Format("%ld",m_number.m_intNumber);
                                     break;
     case JsonType::JDT_number_bcd:  result = m_number.m_bcdNumber.AsString();
@@ -226,7 +226,7 @@ JSONvalue::GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level /*=0*/)
                                       {
                                         break;
                                       }
-                                      result += FormatAsJsonString(m_object[ind].m_name,p_utf8);
+                                      result += XMLParser::PrintJsonString(m_object[ind].m_name,p_utf8);
                                       result += ":";
                                       result += m_object[ind].m_value.GetAsJsonString(p_white,p_utf8,p_level+1);
                                       if(ind < m_object.size() - 1)
@@ -241,51 +241,6 @@ JSONvalue::GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level /*=0*/)
                                     result += separ + "}" + newln;
                                     break;
   }
-  return result;
-}
-
-CString
-JSONvalue::FormatAsJsonString(CString p_string,bool p_utf8 /*=false*/)
-{
-  CString result("\"");
-  unsigned char buffer[3];
-  buffer[2] = 0;
-
-  for(int ind = 0; ind < p_string.GetLength(); ++ind)
-  {
-    char ch = p_string.GetAt(ind);
-
-    if(ch < 0x80)
-    {
-      switch(ch = p_string.GetAt(ind))
-      {
-        case '\"': result += "\\\"";   break;
-        case '\\': result += "\\\\";   break;
-        case '/':  result += "\\/";    break;
-        case '\b': result += "\\b";    break;
-        case '\f': result += "\\f";    break;
-        case '\n': result += "\\n";    break;
-        case '\r': result += "\\r";    break;
-        case '\t': result += "\\t";    break;
-        default:   result += ch;       break;
-      }
-    }
-    else
-    {
-      // Plainly add the character
-      // Windows-1252 encoding or UTF-8 encoding
-      result += ch;
-    }
-  }
-  // Closing
-  result += "\"";
-
-  if(p_utf8)
-  {
-    // Convert to UTF-8
-    result = EncodeStringForTheWire(result,"utf-8");
-  }
-
   return result;
 }
 

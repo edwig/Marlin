@@ -2,8 +2,6 @@
 //
 // SourceFile: XMLRestriction.h
 //
-// Marlin Server: Internet server/client
-// 
 // Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
@@ -25,7 +23,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
+#ifndef __XMLRESTRICTION__
+#define __XMLRESTRICTION__
 #include <map>
 #include "bcd.h"
 #include "XMLMessage.h"
@@ -175,3 +174,5 @@ public:
 private:
   AllRestrictions m_restrictions;
 };
+
+#endif

@@ -2,8 +2,6 @@
 //
 // SourceFile: Namespace.cpp
 //
-// Marlin Server: Internet server/client
-// 
 // Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
@@ -59,7 +57,7 @@ int CompareNamespaces(CString p_namespace1, CString p_namespace2)
 }
 
 // Can be used to split SOAPAction from the HTTP protocol
-// or from the Soap evelope <Action>  node
+// or from the Soap envelope <Action>  node
 //
 // http://server/uri/command       -> "http://server/uri"       + "command"
 // http://server/uri/some#command" -> "http://server/uri/some#" + "command"
@@ -70,7 +68,7 @@ bool SplitNamespaceAndAction(CString p_soapAction, CString& p_namespace, CString
   // Quick check whether it's filled
   if(p_soapAction.IsEmpty())
   {
-    // No result returnd
+    // No result returned
     return false;
   }
   // Remove leading and trailing quotes (can come from HTTP protocol!)

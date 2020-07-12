@@ -2,9 +2,7 @@
 //
 // SourceFile: XMLParser.h
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 1998-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +23,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
+#ifndef __XMLParser__
+#define __XMLParser__
+
 #include "XMLMessage.h"
 
 // To be translated entities in an XML string
@@ -43,8 +43,6 @@ using uchar = unsigned char;
 // Current number of entities recognized
 constexpr auto NUM_ENTITY = 5;
 
-// Print string with entities and optionally as UTF8 again
-CString PrintXmlString(const CString& p_string,bool p_utf8 = false);
 
 class XMLParser
 {
@@ -57,6 +55,10 @@ public:
   void          ParseForNode(XMLElement* p_node,CString& p_message,WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);
   // Setting message to UTF-8 encryption
   void          SetUTF8();
+
+  // Print string with entities and optionally as UTF8 again
+  static CString PrintXmlString (const CString& p_string, bool p_utf8 = false);
+  static CString PrintJsonString(const CString& p_string, bool p_utf8 = false);
 
 protected:
   // Set the internal error
@@ -109,17 +111,4 @@ XMLParser::SetUTF8()
   m_utf8 = true;
 }
 
-class SOAPMessage;
-class JSONMessage;
-class JSONvalue;
-
-class XMLParserJSON : public XMLParser
-{
-public:
-  XMLParserJSON(XMLMessage* p_xml,JSONMessage* p_json);
-private:
-  void ParseMain (XMLElement* p_element,JSONvalue& p_value);
-  void ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arrayName = "");
-private:
-  SOAPMessage* m_soap;
-};
+#endif // __XMLParser__

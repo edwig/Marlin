@@ -11,6 +11,7 @@ attrib -h HTTPManager\.vs
 del marlin_6.rar
 del /q /s /f *.sdf
 del /q /s /f *.VC.db
+rmdir /q /s .vs
 rmdir /q /s lib
 rmdir /q /s Marlin\Debug
 rmdir /q /s Marlin\Release

@@ -2,9 +2,7 @@
 //
 // SourceFile: XMLMessage.cpp
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 1998-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,15 +27,18 @@
 #include "XMLMessage.h"
 #include "XMLParser.h"
 #include "XMLRestriction.h"
-#include "JSONMessage.h"
 #include "Namespace.h"
 #include "ConvertWideString.h"
+#include "StdException.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+// Defined in FileBuffer
+extern unsigned long g_streaming_limit; // = STREAMING_LIMIT;
 
 #pragma region XMLElement
 
@@ -487,20 +488,20 @@ XMLMessage::PrintElements(XMLElement* p_element
   if(p_element->GetType() & XDT_CDATA)
   {
     // CDATA section
-    temp.Format("<%s><![CDATA[%s]]>",PrintXmlString(name,p_utf8).GetString(),value.GetString());
+    temp.Format("<%s><![CDATA[%s]]>",XMLParser::PrintXmlString(name,p_utf8).GetString(),value.GetString());
     message += spaces + temp;
   }
   else if(value.IsEmpty() && p_element->GetAttributes().size() == 0 && p_element->GetChildren().size() == 0)
   {
     // A 'real' empty node
-    temp.Format("<%s />%s",PrintXmlString(name,p_utf8).GetString(),newline.GetString());
+    temp.Format("<%s />%s",XMLParser::PrintXmlString(name,p_utf8).GetString(),newline.GetString());
     message += spaces + temp;
     return message;
   }
   else
   {
     // Parameter printing with attributes
-    temp.Format("<%s",PrintXmlString(name,p_utf8).GetString());
+    temp.Format("<%s",XMLParser::PrintXmlString(name,p_utf8).GetString());
     message += spaces + temp;
 
     // Print all of our attributes
@@ -511,11 +512,11 @@ XMLMessage::PrintElements(XMLElement* p_element
       // Append attribute name
       if(attrib.m_namespace.IsEmpty())
       {
-        temp.Format(" %s=",PrintXmlString(attribute,p_utf8).GetString());
+        temp.Format(" %s=",XMLParser::PrintXmlString(attribute,p_utf8).GetString());
       }
       else
       {
-        temp.Format(" %s:%s=",attrib.m_namespace.GetString(),PrintXmlString(attribute,p_utf8).GetString());
+        temp.Format(" %s:%s=",attrib.m_namespace.GetString(),XMLParser::PrintXmlString(attribute,p_utf8).GetString());
       }
       message += temp;
 
@@ -525,7 +526,7 @@ XMLMessage::PrintElements(XMLElement* p_element
                                     break;
         case XDT_String:            [[fallthrough]];
         case XDT_AnyURI:            [[fallthrough]];
-        case XDT_NormalizedString:  temp.Format("\"%s\"",PrintXmlString(attrib.m_value,p_utf8).GetString());
+        case XDT_NormalizedString:  temp.Format("\"%s\"",XMLParser::PrintXmlString(attrib.m_value,p_utf8).GetString());
                                     break;
       }
       message += temp;
@@ -547,7 +548,7 @@ XMLMessage::PrintElements(XMLElement* p_element
     else
     {
       // Write value and end of the key
-      temp.Format(">%s",PrintXmlString(value,p_utf8).GetString());
+      temp.Format(">%s",XMLParser::PrintXmlString(value,p_utf8).GetString());
       message += temp;
     }
   }
@@ -563,7 +564,7 @@ XMLMessage::PrintElements(XMLElement* p_element
     message += spaces;
   }
   // Write ending of parameter name
-  temp.Format("</%s>%s",PrintXmlString(name,p_utf8).GetString(),newline.GetString());
+  temp.Format("</%s>%s",XMLParser::PrintXmlString(name,p_utf8).GetString(),newline.GetString());
   message += temp;
 
   return message;
@@ -658,7 +659,7 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
     case XDT_CDATA:             [[fallthrough]];
     case XDT_String:            [[fallthrough]];
     case XDT_AnyURI:            [[fallthrough]];
-    case XDT_NormalizedString:  temp = JSONvalue::FormatAsJsonString(value,p_utf8);
+    case XDT_NormalizedString:  temp = XMLParser::PrintJsonString(value,p_utf8);
                                 break;
   }
   message += temp + newline;

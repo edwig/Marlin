@@ -36,6 +36,7 @@
 #include "Namespace.h"
 #include "ConvertWideString.h"
 #include "XMLParser.h"
+#include "XMLParserJSON.h"
 #include "EnsureFile.h"
 #include <utility>
 

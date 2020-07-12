@@ -2,9 +2,7 @@
 //
 // SourceFile: XMLMessage.h
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 1998-2020 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,9 +23,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
-#include <deque>
+#ifndef __XMLMessage__
+#define __XMLMessage__
+
 #include "XMLDataType.h"
+#include <deque>
 
 // XML coding of the message
 enum class XMLEncoding
@@ -428,3 +428,5 @@ XMLMessage::SetStylesheet(CString p_sheet)
 {
   m_stylesheet = p_sheet;
 }
+
+#endif  // __XMLMessage__

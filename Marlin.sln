@@ -11,6 +11,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A8F17E01-82AE-4A85-AAE9-945AF1FFB2BB}"
 	ProjectSection(SolutionItems) = preProject
 		Documentation\License.txt = Documentation\License.txt
+		README = README
 		Documentation\ReleaseNotes_v1.txt = Documentation\ReleaseNotes_v1.txt
 		Documentation\ReleaseNotes_v2.txt = Documentation\ReleaseNotes_v2.txt
 		Documentation\ReleaseNotes_v3.txt = Documentation\ReleaseNotes_v3.txt
@@ -43,6 +44,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerApplet", "ServerApple
 	ProjectSection(ProjectDependencies) = postProject
 		{3CC23320-1FF0-41AF-9F3A-960C5F657C81} = {3CC23320-1FF0-41AF-9F3A-960C5F657C81}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Deployment", "Deployment\Deployment.vcxproj", "{9FD80E97-450B-4724-971E-58C09839034A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -136,6 +139,18 @@ Global
 		{ABEDDA71-62C8-4098-B49F-1AC8068615F6}.Release|x64.ActiveCfg = Release|x64
 		{ABEDDA71-62C8-4098-B49F-1AC8068615F6}.Release|x64.Build.0 = Release|x64
 		{ABEDDA71-62C8-4098-B49F-1AC8068615F6}.Release|x86.ActiveCfg = Release|x64
+		{9FD80E97-450B-4724-971E-58C09839034A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9FD80E97-450B-4724-971E-58C09839034A}.Debug|Win32.Build.0 = Debug|Win32
+		{9FD80E97-450B-4724-971E-58C09839034A}.Debug|x64.ActiveCfg = Debug|x64
+		{9FD80E97-450B-4724-971E-58C09839034A}.Debug|x64.Build.0 = Debug|x64
+		{9FD80E97-450B-4724-971E-58C09839034A}.Debug|x86.ActiveCfg = Debug|Win32
+		{9FD80E97-450B-4724-971E-58C09839034A}.Debug|x86.Build.0 = Debug|Win32
+		{9FD80E97-450B-4724-971E-58C09839034A}.Release|Win32.ActiveCfg = Release|Win32
+		{9FD80E97-450B-4724-971E-58C09839034A}.Release|Win32.Build.0 = Release|Win32
+		{9FD80E97-450B-4724-971E-58C09839034A}.Release|x64.ActiveCfg = Release|x64
+		{9FD80E97-450B-4724-971E-58C09839034A}.Release|x64.Build.0 = Release|x64
+		{9FD80E97-450B-4724-971E-58C09839034A}.Release|x86.ActiveCfg = Release|Win32
+		{9FD80E97-450B-4724-971E-58C09839034A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

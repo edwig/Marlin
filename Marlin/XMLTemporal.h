@@ -25,7 +25,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
+#ifndef __XMLTEMPORAL__
+#define __XMLTEMPORAL__
 #include <sqltypes.h>
 
 #define ONE_MINUTE (60)        // One minute in seconds
@@ -202,3 +203,4 @@ private:
   void ParseGregorianYM(CString p_value);
 };
 
+#endif

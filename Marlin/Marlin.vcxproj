@@ -118,7 +118,7 @@
       <CallingConvention>Cdecl</CallingConvention>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
-      <ProgramDataBaseFileName>$(OutDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -277,6 +277,7 @@
     <ClCompile Include="XMLMessage.cpp" />
     <ClCompile Include="XMLParser.cpp" />
     <ClCompile Include="XMLParserImport.cpp" />
+    <ClCompile Include="XMLParserJSON.cpp" />
     <ClCompile Include="XMLRestriction.cpp" />
     <ClCompile Include="XMLTemporal.cpp" />
     <ClCompile Include="ZLib\adler32.c">
@@ -441,6 +442,7 @@
     <ClInclude Include="XMLMessage.h" />
     <ClInclude Include="XMLParser.h" />
     <ClInclude Include="XMLParserImport.h" />
+    <ClInclude Include="XMLParserJSON.h" />
     <ClInclude Include="XMLRestriction.h" />
     <ClInclude Include="XMLTemporal.h" />
     <ClInclude Include="ZLib\crc32.h" />

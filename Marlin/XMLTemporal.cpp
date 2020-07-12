@@ -2,8 +2,6 @@
 //
 // SourceFile: XMLTemporal.cpp
 //
-// Marlin Server: Internet server/client
-// 
 // Copyright (c) 2015-2018 ir. W.E. Huisman
 // All rights reserved
 //
@@ -28,6 +26,7 @@
 #include "stdafx.h"
 #include <time.h>
 #include "XMLTemporal.h"
+#include "StdException.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -168,7 +167,7 @@ XMLTemporal::ParseXMLDate(const CString& p_string,XMLTimestamp& p_moment)
                 offsetminuten = fraction * 60 + UTCuurBuffer;
                 if(offsetminuten >= 0 && offsetminuten <= 840)
                 {
-                  if(sep6 == '+')
+                  if(sep6 == '-')
                   {
                     offsetminuten = -offsetminuten;
                   }
@@ -186,7 +185,7 @@ XMLTemporal::ParseXMLDate(const CString& p_string,XMLTimestamp& p_moment)
                offsetminuten = UTCuurBuffer * 60 + UTCminBuffer;
                if(offsetminuten >= 0 && offsetminuten <= 840)
                {
-                 if(sep7 == '+')
+                 if(sep7 == '-')
                  {
                    offsetminuten = -offsetminuten;
                  }
