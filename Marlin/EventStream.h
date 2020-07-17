@@ -51,6 +51,7 @@ public:
   __time64_t      m_lastPulse;  // Time of last sent event
   CString         m_user;       // For authenticated user
   long            m_chunks;     // Send chunk counter
+  CRITICAL_SECTION m_lock;       // Just one message from one thread please!
 
   // Construct and init
   EventStream()
@@ -63,6 +64,12 @@ public:
     m_alive     = false;
     m_lastPulse = NULL;
     m_chunks    = 0;
+    InitializeCriticalSection(&m_lock);
+  }
+
+  ~EventStream()
+  {
+    DeleteCriticalSection(&m_lock);
   }
 };
 

@@ -114,7 +114,11 @@ private:
   void SendResponseError      (IHttpResponse* p_response,CString& p_page,int p_error,const char* p_reason);
 
   // For the handling of the event streams
-  virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true);
+  virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
+                                      ,CRITICAL_SECTION*  p_lock
+                                      ,const char*        p_buffer
+                                      ,size_t             p_totalLength
+                                      ,bool               p_continue = true);
 
   WebConfigIIS* m_webConfigIIS { nullptr };
 };

@@ -768,10 +768,13 @@ HTTPServerMarlin::InitEventStream(EventStream& p_stream)
 // Sending a chunk to an event stream
 bool
 HTTPServerMarlin::SendResponseEventBuffer(HTTP_OPAQUE_ID p_requestID
+                                         ,CRITICAL_SECTION* p_lock
                                          ,const char*    p_buffer
                                          ,size_t         p_length
                                          ,bool           p_continue /*=true*/)
 {
+  AutoCritSec lockme(p_lock);
+
   HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_requestID);
   if(request)
   {

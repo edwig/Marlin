@@ -413,8 +413,12 @@ protected:
   UINT      CheckEventStreams();
   // Set the error status
   void      SetError(int p_error);
-  // For the handling of the event streams
-  virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID p_response,const char* p_buffer,size_t p_totalLength,bool p_continue = true) = 0;
+  // For the handling of the event streams: implement this function
+  virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
+                                      ,CRITICAL_SECTION*  p_lock
+                                      ,const char*        p_buffer
+                                      ,size_t             p_totalLength
+                                      ,bool               p_continue = true) = 0;
   // Logging and tracing: The response
   void      TraceResponse(PHTTP_RESPONSE p_response);
   void      TraceKnownResponseHeader(unsigned p_number,const char* p_value);

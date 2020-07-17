@@ -1195,6 +1195,7 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
 // Sending a chunk to an event stream
 bool 
 HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
+                                      ,CRITICAL_SECTION*  p_lock
                                       ,const char*    p_buffer
                                       ,size_t         p_length
                                       ,bool           p_continue /*= true*/)

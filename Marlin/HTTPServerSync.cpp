@@ -1420,10 +1420,13 @@ HTTPServerSync::InitEventStream(EventStream& p_stream)
 // Sending a chunk to an event stream
 bool
 HTTPServerSync::SendResponseEventBuffer(HTTP_OPAQUE_ID p_requestID
+                                       ,CRITICAL_SECTION* p_lock
                                        ,const char*    p_buffer
                                        ,size_t         p_length
                                        ,bool           p_continue /*=true*/)
 {
+  AutoCritSec lockme(p_lock);
+
   DWORD  result    = 0;
   DWORD  bytesSent = 0;
   HTTP_DATA_CHUNK dataChunk;

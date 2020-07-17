@@ -1298,7 +1298,7 @@ HTTPServer::SendEvent(EventStream* p_stream
   CString sendString = EventToString(p_event);
 
   // Send the event to the client. This can take an I/O wait time
-  bool alive = SendResponseEventBuffer(p_stream->m_requestID,sendString.GetString(),sendString.GetLength(),p_continue);
+  bool alive = SendResponseEventBuffer(p_stream->m_requestID,&p_stream->m_lock,sendString.GetString(),sendString.GetLength(),p_continue);
 
   // Lock server as short as possible to register the return status
   // But we must now make sure the event stream still does exist
@@ -1508,7 +1508,7 @@ HTTPServer::CheckEventStreams()
     // we send a ":keepalive" comment to the clients
     if((pulse - stream->m_lastPulse) > (m_eventKeepAlive - 500))
     {
-      stream->m_alive = SendResponseEventBuffer(stream->m_requestID,keepAlive.GetString(),keepAlive.GetLength());
+      stream->m_alive = SendResponseEventBuffer(stream->m_requestID,&stream->m_lock,keepAlive.GetString(),keepAlive.GetLength());
       stream->m_lastPulse = pulse;
       ++stream->m_chunks;
       ++number;
