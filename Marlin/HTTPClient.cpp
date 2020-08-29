@@ -2213,6 +2213,9 @@ HTTPClient::Send(SOAPMessage* p_msg)
     SetBody(soap);
   }
 
+  // Transfer all headers to the client
+  AddMessageHeaders(p_msg);
+
   // For Plain-Old-Soap: make a SOAPAction header
   if(p_msg->GetSoapVersion() < SoapVersion::SOAP_12)
   {
@@ -2223,12 +2226,10 @@ HTTPClient::Send(SOAPMessage* p_msg)
     {
       namesp += "/";
     }
-    header.Format("SOAPAction:%s%s",namesp.GetString(),p_msg->GetSoapAction().GetString());
+    // Old style SOAP 1.0/1.1 SOAPAction with double quotes!!
+    header.Format("SOAPAction: \"%s%s\"",namesp.GetString(),p_msg->GetSoapAction().GetString());
     AddHeader(header);
   }
-
-  // Transfer all headers to the client
-  AddMessageHeaders(p_msg);
 
   // Set cookies
   m_cookies = p_msg->GetCookies();

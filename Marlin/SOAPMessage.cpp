@@ -1294,7 +1294,11 @@ SOAPMessage::SetSoapBody()
   {
     if((m_body != m_root) && m_paramObject && !m_namespace.IsEmpty())
     {
-      SetAttribute(m_paramObject,"xmlns",m_namespace);
+      XMLAttribute* xmlns = FindAttribute(m_paramObject,"xmlns");
+      if(!xmlns)
+      {
+        SetAttribute(m_paramObject,"xmlns",m_namespace);
+      }
     }
   }
 }

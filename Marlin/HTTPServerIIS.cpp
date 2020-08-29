@@ -1200,6 +1200,8 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
                                       ,size_t         p_length
                                       ,bool           p_continue /*= true*/)
 {
+  AutoCritSec lockme(p_lock);
+
   // Check if we have something to send
   if(p_response == NULL || p_buffer == nullptr)
   {
