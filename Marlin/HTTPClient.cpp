@@ -754,9 +754,14 @@ HTTPClient::AddHeader(CString p_header)
   return true;
 }
 
+// Add extra header by name and value pair
 bool
 HTTPClient::AddHeader(CString p_name,CString p_value)
 {
+  if(p_value.GetLength() && (p_value[0] != '\"' && p_value[0] != '\'' && p_value.Find(':') >= 0))
+  {
+    p_value = "\"" + p_value + "\"";
+  }
   CString header = p_name + ": " + p_value;
   return AddHeader(header);
 }
@@ -933,10 +938,10 @@ HTTPClient::AddHostHeader()
     ErrorLog(__FUNCTION__,"Host header NOT set. Error [%d] %s");
     return;
   }
-  DETAILLOG("Host header set: %s",hostHeader.GetString());
+  DETAILLOG("Header => %S",hostString.c_str());
 }
 
-// Add contentlength header
+// Add content length header
 void
 HTTPClient::AddLengthHeader()
 {
@@ -954,7 +959,7 @@ HTTPClient::AddLengthHeader()
     ErrorLog(__FUNCTION__,"Host header NOT set. Error [%d] %s");
     return;
   }
-  DETAILLOG("Length set: %s",length.GetString());
+  DETAILLOG("Header => %S",header.c_str());
 }
 
 void
@@ -998,7 +1003,7 @@ HTTPClient::AddSecurityOptions()
       if(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2) allow += "TLS 1.2, ";
       allow.TrimRight(", ");
 
-      DETAILLOG("Security protocol allows %s",allow.GetString());
+      DETAILLOG("Security protocol allows: %s",allow.GetString());
     }
   }
 }
@@ -1050,7 +1055,7 @@ HTTPClient::AddExtraHeaders()
         // Log error but continue. A lot of headers are optional to a HTTP call
         ErrorLog(__FUNCTION__,"Request headers NOT set. Error [%d] %s");
       }
-      DETAILLOG("Request header set: %S",m_headers[ind].c_str());
+      DETAILLOG("Header => %S",m_headers[ind].c_str());
     }
   }
   if(m_contentType.GetLength())
@@ -1066,7 +1071,7 @@ HTTPClient::AddExtraHeaders()
       // Log error but continue. Most servers can reconstruct the content type
       ErrorLog(__FUNCTION__,"Content type NOT set. Error [%d] %s");
     }
-    DETAILLOG("Content type set: %s",m_contentType.GetString());
+    DETAILLOG("Header => %S",type.c_str());
   }
   if(m_httpCompression)
   {
@@ -1080,22 +1085,27 @@ HTTPClient::AddExtraHeaders()
       // Log error but continue. Most servers will simply not GZIP it's answer
       ErrorLog(__FUNCTION__,"Accept-Encoding NOT set. Error [%d] %s");
     }
-    DETAILLOG("Content Accept-Encoding set to: gzip");
+    DETAILLOG("Header => %S",accept.c_str());
   }
   if(m_soapAction.GetLength())
   {
     USES_CONVERSION;
-    wstring action = wstring(L"SOAPAction: ") + A2CW(m_soapAction);
+    if(m_soapAction[0] != '\"' && m_soapAction.Find(':') >= 0)
+    {
+      m_soapAction = "\"" + m_soapAction + "\"";
+    }
+    wstring header(L"SOAPAction: ");
+    header += A2CW(m_soapAction);
     if(!::WinHttpAddRequestHeaders(m_request
-                                  ,action.c_str()
-                                  ,(DWORD)action.size()
+                                  ,header.c_str()
+                                  ,(DWORD)header.size()
                                   ,WINHTTP_ADDREQ_FLAG_ADD | 
                                    WINHTTP_ADDREQ_FLAG_REPLACE))
     {
       // Log error but continue. Most SOAP-XML has the action in the header or the root node
       ErrorLog(__FUNCTION__,"SOAPAction NOT set. Error [%d] %s");
     }
-    DETAILLOG("SOAPAction set: %s",m_soapAction.GetString());
+    DETAILLOG("Header => %S",header.c_str());
   }
 
   if(m_terminalServices)
@@ -1120,7 +1130,7 @@ HTTPClient::AddExtraHeaders()
         // Result will most probably not work on RDP/Citrix sessions
         ErrorLog(__FUNCTION__,"RemoteDesktop NOT set. Error [%d] %s");
       }
-      DETAILLOG("RemoteDesktop set: %d",session);
+      DETAILLOG("Header => %S",remDesktop.c_str());
     }
   }
 }
@@ -1151,7 +1161,7 @@ HTTPClient::AddCookieHeaders()
       // Log error and continue. Some cookies are optional (e.g. advertorials)
       ErrorLog(__FUNCTION__,"Cookie headers NOT set. Error [%d] %s");
     }
-    DETAILLOG(cookieText);
+    DETAILLOG("Header => %S",cookieStr.c_str());
   }
 }
 
@@ -1850,10 +1860,10 @@ HTTPClient::ReceivePushEvents()
       // Receiving SSE event stream. See if we must trace the results
       if(MUSTLOG(HLL_LOGBODY) && m_log)
       {
-        m_trace->TraceBody("SSE",m_response,m_responseLength);
+        m_log->BareStringLog((const char*)m_response,m_responseLength);
         if(MUSTLOG(HLL_TRACEDUMP))
         {
-          m_trace->TraceHexa("SSE",m_response,m_responseLength);
+          m_log->AnalysisHex(__FUNCTION__,"SSE",m_response,m_responseLength);
         }
       }
 
@@ -2017,10 +2027,7 @@ HTTPClient::Send(CString&    p_url
   {
     for(auto& header : *p_headers)
     {
-      CString head(header.first);
-      head += ": ";
-      head += header.second;
-      AddHeader(head);
+      AddHeader(header.first,header.second);
     }
   }
 
@@ -2217,18 +2224,15 @@ HTTPClient::Send(SOAPMessage* p_msg)
   AddMessageHeaders(p_msg);
 
   // For Plain-Old-Soap: make a SOAPAction header
-  if(p_msg->GetSoapVersion() < SoapVersion::SOAP_12)
+  if((p_msg->GetSoapVersion() < SoapVersion::SOAP_12) && m_soapAction.IsEmpty())
   {
-    CString header;
-    CString namesp = p_msg->GetNamespace();
+    m_soapAction = p_msg->GetNamespace();
 
-    if(!namesp.IsEmpty() && namesp.Right(1) != "/" && namesp.Right(1) != "\\")
+    if(!m_soapAction.IsEmpty() && m_soapAction.Right(1) != "/" && m_soapAction.Right(1) != "\\")
     {
-      namesp += "/";
+      m_soapAction += "/";
     }
-    // Old style SOAP 1.0/1.1 SOAPAction with double quotes!!
-    header.Format("SOAPAction: \"%s%s\"",namesp.GetString(),p_msg->GetSoapAction().GetString());
-    AddHeader(header);
+    m_soapAction += p_msg->GetSoapAction();
   }
 
   // Set cookies
@@ -2935,7 +2939,7 @@ HTTPClient::Send()
           ProcessResultCookies();
 
           // Optionally getting all response headers
-          if(m_readAllHeaders)
+          if(m_readAllHeaders || MUSTLOG(HLL_LOGBODY))
           {
             ReadAllResponseHeaders();
           }
@@ -3009,11 +3013,7 @@ HTTPClient::Send()
   // Response gotten: trace it?
   if(MUSTLOG(HLL_LOGBODY) && m_response)
   {
-    m_trace->TraceBody("Incoming response",(BYTE*) m_response,m_responseLength);
-    if(MUSTLOG(HLL_TRACEDUMP))
-    {
-      m_trace->TraceHexa("Incoming response",m_response,m_responseLength);
-    }
+    TraceTheAnswer();
   }
 
   // Close our request
@@ -3043,54 +3043,116 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
   CString proxy;
   CString server = CW2A(p_server.c_str());
 
-  // Calculate the proxy (if any)
-  if(p_port != m_port || server.CompareNoCase(m_server))
-  {
-    proxy.Format(" through proxy [%s:%d]",server.GetString(),p_port);
-  }
 
   // Find secure call
   CString secure = m_secure && m_scheme.Right(1) != "s" ? "s" : "";
 
   // Log in full, do the raw logging call directly
   m_log->AnalysisLog("HTTPClient::Send",LogType::LOG_INFO,true
-                    ,"%s %s%s://%s:%d%s%s"
+                    ,"%s %s%s://%s:%d%s HTTP/1.1"
                     ,m_verb.GetString()
                     ,m_scheme.GetString()
                     ,secure.GetString()
                     ,m_server.GetString()
                     ,m_port
-                    ,m_url.GetString()
-                    ,proxy.GetString());
+                    ,m_url.GetString());
+  // Calculate the proxy (if any)
+  if(p_port != m_port || server.CompareNoCase(m_server))
+  {
+    m_log->AnalysisLog("HTTPClient::Send",LogType::LOG_INFO,true
+                      ,"Connect through proxy [%s:%d]",server.GetString(),p_port);
+  }
 }
 
 void
 HTTPClient::TraceTheSend()
 {
+  USES_CONVERSION;
+
   // See if we have anything to do
   if(m_log == nullptr || m_logLevel < HLL_LOGBODY)
   {
     return;
   }
 
+  // Before showing the request we show the configuration of the HTTP channel
   if(MUSTLOG(HLL_TRACE))
   {
-    m_trace->Trace("BEFORE",m_session,m_request);
+    m_trace->Trace("BEFORE SENDING",m_session,m_request);
   }
 
-  if(m_body)
+  // THE HTTP HEADER LINE
+
+  CString header;
+  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,true,"Outgoing");
+  header.Format("%s %s%s://%s:%d%s HTTP/1.1"
+                ,m_verb.GetString()
+                ,m_scheme.GetString()
+                ,m_secure ? "s" : ""
+                ,m_server.GetString()
+                ,m_port
+                ,m_url.GetString());
+  m_log->BareStringLog(header, header.GetLength());
+
+  // TRACE ALL HEADERS
+
+  header.Format("Host: %s",m_server.GetString());
+  m_log->BareStringLog(header.GetString(),header.GetLength());
+  header.Format("Content-Length: %lu",m_bodyLength);
+  m_log->BareStringLog(header.GetString(),header.GetLength());
+  header.Format("Content-Type: %s",m_contentType.GetString());
+  m_log->BareStringLog(header.GetString(),header.GetLength());
+  if (m_httpCompression)
   {
-    m_trace->TraceBody("Outgoing request",(BYTE*) m_body,m_bodyLength);
-    if (MUSTLOG(HLL_TRACEDUMP))
+    header = "Accept-Encoding: gzip";
+    m_log->BareStringLog(header.GetString(),header.GetLength());
+  }
+  if (m_soapAction.GetLength())
+  {
+    header.Format("SOAPAction: %s",m_soapAction.GetString());
+    m_log->BareStringLog(header.GetString(),header.GetLength());
+  }
+  if (m_terminalServices)
+  {
+    DWORD session = 0;
+    DWORD pid = GetCurrentProcessId();
+    if (ProcessIdToSessionId(pid, &session))
     {
-      m_trace->TraceHexa("Outgoing",m_body,m_bodyLength);
+      header.Format("RemoteDesktop: %d",session);
+      m_log->BareStringLog(header.GetString(),header.GetLength());
     }
   }
-  if(m_buffer && m_buffer->GetLength())
+  if(m_cookies.GetSize())
+  {
+    header = "Cookie: " + m_cookies.GetCookieText();
+    m_log->BareStringLog(header.GetString(),header.GetLength());
+  }
+  // Trace all other extra headers, including CORS headers
+  for(auto& head : m_headers)
+  {
+    header = CW2A(head.c_str());
+    m_log->BareStringLog(header.GetString(),header.GetLength());
+  }
+
+  // Empty line between headers and body
+  m_log->BareStringLog("",0);
+
+  // THE BODY
+
+  // Trace all parts of the body
+  if(m_body)
+  {
+    m_log->BareStringLog((const char*)m_body,m_bodyLength);
+    if (MUSTLOG(HLL_TRACEDUMP))
+    {
+      m_log->AnalysisHex("TraceHTTP","Outgoing",m_body,m_bodyLength);
+    }
+  }
+  else if(m_buffer && m_buffer->GetLength())
   {
     if(!m_buffer->GetFileName().IsEmpty())
     {
-      DETAILLOG("Sending file: %s",m_buffer->GetFileName().GetString());
+      DETAILLOG("SENDING FILE: %s",m_buffer->GetFileName().GetString());
     }
     else
     {
@@ -3100,17 +3162,64 @@ HTTPClient::TraceTheSend()
 
       while(m_buffer->GetBufferPart(part++,buffer,length))
       {
-        m_trace->TraceBody("Outgoing bufferpart", (BYTE*)buffer, (unsigned long)length);
+        m_log->BareStringLog((const char*)buffer,(int)length);
       }
       if(MUSTLOG(HLL_TRACEDUMP))
       {
         part = 0;
-        while(m_buffer->GetBufferPart(part++, buffer, length))
+        while(m_buffer->GetBufferPart(part++,buffer,length))
         {
-          m_trace->TraceHexa("Outgoing", buffer, (unsigned long)length);
+          m_log->AnalysisHex("TraceHTTP","Outgoing",buffer,(unsigned)length);
         }
       }
     }
+  }
+  else
+  {
+    header = "<No body sent>";
+    m_log->BareStringLog(header.GetString(),header.GetLength());
+  }
+}
+
+void
+HTTPClient::TraceTheAnswer()
+{
+  // We must have a logfile
+  if(m_log == nullptr)
+  {
+    return;
+  }
+
+  // Now here comes the answer
+  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,"Incoming response");
+
+  CString header;
+  header.Format("HTTP/1.1 %d %s",m_status,GetHTTPStatusText(m_status));
+  m_log->BareStringLog(header.GetString(),header.GetLength());
+
+  // All answer headers
+  for(auto& head : m_respHeaders)
+  {
+    header.Format("%s: %s",head.first.GetString(),head.second.GetString());
+    m_log->BareStringLog(header,header.GetLength());
+  }
+
+  // Empty line between headers and body
+  m_log->BareStringLog("",0);
+
+  // Answer body or none received
+  if(m_response)
+  {
+    m_log->BareStringLog((const char*)m_response,(int)m_responseLength);
+    if(MUSTLOG(HLL_TRACEDUMP))
+    {
+      m_log->AnalysisHex("TraceHTTP","Incoming",m_response,m_responseLength);
+    }
+  }
+  else
+  {
+    header = "<No body received>";
+    m_log->BareStringLog(header.GetString(),header.GetLength());
   }
 }
 
@@ -3259,7 +3368,7 @@ HTTPClient::ReadAllResponseHeaders()
                      ,WINHTTP_HEADER_NAME_BY_INDEX
                      ,WINHTTP_NO_OUTPUT_BUFFER
                      ,&dwSize,
-                     WINHTTP_NO_HEADER_INDEX);
+                      WINHTTP_NO_HEADER_INDEX);
 
   if(GetLastError() == ERROR_INSUFFICIENT_BUFFER)
   {
@@ -3333,7 +3442,7 @@ HTTPClient::AddMessageHeaders(HTTPMessage* p_message)
   // Clear all headers of the client
   m_headers.clear();
 
-  // Re-aling message VERB if neccessary through extra header
+  // Re-align message VERB if necessary through extra header
   if(p_message->GetVerbTunneling())
   {
     p_message->UseVerbTunneling();
@@ -3344,15 +3453,12 @@ HTTPClient::AddMessageHeaders(HTTPMessage* p_message)
   HeaderMap* allheaders = p_message->GetHeaderMap();
   for(HeaderMap::iterator it = allheaders->begin(); it != allheaders->end(); ++it)
   {
-    header.Format("%s: %s",it->first.GetString(),it->second.GetString());
-    AddHeader(header);
+    AddHeader(it->first,it->second);
   }
   // Implement if-modified-since method
   if(p_message->GetUseIfModified())
   {
-    CString headerSince("if-modified-since: ");
-    CString timestring = p_message->HTTPTimeFormat(p_message->GetSystemTime());
-    AddHeader(headerSince + timestring);
+    AddHeader("if-modified-since",p_message->HTTPTimeFormat(p_message->GetSystemTime()));
   }
 }
 
@@ -3367,8 +3473,7 @@ HTTPClient::AddMessageHeaders(SOAPMessage* p_message)
   HeaderMap* allheaders = p_message->GetHeaderMap();
   for(HeaderMap::iterator it = allheaders->begin(); it != allheaders->end(); ++it)
   {
-    header.Format("%s: %s",it->first.GetString(),it->second.GetString());
-    AddHeader(header);
+    AddHeader(it->first,it->second);
   }
 }
 
@@ -3389,8 +3494,7 @@ HTTPClient::AddMessageHeaders(JSONMessage* p_message)
   HeaderMap* allheaders = p_message->GetHeaderMap();
   for(HeaderMap::iterator it = allheaders->begin(); it != allheaders->end(); ++it)
   {
-    header.Format("%s: %s",it->first.GetString(),it->second.GetString());
-    AddHeader(header);
+    AddHeader(it->first,it->second);
   }
 }
 

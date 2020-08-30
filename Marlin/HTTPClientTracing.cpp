@@ -277,7 +277,7 @@ HTTPClientTracing::QueryBool(HINTERNET p_handle,DWORD p_option,BOOL* p_bool,char
   BOOL  result = WinHttpQueryOption(p_handle,p_option,p_bool,&bufLength);
   if(result == FALSE)
   {
-    TRACE("Cannot get the option name: %s",p_optionName);
+    m_log->AnalysisLog("Trace",LogType::LOG_TRACE,true,"Cannot get the option name: %s",p_optionName);
   }
   return (result == TRUE);
 }
@@ -290,7 +290,7 @@ HTTPClientTracing::QueryWord(HINTERNET p_handle,DWORD p_option,DWORD* p_word,cha
   BOOL  result = WinHttpQueryOption(p_handle,p_option,p_word,&bufLength);
   if(result == FALSE)
   {
-    TRACE("Cannot get the option name: %s",p_optionName);
+    m_log->AnalysisLog("Trace",LogType::LOG_TRACE,true,"Cannot get the option name: %s",p_optionName);
   }
   return (result == TRUE);
 }
@@ -303,7 +303,7 @@ HTTPClientTracing::QueryVoid(HINTERNET p_handle,DWORD p_option,void** p_pointer,
   BOOL  result = WinHttpQueryOption(p_handle,p_option,p_pointer,&bufLength);
   if(result == FALSE)
   {
-    TRACE("Cannot get the option name: %s",p_optionName);
+    m_log->AnalysisLog("Trace",LogType::LOG_TRACE,true,"Cannot get the option name: %s",p_optionName);
   }
   return (result == TRUE);
 }
@@ -315,11 +315,11 @@ HTTPClientTracing::QueryObject(HINTERNET p_handle,DWORD p_option,void* p_pointer
   BOOL  result = WinHttpQueryOption(p_handle,p_option,p_pointer,&bufLength);
   if(result == FALSE)
   {
-    TRACE("Cannot get the option name: %s",p_optionName);
+    m_log->AnalysisLog("Trace",LogType::LOG_TRACE,true,"Cannot get the option name: %s",p_optionName);
   }
   if(bufLength != p_size)
   {
-    TRACE("Panic: internal object sizes in MS-Windows changed!");
+    m_log->AnalysisLog("Trace",LogType::LOG_TRACE,true,"Panic: internal object sizes in MS-Windows changed!");
   }
   return (result == TRUE);
 }
@@ -343,23 +343,7 @@ HTTPClientTracing::QueryString(HINTERNET p_handle,DWORD p_option,char* p_optionN
   }
   if(result == FALSE)
   {
-    TRACE("Cannot get the option name: %s",p_optionName);
+    m_log->AnalysisLog("Trace",LogType::LOG_TRACE,true,"Cannot get the option name: %s",p_optionName);
   }
   return theString;
-}
-
-// Trace of incoming or outgoing body
-void
-HTTPClientTracing::TraceBody(CString p_name,BYTE* p_body,unsigned long p_length)
-{
-  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,p_name);
-  m_log->BareStringLog((const char*) p_body,p_length);
-}
-
-// Trace in HEXVIEW of the body of the first LOGWRITE_MAXHEXDUMP bytes of the object
-// Standard this is the first 32K of the message body
-void
-HTTPClientTracing::TraceHexa(CString p_name,void* p_body,unsigned long p_length)
-{
-  m_log->AnalysisHex(__FUNCTION__,p_name,p_body,p_length);
 }

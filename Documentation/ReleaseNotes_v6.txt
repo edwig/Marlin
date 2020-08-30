@@ -13,6 +13,12 @@ CHANGES IN VERSION 6.5.2
 ------------------------
 1)  Added a critical_section lock in the SSE Event stream to handle high-load errors in a
     single sessions event stream from various HTTP threads.
+2)  Added corrections for SOAP 1.1 in the HTTPClient for displaying a SOAPAction header
+    with a ':' character in the action value.
+3)  Added correction in SOAPMessage if the namespace on the parameter-node was explicitly
+    set to a different value than the soap action namespace.
+4)  Added full HTTP logging in the HTTPClient. Now prints the full HTTP request and response
+    to the tracing log as also seen by e.g. HTTP tracing agents like 'Fiddler'.
 
 CHANGES IN VERSION 6.5.1
 ------------------------

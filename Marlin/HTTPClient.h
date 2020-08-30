@@ -175,6 +175,7 @@ public:
   // FUNCTIONS
   // Add extra header for the call
   bool AddHeader(CString p_header);
+  // Add extra header by name and value pair
   bool AddHeader(CString p_name,CString p_value);
   // Add extra cookie for the call
   bool AddCookie(CString p_cookie);
@@ -185,7 +186,7 @@ public:
   // Unlock the client (for MT use)
   void UnlockClient();
   // Find a result header
-  CString  FindHeader(CString p_header);
+  CString FindHeader(CString p_header);
   
   // SETTERS
   bool SetURL(CString p_url);
@@ -282,12 +283,6 @@ public:
   bool          GetHTTPCompression()        { return m_httpCompression;   };
   CString       GetCORSOrigin()             { return m_corsOrigin;        };
   int           GetLogLevel()               { return m_logLevel;          };
-  bool          GetDetailLogging();
-  bool          GetTraceData();
-  bool          GetTraceRequest();
-    
-  // GETTERS ONLY
-
   bool          GetIsInitialized()          { return m_initialized;       };
   unsigned      GetRetries()                { return m_retries;           };
   FindProxy&    GetProxyFinder()            { return m_proxyFinder;       };
@@ -303,6 +298,9 @@ public:
   void          GetBody(void*& p_body,unsigned& p_length);
   void          GetResponse(BYTE*& p_response,unsigned& p_length);
   HINTERNET     GetWebsocketHandle();
+  bool          GetDetailLogging();
+  bool          GetTraceData();
+  bool          GetTraceRequest();
 
   // Service routines. Not normally called by other objects
   // Central queue running function
@@ -347,6 +345,7 @@ private:
   void     AddMessageHeaders(JSONMessage* p_message);
   void     LogTheSend(wstring& p_server,int p_port);
   void     TraceTheSend();
+  void     TraceTheAnswer();
   void     ProcessResultCookies();
   CString  GetResultHeader(DWORD p_header,DWORD p_index);
   DWORD    ChooseAuthScheme(DWORD p_dwSupportedSchemes);
