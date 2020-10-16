@@ -468,6 +468,39 @@ CrackedURL::URL()
   return url;
 }
 
+// Safe URL (without the userinfo)
+CString
+CrackedURL::SafeURL()
+{
+  CString url(m_scheme);
+
+  // Secure HTTP 
+  if(m_secure && m_scheme.CompareNoCase("https") != 0)
+  {
+    url += "s";
+  }
+  // Separator
+  url += "://";
+
+  // Add hostname
+  url += m_host;
+
+  // Possibly add a port
+  if((m_secure == false && m_port != INTERNET_DEFAULT_HTTP_PORT) ||
+     (m_secure == true  && m_port != INTERNET_DEFAULT_HTTPS_PORT))
+  {
+    CString portnum;
+    portnum.Format(":%d",m_port);
+    url += portnum;
+  }
+
+  // Now add absolute path and possibly parameters and anchor
+  url += AbsolutePath();
+
+  // This is the result
+  return url;
+}
+
 // Resulting absolute path
 CString 
 CrackedURL::AbsoluteResource()

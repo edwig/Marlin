@@ -58,6 +58,8 @@ public:
 
   // Resulting URL
   CString   URL();
+  // Safe URL (without the userinfo)
+  CString   SafeURL();
   // Resulting absolute path, including parameters & anchor
   CString   AbsolutePath();
   // Resulting absolute designated resource

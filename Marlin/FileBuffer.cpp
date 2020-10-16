@@ -277,6 +277,7 @@ FileBuffer::GetBufferCopy(uchar*& p_buffer,size_t& p_length)
     if(m_buffer == nullptr) 
     {
       delete [] p_buffer;
+      p_buffer = nullptr;
       return false;
     }
     memcpy(p_buffer,m_buffer,p_length + 1);
@@ -472,6 +473,7 @@ FileBuffer::operator=(FileBuffer& p_orig)
   {
     return *this;
   }
+  Reset();
 
   // Copy the members
   m_fileName     = p_orig.m_fileName;
@@ -490,9 +492,11 @@ FileBuffer::operator=(FileBuffer& p_orig)
   }
   
   // If it had a buffer, duplicate it
-  m_buffer = new uchar[m_binaryLength];
-  memcpy(m_buffer,p_orig.m_buffer,m_binaryLength);
-
+  if(m_binaryLength)
+  {
+    m_buffer = new uchar[m_binaryLength];
+    memcpy(m_buffer,p_orig.m_buffer,m_binaryLength);
+  }
   // If it had buffer parts, duplicate them
   Parts::iterator it;
   for(it = p_orig.m_parts.begin();it != p_orig.m_parts.end(); ++it)

@@ -351,6 +351,9 @@
     <ClCompile Include="XMLParserJSON.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="StoreMessage.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -711,6 +714,9 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="XMLParserJSON.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="StoreMessage.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>

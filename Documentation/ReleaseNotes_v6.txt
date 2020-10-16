@@ -19,6 +19,9 @@ CHANGES IN VERSION 6.5.2
     set to a different value than the soap action namespace.
 4)  Added full HTTP logging in the HTTPClient. Now prints the full HTTP request and response
     to the tracing log as also seen by e.g. HTTP tracing agents like 'Fiddler'.
+5)  Added the "StoreMessage" class to store HTTP messages in a binary file.
+    The "CrackedURL" is extended with a "SafeURL" method, to get an URL without the unintended
+    user/password information. This was neccesary to store the HTTPMessage safly in the file.
 
 CHANGES IN VERSION 6.5.1
 ------------------------

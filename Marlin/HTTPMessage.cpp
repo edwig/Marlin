@@ -167,6 +167,10 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
   // Copy the cracked URL
   m_cracked = p_msg->m_cracked;
 
+  // Copy routing information
+  m_routing = p_msg->GetRouting();
+
+
   // Copy the file buffer in case of a 'deep' copy
   // A shallow copy does not create a full buffer copy
   if(p_deep)

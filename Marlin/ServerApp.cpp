@@ -434,10 +434,11 @@ ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
           if(LoadSite(*iisConfig))
           {
             DETAILLOGV("Loaded IIS Site: %s",config.GetString());
+            // Save the site config
+            m_sites.push_back(iisConfig);
+            return;
           }
         }
-        // Save the site config
-        m_sites.push_back(iisConfig);
       }
     }
   }

@@ -150,6 +150,7 @@ public:
   void SetSendBOM(bool p_bom)                   { m_sendBOM            = p_bom;       };
   void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    };
   void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        };
+  void SetSystemTime(SYSTEMTIME p_time)         { m_systemtime         = p_time;      };
   void SetHasBeenAnswered()                     { m_request            = NULL;        };
   void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
