@@ -628,6 +628,17 @@ JSONMessage::AddHeader(CString p_name,CString p_value)
   m_headers.insert(std::make_pair(p_name,p_value));
 }
 
+void
+JSONMessage::DelHeader(CString p_name)
+{
+  p_name.MakeLower();
+  HeaderMap::iterator it = m_headers.find(p_name);
+  if(it != m_headers.end())
+  {
+    m_headers.erase(it);
+  }
+}
+
 // Finding a header by lowercase name
 CString
 JSONMessage::GetHeader(CString p_name)

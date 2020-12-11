@@ -475,7 +475,7 @@ StoreMessage::WriteCookies(Cookies& p_cookies)
   WriteNumber16((short)p_cookies.GetSize());
   for(size_t index = 0;index < p_cookies.GetSize();++index)
   {
-    Cookie* biscuit = p_cookies.GetCookie(index);
+    Cookie* biscuit = p_cookies.GetCookie((unsigned)index);
     WriteString(biscuit->GetSetCookieText());
   }
 }
