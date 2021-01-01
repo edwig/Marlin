@@ -4,7 +4,7 @@
 //
 // HTTPSYS : HTTP Internet server according to the HTTP Server API
 // 
-// Copyright (c) 2015-2018 ir. W.E. Huisman
+// Copyright (c) 2014-2021 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy

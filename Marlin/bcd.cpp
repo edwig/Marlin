@@ -2,7 +2,7 @@
 //
 // SourceFile: bcd.cpp
 //
-// Copyright (c) 2015-2020 ir. W.E. Huisman
+// Copyright (c) 2014-2021 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy

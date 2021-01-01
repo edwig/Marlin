@@ -9,6 +9,9 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 6.5.3
+------------------------
+
 CHANGES IN VERSION 6.5.2
 ------------------------
 1)  Added a critical_section lock in the SSE Event stream to handle high-load errors in a

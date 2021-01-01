@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2015-2020 ir. W.E. Huisman
+// Copyright (c) 2014-2021 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -475,7 +475,7 @@ StoreMessage::WriteCookies(Cookies& p_cookies)
   WriteNumber16((short)p_cookies.GetSize());
   for(size_t index = 0;index < p_cookies.GetSize();++index)
   {
-    Cookie* biscuit = p_cookies.GetCookie(index);
+    Cookie* biscuit = p_cookies.GetCookie((unsigned)index);
     WriteString(biscuit->GetSetCookieText());
   }
 }
