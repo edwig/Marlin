@@ -499,3 +499,14 @@ CRedirect::WriteChildStdIn(LPCSTR lpszInput)
   }
   return 0;
 }
+
+
+void
+CRedirect::CloseChildStdIn()
+{
+  if(m_hStdInWrite != NULL)
+  {
+    VERIFY(::CloseHandle(m_hStdInWrite));
+    m_hStdInWrite = NULL;
+  }
+}

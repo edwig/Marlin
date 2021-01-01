@@ -36,6 +36,7 @@ static char THIS_FILE[] = __FILE__;
 
 RunRedirect::RunRedirect()
             :m_ready(false)
+            ,m_input(nullptr)
 {
   InitializeCriticalSection((LPCRITICAL_SECTION)&m_criticalSection);
 }
@@ -53,11 +54,21 @@ RunRedirect::RunCommand(LPCSTR p_commandLine)
   Release();
 }
 
+void 
+RunRedirect::RunCommand(LPCSTR p_commandLine,LPCSTR p_stdInput)
+{
+  Acquire();
+  m_input = p_stdInput;
+  StartChildProcess(p_commandLine,FALSE);
+  Release();
+}
+
 void RunRedirect::OnChildStarted(LPCSTR /*lpszCmdLine*/) 
 {
   Acquire();
   m_lines = "";
   m_ready = false;
+  FlushStdIn();
   Release();
 }
 void RunRedirect::OnChildStdOutWrite(LPCSTR lpszOutput) 
@@ -112,6 +123,27 @@ RunRedirect::Release()
   LeaveCriticalSection(&m_criticalSection);
 }
 
+// Write to the STDIN after starting the program
+// After writing we close (EOF) the input channel
+void
+RunRedirect::FlushStdIn()
+{
+  if(m_input)
+  {
+    if(WriteChildStdIn(m_input) == 0)
+    {
+      // Ready with the input channel
+      CloseChildStdIn();
+    }
+    else
+    {
+      // Error. Stop as soon as possible
+      m_ready = true;
+    }
+    m_input = nullptr;
+  }
+}
+
 int 
 CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result)
 {
@@ -140,6 +172,42 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result)
 }
 
 int 
+CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,LPCSTR p_stdInput,CString& p_result,int p_waittime)
+{
+#ifndef MARLIN_USE_ATL_ONLY
+  AFX_MANAGE_STATE(AfxGetStaticModuleState());
+#endif
+  RunRedirect run;
+
+  CString commandLine;
+
+  // Result is initially empty
+  p_result = "";
+
+  // Create a new command line
+  commandLine.Format("\"%s\" %s",p_program,p_commandLine);
+
+  clock_t start = clock();
+  run.RunCommand(commandLine.GetString(),p_stdInput);
+  while((run.IsEOF() == false) && (run.IsReady() == false))
+  {
+    Sleep(WAITTIME_STATUS);
+
+    // Check if we are out of waittime
+    clock_t now = clock();
+    if((now - start) > p_waittime)
+    {
+      break;
+    }
+  }
+  p_result = run.m_lines;
+  run.TerminateChildProcess();
+  int exitcode = run.m_exitCode;
+  return exitcode;
+}
+
+
+int 
 CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result,int p_waittime)
 {
 #ifndef MARLIN_USE_ATL_ONLY
@@ -155,10 +223,18 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result,i
   // Create a new command line
   commandLine.Format("\"%s\" %s",p_program,p_commandLine);
 
+  clock_t start = clock();
   run.RunCommand(commandLine.GetString());
   while((run.IsEOF() == false) && (run.IsReady() == false))
   {
-    Sleep(p_waittime);
+    Sleep(WAITTIME_STATUS);
+
+    // Check if we are out of waittime
+    clock_t now = clock();
+    if((now - start) > p_waittime)
+    {
+      break;
+    }
   }
   p_result = run.m_lines;
   run.TerminateChildProcess();

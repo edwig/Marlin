@@ -19,9 +19,9 @@ class StdException
 {
 public:
   // Application type constructors
-  StdException(int p_errorCode);
-  StdException(const char* p_fault);
-  StdException(const CString& p_fault);
+  explicit StdException(int p_errorCode);
+  explicit StdException(const char* p_fault);
+  explicit StdException(const CString& p_fault);
   StdException(int p_errorCode,const char* p_fault);
   // Construct from a SafeExceptionHandler (SEH)
 	StdException(UINT p_safe,_EXCEPTION_POINTERS* p_exceptionPointers);
@@ -54,9 +54,8 @@ CString MessageFromException(CException& p_exception);
 class AutoSeTranslator
 {
 public:
-  AutoSeTranslator(_se_translator_function p_func)
+  explicit AutoSeTranslator(_se_translator_function p_func): m_original(_set_se_translator(p_func))
   {
-    m_original = _set_se_translator(p_func);
   }
   ~AutoSeTranslator()
   {

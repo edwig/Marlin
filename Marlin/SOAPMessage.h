@@ -198,6 +198,8 @@ public:
   // Set headers
   void            AddHeader(CString p_name,CString p_value);
   void            AddHeader(HTTP_HEADER_ID p_id,CString p_value);
+  void            DelHeader(CString p_name);
+  void            DelHeader(HTTP_HEADER_ID p_id);
   // Routing
   void            AddRoute(CString p_route);
   // Set Fault elements

@@ -243,6 +243,7 @@ public:
   void            SetHasBeenAnswered()                    { m_request            = NULL;       };
   void            SetAcceptEncoding(CString p_encoding);
   void            AddHeader(CString p_name,CString p_value);
+  void            DelHeader(CString p_name);
   void            SetEncoding(JsonEncoding p_encoding);
   void            SetSendUnicode(bool p_unicode);
 

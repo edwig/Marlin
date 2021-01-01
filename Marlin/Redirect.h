@@ -45,6 +45,7 @@ public:
   BOOL IsChildRunning() const;
   void TerminateChildProcess();
   int  WriteChildStdIn(LPCSTR lpszInput);
+  void CloseChildStdIn();
 
   // Virtual interface. Derived class must implement this!!
   virtual void OnChildStarted    (LPCSTR lpszCmdLine) = 0;
