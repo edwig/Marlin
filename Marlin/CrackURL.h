@@ -52,6 +52,7 @@ public:
   CrackedURL(CString p_url);
  ~CrackedURL();
 
+  void      SetPath(CString p_path);
   bool      CrackURL(CString p_url);
   bool      Valid();
   void      Reset();

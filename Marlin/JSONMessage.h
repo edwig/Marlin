@@ -230,7 +230,7 @@ public:
   void            SetPassword(CString p_password)         { m_cracked.m_password = p_password; ReparseURL(); };
   void            SetServer(CString p_server)             { m_cracked.m_host     = p_server;   ReparseURL(); };
   void            SetPort(int p_port)                     { m_cracked.m_port     = p_port;     ReparseURL(); };
-  void            SetAbsolutePath(CString p_path)         { m_cracked.m_path     = p_path;     ReparseURL(); };
+  void            SetAbsolutePath(CString p_path)         { m_cracked.SetPath(p_path);         ReparseURL(); };
   void            SetStatus(unsigned p_status)            { m_status             = p_status;   };
   void            SetDesktop(UINT p_desktop)              { m_desktop            = p_desktop;  };
   void            SetRequestHandle(HTTP_OPAQUE_ID p_id)   { m_request            = p_id;       };

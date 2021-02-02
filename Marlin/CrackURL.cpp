@@ -303,6 +303,19 @@ CrackedURL::CrackURL(CString p_url)
   return (m_valid = true);
 }
 
+
+void
+CrackedURL::SetPath(CString p_path)
+{
+  // Strip parameters and anchors
+  int pos = p_path.FindOneOf("#?");
+  if (pos >= 0)
+  {
+    p_path = p_path.Left(pos);
+  }
+  m_path = p_path;
+}
+
 // Convert string to URL encoding, using UTF-8 chars
 CString
 CrackedURL::EncodeURLChars(CString p_text,bool p_queryValue /*=false*/)

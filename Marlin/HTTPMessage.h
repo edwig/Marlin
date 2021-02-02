@@ -140,7 +140,7 @@ public:
   void SetPassword(CString p_password)          { m_cracked.m_password = p_password;  ReparseURL();  };
   void SetServer(CString& p_server)             { m_cracked.m_host     = p_server;    ReparseURL();  };
   void SetPort(unsigned p_port)                 { m_cracked.m_port     = p_port;      ReparseURL();  };
-  void SetAbsolutePath(CString& p_path)         { m_cracked.m_path     = p_path;      ReparseURL();  };
+  void SetAbsolutePath(CString& p_path)         { m_cracked.SetPath(p_path);          ReparseURL();  };
   void SetRequestHandle(HTTP_OPAQUE_ID p_req)   { m_request            = p_req;       };
   void SetAccessToken(HANDLE p_token)           { m_token              = p_token;     };
   void SetRemoteDesktop(UINT p_desktop)         { m_desktop            = p_desktop;   };
