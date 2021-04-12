@@ -837,6 +837,7 @@ HTTPServerIIS::AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers)
 void
 HTTPServerIIS::SetResponseStatus(IHttpResponse* p_response,USHORT p_status,CString p_statusMessage)
 {
+  DETAILLOGV("HTTP Response: %u %s",p_status,p_statusMessage.GetString());
   p_response->SetStatus(p_status,p_statusMessage);
 }
 

@@ -171,7 +171,7 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result)
   return exitcode;
 }
 
-int 
+int
 CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,LPCSTR p_stdInput,CString& p_result,int p_waittime)
 {
 #ifndef MARLIN_USE_ATL_ONLY

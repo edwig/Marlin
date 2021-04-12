@@ -691,3 +691,17 @@ CrackedURL::GetParameter(unsigned p_parameter)
   }
   return nullptr;
 }
+
+bool
+CrackedURL::DelParameter(CString p_parameter)
+{
+  for(UriParams::iterator it = m_parameters.begin(); it != m_parameters.end();++it)
+  {
+    if(it->m_key.CompareNoCase(p_parameter) == 0)
+    {
+      m_parameters.erase(it);
+      return true;
+    }
+  }
+  return false;
+}

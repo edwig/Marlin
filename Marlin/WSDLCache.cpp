@@ -320,98 +320,101 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
   p_wsdlcontent.AppendFormat("      <s:%s>\n",order.GetString());  // all, choice or sequence
 
 
-  for(unsigned ind = 0;ind < p_map.size(); ++ind)
+  for (unsigned ind = 0; ind < p_map.size(); ++ind)
   {
     CString array;
     XMLElement* param = p_map[ind];
-
-    // Begin element
-    p_wsdlcontent += "        <s:element ";
-
-    // Do occurrence type
-    switch(param->GetType() & WSDL_Mask)
+    //Only when the value is not empty or the number of children > 0
+    if(param->GetChildren().size()> 0 || !param->GetValue().IsEmpty())
     {
-      default:             [[fallthrough]];
-      case WSDL_OnceOnly:  [[fallthrough]];
-      case WSDL_Mandatory: temp.Empty(); 
-                           break;
-      case WSDL_ZeroOne:   [[fallthrough]];
-      case WSDL_Optional:  temp  = "minOccurs=\"0\" "; 
-                           break;
-      case WSDL_ZeroMany:  temp  = "minOccurs=\"0\" maxOccurs=\"unbounded\" "; 
-                           array = p_element;
-                           break;
-      case WSDL_OneMany:   temp  = "maxOccurs=\"unbounded\" "; 
-                           array = p_element;
-                           break;
+      // Begin element
+      p_wsdlcontent += "        <s:element ";
+
+      // Do occurrence type
+      switch (param->GetType() & WSDL_Mask)
+      {
+        default:              [[fallthrough]];
+        case WSDL_OnceOnly:   [[fallthrough]];
+        case WSDL_Mandatory:  temp.Empty();
+                              break;
+        case WSDL_ZeroOne:    [[fallthrough]];
+        case WSDL_Optional:   temp = "minOccurs=\"0\" ";
+                              break;
+        case WSDL_ZeroMany:   temp = "minOccurs=\"0\" maxOccurs=\"unbounded\" ";
+                              array = p_element;
+                              break;
+        case WSDL_OneMany:    temp = "maxOccurs=\"unbounded\" ";
+                              array = p_element;
+                              break;
+      }
+      p_wsdlcontent += temp;
+
+      // Do name
+      temp.Format("name=\"%s\"", param->GetName().GetString());
+      p_wsdlcontent += temp;
+
+      // Do data type
+      switch (param->GetType() & XDT_Mask)
+      {
+        case XDT_CDATA:             [[fallthrough]];
+        case (XDT_String|XDT_CDATA):[[fallthrough]];
+        case XDT_String:            temp = " type=\"s:string\"";              break;
+        case XDT_Integer:           temp = " type=\"s:integer\"";             break;
+        case XDT_Double:            temp = " type=\"s:double\"";              break;
+        case XDT_Boolean:           temp = " type=\"s:boolean\"";             break;
+        case XDT_Base64Binary:      temp = " type=\"s:base64Binary\"";        break;
+        case XDT_DateTime:          temp = " type=\"s:dateTime\"";            break;
+        case XDT_AnyURI:            temp = " type=\"s:anyURI\"";              break;
+        case XDT_Date:              temp = " type=\"s:date\"";                break;
+        case XDT_DateTimeStamp:     temp = " type=\"s:dateTimeStamp\"";       break;
+        case XDT_Decimal:           temp = " type=\"s:decimal\"";             break;
+        case XDT_Long:              temp = " type=\"s:long\"";                break;
+        case XDT_Int:               temp = " type=\"s:int\"";                 break;
+        case XDT_Short:             temp = " type=\"s:short\"";               break;
+        case XDT_Byte:              temp = " type=\"s:byte\"";                break;
+        case XDT_NonNegativeInteger:temp = " type=\"s:nonNegativeInteger\"";  break;
+        case XDT_PositiveInteger:   temp = " type=\"s:positiveInteger\"";     break;
+        case XDT_UnsignedLong:      temp = " type=\"s:unsignedLong\"";        break;
+        case XDT_UnsignedInt:       temp = " type=\"s:unsignedInt\"";         break;
+        case XDT_UnsignedShort:     temp = " type=\"s:unsignedShort\"";       break;
+        case XDT_UnsignedByte:      temp = " type=\"s:unsignedByte\"";        break;
+        case XDT_NonPositiveInteger:temp = " type=\"s:nonPositiveInteger\"";  break;
+        case XDT_NegativeInteger:   temp = " type=\"s:negativeInteger\"";     break;
+        case XDT_Duration:          temp = " type=\"s:duration\"";            break;
+        case XDT_DayTimeDuration:   temp = " type=\"s:dayTimeDuration\"";     break;
+        case XDT_YearMonthDuration: temp = " type=\"s:yearMonthDuration\"";   break;
+        case XDT_Float:             temp = " type=\"s:float\"";               break;
+        case XDT_GregDay:           temp = " type=\"s:gDay\"";                break;
+        case XDT_GregMonth:         temp = " type=\"s:gMonth\"";              break;
+        case XDT_GregMonthDay:      temp = " type=\"s:gMonthDay\"";           break;
+        case XDT_GregYear:          temp = " type=\"s:gYear\"";               break;
+        case XDT_GregYearMonth:     temp = " type=\"s:gYearMonth\"";          break;
+        case XDT_HexBinary:         temp = " type=\"s:hexBinary\"";           break;
+        case XDT_NOTATION:          temp = " type=\"s:NOTATION\"";            break;
+        case XDT_QName:             temp = " type=\"s:QName\"";               break;
+        case XDT_NormalizedString:  temp = " type=\"s:normalizedString\"";    break;
+        case XDT_Token:             temp = " type=\"s:token\"";               break;
+        case XDT_Language:          temp = " type=\"s:language\"";            break;
+        case XDT_Name:              temp = " type=\"s:name\"";                break;
+        case XDT_NCName:            temp = " type=\"s:NCName\"";              break;
+        case XDT_ENTITY:            temp = " type=\"s:ENTITY\"";              break;
+        case XDT_ID:                temp = " type=\"s:ID\"";                  break;
+        case XDT_IDREF:             temp = " type=\"s:IDREF\"";               break;
+        case XDT_NMTOKEN:           temp = " type=\"s:NMTOKEN\"";             break;
+        case XDT_Time:              temp = " type=\"s:time\"";                break;
+        case XDT_ENTITIES:          temp = " type=\"s:ENTITIES\"";            break;
+        case XDT_IDREFS:            temp = " type=\"s:IDREFS\"";              break;
+        case XDT_NMTOKENS:          temp = " type=\"s:NMTOKENS\"";            break;
+        case XDT_Complex:           temp.Format(" type=\"tns:%s%s\"",p_element.GetString(),param->GetName().GetString());
+                                    break;
+        default:                    temp = " type=\"s:string\"";
+                                    break;
+      }
+      p_wsdlcontent += temp;
+
+      // End of element
+      p_wsdlcontent += " />\n";
     }
-    p_wsdlcontent += temp;
-
-    // Do name
-    temp.Format("name=\"%s\"",param->GetName().GetString());
-    p_wsdlcontent += temp;
-
-    // Do data type
-    switch(param->GetType() & XDT_Mask)
-    {
-      case XDT_CDATA:             [[fallthrough]];
-      case (XDT_String|XDT_CDATA):[[fallthrough]];
-      case XDT_String:            temp = " type=\"s:string\"";              break;
-      case XDT_Integer:           temp = " type=\"s:integer\"";             break;
-      case XDT_Double:            temp = " type=\"s:double\"";              break;
-      case XDT_Boolean:           temp = " type=\"s:boolean\"";             break;
-      case XDT_Base64Binary:      temp = " type=\"s:base64Binary\"";        break;
-      case XDT_DateTime:          temp = " type=\"s:dateTime\"";            break;
-      case XDT_AnyURI:            temp = " type=\"s:anyURI\"";              break;
-      case XDT_Date:              temp = " type=\"s:date\"";                break;
-      case XDT_DateTimeStamp:     temp = " type=\"s:dateTimeStamp\"";       break;
-      case XDT_Decimal:           temp = " type=\"s:decimal\"";             break;
-      case XDT_Long:              temp = " type=\"s:long\"";                break;
-      case XDT_Int:               temp = " type=\"s:int\"";                 break;
-      case XDT_Short:             temp = " type=\"s:short\"";               break;
-      case XDT_Byte:              temp = " type=\"s:byte\"";                break;
-      case XDT_NonNegativeInteger:temp = " type=\"s:nonNegativeInteger\"";  break;
-      case XDT_PositiveInteger:   temp = " type=\"s:positiveInteger\"";     break;
-      case XDT_UnsignedLong:      temp = " type=\"s:unsignedLong\"";        break;
-      case XDT_UnsignedInt:       temp = " type=\"s:unsignedInt\"";         break;
-      case XDT_UnsignedShort:     temp = " type=\"s:unsignedShort\"";       break;
-      case XDT_UnsignedByte:      temp = " type=\"s:unsignedByte\"";        break;
-      case XDT_NonPositiveInteger:temp = " type=\"s:nonPositiveInteger\"";  break;
-      case XDT_NegativeInteger:   temp = " type=\"s:negativeInteger\"";     break;
-      case XDT_Duration:          temp = " type=\"s:duration\"";            break;
-      case XDT_DayTimeDuration:   temp = " type=\"s:dayTimeDuration\"";     break;
-      case XDT_YearMonthDuration: temp = " type=\"s:yearMonthDuration\"";   break;
-      case XDT_Float:             temp = " type=\"s:float\"";               break;
-      case XDT_GregDay:           temp = " type=\"s:gDay\"";                break;
-      case XDT_GregMonth:         temp = " type=\"s:gMonth\"";              break;
-      case XDT_GregMonthDay:      temp = " type=\"s:gMonthDay\"";           break;
-      case XDT_GregYear:          temp = " type=\"s:gYear\"";               break;
-      case XDT_GregYearMonth:     temp = " type=\"s:gYearMonth\"";          break;
-      case XDT_HexBinary:         temp = " type=\"s:hexBinary\"";           break;
-      case XDT_NOTATION:          temp = " type=\"s:NOTATION\"";            break;
-      case XDT_QName:             temp = " type=\"s:QName\"";               break;
-      case XDT_NormalizedString:  temp = " type=\"s:normalizedString\"";    break;
-      case XDT_Token:             temp = " type=\"s:token\"";               break;
-      case XDT_Language:          temp = " type=\"s:language\"";            break;
-      case XDT_Name:              temp = " type=\"s:name\"";                break;
-      case XDT_NCName:            temp = " type=\"s:NCName\"";              break;
-      case XDT_ENTITY:            temp = " type=\"s:ENTITY\"";              break;
-      case XDT_ID:                temp = " type=\"s:ID\"";                  break;
-      case XDT_IDREF:             temp = " type=\"s:IDREF\"";               break;
-      case XDT_NMTOKEN:           temp = " type=\"s:NMTOKEN\"";             break;
-      case XDT_Time:              temp = " type=\"s:time\"";                break;
-      case XDT_ENTITIES:          temp = " type=\"s:ENTITIES\"";            break;
-      case XDT_IDREFS:            temp = " type=\"s:IDREFS\"";              break;
-      case XDT_NMTOKENS:          temp = " type=\"s:NMTOKENS\"";            break;
-      case XDT_Complex:           temp.Format(" type=\"tns:%s%s\"",p_element.GetString(),param->GetName().GetString());
-                                  break;
-      default:                    temp = " type=\"s:string\"";       
-                                  break;
-    }
-    p_wsdlcontent += temp;
-
-    // End of element
-    p_wsdlcontent += " />\n";
   }
 
   // Footer complex type sequence

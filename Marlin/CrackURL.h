@@ -75,6 +75,7 @@ public:
   CString   GetParameter(CString p_parameter);
   bool      HasParameter(CString p_parameter);
   void      SetParameter(CString p_parameter,CString p_value);
+  bool      DelParameter(CString p_parameter);
 
   static    CString   EncodeURLChars(CString p_text,bool p_queryValue = false);
   static    CString   DecodeURLChars(CString p_text,bool p_queryValue = false);

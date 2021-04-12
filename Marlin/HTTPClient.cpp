@@ -4159,6 +4159,8 @@ HTTPClient::StopClient()
     return;
   }
   DETAILLOG("Stopping the HTTPClient");
+  bool stopping = false;
+
   // Cleaning out the event source
   if(m_eventSource)
   {
@@ -4182,8 +4184,9 @@ HTTPClient::StopClient()
     delete m_eventSource;
     m_eventSource = nullptr;
     DETAILLOG("Stopped the push-events EventSource");
+    stopping = true;
   }
-  else if(m_queueThread && m_queueEvent)
+  if(m_queueThread && m_queueEvent)
   {
     // Stop the queue by resetting the thread
     DETAILLOG("Stopping the send queue");
@@ -4212,9 +4215,13 @@ HTTPClient::StopClient()
     CloseHandle(m_queueEvent);
     m_queueEvent = NULL;
     DETAILLOG("Closed the client HTTP queue");
+    stopping = true;
   }
-  // We are now stopped
-  m_initialized = false;
+  // We are now stopped. Reset also
+  if(stopping)
+  {
+    Reset();
+  }
 }
 
 bool 
