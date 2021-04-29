@@ -192,7 +192,7 @@ public:
   bool SetURL(CString p_url);
   void SetBody(CString& p_body);
   void SetBody(void* p_body,unsigned p_length);
-  void SetLogging(LogAnalysis* p_log);
+  void SetLogging(LogAnalysis* p_log,bool p_transferOwnership = false);
   void SetSecure(bool p_secure)                   { m_secure            = p_secure;   }; // URL Part secure
   void SetUser(CString& p_user)                   { m_user              = p_user;     }; // URL Part user
   void SetPassword(CString& p_password)           { m_password          = p_password; }; // URL Part password

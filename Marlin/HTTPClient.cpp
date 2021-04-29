@@ -506,7 +506,7 @@ HTTPClient::InitLogging()
 }
 
 void
-HTTPClient::SetLogging(LogAnalysis* p_log)
+HTTPClient::SetLogging(LogAnalysis* p_log,bool p_transferOwnership /*= false*/)
 {
   if(m_log && m_logOwner)
   {
@@ -516,6 +516,12 @@ HTTPClient::SetLogging(LogAnalysis* p_log)
   }
   // Remember the setting or resetting of the logfile
   m_log = p_log;
+
+  // HTTP Client wil destroy the logfile object!
+  if(p_transferOwnership)
+  {
+    m_logOwner = true;
+  }
 
   // In case we just gotten a new logfile, init it!
   if(m_log)
