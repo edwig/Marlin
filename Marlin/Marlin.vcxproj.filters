@@ -354,6 +354,9 @@
     <ClCompile Include="StoreMessage.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="OAuth2Cache.cpp">
+      <Filter>MarlinClient</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -718,6 +721,9 @@
     </ClInclude>
     <ClInclude Include="StoreMessage.h">
       <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="OAuth2Cache.h">
+      <Filter>MarlinClient\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

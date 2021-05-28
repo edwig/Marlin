@@ -215,6 +215,7 @@
     <ClCompile Include="MediaType.cpp" />
     <ClCompile Include="MultiPartBuffer.cpp" />
     <ClCompile Include="Namespace.cpp" />
+    <ClCompile Include="OAuth2Cache.cpp" />
     <ClCompile Include="PrintToken.cpp" />
     <ClCompile Include="ProcInfo.cpp" />
     <ClCompile Include="Redirect.cpp" />
@@ -388,6 +389,7 @@
     <ClInclude Include="MediaType.h" />
     <ClInclude Include="MultiPartBuffer.h" />
     <ClInclude Include="Namespace.h" />
+    <ClInclude Include="OAuth2Cache.h" />
     <ClInclude Include="PrintToken.h" />
     <ClInclude Include="ProcInfo.h" />
     <ClInclude Include="Redirect.h" />

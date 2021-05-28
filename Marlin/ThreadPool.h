@@ -41,6 +41,9 @@ constexpr auto NUM_THREADS_MAXIMUM = 20;   // More than this is not wise under W
 // Standard stack size of a thread in 64 bits architectures
 constexpr auto THREAD_STACKSIZE = (2 * 1024 * 1024);
 
+// Set a name on your thread
+void SetThreadName(char* threadName,DWORD dwThreadID = MAXDWORD);
+
 // Callbacks
 typedef void (* LPFN_CALLBACK)(void *);
 typedef bool (* LPFN_TRYABORT)(void *,bool p_stayInThePool,bool p_forcedAbort);
