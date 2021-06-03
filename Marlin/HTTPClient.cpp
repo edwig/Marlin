@@ -41,6 +41,7 @@
 #include "HTTPCertificate.h"
 #include "HTTPClientTracing.h"
 #include "HTTPError.h"
+#include "OAuth2Cache.h"
 #include "gzip.h"
 #include <winerror.h>
 #include <wincrypt.h>
@@ -1237,6 +1238,16 @@ HTTPClient::AddPreEmptiveAuthorization()
     {
       ERRORLOG("Illegal pre-emptive authorization setting: %d",m_preemtive);
     }
+  }
+}
+
+// Add OAuth2 authorization if configured for this call
+void
+HTTPClient::AddOAuth2authorization()
+{
+  if(m_oauthCache && m_oauthSession)
+  {
+
   }
 }
 
@@ -2761,6 +2772,7 @@ HTTPClient::Send()
   AddProxyAuthorization();
   // Add authorization up-front before the call
   AddPreEmptiveAuthorization();
+  AddOAuth2authorization();
   // Always add a host header
   AddHostHeader();
   // Add our recorded cookies

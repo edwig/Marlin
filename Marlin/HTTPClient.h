@@ -91,6 +91,7 @@ class FileBuffer;
 class LogAnalysis;
 class EventSource;
 class ThreadPool;
+class OAuth2Cache;
 class HTTPClientTracing;
 
 // Types of proxies supported
@@ -230,6 +231,8 @@ public:
   void SetClientCertificateName(CString p_name)   { m_certName          = p_name;     };
   void SetClientCertificateStore(CString p_store) { m_certStore         = p_store;    };
   void SetWebsocketHandshake(bool p_socket)       { m_websocket         = p_socket;   };
+  void SetOAuth2Cache(OAuth2Cache* p_cache)       { m_oauthCache        = p_cache;    };
+  void SetOAuth2Session(int p_session)            { m_oauthSession      = p_session;  };
   bool SetClientCertificateThumbprint(CString p_store,CString p_thumbprint);
   void SetCORSOrigin(CString p_origin);
   bool SetCORSPreFlight(CString p_method,CString p_headers);
@@ -293,6 +296,8 @@ public:
   bool          GetPushEvents()             { return m_pushEvents;        };
   bool          GetOnCloseSeen()            { return m_onCloseSeen;       };
   int           GetQueueSize()              { return (int)m_queue.size(); };
+  OAuth2Cache*  GetOAuth2Cace()             { return m_oauthCache;        };
+  int           GetOAuth2Session()          { return m_oauthSession;      };
   int           GetError(CString* p_message = NULL);
   CString       GetStatusText();
   void          GetBody(void*& p_body,unsigned& p_length);
@@ -340,6 +345,7 @@ private:
   void     AddWebSocketUpgrade();
   void     AddProxyAuthorization();
   void     AddPreEmptiveAuthorization();
+  void     AddOAuth2authorization();
   void     AddMessageHeaders(HTTPMessage* p_message);
   void     AddMessageHeaders(SOAPMessage* p_message);
   void     AddMessageHeaders(JSONMessage* p_message);
@@ -472,6 +478,10 @@ private:
   HTTPClientTracing* m_trace      { nullptr };                    // The tracing object
   // WebSocket
   bool          m_websocket       { false   };                    // Try WebSocket handshake
+  // OAuth2
+  OAuth2Cache*  m_oauthCache      { nullptr };                    // OAuth tokens
+  int           m_oauthSession    { 0       };                    // Session in the OAuth2 Cache
+                                                                  
   // For syncing threads
   CRITICAL_SECTION m_queueSection;  // Synchronizing queue adding/sending
   CRITICAL_SECTION m_sendSection;   // Synchronizing sending for multiple threads
