@@ -345,7 +345,7 @@ private:
   void     AddWebSocketUpgrade();
   void     AddProxyAuthorization();
   void     AddPreEmptiveAuthorization();
-  void     AddOAuth2authorization();
+  bool     AddOAuth2authorization();
   void     AddMessageHeaders(HTTPMessage* p_message);
   void     AddMessageHeaders(SOAPMessage* p_message);
   void     AddMessageHeaders(JSONMessage* p_message);
@@ -365,6 +365,7 @@ private:
   CString  ReadHeaderField(int p_header);
   void     ReadAllResponseHeaders();
   bool     CheckCORSAnswer();
+  void     ResetOAuth2Session();
   // Methods for WS-Security
   void     CheckAnswerSecurity (SOAPMessage* p_msg,CString p_answer,XMLEncryption p_security,CString p_password);
   void     CheckBodySigning    (CString p_password,SOAPMessage* p_msg);

@@ -227,6 +227,7 @@
     <ClCompile Include="..\TestsetClient\TestEvents.cpp" />
     <ClCompile Include="..\TestsetClient\TestFormData.cpp" />
     <ClCompile Include="..\TestsetClient\TestJSON.cpp" />
+    <ClCompile Include="..\TestsetClient\TestMSGraph.cpp" />
     <ClCompile Include="..\TestsetClient\TestNamespaces.cpp" />
     <ClCompile Include="..\TestsetClient\TestPatch.cpp" />
     <ClCompile Include="..\TestsetClient\TestReader.cpp" />

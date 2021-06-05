@@ -71,8 +71,8 @@ static char THIS_FILE[] = __FILE__;
 // HTTP_STATUS_NO_CONTENT      -> W3C Standard says that a server can end a event stream with tis HTTP status 
 //
 #define CONTINUE_STREAM(status) ((m_status == HTTP_STATUS_CONTINUE) || \
-                                 (m_status >= HTTP_STATUS_OK && m_status < HTTP_STATUS_NO_CONTENT) || \
-                                 (m_status == HTTP_STATUS_SERVICE_UNAVAIL))
+                                  (m_status >= HTTP_STATUS_OK && m_status < HTTP_STATUS_NO_CONTENT) || \
+                                  (m_status == HTTP_STATUS_SERVICE_UNAVAIL))
 
 // CTOR for the client
 HTTPClient::HTTPClient()
@@ -1242,12 +1242,44 @@ HTTPClient::AddPreEmptiveAuthorization()
 }
 
 // Add OAuth2 authorization if configured for this call
-void
+bool
 HTTPClient::AddOAuth2authorization()
+{
+  bool result = false;
+
+  if(m_oauthCache && m_oauthSession)
+  {
+    CString token = m_oauthCache->GetBearerToken(m_oauthSession);
+    if(!token.IsEmpty())
+    {
+      USES_CONVERSION;
+      CString auth("Authorization: Bearer ");
+      auth += token;
+      wstring header = A2CW(auth);
+
+      if(!::WinHttpAddRequestHeaders(m_request
+                                    ,header.c_str()
+                                    ,(DWORD)header.size()
+                                    ,WINHTTP_ADDREQ_FLAG_ADD | 
+                                     WINHTTP_ADDREQ_FLAG_REPLACE))
+      {
+        ERRORLOG("Cannot add OAuth2 bearer token as 'Authorization' header");
+      }
+      else
+      {
+        result = true;
+      }
+    }
+  }
+  return result;
+}
+
+void
+HTTPClient::ResetOAuth2Session()
 {
   if(m_oauthCache && m_oauthSession)
   {
-
+    m_oauthCache->SetExpired(m_oauthSession);
   }
 }
 
@@ -2910,7 +2942,9 @@ HTTPClient::Send()
                                     --iRetryTimes;
 
                                     // Add authentication headers
-                                    if(AddAuthentication(ntlm3Step) == false)
+                                    ResetOAuth2Session();
+                                    if(AddOAuth2authorization()     == false &&
+                                       AddAuthentication(ntlm3Step) == false )
                                     {
                                       getReponseSucceed = true;
                                       iRetryTimes = retries + 1;
