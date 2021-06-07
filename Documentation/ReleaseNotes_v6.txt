@@ -16,6 +16,8 @@ CHANGES IN VERSION 6.6.0
     Currently supporting "Client Credentials Grant" and "Resource Owner's Credentials Grant".
 2)  Added a test for MS-Graph to test out the OAuth2Cache and to test the querying of the
     MS-Outlook calender events.
+3)  HTTPClient responds with the correct redirection on HTTP status 30x codes automatically.
+    Redirects according to the HTTP standard of GETS or other verbs is now implemented.
 
 CHANGES IN VERSION 6.5.3
 ------------------------

@@ -161,6 +161,8 @@ public:
            ,HeaderMap*  p_headers     = nullptr);
   // Translate SOAP to JSON, send/receive and translate back
   bool SendAsJSON(SOAPMessage* p_msg);
+  // Send and redirect
+  bool SendAndRedirect();
 
   // Add an HTTP message to the async queue
   void AddToQueue(HTTPMessage* p_entry);
@@ -366,6 +368,7 @@ private:
   void     ReadAllResponseHeaders();
   bool     CheckCORSAnswer();
   void     ResetOAuth2Session();
+  bool     DoRedirectionAfterSend();
   // Methods for WS-Security
   void     CheckAnswerSecurity (SOAPMessage* p_msg,CString p_answer,XMLEncryption p_security,CString p_password);
   void     CheckBodySigning    (CString p_password,SOAPMessage* p_msg);

@@ -1991,7 +1991,7 @@ HTTPClient::Send(CString& p_url)
 
   if(SetURL(p_url))
   {
-    return Send();
+    return SendAndRedirect();
   }
   return false;
 }
@@ -2008,7 +2008,7 @@ HTTPClient::Send(CString& p_url,CString& p_body)
   if(SetURL(p_url))
   {
     SetBody((void*) p_body.GetString(),p_body.GetLength());
-    return Send();
+    return SendAndRedirect();
   }
   return false;
 }
@@ -2030,7 +2030,7 @@ HTTPClient::Send(CString& p_url,void* p_buffer,unsigned p_length)
     TestReconnect();
 
     SetBody(p_buffer,p_length);
-    return Send();
+    return SendAndRedirect();
   }
   return false;
 }
@@ -2081,7 +2081,7 @@ HTTPClient::Send(CString&    p_url
   }
 
   // Go get our HTTP file
-  result = Send();
+  result = SendAndRedirect();
 
   p_buffer->Reset();
   p_buffer->ResetFilename();
@@ -2137,7 +2137,7 @@ HTTPClient::Send(HTTPMessage* p_msg)
   m_cookies     = p_msg->GetCookies();
 
   // NOW GO SEND IT
-  result = Send();
+  result = SendAndRedirect();
 
   // Forget what we did send
   p_msg->Reset();
@@ -2290,7 +2290,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   // Put in logfile
   DETAILLOG("Outgoing SOAP message: %s",p_msg->GetSoapAction().GetString());
 
-  // Now go send our XML
+  // Now go send our XML (Never redirected)
   bool result = Send();
 
   // Headers from the answer
@@ -2485,7 +2485,7 @@ HTTPClient::Send(JSONMessage* p_msg)
   // Put in logfile
   DETAILLOG("Outgoing JSON message");
   
-  // NOW GO SEND IT
+  // NOW GO SEND IT (Never redirected)
   result = Send();
 
   ProcessJSONResult(p_msg,result);
@@ -2638,7 +2638,7 @@ HTTPClient::SendAsJSON(SOAPMessage* p_msg)
   DETAILLOG("Outgoing SOAP->JSON: GET %s",url.GetString());
 
   // Go get our JSON response
-  result = Send();
+  result = SendAndRedirect();
 
   // Reset our original request
   p_msg->Reset();
@@ -2689,6 +2689,77 @@ HTTPClient::StartEventStream(CString& p_url)
     return StartEventStreamingThread();
   }
   return false;
+}
+
+bool
+HTTPClient::DoRedirectionAfterSend()
+{
+  CString redirURL = GetResultHeader(WINHTTP_QUERY_LOCATION, 0);
+  if(!redirURL.IsEmpty())
+  {
+    m_url = redirURL;
+    return true;
+  }
+  return false;
+}
+
+// Send message and redirect if so requested by the server
+bool
+HTTPClient::SendAndRedirect()
+{
+  bool result = false;
+  bool redirecting = false;
+  CString redirURL;
+
+  do 
+  {
+    // Do send our message
+    result = Send();
+    // And test for status in the 300 range
+    if(result && (m_status >= HTTP_STATUS_AMBIGUOUS && m_status < HTTP_STATUS_BAD_REQUEST))
+    {
+      switch(m_status)
+      {
+        case HTTP_STATUS_AMBIGUOUS:         if(m_verb != "HEAD")
+                                            {
+                                              redirecting = DoRedirectionAfterSend();
+                                            }
+                                            break;
+        case HTTP_STATUS_MOVED:             // Fall through
+        case HTTP_STATUS_REDIRECT:          // Fall through
+        case HTTP_STATUS_REDIRECT_KEEP_VERB:if(m_verb == "GET" || m_verb == "HEAD")
+                                            {
+                                              redirecting = DoRedirectionAfterSend();
+                                            }
+                                            break;
+        case HTTP_STATUS_REDIRECT_METHOD:   redirecting = DoRedirectionAfterSend();
+                                            if(redirecting)
+                                            {
+                                              m_verb = "GET";
+                                            }
+                                            break;
+        case HTTP_STATUS_NOT_MODIFIED:      // if-modified-since was not modified
+                                            // NEVER REDIRECTED!!
+                                            break;
+        case HTTP_STATUS_USE_PROXY:         redirecting = DoRedirectionAfterSend();
+                                            if(!redirecting)
+                                            {
+                                              // USE_PROXY **MUST** have the "Location" header
+                                              result = false;
+                                            }
+                                            break;
+        case HTTP_STATUS_PERMANENT_REDIRECT:redirecting = DoRedirectionAfterSend();
+                                            break;
+      }
+    }
+    else
+    {
+      redirecting = false;
+    }
+  } 
+  while(redirecting);
+
+  return result;
 }
 
 // Our primary function: send a message
@@ -4157,7 +4228,7 @@ HTTPClient::EventThreadRunning()
 
     DETAILLOG("Starting the HTTP event-stream");
 
-    // Simply send a HTTP GET for this URL
+    // Simply send a HTTP GET for this URL (Never redirected)
     Send();
 
     // If coming out of loop and OnClose is seen
