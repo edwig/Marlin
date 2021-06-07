@@ -23,7 +23,7 @@ CHANGES IN VERSION 6.5.3
 ------------------------
 1)  Added a methode to delete headers from JSON or SOAP messages: 
     - JSONMessage::DelHeader(CString p_name);
-    - SOAPMessage::DelHeader(CStirng p_name);
+    - SOAPMessage::DelHeader(CString p_name);
 2)  Added a "DelParameter" method to CrackedURL
 3)  Fixed a bug in Redirect to close the childs input stream on end.
 4)  Fixed a bug in copying a HTTPMessage to another (copy-constructor)
