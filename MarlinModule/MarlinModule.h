@@ -141,6 +141,7 @@ private:
   bool    CheckApplicationPresent(CString& p_dllPath,CString& p_dllName);
   bool    AlreadyLoaded(APP* p_app, CString p_path_to_dll);
   bool    StillUsed(const HMODULE& p_module);
+  int     CountAppPoolApplications(ServerApp* p_application);
   GLOBAL_NOTIFICATION_STATUS Unhealthy(CString p_error,HRESULT p_code);
 
   CRITICAL_SECTION m_lock;

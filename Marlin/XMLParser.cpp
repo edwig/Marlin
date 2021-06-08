@@ -215,7 +215,10 @@ XMLParser::ParseMessage(CString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_W
   catch(StdException& ex)
   {
     m_message->m_internalError = XmlError::XE_NotAnXMLMessage;
-    m_message->m_internalErrorString = ex.GetErrorMessage();
+    if(m_message->m_internalErrorString.IsEmpty())
+    {
+      m_message->m_internalErrorString = ex.GetErrorMessage();
+    }
   }
 
   // Conclusion of condensed level

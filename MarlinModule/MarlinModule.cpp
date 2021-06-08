@@ -65,7 +65,6 @@ static char THIS_FILE[] = __FILE__;
 AppPool       g_IISApplicationPool;   // All applications in the application pool
 WebConfigIIS* g_config  { nullptr };  // The ApplicationHost.config information only!
 LogAnalysis*  g_logfile { nullptr };  // Logfile for the MarlinModule only
-ErrorReport   g_error;                // Local error reporting object
 wchar_t       g_moduleName[SERVERNAME_BUFFERSIZE + 1] = L"";
 
 // Logging macro for this file only
@@ -468,12 +467,14 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   stopping += application;
   DETAILLOG(stopping);
 
-  // STOP!!
-  app->UnloadSites();
+  if(CountAppPoolApplications(app) == 1)
+  {
+    // STOP!!
+    app->UnloadSites();
 
-  // Let the application stop itself 
-  app->ExitInstance();
-
+    // Let the application stop itself 
+    app->ExitInstance();
+  }
   // Destroy the application and the IIS pool app
   // And possibly unload the application DLL
   HMODULE hmodule = poolapp->m_module;
@@ -490,6 +491,20 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
 
   return GL_NOTIFICATION_HANDLED;
 };
+
+int
+MarlinGlobalFactory::CountAppPoolApplications(ServerApp* p_application)
+{
+  int count = 0;
+  for(auto& app : g_IISApplicationPool)
+  {
+    if(app.second->m_application == p_application)
+    {
+      ++count;
+    }
+  }
+  return count;
+}
 
 // RE-Construct the webroot from these two settings
 // Configuration path : MACHINE/WEBROOT/APPHOST/SECURETEST

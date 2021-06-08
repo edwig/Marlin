@@ -198,31 +198,40 @@ TestWebSocket(LogAnalysis* p_log)
   {
     ++errors;
   }
-  if(!socket->WriteString("Hello server, this is the client. Take one!"))
+  else
   {
-    ++errors;
-  }
-  Sleep(500);
-  if(!socket->WriteString("Hello server, this is the client. Take two!"))
-  {
-    ++errors;
-  }
-  Sleep(500);
+    if(!socket->WriteString("Hello server, this is the client. Take one!"))
+    {
+      ++errors;
+    }
+    else
+    {
+      Sleep(500);
+      if (!socket->WriteString("Hello server, this is the client. Take two!"))
+      {
+        ++errors;
+      }
+      else
+      {
+        Sleep(500);
 
-  // Testing strings that are longer than the TCP/IP buffering for WebSockets
-  // So strings longer than typical 16K bytes must be testable
-  //   CString large = GetLargeMessage();
-  //   if(!socket->WriteString(large))
-  //   {
-  //     ++errors;
-  //   }
-  //   Sleep(5000);
+        // Testing strings that are longer than the TCP/IP buffering for WebSockets
+        // So strings longer than typical 16K bytes must be testable
+        //   CString large = GetLargeMessage();
+        //   if(!socket->WriteString(large))
+        //   {
+        //     ++errors;
+        //   }
+        //   Sleep(5000);
+
+      }
+    }
+  }
 
   if(!socket->SendCloseSocket(WS_CLOSE_NORMAL,"TestWebSocket did close the socket"))
   {
     ++errors;
   }
-
   // WebSocket has been opened
   // --- "---------------------------------------------- - ------
   printf("WebSocket tests for ws://host:port/..._123     : %s\n",errors ? "ERROR" : "OK");
