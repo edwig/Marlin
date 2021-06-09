@@ -18,6 +18,7 @@ CHANGES IN VERSION 6.6.0
     MS-Outlook calender events.
 3)  HTTPClient responds with the correct redirection on HTTP status 30x codes automatically.
     Redirects according to the HTTP standard of GETS or other verbs is now implemented.
+4)  WebSockets now work correctly in IIS, also with buffers larger than 8K.
 
 CHANGES IN VERSION 6.5.3
 ------------------------

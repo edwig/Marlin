@@ -40,4 +40,4 @@ const int TESTING_CLCERT_PORT = 1222;
 #define MARLIN_HOST "localhost"
 
 // UNCOMMENT to test the WebSockets functionality
-// #define TEST_WEBSOCKETS 1
+#define TEST_WEBSOCKETS 1

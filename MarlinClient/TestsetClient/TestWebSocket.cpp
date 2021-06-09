@@ -130,32 +130,19 @@ OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 //////////////////////////////////////////////////////////////////////////
 
 CString 
-GetLargeMessage()
+CreateLargeMessage()
 {
   CString large;
-  CString part1,part2,part3;
 
-  for(unsigned ind = 0; ind < 60; ++ind)
+  for(unsigned ind = 0; ind < 200; ++ind)
   {
-    part1 += "#";
-    part2 += "$";
-    part3 += "=";
+    for(unsigned num = 0; num < 20; ++num)
+    {
+      large.AppendFormat("#%d$",(ind * 20) + num);
+    }
+    large += "=\n";
   }
-
-  large = part1 + "\n" + part2 + "\n" + part3 + "\n";
-
-  part2.Empty();
-  for(unsigned ind = 0; ind < 20; ++ind)
-  {
-    part2 += large;
-  }
-
-  large.Empty();
-  for(unsigned ind = 0; ind < 20; ++ind)
-  {
-    large += part2;
-    large += "*** end ***\n";
-  }
+  large += "*** end ***\n";
 
   return large;
 }
@@ -206,24 +193,20 @@ TestWebSocket(LogAnalysis* p_log)
     }
     else
     {
-      Sleep(500);
       if (!socket->WriteString("Hello server, this is the client. Take two!"))
       {
         ++errors;
       }
       else
       {
-        Sleep(500);
-
         // Testing strings that are longer than the TCP/IP buffering for WebSockets
-        // So strings longer than typical 16K bytes must be testable
-        //   CString large = GetLargeMessage();
-        //   if(!socket->WriteString(large))
-        //   {
-        //     ++errors;
-        //   }
-        //   Sleep(5000);
-
+        // So strings longer than typical 8K bytes must be transportable
+        // This string is 23501 bytes long
+        CString large = CreateLargeMessage();
+        if(!socket->WriteString(large))
+        {
+           ++errors;
+        }
       }
     }
   }

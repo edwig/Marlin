@@ -48,7 +48,7 @@ constexpr auto WS_CLOSING_TIME      =  10000;
 constexpr auto WS_CLOSING_MINIMUM   =   2000;
 constexpr auto WS_CLOSING_MAXIMUM   = 120000;
 // Buffer overhead, for safety allocation
-constexpr auto WS_OVERHEAD          = 4;
+constexpr DWORD WS_OVERHEAD          = 4;
 
 // Forward declaration of our class
 class WebSocket;
@@ -131,6 +131,7 @@ public:
   bool        m_utf8    { false   };    // UTF-8 Frame or Binary frame
   BYTE*       m_data    { nullptr };    // Data block pointer
   DWORD       m_length  { 0       };    // Length of the data block
+  DWORD       m_read    { 0       };    // Last read block by server
 };
 
 // Incoming stacks of data
