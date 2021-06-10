@@ -52,42 +52,6 @@ static char THIS_FILE[] = __FILE__;
 static unsigned _stdcall RunThread(void* p_myThread);
 static unsigned _stdcall RunHeartBeat(void* p_pool);
 
-
-// Set a name on your thread
-// By executing a fake SEH Exception
-//
-const DWORD MS_VC_EXCEPTION = 0x406D1388;
-
-#pragma pack(push,8)
-typedef struct tagTHREADNAME_INFO
-{
-  DWORD  dwType;       // Must be 0x1000.
-  LPCSTR szName;       // Pointer to name (in user addr space).
-  DWORD  dwThreadID;   // Thread ID (MAXDWORD=caller thread).
-  DWORD  dwFlags;      // Reserved for future use, must be zero.
-}
-THREADNAME_INFO;
-#pragma pack(pop)
-
-void SetThreadName(char* threadName,DWORD dwThreadID)
-{
-  THREADNAME_INFO info;
-  info.dwType     = 0x1000;
-  info.szName     = threadName;
-  info.dwThreadID = dwThreadID;
-  info.dwFlags    = 0;
-
-  __try
-  {
-    RaiseException(MS_VC_EXCEPTION,0,sizeof(info) / sizeof(ULONG_PTR),(ULONG_PTR*)&info);
-  }
-  __except(EXCEPTION_EXECUTE_HANDLER)
-  {
-    // Nothing done here: just name changed
-    memset(&info,0,sizeof(THREADNAME_INFO));
-  }
-}
-
 //////////////////////////////////////////////////////////////////////////
 //
 // The ThreadPool
@@ -697,31 +661,19 @@ ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
   }
   catch(StdException& ex)
   {
+    CString temporary;
+    temporary.GetEnvironmentVariable("TMP");
+    CString sceneOfTheCrime("Threadpool");
+
     if(ex.GetSafeExceptionCode())
     {
-      // We need to detect the fact that a second exception can occur,
-      // so we do **not** call the error report method again
-      // Otherwise we would end into an infinite loop
-      g_exception = true;
-      g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers());
-
-      if(g_exception)
-      {
-        // Error while sending an error report
-        // This error can originate from another thread, OR from the sending of this error report
-        TP_TRACE0("HeartBeat: DOUBLE INTERNAL ERROR while making an error report.!!");
-        g_exception = false;
-      }
-      else
-      {
-        TP_TRACE0("CRASH in HeartBeat: Errorreport has been made");
-      }
+      // SEH Exception: Report the full stacktrace
+      ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),temporary,sceneOfTheCrime);
     }
     else
     {
-      // 'Normale' C++ exception: Maar we hebben hem vergeten af te vangen
-      CString empty;
-      ErrorReport::Report(ex.GetErrorMessage(),0,empty,empty);
+      // 'Normal' C++ exception: But we did forget to catch it
+      ErrorReport::Report(ex.GetErrorMessage(),0,temporary,sceneOfTheCrime);
     }
   }
 }
