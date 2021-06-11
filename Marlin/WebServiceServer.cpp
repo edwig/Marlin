@@ -153,14 +153,6 @@ WebServiceServer::Reset()
     m_poolOwner = false;
   }
 
-  // Remove Logfile
-  if (m_log && m_logOwner)
-  {
-	  delete m_log;
-    m_log = nullptr;
-	  m_logOwner = false;
-  }
-
   // De-register ourselves with the server
   if(m_httpServer)
   {
@@ -185,6 +177,15 @@ WebServiceServer::Reset()
       delete server;
     }
   }
+
+  // Remove Logfile
+  if(m_log && m_logOwner)
+  {
+    delete m_log;
+    m_log = nullptr;
+    m_logOwner = false;
+  }
+
   // SoapHandler & GetHandler
   // are cleaned up by the HTTPSite!
 }

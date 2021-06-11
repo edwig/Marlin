@@ -47,25 +47,28 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Load product and application constants
-void LoadConstants(char* p_app_name)
+void LoadConstants(char* /*p_app_name*/)
 {
   // These constants reside in the "ServerMain"
-  APPLICATION_NAME      = p_app_name;                             // Name of the application EXE file!!
+  APPLICATION_NAME      = "MarlinServer.exe";                     // Name of the application EXE file!!
   PRODUCT_NAME          = MARLIN_PRODUCT_NAME;                    // Short name of the product (one word only)
   PRODUCT_DISPLAY_NAME  = "Service for MarlinServer tester";      // "Service for PRODUCT_NAME: <description of the service>"
-  PRODUCT_COPYRIGHT     = "Copyright (c) 2019 ir. W.E. Huisman";  // Copyright line of the product (c) <year> etc.
+  PRODUCT_COPYRIGHT     = "Copyright (c) 2021 ir. W.E. Huisman";  // Copyright line of the product (c) <year> etc.
   PRODUCT_VERSION       = MARLIN_VERSION_NUMBER;                  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
   PRODUCT_MESSAGES_DLL  = "MarlinServerMessages.dll";             // Filename of the WMI Messages dll.
   PRODUCT_SITE          = "/MarlinTest/";                         // Standard base URL absolute path e.g. "/MarlinServer/"
 }
 
 // In case we do **NOT** use IIS and the application factory, This is the one and only server
+// This macro is defined in the project files. **NOT** in the *.h files
 #ifndef MARLIN_IIS
 TestMarlinServer theServer;
+ErrorReport*     g_report = nullptr;
 #endif
 
 TestMarlinServer::TestMarlinServer()
                  :WebServiceServer(PRODUCT_NAME,"","",PrefixType::URLPRE_Strong,"",8)
+                 ,MarlinServer()
 {
   InitializeCriticalSection(&m_std_stream);
 }
@@ -74,6 +77,11 @@ TestMarlinServer::~TestMarlinServer()
 {
   Reset();
   DeleteCriticalSection(&m_std_stream);
+  if(m_ownReport)
+  {
+    delete m_errorReport;
+    m_errorReport = nullptr;
+  }
 }
 
 bool
@@ -92,6 +100,9 @@ TestMarlinServer::Startup()
 
     // Start of program. Start COM+ in multi-threaded mode
     CoInitializeEx(0,COINIT_APARTMENTTHREADED);
+
+    // Set Error Reporting
+    StartErrorReporting();
 
     // Read our "*.config" file
     ReadConfig();
@@ -233,6 +244,16 @@ TestMarlinServer::Server_qprintf(const char* p_format, ...)
   m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,string.GetString());
 }
 
+void
+TestMarlinServer::StartErrorReporting()
+{
+  if(m_errorReport == nullptr)
+  {
+    WebServiceServer::m_errorReport = new ErrorReport();
+    m_ownReport = true;
+  }
+}
+
 // Reading our *.config file
 void  
 TestMarlinServer::ReadConfig()
@@ -348,8 +369,8 @@ TestMarlinServer::ConfigToServer()
 
     // Create a sync server or a a-synchronous server
     // Un-Comment the other if you want to test it.
-    m_httpServer  = new HTTPServerSync(m_serverName);
-  //m_httpServer  = new HTTPServerMarlin(m_serverName);
+    // m_httpServer  = new HTTPServerSync(m_serverName);
+    m_httpServer  = new HTTPServerMarlin(m_serverName);
     m_serverOwner = true; // Do DTOR later!
   }
 
@@ -357,7 +378,10 @@ TestMarlinServer::ConfigToServer()
   m_httpServer->SetWebroot(m_webroot);
 
   // Connect the error reporting
-  WebServiceServer::SetErrorReport(g_report);
+  if(!m_errorReport)
+  {
+    WebServiceServer::SetErrorReport(g_report);
+  }
 }
 
 // Start server log (if any)

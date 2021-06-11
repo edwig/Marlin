@@ -27,8 +27,5 @@
 
 #include <iostream>
 
-// Use Marlin in combination with IIS
-#define MARLIN_IIS
-
 // Autolink with Marlin
 #include <Marlin.h>

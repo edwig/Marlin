@@ -53,6 +53,7 @@ public:
   void  Server_qprintf(const char* p_format, ...);
 
 protected:
+  void  StartErrorReporting();
   // Reading our *.config file
   void  ReadConfig();
   // Start the alert log functionality
@@ -161,6 +162,7 @@ private:
   CString         m_serverLogfile;
   int             m_errors      { 0  };                 // Total number of errors
   bool            m_doDetails   { false };              // Do not log any detailed information
+  bool            m_ownReport   { false };
 
   CRITICAL_SECTION m_std_stream;
 };

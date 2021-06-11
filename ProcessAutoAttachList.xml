@@ -1,3 +1,4 @@
 <AutoAttachProcessList>
   <process>w3wp.exe</process>
+  <process>MarlinServer.exe</process>
 </AutoAttachProcessList>

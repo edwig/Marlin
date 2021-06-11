@@ -35,6 +35,7 @@
 #include "GetLastErrorAsString.h"
 #include "ConvertWideString.h"
 #include "WebSocketServer.h"
+#include "ServiceReporting.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -538,34 +539,41 @@ CancelHTTPRequest(void* p_argument,bool p_stayInThePool,bool p_forcedAbort)
   OutstandingIO* outstanding = reinterpret_cast<OutstandingIO*>(p_argument);
   if(outstanding)
   {
-    DWORD status = (DWORD)(outstanding->Internal & 0x0FFFF);
-    if(status == 0 && outstanding->Offset == 0 && outstanding->OffsetHigh == 0)
+    try
     {
-      HTTPRequest* request = reinterpret_cast<HTTPRequest*>(outstanding->m_request);
-      if(request)
+      DWORD status = (DWORD)(outstanding->Internal & 0x0FFFF);
+      if (status == 0 && outstanding->Offset == 0 && outstanding->OffsetHigh == 0)
       {
-        if((!request->GetIsActive() && !p_stayInThePool) || p_forcedAbort)
+        HTTPRequest* request = reinterpret_cast<HTTPRequest*>(outstanding->m_request);
+        if (request)
         {
-          HTTPServer* server = request->GetHTTPServer();
-          if(server)
+          if ((!request->GetIsActive() && !p_stayInThePool) || p_forcedAbort)
           {
-            server->UnRegisterHTTPRequest(request);
+            HTTPServer* server = request->GetHTTPServer();
+            if (server)
+            {
+              server->UnRegisterHTTPRequest(request);
+            }
+            delete request;
+            return false;
           }
-          delete request;
-          return false;
-        }
-        else if(p_stayInThePool && !request->GetIsActive())
-        {
-          // Start a new request, in case we completed the previous one
-          request->StartRequest();
-          return true;
-        }
-        else if(request->GetIsActive())
-        {
-          // Still processing, we must stay in the pool
-          return true;
+          else if (p_stayInThePool && !request->GetIsActive())
+          {
+            // Start a new request, in case we completed the previous one
+            request->StartRequest();
+            return true;
+          }
+          else if (request->GetIsActive())
+          {
+            // Still processing, we must stay in the pool
+            return true;
+          }
         }
       }
+    }
+    catch(StdException& ex)
+    {
+      SvcReportErrorEvent(0,true,__FUNCTION__,"Handle already invalid: %s",ex.GetErrorMessage().GetString());
     }
   }
   return p_stayInThePool;
