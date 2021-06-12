@@ -1235,12 +1235,15 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
   {
     DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",p_length);
     hr = response->Flush(false,p_continue,&bytesSent);
-    if(hr != S_OK)
+    if(hr != S_OK && p_continue)
     {
       ERRORLOG(GetLastError(),"Flushing event stream failed!");
     }
-    // Possibly log and trace what we just sent
-    LogTraceResponse(nullptr,(unsigned char*) p_buffer,(int) p_length);
+    else
+    {
+      // Possibly log and trace what we just sent
+      LogTraceResponse(nullptr,(unsigned char*) p_buffer,(int) p_length);
+    }
   }
   // Final closing of the connection
   if(p_continue == false)

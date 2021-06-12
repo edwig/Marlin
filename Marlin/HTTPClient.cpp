@@ -2620,7 +2620,7 @@ HTTPClient::SendAsJSON(SOAPMessage* p_msg)
   // Most definitely a get
   m_verb = "GET";
   // Most definitely we want a JSON back
-  m_contentType = "text/json";
+  m_contentType = "application/json";
   m_bodyLength  = 0;
   m_body        = "";
 

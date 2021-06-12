@@ -253,8 +253,10 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
   CString wsdl;
   CString contract("http://interface.marlin.org/testing/");
 
-  url .Format("http://%s:%d/MarlinTest/TestInterface/",              MARLIN_HOST,TESTING_HTTP_PORT);
-  wsdl.Format("http://%s:%d/MarlinTest/TestInterface/MarlinWeb.wsdl",MARLIN_HOST,TESTING_HTTP_PORT);
+//  url .Format("http://%s:%d/MarlinTest/TestInterface/",              MARLIN_HOST,TESTING_HTTP_PORT);
+//  wsdl.Format("http://%s:%d/MarlinTest/TestInterface/MarlinWeb.wsdl",MARLIN_HOST,TESTING_HTTP_PORT);
+  url .Format("http://%s:%d/MarlinTest/",                 MARLIN_HOST,TESTING_HTTP_PORT);
+  wsdl.Format("http://%s:%d/MarlinTest/MarlinServer.wsdl",MARLIN_HOST,TESTING_HTTP_PORT);
   // JSON is simultaneous on different site
   if(p_json)
   {

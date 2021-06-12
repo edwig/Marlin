@@ -19,6 +19,9 @@ CHANGES IN VERSION 6.6.0
 3)  HTTPClient responds with the correct redirection on HTTP status 30x codes automatically.
     Redirects according to the HTTP standard of GETS or other verbs is now implemented.
 4)  WebSockets now work correctly in IIS, also with buffers larger than 8K.
+5)  BEWARE: Json2SOAP translation now always needs a content-type of "application/json"
+    to get the correct answer. This is so we can also support the GET of the WSDL on the
+    same endpoint in a WebServiceServer context.
 
 CHANGES IN VERSION 6.5.3
 ------------------------

@@ -1438,7 +1438,8 @@ HTTPRequest::CancelRequest()
     {
       DETAILLOG1("Event stream connection closed");
     }
-    else if(result != ERROR_IO_PENDING)
+    else if(result != ERROR_IO_PENDING && 
+            result != ERROR_CONNECTION_INVALID)
     {
       ERRORLOG(result,"Event stream incorrectly canceled");
     }

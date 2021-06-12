@@ -67,7 +67,7 @@ ErrorReport*     g_report = nullptr;
 #endif
 
 TestMarlinServer::TestMarlinServer()
-                 :WebServiceServer(PRODUCT_NAME,"","",PrefixType::URLPRE_Strong,"",8)
+                 :WebServiceServer(MARLIN_PRODUCT_NAME,"","",PrefixType::URLPRE_Strong,"",8)
                  ,MarlinServer()
 {
   InitializeCriticalSection(&m_std_stream);
@@ -101,11 +101,11 @@ TestMarlinServer::Startup()
     // Start of program. Start COM+ in multi-threaded mode
     CoInitializeEx(0,COINIT_APARTMENTTHREADED);
 
-    // Set Error Reporting
-    StartErrorReporting();
-
     // Read our "*.config" file
     ReadConfig();
+
+    // Set Error Reporting
+    StartErrorReporting();
 
     // Configure our alert logs
     StartAlerts();
@@ -247,7 +247,7 @@ TestMarlinServer::Server_qprintf(const char* p_format, ...)
 void
 TestMarlinServer::StartErrorReporting()
 {
-  if(m_errorReport == nullptr)
+  if(m_errorReport == nullptr && m_runAsService != RUNAS_IISAPPPOOL)
   {
     WebServiceServer::m_errorReport = new ErrorReport();
     m_ownReport = true;

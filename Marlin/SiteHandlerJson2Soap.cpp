@@ -29,6 +29,8 @@
 #include "stdafx.h"
 #include "SiteHandlerJson2Soap.h"
 #include "SiteHandlerSoap.h"
+#include "WebServiceServer.h"
+#include "HTTPSite.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -47,16 +49,18 @@ SiteHandlerJson2Soap::PreHandle(HTTPMessage* p_message)
   // Guarantee to return to this 'Cleanup', even if we do a SEH!!
   m_site->SetCleanup(this);
 
-  // Create an EMPTY JSON/SOAP message for this thread, forcing version 1.2
-  g_soapMessage = new SOAPMessage(p_message);
-  g_soapMessage->SetSoapVersion(SoapVersion::SOAP_12);
+  if(p_message->GetContentType().Find("json") > 0)
+  {
+    // Create an EMPTY JSON/SOAP message for this thread, forcing version 1.2
+    g_soapMessage = new SOAPMessage(p_message);
+    g_soapMessage->SetSoapVersion(SoapVersion::SOAP_12);
 
-  // CONVERT url parameters to SOAPMessage
-  g_soapMessage->Url2SoapParameters(p_message->GetCrackedURL());
+    // CONVERT url parameters to SOAPMessage
+    g_soapMessage->Url2SoapParameters(p_message->GetCrackedURL());
 
-  // IMPLEMENT YOURSELF: Write your own access mechanism.
-  // Maybe by writing an override to this method and calling this one first..
-
+    // IMPLEMENT YOURSELF: Write your own access mechanism.
+    // Maybe by writing an override to this method and calling this one first..
+  }
   // returning true, to enter the default "Handle" of the (overrided) class
   return true;
 }
@@ -68,6 +72,13 @@ SiteHandlerJson2Soap::Handle(HTTPMessage* p_message)
   if(g_soapMessage)
   {
     return Handle(g_soapMessage);
+  }
+
+  HTTPSite* site = p_message->GetHTTPSite();
+  WebServiceServer* server = reinterpret_cast<WebServiceServer*>(site->GetPayload());
+  if(server)
+  {
+    return server->ProcessGet(p_message);
   }
   // Should never come to here
   // Handle as a BAD_REQUEST
