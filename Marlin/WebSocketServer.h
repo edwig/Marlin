@@ -28,6 +28,8 @@
 #pragma once
 #include "WebSocket.h"
 
+class WebSocketContext;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // SERVER MARLIN WebSocket
@@ -50,34 +52,29 @@ public:
   virtual bool SendCloseSocket(USHORT p_code,CString p_reason);
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
+
   // Register the server request for sending info
   virtual bool RegisterSocket(HTTPMessage* p_message);
   // Perform the server handshake
   virtual bool ServerHandshake(HTTPMessage* p_message);
 
-  // Read a fragment from a WebSocket
-  bool      ReadFragment(BYTE*& p_buffer,int64& p_length,Opcode& p_opcode,bool& p_last);
-  // Send a 'ping' to see if other side still there
-  bool      SendPing();
-  // Send a 'pong' as an answer on a 'ping'
-  void      SendPong(RawFrame* p_ping);
-  // Encode raw frame buffer
-  bool      EncodeFramebuffer(RawFrame* p_frame,Opcode p_opcode,bool p_mask,BYTE* p_buffer,int64 p_length,bool p_last);
-  // Decode raw frame buffer (only m_data is filled)
-  bool      DecodeFrameBuffer(RawFrame* p_frame,int64 p_length);
-  // Store incoming raw frame buffer
-  bool      StoreFrameBuffer(RawFrame* p_frame);
-  // Get next frame to write to the stream
-  WSFrame*  GetFrameToWrite();
+  // To be called for ASYNC I/O completion!
+  void      SocketReader(HRESULT p_error, DWORD p_bytes, BOOL p_utf8, BOOL p_final, BOOL p_close);
+  void      SocketWriter(HRESULT p_error, DWORD p_bytes, BOOL p_utf8, BOOL p_final, BOOL p_close);
 
 protected:
-  // Decode the incoming closing fragment before we call 'OnClose'
-  void      DecodeCloseFragment(RawFrame* p_frame);
+  // Socket listener, entered by the HTTPServer only!!
+  void      SocketListener();
+  // Decode the incoming close socket message
+  bool      ReceiveCloseSocket();
+
 
   // Private data for the server variant of the WebSocket
-  HTTPServer*     m_server  { nullptr };
-  HTTP_OPAQUE_ID  m_request { NULL    };
+  HTTPServer*         m_server  { nullptr };
+  HTTP_OPAQUE_ID      m_request { NULL    };
+  // Private data for the WebSocket variant
+  WebSocketContext*   m_context { nullptr };
   // Asynchronous write buffer
-  WSFrameStack    m_writing;
+  WSFrameStack        m_writing;
 };
 

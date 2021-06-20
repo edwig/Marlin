@@ -244,12 +244,12 @@ WebSocketServerIIS::WriteFragment(BYTE*  p_buffer
 }
 
 void WINAPI
-ServerReadCompletion(HRESULT p_error,
-                     VOID*   p_completionContext,
-                     DWORD   p_bytes,
-                     BOOL    p_utf8,
-                     BOOL    p_final,
-                     BOOL    p_close)
+ServerReadCompletionIIS(HRESULT p_error,
+                        VOID*   p_completionContext,
+                        DWORD   p_bytes,
+                        BOOL    p_utf8,
+                        BOOL    p_final,
+                        BOOL    p_close)
 {
   WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_completionContext);
   if(socket)
@@ -367,7 +367,7 @@ WebSocketServerIIS::SocketListener()
                                          ,&utf8
                                          ,&last
                                          ,&isclosing
-                                         ,ServerReadCompletion
+                                         ,ServerReadCompletionIIS
                                          ,this
                                          ,&expected);
   if(FAILED(hr))

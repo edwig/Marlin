@@ -62,7 +62,7 @@ public:
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request);
   // Flushing a WebSocket intermediate
-  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request);
+  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,CString p_prefix);
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
   

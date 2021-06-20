@@ -357,6 +357,9 @@
     <ClCompile Include="OAuth2Cache.cpp">
       <Filter>MarlinClient</Filter>
     </ClCompile>
+    <ClCompile Include="WebSocketContext.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -724,6 +727,9 @@
     </ClInclude>
     <ClInclude Include="OAuth2Cache.h">
       <Filter>MarlinClient\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketContext.h">
+      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

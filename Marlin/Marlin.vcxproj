@@ -271,6 +271,7 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="WebSocketClient.cpp" />
+    <ClCompile Include="WebSocketContext.cpp" />
     <ClCompile Include="WebSocketServer.cpp" />
     <ClCompile Include="WebSocketServerIIS.cpp" />
     <ClCompile Include="WebSocketServerSync.cpp" />
@@ -437,6 +438,7 @@
     <ClInclude Include="WebServiceServer.h" />
     <ClInclude Include="WebSocket.h" />
     <ClInclude Include="WebSocketClient.h" />
+    <ClInclude Include="WebSocketContext.h" />
     <ClInclude Include="WebSocketServer.h" />
     <ClInclude Include="WebSocketServerIIS.h" />
     <ClInclude Include="WebSocketServerSync.h" />

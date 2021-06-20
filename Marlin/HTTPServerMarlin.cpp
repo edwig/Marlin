@@ -36,6 +36,7 @@
 #include "ConvertWideString.h"
 #include "WebSocketServer.h"
 #include "ServiceReporting.h"
+#include <httpserv.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -794,7 +795,17 @@ HTTPServerMarlin::SendResponseEventBuffer(HTTP_OPAQUE_ID p_requestID
 
 // Cancel and close a WebSocket
 bool
-HTTPServerMarlin::FlushSocket(HTTP_OPAQUE_ID /*p_request*/)
+HTTPServerMarlin::FlushSocket(HTTP_OPAQUE_ID p_request,CString p_prefix)
 {
+  USES_CONVERSION;
+  wstring prefix = A2W(p_prefix);
+  DWORD result = HttpFlushResponseCache(GetRequestQueue(),prefix.c_str(),HTTP_FLUSH_RESPONSE_FLAG_RECURSIVE,nullptr);
+
+  if(result != NO_ERROR)
+  {
+    ERRORLOG(GetLastError(),"Flushing HTTP request for WebSocket failed!");
+    CancelRequestStream(p_request);
+    return false;
+  }
   return true;
 }

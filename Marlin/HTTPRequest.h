@@ -44,8 +44,6 @@ typedef enum _ioaction
  ,IO_Writing     = 4    // Did write a response body part
  ,IO_StartStream = 5    // Did start an event stream
  ,IO_WriteStream = 6    // Did write a stream part
- ,IO_ReadSocket  = 7    // Read action on a WebSocket
- ,IO_WriteSocket = 8    // Write action on a WebSocket
  ,IO_Cancel      = 9    // Cancel current request
 
 }
@@ -86,12 +84,8 @@ public:
   void HandleAsynchroneousIO(IOAction p_action);
   // Cancel the request at the HTTP driver
   void CancelRequest();
-  // Setting a WebSocket
-  void RegisterWebSocket(WebSocketServer* p_socket);
   // Start a response stream
   void StartEventStreamResponse();
-  // Flush the WebSocket stream
-  void FlushWebSocketStream();
   // Send as a stream part to an existing stream
   void SendResponseStream(const char* p_buffer
                          ,size_t      p_length
@@ -101,12 +95,15 @@ public:
   // GETTERS
 
   // Object still has outstanding I/O to handle
-  bool              GetIsActive()   { return m_active;  };
+  bool              GetIsActive()   { return m_active;    }
   // The HTTPServer that handles this request
-  HTTPServer*       GetHTTPServer() { return m_server;  };
+  HTTPServer*       GetHTTPServer() { return m_server;    }
   // The connected WebSocket
-  WebSocketServer*  GetWebSocket()  { return m_socket;  };
-
+  WebSocketServer*  GetWebSocket()  { return m_socket;    }
+  // OPAQUE Request
+  HTTP_OPAQUE_ID    GetRequest()    { return m_requestID; }
+  // OPAQUE Response
+  PHTTP_RESPONSE    GetResponse()   { return m_response;  }
 private:
   // Ready with the response
   void Finalize();
@@ -122,10 +119,6 @@ private:
   void SendBodyPart();             // 4) Has send a body part
   void StartedStream();            // 5) Has started event stream
   void SendStreamPart();           // 6) Has send a stream part
-  // Handlers for the WebSocket's
-  void StartSocketReceiveRequest();
-  void ReceivedWebSocket();
-  void SendWebSocket();
 
   // Sub procedures for the handlers
 
@@ -137,6 +130,7 @@ private:
   void AddUnknownHeaders(UKHeaders& p_headers);
   // Fill response structure out of the HTTPMessage
   void FillResponse(int p_status,bool p_responseOnly = false);
+  void FillResponseWebSocketHeaders(UKHeaders& p_headers);
   // Reset outstanding OVERLAPPED
   void ResetOutstanding(OutstandingIO& p_outstanding);
   // Add a request string for a header

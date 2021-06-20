@@ -108,7 +108,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
@@ -129,7 +129,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\;$(SolutionDir)Bin$(Configuration)_$(Platform)\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -152,7 +152,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -175,7 +175,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>httpapi.lib; secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>

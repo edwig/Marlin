@@ -113,7 +113,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rpcrt4.lib;winhttp.lib;secur32.lib;httpapi.lib;odbc32.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>rpcrt4.lib;winhttp.lib;secur32.lib;httpapi.lib;odbc32.lib;crypt32.lib;websocket.lib</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
@@ -149,7 +149,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rpcrt4.lib;winhttp.lib;secur32.lib;httpapi.lib;odbc32.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>rpcrt4.lib;winhttp.lib;secur32.lib;httpapi.lib;odbc32.lib;crypt32.lib;websocket.lib</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
@@ -189,7 +189,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rpcrt4.lib;winhttp.lib;secur32.lib;httpapi.lib;odbc32.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>rpcrt4.lib;winhttp.lib;secur32.lib;httpapi.lib;odbc32.lib;crypt32.lib;websocket.lib</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <ProgramDatabaseFile>.\release\x64\$(TargetName).pdb</ProgramDatabaseFile>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
@@ -230,7 +230,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rpcrt4.lib;winhttp.lib;secur32.lib;httpapi.lib;odbc32.lib;crypt32.lib</AdditionalDependencies>
+      <AdditionalDependencies>rpcrt4.lib;winhttp.lib;secur32.lib;httpapi.lib;odbc32.lib;crypt32.lib;websocket.lib</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <ProgramDatabaseFile>.\release\x64\$(TargetName).pdb</ProgramDatabaseFile>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>

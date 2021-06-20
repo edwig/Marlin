@@ -692,7 +692,7 @@ HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID /*p_request*/
 }
 
 bool
-HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request)
+HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request,CString /*p_prefix*/)
 {
   IHttpContext*     context  = reinterpret_cast<IHttpContext*>(p_request);
   IHttpResponse*    response = context->GetResponse();
@@ -704,7 +704,8 @@ HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request)
   response->DisableKernelCache(9); // 9 = HANDLER_HTTPSYS_UNFRIENDLY
   policy->DisableUserCache();      // Disable user caching
 
-  HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent);
+  BOOL completion = FALSE;
+  HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent,&completion);
   if(hr != S_OK)
   {
     ERRORLOG(GetLastError(),"Flushing WebSocket failed!");

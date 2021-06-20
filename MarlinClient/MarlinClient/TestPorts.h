@@ -37,3 +37,4 @@ const int TESTING_CLCERT_PORT = 1202;  // For site "/SecureClientCert/"
 // COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST
 #define MARLIN_HOST "localhost"
 
+#define TEST_WEBSOCKETS 1
