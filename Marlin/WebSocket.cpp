@@ -238,6 +238,31 @@ WebSocket::GetParameter(CString p_name)
   return value;
 }
 
+CString 
+WebSocket::GetClosingErrorAsString()
+{
+  CString reason;
+  switch(m_closingError)
+  {
+    case 0:                   reason = "Unknown closing reason";                      break;
+    case WS_CLOSE_NORMAL:     reason = "Normal closing of the connection";            break;
+    case WS_CLOSE_GOINGAWAY:  reason = "Going away. Closing webpage/application";     break;
+    case WS_CLOSE_BYERROR:    reason = "Closing due to protocol error";               break;
+    case WS_CLOSE_TERMINATE:  reason = "Terminating (unacceptable data)";             break;
+    case WS_CLOSE_RESERVED:   reason = "Reserved for future use";                     break;
+    case WS_CLOSE_NOCLOSE:    reason = "Internal error (no closing frame received)";  break;
+    case WS_CLOSE_ABNORMAL:   reason = "No closing frame, TCP/IP error";              break;
+    case WS_CLOSE_DATA:       reason = "Abnormal data(no UTF-8 in UTF-8 frame";       break;
+    case WS_CLOSE_POLICY:     reason = "Policy error, or extension error";            break;
+    case WS_CLOSE_TOOBIG:     reason = "Message is too big to handle";                break;
+    case WS_CLOSE_NOEXTENSION:reason = "Not one of the expected extensions";          break;
+    case WS_CLOSE_CONDITION:  reason = "Internal server error";                       break;
+    case WS_CLOSE_SECURE:     reason = "TLS handshake error (do not send!)";          break;
+    default:                  reason = "Application defined closing number";          break;
+  }
+  return reason;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // LOGGING
@@ -325,7 +350,7 @@ WebSocket::OnOpen()
   WSFrame frame;
   if(m_onopen)
   {
-    DETAILLOGS("WebSocket OnOpen called for: ",m_uri);
+    DETAILLOGV("WebSocket OnOpen called for [%s] on [%s]",m_key.GetString(),m_uri.GetString());
     (*m_onopen)(this,&frame);
   }
 }
@@ -339,7 +364,7 @@ WebSocket::OnMessage()
   {
     if(m_onmessage)
     {
-      DETAILLOGS("WebSocket OnMessage called for: ",m_uri);
+      DETAILLOGV("WebSocket OnMessage called for [%s] on [%s]",m_key.GetString(),m_uri.GetString());
       (*m_onmessage)(this,frame);
     }
     delete frame;
@@ -355,7 +380,7 @@ WebSocket::OnBinary()
   {
     if(m_onbinary)
     {
-      DETAILLOGS("WebSocket OnBinary called for: ",m_uri);
+      DETAILLOGV("WebSocket OnBinary called for [%s] on [%s] ",m_key.GetString(),m_uri.GetString());
       (*m_onbinary)(this,frame);
     }
     delete frame;
@@ -368,7 +393,7 @@ WebSocket::OnError()
   WSFrame* frame = GetWSFrame();
   if(m_onerror)
   {
-    DETAILLOGS("WebSocket OnError called for: ",m_uri);
+    DETAILLOGV("WebSocket OnError called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
     (*m_onerror)(this,frame);
   }
   delete frame;
@@ -383,7 +408,7 @@ WebSocket::OnClose()
   {
     if(m_onclose && (m_openReading || m_openWriting))
     {
-      DETAILLOGS("WebSocket OnClose called for: ",m_uri);
+      DETAILLOGV("WebSocket OnClose called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
       (*m_onclose)(this,frame);
     }
     delete frame;
@@ -393,7 +418,7 @@ WebSocket::OnClose()
     WSFrame empty;
     if(m_onclose && (m_openReading || m_openWriting))
     {
-      DETAILLOGS("WebSocket OnClose called for: ",m_uri);
+      DETAILLOGV("WebSocket OnClose called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
       (*m_onclose)(this,&empty);
     }
   }
@@ -417,8 +442,9 @@ WebSocket::WriteString(CString p_string)
   uchar* buffer = nullptr;
   int    length = 0;
   bool   result = false;
+  DWORD  fragmentsize = 1024 - WS_MAX_HEADER;
 
-  DETAILLOGS("Outgoing message on WebSocket: ",m_uri);
+  DETAILLOGV("Outgoing message on WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
   if(MUSTLOG(HLL_LOGBODY))
   {
     DETAILLOG1(p_string);
@@ -435,7 +461,7 @@ WebSocket::WriteString(CString p_string)
 
       if(MUSTLOG(HLL_TRACEDUMP))
       {
-        m_logfile->AnalysisHex(__FUNCTION__,m_uri,(void*)pointer,toSend);
+        m_logfile->AnalysisHex(__FUNCTION__,m_key,(void*)pointer,toSend);
       }
   
       do
@@ -443,9 +469,9 @@ WebSocket::WriteString(CString p_string)
         // Calculate the length of the next fragment
         bool last = true;
         DWORD toWrite = toSend - total;
-        if(toWrite >= m_fragmentsize)
+        if(toWrite >= fragmentsize)
         {
-          toWrite = m_fragmentsize;
+          toWrite = fragmentsize;
           last    = false;
         }
 
@@ -456,9 +482,14 @@ WebSocket::WriteString(CString p_string)
         }
         // Bookkeeping of the total amount of sent bytes
         total += toWrite;
-        result = true;
       }
       while(total < toSend);
+
+      // Check that we send ALL
+      if(total >= toSend)
+      {
+        result = true;
+      }
     }
     delete [] buffer;
   }
@@ -588,7 +619,7 @@ WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
   int     length_utf8 = 0;
   CString input(p_frame->m_data);
 
-  DETAILLOGS("Incoming message on WebSocket: ",m_uri);
+  DETAILLOGV("Incoming message on WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
   if(MUSTLOG(HLL_TRACEDUMP))
   {
     // This is what we get from 'the wire'

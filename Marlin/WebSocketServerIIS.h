@@ -62,19 +62,22 @@ public:
   void    SocketWriter(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
   // Socket listener, entered by the HTTPServerIIS only!!
   void    SocketListener();
+  // Dispatch an extra write action
+  void    SocketDispatch();
 
 protected:
   // Decode the incoming close socket message
   bool    ReceiveCloseSocket();
 
   // Private data for the server variant of the WebSocket
-  HTTPServer*         m_server{nullptr};
-  HTTP_OPAQUE_ID      m_request{NULL};
+  HTTPServer*         m_server     { nullptr };
+  HTTP_OPAQUE_ID      m_request    { NULL    };
   // Private data for the IIS WebSocket variant
-  IWebSocketContext*  m_iis_socket{nullptr};
-  HANDLE              m_listener{NULL};
+  IWebSocketContext*  m_iis_socket { nullptr };
+  HANDLE              m_listener   { NULL    };
   // Asynchronous write buffer
   WSFrameStack        m_writing;
+  bool                m_dispatched { false   };
 };
 
 

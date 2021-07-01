@@ -9,6 +9,16 @@ Version 6.x contains the new HTTPSYS user mode driver as a HTTPServerAPI replace
 It is tested through the "MarlinServerSync" test program only
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION (NOT RELEASED YET)
+-------------------------------------
+1)  All Analasys logfiles removed from MarlinModule. All memory allocation from the loaded DLL's
+    go now back to the DLL's. This is done so we can move back to static linked librarys and
+    static linked MFC environments.
+2)  All project moved from dynamicly linked DLL's to static libraries
+3)  Continued work on WebSockets in IIS. 
+    Reading and writing of messages longer than 1 frame now work correctly
+
+
 CHANGES IN VERSION 6.6.0
 ------------------------
 1)  Added a OAuth2 credentials cache (OAuth2Cache). You can create sessions and connect the

@@ -74,9 +74,6 @@ public:
 // All applications in the application pool
 using AppPool = std::map<int,APP*>;
 
-// Global objects: The one and only IIS Server application pool
-extern AppPool g_IISApplicationPool;
-
 // Create the module class
 // Hooking into the 'integrated pipeline' of IIS
 class MarlinModule: public CHttpModule

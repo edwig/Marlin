@@ -41,6 +41,25 @@ static char THIS_FILE[] = __FILE__;
 // Open, close and 2 messages
 int totalChecks = 4;
 
+CString 
+GenerateLargePushMessage()
+{
+  CString large;
+  CString extra;
+
+  for (int x = 0; x < 100; ++x)
+  {
+    for (int y = 0; y < 20; ++y)
+    {
+      extra.Format("X%d-", (x * 100) + y);
+      large += extra;
+    }
+    large += "\n";
+  }
+  return large;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // BARE HANDLERS
@@ -49,18 +68,19 @@ int totalChecks = 4;
 
 void OnOpen(WebSocket* p_socket,WSFrame* /*p_frame*/)
 {
-  qprintf("TEST handler: Opened a websocket for: %s",p_socket->GetURI().GetString());
+  qprintf("TEST handler: Opened a websocket for: %s",p_socket->GetIdentityKey().GetString());
   --totalChecks;
 }
 
 void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 {
   CString message((char*)p_frame->m_data);
-  qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetURI().GetString(),message.GetString());
+  qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetIdentityKey().GetString(),message.GetString());
   --totalChecks;
 
-
-  p_socket->WriteString("We are the server!");
+  CString msg = GenerateLargePushMessage();
+  p_socket->WriteString(msg);
+  // p_socket->WriteString("We are the server!");
 }
 
 void OnClose(WebSocket* p_socket,WSFrame* p_frame)
@@ -70,7 +90,7 @@ void OnClose(WebSocket* p_socket,WSFrame* p_frame)
   {
     qprintf("TEST handler: Closing WebSocket message: %s",message.GetString());
   }
-  qprintf("TEST handler: Closed the websocket for: %s",p_socket->GetURI().GetString());
+  qprintf("TEST handler: Closed the websocket for: %s",p_socket->GetIdentityKey().GetString());
   --totalChecks;
 }
 
@@ -82,8 +102,11 @@ void OnClose(WebSocket* p_socket,WSFrame* p_frame)
 
 class SiteHandlerTestSocket : public SiteHandlerWebSocket
 {
+public:
+  SiteHandlerTestSocket(TestMarlinServer* p_server) : m_server(p_server) {}
 protected:
   virtual bool Handle(HTTPMessage* p_message,WebSocket* p_socket);
+  TestMarlinServer* m_server;
 };
 
 bool
@@ -97,6 +120,8 @@ SiteHandlerTestSocket::Handle(HTTPMessage* p_message,WebSocket* p_socket)
   p_socket->SetOnOpen(OnOpen);
   p_socket->SetOnMessage(OnMessage);
   p_socket->SetOnClose(OnClose);
+
+  m_server->m_socket = p_socket->GetIdentityKey();
 
   // Returning a 'true' will trigger the handling!!
   return true;
@@ -131,7 +156,7 @@ TestMarlinServer::TestWebSocket()
   }
 
   // Set a WebSocket handler on the GET handler of this site
-  SiteHandlerTestSocket* handler = new SiteHandlerTestSocket();
+  SiteHandlerTestSocket* handler = new SiteHandlerTestSocket(this);
   site->SetHandler(HTTPCommand::http_get,handler);
   site->SetAllHeaders(true);
 
@@ -152,13 +177,14 @@ TestMarlinServer::TestWebSocket()
 void
 TestMarlinServer::StopWebSocket()
 {
-  WebSocket* socket = m_httpServer->FindWebSocket("/MarlinTest/Socket/socket_123");
+  WebSocket* socket = m_httpServer->FindWebSocket(m_socket);
   if (socket)
   {
     if(socket->CloseSocket() == false)
     {
       xerror();
     }
+    m_httpServer->UnRegisterWebSocket(socket);
   }
 }
 

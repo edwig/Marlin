@@ -98,7 +98,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
             opened = true;
             // Register the socket at the server, so we can find it
             server->RegisterSocket(socket);
-            SITE_DETAILLOGS("Opened a WebSocket for: ",uri);
+            SITE_DETAILLOGV("Opened a WebSocket [%s] on [%s]",socket->GetIdentityKey().GetString(),uri.GetString());
           }
           else
           {

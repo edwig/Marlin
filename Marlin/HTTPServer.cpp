@@ -1755,18 +1755,17 @@ HTTPServer::FindService(CString p_serviceName)
 bool
 HTTPServer::RegisterSocket(WebSocket* p_socket)
 {
-  CString uri = p_socket->GetURI();
-  uri.MakeLower();
+  CString key(p_socket->GetIdentityKey());
+  DETAILLOGV("Register websocket [%s] at the server",key.GetString());
+  key.MakeLower();
 
-  TRACE("Register WebSocket [%s] %lX\n",uri.GetString(),p_socket);
-
-  SocketMap::iterator it = m_sockets.find(uri);
+  SocketMap::iterator it = m_sockets.find(key);
   if(it != m_sockets.end())
   {
     // Drop the double socket. Removes socket from the mapping!
     it->second->CloseSocket();
   }
-  m_sockets.insert(std::make_pair(uri,p_socket));
+  m_sockets.insert(std::make_pair(key,p_socket));
   return true;
 }
 
@@ -1774,12 +1773,11 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
 bool
 HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
 {
-  CString uri = p_socket->GetURI();
-  uri.MakeLower();
+  CString key = p_socket->GetIdentityKey();
+  DETAILLOGV("Unregistering websocket [%s] from the server",key.GetString());
+  key.MakeLower();
 
-  // TRACE("UN-Register WebSocket [%s] %lX\n",uri,p_socket);
-
-  SocketMap::iterator it = m_sockets.find(uri);
+  SocketMap::iterator it = m_sockets.find(key);
   if(it != m_sockets.end())
   {
     delete it->second;
@@ -1792,13 +1790,11 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
 
 // Finding a previous registered websocket
 WebSocket*
-HTTPServer::FindWebSocket(CString p_uri)
+HTTPServer::FindWebSocket(CString p_key)
 {
-  p_uri.MakeLower();
+  p_key.MakeLower();
 
-  TRACE("Find WebSocket: %s\n",p_uri.GetString());
-
-  SocketMap::iterator it = m_sockets.find(p_uri);
+  SocketMap::iterator it = m_sockets.find(p_key);
   if(it != m_sockets.end())
   {
     return it->second;

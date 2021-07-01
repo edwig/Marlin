@@ -30,5 +30,5 @@
 class IHttpContext;
 class LogAnalysis;
 
-void IISDebugAllVariables(IHttpContext* p_context,LogAnalysis* p_log);
+void IISDebugAllVariables(IHttpContext* p_context);
 

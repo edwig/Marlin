@@ -224,6 +224,7 @@ public:
 
   // Getting the URI
   CString GetURI()            { return m_uri;          };
+  CString GetIdentityKey()    { return m_key;          };
   ULONG   GetKeepalive()      { return m_keepalive;    };
   ULONG   GetFragmentSize()   { return m_fragmentsize; };
   CString GetProtocols()      { return m_protocols;    };
@@ -232,6 +233,7 @@ public:
   CString GetClosingMessage() { return m_closing;      };
   int     GetLogLevel()       { return m_logLevel;     };
   LogAnalysis* GetLogfile()   { return m_logfile;      };
+  CString GetClosingErrorAsString();
 
   // Add a URI parameter
   void    AddParameter(CString p_name,CString p_value);
@@ -263,6 +265,7 @@ protected:
 
   // GENERAL SOCKET DATA
   CString m_uri;                      // ws[s]://resource URI for the socket
+  CString m_key;                      // Essential the accept-key that registers the socket
   bool    m_openReading { false };    // WebSocket is opened and alive for reading
   bool    m_openWriting { false };    // WebSocket is opened and alive for writing
   ULONG   m_keepalive;                // Keep alive time of the socket

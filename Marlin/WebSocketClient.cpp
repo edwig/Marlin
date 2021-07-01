@@ -173,8 +173,9 @@ WebSocketClient::OpenSocket()
       m_socket = m_websocket_complete(handle,NULL); // WinHttpWebSocketCompleteUpgrade
       if(m_socket)
       {
-        // Close client handle first. HTTP is no longer needed
-        // WinHttpCloseHandle(handle);
+        // Remember the identity key
+        ResponseMap::iterator key = client.GetResponseHeaders().find("sec-websocket-accept");
+        m_key = key->second;
 
         // Set our timeout headers
         AddWebSocketHeaders();
@@ -231,6 +232,8 @@ WebSocketClient::CloseSocket()
       wait *= 2;
     }
     m_socket = NULL;
+    m_openReading = false;
+    m_openWriting = false;
   }
   return true;
 }
@@ -249,7 +252,7 @@ WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
     }
     DETAILLOGV("Send close WebSocket [%d:%s] for: %s",p_code,p_reason.GetString(),m_uri.GetString());
     DWORD error = m_websocket_close(m_socket,p_code,(void*)p_reason.GetString(),length); // WinHttpWebSocketClose
-    if(error)
+    if(error && (error != ERROR_WINHTTP_OPERATION_CANCELLED))
     {
       // We could be in a tight spot (socket already closed)
       if(error == ERROR_INVALID_OPERATION)
@@ -263,18 +266,14 @@ WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
     }
     else if(!m_closingError)
     {
-      if(ReceiveCloseSocket() && m_closingError)
-      {
-        // The other side acknowledged the fact that they did close also
-        CloseSocket();
-      }
+      ReceiveCloseSocket();
     }
-    else
-    {
-      // It was an answer on an incoming 'close' message
-      // We did our answering, so close completely
-      CloseSocket();
-    }
+    // The other side acknowledged the fact that they did close also
+    // It was an answer on an incoming 'close' message
+    // We did our answering, so close completely
+    CloseSocket();
+
+    // Tell it to the application
     OnClose();
     return true;
   }
@@ -397,12 +396,10 @@ WebSocketClient::SocketListener()
                                      ,&type);
     if(error)
     {
-      if(error == ERROR_WINHTTP_OPERATION_CANCELLED)
+      if(error != ERROR_WINHTTP_OPERATION_CANCELLED)
       {
-        // Socket handle got closed. Object is invalid now. Bail out
-        return;
+        ERRORLOG(error, "ERROR while receiving from WebSocket: " + m_uri);
       }
-      ERRORLOG(error,"ERROR while receiving from WebSocket: " + m_uri);
       CloseSocket();
     }
     else

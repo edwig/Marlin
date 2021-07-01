@@ -439,6 +439,7 @@ ServerApp::LoadSites(IHttpApplication* p_app,CString p_physicalPath)
             return;
           }
         }
+        delete iisConfig;
       }
     }
   }

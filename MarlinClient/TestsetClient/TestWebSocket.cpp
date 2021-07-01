@@ -75,10 +75,14 @@ OnOpenWebsocket(WebSocket* /*p_socket*/,WSFrame* /*p_frame*/)
 }
 
 void
-OnMessageWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
+OnMessageWebsocket(WebSocket* p_socket,WSFrame* p_frame)
 {
-  CString message((char*)p_frame->m_data);
-
+  CString message;
+  
+  if(p_frame)
+  {
+    message = ((char*)p_frame->m_data);
+  }
   if(!message.IsEmpty())
   {
     if(message.GetLength() < 100)
@@ -89,9 +93,12 @@ OnMessageWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
     }
     else
     {
-      printf("ALL\n");
-      printf(message);
-      printf("END\n");
+//       printf("ALL\n");
+//       printf(message);
+//       printf("END\n");
+      // WebSocket without a message string
+      // --- "---------------------------------------------- - ------
+      printf("%-28s Length: %9d : OK\n",p_socket->GetIdentityKey().GetString(),message.GetLength());
     }
   }
   else
@@ -106,8 +113,11 @@ void
 OnErrorWebSocket(WebSocket* p_socket,WSFrame* p_frame)
 {
   CString message;
-  message.Format("ERROR from WebSocket at URI: %s\n",p_socket->GetURI().GetString());
-  message += (char*) p_frame->m_data;
+  message.Format("ERROR from WebSocket at URI: %s\n",p_socket->GetIdentityKey().GetString());
+  if(p_frame)
+  {
+    message += (char*)p_frame->m_data;
+  }
   message += "\n";
 
   printf(message);
@@ -116,10 +126,13 @@ OnErrorWebSocket(WebSocket* p_socket,WSFrame* p_frame)
 void
 OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 {
-  CString message((char*)p_frame->m_data);
-  if(!message.IsEmpty())
+  if (p_frame)
   {
-    printf("CLOSING message: %s\n",message.GetString());
+    CString message((char*)p_frame->m_data);
+    if (!message.IsEmpty())
+    {
+      printf("CLOSING message: %s\n", message.GetString());
+    }
   }
 
   // WebSocket has been closed
@@ -211,13 +224,21 @@ TestWebSocket(LogAnalysis* p_log)
     }
   }
 
+  // Waiting for server write to drain
+  int seconds = 2;
+  // --- "---------------------------------------------- - ------
+  printf("WebSocket waiting for the server %d seconds     : OK\n", seconds);
+  Sleep(seconds * CLOCKS_PER_SEC);
+
   if(!socket->SendCloseSocket(WS_CLOSE_NORMAL,"TestWebSocket did close the socket"))
   {
     ++errors;
   }
+  CString key = socket->GetIdentityKey();
+
   // WebSocket has been opened
   // --- "---------------------------------------------- - ------
-  printf("WebSocket tests for ws://host:port/..._123     : %s\n",errors ? "ERROR" : "OK");
+  printf("WebSocket %-28s tests   : %s\n",key.GetString(),errors ? "ERROR" : "OK");
 
   return errors;
 }

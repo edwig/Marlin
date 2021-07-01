@@ -52,6 +52,8 @@ public:
   void  Server_xprintf(const char* p_format, ...);
   void  Server_qprintf(const char* p_format, ...);
 
+  CString m_socket;
+
 protected:
   void  StartErrorReporting();
   // Reading our *.config file

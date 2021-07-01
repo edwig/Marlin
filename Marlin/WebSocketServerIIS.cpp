@@ -73,6 +73,13 @@ WebSocketServerIIS::Reset()
   m_server = nullptr;
   m_iis_socket = nullptr;
   m_listener = NULL;
+
+  // Remove writing stack
+  for (auto& frame : m_writing)
+  {
+    delete frame;
+  }
+  m_writing.clear();
 }
 
 bool
@@ -80,7 +87,7 @@ WebSocketServerIIS::OpenSocket()
 {
   if(m_server && m_iis_socket)
   {
-    DETAILLOGS("Opening WebSocket: ",m_uri);
+    DETAILLOGV("Opening WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
     SocketListener();
 
     // Change state to opened
@@ -99,12 +106,25 @@ WebSocketServerIIS::OpenSocket()
 bool
 WebSocketServerIIS::CloseSocket()
 {
-  if(m_server && m_iis_socket)
+  if(m_iis_socket)
   {
+    // Make local copies, so we are non-reentrant
+    // Canceling I/O can make read/write closing end up here!!
+    HTTPServer* server = m_server;
+    IWebSocketContext* context = m_iis_socket;
+    m_iis_socket = nullptr;
+
     // Try to gracefully close the WebSocket
     try
     {
-      m_iis_socket->CloseTcpConnection();
+      context->CancelOutstandingIO();
+      Yield();
+      Sleep(100);
+      Yield();
+      context->CloseTcpConnection();
+      Yield();
+      Sleep(100);
+      Yield();
     }
 #ifndef MARLIN_USE_ATL_ONLY
     catch(CException& er)
@@ -119,18 +139,15 @@ WebSocketServerIIS::CloseSocket()
     }
 
     // Cancel the outstanding request altogether
-    m_server->CancelRequestStream(m_request);
+    server->CancelRequestStream(m_request);
 
-    DETAILLOGS("Closed WebSocket: ",m_uri);
+    DETAILLOGV("Closed WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
 
-    // Unregister ourselves first
-    m_server->UnRegisterWebSocket(this);
-    // Object is now invalid (removed by server)
+    // Reduce memory, removing reading/writing stacks
+    Reset();
+
     return true;
   }
-  m_server = nullptr;
-  m_iis_socket = nullptr;
-
   return false;
 }
 
@@ -152,10 +169,10 @@ ServerWriteCompletion(HRESULT p_error,
 // Duties to perform after writing of a fragment is completed
 void
 WebSocketServerIIS::SocketWriter(HRESULT p_error
-                                 ,DWORD /*p_bytes*/
-                                 ,BOOL  /*p_utf8*/
-                                 ,BOOL  /*p_final*/
-                                 ,BOOL    p_close)
+                                ,DWORD   p_bytes
+                                ,BOOL  /*p_utf8*/
+                                ,BOOL  /*p_final*/
+                                ,BOOL    p_close)
 {
   // Pop first WSFrame from the writing queue
   {
@@ -167,27 +184,30 @@ WebSocketServerIIS::SocketWriter(HRESULT p_error
       m_writing.pop_front();
     }
   }
+  TRACE("WS BLOCK WRITTEN: %d\n",p_bytes);
 
   // Handle any error (if any)
   if(p_error)
   {
     DWORD error = (p_error & 0x0F);
     ERRORLOG(error,"Websocket failed to write fragment");
+    OnError();
     CloseSocket();
     return;
   }
   if(p_close)
   {
     ReceiveCloseSocket();
-    if(m_openWriting)
-    {
-      CString reason;
-      reason.Format("WebSocket [%s] closed.",m_uri.GetString());
-      SendCloseSocket(WS_CLOSE_NORMAL,reason);
-    }
     OnClose();
     CloseSocket();
+    return;
   }
+
+  // Ready with last write command
+  m_dispatched = false;
+
+  // See if we must dispatch an extra write command
+  SocketDispatch();
 }
 
 // Low level WriteFragment
@@ -204,17 +224,45 @@ WebSocketServerIIS::WriteFragment(BYTE*  p_buffer
   }
 
   // Store the buffer in a WSFrame for asynchronous storage
-  WSFrame* frame = new WSFrame();
-  frame->m_utf8 = (p_opcode == Opcode::SO_UTF8);
+  WSFrame* frame  = new WSFrame();
+  frame->m_utf8   = (p_opcode == Opcode::SO_UTF8);
   frame->m_length = p_length;
-  frame->m_data = (BYTE*)malloc(p_length + WS_OVERHEAD);
+  frame->m_data   = (BYTE*)malloc(p_length + WS_OVERHEAD);
+  frame->m_final  = p_last;
   memcpy_s(frame->m_data,p_length + WS_OVERHEAD,p_buffer,p_length);
 
   // Put it in the writing queue
   // While locking the queue
+  bool dispatch_running = false;
   {
     AutoCritSec lock(&m_lock);
     m_writing.push_back(frame);
+    dispatch_running = m_dispatched;
+  }
+
+  // Start dispatching write commands after last block is in the buffer
+  if(!dispatch_running && p_last)
+  {
+    SocketDispatch();
+  }
+  return true;
+}
+
+void
+WebSocketServerIIS::SocketDispatch()
+{
+  WSFrame* frame = nullptr;
+
+  // Get from the writing queue
+  // While locking the queue
+  {
+    AutoCritSec lock(&m_lock);
+    if(m_writing.empty())
+    {
+      return;
+    }
+    m_dispatched = true;
+    frame = m_writing.front();
   }
 
   // Issue a asynchronous write command for this buffer
@@ -223,7 +271,7 @@ WebSocketServerIIS::WriteFragment(BYTE*  p_buffer
                                           ,&frame->m_length
                                           ,TRUE
                                           ,(BOOL)frame->m_utf8
-                                          ,(BOOL)p_last
+                                          ,(BOOL)frame->m_final
                                           ,ServerWriteCompletion
                                           ,this
                                           ,&expected);
@@ -231,16 +279,12 @@ WebSocketServerIIS::WriteFragment(BYTE*  p_buffer
   {
     DWORD error = hr & 0x0F;
     ERRORLOG(error,"Websocket failed to register write command for a fragment");
-    CloseSocket();
-    return false;
   }
   if(!expected)
   {
     // Finished synchronized after all, perform after-writing actions
-    SocketWriter(hr,frame->m_length,frame->m_utf8,p_last,false);
+    SocketWriter(hr,frame->m_length,frame->m_utf8,frame->m_final,false);
   }
-
-  return true;
 }
 
 void WINAPI
@@ -251,6 +295,7 @@ ServerReadCompletionIIS(HRESULT p_error,
                         BOOL    p_final,
                         BOOL    p_close)
 {
+  // Try to get our context back
   WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_completionContext);
   if(socket)
   {
@@ -274,6 +319,15 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
     return;
   }
 
+  // Outstanding read command on an already closed socket?
+  if(m_iis_socket == nullptr)
+  {
+    // Unregister ourselves first
+    m_server->UnRegisterWebSocket(this);
+    // Object is now invalid (removed by server)
+    return;
+  }
+
   // Consolidate the reading buffer
   m_reading->m_length += p_bytes;
   m_reading->m_data[m_reading->m_length] = 0;
@@ -288,10 +342,13 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
   if(p_close)
   {
     ReceiveCloseSocket();
+
+    // Closing fragment is always ONE websocket frame, and thus always fits 
+    // in the reading data buffer of two frames.
+    strcpy_s((char*)m_reading->m_data,m_fragmentsize,m_closing.GetString());
+    m_reading->m_length = m_closing.GetLength();
     m_reading->m_utf8   = true;
     m_reading->m_final  = true;
-    m_reading->m_data   = (BYTE*)_strdup(m_closing.GetString());
-    m_reading->m_length = m_closing.GetLength();
 
     // Store frame without UTF-8 conversion
     {
@@ -299,44 +356,26 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
       m_frames.push_back(m_reading);
       m_reading = nullptr;
     }
-  }
-  else if(p_final)
-  {
-    // Store or append the fragment
-    if(p_utf8)
-    {
-      StoreOrAppendWSFrame(m_reading);
-    }
-    else
-    {
-      // Store the current fragment we just did read
-      StoreWSFrame(m_reading);
-    }
-
-    // Decide what to do and which handler to call
-    if(!p_utf8)
-    {
-      OnBinary();
-    }
-    else if(p_utf8 && p_final)
-    {
-      OnMessage();
-    }
-  }
-
-  // What to do at the end
-  if(p_close)
-  {
-    if(m_openWriting)
-    {
-      CString reason;
-      reason.Format("WebSocket [%s] closed.",m_uri.GetString());
-      SendCloseSocket(WS_CLOSE_NORMAL,reason);
-    }
     OnClose();
     CloseSocket();
   }
-  else
+  else if(p_final)
+  {
+    // Store the current fragment we just did read
+    StoreWSFrame(m_reading);
+
+    // Decide what to do and which handler to call
+    if(p_utf8)
+    {
+      OnMessage();
+    }
+    else
+    {
+      OnBinary();
+    }
+  }
+
+  if(m_server && m_iis_socket)
   {
     // Issue a new read command for a new buffer
     SocketListener();
@@ -374,14 +413,12 @@ WebSocketServerIIS::SocketListener()
   {
     DWORD error = hr & 0x0F;
     ERRORLOG(error,"Websocket failed to register read command for a fragment");
-    CloseSocket();
   }
 
   if(!expected)
   {
     // Was issued in-sync after all, so re-work the received data
-    m_reading->m_length += m_reading->m_read;
-    SocketReader(hr,m_reading->m_length,utf8,last,isclosing);
+    SocketReader(hr,m_reading->m_read,utf8,last,isclosing);
   }
 }
 
@@ -399,22 +436,22 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
   // Still other parameters and reason to do
   BOOL expected = FALSE;
   HRESULT hr = m_iis_socket->SendConnectionClose(TRUE
-                                                 ,p_code
-                                                 ,pointer
-                                                 ,ServerWriteCompletion
-                                                 ,this
-                                                 ,&expected);
+                                                ,p_code
+                                                ,pointer
+                                                ,ServerWriteCompletion
+                                                ,this
+                                                ,&expected);
   delete[] buffer;
   if(FAILED(hr))
   {
-    ERRORLOG(ERROR_INVALID_OPERATION,"Cannot send a 'close' message on the WebSocket: " + m_uri);
+    ERRORLOG(ERROR_INVALID_OPERATION,"Cannot send a 'close' message on the WebSocket [" + m_key + "] on [" + m_uri + "]");
     return false;
   }
   if(!expected)
   {
     SocketWriter(hr,length,true,true,false);
   }
-  DETAILLOGV("Sent a 'close' message [%d:%s] on WebSocket: %s",p_code,p_reason.GetString(),m_uri.GetString());
+  DETAILLOGV("Sent a 'close' message [%d:%s] on WebSocket [%s] on [%s]",p_code,p_reason.GetString(),m_key.GetString(),m_uri.GetString());
   return true;
 }
 
@@ -439,7 +476,13 @@ WebSocketServerIIS::ReceiveCloseSocket()
     {
       m_closing = encoded;
     }
-    DETAILLOGV("Received closing message [%d:%s] on WebSocket: %s",m_closingError,m_closing.GetString(),m_uri.GetString());
+    CString explanation = GetClosingErrorAsString();
+    DETAILLOGV("Received closing message [%d:%s] -> [%s] on WebSocket [%s] on [%s]"
+              ,m_closingError
+              ,explanation.GetString()
+              ,m_closing.GetString()
+              ,m_key.GetString()
+              ,m_uri.GetString());
     return true;
   }
   return false;
@@ -469,7 +512,7 @@ WebSocketServerIIS::RegisterSocket(HTTPMessage*  p_message)
     }
     else
     {
-      DETAILLOGS("HTTP connection upgraded to WebSocket for: ",m_uri);
+      DETAILLOGV("HTTP connection upgraded to WebSocket for [%s] on [%s]",m_key.GetString(),m_uri.GetString());
       return true;
     }
   }
@@ -509,5 +552,9 @@ WebSocketServerIIS::ServerHandshake(HTTPMessage* p_message)
   {
     return false;
   }
+
+  // Remember our client key as the registration
+  m_key = serverKey;
+
   return true;
 }

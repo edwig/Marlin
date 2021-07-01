@@ -53,6 +53,8 @@ SvcStartEventBuffer()
 {
   // Initialise the logging lock
   InitializeCriticalSection(&g_eventBufferLock);
+  // Deallocate our event buffer at the end
+  atexit(SvcFreeEventBuffer);
 }
 
 void
@@ -64,17 +66,12 @@ SvcFreeEventBuffer()
     free(g_eventBuffer);
     g_eventBuffer = nullptr;
   }
-
   DeleteCriticalSection(&g_eventBufferLock);
 }
 
 void
 SvcAllocEventBuffer()
 {
-  SvcStartEventBuffer();
-  // Lock against double allocation
-  AutoCritSec lock(&g_eventBufferLock);
-
   // Already there: nothing to be done
   if(g_eventBuffer)
   {
@@ -84,6 +81,10 @@ SvcAllocEventBuffer()
   if(g_eventBuffer == nullptr)
   {
     SvcReportSuccessEvent("ERROR: Cannot make a buffer for errors and events");
+  }
+  else
+  {
+    SvcStartEventBuffer();
   }
 }
 

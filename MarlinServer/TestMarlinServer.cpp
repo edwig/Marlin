@@ -63,7 +63,6 @@ void LoadConstants(char* /*p_app_name*/)
 // This macro is defined in the project files. **NOT** in the *.h files
 #ifndef MARLIN_IIS
 TestMarlinServer theServer;
-ErrorReport*     g_report = nullptr;
 #endif
 
 TestMarlinServer::TestMarlinServer()
