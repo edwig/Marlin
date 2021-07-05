@@ -557,7 +557,7 @@ XMLMessage::PrintElements(XMLElement* p_element
   {
     message += newline;
     // call recursively
-    for(auto element : p_element->GetChildren())
+    for(auto& element : p_element->GetChildren())
     {
       message += PrintElements(element,p_utf8,p_level + 1);
     }

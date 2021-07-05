@@ -1256,17 +1256,24 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
 
 // Used for canceling a WebSocket or an event stream
 void
-HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response)
+HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_doReset /*=false*/)
 {
   IHttpContext*  context = (IHttpContext*)p_response;
   IHttpResponse* response = context->GetResponse();
   
   try
   {
+    // Set disconnection
+    if(p_doReset)
+    {
+      context->PostCompletion(0);
+    }
+    else
+    {
+      response->SetNeedDisconnect();
+    }
     // Now ready with the IIS context. Original request is finished
     context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
-    // Set disconnection
-    response->SetNeedDisconnect();
 
     DETAILLOG1("Event/Socket connection closed");
   }

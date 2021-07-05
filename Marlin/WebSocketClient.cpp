@@ -268,13 +268,14 @@ WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
     {
       ReceiveCloseSocket();
     }
+    // Tell it to the application
+    OnClose();
+
     // The other side acknowledged the fact that they did close also
     // It was an answer on an incoming 'close' message
     // We did our answering, so close completely
     CloseSocket();
 
-    // Tell it to the application
-    OnClose();
     return true;
   }
   return false;
@@ -429,7 +430,10 @@ WebSocketClient::SocketListener()
           {
             SendCloseSocket(WS_CLOSE_NORMAL,"Socket closed!");
           }
-          OnClose();
+          else
+          {
+            OnClose();
+          }
           CloseSocket();
         }
         else if(utf8)

@@ -31,6 +31,8 @@
 #include "WebSocketClient.h"
 #include "Analysis.h"
 
+int g_closed = 0;
+
 // Stand-alone test without client or server
 // See if the handshake works as described in the IETF RFC 6455
 int
@@ -135,6 +137,9 @@ OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
     }
   }
 
+  // Mark as closed
+  g_closed = 1;
+
   // WebSocket has been closed
   // --- "---------------------------------------------- - ------
   printf("WebSocket gotten the 'OnClose' event           : OK\n");
@@ -222,6 +227,7 @@ TestWebSocket(LogAnalysis* p_log)
         }
       }
     }
+    socket->WriteString("RequestClose");
   }
 
   // Waiting for server write to drain
@@ -230,11 +236,15 @@ TestWebSocket(LogAnalysis* p_log)
   printf("WebSocket waiting for the server %d seconds     : OK\n", seconds);
   Sleep(seconds * CLOCKS_PER_SEC);
 
-  if(!socket->SendCloseSocket(WS_CLOSE_NORMAL,"TestWebSocket did close the socket"))
-  {
-    ++errors;
-  }
   CString key = socket->GetIdentityKey();
+
+  if(!g_closed)
+  {
+    if (!socket->SendCloseSocket(WS_CLOSE_NORMAL, "TestWebSocket did close the socket"))
+    {
+      ++errors;
+    }
+  }
 
   // WebSocket has been opened
   // --- "---------------------------------------------- - ------

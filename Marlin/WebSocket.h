@@ -260,8 +260,6 @@ protected:
   WSFrame* GetWSFrame();
   // Convert the UTF-8 in a frame back to MBCS
   void    ConvertWSFrameToMBCS(WSFrame* p_frame);
-  // Append UTF-8 text to last frame on the stack, or just store it
-  void    StoreOrAppendWSFrame(WSFrame*& p_frame);
 
   // GENERAL SOCKET DATA
   CString m_uri;                      // ws[s]://resource URI for the socket

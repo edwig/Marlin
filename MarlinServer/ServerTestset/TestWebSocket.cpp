@@ -78,9 +78,16 @@ void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
   qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetIdentityKey().GetString(),message.GetString());
   --totalChecks;
 
-  CString msg = GenerateLargePushMessage();
-  p_socket->WriteString(msg);
-  // p_socket->WriteString("We are the server!");
+  if(message.CompareNoCase("RequestClose") == 0)
+  {
+    p_socket->SendCloseSocket(WS_CLOSE_NORMAL, "Marlin TestServer closing socket");
+  }
+  else
+  {
+    // CString msg = GenerateLargePushMessage();
+    // p_socket->WriteString(msg);
+    p_socket->WriteString("We are the server!");
+  }
 }
 
 void OnClose(WebSocket* p_socket,WSFrame* p_frame)

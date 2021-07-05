@@ -155,24 +155,17 @@ WebSocketServer::SocketReader(HRESULT p_error
   else if(p_final)
   {
     // Store or append the fragment
+    // Store the current fragment we just did read
+    StoreWSFrame(m_reading);
+
+    // Decide what to do and which handler to call
     if(p_utf8)
     {
-      StoreOrAppendWSFrame(m_reading);
+      OnMessage();
     }
     else
     {
-      // Store the current fragment we just did read
-      StoreWSFrame(m_reading);
-    }
-
-    // Decide what to do and which handler to call
-    if(!p_utf8)
-    {
       OnBinary();
-    }
-    else if(p_utf8 && p_final)
-    {
-      OnMessage();
     }
   }
 

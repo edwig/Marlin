@@ -331,8 +331,8 @@ WebSocket::ErrorLog(const char* p_function,DWORD p_code,CString p_text)
   // nothing logged
   if(!result)
   {
-    // What can we do? As a last result: print to stdout
-    printf(MARLIN_SERVER_VERSION " Error [%d] %s\n",p_code,(LPCTSTR)p_text);
+    // What can we do? As a last result: print debug pane
+    TRACE("%s Error [%d] %s\n",MARLIN_SERVER_VERSION,p_code,(LPCTSTR)p_text);
   }
 #endif
 }
@@ -365,6 +365,10 @@ WebSocket::OnMessage()
     if(m_onmessage)
     {
       DETAILLOGV("WebSocket OnMessage called for [%s] on [%s]",m_key.GetString(),m_uri.GetString());
+      if (MUSTLOG(HLL_TRACEDUMP))
+      {
+        m_logfile->AnalysisHex(__FUNCTION__,m_key,(void*)frame->m_data, frame->m_length);
+      }
       (*m_onmessage)(this,frame);
     }
     delete frame;
@@ -381,6 +385,10 @@ WebSocket::OnBinary()
     if(m_onbinary)
     {
       DETAILLOGV("WebSocket OnBinary called for [%s] on [%s] ",m_key.GetString(),m_uri.GetString());
+      if (MUSTLOG(HLL_TRACEDUMP))
+      {
+        m_logfile->AnalysisHex(__FUNCTION__,m_key,(void*)frame->m_data, frame->m_length);
+      }
       (*m_onbinary)(this,frame);
     }
     delete frame;
@@ -409,15 +417,19 @@ WebSocket::OnClose()
     if(m_onclose && (m_openReading || m_openWriting))
     {
       DETAILLOGV("WebSocket OnClose called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
+      if(MUSTLOG(HLL_TRACEDUMP))
+      {
+        m_logfile->AnalysisHex(__FUNCTION__,m_key,(void*)frame->m_data,frame->m_length);
+      }
       (*m_onclose)(this,frame);
     }
     delete frame;
   }
   else
   {
-    WSFrame empty;
     if(m_onclose && (m_openReading || m_openWriting))
     {
+      WSFrame empty;
       DETAILLOGV("WebSocket OnClose called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
       (*m_onclose)(this,&empty);
     }
@@ -442,7 +454,6 @@ WebSocket::WriteString(CString p_string)
   uchar* buffer = nullptr;
   int    length = 0;
   bool   result = false;
-  DWORD  fragmentsize = 1024 - WS_MAX_HEADER;
 
   DETAILLOGV("Outgoing message on WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
   if(MUSTLOG(HLL_LOGBODY))
@@ -469,9 +480,9 @@ WebSocket::WriteString(CString p_string)
         // Calculate the length of the next fragment
         bool last = true;
         DWORD toWrite = toSend - total;
-        if(toWrite >= fragmentsize)
+        if(toWrite >= m_fragmentsize)
         {
-          toWrite = fragmentsize;
+          toWrite = m_fragmentsize;
           last    = false;
         }
 
@@ -570,44 +581,6 @@ WebSocket::StoreWSFrame(WSFrame*& p_frame)
 
   // Reset the origin of the stored message
   p_frame = nullptr;
-}
-
-// Append UTF-8 text to last frame on the stack, or just store it
-void
-WebSocket::StoreOrAppendWSFrame(WSFrame*& p_frame)
-{
-  AutoCritSec lock(&m_lock);
-
-  // Try to get the Top-Of-Stack (TOS)
-  WSFrame* last = nullptr;
-  if(!m_frames.empty())
-  {
-    last = m_frames.back();
-  }
-
-  // See if we must append the text frame to the last
-  if(last && last->m_utf8 && !last->m_final)
-  {
-    // Append the frame
-    DWORD length = last->m_length + p_frame->m_length;
-    last->m_data = (BYTE*) realloc(last->m_data,length + 1);
-    memcpy_s(&last->m_data[last->m_length],p_frame->m_length + 1,p_frame->m_data,p_frame->m_length + 1);
-    last->m_length = length;
-
-    // Now convert to total back to MBCS
-    if(p_frame->m_final)
-    {
-      ConvertWSFrameToMBCS(last);
-    }
-    // Done with the frame
-    delete p_frame;
-    p_frame = nullptr;
-  }
-  else
-  {
-    // Store the frame
-    StoreWSFrame(p_frame);
-  }
 }
 
 // Convert the UTF-8 in a frame back to MBCS

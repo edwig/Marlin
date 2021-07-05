@@ -101,56 +101,6 @@ WebSocketServerIIS::OpenSocket()
   return false;
 }
 
-// Close the socket
-// Close the underlying TCP/IP connection
-bool
-WebSocketServerIIS::CloseSocket()
-{
-  if(m_iis_socket)
-  {
-    // Make local copies, so we are non-reentrant
-    // Canceling I/O can make read/write closing end up here!!
-    HTTPServer* server = m_server;
-    IWebSocketContext* context = m_iis_socket;
-    m_iis_socket = nullptr;
-
-    // Try to gracefully close the WebSocket
-    try
-    {
-      context->CancelOutstandingIO();
-      Yield();
-      Sleep(100);
-      Yield();
-      context->CloseTcpConnection();
-      Yield();
-      Sleep(100);
-      Yield();
-    }
-#ifndef MARLIN_USE_ATL_ONLY
-    catch(CException& er)
-    {
-      ERRORLOG(12102,MessageFromException(er).GetString());
-    }
-#endif
-    catch(StdException& ex)
-    {
-      ReThrowSafeException(ex);
-      ERRORLOG(12102,ex.GetErrorMessage().GetString());
-    }
-
-    // Cancel the outstanding request altogether
-    server->CancelRequestStream(m_request);
-
-    DETAILLOGV("Closed WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
-
-    // Reduce memory, removing reading/writing stacks
-    Reset();
-
-    return true;
-  }
-  return false;
-}
-
 void WINAPI
 ServerWriteCompletion(HRESULT p_error,
                       VOID*   p_completionContext,
@@ -358,6 +308,7 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
     }
     OnClose();
     CloseSocket();
+    return;
   }
   else if(p_final)
   {
@@ -433,6 +384,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
   {
     pointer = (LPCWSTR)buffer;
   }
+
   // Still other parameters and reason to do
   BOOL expected = FALSE;
   HRESULT hr = m_iis_socket->SendConnectionClose(TRUE
@@ -558,3 +510,76 @@ WebSocketServerIIS::ServerHandshake(HTTPMessage* p_message)
 
   return true;
 }
+
+VOID WINAPI OverlappedCompletion(DWORD dwErrorCode,DWORD dwNumberOfBytes,LPOVERLAPPED lpOverlapped)
+{
+  WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(lpOverlapped);
+  if(socket)
+  {
+    socket->PostCompletion(dwErrorCode, dwNumberOfBytes);
+  }
+}
+
+void
+WebSocketServerIIS::PostCompletion(DWORD dwErrorCode, DWORD /*dwNumberOfBytes*/)
+{
+  DETAILLOGV("Post completion of websocket [%s] Errorcode [%d]",m_key.GetString(),dwErrorCode);
+}
+
+
+// Close the socket
+// Close the underlying TCP/IP connection
+bool
+WebSocketServerIIS::CloseSocket()
+{
+  if(m_iis_socket)
+  {
+    // Make local copies, so we are non-reentrant
+    // Canceling I/O can make read/write closing end up here!!
+    HTTPServer* server = m_server;
+    IWebSocketContext* context = m_iis_socket;
+    m_iis_socket = nullptr;
+
+    // Try to gracefully close the WebSocket
+    try
+    {
+      context->CancelOutstandingIO();
+
+      context->CloseTcpConnection();
+      Yield();
+      Sleep(100);
+      Yield();
+    }
+#ifndef MARLIN_USE_ATL_ONLY
+    catch(CException& er)
+    {
+      ERRORLOG(12102,MessageFromException(er).GetString());
+    }
+#endif
+    catch(StdException& ex)
+    {
+      ReThrowSafeException(ex);
+      ERRORLOG(12102,ex.GetErrorMessage().GetString());
+    }
+
+    // Cancel the outstanding request altogether
+    server->CancelRequestStream(m_request,false);
+
+    DETAILLOGV("Closed WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
+
+    // Reduce memory, removing reading/writing stacks
+    Reset();
+
+    // Now find the IWebSocketContext
+//     IHttpContext* contextIIS = reinterpret_cast<IHttpContext*>(m_request);
+//     IHttpContext3* context3  = nullptr;
+//     HRESULT hr = HttpGetExtendedInterface(g_iisServer,contextIIS,&context3);
+//     if (SUCCEEDED(hr))
+//     {
+//       context3->PostCompletion(0,OverlappedCompletion,this);
+//     }
+    return true;
+  }
+  return false;
+}
+

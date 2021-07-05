@@ -224,7 +224,7 @@ HTTPServerMarlin::Cleanup()
   }
 
   // Try to stop and remove all groups
-  for(auto group : m_urlGroups)
+  for(auto& group : m_urlGroups)
   {
     // Gracefully stop
     group->StopGroup();
@@ -466,7 +466,7 @@ HTTPServerMarlin::FindUrlGroup(CString p_authName
 {
   // See if we already have a group of these combination
   // And if so: reuse that URL group
-  for(auto group : m_urlGroups)
+  for(auto& group : m_urlGroups)
   {
     if(group->GetAuthenticationScheme()    == p_authScheme &&
        group->GetAuthenticationNtlmCache() == p_cache      &&
@@ -700,7 +700,7 @@ HTTPServerMarlin::StopServer()
 
 // Used for canceling a WebSocket for an event stream
 void 
-HTTPServerMarlin::CancelRequestStream(HTTP_OPAQUE_ID p_response)
+HTTPServerMarlin::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/)
 {
   HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_response);
 

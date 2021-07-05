@@ -72,6 +72,7 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
   m_contentType   = p_msg->GetContentType();
   m_acceptEncoding= p_msg->GetAcceptEncoding();
   m_sendBOM       = p_msg->GetSendBOM();
+  m_headers       =*p_msg->GetHeaderMap();
   m_incoming      = p_msg->GetCommand() != HTTPCommand::http_response;
 
   // Overrides from class defaults
@@ -91,13 +92,6 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
 
   // Duplicate all cookies
   m_cookies = p_msg->GetCookies();
-
-  // Copy all headers from the HTTPmessage
-  HeaderMap* map = p_msg->GetHeaderMap();
-  for(HeaderMap::iterator it = map->begin();it != map->end();++it)
-  {
-    m_headers[it->first] = it->second;
-  }
 
   // Get sender (if any) from the HTTP message
   memcpy(&m_sender,p_msg->GetSender(),sizeof(SOCKADDR_IN6));
@@ -170,19 +164,13 @@ SOAPMessage::SOAPMessage(JSONMessage* p_msg)
   m_sendBOM       = p_msg->GetSendBOM();
   m_incoming      = p_msg->GetIncoming();
   m_acceptEncoding= p_msg->GetAcceptEncoding();
+  m_headers       =*p_msg->GetHeaderMap();
 
   // Duplicate all cookies
   m_cookies = p_msg->GetCookies();
 
   // Duplicate routing
   m_routing = p_msg->GetRouting();
-
-  // Copy all headers from the HTTPmessage
-  HeaderMap* map = p_msg->GetHeaderMap();
-  for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
-  {
-    m_headers[it->first] = it->second;
-  }
 
   // Get sender (if any) from the HTTP message
   memcpy(&m_sender,p_msg->GetSender(),sizeof(SOCKADDR_IN6));
@@ -316,6 +304,7 @@ SOAPMessage::SOAPMessage(SOAPMessage* p_orig)
   m_desktop       = p_orig->m_desktop;
   m_order         = p_orig->m_order;
   m_incoming      = p_orig->m_incoming;
+  m_headers       = p_orig->m_headers;
   // WS-Reliability
   m_addressing    = p_orig->m_addressing;
   m_reliable      = p_orig->m_reliable;

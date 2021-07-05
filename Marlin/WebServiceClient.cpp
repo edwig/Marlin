@@ -274,7 +274,7 @@ WebServiceClient::Close()
   if(m_messages.size())
   {
     DETAILLOG1("Freeing the WS message store");
-    for(auto msg : m_messages)
+    for(auto& msg : m_messages)
     {
       delete msg.m_message;
     }
@@ -686,7 +686,7 @@ WebServiceClient::DoRetransmit()
   {
     // Transmit at most 1. So don't retransmit
     // Transmit exactly 1. So don't retransmit
-    for (auto msg : m_messages)
+    for(auto& msg : m_messages)
     {
       delete msg.m_message;
     }

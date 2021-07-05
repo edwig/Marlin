@@ -278,10 +278,7 @@ TestMarlinServer::ReadConfig()
     if(m_instance > 100) m_instance = 100;
   }
   // Registered name for the WMI logging
-  if(g_svcname[0] == 0)
-  {
-    sprintf_s(g_svcname,SERVICE_NAME_LENGTH,"%s_%d_v%s",PRODUCT_NAME,m_instance,PRODUCT_VERSION);
-  }
+  sprintf_s(g_svcname,SERVICE_NAME_LENGTH,"%s_%d_v%s",PRODUCT_NAME,m_instance,PRODUCT_VERSION);
 
   // Port numbers cannot be under the IANA border value of 1024
   // unless... they are the default 80/443 ports
@@ -328,7 +325,7 @@ TestMarlinServer::StartAlerts()
       // Server registers the first module
       // Should return the 'module = 0' value
       m_alertModule = ConfigureApplicationAlerts(path);
-      if(m_alertModule > 0)
+      if(m_alertModule >= 0)
       {
         SvcReportInfoEvent(true,"Configured the 'Alerts' directory [%d] for the product [%s] in [%s]",m_alertModule,PRODUCT_NAME,path.GetString());
         return;

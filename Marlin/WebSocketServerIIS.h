@@ -64,7 +64,7 @@ public:
   void    SocketListener();
   // Dispatch an extra write action
   void    SocketDispatch();
-
+  void    PostCompletion(DWORD dwErrorCode,DWORD dwNumberOfBytes);
 protected:
   // Decode the incoming close socket message
   bool    ReceiveCloseSocket();

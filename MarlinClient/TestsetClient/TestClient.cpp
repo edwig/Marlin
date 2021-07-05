@@ -148,25 +148,27 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestCookiesOverwrite();
       errors += TestDecryptCookie();
 //    errors += TestMSGraph(client);
-//       errors += TestBaseSite(client);
-//       errors += TestSecureSite(client);
-//       errors += TestClientCertificate(client);
+      errors += TestBaseSite(client);
+      errors += TestSecureSite(client);
+      errors += TestClientCertificate(client);
 #ifdef TEST_WEBSOCKETS
-//      errors += TestWebSocketAccept();
+      errors += TestWebSocketAccept();
       errors += TestWebSocket(g_log);
+      errors += TestCloseWebSocket();
 #endif
-//       errors += TestEvents(client);
-//       errors += TestCookies(*client);
-//       errors += TestFormData(client);
-//       errors += TestJsonData(client);
-//       errors += TestContract(client,true, false);  // JSON No authentication
-//       errors += TestContract(client,false,false);  // WS   No authentication
-//       errors += TestContract(client,false,true);   // WS   WS-Secure token-profile
-//       errors += TestPatching(client);
-//       errors += TestCompression(client);
-//       errors += TestWebservices(*client);
+      errors += TestEvents(client);
+      errors += TestCookies(*client);
+      errors += TestFormData(client);
+      errors += TestJsonData(client);
+      errors += TestContract(client,true, false);  // JSON No authentication
+      errors += TestContract(client,false,false);  // WS   No authentication
+      errors += TestContract(client,false,true);   // WS   WS-Secure token-profile
+      errors += TestPatching(client);
+      errors += TestCompression(client);
+      errors += TestWebservices(*client);
     }
-  
+
+
     printf("\n");
     printf("SUMMARY OF ALL CLIENT TESTS\n");
     printf("===========================\n");
@@ -181,9 +183,6 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
 
     printf("\nRead everything? ");
     WaitForKey();
-
-    // Stopping the WebSocket
-    TestCloseWebSocket();
 
     // And stop the client
     StopClient(client);

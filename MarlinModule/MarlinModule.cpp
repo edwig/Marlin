@@ -47,10 +47,8 @@
 #include "StdException.h"
 #include "RunRedirect.h"
 #include "ServiceReporting.h"
-#include <io.h>
-#ifdef _DEBUG
 #include "IISDebug.h"
-#endif
+#include <io.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -66,6 +64,7 @@ static char THIS_FILE[] = __FILE__;
 static AppPool       g_IISApplicationPool;   // All applications in the application pool
 static WebConfigIIS* g_config  { nullptr };  // The ApplicationHost.config information only!
 static wchar_t       g_moduleName[SERVERNAME_BUFFERSIZE + 1] = L"";
+static bool          g_debugMode = false;
 
 // Logging macro for this file only
 #define DETAILLOG(text)    SvcReportInfoEvent(false,text);
@@ -94,25 +93,31 @@ RegisterModule(DWORD                        p_version
               ,IHttpModuleRegistrationInfo* p_moduleInfo
               ,IHttpServer*                 p_server)
 {
-  USES_CONVERSION;
   TRACE("REGISTER MODULE\n");
 
   // Global name for the WMI Service event registration
-  PRODUCT_NAME = "IIS-MarlinModule";
+  PRODUCT_NAME = "Marlin_for_IIS";
+  strcpy_s(g_svcname,SERVICE_NAME_LENGTH,PRODUCT_NAME);
 
   // Declaration of the start log function
-  void LogStart(DWORD p_version);
+  void ApplicationConfigStart(DWORD p_version);
 
   // What we want to have from IIS
-  DWORD globalEvents = GL_APPLICATION_START |     // Starting application pool
-                       GL_APPLICATION_STOP;       // Stopping application pool
-  DWORD moduleEvents = RQ_BEGIN_REQUEST |         // First point to intercept the IIS integrated pipeline
-                       RQ_RESOLVE_REQUEST_CACHE |
+  DWORD globalEvents = GL_APPLICATION_START |       // Starting application pool
+                       GL_APPLICATION_STOP;         // Stopping application pool
+  DWORD moduleEvents = RQ_RESOLVE_REQUEST_CACHE |   // Request is found in the cache or from internet
                        RQ_EXECUTE_REQUEST_HANDLER;  // Request is authenticated, ready for processing
+  // Add RQ_BEGIN_REQUEST only for debugging purposes!!
+  if(g_debugMode)
+  {
+    // First point to intercept the IIS integrated pipeline
+    moduleEvents |= RQ_BEGIN_REQUEST;
+  }
 
-  // Start/Restart the logfile.
-  // First moment IIS is calling us. So start logging first!
-  LogStart(p_version);
+  // First moment IIS is calling us.
+  // Read the ApplicationConfig file of IIS
+  // Start/Restart the logging in the WMI
+  ApplicationConfigStart(p_version);
 
   // Preserving the server in a global pointer
   if(g_iisServer == nullptr)
@@ -167,32 +172,45 @@ RegisterModule(DWORD                        p_version
 
 //////////////////////////////////////////////////////////////////////////
 //
-// Starting/Stopping logging for the module application
+// Starting/Stopping the ApplicationHost.Config of IIS
+// Tell it to the WMI logging
 //
 //////////////////////////////////////////////////////////////////////////
 
 void
-LogStart(DWORD p_version)
+ApplicationConfigStart(DWORD p_version)
 {
+  bool read = false;
+
+  // See if we have a debug.txt in the "%windir%\system32\inetsrv\" directory
+  CString debugPath;
+  debugPath.GetEnvironmentVariable("windir");
+  debugPath += "\\system32\\inetsrv\\debug.txt";
+  if(_access(debugPath.GetString(),0) == 0)
+  {
+    g_debugMode = true;
+  }
+
   // Depending on the application pool settings, we are sometimes
   // called more than once, so see if the log is not already started
   if(g_config == nullptr)
   {
     g_config = new WebConfigIIS();
     // Only reads system wide "ApplicationHost.Config"
-    g_config->ReadConfig();
+    read = g_config->ReadConfig();
   }
 
-  // Tell that we started the logfile
+  // Tell that we started the module.
   SvcReportInfoEvent(true
-                    ,"Marlin native module called by IIS version %d.%d"
+                    ,"Marlin native module called by IIS version %d.%d. ApplicationHost.Config read: %s"
                     ,p_version / 0x10000
-                    ,p_version % 0x10000);
+                    ,p_version % 0x10000
+                    ,read ? "OK" : "ERROR");
 }
 
-// Stopping the logging
+// Stopping the ApplicationHost.Config
 void
-LogStop()
+ApplicationConfigStop()
 {
   // Removing the application config registration
   if(g_config)
@@ -200,7 +218,7 @@ LogStop()
     delete g_config;
     g_config = nullptr;
   }
-  SvcReportInfoEvent(false,"Marlin native module stopped.");
+  SvcReportInfoEvent(false,"ApplicationHost.Config unloaded. Marlin native module stopped.");
 }
 
 // End of Extern "C" calls
@@ -643,10 +661,10 @@ CString
 MarlinGlobalFactory::ConstructDLLLocation(CString p_rootpath,CString p_dllPath)
 {
 #ifdef _DEBUG
+  // ONLY FOR DEVELOPMENT TEAMS RUNNING OUTSIDE THE WEBROOT
   if(p_dllPath.GetAt(0) == '@')
   {
     return p_dllPath.Mid(1);
-  
   }
 #endif
   // Default implementation
@@ -718,16 +736,16 @@ MarlinGlobalFactory::Terminate()
 
 MarlinModuleFactory::MarlinModuleFactory()
 {
-#ifdef _DEBUG
-  DETAILLOG("Starting new module factory");
-#endif
+// #ifdef _DEBUG
+//   DETAILLOG("Starting new module factory");
+// #endif
 }
 
 MarlinModuleFactory::~MarlinModuleFactory()
 {
-#ifdef _DEBUG
-  DETAILLOG("Stopping module factory");
-#endif
+// #ifdef _DEBUG
+//   DETAILLOG("Stopping module factory");
+// #endif
 }
   
 HRESULT 
@@ -755,7 +773,7 @@ MarlinModuleFactory::Terminate()
 {
   // Last function to be called from within IIS
   // So stop the log here
-  LogStop();
+  ApplicationConfigStop();
 
   // Strange but true: See MSDN documentation!!
   delete this;
@@ -769,21 +787,24 @@ MarlinModuleFactory::Terminate()
 
 MarlinModule::MarlinModule()
 {
-#ifdef _DEBUG
-  DETAILLOG("Start Request");
-#endif
+// #ifdef _DEBUG
+//   DETAILLOG("Start Request");
+// #endif
 }
 
 MarlinModule::~MarlinModule()
 {
-#ifdef _DEBUG
-  DETAILLOG("Request ready");
-#endif
+// #ifdef _DEBUG
+//   DETAILLOG("Request ready");
+// #endif
 }
 
 // On each request: Note the fact that we got it. 
 // Regardless whether we will process it.
 // Even non-authenticated requests will be processed
+//
+// BEWARE: ONLY CALLED IF WE CONFIGURE IT 
+//         BY DEFINING "debug.txt" IN THE IIS DIRECTORY
 //
 REQUEST_NOTIFICATION_STATUS 
 MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
@@ -801,10 +822,8 @@ MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
     logging += rawRequest->pRawUrl;
     DETAILLOG(logging);
 
-// Here we can debug IIS variables, before other functionality is called!
-#ifdef _DEBUG
+    // Here we can debug IIS variables, before other functionality is called!
     IISDebugAllVariables(p_context);
-#endif
   }
   // Just continue processing
   return RQ_NOTIFICATION_CONTINUE;
@@ -878,11 +897,11 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   }
 
   // This is the call we are getting
-  PCSTR url = rawRequest->pRawUrl;
-#ifdef _DEBUG
-  DETAILLOG(url);
-#endif
-
+  if(g_debugMode)
+  {
+    PCSTR url = rawRequest->pRawUrl;
+    DETAILLOG(url);
+  }
   // Find our marlin representation of the site
   // Use HTTPServer()->FindHTTPSite of the application in the loaded DLL
   HTTPSite* site =  (*app->m_findSite)(serverapp,serverPort,rawRequest->CookedUrl.pAbsPath);
@@ -892,9 +911,12 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   {
     // Not our request: Other app running on this machine!
     // This is why it is wasteful to use IIS for our internet server!
-    CString message("Rejected HTTP call: ");
-    message += rawRequest->pRawUrl;
-    ERRORLOG(message);
+    if(g_debugMode)
+    {
+      CString message("Rejected HTTP call: ");
+      message += rawRequest->pRawUrl;
+      ERRORLOG(message);
+    }
     // Let someone else handle this call (if any :-( )
     return RQ_NOTIFICATION_CONTINUE;
   }
@@ -974,10 +996,11 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   }
 
   // This is the call we are getting
-  PCSTR url = rawRequest->pRawUrl;
-#ifdef _DEBUG
-  DETAILLOG(url);
-#endif
+  if(g_debugMode)
+  {
+    PCSTR url = rawRequest->pRawUrl;
+    DETAILLOG(url);
+  }
 
   // Getting the HTTPSite through the server port/absPath combination
   // Use the HTTPServer() method FindHTTPSite to grab the site
@@ -988,9 +1011,12 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   {
     // Not our request: Other app running on this machine!
     // This is why it is wasteful to use IIS for our internet server!
-    CString message("Rejected HTTP call: ");
-    message += rawRequest->pRawUrl;
-    ERRORLOG(message);
+    if(g_debugMode)
+    {
+      CString message("Rejected HTTP call: ");
+      message += rawRequest->pRawUrl;
+      ERRORLOG(message);
+    }
     // Let someone else handle this call (if any :-( )
     return RQ_NOTIFICATION_CONTINUE;
   }

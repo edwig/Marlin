@@ -1,0 +1,32 @@
+RELEASENOTES MARLIN VERSION 7.x
+===============================
+
+For releasenotes of the previous main version (6.x), see the separate file "Releasenotes_v6.txt".
+This document contains all release notes and remarks beginning with version 7.0. The document
+would otherwise grow to large and complex.
+
+Version 7.x contains the new MarlinModule that (again) allows to be used with staticly linked
+application modules (DLL's), and so optimize the depoloyment and stack tracing capabilities
+----------------------------------------------------------------------------------------------
+
+CHANGES IN VERSION 7.0.0 BETA
+------------------------
+1)  All Analasys logfiles removed from MarlinModule. All memory allocation from the loaded DLL's
+    go now back to the DLL's. This is done so we can move back to static linked librarys and
+    static linked MFC environments.
+2)  The MarlinModule can be put in 'debugging' mode by placing a 'debug.txt' file in the
+    %WINDIR%\System32\inetsrv directory. The file can be empty, it only need to be.
+    Extra information will then be written to the Windows WMI log. Information that previously
+    went to the "Marlin" logfile under ""C:\Inetpub\Logs\Logfiles\Marlin"
+3)  All project moved from dynamicly linked DLL's to static libraries
+4)  Continued work on WebSockets in IIS. 
+    Reading and writing of messages longer than 1 frame now work correctly
+    Websockets can be closed both from the client and from the server-side end of things.
+5)  Please always use the "RegisterMessagesDllForService()" call in your server applications.
+    otherwise fill in the ""g_svcname" global parameters. 
+    Otherwise your application will continue to run as "Marlin for IIS" as configured in 
+    the "Marlin_for_IIS" in the MS-Windows WMI Event log.
+6)  Corrections in the CTOR methods of SOAPMessage. Copying of the headermap was added in
+    all CTOR's.
+
+
