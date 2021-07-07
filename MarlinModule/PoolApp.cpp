@@ -1,0 +1,262 @@
+/////////////////////////////////////////////////////////////////////////////////
+//
+// SourceFile: PoolApp.cpp
+//
+// Marlin Server: Internet server/client
+// 
+// Copyright (c) 2014-2021 ir. W.E. Huisman
+// All rights reserved
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+#include "stdafx.h"
+#include "PoolApp.h"
+#include "ServiceReporting.h"
+#include <io.h>
+
+#define MODULE_NAME "Application"
+#define MODULE_PATH "Directory"
+
+// Logging macro for this file only
+#define DETAILLOG(text)    SvcReportInfoEvent(false,text);
+#define ERRORLOG(text)     SvcReportErrorEvent(0,false,__FUNCTION__,text);
+
+// General error function
+void Unhealthy(CString p_error, HRESULT p_code);
+
+PoolApp::~PoolApp()
+{
+  // Only delete application if last site was deallocated
+  // If ServerApp::LoadSite() overloads forget to call base method
+  // the reference count can drop below zero
+  if (m_application && (*m_sitesInAppPool)(m_application) <= 0)
+  {
+    delete m_application;
+  }
+}
+
+bool
+PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_physical,CString p_application)
+{
+  // Read Web config from "physical-application-path" + "web.config"
+  CString baseWebConfig = p_physical + "web.config";
+  baseWebConfig.MakeLower();
+  m_config.ReadConfig(baseWebConfig);
+
+  // Load the **real** application DLL from the settings of web.config
+  CString dllLocation = m_config.GetSetting(MODULE_NAME);
+  if(dllLocation.IsEmpty())
+  {
+    Unhealthy("MarlinModule could **NOT** locate the 'Application' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
+    return false;
+  }
+
+  CString dllPath = m_config.GetSetting(MODULE_PATH);
+  if(dllPath.IsEmpty())
+  {
+    Unhealthy("MarlinModule could **NOT** locate the 'Directory' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
+    return false;
+  }
+
+  // Tell MS-Windows where to look while loading our DLL
+  dllPath = ConstructDLLLocation(p_physical,dllPath);
+  if(SetDllDirectory(dllPath) == FALSE)
+  {
+    Unhealthy("MarlinModule could **NOT** append DLL-loading search path with: " + dllPath,ERROR_NOT_FOUND);
+    return false;
+  }
+
+  // Ultimately check that the directory exists and that we have read rights on the application's DLL
+  if(!CheckApplicationPresent(dllPath, dllLocation))
+  {
+    Unhealthy("MarlinModule could not access the application module DLL: " + dllLocation,ERROR_ACCESS_DENIED);
+    return false;
+  }
+
+  // See if we must load the DLL application
+  if(AlreadyLoaded(dllLocation))
+  {
+    DETAILLOG("MarlinModule already loaded DLL [" + dllLocation + "] for application: " + p_application);
+  }
+  else
+  {
+    // Try to load the DLL
+    m_module = LoadLibrary(dllLocation);
+    if (m_module)
+    {
+      m_marlinDLL = dllLocation;
+      DETAILLOG("MarlinModule loaded DLL from: " + dllLocation);
+    }
+    else
+    {
+      HRESULT code = GetLastError();
+      CString error("MarlinModule could **NOT** load DLL from: " + dllLocation);
+      Unhealthy(error,code);
+      return false;
+    }
+
+    // Getting the start address of the application factory
+    m_createServerApp = (CreateServerAppFunc)GetProcAddress(m_module,"CreateServerApp");
+    m_findSite        = (FindHTTPSiteFunc)   GetProcAddress(m_module,"FindHTTPSite");
+    m_getHttpStream   = (GetHTTPStreamFunc)  GetProcAddress(m_module,"GetStreamFromRequest");
+    m_getHttpMessage  = (GetHTTPMessageFunc) GetProcAddress(m_module,"GetHTTPMessageFromRequest");
+    m_handleMessage   = (HandleMessageFunc)  GetProcAddress(m_module,"HandleHTTPMessage");
+    m_sitesInAppPool  = (SitesInApplicPool)  GetProcAddress(m_module,"SitesInApplicationPool");
+    m_minVersion      = (MinVersionFunc)     GetProcAddress(m_module,"MinMarlinVersion");
+
+    if(m_createServerApp == nullptr ||
+       m_findSite        == nullptr ||
+       m_getHttpStream   == nullptr ||
+       m_getHttpMessage  == nullptr ||
+       m_handleMessage   == nullptr ||
+       m_sitesInAppPool  == nullptr ||
+       m_minVersion      == nullptr )
+    {
+      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', "
+                    "'GetHTTPMessageFromRequest', 'HandleHTTPMessage', 'SitesInApplicPool' or 'MinMarlinVersion'");
+      Unhealthy(error,ERROR_NOT_FOUND);
+      return false;
+    }
+  }
+
+  // Let the server app factory create a new one for us
+  // And store it in our representation of the active application pool
+  m_application = (*m_createServerApp)(g_iisServer                 // Microsoft IIS server object
+                                      ,p_webroot.GetString()       // The IIS registered webroot
+                                      ,p_application.GetString()); // The application's name
+  if(m_application == nullptr)
+  {
+    CString error("NO APPLICATION CREATED IN THE APP-FACTORY!");
+    Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
+    return false;
+  }
+
+  // Check if application can work together with the current MarlinModule
+  int version = MARLIN_VERSION_MAJOR * 10000 +   // Major version main
+                MARLIN_VERSION_MINOR *   100 +   // Minor version number
+                MARLIN_VERSION_SP;               // Service pack
+  if(!(*m_minVersion)(m_application,version))
+  {
+    CString error("ERROR WRONG VERSION Application: " + p_application);
+    Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
+    return false;
+  }
+
+  // Call the initialization
+  m_application->InitInstance();
+
+  // Try loading the sites from IIS in the application
+  m_application->LoadSites(p_httpapp,p_physical);
+
+  // Ready, so stop the timer
+  m_application->StopCounter();
+
+  // Check if everything went well
+  if(m_application->CorrectlyStarted() == false)
+  {
+    CString error("ERROR STARTING Application: " + p_application);
+    Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
+    return false;
+  }
+  return true;
+}
+
+// If the given DLL begins with a '@' it is an absolute pathname
+// Otherwise it is relative to the directory the 'web.config' is in
+CString
+PoolApp::ConstructDLLLocation(CString p_rootpath, CString p_dllPath)
+{
+#ifdef _DEBUG
+  // ONLY FOR DEVELOPMENT TEAMS RUNNING OUTSIDE THE WEBROOT
+  if(p_dllPath.GetAt(0) == '@')
+  {
+    return p_dllPath.Mid(1);
+  }
+#endif
+  // Default implementation
+  CString pathname = p_rootpath;
+  if(pathname.Right(1) != "\\")
+  {
+    pathname += "\\";
+  }
+  pathname += p_dllPath;
+  if(pathname.Right(1) != "\\")
+  {
+    pathname += "\\";
+  }
+  return pathname;
+}
+
+// Checking for the presence of the application DLL
+bool
+PoolApp::CheckApplicationPresent(CString& p_dllPath,CString& p_dllName)
+{
+  // Check if the directory exists
+  if(_access(p_dllPath, 0) == -1)
+  {
+    ERRORLOG("The directory does not exist: " + p_dllPath);
+    return false;
+  }
+
+  // Check that dllName does not have a directory
+  int pos = p_dllName.Find('\\');
+  if (pos >= 0)
+  {
+    ERRORLOG("The variable 'Application' must only be the name of the application DLL: " + p_dllName);
+    return false;
+  }
+
+  // Construct the complete path and check for presence
+  p_dllName = p_dllPath + p_dllName;
+  if(_access(p_dllPath, 4) == -1)
+  {
+    ERRORLOG("The application DLL cannot be read: " + p_dllName);
+    return false;
+  }
+  return true;
+}
+
+// See if we already did load the module
+// For some reason reference counting does not work from within IIS.
+bool
+PoolApp::AlreadyLoaded(CString p_path_to_dll)
+{
+  // All applications in the application pool
+  extern std::map<int,PoolApp*> g_IISApplicationPool;
+
+  for(auto& app : g_IISApplicationPool)
+  {
+    if(p_path_to_dll.Compare(app.second->m_marlinDLL) == 0)
+    {
+      // Application module
+      m_module          = app.second->m_module;
+      m_createServerApp = app.second->m_createServerApp;
+      // Function pointers
+      m_createServerApp = app.second->m_createServerApp;
+      m_findSite        = app.second->m_findSite;
+      m_getHttpStream   = app.second->m_getHttpStream;
+      m_getHttpMessage  = app.second->m_getHttpMessage;
+      m_handleMessage   = app.second->m_handleMessage;
+      m_sitesInAppPool  = app.second->m_sitesInAppPool;
+      return true;
+    }
+  }
+  return false;
+}
+

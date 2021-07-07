@@ -32,6 +32,7 @@
 #pragma warning (error:4091)
 
 #include "ServerApp.h"
+#include "PoolApp.h"
 #include <map>
 
 #define SERVERNAME_BUFFERSIZE 256
@@ -42,37 +43,11 @@ class LogAnalysis;
 class HTTPServerIIS;
 class ErrorReport;
 
-// Helper class with a web application
-// Also contains the function pointers into our application DLL
-class APP
-{
-public:
-  ~APP()
-  {
-    // Only delete application if last site was deallocated
-    // If ServerApp::LoadSite() overloads forget to call base method
-    // the reference count can drop below zero
-    if(m_application && (*m_sitesInAppPool)(m_application) <= 0)
-    {
-      delete m_application;
-    }
-  }
-  WebConfigIIS        m_config;
-  CString             m_marlinDLL;
-  ServerApp*          m_application     { nullptr };
-  LogAnalysis*        m_analysisLog     { nullptr };
-  HMODULE             m_module          { NULL    };
-  // DLL Loaded functions
-  CreateServerAppFunc m_createServerApp { nullptr };
-  FindHTTPSiteFunc    m_findSite        { nullptr };
-  GetHTTPStreamFunc   m_getHttpStream   { nullptr };
-  GetHTTPMessageFunc  m_getHttpMessage  { nullptr };
-  HandleMessageFunc   m_handleMessage   { nullptr };
-  SitesInApplicPool   m_sitesInAppPool  { nullptr };
-};
-
 // All applications in the application pool
-using AppPool = std::map<int,APP*>;
+using AppPool = std::map<int,PoolApp*>;
+
+// General error function
+void Unhealthy(CString p_error, HRESULT p_code);
 
 // Create the module class
 // Hooking into the 'integrated pipeline' of IIS
@@ -134,12 +109,8 @@ public:
   virtual void Terminate() override;
 private:
   bool    ModuleInHandlers(const CString& p_configPath);
-  CString ConstructDLLLocation(CString p_rootpath,CString p_dllPath);
-  bool    CheckApplicationPresent(CString& p_dllPath,CString& p_dllName);
-  bool    AlreadyLoaded(APP* p_app, CString p_path_to_dll);
   bool    StillUsed(const HMODULE& p_module);
   int     CountAppPoolApplications(ServerApp* p_application);
-  GLOBAL_NOTIFICATION_STATUS Unhealthy(CString p_error,HRESULT p_code);
 
   CRITICAL_SECTION m_lock;
 };

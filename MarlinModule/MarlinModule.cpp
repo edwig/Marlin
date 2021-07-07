@@ -56,12 +56,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define MODULE_NAME "Application"
-#define MODULE_PATH "Directory"
 #define MODULE_XSS  "XSSBlocking"
 
 // GLOBALS Needed for the module
-static AppPool       g_IISApplicationPool;   // All applications in the application pool
+       AppPool       g_IISApplicationPool;   // All applications in the application pool
 static WebConfigIIS* g_config  { nullptr };  // The ApplicationHost.config information only!
 static wchar_t       g_moduleName[SERVERNAME_BUFFERSIZE + 1] = L"";
 static bool          g_debugMode = false;
@@ -224,6 +222,41 @@ ApplicationConfigStop()
 // End of Extern "C" calls
 }
 
+// IIS cannot continue with this application pool for some reason
+// and must stop the complete pool (w3wp.exe) process
+void Unhealthy(CString p_error, HRESULT p_code)
+{
+  USES_CONVERSION;
+
+  // Print to the MS-Windows WMI
+  ERRORLOG(p_error);
+  CComBSTR werr = A2W(p_error);
+  // Report to IIS to kill the application with **this** reason
+  g_iisServer->ReportUnhealthy(werr, p_code);
+
+  // Stopping the application pool
+  CString appPoolName = W2A(g_iisServer->GetAppPoolName());
+  CString command;
+  CString parameters;
+  command.GetEnvironmentVariable("WINDIR");
+  command += "\\system32\\inetsrv\\appcmd.exe";
+  parameters.Format("stop apppool \"%s\"",appPoolName.GetString());
+
+  // Stopping the application pool will be called like this
+  CString logging;
+  logging.Format("W3WP.EXE Stopped by: %s %s",command.GetString(),parameters.GetString());
+  DETAILLOG(logging);
+
+  // STOP!
+  CString result;
+  CallProgram_For_String(command, parameters, result);
+
+  // Program is dead after this point. 
+  // But lets return anyhow with the proper notification
+  // AFTER CALING THIS FUNCTION, YOU SHOULD END THE MODULE WITH:
+  // return GL_NOTIFICATION_CONTINUE;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // GLOBAL LEVEL
@@ -284,133 +317,25 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     CString error;
     error.Format("Application [%s] on port [%d] already started. ANOTHER application must implement this port!!"
                  ,application.GetString(),applicationPort);
-    return Unhealthy(error,ERROR_DUP_NAME);
+    Unhealthy(error,ERROR_DUP_NAME);
+    return GL_NOTIFICATION_CONTINUE;
   }
 
   // Create a new pool application
-  APP* poolapp = new APP();
-
-  // Read Web config from "physical-application-path" + "web.config"
-  CString baseWebConfig = physical + "web.config";
-  baseWebConfig.MakeLower();
-  poolapp->m_config.ReadConfig(baseWebConfig);
-
-  // Load the **real** application DLL from the settings of web.config
-  CString dllLocation = poolapp->m_config.GetSetting(MODULE_NAME);
-  if(dllLocation.IsEmpty())
+  PoolApp* poolapp = new PoolApp();
+  if(poolapp->LoadPoolApp(httpapp,webroot,physical,application))
   {
-    delete poolapp;
-    return Unhealthy("MarlinModule could **NOT** locate the 'Application' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
-  }
-
-  CString dllPath = poolapp->m_config.GetSetting(MODULE_PATH);
-  if(dllPath.IsEmpty())
-  {
-    delete poolapp;
-    return Unhealthy("MarlinModule could **NOT** locate the 'Directory' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
-  }
-
-  // Tell MS-Windows where to look while loading our DLL
-  dllPath = ConstructDLLLocation(physical,dllPath);
-  if(SetDllDirectory(dllPath) == FALSE)
-  {
-    delete poolapp;
-    return Unhealthy("MarlinModule could **NOT** append DLL-loading search path with: " + dllPath,ERROR_NOT_FOUND);
-  }
-
-  // Ultimately check that the directory exists and that we have read rights on the application's DLL
-  if(!CheckApplicationPresent(dllPath, dllLocation))
-  {
-    delete poolapp;
-    return Unhealthy("MarlinModule could not access the application module DLL: " + dllLocation,ERROR_ACCESS_DENIED);
-  }
-
-  // See if we must load the DLL application
-  if(AlreadyLoaded(poolapp,dllLocation))
-  {
-    DETAILLOG("MarlinModule already loaded DLL [" + dllLocation + "] for application: " + application);
+    // Keep application in our IIS application pool
+    g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
   }
   else
   {
-    // Try to load the DLL
-    poolapp->m_module = LoadLibrary(dllLocation);
-    if (poolapp->m_module)
-    {
-      poolapp->m_marlinDLL = dllLocation;
-      DETAILLOG("MarlinModule loaded DLL from: " + dllLocation);
-    }
-    else
-    {
-      HRESULT code = GetLastError();
-      CString error("MarlinModule could **NOT** load DLL from: " + dllLocation);
-      SetDllDirectory(nullptr);
-      delete poolapp;
-      return Unhealthy(error,code);
-    }
-
-    // Getting the start address of the application factory
-    poolapp->m_createServerApp = (CreateServerAppFunc)GetProcAddress(poolapp->m_module,"CreateServerApp");
-    poolapp->m_findSite        = (FindHTTPSiteFunc)   GetProcAddress(poolapp->m_module,"FindHTTPSite");
-    poolapp->m_getHttpStream   = (GetHTTPStreamFunc)  GetProcAddress(poolapp->m_module,"GetStreamFromRequest");
-    poolapp->m_getHttpMessage  = (GetHTTPMessageFunc) GetProcAddress(poolapp->m_module,"GetHTTPMessageFromRequest");
-    poolapp->m_handleMessage   = (HandleMessageFunc)  GetProcAddress(poolapp->m_module,"HandleHTTPMessage");
-    poolapp->m_sitesInAppPool  = (SitesInApplicPool)  GetProcAddress(poolapp->m_module,"SitesInApplicationPool");
-
-
-    if(poolapp->m_createServerApp == nullptr ||
-       poolapp->m_findSite        == nullptr ||
-       poolapp->m_getHttpStream   == nullptr ||
-       poolapp->m_getHttpMessage  == nullptr ||
-       poolapp->m_handleMessage   == nullptr ||
-       poolapp->m_sitesInAppPool  == nullptr  )
-    {
-      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', "
-                    "'GetHTTPMessageFromRequest', 'HandleHTTPMessage' or 'SitesInApplicPool'");
-      delete poolapp;
-      return Unhealthy(error,ERROR_NOT_FOUND);
-    }
-  }
-
-  // Let the server app factory create a new one for us
-  // And store it in our representation of the active application pool
-  ServerApp* app = (*poolapp->m_createServerApp)(g_iisServer               // Microsoft IIS server object
-                                                ,webroot.GetString()       // The IIS registered webroot
-                                                ,application.GetString()); // The application's name
-  if(app == nullptr)
-  {
+    // NOPE: Didn't work. Delete it again
     delete poolapp;
-    CString error("NO APPLICATION CREATED IN THE APP-FACTORY!");
-    return Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
   }
-
-  // Keep our application
-  poolapp->m_application = app;
-
-  // Call the initialization
-  app->InitInstance();
-
-  // Try loading the sites from IIS in the application
-  app->LoadSites(httpapp,physical);
-
-  // Check if everything went well
-  if(app->CorrectlyStarted() == false)
-  {
-    delete poolapp;
-    CString error("ERROR STARTING Application: " + application);
-    return Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
-  }
-
-  // Keep application in our IIS application pool
-  g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
 
   // Restore the original DLL search order
-  if(!dllPath.IsEmpty())
-  {
-    SetDllDirectory(nullptr);
-  }
-
-  // Ready, so stop the timer
-  app->StopCounter();
+  SetDllDirectory(nullptr);
 
   return GL_NOTIFICATION_HANDLED;
 };
@@ -438,11 +363,11 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
     // Not our application to stop. Continue silently!
     return GL_NOTIFICATION_CONTINUE;
   }
-  APP* poolapp = it->second;
+  PoolApp* poolapp = it->second;
   ServerApp* app = poolapp->m_application;
 
   // Tell that we are stopping
-  CString stopping(MODULE_NAME " stopping application: ");
+  CString stopping("Marlin stopping application: ");
   stopping += application;
   DETAILLOG(stopping);
 
@@ -534,31 +459,6 @@ MarlinGlobalFactory::ExtractAppSite(CString p_configPath)
   return "";
 }
 
-// See if we already did load the module
-// For some reason reference counting does not work from within IIS.
-bool
-MarlinGlobalFactory::AlreadyLoaded(APP* p_app,CString p_path_to_dll)
-{
-  for(auto& app : g_IISApplicationPool)
-  {
-    if(p_path_to_dll.Compare(app.second->m_marlinDLL) == 0)
-    {
-      // Application module
-      p_app->m_module          = app.second->m_module;
-      p_app->m_createServerApp = app.second->m_createServerApp;
-      // Function pointers
-      p_app->m_createServerApp = app.second->m_createServerApp;
-      p_app->m_findSite        = app.second->m_findSite;
-      p_app->m_getHttpStream   = app.second->m_getHttpStream;
-      p_app->m_getHttpMessage  = app.second->m_getHttpMessage;
-      p_app->m_handleMessage   = app.second->m_handleMessage;
-      p_app->m_sitesInAppPool  = app.second->m_sitesInAppPool;
-      return true;
-    }
-  }
-  return false;
-}
-
 // See if the module is still used by one of the websites in the application pool
 // (if so, the module should not be freed by "FreeLibrary")
 bool    
@@ -618,96 +518,6 @@ MarlinGlobalFactory::ModuleInHandlers(const CString& p_configPath)
     }
   }
   return false;
-}
-
-// IIS cannot continue with this application pool for some reason
-// and must stop the complete pool (w3wp.exe) process
-GLOBAL_NOTIFICATION_STATUS 
-MarlinGlobalFactory::Unhealthy(CString p_error,HRESULT p_code)
-{
-  USES_CONVERSION;
-
-  // Print to our logfile
-  ERRORLOG(p_error);
-  CComBSTR werr = A2W(p_error);
-  // Report to IIS to kill the application with **this** reason
-  g_iisServer->ReportUnhealthy(werr,p_code);
-
-  // Stopping the application pool
-  CString appPoolName = W2A(g_iisServer->GetAppPoolName());
-  CString command;
-  command.GetEnvironmentVariable("WINDIR");
-  command += "\\system32\\inetsrv\\appcmd.exe";
-  CString parameters;
-  parameters.Format("stop apppool \"%s\"",appPoolName);
-
-  // Stopping the application pool will be called like this
-  CString logging;
-  logging.Format("W3WP.EXE Stopped by: %s %s",command,parameters);
-  DETAILLOG(logging);
-
-  // STOP!
-  CString result;
-  CallProgram_For_String(command,parameters,result);
-
-  // Program is dead after this point. 
-  // But lets return anyhow with the proper notification
-  return GL_NOTIFICATION_CONTINUE;
-}
-
-// If the given DLL begins with a '@' it is an absolute pathname
-// Otherwise it is relative to the directory the 'web.config' is in
-CString 
-MarlinGlobalFactory::ConstructDLLLocation(CString p_rootpath,CString p_dllPath)
-{
-#ifdef _DEBUG
-  // ONLY FOR DEVELOPMENT TEAMS RUNNING OUTSIDE THE WEBROOT
-  if(p_dllPath.GetAt(0) == '@')
-  {
-    return p_dllPath.Mid(1);
-  }
-#endif
-  // Default implementation
-  CString pathname = p_rootpath;
-  if(pathname.Right(1) != "\\")
-  {
-    pathname += "\\";
-  }
-  pathname += p_dllPath;
-  if(pathname.Right(1) != "\\")
-  {
-    pathname += "\\";
-  }
-  return pathname;
-}
-
-// Checking for the presence of the application DLL
-bool
-MarlinGlobalFactory::CheckApplicationPresent(CString& p_dllPath,CString& p_dllName)
-{
-  // Check if the directory exists
-  if(_access(p_dllPath, 0) == -1)
-  {
-    ERRORLOG("The directory does not exist: " + p_dllPath);
-    return false;
-  }
-
-  // Check that dllName does not have a directory
-  int pos = p_dllName.Find('\\');
-  if (pos >= 0)
-  {
-    ERRORLOG("The variable 'Application' must only be the name of the application DLL: " + p_dllName);
-    return false;
-  }
-
-  // Construct the complete path and check for presence
-  p_dllName = p_dllPath + p_dllName;
-  if(_access(p_dllPath, 4) == -1)
-  {
-    ERRORLOG("The application DLL cannot be read: " + p_dllName);
-    return false;
-  }
-  return true;
 }
 
 // Stopping the global factory
@@ -854,7 +664,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   }
 
   // Find our app
-  APP* app = it->second;
+  PoolApp* app = it->second;
   ServerApp* serverapp = app->m_application;
 
   // Getting the request/response objects
@@ -956,7 +766,7 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   }
 
   // Find our app
-  APP* app = it->second;
+  PoolApp* app = it->second;
   ServerApp* serverapp = app->m_application;
 
   // Getting the request/response objects

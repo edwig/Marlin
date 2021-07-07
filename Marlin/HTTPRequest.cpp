@@ -43,6 +43,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define TRACE0(sz)                TRACE(_T("%Ts"), _T(sz))
+#define TRACE1(sz, p1)            TRACE(_T(sz), p1)
+
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
 #define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }

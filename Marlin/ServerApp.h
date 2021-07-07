@@ -50,6 +50,7 @@ typedef bool          (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,H
 typedef HTTPMessage*  (CALLBACK* GetHTTPMessageFunc) (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
 typedef bool          (CALLBACK* HandleMessageFunc)  (ServerApp*,HTTPSite* p_site,HTTPMessage*);
 typedef int           (CALLBACK* SitesInApplicPool)  (ServerApp*);
+typedef int           (CALLBACK* MinVersionFunc)     (ServerApp*,int version);
 
 extern IHttpServer*  g_iisServer;
 extern LogAnalysis*  g_analysisLog;
@@ -95,6 +96,9 @@ public:
 
   // Number of IIS sites in this Application Pool
   virtual int  SitesInThePool();
+
+  // Minimal needed MarlinModule version. Checked after DLL loading in MarlinModule
+  virtual int  MinMarlinVersion(int p_version);
 
   // Add new MarlinModule used virtual overrides at this end of the table!
   // END OF THE VTABLE

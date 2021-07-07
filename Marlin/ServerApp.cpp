@@ -30,6 +30,8 @@
 #include "WebConfigIIS.h"
 #include "HTTPSite.h"
 #include "EnsureFile.h"
+#include "Version.h"
+#include "ServiceReporting.h"
 #include <string>
 #include <set>
 
@@ -144,6 +146,12 @@ __declspec(dllexport)
 int __stdcall SitesInApplicationPool(ServerApp* p_application)
 {
   return p_application->SitesInThePool();
+}
+
+__declspec(dllexport)
+int __stdcall MinMarlinVersion(ServerApp* p_application,int p_version)
+{
+  return p_application->MinMarlinVersion(p_version);
 }
 
 }
@@ -341,6 +349,20 @@ int
 ServerApp::SitesInThePool()
 {
   return m_numSites;
+}
+
+int
+ServerApp::MinMarlinVersion(int p_version)
+{
+  int version = MARLIN_VERSION_MAJOR * 10000 +   // Major version main
+                MARLIN_VERSION_MINOR *   100 +   // Minor version number
+                MARLIN_VERSION_SP;               // Service pack
+  if(p_version > version)
+  {
+    SvcReportErrorEvent(0,true,__FUNCTION__,"MarlinModule version is too great: %d.%d.%d",p_version / 10000,p_version % 10000,p_version % 100);
+    return 0;
+  }
+  return version;
 }
 
 // Default implementation. Use the Marlin error report

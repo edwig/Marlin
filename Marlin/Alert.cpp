@@ -31,6 +31,7 @@
 #include "WebConfig.h"
 #include "strsafe.h"
 #include <sys/timeb.h>
+#include <time.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

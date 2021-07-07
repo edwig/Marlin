@@ -27,6 +27,7 @@
 //
 #include "stdafx.h"
 #include "RunRedirect.h"
+#include <time.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -33,8 +33,13 @@
 #define MARLIN_VERSION_BUILD    "Beta"           // Can carry strings like 'Alpha', 'Beta', 'RC'
 #define MARLIN_VERSION_DATE     "05-07-2021"     // Last production date
 
+#define MARLIN_VERSION_MAJOR    7
+#define MARLIN_VERSION_MINOR    0
+#define MARLIN_VERSION_SP       0
+#define MARLIN_VERSION_SUB      0
+
 // This is our version string
 #define MARLIN_SERVER_VERSION MARLIN_PRODUCT_NAME " " MARLIN_VERSION_NUMBER MARLIN_VERSION_BUILD
 
 // Definitions for binary resources
-#define MARLIN_VERSION_BIN 7,0,0,0
+#define MARLIN_VERSION_BIN    MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP,MARLIN_VERSION_SUB

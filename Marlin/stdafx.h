@@ -37,7 +37,7 @@
 #include <iostream>
 #endif//MARLIN_USE_ATL_ONLY
 
-// Using our exentsion of CException
+// Using our extension of Safe Exception Handlers
 #include "StdException.h"
 
 // Do not autolink with Marlin from within the library itself
