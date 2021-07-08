@@ -28,5 +28,6 @@ CHANGES IN VERSION 7.0.0 BETA
     the "Marlin_for_IIS" in the MS-Windows WMI Event log.
 6)  Corrections in the CTOR methods of SOAPMessage. Copying of the headermap was added in
     all CTOR's.
-
+7)  Extra error for SOAPMessage with a <Action> header and a "mustunderstand=true" attribute,
+    with no operational soapaction in that header (basically an empty node).
 

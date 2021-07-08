@@ -1884,6 +1884,17 @@ SOAPMessage::CheckHeaderAction()
       // Promote to SOAP 1.2
       m_soapVersion = SoapVersion::SOAP_12;
     }
+    else if(response.IsEmpty())
+    {
+        error.Format("Answer on webservice [%s/%s] with empty response protocol."
+                     ,m_namespace.GetString()
+                     ,m_soapAction.GetString());
+        m_errorstate      = true;
+        m_soapFaultCode   = "Soap-Envelope";
+        m_soapFaultActor  = "Message";
+        m_soapFaultString = error;
+        m_internalError   = XmlError::XE_UnknownProtocol;
+    }
     else
     {
       // Not what we expected. See if it is a fault
