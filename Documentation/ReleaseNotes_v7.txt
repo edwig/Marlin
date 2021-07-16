@@ -9,8 +9,8 @@ Version 7.x contains the new MarlinModule that (again) allows to be used with st
 application modules (DLL's), and so optimize the depoloyment and stack tracing capabilities
 ----------------------------------------------------------------------------------------------
 
-CHANGES IN VERSION 7.0.0 BETA
-------------------------
+CHANGES IN VERSION 7.0.0 RC
+---------------------------
 1)  All Analasys logfiles removed from MarlinModule. All memory allocation from the loaded DLL's
     go now back to the DLL's. This is done so we can move back to static linked librarys and
     static linked MFC environments.

@@ -33,18 +33,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Stdafx.h"
-#include "Analysis.h"
-#include "HTTPServerIIS.h"
-#include "HTTPSite.h"
-#include "ThreadPool.h"
 #include "AutoCritical.h"
-#include "WebConfig.h"
 #include "MarlinModule.h"
-#include "ServerApp.h"
-#include "EnsureFile.h"
-#include "AutoCritical.h"
 #include "WebConfigIIS.h"
-#include "StdException.h"
 #include "RunRedirect.h"
 #include "ServiceReporting.h"
 #include "IISDebug.h"
@@ -182,7 +173,10 @@ ApplicationConfigStart(DWORD p_version)
 
   // See if we have a debug.txt in the "%windir%\system32\inetsrv\" directory
   CString debugPath;
-  debugPath.GetEnvironmentVariable("windir");
+  if(!debugPath.GetEnvironmentVariable("windir"))
+  {
+    debugPath = "C:\\Windows";
+  }
   debugPath += "\\system32\\inetsrv\\debug.txt";
   if(_access(debugPath.GetString(),0) == 0)
   {
@@ -238,7 +232,10 @@ void Unhealthy(CString p_error, HRESULT p_code)
   CString appPoolName = W2A(g_iisServer->GetAppPoolName());
   CString command;
   CString parameters;
-  command.GetEnvironmentVariable("WINDIR");
+  if(!command.GetEnvironmentVariable("WINDIR"))
+  {
+    command = "C:\\windows";
+  }
   command += "\\system32\\inetsrv\\appcmd.exe";
   parameters.Format("stop apppool \"%s\"",appPoolName.GetString());
 
@@ -252,7 +249,6 @@ void Unhealthy(CString p_error, HRESULT p_code)
   CallProgram_For_String(command, parameters, result);
 
   // Program is dead after this point. 
-  // But lets return anyhow with the proper notification
   // AFTER CALING THIS FUNCTION, YOU SHOULD END THE MODULE WITH:
   // return GL_NOTIFICATION_CONTINUE;
 }

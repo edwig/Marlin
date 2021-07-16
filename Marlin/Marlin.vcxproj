@@ -95,7 +95,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)ExtraParts;ZLib;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -111,7 +111,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)ExtraParts;ZLib;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_DEBUG;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -131,7 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)ExtraParts;ZLib;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <PreprocessorDefinitions>NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -152,7 +152,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)ExtraParts;ZLib;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <PreprocessorDefinitions>MARLIN_USE_ATL_ONLY;NO_WARN_MBCS_MFC_DEPRECATION;WIN32;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>

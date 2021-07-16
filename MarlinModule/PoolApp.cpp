@@ -254,6 +254,7 @@ PoolApp::AlreadyLoaded(CString p_path_to_dll)
       m_getHttpMessage  = app.second->m_getHttpMessage;
       m_handleMessage   = app.second->m_handleMessage;
       m_sitesInAppPool  = app.second->m_sitesInAppPool;
+      m_minVersion      = app.second->m_minVersion;
       return true;
     }
   }

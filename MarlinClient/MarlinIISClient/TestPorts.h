@@ -27,8 +27,6 @@
 //
 #pragma once
 
-// #define TEST_WEBSOCKETS
-
 #define CLIENT_CONFIG "IIS/HWCore"
 
 // All tests running on these ports in Marlin IIS mode
