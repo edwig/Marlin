@@ -66,7 +66,7 @@ SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
   {
     highSpeed = 1;
   }
-  else if(speed == (highSpeed + 1))
+  else if(speed > highSpeed)
   {
     // Next message
     highSpeed = speed;
@@ -175,6 +175,6 @@ TestMarlinServer::AfterTestInsecure()
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
   qprintf("SOAP messages to insecure site                 : %s\n",totalChecks > 0 ? "ERROR" : "OK");
-  qprintf("All highspeed queue messages received          : %s\n",highSpeed == 20 ? "OK" : "ERROR");
+  qprintf("All highspeed queue messages received          : %s\n",(highSpeed % 20) == 0 ? "OK" : "ERROR");
   return totalChecks > 0;
 }

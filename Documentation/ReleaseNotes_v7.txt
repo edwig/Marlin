@@ -30,4 +30,8 @@ CHANGES IN VERSION 7.0.0 RC
     all CTOR's.
 7)  Extra error for SOAPMessage with a <Action> header and a "mustunderstand=true" attribute,
     with no operational soapaction in that header (basically an empty node).
+8)  The new ServerApp methode "MinMarlinVersion" can now check the version of the used MarlinModule
+    that starts it from IIS. It has the potential to reject the current used module.
+    Modules with a version number under 7.0.0 or 8.0.0 and above are rejected
+9)  Client testsets have been expanded voor WebSocket testing in IIS.
 

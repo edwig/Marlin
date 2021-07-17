@@ -3,7 +3,7 @@ Introduction and purpose
 
 This is the Marlin webserver library. Version 7.0.0
 
-The ‘Marlin’ components – webserver and web client – are built in C++ around a number 
+The ‘Marlin' components – webserver and web client – are built in C++ around a number 
 of general classes that take care of optimal performance and have the purpose that 
 the server and client parts can be plugged-in in a C++ project.
 The main reason to build this library was to expand an existing web server with 

@@ -149,7 +149,7 @@ int __stdcall SitesInApplicationPool(ServerApp* p_application)
 }
 
 __declspec(dllexport)
-int __stdcall MinMarlinVersion(ServerApp* p_application,int p_version)
+bool __stdcall MinMarlinVersion(ServerApp* p_application,int p_version)
 {
   return p_application->MinMarlinVersion(p_version);
 }
@@ -323,12 +323,13 @@ ServerApp::CorrectlyStarted()
   // If a derived class has been statically declared
   // and a IHttpServer and a HTTPServerIIS has been found
   // and a ThreadPool is initialized, we are good to go
-  if(m_iis && m_httpServer && m_threadPool && m_logfile)
+  if(m_iis && m_httpServer && m_threadPool && m_logfile && m_versionCheck)
   {
     return true;
   }
 
   // Log the errors
+  // See to it that we did our version check
   if(!m_iis)
   {
     ERRORLOG(ERROR_NOT_FOUND,"No connected IIS server found!");
@@ -341,6 +342,11 @@ ServerApp::CorrectlyStarted()
   {
     ERRORLOG(ERROR_NOT_FOUND,"No connected threadpool found!");
   }
+  if(!m_versionCheck)
+  {
+    ERRORLOG(ERROR_VALIDATE_CONTINUE,"MarlinModule version check not done! Did you use a MarlinModule prior to version 7.0.0 ?");
+    return false;
+  }
   return false;
 }
 
@@ -351,18 +357,26 @@ ServerApp::SitesInThePool()
   return m_numSites;
 }
 
-int
+bool
 ServerApp::MinMarlinVersion(int p_version)
 {
-  int version = MARLIN_VERSION_MAJOR * 10000 +   // Major version main
-                MARLIN_VERSION_MINOR *   100 +   // Minor version number
-                MARLIN_VERSION_SP;               // Service pack
-  if(p_version > version)
+  int minVersion =  MARLIN_VERSION_MAJOR      * 10000 +   // Major version main
+                    MARLIN_VERSION_MINOR      *   100 +   // Minor version number
+                    MARLIN_VERSION_SP;                    // Service pack
+  int maxVersion = (MARLIN_VERSION_MAJOR + 1) * 10000 +   // Major version main
+                    MARLIN_VERSION_MINOR      *   100 +   // Minor version number
+                    MARLIN_VERSION_SP;                    // Service pack
+  if(p_version < minVersion || maxVersion <= p_version)
   {
-    SvcReportErrorEvent(0,true,__FUNCTION__,"MarlinModule version is too great: %d.%d.%d",p_version / 10000,p_version % 10000,p_version % 100);
+    SvcReportErrorEvent(0,true,__FUNCTION__
+                       ,"MarlinModule version is out of range: %d.%d.%d\n"
+                       ,"This application was compiled for: %d.%d.%d"
+                       ,p_version / 10000,p_version % 10000,p_version % 100
+                       ,MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP);
     return 0;
   }
-  return version;
+  // We have done our version check
+  return m_versionCheck = true;
 }
 
 // Default implementation. Use the Marlin error report

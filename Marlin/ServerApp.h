@@ -50,7 +50,7 @@ typedef bool          (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,H
 typedef HTTPMessage*  (CALLBACK* GetHTTPMessageFunc) (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
 typedef bool          (CALLBACK* HandleMessageFunc)  (ServerApp*,HTTPSite* p_site,HTTPMessage*);
 typedef int           (CALLBACK* SitesInApplicPool)  (ServerApp*);
-typedef int           (CALLBACK* MinVersionFunc)     (ServerApp*,int version);
+typedef bool          (CALLBACK* MinVersionFunc)     (ServerApp*,int version);
 
 extern IHttpServer*  g_iisServer;
 extern LogAnalysis*  g_analysisLog;
@@ -98,7 +98,7 @@ public:
   virtual int  SitesInThePool();
 
   // Minimal needed MarlinModule version. Checked after DLL loading in MarlinModule
-  virtual int  MinMarlinVersion(int p_version);
+  virtual bool MinMarlinVersion(int p_version);
 
   // Add new MarlinModule used virtual overrides at this end of the table!
   // END OF THE VTABLE
@@ -141,6 +141,7 @@ protected:
   LogAnalysis*   m_logfile      { nullptr };    // Logfile object
   ErrorReport*   m_errorReport  { nullptr };    // Error reporting object
   bool           m_ownReport    { false   };    // We made the error report
+  bool           m_versionCheck { false   };    // Did we do our version check
   int            m_logLevel     { HLL_NOLOG };  // Logging level of server and logfile
   int            m_keepLogFiles { LOGWRITE_KEEPFILES };  // Default number of logfiles to keep
 };
