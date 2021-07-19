@@ -5,13 +5,12 @@
 ;
 ; Copyright (c) 2019 Edwig Huisman
 ;
-; Date of last change: 16-06-2020
-; Version:             6.5
+; Date of last change: 19-07-2021
+; Version:             7.0
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 32Bits"
- !define PRODUCT_VERSION                      "6.5.0.18"
- !define PRODUCT_EXT                          "650"
- !define PRODUCT_BUILDNUMBER                  "18"
+ !define PRODUCT_VERSION                      "7.0.0"
+ !define PRODUCT_EXT                          "700"
  !define PRODUCT_PUBLISHER                    "Edwig Huisman"
  !define PRODUCT_WEB_SITE                     "https://github.com/Edwig/Marlin"
  !define PRODUCT_DIR_REGKEY                   "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"
@@ -59,6 +58,8 @@ InstallDir "$WINDIR\system32\inetsrv\"
  !define MUI_ABORTWARNING
  !define MUI_ICON   "Marlin.ico"
  !define MUI_UNICON "Marlin.ico"
+ !define MUI_WELCOMEFINISHPAGE_BITMAP "jumping.bmp"
+ !define MUI_UN1WELCOMEFINISHPAGE_BITMAP "jumping.bmp"
 ;--------------------------------------------------------------------------------------------------------
  ; Language Selection Dialog Settings
  !define MUI_LANGDLL_REGISTRY_ROOT "${PRODUCT_UNINST_ROOT_KEY}"
@@ -98,7 +99,7 @@ Function .onInit
  strcpy $R0 "$TEMP\${LogFile}.log"
  call OpenLogfile
  
- !insertmacro Log "Installing and registering the MarlinModule 32-Bits version: ${PRODUCT_VERSION} buildnummer ${PRODUCT_BUILDNUMBER}"
+ !insertmacro Log "Installing and registering the MarlinModule 32-Bits version: ${PRODUCT_VERSION}"
  !insertmacro Log ""
  ReadEnvStr $1 "USERNAME"
  !insertmacro Log "Processed by $1 on ${__DATE__} ${__TIME__}"
@@ -116,7 +117,7 @@ Function .onInit
  IfSilent +2
  advsplash::show 1000 1000 500 0xFFFFFF $PLUGINSDIR\Marlin
  
- IntCmp $currentVersion ${PRODUCT_BUILDNUMBER} versionSame SetupNewerVersion CurrentVersionNewer
+ IntCmp $currentVersion ${PRODUCT_VERSION} versionSame SetupNewerVersion CurrentVersionNewer
 
  versionSame:
   Messagebox MB_YESNO "This version of ${PRODUCT_NAME} is already installed. Do you want to re-install it?. " /SD IDYES IDNO doNotRepair
@@ -146,7 +147,7 @@ Function .onInit
  SilentLogging:
    !insertmacro Log "This is a 'silent' installation, onrelate to a previous installed version."
    !insertmacro Log "The current version WAS: $currentVersion"
-   !insertmacro Log "The now installed version IS: ${PRODUCT_BUILDNUMBER}"
+   !insertmacro Log "The now installed version IS: ${PRODUCT_VERSION}"
 
  InitEnd:
 ; !insertmacro MUI_LANGDLL_DISPLAY
@@ -175,15 +176,15 @@ SectionEnd
 
 ;--------------------------------------------------------------------------------------------------------
 Section -Post
- WriteUninstaller "$SYSDIR\inetsrv\Uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.${PRODUCT_BUILDNUMBER}.exe"
+ WriteUninstaller "$SYSDIR\inetsrv\Uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.exe"
  
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName"     "$(^Name)"
- WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$WINDIR\SysWOW64\inetsrv\Uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.${PRODUCT_BUILDNUMBER}.exe"
- WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon"     "$WINDIR\SysWOW64\inetsrv\Uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.${PRODUCT_BUILDNUMBER}.exe"
- WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion"  "${PRODUCT_VERSION}.${PRODUCT_BUILDNUMBER}"
+ WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$WINDIR\SysWOW64\inetsrv\Uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.exe"
+ WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon"     "$WINDIR\SysWOW64\inetsrv\Uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.exe"
+ WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion"  "${PRODUCT_VERSION}"
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout"    "${PRODUCT_WEB_SITE}"
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher"       "${PRODUCT_PUBLISHER}"
- WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "BuildNumber"     "${PRODUCT_BUILDNUMBER}"
+ WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "BuildNumber"     "${PRODUCT_VERSION}"
 
  ; This is the last section
  ; We can now close the logfile
@@ -208,7 +209,7 @@ Section Uninstall
  SetAutoClose true
  strcpy $R0 "$TEMP\Uninstaller ${LogFile}.log"
  Call Un.OpenLogfile
- !insertmacro LogDetail "De-installation and de-registration of ${PRODUCT_NAME} version: ${PRODUCT_VERSION} buildnummer ${PRODUCT_BUILDNUMBER}"
+ !insertmacro LogDetail "De-installation and de-registration of ${PRODUCT_NAME} version: ${PRODUCT_VERSION}"
 
  ; UN-Registering the module
  !insertmacro LogDetail "Deleting the MarlinModule from IIS"
