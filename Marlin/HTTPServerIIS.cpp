@@ -893,7 +893,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   if(status == HTTP_STATUS_CONTINUE)
   {
     // Log that we do not do this message, but we pass it on to IIS
-    DETAILLOGV("We do **NOT** handle this url: ",p_message->GetURL().GetString());
+    DETAILLOGV("We do **NOT** handle this url: ",p_message->GetCrackedURL().SafeURL().GetString());
 
     // Do **NOT** send an answer twice
     p_message->SetHasBeenAnswered();

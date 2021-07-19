@@ -4123,11 +4123,11 @@ HTTPClient::ProcessQueueMessage(HTTPMessage* p_message)
 {
   if(Send(p_message))
   {
-    DETAILLOG("Did send queued HTTPMessage to: %s",p_message->GetURL().GetString());
+    DETAILLOG("Did send queued HTTPMessage to: %s",p_message->GetCrackedURL().SafeURL().GetString());
   }
   else
   {
-    ERRORLOG("Error while sending queued HTTPMessage to: %s",p_message->GetURL().GetString());
+    ERRORLOG("Error while sending queued HTTPMessage to: %s",p_message->GetCrackedURL().SafeURL().GetString());
   }
   // End of the line: Remove the queue message
   delete p_message;
@@ -4138,11 +4138,11 @@ HTTPClient::ProcessQueueMessage(SOAPMessage* p_message)
 {
   if(Send(p_message))
   {
-    DETAILLOG("Did send queued SOAPMessage [%s] to: %s",p_message->GetSoapAction().GetString(),p_message->GetURL().GetString());
+    DETAILLOG("Did send queued SOAPMessage [%s] to: %s",p_message->GetSoapAction().GetString(),CrackedURL(p_message->GetURL()).SafeURL().GetString());
   }
   else
   {
-    ERRORLOG("Error while sending queued SOAPMessage [%s] to: %s", p_message->GetSoapAction().GetString(),p_message->GetURL().GetString());
+    ERRORLOG("Error while sending queued SOAPMessage [%s] to: %s", p_message->GetSoapAction().GetString(),CrackedURL(p_message->GetURL()).SafeURL().GetString());
   }
   // End of the line: Remove the queue message
   delete p_message;
@@ -4153,11 +4153,11 @@ HTTPClient::ProcessQueueMessage(JSONMessage* p_message)
 {
   if(Send(p_message))
   {
-    DETAILLOG("Did send queued JSONMessage to: %s",p_message->GetURL().GetString());
+    DETAILLOG("Did send queued JSONMessage to: %s",p_message->GetCrackedURL().SafeURL().GetString());
   }
   else
   {
-    ERRORLOG("Error while sending queued JSONMessage to: %s", p_message->GetURL().GetString());
+    ERRORLOG("Error while sending queued JSONMessage to: %s", p_message->GetCrackedURL().SafeURL().GetString());
   }
   // End of the line: Remove the queue message
   delete p_message;
