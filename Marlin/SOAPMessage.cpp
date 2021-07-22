@@ -1102,12 +1102,8 @@ SOAPMessage::SetPreserveWhitespace(bool p_preserve /*= true*/)
 CString 
 SOAPMessage::GetSoapMessage()
 {
-  // Printing the body of the message
-  if(m_soapVersion > SoapVersion::SOAP_10)
-  {
-    // Make sure all members are set to XML
-    CompleteTheMessage();
-  }
+  // Make sure all members are set to XML
+  CompleteTheMessage();
 
   // Let the XML object print the message
   CString message = XMLMessage::Print();
@@ -1136,13 +1132,16 @@ SOAPMessage::CompleteTheMessage()
   {
     SetSoapBody();
 
-    if(m_encryption == XMLEncryption::XENC_Signing)
+    if(m_soapVersion > SoapVersion::SOAP_11)
     {
-      AddToHeaderSigning();
-    }
-    else if(m_encryption == XMLEncryption::XENC_Body)
-    {
-      EncryptBody();
+      if(m_encryption == XMLEncryption::XENC_Signing)
+      {
+        AddToHeaderSigning();
+      }
+      else if(m_encryption == XMLEncryption::XENC_Body)
+      {
+        EncryptBody();
+      }
     }
   }
 }

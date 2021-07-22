@@ -86,7 +86,11 @@ protected:
 class JSONParserSOAP : public JSONParser
 {
 public:
+  JSONParserSOAP(JSONMessage* p_message);
   JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap);
+  JSONParserSOAP(JSONMessage* p_message,XMLMessage*  p_xml);
+
+  void Parse(XMLElement* p_element);
 private:
   // Parse the message
   void ParseMain   (JSONvalue& p_valPointer,XMLElement& p_element);
@@ -97,7 +101,5 @@ private:
   void CreateArray (JSONvalue& p_valPointer,XMLElement& p_element,CString p_arrayName);
   // Forward scanning
   bool ScanForArray(XMLElement& p_element,CString& p_arrayName);
-
-  SOAPMessage* m_soap;
 };
 

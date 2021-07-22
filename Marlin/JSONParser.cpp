@@ -543,17 +543,36 @@ JSONParser::ParseNumber()
 //
 //////////////////////////////////////////////////////////////////////////
 
+JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message)
+               :JSONParser(p_message)
+{
+}
+
 JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap)
                :JSONParser(p_message)
-               ,m_soap(p_soap)
 {
   // Construct the correct contents!!
-  p_soap->GetSoapMessage();
+  p_soap->CompleteTheMessage();
 
   JSONvalue&  valPointer = *m_message->m_value;
-  XMLElement& element    = *m_soap->GetParameterObjectNode();
+  XMLElement& element    = *p_soap->GetParameterObjectNode();
 
   ParseMain(valPointer,element);
+}
+
+JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,XMLMessage* p_xml)
+               :JSONParser(p_message)
+{
+  JSONvalue&  valPointer = *m_message->m_value;
+  XMLElement& element    = *p_xml->GetRoot();
+
+  ParseMain(valPointer,element);
+}
+
+void
+JSONParserSOAP::Parse(XMLElement* p_element)
+{
+  ParseMain(*m_message->m_value,*p_element);
 }
 
 void
