@@ -273,7 +273,7 @@ HTTPRequest::ReceivedRequest()
   CString   authorize       = m_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
   CString   modified        = m_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
   CString   referrer        = m_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
-  CString   rawUrl          = CW2A(m_request->CookedUrl.pFullUrl);
+  CString   rawUrl          = (CString) CW2A(m_request->CookedUrl.pFullUrl);
   PSOCKADDR sender          = m_request->Address.pRemoteAddress;
   PSOCKADDR receiver        = m_request->Address.pLocalAddress;
   int       remDesktop      = m_server->FindRemoteDesktop(m_request->Headers.UnknownHeaderCount
@@ -311,7 +311,7 @@ HTTPRequest::ReceivedRequest()
   // See if we must substitute for a sub-site
   if(m_server->GetHasSubsites())
   {
-    CString absPath = CW2A(m_request->CookedUrl.pAbsPath);
+    CString absPath = (CString) CW2A(m_request->CookedUrl.pAbsPath);
     m_site = m_server->FindHTTPSite(m_site,absPath);
   }
 
@@ -370,7 +370,7 @@ HTTPRequest::ReceivedRequest()
   acceptTypes.Trim();
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
-    CString absolutePath = CW2A(m_request->CookedUrl.pAbsPath);
+    CString absolutePath = (CString) CW2A(m_request->CookedUrl.pAbsPath);
     if(m_server->CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
     {
       return;
@@ -785,7 +785,7 @@ HTTPRequest::StartEventStreamResponse()
   TRACE0("Start EventStream Response\n");
 
   // First comment to push to the stream (not an event!)
-  CString init = m_server->GetEventBOM() ? ConstructBOM() : "";
+  CString init = m_server->GetEventBOM() ? ConstructBOM() : CString();
   init += ":init event-stream\n";
 
   // Initialize the HTTP response structure.

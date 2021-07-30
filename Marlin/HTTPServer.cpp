@@ -66,7 +66,7 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
-constexpr char* global_server_error = 
+constexpr const char* global_server_error = 
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n"
   "<html>\n"
   "<head>\n"
@@ -78,7 +78,7 @@ constexpr char* global_server_error =
   "</body>\n"
   "</html>\n";
 
-constexpr char* global_client_error =
+constexpr const char* global_client_error =
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n"
   "<html>\n"
   "<head>\n"
@@ -557,7 +557,7 @@ HTTPSite*
 HTTPServer::FindHTTPSite(int p_port,PCWSTR p_url)
 {
   USES_CONVERSION;
-  CString site = CW2A(p_url);
+  CString site = (CString) CW2A(p_url);
 
   return FindHTTPSite(p_port,site);
 }

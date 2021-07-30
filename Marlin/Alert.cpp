@@ -132,7 +132,7 @@ __int64 CreateAlert(LPCTSTR p_function,LPCTSTR p_oserror,LPCTSTR p_eventdata,int
     // Create the file (and directory) and open it in write mode
     FILE* file = nullptr;
     EnsureFile ensure(fileName);
-    if((ensure.OpenFile(&file,"w") == 0) && (file != INVALID_HANDLE_VALUE))
+    if((ensure.OpenFile(&file,(char*)"w") == 0) && (file != INVALID_HANDLE_VALUE))
     {
       // Directly print our information to the alert file
       fprintf(file,"APPLICATION ALERT FILE\n");

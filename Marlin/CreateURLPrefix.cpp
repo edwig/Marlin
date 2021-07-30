@@ -67,7 +67,7 @@ CString GetHostName(int p_type)
   // Find IP address by way of addressinfo
   struct addrinfo aiHints;
   struct addrinfo *aiList = NULL;
-  char*  port = "80";
+  const char*  port = "80";
 
   // Setup the hints address info structure
   // which is passed to the getaddrinfo() function

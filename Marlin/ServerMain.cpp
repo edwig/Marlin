@@ -616,7 +616,7 @@ int SvcInstall(char* username,char* password)
   };
   actions.dwResetPeriod = 600;  // reset count after 10 minutes
   actions.lpRebootMsg   = (LPSTR) PRODUCT_NAME;
-  actions.lpCommand     = "";
+  actions.lpCommand     = (LPSTR) "";
   actions.cActions      = 5;
   actions.lpsaActions   = restart;
 
@@ -1178,6 +1178,7 @@ int StandAloneStart()
 
   int     status = 0;
   int     retval = 1;  // Still not lucky
+  int     startResult = 0;
   // Save the tick count and initial checkpoint.
   DWORD   dwStartTickCount = GetTickCount();
   DWORD   dwWaitTime;
@@ -1225,7 +1226,7 @@ int StandAloneStart()
   }
 
   // Attempt to start the service.
-  int startResult = ExecuteProcess(program,arguments,true,emptyString,SW_HIDE);
+  startResult = ExecuteProcess(program,arguments,true,emptyString,SW_HIDE);
   if(startResult)
   {
     printf("StartService failed: %s\n",(LPCTSTR)GetLastErrorAsString());

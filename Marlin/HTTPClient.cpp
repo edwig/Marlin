@@ -2622,7 +2622,7 @@ HTTPClient::SendAsJSON(SOAPMessage* p_msg)
   // Most definitely we want a JSON back
   m_contentType = "application/json";
   m_bodyLength  = 0;
-  m_body        = "";
+  m_body        = (void*) "";
 
   // Reset as far as needed
   m_headers.clear();
@@ -3164,7 +3164,7 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
 
   USES_CONVERSION;
   CString proxy;
-  CString server = CW2A(p_server.c_str());
+  CString server = (CString) CW2A(p_server.c_str());
 
 
   // Find secure call
@@ -3201,7 +3201,7 @@ HTTPClient::TraceTheSend()
   // Before showing the request we show the configuration of the HTTP channel
   if(MUSTLOG(HLL_TRACE))
   {
-    m_trace->Trace("BEFORE SENDING",m_session,m_request);
+    m_trace->Trace((char*)"BEFORE SENDING",m_session,m_request);
   }
 
   // THE HTTP HEADER LINE
@@ -3510,7 +3510,7 @@ HTTPClient::ReadAllResponseHeaders()
       else
       {
         USES_CONVERSION;
-        CString all = CW2A(buffer);
+        CString all = (CString) CW2A(buffer);
         m_respHeaders.clear();
 
         int pos = all.Find("\r\n");

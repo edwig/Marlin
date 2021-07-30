@@ -76,8 +76,8 @@ TestMarlinServer::TestThreadPool(ThreadPool* p_pool)
 {
   pool = p_pool;
   int errors = 0;
-  char* text1("This is a longer text for the pool.");
-  char* text2("This is another! text for the pool.");
+  const char* text1("This is a longer text for the pool.");
+  const char* text2("This is another! text for the pool.");
 
   xprintf("TESTING SLEEPING/WAKING THREAD FUNCTIONS OF THREADPOOL\n");
   xprintf("======================================================\n");

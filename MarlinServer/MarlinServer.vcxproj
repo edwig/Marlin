@@ -133,7 +133,8 @@ copy ..\Certificates\web.config $(OutDir)</Command>
       <ExceptionHandling>Async</ExceptionHandling>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -188,8 +189,9 @@ copy ..\Certificates\web.config $(OutDir)</Command>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)Marlin\;$(SolutionDir)ExtraParts\;$(ProjectDir)ServerTestset\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

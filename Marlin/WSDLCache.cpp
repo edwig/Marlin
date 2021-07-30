@@ -186,7 +186,7 @@ WSDLCache::GenerateWSDL()
   // Open file;
   FILE* file = nullptr;
   EnsureFile ensfile(m_filename);
-  ensfile.OpenFile(&file,"w");
+  ensfile.OpenFile(&file,(char*)"w");
   if(file)
   {
     CString wsdlcontent;
@@ -741,7 +741,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     {
       checkParam = p_check->FindElement(p_checkBase,orgName,false);
     }
-    CString chkName = checkParam ? checkParam->GetName() : "";
+    CString chkName = checkParam ? checkParam->GetName() : CString();
 
     // DO CHECKS
 
@@ -1122,8 +1122,8 @@ WSDLCache::GetOperationPageFooter()
 
 struct _baseType
 {
-  char* m_name;
-  int   m_type;
+  const char* m_name;
+  int         m_type;
 }
 baseTypes[] =
 {

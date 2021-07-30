@@ -48,7 +48,7 @@ TestMarlinServerAppFactory::CreateServerApp(IHttpServer*  p_iis
 {
   static TestMarlinServerAppPool* theOne = nullptr;
 
-  LoadConstants("MarlinServer");
+  LoadConstants((char*)"MarlinServer");
 
   // Generally we want only ONE app. Here we have one app and three sites
   if(theOne == nullptr)

@@ -88,8 +88,8 @@ enum class HTTPCommand
 extern const char* headers[];
 
 // Incoming and responding header names
-extern char* header_fields[];
-extern char* header_response[];
+extern const char* header_fields[];
+extern const char* header_response[];
 
 using ushort    = unsigned short;
 using HeaderMap = std::map<CString,CString>;

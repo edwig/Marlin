@@ -44,7 +44,7 @@ TestMail::Send()
 {
   int cc = 0;
   CString filename("testmail");
-  FILE* file = CreateTempFile(filename,"w");
+  FILE* file = CreateTempFile(filename,(char*)"w");
   if(file)
   {
     fprintf(file,"HOST:%s\n",m_server);

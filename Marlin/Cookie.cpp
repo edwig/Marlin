@@ -155,7 +155,7 @@ Cookie::GetSetCookieText()
       error.Format("Error %u in WinHttpTimeFromSystemTime.\n",GetLastError());
       throw StdException(error.GetString());
     }
-    CString expires = CW2A((LPCWSTR)&pwszTimeStr);
+    CString expires = (CString) CW2A((LPCWSTR)&pwszTimeStr);
     cookie.AppendFormat("; Expires=%s",expires.GetString());
   }
   // Optional flags

@@ -32,8 +32,8 @@
 
 typedef struct _httpError
 {
-  int   m_error;
-  char* m_text;
+  int         m_error;
+  const char* m_text;
 }
 HTTPError;
 

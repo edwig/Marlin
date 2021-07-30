@@ -359,8 +359,10 @@ FileBuffer::ReadFile()
     return false;
   }
   // Get the size of the file so we can create an internal buffer
-  DWORD sizeHigh = NULL;
-  DWORD sizeLow  = GetFileSize(m_file,&sizeHigh);
+  DWORD sizeHigh  = NULL;
+  DWORD sizeLow   = GetFileSize(m_file,&sizeHigh);
+  DWORD readBytes = 0;
+
   if(sizeLow == INVALID_FILE_SIZE || sizeHigh)
   {
     // Cannot get the file size, or file bigger than 4GB
@@ -382,7 +384,6 @@ FileBuffer::ReadFile()
   m_buffer = new uchar[m_binaryLength + 1];
 
   // Read file from disk in one (1) go
-  DWORD readBytes = 0;
   if(::ReadFile(m_file,m_buffer,(DWORD)m_binaryLength,&readBytes,NULL))
   {
     if(readBytes >= (DWORD)m_binaryLength)

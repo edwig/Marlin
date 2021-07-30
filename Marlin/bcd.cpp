@@ -2320,7 +2320,7 @@ bcd::AsDisplayString(int p_decimals /*=2*/) const
   // Apply thousand separators in first part of the number
   if((pos > 0) || (pos == -1 && str.GetLength() > 3))
   {
-    CString result = pos > 0 ? str.Mid(pos) : "";
+    CString result = pos > 0 ? str.Mid(pos) : CString();
     str = pos > 0 ? str.Left(pos) : str;
     pos = result.GetLength();
 

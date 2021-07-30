@@ -361,7 +361,7 @@ ParseCommandLine(int argc,char* argv[])
 {
   // Setting the application pool name
   CString exeName = GetExeName();
-  g_poolName = exeName.IsEmpty() ? MARLIN_PRODUCT_NAME : exeName;
+  g_poolName = exeName.IsEmpty() ? CString(MARLIN_PRODUCT_NAME) : exeName;
 
   for(int ind = 1; ind < argc, argv[ind]; ++ind)
   {

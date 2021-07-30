@@ -270,7 +270,7 @@ HTTPClientTracing::Trace(char* p_when,HINTERNET p_session,HINTERNET p_request)
 //////////////////////////////////////////////////////////////////////////
 
 bool 
-HTTPClientTracing::QueryBool(HINTERNET p_handle,DWORD p_option,BOOL* p_bool,char* p_optionName)
+HTTPClientTracing::QueryBool(HINTERNET p_handle,DWORD p_option,BOOL* p_bool,const char* p_optionName)
 {
   DWORD bufLength = sizeof(BOOL);
   *p_bool = FALSE;
@@ -283,7 +283,7 @@ HTTPClientTracing::QueryBool(HINTERNET p_handle,DWORD p_option,BOOL* p_bool,char
 }
 
 bool 
-HTTPClientTracing::QueryWord(HINTERNET p_handle,DWORD p_option,DWORD* p_word,char* p_optionName)
+HTTPClientTracing::QueryWord(HINTERNET p_handle,DWORD p_option,DWORD* p_word,const char* p_optionName)
 {
   DWORD bufLength = sizeof(DWORD);
   *p_word = 0L;
@@ -296,7 +296,7 @@ HTTPClientTracing::QueryWord(HINTERNET p_handle,DWORD p_option,DWORD* p_word,cha
 }
 
 bool 
-HTTPClientTracing::QueryVoid(HINTERNET p_handle,DWORD p_option,void** p_pointer,char* p_optionName)
+HTTPClientTracing::QueryVoid(HINTERNET p_handle,DWORD p_option,void** p_pointer,const char* p_optionName)
 {
   DWORD bufLength = sizeof(DWORD_PTR);
   *p_pointer = nullptr;
@@ -309,7 +309,7 @@ HTTPClientTracing::QueryVoid(HINTERNET p_handle,DWORD p_option,void** p_pointer,
 }
 
 bool
-HTTPClientTracing::QueryObject(HINTERNET p_handle,DWORD p_option,void* p_pointer,DWORD p_size,char* p_optionName)
+HTTPClientTracing::QueryObject(HINTERNET p_handle,DWORD p_option,void* p_pointer,DWORD p_size,const char* p_optionName)
 {
   DWORD bufLength = p_size;
   BOOL  result = WinHttpQueryOption(p_handle,p_option,p_pointer,&bufLength);
@@ -325,7 +325,7 @@ HTTPClientTracing::QueryObject(HINTERNET p_handle,DWORD p_option,void* p_pointer
 }
 
 CString
-HTTPClientTracing::QueryString(HINTERNET p_handle,DWORD p_option,char* p_optionName)
+HTTPClientTracing::QueryString(HINTERNET p_handle,DWORD p_option,const char* p_optionName)
 {
   DWORD bufLength = 0L;
   CString theString;

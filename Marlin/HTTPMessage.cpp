@@ -740,7 +740,7 @@ HTTPMessage::SetAuthorization(CString& p_authorization)
 // DO NOT CHANGE THE ORDER, because the array/header information will be
 // delivered in this order from the MS-Windows kernel
 //
-char* header_fields[HttpHeaderMaximum] =
+const char* header_fields[HttpHeaderMaximum] =
 {
   /*  0 */   "cache-control"
   /*  1 */  ,"connection"
@@ -785,7 +785,7 @@ char* header_fields[HttpHeaderMaximum] =
   /* 40 */  ,"user-agent"
 };
 
-char* header_response[10]
+const char* header_response[10]
 {
   /* 20 */   "accept-ranges"
   /* 21 */  ,"age"

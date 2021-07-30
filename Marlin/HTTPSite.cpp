@@ -499,7 +499,7 @@ HTTPSite::LogSettings()
   DETAILLOGS("Site has XSS Protection block mode : ",       m_xXSSBlockMode  ? "ON" : "OFF");
   DETAILLOGS("Site blocking the browser caching  : ",       m_blockCache     ? "ON" : "OFF");
   DETAILLOGS("Site Cross-Origin-Resource-Sharing : ",       m_useCORS        ? "ON" : "OFF");
-  DETAILLOG1(CString("Site allows cross-origin           : ") + (m_allowOrigin.IsEmpty() ? "*" : m_allowOrigin));
+  DETAILLOG1(CString("Site allows cross-origin           : ") + (m_allowOrigin.IsEmpty() ? CString("*") : m_allowOrigin));
   DETAILLOGS("Site CORS allows headers           : ",       m_allowHeaders);
   DETAILLOGV("Site CORS max age of pre-flight    : %d",     m_corsMaxAge);
   DETAILLOGS("Site CORS allows credentials       : %s",     m_corsCredentials ? "YES" : "NO");
@@ -1877,6 +1877,6 @@ HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
   // If we use CORS, make sure we advertise the origin
   if(m_useCORS)
   {
-    p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? "*" : m_allowOrigin));
+    p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? CString("*") : m_allowOrigin));
   }
 }

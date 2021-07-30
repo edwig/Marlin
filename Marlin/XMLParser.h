@@ -32,9 +32,9 @@
 class Entity
 {
 public:
-  char*  m_entity;
-  int    m_length;
-  char   m_char;
+  const char* m_entity;
+  int         m_length;
+  const char  m_char;
 };
 
 // Pointer type for processing

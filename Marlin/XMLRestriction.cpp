@@ -1326,7 +1326,7 @@ XMLRestriction::CheckDuration(CString p_value,int& p_type)
   // Must see a 'P' for period
   if(duration.Left(1) != 'P')
   {
-    return false; // Leave interval at NULL
+    return CString(); // Leave interval at NULL
   }
   duration = duration.Mid(1);
 

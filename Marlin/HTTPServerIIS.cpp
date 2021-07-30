@@ -392,7 +392,7 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
 
     // Grab the rest of the needed content out of the request
     PSOCKADDR_IN6 sender   = (PSOCKADDR_IN6)p_request->Address.pRemoteAddress;
-    CString   absolutePath = CW2A(p_request->CookedUrl.pAbsPath);
+    CString   absolutePath = (CString) CW2A(p_request->CookedUrl.pAbsPath);
 
     if(CheckUnderDDOSAttack(sender,absolutePath))
     {
@@ -400,7 +400,7 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
     }
 
     // Grab the raw URL and the dekstop for the stream
-    CString   rawUrl       = CW2A(p_request->CookedUrl.pFullUrl);
+    CString   rawUrl       = (CString) CW2A(p_request->CookedUrl.pFullUrl);
     int       remDesktop   = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
                                               ,p_request->Headers.pUnknownHeaders);
     // Open an event stream
@@ -448,7 +448,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   CString   authorize      = p_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
   CString   modified       = p_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
   CString   referrer       = p_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
-  CString   rawUrl         = CW2A(p_request->CookedUrl.pFullUrl);
+  CString   rawUrl         = (CString) CW2A(p_request->CookedUrl.pFullUrl);
   PSOCKADDR sender         = p_request->Address.pRemoteAddress;
   int       remDesktop     = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
                                               ,p_request->Headers.pUnknownHeaders);
@@ -467,7 +467,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   // See if we must substitute for a sub-site
   if(m_hasSubsites)
   {
-    CString absPath = CW2A(p_request->CookedUrl.pAbsPath);
+    CString absPath = (CString) CW2A(p_request->CookedUrl.pAbsPath);
     p_site = FindHTTPSite(p_site,absPath);
   }
 
@@ -751,7 +751,7 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
   IHttpCachePolicy* policy = response->GetCachePolicy();
 
   // First comment to push to the stream (not an event!)
-  CString init = m_eventBOM ? ConstructBOM() : "";
+  CString init = m_eventBOM ? ConstructBOM() : CString();
   init += ":init event-stream\r\n\r\n";
 
   response->SetStatus(HTTP_STATUS_OK,"OK");

@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-char* xml_datatypes[] =
+const char* xml_datatypes[] =
 {
   ""                          // 0
  ,"string"                    // 1  XDT_String            SQL_C_CHAR
@@ -102,7 +102,7 @@ XmlDataTypeToString(XmlDataType p_type)
 XmlDataType
 StringToXmlDataType(CString p_name)
 {
-  char** datatypes = xml_datatypes;
+  const char** datatypes = xml_datatypes;
 
   for(int ind = 1;ind < sizeof(xml_datatypes) / sizeof(char*); ++ind)
   {

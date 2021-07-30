@@ -488,7 +488,7 @@ SOAPMessage::AddHeader(CString p_name,CString p_value)
 void
 SOAPMessage::AddHeader(HTTP_HEADER_ID p_id,CString p_value)
 {
-  extern char* header_fields[HttpHeaderMaximum];
+  extern const char* header_fields[HttpHeaderMaximum];
   int maximum = m_incoming ? HttpHeaderMaximum : HttpHeaderResponseMaximum;
 
   if(p_id >= 0 && p_id < maximum)
@@ -512,7 +512,7 @@ SOAPMessage::DelHeader(CString p_name)
 void
 SOAPMessage::DelHeader(HTTP_HEADER_ID p_id)
 {
-  extern char* header_fields[HttpHeaderMaximum];
+  extern const char* header_fields[HttpHeaderMaximum];
   int maximum = m_incoming ? HttpHeaderMaximum : HttpHeaderResponseMaximum;
 
   if(p_id >= 0 && p_id < maximum)
@@ -1596,7 +1596,7 @@ SOAPMessage::CheckAfterParsing()
 
   // get the name of first element within body/root
   // SOAP Action (first guess)
-  m_soapAction = m_paramObject ? m_paramObject->GetName() : "";
+  m_soapAction = m_paramObject ? m_paramObject->GetName() : CString();
   // SOAP namespace override (leave HTTP header SOAPAction intact)
   CString namesp = GetAttribute(m_paramObject,"xmlns");
   if(!namesp.IsEmpty())
@@ -1969,9 +1969,9 @@ SOAPMessage::HandleSoapFault(XMLElement* p_fault)
     XMLElement* detail = FindElement(p_fault,"detail");
 
     m_soapFaultCode   =          fcode ->GetValue();
-    m_soapFaultActor  = actor  ? actor ->GetValue() : "";
-    m_soapFaultString = fmess  ? fmess ->GetValue() : "";
-    m_soapFaultDetail = detail ? detail->GetValue() : "";
+    m_soapFaultActor  = actor  ? actor ->GetValue() : CString();
+    m_soapFaultString = fmess  ? fmess ->GetValue() : CString();
+    m_soapFaultDetail = detail ? detail->GetValue() : CString();
   }
   else
   {
@@ -1999,10 +1999,10 @@ SOAPMessage::HandleSoapFault(XMLElement* p_fault)
     {
       text = FindElement(reason,"Text");
     }
-    m_soapFaultCode   = value1 ? value1->GetValue() : "";
-    m_soapFaultActor  = value2 ? value2->GetValue() : "";
-    m_soapFaultString = text   ? text  ->GetValue() : "";
-    m_soapFaultDetail = detail ? detail->GetValue() : "";
+    m_soapFaultCode   = value1 ? value1->GetValue() : CString();
+    m_soapFaultActor  = value2 ? value2->GetValue() : CString();
+    m_soapFaultString = text   ? text  ->GetValue() : CString();
+    m_soapFaultDetail = detail ? detail->GetValue() : CString();
   }
 }
 

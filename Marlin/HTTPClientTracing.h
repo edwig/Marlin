@@ -43,11 +43,11 @@ public:
   void Trace(char* p_when,HINTERNET p_session,HINTERNET p_request);
 
 private:
-  bool    QueryBool  (HINTERNET p_handle,DWORD p_option,BOOL*  p_bool,   char* p_optionName);
-  bool    QueryWord  (HINTERNET p_handle,DWORD p_option,DWORD* p_word,   char* p_optionName);
-  bool    QueryVoid  (HINTERNET p_handle,DWORD p_option,void** p_pointer,char* p_optionName);
-  bool    QueryObject(HINTERNET p_handle,DWORD p_option,void*  p_pointer,DWORD p_size,char* p_optionName);
-  CString QueryString(HINTERNET p_handle,DWORD p_option,char*  p_optionName);
+  bool    QueryBool  (HINTERNET p_handle,DWORD p_option,BOOL*  p_bool,   const char* p_optionName);
+  bool    QueryWord  (HINTERNET p_handle,DWORD p_option,DWORD* p_word,   const char* p_optionName);
+  bool    QueryVoid  (HINTERNET p_handle,DWORD p_option,void** p_pointer,const char* p_optionName);
+  bool    QueryObject(HINTERNET p_handle,DWORD p_option,void*  p_pointer,DWORD p_size,const char* p_optionName);
+  CString QueryString(HINTERNET p_handle,DWORD p_option,const char*  p_optionName);
 
   // Works for this client
   HTTPClient*   m_client;

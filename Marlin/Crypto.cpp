@@ -204,15 +204,16 @@ Crypto::Digest(CString& p_buffer,CString& p_password)
     goto error_exit;
   }
 
-  // Make a string version of the numeric digest value
-  m_digest.Empty();
+  {
+    // Make a string version of the numeric digest value
+    m_digest.Empty();
 
-  // Create a base64 string of the hash data
-  int b64length = (int) base64.B64_length(dwHashLen);
-  char* buffer  = m_digest.GetBufferSetLength(b64length);
-  base64.Encrypt((const unsigned char*)pbHash,dwHashLen,(unsigned char*)buffer);
-  m_digest.ReleaseBuffer(b64length);
-
+    // Create a base64 string of the hash data
+    int b64length = (int)base64.B64_length(dwHashLen);
+    char* buffer = m_digest.GetBufferSetLength(b64length);
+    base64.Encrypt((const unsigned char*)pbHash,dwHashLen,(unsigned char*)buffer);
+    m_digest.ReleaseBuffer(b64length);
+  }
 error_exit:
   if(pbHash)
   {
@@ -310,6 +311,14 @@ Crypto::Encryption(CString p_input,CString p_password)
   DWORD      dwDataLen  = 0;
   DWORD      dwBuffLen  = 0;
   BYTE*      pbData     = NULL;
+  DWORD      blocklen   = 0;
+  DWORD      cbBlocklen = sizeof(DWORD);
+  DWORD      dwFlags    = 0;
+  BOOL       bFinal     = FALSE;
+  DWORD      totallen   = 0;
+  BYTE*      crypting   = pbData;
+  int        b64length  = 0;
+  char*      buffer     = nullptr;
   CString    result;
   Base64     base64;
 
@@ -338,8 +347,6 @@ Crypto::Encryption(CString p_input,CString p_password)
     goto error_exit;
   }
 
-  DWORD blocklen = 0;
-  DWORD cbBlocklen = sizeof(DWORD);
   if(!CryptGetKeyParam(hCryptKey,KP_BLOCKLEN,(BYTE*)&blocklen,&cbBlocklen,0))
   {
     m_error = "Cannot get the block length of the encryption method";
@@ -352,10 +359,6 @@ Crypto::Encryption(CString p_input,CString p_password)
   pbData = new BYTE[dwBuffLen];
   strcpy_s((char*)pbData,dwBuffLen,p_input.GetString());
 
-  DWORD dwFlags   = 0;
-  BOOL  bFinal    = FALSE;
-  DWORD totallen  = 0;
-  BYTE* crypting  = pbData;
   
   do
   {
@@ -397,8 +400,8 @@ Crypto::Encryption(CString p_input,CString p_password)
   while(bFinal == FALSE);
 
   // Create a base64 string of the hash data
-  int b64length = (int)base64.B64_length(totallen);
-  char*  buffer = result.GetBufferSetLength(b64length);
+  b64length = (int)base64.B64_length(totallen);
+  buffer    = result.GetBufferSetLength(b64length);
   base64.Encrypt((const unsigned char*)pbData,totallen,(unsigned char*)buffer);
   result.ReleaseBuffer(b64length);
 
@@ -436,6 +439,12 @@ Crypto::Decryption(CString p_input,CString p_password)
   DWORD      dataLength = 0;
   DWORD      bufferSize = 0;
   BYTE*      pbData     = NULL;
+  DWORD      blocklen   = 0;
+  DWORD      cbBlocklen = sizeof(DWORD);
+  BOOL       bFinal     = FALSE;
+  DWORD      dwFlags    = 0;
+  DWORD      totallen   = 0;
+  BYTE*      decrypting = pbData;
   CString    result;
   Base64     base64;
 
@@ -471,8 +480,6 @@ Crypto::Decryption(CString p_input,CString p_password)
     goto error_exit;
   }
 
-  DWORD blocklen = 0;
-  DWORD cbBlocklen = sizeof(DWORD);
   if(!CryptGetKeyParam(hCryptKey,KP_BLOCKLEN,(BYTE*)&blocklen,&cbBlocklen,0))
   {
     m_error = "Cannot get the block length of the encryption method";
@@ -492,10 +499,6 @@ Crypto::Decryption(CString p_input,CString p_password)
   pbData = new BYTE[bufferSize];
   base64.Decrypt((const unsigned char*)p_input.GetString(), dwDataLen, (unsigned char*)pbData);
 
-  BOOL  bFinal     = FALSE;
-  DWORD dwFlags    = 0;
-  DWORD totallen   = 0;
-  BYTE* decrypting = pbData;
 
   do 
   {

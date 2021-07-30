@@ -409,7 +409,7 @@ HTTPServerSync::RunHTTPServer()
     CString   modified       = request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
     CString   referrer       = request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
     CString   contentLength  = request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
-    CString   rawUrl         = CW2A(request->CookedUrl.pFullUrl);
+    CString   rawUrl         = (CString) CW2A(request->CookedUrl.pFullUrl);
     PSOCKADDR sender         = request->Address.pRemoteAddress;
     int       remDesktop     = FindRemoteDesktop(request->Headers.UnknownHeaderCount
                                                 ,request->Headers.pUnknownHeaders);
@@ -457,7 +457,7 @@ HTTPServerSync::RunHTTPServer()
       // See if we must substitute for a sub-site
       if(site && m_hasSubsites)
       {
-        CString absPath = CW2A(request->CookedUrl.pAbsPath);
+        CString absPath = (CString) CW2A(request->CookedUrl.pAbsPath);
         site = FindHTTPSite(site,absPath);
       }
 
@@ -521,7 +521,7 @@ HTTPServerSync::RunHTTPServer()
       acceptTypes.Trim();
       if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
       {
-        CString absolutePath = CW2A(request->CookedUrl.pAbsPath);
+        CString absolutePath = (CString) CW2A(request->CookedUrl.pAbsPath);
         if(CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
         {
           continue;
@@ -1354,11 +1354,11 @@ bool
 HTTPServerSync::InitEventStream(EventStream& p_stream)
 {
   // First comment to push to the stream (not an event!)
-  CString init = m_eventBOM ? ConstructBOM() : "";
+  CString init = m_eventBOM ? ConstructBOM() : CString();
   init += ":init event-stream\n";
 
   // Initialize the HTTP response structure.
-  InitializeHttpResponse(&p_stream.m_response,HTTP_STATUS_OK,"OK");
+  InitializeHttpResponse(&p_stream.m_response,HTTP_STATUS_OK,(PSTR)"OK");
 
   // Add a known header.
   AddKnownHeader(p_stream.m_response,HttpHeaderContentType,"text/event-stream");

@@ -91,7 +91,7 @@ WebConfigDlg::OnInitDialog()
   }
   else
   {
-    CString subject = m_url.IsEmpty() ? "server" : m_url;
+    CString subject = m_url.IsEmpty() ? CString("server") : m_url;
     m_title = base + " Editor for: " + subject;
   }
   SetWindowText(m_iis ? "Marlin.Config" : "Web.Config");
