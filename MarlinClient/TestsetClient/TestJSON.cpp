@@ -205,7 +205,7 @@ int TestArray()
 int MultiJSON()
 {
   int errors = 0;
-  char* buffer=
+  const char* buffer=
 "------WebKitFormBoundarydZ38XIr1QTTS2IMb\r\n"
 "Content-Disposition: form-data; name=\"277153\"\r\n"
 "\r\n"
@@ -365,7 +365,7 @@ int TestJSON(void)
   XMLElement* fort = soap.FindElement("Fortune");
   XMLElement* glor = soap.FindElement("Glory");
   int FirstFortune = fort ? atoi(fort->GetValue()) : 0;
-  CString glory    = glor ? glor->GetValue() : "";
+  CString glory    = glor ? glor->GetValue() : CString();
   if(FirstAction1 != 101 || FirstAction2 != 102 || FirstFortune != 1000000 || glory.Compare("Indiana Jones"))
   {
     printf("ERROR: ROUND TRIP ENGINEERING SOAP -> JSON -> SOAP FAILED\n");

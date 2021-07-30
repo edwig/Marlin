@@ -383,28 +383,28 @@ int TestWebservices(HTTPClient& client)
   xprintf("TESTING STANDARD SOAP MESSAGE TO /MarlinTest/Insecure/\n");
   xprintf("====================================================\n");
   msg = CreateSoapMessage(namesp,command,url);
-  errors += DoSend(client,msg,"insecure");
+  errors += DoSend(client,msg,(char*)"insecure");
 
   // Test 2
   xprintf("TESTING BODY SIGNING SOAP TO /MarlinTest/BodySigning/\n");
   xprintf("===================================================\n");
   url = CreateURL("BodySigning");
   msg = CreateSoapMessage(namesp,command,url,SoapVersion::SOAP_12, XMLEncryption::XENC_Signing);
-  errors += DoSend(client,msg,"body signing");
+  errors += DoSend(client,msg,(char*)"body signing");
 
   // Test 3
   xprintf("TESTING BODY ENCRYPTION SOAP TO /MarlinTest/BodyEncrypt/\n");
   xprintf("======================================================\n");
   url = CreateURL("BodyEncrypt");
   msg = CreateSoapMessage(namesp,command,url, SoapVersion::SOAP_12, XMLEncryption::XENC_Body);
-  errors += DoSend(client,msg,"body encrypting");
+  errors += DoSend(client,msg,(char*)"body encrypting");
 
   // Test 4
   xprintf("TESTING WHOLE MESSAGE ENCRYPTION TO /MarlinTest/MessageEncrypt/\n");
   xprintf("=============================================================\n");
   url = CreateURL("MessageEncrypt");
   msg = CreateSoapMessage(namesp,command,url, SoapVersion::SOAP_12, XMLEncryption::XENC_Message);
-  errors += DoSend(client,msg,"message encrypting");
+  errors += DoSend(client,msg,(char*)"message encrypting");
 
   // Test 5
   xprintf("TESTING RELIABLE MESSAGING TO /MarlinTest/Reliable/\n");
@@ -428,7 +428,7 @@ int TestWebservices(HTTPClient& client)
   CString password("altijd");
   client.SetUser(user);
   client.SetPassword(password);
-  errors += DoSend(client,msg,"token testing");
+  errors += DoSend(client,msg,(char*)"token testing");
   client.SetSingleSignOn(false);
 
   // Test 8
@@ -441,9 +441,9 @@ int TestWebservices(HTTPClient& client)
   client.SetSingleSignOn(true);
   client.SetUser(user);
   client.SetPassword(password);
-  errors += DoSend(client,msg,"single sign on");
+  errors += DoSend(client,msg,(char*)"single sign on");
   msg = CreateSoapMessage(namesp,command,url2);
-  errors += DoSend(client,msg,"single sign on");
+  errors += DoSend(client,msg,(char*)"single sign on");
   client.SetSingleSignOn(false);
 
   // Test 9
@@ -452,7 +452,7 @@ int TestWebservices(HTTPClient& client)
   url = CreateURL("Insecure");
   msg = CreateSoapMessage(namesp,command,url);
   msg->SetParameter("TestFault",true);
-  errors += DoSend(client,msg,"soap fault",true);
+  errors += DoSend(client,msg,(char*)"soap fault",true);
 
   // Test 10
   xprintf("TESTING UNICODE SENDING TO /MarlinTest/Insecure/\n");
@@ -460,7 +460,7 @@ int TestWebservices(HTTPClient& client)
   url = CreateURL("Insecure");
   msg = CreateSoapMessage(namesp,command,url);
   msg->SetSendUnicode(true);
-  errors += DoSend(client,msg,"sending unicode");
+  errors += DoSend(client,msg,(char*)"sending unicode");
 
   // Test 11
   xprintf("TESTING FILTERING CAPABILITIES TO /MarlinTest/Filter/\n");
