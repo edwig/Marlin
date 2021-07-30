@@ -589,6 +589,11 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
   bool didError = false;
   SiteHandler* handler  = nullptr;
 
+  // In case we come from IIS. This is the first entry point in the Server DLL
+  // So we alter the thread from the MS-Threadpool from that system to do our
+  // type of exception handling!
+  _set_se_translator(SeTranslator);
+
   try
   {
     // HTTP Throttling is one call per calling address at the time

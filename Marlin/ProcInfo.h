@@ -70,7 +70,11 @@ public:
 class  ProcInfo 
 {
 public:
+  #define STATUS_SUCCESS (0x00000000)
+
   typedef ProcModule Module;
+  typedef LONG NTSTATUS, * PNTSTATUS;
+  typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
 
   //	Helper functions
   static Module* LoadModule(HMODULE);
@@ -113,9 +117,12 @@ public:
   ModuleList  m_modules;
 private:
   static
-  CString     ReadLangString(LPVOID      pVI
-                            ,char const* pszFormatString
-                            ,DWORD       dwLang
-                            ,char const* pszStringName);
-  bool				m_use_psapi;
+  CString             ReadLangString(LPVOID      pVI
+                                    ,char const* pszFormatString
+                                    ,DWORD       dwLang
+                                    ,char const* pszStringName);
+  bool                isWin10AnniversaryOrHigher();
+  RTL_OSVERSIONINFOW  getRealOSVersion();
+  bool				        m_use_psapi;
+
 };

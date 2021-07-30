@@ -71,8 +71,8 @@ static char THIS_FILE[] = __FILE__;
 // HTTP_STATUS_NO_CONTENT      -> W3C Standard says that a server can end a event stream with tis HTTP status 
 //
 #define CONTINUE_STREAM(status) ((m_status == HTTP_STATUS_CONTINUE) || \
-                                  (m_status >= HTTP_STATUS_OK && m_status < HTTP_STATUS_NO_CONTENT) || \
-                                  (m_status == HTTP_STATUS_SERVICE_UNAVAIL))
+                                 (m_status >= HTTP_STATUS_OK && m_status < HTTP_STATUS_NO_CONTENT) || \
+                                 (m_status == HTTP_STATUS_SERVICE_UNAVAIL))
 
 // CTOR for the client
 HTTPClient::HTTPClient()

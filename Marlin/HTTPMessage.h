@@ -126,8 +126,8 @@ public:
   void Reset();
 
   // SETTERS
-  void SetBody(CString& p_body);
-  void SetBody(const char* p_body);
+  void SetBody(CString     p_body,CString p_encoding = "");
+  void SetBody(const char* p_body,CString p_encoding = "");
   void SetBody(void* p_body,unsigned p_length);
   void SetURL(CString& p_url);
   bool SetVerb(CString p_verb);
@@ -279,18 +279,6 @@ private:
   SYSTEMTIME          m_systemtime;                                   // System time for m_modified
   long                m_references    { 1       };                    // Referencing system
 };
-
-inline void
-HTTPMessage::SetBody(CString& p_body)
-{
-  m_buffer.SetBuffer((uchar*)p_body.GetString(),p_body.GetLength());
-}
-
-inline void
-HTTPMessage::SetBody(const char* p_body)
-{
-  m_buffer.SetBuffer((uchar*)p_body,strlen(p_body));
-}
 
 inline void 
 HTTPMessage::SetBody(void* p_body,unsigned p_length)

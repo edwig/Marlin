@@ -694,6 +694,7 @@ LogAnalysis::ReadConfig()
 static unsigned int
 __stdcall StartingTheLog(void* pParam)
 {
+  _set_se_translator(SeTranslator);
   LogAnalysis* theLog = reinterpret_cast<LogAnalysis*> (pParam);
   theLog->RunLogAnalysis();
   return 0;

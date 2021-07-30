@@ -9,8 +9,8 @@ Version 7.x contains the new MarlinModule that (again) allows to be used with st
 application modules (DLL's), and so optimize the depoloyment and stack tracing capabilities
 ----------------------------------------------------------------------------------------------
 
-CHANGES IN VERSION 7.0.0 RC
----------------------------
+CHANGES IN VERSION 7.0.0
+------------------------
 1)  All Analasys logfiles removed from MarlinModule. All memory allocation from the loaded DLL's
     go now back to the DLL's. This is done so we can move back to static linked librarys and
     static linked MFC environments.
@@ -34,4 +34,9 @@ CHANGES IN VERSION 7.0.0 RC
     that starts it from IIS. It has the potential to reject the current used module.
     Modules with a version number under 7.0.0 or 8.0.0 and above are rejected
 9)  Client testsets have been expanded voor WebSocket testing in IIS.
+10) Better deduction of the MS-WIndows version in the crash reports
+11) Faster parsing of a SOAP/XML message into a JSONMessage. Does *NOT* require to reconstruct
+    the SOAP message, but does it internally.
+12) Various fixes for SEH Translators.
+
 

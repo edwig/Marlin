@@ -372,6 +372,9 @@ public:
                                    ,CString         p_reason
                                    ,CString         p_authScheme = ""
                                    ,CString         p_realm      = "");
+  // Response in case of succesful sending of 2FA code
+  void       RespondWith2FASuccess (HTTPMessage*    p_message
+                                   ,CString         p_body);
   // REQUEST HEADER METHODS
 
   // RFC 2616: paragraph 14.25: "if-modified-since"

@@ -230,6 +230,20 @@ OAuth2Cache::SetExpired(int p_session)
   }
 }
 
+// Slow lookup of a session
+int
+OAuth2Cache::GetHasSession(CString p_appID,CString p_appKey)
+{
+  for(auto& ses : m_cache)
+  {
+    if(ses.second.m_appID == p_appID && ses.second.m_appKey == p_appKey)
+    {
+      return ses.first;
+    }
+  }
+  return 0;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // PRIVATE

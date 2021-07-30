@@ -87,6 +87,7 @@ public:
   bool      GetIsExpired(int p_session);
   INT64     GetExpires(int p_session);
   INT64     GetDefaultExpirationPeriod();
+  int       GetHasSession(CString p_appID,CString p_appKey);
 
   // SETTERS
   void      SetExpired(int p_session);

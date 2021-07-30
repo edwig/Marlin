@@ -94,11 +94,11 @@ int main(int argc,char* argv[],char* /*envp[]*/)
   }
 
   // initialize MFC and print and error on failure
-//   if(!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
-//   {
-//     printf("MFC Initialisation has failed\n");
-//     return 1;
-//   }
+  if(!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
+  {
+    printf("MFC Initialisation has failed\n");
+    return 1;
+  }
 
   // Load ServerApp constants before anything else
   LoadConstants(argv[0]);

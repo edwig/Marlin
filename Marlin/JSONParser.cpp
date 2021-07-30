@@ -656,7 +656,7 @@ JSONParserSOAP::ScanForArray(XMLElement& p_element,CString& p_arrayName)
   return true;
 }
 
-void 
+void
 JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CString p_arrayName)
 {
   p_valPointer.SetDatatype(JsonType::JDT_object);
@@ -671,6 +671,23 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
 
   for(auto& element : p_element.GetChildren())
   {
+		if(element->GetAttributes().size() > 0)
+		{
+			JSONobject objVal;
+			for(auto& attribute : element->GetAttributes())
+			{
+				JSONpair attrPair;
+				attrPair.m_name = attribute.m_name;
+				attrPair.m_value.SetValue(attribute.m_value);
+
+				// Put an object in the array and parse it
+				objVal.push_back(attrPair);
+			}
+      JSONvalue value;
+			jar.push_back(value);
+      JSONvalue& val = jar.back();
+			val.SetValue(objVal);
+		}
     // Put an object in the array and parse it
     JSONvalue value;
     jar.push_back(value);
@@ -686,6 +703,22 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
   p_valPointer.SetDatatype(JsonType::JDT_object);
   for(auto& element : p_element.GetChildren())
   {
+    if(element->GetAttributes().size() > 0)
+		{
+      JSONobject obj;
+      JSONpair p;
+      p.m_name = element->GetName();
+      p.m_value.SetValue(obj);
+      p_valPointer.GetObject().push_back(p);
+      JSONobject* objPtr = &p_valPointer.GetObject().back().m_value.GetObject();
+      JSONpair attrPair;
+			for(auto& attribute : element->GetAttributes())
+			{
+				attrPair.m_name = attribute.m_name;
+				attrPair.m_value.SetValue(attribute.m_value);
+        objPtr->push_back(attrPair);
+			}
+		}
     if(element->GetChildren().size())
     {
       JSONobject object;

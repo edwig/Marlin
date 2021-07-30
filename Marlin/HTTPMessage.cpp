@@ -551,6 +551,23 @@ HTTPMessage::GetRawBody(uchar** p_body,size_t& p_length)
   (*p_body)[p_length + 1] = 0;
 }
 
+void
+HTTPMessage::SetBody(CString p_body,CString p_encoding /*=""*/)
+{
+  if(!p_encoding.IsEmpty())
+  {
+    p_body = EncodeStringForTheWire(p_body.GetString(),p_encoding);
+  }
+  m_buffer.SetBuffer((uchar*)p_body.GetString(),p_body.GetLength());
+}
+
+void
+HTTPMessage::SetBody(const char* p_body,CString p_encoding /*=""*/)
+{
+  CString body(p_body);
+  SetBody(body,p_encoding);
+}
+
 void 
 HTTPMessage::SetAcceptEncoding(CString p_encoding)
 {
@@ -833,7 +850,15 @@ HTTPMessage::AddHeader(CString p_name,CString p_value,bool p_lower /*=true*/)
   {
     p_name.MakeLower();
   }
-  m_headers.insert(std::make_pair(p_name,p_value));
+  HeaderMap::iterator it = m_headers.find(p_name);
+  if(it != m_headers.end())
+  {
+    it->second = p_value;
+  }
+  else
+  {
+    m_headers.insert(std::make_pair(p_name,p_value));
+  }
 }
 
 // Finding a header by lowercase name

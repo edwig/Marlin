@@ -360,12 +360,9 @@ ServerApp::SitesInThePool()
 bool
 ServerApp::MinMarlinVersion(int p_version)
 {
-  int minVersion =  MARLIN_VERSION_MAJOR      * 10000 +   // Major version main
-                    MARLIN_VERSION_MINOR      *   100 +   // Minor version number
-                    MARLIN_VERSION_SP;                    // Service pack
-  int maxVersion = (MARLIN_VERSION_MAJOR + 1) * 10000 +   // Major version main
-                    MARLIN_VERSION_MINOR      *   100 +   // Minor version number
-                    MARLIN_VERSION_SP;                    // Service pack
+  int minVersion =  MARLIN_VERSION_MAJOR      * 10000;    // Major version main
+  int maxVersion = (MARLIN_VERSION_MAJOR + 1) * 10000;    // Major version main
+
   if(p_version < minVersion || maxVersion <= p_version)
   {
     SvcReportErrorEvent(0,true,__FUNCTION__
