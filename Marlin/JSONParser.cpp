@@ -570,8 +570,9 @@ JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,XMLMessage* p_xml)
 }
 
 void
-JSONParserSOAP::Parse(XMLElement* p_element)
+JSONParserSOAP::Parse(XMLElement* p_element,bool p_forceerArray /*=false*/)
 {
+  m_forceerArray = p_forceerArray;
   ParseMain(*m_message->m_value,*p_element);
 }
 
@@ -630,8 +631,19 @@ JSONParserSOAP::ScanForArray(XMLElement& p_element,CString& p_arrayName)
   }
 
   // See if we must scan
-  if(p_element.GetChildren().size() < 2)
+  if(p_element.GetChildren().empty())
   {
+    return false;
+  }
+
+  // Special case 1 element, but we must do an array
+  if(p_element.GetChildren().size() == 1)
+  {
+    if(m_forceerArray)
+    {
+      p_arrayName = p_element.GetChildren().front()->GetName();
+      return true;
+    }
     return false;
   }
 
@@ -659,81 +671,127 @@ JSONParserSOAP::ScanForArray(XMLElement& p_element,CString& p_arrayName)
 void
 JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CString p_arrayName)
 {
-  p_valPointer.SetDatatype(JsonType::JDT_object);
-  JSONarray jarray;
-  JSONpair  pair;
+  JSONvalue* append = nullptr;
+  JSONarray  jarray;
+  JSONpair   pair;
   pair.m_name = p_arrayName;
   pair.m_value.SetValue(jarray);
+
+  if(p_valPointer.GetDataType() != JsonType::JDT_object)
+  {
+    p_valPointer.SetDatatype(JsonType::JDT_object);
+  }
   p_valPointer.GetObject().push_back(pair);
 
-  JSONpair&  jpair = p_valPointer.GetObject().back();
-  JSONarray& jar   = jpair.m_value.GetArray();
+  JSONpair& jpair = p_valPointer.GetObject().back();
+  JSONarray& jar = jpair.m_value.GetArray();
 
   for(auto& element : p_element.GetChildren())
   {
-		if(element->GetAttributes().size() > 0)
-		{
-			JSONobject objVal;
-			for(auto& attribute : element->GetAttributes())
-			{
-				JSONpair attrPair;
-				attrPair.m_name = attribute.m_name;
-				attrPair.m_value.SetValue(attribute.m_value);
+    if(element->GetAttributes().size() > 0)
+    {
+      JSONobject objVal;
+      for(auto& attribute : element->GetAttributes())
+      {
+        JSONpair attrPair;
+        attrPair.m_name = attribute.m_name;
+        attrPair.m_value.SetValue(attribute.m_value);
 
-				// Put an object in the array and parse it
-				objVal.push_back(attrPair);
-			}
+        // Put an object in the array and parse it
+        objVal.push_back(attrPair);
+      }
+
+      // Put in the array
       JSONvalue value;
-			jar.push_back(value);
+      jar.push_back(value);
       JSONvalue& val = jar.back();
-			val.SetValue(objVal);
-		}
-    // Put an object in the array and parse it
-    JSONvalue value;
-    jar.push_back(value);
-    JSONvalue& val = jar.back();
+      val.SetValue(objVal);
+      append = &val;
+    }
+    else
+    {
+      // Put an object in the array and parse it
+      JSONvalue value;
+      jar.push_back(value);
+      append = &jar.back();
+    }
 
-    ParseLevel(val,*element);
+    // Parse on, if something to do
+    if(!element->GetChildren().empty() || !element->GetValue().IsEmpty())
+    {
+      ParseLevel(*append,*element);
+    }
   }
 }
 
 void 
 JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
 {
-  p_valPointer.SetDatatype(JsonType::JDT_object);
+  if(p_valPointer.GetDataType() != JsonType::JDT_object)
+  {
+    p_valPointer.SetDatatype(JsonType::JDT_object);
+  }
+
   for(auto& element : p_element.GetChildren())
   {
+    CreatePair(p_valPointer,*element);
+
+    JSONvalue*  here   = &(p_valPointer.GetObject().back().m_value);
+    JSONobject* objPtr = nullptr;
+    JSONvalue*  append = nullptr;
+    CString     value  = here->GetString();
+
     if(element->GetAttributes().size() > 0)
-		{
-      JSONobject obj;
-      JSONpair p;
-      p.m_name = element->GetName();
-      p.m_value.SetValue(obj);
-      p_valPointer.GetObject().push_back(p);
-      JSONobject* objPtr = &p_valPointer.GetObject().back().m_value.GetObject();
-      JSONpair attrPair;
-			for(auto& attribute : element->GetAttributes())
-			{
-				attrPair.m_name = attribute.m_name;
-				attrPair.m_value.SetValue(attribute.m_value);
-        objPtr->push_back(attrPair);
-			}
-		}
+    {
+      if(m_forceerArray)
+      {
+        JSONarray  arr;
+        JSONobject obj;
+        JSONvalue  objval;
+
+        objval.SetValue(obj);
+        arr.push_back(objval);
+        here->SetValue(arr);
+        append = &(here->GetArray().back());
+        objPtr = &append->GetObject();
+   
+        JSONpair attrPair;
+        for(auto& attribute : element->GetAttributes())
+        {
+          attrPair.m_name = attribute.m_name;
+          attrPair.m_value.SetValue(attribute.m_value);
+          objPtr->push_back(attrPair);
+        }
+      }
+      else
+      {
+        JSONobject obj;
+        here->SetValue(obj);
+        objPtr = &here->GetObject();
+        
+        JSONpair attrPair;
+        for(auto& attribute : element->GetAttributes())
+        {
+          attrPair.m_name = attribute.m_name;
+          attrPair.m_value.SetValue(attribute.m_value);
+          objPtr->push_back(attrPair);
+        }
+        append = &p_valPointer.GetObject().back().m_value;
+      }
+
+      // Append the text node that was overwritten by the attributes
+      if(!value.IsEmpty())
+      {
+        JSONpair textPair;
+        textPair.m_name = "text";
+        textPair.m_value.SetValue(value);
+        objPtr->push_back(textPair);
+      }
+    }
     if(element->GetChildren().size())
     {
-      JSONobject object;
-      JSONpair   pair;
-      pair.m_name = element->GetName();
-      pair.m_value.SetValue(object);
-      p_valPointer.GetObject().push_back(pair);
-
-      JSONpair& npair = p_valPointer.GetObject().back();
-      JSONvalue& value = npair.m_value;
-      ParseLevel(value,*element);
-    }
-    else
-    {
-      ParseLevel(p_valPointer,*element);
+      append = here;
+      ParseLevel(*append,*element);
     }
   }
 }

@@ -33,12 +33,17 @@ class JSONvalue;
 class XMLParserJSON : public XMLParser
 {
 public:
+  XMLParserJSON();
   XMLParserJSON(XMLMessage* p_xml,JSONMessage* p_json);
+ ~XMLParserJSON() = default;
+
+ void  ParseMain(XMLElement* p_element,JSONvalue& p_value);
 private:
-  void ParseMain (XMLElement* p_element,JSONvalue& p_value);
-  void ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arrayName = "");
+  void ParseMainSOAP (XMLElement* p_element,JSONvalue& p_value);
+  void ParseLevel    (XMLElement* p_element,JSONvalue& p_value,CString p_arrayName = "");
 private:
-  SOAPMessage* m_soap;
+  SOAPMessage* m_soap      { nullptr };
+  bool         m_rootFound { false   };
 };
 
 

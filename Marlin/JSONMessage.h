@@ -104,13 +104,13 @@ public:
   void        SetValue(bcd        p_value);
 
   // GETTERS
-  JsonType    GetDataType()  { return m_type;     };
-  CString     GetString()    { return m_string;   };
-  int         GetNumberInt() { return m_number.m_intNumber;  };
-  bcd         GetNumberBcd() { return m_number.m_bcdNumber;  };
-  JSONarray&  GetArray()     { return m_array;    };
-  JSONobject& GetObject()    { return m_object;   };
-  JsonConst   GetConstant()  { return m_constant; };
+  JsonType    GetDataType()  const { return m_type;     };
+  CString     GetString()    const { return m_string;   };
+  int         GetNumberInt() const { return m_number.m_intNumber;  };
+  bcd         GetNumberBcd() const { return m_number.m_bcdNumber;  };
+  JsonConst   GetConstant()  const { return m_constant; };
+  JSONarray&  GetArray()           { return m_array;    };
+  JSONobject& GetObject()          { return m_object;   };
   CString     GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level = 0);
 
   // OPERATORS
@@ -137,6 +137,12 @@ private:
 class JSONpair
 {
 public:
+  JSONpair() = default;
+  JSONpair(CString p_name) 
+    :m_name(p_name) {}
+  JSONpair(CString p_name,JSONvalue& p_value)
+    :m_name(p_name)
+    ,m_value(p_value) {}
   CString   m_name;
   JSONvalue m_value;
 };
@@ -184,9 +190,9 @@ public:
   JsonConst       GetValueConstant(CString p_name);
 
   // GETTERS
-  CString         GetJsonMessage       (JsonEncoding p_encoding = JsonEncoding::JENC_Plain);
-  CString         GetJsonMessageWithBOM(JsonEncoding p_encoding = JsonEncoding::JENC_UTF8);
-  JSONvalue&      GetValue()          { return *m_value;                };
+  CString         GetJsonMessage       (JsonEncoding p_encoding = JsonEncoding::JENC_Plain) const;
+  CString         GetJsonMessageWithBOM(JsonEncoding p_encoding = JsonEncoding::JENC_UTF8)  const;
+  JSONvalue&      GetValue()  const    { return *m_value;                };
   CString         GetURL()            { return m_url;                   };
   CrackedURL&     GetCrackedURL()     { return m_cracked;               };
   unsigned        GetStatus()         { return m_status;                };

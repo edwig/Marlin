@@ -143,7 +143,7 @@ JSONvalue::SetValue(JSONarray p_value)
   std::copy(p_value.begin(),p_value.end(),back_inserter(m_array));
   // Clear the rest
   m_object.clear();
-  m_string.Empty();
+  // m_string.Empty();
   m_number.m_intNumber = 0;
   m_number.m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
@@ -706,13 +706,13 @@ JSONMessage::ParseMessage(CString p_message,JsonEncoding p_encoding /*=JsonEncod
 
 // Reconstruct JSON string from this message
 CString 
-JSONMessage::GetJsonMessage(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/)
+JSONMessage::GetJsonMessage(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/) const
 {
   return m_value->GetAsJsonString(m_whitespace,(p_encoding == JsonEncoding::JENC_UTF8));
 }
 
 CString 
-JSONMessage::GetJsonMessageWithBOM(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/)
+JSONMessage::GetJsonMessageWithBOM(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/) const
 {
   if(m_sendBOM && p_encoding == JsonEncoding::JENC_UTF8)
   {

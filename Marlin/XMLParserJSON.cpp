@@ -40,6 +40,10 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
+XMLParserJSON::XMLParserJSON()
+{
+}
+
 XMLParserJSON::XMLParserJSON(XMLMessage* p_xml,JSONMessage* p_json)
               :XMLParser(p_xml)
 {
@@ -47,11 +51,11 @@ XMLParserJSON::XMLParserJSON(XMLMessage* p_xml,JSONMessage* p_json)
   XMLElement* element = m_soap->GetParameterObjectNode();
   JSONvalue&  value   = p_json->GetValue();
 
-  ParseMain(element,value);
+  ParseMainSOAP(element,value);
 }
 
 void
-XMLParserJSON::ParseMain(XMLElement* p_element,JSONvalue& p_value)
+XMLParserJSON::ParseMainSOAP(XMLElement* p_element,JSONvalue& p_value)
 {
   // finding the main node in the JSON
   if(p_value.GetDataType() != JsonType::JDT_object)
@@ -93,6 +97,12 @@ XMLParserJSON::ParseMain(XMLElement* p_element,JSONvalue& p_value)
 }
 
 void
+XMLParserJSON::ParseMain(XMLElement* p_element,JSONvalue& p_value)
+{
+  ParseLevel(p_element,p_value);
+}
+
+void
 XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arrayName /*=""*/)
 {
   JSONobject* object  = nullptr;
@@ -112,7 +122,16 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,CString p_arr
                                       }
                                       else
                                       {
-                                        element = m_soap->AddElement(p_element,pair.m_name,XDT_String,"");
+                                        if(m_soap || m_rootFound)
+                                        {
+                                          element = m_soap->AddElement(p_element,pair.m_name,XDT_String,"");
+                                        }
+                                        else
+                                        {
+                                          p_element->SetName(pair.m_name);
+                                          element = p_element;
+                                          m_rootFound = true;
+                                        }
                                         ParseLevel(element,pair.m_value);
                                       }
                                     }

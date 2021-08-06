@@ -90,7 +90,7 @@ public:
   JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap);
   JSONParserSOAP(JSONMessage* p_message,XMLMessage*  p_xml);
 
-  void Parse(XMLElement* p_element);
+  void Parse(XMLElement* p_element,bool p_forceerArray = false);
 private:
   // Parse the message
   void ParseMain   (JSONvalue& p_valPointer,XMLElement& p_element);
@@ -101,5 +101,7 @@ private:
   void CreateArray (JSONvalue& p_valPointer,XMLElement& p_element,CString p_arrayName);
   // Forward scanning
   bool ScanForArray(XMLElement& p_element,CString& p_arrayName);
+
+  bool m_forceerArray { false };
 };
 
