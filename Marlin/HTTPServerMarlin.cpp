@@ -176,10 +176,13 @@ HTTPServerMarlin::Initialise()
   // STEP 9: Set the hard limits
   InitHardLimits();
 
-  // STEP 10: Init the response headers to send
+  // STEP 10: Set the event stream parameters
+  InitEventstreamKeepalive();
+
+  // STEP 11: Init the response headers to send
   InitHeaders();
 
-  // STEP 11: Init the ThreadPool
+  // STEP 12: Init the ThreadPool
   InitThreadPool();
 
   // We are airborne!

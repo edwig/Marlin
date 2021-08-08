@@ -596,9 +596,7 @@ XMLMessage::PrintWSDLComment(XMLElement* p_element)
 CString 
 XMLMessage::PrintJson(bool p_attributes)
 {
-  bool utf8 = (m_encoding == XMLEncoding::ENC_UTF8);
-
-  CString message = PrintElementsJson(m_root,p_attributes,utf8);
+  CString message = PrintElementsJson(m_root,p_attributes,m_encoding);
   if(m_condensed)
   {
     message += "\n";
@@ -610,8 +608,8 @@ XMLMessage::PrintJson(bool p_attributes)
 CString
 XMLMessage::PrintElementsJson(XMLElement* p_element
                              ,bool        p_attributes
-                             ,bool        p_utf8  /*=true*/
-                             ,int         p_level /*=0*/)
+                             ,XMLEncoding p_encoding /*=XMLEncoding = ENC_UTF8 */
+                             ,int         p_level    /* = 0*/)
 {
   CString temp;
   CString spaces;
@@ -659,7 +657,7 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
     case XDT_CDATA:             [[fallthrough]];
     case XDT_String:            [[fallthrough]];
     case XDT_AnyURI:            [[fallthrough]];
-    case XDT_NormalizedString:  temp = XMLParser::PrintJsonString(value,p_utf8);
+    case XDT_NormalizedString:  temp = XMLParser::PrintJsonString(value,static_cast<JsonEncoding>(m_encoding));
                                 break;
   }
   message += temp + newline;
@@ -676,7 +674,7 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
     message += spaces + "{" + newline;
     for(auto& elem : p_element->GetChildren())
     {
-      PrintElementsJson(elem,p_attributes,p_utf8,p_level + 1);
+      PrintElementsJson(elem,p_attributes,p_encoding,p_level + 1);
     }
     message += spaces + "}" + newline;
   }

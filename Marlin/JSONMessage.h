@@ -65,6 +65,7 @@ enum class JsonType
 };
 
 // JSON coding of the message
+// BEWARE: Values must be the same as XMLEncoding
 enum class JsonEncoding
 {
    JENC_Plain    = 0  // No action taken, use GetACP(): windows-1252 in "The Netherlands"
@@ -72,15 +73,6 @@ enum class JsonEncoding
   ,JENC_UTF16    = 2  // Default ECMA-404 The JSON Data Interchange Standard
   ,JENC_ISO88591 = 3  // Default (X)HTML 4.01 standard
 };
-
-
-// Numbers are integers or exponentials
-typedef struct _jsonNumber
-{
-  long m_intNumber;
-  bcd  m_bcdNumber;
-}
-JSONnumber;
 
 using JSONarray  = std::vector<JSONvalue>;
 using JSONobject = std::vector<JSONpair>;
@@ -92,6 +84,12 @@ class JSONvalue
 public:
   JSONvalue();
   JSONvalue(JSONvalue* p_other);
+  JSONvalue(JsonType   p_type);
+  JSONvalue(JsonConst  p_value);
+  JSONvalue(CString    p_value);
+  JSONvalue(int        p_value);
+  JSONvalue(bcd        p_value);
+  JSONvalue(bool       p_value);
  ~JSONvalue();
 
   // SETTERS
@@ -106,30 +104,46 @@ public:
   // GETTERS
   JsonType    GetDataType()  const { return m_type;     };
   CString     GetString()    const { return m_string;   };
-  int         GetNumberInt() const { return m_number.m_intNumber;  };
-  bcd         GetNumberBcd() const { return m_number.m_bcdNumber;  };
+  int         GetNumberInt() const { return m_intNumber;};
+  bcd         GetNumberBcd() const { return m_bcdNumber;};
   JsonConst   GetConstant()  const { return m_constant; };
   JSONarray&  GetArray()           { return m_array;    };
   JSONobject& GetObject()          { return m_object;   };
-  CString     GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level = 0);
+  CString     GetAsJsonString(bool p_white,JsonEncoding p_encoding,unsigned p_level = 0);
+
+  // Specials for the empty/null state
+  void        Empty();
+  bool        IsEmpty();
+  // Specials for construction: add to an array/object
+  void        Add(JSONvalue& p_value);
+  void        Add(JSONpair&  p_value);
 
   // OPERATORS
+
+  // Assignment of another value
   JSONvalue&  operator=(JSONvalue& p_other);
+  // Getting the value from an JSONarray
+  JSONvalue&  operator[](int p_index);
+  // Getting the value from an JSONobject
+  JSONvalue&  operator[](CString p_name);
 
   // JSONvalue's can be stored elsewhere. Use the reference mechanism to add/drop references
   // With the drop of the last reference, the object WILL destroy itself
   void        AddReference();
   void        DropReference();
+
 private:
   // What's in there: the data type
   JsonType   m_type       { JsonType::JDT_const };
   // Depending on m_type: one of these
   CString    m_string;
-  JSONnumber m_number     { 0 };
+  int        m_intNumber  { 0 };
+  bcd        m_bcdNumber;
   JSONarray  m_array;
   JSONobject m_object;
   JsonConst  m_constant   { JsonConst::JSON_NONE };
-  long       m_references { 0 };   // Externally referenced
+  // Externally referenced
+  long       m_references { 0 };   
 };
 
 // Objects are made of pairs
@@ -138,13 +152,34 @@ class JSONpair
 {
 public:
   JSONpair() = default;
-  JSONpair(CString p_name) 
-    :m_name(p_name) {}
-  JSONpair(CString p_name,JSONvalue& p_value)
-    :m_name(p_name)
-    ,m_value(p_value) {}
+  JSONpair(CString p_name);
+  JSONpair(CString p_name,JsonType p_type);
+  JSONpair(CString p_name,JSONvalue& p_value);
+
+  // Currently public. Will be moved to private in a future version
   CString   m_name;
   JSONvalue m_value;
+
+  void        SetName(CString p_name)      { m_name = p_name;             }
+  void        SetDatatype(JsonType p_type) { m_value.SetDatatype(p_type); }
+  void        SetValue(CString    p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(JsonConst  p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(JSONobject p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(JSONarray  p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(int        p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(bcd        p_value) { m_value.SetValue(p_value);   }
+
+  JsonType    GetDataType()  const { return m_value.GetDataType();  }
+  CString     GetString()    const { return m_value.GetString();    }
+  int         GetNumberInt() const { return m_value.GetNumberInt(); }
+  bcd         GetNumberBcd() const { return m_value.GetNumberBcd(); }
+  JsonConst   GetConstant()  const { return m_value.GetConstant();  }
+  JSONarray&  GetArray()           { return m_value.GetArray();     }
+  JSONobject& GetObject()          { return m_value.GetObjectA();   }
+
+  // Specials for construction: add to an array/object
+  void        Add(JSONvalue& p_value) { m_value.Add(p_value); }
+  void        Add(JSONpair& p_value)  { m_value.Add(p_value); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -188,11 +223,12 @@ public:
   long            GetValueInteger (CString p_name);
   bcd             GetValueNumber  (CString p_name);
   JsonConst       GetValueConstant(CString p_name);
+  bool            AddNamedObject(CString p_name,JSONobject& p_object,bool p_forceArray = false);
 
   // GETTERS
   CString         GetJsonMessage       (JsonEncoding p_encoding = JsonEncoding::JENC_Plain) const;
   CString         GetJsonMessageWithBOM(JsonEncoding p_encoding = JsonEncoding::JENC_UTF8)  const;
-  JSONvalue&      GetValue()  const    { return *m_value;                };
+  JSONvalue&      GetValue()  const   { return *m_value;                };
   CString         GetURL()            { return m_url;                   };
   CrackedURL&     GetCrackedURL()     { return m_cracked;               };
   unsigned        GetStatus()         { return m_status;                };
@@ -280,7 +316,7 @@ private:
   CString         m_lastError;                                  // Error as text
   JsonEncoding    m_encoding    { JsonEncoding::JENC_UTF8 };    // Encoding details
   bool            m_sendUnicode { false };                      // Send message in UTF-16 Unicode
-  bool            m_sendBOM     { false };                      // Pre-pend message with UTF-8 or UTF-16 Byte-Order-Mark
+  bool            m_sendBOM     { false };                      // Prepend message with UTF-8 or UTF-16 Byte-Order-Mark
   bool            m_verbTunnel  { false };                      // HTTP-VERB Tunneling used
   // DESTINATION
   CString         m_url;                                        // Full URL of the JSON service

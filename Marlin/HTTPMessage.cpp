@@ -929,7 +929,7 @@ HTTPMessage::SetHTTPTime(CString p_timestring)
   return true;
 }
 
-// Change POST method to PUT/MERGE/PATCH/DELETE
+// Change POST method to the tunneled VERB
 // Used for incoming traffic through VERB-Tunneling
 bool
 HTTPMessage::FindVerbTunneling()
@@ -960,17 +960,14 @@ HTTPMessage::FindVerbTunneling()
   return m_verbTunnel = (oldCommand != m_command);
 }
 
-// Use POST method for PUT/MERGE/PATCH/DELETE
+// Use POST method for any other HTTP VERB
 // Also known as VERB-Tunneling
 bool
 HTTPMessage::UseVerbTunneling()
 {
   if(m_verbTunnel)
   {
-    if(m_command == HTTPCommand::http_put   ||
-       m_command == HTTPCommand::http_merge ||
-       m_command == HTTPCommand::http_patch ||
-       m_command == HTTPCommand::http_delete )
+    if(m_command != HTTPCommand::http_post)
     {
       // Change of identity!
       CString method = headers[static_cast<unsigned>(m_command)];

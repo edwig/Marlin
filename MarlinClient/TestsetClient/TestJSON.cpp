@@ -145,27 +145,25 @@ int TestArray()
   CString res = json.GetJsonMessage();
   xprintf(res);
   CString expect1 = "{\n"
-                    " \"Applications\":{\n"
-                    "   \"Datasources\":{\n"
-                    "     \"Datasource\":\n"
-                    "[      \"develop\"\n"
-                    "      ,\"test\"\n"
-                    "      ,\"accept\"\n"
-                    "      ,\"production\"\n"
-                    "]\n"
-                    "    }\n"
-                    "\n"
-                    "  ,\"Commercial\":{\n"
-                    "     \"Application\":\n"
-                    "[      \"Financials\"\n"
-                    "      ,\"Maintainance\"\n"
-                    "      ,\"Rentals\"\n"
-                    "]\n"
-                    "    }\n"
-                    "\n"
-                    "  ,\"Default\":\"QL_Account\"\n"
-                    "  }\n"
-                    "}\n";
+                    "\t\"Applications\":{\n"
+                    "\t\t\"Datasources\":{\n"
+                    "\t\t\t\"Datasource\":[\n"
+                    "\t\t\t\"develop\",\n"
+                    "\t\t\t\"test\",\n"
+                    "\t\t\t\"accept\",\n"
+                    "\t\t\t\"production\"\n"
+                    "\t\t\t]\n"
+                    "\t\t},\n"
+                    "\t\t\"Commercial\":{\n"
+                    "\t\t\t\"Application\":[\n"
+                    "\t\t\t\"Financials\",\n"
+                    "\t\t\t\"Maintainance\",\n"
+                    "\t\t\t\"Rentals\"\n"
+                    "\t\t\t]\n"
+                    "\t\t},\n"
+                    "\t\t\"Default\":\"QL_Account\"\n"
+                    "\t}\n"
+                    "}";
 
   // Check that the expected JSON matches what we now it must be
   errors += (res == expect1) ? 0 : 1;
@@ -308,6 +306,68 @@ int TestFindValue()
   return errors;
 }
 
+int TestAddObject()
+{
+  JSONMessage json;
+
+  JSONobject  object;
+  JSONpair    pair1("one");
+  JSONpair    pair2("two");
+  JSONpair    pair3("three");
+  pair1.SetValue(1);
+  pair2.SetValue(2);
+  pair3.SetValue(3);
+
+  object.push_back(pair1);
+  object.push_back(pair2);
+  object.push_back(pair3);
+
+  json.AddNamedObject("MyObject",object);
+
+  JSONobject object2;
+  JSONpair   pair4("four");
+  JSONpair   pair5("five");
+  JSONpair   pair6("six");
+  pair4.SetValue(4);
+  pair5.SetValue(5);
+  pair6.SetValue(6);
+
+  object2.push_back(pair4);
+  object2.push_back(pair5);
+  object2.push_back(pair6);
+
+  json.AddNamedObject("MyObject",object2,true);
+
+  json.SetWhitespace(true);
+  CString total = json.GetJsonMessage(JsonEncoding::JENC_Plain);
+
+  CString expected = "{\n"
+                     "\t\"MyObject\":[\n"
+                     "\t\t{\n"
+                     "\t\t\t\"one\":1,\n"
+                     "\t\t\t\"two\":2,\n"
+                     "\t\t\t\"three\":3\n"
+                     "\t\t},\n"
+                     "\t\t{\n"
+                     "\t\t\t\"four\":4,\n"
+                     "\t\t\t\"five\":5,\n"
+                     "\t\t\t\"six\":6\n"
+                     "\t\t}\n"
+                     "\t]\n"
+                     "}";
+  // Check that the expected JSON matches what we now it must be
+  int errors = (total == expected) ? 0 : 1;
+
+  if(errors)
+  {
+    xprintf("JSON string: \n%s\n", total.GetString());
+  }
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("JSON message adding object with forced array   : %s\n", errors ? "ERROR" : "OK");
+  return 0;
+}
+
 int TestJSON(void)
 {
   int errors = 0;
@@ -336,8 +396,10 @@ int TestJSON(void)
   errors += TestObject("{\"one\":1,\"two\":2}");
   // Compounded test
   errors += TestObject("{\"one\":1,\"two\":[1,2,3,4,5,\"six\",\"seven\"]}");
-  // Testen van een array
+  // Testing of an array
   errors += TestArray();
+  // Testing the adding of an object
+  errors += TestAddObject();
 
 
   // TEST ROUNDTRIP SOAP -> JSON

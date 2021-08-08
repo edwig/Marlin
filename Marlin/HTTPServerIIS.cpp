@@ -106,10 +106,13 @@ HTTPServerIIS::Initialise()
   // STEP 3: Set the hard limits
   InitHardLimits();
 
-  // STEP 4: Init the response headers to send
+  // STEP 4: Set the event stream parameters
+  InitEventstreamKeepalive();
+
+  // STEP 5: Init the response headers to send
   InitHeaders();
 
-  // STEP 5: Init the threadpool
+  // STEP 6: Init the threadpool
   InitThreadPool();
 
   // We are airborne!

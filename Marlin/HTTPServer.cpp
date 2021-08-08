@@ -250,6 +250,22 @@ HTTPServer::InitHardLimits()
   DETAILLOGV("Server hard-limit compression threshold: %d",    g_compress_limit);
 }
 
+// Initialise the even stream parameters
+void
+HTTPServer::InitEventstreamKeepalive()
+{
+  m_eventKeepAlive = m_webConfig->GetParameterInteger("Server","EventKeepAlive",DEFAULT_EVENT_KEEPALIVE);
+  m_eventRetryTime = m_webConfig->GetParameterInteger("Server","EventRetryTime",DEFAULT_EVENT_RETRYTIME);
+
+  if(m_eventKeepAlive < EVENT_KEEPALIVE_MIN) m_eventKeepAlive = EVENT_KEEPALIVE_MIN;
+  if(m_eventKeepAlive > EVENT_KEEPALIVE_MAX) m_eventKeepAlive = EVENT_KEEPALIVE_MAX;
+  if(m_eventRetryTime < EVENT_RETRYTIME_MIN) m_eventRetryTime = EVENT_RETRYTIME_MIN;
+  if(m_eventRetryTime > EVENT_RETRYTIME_MAX) m_eventRetryTime = EVENT_RETRYTIME_MAX;
+
+  DETAILLOGV("Server SSE keepalive interval: %d ms", m_eventKeepAlive);
+  DETAILLOGV("Server SSE client retry time : %d ms", m_eventRetryTime);
+}
+
 void
 HTTPServer::SetQueueLength(ULONG p_length)
 {

@@ -9,10 +9,6 @@ Version 7.x contains the new MarlinModule that (again) allows to be used with st
 application modules (DLL's), and so optimize the depoloyment and stack tracing capabilities
 ----------------------------------------------------------------------------------------------
 
-CHANGES IN VERSION 7.0.1
-------------------------
-
-
 CHANGES IN VERSION 7.0.0
 ------------------------
 1)  All Analasys logfiles removed from MarlinModule. All memory allocation from the loaded DLL's
@@ -42,5 +38,7 @@ CHANGES IN VERSION 7.0.0
 11) Faster parsing of a SOAP/XML message into a JSONMessage. Does *NOT* require to reconstruct
     the SOAP message, but does it internally.
 12) Various fixes for SEH Translators.
-
-
+13) Verb-tunneling expanded to all HTTP verbs.
+14) JSON whitespace printing changed from two spaces to TAB character
+15) Added the JSON methode "AddNamedObject(name,object,force-array)"
+    See the MarlinClient testset for an example.

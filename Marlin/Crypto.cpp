@@ -316,7 +316,7 @@ Crypto::Encryption(CString p_input,CString p_password)
   DWORD      dwFlags    = 0;
   BOOL       bFinal     = FALSE;
   DWORD      totallen   = 0;
-  BYTE*      crypting   = pbData;
+  BYTE*      crypting   = nullptr;
   int        b64length  = 0;
   char*      buffer     = nullptr;
   CString    result;
@@ -358,7 +358,7 @@ Crypto::Encryption(CString p_input,CString p_password)
   dwBuffLen = ((p_input.GetLength() + blocklen) / blocklen) * blocklen;
   pbData = new BYTE[dwBuffLen];
   strcpy_s((char*)pbData,dwBuffLen,p_input.GetString());
-
+  crypting = pbData;
   
   do
   {
@@ -389,7 +389,7 @@ Crypto::Encryption(CString p_input,CString p_password)
       dwBuffLen -= blocklen;
       dwDataLen -= blocklen;
       // Next pointer to data to be encrypted
-      crypting += blocklen;
+      crypting  += blocklen;
     }
     else
     {
@@ -444,7 +444,7 @@ Crypto::Decryption(CString p_input,CString p_password)
   BOOL       bFinal     = FALSE;
   DWORD      dwFlags    = 0;
   DWORD      totallen   = 0;
-  BYTE*      decrypting = pbData;
+  BYTE*      decrypting = nullptr;
   CString    result;
   Base64     base64;
 
@@ -498,7 +498,7 @@ Crypto::Decryption(CString p_input,CString p_password)
   bufferSize = ((dataLength + blocklen) / blocklen) * blocklen;
   pbData = new BYTE[bufferSize];
   base64.Decrypt((const unsigned char*)p_input.GetString(), dwDataLen, (unsigned char*)pbData);
-
+  decrypting = pbData;
 
   do 
   {
@@ -508,6 +508,7 @@ Crypto::Decryption(CString p_input,CString p_password)
     {
       data = dataLength;
       bFinal = TRUE;
+      dwFlags = CRYPT_DECRYPT_RSA_NO_PADDING_CHECK;
     }
     else
     {

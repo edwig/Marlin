@@ -386,7 +386,7 @@ JSONParser::ParseObject()
   {
     JSONpair value;
     m_valPointer->GetObject().push_back(value);
-    JSONpair& property = m_valPointer->GetObject().back();
+    JSONpair& pair = m_valPointer->GetObject().back();
 
     // Check for an empty object
     if(*m_pointer == '}' && elements == 0)
@@ -398,7 +398,7 @@ JSONParser::ParseObject()
 
     // Parse the name string;
     CString name = GetString();
-    property.m_name = name;
+    pair.m_name = name;
 
     SkipWhitespace();
     if(*m_pointer != ':')
@@ -410,7 +410,7 @@ JSONParser::ParseObject()
 
     // Put pointer on the stack and parse a value
     JSONvalue* workPointer = m_valPointer;
-    m_valPointer = &property.m_value;
+    m_valPointer = &pair.m_value;
     ParseLevel();
     m_valPointer = workPointer;
 

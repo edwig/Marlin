@@ -400,6 +400,8 @@ protected:
   virtual void  InitHeaders() = 0;
   // Initialise the hard server limits in bytes
   virtual void  InitHardLimits();
+  // Initialise the even stream parameters
+  virtual void  InitEventstreamKeepalive();
   // Initialise the logging and error mechanism
   virtual void  InitLogging();
   // Initialise the ThreadPool

@@ -27,6 +27,7 @@
 #define __XMLParser__
 
 #include "XMLMessage.h"
+#include "JSONMessage.h"
 
 // To be translated entities in an XML string
 class Entity
@@ -47,6 +48,7 @@ constexpr auto NUM_ENTITY = 5;
 class XMLParser
 {
 public:
+  XMLParser() = default;
   XMLParser(XMLMessage* p_message);
 
   // Parse a complete XML message string
@@ -58,7 +60,7 @@ public:
 
   // Print string with entities and optionally as UTF8 again
   static CString PrintXmlString (const CString& p_string, bool p_utf8 = false);
-  static CString PrintJsonString(const CString& p_string, bool p_utf8 = false);
+  static CString PrintJsonString(const CString& p_string, JsonEncoding p_encoding = JsonEncoding::JENC_Plain);
 
 protected:
   // Set the internal error

@@ -80,6 +80,8 @@ protected:
   bool        m_useStreamingLimit;
   bool        m_useCompressLimit;
   bool        m_useThrotteling;
+  bool        m_useKeepalive;
+  bool        m_useRetrytime;
   // Server headers
   bool        m_useXFrameOpt;
   bool        m_useXFrameAllow;
@@ -106,6 +108,8 @@ protected:
   unsigned    m_streamingLimit;
   unsigned    m_compressLimit;
   bool        m_throtteling;
+  int         m_keepalive;
+  int         m_retrytime;
   // Server headers
   CString     m_xFrameOption;
   CString     m_xFrameAllowed;
@@ -147,6 +151,8 @@ protected:
   CButton     m_buttonUseStreamingLimit;
   CButton     m_buttonUseCompressLimit;
   CButton     m_buttonUseThrotteling;
+  CButton     m_buttonUseKeepalive;
+  CButton     m_buttonUseRetrytime;
   
 public:
   afx_msg void OnEnChangeWebroot();
@@ -167,6 +173,8 @@ public:
   afx_msg void OnEnChangeStreamingLimit();
   afx_msg void OnEnChangeCompressLimit();
   afx_msg void OnBnClickedThrotteling();
+  afx_msg void OnEnChangeKeepalive();
+  afx_msg void OnEnChangeRetrytime();
 
   afx_msg void OnBnClickedUseWebroot();
   afx_msg void OnBnClickedUseUrl();
@@ -183,4 +191,6 @@ public:
   afx_msg void OnBnClickedUseStreamingLimit();
   afx_msg void OnBnClickedUseCompressLimit();
   afx_msg void OnBnClickedUseThrotteling();
+  afx_msg void OnBnClickedUseKeepalive();
+  afx_msg void OnBnClickedUseRetrytime();
 };

@@ -51,6 +51,36 @@ JSONvalue::JSONvalue(JSONvalue* p_other)
   *this = *p_other;
 }
 
+JSONvalue::JSONvalue(JsonType p_type)
+{
+  SetDatatype(p_type);
+}
+
+JSONvalue::JSONvalue(JsonConst  p_value)
+{
+  SetValue(p_value);
+}
+
+JSONvalue::JSONvalue(CString p_value)
+{
+  SetValue(p_value);
+}
+
+JSONvalue::JSONvalue(int p_value)
+{
+  SetValue(p_value);
+}
+
+JSONvalue::JSONvalue(bcd p_value)
+{
+  SetValue(p_value);
+}
+
+JSONvalue::JSONvalue(bool p_value)
+{
+  SetValue(p_value ? JsonConst::JSON_TRUE : JsonConst::JSON_FALSE);
+}
+
 JSONvalue::~JSONvalue()
 {
   m_array .clear();
@@ -66,11 +96,11 @@ JSONvalue::operator=(JSONvalue& p_other)
     return *this;
   }
   // Copy values
-  m_type     = p_other.m_type;
-  m_string   = p_other.m_string;
-  m_constant = p_other.m_constant;
-  m_number.m_intNumber = p_other.m_number.m_intNumber;
-  m_number.m_bcdNumber = p_other.m_number.m_bcdNumber;
+  m_type      = p_other.m_type;
+  m_string    = p_other.m_string;
+  m_constant  = p_other.m_constant;
+  m_intNumber = p_other.m_intNumber;
+  m_bcdNumber = p_other.m_bcdNumber;
   // Copy objects
   m_array.clear();
   m_object.clear();
@@ -88,8 +118,8 @@ JSONvalue::SetDatatype(JsonType p_type)
   m_object.clear();
   m_array .clear();
   m_string.Empty();
-  m_number.m_intNumber = 0;
-  m_number.m_bcdNumber.Zero();
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
   // Remember our type
   m_type = p_type;
@@ -103,8 +133,8 @@ JSONvalue::SetValue(CString p_value)
   // Clear the rest
   m_array .clear();
   m_object.clear();
-  m_number.m_intNumber = 0;
-  m_number.m_bcdNumber.Zero();
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
 }
 
@@ -116,8 +146,8 @@ JSONvalue::SetValue(JsonConst p_value)
   // Clear the rest
   m_array.clear();
   m_object.clear();
-  m_number.m_intNumber = 0;
-  m_number.m_bcdNumber.Zero();
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
   m_string.Empty();
 }
 
@@ -130,8 +160,8 @@ JSONvalue::SetValue(JSONobject p_value)
   // Clear the rest
   m_array.clear();
   m_string.Empty();
-  m_number.m_intNumber = 0;
-  m_number.m_bcdNumber.Zero();
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
 }
 
@@ -144,8 +174,8 @@ JSONvalue::SetValue(JSONarray p_value)
   // Clear the rest
   m_object.clear();
   // m_string.Empty();
-  m_number.m_intNumber = 0;
-  m_number.m_bcdNumber.Zero();
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
   m_constant = JsonConst::JSON_NONE;
 }
 
@@ -153,8 +183,8 @@ void
 JSONvalue::SetValue(int p_value)
 {
   m_type = JsonType::JDT_number_int;
-  m_number.m_intNumber = p_value;
-  m_number.m_bcdNumber.Zero();
+  m_intNumber = p_value;
+  m_bcdNumber.Zero();
   // Clear the rest
   m_object.clear();
   m_array.clear();
@@ -166,8 +196,8 @@ void
 JSONvalue::SetValue(bcd p_value)
 {
   m_type = JsonType::JDT_number_bcd;
-  m_number.m_bcdNumber = p_value;
-  m_number.m_intNumber = 0;
+  m_bcdNumber = p_value;
+  m_intNumber = 0;
   // Clear the rest
   m_object.clear();
   m_array.clear();
@@ -175,18 +205,61 @@ JSONvalue::SetValue(bcd p_value)
   m_constant = JsonConst::JSON_NONE;
 }
 
+void
+JSONvalue::Empty()
+{
+  SetValue(JsonConst::JSON_NONE);
+}
+
+bool
+JSONvalue::IsEmpty()
+{
+  if(m_type == JsonType::JDT_const)
+  {
+    if(m_constant == JsonConst::JSON_NULL || 
+       m_constant == JsonConst::JSON_NONE )
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+JSONvalue::Add(JSONvalue& p_value)
+{
+  if(m_type == JsonType::JDT_array)
+  {
+    m_array.push_back(p_value);
+    return;
+  }
+  throw StdException("JSONvalue can only be added to a JSON array!");
+}
+
+void
+JSONvalue::Add(JSONpair& p_value)
+{
+  if(m_type == JsonType::JDT_object)
+  {
+    m_object.push_back(p_value);
+    return;
+  }
+  throw StdException("JSONpair can only be added to a JSON object!");
+}
+
 CString
-JSONvalue::GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level /*=0*/)
+JSONvalue::GetAsJsonString(bool p_white,JsonEncoding p_encoding,unsigned p_level /*=0*/)
 {
   CString result;
-  CString separ;
+  CString separ,less;
   CString newln = p_white ? "\n" : "";
 
   if(p_white)
   {
     for(unsigned ind = 0;ind < p_level; ++ind)
     {
-      separ += "  ";
+      less   = separ;
+      separ += "\t";
     }
   }
 
@@ -200,23 +273,25 @@ JSONvalue::GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level /*=0*/)
                                       case JsonConst::JSON_TRUE:  return "true";
                                     }
                                     break;
-    case JsonType::JDT_string:      return XMLParser::PrintJsonString(m_string,p_utf8);
-    case JsonType::JDT_number_int:  result.Format("%ld",m_number.m_intNumber);
+    case JsonType::JDT_string:      return XMLParser::PrintJsonString(m_string,p_encoding);
+    case JsonType::JDT_number_int:  result.Format("%ld",m_intNumber);
                                     break;
-    case JsonType::JDT_number_bcd:  result = m_number.m_bcdNumber.AsString();
+    case JsonType::JDT_number_bcd:  result = m_bcdNumber.AsString();
                                     break;
-    case JsonType::JDT_array:       result = newln + "[" + separ;
+    case JsonType::JDT_array:       result = "[" + newln;
                                     for(unsigned ind = 0;ind < m_array.size();++ind)
                                     {
-                                      result += m_array[ind].GetAsJsonString(p_white,p_utf8,p_level+1);
+                                      result += separ;
+                                      result += m_array[ind].GetAsJsonString(p_white,p_encoding,p_level+1);
                                       if(ind < m_array.size() - 1)
                                       {
-                                        result += newln + separ + ",";
+                                        result += ",";
                                       }
+                                      result += newln;
                                     }
-                                    result += newln + "]";
+                                    result += separ + "]";
                                     break;
-    case JsonType::JDT_object:      result = "{" + newln + separ + (p_white ? " " : "");
+    case JsonType::JDT_object:      result = less + "{" + newln;
                                     for(unsigned ind = 0; ind < m_object.size(); ++ind)
                                     {
                                       // Check for empty object
@@ -226,22 +301,53 @@ JSONvalue::GetAsJsonString(bool p_white,bool p_utf8,unsigned p_level /*=0*/)
                                       {
                                         break;
                                       }
-                                      result += XMLParser::PrintJsonString(m_object[ind].m_name,p_utf8);
+                                      result += separ + (p_white ? "\t" : "");
+                                      result += XMLParser::PrintJsonString(m_object[ind].m_name,p_encoding);
                                       result += ":";
-                                      result += m_object[ind].m_value.GetAsJsonString(p_white,p_utf8,p_level+1);
+                                      result += m_object[ind].m_value.GetAsJsonString(p_white,p_encoding,p_level+1).TrimLeft('\t');
                                       if(ind < m_object.size() - 1)
                                       {
-                                        result += newln + separ + ",";
+                                        result += ",";
                                       }
-                                    }
-                                    if(p_white && result.Right(1) != "\n")
-                                    {
                                       result += newln;
                                     }
-                                    result += separ + "}" + newln;
+                                    result += separ + "}";
                                     break;
   }
   return result;
+}
+
+// Getting the value from an JSONarray
+JSONvalue& 
+JSONvalue::operator[](int p_index)
+{
+  if(m_type != JsonType::JDT_array)
+  {
+    throw StdException("JSON array index used on a non-array node!");
+  }
+  if(p_index >= 0 && p_index < (int)m_array.size())
+  {
+    return m_array[p_index];
+  }
+  throw StdException("JSON array index out of bounds!");
+}
+
+// Getting the value from an JSONobject
+JSONvalue&
+JSONvalue::operator[](CString p_name)
+{
+  if(m_type != JsonType::JDT_object)
+  {
+    throw StdException("JSON object index used on an non-object node");
+  }
+  for(auto& pair : m_object)
+  {
+    if(pair.m_name.Compare(p_name) == 0)
+    {
+      return pair.m_value;
+    }
+  }
+  throw StdException("JSON object index not found!");
 }
 
 // JSONvalues can be stored elsewhere. Use the reference mechanism to add/drop references
@@ -260,6 +366,29 @@ JSONvalue::DropReference()
   {
     delete this;
   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// JSONpair
+//
+//////////////////////////////////////////////////////////////////////////
+
+JSONpair::JSONpair(CString p_name) 
+         :m_name(p_name)
+{
+}
+
+JSONpair::JSONpair(CString p_name,JSONvalue& p_value)
+         :m_name(p_name)
+         ,m_value(p_value)
+{
+}
+
+JSONpair::JSONpair(CString p_name, JsonType p_type)
+         :m_name(p_name)
+         ,m_value(p_type)
+{
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -708,17 +837,15 @@ JSONMessage::ParseMessage(CString p_message,JsonEncoding p_encoding /*=JsonEncod
 CString 
 JSONMessage::GetJsonMessage(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/) const
 {
-  return m_value->GetAsJsonString(m_whitespace,(p_encoding == JsonEncoding::JENC_UTF8));
+  return m_value->GetAsJsonString(m_whitespace,p_encoding);
 }
 
 CString 
 JSONMessage::GetJsonMessageWithBOM(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/) const
 {
-  if(m_sendBOM && p_encoding == JsonEncoding::JENC_UTF8)
+  if(m_sendBOM)
   {
-    CString msg = ConstructBOM();
-    msg += GetJsonMessage(p_encoding);
-    return msg;
+    return ConstructBOM(static_cast<XMLEncoding>(p_encoding)) + GetJsonMessage(p_encoding);
   }
   return GetJsonMessage(p_encoding);
 }
@@ -730,10 +857,7 @@ JSONMessage::UseVerbTunneling()
 {
   if(m_verbTunnel)
   {
-    if(m_verb == "PUT"    || 
-       m_verb == "MERGE"  || 
-       m_verb == "DELETE" || 
-       m_verb == "PATCH"   ) 
+    if(m_verb != "POST")
     {
       // Change of identity!
       AddHeader("X-HTTP-Method-Override",m_verb);
@@ -1012,6 +1136,59 @@ JSONMessage::GetValueConstant(CString p_name)
   return JsonConst::JSON_NONE;
 }
 
+bool
+JSONMessage::AddNamedObject(CString p_name,JSONobject& p_object,bool p_forceArray /*=false*/)
+{
+  // if JSONMessage still empty, turn it into an object
+  if(m_value->GetDataType() == JsonType::JDT_const && 
+     m_value->GetConstant() == JsonConst::JSON_NONE)
+  {
+    m_value->SetDatatype(JsonType::JDT_object);
+  }
+
+  // Check that the first node is an object
+  if(m_value->GetDataType() != JsonType::JDT_object)
+  {
+    return false;
+  }
+
+  // First object of this name?
+  JSONpair* insert = FindPair(p_name);
+  if (!insert)
+  {
+    JSONpair pair(p_name,JsonType::JDT_object);
+    m_value->Add(pair);
+
+    (*m_value)[p_name].GetObject() = p_object;
+    return true;
+  }
+  else
+  {
+    JSONvalue* here = FindValue(p_name, true);
+
+    // Add to the found pair of the same name
+    if(p_forceArray && here->GetObject().size() == 1)
+    {
+      if(insert->GetDataType() != JsonType::JDT_array)
+      {
+        JSONarray arr;
+        arr.push_back(insert->m_value);
+        insert->m_value.SetValue(arr);
+      }
+      JSONvalue val;
+      insert->GetArray().push_back(val);
+      insert->GetArray().back().SetValue(p_object);
+    }
+    else
+    {
+      JSONpair pair(p_name, JsonType::JDT_object);
+      here->Add(pair);
+      here->GetObject().back().GetObject() = p_object;
+      return true;
+    }
+  }
+  return false;
+}
 
 #pragma region References
 

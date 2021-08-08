@@ -98,7 +98,7 @@ XMLParser::PrintXmlString(const CString& p_string,bool p_utf8 /*=false*/)
 }
 
 CString
-XMLParser::PrintJsonString(const CString& p_string,bool p_utf8 /*=false*/)
+XMLParser::PrintJsonString(const CString& p_string,JsonEncoding p_encoding)
 {
   CString result("\"");
   unsigned char buffer[3];
@@ -133,16 +133,16 @@ XMLParser::PrintJsonString(const CString& p_string,bool p_utf8 /*=false*/)
   // Closing
   result += "\"";
 
-  if(p_utf8)
+  switch(p_encoding)
   {
-    // Convert to UTF-8
-    result = EncodeStringForTheWire(result,"utf-8");
+    case JsonEncoding::JENC_UTF8:     result = EncodeStringForTheWire(result,"utf-8");    break;
+    case JsonEncoding::JENC_UTF16:    result = EncodeStringForTheWire(result,"utf-16");   break;
+    case JsonEncoding::JENC_ISO88591: result = EncodeStringForTheWire(result,"iso88591"); break;
+    case JsonEncoding::JENC_Plain:    // Fall through
+    default:                          break;
   }
-
   return result;
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////
 //

@@ -32,6 +32,7 @@
 #include "MapDialoog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
+#include "EventStream.h"
 #include "afxdialogex.h"
 
 #ifdef _DEBUG
@@ -70,6 +71,8 @@ WebConfigServer::WebConfigServer(bool p_iis,CWnd* pParent /*=NULL*/)
   m_useCompressLimit  = false;
   m_useThrotteling    = false;
   m_useCORS           = false;
+  m_useKeepalive      = false;
+  m_useRetrytime      = false;
 
   // SERVER OVERRIDES
   m_port            = 0;
@@ -84,6 +87,8 @@ WebConfigServer::WebConfigServer(bool p_iis,CWnd* pParent /*=NULL*/)
   m_streamingLimit  = STREAMING_LIMIT;
   m_compressLimit   = COMPRESS_LIMIT;
   m_throtteling     = false;
+  m_keepalive       = DEFAULT_EVENT_KEEPALIVE;
+  m_retrytime       = DEFAULT_EVENT_RETRYTIME;
 }
 
 WebConfigServer::~WebConfigServer()
@@ -109,6 +114,8 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_USE_STREAM,     m_buttonUseStreamingLimit);
   DDX_Control(pDX,IDC_USE_COMPR,      m_buttonUseCompressLimit);
   DDX_Control(pDX,IDC_USE_THROTTLE,   m_buttonUseThrotteling);
+  DDX_Control(pDX,IDC_USE_KEEPALIVE,  m_buttonUseKeepalive);
+  DDX_Control(pDX,IDC_USE_RETRYTIME,  m_buttonUseRetrytime);
 
   // SERVER OVERRIDES
   DDX_Text   (pDX,IDC_WEBROOT,        m_webroot);
@@ -127,6 +134,11 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
   DDX_Text   (pDX,IDC_STREAM_LIMIT,   m_streamingLimit);
   DDX_Text   (pDX,IDC_COMP_LIMIT,     m_compressLimit);
   DDX_Control(pDX,IDC_THROTTLE,       m_buttonThrotteling);
+  DDX_Text   (pDX,IDC_KALIVE,         m_keepalive);
+  DDX_Text   (pDX,IDC_RETRYTIME,      m_retrytime);
+
+  DDV_MinMaxInt(pDX,m_keepalive,EVENT_KEEPALIVE_MIN,EVENT_KEEPALIVE_MAX);
+  DDV_MinMaxInt(pDX,m_retrytime,EVENT_RETRYTIME_MIN,EVENT_RETRYTIME_MAX);
 
   if(pDX->m_bSaveAndValidate == FALSE)
   {
@@ -141,6 +153,8 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
     w = GetDlgItem(IDC_MAX_THREADS);    w->EnableWindow(m_useMaxThreads);
     w = GetDlgItem(IDC_STREAM_LIMIT);   w->EnableWindow(m_useStreamingLimit);
     w = GetDlgItem(IDC_COMP_LIMIT);     w->EnableWindow(m_useCompressLimit);
+    w = GetDlgItem(IDC_KALIVE);         w->EnableWindow(m_useKeepalive);
+    w = GetDlgItem(IDC_RETRYTIME);      w->EnableWindow(m_useRetrytime);
 
     m_comboProtocol      .EnableWindow(m_useProtocol);
     m_comboBinding       .EnableWindow(m_useBinding);
@@ -172,6 +186,8 @@ BEGIN_MESSAGE_MAP(WebConfigServer, CDialog)
   ON_EN_CHANGE    (IDC_STREAM_LIMIT,  &WebConfigServer::OnEnChangeStreamingLimit)
   ON_EN_CHANGE    (IDC_COMP_LIMIT,    &WebConfigServer::OnEnChangeCompressLimit)
   ON_BN_CLICKED   (IDC_THROTTLE,      &WebConfigServer::OnBnClickedThrotteling)
+  ON_EN_KILLFOCUS (IDC_KALIVE,        &WebConfigServer::OnEnChangeKeepalive)
+  ON_EN_KILLFOCUS (IDC_RETRYTIME,     &WebConfigServer::OnEnChangeRetrytime)
   // USING BUTTONS
   ON_BN_CLICKED(IDC_USE_WEBROOT,      &WebConfigServer::OnBnClickedUseWebroot)
   ON_BN_CLICKED(IDC_USE_URL,          &WebConfigServer::OnBnClickedUseUrl)
@@ -188,6 +204,8 @@ BEGIN_MESSAGE_MAP(WebConfigServer, CDialog)
   ON_BN_CLICKED(IDC_USE_STREAM,       &WebConfigServer::OnBnClickedUseStreamingLimit)
   ON_BN_CLICKED(IDC_USE_COMPR,        &WebConfigServer::OnBnClickedUseCompressLimit)
   ON_BN_CLICKED(IDC_USE_THROTTLE,     &WebConfigServer::OnBnClickedUseThrotteling)
+  ON_BN_CLICKED(IDC_USE_KEEPALIVE,    &WebConfigServer::OnBnClickedUseKeepalive)
+  ON_BN_CLICKED(IDC_USE_RETRYTIME,    &WebConfigServer::OnBnClickedUseRetrytime)
 END_MESSAGE_MAP()
 
 BOOL
@@ -275,6 +293,8 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
   m_useStreamingLimit = config.HasParameter("Server","StreamingLimit");
   m_useCompressLimit  = config.HasParameter("Server","CompressLimit");
   m_useThrotteling    = config.HasParameter("Server","HTTPThrotteling");
+  m_useKeepalive      = config.HasParameter("Server","EventKeepAlive");
+  m_useRetrytime      = config.HasParameter("Server","EventRetryTime");
 
   m_webroot           = config.GetParameterString ("Server","WebRoot",           "");
   m_baseURL           = config.GetParameterString ("Server","BaseURL",           "");
@@ -291,6 +311,8 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
   m_streamingLimit    = config.GetParameterInteger("Server","StreamingLimit",STREAMING_LIMIT);
   m_compressLimit     = config.GetParameterInteger("Server","CompressLimit", COMPRESS_LIMIT);
   m_throtteling       = config.GetParameterBoolean("Server","HTTPThrotteling",false);
+  m_keepalive         = config.GetParameterInteger("Server","EventKeepAlive", DEFAULT_EVENT_KEEPALIVE);
+  m_retrytime         = config.GetParameterInteger("Server","EventRetryTime", DEFAULT_EVENT_RETRYTIME);
 
   // READ THE SECURITY OVERRIDES
   m_useXFrameOpt      = config.HasParameter("Security","XFrameOption");
@@ -349,6 +371,8 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
   m_buttonUseStreamingLimit.SetCheck(m_useStreamingLimit);
   m_buttonUseCompressLimit .SetCheck(m_useCompressLimit);
   m_buttonUseThrotteling   .SetCheck(m_useThrotteling);
+  m_buttonUseKeepalive     .SetCheck(m_useKeepalive);
+  m_buttonUseRetrytime     .SetCheck(m_useRetrytime);
 
   UpdateData(FALSE);
 }
@@ -397,6 +421,10 @@ WebConfigServer::WriteWebConfig(WebConfig& config)
   else                    config.RemoveParameter("Server","HTTPThrotteling");
   if(m_useTunneling)      config.SetParameter   ("Server","VerbTunneling",  m_tunneling);
   else                    config.RemoveParameter("Server","VerbTunneling");
+  if(m_useKeepalive)      config.SetParameter   ("Server","EventKeepAlive", m_keepalive);
+  else                    config.RemoveParameter("Server","EventKeepAlive");
+  if(m_useRetrytime)      config.SetParameter   ("Server","EventRetryTime", m_retrytime);
+  else                    config.RemoveParameter("Server","EventRetryTime");
 
   // SECURITY HEADERS
   config.SetSection("Security");
@@ -583,6 +611,18 @@ WebConfigServer::OnBnClickedThrotteling()
   m_throtteling = m_buttonThrotteling.GetCheck() > 0;
 }
 
+void 
+WebConfigServer::OnEnChangeKeepalive()
+{
+  UpdateData();
+}
+
+void 
+WebConfigServer::OnEnChangeRetrytime()
+{
+  UpdateData();
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // USING FIELDS EVENTS
@@ -698,5 +738,17 @@ void
 WebConfigServer::OnBnClickedUseThrotteling()
 {
   m_useThrotteling = m_buttonUseThrotteling.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
+void WebConfigServer::OnBnClickedUseKeepalive()
+{
+  m_useKeepalive = m_buttonUseKeepalive.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
+void WebConfigServer::OnBnClickedUseRetrytime()
+{
+  m_useRetrytime = m_buttonUseRetrytime.GetCheck() > 0;
   UpdateData(FALSE);
 }

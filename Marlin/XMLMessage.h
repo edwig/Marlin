@@ -30,6 +30,7 @@
 #include <deque>
 
 // XML coding of the message
+// BEWARE: Values must be the same as JsonEncoding
 enum class XMLEncoding
 {
    ENC_Plain     = 0  // No action taken, use GetACP(): windows-1252 in "The Netherlands"
@@ -184,10 +185,10 @@ public:
   // Print the XML as a JSON object
   virtual CString PrintJson(bool p_attributes);
   // Print the elements stack as a JSON string
-  virtual CString PrintElementsJson(XMLElement* p_element
-                                   ,bool        p_attributes
-                                   ,bool        p_utf8  = true
-                                   ,int         p_level = 0);
+  virtual CString PrintElementsJson(XMLElement*   p_element
+                                   ,bool          p_attributes
+                                   ,XMLEncoding   p_encoding = XMLEncoding::ENC_UTF8
+                                   ,int           p_level    = 0);
 
   // FILE OPERATIONS
 

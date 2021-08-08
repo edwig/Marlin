@@ -31,7 +31,13 @@
 constexpr auto DEFAULT_EVENT_KEEPALIVE = 10000;
 // Initial event retry time in milliseconds
 constexpr auto DEFAULT_EVENT_RETRYTIME = 3000;
-// Maximum number of datachunks on a IIS event stream
+// Minimum and maximum values
+constexpr auto EVENT_KEEPALIVE_MIN =  1000;   //  1 second
+constexpr auto EVENT_KEEPALIVE_MAX = 90000;   // 90 seconds
+constexpr auto EVENT_RETRYTIME_MIN =  1000;   //  1 second
+constexpr auto EVENT_RETRYTIME_MAX =  5000;   //  5 seconds
+
+// Maximum number of data chunks on a IIS event stream
 // Theoretical max = 65535, but we stop before this is reached
 constexpr auto MAX_DATACHUNKS = 65530;
 
