@@ -688,9 +688,11 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
 
   for(auto& element : p_element.GetChildren())
   {
+    CString text = element->GetValue();
+    JSONobject objVal;
+
     if(element->GetAttributes().size() > 0)
     {
-      JSONobject objVal;
       for(auto& attribute : element->GetAttributes())
       {
         JSONpair attrPair;
@@ -699,6 +701,13 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
 
         // Put an object in the array and parse it
         objVal.push_back(attrPair);
+      }
+      if(!text.IsEmpty())
+      {
+        JSONpair textPair;
+        textPair.m_name = "text";
+        textPair.m_value.SetValue(text);
+        objVal.push_back(textPair);
       }
 
       // Put in the array
@@ -710,14 +719,13 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
     }
     else
     {
-      // Put an object in the array and parse it
-      JSONvalue value;
-      jar.push_back(value);
-      append = &jar.back();
+      JSONvalue val(text);
+      jar.push_back(val);
+      append = &(jar.back());
     }
 
     // Parse on, if something to do
-    if(!element->GetChildren().empty() || !element->GetValue().IsEmpty())
+    if(!element->GetChildren().empty())
     {
       ParseLevel(*append,*element);
     }
