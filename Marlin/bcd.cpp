@@ -2214,7 +2214,7 @@ bcd::AsUInt64() const
 // Description: Get as a mathematical string
 // Technical:   Convert back to "[sign][digit][.[digit]*][E[sign][digits]+]"
 CString 
-bcd::AsString(bcd::Format p_format /*=Bookkeeping*/,bool p_printPositive /*=false*/) const
+bcd::AsString(bcd::Format p_format /*=Bookkeeping*/,bool p_printPositive /*=false*/,int p_decimals /*=2*/) const
 {
   CString result;
   int exp    = m_exponent;
@@ -2271,10 +2271,11 @@ bcd::AsString(bcd::Format p_format /*=Bookkeeping*/,bool p_printPositive /*=fals
         before += "0";
       }
       result = before;
-      if(behind.GetLength())
+      while(p_decimals > 0 && behind.GetLength() < p_decimals)
       {
-        result += "." + behind;
+        behind += '0';
       }
+      result += "." + behind;
     }
   }
 

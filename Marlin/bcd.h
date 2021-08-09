@@ -343,7 +343,7 @@ public:
   // Get as an unsigned 64 bits long
   uint64  AsUInt64() const;
   // Get as a mathematical string
-  CString AsString(bcd::Format p_format = Bookkeeping,bool p_printPositive = false) const;
+  CString AsString(bcd::Format p_format = Bookkeeping,bool p_printPositive = false,int p_decimals = 2) const;
   // Get as a display string (by desktop locale)
   CString AsDisplayString(int p_decimals = 2) const;
   // Get as an ODBC SQL NUMERIC(p,s)
