@@ -543,6 +543,8 @@ JSONParser::ParseNumber()
 //
 //////////////////////////////////////////////////////////////////////////
 
+#define WHITESPACE "\r\n\t\f "
+
 JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message)
                :JSONParser(p_message)
 {
@@ -592,6 +594,7 @@ JSONParserSOAP::ParseMain(JSONvalue& p_valPointer,XMLElement& p_element)
 
   if(!p_element.GetChildren().empty())
   {
+    value.SetDatatype(JsonType::JDT_object);
     ParseLevel(value,p_element);
   }
 }
@@ -663,15 +666,68 @@ JSONParserSOAP::ScanForArray(XMLElement& p_element,CString& p_arrayName)
       return false;
     }
   }
+
   // Yip, it's an array
   p_arrayName = sameName;
   return true;
 }
 
+// Scan for an array halfway into an object vector
+// 0 -> No extra array needed
+// 1 -> Already a name found
+// 2 -> Create a new array
+int
+JSONParserSOAP::ScanForArray(XMLElement& p_element)
+{
+  XMLElement* parent = p_element.GetParent();
+  XMLElement* before = nullptr;
+  XMLElement* after  = nullptr;
+
+  XmlElementMap::iterator it = parent->GetChildren().begin();
+  while(it != parent->GetChildren().end())
+  {
+    if(*it == &p_element)
+    {
+      break;
+    }
+    before = *it++;
+    if(m_forceerArray && p_element.GetName().Compare(before->GetName()) == 0)
+    {
+      return 1;
+    }
+  }
+  if(*it == &p_element && ++it != parent->GetChildren().end())
+  {
+    after = *(it);
+  }
+
+  if(before && p_element.GetName().Compare(before->GetName()) == 0)
+  {
+    return 1;
+  }
+  if(after && p_element.GetName().Compare(after->GetName()) == 0)
+  {
+    return 2;
+  }
+
+  if(m_forceerArray)
+  {
+    // There is a same node further on
+    while(it != parent->GetChildren().end())
+    {
+      if(p_element.GetName().Compare((*(it))->GetName()) == 0)
+      {
+        return 2;
+      }
+      ++it;
+    }
+  }
+  return 0;
+}
+
 void
 JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CString p_arrayName)
 {
-  JSONvalue* append = nullptr;
   JSONarray  jarray;
   JSONpair   pair;
   pair.m_name = p_arrayName;
@@ -688,7 +744,10 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
 
   for(auto& element : p_element.GetChildren())
   {
+    JSONvalue* append = nullptr;
     CString text = element->GetValue();
+    Trim(text);
+
     JSONobject objVal;
 
     if(element->GetAttributes().size() > 0)
@@ -717,7 +776,7 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
       val.SetValue(objVal);
       append = &val;
     }
-    else
+    else if(!text.IsEmpty())
     {
       JSONvalue val(text);
       jar.push_back(val);
@@ -727,6 +786,12 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
     // Parse on, if something to do
     if(!element->GetChildren().empty())
     {
+      if(append == nullptr || append->GetDataType() != JsonType::JDT_object)
+      {
+        JSONvalue val(JsonType::JDT_object);
+        jar.push_back(val);
+        append = &(jar.back());
+      }
       ParseLevel(*append,*element);
     }
   }
@@ -735,56 +800,83 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,CStrin
 void 
 JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
 {
-  if(p_valPointer.GetDataType() != JsonType::JDT_object)
+  // Adding to an array. First add an object
+  if(p_valPointer.GetDataType() == JsonType::JDT_array)
   {
-    p_valPointer.SetDatatype(JsonType::JDT_object);
+    JSONvalue val(JsonType::JDT_object);
+    p_valPointer.Add(val);
   }
 
   for(auto& element : p_element.GetChildren())
   {
-    CreatePair(p_valPointer,*element);
-
-    JSONvalue*  here   = &(p_valPointer.GetObject().back().m_value);
+    CString value;
+    JSONvalue*  here   = nullptr;
     JSONobject* objPtr = nullptr;
-    JSONvalue*  append = nullptr;
-    CString     value  = here->GetString();
+    JSONvalue* valPointer = &p_valPointer;
 
-    if(element->GetAttributes().size() > 0)
+    if(p_valPointer.GetDataType() == JsonType::JDT_array)
     {
-      if(m_forceerArray)
-      {
-        JSONarray  arr;
-        JSONobject obj;
-        JSONvalue  objval;
+      valPointer = &(p_valPointer.GetArray().back());
+    }
 
-        objval.SetValue(obj);
-        arr.push_back(objval);
-        here->SetValue(arr);
-        append = &(here->GetArray().back());
-        objPtr = &append->GetObject();
-   
-        JSONpair attrPair;
-        for(auto& attribute : element->GetAttributes())
+    int makeArray = ScanForArray(*element);
+    if(makeArray == 1)
+    {
+      JsonType searchArray(JsonType::JDT_array);
+      JSONvalue* val = m_message->FindValue(&p_valPointer,element->GetName(),false,&searchArray);
+      JSONarray* arr = &(val->GetArray());
+      JSONvalue object(JsonType::JDT_object);
+      arr->push_back(object);
+      valPointer = here = &(arr->back());
+      value = element->GetValue();
+      Trim(value);
+    }
+    else
+    {
+      CreatePair(*valPointer,*element);
+      if(valPointer->GetDataType() == JsonType::JDT_object &&
+        !valPointer->GetObject().empty())
+      {
+        here = &(valPointer->GetObject().back().m_value);
+        if(!element->GetAttributes().empty())
         {
-          attrPair.m_name = attribute.m_name;
-          attrPair.m_value.SetValue(attribute.m_value);
-          objPtr->push_back(attrPair);
+          value = element->GetValue();
+          Trim(value);
         }
       }
-      else
+    }
+    if(makeArray == 2)
+    {
+      // Change the just added pair to an array
+      if(here->GetDataType() == JsonType::JDT_array && !here->GetArray().empty())
       {
-        JSONobject obj;
-        here->SetValue(obj);
-        objPtr = &here->GetObject();
+        value = here->GetArray().back().GetString();
+      }
+      here->SetDatatype(JsonType::JDT_array);
+      JSONvalue val(JsonType::JDT_object);
+      here->Add(val);
+      here = &(here->GetArray().back());
+    }
+
+    // Preserve the innertext of the element
+    if(value.IsEmpty() && here)
+    {
+      value = here->GetString();
+    }
+
+    // Do the attributes
+    if(element->GetAttributes().size() > 0)
+    {
+      JSONobject obj;
+      here->SetValue(obj);
+      objPtr = &here->GetObject();
         
-        JSONpair attrPair;
-        for(auto& attribute : element->GetAttributes())
-        {
-          attrPair.m_name = attribute.m_name;
-          attrPair.m_value.SetValue(attribute.m_value);
-          objPtr->push_back(attrPair);
-        }
-        append = &p_valPointer.GetObject().back().m_value;
+      JSONpair attrPair;
+      for(auto& attribute : element->GetAttributes())
+      {
+        attrPair.m_name = attribute.m_name;
+        attrPair.m_value.SetValue(attribute.m_value);
+        objPtr->push_back(attrPair);
       }
 
       // Append the text node that was overwritten by the attributes
@@ -796,10 +888,15 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
         objPtr->push_back(textPair);
       }
     }
+
+    // Do the children
     if(element->GetChildren().size())
     {
-      append = here;
-      ParseLevel(*append,*element);
+      if(here->GetDataType() == JsonType::JDT_const)
+      {
+        here->SetDatatype(JsonType::JDT_object);
+      }
+      ParseLevel(*here,*element);
     }
   }
 }
@@ -812,22 +909,65 @@ JSONParserSOAP::CreatePair(JSONvalue& p_valPointer,XMLElement& p_element)
     JSONpair pair;
     pair.m_name = p_element.GetName();
     CString value = p_element.GetValue();
-    if(value.IsEmpty())
+    Trim(value);
+
+    if(m_forceerArray)
     {
-      pair.m_value.SetValue(JsonConst::JSON_NULL);
+      pair.m_value.SetDatatype(JsonType::JDT_array);
+      if(p_element.GetChildren().empty())
+      {
+        JSONvalue val(JsonConst::JSON_NULL);
+        if(!value.IsEmpty())
+        {
+          val.SetValue(value);
+        }
+        pair.m_value.Add(val);
+      }
     }
     else
     {
-      pair.m_value.SetValue(value);
+      pair.m_value.SetValue(JsonConst::JSON_NULL);
+      if(!value.IsEmpty())
+      {
+        pair.m_value.SetValue(value);
+      }
     }
     // Put in the surrounding object
     p_valPointer.GetObject().push_back(pair);
   }
   else
   {
-    // Simple string in an array
+    // Simple string in an array (SPACES ALLOWED)
     p_valPointer.SetDatatype(JsonType::JDT_string);
     CString value = p_element.GetValue();
     p_valPointer.SetValue(value);
   }
 }
+
+void
+JSONParserSOAP::Trim(CString& p_value)
+{
+  while(p_value.GetLength())
+  {
+    int index = p_value.GetLength() - 1;
+    int ch = p_value.GetAt(index);
+    if(strchr(WHITESPACE,ch))
+    {
+      p_value = p_value.Left(index);
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  while(p_value.GetLength())
+  {
+    if(strchr(WHITESPACE,p_value.GetAt(0)))
+    {
+      p_value = p_value.Mid(1);
+    }
+    else break;
+  }
+}
+

@@ -100,7 +100,9 @@ private:
   void CreateObject(JSONvalue& p_valPointer,XMLElement& p_element);
   void CreateArray (JSONvalue& p_valPointer,XMLElement& p_element,CString p_arrayName);
   // Forward scanning
+  int  ScanForArray(XMLElement& p_element);
   bool ScanForArray(XMLElement& p_element,CString& p_arrayName);
+  void Trim(CString& p_value);
 
   bool m_forceerArray { false };
 };

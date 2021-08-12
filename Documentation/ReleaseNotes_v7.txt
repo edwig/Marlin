@@ -42,3 +42,4 @@ CHANGES IN VERSION 7.0.0
 14) JSON whitespace printing changed from two spaces to TAB character
 15) Added the JSON methode "AddNamedObject(name,object,force-array)"
     See the MarlinClient testset for an example.
+16) JSON's now support conversion of XML sets to JSON arrays.

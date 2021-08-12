@@ -213,8 +213,8 @@ public:
   bool SaveFile(const CString& p_fileName, bool p_withBom = false);
 
   // Finding value nodes within the JSON structure
-  JSONvalue*      FindValue (CString    p_name,               bool p_object = false);
-  JSONvalue*      FindValue (JSONvalue* p_from,CString p_name,bool p_object = false);
+  JSONvalue*      FindValue (CString    p_name,               bool p_object = false,JsonType* p_type = nullptr);
+  JSONvalue*      FindValue (JSONvalue* p_from,CString p_name,bool p_object = false,JsonType* p_type = nullptr);
   JSONpair*       FindPair  (CString    p_name);
   JSONpair*       FindPair  (JSONvalue* p_value, CString p_name);
   JSONvalue*      GetArrayElement (JSONvalue* p_array, int p_index);
