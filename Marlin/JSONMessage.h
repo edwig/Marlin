@@ -215,8 +215,8 @@ public:
   // Finding value nodes within the JSON structure
   JSONvalue*      FindValue (CString    p_name,               bool p_object = false,JsonType* p_type = nullptr);
   JSONvalue*      FindValue (JSONvalue* p_from,CString p_name,bool p_object = false,JsonType* p_type = nullptr);
-  JSONpair*       FindPair  (CString    p_name);
-  JSONpair*       FindPair  (JSONvalue* p_value, CString p_name);
+  JSONpair*       FindPair  (CString    p_name,bool p_recursief = true);
+  JSONpair*       FindPair  (JSONvalue* p_value,CString p_name,bool p_recursief = true);
   JSONvalue*      GetArrayElement (JSONvalue* p_array, int p_index);
   JSONpair*       GetObjectElement(JSONvalue* p_object,int p_index);
   CString         GetValueString  (CString p_name);

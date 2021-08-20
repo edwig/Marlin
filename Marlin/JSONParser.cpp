@@ -330,10 +330,6 @@ JSONParser::ParseArray()
   int elements = 0;
   while(*m_pointer)
   {
-    // Put array element extra in the array
-    JSONvalue value;
-    m_valPointer->GetArray().push_back(value);
-
     // Check for an empty array
     if(*m_pointer == ']' && elements == 0)
     {
@@ -341,6 +337,11 @@ JSONParser::ParseArray()
       return true;
     }
     ++elements;
+
+    // Array is not empty
+    // Put array element extra in the array
+    JSONvalue value;
+    m_valPointer->GetArray().push_back(value);
 
     // Put value pointer on the stack and parse an array value
     JSONvalue* workPointer = m_valPointer;

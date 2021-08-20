@@ -43,3 +43,4 @@ CHANGES IN VERSION 7.0.0
 15) Added the JSON methode "AddNamedObject(name,object,force-array)"
     See the MarlinClient testset for an example.
 16) JSON's now support conversion of XML sets to JSON arrays.
+17) The ability to search recursively through a JSON or just the first chosen level.

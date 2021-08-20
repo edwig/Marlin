@@ -1019,18 +1019,18 @@ JSONMessage::FindValue(JSONvalue* p_from,CString p_name,bool p_object /*=false*/
 
 // Finding the first name/value pair of this name
 JSONpair*
-JSONMessage::FindPair(CString p_name)
+JSONMessage::FindPair(CString p_name,bool p_recursief /*= true*/)
 {
   if(m_value)
   {
-    return FindPair(m_value, p_name);
+    return FindPair(m_value,p_name,p_recursief);
   }
   return nullptr;
 }
 
 // Finding the first name/value pair AFTER this value
 JSONpair* 
-JSONMessage::FindPair(JSONvalue* p_value,CString p_name)
+JSONMessage::FindPair(JSONvalue* p_value,CString p_name,bool p_recursief /*= true*/)
 {
   if(p_value && p_value->GetDataType() == JsonType::JDT_object)
   {
@@ -1040,16 +1040,24 @@ JSONMessage::FindPair(JSONvalue* p_value,CString p_name)
       {
         return &pair;
       }
+      if(p_recursief)
+      {
+        JSONpair* found = FindPair(&(pair.m_value),p_name,true);
+        if(found)
+        {
+          return found;
+        }
+      }
     }
   }
-  if(p_value && p_value->GetDataType() == JsonType::JDT_array)
+  if(p_recursief && p_value && (p_value->GetDataType() == JsonType::JDT_array))
   {
     for(auto& val : p_value->GetArray())
     {
       if(val.GetDataType() == JsonType::JDT_object ||
          val.GetDataType() == JsonType::JDT_array  )
       {
-        JSONpair* pair = FindPair(&val,p_name);
+        JSONpair* pair = FindPair(&val,p_name,true);
         if(pair)
         {
           return pair;
