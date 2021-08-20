@@ -112,6 +112,17 @@ WebConfigIIS::GetSetting(CString p_key)
 }
 
 CString
+WebConfigIIS::GetSiteAppPool(CString p_site)
+{
+  IISSite* site = GetSite(p_site);
+  if(site)
+  {
+    return site->m_appPool;
+  }
+  return CString();
+}
+
+CString
 WebConfigIIS::GetSiteBinding(CString p_site,CString p_default)
 {
   IISSite* site = GetSite(p_site);
@@ -221,6 +232,17 @@ WebConfigIIS::GetSiteNTLMCache(CString p_site,bool p_default)
   return p_default;
 }
 
+bool
+WebConfigIIS::GetSitePreload(CString p_site)
+{
+  IISSite* site = GetSite(p_site);
+  if(site)
+  {
+    return site->m_preload;
+  }
+  return false;
+}
+
 IISError
 WebConfigIIS::GetSiteError(CString p_site)
 {
@@ -230,6 +252,61 @@ WebConfigIIS::GetSiteError(CString p_site)
     return site->m_error;
   }
   return IISER_NoError;
+}
+
+CString
+WebConfigIIS::GetPoolStartMode(CString p_pool)
+{
+  IISAppPool* pool = GetPool(p_pool);
+  if(pool)
+  {
+    return pool->m_startMode;
+  }
+  return CString();
+}
+
+CString
+WebConfigIIS::GetPoolPeriodicRestart(CString p_pool)
+{
+  IISAppPool* pool = GetPool(p_pool);
+  if(pool)
+  {
+    return pool->m_periodicRestart;
+  }
+  return CString();
+}
+
+CString
+WebConfigIIS::GetPoolIdleTimeout(CString p_pool)
+{
+  IISAppPool* pool = GetPool(p_pool);
+  if(pool)
+  {
+    return pool->m_idleTimeout;
+  }
+  return CString();
+}
+
+bool
+WebConfigIIS::GetPoolAutostart(CString p_pool)
+{
+  IISAppPool* pool = GetPool(p_pool);
+  if(pool)
+  {
+    return pool->m_autoStart;
+  }
+  return false;
+}
+
+CString
+WebConfigIIS::GetPoolPipelineMode(CString p_pool)
+{
+  IISAppPool* pool = GetPool(p_pool);
+  if(pool)
+  {
+    return pool->m_pipelineMode;
+  }
+  return CString();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -300,6 +377,7 @@ WebConfigIIS::ReadConfig(CString p_configFile,IISSite* p_site /*=nullptr*/)
   msg.LoadFile(p_configFile);
 
   ReadLogPath(msg);
+  ReadAppPools(msg);
   ReadSites(msg);
   ReadSettings(msg);
 
@@ -340,6 +418,77 @@ WebConfigIIS::ReadLogPath(XMLMessage& p_msg)
 }
 
 void
+WebConfigIIS::ReadAppPools(XMLMessage& p_msg)
+{
+  XMLElement* appPools = p_msg.FindElement("applicationPools");
+  if(!appPools) return;
+
+  CString defaultStartmode; // empty or "AlwaysRunning"
+  CString defaultRecycling; // time "days.hours:minutes:seconds"
+
+  // Find defaults for all the pools
+  XMLElement* defs = p_msg.FindElement(appPools,"applicationPoolDefaults");
+  if(defs)
+  {
+    defaultStartmode = p_msg.GetAttribute(defs,"startMode");
+    XMLElement* restart = p_msg.FindElement(defs,"periodicRestart");
+    if(restart)
+    {
+      defaultRecycling = p_msg.GetAttribute(restart,"time");
+    }
+  }
+
+  // Find pools and specific settings for the pool
+  XMLElement* pools = p_msg.FindElement(appPools,"add");
+  while(pools)
+  {
+    IISAppPool pool;
+    pool.m_autoStart       = false;
+    pool.m_startMode       = defaultStartmode;
+    pool.m_periodicRestart = defaultRecycling;
+    
+    // Getting pool name
+    CString name = p_msg.GetAttribute(pools,"name");
+    pool.m_name = name;
+
+    // Getting pool startmode
+    CString startMode = p_msg.GetAttribute(pools,"startMode");
+    if(!startMode.IsEmpty())
+    {
+      pool.m_startMode = startMode;
+    }
+
+    // Getting pool autostart
+    CString autostart = p_msg.GetAttribute(pools,"autoStart");
+    if(autostart.CompareNoCase("true") == 0)
+    {
+      pool.m_autoStart = true;
+    }
+
+    // Getting the pipeline mode
+    pool.m_pipelineMode = p_msg.GetAttribute(pools,"managedPipelineMode");
+
+    // Getting idle timeout
+    XMLElement* process = p_msg.FindElement(pools,"processModel");
+    if(process)
+    {
+      pool.m_idleTimeout = p_msg.GetAttribute(process,"idleTimeout");
+    }
+
+    // Retain pool information
+    name.MakeLower();
+    m_pools.insert(std::make_pair(name,pool));
+
+    // Getting the next pool
+    pools = p_msg.GetElementSibling(pools);
+    if(pools && pools->GetName().Compare("add"))
+    {
+      break;
+    }
+  }
+}
+
+void
 WebConfigIIS::ReadSites(XMLMessage& p_msg)
 {
   XMLElement* sites = p_msg.FindElement("sites");
@@ -353,10 +502,18 @@ WebConfigIIS::ReadSites(XMLMessage& p_msg)
       IISSite theSite;
       theSite.m_ntlmCache  = true;
       theSite.m_secure     = false;
+      theSite.m_preload    = false;
       theSite.m_authScheme = 0;
       theSite.m_error      = IISER_NoError;
-      CString name = p_msg.GetAttribute(site,"name");
-      theSite.m_name = name;
+      theSite.m_name       = p_msg.GetAttribute(site,"name");
+
+      // Application
+      XMLElement* applic = p_msg.FindElement(site,"application");
+      if(applic)
+      {
+        theSite.m_appPool = p_msg.GetAttribute(applic,"applicationPool");
+        theSite.m_preload = p_msg.GetAttribute(applic,"preloadEnabled").CompareNoCase("true") == 0;
+      }
 
       // Virtual path
       XMLElement* virtdir = p_msg.FindElement(site,"virtualDirectory");
@@ -388,6 +545,7 @@ WebConfigIIS::ReadSites(XMLMessage& p_msg)
       ReadAuthentication(theSite,p_msg);
 
       // Add to sites
+      CString name = theSite.m_name;
       name.MakeLower();
       m_sites.insert(std::make_pair(name,theSite));
     }
@@ -660,6 +818,19 @@ WebConfigIIS::GetSite(CString p_site)
   if(it != m_sites.end())
   {
     return &it->second;
+  }
+  return nullptr;
+}
+
+// Finding a application pool registration
+IISAppPool* 
+WebConfigIIS::GetPool(CString p_pool)
+{
+  p_pool.MakeLower();
+  IISPools::iterator it = m_pools.find(p_pool);
+  if(it != m_pools.end())
+  {
+    return &(it->second);
   }
   return nullptr;
 }

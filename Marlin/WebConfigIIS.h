@@ -53,6 +53,7 @@ using IISHandlers = std::map<CString,IISHandler>;
 typedef struct _iisSite
 {
   CString     m_name;
+  CString     m_appPool;
   CString     m_binding;
   CString     m_protocol;
   int         m_port;
@@ -62,12 +63,26 @@ typedef struct _iisSite
   CString     m_realm;
   CString     m_domain;
   bool        m_ntlmCache;
+  bool        m_preload;
   IISError    m_error;
   IISHandlers m_handlers;
 }
 IISSite;
 
+// Waht we want to remember about an IIS Application Pool
+typedef struct _appPool
+{
+  CString   m_name;
+  CString   m_startMode;
+  CString   m_periodicRestart;
+  CString   m_idleTimeout;
+  bool      m_autoStart;
+  CString   m_pipelineMode;
+}
+IISAppPool;
+
 using IISSites    = std::map<CString,IISSite>;
+using IISPools    = std::map<CString,IISAppPool>;
 using WCFiles     = std::map<CString,int>;
 using AppSettings = std::map<CString,CString>;
 
@@ -93,6 +108,7 @@ public:
   // Getting information of a site
   CString     GetSiteName     (CString p_site);
   CString     GetSetting      (CString p_key);
+  CString     GetSiteAppPool  (CString p_site);
   CString     GetSiteBinding  (CString p_site,CString p_default);
   CString     GetSiteProtocol (CString p_site,CString p_default);
   int         GetSitePort     (CString p_site,int     p_default);
@@ -103,10 +119,18 @@ public:
   CString     GetSiteRealm    (CString p_site,CString p_default);
   CString     GetSiteDomain   (CString p_site,CString p_default);
   bool        GetSiteNTLMCache(CString p_site,bool    p_default);
+  bool        GetSitePreload  (CString p_site);
   IISError    GetSiteError    (CString p_site);
 
   IISHandlers* GetAllHandlers (CString p_site);
   IISHandler*  GetHandler     (CString p_site,CString p_handler);
+
+  // Getting information of a application pool
+  CString     GetPoolStartMode      (CString p_pool);
+  CString     GetPoolPeriodicRestart(CString p_pool);
+  CString     GetPoolIdleTimeout    (CString p_pool);
+  bool        GetPoolAutostart      (CString p_pool);
+  CString     GetPoolPipelineMode   (CString p_pool);
 
 private:
   // Read one config file
@@ -115,8 +139,11 @@ private:
   static bool ReplaceEnvironVars(CString& p_string);
   // Site registration
   IISSite*    GetSite(CString p_site);
+  // Pool registration
+  IISAppPool* GetPool(CString p_pool);
   // Reading of the internal structures of a config file
   void        ReadLogPath (XMLMessage& p_msg);
+  void        ReadAppPools(XMLMessage& p_msg);
   void        ReadSites   (XMLMessage& p_msg);
   void        ReadSettings(XMLMessage& p_msg);
   void        ReadStreamingLimit(XMLMessage& p_msg, XMLElement* p_elem);
@@ -133,6 +160,7 @@ private:
   WCFiles     m_files;
 
   AppSettings m_settings;
+  IISPools    m_pools;
   IISSites    m_sites;
   CString     m_logpath;
   bool        m_logging        { false };
