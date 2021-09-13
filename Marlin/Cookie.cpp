@@ -158,6 +158,11 @@ Cookie::GetSetCookieText()
     CString expires = (CString) CW2A((LPCWSTR)&pwszTimeStr);
     cookie.AppendFormat("; Expires=%s",expires.GetString());
   }
+
+  // Samesite setting
+  CString value = m_sameSite == SameSiteValue::Strict ? "Strict" : m_sameSite == SameSiteValue::Lax ? "Lax" : "None";
+  cookie.AppendFormat("; SameSite=%s",value.GetString());
+
   // Optional flags
   if(m_secure)
   {

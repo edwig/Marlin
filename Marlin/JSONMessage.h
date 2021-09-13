@@ -213,8 +213,8 @@ public:
   bool SaveFile(const CString& p_fileName, bool p_withBom = false);
 
   // Finding value nodes within the JSON structure
-  JSONvalue*      FindValue (CString    p_name,               bool p_object = false,JsonType* p_type = nullptr);
-  JSONvalue*      FindValue (JSONvalue* p_from,CString p_name,bool p_object = false,JsonType* p_type = nullptr);
+  JSONvalue*      FindValue (CString    p_name,               bool p_recurse = true,bool p_object = false,JsonType* p_type = nullptr);
+  JSONvalue*      FindValue (JSONvalue* p_from,CString p_name,bool p_recurse = true,bool p_object = false,JsonType* p_type = nullptr);
   JSONpair*       FindPair  (CString    p_name,bool p_recursief = true);
   JSONpair*       FindPair  (JSONvalue* p_value,CString p_name,bool p_recursief = true);
   JSONvalue*      GetArrayElement (JSONvalue* p_array, int p_index);
@@ -283,6 +283,7 @@ public:
   void            SetSendBOM(bool p_bom)                  { m_sendBOM            = p_bom;      };
   void            SetVerbTunneling(bool p_tunnel)         { m_verbTunnel         = p_tunnel;   };
   void            SetHasBeenAnswered()                    { m_request            = NULL;       };
+  void            SetReferrer(CString p_referrer)         { m_referrer           = p_referrer; };
   void            SetAcceptEncoding(CString p_encoding);
   void            AddHeader(CString p_name,CString p_value);
   void            DelHeader(CString p_name);

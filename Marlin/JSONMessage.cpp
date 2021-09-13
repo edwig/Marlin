@@ -954,16 +954,16 @@ JSONMessage::SaveFile(const CString& p_fileName, bool p_withBom /*= false*/)
 //////////////////////////////////////////////////////////////////////////
 
 // Finding the first value of this name
-JSONvalue* 
-JSONMessage::FindValue(CString p_name,bool p_object /*= false*/,JsonType* p_type /*=nullptr*/)
+JSONvalue*
+JSONMessage::FindValue(CString p_name,bool p_recurse /*=true*/,bool p_object /*= false*/,JsonType* p_type /*=nullptr*/)
 {
   // Find from the root value
-  return FindValue(m_value,p_name,p_object,p_type);
+  return FindValue(m_value,p_name,p_recurse,p_object,p_type);
 }
 
 // Finding the first value with this name AFTER the p_from value
 JSONvalue* 
-JSONMessage::FindValue(JSONvalue* p_from,CString p_name,bool p_object /*=false*/,JsonType* p_type /*= nullptr*/)
+JSONMessage::FindValue(JSONvalue* p_from,CString p_name,bool p_recurse /*=true*/,bool p_object /*=false*/,JsonType* p_type /*= nullptr*/)
 {
   // Stopping criterion: nothing more to find
   if(p_from == nullptr)
@@ -976,7 +976,7 @@ JSONMessage::FindValue(JSONvalue* p_from,CString p_name,bool p_object /*=false*/
   {
     for(auto& val : p_from->GetArray())
     {
-      JSONvalue* value = FindValue(&val,p_name,p_object,p_type);
+      JSONvalue* value = FindValue(&val,p_name,p_recurse,p_object,p_type);
       if(value)
       {
         return value;
@@ -1003,13 +1003,16 @@ JSONMessage::FindValue(JSONvalue* p_from,CString p_name,bool p_object /*=false*/
         }
       }
       // Recurse for array and object
-      if(val.m_value.GetDataType() == JsonType::JDT_array ||
-         val.m_value.GetDataType() == JsonType::JDT_object)
+      if(p_recurse)
       {
-        JSONvalue* value = FindValue(&val.m_value,p_name,p_object,p_type);
-        if(value)
+        if(val.m_value.GetDataType() == JsonType::JDT_array ||
+           val.m_value.GetDataType() == JsonType::JDT_object)
         {
-          return value;
+          JSONvalue* value = FindValue(&val.m_value,p_name,true,p_object,p_type);
+          if(value)
+          {
+            return value;
+          }
         }
       }
     }
@@ -1175,7 +1178,7 @@ JSONMessage::AddNamedObject(CString p_name,JSONobject& p_object,bool p_forceArra
   }
   else
   {
-    JSONvalue* here = FindValue(p_name, true);
+    JSONvalue* here = FindValue(p_name,true,true);
 
     // Add to the found pair of the same name
     if(p_forceArray && here->GetObject().size() == 1)

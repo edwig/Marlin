@@ -824,7 +824,7 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
     if(makeArray == 1)
     {
       JsonType searchArray(JsonType::JDT_array);
-      JSONvalue* val = m_message->FindValue(&p_valPointer,element->GetName(),false,&searchArray);
+      JSONvalue* val = m_message->FindValue(&p_valPointer,element->GetName(),false,false,&searchArray);
       JSONarray* arr = &(val->GetArray());
       JSONvalue object(JsonType::JDT_object);
       arr->push_back(object);
