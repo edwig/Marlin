@@ -360,6 +360,9 @@
     <ClCompile Include="WebSocketContext.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
+    <ClCompile Include="JSONPointer.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -730,6 +733,9 @@
     </ClInclude>
     <ClInclude Include="WebSocketContext.h">
       <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="JSONPointer.h">
+      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -399,6 +399,8 @@ JSONpair::JSONpair(CString p_name, JsonType p_type)
 
 JSONMessage::JSONMessage()
 {
+  AddReference();
+
   // Set empty value
   m_value = new JSONvalue();
 
@@ -410,6 +412,8 @@ JSONMessage::JSONMessage()
 // Incoming string , no whitespace preservation, expect it to be UTF-8
 JSONMessage::JSONMessage(CString p_message)
 {
+  AddReference();
+
   // Set empty value
   m_value = new JSONvalue();
 
@@ -426,6 +430,8 @@ JSONMessage::JSONMessage(CString p_message)
 // XTOR: From an internal string with explicit space and encoding
 JSONMessage::JSONMessage(CString p_message,bool p_whitespace,JsonEncoding p_encoding)
 {
+  AddReference();
+
   // Set empty value
   m_value = new JSONvalue();
 
@@ -442,6 +448,8 @@ JSONMessage::JSONMessage(CString p_message,bool p_whitespace,JsonEncoding p_enco
 // XTOR: Outgoing message + url
 JSONMessage::JSONMessage(CString p_message,CString p_url)
 {
+  AddReference();
+
   // Set empty value
   m_value = new JSONvalue();
 
@@ -458,6 +466,8 @@ JSONMessage::JSONMessage(CString p_message,CString p_url)
 // XTOR: From another message
 JSONMessage::JSONMessage(JSONMessage* p_other)
 {
+  AddReference();
+
   // Copy the primary message value, and reference it
   m_value = new JSONvalue(p_other->m_value);
   m_value->AddReference();
@@ -507,6 +517,8 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
 
 JSONMessage::JSONMessage(HTTPMessage* p_message)
 {
+  AddReference();
+
   // Set empty value
   m_value          = new JSONvalue();
 
@@ -605,6 +617,8 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
 
 JSONMessage::JSONMessage(SOAPMessage* p_message)
 {
+  AddReference();
+
   // Set empty value
   m_value = new JSONvalue();
 

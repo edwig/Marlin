@@ -41,6 +41,7 @@ class JSONvalue;
 class JSONpair;
 class JSONParser;
 class JSONParserSOAP;
+class JSONPointer;
 
 // The JSON constants
 //
@@ -133,6 +134,9 @@ public:
   void        DropReference();
 
 private:
+  // JSONPointer may have access to the objects
+  friend     JSONPointer;
+
   // What's in there: the data type
   JsonType   m_type       { JsonType::JDT_const };
   // Depending on m_type: one of these

@@ -9,11 +9,16 @@ Version 7.x contains the new MarlinModule that (again) allows to be used with st
 application modules (DLL's), and so optimize the depoloyment and stack tracing capabilities
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 7.1.0
+------------------------
+1)  Added the new class JSONPointer as per IETF RFC 6901 (Full implementation)
+    You can point to any member of a JSON with the pointer path reference
+    See the TestJSON.cpp file in the client project for test cases and examples of JSONPointer.
+
 CHANGES IN VERSION 7.0.1
 ------------------------
 1)  Added 'samesite' option to cookies
 2)  Added 'recurse' option to the 'FindValue' methods of the JSONMessage
-
 
 CHANGES IN VERSION 7.0.0
 ------------------------
