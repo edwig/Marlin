@@ -14,6 +14,16 @@ CHANGES IN VERSION 7.1.0
 1)  Added the new class JSONPointer as per IETF RFC 6901 (Full implementation)
     You can point to any member of a JSON with the pointer path reference
     See the TestJSON.cpp file in the client project for test cases and examples of JSONPointer.
+2)  JSONPointer can act not only on JSONPointer names, but also on JSONPath names with the
+    standard '.' notation for delimters
+
+    A JSONPointer can be one of the following:
+    - "" or "$"             -> Empty string -> Whole JSON document is matched
+    - "/any/path/3/name"    -> Standard JSONPointer path implied by first '/' char
+    - "#/any/path/3/name"   -> JSONPointer comes from an URL anchor, replace the URL escape chars
+    - "$.any.path.3.name"   -> Standard JSONPath implied by first '$' char. Changes delimiter to '.'
+    - "#$.any.path.3.name"  -> JSONPath name comes from an URL ancher, replace URL escape chars 
+                               AND change delimiter to '.'
 
 CHANGES IN VERSION 7.0.1
 ------------------------

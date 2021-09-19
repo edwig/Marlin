@@ -86,12 +86,14 @@ private:
   void Reset();
   void PresetFromJsonValue();
   bool ParseLevel(CString& p_parsing);
-  void Unescape(CString& p_token);
+  void UnescapeType(CString& p_pointer);
+  void UnescapeJSON(CString& p_token);
 
   // DATA
   CString       m_pointer;
   JSONMessage*  m_message     { nullptr };
   JPStatus      m_status      { JPStatus::JP_None };
+  char          m_delimiter   { '/' };
 
   // RESULT pointers
   JsonType      m_type        { JsonType::JDT_const  };

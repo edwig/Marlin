@@ -456,6 +456,95 @@ int TestJSONPointer(void)
   return errors;
 }
 
+int TestJSONPath(void)
+{
+  int errors = 0;
+
+  CString jsonString = "{\n"
+                       "\t\"MyObject\":[\n"
+                       "\t\t{\n"
+                       "\t\t\t\"one\":1,\n"
+                       "\t\t\t\"two\":2,\n"
+                       "\t\t\t\"three\":true\n"
+                       "\t\t},\n"
+                       "\t\t{\n"
+                       "\t\t\t\"four\":\"The Fantastic 4\",\n"
+                       "\t\t\t\"five\":5.17,\n"
+                       "\t\t\t\"six\":6,\n"
+                       "\t\t\t\"strange~ger\":42,\n"
+                       "\t\t\t\"sp.1\":\"7.1.12\"\n"
+                       "\t\t}\n"
+                       "\t]\n"
+                       "}";
+  CString jsonCompressed(jsonString);
+  jsonCompressed.Replace("\t","");
+  jsonCompressed.Replace("\n","");
+
+  JSONMessage json(jsonString);
+  JSONPointer jp(&json,"$.MyObject.0.two");
+
+  int result = jp.GetResultInteger();
+  errors += result != 2;
+
+  jp.SetPointer("$.MyObject.1.six");
+  result = jp.GetResultInteger();
+  errors += result != 6;
+  errors += jp.GetType() != JsonType::JDT_number_int;
+  errors += jp.GetStatus() != JPStatus::JP_Match_number_int;
+
+  jp.SetPointer("$");
+  CString resultJson = jp.GetResultForceToString();
+  errors += resultJson.Compare(jsonCompressed) != 0;
+
+  resultJson = jp.GetResultForceToString(true);
+  errors += jsonString.Compare(resultJson) != 0;
+  errors += jp.GetType() != JsonType::JDT_object;
+  errors += jp.GetStatus() != JPStatus::JP_Match_wholedoc;
+
+  jp.SetPointer("$.MyObject");
+  errors += jp.GetResultArray()->size() != 2;
+  errors += jp.GetType() != JsonType::JDT_array;
+  errors += jp.GetStatus() != JPStatus::JP_Match_array;
+
+  jp.SetPointer("$.MyObject.1");
+  errors += jp.GetResultObject()->size() != 5;
+  errors += jp.GetType() != JsonType::JDT_object;
+  errors += jp.GetStatus() != JPStatus::JP_Match_object;
+
+  jp.SetPointer("$.MyObject.1.five");
+  bcd testnum = jp.GetResultBCD();
+  errors += testnum != bcd("5.17");
+  errors += jp.GetType() != JsonType::JDT_number_bcd;
+  errors += jp.GetStatus() != JPStatus::JP_Match_number_bcd;
+
+  jp.SetPointer("$.MyObject.1.four");
+  CString four = jp.GetResultString();
+  errors += four.Compare("The Fantastic 4") != 0;
+  errors += jp.GetType() != JsonType::JDT_string;
+  errors += jp.GetStatus() != JPStatus::JP_Match_string;
+
+  jp.SetPointer("$.MyObject.0.three");
+  errors += jp.GetResultConstant() != JsonConst::JSON_TRUE;
+  errors += jp.GetType() != JsonType::JDT_const;
+  errors += jp.GetStatus() != JPStatus::JP_Match_constant;
+
+  // Escape of an '/' char in a name
+  jp.SetPointer("$.MyObject.1.sp~11");
+  CString version = jp.GetResultString();
+  errors += version.Compare("7.1.12") != 0;
+
+  // Escape of an '~' char in a name
+  jp.SetPointer("$.MyObject.1.strange~0ger");
+  int reason = jp.GetResultInteger();
+  errors += reason != 42;
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("JSONPath checks on all types/objects/escapes   : %s\n",errors ? "ERROR" : "OK");
+
+  return errors;
+}
+
 int TestJSON(void)
 {
   int errors = 0;
@@ -548,6 +637,7 @@ int TestJSON(void)
   errors += MultiJSON();
   errors += TestFindValue();
   errors += TestJSONPointer();
+  errors += TestJSONPath();
 
   return errors;
 }

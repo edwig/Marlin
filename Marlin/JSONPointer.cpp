@@ -73,14 +73,15 @@ JSONPointer::Evaluate()
   // Preset the first pointer
   m_value = &(m_message->GetValue());
 
-  if(m_pointer.IsEmpty())
+  // Parse the pointer (left-to-right)
+  CString parsing(m_pointer);
+  UnescapeType(parsing);
+  if(parsing.IsEmpty())
   {
     PresetFromJsonValue();
     m_status = JPStatus::JP_Match_wholedoc;
     return true;
   }
-  // Parse the pointer (left-to-right)
-  CString parsing(m_pointer);
   while(ParseLevel(parsing));
 
   // See if we found something
@@ -292,14 +293,52 @@ JSONPointer::PresetFromJsonValue()
   }
 }
 
+// Pointer can be one of the following:
+//
+// /any/path/3/name    -> No action taken, JSONPointer path implied
+// #/any/path/3/name   -> Pointer comes from a HTML anchor, replace the URL escape chars
+// $.any.path.3.name   -> Change delimiter to '.', JSONPath implied
+// #$.any.path.3.name  -> JSONPath in URL ancher, replace URL escape chars AND change delimiter to '.'
+//
 void
-JSONPointer::Unescape(CString& p_token)
+JSONPointer::UnescapeType(CString& p_pointer)
 {
-  p_token.Replace("~1", "/");
-  p_token.Replace("~0", "~");
+  // Find first char in the sequence
+  char first = 0;
 
-  // Decode the URI hex chars
-  p_token = CrackedURL::DecodeURLChars(p_token);
+  if(!p_pointer.IsEmpty())
+  {
+    first = p_pointer.GetAt(0);
+  }
+
+  if(first == '#')
+  {
+    // Decode the URI hex chars
+    p_pointer = CrackedURL::DecodeURLChars(p_pointer.Mid(1));
+    if(!p_pointer.IsEmpty())
+    {
+      first = p_pointer.GetAt(0);
+    }
+  }
+
+  if(first == '$')
+  {
+    // Pointer is a JSONPath pointer instead of a JSONPointer
+    m_delimiter = '.';
+    p_pointer = p_pointer.Mid(1);
+  }
+}
+
+void
+JSONPointer::UnescapeJSON(CString& p_token)
+{
+  char delim[2];
+  delim[0] = m_delimiter;
+  delim[1] = 0;
+
+  // UN-Escape the JSONPointer escape characters for the delimiter
+  p_token.Replace("~1", delim);
+  p_token.Replace("~0", "~");
 }
 
 // Parse one extra level
@@ -314,8 +353,8 @@ JSONPointer::ParseLevel(CString& p_parsing)
     return false;
   }
 
-  // Anything left must start with a '/'
-  if(p_parsing.GetAt(0) != '/')
+  // Anything left must start with a delimiter
+  if(p_parsing.GetAt(0) != m_delimiter)
   {
     m_status = JPStatus::JP_INVALID;
     return false;
@@ -324,7 +363,7 @@ JSONPointer::ParseLevel(CString& p_parsing)
 
   // Finding the token
   CString token;
-  int nextpos = p_parsing.Find('/');
+  int nextpos = p_parsing.Find(m_delimiter);
   if(nextpos > 0)
   {
     token = p_parsing.Left(nextpos);
@@ -336,8 +375,7 @@ JSONPointer::ParseLevel(CString& p_parsing)
     p_parsing.Empty();
   }
 
-  // Unescape the token
-  Unescape(token);
+  UnescapeJSON(token);
 
   // Check for value == array and token is number
   if(m_value->GetDataType() == JsonType::JDT_array && !token.IsEmpty() && isdigit(token.GetAt(0)))
