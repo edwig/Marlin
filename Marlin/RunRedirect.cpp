@@ -35,10 +35,15 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-RunRedirect::RunRedirect()
+RunRedirect::RunRedirect(ULONG p_maxTime /*=INFINITE*/)
             :m_ready(false)
             ,m_input(nullptr)
 {
+  // Setting the maximum timeout only from this interval
+  if(p_maxTime > 0 && p_maxTime < 0x7FFFFFFF)
+  {
+    m_timeoutChild = p_maxTime;
+  }
   InitializeCriticalSection((LPCRITICAL_SECTION)&m_criticalSection);
 }
 
@@ -64,28 +69,48 @@ RunRedirect::RunCommand(LPCSTR p_commandLine,LPCSTR p_stdInput)
   Release();
 }
 
+void 
+RunRedirect::RunCommand(LPCSTR p_commandLine,HWND p_console,UINT p_showWindow,BOOL p_waitForInputIdle)
+{
+  Acquire();
+  m_console = p_console;
+  if(StartChildProcess(p_commandLine,p_showWindow,p_waitForInputIdle) == FALSE)
+  {
+    // Do not continue waiting on the process
+    m_ready = true;
+  }
+  Release();
+}
+
 void RunRedirect::OnChildStarted(LPCSTR /*lpszCmdLine*/) 
 {
   Acquire();
-  m_lines = "";
+  m_output.Empty();
+  m_error.Empty();
   m_ready = false;
   FlushStdIn();
   Release();
 }
 void RunRedirect::OnChildStdOutWrite(LPCSTR lpszOutput) 
 {
-  CString standard(lpszOutput);
   Acquire();
-  m_lines += standard;
+  m_output += lpszOutput;
+  if(m_console)
+  {
+    ::SendMessage(m_console,WM_CONSOLE_TEXT,0,(LPARAM)lpszOutput);
+  }
   Release();
 }
 
 void 
 RunRedirect::OnChildStdErrWrite(LPCSTR lpszOutput)
 {
-  CString standard(lpszOutput);
   Acquire();
-  m_lines += standard;
+  m_error += lpszOutput;
+  if(m_console)
+  {
+    ::SendMessage(m_console,WM_CONSOLE_TEXT,1,(LPARAM)lpszOutput);
+  }
   Release();
 }
 
@@ -166,7 +191,7 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result)
   {
     Sleep(WAITTIME_STATUS);
   }
-  p_result = run.m_lines;
+  p_result = run.m_output;
   run.TerminateChildProcess();
   int exitcode = run.m_exitCode;
   return exitcode;
@@ -201,10 +226,9 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,LPCSTR p_stdInput,C
       break;
     }
   }
-  p_result = run.m_lines;
+  p_result = run.m_output;
   run.TerminateChildProcess();
-  int exitcode = run.m_exitCode;
-  return exitcode;
+  return run.m_exitCode;
 }
 
 
@@ -237,10 +261,9 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result,i
       break;
     }
   }
-  p_result = run.m_lines;
+  p_result = run.m_output;
   run.TerminateChildProcess();
-  int exitcode = run.m_exitCode;
-  return exitcode;
+  return run.m_exitCode;
 }
 
 int 
@@ -262,3 +285,69 @@ CallProgram(LPCSTR p_program, LPCSTR p_commandLine)
   }
   return run.m_exitCode;
 }
+
+// Calling our program at last
+int 
+PosixCallProgram(CString  p_directory
+                ,CString  p_programma
+                ,CString  p_parameters
+                ,CString  p_stdin
+                ,CString& p_stdout
+                ,CString& p_stderr
+                ,HWND     p_console         /*= NULL    */
+                ,UINT     p_showWindow      /*= SW_HIDE */
+                ,BOOL     p_waitForIdle     /*= FALSE   */
+                ,ULONG    p_maxRunningTime  /*= INFINITE*/)
+{
+  AFX_MANAGE_STATE(AfxGetStaticModuleState());
+  RunRedirect run(p_maxRunningTime);
+
+  // Result is initially empty
+  p_stdout.Empty();
+  p_stderr.Empty();
+
+  // Remove backslash
+  p_directory.TrimRight('\\');
+
+  // Create a new command line
+  CString commandLine = p_directory + "\\" + p_programma;
+
+  // Set console title
+  if(p_console)
+  {
+    SendMessage(p_console,WM_CONSOLE_TITLE,0,(LPARAM)commandLine.GetString());
+  }
+
+  // Adding parameters
+  commandLine  = "\"" + commandLine + "\" ";
+  commandLine += p_parameters;
+
+  // Start the command
+  run.RunCommand(commandLine.GetString(),p_console,p_showWindow,p_waitForIdle);
+
+  // Write to the standard input channel
+  if(!p_stdin.IsEmpty())
+  {
+    run.WriteChildStdIn(p_stdin);
+  }
+
+  // Wait for the standard output/standard error to drain
+  while((run.IsEOF() == false) && (run.IsReady() == false))
+  {
+    Sleep(WAITTIME_STATUS);
+  }
+
+  // Reset console title
+  if (p_console)
+  {
+    SendMessage(p_console,WM_CONSOLE_TITLE,0,(LPARAM)"");
+  }
+
+  // Remember our output
+  p_stdout = run.m_output;
+  p_stderr = run.m_error;
+
+  // And return the exit code
+  return run.m_exitCode;
+}
+

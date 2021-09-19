@@ -138,6 +138,8 @@ public:
  ~HTTPClient();
   // Reset the client to 'sane' values
   void Reset();
+  // Pre-Initialize the client
+  bool Initialize();
 
   // Our primary function: send something
   bool Send();
@@ -327,7 +329,6 @@ private:
   // Error handling for logging
   int      ErrorLog(const char* p_function,const char* p_logText);
   // Initializing the client 
-  bool     Initialize();
   void     InitializeSingleSignOn();
   void     CleanQueue();
   void     TestReconnect();

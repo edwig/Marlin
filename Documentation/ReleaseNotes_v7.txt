@@ -24,6 +24,13 @@ CHANGES IN VERSION 7.1.0
     - "$.any.path.3.name"   -> Standard JSONPath implied by first '$' char. Changes delimiter to '.'
     - "#$.any.path.3.name"  -> JSONPath name comes from an URL ancher, replace URL escape chars 
                                AND change delimiter to '.'
+3)  Extensive re-write of the ""Redirect"" and "RunRedirect" classes to run a command in the
+    background. Funcionality now includes:
+    - Redirecting and distinguishing between standard-output and standard error
+    - Support for a virtual console to write the standard input and output to
+    - New "PosixCallProgram" function including all of the new functionality
+    - True timeout on a command
+
 
 CHANGES IN VERSION 7.0.1
 ------------------------

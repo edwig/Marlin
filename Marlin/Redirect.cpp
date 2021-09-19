@@ -39,11 +39,11 @@ static char THIS_FILE[] = __FILE__;
 // Q190351 HOWTO: Spawn Console Processes with Redirected Standard Handles.
 
 /////////////////////////////////////////////////////////////////////////////
-// CRedirect class
+// Redirect class
 
-CRedirect::CRedirect()
+Redirect::Redirect()
 {
-  // Initialisation.
+  // Initialization.
   m_hStdIn          = NULL;
   m_hStdOut         = NULL;
   m_hStdErr         = NULL;
@@ -58,23 +58,32 @@ CRedirect::CRedirect()
   m_bRunThread      = FALSE;
   m_exitCode        = 0;
   m_eof_input       = 0;
+  m_timeoutChild    = INFINITE;
+  m_timeoutIdle     = MAXWAIT_FOR_INPUT_IDLE;
   m_terminated      = false;
 }
 
-CRedirect::~CRedirect()
+Redirect::~Redirect()
 {
   TerminateChildProcess();
 }
 
-// Create standard handles, try to start child from command line.
+// Max waiting time for input-idle status of the child process
+void 
+Redirect::SetTimeoutIdle(ULONG p_timeout)
+{
+  m_timeoutIdle = p_timeout;
+}
 
+// Create standard handles, try to start child from command line.
 BOOL 
-CRedirect::StartChildProcess(LPCSTR lpszCmdLine, BOOL bShowChildWindow)
+Redirect::StartChildProcess(LPCSTR lpszCmdLine,UINT uShowChildWindow /*=SW_HIDE*/,BOOL bWaitForInputIdle /*=FALSE*/)
 {
   HANDLE hProcess = ::GetCurrentProcess();
 
   m_eof_input = 0;
   m_exitCode  = 0;
+
   // Set up the security attributes struct.
   SECURITY_ATTRIBUTES sa;
   ::ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
@@ -97,32 +106,30 @@ CRedirect::StartChildProcess(LPCSTR lpszCmdLine, BOOL bShowChildWindow)
   // Set the properties to FALSE. Otherwise, the child inherits the
   // properties and, as a result, non-closeable handles to the pipes
   // are created.
-
-  VERIFY(::DuplicateHandle(hProcess, hStdInWriteTmp,
-    hProcess, &m_hStdInWrite, 0, FALSE, DUPLICATE_SAME_ACCESS));
-
-  VERIFY(::DuplicateHandle(hProcess, hStdOutReadTmp,
-    hProcess, &m_hStdOutRead, 0, FALSE, DUPLICATE_SAME_ACCESS));
-
-  VERIFY(::DuplicateHandle(hProcess, hStdErrReadTmp,
-    hProcess, &m_hStdErrRead, 0, FALSE, DUPLICATE_SAME_ACCESS));
+  VERIFY(::DuplicateHandle(hProcess,hStdInWriteTmp,hProcess,&m_hStdInWrite,0,FALSE,DUPLICATE_SAME_ACCESS));
+  VERIFY(::DuplicateHandle(hProcess,hStdOutReadTmp,hProcess,&m_hStdOutRead,0,FALSE,DUPLICATE_SAME_ACCESS));
+  VERIFY(::DuplicateHandle(hProcess,hStdErrReadTmp,hProcess,&m_hStdErrRead,0,FALSE,DUPLICATE_SAME_ACCESS));
 
   // Close inheritable copies of the handles you do not want to be
   // inherited.
-
   VERIFY(::CloseHandle(hStdInWriteTmp));
   VERIFY(::CloseHandle(hStdOutReadTmp));
   VERIFY(::CloseHandle(hStdErrReadTmp));
 
   // Start child process with redirected stdout, stdin & stderr
   m_hChildProcess = PrepAndLaunchRedirectedChild(lpszCmdLine,
-    m_hStdOut, m_hStdIn, m_hStdErr, bShowChildWindow);
+                                                 m_hStdOut, 
+                                                 m_hStdIn, 
+                                                 m_hStdErr, 
+                                                 uShowChildWindow,
+                                                 bWaitForInputIdle);
 
-  if (m_hChildProcess == NULL)
+  if(m_hChildProcess == NULL)
   {
+    // If we cannot start a child process: write to the standard error ourselves
     TCHAR lpszBuffer[BUFFER_SIZE];
-    sprintf_s(lpszBuffer, BUFFER_SIZE, "Unable to start %s\n", lpszCmdLine);
-    OnChildStdOutWrite(lpszBuffer);
+    sprintf_s(lpszBuffer, BUFFER_SIZE, "Unable to start: %s\n", lpszCmdLine);
+    OnChildStdErrWrite(lpszBuffer);
 
     // close all handles and return FALSE
     VERIFY(::CloseHandle(m_hStdIn));
@@ -162,24 +169,28 @@ CRedirect::StartChildProcess(LPCSTR lpszCmdLine, BOOL bShowChildWindow)
 
 // Check if the child process is running. 
 // On NT/2000 the handle must have PROCESS_QUERY_INFORMATION access.
-
-BOOL CRedirect::IsChildRunning() const
+BOOL 
+Redirect::IsChildRunning() const
 {
   DWORD dwExitCode;
-  if (m_hChildProcess == NULL) return FALSE;
+  if(m_hChildProcess == NULL)
+  {
+    return FALSE;
+  }
   ::GetExitCodeProcess(m_hChildProcess, &dwExitCode);
   m_exitCode = dwExitCode;
   return (dwExitCode == STILL_ACTIVE) ? TRUE: FALSE;
 }
 
-void CRedirect::TerminateChildProcess()
+void 
+Redirect::TerminateChildProcess()
 {
+  // We are now in Terminate function
+  // never come here twice
   if(m_terminated)
   {
     return;
   }
-  // We ar now in Terminate function
-  // never come here twice
   m_terminated = true;
 
   // Tell the threads to exit and wait for process thread to die.
@@ -245,10 +256,9 @@ void CRedirect::TerminateChildProcess()
 
   if (IsChildRunning())
   {
-    VERIFY(::TerminateProcess(m_hChildProcess, 1));
+    VERIFY(::TerminateProcess   (m_hChildProcess, 1));
     VERIFY(::WaitForSingleObject(m_hChildProcess, 1000) != WAIT_TIMEOUT);
   }
-  CloseHandle(m_hChildProcess);
   m_hChildProcess = NULL;
 
   // cleanup the exit event
@@ -260,18 +270,19 @@ void CRedirect::TerminateChildProcess()
 }
 
 // Launch the process that you want to redirect.
-
-HANDLE CRedirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
-                                              ,HANDLE hStdOut
-                                              ,HANDLE hStdIn
-                                              ,HANDLE hStdErr
-                                              ,BOOL   bShowChildWindow)
+HANDLE 
+Redirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
+                                      ,HANDLE hStdOut
+                                      ,HANDLE hStdIn
+                                      ,HANDLE hStdErr
+                                      ,UINT   uShowChildWindow
+                                      ,BOOL   bWaitForInputIdle)
 {
-  //HANDLE hProcess = ::GetCurrentProcess();
-
+  // Resulting process information
   PROCESS_INFORMATION pi;
+  ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 
-  // Set up the start up info struct.
+  // Set up the start up info structure
   STARTUPINFO si;
   ::ZeroMemory(&si, sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
@@ -281,10 +292,15 @@ HANDLE CRedirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
   si.hStdError  = hStdErr;
 
   // Use this if you want to show the child.
-  si.wShowWindow = bShowChildWindow ? SW_SHOW: SW_HIDE;
+  // But it cannot get any larger than SW_MAX
   // Note that dwFlags must include STARTF_USESHOWWINDOW if you want to
   // use the wShowWindow flags.
-
+  if(uShowChildWindow > SW_MAX)
+  {
+    uShowChildWindow = SW_HIDE;
+  }
+  si.wShowWindow = (WORD)uShowChildWindow;
+   
   // Create the NULL security token for the process
   // On NT/2000 the handle must have PROCESS_QUERY_INFORMATION access.
   // This is made using an empty security descriptor. It is not the same
@@ -312,32 +328,38 @@ HANDLE CRedirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
                                 ,&pi);
 
   // Cleanup memory allocation
-  if (lpSA != NULL)
+  if(lpSA != NULL)
   {
     delete lpSA;
   }
-  if (lpSD != NULL)
+  if(lpSD != NULL)
   {
     delete lpSD;
   }
   // Return if an error occurs.
-  if (!bResult) 
+  if(!bResult) 
   {
-    return FALSE;
+    return NULL;
   }
+
   // Close any unnecessary handles.
   VERIFY(::CloseHandle(pi.hThread));
+
+  // Wait for the process so that it can begin processing the standard input
+  if(bWaitForInputIdle && pi.hProcess)
+  {
+    ::WaitForInputIdle(pi.hProcess,m_timeoutIdle);
+  }
 
   // Save global child process handle to cause threads to exit.
   return pi.hProcess;
 }
 
-BOOL CRedirect::m_bRunThread = TRUE;
+BOOL Redirect::m_bRunThread = TRUE;
 
 // Thread to read the child stdout.
-
 int 
-CRedirect::StdOutThread(HANDLE hStdOutRead)
+Redirect::StdOutThread(HANDLE hStdOutRead)
 {
   DWORD nBytesRead;
   CHAR  lpszBuffer[10];
@@ -347,7 +369,7 @@ CRedirect::StdOutThread(HANDLE hStdOutRead)
   while(true)
   {
     nBytesRead = 0;
-    if (!::ReadFile(hStdOutRead, lpszBuffer, 1, &nBytesRead, NULL) || !nBytesRead)
+    if(!::ReadFile(hStdOutRead, lpszBuffer, 1, &nBytesRead, NULL) || !nBytesRead)
     {
       // pipe done - normal exit path.
       // Partial input line left hanging?
@@ -370,28 +392,29 @@ CRedirect::StdOutThread(HANDLE hStdOutRead)
     if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
     {
       // Virtual function to notify derived class that
-      // characters are writted to stdout.
+      // characters are written to stdout.
       *linePointer = 0;
       OnChildStdOutWrite(lineBuffer);
       linePointer = lineBuffer;
     }
   }
   return 0;
+
 }
 
 // Thread to read the child stderr.
 
 int 
-CRedirect::StdErrThread(HANDLE hStdErrRead)
+Redirect::StdErrThread(HANDLE hStdErrRead)
 {
   DWORD nBytesRead;
   CHAR  lpszBuffer[10];
-  CHAR  lineBuffer[BUFFER_SIZE+1];
+  CHAR  lineBuffer[BUFFER_SIZE + 1];
   char* linePointer = lineBuffer;
 
-  while (m_bRunThread)
+  while(m_bRunThread)
   {
-    if (!::ReadFile(hStdErrRead, lpszBuffer, 1,	&nBytesRead, NULL) || !nBytesRead)
+    if(!::ReadFile(hStdErrRead,lpszBuffer,1,&nBytesRead,NULL) || !nBytesRead)
     {
       // pipe done - normal exit path.
       // Partial input line left hanging?
@@ -400,7 +423,7 @@ CRedirect::StdErrThread(HANDLE hStdErrRead)
         *linePointer = 0;
         OnChildStdErrWrite(lineBuffer);
       }
-      break;			
+      break;
     }
     if(lpszBuffer[0] == '\004')
     {
@@ -412,7 +435,7 @@ CRedirect::StdErrThread(HANDLE hStdErrRead)
     if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
     {
       // Virtual function to notify derived class that
-      // characters are writted to stdout.
+      // characters are written to stdout.
       *linePointer = 0;
       OnChildStdErrWrite(lpszBuffer);
       linePointer = lineBuffer;
@@ -424,16 +447,19 @@ CRedirect::StdErrThread(HANDLE hStdErrRead)
 // Thread to monitoring the child process.
 
 int 
-CRedirect::ProcessThread()
+Redirect::ProcessThread()
 {
   HANDLE hWaitHandle[2];
   hWaitHandle[0] = m_hExitEvent;
   hWaitHandle[1] = m_hChildProcess;
   int returnValue = -1;
 
-  while (m_bRunThread)
+  // Starting time of our process thread
+  clock_t start = clock();
+
+  while(m_bRunThread)
   {
-    switch (::WaitForMultipleObjects(2, hWaitHandle, FALSE, 50))
+    switch(::WaitForMultipleObjects(2, hWaitHandle, FALSE, 50))
     {
       case WAIT_OBJECT_0 + 0:	// exit on event
                               if(m_bRunThread == FALSE)
@@ -451,7 +477,11 @@ CRedirect::ProcessThread()
       case WAIT_FAILED:       returnValue = GetLastError();
                               m_bRunThread = FALSE;
                               break;
-      case WAIT_TIMEOUT:      break;
+      case WAIT_TIMEOUT:      if((ULONG)((clock() - start)) > m_timeoutChild)
+                              {
+                                m_bRunThread = FALSE;
+                              }
+                              break;
       default:                m_bRunThread = FALSE;
                               returnValue = -1;
                               break;
@@ -477,7 +507,7 @@ CRedirect::ProcessThread()
 // Function that write to the child stdin.
 
 int
-CRedirect::WriteChildStdIn(LPCSTR lpszInput)
+Redirect::WriteChildStdIn(LPCSTR lpszInput)
 {
   DWORD nBytesWrote;
   DWORD Length = (DWORD) strlen(lpszInput);
@@ -500,9 +530,8 @@ CRedirect::WriteChildStdIn(LPCSTR lpszInput)
   return 0;
 }
 
-
 void
-CRedirect::CloseChildStdIn()
+Redirect::CloseChildStdIn()
 {
   if(m_hStdInWrite != NULL)
   {
@@ -510,3 +539,4 @@ CRedirect::CloseChildStdIn()
     m_hStdInWrite = NULL;
   }
 }
+

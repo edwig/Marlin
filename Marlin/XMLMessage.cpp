@@ -820,7 +820,7 @@ XMLElement*
 XMLMessage::SetElement(XMLElement* p_base,CString p_name,bool p_value)
 {
   CString value;
-  value.Format("%s",p_value ? "yes" : "no");
+  value.Format("%s",p_value ? "true" : "false");
   return SetElement(p_base,p_name,XDT_Boolean,value);
 }
 
@@ -982,7 +982,8 @@ bool
 XMLMessage::GetElementBoolean(XMLElement* p_elem,CString p_name)
 {
   CString value = GetElement(p_elem,p_name);
-  if(value.CompareNoCase("true") == 0)
+  if((value.CompareNoCase("true") == 0) ||
+     (value.CompareNoCase("yes") == 0))
   {
     return true;
   }

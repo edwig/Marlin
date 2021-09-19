@@ -27,24 +27,27 @@
 //
 #pragma once
 
+// Command line length in NT technology
+#define BUFFER_SIZE 8192
+// Maximum wait 1 minute for input idle
+#define MAXWAIT_FOR_INPUT_IDLE 60000
+
 /////////////////////////////////////////////////////////////////////////////
-// CRedirect class
+// Redirect class
 
-#define BUFFER_SIZE 4096
-
-class CRedirect
+class Redirect
 {
-  // INCLUDE_CLASSNAME(CRedirect)
   // Construction
 public:
-  CRedirect();
- ~CRedirect();
+  Redirect();
+ ~Redirect();
 
   // Actual interface. Use these.
-  BOOL StartChildProcess(LPCSTR lpszCmdLine, BOOL bShowChildWindow = FALSE);
+  BOOL StartChildProcess(LPCSTR lpszCmdLine,UINT uShowChildWindow = SW_HIDE,BOOL bWaitForInputIdle = FALSE);
   BOOL IsChildRunning() const;
   void TerminateChildProcess();
   int  WriteChildStdIn(LPCSTR lpszInput);
+  void SetTimeoutIdle(ULONG p_timeout);
   void CloseChildStdIn();
 
   // Virtual interface. Derived class must implement this!!
@@ -68,26 +71,32 @@ protected:
   HANDLE m_hProcessThread;
   // Child process handle
   HANDLE m_hChildProcess;
+  // Max running time before we timeout on the child process
+  ULONG  m_timeoutChild;
+  // Max wait time for InputIdle status of the child process
+  ULONG  m_timeoutIdle;
 
   HANDLE PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
                                      ,HANDLE hStdOut
                                      ,HANDLE hStdIn
                                      ,HANDLE hStdErr
-                                     ,BOOL   bShowChildWindow);
+                                     ,UINT   uShowChildWindow  = SW_HIDE
+                                     ,BOOL   bWaitForInputIdle = FALSE);
+
   static BOOL m_bRunThread;
   static unsigned int WINAPI staticStdOutThread(void* pRedirect)
   { 
-    CRedirect* redir = reinterpret_cast<CRedirect*>(pRedirect);
+    Redirect* redir = reinterpret_cast<Redirect*>(pRedirect);
     return redir->StdOutThread(redir->m_hStdOutRead); 
   }
   static unsigned int WINAPI staticStdErrThread(void* pRedirect)
   { 
-    CRedirect* redir = reinterpret_cast<CRedirect*>(pRedirect);
+    Redirect* redir = reinterpret_cast<Redirect*>(pRedirect);
     return redir->StdErrThread(redir->m_hStdErrRead); 
   }
   static unsigned int WINAPI staticProcessThread(void* pRedirect)
   { 
-    CRedirect* redir = reinterpret_cast<CRedirect*>(pRedirect);
+    Redirect* redir = reinterpret_cast<Redirect*>(pRedirect);
     return redir->ProcessThread(); 
   }
   int StdOutThread(HANDLE hStdOutRead);

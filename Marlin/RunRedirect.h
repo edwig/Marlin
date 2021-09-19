@@ -31,21 +31,35 @@
 // Milliseconds wait loop
 #define WAITTIME_STATUS 25
 
+#define WM_CONSOLE_TITLE (WM_USER + 1)
+#define WM_CONSOLE_TEXT  (WM_USER + 2)
+
 // All global 'CallProgram' variants
 int  CallProgram           (LPCSTR p_program,LPCSTR p_commandLine);
 int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result);
 int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result,int p_waittime);
 int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,LPCSTR p_stdInput,CString& p_result,int p_waittime);
 
-class RunRedirect : public CRedirect
+int  PosixCallProgram(CString  p_directory
+                     ,CString  p_programma
+                     ,CString  p_commandLine
+                     ,CString  p_stdin
+                     ,CString& p_stdout
+                     ,CString& p_stderror
+                     ,HWND     p_console        = NULL
+                     ,UINT     p_showWindow     = SW_HIDE
+                     ,BOOL     p_waitForIdle    = FALSE
+                     ,ULONG    p_maxRunningTime = INFINITE);
+
+class RunRedirect : public Redirect
 {
-  // INCLUDE_CLASSNAME(RunBriefRun)
 public:
-   RunRedirect();
+   RunRedirect(ULONG p_maxTime = INFINITE);
   ~RunRedirect();
 
   void RunCommand(LPCSTR p_commandLine);
   void RunCommand(LPCSTR p_commandLine,LPCSTR p_stdInput);
+  void RunCommand(LPCSTR p_commandLine,HWND p_console,UINT p_showWindow,BOOL p_waitForInputIdle);
 
   // Virtual interface. Derived class must implement this!!
   virtual void OnChildStarted    (LPCSTR lpszCmdLine) override;
@@ -55,9 +69,11 @@ public:
   bool IsReady();
   bool IsEOF();
 
+  HWND    m_console { NULL };
   bool    m_ready;
-  CString m_lines;
   LPCTSTR m_input;
+  CString m_output;
+  CString m_error;
 private:
   void    Acquire();
   void    Release();

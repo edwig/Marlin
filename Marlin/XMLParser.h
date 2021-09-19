@@ -75,7 +75,7 @@ protected:
   void          ParseStylesheet();
   void          ParseComment();
   void          ParseDTD();
-  void          ParseCDATA();
+  void          ParseCDATA(bool p_append = false);
   void          ParseText();
   bool          ParseElement();
   virtual void  ParseAfterElement();

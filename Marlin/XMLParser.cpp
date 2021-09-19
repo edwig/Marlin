@@ -269,6 +269,11 @@ XMLParser::ParseLevel()
     else if(strncmp((const char*)m_pointer,"<![CDATA[",9) == 0)
     {
       ParseCDATA();
+      // Scan for recursively restartable CDATA sections
+      while(strncmp((const char*)m_pointer,"<![CDATA[",9) == 0)
+      {
+        ParseCDATA(true);
+      }
       return;
     }
     else if(strncmp((const char*)m_pointer,"<!",2) == 0)
@@ -480,8 +485,8 @@ XMLParser::ParseComment()
   SkipWhiteSpace();
 }
 
-void 
-XMLParser::ParseCDATA()
+void
+XMLParser::ParseCDATA(bool p_append /*= false*/)
 {
   CString value;
 
@@ -500,8 +505,15 @@ XMLParser::ParseCDATA()
   // Add to current element
   if(m_lastElement)
   {
-    m_lastElement->SetValue(value);
-    m_lastElement->SetType(XDT_CDATA);
+    if(p_append)
+    {
+      m_lastElement->SetValue(m_lastElement->GetValue() + value);
+    }
+    else
+    {
+      m_lastElement->SetValue(value);
+      m_lastElement->SetType(XDT_CDATA);
+    }
   }
   SkipWhiteSpace();
 }
