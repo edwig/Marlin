@@ -197,7 +197,7 @@ public:
   // XTOR: For incoming UTF-8 String
   JSONMessage(CString p_message);
   // XTOR: Internal construction from MBCS string
-  JSONMessage(CString p_message,bool p_whitespace,JsonEncoding p_encoding);
+  JSONMessage(CString p_message,bool p_whitespace);
   // XTOR: Outgoing to a URL
   JSONMessage(CString p_message,CString p_url);
   // XTOR: From another XXXmessage
@@ -210,11 +210,11 @@ public:
   // Resetting the message for answering
   void Reset();
   // Create from message stream
-  bool ParseMessage(CString p_message,JsonEncoding p_encoding = JsonEncoding::JENC_Plain);
+  bool ParseMessage(CString p_message);
   // Load from file
   bool LoadFile(const CString& p_fileName);
   // Save to file
-  bool SaveFile(const CString& p_fileName, bool p_withBom = false);
+  bool SaveFile(const CString& p_fileName, bool p_withBom = true);
 
   // Finding value nodes within the JSON structure
   JSONvalue*      FindValue (CString    p_name,               bool p_recurse = true,bool p_object = false,JsonType* p_type = nullptr);
@@ -231,7 +231,7 @@ public:
 
   // GETTERS
   CString         GetJsonMessage       (JsonEncoding p_encoding = JsonEncoding::JENC_Plain) const;
-  CString         GetJsonMessageWithBOM(JsonEncoding p_encoding = JsonEncoding::JENC_UTF8)  const;
+  CString         GetJsonMessageWithBOM()  const;
   JSONvalue&      GetValue()  const   { return *m_value;                };
   CString         GetURL()            { return m_url;                   };
   CrackedURL&     GetCrackedURL()     { return m_cracked;               };
@@ -252,9 +252,7 @@ public:
   bool            GetErrorState()     { return m_errorstate;            };
   CString         GetLastError()      { return m_lastError;             };
   bool            GetWhitespace()     { return m_whitespace;            };
-  JsonEncoding    GetEncoding()       { return m_encoding;              };
   CString         GetAcceptEncoding() { return m_acceptEncoding;        };
-  bool            GetSendBOM()        { return m_sendBOM;               };
   bool            GetSendUnicode()    { return m_sendUnicode;           };
   bool            GetVerbTunneling()  { return m_verbTunnel;            };
   bool            GetIncoming()       { return m_incoming;              };
@@ -284,14 +282,12 @@ public:
   void            SetCookies(Cookies& p_cookies)          { m_cookies            = p_cookies;  };
   void            SetContentType(CString p_type)          { m_contentType        = p_type;     };
   void            SetWhitespace(bool p_white)             { m_whitespace         = p_white;    };
-  void            SetSendBOM(bool p_bom)                  { m_sendBOM            = p_bom;      };
   void            SetVerbTunneling(bool p_tunnel)         { m_verbTunnel         = p_tunnel;   };
   void            SetHasBeenAnswered()                    { m_request            = NULL;       };
   void            SetReferrer(CString p_referrer)         { m_referrer           = p_referrer; };
   void            SetAcceptEncoding(CString p_encoding);
   void            AddHeader(CString p_name,CString p_value);
   void            DelHeader(CString p_name);
-  void            SetEncoding(JsonEncoding p_encoding);
   void            SetSendUnicode(bool p_unicode);
 
   // Use POST method for PUT/MERGE/PATCH/DELETE
@@ -319,9 +315,7 @@ private:
   bool            m_incoming    { false };                      // Incoming JSON message
   bool            m_errorstate  { false };                      // Internal for parsing errors
   CString         m_lastError;                                  // Error as text
-  JsonEncoding    m_encoding    { JsonEncoding::JENC_UTF8 };    // Encoding details
   bool            m_sendUnicode { false };                      // Send message in UTF-16 Unicode
-  bool            m_sendBOM     { false };                      // Prepend message with UTF-8 or UTF-16 Byte-Order-Mark
   bool            m_verbTunnel  { false };                      // HTTP-VERB Tunneling used
   // DESTINATION
   CString         m_url;                                        // Full URL of the JSON service

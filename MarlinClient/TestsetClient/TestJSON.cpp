@@ -545,6 +545,23 @@ int TestJSONPath(void)
   return errors;
 }
 
+int TestJSONUnicode()
+{
+  int errors = 0;
+
+  CString jsonString = "{ \"dollar\" : \"\\u00E9\\u00E9\\u006E \\u20AC = one €$\" }";
+  JSONMessage json(jsonString);
+  CString test = json.GetJsonMessage();
+  CString expected("{\"dollar\":\"één € = one €$\"}");
+  errors = test.Compare(expected) != 0;
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("JSON parser converts \\u escape sequences       : %s\n",errors ? "ERROR" : "OK");
+
+  return errors;
+}
+
 int TestJSON(void)
 {
   int errors = 0;
@@ -638,6 +655,7 @@ int TestJSON(void)
   errors += TestFindValue();
   errors += TestJSONPointer();
   errors += TestJSONPath();
+  errors += TestJSONUnicode();
 
   return errors;
 }

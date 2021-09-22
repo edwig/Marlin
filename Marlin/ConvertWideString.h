@@ -55,12 +55,14 @@ CString FindMimeTypeInContentType(CString p_contentType);
 // Construct an UTF-8 Byte-Order-Mark
 CString ConstructBOM();
 // Construct a UTF-16 Byte-Order-Mark
-CString ConstructBOMUTF16();
+std::wstring ConstructBOMUTF16();
 // Construct a BOM
 CString ConstructBOM(XMLEncoding p_encoding);
 // Decoding incoming strings from the internet. Defaults to UTF-8 encoding
 CString DecodeStringFromTheWire(CString p_string,CString p_charset = "utf-8");
 // Encode to string for internet. Defaults to UTF-8 encoding
 CString EncodeStringForTheWire (CString p_string,CString p_charset = "utf-8");
+// Scan for UTF-8 chars in a string
+bool    DetectUTF8(CString& p_string);
 
 #endif // __CONVERTWIDESTRING__

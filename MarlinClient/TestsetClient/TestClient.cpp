@@ -168,7 +168,6 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestWebservices(*client);
     }
 
-
     printf("\n");
     printf("SUMMARY OF ALL CLIENT TESTS\n");
     printf("===========================\n");

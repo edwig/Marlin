@@ -44,7 +44,7 @@ JSONParser::JSONParser(JSONMessage* p_message)
 }
 
 void
-JSONParser::SetError(JsonError p_error,const char* p_text)
+JSONParser::SetError(JsonError p_error,const char* p_text,bool p_throw /*= true*/)
 {
   if(m_message)
   {
@@ -52,11 +52,14 @@ JSONParser::SetError(JsonError p_error,const char* p_text)
     m_message->m_lastError.Format("ERROR [%d] on line [%d] ",p_error,m_lines);
     m_message->m_lastError += p_text;
   }
-  throw p_error;
+  if(p_throw)
+  {
+    throw p_error;
+  }
 }
 
 void
-JSONParser::ParseMessage(CString& p_message,bool& p_whitespace,JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/)
+JSONParser::ParseMessage(CString& p_message,bool& p_whitespace)
 {
   // Check if we have something to do
   if(m_message == nullptr)
@@ -70,7 +73,6 @@ JSONParser::ParseMessage(CString& p_message,bool& p_whitespace,JsonEncoding p_en
   m_valPointer = m_message->m_value;
   m_lines      = 1;
   m_objects    = 0;
-  m_utf8       = p_encoding == JsonEncoding::JENC_UTF8;
 
   // Check for Byte-Order-Mark first
   BOMType bomType = BOMType::BT_NO_BOM;
@@ -85,9 +87,6 @@ JSONParser::ParseMessage(CString& p_message,bool& p_whitespace,JsonEncoding p_en
       SetError(JsonError::JE_IncompatibleEncoding,"Incompatible Byte-Order-Mark encoding");
       return;
     }
-    m_message->m_encoding = JsonEncoding::JENC_UTF8;
-    m_message->m_sendBOM  = true;
-    m_utf8 = true;
     // Skip past BOM
     m_pointer += skip;
   }
@@ -104,7 +103,7 @@ JSONParser::ParseMessage(CString& p_message,bool& p_whitespace,JsonEncoding p_en
   // MAIN PARSING LOOP
   try
   {
-    // Parse an XML level
+    // Parse a JSON level
     ParseLevel();
 
     if(m_pointer && *m_pointer)
@@ -134,6 +133,7 @@ JSONParser::SkipWhitespace()
   }
 }
 
+// Recursive descent parser for JSON
 void
 JSONParser::ParseLevel()
 {
@@ -158,7 +158,6 @@ JSONParser::ParseLevel()
       }
     }
   }
-
   SkipWhitespace();
 }
 
@@ -193,13 +192,15 @@ CString
 JSONParser::GetString()
 {
   CString result;
+  bool    doUTF8 = false;
+  bool    doMBCS = false;
 
   // Check that we have a string now
   if(*m_pointer != '\"')
   {
     SetError(JsonError::JE_NoString,"String expected but not found!");
   }
-  ++m_pointer;
+  uchar* startPointer(++m_pointer);
 
   while(*m_pointer && *m_pointer != '\"')
   {
@@ -207,7 +208,7 @@ JSONParser::GetString()
     if(*m_pointer == '\\')
     {
       ++m_pointer;
-      int ch = *m_pointer++;
+      uchar ch = *m_pointer++;
       switch(ch)
       {
         case '\"': [[fallthrough]];
@@ -218,15 +219,38 @@ JSONParser::GetString()
         case 'n':  result += '\n'; break;
         case 'r':  result += '\r'; break;
         case 't':  result += '\t'; break;
-        case 'u':  result += UnicodeChar();
-                   break;
+        case 'u':  m_pointer = startPointer;
+                   return GetUnicodeString();
         default:   SetError(JsonError::JE_IllString,"Ill formed string. Illegal escape sequence.");
                    break;
       }
     }
     else
     {
-      result += ValueChar();
+      uchar ch = ValueChar();
+      if((ch & 0xC0) == 0xC0 || 
+         (ch & 0xE0) == 0xE0 || 
+         (ch & 0xF0) == 0xF0  )
+      {
+        // UTF-8 found. Cannot mix with MBCS
+        if(doMBCS)
+        {
+          m_pointer = startPointer;
+          return GetUnicodeString();
+        }
+        doUTF8 = true;
+      }
+      else if((ch & 0xC0) != 0x1000)
+      {
+        // MBCS found. Cannot mix with UTF8
+        if(doUTF8)
+        {
+          m_pointer = startPointer;
+          return GetUnicodeString();
+        }
+        doMBCS = true;
+      }
+      result += ch;
     }
   }
   // Skip past string's ending
@@ -240,7 +264,7 @@ JSONParser::GetString()
   }
 
   // Eventually decode UTF-8 encodings
-  if(m_utf8)
+  if(doUTF8)
   {
     result = DecodeStringFromTheWire(result);
   }
@@ -266,7 +290,7 @@ JSONParser::XDigitToValue(int ch)
   return 0;
 }
 
-// Get a character from message including UTF-8 translation
+// Get a character from message
 uchar
 JSONParser::ValueChar()
 {
@@ -277,11 +301,12 @@ JSONParser::ValueChar()
   return *m_pointer++;
 }
 
-uchar
+// Get an UTF-16 \uXXXX escape char
+unsigned short
 JSONParser::UnicodeChar()
 {
   int  ind = 4;
-  uchar ch = 0;
+  unsigned short ch = 0;
   while(*m_pointer && isxdigit(*m_pointer) && ind > 0)
   {
     ch *= 16; // Always radix 16 for JSON
@@ -295,6 +320,145 @@ JSONParser::UnicodeChar()
     SetError(JsonError::JE_Unicode4Chars, "Unicode escape consists of 4 hex characters");
   }
   return ch;
+}
+
+// Get a character from message including UTF-8 translation
+// Only works on the first 16 bits Multilangual Unicode Plane !!
+unsigned short
+JSONParser::UTF8Char()
+{
+  if(*m_pointer == '\n')
+  {
+    ++m_lines;
+  }
+  unsigned num = 0;
+  unsigned short cp = 0;
+  unsigned short bytes = *m_pointer++;
+
+  if((bytes & 0x80) == 0x00)
+  {
+    // U+0000 to U+007F (Standard 7bit ASCII)
+    cp = (bytes & 0x7F);
+    num = 1;
+  }
+  else if((bytes & 0xE0) == 0xC0)
+  {
+    // U+0080 to U+07FF (one extra char. cp = first 9 bits)
+    cp = (bytes & 0x1F);
+    num = 2;
+  }
+  else if((bytes & 0xF0) == 0xE0)
+  {
+    // U+0800 to U+FFFF (two extra char. cp = first 8 bits)
+    cp = (bytes & 0x0F);
+    num = 3;
+  }
+  else if((bytes & 0xF8) == 0xF0)
+  {
+    // U+10000 to U+10FFFF (three extra char. cp = first 3 bits)
+    cp = (bytes & 0x07);
+    num = 4;
+  }
+  else
+  {
+    // Convert MBCS to 16 bit UTF16-Codepoint
+    CString string;
+    string += ((unsigned char)bytes);
+    uchar* buffer = nullptr;
+    int    length = 0;
+    if(TryCreateWideString(string,"",false,&buffer,length))
+    {
+      cp = *((unsigned short*)buffer);
+    }
+    delete[] buffer;
+    if(cp)
+    {
+      return cp;
+    }
+    SetError(JsonError::JE_IllString,"Ill formed string. Illegal UTF-8 characters.",false);
+    return '?';
+  }
+  for(unsigned i = 1; i < num; ++i)
+  {
+    bytes = *m_pointer++;
+    if((bytes & 0xC0) != 0x80)
+    {
+      // Not a UTF-8 6 bit follow up char
+      SetError(JsonError::JE_IllString,"Ill formed string. Illegal UTF-8 follow-up characters.",false);
+      return '?';
+    }
+    cp = (cp << 6) | (bytes & 0x3F);
+  }
+  return cp;
+}
+
+// The current string contains an \u escape sequence
+// Restart the scanning of the string on the basis of UTF-16 chars in the string
+CString 
+JSONParser::GetUnicodeString()
+{
+  uchar* start(m_pointer);
+
+  // Find the length of the string
+  int length = 0;
+  while(*m_pointer && (*m_pointer++ != '\"')) ++length;
+  if(!*m_pointer)
+  {
+    SetError(JsonError::JE_StringEnding,"UTF-16 String found without an ending quote!");
+    return "";
+  }
+  m_pointer = start;
+
+  // Allocate a array of shorts (2 bytes) for the string
+  unsigned short* result = new unsigned short[length + 1];
+  memset(result,0,2 * (length + 1));
+
+  // Fill the array with chars and unicode chars
+  unsigned short* resPointer = result;
+  while(*m_pointer && *m_pointer != '\"')
+  {
+    // See if we must do an escape
+    if(*m_pointer == '\\')
+    {
+      ++m_pointer;
+      unsigned short ch = *m_pointer++;
+      switch(ch)
+      {
+        case '\"': [[fallthrough]];
+        case '\\': [[fallthrough]];
+        case '/':  *resPointer = ch;    break;
+        case 'b':  *resPointer = '\b';  break;
+        case 'f':  *resPointer = '\f';  break;
+        case 'n':  *resPointer = '\n';  break;
+        case 'r':  *resPointer = '\r';  break;
+        case 't':  *resPointer = '\t';  break;
+        case 'u':  *resPointer = UnicodeChar(); break;
+        default:   SetError(JsonError::JE_IllString,"Ill formed string. Illegal escape sequence.");
+                   break;
+      }
+      ++resPointer;
+    }
+    else
+    {
+      unsigned short ch = UTF8Char();
+      if(ch)
+      {
+        *resPointer++ = ch;
+      }
+    }
+  }
+
+  // Convert the UTF-16 string back to MBCS
+  CString decoded;
+  bool foundBom = false;
+
+  if(!TryConvertWideString((const uchar*)result,length,"",decoded,foundBom))
+  {
+    decoded.Empty();
+    SetError(JsonError::JE_IllString,"Ill formed string. Could not convert UTF-16 characters.");
+  }
+  delete[] result;
+  return decoded;
 }
 
 bool

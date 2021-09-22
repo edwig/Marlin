@@ -161,7 +161,6 @@ SOAPMessage::SOAPMessage(JSONMessage* p_msg)
   m_port          = p_msg->GetPort();
   m_absPath       = p_msg->GetAbsolutePath();
   m_contentType   = p_msg->GetContentType();
-  m_sendBOM       = p_msg->GetSendBOM();
   m_incoming      = p_msg->GetIncoming();
   m_acceptEncoding= p_msg->GetAcceptEncoding();
   m_headers       =*p_msg->GetHeaderMap();
@@ -551,7 +550,6 @@ SOAPMessage::operator=(JSONMessage& p_json)
   m_port          = p_json.GetPort();
   m_absPath       = p_json.GetAbsolutePath();
   m_contentType   = p_json.GetContentType();
-  m_sendBOM       = p_json.GetSendBOM();
   m_incoming      = p_json.GetIncoming();
 
   // Duplicate all cookies

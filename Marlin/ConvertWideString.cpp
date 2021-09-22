@@ -28,6 +28,7 @@
 #include "XMLMessage.h"
 #include <map>
 #include <string>
+#include <xstring>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -374,16 +375,13 @@ CString ConstructBOM()
 }
 
 // Construct a UTF-16 Byte-Order-Mark
-CString ConstructBOMUTF16()
+std::wstring ConstructBOMUTF16()
 {
-  CString bom;
+  std::wstring bom;
 
   // 2 BYTE UTF-16 Byte-order-Mark "\0xFE\0xFF"
-  bom.GetBufferSetLength(3);
-  bom.SetAt(0,(unsigned char)0xFE);
-  bom.SetAt(1,(unsigned char)0xFF);
-  bom.SetAt(2,0);
-  bom.ReleaseBuffer(2);
+  bom += (unsigned char)0xFE;
+  bom += (unsigned char)0xFF;
 
   return bom;
 }
@@ -396,7 +394,6 @@ CString ConstructBOM(XMLEncoding p_encoding)
   switch (p_encoding)
   {
     case XMLEncoding::ENC_UTF8:    bom = ConstructBOM();      break;
-    case XMLEncoding::ENC_UTF16:   bom = ConstructBOMUTF16(); break;
     case XMLEncoding::ENC_ISO88591:// Fall through
     case XMLEncoding::ENC_Plain:   // Fall through
     default:                       break;
@@ -638,4 +635,72 @@ EncodeStringForTheWire(CString p_string,CString p_charset /*="utf-8"*/)
   }
   delete[] buffer;
   return p_string;
+}
+
+// Scan for UTF-8 chars in a string
+bool
+DetectUTF8(CString& p_string)
+{
+  const unsigned char* bytes = (const unsigned char*)p_string.GetString();
+  bool detectedUTF8 = false;
+  unsigned int cp = 0;
+  int num = 0;
+
+  while(*bytes != 0x00)
+  {
+    if((*bytes & 0x80) == 0x00)
+    {
+      // U+0000 to U+007F 
+      cp = (*bytes & 0x7F);
+      num = 1;
+    }
+    else if((*bytes & 0xE0) == 0xC0)
+    {
+      // U+0080 to U+07FF 
+      cp = (*bytes & 0x1F);
+      detectedUTF8 = true;
+      num = 2;
+    }
+    else if((*bytes & 0xF0) == 0xE0)
+    {
+      // U+0800 to U+FFFF 
+      cp = (*bytes & 0x0F);
+      detectedUTF8 = true;
+      num = 3;
+    }
+    else if((*bytes & 0xF8) == 0xF0)
+    {
+      // U+10000 to U+10FFFF 
+      cp = (*bytes & 0x07);
+      detectedUTF8 = true;
+      num = 4;
+    }
+    else
+    {
+      return false;
+    }
+    bytes += 1;
+    for(int i = 1; i < num; ++i)
+    {
+      if((*bytes & 0xC0) != 0x80)
+      {
+        // Not a UTF-8 6 bit follow up char
+        return false;
+      }
+      cp = (cp << 6) | (*bytes & 0x3F);
+      bytes += 1;
+    }
+
+    // Check for overlong encodings or UTF-16 surrogates
+    if((cp >  0x10FFFF) ||
+      ((cp >= 0xD800)  && (cp  <= 0xDFFF)) ||
+      ((cp <= 0x007F)  && (num != 1)) ||
+      ((cp >= 0x0080)  && (cp  <= 0x07FF)   && (num != 2)) ||
+      ((cp >= 0x0800)  && (cp  <= 0xFFFF)   && (num != 3)) ||
+      ((cp >= 0x10000) && (cp  <= 0x1FFFFF) && (num != 4)))
+    {
+      return false;
+    }
+  }
+  return detectedUTF8;
 }

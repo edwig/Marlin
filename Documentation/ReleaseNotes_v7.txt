@@ -15,7 +15,7 @@ CHANGES IN VERSION 7.1.0
     You can point to any member of a JSON with the pointer path reference
     See the TestJSON.cpp file in the client project for test cases and examples of JSONPointer.
 2)  JSONPointer can act not only on JSONPointer names, but also on JSONPath names with the
-    standard '.' notation for delimters
+    standard '.' notation for delimiters
 
     A JSONPointer can be one of the following:
     - "" or "$"             -> Empty string -> Whole JSON document is matched
@@ -30,7 +30,22 @@ CHANGES IN VERSION 7.1.0
     - Support for a virtual console to write the standard input and output to
     - New "PosixCallProgram" function including all of the new functionality
     - True timeout on a command
-
+4)  The recognition of strings in a JSON has been expanded to be able to handle the mixing of the
+    following situations and possibilities:
+    - Plain 7 bit ASCII strings;
+    - UTF-8 strings as per JSON standard. Strings can only contain UTF-8 escapes, but up to the
+      full 21 bits in the Unicode standard;
+    - Strings with MBCS escape characters of the win-1252 codepage, as used in Western-Europe;
+    - Strings with UTF-16 escape characters in them, coded as '\uXXXX' as per JSON standard;
+    - Mixing of strings with MBCS / UTF-8 / UTF-16 escape characters. In this situation the mixed
+      strings can only contain UTF-8 and MBCS characters in the '16 bit Multilangual Unicode Plane'.
+    Each string within the document can have a different mixing of these. So it is possible that
+    one string has only UTF-8 (with effectivly 21 bits in use) while another string might have a 
+    mixing of MBCS and UTF-16 escape codes!
+5)  As a result of the better UTF-8 recognition, the implementation of the JSONMessage and the
+    JSONParser could be simplified. The character encoding and bom-status are no longer stored in 
+    the JSONMessage itself.
+6)  Added a new function to ConvertWideString "bool DetectUTF8(string)". Use at your leasure!
 
 CHANGES IN VERSION 7.0.1
 ------------------------
