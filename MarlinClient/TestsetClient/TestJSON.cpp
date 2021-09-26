@@ -30,6 +30,7 @@
 #include "JSONMessage.h"
 #include "SOAPMessage.h"
 #include "JSONPointer.h"
+#include "JSONPath.h"
 #include "HTTPClient.h"
 #include "MultiPartBuffer.h"
 
@@ -456,7 +457,7 @@ int TestJSONPointer(void)
   return errors;
 }
 
-int TestJSONPath(void)
+int TestJSONPathInPointer(void)
 {
   int errors = 0;
 
@@ -562,6 +563,82 @@ int TestJSONUnicode()
   return errors;
 }
 
+int TestJSONPath(void)
+{
+  int errors = 0;
+
+  CString jsonString = "{\t\"array\": [\n"
+                       "\t\t{\t\"one\"  : 1  },\n"
+                       "\t\t{\t\"two\"  : 2  },\n"
+                       "\t\t{\t\"three\": 3  },\n"
+                       "\t\t{\t\"four\" : 4  },\n"
+                       "\t\t{\t\"five\" : 5  },\n"
+                       "\t\t{\t\"six\"  : 6  },\n"
+                       "\t\t{\t\"seven\": 7  },\n"
+                       "\t\t{\t\"eight\": 8  },\n"
+                       "\t\t{\t\"nine\" : 9  },\n"
+                       "\t\t{\t\"ten\"  : 10 },\n"
+                       "\t\t{\t\"eleven\": [\n"
+                       "\t\t\t\t{\n"
+                       "\t\t\t\t\t\"renault\": \"twingo\",\n"
+                       "\t\t\t\t\t\"citroen\": \"ds\",\n"
+                       "\t\t\t\t\t\"peugeot\": \"8005\"\n"
+                       "\t\t\t\t},\n"
+                       "\t\t\t\t{\n"
+                       "\t\t\t\t\t\"opel\": \"astra\",\n"
+                       "\t\t\t\t\t\"bmw\": \"3series\",\n"
+                       "\t\t\t\t\t\"mercedes\": \"amg\"\n"
+                       "\t\t\t\t},\n"
+                       "\t\t\t\t{\n"
+                       "\t\t\t\t\t\"ford\": \"focus\",\n"
+                       "\t\t\t\t\t\"fiat\": \"750\"1,\n"
+                       "\t\t\t\t\t\"seat\": \"leon\"\n"
+                       "\t\t\t\t}\n"
+                       "\t\t\t]\n"
+                       "\t\t}\n"
+                       "\t]\n"
+                       "}";
+  JSONMessage json(jsonString);
+  JSONPath path(json,"$.array[4].five");
+
+  int result = 0;
+  if(path.GetStatus() == JPStatus::JP_Match_number_int)
+  {
+    result = path.GetFirstResult()->GetNumberInt();
+  }
+  errors = result != 5;
+
+  path.SetPath("$.array[10].eleven[2].ford");
+  if(path.GetStatus() != JPStatus::JP_INVALID)
+  {
+    CString name = path.GetFirstResult()->GetString();
+    errors = name.Compare("focus") != 0;
+  }
+
+  path.SetPath("$.array[0:8:2]"); // selects 0,2,4,6
+  errors += path.GetNumberOfMatches() != 4;
+  errors += path.GetResult(0)->GetObject()[0].GetNumberInt() != 1;
+  errors += path.GetResult(1)->GetObject()[0].GetNumberInt() != 3;
+  errors += path.GetResult(2)->GetObject()[0].GetNumberInt() != 5;
+  errors += path.GetResult(3)->GetObject()[0].GetNumberInt() != 7;
+
+  path.SetPath("$.array[0:8:-2]"); // selects 8,6,4,2
+  errors += path.GetNumberOfMatches() != 4;
+  errors += path.GetResult(0)->GetObject()[0].GetNumberInt() != 8;
+  errors += path.GetResult(1)->GetObject()[0].GetNumberInt() != 6;
+  errors += path.GetResult(2)->GetObject()[0].GetNumberInt() != 4;
+  errors += path.GetResult(3)->GetObject()[0].GetNumberInt() != 2;
+
+  path.SetPath("$.array[10].eleven[0,1]");
+  errors += path.GetNumberOfMatches() != 2;
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("JSONPath resolves all paths                    : %s\n",errors ? "ERROR" : "OK");
+
+  return errors;
+}
+
 int TestJSON(void)
 {
   int errors = 0;
@@ -654,8 +731,9 @@ int TestJSON(void)
   errors += MultiJSON();
   errors += TestFindValue();
   errors += TestJSONPointer();
-  errors += TestJSONPath();
+  errors += TestJSONPathInPointer();
   errors += TestJSONUnicode();
+  errors += TestJSONPath();
 
   return errors;
 }

@@ -46,6 +46,26 @@ CHANGES IN VERSION 7.1.0
     JSONParser could be simplified. The character encoding and bom-status are no longer stored in 
     the JSONMessage itself.
 6)  Added a new function to ConvertWideString "bool DetectUTF8(string)". Use at your leasure!
+7)  Added the implementation of the IETF draft for the JSONPath. See the JSONPath.h for documentation
+    Currently the following parts of the draft are implemented:
+
+    Path                     Selects the following
+    ------------------------ ---------------------------------------
+    $.one.two.three          object selection
+    $.one[2].three           array (3th element).object selection
+    $['one']['two']['three'] object selection
+    $['one'][2]['three]      array (3th element).object selection
+    $                        Whole document (selects the root)
+    $..*                     Whole document (selects the root)
+    $.one..something         Recursive find 'something' under 'one'
+    $.one.two.*              All elements of 'two'
+    $.one.two[:4]            Slice operator, array elements 0,1,2,3
+    $.one.two[1:8:2]         Slice operator, array elements 2,4,6
+    $.one.two[:8:2]          Slice operator, array elements 0,2,4,6
+    $.one.two[2::3]          Slice operator, array elements 3,6,9,...
+    $.one.two[3,4,7]         Union operator, array elements 4,5,8
+
+
 
 CHANGES IN VERSION 7.0.1
 ------------------------

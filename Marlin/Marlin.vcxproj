@@ -212,6 +212,7 @@
     <ClCompile Include="IISDebug.cpp" />
     <ClCompile Include="JSONMessage.cpp" />
     <ClCompile Include="JSONParser.cpp" />
+    <ClCompile Include="JSONPath.cpp" />
     <ClCompile Include="JSONPointer.cpp" />
     <ClCompile Include="Marlin.cpp" />
     <ClCompile Include="MarlinServer.cpp" />
@@ -388,6 +389,7 @@
     <ClInclude Include="IISSiteConfig.h" />
     <ClInclude Include="JSONMessage.h" />
     <ClInclude Include="JSONParser.h" />
+    <ClInclude Include="JSONPath.h" />
     <ClInclude Include="JSONPointer.h" />
     <ClInclude Include="Marlin.h" />
     <ClInclude Include="MarlinServer.h" />
