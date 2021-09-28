@@ -35,11 +35,12 @@ constexpr auto MAX_COOKIE_CHAR = 0x7E;
 class Cookies;
 
 // SameSite attribute values
-enum class SameSiteValue
+enum class CookieSameSite
 {
-   None   = 1
-  ,Lax    = 2
-  ,Strict = 3
+   NoSameSite = 0  // Do not append SameSite attribute
+  ,None       = 1  // Append "SameSite=None"
+  ,Lax        = 2  // Append "SameSite=Lax"
+  ,Strict     = 3  // Append "SameSite=Strict"
 };
 
 class Cookie
@@ -59,27 +60,27 @@ public:
   void  SetHttpOnly (bool p_httpOnly)           { m_httpOnly = p_httpOnly; };
   void  SetDomain   (CString p_domain)          { m_domain   = p_domain;   };
   void  SetPath     (CString p_path)            { m_path     = p_path;     };
-  void  SetSameSite (SameSiteValue p_sameSite)  { m_sameSite = p_sameSite; };
+  void  SetSameSite (CookieSameSite p_sameSite) { m_sameSite = p_sameSite; };
   void  SetExpires  (SYSTEMTIME* p_expires);
 
   // GETTERS
 
   // Compound getters
-  CString       GetSetCookieText();
-  CString       GetCookieText();
-  CString       GetValue(CString p_metadata = "");
+  CString        GetSetCookieText();
+  CString        GetCookieText();
+  CString        GetValue(CString p_metadata = "");
   // Individual getters
-  CString       GetName()       { return m_name;     };
-  bool          GetSecure()     { return m_secure;   };
-  bool          GetHttpOnly()   { return m_httpOnly; };
-  CString       GetDomain()     { return m_domain;   };
-  CString       GetPath()       { return m_path;     };
-  SameSiteValue GetSameSite()   { return m_sameSite; };
-  SYSTEMTIME*   GetExpires()    { return &m_expires; };
-  void          SetExpires(CString p_expires);
+  CString        GetName()       { return m_name;     };
+  bool           GetSecure()     { return m_secure;   };
+  bool           GetHttpOnly()   { return m_httpOnly; };
+  CString        GetDomain()     { return m_domain;   };
+  CString        GetPath()       { return m_path;     };
+  CookieSameSite GetSameSite()   { return m_sameSite; };
+  SYSTEMTIME*    GetExpires()    { return &m_expires; };
+  void           SetExpires(CString p_expires);
 
   // FUNCTIONS
-  bool        IsExpired();
+  bool           IsExpired();
 
   // OPERATORS
   Cookie&     operator=(Cookie& p_other);
@@ -98,11 +99,11 @@ private:
   CString m_name;                                       // Optional!
   CString m_value;                                      // The dough of the cookie 
   // Attributes to the cookie
-  bool          m_secure    { false };                  // Secure attribute of the cookie
-  bool          m_httpOnly  { false };                  // HTTP Only attribute 
-  CString       m_domain;                               // Optional domain
-  CString       m_path;                                 // Optional path
-  SameSiteValue m_sameSite  { SameSiteValue::Strict };  // SameSite attribute
+  bool           m_secure    { false };                  // Secure attribute of the cookie
+  bool           m_httpOnly  { false };                  // HTTP Only attribute 
+  CString        m_domain;                               // Optional domain
+  CString        m_path;                                 // Optional path
+  CookieSameSite m_sameSite  { CookieSameSite::NoSameSite }; // SameSite attribute
   // Expiration time
   SYSTEMTIME m_expires;
 };

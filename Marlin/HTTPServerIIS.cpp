@@ -929,6 +929,27 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
                                           break;
   }
 
+  // Cookie settings
+  bool cookiesHasSecure(false);
+  bool cookiesHasHttp(false);
+  bool cookiesHasSame(false);
+  bool cookiesSecure(false);
+  bool cookiesHttpOnly(false);
+  CookieSameSite cookiesSameSite(CookieSameSite::NoSameSite);
+
+  // Getting the site settings
+  HTTPSite* site = p_message->GetHTTPSite();
+  if(site)
+  {
+    cookiesHasSecure = site->GetCookieHasSecure();
+    cookiesHasHttp   = site->GetCookieHasHttpOnly();
+    cookiesHasSame   = site->GetCookieHasSameSite();
+
+    cookiesSecure    = site->GetCookiesSecure();
+    cookiesHttpOnly  = site->GetCookiesHttpOnly();
+    cookiesSameSite  = site->GetCookiesSameSite();
+  }
+
   // Add cookies to the unknown response headers
   // Because we can have more than one Set-Cookie: header
   // and HTTP API just supports one set-cookie.
@@ -936,14 +957,11 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   Cookies& cookies = p_message->GetCookies();
   for(auto& cookie : cookies.GetCookies())
   {
-    ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
-  }
+    if(cookiesHasSecure)  cookie.SetSecure  (cookiesSecure);
+    if(cookiesHasHttp)    cookie.SetHttpOnly(cookiesHttpOnly);
+    if(cookiesHasSame)    cookie.SetSameSite(cookiesSameSite);
 
-  // Other unknown headers
-  HTTPSite* site = p_message->GetHTTPSite();
-  if(site)
-  {
-    site->AddSiteOptionalHeaders(ukheaders);
+    ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
   }
 
   // Add extra headers from the message
@@ -951,6 +969,12 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
   {
     ukheaders.insert(std::make_pair(it->first,it->second));
+  }
+
+  // Add other optional security headers like CORS etc.
+  if(site)
+  {
+    site->AddSiteOptionalHeaders(ukheaders);
   }
 
   // Possible zip the contents, and add content-encoding header

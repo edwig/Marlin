@@ -34,6 +34,7 @@
 #include "ThreadPool.h"
 #include "SiteFilter.h"
 #include "SiteHandler.h"
+#include "Cookie.h"
 #include <map>
 
 // Session address for reliable messaging
@@ -200,6 +201,12 @@ public:
   void            SetCORSOrigin(CString p_origin);
   // OPTIONAL: Set use CORS max age promise
   void            SetCORSMaxAge(unsigned p_maxAge);
+  // OPTIONAL: Set all cookies HttpOnly
+  void            SetCookiesHttpOnly(bool p_only);
+  // OPTIONAL: Set all cookies Secure
+  void            SetCookiesSecure(bool p_secure);
+  // OPTIONAL: Set all cookies same-site attribute
+  void            SetCookiesSameSite(CookieSameSite p_same);
 
   // GETTERS
   CString         GetSite()                         { return m_site;          };
@@ -229,7 +236,13 @@ public:
   CString         GetCORSOrigin()                   { return m_allowOrigin;   };
   CString         GetCORSHeaders()                  { return m_allowHeaders;  };
   int             GetCORSMaxAge()                   { return m_corsMaxAge;    };
-  bool            GetCORSAllowCredentials()         { return m_corsCredentials; };
+  bool            GetCORSAllowCredentials()         { return m_corsCredentials;  }
+  bool            GetCookieHasSecure()              { return m_cookieHasSecure;  }
+  bool            GetCookieHasHttpOnly()            { return m_cookieHasHttp;    }
+  bool            GetCookieHasSameSite()            { return m_cookieHasSame;    }
+  CookieSameSite  GetCookiesSameSite()              { return m_cookieSameSite;   }
+  bool            GetCookiesSecure()                { return m_cookieSecure;     }
+  bool            GetCookiesHttpOnly()              { return m_cookieHttpOnly;   }
   CString         GetAuthenticationScheme();
   bool            GetAuthenticationNTLMCache();
   CString         GetAuthenticationRealm();
@@ -367,6 +380,13 @@ protected:
   CRITICAL_SECTION  m_filterLock;                         // Adding/deleting/calling filters
   CRITICAL_SECTION  m_sessionLock;                        // Adding/deleting sessions sequences
   ThrottlingMap     m_throttels;                          // Addresses to be throttled
+  // Cookie settings enforcement
+  bool              m_cookieHasSecure { false };          // Site override voor 'secure'   cookies
+  bool              m_cookieHasHttp   { false };          // Site override voor 'httpOnly' cookies
+  bool              m_cookieHasSame   { false };          // Site override voor 'SameSite' cookies
+  bool              m_cookieSecure    { false };          // All cookies have the 'secure'   attribute
+  bool              m_cookieHttpOnly  { false };          // All cookies have the 'httpOnly' attribute
+  CookieSameSite    m_cookieSameSite  { CookieSameSite::NoSameSite }; // Same site setting of cookies
   // Auto HTTP headers added to all response traffic
   XFrameOption      m_xFrameOption    { XFrameOption::XFO_NO_OPTION };  // Standard frame options
   CString           m_xFrameAllowed;                      // IFrame allowed from this URI
@@ -506,3 +526,4 @@ HTTPSite::SetCORSMaxAge(unsigned p_maxAge)
 {
   m_corsMaxAge = p_maxAge;
 }
+

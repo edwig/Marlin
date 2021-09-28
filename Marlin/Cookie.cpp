@@ -160,9 +160,11 @@ Cookie::GetSetCookieText()
   }
 
   // Samesite setting
-  CString value = m_sameSite == SameSiteValue::Strict ? "Strict" : m_sameSite == SameSiteValue::Lax ? "Lax" : "None";
-  cookie.AppendFormat("; SameSite=%s",value.GetString());
-
+  if(m_sameSite != CookieSameSite::NoSameSite)
+  {
+    CString value = m_sameSite == CookieSameSite::Strict ? "Strict" : m_sameSite == CookieSameSite::Lax ? "Lax" : "None";
+    cookie.AppendFormat("; SameSite=%s",value.GetString());
+  }
   // Optional flags
   if(m_secure)
   {

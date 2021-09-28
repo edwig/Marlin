@@ -28,6 +28,7 @@
 #pragma once
 #include "SecureClientDlg.h"
 #include "ServerHeadersDlg.h"
+#include <Cookie.h>
 
 class WebConfig;
 
@@ -82,6 +83,9 @@ protected:
   bool        m_useThrotteling;
   bool        m_useKeepalive;
   bool        m_useRetrytime;
+  bool        m_useCookieSecure;
+  bool        m_useCookieHttpOnly;
+  bool        m_useCookieSameSite;
   // Server headers
   bool        m_useXFrameOpt;
   bool        m_useXFrameAllow;
@@ -110,6 +114,9 @@ protected:
   bool        m_throtteling;
   int         m_keepalive;
   int         m_retrytime;
+  bool        m_cookieSecure;
+  bool        m_cookieHttpOnly;
+  CString     m_cookieSameSite;
   // Server headers
   CString     m_xFrameOption;
   CString     m_xFrameAllowed;
@@ -135,6 +142,9 @@ protected:
   CButton     m_buttonServerUnicode;
   CButton     m_buttonGzip;
   CButton     m_buttonThrotteling;
+  CButton     m_buttonCookieSecure;
+  CButton     m_buttonCookieHttpOnly;
+  CComboBox   m_comboCookieSameSite;
 
   CButton     m_buttonUseWebroot;
   CButton     m_buttonUseBaseURL;
@@ -153,6 +163,9 @@ protected:
   CButton     m_buttonUseThrotteling;
   CButton     m_buttonUseKeepalive;
   CButton     m_buttonUseRetrytime;
+  CButton     m_buttonUseCookieSecure;
+  CButton     m_buttonUseCookieHttpOnly;
+  CButton     m_buttonUseCookieSameSite;
   
 public:
   afx_msg void OnEnChangeWebroot();
@@ -175,6 +188,9 @@ public:
   afx_msg void OnBnClickedThrotteling();
   afx_msg void OnEnChangeKeepalive();
   afx_msg void OnEnChangeRetrytime();
+  afx_msg void OnBnClickedCookieSecure();
+  afx_msg void OnBnClickedCookieHttpOnly();
+  afx_msg void OnCbnSelChangeCookieSameSite();
 
   afx_msg void OnBnClickedUseWebroot();
   afx_msg void OnBnClickedUseUrl();
@@ -193,4 +209,7 @@ public:
   afx_msg void OnBnClickedUseThrotteling();
   afx_msg void OnBnClickedUseKeepalive();
   afx_msg void OnBnClickedUseRetrytime();
+  afx_msg void OnBnClickedUseCookieSecure();
+  afx_msg void OnBnClickedUseCookieHttpOnly();
+  afx_msg void OnBnClickedUseCookieSameSite();
 };

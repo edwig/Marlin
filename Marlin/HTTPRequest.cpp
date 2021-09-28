@@ -1164,6 +1164,27 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
                                           break;
   }
 
+  // Cookie settings
+  bool cookiesHasSecure(false);
+  bool cookiesHasHttp(false);
+  bool cookiesHasSame(false);
+  bool cookiesSecure(false);
+  bool cookiesHttpOnly(false);
+  CookieSameSite cookiesSameSite(CookieSameSite::NoSameSite);
+
+  // Getting the site settings
+  HTTPSite* site = m_message->GetHTTPSite();
+  if(site)
+  {
+    cookiesHasSecure = site->GetCookieHasSecure();
+    cookiesHasHttp   = site->GetCookieHasHttpOnly();
+    cookiesHasSame   = site->GetCookieHasSameSite();
+
+    cookiesSecure    = site->GetCookiesSecure();
+    cookiesHttpOnly  = site->GetCookiesHttpOnly();
+    cookiesSameSite  = site->GetCookiesSameSite();
+  }
+
   // Add cookies to the unknown response headers
   // Because we can have more than one Set-Cookie: header
   // and HTTP API just supports one set-cookie.
@@ -1171,13 +1192,11 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   Cookies& cookies = m_message->GetCookies();
   for(auto& cookie : cookies.GetCookies())
   {
-    ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
-  }
+    if(cookiesHasSecure)  cookie.SetSecure  (cookiesSecure);
+    if(cookiesHasHttp)    cookie.SetHttpOnly(cookiesHttpOnly);
+    if(cookiesHasSame)    cookie.SetSameSite(cookiesSameSite);
 
-  // Add Other unknown headers
-  if(m_site)
-  {
-    m_site->AddSiteOptionalHeaders(ukheaders);
+    ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
   }
 
   // Add extra headers from the message
@@ -1191,6 +1210,12 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     {
       ukheaders.insert(std::make_pair(header.first, header.second));
     }
+  }
+
+  // Add other optional security headers like CORS etc.
+  if(m_site)
+  {
+    m_site->AddSiteOptionalHeaders(ukheaders);
   }
 
   // Possible zip the contents, and add content-encoding header

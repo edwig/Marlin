@@ -350,7 +350,7 @@ HTTPSite::CheckReliable()
 {
   if(m_reliable && m_async)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Asynchrone modus en reliable-messaging gaan niet samen");
+    ERRORLOG(ERROR_INVALID_PARAMETER,"Asynchrone mode and reliable-messaging do not mix together");
     return false;
   }
   if(m_reliable && m_scheme.IsEmpty())
@@ -397,6 +397,26 @@ HTTPSite::InitSite(WebConfig& p_config)
   m_compression   = p_config.GetParameterBoolean("Server","HTTPCompression",m_compression);
   m_throttling    = p_config.GetParameterBoolean("Server","HTTPThrotteling",m_throttling);
 
+  // Getting cookie settings
+  m_cookieHasSecure = p_config.HasParameter("Cookies","Secure");
+  m_cookieHasHttp   = p_config.HasParameter("Cookies","HttpOnly");
+  m_cookieHasSame   = p_config.HasParameter("Cookies","SameSite");
+
+  if(m_cookieHasSecure)
+  {
+    m_cookieSecure = p_config.GetParameterBoolean("Cookies","Secure",m_cookieSecure);
+  }
+  if(m_cookieHasHttp)
+  {
+    m_cookieHttpOnly = p_config.GetParameterBoolean("Cookies","HttpOnly",m_cookieHttpOnly);
+  }
+  if(m_cookieHasSame)
+  {
+    CString sameSite = p_config.GetParameterString("Cookies","SameSite","");
+    if(sameSite.CompareNoCase("None"))   m_cookieSameSite = CookieSameSite::None;
+    if(sameSite.CompareNoCase("Lax"))    m_cookieSameSite = CookieSameSite::Lax;
+    if(sameSite.CompareNoCase("Strict")) m_cookieSameSite = CookieSameSite::Strict;
+  }
   // Add and report the automatic headers as a last resort for responsive app's
   SetAutomaticHeaders(p_config);
 }
@@ -473,6 +493,16 @@ HTTPSite::LogSettings()
   if(m_authScheme == 0)                         schemes += "Anonymous/";
   schemes.TrimRight('/');
 
+  // SameSite cookie setting
+  CString sameSite;
+  switch(m_cookieSameSite)
+  {
+    case CookieSameSite::NoSameSite: sameSite = "NoSameSite"; break;
+    case CookieSameSite::None:       sameSite = "None";       break;
+    case CookieSameSite::Lax:        sameSite = "Lax";        break;
+    case CookieSameSite::Strict:     sameSite = "Strict";     break;
+  }
+
   // List other settings of the site
   //         "---------------------------------- : ------------"
   DETAILLOGV("Site HTTP port set to              : %d",     m_port);
@@ -503,6 +533,9 @@ HTTPSite::LogSettings()
   DETAILLOGS("Site CORS allows headers           : ",       m_allowHeaders);
   DETAILLOGV("Site CORS max age of pre-flight    : %d",     m_corsMaxAge);
   DETAILLOGS("Site CORS allows credentials       : %s",     m_corsCredentials ? "YES" : "NO");
+  DETAILLOGS("Site secure Cookie setting         : %s",     m_cookieHasSecure ? m_cookieSecure   ? "YES" : "NO" : "NO");
+  DETAILLOGS("Site httpOnly Cookie setting       : %s",     m_cookieHasHttp   ? m_cookieHttpOnly ? "YES" : "NO" : "NO");
+  DETAILLOGS("Site SameSite Cookie setting       : %s",     m_cookieHasSame   ? sameSite.GetString() : "NO");
 }
 
 // Remove the site from the URL group
@@ -1879,4 +1912,31 @@ HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
   {
     p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? CString("*") : m_allowOrigin));
   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Setting of the cookie security
+//
+//////////////////////////////////////////////////////////////////////////
+
+void
+HTTPSite::SetCookiesHttpOnly(bool p_only)
+{
+  m_cookieHttpOnly = p_only;
+  m_cookieHasHttp  = true;
+}
+
+void
+HTTPSite::SetCookiesSecure(bool p_secure)
+{
+  m_cookieSecure    = p_secure;
+  m_cookieHasSecure = true;
+}
+
+void
+HTTPSite::SetCookiesSameSite(CookieSameSite p_same)
+{
+  m_cookieSameSite = p_same;
+  m_cookieHasSame  = true;
 }
