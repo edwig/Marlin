@@ -53,6 +53,7 @@ class JSONParser
 {
 public:
   JSONParser(JSONMessage* p_message);
+ ~JSONParser();
 
   // Parse a complete JSON message string
   void    ParseMessage(CString& p_message,bool& p_whitespace);
@@ -80,6 +81,7 @@ protected:
   JSONvalue*   m_valPointer { nullptr };  // Currently parsing value
   unsigned     m_lines      { 0 };        // Lines parsed
   unsigned     m_objects    { 0 };        // Objects/arrays parsed
+  uchar*       m_scanString { nullptr };  // Temporary buffer to scan one string
 };
 
 // Parsing a SOAPMessage to a JSON Message

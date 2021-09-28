@@ -43,6 +43,14 @@ JSONParser::JSONParser(JSONMessage* p_message)
 {
 }
 
+JSONParser::~JSONParser()
+{
+  if(m_scanString)
+  {
+    delete[] m_scanString;
+  }
+}
+
 void
 JSONParser::SetError(JsonError p_error,const char* p_text,bool p_throw /*= true*/)
 {
@@ -90,6 +98,10 @@ JSONParser::ParseMessage(CString& p_message,bool& p_whitespace)
     // Skip past BOM
     m_pointer += skip;
   }
+
+  // Allocate scanning buffer
+  // Individual string cannot be larger than this
+  m_scanString = new uchar[p_message.GetLength() + 1];
 
   // See if we have an empty message string
   SkipWhitespace();
@@ -194,6 +206,7 @@ JSONParser::GetString()
   CString result;
   bool    doUTF8 = false;
   bool    doMBCS = false;
+  uchar*  buffer = m_scanString;
 
   // Check that we have a string now
   if(*m_pointer != '\"')
@@ -213,12 +226,12 @@ JSONParser::GetString()
       {
         case '\"': [[fallthrough]];
         case '\\': [[fallthrough]];
-        case '/':  result += (char)ch; break;
-        case 'b':  result += '\b'; break;
-        case 'f':  result += '\f'; break;
-        case 'n':  result += '\n'; break;
-        case 'r':  result += '\r'; break;
-        case 't':  result += '\t'; break;
+        case '/':  *buffer++ = (char)ch; break;
+        case 'b':  *buffer++ = '\b'; break;
+        case 'f':  *buffer++ = '\f'; break;
+        case 'n':  *buffer++ = '\n'; break;
+        case 'r':  *buffer++ = '\r'; break;
+        case 't':  *buffer++ = '\t'; break;
         case 'u':  m_pointer = startPointer;
                    return GetUnicodeString();
         default:   SetError(JsonError::JE_IllString,"Ill formed string. Illegal escape sequence.");
@@ -250,7 +263,7 @@ JSONParser::GetString()
         }
         doMBCS = true;
       }
-      result += ch;
+      *buffer++ = ch;
     }
   }
   // Skip past string's ending
@@ -262,6 +275,10 @@ JSONParser::GetString()
   {
     SetError(JsonError::JE_StringEnding,"String found without an ending quote!");
   }
+
+  // Getting the string
+  *buffer = 0;
+  result  = m_scanString;
 
   // Eventually decode UTF-8 encodings
   if(doUTF8)

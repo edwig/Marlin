@@ -100,9 +100,10 @@ XMLParser::PrintXmlString(const CString& p_string,bool p_utf8 /*=false*/)
 CString
 XMLParser::PrintJsonString(const CString& p_string,JsonEncoding p_encoding)
 {
-  CString result("\"");
-  unsigned char buffer[3];
-  buffer[2] = 0;
+  unsigned char* buffer  = new unsigned char[2 * p_string.GetLength() + 4];
+  unsigned char* pointer = buffer;
+
+  *pointer++ = '\"';
 
   for(int ind = 0; ind < p_string.GetLength(); ++ind)
   {
@@ -112,27 +113,47 @@ XMLParser::PrintJsonString(const CString& p_string,JsonEncoding p_encoding)
     {
       switch(ch = p_string.GetAt(ind))
       {
-        case '\"': result += "\\\"";   break;
-        case '\\': result += "\\\\";   break;
-        case '/':  result += "\\/";    break;
-        case '\b': result += "\\b";    break;
-        case '\f': result += "\\f";    break;
-        case '\n': result += "\\n";    break;
-        case '\r': result += "\\r";    break;
-        case '\t': result += "\\t";    break;
-        default:   result += ch;       break;
+        case '\"': *pointer++ = '\\';
+                   *pointer++ = '\"';
+                   break;
+        case '\\': *pointer++ = '\\';
+                   *pointer++ = '\\';
+                   break;
+        case '/':  *pointer++ = '\\';
+                   *pointer++ = '/';
+                   break;
+        case '\b': *pointer++ = '\\';
+                   *pointer++ = 'b';
+                   break;
+        case '\f': *pointer++ = '\\';
+                   *pointer++ = 'f';
+                   break;
+        case '\n': *pointer++ = '\\';
+                   *pointer++ = 'n';
+                   break;
+        case '\r': *pointer++ = '\\';
+                   *pointer++ = 'r';
+                   break;
+        case '\t': *pointer++ = '\\';
+                   *pointer++ = 't';
+                   break;
+        default:   *pointer++ = ch;
+                   break;
       }
     }
     else
     {
       // Plainly add the character
       // Windows-1252 encoding or UTF-8 encoding
-      result += ch;
+      *pointer++ = ch;
     }
   }
   // Closing
-  result += "\"";
+  *pointer++ = '\"';
+  *pointer   = 0;
 
+  CString result(buffer);
+  delete [] buffer;
   switch(p_encoding)
   {
     case JsonEncoding::JENC_UTF8:     result = EncodeStringForTheWire(result,"utf-8");    break;
