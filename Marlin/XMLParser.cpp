@@ -119,9 +119,6 @@ XMLParser::PrintJsonString(const CString& p_string,JsonEncoding p_encoding)
         case '\\': *pointer++ = '\\';
                    *pointer++ = '\\';
                    break;
-        case '/':  *pointer++ = '\\';
-                   *pointer++ = '/';
-                   break;
         case '\b': *pointer++ = '\\';
                    *pointer++ = 'b';
                    break;
