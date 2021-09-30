@@ -56,7 +56,7 @@ public:
  ~JSONParser();
 
   // Parse a complete JSON message string
-  void    ParseMessage(CString& p_message,bool& p_whitespace);
+  void    ParseMessage(CString& p_message,bool& p_whitespace,JsonEncoding p_encoding = JsonEncoding::JENC_UTF8);
 private:
   void    SetError(JsonError p_error,const char* p_text,bool p_throw = true);
   void    SkipWhitespace();
@@ -81,6 +81,7 @@ protected:
   JSONvalue*   m_valPointer { nullptr };  // Currently parsing value
   unsigned     m_lines      { 0 };        // Lines parsed
   unsigned     m_objects    { 0 };        // Objects/arrays parsed
+  bool         m_utf8       { false   };  // Scan UTF-8 text
   uchar*       m_scanString { nullptr };  // Temporary buffer to scan one string
 };
 

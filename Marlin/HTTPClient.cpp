@@ -2425,14 +2425,20 @@ HTTPClient::Send(JSONMessage* p_msg)
   uchar* buffer = nullptr;
   int    length = 0;
 
+  if(m_sendBOM)
+  {
+    p_msg->SetSendBOM(true);
+  }
+
   // Preparing the body of the transmission
-  if(m_sendUnicode || p_msg->GetSendUnicode())
-  if(m_sendUnicode || p_msg->GetSendUnicode())
+  if(m_sendUnicode || 
+     p_msg->GetSendUnicode() || 
+     p_msg->GetEncoding() == JsonEncoding::JENC_UTF16)
   {
     // SEND AS 16 BITS UTF MESSAGE
     p_msg->SetSendUnicode(true);
     json = p_msg->GetJsonMessage(JsonEncoding::JENC_Plain);
-    if(TryCreateWideString(json,"",m_sendBOM,&buffer,length))
+    if(TryCreateWideString(json,"",p_msg->GetSendBOM(),&buffer,length))
     {
       m_contentType = p_msg->GetContentType() + "; charset=utf-16";
       SetBody(buffer,length);
@@ -2447,10 +2453,20 @@ HTTPClient::Send(JSONMessage* p_msg)
   {
     // SEND IN OTHER ENCODINGS
     m_contentType = p_msg->GetContentType();
-    json = m_sendBOM ? p_msg->GetJsonMessageWithBOM() : p_msg->GetJsonMessage(JsonEncoding::JENC_UTF8);
+    JsonEncoding encoding = p_msg->GetEncoding();
+    json = p_msg->GetJsonMessageWithBOM(encoding);
 
-    // Take care of default UTF-8 encoding
-    m_contentType += "; charset=utf-8";
+    // Take care of character encoding
+    int acp = -1;
+    switch(encoding)
+    {
+      case JsonEncoding::JENC_Plain:   acp =    -1; break; // Find Active Code Page
+      case JsonEncoding::JENC_UTF8:    acp = 65001; break; // See ConvertWideString.cpp
+      case JsonEncoding::JENC_UTF16:   acp =  1200; break; // See ConvertWideString.cpp
+      case JsonEncoding::JENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
+      default:                         break;
+    }
+    m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp).GetString());
     SetBody(json);
   }
 
@@ -2494,6 +2510,7 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
 
   // Prepare the answer
   CString answer;
+  JsonEncoding encoding = JsonEncoding::JENC_UTF8;
   bool doBom = false;
   int uni = IS_TEXT_UNICODE_UNICODE_MASK;  // Intel/AMD processors
 
@@ -2501,7 +2518,12 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   if(charset.Left(6).CompareNoCase("utf-16") == 0)
   {
     // Works for "UTF-16", "UTF-16LE" and "UTF-16BE" as of RFC 2781
-    if(!TryConvertWideString(m_response,m_responseLength,"",answer,doBom))
+    if(TryConvertWideString(m_response,m_responseLength,"",answer,doBom))
+    {
+      p_msg->SetSendBOM(doBom);
+      encoding = JsonEncoding::JENC_Plain;
+    }
+    else
     {
       // SET ERROR STATE
       CString message;
@@ -2516,7 +2538,12 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
           IsTextUnicode(m_response,m_responseLength,&uni))
   {
     // Find specific code page and try to convert
-    if(!TryConvertWideString(m_response,m_responseLength,"",answer,doBom))
+    if(TryConvertWideString(m_response,m_responseLength,"",answer,doBom))
+    {
+      p_msg->SetSendBOM(doBom);
+      encoding = JsonEncoding::JENC_Plain;
+    }
+    else
     {
       // SET ERROR STATE
       CString message;
@@ -2529,13 +2556,26 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   }
   else
   {
+    // Sender forces to not sniffing
+    // So assume the standard codepages are used (ACP=1252, UTF-8 or ISO-8859-1)
+    CString currentCP = CodepageToCharset(GetACP());
+
+    // Other special cases of the charset
+    if(charset.Left(currentCP.GetLength()).CompareNoCase(currentCP) == 0)
+    {
+      encoding = JsonEncoding::JENC_Plain;
+    }
+    else if(charset.Left(10).CompareNoCase("iso-8859-1") == 0)
+    {
+      encoding = JsonEncoding::JENC_ISO88591;
+    }
     // Answer is the raw response
     answer = ((const char*)m_response);
   }
 
   // Keep response as new body. Might contain an error!!
   DETAILLOG("Incoming JSON answer");
-  p_msg->ParseMessage(answer);
+  p_msg->ParseMessage(answer,encoding);
 
   // Keep cookies
   p_msg->SetCookies(m_resultCookies);

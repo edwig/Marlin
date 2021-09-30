@@ -428,7 +428,7 @@ JSONMessage::JSONMessage(CString p_message)
 }
 
 // XTOR: From an internal string with explicit space and encoding
-JSONMessage::JSONMessage(CString p_message,bool p_whitespace)
+JSONMessage::JSONMessage(CString p_message,bool p_whitespace,JsonEncoding p_encoding)
 {
   AddReference();
 
@@ -442,7 +442,7 @@ JSONMessage::JSONMessage(CString p_message,bool p_whitespace)
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
 
   // Use the parameter
-  ParseMessage(p_message);
+  ParseMessage(p_message,p_encoding);
 }
 
 // XTOR: Outgoing message + url
@@ -460,7 +460,7 @@ JSONMessage::JSONMessage(CString p_message,CString p_url)
   SetURL(p_url);
 
   // Use the parameter
-  ParseMessage(p_message);
+  ParseMessage(p_message,JsonEncoding::JENC_Plain);
 }
 
 // XTOR: From another message
@@ -483,7 +483,9 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
   m_request     = p_other->m_request;
   m_site        = p_other->m_site;
   m_desktop     = p_other->m_desktop;
+  m_encoding    = p_other->m_encoding;
   m_sendUnicode = p_other->m_sendUnicode;
+  m_sendBOM     = p_other->m_sendBOM;
   m_verbTunnel  = p_other->m_verbTunnel;
   m_acceptEncoding = p_other->m_acceptEncoding;
   // Duplicate all cookies
@@ -563,6 +565,7 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
 
   // The message itself
   CString message;
+  JsonEncoding encoding = JsonEncoding::JENC_UTF8;
   CString charset = FindCharsetInContentType(m_contentType);
   if(charset.Left(6).CompareNoCase("utf-16") == 0)
   {
@@ -574,9 +577,10 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
     int uni = IS_TEXT_UNICODE_UNICODE_MASK;  // Intel/AMD processors + BOM
     if(IsTextUnicode(buffer,(int)length,&uni))
     {
-      bool foundBOM = false;
-      if(TryConvertWideString(buffer,(int)length,"",message,foundBOM))
+      if(TryConvertWideString(buffer,(int)length,"",message,m_sendBOM))
       {
+        // Current encoding is now plain current codepage
+        encoding = JsonEncoding::JENC_Plain;
         // Will answer as 16 bits Unicode
         m_sendUnicode = true;
       }
@@ -597,8 +601,18 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
   else
   {
     message = p_message->GetBody();
+
+    // Other special cases of the charset
+    if(charset.Left(12).CompareNoCase("windows-1252") == 0)
+    {
+      encoding = JsonEncoding::JENC_Plain;
+    }
+    else if(charset.Left(10).CompareNoCase("iso-8859-1") == 0)
+    {
+      encoding = JsonEncoding::JENC_ISO88591;
+    }
   }
-  ParseMessage(message);
+  ParseMessage(message,encoding);
 }
 
 JSONMessage::JSONMessage(SOAPMessage* p_message)
@@ -799,35 +813,55 @@ JSONMessage::SetURL(CString& p_url)
 }
 
 void
+JSONMessage::SetEncoding(JsonEncoding p_encoding)
+{
+  m_encoding    = p_encoding;
+  m_sendUnicode = (p_encoding == JsonEncoding::JENC_UTF16);
+}
+
+void
 JSONMessage::SetSendUnicode(bool p_unicode)
 {
   m_sendUnicode = p_unicode;
+  if(p_unicode)
+  {
+    m_encoding = JsonEncoding::JENC_UTF16;
+  }
+  else if(m_encoding == JsonEncoding::JENC_UTF16)
+  {
+    // Reset to UTF8, if not sending in Unicode16
+    m_encoding = JsonEncoding::JENC_UTF8;
+  }
 }
 
 // Go from JSON string to this message
 // The p_encoding gives the encoding the incoming string is in!
 bool
-JSONMessage::ParseMessage(CString p_message)
+JSONMessage::ParseMessage(CString p_message,JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/)
 {
   JSONParser parser(this);
 
   // Starting the parser, preserving it's whitespace state
-  parser.ParseMessage(p_message,m_whitespace);
+  parser.ParseMessage(p_message,m_whitespace,p_encoding);
 
   return (m_errorstate == false);
 }
 
 // Reconstruct JSON string from this message
 CString 
-JSONMessage::GetJsonMessage(JsonEncoding p_encoding /*=JsonEncoding::JENC_Plain*/) const
+JSONMessage::GetJsonMessage(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/) const
 {
   return m_value->GetAsJsonString(m_whitespace,p_encoding);
 }
 
 CString 
-JSONMessage::GetJsonMessageWithBOM() const
+JSONMessage::GetJsonMessageWithBOM(JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/) const
 {
-  return ConstructBOM(XMLEncoding::ENC_UTF8) + GetJsonMessage(JsonEncoding::JENC_UTF8);
+  if(m_sendBOM)
+  {
+    return ConstructBOM(static_cast<XMLEncoding>(p_encoding)) + GetJsonMessage(p_encoding);
+  }
+  return GetJsonMessage(p_encoding);
 }
 
 // Use POST method for PUT/MERGE/PATCH/DELETE
@@ -899,7 +933,7 @@ JSONMessage::LoadFile(const CString& p_fileName)
 
 // Save to file
 bool
-JSONMessage::SaveFile(const CString& p_fileName, bool p_withBom /*= true*/)
+JSONMessage::SaveFile(const CString& p_fileName, bool p_withBom /*= false*/)
 {
   bool result = false;
   FILE* file = nullptr;
@@ -908,11 +942,11 @@ JSONMessage::SaveFile(const CString& p_fileName, bool p_withBom /*= true*/)
     CString inhoud;
     if(p_withBom)
     {
-      inhoud = GetJsonMessageWithBOM();
+      inhoud = GetJsonMessage(m_encoding);
     }
     else
     {
-      inhoud = GetJsonMessage(JsonEncoding::JENC_Plain);
+      inhoud = GetJsonMessageWithBOM(m_encoding);
     }
     if(fwrite(inhoud.GetString(),inhoud.GetLength(),1,file) == 1)
     {

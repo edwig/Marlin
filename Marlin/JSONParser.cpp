@@ -67,7 +67,7 @@ JSONParser::SetError(JsonError p_error,const char* p_text,bool p_throw /*= true*
 }
 
 void
-JSONParser::ParseMessage(CString& p_message,bool& p_whitespace)
+JSONParser::ParseMessage(CString& p_message,bool& p_whitespace,JsonEncoding p_encoding /*=JsonEncoding::JENC_UTF8*/)
 {
   // Check if we have something to do
   if(m_message == nullptr)
@@ -81,6 +81,7 @@ JSONParser::ParseMessage(CString& p_message,bool& p_whitespace)
   m_valPointer = m_message->m_value;
   m_lines      = 1;
   m_objects    = 0;
+  m_utf8       = p_encoding == JsonEncoding::JENC_UTF8;
 
   // Check for Byte-Order-Mark first
   BOMType bomType = BOMType::BT_NO_BOM;
@@ -95,6 +96,9 @@ JSONParser::ParseMessage(CString& p_message,bool& p_whitespace)
       SetError(JsonError::JE_IncompatibleEncoding,"Incompatible Byte-Order-Mark encoding");
       return;
     }
+    m_message->m_encoding = JsonEncoding::JENC_UTF8;
+    m_message->m_sendBOM  = true;
+    m_utf8 = true;
     // Skip past BOM
     m_pointer += skip;
   }
@@ -281,7 +285,7 @@ JSONParser::GetString()
   result  = m_scanString;
 
   // Eventually decode UTF-8 encodings
-  if(doUTF8)
+  if(m_utf8 || doUTF8)
   {
     result = DecodeStringFromTheWire(result);
   }

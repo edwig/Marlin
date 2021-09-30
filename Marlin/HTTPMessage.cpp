@@ -292,6 +292,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
   m_contentType    = p_msg->GetContentType();
   m_acceptEncoding = p_msg->GetAcceptEncoding();
   m_desktop        = p_msg->GetDesktop();
+  m_sendBOM        = p_msg->GetSendBOM();
   m_site           = p_msg->GetHTTPSite();
   m_verbTunnel     = p_msg->GetVerbTunneling();
   m_status         = p_msg->GetStatus();
@@ -330,30 +331,42 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
 
   // Take care of character encoding
   CString charset = FindCharsetInContentType(m_contentType);
+  JsonEncoding encoding = p_msg->GetEncoding();
 
-  bool unicode = false;
   if(charset.Left(6).CompareNoCase("utf-16") == 0 || 
-     p_msg->GetSendUnicode() || 
-     (m_site && m_site->GetSendUnicode()))
+     p_msg->GetSendUnicode() || (m_site && m_site->GetSendUnicode()))
   {
-    unicode = true;
+    encoding = JsonEncoding::JENC_UTF16;
   }
 
-  // To find active code pages, see ConvertWideString.cpp
-  int acp = unicode ? 1200 : 65001;
+  int acp = -1;
+  switch(encoding)
+  {
+    case JsonEncoding::JENC_Plain:   acp =    -1; break; // Find Active Code Page
+    case JsonEncoding::JENC_UTF8:    acp = 65001; break; // See ConvertWideString.cpp
+    case JsonEncoding::JENC_UTF16:   acp =  1200; break; // See ConvertWideString.cpp
+    case JsonEncoding::JENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
+    default:                                      break;
+  }
 
   // Reconstruct the content type header
   m_contentType = FindMimeTypeInContentType(m_contentType);
   m_contentType.AppendFormat("; charset=%s", CodepageToCharset(acp).GetString());
 
+  // Propagate the BOM settings of the site to this message
+  if(m_site && m_site->GetSendJsonBOM())
+  {
+    p_msg->SetSendBOM(true);
+  }
+
   // Set body and contentLength
-  if(unicode)
+  if(acp == 1200)
   {
     p_msg->SetSendUnicode(true);
-    CString soap = p_msg->GetJsonMessage();
+    CString soap = p_msg->GetJsonMessage(JsonEncoding::JENC_Plain);
     uchar* buffer = nullptr;
     int    length = 0;
-    if(TryCreateWideString(soap,"",m_site->GetSendJsonBOM(),&buffer,length))
+    if(TryCreateWideString(soap,"",p_msg->GetSendBOM(),&buffer,length))
     {
       SetBody(buffer,length + 2);
       delete [] buffer;
@@ -369,14 +382,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
   else
   {
     // Simply record as our body
-    if(m_site->GetSendJsonBOM())
-    {
-      SetBody(p_msg->GetJsonMessageWithBOM());
-    }
-    else
-    {
-      SetBody(p_msg->GetJsonMessage(JsonEncoding::JENC_UTF8));
-    }
+    SetBody(p_msg->GetJsonMessageWithBOM(encoding));
   }
   // Make sure we have a server name for host headers
   CheckServer();
