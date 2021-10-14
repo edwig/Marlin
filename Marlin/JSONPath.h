@@ -80,9 +80,9 @@ using JPResults = std::vector<JSONvalue*>;
 class JSONPath
 {
 public:
-  JSONPath() = default;
-  JSONPath(JSONMessage* p_message,CString p_path);
-  JSONPath(JSONMessage& p_message,CString p_path);
+  JSONPath(bool p_originOne = false);
+  JSONPath(JSONMessage* p_message,CString p_path,bool p_originOne = false);
+  JSONPath(JSONMessage& p_message,CString p_path,bool p_originOne = false);
  ~JSONPath();
 
   // Our main purpose: evaluate the path in the message
@@ -116,6 +116,7 @@ private:
   // DATA
   CString      m_path;
   JSONMessage* m_message   { nullptr };
+  int          m_origin    { 0       };
   JPStatus     m_status    { JPStatus::JP_None };
   char         m_delimiter { '/'};
   JSONvalue*   m_searching { nullptr };

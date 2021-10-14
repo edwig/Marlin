@@ -101,6 +101,7 @@ JSONvalue::operator=(JSONvalue& p_other)
   m_constant  = p_other.m_constant;
   m_intNumber = p_other.m_intNumber;
   m_bcdNumber = p_other.m_bcdNumber;
+  m_mark      = p_other.m_mark;
   // Copy objects
   m_array.clear();
   m_object.clear();
@@ -203,6 +204,12 @@ JSONvalue::SetValue(bcd p_value)
   m_array.clear();
   m_string.Empty();
   m_constant = JsonConst::JSON_NONE;
+}
+
+void
+JSONvalue::SetMark(bool p_mark)
+{
+  m_mark = p_mark;
 }
 
 void
@@ -389,6 +396,14 @@ JSONpair::JSONpair(CString p_name, JsonType p_type)
          :m_name(p_name)
          ,m_value(p_type)
 {
+}
+
+JSONpair& 
+JSONpair::operator=(JSONpair& p_other)
+{
+  m_name  = p_other.m_name;
+  m_value = p_other.m_value;
+  return *this;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1217,6 +1232,7 @@ JSONMessage::AddNamedObject(CString p_name,JSONobject& p_object,bool p_forceArra
   }
   return false;
 }
+
 
 #pragma region References
 

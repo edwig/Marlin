@@ -28,10 +28,23 @@
 #include "stdafx.h"
 #include "JSONPath.h"
 
-JSONPath::JSONPath(JSONMessage* p_message,CString p_path)
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+JSONPath::JSONPath(bool p_originOne /*= false*/)
+{
+  m_origin = p_originOne ? 1 : 0;
+}
+
+JSONPath::JSONPath(JSONMessage* p_message,CString p_path,bool p_originOne /*= false*/)
          :m_message(p_message)
          ,m_path(p_path)
 {
+  m_origin = p_originOne ? 1 : 0;
+
   if(m_message)
   {
     m_message->AddReference();
@@ -39,10 +52,12 @@ JSONPath::JSONPath(JSONMessage* p_message,CString p_path)
   Evaluate();
 }
 
-JSONPath::JSONPath(JSONMessage& p_message,CString p_path)
+JSONPath::JSONPath(JSONMessage& p_message,CString p_path,bool p_originOne /*= false*/)
          :m_message(&p_message)
          ,m_path(p_path)
 {
+  m_origin = p_originOne?1:0;
+
   if(m_message)
   {
     m_message->AddReference();
@@ -261,7 +276,7 @@ JSONPath::GetNextToken(CString& p_parsing,CString& p_token,bool& p_isIndex)
   }
 
   // Find a word
-  if(firstChar == '.')
+  if(firstChar == '.' && secondChar != '[')
   {
     int pos = p_parsing.Find('.',1);
     int ind = p_parsing.Find('[');
@@ -289,6 +304,13 @@ JSONPath::GetNextToken(CString& p_parsing,CString& p_token,bool& p_isIndex)
     return true;
   }
 
+  // Parse away a residue ".['something']"
+  if(firstChar == '.' && secondChar == '[')
+  {
+    firstChar = secondChar;
+    p_parsing = p_parsing.Mid(1);
+  }
+
   // Find an index subscription
   if(firstChar == '[')
   {
@@ -307,6 +329,10 @@ JSONPath::GetNextToken(CString& p_parsing,CString& p_token,bool& p_isIndex)
     if(p_token.GetAt(0) != '\'')
     {
       p_isIndex = true;
+    }
+    else
+    {
+      p_token = p_token.Trim('\'');
     }
     return true;
   }
@@ -355,23 +381,23 @@ JSONPath::ProcessSlice(CString p_token)
   int firstColon = p_token.Find(':');
   if(firstColon > 0)
   {
-    starting = atoi(p_token);
+    starting = atoi(p_token) - m_origin;
     p_token = p_token.Mid(firstColon + 1);
   }
   int secondColon = p_token.Find(':');
   if(secondColon > 0)
   {
-    ending = atoi(p_token);
+    ending = atoi(p_token) - m_origin;
     step = atoi(p_token.Mid(secondColon + 1));
   }
   else if(secondColon == 0)
   {
     // Ending is still at array end.
-    step = atoi(p_token.Mid(1));
+    step = atoi(p_token.Mid(1) - m_origin);
   }
   else // secondColon < 0
   {
-    ending = atoi(p_token);
+    ending = atoi(p_token) - m_origin;
   }
 
   // Check array bounds and step direction
@@ -416,7 +442,7 @@ JSONPath::ProcessUnion(CString p_token)
 {
   while(!p_token.IsEmpty())
   {
-    size_t index = atoi(p_token);
+    size_t index = atoi(p_token) - m_origin;
     int pos = p_token.Find(',');
     if(pos > 0)
     {
@@ -508,7 +534,7 @@ JSONPath::ParseLevel(CString& p_parsing)
         }
 
         // Search on through this array
-        size_t index = atoi(token);
+        size_t index = atoi(token) - m_origin;
         if(index < 0)
         {
           // Negative index, take it from the end

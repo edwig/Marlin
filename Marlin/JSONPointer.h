@@ -54,8 +54,8 @@ enum class JPStatus
 class JSONPointer
 {
 public:
-  JSONPointer();
-  JSONPointer(JSONMessage* p_message,CString p_pointer);
+  JSONPointer(bool p_originOne = false);
+  JSONPointer(JSONMessage* p_message,CString p_pointer,bool p_originOne = false);
  ~JSONPointer();
 
   // Our main purpose: evaluate the pointer in the message
@@ -70,6 +70,8 @@ public:
   JSONMessage*  GetJSONMessage();
   JPStatus      GetStatus();
   JsonType      GetType();
+  bool          GetCanAppend();
+  CString       GetLastToken();
   // Result independent of the type!
   JSONvalue*    GetResultJSONValue();
   CString       GetResultForceToString(bool p_whitespace = false);
@@ -93,7 +95,10 @@ private:
   CString       m_pointer;
   JSONMessage*  m_message     { nullptr };
   JPStatus      m_status      { JPStatus::JP_None };
-  char          m_delimiter   { '/' };
+  char          m_delimiter   { '/'   };
+  bool          m_canAppend   { false };
+  int           m_origin      { 0     };
+  CString       m_lastToken;
 
   // RESULT pointers
   JsonType      m_type        { JsonType::JDT_const  };

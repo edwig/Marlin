@@ -101,15 +101,17 @@ public:
   void        SetValue(JSONarray  p_value);
   void        SetValue(int        p_value);
   void        SetValue(bcd        p_value);
+  void        SetMark (bool       p_mark);
 
   // GETTERS
-  JsonType    GetDataType()  const { return m_type;     };
-  CString     GetString()    const { return m_string;   };
-  int         GetNumberInt() const { return m_intNumber;};
-  bcd         GetNumberBcd() const { return m_bcdNumber;};
-  JsonConst   GetConstant()  const { return m_constant; };
-  JSONarray&  GetArray()           { return m_array;    };
-  JSONobject& GetObject()          { return m_object;   };
+  JsonType    GetDataType()  const { return m_type;     }
+  CString     GetString()    const { return m_string;   }
+  int         GetNumberInt() const { return m_intNumber;}
+  bcd         GetNumberBcd() const { return m_bcdNumber;}
+  JsonConst   GetConstant()  const { return m_constant; }
+  bool        GetMark()      const { return m_mark;     }
+  JSONarray&  GetArray()           { return m_array;    }
+  JSONobject& GetObject()          { return m_object;   }
   CString     GetAsJsonString(bool p_white,JsonEncoding p_encoding,unsigned p_level = 0);
 
   // Specials for the empty/null state
@@ -148,6 +150,7 @@ private:
   JsonConst  m_constant   { JsonConst::JSON_NONE };
   // Externally referenced
   long       m_references { 0 };   
+  bool       m_mark       { false };
 };
 
 // Objects are made of pairs
@@ -179,11 +182,13 @@ public:
   bcd         GetNumberBcd() const { return m_value.GetNumberBcd(); }
   JsonConst   GetConstant()  const { return m_value.GetConstant();  }
   JSONarray&  GetArray()           { return m_value.GetArray();     }
-  JSONobject& GetObject()          { return m_value.GetObjectA();   }
+  JSONobject& GetObject()          { return m_value.GetObject();    }
 
   // Specials for construction: add to an array/object
   void        Add(JSONvalue& p_value) { m_value.Add(p_value); }
   void        Add(JSONpair& p_value)  { m_value.Add(p_value); }
+
+  JSONpair&   operator=(JSONpair&);
 };
 
 //////////////////////////////////////////////////////////////////////////

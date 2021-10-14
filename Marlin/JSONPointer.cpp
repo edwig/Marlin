@@ -29,17 +29,26 @@
 #include "JSONPointer.h"
 #include "CrackURL.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Global value to reference non-existing array or object members
 static char g_invalid_jp_value[] = "-";
 
-JSONPointer::JSONPointer()
+JSONPointer::JSONPointer(bool p_originOne /*= false*/)
 {
+  m_origin = p_originOne ? 1 : 0;
 }
 
-JSONPointer::JSONPointer(JSONMessage* p_message,CString p_pointer)
+JSONPointer::JSONPointer(JSONMessage* p_message,CString p_pointer,bool p_originOne /*= false*/)
             :m_message(p_message)
             ,m_pointer(p_pointer)
 {
+  m_origin = p_originOne ? 1 : 0;
+
   if(m_message)
   {
     m_message->AddReference();
@@ -91,6 +100,10 @@ JSONPointer::Evaluate()
     return true;
   }
   // Not in a valid state!
+  if(!m_canAppend)
+  {
+    m_value = nullptr;
+  }
   return false;
 }
 
@@ -242,6 +255,18 @@ JSONPointer::GetResultArray()
   return m_array;
 }
 
+bool
+JSONPointer::GetCanAppend()
+{
+  return m_canAppend;
+}
+
+CString
+JSONPointer::GetLastToken()
+{
+  return m_lastToken;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // PRIVATE
@@ -253,6 +278,8 @@ JSONPointer::Reset()
 {
   // Reset the status
   m_status      = JPStatus::JP_None;
+  m_canAppend   = false;
+  m_lastToken.Empty();
   // RESULT pointers
   m_type        = JsonType::JDT_const;
   m_value       = nullptr;
@@ -357,6 +384,7 @@ JSONPointer::ParseLevel(CString& p_parsing)
   if(p_parsing.GetAt(0) != m_delimiter)
   {
     m_status = JPStatus::JP_INVALID;
+    m_value  = nullptr;
     return false;
   }
   p_parsing = p_parsing.Mid(1);
@@ -380,7 +408,7 @@ JSONPointer::ParseLevel(CString& p_parsing)
   // Check for value == array and token is number
   if(m_value->GetDataType() == JsonType::JDT_array && !token.IsEmpty() && isdigit(token.GetAt(0)))
   {
-    unsigned index = atoi(token);
+    unsigned index = atoi(token) - m_origin;
     if(index < (int)m_value->GetArray().size())
     {
       m_value = &(m_value->GetArray()[index]);
@@ -401,7 +429,13 @@ JSONPointer::ParseLevel(CString& p_parsing)
     }
     // Token-not-found-in-object error
   }
-  // Else error:
+  // One more check. Token was last in the chain and
+  // could be potentially appended here
+  if(p_parsing.IsEmpty() && m_value->GetDataType() == JsonType::JDT_object)
+  {
+    m_lastToken = token;
+    m_canAppend = true;
+  }
   // No more recursive JSON content found and still a token
   // so token cannot be found in the JSON
   m_status = JPStatus::JP_INVALID;
