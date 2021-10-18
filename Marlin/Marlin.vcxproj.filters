@@ -366,6 +366,9 @@
     <ClCompile Include="JSONPath.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="CRC32.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -741,6 +744,9 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="JSONPath.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CRC32.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -64,7 +64,8 @@ CHANGES IN VERSION 7.1.0
     $.one.two[:8:2]          Slice operator, array elements 0,2,4,6
     $.one.two[2::3]          Slice operator, array elements 3,6,9,...
     $.one.two[3,4,7]         Union operator, array elements 4,5,8
-
+8)  Added a "ComputeCRC32" function to calculate the CRC32 checksum over a specified length of
+    buffer of bytes.
 
 
 CHANGES IN VERSION 7.0.1

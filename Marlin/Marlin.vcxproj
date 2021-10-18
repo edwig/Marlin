@@ -177,6 +177,7 @@
     <ClCompile Include="Base64.cpp" />
     <ClCompile Include="bcd.cpp" />
     <ClCompile Include="CommandBus.cpp" />
+    <ClCompile Include="CRC32.cpp" />
     <ClCompile Include="EventLogRegistration.cpp" />
     <ClCompile Include="HostedWebCore.cpp" />
     <ClCompile Include="HTTPCertificate.cpp" />
@@ -350,6 +351,7 @@
     <ClInclude Include="Base64.h" />
     <ClInclude Include="bcd.h" />
     <ClInclude Include="CommandBus.h" />
+    <ClInclude Include="CRC32.h" />
     <ClInclude Include="EventLogRegistration.h" />
     <ClInclude Include="EventStream.h" />
     <ClInclude Include="HostedWebCore.h" />
