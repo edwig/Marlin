@@ -190,7 +190,7 @@ int  TestEncryption(void)
   CString password("P@$$w03d4m3"); // Password for me
   CString buffer("This is a somewhat longer string with an intentional message");
 
-  // Dit gaan we testen
+  // This is what we test
   xprintf("TESTING ENCRYPTION PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
   xprintf("======================================================================\n");
   xprintf("DIGEST Password: %s\n", password.GetString());
@@ -200,7 +200,7 @@ int  TestEncryption(void)
 
   xprintf("Provider       : PROV_RSA_AES\n");
   xprintf("Password-hash  : CALG_SHA_256\n");
-  xprintf("Encryptie      : CALG_AES_256\n");
+  xprintf("Encryption    : CALG_AES_256\n");
   xprintf("\n");
 
 
@@ -259,6 +259,45 @@ int TestEncryptionLongerStrings()
   return errors;
 }
 
+int  TestFastEncryption(void)
+{
+  Crypto crypt;
+  CString result;
+  CString password("P@$$w03d4m3"); // Password for me
+  CString buffer("This is a somewhat longer string with an intentional message");
+
+  // This is what we test
+  xprintf("TESTING ENCRYPTION PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
+  xprintf("======================================================================\n");
+  xprintf("DIGEST Password: %s\n",password.GetString());
+  xprintf("DIGEST Buffer  : %s\n",buffer.GetString());
+  xprintf("----------------------------------------------------------------------\n");
+  xprintf("\n");
+
+  xprintf("Provider       : BCrypt\n");
+  xprintf("Password-hash  : RC4\n");
+  xprintf("Encryption     : RC4\n");
+  xprintf("\n");
+
+
+  result = crypt.FastEncryption(buffer,password);
+
+  xprintf("Expected       : F8jAdeNxzKzNzPN70RUAtlpuOuyraqlNTDmUImGPMsfdqZgVY7rvIqWjFxtHQRNi6+NprOHcpsuyIQDX\n");
+  xprintf("ENCRYPTION     : %s\n",result.GetString());
+
+  result = crypt.FastDecryption(result,password);
+
+  xprintf("DECRYPTION     : %s\n",result.GetString());
+  xprintf("\n");
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("Test MS Cryptographic provider in fast RC4     : %s\n",(result == buffer) ? "OK" : "ERROR");
+
+  return (result == buffer) ? 0 : 1;
+}
+
+
 int  TestCryptography(void)
 {
   int errors = 0;
@@ -266,6 +305,7 @@ int  TestCryptography(void)
   errors += TestHashing();
   errors += TestEncryption();
   errors += TestEncryptionLongerStrings();
+  errors += TestFastEncryption();
 
   return errors;
 }

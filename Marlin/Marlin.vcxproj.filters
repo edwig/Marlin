@@ -234,7 +234,7 @@
     <ClCompile Include="ZLib\adler32.c">
       <Filter>Zip</Filter>
     </ClCompile>
-    <ClCompile Include="ZLib\crc32.c">
+    <ClCompile Include="ZLib\zipcrc32.c">
       <Filter>Zip</Filter>
     </ClCompile>
     <ClCompile Include="ZLib\trees.c">
@@ -398,7 +398,7 @@
     <ClInclude Include="ZLib\deflate.h">
       <Filter>Zip\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="ZLib\crc32.h">
+    <ClInclude Include="ZLib\zipcrc32.h">
       <Filter>Zip\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ZLib\trees.h">

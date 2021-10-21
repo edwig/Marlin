@@ -31,6 +31,7 @@
 #include "GetLastErrorAsString.h"
 #include "AutoCritical.h"
 #include <wincrypt.h>
+#include <bcrypt.h>
 #include <schannel.h>
 #include <vector>
 
@@ -45,6 +46,10 @@
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
+
+#ifndef STATUS_SUCCESS
+#define STATUS_SUCCESS (0x00000000)
 #endif
 
 static bool m_crypt_init = false;
@@ -560,6 +565,109 @@ error_exit:
   {
     CryptReleaseContext(hCryptProv,0);
   }
+  return result;
+}
+
+
+CString
+Crypto::FastEncryption(CString p_input, CString password)
+{
+  AutoCritSec lock(&m_lock);
+  BCRYPT_ALG_HANDLE hAlgorithm;
+  CString result;
+
+  NTSTATUS res = BCryptOpenAlgorithmProvider(&hAlgorithm, L"RC4", NULL, /*BCRYPT_HASH_REUSABLE_FLAG*/ 0); 
+  if(res != STATUS_SUCCESS)
+  {
+    return result;
+  }
+
+  BCRYPT_KEY_HANDLE hKey;
+  if(BCryptGenerateSymmetricKey(hAlgorithm, &hKey, NULL, NULL, (PUCHAR)password.GetString(), password.GetLength(), NULL) != STATUS_SUCCESS)
+  {
+    return result;
+  }
+
+  ULONG cbCipherText;
+  if(BCryptEncrypt(hKey, (PUCHAR)p_input.GetString(), p_input.GetLength(), NULL, NULL, NULL, NULL, NULL, &cbCipherText, NULL) != STATUS_SUCCESS)
+  {
+    return result;
+  }
+    
+  CString data;
+  char* datapointer = data.GetBufferSetLength(cbCipherText);
+  if (BCryptEncrypt(hKey, (PUCHAR)p_input.GetString(), p_input.GetLength(), NULL, NULL, NULL, (PUCHAR)datapointer, cbCipherText, &cbCipherText, NULL) != STATUS_SUCCESS)
+  {
+    return result;
+  }
+  data.ReleaseBufferSetLength(cbCipherText);
+
+
+  BCryptDestroyKey(hKey);
+  BCryptCloseAlgorithmProvider(hAlgorithm, 0);
+
+  // Create a base64 string of the hash data
+  Base64 base64;
+  int b64length = (int)base64.B64_length(cbCipherText);
+  char* buffer = result.GetBufferSetLength(b64length);
+  base64.Encrypt((const unsigned char*)data.GetString(),cbCipherText,(unsigned char*)buffer);
+  result.ReleaseBuffer(b64length);
+
+  return result;
+}
+
+CString
+Crypto::FastDecryption(CString p_input,CString password)
+{
+  AutoCritSec lock(&m_lock);
+
+  CString result;
+  char* data = nullptr;
+  DWORD dwDataLen  = p_input.GetLength();
+  BCRYPT_ALG_HANDLE hAlgorithm = NULL;
+  BCRYPT_KEY_HANDLE hKey = NULL;
+  ULONG cbCipherText = 0;
+
+  // Check if we have anything to do
+  if(dwDataLen < 3)
+  {
+    return result;
+  }
+
+  // Create a data string of the base64 string
+  Base64 base64;
+  DWORD dataLength = (DWORD)base64.Ascii_length(dwDataLen);
+  BYTE* pbData = new BYTE[dataLength + 2];
+  base64.Decrypt((const unsigned char*)p_input.GetString(),dwDataLen,(unsigned char*)pbData);
+
+
+  if(BCryptOpenAlgorithmProvider(&hAlgorithm, L"RC4", NULL, 0/*BCRYPT_HASH_REUSABLE_FLAG*/) != STATUS_SUCCESS)
+  {
+    goto error_exit;
+  }
+
+  if(BCryptGenerateSymmetricKey(hAlgorithm, &hKey, NULL, NULL, (PUCHAR)password.GetString(), password.GetLength(), NULL) != STATUS_SUCCESS)
+  {
+    goto error_exit;
+  }
+
+  if(BCryptDecrypt(hKey, (PUCHAR)pbData, dataLength, NULL, NULL, NULL, NULL, NULL, &cbCipherText, NULL) != STATUS_SUCCESS)
+  {
+    goto error_exit;
+  }
+
+  data = result.GetBufferSetLength(cbCipherText);
+  if(BCryptDecrypt(hKey, (PUCHAR)pbData, dataLength, NULL, NULL, NULL, (PUCHAR)data, cbCipherText, &cbCipherText, NULL) != STATUS_SUCCESS)
+  {
+    goto error_exit;
+  }
+  result.ReleaseBufferSetLength(cbCipherText);
+
+error_exit:
+  BCryptDestroyKey(hKey);
+  BCryptCloseAlgorithmProvider(hAlgorithm,0);
+  delete[] pbData;
+
   return result;
 }
 

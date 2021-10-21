@@ -689,7 +689,7 @@ TestJSONMessage3()
     --result;
   }
 
-  JSONMessage msg2(mustbe,false);
+  JSONMessage msg2(mustbe,false,JsonEncoding::JENC_Plain);
   CString tt2 = msg2.GetJsonMessage();
 
   if(tt2 == text)
