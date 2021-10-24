@@ -322,7 +322,7 @@ protected:
   // Status and other info
   XmlError        m_internalError   { XmlError::XE_NoError }; // Internal error status
   CString         m_internalErrorString;                      // Human readable form of the error
-  long            m_references      { 0 };                    // Externally referenced
+  long            m_references      { 1 };                    // Externally referenced
 };
 
 //////////////////////////////////////////////////////////////////////////

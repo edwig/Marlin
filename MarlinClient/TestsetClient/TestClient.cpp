@@ -139,6 +139,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       // Do Unit testing of the client without connecting to the internet
       errors += TestUnicode();
       errors += TestURLChars();
+      errors += TestXML();
       errors += TestCryptography();
       errors += TestReader();
       errors += TestConvert();

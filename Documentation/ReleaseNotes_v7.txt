@@ -68,6 +68,8 @@ CHANGES IN VERSION 7.1.0
     buffer of bytes.
 9)  Added "FastEncryption" and "FastDecription" to the Crypto class, using the newer BCrypt
     interface from Microsoft.
+10) Added a (partial) XPath implementation.
+    See the XPath.h header for further manual and clarification.
 
 
 CHANGES IN VERSION 7.0.1

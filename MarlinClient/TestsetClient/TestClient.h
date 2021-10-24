@@ -70,3 +70,4 @@ extern int TestCompression(HTTPClient* p_client);
 extern int TestWebservices(HTTPClient& p_client);
 extern int TestClientCertificate(HTTPClient* p_client);
 extern int TestMSGraph(HTTPClient* p_client);
+extern int TestXML(void);

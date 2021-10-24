@@ -288,6 +288,7 @@
     <ClCompile Include="XMLParserJSON.cpp" />
     <ClCompile Include="XMLRestriction.cpp" />
     <ClCompile Include="XMLTemporal.cpp" />
+    <ClCompile Include="XPath.cpp" />
     <ClCompile Include="ZLib\adler32.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -459,6 +460,7 @@
     <ClInclude Include="XMLParserJSON.h" />
     <ClInclude Include="XMLRestriction.h" />
     <ClInclude Include="XMLTemporal.h" />
+    <ClInclude Include="XPath.h" />
     <ClInclude Include="ZLib\zipcrc32.h" />
     <ClInclude Include="ZLib\deflate.h" />
     <ClInclude Include="ZLib\gzguts.h" />

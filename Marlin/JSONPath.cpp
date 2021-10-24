@@ -568,3 +568,4 @@ JSONPath::ParseLevel(CString& p_parsing)
   m_status = JPStatus::JP_INVALID;
   return false;
 }
+
