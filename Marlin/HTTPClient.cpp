@@ -765,10 +765,6 @@ HTTPClient::AddHeader(CString p_header)
 bool
 HTTPClient::AddHeader(CString p_name,CString p_value)
 {
-  if(p_value.GetLength() && (p_value[0] != '\"' && p_value[0] != '\'' && p_value.Find(':') >= 0))
-  {
-    p_value = "\"" + p_value + "\"";
-  }
   CString header = p_name + ": " + p_value;
   return AddHeader(header);
 }
