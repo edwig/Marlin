@@ -183,9 +183,9 @@ HTTPClient::Reset()
     m_trace = nullptr;
   }
   // Clear the maps
-  m_headers.clear();
+  m_requestHeaders.clear();
+  m_responseHeaders.clear();
   m_cookies.Clear();
-  m_respHeaders.clear();
   m_resultCookies.Clear();
 
   // Reset the logging
@@ -272,7 +272,7 @@ HTTPClient::GetStatusText()
   return text;
 }
 
-// Errorlog text MUST have the formatting of
+// Logging error text MUST have the formatting of
 // text text text %d %s
 // Where %d is the error number and
 // where %s is the error text explanation
@@ -457,7 +457,7 @@ HTTPClient::InitLogging()
     return;
   }
 
-  // Get parameters from webconfig
+  // Get parameters from web.config
   CString file = m_webConfig.GetParameterString ("Logging","Logfile",  "");
   bool logging = m_webConfig.GetParameterBoolean("Logging","DoLogging",false);
   bool timing  = m_webConfig.GetParameterBoolean("Logging","DoTiming", true);
@@ -518,7 +518,7 @@ HTTPClient::SetLogging(LogAnalysis* p_log,bool p_transferOwnership /*= false*/)
   // Remember the setting or resetting of the logfile
   m_log = p_log;
 
-  // HTTP Client wil destroy the logfile object!
+  // HTTP Client will destroy the logfile object!
   if(p_transferOwnership)
   {
     m_logOwner = true;
@@ -630,7 +630,7 @@ HTTPClient::InitSettings()
     case HLL_ERRORS:    loglevel = "Errors and warnings"; break;
     case HLL_LOGGING:   loglevel = "Info logging";        break;
     case HLL_TRACE:     loglevel = "Tracing and bodies";  break;
-    case HLL_TRACEDUMP: loglevel = "Tracing bodies, headers and hexdump"; break;
+    case HLL_TRACEDUMP: loglevel = "Tracing bodies, headers and hex-dump"; break;
   }
 
   // Logging of our settings
@@ -752,21 +752,44 @@ HTTPClient::SetURL(CString p_url)
 
 // Add extra header for the call
 bool 
-HTTPClient::AddHeader(CString p_header)
+HTTPClient::AddHeader(CString p_header,bool p_unique /*=true*/)
 {
-  USES_CONVERSION;
-  wstring header = A2CW(p_header);
-  m_headers.push_back(header);
+  int pos = p_header.Find(':');
+  if (pos > 0)
+  {
+    CString name   = p_header.Left(pos);
+    CString value  = p_header.Mid(pos + 1);
 
-  return true;
+    return AddHeader(name,value,p_unique);
+  }
+  return false;
 }
 
 // Add extra header by name and value pair
 bool
-HTTPClient::AddHeader(CString p_name,CString p_value)
+HTTPClient::AddHeader(CString p_name,CString p_value,bool p_unique /*=true*/)
 {
-  CString header = p_name + ": " + p_value;
-  return AddHeader(header);
+  HttpHeader header;
+  header.m_name   = p_name;
+  header.m_value  = p_value;
+  header.m_unique = true;
+    
+  for(auto& head : m_requestHeaders)
+  {
+    if(head.m_name.Compare(p_name) == 0)
+    {
+      if(p_unique)
+      {
+        // OVERWRITE
+        head.m_value = p_value;
+        return false;
+      }
+      header.m_unique = false;
+      head.m_unique   = false;
+    }
+  }
+  m_requestHeaders.push_back(header);
+  return true;
 }
 
 // Add extra cookie for the call
@@ -1045,72 +1068,22 @@ HTTPClient::AddCORSHeaders()
 void
 HTTPClient::AddExtraHeaders()
 {
-  if(m_headers.size())
+  if(!m_contentType.IsEmpty())
   {
-    for(unsigned ind = 0;ind < m_headers.size(); ++ind)
-    {
-      if(!::WinHttpAddRequestHeaders(m_request
-                                    ,m_headers[ind].c_str()
-                                    ,(DWORD)m_headers[ind].size()
-                                    ,(ind == 0) ? WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE
-                                                : WINHTTP_ADDREQ_FLAG_COALESCE_WITH_SEMICOLON))
-      {
-        // Log error but continue. A lot of headers are optional to a HTTP call
-        ErrorLog(__FUNCTION__,"Request headers NOT set. Error [%d] %s");
-      }
-      DETAILLOG("Header => %S",m_headers[ind].c_str());
-    }
+    AddHeader("Content-Type",m_contentType);
   }
-  if(m_contentType.GetLength())
+  if (m_httpCompression)
   {
-    USES_CONVERSION;
-    wstring type = wstring(L"Content-Type: ") + A2CW(m_contentType);
-    if(!::WinHttpAddRequestHeaders(m_request
-                                  ,type.c_str()
-                                  ,(DWORD)type.size()
-                                  ,WINHTTP_ADDREQ_FLAG_ADD | 
-                                   WINHTTP_ADDREQ_FLAG_REPLACE))
-    {
-      // Log error but continue. Most servers can reconstruct the content type
-      ErrorLog(__FUNCTION__,"Content type NOT set. Error [%d] %s");
-    }
-    DETAILLOG("Header => %S",type.c_str());
+    AddHeader("Accept-Encoding","gzip");
   }
-  if(m_httpCompression)
+  if (m_soapAction.GetLength())
   {
-    wstring accept = wstring(L"Accept-Encoding: gzip");
-    if(!::WinHttpAddRequestHeaders(m_request
-                                  ,accept.c_str()
-                                  ,(DWORD)accept.size()
-                                  ,WINHTTP_ADDREQ_FLAG_ADD |
-                                   WINHTTP_ADDREQ_FLAG_REPLACE))
-    {
-      // Log error but continue. Most servers will simply not GZIP it's answer
-      ErrorLog(__FUNCTION__,"Accept-Encoding NOT set. Error [%d] %s");
-    }
-    DETAILLOG("Header => %S",accept.c_str());
-  }
-  if(m_soapAction.GetLength())
-  {
-    USES_CONVERSION;
-    if(m_soapAction[0] != '\"' && m_soapAction.Find(':') >= 0)
+    if (m_soapAction[0] != '\"' && m_soapAction.Find(':') >= 0)
     {
       m_soapAction = "\"" + m_soapAction + "\"";
     }
-    wstring header(L"SOAPAction: ");
-    header += A2CW(m_soapAction);
-    if(!::WinHttpAddRequestHeaders(m_request
-                                  ,header.c_str()
-                                  ,(DWORD)header.size()
-                                  ,WINHTTP_ADDREQ_FLAG_ADD | 
-                                   WINHTTP_ADDREQ_FLAG_REPLACE))
-    {
-      // Log error but continue. Most SOAP-XML has the action in the header or the root node
-      ErrorLog(__FUNCTION__,"SOAPAction NOT set. Error [%d] %s");
-    }
-    DETAILLOG("Header => %S",header.c_str());
+    AddHeader("SOAPAction", m_soapAction);
   }
-
   if(m_terminalServices)
   {
     // Try to get the TerminalServices desktop session number
@@ -1120,21 +1093,30 @@ HTTPClient::AddExtraHeaders()
     DWORD pid = GetCurrentProcessId();
     if(ProcessIdToSessionId(pid,&session))
     {
-      wchar_t number[20];
-      _itow_s(session,number,20,10);
-      wstring remDesktop = L"RemoteDesktop: " + wstring(number);
-      if(!::WinHttpAddRequestHeaders(m_request
-                                    ,remDesktop.c_str()
-                                    ,(DWORD)remDesktop.size()
-                                    ,WINHTTP_ADDREQ_FLAG_ADD | 
-                                     WINHTTP_ADDREQ_FLAG_REPLACE))
-      {
-        // Log error and continue with fingers crossed. 
-        // Result will most probably not work on RDP/Citrix sessions
-        ErrorLog(__FUNCTION__,"RemoteDesktop NOT set. Error [%d] %s");
-      }
-      DETAILLOG("Header => %S",remDesktop.c_str());
+      char number[20];
+      _itoa_s(session,number,20,10);
+      AddHeader("RemoteDesktop",number);
     }
+  }
+
+  // Set all of our headers
+  USES_CONVERSION;
+  for(auto& head : m_requestHeaders)
+  {
+    CString header = head.m_name + ":" + head.m_value;
+    wstring theHeader = A2CW(header);
+
+    DWORD modifiers = head.m_unique ? WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE
+                                    : WINHTTP_ADDREQ_FLAG_COALESCE_WITH_SEMICOLON;
+    if(!::WinHttpAddRequestHeaders(m_request
+                                  ,theHeader.c_str()
+                                  ,(DWORD)theHeader.size()
+                                  ,modifiers))
+    {
+      // Log error but continue. A lot of headers are optional to a HTTP call
+      ErrorLog(__FUNCTION__,"Request headers NOT set. Error [%d] %s");
+    }
+    DETAILLOG("Header => %S",theHeader.c_str());
   }
 }
 
@@ -2056,7 +2038,7 @@ HTTPClient::Send(CString&    p_url
   m_verb = "GET";
 
   // Reset as far as needed
-  m_headers.clear();
+  m_requestHeaders.clear();
   m_cookies.Clear();
 
   // Using our parameters (if any)
@@ -2144,7 +2126,7 @@ HTTPClient::Send(HTTPMessage* p_msg)
   // Getting all headers from the answer
   if(m_readAllHeaders)
   {
-    for(ResponseMap::iterator it = m_respHeaders.begin(); it != m_respHeaders.end(); ++it)
+    for(ResponseMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
     {
       p_msg->AddHeader(it->first,it->second);
     }
@@ -2357,7 +2339,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   // Getting all headers from the answer
   if(m_readAllHeaders)
   {
-    for(ResponseMap::iterator it = m_respHeaders.begin(); it != m_respHeaders.end(); ++it)
+    for(ResponseMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
     {
       p_msg->AddHeader(it->first,it->second);
     }
@@ -2578,7 +2560,7 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   // Getting all headers from the answer
   if(m_readAllHeaders)
   {
-    for(ResponseMap::iterator it = m_respHeaders.begin(); it != m_respHeaders.end(); ++it)
+    for(ResponseMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
     {
       p_msg->AddHeader(it->first,it->second);
     }
@@ -2621,7 +2603,7 @@ HTTPClient::SendAsJSON(SOAPMessage* p_msg)
   m_body        = (void*) "";
 
   // Reset as far as needed
-  m_headers.clear();
+  m_requestHeaders.clear();
   m_cookies.Clear();
 
   // Using our parameters (if any)
@@ -2917,7 +2899,7 @@ HTTPClient::Send()
     m_lastError = 0;
 
     // Clearing the response headers
-    m_respHeaders.clear();
+    m_responseHeaders.clear();
     m_contentType.Empty();
 
     // Send the header only
@@ -3247,9 +3229,9 @@ HTTPClient::TraceTheSend()
     m_log->BareStringLog(header.GetString(),header.GetLength());
   }
   // Trace all other extra headers, including CORS headers
-  for(auto& head : m_headers)
+  for(auto& head : m_requestHeaders)
   {
-    header = CW2A(head.c_str());
+    header = head.m_name + ":" + head.m_value;
     m_log->BareStringLog(header.GetString(),header.GetLength());
   }
 
@@ -3317,7 +3299,7 @@ HTTPClient::TraceTheAnswer()
   m_log->BareStringLog(header.GetString(),header.GetLength());
 
   // All answer headers
-  for(auto& head : m_respHeaders)
+  for(auto& head : m_responseHeaders)
   {
     header.Format("%s: %s",head.first.GetString(),head.second.GetString());
     m_log->BareStringLog(header,header.GetLength());
@@ -3507,7 +3489,7 @@ HTTPClient::ReadAllResponseHeaders()
       {
         USES_CONVERSION;
         CString all = (CString) CW2A(buffer);
-        m_respHeaders.clear();
+        m_responseHeaders.clear();
 
         int pos = all.Find("\r\n");
         while(pos >= 0)
@@ -3521,12 +3503,10 @@ HTTPClient::ReadAllResponseHeaders()
           int namepos = header.Find(':');
           if(namepos > 0)
           {
-            name  = header.Left(namepos);
-            value = header.Mid(namepos + 1);
-            name.Trim();
-            value.Trim();
-            name.MakeLower();
-            m_respHeaders.insert(std::make_pair(name,value));
+            CString hname   = header.Left(namepos).Trim();
+            CString hvalue  = header.Mid(namepos + 1).Trim();
+            hname.MakeLower();
+            m_responseHeaders.insert(std::make_pair(hname,hvalue));
           }
           // Find next
           pos = all.Find("\r\n");
@@ -3546,8 +3526,8 @@ HTTPClient::FindHeader(CString p_header)
 {
   p_header.MakeLower();
 
-  ResponseMap::iterator it = m_respHeaders.find(p_header);
-  if(it != m_respHeaders.end())
+  ResponseMap::iterator it = m_responseHeaders.find(p_header);
+  if(it != m_responseHeaders.end())
   {
     return it->second;
   }
@@ -3559,7 +3539,7 @@ void
 HTTPClient::AddMessageHeaders(HTTPMessage* p_message)
 {
   // Clear all headers of the client
-  m_headers.clear();
+  m_requestHeaders.clear();
 
   // Re-align message VERB if necessary through extra header
   if(p_message->GetVerbTunneling())
@@ -3585,7 +3565,7 @@ void
 HTTPClient::AddMessageHeaders(SOAPMessage* p_message)
 {
   // Clear all headers of the client
-  m_headers.clear();
+  m_requestHeaders.clear();
 
   // Copy headers in different format
   CString header;
@@ -3600,7 +3580,7 @@ void
 HTTPClient::AddMessageHeaders(JSONMessage* p_message)
 {
   // Clear all headers of the client
-  m_headers.clear();
+  m_requestHeaders.clear();
 
   // Replacing message VERB if necessary through extra header
   if(p_message->GetVerbTunneling())

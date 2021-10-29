@@ -385,7 +385,7 @@ int TestJSONPointer(void)
                        "\t\t\t\"five\":5.17,\n"
                        "\t\t\t\"six\":6,\n"
                        "\t\t\t\"strange~ger\":42,\n"
-                       "\t\t\t\"sp\\/1\":\"7.1.12\"\n"
+                       "\t\t\t\"sp/1\":\"7.1.12\"\n"
                        "\t\t}\n"
                        "\t]\n"
                        "}";
@@ -651,7 +651,7 @@ int TestJSON(void)
 
   // Singular values
   errors += TestValue1("\"This is a regular string\"");
-  errors += TestValue1("\"This is a string\\nwith\\r\\nseveral \\/ and more \\\\ escape \\f sequences \\t in \\t it.\\r\\n\"");
+  errors += TestValue1("\"This is a string\\nwith\\r\\nseveral / and more \\\\ escape \\f sequences \\t in \\t it.\\r\\n\"");
   errors += TestValue1("1234");
   errors += TestValue1("1234.56789");
   errors += TestValue1("-1234");
@@ -757,7 +757,7 @@ int DoSend(HTTPClient* p_client,JSONMessage* p_msg)
       }
       if(val.GetObject()[0].m_name == "two")
       {
-        if(msg == "{\"two\":[201,202,203,204.5,205.6789],\"three\":[301,302,303,304.5,305.6789]}")
+        if(msg == "{\"two\":[201,202,203,204.50,205.6789],\"three\":[301,302,303,304.50,305.6789]}")
         {
           --errors;
         }

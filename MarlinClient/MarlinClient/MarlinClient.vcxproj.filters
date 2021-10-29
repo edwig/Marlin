@@ -89,6 +89,9 @@
     <ClCompile Include="..\TestsetClient\TestMSGraph.cpp">
       <Filter>TestSet</Filter>
     </ClCompile>
+    <ClCompile Include="..\TestsetClient\TestXML.cpp">
+      <Filter>TestSet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Web.Config">

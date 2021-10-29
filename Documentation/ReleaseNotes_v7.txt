@@ -70,6 +70,9 @@ CHANGES IN VERSION 7.1.0
     interface from Microsoft.
 10) Added a (partial) XPath implementation.
     See the XPath.h header for further manual and clarification.
+11) Changed the implementation of the request headers in the HTTPClient.
+    It is now possible to register explicitly duplicate request headers or unique request headers
+    The "AddHeader" has a third optional parameter (p_unique) with a standard value of 'true'
 
 
 CHANGES IN VERSION 7.0.1

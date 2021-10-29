@@ -117,7 +117,9 @@
     </Link>
     <PostBuildEvent>
       <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)</Command>
+copy ..\Certificates\web.config $(OutDir)
+echo copy MarlinServer.config $(OutDir)
+copy MarlinServer.config $(OutDir)</Command>
       <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -144,7 +146,9 @@ copy ..\Certificates\web.config $(OutDir)</Command>
     </Link>
     <PostBuildEvent>
       <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)</Command>
+copy ..\Certificates\web.config $(OutDir)
+echo copy MarlinServer.config $(OutDir)
+copy MarlinServer.config $(OutDir)</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
@@ -174,7 +178,9 @@ copy ..\Certificates\web.config $(OutDir)</Command>
     </Link>
     <PostBuildEvent>
       <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)</Command>
+copy ..\Certificates\web.config $(OutDir)
+echo copy MarlinServer.config $(OutDir)
+copy MarlinServer.config $(OutDir)</Command>
       <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -203,7 +209,9 @@ copy ..\Certificates\web.config $(OutDir)</Command>
     </Link>
     <PostBuildEvent>
       <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)</Command>
+copy ..\Certificates\web.config $(OutDir)
+echo copy MarlinServer.config $(OutDir)
+copy MarlinServer.config $(OutDir)</Command>
       <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

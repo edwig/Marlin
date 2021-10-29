@@ -175,19 +175,26 @@ WebSocketClient::OpenSocket()
       {
         // Remember the identity key
         ResponseMap::iterator key = client.GetResponseHeaders().find("sec-websocket-accept");
-        m_key = key->second;
-
-        // Set our timeout headers
-        AddWebSocketHeaders();
-
-        // Trying to start the listener
-        if(StartClientListner())
+        if(key != client.GetResponseHeaders().end())
         {
-          // If we come back here the receive thread is running
-          DETAILLOGS("WebSocket open for: ",m_uri);
-          m_openReading = true;
-          m_openWriting = true;
-          OnOpen();
+          m_key = key->second;
+
+          // Set our timeout headers
+          AddWebSocketHeaders();
+
+          // Trying to start the listener
+          if(StartClientListner())
+          {
+            // If we come back here the receive thread is running
+            DETAILLOGS("WebSocket open for: ",m_uri);
+            m_openReading = true;
+            m_openWriting = true;
+            OnOpen();
+          }
+        }
+        else
+        {
+          ERRORLOG(ERROR_NOT_FOUND,"Socket upgrade to WinSocket failed. Sec-WebSocket-Accept not found\n");
         }
       }
       else

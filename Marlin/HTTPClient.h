@@ -126,9 +126,18 @@ public:
   m_message;
 };
 
+// Request headers
+class HttpHeader
+{
+public:
+  CString m_name;
+  CString m_value;
+  bool    m_unique;
+};
+
 // Used mappings in this class
-using ExtraMap    = std::vector<std::wstring>;
 using HttpQueue   = std::list<MsgBuf>;
+using HttpHeadMap = std::vector<HttpHeader>;
 using ResponseMap = std::multimap<CString,CString>;
 
 class HTTPClient
@@ -179,9 +188,9 @@ public:
 
   // FUNCTIONS
   // Add extra header for the call
-  bool AddHeader(CString p_header);
+  bool AddHeader(CString p_header,bool p_unique = true);
   // Add extra header by name and value pair
-  bool AddHeader(CString p_name,CString p_value);
+  bool AddHeader(CString p_name,CString p_value,bool p_unique = true);
   // Add extra cookie for the call
   bool AddCookie(CString p_cookie);
   // Disconnect from server
@@ -280,7 +289,7 @@ public:
   bool          GetReadAllHeaders()         { return m_readAllHeaders;    };
   HPFCounter*   GetCounter()                { return &m_counter;          };
   LogAnalysis*  GetLogging()                { return m_log;               };
-  ResponseMap&  GetAllHeadersMap()          { return m_respHeaders;       };
+  ResponseMap&  GetAllHeadersMap()          { return m_responseHeaders;   };
   unsigned      GetSslTlsSettings()         { return m_ssltls;            }; 
   bool          GetSendBOM()                { return m_sendBOM;           };
   bool          GetVerbTunneling()          { return m_verbTunneling;     };
@@ -296,7 +305,7 @@ public:
   FileBuffer*   GetFileBuffer()             { return m_buffer;            };
   Cookies&      GetCookies()                { return m_cookies;           };
   Cookies&      GetResultCookies()          { return m_resultCookies;     };
-  ResponseMap&  GetResponseHeaders()        { return m_respHeaders;       };
+  ResponseMap&  GetResponseHeaders()        { return m_responseHeaders;   };
   bool          GetPushEvents()             { return m_pushEvents;        };
   bool          GetOnCloseSeen()            { return m_onCloseSeen;       };
   int           GetQueueSize()              { return (int)m_queue.size(); };
@@ -396,7 +405,7 @@ private:
   // Connection specials
   bool          m_initialized     { false   };                    // Initialisation done
   unsigned      m_retries         { 0       };                    // Number of sending retries
-  CString       m_agent           { "HTTPClient/1.0" };           // User agents name (spoofing!!)
+  CString       m_agent           { "HTTPClient/7.0" };           // User agents name (spoofing!!)
   ProxyType     m_useProxy        { ProxyType::PROXY_IEPROXY };   // Which proxy to use
   CString       m_proxy;                                          // Use proxy
   CString       m_proxyBypass;                                    // Do not use these proxies
@@ -452,10 +461,10 @@ private:
   unsigned      m_timeoutSend     { DEF_TIMEOUT_SEND    };        // Timeout in sending 
   unsigned      m_timeoutReceive  { DEF_TIMEOUT_RECEIVE };        // Timeout in receiving
   // Extra headers / Cookie
-  ExtraMap      m_headers;                                        // All headers to use
+  HttpHeadMap   m_requestHeaders;                                 // All request headers to the call
+  ResponseMap   m_responseHeaders;                                // All response headers from the call
   Cookies       m_cookies;                                        // All cookies to send
   bool          m_readAllHeaders  { false   };                    // Get all response headers
-  ResponseMap   m_respHeaders;                                    // All Response headers
   // CORS Cross Origin Resource Sharing
   CString       m_corsOrigin;                                     // Use CORS header methods (sending "Origin:")
   CString       m_corsMethod;                                     // Pre-flight request method  in OPTIONS call
