@@ -224,6 +224,14 @@ WebSocket::AddParameter(CString p_name,CString p_value)
   m_parameters[p_name] = p_value;
 }
 
+// Add a HTTP header
+void
+WebSocket::AddHeader(CString p_name,CString p_value)
+{
+  p_name.MakeLower();
+  m_headers[p_name] = p_value;
+}
+
 // Find a URI parameter
 CString
 WebSocket::GetParameter(CString p_name)

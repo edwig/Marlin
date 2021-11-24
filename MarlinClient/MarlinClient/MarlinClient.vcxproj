@@ -226,6 +226,7 @@
     <ClCompile Include="..\TestsetClient\TestConvert.cpp" />
     <ClCompile Include="..\TestsetClient\TestCookies.cpp" />
     <ClCompile Include="..\TestsetClient\TestCrypto.cpp" />
+    <ClCompile Include="..\TestsetClient\TestEventDriver.cpp" />
     <ClCompile Include="..\TestsetClient\TestEvents.cpp" />
     <ClCompile Include="..\TestsetClient\TestFormData.cpp" />
     <ClCompile Include="..\TestsetClient\TestJSON.cpp" />

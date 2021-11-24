@@ -27,6 +27,7 @@
 //
 #pragma once
 #include "WebServiceServer.h"
+#include "ServerEventDriver.h"
 #include "MarlinServer.h"
 #include "AppConfig.h"
 
@@ -53,6 +54,9 @@ public:
   void  Server_qprintf(const char* p_format, ...);
 
   CString m_socket;
+
+  // Testing the ServerEventDriver
+  void IncomingEvent(LTEvent* p_event);
 
 protected:
   void  StartErrorReporting();
@@ -88,6 +92,9 @@ protected:
   // Add service operations for WSDL and service handlers
   void AddOperations(CString p_contract);
 
+  // Testing ServerEventDriver
+  void PostEventsToDrivers();
+
 private:
 
   // TESTSETS Installation
@@ -114,6 +121,7 @@ private:
   int TestHTTPTime();
   int TestToken();
   int TestWebSocket();
+  int TestEventDriver();
 
   // AFTER THE TEST
   int  StopSubsites();
@@ -130,6 +138,7 @@ private:
   int AfterTestCookies();
   int AfterTestCrackURL();
   int AfterTestEvents();
+  int AfterTestEventDriver();
   int AfterTestFilter();
   int AfterTestFormData();
   int AfterTestInsecure();
@@ -166,7 +175,13 @@ private:
   bool            m_doDetails   { false };              // Do not log any detailed information
   bool            m_ownReport   { false };
 
-  CRITICAL_SECTION m_std_stream;
+  // Testing the event drivers
+  ServerEventDriver m_driver;
+  int m_channel1{ 0 };
+  int m_channel2{ 0 };
+  int m_channel3{ 0 };
+
+  CRITICAL_SECTION  m_std_stream;
 };
 
 extern TestMarlinServer theServer;

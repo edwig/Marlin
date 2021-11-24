@@ -368,6 +368,7 @@ HTTPRequest::ReceivedRequest()
 
   // Receiving the initiation of an event stream for the server
   acceptTypes.Trim();
+  EventStream* stream = nullptr;
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
     CString absolutePath = (CString) CW2A(m_request->CookedUrl.pAbsPath);
@@ -375,19 +376,13 @@ HTTPRequest::ReceivedRequest()
     {
       return;
     }
-    EventStream* stream = m_server->SubscribeEventStream((PSOCKADDR_IN6) sender
-                                                         ,remDesktop
-                                                         ,m_site
-                                                         ,m_site->GetSite()
-                                                         ,absolutePath
-                                                         ,(HTTP_OPAQUE_ID) this
-                                                         ,accessToken);
-    if(stream)
-    {
-      stream->m_baseURL = rawUrl;
-      m_site->HandleEventStream(stream);
-      return;
-    }
+    stream = m_server->SubscribeEventStream((PSOCKADDR_IN6) sender
+                                            ,remDesktop
+                                            ,m_site
+                                            ,m_site->GetSite()
+                                            ,absolutePath
+                                            ,(HTTP_OPAQUE_ID) this
+                                            ,accessToken);
   }
 
   // For all types of requests: Create the HTTPMessage
@@ -441,6 +436,14 @@ HTTPRequest::ReceivedRequest()
     {
       DETAILLOGV("Request VERB changed to: %s",m_message->GetVerb().GetString());
     }
+  }
+
+  // Go handle the stream if we got one
+  if(stream)
+  {
+    stream->m_baseURL = rawUrl;
+    m_site->HandleEventStream(m_message,stream);
+    return;
   }
 
   // Remember the fact that we should read the rest of the message

@@ -115,6 +115,8 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
     nRetCode = 1;
     return nRetCode;
   }
+  _set_se_translator(SeTranslator);
+
   // initialize MFC and print an error on failure
   if (!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
   {
@@ -158,6 +160,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestCloseWebSocket();
 #endif
       errors += TestEvents(client);
+      errors += TestEventDriver(g_log);
       errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestJsonData(client);

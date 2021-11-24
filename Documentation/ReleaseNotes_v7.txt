@@ -9,6 +9,18 @@ Version 7.x contains the new MarlinModule that (again) allows to be used with st
 application modules (DLL's), and so optimize the depoloyment and stack tracing capabilities
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 7.2.0
+------------------------
+1)  Added the new ServerEventDriver and ClientEventDriver for the transparent event framework.
+    Clients now can choose between the following three ways of getting event messages from 
+    the webserver
+    1) WebSockets (IIS only !)
+    2) Server-Sent-Events (Eventsource)
+    3) Long-Polling
+    If firewalls do not allow for SSE, you can opt-in by policy for WebSockets or polling
+2)  See the manual in the ServerEventDriver.h interface file and ClientEventDriver.h
+    For examples: see the MarlinClient testframe and "TestEventDriver.cpp"
+
 CHANGES IN VERSION 7.1.0
 ------------------------
 1)  Added the new class JSONPointer as per IETF RFC 6901 (Full implementation)

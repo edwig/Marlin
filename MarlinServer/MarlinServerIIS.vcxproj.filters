@@ -82,6 +82,9 @@
     <ClCompile Include="TestMarlinServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ServerTestset\TestEventDriver.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

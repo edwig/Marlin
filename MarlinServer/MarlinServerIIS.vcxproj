@@ -191,6 +191,7 @@
     <ClCompile Include="ServerTestset\TestContract.cpp" />
     <ClCompile Include="ServerTestset\TestCookies.cpp" />
     <ClCompile Include="ServerTestset\TestCrackUrl.cpp" />
+    <ClCompile Include="ServerTestset\TestEventDriver.cpp" />
     <ClCompile Include="ServerTestset\TestEvents.cpp" />
     <ClCompile Include="ServerTestset\TestFilter.cpp" />
     <ClCompile Include="ServerTestset\TestFormData.cpp" />

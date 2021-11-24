@@ -423,11 +423,15 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
         stream->m_user = CW2A(user->GetRemoteUserName());
       }
       stream->m_baseURL = rawUrl;
-      DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s",stream->m_user.GetString(),rawUrl.GetString());
+
+      HTTPMessage* message = GetHTTPMessageFromRequest(p_context,p_site,p_request);
+
       // To do for this stream, not for a message
-      p_site->HandleEventStream(stream);
+      DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s", stream->m_user.GetString(), rawUrl.GetString());
+      p_site->HandleEventStream(message,stream);
 
       // Return the fact that the request turned into a stream
+      delete message;
       return stream;
     }
   }

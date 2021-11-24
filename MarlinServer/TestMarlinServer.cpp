@@ -461,6 +461,7 @@ TestMarlinServer::RegisterSiteHandlers()
   TestCookies();
   TestCrackURL();
   TestPushEvents();
+  TestEventDriver();
   TestFilter();
   TestFormData();
   TestInsecure();
@@ -491,6 +492,7 @@ TestMarlinServer::AfterTests()
   AfterTestCookies();
   AfterTestCrackURL();
   AfterTestEvents();
+  AfterTestEventDriver();
   AfterTestFilter();
   AfterTestFormData();
   AfterTestInsecure();

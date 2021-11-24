@@ -28,6 +28,14 @@
 #pragma once
 #include "HTTPServerMarlin.h"
 
+// Structure for dispatching an event stream
+typedef struct _msg_stream
+{
+  HTTPMessage* m_message;
+  EventStream* m_stream;
+}
+MsgStream;
+
 class HTTPServerSync: public HTTPServerMarlin
 {
 public:

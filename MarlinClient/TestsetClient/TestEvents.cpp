@@ -51,8 +51,10 @@ int  onOtherSeen   = 0;
 int  onErrorSeen   = 0;
 UINT maxID         = 0;
 
-void OnOpen(ServerEvent* p_event)
+void OnOpen(ServerEvent* p_event,void* p_data)
 {
+  UNREFERENCED_PARAMETER(p_data);
+
   xprintf("ONE TIME OCCURENCE: Open event listener channel\n");
   fflush(stdout);
 
@@ -66,8 +68,10 @@ void OnOpen(ServerEvent* p_event)
   printf("EVENT channel OnOpen received                  : OK\n");
 }
 
-void OnClose(ServerEvent* p_event)
+void OnClose(ServerEvent* p_event,void* p_data)
 {
+  UNREFERENCED_PARAMETER(p_data);
+
   xprintf("ONE TIME OCCURENCE: Closed event listener channel\n");
   fflush(stdout);
 
@@ -82,8 +86,10 @@ void OnClose(ServerEvent* p_event)
   printf("EVENT channel OnClose received                 : OK\n");
 }
 
-void OnMessage(ServerEvent* p_event)
+void OnMessage(ServerEvent* p_event,void* p_data)
 {
+  UNREFERENCED_PARAMETER(p_data);
+
   xprintf("OnMessage delivered from server.\n"
           "Message ID: %d\n%s\n"
          ,p_event->m_id
@@ -106,8 +112,10 @@ void OnMessage(ServerEvent* p_event)
   delete p_event;
 }
 
-void OnOther(ServerEvent* p_event)
+void OnOther(ServerEvent* p_event,void* p_data)
 {
+  UNREFERENCED_PARAMETER(p_data);
+
   xprintf("OTHER event delivered from server.\n"
           "Message ID: %d\n%s\n"
           ,p_event->m_id
@@ -125,8 +133,10 @@ void OnOther(ServerEvent* p_event)
   delete p_event;
 }
 
-void OnError(ServerEvent* p_event)
+void OnError(ServerEvent* p_event,void* p_data)
 {
+  UNREFERENCED_PARAMETER(p_data);
+
   xprintf("WHOAAA. ERROR received from server\n"
           "Message ID: %d\n%s\n"
           ,p_event->m_id

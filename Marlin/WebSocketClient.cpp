@@ -140,7 +140,6 @@ WebSocketClient::OpenSocket()
     return false;
   }
 
-
   // GET this URI (ws[s]://resource) !!
   client.SetVerb("GET");
   client.SetURL(m_uri);
@@ -153,6 +152,13 @@ WebSocketClient::OpenSocket()
   if(!m_extensions.IsEmpty())
   {
     client.AddHeader("Sec-WebSocket-Extensions",m_extensions);
+  }
+  if(!m_headers.empty())
+  {
+    for(auto& header : m_headers)
+    {
+      client.AddHeader(header.first,header.second);
+    }
   }
 
   // We need all response headers for the handshake
@@ -241,6 +247,12 @@ WebSocketClient::CloseSocket()
     m_socket = NULL;
     m_openReading = false;
     m_openWriting = false;
+
+    // Really get rid of the thread!
+    if(m_listener)
+    {
+      TerminateThread(m_listener,0);
+    }
   }
   return true;
 }

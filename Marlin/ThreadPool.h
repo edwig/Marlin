@@ -103,7 +103,7 @@ public:
   // OUR PRIMARY FUNCTION!
 
   // Submit an item, starting a thread on it
-  void  SubmitWork(LPFN_CALLBACK p_callback,void* p_argument);
+  bool  SubmitWork(LPFN_CALLBACK p_callback,void* p_argument);
   // Submitting cleanup jobs. Runs when ThreadPool stops
   void  SubmitCleanup(LPFN_CALLBACK p_cleanup,void* p_argument);
 

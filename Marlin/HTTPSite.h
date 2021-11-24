@@ -264,7 +264,7 @@ public:
   // Call the correct HTTP handler!
   void HandleHTTPMessage(HTTPMessage* p_message);
   // Call the correct EventStream handler
-  void HandleEventStream(EventStream* p_stream);
+  void HandleEventStream(HTTPMessage* p_message,EventStream* p_stream);
   // Check WS-ReliableMessaging protocol
   bool HttpReliableCheck(SOAPMessage* p_message);
   // Check WS-Security protocol
@@ -526,4 +526,3 @@ HTTPSite::SetCORSMaxAge(unsigned p_maxAge)
 {
   m_corsMaxAge = p_maxAge;
 }
-

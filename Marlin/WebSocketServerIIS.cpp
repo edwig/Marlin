@@ -376,9 +376,9 @@ WebSocketServerIIS::SocketListener()
 bool
 WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
 {
-  int     length = 0;
-  uchar*  buffer = nullptr;
-  LPCWSTR pointer = nullptr;
+  int     length  = 0;
+  uchar*  buffer  = nullptr;
+  LPCWSTR pointer = L"";
 
   if(TryCreateWideString(p_reason,"",false,&buffer,length))
   {
@@ -387,6 +387,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
 
   // Still other parameters and reason to do
   BOOL expected = FALSE;
+  CString message;
   HRESULT hr = m_iis_socket->SendConnectionClose(TRUE
                                                 ,p_code
                                                 ,pointer
@@ -396,7 +397,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
   delete[] buffer;
   if(FAILED(hr))
   {
-    ERRORLOG(ERROR_INVALID_OPERATION,"Cannot send a 'close' message on the WebSocket [" + m_key + "] on [" + m_uri + "]");
+    ERRORLOG(ERROR_INVALID_OPERATION,"Cannot send a 'close' message on the WebSocket [" + m_key + "] on [" + m_uri + "] " + message);
     return false;
   }
   if(!expected)

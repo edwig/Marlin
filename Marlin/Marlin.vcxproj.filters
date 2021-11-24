@@ -372,6 +372,21 @@
     <ClCompile Include="XPath.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="ServerEventDriver.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerEventChannel.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientEventDriver.cpp">
+      <Filter>MarlinClient</Filter>
+    </ClCompile>
+    <ClCompile Include="LongPolling.cpp">
+      <Filter>MarlinClient</Filter>
+    </ClCompile>
+    <ClCompile Include="LongTermEvent.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ZLib\inflate.h">
@@ -753,6 +768,21 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="XPath.h">
+      <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerEventDriver.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerEventChannel.h">
+      <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientEventDriver.h">
+      <Filter>MarlinClient\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="LongPolling.h">
+      <Filter>MarlinClient\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="LongTermEvent.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>

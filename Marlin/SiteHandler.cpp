@@ -50,28 +50,28 @@ SiteHandler::~SiteHandler()
 }
 
 // Default nothing to do
-// Implement your own for initialisation reasons!
+// Implement your own for initialization reasons!
 void
 SiteHandler::OnStartSite()
 {
 }
 
 // Default nothing to do
-// Implement your own for initialisation reasons!
+// Implement your own for initialization reasons!
 void
 SiteHandler::OnStopSite()
 {
 }
 
 void 
-SiteHandler::HandleStream(EventStream* /*p_stream*/)
+SiteHandler::HandleStream(HTTPMessage* /*p_message*/,EventStream* /*p_stream*/)
 {
   // Nothing to do
 }
 
 // Go handle this message
 // This is the main loop of handling a message, and it 
-// guarantees the calling of prehandle / handle / posthandle order
+// guarantees the calling of pre-handle / handle / post-handle order
 void 
 SiteHandler::HandleMessage(HTTPMessage* p_message)
 {

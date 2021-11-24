@@ -30,7 +30,7 @@
 // 
 // MANUAL FOR EventSource
 //
-// 1: Define  your URL            e.g.  CString url("http://servermachine:1200/TestApp/");
+// 1: Define  your URL            e.g.  CString url("http://servermachine:1200/TestApp/Events");
 // 2: Declare your HTTP Client    e.g.  HTTPClient client;
 // 3: Create  your eventsource as e.g.  EventSource* source = client.CreateEventSource(url);
 // 4: Set the OnOpen handler      e.g.  source->m_onopen    = OnOpen;
@@ -39,13 +39,14 @@
 // 7: Set the OnClose handler     e.g.  source->m_onclose   = OnClose;
 // 8: Set other handlers as well  e.g.  source->AddEventListener("other",OnOther);
 // 9: Define your reconnect time  e.g.  source->SetReconnectionTime(2000);
+// 10: OPTIONALLY: connect pool   e.g.  source->SetThreadPool(p_myPool);
 // 
 // Now turning the client into a listener
 // source->EventSourceInit(false);
 //
 // ... DO THE NORMAL LOGIC OF YOUR APPLICATION
 // ... NOTE: the OnMessage handler starts by way of the threadpool
-//           all other handlers are excuted inplace by the calling thread
+//           all other handlers are executed in-place by the calling thread
 // 
 // At closure time and cleaning up, stop your client
 // client.StopClient();
@@ -74,7 +75,7 @@ typedef enum
 }
 ReadyState;
 
-typedef void(* LPFN_EVENTHANDLER)(ServerEvent* p_event);
+typedef void(* LPFN_EVENTHANDLER)(ServerEvent* p_event,void* p_data);
 
 typedef struct _eventListener
 {
@@ -94,14 +95,19 @@ public:
 
   // Init the event source
   bool        EventSourceInit(bool p_withCredentials = false);
-  // Closing the event source. Stopping on next HTTP roundtrip
+  // Closing the event source. Stopping on next HTTP round trip
   void        Close();
-  // Add event listner to the source
+  // Add event listener to the source
   bool        AddEventListener(CString p_event,LPFN_EVENTHANDLER p_handler,bool p_useCapture = false);
+  // Add application pointer
+  void        SetApplicationData(void* p_data);
 
   // Setters
   void        SetSerialize(bool p_serialize);
   void        SetReconnectionTime(ULONG p_time);
+  void        SetThreadPool(ThreadPool* p_pool);
+  void        SetDirectMessage(bool p_direct);
+  void        SetSecurity(CString p_cookie,CString p_secret);
 
   // Getters
   ReadyState  GetReadyState();
@@ -109,6 +115,8 @@ public:
   ULONG       GetReconnectionTime();
   bool        GetSerialize();
   ULONG       GetLastEventID();
+  CString     GetCookieName();
+  CString     GetCookieValue();
 
   // Public standard listeners
   LPFN_EVENTHANDLER  m_onopen;      // OPTIONAL
@@ -149,12 +157,17 @@ private:
   CString     m_url;
   bool        m_withCredentials;
   bool        m_serialize;
+  bool        m_ownPool;
+  CString     m_cookie;
+  CString     m_secret;
   ReadyState  m_readyState;
   ULONG       m_reconnectionTime; // No getters
   ULONG       m_lastEventID;      // No getters
   ListenerMap m_listeners;        // All listeners
-  ThreadPool* m_pool;
-  HTTPClient* m_client;
+  ThreadPool* m_pool    { nullptr };
+  HTTPClient* m_client  { nullptr };
+  void*       m_appData { nullptr };
+  bool        m_direct  { false   };
 };
 
 inline ReadyState
@@ -197,4 +210,22 @@ inline ULONG
 EventSource::GetLastEventID()
 {
   return m_lastEventID;
+}
+
+inline void
+EventSource::SetDirectMessage(bool p_direct)
+{
+  m_direct = p_direct;
+}
+
+inline CString
+EventSource::GetCookieName()
+{
+  return m_cookie;
+}
+
+inline CString
+EventSource::GetCookieValue()
+{
+  return m_secret;
 }

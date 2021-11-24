@@ -747,7 +747,7 @@ ThreadPool::StopHeartbeat()
 
 // OUR PRIMARY FUNCTION
 // TRY TO GET SOME WORK DONE
-void
+bool
 ThreadPool::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument)
 {
   // Lock the pool
@@ -762,7 +762,7 @@ ThreadPool::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument)
   if(m_openForWork == false)
   {
     TP_TRACE0("INTERNAL ERROR: Threadpool not open for work. Program in closing mode.\n");
-    return;
+    return false;
   }
 
   // Queue the work for later use
@@ -776,7 +776,9 @@ ThreadPool::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument)
   if(!PostQueuedCompletionStatus(m_completion,0,COMPLETION_WORK,(LPOVERLAPPED)INVALID_HANDLE_VALUE))
   {
     TP_TRACE0("Posting of I/O Completion failed\n");
+    return false;
   }
+  return true;
 }
 
 // Submitting cleanup jobs

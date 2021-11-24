@@ -837,13 +837,13 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
 
 // Call the correct EventStream handler
 void 
-HTTPSite::HandleEventStream(EventStream* p_stream)
+HTTPSite::HandleEventStream(HTTPMessage* p_message,EventStream* p_stream)
 {
   SiteHandler* handler = GetSiteHandler(HTTPCommand::http_get);
 
   if(handler)
   {
-    handler->HandleStream(p_stream);
+    handler->HandleStream(p_message,p_stream);
   }
   else
   {

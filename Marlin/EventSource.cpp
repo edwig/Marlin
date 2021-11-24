@@ -50,19 +50,33 @@ EventSource::EventSource(HTTPClient* p_client,CString p_url)
             :m_url(p_url)
             ,m_client(p_client)
             ,m_serialize(false)
-            ,m_pool(nullptr)
+            ,m_ownPool(false)
 {
   Reset();
 }
 
 EventSource::~EventSource()
 {
-  // Stop threadpool
-  if(m_pool)
+  if(m_pool && m_ownPool)
   {
+    // Stop threadpool
     delete m_pool;
     m_pool = nullptr;
+    m_ownPool = false;
   }
+}
+
+// Set an external threadpool
+void
+EventSource::SetThreadPool(ThreadPool* p_pool)
+{
+  if(m_pool && m_ownPool)
+  {
+    // Stop threadpool
+    delete m_pool;
+  }
+  m_pool    = p_pool;
+  m_ownPool = false;
 }
 
 bool
@@ -74,6 +88,7 @@ EventSource::EventSourceInit(bool p_withCredentials)
   if(m_pool == nullptr)
   {
     m_pool = new ThreadPool(NUM_THREADS_MINIMUM,NUM_THREADS_MAXIMUM);
+    m_ownPool = true;
   }
   // Now starting the eventstream
   return m_client->StartEventStream(m_url);
@@ -188,6 +203,20 @@ EventSource::HandleLastID(ServerEvent* p_event)
   }
 }
 
+// Add application pointer
+void
+EventSource::SetApplicationData(void* p_data)
+{
+  m_appData = p_data;
+}
+
+void
+EventSource::SetSecurity(CString p_cookie, CString p_secret)
+{
+  m_cookie = p_cookie;
+  m_secret = p_secret;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Default stubs for the standard listeners
@@ -207,7 +236,7 @@ EventSource::OnOpen(ServerEvent* p_event)
   // Handle onopen
   if(m_onopen)
   {
-    (*m_onopen)(p_event);
+    (*m_onopen)(p_event,m_appData);
     return;
   }
   DETAILLOG("EventSource: Unhandeled OnOpen event");
@@ -224,7 +253,7 @@ EventSource::OnError(ServerEvent* p_event)
   // Handle on error
   if(m_onerror)
   {
-    (*m_onerror)(p_event);
+    (*m_onerror)(p_event,m_appData);
     return;
   }
   DETAILLOG("EventSource: Unhandeled OnError event");
@@ -239,7 +268,12 @@ EventSource::OnMessage(ServerEvent* p_event)
   HandleLastID(p_event);
 
   // Handle on message
-  if(m_onmessage)
+  if(m_direct)
+  {
+    (*m_onmessage)(p_event, m_appData);
+    return;
+  }
+  else if(m_onmessage)
   {
     // Submit to threadpool
     m_pool->SubmitWork((LPFN_CALLBACK)m_onmessage,(void*)p_event);
@@ -259,7 +293,7 @@ EventSource::OnClose(ServerEvent* p_event)
   // Handle on error
   if(m_onclose)
   {
-    (*m_onclose)(p_event);
+    (*m_onclose)(p_event,m_appData);
     m_readyState = CLOSED_BY_SERVER;
   }
   else
@@ -291,7 +325,7 @@ EventSource::OnComment(ServerEvent* p_event)
   // Handle oncomment
   if(m_oncomment)
   {
-    (*m_oncomment)(p_event);
+    (*m_oncomment)(p_event,m_appData);
     return;
   }
   // Do the default comment handler
@@ -310,7 +344,7 @@ EventSource::OnRetry(ServerEvent* p_event)
   // Handle onretry
   if(m_onretry)
   {
-    (*m_onretry)(p_event);
+    (*m_onretry)(p_event,m_appData);
     return;
   }
   // Default = Log the retry

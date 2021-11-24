@@ -50,11 +50,11 @@ static EventStream* testStream = nullptr;
 class SiteHandlerStream: public SiteHandler
 {
 public:
-  void HandleStream(EventStream* p_stream);
+  void HandleStream(HTTPMessage* p_message,EventStream* p_stream) override;
 };
 
 void 
-SiteHandlerStream::HandleStream(EventStream* p_stream)
+SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream)
 {
   bool result = false;
 

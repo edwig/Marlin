@@ -209,6 +209,10 @@ public:
   void SetLogfile(LogAnalysis* p_logfile);
   // Set logging to on or off
   void SetLogLevel(int p_logLevel);
+  // Setting the application completion port
+  void SetApplication(void* p_application);
+  // Setting the application context data
+  void SetApplicationData(UINT64 p_data);
   // Set the OnOpen handler
   void SetOnOpen   (LPFN_SOCKETHANDLER p_onOpen);
   // Set the OnMessage handler
@@ -223,20 +227,24 @@ public:
   // GETTERS
 
   // Getting the URI
-  CString GetURI()            { return m_uri;          };
-  CString GetIdentityKey()    { return m_key;          };
-  ULONG   GetKeepalive()      { return m_keepalive;    };
-  ULONG   GetFragmentSize()   { return m_fragmentsize; };
-  CString GetProtocols()      { return m_protocols;    };
-  CString GetExtensions()     { return m_extensions;   };
-  USHORT  GetClosingError()   { return m_closingError; };
-  CString GetClosingMessage() { return m_closing;      };
-  int     GetLogLevel()       { return m_logLevel;     };
-  LogAnalysis* GetLogfile()   { return m_logfile;      };
+  CString GetURI()            { return m_uri;          }
+  CString GetIdentityKey()    { return m_key;          }
+  ULONG   GetKeepalive()      { return m_keepalive;    }
+  ULONG   GetFragmentSize()   { return m_fragmentsize; }
+  CString GetProtocols()      { return m_protocols;    }
+  CString GetExtensions()     { return m_extensions;   }
+  USHORT  GetClosingError()   { return m_closingError; }
+  CString GetClosingMessage() { return m_closing;      }
+  int     GetLogLevel()       { return m_logLevel;     }
+  LogAnalysis* GetLogfile()   { return m_logfile;      }
+  void*   GetApplication()    { return m_application;  }
+  UINT64  GetApplicationData(){ return m_appData;      }
   CString GetClosingErrorAsString();
 
   // Add a URI parameter
   void    AddParameter(CString p_name,CString p_value);
+  // Add a HTTP header
+  void    AddHeader(CString p_name,CString p_value);
   // Find a URI parameter
   CString GetParameter(CString p_name);
 
@@ -281,13 +289,17 @@ protected:
   FragmentStack m_stack;              // Incoming raw fragments (stand-alone)
   WSFrameStack  m_frames;             // Incoming WS  fragments (IIS, WinHTTP)
   LogAnalysis*  m_logfile {nullptr};  // Connected to this logfile
-  SocketParams  m_parameters;         // All parameters
+  SocketParams  m_parameters;         // All URL parameters
+  SocketParams  m_headers;            // All HTTP headers
+  // Application completion port
+  void*              m_application  { nullptr };
+  UINT64             m_appData      { 0L      };
   // Handlers
-  LPFN_SOCKETHANDLER m_onopen    { nullptr }; // OnOpen    handler
-  LPFN_SOCKETHANDLER m_onmessage { nullptr }; // OnMessage handler
-  LPFN_SOCKETHANDLER m_onbinary  { nullptr }; // OnBinary  handler
-  LPFN_SOCKETHANDLER m_onerror   { nullptr }; // OnError   handler
-  LPFN_SOCKETHANDLER m_onclose   { nullptr }; // OnClose   handler
+  LPFN_SOCKETHANDLER m_onopen       { nullptr }; // OnOpen    handler
+  LPFN_SOCKETHANDLER m_onmessage    { nullptr }; // OnMessage handler
+  LPFN_SOCKETHANDLER m_onbinary     { nullptr }; // OnBinary  handler
+  LPFN_SOCKETHANDLER m_onerror      { nullptr }; // OnError   handler
+  LPFN_SOCKETHANDLER m_onclose      { nullptr }; // OnClose   handler
   // Current frame for reading & writing
   WSFrame* m_reading { nullptr };
   // Synchronization for the fragment stack
@@ -341,6 +353,18 @@ inline void
 WebSocket::SetLogLevel(int p_logLevel)
 {
   m_logLevel = p_logLevel;
+}
+
+inline void 
+WebSocket::SetApplication(void* p_application)
+{
+  m_application = p_application;
+}
+
+inline void 
+WebSocket::SetApplicationData(UINT64 p_data)
+{
+  m_appData = p_data;
 }
 
 inline void 

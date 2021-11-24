@@ -4194,6 +4194,16 @@ HTTPClient::EventThreadRunning()
   // Accepts text-event streams
   AddHeader("accept: text/event-stream");
 
+  // Add channel security if so set
+  if(!m_eventSource->GetCookieName().IsEmpty())
+  {
+    CString value;
+    value.Format("%s=%s"
+                 ,m_eventSource->GetCookieName().GetString()
+                 ,m_eventSource->GetCookieValue().GetString());
+    AddHeader("Cookie",value);
+  }
+
   do
   {
     // Reset the stream status
@@ -4264,6 +4274,19 @@ HTTPClient::StopClient()
   if(m_eventSource)
   {
     DETAILLOG("Stopping the EventSource");
+    if(m_request)
+    {
+      ERRORLOG("Stopping of the HTTP event-source channel");
+      OnCloseSeen();
+    }
+    for (int i = 0; i < 10; ++i)
+    {
+      Sleep(100);
+      if(m_queueThread == 0)
+      {
+        break;
+      }
+    }
     if(m_queueThread)
     {
       // Only way to cancel from NTDLL.DLL on the HTTP Stack
@@ -4272,13 +4295,6 @@ HTTPClient::StopClient()
       m_queueThread = NULL;
       m_running = false;
       ERRORLOG("Forced stopping of the event-source listner");
-    }
-    if(m_request)
-    {
-      // Close open call
-      WinHttpCloseHandle(m_request);
-      m_request = NULL;
-      ERRORLOG("Forced stopping of the HTTP event-source channel");
     }
     delete m_eventSource;
     m_eventSource = nullptr;

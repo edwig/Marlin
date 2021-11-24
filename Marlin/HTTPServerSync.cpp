@@ -293,15 +293,19 @@ void HTTPSiteCallbackMessage(void* p_argument)
 }
 void HTTPSiteCallbackEvent(void* p_argument)
 {
-  EventStream* stream = reinterpret_cast<EventStream*>(p_argument);
-  if (stream)
+  MsgStream* dispatch = reinterpret_cast<MsgStream*>(p_argument);
+  EventStream* stream = dispatch->m_stream;
+  HTTPMessage* message = dispatch->m_message;
+  if(stream)
   {
     HTTPSite* site = stream->m_site;
     if (site)
     {
-      site->HandleEventStream(stream);
+      site->HandleEventStream(message,stream);
     }
   }
+  delete message;
+  delete dispatch;
 }
 
 static unsigned int
@@ -522,6 +526,7 @@ HTTPServerSync::RunHTTPServer()
 
       // Receiving the initiation of an event stream for the server
       acceptTypes.Trim();
+      EventStream* stream = nullptr;
       if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
       {
         CString absolutePath = (CString) CW2A(request->CookedUrl.pAbsPath);
@@ -529,23 +534,13 @@ HTTPServerSync::RunHTTPServer()
         {
           continue;
         }
-        EventStream* stream = SubscribeEventStream((PSOCKADDR_IN6) sender
-                                                   ,remDesktop
-                                                   ,site
-                                                   ,site->GetSite()
-                                                   ,absolutePath
-                                                   ,request->RequestId
-                                                   ,accessToken);
-        if(stream)
-        {
-          // Remember our URL
-          stream->m_baseURL = rawUrl;
-          // Check for a correct callback
-          callback = callback ? callback : HTTPSiteCallbackEvent;
-          m_pool.SubmitWork(callback,(void*)stream);
-          HTTP_SET_NULL_ID(&requestId);
-          continue;
-        }
+        stream = SubscribeEventStream((PSOCKADDR_IN6) sender
+                                      ,remDesktop
+                                      ,site
+                                      ,site->GetSite()
+                                      ,absolutePath
+                                      ,request->RequestId
+                                      ,accessToken);
       }
 
       // For all types of requests: Create the HTTPMessage
@@ -598,6 +593,22 @@ HTTPServerSync::RunHTTPServer()
           DETAILLOGV("Request VERB changed to: %s",message->GetVerb().GetString());
         }
       }
+
+      if(stream)
+      {
+        // Remember our URL
+        stream->m_baseURL = rawUrl;
+        // Create callback structure
+        MsgStream* dispatch = new MsgStream();
+        dispatch->m_message = message;
+        dispatch->m_stream  = stream;
+        // Check for a correct callback
+        callback = callback ? callback : HTTPSiteCallbackEvent;
+        m_pool.SubmitWork(callback,(void*)dispatch);
+        HTTP_SET_NULL_ID(&requestId);
+        continue;
+      }
+
 
       // Remember the fact that we should read the rest of the message
       message->SetReadBuffer(request->Flags & HTTP_REQUEST_FLAG_MORE_ENTITY_BODY_EXISTS);
