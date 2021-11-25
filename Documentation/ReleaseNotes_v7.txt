@@ -20,6 +20,10 @@ CHANGES IN VERSION 7.2.0
     If firewalls do not allow for SSE, you can opt-in by policy for WebSockets or polling
 2)  See the manual in the ServerEventDriver.h interface file and ClientEventDriver.h
     For examples: see the MarlinClient testframe and "TestEventDriver.cpp"
+3)  The logfiles (LogAnalysis) now has the capability to write in the foreground, without
+    an extra background write trhead, so that we can write multiple smaller logfiles without
+    overly starting a bunch of OS-threads
+4)  WebConfig IIS can now relate to it's application pool and its settings
 
 CHANGES IN VERSION 7.1.0
 ------------------------

@@ -795,17 +795,11 @@ HTTPSite::PostHandle(HTTPMessage* p_message,bool p_reset /*=true*/)
 bool
 HTTPSite::CallFilters(HTTPMessage* p_message)
 {
-  FilterMap filters;
-
-  // Use lock to make a copy of the map
-  {
-    AutoCritSec lock(&m_filterLock);
-    filters = m_filters;
-  }
+  AutoCritSec lock(&m_filterLock);
 
   // Now call all filters, stopping at first false reaction
   bool result = true;
-  for(FilterMap::iterator it = filters.begin(); it != filters.end();++it)
+  for(FilterMap::iterator it = m_filters.begin(); it != m_filters.end();++it)
   {
     if(false == (result = it->second->Handle(p_message)))
     {

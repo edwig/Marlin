@@ -73,39 +73,50 @@ LogAnalysis::Reset()
   // Tell we closed 'normally'
   if(m_initialised)
   {
-    AnalysisLog("Analysis log is:", LogType::LOG_INFO,false,"Closed");
+    AnalysisLog("Analysis log is:",LogType::LOG_INFO,false,"Closed");
   }
+  else return;
+
+  // Flush left-overs from the application
   if(!m_list.empty())
   {
-    // Flushing the cache and ending all writing activity
-    SetEvent(m_event);
-    // Wait max 10 seconds to sync the logfile
-    for(unsigned ind = 0; ind < 100; ++ind)
+    if(m_useWriter)
     {
-      // Extra context for lock
+      // Flushing the cache and ending all writing activity
+      SetEvent(m_event);
+      // Wait max 10 seconds to sync the logfile
+      for(unsigned ind = 0; ind < 100; ++ind)
       {
-        AutoCritSec lock(&m_lock);
-        if(m_list.empty())
+        // Extra context for lock
+        {
+          AutoCritSec lock(&m_lock);
+          if(m_list.empty())
+          {
+            break;
+          }
+        }
+        Sleep(100);
+      }
+
+      // De-initialize and so stopping the thread
+      m_initialised = false;
+      SetEvent(m_event);
+
+      // Wait for a max of 200ms For the thread to stop
+      for(unsigned ind = 0; ind < 10; ++ind)
+      {
+        if(m_logThread == NULL)
         {
           break;
         }
+        Sleep(20);
       }
-      Sleep(100);
     }
-  }
-
-  // De-initialize and so stopping the thread
-  m_initialised = false;
-  SetEvent(m_event);
-
-  // Wait for a max of 200ms For the thread to stop
-  for(unsigned ind = 0; ind < 10; ++ind)
-  {
-    if(m_logThread == NULL)
+    else
     {
-      break;
+      // Direct flushing in the current thread
+      Flush(true);
     }
-    Sleep(20);
   }
 
   // Flush file to disk, after thread has ended
@@ -126,6 +137,7 @@ LogAnalysis::Reset()
 
   // Reset loglevel
   m_logLevel = HLL_NOLOG;
+  m_initialised = false;
 }
 
 CString
@@ -195,10 +207,10 @@ LogAnalysis::SetDoLogging(bool p_logging)
 void
 LogAnalysis::SetCache(int p_cache)
 {
-  m_cache = p_cache;
+  m_cacheMaxSize = p_cache;
 
-  if(m_cache < LOGWRITE_MINCACHE) m_cache = LOGWRITE_MINCACHE;
-  if(m_cache > LOGWRITE_MAXCACHE) m_cache = LOGWRITE_MAXCACHE;
+  if(m_cacheMaxSize < LOGWRITE_MINCACHE) m_cacheMaxSize = LOGWRITE_MINCACHE;
+  if(m_cacheMaxSize > LOGWRITE_MAXCACHE) m_cacheMaxSize = LOGWRITE_MAXCACHE;
 }
 
 void
@@ -217,6 +229,17 @@ LogAnalysis::SetKeepfiles(int p_keepfiles)
 
   if(m_keepfiles < LOGWRITE_KEEPLOG_MIN) m_keepfiles = LOGWRITE_KEEPLOG_MIN;
   if(m_keepfiles > LOGWRITE_KEEPLOG_MAX) m_keepfiles = LOGWRITE_KEEPLOG_MAX;
+}
+
+bool
+LogAnalysis::SetBackgroundWriter(bool p_writer)
+{
+  if(m_logThread == NULL)
+  {
+    m_useWriter = p_writer;
+    return true;
+  }
+  return false;
 }
 
 // Setting our logging level
@@ -251,12 +274,18 @@ LogAnalysis::SetLogLevel(int p_logLevel)
   }
 }
 
-size_t
+int
 LogAnalysis::GetCacheSize()
 {
   AutoCritSec lock(&m_lock);
-  return m_list.size();
+  return (int) m_list.size();
 };
+
+int  
+LogAnalysis::GetCacheMaxSize()
+{
+  return (int) m_cacheMaxSize;
+}
 
 // Initialize our logfile/log event
 void
@@ -341,7 +370,10 @@ LogAnalysis::Initialisation()
     WriteFile(m_file,bom.GetString(),bom.GetLength(),&written,nullptr);
 
     // Starting the log writing thread
-    RunLog();
+    if(m_useWriter)
+    {
+      RunLog();
+    }
   }
   // Tell that we are now running
   AnalysisLog("Logfile now running for:", LogType::LOG_INFO,false,m_name);
@@ -433,6 +465,12 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
     // Locked m_list gets a buffer
     m_list.push_back(logBuffer);
     result = true;
+
+    // In case we get to big
+    if(m_list.size() > m_cacheMaxSize)
+    {
+      Flush(false);
+    }
   }
   else if(m_doEvents)
   {
@@ -442,7 +480,14 @@ LogAnalysis::AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,c
   // In case of an error, flush immediately!
   if(m_file && p_type == LogType::LOG_ERROR)
   {
-    SetEvent(m_event);
+    if(m_useWriter)
+    {
+      SetEvent(m_event);
+    }
+    else
+    {
+      Flush(true);
+    }
   }
   return result;
 }
@@ -557,7 +602,14 @@ LogAnalysis::BareStringLog(const char* p_buffer,int p_length)
 void
 LogAnalysis::ForceFlush()
 {
-  SetEvent(m_event);
+  if(m_useWriter)
+  {
+    SetEvent(m_event);
+  }
+  else
+  {
+    Flush(true);
+  }
 }
 
 // At certain times, you may wish to flush the cache
@@ -579,7 +631,7 @@ LogAnalysis::Flush(bool p_all)
     if(!m_list.empty())
     {
       // See if list has become to long
-      if(((int)m_list.size() > m_cache) || p_all)
+      if((m_list.size() > m_cacheMaxSize) || p_all)
       {
         // Gather the list in the buffer, destroying the list
         for(auto& line : m_list)
@@ -704,6 +756,12 @@ __stdcall StartingTheLog(void* pParam)
 void
 LogAnalysis::RunLog()
 {
+  // Write in the foreground?
+  if(!m_useWriter)
+  {
+    return;
+  }
+
   // See if the thread is already running
   if(WaitForSingleObject(m_logThread,0) == WAIT_TIMEOUT)
   {

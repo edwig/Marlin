@@ -67,8 +67,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-LPCTSTR CrackedURL::m_unsafeString   = " \"<>#{}|\\^~[]`";
-LPCTSTR CrackedURL::m_reservedString = "$&/;?@-!*()'"; // ".,+_:="
+LPCTSTR CrackedURL::m_unsafeString = " \"@<>#{}|\\^~[]`";
+LPCTSTR CrackedURL::m_reservedString = "$&/;?-!*()'"; // ".,+_:="
 
 CrackedURL::CrackedURL()
 {

@@ -44,6 +44,7 @@
 #include "ErrorReport.h"
 #include "EventStream.h"
 #include "Version.h"
+#include <wincred.h>
 #include <http.h>
 #include <winhttp.h>
 #include <string>
@@ -77,11 +78,6 @@ constexpr auto TIMEOUT_BRUTEFORCE     = (10 * CLOCKS_PER_SEC);
 // Can be set through the web.config reading of the HTTPServer
 extern unsigned long g_streaming_limit; // = STREAMING_LIMIT;
 extern unsigned long g_compress_limit;  // = COMPRESS_LIMIT;
-
-// From <nstatus.h>
-#ifndef STATUS_LOGON_FAILURE
-#define STATUS_LOGON_FAILURE  ((LONG)0xC000006DL)
-#endif
 
 #ifndef _WIN32_WINNT_WIN10
 // Windows 10 extension on HTTP_REQUEST_INFO_TYPE

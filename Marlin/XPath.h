@@ -28,6 +28,7 @@
 //
 // XPATH
 //
+// name                           -> Do a regular recursive 'FindElement'
 // /name/other                    -> Selects the 'other' node under the 'name' root
 // /name/other/house[4]           -> Selects the 4th 'house' node under the 'other'
 // /myRoot/Houses//garage         -> Selects the first 'garage' node somewhere below the 'Houses' node

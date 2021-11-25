@@ -367,7 +367,7 @@ WebConfigIIS::ReadConfig(CString p_configFile,IISSite* p_site /*=nullptr*/)
   // See if we did already read this file earlier
   p_configFile.MakeLower();
   WCFiles::iterator it = m_files.find(p_configFile);
-  if(it != m_files.end())
+  if(it != m_files.end() && !p_site)
   {
     return true;
   }

@@ -89,11 +89,19 @@ XPath::Evaluate() noexcept
   // Check that we have work to do
   // message and path must be filled
   // path MUST start with the '/' symbol !!
-  if (m_message == nullptr || m_path.IsEmpty() || m_path.GetAt(0) != '/')
+  if (m_message == nullptr || m_path.IsEmpty())
   {
     m_status = XPStatus::XP_Invalid;
-    m_errorInfo = "No message, path or the path does not start with a '/'";
+    m_errorInfo = "Message and path must both be filled in.";
     return false;
+  }
+
+  // Special case: Not a path, but a node to find
+  if(m_path.GetAt(0) != '/')
+  {
+    m_results.push_back(m_message->FindElement(m_path));
+    m_status = m_results.empty() ? XPStatus::XP_Invalid : XPStatus::XP_Nodes;
+    return true;
   }
 
   // Preset the start of searching

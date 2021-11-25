@@ -94,25 +94,27 @@ public:
   void    SetLogFilename(CString p_filename,bool p_perUser = false);
   void    SetDoLogging(bool p_logging);
   void    SetLogLevel(int p_logLevel);
-  void    SetDoTiming(bool p_doTiming)         { m_doTiming    = p_doTiming; };
-  void    SetDoEvents(bool p_doEvents)         { m_doEvents    = p_doEvents; };
-  void    SetLogRotation(bool p_rotate)        { m_rotate      = p_rotate;   };
+  void    SetDoTiming(bool p_doTiming)         { m_doTiming    = p_doTiming; }
+  void    SetDoEvents(bool p_doEvents)         { m_doEvents    = p_doEvents; }
+  void    SetLogRotation(bool p_rotate)        { m_rotate      = p_rotate;   }
   void    SetKeepfiles(int p_keepfiles);
   void    SetCache   (int  p_cache);
   void    SetInterval(int  p_interval);
+  bool    SetBackgroundWriter(bool p_writer);
 
   // GETTERS
   bool    GetIsOpen();
   bool    GetDoLogging();
-  int     GetLogLevel()                        { return m_logLevel;   };
-  bool    GetDoEvents()                        { return m_doEvents;   };
-  bool    GetDoTiming()                        { return m_doTiming;   };
-  CString GetLogFileName()                     { return m_logFileName;};
-  int     GetCache()                           { return m_cache;      };
-  int     GetInterval()                        { return m_interval;   };
-  bool    GetLogRotation()                     { return m_rotate;     };
-  int     GetKeepfiles()                       { return m_keepfiles;  };
-  size_t  GetCacheSize();
+  int     GetLogLevel()                        { return m_logLevel;   }
+  bool    GetDoEvents()                        { return m_doEvents;   }
+  bool    GetDoTiming()                        { return m_doTiming;   }
+  CString GetLogFileName()                     { return m_logFileName;}
+  int     GetInterval()                        { return m_interval;   }
+  bool    GetLogRotation()                     { return m_rotate;     }
+  int     GetKeepfiles()                       { return m_keepfiles;  }
+  bool    GetBackgroundWriter()                { return m_useWriter;  }
+  int     GetCacheSize();
+  int     GetCacheMaxSize();
 
   // INTERNALS ONLY: DO NOT CALL EXTERNALLY
   // Must be public to start a writing thread
@@ -137,7 +139,8 @@ private:
   bool    m_doTiming    { true  };              // Prepend date-and-time to log-lines
   bool    m_doEvents    { false };              // Also write to WMI event log
   bool    m_rotate      { false };              // Log rotation for server solutions
-  int     m_cache       { LOGWRITE_CACHE     }; // Number of cached lines
+  bool    m_useWriter   { true  };              // Use thread writer in the background
+  size_t  m_cacheMaxSize{ LOGWRITE_CACHE     }; // Number of cached lines
   int     m_interval    { LOGWRITE_INTERVAL  }; // Interval between writes (in seconds)
   int     m_keepfiles   { LOGWRITE_KEEPFILES }; // Keep a maximum of n files in a directory
 

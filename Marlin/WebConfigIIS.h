@@ -106,6 +106,7 @@ public:
   ULONG       GetStreamingLimit() { return m_streamingLimit;  };
 
   // Getting information of a site
+  IISSite*    GetSite         (CString p_site);
   CString     GetSiteName     (CString p_site);
   CString     GetSetting      (CString p_key);
   CString     GetSiteAppPool  (CString p_site);
@@ -132,13 +133,12 @@ public:
   bool        GetPoolAutostart      (CString p_pool);
   CString     GetPoolPipelineMode   (CString p_pool);
 
-private:
   // Read one config file
   bool        ReadConfig(CString p_configFile,IISSite* p_site);
+
+private:
   // Replace environment variables in a string
   static bool ReplaceEnvironVars(CString& p_string);
-  // Site registration
-  IISSite*    GetSite(CString p_site);
   // Pool registration
   IISAppPool* GetPool(CString p_pool);
   // Reading of the internal structures of a config file

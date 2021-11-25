@@ -175,6 +175,7 @@ XMLMessage::XMLMessage()
 {
   m_root = new XMLElement();
   m_root->SetType(XDT_String);
+  AddReference();
 }
 
 // XTOR from another message
@@ -191,6 +192,8 @@ XMLMessage::XMLMessage(XMLMessage* p_orig)
   m_sendBOM             = p_orig->m_sendBOM;
   m_internalError       = p_orig->m_internalError;
   m_internalErrorString = p_orig->m_internalErrorString;
+
+  AddReference();
 }
 
 XMLMessage::~XMLMessage()

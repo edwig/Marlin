@@ -182,7 +182,7 @@ HTTPServer::InitLogging()
     m_logOwner = true;
 
   CString file    = m_log->GetLogFileName();
-  int  cache      = m_log->GetCache();
+  int  cache      = m_log->GetCacheSize();
   int  logging    = m_log->GetLogLevel();
   bool timing     = m_log->GetDoTiming();
   bool events     = m_log->GetDoEvents();
@@ -520,7 +520,7 @@ HTTPServer::RegisterSite(HTTPSite* p_site,CString p_urlPrefix)
     {
       // Duplicate site found: Not necesseraly an error
       WARNINGLOG("Site was already registered: %s",base.GetString());
-      return true;
+      return false;
     }
   }
 
