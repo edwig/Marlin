@@ -42,10 +42,6 @@ static char THIS_FILE[] = __FILE__;
 #define DETAILLOG(text) if(m_client->GetLogging()) m_client->GetLogging()->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text))
 #define ERRORLOG(text)  if(m_client->GetLogging()) m_client->GetLogging()->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(text))
 
-// Saving the event data
-_declspec(thread) CString* eventData = NULL;
-_declspec(thread) CString* eventName = NULL;
-
 EventSource::EventSource(HTTPClient* p_client,CString p_url)
             :m_url(p_url)
             ,m_client(p_client)
@@ -306,14 +302,8 @@ EventSource::OnClose(ServerEvent* p_event)
   // Do status in the client
   m_client->OnCloseSeen();
   
-  // Remove data, in this thread
-  if(eventName)
-  {
-    delete eventName;
-    eventName = NULL;
-    delete eventData;
-    eventData = NULL;
-  }
+  m_eventName.Empty();
+  m_eventData.Empty();
 }
 
 void
@@ -408,13 +398,10 @@ EventSource::Parse(CString& p_buffer)
   
   GetLine(p_buffer,line);
 
-  // Set the event name, if not already set
-  if(!eventName)
+  // set the default event name
+  if(m_eventName.IsEmpty())
   {
-    // If found in leak-detection: This is declspec(thread) declared
-    // Can leak (once!) if a thread is crashed on exit of the application
-    eventData = new CString();
-    eventName = new CString("message");
+    m_eventName = "message";
   }
 
   // Try to do multiple events
@@ -466,7 +453,7 @@ EventSource::Parse(CString& p_buffer)
     else if(field.CompareNoCase("event") == 0)
     {
       // Our event name
-      *eventName = value;
+      m_eventName = value;
     }
     else if(field.CompareNoCase("id") == 0)
     {
@@ -477,30 +464,30 @@ EventSource::Parse(CString& p_buffer)
         // Works also for an empty line "id:"
         m_lastEventID = 0;
       }
+      else if(id > m_lastEventID)
+      {
+        m_lastEventID = id;
+      }
     }
     else if(field.CompareNoCase("data") == 0)
     {
       // Beginning of the data
       if(lineNo++)
       {
-        *eventData += "\n";
+        m_eventData += "\n";
       }
-      *eventData += value;
+      m_eventData += value;
     }
     // Get next line
     if(GetLine(p_buffer,line) == false)
     {
       // Dispatch only when we find an empty line
-      DispatchEvent(eventName,id,eventData);
+      DispatchEvent(&m_eventName,id,&m_eventData);
       // Reset line counter
       lineNo = 0;
       // Clear the event data: Could be another event in the stream buffer
-      if(eventName)
-      {
-        // If not deleted by the just dispatched OnClose event
-        eventName->Empty();
-        eventData->Empty();
-      }
+      m_eventName.Empty();
+      m_eventData.Empty();
       id = 0;
 
       // If buffer not yet drained, get a new line
@@ -662,5 +649,3 @@ EventSource::DispatchEvent(CString* p_event,ULONG p_id,CString* p_data)
   // So send it to the general 'OnMessage'  handler
   OnMessage(theEvent);
 }
-
-

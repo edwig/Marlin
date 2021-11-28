@@ -89,6 +89,7 @@ private:
   int     m_interval    { 0 };
   bool    m_receiving   { false };
   int     m_lastNumber  { 0 };
+  bool    m_openSeen    { false };
 
   LPFN_EVENTCALLBACK  m_callback { nullptr };
   LogAnalysis*        m_logfile  { nullptr };

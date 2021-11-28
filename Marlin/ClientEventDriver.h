@@ -59,8 +59,11 @@ class LongPolling;
 #define MONITOR_INTERVAL_MAX  10000
 #define MONITOR_INTERVAL_MIN    100
 // Polling interval for opening a SSE channel
-#define SSE_OPEN_INTERVAL   100
-#define SSE_OPEN_RETRIES    100
+#define SSE_OPEN_INTERVAL       100
+#define SSE_OPEN_RETRIES        100
+// Waiting for the end of the monitor thread
+#define MONITOR_END_INTERVAL    100
+#define MONITOR_END_RETRIES     100
 
 class ClientEventDriver
 {
@@ -89,7 +92,6 @@ public:
   void  PostEventToServer(LTEvent* p_event);
   // Event is incoming from socket/SSE/polling (only called internally)
   void  RegisterIncomingEvent(LTEvent* p_event);
-
   // Main loop of the event runner
   void  EventThreadRunning();
 private:
@@ -120,6 +122,7 @@ private:
   CString          m_cookie;
   CString          m_secret;
   bool             m_running    { false };
+  bool             m_closeSeen  { false };
   EVChannelPolicy  m_policy     { EVChannelPolicy::DP_Disconnected };
   WebSocketClient* m_websocket  { nullptr };
   EventSource*     m_source     { nullptr };
@@ -129,6 +132,7 @@ private:
   HANDLE           m_event      { NULL };
   HANDLE           m_thread     { NULL };
   int              m_outNumber  { 0    };
+  int              m_inNumber   { 0    };
   int              m_interval   { MONITOR_INTERVAL_MIN };
   EventQueue       m_inQueue;
   EventQueue       m_outQueue;

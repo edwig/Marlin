@@ -484,6 +484,7 @@ TestMarlinServer::RegisterSiteHandlers()
 void
 TestMarlinServer::AfterTests()
 {
+  AfterTestEventDriver();
   AfterTestAsynchrone();
   AfterTestBaseSite();
   AfterTestBodyEncryption();
@@ -492,7 +493,6 @@ TestMarlinServer::AfterTests()
   AfterTestCookies();
   AfterTestCrackURL();
   AfterTestEvents();
-  AfterTestEventDriver();
   AfterTestFilter();
   AfterTestFormData();
   AfterTestInsecure();

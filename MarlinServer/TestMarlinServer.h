@@ -177,9 +177,11 @@ private:
 
   // Testing the event drivers
   ServerEventDriver m_driver;
-  int m_channel1{ 0 };
-  int m_channel2{ 0 };
-  int m_channel3{ 0 };
+  int m_channel1 { 0 };
+  int m_channel2 { 0 };
+  int m_channel3 { 0 };
+  int m_openSeen { 0 };
+  int m_closeSeen{ 0 };
 
   CRITICAL_SECTION  m_std_stream;
 };

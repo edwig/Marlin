@@ -91,11 +91,26 @@ SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream
     Sleep(100);
   }
 
-  xprintf("Sending other messages\n");
-  ServerEvent* ander = new ServerEvent("other");
-  ander->m_id   = 1;
-  ander->m_data = "This is a complete different message in another set of stories.";
-  result = server->SendEvent(p_stream,ander);
+  // Create very large event data message
+  CString otherData;
+  CString line;
+  for (int y = 0; y < 26; ++y)
+  {
+    line += (char)('A' + y);
+    line += (char)('z' - y);
+  }
+  CString all = line + line + line + line;
+  all += "\r\n";
+  for(int x = 0; x < 1000; ++x)
+  {
+    otherData += all;
+  }
+
+  xprintf("Sending other message\n");
+  ServerEvent* other = new ServerEvent("other");
+  other->m_data = "This is a complete different message in another set of stories.\r\n";
+  other->m_data += otherData;
+  result = server->SendEvent(p_stream,other);
   // --- "---------------------------------------------- - ------
   qprintf("Event stream 'other' message sent              : %s\n", result ? "OK" : "ERROR");
   if(result) 
@@ -109,7 +124,6 @@ SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream
 
   xprintf("Sending an error message\n");
   ServerEvent* err = new ServerEvent("error");
-  err->m_id = 0;
   err->m_data = "This is a very serious bug report from your server! Heed attention to it!";
   result = server->SendEvent(p_stream,err);
   // --- "---------------------------------------------- - ------

@@ -1319,7 +1319,16 @@ HTTPServer::SendEvent(EventStream* p_stream
   {
     p_stream->m_lastID = p_event->m_id;
   }
- 
+
+  // Tell what we are about to do
+  if (MUSTLOG(HLL_LOGGING) && m_log && p_stream->m_alive)
+  {
+    CString text;
+    text.Format("Sent event id: %d to client(s) on URL: ", p_event->m_id);
+    text += p_stream->m_baseURL;
+    DETAILLOG1(text);
+  }
+
   // Produce the event string
   CString sendString = EventToString(p_event);
 
@@ -1347,25 +1356,6 @@ HTTPServer::SendEvent(EventStream* p_stream
 
   // Increment the chunk counter
   ++p_stream->m_chunks;
-
-  // Tell what we just did
-  if(MUSTLOG(HLL_LOGGING) && m_log && p_stream->m_alive)
-  {
-    CString text;
-    text.Format("Sent event id: %d to client(s) on URL: ",p_event->m_id);
-    text += p_stream->m_baseURL;
-    if(MUSTLOG(HLL_LOGBODY))
-    {
-      text += "\n";
-      text += p_event->m_data;
-    }
-    DETAILLOG1(text);
-
-    if(MUSTLOG(HLL_TRACEDUMP))
-    {
-      m_log->AnalysisHex(__FUNCTION__,"SSE",(void*) p_event->m_data.GetString(),p_event->m_data.GetLength());
-    }
-  }
 
   // Ready with the event
   delete p_event;

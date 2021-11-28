@@ -37,8 +37,12 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 ThreadPool         g_pool;
-ClientEventDriver* g_driver = nullptr;
-int                g_number = 0;
+ClientEventDriver* g_driver     = nullptr;
+int                g_msgSeen    = 0;
+int                g_openSeen   = 0;
+int                g_closeSeen  = 0;
+int                g_errorSeen  = 0;
+int                g_binarySeen = 0;
 
 // Set this one to true to see all logging
 extern bool doDetails;
@@ -52,12 +56,15 @@ void CEDCallback(void* p_object, LTEvent* p_event)
   text.Format("Server Event: [%d:%s] %s",p_event->m_number,type.GetString(),p_event->m_payload.GetString());
   xprintf("%s\n",text.GetString());
 
-  // Count the number of 'normal' messages for completion of the test
-  if(p_event->m_type == EvtType::EV_Message)
+  // Count the number of messages for completion of the test
+  switch(p_event->m_type)
   {
-    ++g_number;
+    case EvtType::EV_Open:    g_openSeen++;   break;
+    case EvtType::EV_Message: g_msgSeen++;    break;
+    case EvtType::EV_Binary:  g_binarySeen++; break;
+    case EvtType::EV_Error:   g_errorSeen++;  break;
+    case EvtType::EV_Close:   g_closeSeen++;  break;
   }
-
   // Done with this event
   delete p_event;
 }
@@ -99,17 +106,19 @@ TestEventDriver(LogAnalysis* p_log)
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("Starting the ClientEventDriver + session 2     : %s\n", result ? "OK" : "ERROR");
+  errors += !result;
 
   // Wait for first 20 messages
   int waiting = 100;
-  while(g_number < 20)
+  while(g_msgSeen < 20)
   {
     Sleep(100);
     if(--waiting <= 0) break;
   }
   // --- "---------------------------------------------- - ------
-  printf("All SSE events are received                    : %s\n", g_number == 20 ? "OK" : "ERROR");
-  g_number = 0;
+  printf("All SSE events are received                    : %s\n", g_msgSeen == 20 ? "OK" : "ERROR");
+  errors += g_msgSeen != 20;
+  g_msgSeen = 0;
 
   // change policy BEFORE restarting !!!!
   g_driver->SetChannelPolicy(EVChannelPolicy::DP_Binary);
@@ -125,14 +134,15 @@ TestEventDriver(LogAnalysis* p_log)
 
   // Wait for second set of 20 messages
   waiting = 100; // 
-  while(g_number < 20) 
+  while(g_msgSeen < 20) 
   {
     Sleep(100);
     if(--waiting <= 0) break;
   }
   // --- "---------------------------------------------- - ------
-  printf("All WebSocket events are received              : %s\n", g_number == 20 ? "OK" : "ERROR");
-  g_number = 0;
+  printf("All WebSocket events are received              : %s\n", g_msgSeen == 20 ? "OK" : "ERROR");
+  errors += g_msgSeen != 20;
+  g_msgSeen = 0;
 
   g_driver->SetChannelPolicy(EVChannelPolicy::DP_Disconnected);
   g_driver->StopEventsForSession();
@@ -146,14 +156,23 @@ TestEventDriver(LogAnalysis* p_log)
 
   // Wait for third set of 20 messages
   waiting = 100; // 
-  while (g_number < 20)
+  while (g_msgSeen < 20)
   {
     Sleep(100);
     if (--waiting <= 0) break;
   }
   // --- "---------------------------------------------- - ------
-  printf("All LongPolling events are received            : %s\n", g_number == 20 ? "OK" : "ERROR");
-  g_number = 0;
+  printf("All LongPolling events are received            : %s\n", g_msgSeen == 20 ? "OK" : "ERROR");
+  errors += (g_msgSeen != 20);
+  g_msgSeen = 0;
+
+  printf("All channel 'open' events are received         : %s\n", g_openSeen == 3 ? "OK" : "ERROR");
+  errors += (g_openSeen != 3);
+  g_openSeen = 0;
+
+  printf("All channel 'close' events are received        : %s\n", g_closeSeen == 3 ? "OK" : "ERROR");
+  errors += (g_closeSeen != 3);
+  g_openSeen = 0;
 
   // Delete test driver 
   delete g_driver;

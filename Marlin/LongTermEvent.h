@@ -58,7 +58,8 @@ enum class EVChannelPolicy
 class LTEvent
 {
 public:
-  LTEvent() = default;
+  LTEvent();
+  LTEvent(EvtType p_type);
 
   static EvtType StringToEventType(CString p_type);
   static CString EventTypeToString(EvtType p_type);

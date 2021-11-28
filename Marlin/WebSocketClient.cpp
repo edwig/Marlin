@@ -236,17 +236,18 @@ WebSocketClient::CloseSocket()
   if(m_socket)
   {
     DETAILLOGS("Hard TCP/IP close for WebSocket: ",m_uri);
+    m_openReading = false;
+    m_openWriting = false;
+
     WinHttpCloseHandle(m_socket);
 
     DWORD wait = 10;
-    while(m_listener && wait <= 640)
+    while(m_listener && wait <= 6400)
     {
       Sleep(wait);
       wait *= 2;
     }
     m_socket = NULL;
-    m_openReading = false;
-    m_openWriting = false;
 
     // Really get rid of the thread!
     if(m_listener)
@@ -261,43 +262,45 @@ WebSocketClient::CloseSocket()
 bool 
 WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
 {
-  if(m_socket)
+  // Already closed?
+  if(!m_socket)
   {
-    // Check if p_reason is shorter then or equal to 123 bytes 
-    DWORD length = p_reason.GetLength();
-    if(length > WS_CLOSE_MAXIMUM)
-    {
-      length = WS_CLOSE_MAXIMUM;
-    }
-    DETAILLOGV("Send close WebSocket [%d:%s] for: %s",p_code,p_reason.GetString(),m_uri.GetString());
-    DWORD error = m_websocket_close(m_socket,p_code,(void*)p_reason.GetString(),length); // WinHttpWebSocketClose
-    if(error && (error != ERROR_WINHTTP_OPERATION_CANCELLED))
-    {
-      // We could be in a tight spot (socket already closed)
-      if(error == ERROR_INVALID_OPERATION)
-      {
-        return true;
-      }
-      // Failed to send a close socket message.
-      CString message = "Failed to send WebSocket 'close' message: " + GetLastErrorAsString(error);
-      ERRORLOG(error,message);
-      return false;
-    }
-    else if(!m_closingError)
-    {
-      ReceiveCloseSocket();
-    }
-    // Tell it to the application
-    OnClose();
-
-    // The other side acknowledged the fact that they did close also
-    // It was an answer on an incoming 'close' message
-    // We did our answering, so close completely
-    CloseSocket();
-
     return true;
   }
-  return false;
+
+  // Check if p_reason is shorter then or equal to 123 bytes 
+  DWORD length = p_reason.GetLength();
+  if(length > WS_CLOSE_MAXIMUM)
+  {
+    length = WS_CLOSE_MAXIMUM;
+  }
+  DETAILLOGV("Send close WebSocket [%d:%s] for: %s",p_code,p_reason.GetString(),m_uri.GetString());
+  DWORD error = m_websocket_close(m_socket,p_code,(void*)p_reason.GetString(),length); // WinHttpWebSocketClose
+  if(error && (error != ERROR_WINHTTP_OPERATION_CANCELLED))
+  {
+    // We could be in a tight spot (socket already closed)
+    if(error == ERROR_INVALID_OPERATION)
+    {
+      return true;
+    }
+    // Failed to send a close socket message.
+    CString message = "Failed to send WebSocket 'close' message: " + GetLastErrorAsString(error);
+    ERRORLOG(error,message);
+    return false;
+  }
+  else if(!m_closingError)
+  {
+    // ReceiveCloseSocket();
+  }
+  // Tell it to the application
+  OnClose();
+
+  // The other side acknowledged the fact that they did close also
+  // It was an answer on an incoming 'close' message
+  // We did our answering, so close completely
+  CloseSocket();
+
+  return true;
 }
 
 // Decode the incoming close socket message
@@ -327,6 +330,10 @@ WebSocketClient::ReceiveCloseSocket()
       reason[received] = 0;
       m_closing = reason;
       DETAILLOGV("Closing WebSocket frame received [%d:%s]",m_closingError,m_closing.GetString());
+      WinHttpCloseHandle(m_socket);
+      m_socket = NULL;
+      m_openReading = false;
+      m_openWriting = false;
     }
     return true;
   }
@@ -405,6 +412,11 @@ WebSocketClient::SocketListener()
       m_reading = new WSFrame;
       m_reading->m_data = (BYTE*)malloc(m_fragmentsize + WS_OVERHEAD);
     }
+    // Happens on SocketClose from the server
+    if(!m_socket)
+    {
+      break;
+    }
 
     DWORD bytesRead = 0;
     WINHTTP_WEB_SOCKET_BUFFER_TYPE type;
@@ -419,8 +431,9 @@ WebSocketClient::SocketListener()
       if(error != ERROR_WINHTTP_OPERATION_CANCELLED)
       {
         ERRORLOG(error, "ERROR while receiving from WebSocket: " + m_uri);
+        CloseSocket();
       }
-      CloseSocket();
+      m_openReading = false;
     }
     else
     {

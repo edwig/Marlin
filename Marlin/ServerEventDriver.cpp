@@ -262,6 +262,10 @@ ServerEventDriver::UnRegisterChannel(int p_channel)
     {
       m_cookies.erase(ck);
     }
+
+    // Now go close the channel
+    channel->CloseChannel();
+
     // Delete the channel completely
     delete channel;
     m_channels.erase(it);
@@ -386,6 +390,8 @@ ServerEventDriver::IncomingEvent()
 int
 ServerEventDriver::GetChannelQueueCount(int p_channel)
 {
+  AutoCritSec lock(&m_lock);
+
   ChannelMap::iterator it = m_channels.find(p_channel);
   if(it != m_channels.end())
   {
@@ -399,12 +405,40 @@ ServerEventDriver::GetChannelQueueCount(int p_channel)
 int
 ServerEventDriver::GetChannelQueueCount(CString p_session)
 {
+  AutoCritSec lock(&m_lock);
+
   ChanNameMap::iterator it = m_names.find(p_session);
   if(it != m_names.end())
   {
     return it->second->GetQueueCount();
   }
   return -1;
+}
+
+int
+ServerEventDriver::GetChannelClientCount(int p_channel)
+{
+  AutoCritSec lock(&m_lock);
+
+  ChannelMap::iterator it = m_channels.find(p_channel);
+  if(it != m_channels.end())
+  {
+    return it->second->GetClientCount();
+  }
+  return 0;
+}
+
+int
+ServerEventDriver::GetChannelClientCount(CString p_session)
+{
+  AutoCritSec lock(&m_lock);
+
+  ChanNameMap::iterator it = m_names.find(p_session);
+  if(it != m_names.end())
+  {
+    return it->second->GetClientCount();
+  }
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////

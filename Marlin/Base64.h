@@ -32,10 +32,12 @@
 class Base64
 {
 public:
-  unsigned char*  Encrypt(const unsigned char* srcp,int len,unsigned char * dstp);
-  void*           Decrypt(const unsigned char* srcp,int len,unsigned char * dstp);
-  size_t          B64_length  (size_t len);
-  size_t          Ascii_length(size_t len);
+  static CString         Encrypt(CString p_unencrypted);
+  static CString         Decrypt(CString p_encrypted);
+  static unsigned char*  Encrypt(const unsigned char* srcp,int len,unsigned char * dstp);
+  static void*           Decrypt(const unsigned char* srcp,int len,unsigned char * dstp);
+  static size_t          B64_length  (size_t len);
+  static size_t          Ascii_length(size_t len);
 };
 
 class CRC4 

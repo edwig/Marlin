@@ -133,6 +133,30 @@ Base64::Ascii_length(size_t len)
   return  (len*6)/8;
 }
 
+CString
+Base64::Encrypt(CString p_unencrypted)
+{
+  CString encrypt;
+  int length = (int) B64_length(p_unencrypted.GetLength());
+  char* buffer = encrypt.GetBufferSetLength(length);
+  Encrypt((const unsigned char*)p_unencrypted.GetString(),p_unencrypted.GetLength(),(unsigned char*)buffer);
+  encrypt.ReleaseBufferSetLength(length);
+
+  return encrypt;
+}
+
+CString
+Base64::Decrypt(CString p_encrypted)
+{
+  CString decrypt;
+  int length = (int) Ascii_length(p_encrypted.GetLength());
+  char* buffer = decrypt.GetBufferSetLength(length);
+  Decrypt((const unsigned char*)p_encrypted.GetString(),p_encrypted.GetLength(),(unsigned char*)buffer);
+  decrypt.ReleaseBufferSetLength(length);
+
+  return decrypt;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // CRC4
@@ -191,3 +215,4 @@ CRC4::Decrypt(char *pszText,const char *pszKey)
 {
   return Encrypt(pszText,pszKey) ;  /* using the same function as encoding */
 }
+

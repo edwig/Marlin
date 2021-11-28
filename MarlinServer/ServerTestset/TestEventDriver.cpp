@@ -56,17 +56,25 @@ void
 TestMarlinServer::IncomingEvent(LTEvent* p_event)
 {
   CString text;
+  CString type;
   switch (p_event->m_type)
   {
-    case EvtType::EV_Open:    text = "Open: ";    break;
-    case EvtType::EV_Message: text = "Message: "; break;
-    case EvtType::EV_Binary:  text = "Binary: ";  break;
-    case EvtType::EV_Error:   text = "Error:  ";  break;
-    case EvtType::EV_Close:   text = "Close: ";   break;
+    case EvtType::EV_Message: type = "Message"; 
+                              break;
+    case EvtType::EV_Binary:  type = "Binary";
+                              break;
+    case EvtType::EV_Error:   type = "Error";
+                              break;
+    case EvtType::EV_Open:    type = "Open";    
+                              m_openSeen++;
+                              break;
+    case EvtType::EV_Close:   type = "Close";
+                              m_closeSeen++;
+                              break;
   }
-  text.AppendFormat(" Number [%d] ",p_event->m_number);
+  text.Format("Incoming event [%s] Number [%d] ",type.GetString(),p_event->m_number);
   text += p_event->m_payload;
-  xprintf(text);
+  qprintf(text);
 
   PostEventsToDrivers();
 }
@@ -178,6 +186,8 @@ TestMarlinServer::AfterTestEventDriver()
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
   qprintf("ServerEventDriver all messages delivered [%d]   : %s\n",errors,errors > 0 ? "ERROR" : "OK");
+  qprintf("ServerEventDriver all open messages delivered  : %s\n", m_openSeen  != 3  ? "ERROR" : "OK");
+  qprintf("ServerEventDriver all close messages delivered : %s\n", m_closeSeen != 3  ? "ERROR" : "OK");
 
   return errors;
 }

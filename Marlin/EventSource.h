@@ -168,6 +168,9 @@ private:
   HTTPClient* m_client  { nullptr };
   void*       m_appData { nullptr };
   bool        m_direct  { false   };
+  // Incoming event
+  CString     m_eventName;
+  CString     m_eventData;
 };
 
 inline ReadyState

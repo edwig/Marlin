@@ -380,6 +380,12 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
   uchar*  buffer  = nullptr;
   LPCWSTR pointer = L"";
 
+  // Check if already closed
+  if(m_iis_socket == nullptr)
+  {
+    return true;
+  }
+
   if(TryCreateWideString(p_reason,"",false,&buffer,length))
   {
     pointer = (LPCWSTR)buffer;
@@ -388,12 +394,21 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
   // Still other parameters and reason to do
   BOOL expected = FALSE;
   CString message;
-  HRESULT hr = m_iis_socket->SendConnectionClose(TRUE
-                                                ,p_code
-                                                ,pointer
-                                                ,ServerWriteCompletion
-                                                ,this
-                                                ,&expected);
+  HRESULT hr = S_FALSE;
+  try
+  {
+    hr = m_iis_socket->SendConnectionClose(TRUE
+                                          ,p_code
+                                          ,pointer
+                                          ,ServerWriteCompletion
+                                          ,this
+                                          ,&expected);
+  }
+  catch (StdException& ex)
+  {
+    UNREFERENCED_PARAMETER(ex);
+    hr = S_FALSE;
+  }
   delete[] buffer;
   if(FAILED(hr))
   {

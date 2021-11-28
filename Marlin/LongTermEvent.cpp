@@ -28,6 +28,15 @@
 #include "stdafx.h"
 #include "LongTermEvent.h"
 
+LTEvent::LTEvent()
+{
+}
+
+LTEvent::LTEvent(EvtType p_type)
+        :m_type(p_type)
+{
+}
+
 EvtType
 LTEvent::StringToEventType(CString p_type)
 {
@@ -48,7 +57,7 @@ LTEvent::EventTypeToString(EvtType p_type)
   {
     case EvtType::EV_Open:    return "open";
     case EvtType::EV_Message: return "message";
-    case EvtType::EV_Binary:  return "Binary";
+    case EvtType::EV_Binary:  return "binary";
     case EvtType::EV_Error:   return "error";
     case EvtType::EV_Close:   return "close";
   }

@@ -32,6 +32,7 @@
 #include "ConvertWideString.h"
 #include "WebSocket.h"
 #include "AutoCritical.h"
+#include "Base64.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -138,7 +139,7 @@ ServerEventChannel::ServerEventChannel(ServerEventDriver* p_driver
 
 ServerEventChannel::~ServerEventChannel()
 {
-  // CloseChannel();
+  CloseChannel();
   DeleteCriticalSection(&m_lock);
 }
 
@@ -210,6 +211,23 @@ ServerEventChannel::GetQueueCount()
   return (int) m_outQueue.size();
 }
 
+// Count all 'opened' sockets and all SSE-streams
+// Giving the fact that a channel is 'connected' to a number of clients
+int
+ServerEventChannel::GetClientCount()
+{
+  AutoCritSec lock(&m_lock);
+  int count = 0;
+
+  for(auto& socket : m_opened)
+  {
+    count += socket.second == true ? 1 : 0;
+  }
+  count += (int) m_streams.size();
+
+  return count;
+}
+
 bool 
 ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket,bool p_check /*=false*/)
 {
@@ -277,7 +295,9 @@ ServerEventChannel::OnOpenSocket(WebSocket* p_socket)
   SocketOpen::iterator it = m_opened.find(p_socket);
   if(it != m_opened.end())
   {
-    it->second = true;
+    it->second  = true;
+    m_openSeen  = true;
+    m_closeSeen = false;
   }
 }
 
@@ -289,7 +309,8 @@ ServerEventChannel::OnCloseSocket(WebSocket* p_socket)
   SocketOpen::iterator it = m_opened.find(p_socket);
   if (it != m_opened.end())
   {
-    it->second = false;
+    it->second  = false;
+    m_closeSeen = true;
   }
 }
 
@@ -368,13 +389,22 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
   bool    close   = p_message->GetParameterBoolean("CloseChannel");
   int     acknl   = p_message->GetParameterInteger("Acknowledged");
   CString message = p_message->GetParameter("Message");
-  p_message->Reset();
-  _time64(&m_lastSending);
+  CString type    = p_message->GetParameter("Type");
+
+  // Reset to response
+  p_message->Reset(ResponseType::RESP_ACTION_RESP);
 
   // If we've got an incoming message as well
   if(!message.IsEmpty())
   {
-    OnMessage(message);
+    switch(LTEvent::StringToEventType(type))
+    {
+      case EvtType::EV_Open:    OnOpen   (message); break;
+      case EvtType::EV_Message: OnMessage(message); break;
+      case EvtType::EV_Binary:  OnBinary ((void*)message.GetString(),message.GetLength()); break;
+      case EvtType::EV_Error:   OnError  (message); break;
+      case EvtType::EV_Close:   OnClose  (message); break;
+    }
   }
 
   // Remove all the events that the client has acknowledged
@@ -399,6 +429,11 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
 
   AutoCritSec lock(&m_lock);
 
+  // Make sure channel is now open on the server side and 'in-use'
+  if(!m_openSeen)
+  {
+    OnOpen("");
+  }
   // Return 'empty' or the oldest event
   if(m_outQueue.empty())
   {
@@ -412,6 +447,9 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
     p_message->SetParameter("Type",   LTEvent::EventTypeToString(event->m_type));
     event->m_sent++;
   }
+
+  // Ready
+  _time64(&m_lastSending);
   return true;
 }
 
@@ -456,11 +494,17 @@ ServerEventChannel::SendQueueToSocket()
     {
       if(m_opened[it->second] == true)
       {
+        // Make sure channel is now open on the server side and 'in-use'
+        if(!m_openSeen)
+        {
+          OnOpen("");
+        }
         if(!it->second->WriteString(ltevent->m_payload))
         {
           allok = false;
           CloseSocket(it->second);
           it = m_sockets.erase(it);
+          OnClose("");
           continue;
         }
       }
@@ -504,14 +548,28 @@ ServerEventChannel::SendQueueToStream()
     {
       CString type = LTEvent::EventTypeToString(ltevent->m_type);
       ServerEvent* event = new ServerEvent(type);
-      event->m_data = ltevent->m_payload;
-      event->m_id   = ltevent->m_number;
+      event->m_id = ltevent->m_number;
+      if (ltevent->m_type == EvtType::EV_Binary)
+      {
+        event->m_data  = Base64::Encrypt(ltevent->m_payload);
+      }
+      else
+      {
+        // Simply send the payload text
+        event->m_data = ltevent->m_payload;
+      }
 
+      // Make sure channel is now open on the server side and 'in-use'
+      if (!m_openSeen)
+      {
+        OnOpen("");
+      }
       if(!m_server->SendEvent(it->second, event))
       {
         allok = false;
         CloseStream(it->second);
         it = m_streams.erase(it);
+        OnClose("");
         continue;
       }
       ++it;
@@ -549,6 +607,21 @@ void
 ServerEventChannel::CloseChannel()
 {
   AutoCritSec lock(&m_lock);
+
+  // Begin with sending a close-event to the server application
+  // event channels to the client possibly still open.
+  if(m_closeSeen == false)
+  {
+    LTEvent* event = new LTEvent(EvtType::EV_Close);
+    event->m_payload = "Channel closed";
+    event->m_number  = ++m_maxNumber;
+    event->m_sent    = m_appData;
+
+    // Do not come here again
+    m_closeSeen = true;
+    // Tell it the server
+    (*m_application)(event);
+  }
 
   // Closing open channels to the client
   m_current = EventDriverType::EDT_NotConnected;
@@ -629,15 +702,19 @@ ServerEventChannel::OnOpen(CString p_message)
 {
   AutoCritSec lock(&m_lock);
 
+  // Open seen. Do not generate again for this channel
+  m_openSeen = true;
+
   LTEvent* event = new LTEvent;
   event->m_payload = p_message;
   event->m_type    = EvtType::EV_Open;
   event->m_number  = 0;
-  event->m_sent    = (UINT64) m_appData;
+  event->m_sent    = m_appData;
   m_inQueue.push_back(event);
   m_driver->IncomingEvent();
 }
 
+// Called by socket handler and long-polling handler
 void
 ServerEventChannel::OnMessage(CString p_message)
 {
@@ -647,7 +724,7 @@ ServerEventChannel::OnMessage(CString p_message)
   event->m_payload = p_message;
   event->m_type    = EvtType::EV_Message;
   event->m_number  = 0;
-  event->m_sent    = (UINT64)m_appData;
+  event->m_sent    = m_appData;
   m_inQueue.push_back(event);
   m_driver->IncomingEvent();
 }
@@ -661,7 +738,7 @@ ServerEventChannel::OnError(CString p_message)
   event->m_payload = p_message;
   event->m_type    = EvtType::EV_Error;
   event->m_number  = 0;
-  event->m_sent    = (UINT64)m_appData;
+  event->m_sent    = m_appData;
   m_inQueue.push_back(event);
   m_driver->IncomingEvent();
 }
@@ -675,7 +752,7 @@ ServerEventChannel::OnClose(CString p_message)
   event->m_payload = p_message;
   event->m_type    = EvtType::EV_Close;
   event->m_number  = 0;
-  event->m_sent    = (UINT64) m_appData;
+  event->m_sent    = m_appData;
   m_inQueue.push_back(event);
   m_driver->IncomingEvent();
 }
@@ -685,10 +762,15 @@ ServerEventChannel::OnBinary(void* p_data,DWORD p_length)
 {
   AutoCritSec lock(&m_lock);
 
+  if(m_openSeen == false)
+  {
+    m_openSeen = true;
+    OnOpen("OpenChannel");
+  }
   LTEvent* event = new LTEvent;
   event->m_type    = EvtType::EV_Binary;
   event->m_number  = p_length;
-  event->m_sent    = (UINT64) m_appData;
+  event->m_sent    = m_appData;
   char* buffer = event->m_payload.GetBufferSetLength(p_length);
   strcpy_s(buffer,p_length,(char*)p_data);
   event->m_payload.ReleaseBufferSetLength(p_length);
@@ -709,8 +791,14 @@ ServerEventChannel::Receiving()
   EventQueue::iterator it = m_inQueue.begin();
   while(it != m_inQueue.end())
   {
+    LTEvent* event = m_inQueue.front();
+    if(!m_openSeen && event->m_type != EvtType::EV_Open)
+    {
+      LTEvent* open = new LTEvent(EvtType::EV_Open);
+      pool->SubmitWork(m_application,open);
+    }
     // Post it to the thread pool
-    if(!pool->SubmitWork(m_application,(*it)))
+    if(!pool->SubmitWork(m_application,event))
     {
       // Threadpool not yet open or posting did not go right
       // Leave the in-queue intact from this point on

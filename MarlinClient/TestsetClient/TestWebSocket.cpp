@@ -205,13 +205,13 @@ TestWebSocket(LogAnalysis* p_log)
   }
   else
   {
-    if(!socket->WriteString("Hello server, this is the client. Take one!"))
+    if(!socket->WriteString("Hello server, this is the client. This is a one-liner message. Take one!"))
     {
       ++errors;
     }
     else
     {
-      if (!socket->WriteString("Hello server, this is the client. Take two!"))
+      if (!socket->WriteString("Hello server, this is the client. This is also a one-liner message. Take two!"))
       {
         ++errors;
       }
@@ -240,7 +240,7 @@ TestWebSocket(LogAnalysis* p_log)
 
   if(!g_closed)
   {
-    if (!socket->SendCloseSocket(WS_CLOSE_NORMAL, "TestWebSocket did close the socket"))
+    if(!socket->SendCloseSocket(WS_CLOSE_NORMAL, "TestWebSocket did close the socket"))
     {
       ++errors;
     }
@@ -258,8 +258,8 @@ TestCloseWebSocket()
 {
   if(g_socket)
   {
-    g_socket->CloseSocket();
     delete g_socket;
+    g_socket = nullptr;
   }
   return 0;
 }

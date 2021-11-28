@@ -30,6 +30,7 @@
 #include "Analysis.h"
 #include "SOAPMessage.h"
 #include "AutoCritical.h"
+#include "Base64.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -93,6 +94,21 @@ LongPolling::StopLongPolling()
   // Kick the worker bee out of work
   m_receiving = false;
   ::SetEvent(m_event);
+
+  // Wait for end of the action
+  for(int ind = 0; ind < MONITOR_END_RETRIES; ++ind)
+  {
+    Sleep(MONITOR_END_INTERVAL);
+    if(m_thread == NULL)
+    {
+      break;
+    }
+  }
+  if(m_thread)
+  {
+    TerminateThread(m_thread,3);
+    m_thread = NULL;
+  }
 }
 
 void
@@ -216,7 +232,15 @@ LongPolling::AskForMessages(LTEvent* p_event /*=nullptr*/)
   // Add an optional message to the server
   if(p_event)
   {
-    msg.SetParameter("Message",p_event->m_payload);
+    msg.SetParameter("Type",   LTEvent::EventTypeToString(p_event->m_type));
+    if(p_event->m_type == EvtType::EV_Binary)
+    {
+      msg.SetParameter("Message",Base64::Encrypt(p_event->m_payload));
+    }
+    else
+    {
+      msg.SetParameter("Message", p_event->m_payload);
+    }
   }
 
   DETAILLOG1("Asking server for message.");
@@ -237,6 +261,11 @@ LongPolling::AskForMessages(LTEvent* p_event /*=nullptr*/)
       if(empty)
       {
         return PollStatus::PS_Empty;
+      }
+      if(!m_openSeen && type != EvtType::EV_Open)
+      {
+        RegisterEvent("",EvtType::EV_Open,0);
+        m_openSeen = true;
       }
       // Post event
       RegisterEvent(payload,type,number);

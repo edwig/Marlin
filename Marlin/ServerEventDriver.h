@@ -150,8 +150,10 @@ public:
   bool        GetForceAuthentication()  { return m_force;     }
   size_t      GetNumberOfChannels()     { return m_channels.size(); }
   int         GetBruteForceInterval()   { return m_interval;  }
-  int         GetChannelQueueCount(int     p_channel);
-  int         GetChannelQueueCount(CString p_session);
+  int         GetChannelQueueCount (int     p_channel);
+  int         GetChannelQueueCount (CString p_session);
+  int         GetChannelClientCount(int     p_channel);
+  int         GetChannelClientCount(CString p_session);
 
   // OUR WORKHORSE: Post an event to the client
   int   PostEvent(int p_session,CString p_payload,EvtType type = EvtType::EV_Message);

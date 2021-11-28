@@ -84,6 +84,7 @@ public:
   CString GetToken()        { return m_token;   }
   CString GetCookieToken();
   int     GetQueueCount();
+  int     GetClientCount();
   // Current active type
   EventDriverType GetDriverType() { return m_current; }
 
@@ -126,9 +127,11 @@ private:
   INT64               m_lastSending { 0 };
   // All incoming events from the client
   EventQueue          m_inQueue;
+  bool                m_openSeen    { false };
+  bool                m_closeSeen   { false };
   // We belong to this driver
-  ServerEventDriver*  m_driver;
-  HTTPServer*         m_server;
+  ServerEventDriver*  m_driver      { nullptr };
+  HTTPServer*         m_server      { nullptr };
   // LOCKING
   CRITICAL_SECTION    m_lock;
 };

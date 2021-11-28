@@ -32,6 +32,7 @@
 #include "LongPolling.h"
 #include "AutoCritical.h"
 #include "Analysis.h"
+#include "Base64.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -137,9 +138,15 @@ ClientEventDriver::StopEventsForSession()
 {
   DETAILLOGV("Stop event channel for [%s:%s=%s]", m_session.GetString(), m_cookie.GetString(), m_secret.GetString());
   
+  if(!m_closeSeen)
+  {
+    LTEvent* event = new LTEvent(EvtType::EV_Close);
+    (*m_callback)(m_object,event);
+    m_closeSeen = true;
+  }
   m_session.Empty();
-  m_cookie.Empty();
-  m_session.Empty();
+  m_cookie .Empty();
+  m_secret .Empty();
 
   return CloseDown();
 }
@@ -177,15 +184,26 @@ void
 ClientEventDriver::RegisterIncomingEvent(LTEvent* p_event)
 {
   AutoCritSec lock(&m_lockQueue);
-  if(m_thread && m_event)
+
+  if(p_event->m_number == 0)
   {
-    DETAILLOGV("Register incoming event: %d",p_event->m_number);
+    p_event->m_number = ++m_inNumber;
+    DETAILLOGV("Register [%s] event [%d:%s]",LTEvent::EventTypeToString(p_event->m_type).GetString(),m_inNumber,p_event->m_payload.GetString());
+  }
+  else
+  {
+    DETAILLOGV("Register incoming event: %d", p_event->m_number);
+  }
+
+  if(m_thread && m_event) 
+  {
     m_inQueue.push_back(p_event);
     // Kick the event thread, sending to the application
     ::SetEvent(m_event);
     return;
   }
-  // LOG!! Mostly the 'close' channel event
+  // LOG!! Incoming event without a running event driver.
+  //       Mostly the 'OnClose' message
   DETAILLOGV("Lost incoming event [%d:%s] [%s]"
              ,p_event->m_number
              ,LTEvent::EventTypeToString(p_event->m_type).GetString()
@@ -211,14 +229,18 @@ ClientEventDriver::CloseDown()
   ::SetEvent(m_event);
 
   // wait for the queue to stop
-  int waiting = 0;
-  while (waiting++ < 100)
+  for(int waiting = 0;waiting++ < MONITOR_END_RETRIES;++waiting)
   {
-    Sleep(100);
-    if (!m_thread)
+    Sleep(MONITOR_END_INTERVAL);
+    if(!m_thread)
     {
       break;
     }
+  }
+  if(m_thread)
+  {
+    TerminateThread(m_thread, 3);
+    m_thread = NULL;
   }
 
   DETAILLOG1("Stopping the event channels");
@@ -239,13 +261,18 @@ ClientEventDriver::CloseDown()
   }
 
   // Stop the Long Polling
-  if (m_polling)
+  if(m_polling)
   {
     m_polling->StopLongPolling();
     delete m_polling;
     m_polling = nullptr;
   }
 
+  // Reset event counters
+  m_inNumber  = 0;
+  m_outNumber = 0;
+
+  // Success if monitor is stopped indeed
   return (m_thread == NULL);
 }
 
@@ -262,6 +289,7 @@ ClientEventDriver::StartDispatcher()
 
   DETAILLOGV("Starting event monitor in [%s] policy",LTEvent::ChannelPolicyToString(m_policy).GetString());
 
+  m_closeSeen = false;
   switch(m_policy)
   {
     case EVChannelPolicy::DP_NoPolicy:      break;
@@ -479,6 +507,22 @@ static void OnEventMessage(ServerEvent* p_event,void* p_data)
   delete p_event;
 }
 
+static void OnEventBinary(ServerEvent* p_event, void* p_data)
+{
+  ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_data);
+  if (driver)
+  {
+    LTEvent* event   = new LTEvent();
+    event->m_type    = EvtType::EV_Binary;
+    event->m_sent    = 0;
+    event->m_number  = p_event->m_id;
+    event->m_payload = Base64::Decrypt(p_event->m_data);
+
+    driver->RegisterIncomingEvent(event);
+  }
+  delete p_event;
+}
+
 static void OnEventError(ServerEvent* p_event,void* p_data)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_data);
@@ -527,6 +571,8 @@ ClientEventDriver::StartEventsChannel()
   m_source->m_onmessage = OnEventMessage;
   m_source->m_onerror   = OnEventError;
   m_source->m_onclose   = OnEventClose;
+  // Not a standard listener: Implement binary ourselves
+  m_source->AddEventListener("binary",OnEventBinary);
 
   // Set our thread pool if any 
   // Otherwise the event source will create a new one
@@ -812,6 +858,10 @@ ClientEventDriver::SendChannelsToApplication()
     }
     if(event)
     {
+      if(event->m_type == EvtType::EV_Close)
+      {
+        m_closeSeen = true;
+      }
       // Callback the application with the event
       (*m_callback)(m_object, event);
       ++sent;
