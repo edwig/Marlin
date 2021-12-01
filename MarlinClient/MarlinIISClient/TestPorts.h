@@ -31,7 +31,7 @@
 
 // All tests running on these ports in Marlin IIS mode
 const int TESTING_HTTP_PORT   = 80;
-const int TESTING_HTTPS_PORT  = 443;
+const int TESTING_HTTPS_PORT  = 1220;
 const int TESTING_CLCERT_PORT = 1222;
 
 // COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST

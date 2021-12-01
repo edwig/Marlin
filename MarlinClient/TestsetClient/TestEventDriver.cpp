@@ -74,6 +74,8 @@ TestEventDriver(LogAnalysis* p_log)
 {
   int errors = 0;
 
+  doDetails = false;
+
   // This is what we are going to test
   xprintf("TESTING ClientEventDriver INTERFACE FOR APPLICATIONS\n");
   xprintf("====================================================\n");
@@ -177,6 +179,8 @@ TestEventDriver(LogAnalysis* p_log)
   // Delete test driver 
   delete g_driver;
   g_driver = nullptr;
+
+  doDetails = false;
 
   return errors;
 }

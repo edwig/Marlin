@@ -83,7 +83,7 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
     }
     else
     {
-      status = HTTP_STATUS_NOT_FOUND; // HTTP_STATUS_FORBIDDEN
+      status = HTTP_STATUS_FORBIDDEN;
       DWORD error = GetLastError();
       CString message;
       message.Format("HTTP PUT: File not written: %s\n",pathname.GetString());

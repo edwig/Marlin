@@ -68,8 +68,8 @@ public:
   static CString ChannelPolicyToString(EVChannelPolicy p_policy);
 
   // DATA
-  int     m_number;
-  UINT64  m_sent;
+  int     m_number { 0  };
+  UINT64  m_sent   { 0L };
   EvtType m_type;
   CString m_payload;
 };

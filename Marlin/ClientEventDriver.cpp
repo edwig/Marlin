@@ -185,7 +185,7 @@ ClientEventDriver::RegisterIncomingEvent(LTEvent* p_event)
 {
   AutoCritSec lock(&m_lockQueue);
 
-  if(p_event->m_number == 0)
+  if(p_event->m_number <= 0)
   {
     p_event->m_number = ++m_inNumber;
     DETAILLOGV("Register [%s] event [%d:%s]",LTEvent::EventTypeToString(p_event->m_type).GetString(),m_inNumber,p_event->m_payload.GetString());
@@ -197,6 +197,7 @@ ClientEventDriver::RegisterIncomingEvent(LTEvent* p_event)
 
   if(m_thread && m_event) 
   {
+    // Keep event
     m_inQueue.push_back(p_event);
     // Kick the event thread, sending to the application
     ::SetEvent(m_event);
@@ -208,7 +209,6 @@ ClientEventDriver::RegisterIncomingEvent(LTEvent* p_event)
              ,p_event->m_number
              ,LTEvent::EventTypeToString(p_event->m_type).GetString()
              ,p_event->m_payload.GetString());
-  delete p_event;
 }
 
 //////////////////////////////////////////////////////////////////////////
