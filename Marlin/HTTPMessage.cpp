@@ -145,6 +145,8 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
   m_ifmodified        = p_msg->m_ifmodified;
   m_sendBOM           = p_msg->m_sendBOM;
   m_referrer          = p_msg->m_referrer;
+  m_user              = p_msg->m_user;
+  m_password          = p_msg->m_password;
 
   // Taking a duplicate token
   if(DuplicateTokenEx(p_msg->m_token
@@ -194,6 +196,8 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
   m_sendBOM       = p_msg->GetSendBOM();
   m_acceptEncoding= p_msg->GetAcceptEncoding();
   m_status        = p_msg->GetStatus();
+  m_user          = p_msg->GetUser();
+  m_password      = p_msg->GetPassword();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Getting the URL of all parts
@@ -296,6 +300,8 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
   m_site           = p_msg->GetHTTPSite();
   m_verbTunnel     = p_msg->GetVerbTunneling();
   m_status         = p_msg->GetStatus();
+  m_user           = p_msg->GetUser();
+  m_password       = p_msg->GetPassword();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Getting the URL of all parts
@@ -410,8 +416,6 @@ HTTPMessage::Reset()
   // Reset resulting cracked URL;
   m_cracked.m_scheme = "http";
   m_cracked.m_secure = false;
-  m_cracked.m_userName.Empty();
-  m_cracked.m_password.Empty();
   m_cracked.m_host.Empty();
   m_cracked.m_port = INTERNET_DEFAULT_HTTP_PORT;
   m_cracked.m_path.Empty();
@@ -419,6 +423,8 @@ HTTPMessage::Reset()
   m_cracked.m_anchor.Empty();
 
   m_url.Empty();
+  m_user.Empty();
+  m_password.Empty();
   m_buffer.Reset();
   m_headers.clear();
   m_routing.clear();

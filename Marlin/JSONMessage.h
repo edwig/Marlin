@@ -244,9 +244,9 @@ public:
   HTTP_OPAQUE_ID  GetRequestHandle()  { return m_request;               };
   HTTPSite*       GetHTTPSite()       { return m_site;                  };
   HeaderMap*      GetHeaderMap()      { return &m_headers;              };
+  CString         GetUser()           { return m_user;                  };
+  CString         GetPassword()       { return m_password;              };
   bool            GetSecure()         { return m_cracked.m_secure;      };
-  CString         GetUser()           { return m_cracked.m_userName;    };
-  CString         GetPassword()       { return m_cracked.m_password;    };
   CString         GetServer()         { return m_cracked.m_host;        };
   int             GetPort()           { return m_cracked.m_port;        };
   CString         GetAbsolutePath()   { return m_cracked.AbsolutePath();};
@@ -276,9 +276,9 @@ public:
   void            SetIncoming(bool p_incoming)            { m_incoming           = p_incoming; };
   void            SetErrorstate(bool p_state)             { m_errorstate         = p_state;    };
   void            SetLastError(CString p_error)           { m_lastError          = p_error;    };
+  void            SetUser(CString p_user)                 { m_user               = p_user;     };
+  void            SetPassword(CString p_password)         { m_password           = p_password; };
   void            SetSecure(bool p_secure)                { m_cracked.m_secure   = p_secure;   ReparseURL(); };
-  void            SetUser(CString p_user)                 { m_cracked.m_userName = p_user;     ReparseURL(); };
-  void            SetPassword(CString p_password)         { m_cracked.m_password = p_password; ReparseURL(); };
   void            SetServer(CString p_server)             { m_cracked.m_host     = p_server;   ReparseURL(); };
   void            SetPort(int p_port)                     { m_cracked.m_port     = p_port;     ReparseURL(); };
   void            SetAbsolutePath(CString p_path)         { m_cracked.SetPath(p_path);         ReparseURL(); };
@@ -336,6 +336,9 @@ private:
   HTTP_OPAQUE_ID  m_request     { NULL };                       // Request it must answer
   HTTPSite*       m_site        { nullptr };                    // Site for which message is received
   HeaderMap       m_headers;                                    // Extra HTTP headers (incoming / outgoing)
+  // Authentication
+  CString         m_user;                                       // Found username for authentication
+  CString         m_password;                                   // Found password for authentication
   // Message details
   CString         m_referrer;                                   // Referrer of the message
   CString         m_contentType;                                // Content type of JSON message

@@ -24,6 +24,15 @@ CHANGES IN VERSION 7.2.0
     an extra background write trhead, so that we can write multiple smaller logfiles without
     overly starting a bunch of OS-threads
 4)  WebConfig IIS can now relate to it's application pool and its settings
+5)  For security reasons the ability to accept and parse 'username' and 'password' combinations
+    in the URL (in front of the origin server: http://username:password@server:port) has been
+    removed. This ability is inherently unsafe, as passwords will be cached in the internet 
+    servers and proxies in the URL logging files.
+    Authentication and authorization can now only be performed from within designated HTTP headers
+    and/or the payload an internet messages is carrying.
+    CrackedURL has no longer the ability to parsae username/password.
+    HTTP/SOAP/JSON Messages now have individual 'm_user' and 'm_password' members to carry this
+    information throughout your applications. The interface of these objects have *NOT* changed.
 
 CHANGES IN VERSION 7.1.0
 ------------------------

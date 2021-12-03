@@ -88,8 +88,6 @@ public:
   // Cracked down parts of the URL
   CString 	m_scheme;
   bool      m_secure  { false };
-  CString   m_userName;
-  CString   m_password;
   CString   m_host;
   int       m_port    { INTERNET_DEFAULT_HTTP_PORT };
   CString   m_path;
@@ -100,8 +98,6 @@ public:
   // Parts found in the url (otherwise empty)
   bool      m_foundScheme;
   bool      m_foundSecure;
-  bool      m_foundUsername;
-  bool      m_foundPassword;
   bool      m_foundHost;
   bool      m_foundPort;
   bool      m_foundPath;

@@ -735,8 +735,6 @@ HTTPClient::SetURL(CString p_url)
   CrackedURL url(p_url);
   if(url.Valid())
   {
-    if(url.m_foundUsername) ReplaceSetting(&m_user,    url.m_userName);
-    if(url.m_foundPassword) ReplaceSetting(&m_password,url.m_password);
     m_scheme   = url.m_scheme;
     m_secure   = url.m_secure;
     m_server   = url.m_host;

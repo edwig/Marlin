@@ -135,9 +135,9 @@ public:
   void SetCommand(HTTPCommand p_command)        { m_command            = p_command;   };
   void SetReferrer(CString p_referrer)          { m_referrer           = p_referrer;  };
   void SetStatus(unsigned p_status)             { m_status             = p_status;    };
+  void SetUser(CString p_user)                  { m_user               = p_user;      };
+  void SetPassword(CString p_password)          { m_password           = p_password;  };
   void SetSecure(bool p_secure)                 { m_cracked.m_secure   = p_secure;    ReparseURL();  };
-  void SetUser(CString p_user)                  { m_cracked.m_userName = p_user;      ReparseURL();  };
-  void SetPassword(CString p_password)          { m_cracked.m_password = p_password;  ReparseURL();  };
   void SetServer(CString& p_server)             { m_cracked.m_host     = p_server;    ReparseURL();  };
   void SetPort(unsigned p_port)                 { m_cracked.m_port     = p_port;      ReparseURL();  };
   void SetAbsolutePath(CString& p_path)         { m_cracked.SetPath(p_path);          ReparseURL();  };
@@ -172,9 +172,9 @@ public:
   CString             GetReferrer()             { return m_referrer;                  };
   CrackedURL&         GetCrackedURL()           { return m_cracked;                   };
   unsigned            GetStatus()               { return m_status;                    };
+  CString             GetUser()                 { return m_user;                      };
+  CString             GetPassword()             { return m_password;                  };
   bool                GetSecure()               { return m_cracked.m_secure;          };
-  CString             GetUser()                 { return m_cracked.m_userName;        };
-  CString             GetPassword()             { return m_cracked.m_password;        };
   CString             GetServer()               { return m_cracked.m_host;            };
   unsigned            GetPort()                 { return m_cracked.m_port;            };
   CString             GetAbsolutePath()         { return m_cracked.AbsolutePath();    };
@@ -260,6 +260,8 @@ private:
   HTTPSite*           m_site          { nullptr };                    // Site for which message is received
   CString             m_contentType;                                  // Carrying this content
   CString             m_acceptEncoding;                               // Accepted compression encoding
+  CString             m_user;                                         // Found user name for authentication
+  CString             m_password;                                     // Found password for authentication
   bool                m_verbTunnel    { false   };                    // HTTP-VERB Tunneling used
   bool                m_sendBOM       { false   };                    // BOM discovered in content block
   bool                m_readBuffer    { false   };                    // HTTP content still to be read

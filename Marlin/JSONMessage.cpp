@@ -494,6 +494,8 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
   m_lastError   = p_other->m_lastError;
   m_url         = p_other->m_url;
   m_cracked     = p_other->m_cracked;
+  m_user        = p_other->m_user;
+  m_password    = p_other->m_password;
   m_status      = p_other->m_status;
   m_request     = p_other->m_request;
   m_site        = p_other->m_site;
@@ -548,6 +550,8 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
   m_acceptEncoding = p_message->GetAcceptEncoding();
   m_verbTunnel     = p_message->GetVerbTunneling();
   m_referrer       = p_message->GetReferrer();
+  m_user           = p_message->GetUser();
+  m_password       = p_message->GetPassword();
   m_incoming       = (p_message->GetCommand() != HTTPCommand::http_response);
 
   // Duplicate all cookies
@@ -645,10 +649,12 @@ JSONMessage::JSONMessage(SOAPMessage* p_message)
   m_site            = p_message->GetHTTPSite();
   m_desktop         = p_message->GetRemoteDesktop();
   m_contentType     = p_message->GetContentType();
-  m_verbTunnel      = false; //p_message->GetVerbTunneling();
+  m_verbTunnel      = false;
   m_incoming        = p_message->GetIncoming();
-  m_whitespace     = !p_message->GetCondensed();
+  m_whitespace      =!p_message->GetCondensed();
   m_acceptEncoding  = p_message->GetAcceptEncoding();
+  m_user            = p_message->GetUser();
+  m_password        = p_message->GetPassword();
 
   // Duplicate all cookies
   m_cookies = p_message->GetCookies();

@@ -222,8 +222,6 @@ SOAPMessage::SOAPMessage(CString&     p_namespace
     CrackedURL url;
     if(url.CrackURL(p_url))
     {
-      m_user     = url.m_userName;
-      m_password = url.m_password;
       m_secure   = url.m_secure;
       m_server   = url.m_host;
       m_port     = url.m_port;
@@ -708,8 +706,6 @@ SOAPMessage::SetURL(CString& p_url)
   if(url.CrackURL(p_url))
   {
     m_secure   = url.m_secure;
-    m_user     = url.m_userName;
-    m_password = url.m_password;
     m_server   = url.m_host;
     m_port     = url.m_port;
     m_absPath  = url.m_path;
