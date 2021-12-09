@@ -359,7 +359,14 @@ WebSocket::OnOpen()
   if(m_onopen)
   {
     DETAILLOGV("WebSocket OnOpen called for [%s] on [%s]",m_key.GetString(),m_uri.GetString());
+    try
+    {
     (*m_onopen)(this,&frame);
+  }
+    catch(StdException& ex)
+    {
+      ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+    }
   }
 }
 
@@ -372,12 +379,18 @@ WebSocket::OnMessage()
   {
     if(m_onmessage)
     {
-      DETAILLOGV("WebSocket OnMessage called for [%s] on [%s]",m_key.GetString(),m_uri.GetString());
-      if (MUSTLOG(HLL_TRACEDUMP))
+      try
       {
-        m_logfile->AnalysisHex(__FUNCTION__,m_key,(void*)frame->m_data, frame->m_length);
-      }
       (*m_onmessage)(this,frame);
+    }
+      catch(StdException& ex)
+      {
+        ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+      }
+    }
+    else
+    {
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost WSFrame message data");
     }
     delete frame;
   }
@@ -392,12 +405,18 @@ WebSocket::OnBinary()
   {
     if(m_onbinary)
     {
-      DETAILLOGV("WebSocket OnBinary called for [%s] on [%s] ",m_key.GetString(),m_uri.GetString());
-      if (MUSTLOG(HLL_TRACEDUMP))
+      try
       {
-        m_logfile->AnalysisHex(__FUNCTION__,m_key,(void*)frame->m_data, frame->m_length);
-      }
       (*m_onbinary)(this,frame);
+    }
+      catch(StdException& ex)
+      {
+        ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+      }
+    }
+    else
+    {
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost WSFrame binary data");
     }
     delete frame;
   }
@@ -407,10 +426,17 @@ void
 WebSocket::OnError()
 {
   WSFrame* frame = GetWSFrame();
+
   if(m_onerror)
   {
-    DETAILLOGV("WebSocket OnError called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
+    try
+    {
     (*m_onerror)(this,frame);
+  }
+    catch(StdException& ex)
+    {
+      ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+    }
   }
   delete frame;
 }
@@ -424,12 +450,18 @@ WebSocket::OnClose()
   {
     if(m_onclose && (m_openReading || m_openWriting))
     {
-      DETAILLOGV("WebSocket OnClose called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
-      if(MUSTLOG(HLL_TRACEDUMP))
+      try
       {
-        m_logfile->AnalysisHex(__FUNCTION__,m_key,(void*)frame->m_data,frame->m_length);
-      }
       (*m_onclose)(this,frame);
+    }
+      catch(StdException& ex)
+      {
+        ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+      }
+    }
+    else
+    {
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost closing frame");
     }
     delete frame;
   }
@@ -439,7 +471,14 @@ WebSocket::OnClose()
     {
       WSFrame empty;
       DETAILLOGV("WebSocket OnClose called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
+      try
+      {
       (*m_onclose)(this,&empty);
+      }
+      catch(StdException& ex)
+      {
+        ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+      }
     }
   }
   // OnClose can be called just once!

@@ -245,6 +245,11 @@ ServerReadCompletionIIS(HRESULT p_error,
                         BOOL    p_final,
                         BOOL    p_close)
 {
+  if(p_error == HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED))
+  {
+    // Aborted socket. Completion context can/will be totally wrong
+    return;
+  }
   // Try to get our context back
   WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_completionContext);
   if(socket)

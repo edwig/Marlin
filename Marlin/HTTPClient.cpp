@@ -3184,10 +3184,9 @@ HTTPClient::TraceTheSend()
 
   CString header;
   m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,true,"Outgoing");
-  header.Format("%s %s%s://%s:%d%s HTTP/1.1"
+  header.Format("%s %s://%s:%d%s HTTP/1.1"
                 ,m_verb.GetString()
                 ,m_scheme.GetString()
-                ,m_secure ? "s" : ""
                 ,m_server.GetString()
                 ,m_port
                 ,m_url.GetString());

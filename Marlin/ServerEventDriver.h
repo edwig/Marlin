@@ -135,9 +135,12 @@ public:
   // Stopping the event driver
   bool  StopEventDriver();
 
+  // Flush messages as much as possible for a channel
+  bool  FlushChannel(CString p_cookie,CString p_token);
+  bool  FlushChannel(int p_channel);
   // RemoveChannel (possibly at the end of an user session)
-  bool  UnRegisterChannel(CString p_cookie,CString p_token);
-  bool  UnRegisterChannel(int p_channel);
+  bool  UnRegisterChannel(CString p_cookie,CString p_token,bool p_flush = true);
+  bool  UnRegisterChannel(int p_channel,bool p_flush = true);
   // Incoming new Socket/SSE Stream
   bool  IncomingNewSocket(HTTPMessage* p_message,WebSocket*   p_socket);
   void  IncomingNewStream(HTTPMessage* p_message,EventStream* p_stream);
@@ -156,7 +159,8 @@ public:
   int         GetChannelClientCount(CString p_session);
 
   // OUR WORKHORSE: Post an event to the client
-  int   PostEvent(int p_session,CString p_payload,EvtType type = EvtType::EV_Message);
+  // If 'returnToSender' is filled, only this client will receive the message
+  int   PostEvent(int p_session,CString p_payload,CString p_returnToSender = "",EvtType p_type = EvtType::EV_Message);
 
   // Main loop of the event runner. DO NOT CALL!
   void  EventThreadRunning();

@@ -141,7 +141,14 @@ ClientEventDriver::StopEventsForSession()
   if(!m_closeSeen)
   {
     LTEvent* event = new LTEvent(EvtType::EV_Close);
+    try
+    {
     (*m_callback)(m_object,event);
+    }
+    catch(StdException& ex)
+    {
+      ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+    }
     m_closeSeen = true;
   }
   m_session.Empty();
@@ -181,18 +188,19 @@ ClientEventDriver::PostEventToServer(LTEvent* p_event)
 
 // Event is incoming from socket/SSE/polling
 void
-ClientEventDriver::RegisterIncomingEvent(LTEvent* p_event)
+ClientEventDriver::RegisterIncomingEvent(LTEvent* p_event,bool p_doLog /*=false*/)
 {
   AutoCritSec lock(&m_lockQueue);
 
   if(p_event->m_number <= 0)
   {
     p_event->m_number = ++m_inNumber;
-    DETAILLOGV("Register [%s] event [%d:%s]",LTEvent::EventTypeToString(p_event->m_type).GetString(),m_inNumber,p_event->m_payload.GetString());
   }
-  else
+  DETAILLOGV("Client register incoming event: %d",p_event->m_number);
+  if(p_doLog)
   {
-    DETAILLOGV("Register incoming event: %d", p_event->m_number);
+    // Logging for long-polling
+    DETAILLOGV("Register [%s] event [%d:%s]",LTEvent::EventTypeToString(p_event->m_type).GetString(),m_inNumber,p_event->m_payload.GetString());
   }
 
   if(m_thread && m_event) 
@@ -209,6 +217,27 @@ ClientEventDriver::RegisterIncomingEvent(LTEvent* p_event)
              ,p_event->m_number
              ,LTEvent::EventTypeToString(p_event->m_type).GetString()
              ,p_event->m_payload.GetString());
+  if(m_callback)
+  {
+    try
+    {
+    (*m_callback)(m_object,p_event);
+  }
+    catch(StdException& ex)
+    {
+      ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+    }
+  }
+  else
+  {
+    delete p_event;
+  }
+}
+
+bool
+ClientEventDriver::GetIsRunning()
+{
+  return m_running;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -308,6 +337,12 @@ ClientEventDriver::StartDispatcher()
                                               result = StartPollingChannel();
                                             }
                                             break;
+    case EVChannelPolicy::DP_NoSockets:     result = StartEventsChannel();
+                                            if(!result)
+                                            {
+                                              result = StartPollingChannel();
+                                            }
+                                            break;
     case EVChannelPolicy::DP_SureDelivery:  result = StartSocketChannel();
                                             if(!result)
                                             {
@@ -318,6 +353,7 @@ ClientEventDriver::StartDispatcher()
                                               }
                                             }
                                             break;
+    default:                                break;
   }
   return result;
 }
@@ -437,8 +473,8 @@ bool
 ClientEventDriver::StartSocketChannel()
 {
   CString url = m_serverURL + "Sockets/" + m_session;
-  url.Replace("http://", "ws://");
-  url.Replace("https://","wss://");
+//   url.Replace("http://", "ws://");
+//   url.Replace("https://","wss://");
 
   // Create client side of the websocket and connect to this driver
   m_websocket = new WebSocketClient(url);
@@ -617,7 +653,7 @@ void OnPollingEvent(void* p_application,LTEvent* p_event)
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_application);
   if(driver)
   {
-    driver->RegisterIncomingEvent(p_event);
+    driver->RegisterIncomingEvent(p_event,true);
     return;
   }
   delete p_event;
@@ -862,9 +898,16 @@ ClientEventDriver::SendChannelsToApplication()
       {
         m_closeSeen = true;
       }
+      try
+      {
       // Callback the application with the event
       (*m_callback)(m_object, event);
       ++sent;
+      }
+      catch(StdException& ex)
+      {
+        ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+      }
     }
     // Possibly stopped by the application
     if(!m_running)

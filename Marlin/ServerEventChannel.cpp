@@ -33,6 +33,7 @@
 #include "WebSocket.h"
 #include "AutoCritical.h"
 #include "Base64.h"
+#include "CRC32.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -90,7 +91,7 @@ void EventChannelOnBinary(WebSocket* p_socket,WSFrame* p_event)
 void EventChannelOnError(WebSocket* p_socket,WSFrame* p_event)
 {
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
-  if(channel)
+  if(channel && p_event)
   {
     CString message(p_event->m_data);
     if(p_event->m_utf8)
@@ -143,17 +144,31 @@ ServerEventChannel::~ServerEventChannel()
   DeleteCriticalSection(&m_lock);
 }
 
+// Reset the channel. No more events to the server application
+void 
+ServerEventChannel::Reset()
+{
+  m_application = nullptr;
+  m_appData     = NULL;
+}
+
 int 
-ServerEventChannel::PostEvent(CString p_payload,EvtType type /*= EvtType::EV_Message*/)
+ServerEventChannel::PostEvent(CString p_payload,CString p_sender,EvtType p_type /*= EvtType::EV_Message*/)
 {
   AutoCritSec lock(&m_lock);
 
   // Create event and store at the back of the queue
   LTEvent* event   = new LTEvent();
   event->m_number  = ++m_maxNumber;
-  event->m_sent    = 0; // Not yet send
-  event->m_type    = type;
+  event->m_sent    = 0; // Send to all clients
+  event->m_type    = p_type;
   event->m_payload = p_payload;
+
+  // Send just to this sender
+  if(!p_sender.IsEmpty())
+  {
+    event->m_sent = ComputeCRC32(SENDER_RANDOM_NUMBER,p_sender.GetString(),p_sender.GetLength());
+  }
   m_outQueue.push_back(event);
 
   return m_maxNumber;
@@ -219,9 +234,9 @@ ServerEventChannel::GetClientCount()
   AutoCritSec lock(&m_lock);
   int count = 0;
 
-  for(auto& socket : m_opened)
+  for(auto& socket : m_sockets)
   {
-    count += socket.second == true ? 1 : 0;
+    count += socket.m_open == true ? 1 : 0;
   }
   count += (int) m_streams.size();
 
@@ -277,11 +292,23 @@ ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket
   }
 
   // Register our socket
-  AllSockets::iterator it = m_sockets.find(url);
-  if (it == m_sockets.end())
+  bool found = false;
+  for(auto& sock : m_sockets)
   {
-    m_sockets[url] = p_socket;
-    m_opened[p_socket] = false;
+    if(sock.m_url.Compare(url) == 0)
+    {
+      found = true;
+    }
+  }
+  if(!found)
+  {
+    EventWebSocket sock;
+    sock.m_socket = p_socket;
+    sock.m_url    = url;
+    sock.m_sender = ComputeCRC32(SENDER_RANDOM_NUMBER,sender.GetString(),sender.GetLength());
+    sock.m_open   = false;
+
+    m_sockets.push_back(sock);
   }
   m_current = EventDriverType::EDT_Sockets;
   return true;
@@ -292,13 +319,15 @@ ServerEventChannel::OnOpenSocket(WebSocket* p_socket)
 {
   AutoCritSec lock(&m_lock);
 
-  SocketOpen::iterator it = m_opened.find(p_socket);
-  if(it != m_opened.end())
+  for(auto& sock : m_sockets)
   {
-    it->second  = true;
+    if(sock.m_socket == p_socket)
+    {
+      sock.m_open = true;
     m_openSeen  = true;
     m_closeSeen = false;
   }
+}
 }
 
 void
@@ -306,12 +335,14 @@ ServerEventChannel::OnCloseSocket(WebSocket* p_socket)
 {
   AutoCritSec lock(&m_lock);
 
-  SocketOpen::iterator it = m_opened.find(p_socket);
-  if (it != m_opened.end())
+  for(auto& sock : m_sockets)
   {
-    it->second  = false;
+    if(sock.m_socket == p_socket)
+  {
+      sock.m_open = false;
     m_closeSeen = true;
   }
+}
 }
 
 bool 
@@ -352,11 +383,24 @@ ServerEventChannel::RegisterNewStream(HTTPMessage* p_message,EventStream* p_stre
   }
 
   // Register our stream
-  AllStreams::iterator it = m_streams.find(url);
-  if(it == m_streams.end())
+  bool found = false;
+  for(auto& stream : m_streams)
   {
-    m_streams[url] = p_stream;
+    if(stream.m_url.Compare(url) == 0)
+  {
+      found = true;
+    }
   }
+  if(!found)
+  {
+    EventSSEStream stream;
+    stream.m_stream = p_stream;
+    stream.m_url    = url;
+    stream.m_sender = ComputeCRC32(SENDER_RANDOM_NUMBER,sender.GetString(),sender.GetLength());
+
+    m_streams.push_back(stream);
+  }
+
   m_current = EventDriverType::EDT_ServerEvents;
 
   // SSE Channels have no client messages, so we generate one ourselves
@@ -492,17 +536,17 @@ ServerEventChannel::SendQueueToSocket()
     AllSockets::iterator it = m_sockets.begin();
     while(it != m_sockets.end())
     {
-      if(m_opened[it->second] == true)
+      if(it->m_open == true && (ltevent->m_sent == 0 || ltevent->m_sent == it->m_sender))
       {
         // Make sure channel is now open on the server side and 'in-use'
         if(!m_openSeen)
         {
           OnOpen("");
         }
-        if(!it->second->WriteString(ltevent->m_payload))
+        if(!it->m_socket->WriteString(ltevent->m_payload))
         {
           allok = false;
-          CloseSocket(it->second);
+          CloseSocket(it->m_socket);
           it = m_sockets.erase(it);
           OnClose("");
           continue;
@@ -546,6 +590,8 @@ ServerEventChannel::SendQueueToStream()
     AllStreams::iterator it = m_streams.begin();
     while (it != m_streams.end())
     {
+      if(ltevent->m_sent == 0 || ltevent->m_sent == it->m_sender)
+      {
       CString type = LTEvent::EventTypeToString(ltevent->m_type);
       ServerEvent* event = new ServerEvent(type);
       event->m_id = ltevent->m_number;
@@ -564,13 +610,14 @@ ServerEventChannel::SendQueueToStream()
       {
         OnOpen("");
       }
-      if(!m_server->SendEvent(it->second, event))
+        if(!m_server->SendEvent(it->m_stream,event))
       {
         allok = false;
-        CloseStream(it->second);
+          CloseStream(it->m_stream);
         it = m_streams.erase(it);
         OnClose("");
         continue;
+      }
       }
       ++it;
     }
@@ -603,6 +650,15 @@ ServerEventChannel::LogNotConnected()
   return 0;
 }
 
+// Flushing a channel directly
+// (Works only for sockets and streams)
+bool 
+ServerEventChannel::FlushChannel()
+{
+  SendChannel();
+  return m_outQueue.empty();
+}
+
 void
 ServerEventChannel::CloseChannel()
 {
@@ -620,20 +676,30 @@ ServerEventChannel::CloseChannel()
     // Do not come here again
     m_closeSeen = true;
     // Tell it the server
+    if(m_application)
+    {
+      try
+      {
     (*m_application)(event);
+  }
+      catch(StdException& ex)
+      {
+        ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+      }
+    }
   }
 
   // Closing open channels to the client
   m_current = EventDriverType::EDT_NotConnected;
   for(auto& sock : m_sockets)
   {
-    CloseSocket(sock.second);
+    CloseSocket(sock.m_socket);
   }
   m_sockets.clear();
 
   for(auto& stream : m_streams)
   {
-    CloseStream(stream.second);
+    CloseStream(stream.m_stream);
   }
   m_streams.clear();
 
@@ -657,7 +723,7 @@ ServerEventChannel::CloseSocket(WebSocket* p_socket)
 {
   DETAILLOGV("Closing WebSocket for event channel [%s] Queue size: %d",m_name.GetString(),(int)m_outQueue.size());
   p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"ServerEventDriver is closing channel");
-  //p_socket->CloseSocket();
+  p_socket->CloseSocket();
   m_server->UnRegisterWebSocket(p_socket);
 }
 
@@ -691,7 +757,7 @@ ServerEventChannel::ChangeEventPolicy(EVChannelPolicy p_policy,LPFN_CALLBACK p_a
   // And tell it our sockets (if any)
   for(auto& socket : m_sockets)
   {
-    socket.second->SetApplicationData(p_data);
+    socket.m_socket->SetApplicationData(p_data);
   }
   return true;
 }
@@ -784,6 +850,12 @@ ServerEventChannel::OnBinary(void* p_data,DWORD p_length)
 int
 ServerEventChannel::Receiving()
 {
+  // Cannot process if no application pointer
+  if(!m_application)
+  {
+    return 0;
+  }
+
   AutoCritSec lock(&m_lock);
   ThreadPool* pool = m_server->GetThreadPool();
   int received = 0;

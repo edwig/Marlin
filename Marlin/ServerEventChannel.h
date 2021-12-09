@@ -29,7 +29,7 @@
 #include "ThreadPool.h"
 #include "LongTermEvent.h"
 #include <deque>
-#include <map>
+#include <vector>
 
 class HTTPServer;
 class HTTPMessage;
@@ -47,10 +47,27 @@ enum class EventDriverType
  ,EDT_LongPolling  = 3
 };
 
+typedef struct _regSocket
+{
+  WebSocket* m_socket;
+  CString    m_url;
+  UINT64     m_sender;
+  bool       m_open;
+}
+EventWebSocket;
+
+typedef struct _regStream
+{
+  EventStream* m_stream;
+  CString      m_url;
+  UINT64       m_sender;
+}
+EventSSEStream;
+
 using EventQueue = std::deque<LTEvent*>;
-using AllStreams = std::map<CString,EventStream*>;
-using AllSockets = std::map<CString,WebSocket*>;
-using SocketOpen = std::map<WebSocket*,bool>;
+using AllStreams = std::vector<EventSSEStream>;
+using AllSockets = std::vector<EventWebSocket>;
+
 
 class ServerEventChannel
 {
@@ -67,9 +84,13 @@ public:
   // Process the receiving part of the queue
   int  Receiving();
   // Post a new event, giving a new event numerator
-  int  PostEvent(CString p_payload,EvtType type = EvtType::EV_Message);
+  int  PostEvent(CString p_payload,CString p_sender,EvtType p_type = EvtType::EV_Message);
+  // Flushing a channel directly
+  bool FlushChannel();
   // Closing an event channel
   void CloseChannel();
+  // Reset the channel. No more events to the server application
+  void Reset();
 
   // Register new incoming channels
   bool RegisterNewSocket(HTTPMessage* p_message,WebSocket*   p_socket,bool p_check = false);
@@ -116,7 +137,6 @@ private:
   EventDriverType     m_current     { EventDriverType::EDT_NotConnected };
   AllStreams          m_streams;
   AllSockets          m_sockets;
-  SocketOpen          m_opened;
   // Application we are working for
   LPFN_CALLBACK       m_application { nullptr };
   UINT64              m_appData     { 0L      };

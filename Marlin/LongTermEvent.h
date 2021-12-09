@@ -52,8 +52,11 @@ enum class EVChannelPolicy
  ,DP_Disconnected   = 3       // Disconnected messages only (polling)
  ,DP_Immediate_S2C  = 4       // Immediate delivery server 2 client (websocket + SSE)
  ,DP_TwoWayMessages = 5       // Also client 2 server (websocket + polling)
- ,DP_SureDelivery   = 6       // All S2C channels (websocket + SSE + polling)
+ ,DP_NoSockets      = 6       // Running outside of IIS (SSE + polling)
+ ,DP_SureDelivery   = 7       // All S2C channels (websocket + SSE + polling)
 };
+
+#define SENDER_RANDOM_NUMBER 0xADF74FF6
 
 class LTEvent
 {

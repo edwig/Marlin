@@ -105,7 +105,8 @@ JSONParser::ParseMessage(CString& p_message,bool& p_whitespace,JsonEncoding p_en
 
   // Allocate scanning buffer
   // Individual string cannot be larger than this
-  m_scanString = new uchar[p_message.GetLength() + 1];
+  m_scanLength = p_message.GetLength();
+  m_scanString = new uchar[m_scanLength + 1];
 
   // See if we have an empty message string
   SkipWhitespace();
@@ -271,7 +272,7 @@ JSONParser::GetString()
     }
   }
   // Skip past string's ending
-  if(*m_pointer && *m_pointer == '\"')
+  if(m_pointer && *m_pointer == '\"')
   {
     ++m_pointer;
   }
@@ -418,25 +419,15 @@ JSONParser::UTF8Char()
 CString 
 JSONParser::GetUnicodeString()
 {
-  uchar* start(m_pointer);
-
-  // Find the length of the string
-  int length = 0;
-  while(*m_pointer && (*m_pointer++ != '\"')) ++length;
-  if(!*m_pointer)
-  {
-    SetError(JsonError::JE_StringEnding,"UTF-16 String found without an ending quote!");
-    return "";
-  }
-  m_pointer = start;
-
   // Allocate a array of shorts (2 bytes) for the string
-  unsigned short* result = new unsigned short[length + 1];
-  memset(result,0,2 * (length + 1));
+  unsigned short* result = new unsigned short[m_scanLength + 1];
+  memset(result,0,sizeof(unsigned short)  *  (m_scanLength + 1));
 
   // Fill the array with chars and unicode chars
   unsigned short* resPointer = result;
-  while(*m_pointer && *m_pointer != '\"')
+  int total = 0;
+
+  while(*m_pointer && *m_pointer != '\"' && total <= m_scanLength)
   {
     // See if we must do an escape
     if(*m_pointer == '\\')
@@ -455,25 +446,38 @@ JSONParser::GetUnicodeString()
         case 't':  *resPointer = '\t';  break;
         case 'u':  *resPointer = UnicodeChar(); break;
         default:   SetError(JsonError::JE_IllString,"Ill formed string. Illegal escape sequence.");
+                   *resPointer = ch;
                    break;
       }
       ++resPointer;
+      ++total;
     }
     else
     {
-      unsigned short ch = UTF8Char();
+      unsigned short ch = ValueChar();
       if(ch)
       {
         *resPointer++ = ch;
+        ++total;
       }
     }
+  }
+
+  // Skip past string's ending
+  if(m_pointer && *m_pointer == '\"')
+  {
+    ++m_pointer;
+  }
+  else
+  {
+    SetError(JsonError::JE_StringEnding,"String found without an ending quote!");
   }
 
   // Convert the UTF-16 string back to MBCS
   CString decoded;
   bool foundBom = false;
 
-  if(!TryConvertWideString((const uchar*)result,length,"",decoded,foundBom))
+  if(!TryConvertWideString((const uchar*)result,total,"",decoded,foundBom))
   {
     decoded.Empty();
     SetError(JsonError::JE_IllString,"Ill formed string. Could not convert UTF-16 characters.");
@@ -1095,7 +1099,6 @@ JSONParserSOAP::CreatePair(JSONvalue& p_valPointer,XMLElement& p_element)
     JSONpair pair;
     pair.m_name = p_element.GetName();
     CString value = p_element.GetValue();
-    Trim(value);
 
     if(m_forceerArray)
     {

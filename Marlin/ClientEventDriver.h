@@ -91,9 +91,11 @@ public:
   // Post application event to the server (WebSocket/polling only!!)
   void  PostEventToServer(LTEvent* p_event);
   // Event is incoming from socket/SSE/polling (only called internally)
-  void  RegisterIncomingEvent(LTEvent* p_event);
+  void  RegisterIncomingEvent(LTEvent* p_event,bool p_doLog = false);
   // Main loop of the event runner
   void  EventThreadRunning();
+  // Is the event driver running?
+  bool  GetIsRunning();
 private:
   // Start a thread for the streaming websocket/server-push event interface
   bool  StartEventThread();

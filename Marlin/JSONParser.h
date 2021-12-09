@@ -83,6 +83,7 @@ protected:
   unsigned     m_objects    { 0 };        // Objects/arrays parsed
   bool         m_utf8       { false   };  // Scan UTF-8 text
   uchar*       m_scanString { nullptr };  // Temporary buffer to scan one string
+  int          m_scanLength { 0 };        // Max length of a string to scan
 };
 
 // Parsing a SOAPMessage to a JSON Message

@@ -227,22 +227,64 @@ ServerEventDriver::SetChannelPolicy(int              p_channel
   return false;
 }
 
-// RemoveChannel (possibly at the end of an user session)
+// Flush messages as much as possible for a channel
 bool
-ServerEventDriver::UnRegisterChannel(CString p_cookie,CString p_token)
+ServerEventDriver::FlushChannel(CString p_cookie,CString p_token)
 {
-
   ServerEventChannel* session = FindSession(p_cookie,p_token);
   if(session)
   {
-    return UnRegisterChannel(session->GetChannel());
+    return FlushChannel(session->GetChannel());
   }
   return false;
 }
 
 bool
-ServerEventDriver::UnRegisterChannel(int p_channel)
+ServerEventDriver::FlushChannel(int p_channel)
 {
+  AutoCritSec lock(&m_lock);
+
+  ChannelMap::iterator it = m_channels.find(p_channel);
+  if(it != m_channels.end())
+  {
+    ServerEventChannel* channel = it->second;
+    return channel->FlushChannel();
+  }
+  return false;
+}
+
+// RemoveChannel (possibly at the end of an user session)
+bool
+ServerEventDriver::UnRegisterChannel(CString p_cookie,CString p_token,bool p_flush /*=true*/)
+{
+  ServerEventChannel* session = FindSession(p_cookie,p_token);
+  if(session)
+  {
+    AutoCritSec lock(&m_lock);
+
+    if(session->FlushChannel())
+    {
+      // If flushing is unsuccessful, the channel remains for later polling
+      return UnRegisterChannel(session->GetChannel(),p_flush);
+  }
+  }
+  return false;
+}
+
+bool
+ServerEventDriver::UnRegisterChannel(int p_channel,bool p_flush /*=true*/)
+{
+  // See if we can flush the channel
+  if(p_flush)
+  {
+  if(!FlushChannel(p_channel))
+  {
+    // If not, the channel stays for now
+    return false;
+    }
+  }
+
+  // Go on and lock the channels
   AutoCritSec lock(&m_lock);
 
   ChannelMap::iterator it = m_channels.find(p_channel);
@@ -290,6 +332,8 @@ ServerEventDriver::StartEventDriver()
 bool
 ServerEventDriver::StopEventDriver()
 {
+  DETAILLOG1("Stopping ServerEventDriver");
+
   // No more new postings from now on
   m_active = false;
   // Try to clear the queues one more time
@@ -304,6 +348,7 @@ ServerEventDriver::StopEventDriver()
     }
     Sleep(MONITOR_END_WAITMS);
   }
+  DETAILLOG1((m_thread == NULL) ? "EventDriver stopped" : "EventDriver still running!!");
   return (m_thread == NULL);
 }
 
@@ -359,7 +404,10 @@ ServerEventDriver::IncomingLongPoll(SOAPMessage* p_message)
 }
 
 int
-ServerEventDriver::PostEvent(int p_session,CString p_payload,EvtType type /*= EvtType::EV_Message*/)
+ServerEventDriver::PostEvent(int     p_session
+                            ,CString p_payload
+                            ,CString p_returnToSender /*= ""*/
+                            ,EvtType p_type           /*= EvtType::EV_Message*/)
 {
   int number = 0;
   if(m_active)
@@ -369,7 +417,7 @@ ServerEventDriver::PostEvent(int p_session,CString p_payload,EvtType type /*= Ev
     ServerEventChannel* session = FindSession(p_session);
     if(session)
     {
-      number = session->PostEvent(p_payload,type);
+      number = session->PostEvent(p_payload,p_returnToSender,p_type);
       // Kick the worker bee to start sending
       ::SetEvent(m_event);
     }
@@ -455,6 +503,10 @@ ServerEventDriver::Reset()
 
   m_nextSession = 0;
 
+  for(auto& session : m_channels)
+  {
+    session.second->Reset();
+  }
   // Remove all session
   for(auto& session : m_channels)
   {
