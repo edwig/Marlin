@@ -283,7 +283,7 @@ JSONvalue::GetAsJsonString(bool p_white,JsonEncoding p_encoding,unsigned p_level
     case JsonType::JDT_string:      return XMLParser::PrintJsonString(m_string,p_encoding);
     case JsonType::JDT_number_int:  result.Format("%ld",m_intNumber);
                                     break;
-    case JsonType::JDT_number_bcd:  result = m_bcdNumber.AsString();
+    case JsonType::JDT_number_bcd:  result = m_bcdNumber.AsString(bcd::Format::Bookkeeping,false,0);
                                     break;
     case JsonType::JDT_array:       result = "[" + newln;
                                     for(unsigned ind = 0;ind < m_array.size();++ind)

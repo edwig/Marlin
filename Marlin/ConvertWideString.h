@@ -25,6 +25,7 @@
 //
 #ifndef __CONVERTWIDESTRING__
 #define __CONVERTWIDESTRING__
+#include <string>
 
 enum class XMLEncoding;
 using uchar = unsigned char;

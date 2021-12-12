@@ -27,7 +27,6 @@
 #include "ConvertWideString.h"
 #include "XMLMessage.h"
 #include <map>
-#include <string>
 #include <xstring>
 
 #ifdef _DEBUG

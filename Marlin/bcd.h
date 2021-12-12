@@ -32,6 +32,7 @@
 // Numbers are stored in 1E8 based mantissa with a digital . implied at the second position
 // The mantissa array exists of a series of integers with 8 functional digits each
 //
+// Copyright (c) 2012-2021 ir W. E. Huisman
 // Version 1.2 of 18-12-2019
 //
 #ifndef __BCD__
@@ -116,9 +117,9 @@ extern int  g_locale_strCurrencyLen;
 class bcd
 {
 public:
-  typedef enum _sign    { Positive,    Negative    } Sign;
-  typedef enum _format  { Engineering, Bookkeeping } Format;
-  typedef enum _operator{ Addition,    Subtraction } Operator;
+  enum class Sign     { Positive,    Negative    };
+  enum class Format   { Engineering, Bookkeeping };
+  enum class Operator { Addition,    Subtraction };
 
   // CONSTRUCTORS/DESTRUCTORS
 
@@ -343,7 +344,7 @@ public:
   // Get as an unsigned 64 bits long
   uint64  AsUInt64() const;
   // Get as a mathematical string
-  CString AsString(bcd::Format p_format = Bookkeeping,bool p_printPositive = false,int p_decimals = 2) const;
+  CString AsString(bcd::Format p_format = Format::Bookkeeping,bool p_printPositive = false,int p_decimals = 2) const;
   // Get as a display string (by desktop locale)
   CString AsDisplayString(int p_decimals = 2) const;
   // Get as an ODBC SQL NUMERIC(p,s)
