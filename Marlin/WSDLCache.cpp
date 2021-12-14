@@ -325,7 +325,7 @@ WSDLCache::GenerateParameterTypes(CString&       p_wsdlcontent
     CString array;
     XMLElement* param = p_map[ind];
     //Only when the value is not empty or the number of children > 0
-    if(param->GetChildren().size()> 0 || !param->GetValue().IsEmpty())
+    if(param->GetChildren().size()> 0 || !param->GetName().IsEmpty() || !param->GetValue().IsEmpty())
     {
       // Begin element
       p_wsdlcontent += "        <s:element ";

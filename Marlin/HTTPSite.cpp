@@ -532,10 +532,10 @@ HTTPSite::LogSettings()
   DETAILLOG1(CString("Site allows cross-origin           : ") + (m_allowOrigin.IsEmpty() ? CString("*") : m_allowOrigin));
   DETAILLOGS("Site CORS allows headers           : ",       m_allowHeaders);
   DETAILLOGV("Site CORS max age of pre-flight    : %d",     m_corsMaxAge);
-  DETAILLOGS("Site CORS allows credentials       : %s",     m_corsCredentials ? "YES" : "NO");
-  DETAILLOGS("Site secure Cookie setting         : %s",     m_cookieHasSecure ? m_cookieSecure   ? "YES" : "NO" : "NO");
-  DETAILLOGS("Site httpOnly Cookie setting       : %s",     m_cookieHasHttp   ? m_cookieHttpOnly ? "YES" : "NO" : "NO");
-  DETAILLOGS("Site SameSite Cookie setting       : %s",     m_cookieHasSame   ? sameSite.GetString() : "NO");
+  DETAILLOGS("Site CORS allows credentials       : ",     m_corsCredentials ? "YES" : "NO");
+  DETAILLOGS("Site secure Cookie setting         : ",     m_cookieHasSecure ? m_cookieSecure   ? "YES" : "NO" : "NO");
+  DETAILLOGS("Site httpOnly Cookie setting       : ",     m_cookieHasHttp   ? m_cookieHttpOnly ? "YES" : "NO" : "NO");
+  DETAILLOGS("Site SameSite Cookie setting       : ",     m_cookieHasSame   ? sameSite.GetString() : "NO");
 }
 
 // Remove the site from the URL group
