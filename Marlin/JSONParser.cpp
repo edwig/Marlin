@@ -211,6 +211,7 @@ JSONParser::GetString()
   CString result;
   bool    doUTF8 = false;
   bool    doMBCS = false;
+  int     contin = 0;
   uchar*  buffer = m_scanString;
 
   // Check that we have a string now
@@ -246,9 +247,10 @@ JSONParser::GetString()
     else
     {
       uchar ch = ValueChar();
-      if((ch & 0xC0) == 0xC0 || 
-         (ch & 0xE0) == 0xE0 || 
-         (ch & 0xF0) == 0xF0  )
+      // UTF-8 Check. See: https://en.wikipedia.org/wiki/UTF-8
+      if(((ch >> 5) == 0x06) ||  // 110xxxxx
+         ((ch >> 4) == 0x0E) ||  // 1110xxxx
+         ((ch >> 3) == 0x1E))    // 11110xxx
       {
         // UTF-8 found. Cannot mix with MBCS
         if(doMBCS)
@@ -257,8 +259,19 @@ JSONParser::GetString()
           return GetUnicodeString();
         }
         doUTF8 = true;
+
+        // Calculate the correct amount of continuation bytes
+        if((ch >> 5) == 0x06)  contin = 1;
+        if((ch >> 4) == 0x0E)  contin = 2;
+        if((ch >> 3) == 0x1E)  contin = 3;
       }
-      else if((ch & 0xC0) != 0x1000)
+      else if(((ch >> 6) == 0x02) && contin)
+      {
+        // UTF-Continuation code. No special action
+        // Count if we get the correct amount of continuation bytes
+        --contin;
+      }
+      else if(ch & 0x80)
       {
         // MBCS found. Cannot mix with UTF8
         if(doUTF8)
@@ -353,33 +366,32 @@ JSONParser::UTF8Char()
   {
     ++m_lines;
   }
-  unsigned num = 0;
+  unsigned extra = 0;
   unsigned short cp = 0;
   unsigned short bytes = *m_pointer++;
 
   if((bytes & 0x80) == 0x00)
   {
     // U+0000 to U+007F (Standard 7bit ASCII)
-    cp = (bytes & 0x7F);
-    num = 1;
+    return bytes;
   }
-  else if((bytes & 0xE0) == 0xC0)
+  else if((bytes >> 5) == 0x06)
   {
-    // U+0080 to U+07FF (one extra char. cp = first 9 bits)
+    // U+0080 to U+07FF (one extra char. cp = last 5 bits)
     cp = (bytes & 0x1F);
-    num = 2;
+    extra = 1;
   }
-  else if((bytes & 0xF0) == 0xE0)
+  else if((bytes >> 4) == 0x0E)
   {
-    // U+0800 to U+FFFF (two extra char. cp = first 8 bits)
+    // U+0800 to U+FFFF (two extra char. cp = last 4 bits)
     cp = (bytes & 0x0F);
-    num = 3;
+    extra = 2;
   }
-  else if((bytes & 0xF8) == 0xF0)
+  else if((bytes >> 3) == 0x1E)
   {
-    // U+10000 to U+10FFFF (three extra char. cp = first 3 bits)
+    // U+10000 to U+10FFFF (three extra char. cp = last 3 bits)
     cp = (bytes & 0x07);
-    num = 4;
+    extra = 3;
   }
   else
   {
@@ -400,7 +412,7 @@ JSONParser::UTF8Char()
     SetError(JsonError::JE_IllString,"Ill formed string. Illegal UTF-8 characters.",false);
     return '?';
   }
-  for(unsigned i = 1; i < num; ++i)
+  for(unsigned i = 1; i < extra; ++i)
   {
     bytes = *m_pointer++;
     if((bytes & 0xC0) != 0x80)
@@ -409,6 +421,7 @@ JSONParser::UTF8Char()
       SetError(JsonError::JE_IllString,"Ill formed string. Illegal UTF-8 follow-up characters.",false);
       return '?';
     }
+    // Add 6 extra bits (11, 16, 21 bits)
     cp = (cp << 6) | (bytes & 0x3F);
   }
   return cp;
