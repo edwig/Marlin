@@ -33,6 +33,7 @@ CHANGES IN VERSION 7.2.0
     CrackedURL has no longer the ability to parsae username/password.
     HTTP/SOAP/JSON Messages now have individual 'm_user' and 'm_password' members to carry this
     information throughout your applications. The interface of these objects have *NOT* changed.
+6)  Dropped support of 32-bits versions
 
 CHANGES IN VERSION 7.1.0
 ------------------------
