@@ -172,8 +172,8 @@ TestEventDriver(LogAnalysis* p_log)
   errors += (g_openSeen != 3);
   g_openSeen = 0;
 
-  printf("All channel 'close' events are received        : %s\n", g_closeSeen == 3 ? "OK" : "ERROR");
-  errors += (g_closeSeen != 3);
+  printf("All channel 'close' events are received        : %s\n", g_closeSeen >= 3 ? "OK" : "ERROR");
+  errors += (g_closeSeen < 3);
   g_openSeen = 0;
 
   // Delete test driver 

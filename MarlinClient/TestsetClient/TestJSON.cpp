@@ -550,10 +550,10 @@ int TestJSONUnicode()
 {
   int errors = 0;
 
-  CString jsonString = "{ \"dollar\" : \"\\u00E9\\u00E9\\u006E \\u20AC = one €$\" }";
+  CString jsonString = "{ \"dollar\" : \"\\u00E9\\u00E9\\u006E \\u20AC = one $\" }";
   JSONMessage json(jsonString);
   CString test = json.GetJsonMessage();
-  CString expected("{\"dollar\":\"één € = one €$\"}");
+  CString expected("{\"dollar\":\"één € = one $\"}");
   errors = test.Compare(expected) != 0;
 
   // SUMMARY OF THE TEST
@@ -757,7 +757,7 @@ int DoSend(HTTPClient* p_client,JSONMessage* p_msg)
       }
       if(val.GetObject()[0].m_name == "two")
       {
-        if(msg == "{\"two\":[201,202,203,204.50,205.6789],\"three\":[301,302,303,304.50,305.6789]}")
+        if(msg == "{\"two\":[201,202,203,204.5,205.6789],\"three\":[301,302,303,304.5,305.6789]}")
         {
           --errors;
         }

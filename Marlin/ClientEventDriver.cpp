@@ -221,8 +221,8 @@ ClientEventDriver::RegisterIncomingEvent(LTEvent* p_event,bool p_doLog /*=false*
   {
     try
     {
-    (*m_callback)(m_object,p_event);
-  }
+      (*m_callback)(m_object,p_event);
+    }
     catch(StdException& ex)
     {
       ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());

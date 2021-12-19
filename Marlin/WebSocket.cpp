@@ -361,8 +361,8 @@ WebSocket::OnOpen()
     DETAILLOGV("WebSocket OnOpen called for [%s] on [%s]",m_key.GetString(),m_uri.GetString());
     try
     {
-    (*m_onopen)(this,&frame);
-  }
+      (*m_onopen)(this,&frame);
+    }
     catch(StdException& ex)
     {
       ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
@@ -381,8 +381,8 @@ WebSocket::OnMessage()
     {
       try
       {
-      (*m_onmessage)(this,frame);
-    }
+        (*m_onmessage)(this,frame);
+      }
       catch(StdException& ex)
       {
         ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
@@ -407,8 +407,8 @@ WebSocket::OnBinary()
     {
       try
       {
-      (*m_onbinary)(this,frame);
-    }
+        (*m_onbinary)(this,frame);
+      }
       catch(StdException& ex)
       {
         ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
@@ -431,8 +431,8 @@ WebSocket::OnError()
   {
     try
     {
-    (*m_onerror)(this,frame);
-  }
+      (*m_onerror)(this,frame);
+    }
     catch(StdException& ex)
     {
       ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
@@ -452,8 +452,8 @@ WebSocket::OnClose()
     {
       try
       {
-      (*m_onclose)(this,frame);
-    }
+        (*m_onclose)(this,frame);
+      }
       catch(StdException& ex)
       {
         ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
@@ -461,7 +461,8 @@ WebSocket::OnClose()
     }
     else
     {
-      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost closing frame");
+      // Application already stopped accepting info
+      // ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost closing frame");
     }
     delete frame;
   }
@@ -473,7 +474,7 @@ WebSocket::OnClose()
       DETAILLOGV("WebSocket OnClose called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
       try
       {
-      (*m_onclose)(this,&empty);
+        (*m_onclose)(this,&empty);
       }
       catch(StdException& ex)
       {
