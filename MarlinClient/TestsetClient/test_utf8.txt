@@ -1,0 +1,3 @@
+This is één (one) € euro sign.
+Greek: αβγδ-χψω
+Alternate: \u0EB1

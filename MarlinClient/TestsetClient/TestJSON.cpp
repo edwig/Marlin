@@ -550,10 +550,10 @@ int TestJSONUnicode()
 {
   int errors = 0;
 
-  CString jsonString = "{ \"dollar\" : \"\\u00E9\\u00E9\\u006E \\u20AC = one $\" }";
+  CString jsonString = "{ \"dollar\" : \"\\u00E9\\u00E9\\u006E \\u20AC = one €\" }";
   JSONMessage json(jsonString);
   CString test = json.GetJsonMessage();
-  CString expected("{\"dollar\":\"één € = one $\"}");
+  CString expected("{\"dollar\":\"één € = one €\"}");
   errors = test.Compare(expected) != 0;
 
   // SUMMARY OF THE TEST

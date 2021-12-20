@@ -61,12 +61,11 @@ private:
   void    SetError(JsonError p_error,const char* p_text,bool p_throw = true);
   void    SkipWhitespace();
   CString GetString();
-  CString GetUnicodeString();
   // Get a character from message including '& translation'
   uchar   ValueChar();
   uchar   XDigitToValue(int ch);
-  unsigned short UnicodeChar();
-  unsigned short UTF8Char();
+  unsigned char UnicodeChar();
+  unsigned char UTF8Char();
 
   void    ParseLevel();
   bool    ParseConstant();

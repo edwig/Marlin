@@ -208,18 +208,14 @@ JSONParser::ParseConstant()
 CString
 JSONParser::GetString()
 {
-  CString result;
-  bool    doUTF8 = false;
-  bool    doMBCS = false;
-  int     contin = 0;
-  uchar*  buffer = m_scanString;
+  uchar* buffer = m_scanString;
 
   // Check that we have a string now
   if(*m_pointer != '\"')
   {
     SetError(JsonError::JE_NoString,"String expected but not found!");
   }
-  uchar* startPointer(++m_pointer);
+  ++m_pointer;
 
   while(*m_pointer && *m_pointer != '\"')
   {
@@ -230,58 +226,24 @@ JSONParser::GetString()
       uchar ch = *m_pointer++;
       switch(ch)
       {
-        case '\"': [[fallthrough]];
-        case '\\': [[fallthrough]];
-        case '/':  *buffer++ = (char)ch; break;
+        case '\"': *buffer++ = '\"'; break;
+        case '\\': *buffer++ = '\\'; break;
+        case '/':  *buffer++ = '/';  break;
         case 'b':  *buffer++ = '\b'; break;
         case 'f':  *buffer++ = '\f'; break;
         case 'n':  *buffer++ = '\n'; break;
         case 'r':  *buffer++ = '\r'; break;
         case 't':  *buffer++ = '\t'; break;
-        case 'u':  m_pointer = startPointer;
-                   return GetUnicodeString();
+        case 'u':  *buffer++ = UnicodeChar(); 
+                   break;
         default:   SetError(JsonError::JE_IllString,"Ill formed string. Illegal escape sequence.");
+                   *buffer++ = ch;
                    break;
       }
     }
     else
     {
-      uchar ch = ValueChar();
-      // UTF-8 Check. See: https://en.wikipedia.org/wiki/UTF-8
-      if(((ch >> 5) == 0x06) ||  // 110xxxxx
-         ((ch >> 4) == 0x0E) ||  // 1110xxxx
-         ((ch >> 3) == 0x1E))    // 11110xxx
-      {
-        // UTF-8 found. Cannot mix with MBCS
-        if(doMBCS)
-        {
-          m_pointer = startPointer;
-          return GetUnicodeString();
-        }
-        doUTF8 = true;
-
-        // Calculate the correct amount of continuation bytes
-        if((ch >> 5) == 0x06)  contin = 1;
-        if((ch >> 4) == 0x0E)  contin = 2;
-        if((ch >> 3) == 0x1E)  contin = 3;
-      }
-      else if(((ch >> 6) == 0x02) && contin)
-      {
-        // UTF-Continuation code. No special action
-        // Count if we get the correct amount of continuation bytes
-        --contin;
-      }
-      else if(ch & 0x80)
-      {
-        // MBCS found. Cannot mix with UTF8
-        if(doUTF8)
-        {
-          m_pointer = startPointer;
-          return GetUnicodeString();
-        }
-        doMBCS = true;
-      }
-      *buffer++ = ch;
+      *buffer++ = UTF8Char();
     }
   }
   // Skip past string's ending
@@ -296,14 +258,7 @@ JSONParser::GetString()
 
   // Getting the string
   *buffer = 0;
-  result  = m_scanString;
-
-  // Eventually decode UTF-8 encodings
-  if(m_utf8 || doUTF8)
-  {
-    result = DecodeStringFromTheWire(result);
-  }
-  return result;
+  return CString(m_scanString);
 }
 
 // Conversion of xdigit to a numeric value
@@ -337,7 +292,7 @@ JSONParser::ValueChar()
 }
 
 // Get an UTF-16 \uXXXX escape char
-unsigned short
+unsigned char
 JSONParser::UnicodeChar()
 {
   int  ind = 4;
@@ -354,12 +309,21 @@ JSONParser::UnicodeChar()
   {
     SetError(JsonError::JE_Unicode4Chars, "Unicode escape consists of 4 hex characters");
   }
-  return ch;
+  unsigned short buffer[2];
+  buffer[0] = ch;
+  buffer[1] = 0;
+
+  bool foundBOM(false);
+  CString result;
+  if(TryConvertWideString((const uchar*)buffer,1,"",result,foundBOM))
+  {
+    return result.GetAt(0);
+  }
+  return '?';
 }
 
 // Get a character from message including UTF-8 translation
-// Only works on the first 16 bits Multilangual Unicode Plane !!
-unsigned short
+unsigned char
 JSONParser::UTF8Char()
 {
   if(*m_pointer == '\n')
@@ -367,8 +331,7 @@ JSONParser::UTF8Char()
     ++m_lines;
   }
   unsigned extra = 0;
-  unsigned short cp = 0;
-  unsigned short bytes = *m_pointer++;
+  unsigned char bytes = *m_pointer++;
 
   if((bytes & 0x80) == 0x00)
   {
@@ -378,125 +341,49 @@ JSONParser::UTF8Char()
   else if((bytes >> 5) == 0x06)
   {
     // U+0080 to U+07FF (one extra char. cp = last 5 bits)
-    cp = (bytes & 0x1F);
+    if((*m_pointer & 0xC0) != 0x80)
+    {
+      // Not a continuation byte: regular win-1252
+      return bytes;
+    }
     extra = 1;
   }
   else if((bytes >> 4) == 0x0E)
   {
     // U+0800 to U+FFFF (two extra char. cp = last 4 bits)
-    cp = (bytes & 0x0F);
+    if(((*m_pointer       & 0xC0) != 0x80) &&
+       ((*(m_pointer + 1) & 0xC0) != 0x80))
+    {
+      // Not two continuation bytes: regular win-1252
+      return bytes;
+    }
     extra = 2;
   }
   else if((bytes >> 3) == 0x1E)
   {
     // U+10000 to U+10FFFF (three extra char. cp = last 3 bits)
-    cp = (bytes & 0x07);
+    if(((*m_pointer      & 0xC0) != 0x80) &&
+      ((*(m_pointer + 1) & 0xC0) != 0x80) &&
+      ((*(m_pointer + 2) & 0xC0) != 0x80))
+    {
+      // Not three continuation bytes: regular win-1252
+      return bytes;
+    }
     extra = 3;
   }
   else
   {
-    // Convert MBCS to 16 bit UTF16-Codepoint
-    CString string;
-    string += ((unsigned char)bytes);
-    uchar* buffer = nullptr;
-    int    length = 0;
-    if(TryCreateWideString(string,"",false,&buffer,length))
-    {
-      cp = *((unsigned short*)buffer);
-    }
-    delete[] buffer;
-    if(cp)
-    {
-      return cp;
-    }
-    SetError(JsonError::JE_IllString,"Ill formed string. Illegal UTF-8 characters.",false);
-    return '?';
+    // Regular MBCS character outside of the UTF-8 range
+    return bytes;
   }
-  for(unsigned i = 1; i < extra; ++i)
+  CString buffer;
+  buffer += bytes;
+  for(unsigned i = 1; i <= extra; ++i)
   {
-    bytes = *m_pointer++;
-    if((bytes & 0xC0) != 0x80)
-    {
-      // Not a UTF-8 6 bit follow up char
-      SetError(JsonError::JE_IllString,"Ill formed string. Illegal UTF-8 follow-up characters.",false);
-      return '?';
-    }
-    // Add 6 extra bits (11, 16, 21 bits)
-    cp = (cp << 6) | (bytes & 0x3F);
+    buffer += *m_pointer++;
   }
-  return cp;
-}
-
-// The current string contains an \u escape sequence
-// Restart the scanning of the string on the basis of UTF-16 chars in the string
-CString 
-JSONParser::GetUnicodeString()
-{
-  // Allocate a array of shorts (2 bytes) for the string
-  unsigned short* result = new unsigned short[m_scanLength + 1];
-  memset(result,0,sizeof(unsigned short)  *  (m_scanLength + 1));
-
-  // Fill the array with chars and unicode chars
-  unsigned short* resPointer = result;
-  int total = 0;
-
-  while(*m_pointer && *m_pointer != '\"' && total <= m_scanLength)
-  {
-    // See if we must do an escape
-    if(*m_pointer == '\\')
-    {
-      ++m_pointer;
-      unsigned short ch = *m_pointer++;
-      switch(ch)
-      {
-        case '\"': [[fallthrough]];
-        case '\\': [[fallthrough]];
-        case '/':  *resPointer = ch;    break;
-        case 'b':  *resPointer = '\b';  break;
-        case 'f':  *resPointer = '\f';  break;
-        case 'n':  *resPointer = '\n';  break;
-        case 'r':  *resPointer = '\r';  break;
-        case 't':  *resPointer = '\t';  break;
-        case 'u':  *resPointer = UnicodeChar(); break;
-        default:   SetError(JsonError::JE_IllString,"Ill formed string. Illegal escape sequence.");
-                   *resPointer = ch;
-                   break;
-      }
-      ++resPointer;
-      ++total;
-    }
-    else
-    {
-      unsigned short ch = ValueChar();
-      if(ch)
-      {
-        *resPointer++ = ch;
-        ++total;
-      }
-    }
-  }
-
-  // Skip past string's ending
-  if(m_pointer && *m_pointer == '\"')
-  {
-    ++m_pointer;
-  }
-  else
-  {
-    SetError(JsonError::JE_StringEnding,"String found without an ending quote!");
-  }
-
-  // Convert the UTF-16 string back to MBCS
-  CString decoded;
-  bool foundBom = false;
-
-  if(!TryConvertWideString((const uchar*)result,total,"",decoded,foundBom))
-  {
-    decoded.Empty();
-    SetError(JsonError::JE_IllString,"Ill formed string. Could not convert UTF-16 characters.");
-  }
-  delete[] result;
-  return decoded;
+  CString result = DecodeStringFromTheWire(buffer);
+  return result.GetAt(0);
 }
 
 bool

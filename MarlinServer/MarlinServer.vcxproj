@@ -146,13 +146,13 @@ copy MarlinServer.config $(OutDir)</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)
-echo copy MarlinServer.config $(OutDir)
-copy MarlinServer.config $(OutDir)</Command>
+      <Command>echo copy MarlinServer.config $(OutDir)
+copy MarlinServer.config $(OutDir)
+echo copy Marlin.config $(OutDir)
+copy marlin.config $(OutDir)</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
+      <Message>Copy marlin.config to the output dir in order to test SSL certificate connection</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -210,11 +210,11 @@ copy MarlinServer.config $(OutDir)</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>echo copy web.config $(OutDir)
-copy ..\Certificates\web.config $(OutDir)
-echo copy MarlinServer.config $(OutDir)
-copy MarlinServer.config $(OutDir)</Command>
-      <Message>Copy web.config to the output dir in order to test SSL certificate connection</Message>
+      <Command>echo copy MarlinServer.config $(OutDir)
+copy MarlinServer.config $(OutDir)
+echo copy Marlin.config $(OutDir)
+copy marlin.config $(OutDir)</Command>
+      <Message>Copy marlin.config to the output dir in order to test SSL certificate connection</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
