@@ -33,7 +33,8 @@
 //  And is always stored in normalized mode after an operation or conversion
 //  with an implied decimal point between the first and second position
 //
-// Version 1.2 of 18-12-2019
+// Copyright (c) 2014-2021 ir. W.E. Huisman
+// Version 1.4 of 12-12-2021
 //
 //  Examples:
 //  E+03 15456712 45000000 00000000 -> 1545.671245
@@ -219,6 +220,7 @@ bcd::bcd(const SQL_NUMERIC_STRUCT* p_numeric)
   SetValueNumeric(p_numeric);
 }
 
+//
 //////////////////////////////////////////////////////////////////////////
 //
 // END OF CONSTRUCTORS OF BCD
@@ -2816,31 +2818,29 @@ bcd::SetValueInt64(const int64 p_value, const int64 p_restValue)
     m_sign = (p_value < 0L) ? Sign::Negative : Sign::Positive;
   }
   // Fill in mantissa
+  int norm = 0;
   if(p_restValue % bcdBase)
   {
-    m_mantissa[0] = long_abs(p_value % bcdBase);
-    Normalize();
-    m_exponent = -1; // reset
+    m_mantissa[0] = long_abs(p_restValue % bcdBase);
   }
   if(p_restValue / bcdBase)
   {
     ShiftRight();
     m_mantissa[0] = long_abs((long)(p_restValue / bcdBase));
-    Normalize();
-    m_exponent = -1; // reset
   }
   if(p_value % bcdBase)
   {
     ShiftRight();
     m_mantissa[0] = long_abs((long)(p_value % bcdBase));
-    Normalize(bcdDigits - 1);
+    norm = bcdDigits - 1;
   }
   if(p_value / bcdBase)
   {
     ShiftRight();
     m_mantissa[0] = long_abs((long)(p_value / bcdBase));
-    Normalize(2 * bcdDigits - 1);
+    norm = 2 * bcdDigits - 1;
   }
+  Normalize(norm);
 }
 
 void    

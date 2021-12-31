@@ -32,8 +32,8 @@
 // Numbers are stored in 1E8 based mantissa with a digital . implied at the second position
 // The mantissa array exists of a series of integers with 8 functional digits each
 //
-// Copyright (c) 2012-2021 ir W. E. Huisman
-// Version 1.2 of 18-12-2019
+// Copyright (c) 2014-2021 ir W. E. Huisman
+// Version 1.4 of 12-12-2021
 //
 #ifndef __BCD__
 #define __BCD__
@@ -170,7 +170,7 @@ public:
 
   // BCD from a SQL_NUMERIC_STRUCT
   bcd(const SQL_NUMERIC_STRUCT* p_numeric);
-  
+
   // CONSTANTS
 
   static bcd PI();     // Circumference/Radius ratio of a circle
