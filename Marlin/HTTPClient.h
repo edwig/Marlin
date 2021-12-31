@@ -311,6 +311,7 @@ public:
   int           GetQueueSize()              { return (int)m_queue.size(); };
   OAuth2Cache*  GetOAuth2Cace()             { return m_oauthCache;        };
   int           GetOAuth2Session()          { return m_oauthSession;      };
+  CString       GetLastBearerToken()        { return m_lastBearerToken;   };
   int           GetError(CString* p_message = NULL);
   CString       GetStatusText();
   void          GetBody(void*& p_body,unsigned& p_length);
@@ -495,7 +496,7 @@ private:
   // OAuth2
   OAuth2Cache*  m_oauthCache      { nullptr };                    // OAuth tokens
   int           m_oauthSession    { 0       };                    // Session in the OAuth2 Cache
-                                                                  
+  CString       m_lastBearerToken;                                // Last used OAuth2 bearer token
   // For syncing threads
   CRITICAL_SECTION m_queueSection;  // Synchronizing queue adding/sending
   CRITICAL_SECTION m_sendSection;   // Synchronizing sending for multiple threads

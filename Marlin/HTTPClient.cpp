@@ -1244,6 +1244,7 @@ HTTPClient::AddOAuth2authorization()
       else
       {
         result = true;
+        m_lastBearerToken = token;
       }
     }
   }

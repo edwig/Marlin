@@ -99,6 +99,7 @@ public:
   // Results from the path evaluation
   unsigned     GetNumberOfMatches() const;
   JSONvalue*   GetFirstResult() const;
+  CString      GetFirstResultForceToString(bool p_whitespace = false) const;
   JSONvalue*   GetResult(int p_index) const;
   CString      GetErrorMessage() const;
 

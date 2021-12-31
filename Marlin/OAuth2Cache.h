@@ -93,6 +93,7 @@ public:
   void      SetExpired(int p_session);
   void      SetAnalysisLog(LogAnalysis* p_logfile);
   void      SetDefaultExpirationPeriod(INT64 p_default);
+  void      SetDevelopment(bool p_dev = true);
 
 private:
   OAuthSession* FindSession(int p_session);
@@ -105,6 +106,7 @@ private:
   LogAnalysis*  m_logfile       { nullptr };   // Optional logfile
   INT64         m_defaultPeriod { 60 * 60 };   // Token valid for 1 hour
   int           m_nextSession   { 0 };         // Next session number to register
+  bool          m_development   { false };     // Used in a development environment
   // Locking of the session state
   CRITICAL_SECTION m_lock;
 };

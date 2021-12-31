@@ -152,7 +152,7 @@ OAuth2Cache::GetBearerToken(int p_session,bool p_refresh /*= true*/)
   OAuthSession* session = FindSession(p_session);
   if(session)
   {
-    if(GetIsExpired(p_session) && p_refresh)
+    if(GetIsExpired(p_session) || p_refresh)
     {
       StartCredentialsGrant(session);
     }
@@ -230,6 +230,12 @@ OAuth2Cache::SetExpired(int p_session)
   }
 }
 
+void
+OAuth2Cache::SetDevelopment(bool p_dev /*= true*/)
+{
+  m_development = p_dev;
+}
+
 // Slow lookup of a session
 int
 OAuth2Cache::GetHasSession(CString p_appID,CString p_appKey)
@@ -271,6 +277,15 @@ OAuth2Cache::GetClient()
     {
       m_client->SetLogging(m_logfile);
     }
+    if(m_development)
+    {
+      // Test environments are normally lax with certificates
+      // So be prepared to deal with not completely right ones!
+      m_client->SetRelaxOptions(SECURITY_FLAG_IGNORE_CERT_CN_INVALID   |
+                                SECURITY_FLAG_IGNORE_CERT_DATE_INVALID | 
+                                SECURITY_FLAG_IGNORE_UNKNOWN_CA        | 
+                                SECURITY_FLAG_IGNORE_CERT_WRONG_USAGE  );
+    }
   }
   return m_client;
 }
@@ -301,6 +316,7 @@ OAuth2Cache::StartCredentialsGrant(OAuthSession* p_session)
   // Send through extra HTTPClient
   HTTPClient* client = GetClient();
   client->SetPreEmptiveAuthorization(WINHTTP_AUTH_SCHEME_BASIC);
+
   if(client->Send(&getToken))
   {
     JSONMessage json(&getToken);

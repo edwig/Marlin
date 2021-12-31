@@ -195,6 +195,33 @@ JSONPath::GetErrorMessage() const
   return m_errorInfo;
 }
 
+CString
+JSONPath::GetFirstResultForceToString(bool p_whitespace /*=false*/) const
+{
+  JSONvalue* value = nullptr;
+
+  if(m_status == JPStatus::JP_Match_wholedoc)
+  {
+    if(m_message)
+    {
+      value = &(m_message->GetValue());
+    }
+  }
+  if(!m_results.empty())
+  {
+    if(m_status != JPStatus::JP_INVALID &&
+       m_status != JPStatus::JP_None)
+    {
+      value = m_results.front();
+    }
+  }
+  if(value)
+  {
+    return value->GetAsJsonString(p_whitespace,JsonEncoding::JENC_Plain,0);
+  }
+  return CString();
+}
+
 //////////////////////////////////////////////////////////////////////////
 // 
 // PRIVATE
