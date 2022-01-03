@@ -32,8 +32,8 @@
 // Numbers are stored in 1E8 based mantissa with a digital . implied at the second position
 // The mantissa array exists of a series of integers with 8 functional digits each
 //
-// Copyright (c) 2014-2021 ir W. E. Huisman
-// Version 1.4 of 12-12-2021
+// Copyright (c) 2014-2022 ir W. E. Huisman
+// Version 1.5 of 03-01-2022
 //
 #ifndef __BCD__
 #define __BCD__

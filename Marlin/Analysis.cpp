@@ -84,8 +84,8 @@ LogAnalysis::Reset()
     {
       // Flushing the cache and ending all writing activity
       SetEvent(m_event);
-      // Wait max 10 seconds to sync the logfile
-      for(unsigned ind = 0; ind < 100; ++ind)
+      // Wait max 100 seconds to sync the logfile
+      for(unsigned ind = 0; ind < 1000; ++ind)
       {
         // Extra context for lock
         {

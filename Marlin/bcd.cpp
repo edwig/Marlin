@@ -33,8 +33,8 @@
 //  And is always stored in normalized mode after an operation or conversion
 //  with an implied decimal point between the first and second position
 //
-// Copyright (c) 2014-2021 ir. W.E. Huisman
-// Version 1.4 of 12-12-2021
+// Copyright (c) 2014-2022 ir W. E. Huisman
+// Version 1.5 of 03-01-2022
 //
 //  Examples:
 //  E+03 15456712 45000000 00000000 -> 1545.671245
@@ -2794,14 +2794,18 @@ bcd::SetValueLong(const long p_value, const long p_restValue)
 // bcd::SetValueint64
 // Description: Set the bcd to the value of two longs
 //              Numbers can be set as bcd(12345,4567) -> +1.23454567E+4 = 12,345.4567
-//              Works up to 16 positions before and after the decimal point
+//              Works up to all 19 positions before and after the decimal point
 // Parameters:  const long value     // value before the decimal point
 //              const long restValue // Optional value behind the decimal point
-//
+// Be advised:  The restValues behave as digits left shifted to the decimal marker
+//              5      becomes 0.5
+//              15     becomes 0.15
+//              2376   becomes 0.2376
 void  
 bcd::SetValueInt64(const int64 p_value, const int64 p_restValue)
 {
   Zero();
+  int64 dblBcdDigits = (int64)bcdBase * (int64)bcdBase;
 
   if(p_value == 0L && p_restValue == 0L)
   {
@@ -2819,15 +2823,33 @@ bcd::SetValueInt64(const int64 p_value, const int64 p_restValue)
   }
   // Fill in mantissa
   int norm = 0;
+
+  // Part after the decimal point first
   if(p_restValue % bcdBase)
   {
     m_mantissa[0] = long_abs(p_restValue % bcdBase);
+    norm = bcdDigits - 1;
   }
   if(p_restValue / bcdBase)
   {
     ShiftRight();
-    m_mantissa[0] = long_abs((long)(p_restValue / bcdBase));
+    m_mantissa[0] = long_abs((long)((p_restValue / bcdBase) % bcdBase));
+    norm = 2 * bcdDigits - 1;
   }
+  if(p_restValue / dblBcdDigits)
+  {
+    ShiftRight();
+    m_mantissa[0] = long_abs((long)(p_restValue / dblBcdDigits));
+    norm = 3 * bcdDigits - 1;
+  }
+  if(p_restValue)
+  {
+    // Normalize the rest value to be left shifted
+    Normalize(norm);
+    norm = 0; // reset !!
+  }
+
+  // Part before the decimal point
   if(p_value % bcdBase)
   {
     ShiftRight();
@@ -2837,9 +2859,17 @@ bcd::SetValueInt64(const int64 p_value, const int64 p_restValue)
   if(p_value / bcdBase)
   {
     ShiftRight();
-    m_mantissa[0] = long_abs((long)(p_value / bcdBase));
+    m_mantissa[0] = long_abs((long)((p_value / bcdBase) % bcdBase));
     norm = 2 * bcdDigits - 1;
   }
+  if(p_value / dblBcdDigits)
+  {
+    ShiftRight();
+    m_mantissa[0] = long_abs((long)(p_value / dblBcdDigits));
+    norm = 3 * bcdDigits -1;
+  }
+
+  // Normalize the whole result
   Normalize(norm);
 }
 
@@ -2848,15 +2878,15 @@ bcd::SetValueUInt64(const uint64 p_value,const int64 p_restValue)
 {
   uint64 value(p_value);
   bool extra = false;
-  if(p_value > LONG_MAX)
+  if(p_value > LONGLONG_MAX)
   {
     extra  = true;
-    value -= LONG_MAX;
+    value -= LONGLONG_MAX;
   }
   SetValueInt64(value,p_restValue);
   if(extra)
   {
-    *this += bcd((long)LONG_MAX);
+    *this += bcd(LONGLONG_MAX);
   }
   Normalize();
 }
@@ -2887,7 +2917,7 @@ bcd::SetValueDouble(const double p_value)
 
   // Set the double mantissa into the m_mantissa
   // A double has 16 digits
-  for(int ind = 0;ind < (16/bcdDigits); ++ind)
+  for(int ind = 0;ind < (16 / bcdDigits); ++ind)
   {
     long base = bcdBase / 10;
     for(int pos = 0; pos < bcdDigits; ++pos)
