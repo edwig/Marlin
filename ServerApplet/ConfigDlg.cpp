@@ -524,6 +524,7 @@ ConfigDlg::OnEnChangeServer()
 {
   UpdateData();
 
+  // Guard against using 'localhost'
   if(m_server.CompareNoCase("localhost") == 0)
   {
     m_server = GetHostName(HOSTNAME_FULL);

@@ -2276,6 +2276,8 @@ HTTPClient::Send(SOAPMessage* p_msg)
 
   // Process our answer
   p_msg->Reset();
+  p_msg->SetStatus(m_status);
+
   CString answer;
   bool sendBom = false;
   if(charset.Left(6).CompareNoCase("utf-16") == 0)

@@ -72,9 +72,12 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
   if(g_soapMessage->GetInternalError() != XmlError::XE_NoError)
   {
     CString msg = g_soapMessage->GetInternalErrorString();
-    g_soapMessage->Reset();
-    g_soapMessage->SetFault("XML","Client","XML parsing error",msg);
-    SITE_ERRORLOG(ERROR_BAD_ARGUMENTS,"Expected a SOAP message, but no valid XML message found");
+    if(g_soapMessage->GetFaultCode().IsEmpty())
+    {
+      g_soapMessage->Reset();
+      g_soapMessage->SetFault("XML","Client","XML parsing error",msg);
+      SITE_ERRORLOG(ERROR_BAD_ARGUMENTS,"Expected a SOAP message, but no valid XML message found");
+    }
     m_site->SendResponse(g_soapMessage);
     p_message->SetHasBeenAnswered();
     return false;

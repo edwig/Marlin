@@ -764,7 +764,7 @@ WebServiceClient::MinimumCheck()
 
   }
   // Contract is in the SOAP-header for the WS-ReliableMessaging protocol
-  if(m_reliable == false && m_contract.IsEmpty())
+  if(m_reliable == true && m_contract.IsEmpty())
   {
     CString error("WebServiceClient without a contract definition, needed for reliable messaging.");
     DETAILLOG1(error);

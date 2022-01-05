@@ -44,93 +44,20 @@ static char g_hostName[NI_MAXHOST] = "";
 // Requesting the current hostname
 // Host names can be returned in three formats:
 //
-// HOSTNAME_SHORT  -> e.g. "localhost", "myMachine" etc
-// HOSTNAME_IP     -> e.g. "123.67.18.12"
+// HOSTNAME_SHORT  -> e.g. "myMachine" etc
 // HOSTNAME_FULL   -> e.g. "myMachine.network.org"
 //
 CString GetHostName(int p_type)
 {
-  WORD wVersionRequested;
-  WSADATA wsaData;
-  DWORD ipaddr = 0;
+  char  buffer[MAX_PATH + 1];
+  DWORD size = MAX_PATH;
+  COMPUTER_NAME_FORMAT format = p_type == HOSTNAME_FULL ? ComputerNameDnsFullyQualified : ComputerNameDnsDomain;
 
-  // Requesting the same name type again. Use the cached 
-  if(g_hostName[0] && g_hostType == p_type)
+  if(::GetComputerNameEx(format,buffer,&size))
   {
-    return CString(g_hostName);
+    return CString(buffer);
   }
-  g_hostType = p_type;
-
-  // Startup WinSockets
-  wVersionRequested = MAKEWORD(2,2);
-  if(WSAStartup(wVersionRequested,&wsaData))
-  {
-    // Could not start WinSockets?
-    return "";
-  }
-
-  // Get hour host name (short form)
-  if(gethostname(g_hostName,NI_MAXHOST) != 0)
-  {
-    strcpy_s(g_hostName,NI_MAXHOST,"localhost");
-  }
-
-  // Only named form requested
-  if(p_type == HOSTNAME_SHORT)
-  {
-    WSACleanup();
-    return CString(g_hostName);
-  }
-
-  // Find IP address by way of addressinfo
-  struct addrinfo aiHints;
-  struct addrinfo *aiList = NULL;
-  const char*  port = "80";
-
-  // Setup the hints address info structure
-  // which is passed to the getaddrinfo() function
-  memset(&aiHints, 0, sizeof(aiHints));
-  aiHints.ai_family   = AF_INET;
-  aiHints.ai_socktype = SOCK_STREAM;
-  aiHints.ai_protocol = IPPROTO_TCP;
-
-  if(getaddrinfo(g_hostName,port,&aiHints,&aiList) != 0)
-  {
-    // Cleanup again. Server will do Startup later
-    WSACleanup();
-    strcpy_s(g_hostName,NI_MAXHOST,"127.0.0.1");
-    return CString(g_hostName);
-  }
-
-  // Get the IP address in network order
-  ipaddr = *((DWORD*) &aiList->ai_addr->sa_data[2]);
-
-  if(p_type == HOSTNAME_IP)
-  {
-    // Cleanup again. Server will do Startup later
-    WSACleanup();
-    // Convert to string
-    struct in_addr addr;
-    addr.S_un.S_addr  = ipaddr;
-
-    g_hostName[0] = 0;
-    inet_ntop(AF_INET,(PVOID)&addr,g_hostName,NI_MAXHOST);
-    return CString(g_hostName);
-  }
-
-  // Find Full Qualified server name
-  // Can time-out a long time (3 seconds or more)
-  getnameinfo(aiList->ai_addr
-             ,sizeof(sockaddr_in)
-             ,g_hostName
-             ,NI_MAXHOST
-             ,NULL
-             ,0
-             ,NI_NAMEREQD);
-
-  // Cleanup again. Server will do Startup later
-  WSACleanup();
-  return CString(g_hostName);
+  return "";
 }
 
 CString

@@ -66,7 +66,7 @@ constexpr auto INIT_HTTP_BUFFERSIZE   = (32 * 1024);
 // Initial HTTP backlog queue length
 constexpr auto INIT_HTTP_BACKLOGQUEUE = 64;
 constexpr auto MAXX_HTTP_BACKLOGQUEUE = 640;
-// Timout after bruteforce attack
+// Timeout after bruteforce attack
 constexpr auto TIMEOUT_BRUTEFORCE     = (10 * CLOCKS_PER_SEC);
 
 // Websockets are two sided sockets, not HTTP

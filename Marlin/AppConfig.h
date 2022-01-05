@@ -33,7 +33,7 @@
 // DEFAULTS for the application config file: "<PRODUCT_NAME>.Config"
 
 #define DEFAULT_NAME        "<DTAP Name>"   // DTAP = "Development", "Test", "Acceptance", "Production"
-#define DEFAULT_SERVER      "localhost"
+#define DEFAULT_SERVER      "mymachine"
 #define DEFAULT_URL         "/myserver/"
 #define DEFAULT_SERVERLOG   "C:\\WWW\\Serverlog.txt"
 #define DEFAULT_WEBROOT     "C:\\WWW\\"
