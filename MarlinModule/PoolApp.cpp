@@ -30,8 +30,9 @@
 #include "ServiceReporting.h"
 #include <io.h>
 
-#define MODULE_NAME "Application"
-#define MODULE_PATH "Directory"
+#define MODULE_NAME  "Application"
+#define MODULE_PATH  "Directory"
+#define MODULE_EMAIL "AdministratorEmail"
 
 // Logging macro for this file only
 #define DETAILLOG(text)    SvcReportInfoEvent(false,text);
@@ -57,7 +58,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
   // Read Web config from "physical-application-path" + "web.config"
   CString baseWebConfig = p_physical + "web.config";
   baseWebConfig.MakeLower();
-  m_config.ReadConfig(baseWebConfig);
+  m_config.ReadConfig(p_application,baseWebConfig);
 
   // Load the **real** application DLL from the settings of web.config
   CString dllLocation = m_config.GetSetting(MODULE_NAME);
@@ -72,6 +73,20 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
   {
     Unhealthy("MarlinModule could **NOT** locate the 'Directory' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
     return false;
+  }
+
+  // Find our default administrator email to send a Error report to
+  CString adminEmail = m_config.GetSetting(MODULE_EMAIL);
+  if(adminEmail.IsEmpty())
+  {
+    Unhealthy("MarlinModule could **NOT** locate the 'AdministratorEmail' in the web.config: " + baseWebConfig,ERROR_NOT_FOUND);
+    return false;
+  }
+  else
+  {
+    extern char g_adminEmail[];
+    strncpy_s(g_adminEmail,MAX_PATH - 1,adminEmail.GetString(),MAX_PATH - 1);
+    PRODUCT_ADMIN_EMAIL = g_adminEmail;
   }
 
   // Tell MS-Windows where to look while loading our DLL

@@ -9,6 +9,12 @@ Version 7.x contains the new MarlinModule that (again) allows to be used with st
 application modules (DLL's), and so optimize the depoloyment and stack tracing capabilities
 ----------------------------------------------------------------------------------------------
 
+CHANGES in VERSION 7.3.0
+------------------------
+1)  The IIS web.config has been expanded with an administrators emailadress for crash reports.
+    This upgrades the MarlinModule to 7.3.0 and the ServerApp depends on that.
+	You must upgrade your application accordingly.
+
 CHANGES IN VERSION 7.2.0
 ------------------------
 1)  Added the new ServerEventDriver and ClientEventDriver for the transparent event framework.

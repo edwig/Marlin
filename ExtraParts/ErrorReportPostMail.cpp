@@ -55,6 +55,8 @@ ErrorReportPostMail::DoReport(const CString&    p_subject
                              ,const CString&    p_webroot
                              ,const CString&    p_url) const
 {
+  extern const char* PRODUCT_ADMIN_EMAIL;
+
   // Getting proces information
   std::auto_ptr<ProcInfo> procInfo(new ProcInfo);
   FILETIME creationTime, exitTime, kernelTime, userTime;
@@ -67,6 +69,11 @@ ErrorReportPostMail::DoReport(const CString&    p_subject
   // Getting the error address
   const CString &errorAddress    = p_trace.FirstAsString();
   const CString &xmlErrorAddress = p_trace.FirstAsXMLString();
+  CString receiver(m_receiver);
+  if(receiver.IsEmpty() && PRODUCT_ADMIN_EMAIL)
+  {
+    receiver = CString(PRODUCT_ADMIN_EMAIL);
+  }
 
   CString version;
   version.Format("%s.%s",SHM_VERSION,VERSION_BUILD);
@@ -74,7 +81,7 @@ ErrorReportPostMail::DoReport(const CString&    p_subject
   // Format the message
   CString message = "HOST:" + m_mailServer + "\n"
                     "FROM:" + procInfo->m_username + " op " + procInfo->m_computer + " <" + m_sender + ">\n"
-                    "TO:"   + m_receiver + "\n"
+                    "TO:"   + receiver + "\n"
                     "ONDERWERP: " PRODUCT_NAME ": version: " + version + ": " + p_subject + " in " + errorAddress + "\n"
                     "VERWIJDEREN:nee\n"
                     "<BODY>\n"

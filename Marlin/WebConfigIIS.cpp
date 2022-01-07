@@ -56,15 +56,19 @@ WebConfigIIS::ReadConfig()
 }
 
 bool
-WebConfigIIS::ReadConfig(CString p_baseWebConfig)
+WebConfigIIS::ReadConfig(CString p_application,CString p_extraWebConfig /*= ""*/)
 {
-  // Standard web.config file
-  m_webconfig = p_baseWebConfig;
-
   // Reads the central IIS application host configuration file first
   // this file contains the defaults for IIS.
   bool result = ReadConfig("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config",nullptr);
-  SetApplication(m_application);
+  if(!p_application.IsEmpty())
+  {
+    SetApplication(p_application);
+  }
+  else if(!p_extraWebConfig.IsEmpty())
+  {
+    ReadConfig(p_extraWebConfig,nullptr);
+  }
   return result;
 }
 
@@ -72,26 +76,19 @@ void
 WebConfigIIS::SetApplication(CString p_application)
 {
   // Try reading applications web.config
-  if(p_application.IsEmpty())
+  IISSite* site = GetSite(p_application);
+  if(site)
   {
-    ReadConfig(m_webconfig,nullptr);
-  }
-  else
-  {
-    IISSite* site = GetSite(p_application);
-    if(site)
+    // Get virtual directory: can be outside "inetpub\wwwroot"
+    CString config = site->m_path + "\\web.config";
+    // Read the web.config of the application site, if any requested
+    if(ReadConfig(config,site))
     {
-      // Get virtual directory: can be outside "inetpub\wwwroot"
-      CString config = site->m_path + "\\Web.Config";
-      // Read the web.config of the application site, if any requested
-      ReadConfig(config,site);
+      m_webconfig = config;
     }
   }
   // Store the application
-  if(m_application.IsEmpty())
-  {
-    m_application = p_application;
-  }
+  m_application = p_application;
 }
 
 CString

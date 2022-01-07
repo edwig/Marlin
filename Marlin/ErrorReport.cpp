@@ -547,6 +547,7 @@ SignalHandler(int signal)
   {
     // Gather stack information in our TMP directory
     ErrorReport::Report(signal,0,tempdir,"Crash_");
+    return;
   }
   // Gather stack information in the C:\ root directory
   ErrorReport::Report(signal,0,"","");

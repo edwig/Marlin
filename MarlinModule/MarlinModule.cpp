@@ -54,6 +54,7 @@ static char THIS_FILE[] = __FILE__;
 static WebConfigIIS* g_config  { nullptr };  // The ApplicationHost.config information only!
 static wchar_t       g_moduleName[SERVERNAME_BUFFERSIZE + 1] = L"";
 static bool          g_debugMode = false;
+       char          g_adminEmail[MAX_PATH];
 
 // Logging macro for this file only
 #define DETAILLOG(text)    SvcReportInfoEvent(false,text);

@@ -94,7 +94,7 @@ public:
 
   // Read total config
   bool ReadConfig();
-  bool ReadConfig(CString p_baseWebConfig);
+  bool ReadConfig(CString p_application,CString p_extraWebConfig = "");
   // Set a different application before re-reading the config
   void SetApplication(CString p_app);
 

@@ -360,7 +360,8 @@ ServerApp::SitesInThePool()
 bool
 ServerApp::MinMarlinVersion(int p_version)
 {
-  int minVersion =  MARLIN_VERSION_MAJOR      * 10000;    // Major version main
+  int minVersion =  MARLIN_VERSION_MAJOR      * 10000 +   // Major version main
+                    MARLIN_VERSION_MINOR      *   100;
   int maxVersion = (MARLIN_VERSION_MAJOR + 1) * 10000;    // Major version main
 
   if(p_version < minVersion || maxVersion <= p_version)
@@ -368,7 +369,7 @@ ServerApp::MinMarlinVersion(int p_version)
     SvcReportErrorEvent(0,true,__FUNCTION__
                        ,"MarlinModule version is out of range: %d.%d.%d\n"
                        ,"This application was compiled for: %d.%d.%d"
-                       ,p_version / 10000,p_version % 10000,p_version % 100
+                       ,p_version / 10000,(p_version % 10000)/100,p_version % 100
                        ,MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP);
     return 0;
   }
