@@ -38,6 +38,7 @@
 #include "WebConfigIIS.h"
 #include "RunRedirect.h"
 #include "ServiceReporting.h"
+#include "StdException.h"
 #include "IISDebug.h"
 #include <io.h>
 
@@ -229,26 +230,33 @@ void Unhealthy(CString p_error, HRESULT p_code)
   // Report to IIS to kill the application with **this** reason
   g_iisServer->ReportUnhealthy(werr, p_code);
 
-  // Stopping the application pool
-  CString appPoolName = W2A(g_iisServer->GetAppPoolName());
-  CString command;
-  CString parameters;
-  if(!command.GetEnvironmentVariable("WINDIR"))
+  _set_se_translator(SeTranslator);
+  try
   {
-    command = "C:\\windows";
+    // Stopping the application pool
+    CString appPoolName = W2A(g_iisServer->GetAppPoolName());
+    CString command;
+    CString parameters;
+    if(!command.GetEnvironmentVariable("WINDIR"))
+    {
+      command = "C:\\windows";
+    }
+    command += "\\system32\\inetsrv\\appcmd.exe";
+    parameters.Format("stop apppool \"%s\"",appPoolName.GetString());
+
+    // Stopping the application pool will be called like this
+    CString logging;
+    logging.Format("W3WP.EXE Stopped by: %s %s",command.GetString(),parameters.GetString());
+    DETAILLOG(logging);
+
+    // STOP!
+    CString result;
+    CallProgram_For_String(command,parameters,result);
   }
-  command += "\\system32\\inetsrv\\appcmd.exe";
-  parameters.Format("stop apppool \"%s\"",appPoolName.GetString());
-
-  // Stopping the application pool will be called like this
-  CString logging;
-  logging.Format("W3WP.EXE Stopped by: %s %s",command.GetString(),parameters.GetString());
-  DETAILLOG(logging);
-
-  // STOP!
-  CString result;
-  CallProgram_For_String(command, parameters, result);
-
+  catch(StdException& /*ex*/)
+  {
+    // PROGRAM ALREADY DEAD!!
+  }
   // Program is dead after this point. 
   // AFTER CALING THIS FUNCTION, YOU SHOULD END THE MODULE WITH:
   // return GL_NOTIFICATION_CONTINUE;
@@ -305,35 +313,45 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   message += "IIS Application       : " + application;
   DETAILLOG(message.GetString());
 
-  // Check if already application started for this port number
-  AppPool::iterator it = g_IISApplicationPool.find(applicationPort);
-  if(it != g_IISApplicationPool.end())
+  _set_se_translator(SeTranslator);
+  try
   {
-    // Already started this application
-    // Keep fingers crossed that another application implements this port!!!
+    // Check if already application started for this port number
+    AppPool::iterator it = g_IISApplicationPool.find(applicationPort);
+    if(it != g_IISApplicationPool.end())
+    {
+      // Already started this application
+      // Keep fingers crossed that another application implements this port!!!
+      CString error;
+      error.Format("Application [%s] on port [%d] already started. ANOTHER application must implement this port!!"
+                   ,application.GetString(),applicationPort);
+      Unhealthy(error,ERROR_DUP_NAME);
+      return GL_NOTIFICATION_CONTINUE;
+    }
+
+    // Create a new pool application
+    PoolApp* poolapp = new PoolApp();
+    if(poolapp->LoadPoolApp(httpapp,webroot,physical,application))
+    {
+      // Keep application in our IIS application pool
+      g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
+    }
+    else
+    {
+      // NOPE: Didn't work. Delete it again
+      delete poolapp;
+    }
+
+    // Restore the original DLL search order
+    SetDllDirectory(nullptr);
+  }
+  catch(StdException& ex)
+  {
     CString error;
-    error.Format("Application [%s] on port [%d] already started. ANOTHER application must implement this port!!"
-                 ,application.GetString(),applicationPort);
-    Unhealthy(error,ERROR_DUP_NAME);
-    return GL_NOTIFICATION_CONTINUE;
+    error.Format("Marlin found an error while starting application [%s] %s",appName.GetString(),ex.GetErrorMessage().GetString());
+    ERRORLOG(error);
+    ErrorReport::Report(ERROR_SERVICE_NEVER_STARTED,0,webroot,"Crash_");
   }
-
-  // Create a new pool application
-  PoolApp* poolapp = new PoolApp();
-  if(poolapp->LoadPoolApp(httpapp,webroot,physical,application))
-  {
-    // Keep application in our IIS application pool
-    g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
-  }
-  else
-  {
-    // NOPE: Didn't work. Delete it again
-    delete poolapp;
-  }
-
-  // Restore the original DLL search order
-  SetDllDirectory(nullptr);
-
   return GL_NOTIFICATION_HANDLED;
 };
 
@@ -346,9 +364,12 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   USES_CONVERSION;
 
   IHttpApplication* httpapp = p_provider->GetApplication();
+  CString appName    = W2A(httpapp->GetApplicationId());
   CString configPath = W2A(httpapp->GetAppConfigPath());
+  CString physical   = W2A(httpapp->GetApplicationPhysicalPath());
   CString appSite    = ExtractAppSite(configPath);
- 
+  CString webroot    = ExtractWebroot(configPath,physical);
+
   // IIS Guarantees that every app site is on an unique port
   int applicationPort = g_config->GetSitePort(appSite,INTERNET_DEFAULT_HTTPS_PORT);
   CString application = g_config->GetSiteName(appSite);
@@ -370,11 +391,22 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
 
   if(CountAppPoolApplications(app) == 1)
   {
-    // STOP!!
-    app->UnloadSites();
+    _set_se_translator(SeTranslator);
+    try
+    {
+      // STOP!!
+      app->UnloadSites();
 
-    // Let the application stop itself 
-    app->ExitInstance();
+      // Let the application stop itself 
+      app->ExitInstance();
+    }
+    catch(StdException& ex)
+    {
+      CString error;
+      error.Format("Marlin found an error while stopping application [%s] %s",appName.GetString(),ex.GetErrorMessage().GetString());
+      ERRORLOG(error);
+      ErrorReport::Report(ERROR_SERVICE_NOTIFICATION,0,webroot,"Crash_");
+    }
   }
   // Destroy the application and the IIS pool app
   // And possibly unload the application DLL
@@ -565,7 +597,7 @@ MarlinModuleFactory::GetHttpModule(OUT CHttpModule**     p_module
   //Test for an error
   if(!requestModule)
   {
-    DETAILLOG("Failed: APP pool cannot find the requested Marlin module!");
+    ERRORLOG("Failed: APP pool cannot find the requested Marlin module!");
     return HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
   }
   // Return a pointer to the module

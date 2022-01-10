@@ -5,12 +5,12 @@
 ;
 ; Copyright (c) 2019 Edwig Huisman
 ;
-; Date of last change: 19-07-2021
-; Version:             7.0
+; Date of last change: 10-01-2022
+; Version:             7.3
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 64Bits"
- !define PRODUCT_VERSION                      "7.0.0"
- !define PRODUCT_EXT                          "700"
+ !define PRODUCT_VERSION                      "7.3.0"
+ !define PRODUCT_EXT                          "730"
  !define PRODUCT_PUBLISHER                    "Edwig Huisman"
  !define PRODUCT_WEB_SITE                     "https://github.com/Edwig/Marlin"
  !define PRODUCT_DIR_REGKEY                   "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"
@@ -117,30 +117,18 @@ Function .onInit
  IfSilent +2
  advsplash::show 1000 1000 500 0xFFFFFF $PLUGINSDIR\Marlin
  
- IntCmp $currentVersion ${PRODUCT_VERSION} versionSame SetupNewerVersion CurrentVersionNewer
+ StrCmp $currentVersion ${PRODUCT_VERSION} versionSame SetupNewerVersion
 
  versionSame:
-  Messagebox MB_YESNO "This version of ${PRODUCT_NAME} is already installed. Do you want to re-install it?. " /SD IDYES IDNO doNotRepair
+  Messagebox MB_YESNO "This version of ${PRODUCT_NAME} is already installed. Do you want to re-install it?. " /SD IDYES IDNO doNotInstall
   !insertmacro Log "Reinstalling product ${PRODUCT_NAME}."
   goto SetupNewerVersion
   
- doNotRepair:
-  !insertmacro Log "User has chosen NOT to repair the product."
+ doNotInstall:
+  !insertmacro Log "User has chosen NOT to install the product."
   !insertmacro Log "Setup is ready."
   abort
   
- CurrentVersionNewer:
-  !insertmacro Log "There is already a newer version of  ${PRODUCT_NAME} installed on your system."
-  !insertmacro Log "Version: ${PRODUCT_VERSION}.$currentVersion"
-  Messagebox MB_YESNO "There is already a newer version of  ${PRODUCT_NAME} installed on your system. \
-                       Do you want to overwrite the newer version with this version?" \
-                      /SD IDNO IDYES doInstall
-
-  abort
- doInstall:
- !insertmacro Log "User has chosen to install an older version of the product."
- Delete "$INSTDIR\uninstall ${PRODUCT_NAME} $currentVersion.exe"
- 
  SetupNewerVersion:
   goto InitEnd
 
