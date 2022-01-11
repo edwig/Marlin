@@ -361,9 +361,9 @@ HTTPSite::CheckReliable()
   return true;
 }
 
-// Init parameters from web.config
+// Init parameters from Marlin.config
 void
-HTTPSite::InitSite(WebConfig& p_config)
+HTTPSite::InitSite(MarlinConfig& p_config)
 {
   // Get the WebRoot
   m_webroot = p_config.GetParameterString("Server", "WebRoot", m_webroot);
@@ -1813,7 +1813,7 @@ HTTPSite::SetBlockCacheControl(bool p_block)
 
 // Set automatic headers upon starting site
 void
-HTTPSite::SetAutomaticHeaders(WebConfig& p_config)
+HTTPSite::SetAutomaticHeaders(MarlinConfig& p_config)
 {
   // Find default value for xFrame options
   CString option;

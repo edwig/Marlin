@@ -274,7 +274,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="WebConfig.cpp" />
+    <ClCompile Include="MarlinConfig.cpp" />
     <ClCompile Include="WebConfigIIS.cpp" />
     <ClCompile Include="WebServiceClient.cpp" />
     <ClCompile Include="WebServiceServer.cpp" />
@@ -453,7 +453,7 @@
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="ThreadPoolED.h" />
     <ClInclude Include="Version.h" />
-    <ClInclude Include="WebConfig.h" />
+    <ClInclude Include="MarlinConfig.h" />
     <ClInclude Include="WebConfigIIS.h" />
     <ClInclude Include="WebServiceClient.h" />
     <ClInclude Include="WebServiceServer.h" />

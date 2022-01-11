@@ -105,7 +105,7 @@ FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
   xprintf("File indicated size    : %d\n",(int)    p_part->GetSize());
 
   // Keep debugging things together, by resetting the filename
-  CString filename = WebConfig::GetExePath() + p_part->GetFileName();
+  CString filename = MarlinConfig::GetExePath() + p_part->GetFileName();
   p_part->SetFileName(filename);
   // Re-write the file part buffer + optional file times.
   bool result = p_part->WriteFile();

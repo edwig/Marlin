@@ -35,7 +35,7 @@
 #pragma once
 #include "Analysis.h"
 #include "HTTPMessage.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "CreateURLPrefix.h"
 #include "HPFCounter.h"
 #include "ServerEvent.h"
@@ -75,7 +75,7 @@ constexpr auto TIMEOUT_BRUTEFORCE     = (10 * CLOCKS_PER_SEC);
 #endif
 
 // Static globals for the server as a whole
-// Can be set through the web.config reading of the HTTPServer
+// Can be set through the Marlin.config reading of the HTTPServer
 extern unsigned long g_streaming_limit; // = STREAMING_LIMIT;
 extern unsigned long g_compress_limit;  // = COMPRESS_LIMIT;
 
@@ -112,7 +112,7 @@ enum class SendHeader
   HTTP_SH_MICROSOFT = 1         // Send standard Microsoft server header
  ,HTTP_SH_MARLIN                // Send our standard server header
  ,HTTP_SH_APPLICATION           // Application's server name
- ,HTTP_SH_WEBCONFIG             // Send server from the web.config
+ ,HTTP_SH_WEBCONFIG             // Send server from the Marlin.config
  ,HTTP_SH_HIDESERVER            // Hide the server type - do not send header
 };
 
@@ -251,7 +251,7 @@ public:
   // Get the client retry connection time
   ULONG       GetEventRetryConnection();
   // Reference to the WebConfig
-  WebConfig&  GetWebConfig();
+  MarlinConfig&  GetWebConfig();
   // Getting the logfile
   LogAnalysis* GetLogfile();
   // Server session ID for the groups
@@ -448,13 +448,13 @@ protected:
   HTTP_CACHE_POLICY_TYPE  m_policy   { HttpCachePolicyNocache };        // Cache policy
   ULONG                   m_secondsToLive  { 0 };   // Seconds to live in the cache
   ThreadPool              m_pool;                   // Our threadpool for the server
-  WebConfig*              m_webConfig;              // Web.config or Marlin.Config in our current directory
+  MarlinConfig*              m_marlinConfig;           // Web.config or Marlin.Config in our current directory
   LogAnalysis*            m_log      { nullptr };   // Logging object
   bool                    m_logOwner { false   };   // Server owns the log
   int                     m_logLevel { HLL_NOLOG }; // Detailed logging of the server
   HPFCounter              m_counter;                // High performance counter
   SendHeader              m_sendHeader { SendHeader::HTTP_SH_HIDESERVER }; // Server header to send
-  CString                 m_configServerName;       // Server header name from web.config
+  CString                 m_configServerName;       // Server header name from Marlin.config
   ErrorReport*            m_errorReport{ nullptr};  // Error report handling
   // All sites of the server
   SiteMap                 m_allsites;               // All URL's and context pointers
@@ -573,10 +573,10 @@ HTTPServer::SetByteOrderMark(bool p_mark)
   m_eventBOM = p_mark;
 }
 
-inline WebConfig&
+inline MarlinConfig&
 HTTPServer::GetWebConfig()
 {
-  return *m_webConfig;
+  return *m_marlinConfig;
 }
 
 inline LogAnalysis* 

@@ -27,7 +27,7 @@
 //
 #pragma once
 
-class WebConfig;
+class MarlinConfig;
 
 // WebConfigDlg dialog
 
@@ -39,8 +39,8 @@ public:
   WebConfigAuthentication(bool p_iis,CWnd* pParent = NULL);   // standard constructor
  ~WebConfigAuthentication();
   BOOL OnInitDialog();
-  void ReadWebConfig(WebConfig& config);
-  void WriteWebConfig(WebConfig& config);
+  void ReadWebConfig (MarlinConfig& config);
+  void WriteWebConfig(MarlinConfig& config);
 
 // Dialog Data
   enum { IDD = IDD_WC_AUTHENTICATION };

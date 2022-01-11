@@ -69,19 +69,19 @@ HTTPSiteMarlin::StartSite()
   // Getting the global settings
   InitSite(m_server->GetWebConfig());
 
-  // If we have a site web.config file: read it
+  // If we have a site Marlin.config file: read it
   // Overrides the programmatical settings between HTTPServer::CreateSite and HTTPSite::StartSite
-  CString siteConfigFile = WebConfig::GetSiteConfig(m_prefixURL);
+  CString siteConfigFile = MarlinConfig::GetSiteConfig(m_prefixURL);
   if(!siteConfigFile.IsEmpty())
   {
-    WebConfig config(siteConfigFile);
+    MarlinConfig config(siteConfigFile);
     if(config.IsFilled())
     {
       InitSite(config);
     }
   }
 
-  // Now log the settings, once we read all web.config files
+  // Now log the settings, once we read all Marlin.config files
   LogSettings();
 
   // See if we have a reliable messaging WITH authentication
@@ -214,7 +214,7 @@ HTTPSiteMarlin::SetWebroot(CString p_webroot)
 }
 
 void
-HTTPSiteMarlin::InitSite(WebConfig& p_config)
+HTTPSiteMarlin::InitSite(MarlinConfig& p_config)
 {
   // Call our main class InitSite
   HTTPSite::InitSite(p_config);

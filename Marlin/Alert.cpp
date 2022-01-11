@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "Alert.h"
 #include "EnsureFile.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "strsafe.h"
 #include <sys/timeb.h>
 #include <time.h>
@@ -138,7 +138,7 @@ __int64 CreateAlert(LPCTSTR p_function,LPCTSTR p_oserror,LPCTSTR p_eventdata,int
       fprintf(file,"APPLICATION ALERT FILE\n");
       fprintf(file,"======================\n");
       fprintf(file,"\n");
-      fprintf(file,"Server module: %s\n",WebConfig::GetExeModule().GetString());
+      fprintf(file,"Server module: %s\n",MarlinConfig::GetExeModule().GetString());
       fprintf(file,"Alert moment : %4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d.%3.3d\n"
                   ,today.tm_year + 1900
                   ,today.tm_mon  + 1

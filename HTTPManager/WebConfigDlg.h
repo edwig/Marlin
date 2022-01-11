@@ -32,7 +32,7 @@
 #include "WebConfigWServices.h"
 #include "WebConfigLogging.h"
 
-class WebConfig;
+class MarlinConfig;
 
 // WebConfigDlg dialog
 
@@ -73,7 +73,7 @@ protected:
   WebConfigWServices      m_page4 { m_iis,this };
   WebConfigLogging        m_page5 { m_iis,this };
 
-  WebConfig* m_webconfig { nullptr };
+  MarlinConfig* m_webconfig { nullptr };
 public:
   afx_msg void OnTcnSelchangeTab(NMHDR *pNMHDR,LRESULT *pResult);
   afx_msg void OnBnClickedOk();

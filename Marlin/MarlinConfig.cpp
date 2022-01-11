@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: WebConfig.cpp
+// SourceFile: MarlinConfig.cpp
 //
 // Marlin Server: Internet server/client
 // 
@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "Stdafx.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "Crypto.h"
 
 #ifdef _DEBUG
@@ -35,16 +35,16 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-WebConfig::WebConfig()
+MarlinConfig::MarlinConfig()
 {
-  ReadConfig("web.config");
+  ReadConfig("Marlin.config");
 }
 
-WebConfig::WebConfig(CString p_filename)
+MarlinConfig::MarlinConfig(CString p_filename)
 {
   if(p_filename.IsEmpty())
   {
-    ReadConfig("web.config");
+    ReadConfig("Marlin.config");
   }
   else
   {
@@ -52,7 +52,7 @@ WebConfig::WebConfig(CString p_filename)
   }
 }
 
-WebConfig::~WebConfig()
+MarlinConfig::~MarlinConfig()
 {
   WriteConfig();
 }
@@ -60,7 +60,7 @@ WebConfig::~WebConfig()
 static char g_staticAddress;
 
 /* static */ CString
-WebConfig::GetExeModule()
+MarlinConfig::GetExeModule()
 {
   char buffer[_MAX_PATH + 1];
 
@@ -80,7 +80,7 @@ WebConfig::GetExeModule()
 }
 
 /* static */ CString
-WebConfig::GetExePath()
+MarlinConfig::GetExePath()
 {
   CString assembly = GetExeModule();
 
@@ -92,14 +92,14 @@ WebConfig::GetExePath()
   return assembly.Left(slashPosition + 1);
 }
 
-// Find the name of a URL site specific web.config file
+// Find the name of a URL site specific Marlin.config file
 // Thus we can set overrides on a site basis
 // Will produce something like 'Site-<port>-url-without-slashes.config'
 
 /* static */ CString
-WebConfig::GetSiteConfig(CString p_prefixURL)
+MarlinConfig::GetSiteConfig(CString p_prefixURL)
 {
-  CString pathName = WebConfig::GetExePath();
+  CString pathName = MarlinConfig::GetExePath();
 
   CString name(p_prefixURL);
   int pos = name.Find("//");
@@ -122,9 +122,9 @@ WebConfig::GetSiteConfig(CString p_prefixURL)
 }
 
 /* static */ CString
-WebConfig::GetURLConfig(CString p_url)
+MarlinConfig::GetURLConfig(CString p_url)
 {
-  CString pathName = WebConfig::GetExePath();
+  CString pathName = MarlinConfig::GetExePath();
 
   CString url(p_url);
   int pos = url.Find("//");
@@ -164,7 +164,7 @@ WebConfig::GetURLConfig(CString p_url)
 }
 
 bool
-WebConfig::ReadConfig(CString p_filename)
+MarlinConfig::ReadConfig(CString p_filename)
 {
   // File to open  
   // Remember where we read it
@@ -194,7 +194,7 @@ WebConfig::ReadConfig(CString p_filename)
 }
 
 bool
-WebConfig::WriteConfig()
+MarlinConfig::WriteConfig()
 {
   if(!m_changed)
   {
@@ -203,7 +203,7 @@ WebConfig::WriteConfig()
   // Check for new file
   if(m_fileName.IsEmpty())
   {
-    m_fileName = GetExePath() + "web.config";
+    m_fileName = GetExePath() + "Marlin.config";
   }
 
   return XMLMessage::SaveFile(m_fileName);
@@ -212,35 +212,35 @@ WebConfig::WriteConfig()
 // In case we want to make in-memory changes that may never
 // be written back to disk
 void
-WebConfig::ForgetChanges()
+MarlinConfig::ForgetChanges()
 {
   m_changed = false;
 }
 
 // Find section with this name
 XMLElement* 
-WebConfig::FindSection(CString p_section)
+MarlinConfig::FindSection(CString p_section)
 {
   return FindElement(p_section);
 }
 
 // Find parameter within a section
 XMLElement*   
-WebConfig::FindParameter(XMLElement* p_section,CString p_parameter)
+MarlinConfig::FindParameter(XMLElement* p_section,CString p_parameter)
 {
   return FindElement(p_section,p_parameter);
 }
 
 // Remove a parameter
 void         
-WebConfig::RemoveParameter(XMLElement* p_section,CString p_parameter)
+MarlinConfig::RemoveParameter(XMLElement* p_section,CString p_parameter)
 {
   DeleteElement(p_section,p_parameter);
 }
 
 // Find an attribute within a parameter
 XMLAttribute* 
-WebConfig::FindAttribute(XMLElement* p_parameter,CString p_attribute)
+MarlinConfig::FindAttribute(XMLElement* p_parameter,CString p_attribute)
 {
   return XMLMessage::FindAttribute(p_parameter,p_attribute);
 }
@@ -248,7 +248,7 @@ WebConfig::FindAttribute(XMLElement* p_parameter,CString p_attribute)
 // SETTERS
 
 bool 
-WebConfig::SetSection(CString p_section)
+MarlinConfig::SetSection(CString p_section)
 {
   if(FindElement(p_section))
   {
@@ -263,7 +263,7 @@ WebConfig::SetSection(CString p_section)
 }
 
 bool 
-WebConfig::SetParameter(CString p_section,CString p_parameter,CString p_value)
+MarlinConfig::SetParameter(CString p_section,CString p_parameter,CString p_value)
 {
   XMLElement* section = FindElement(p_section);
 
@@ -289,7 +289,7 @@ WebConfig::SetParameter(CString p_section,CString p_parameter,CString p_value)
 }
 
 bool 
-WebConfig::SetParameter(CString p_section,CString p_parameter,int p_value)
+MarlinConfig::SetParameter(CString p_section,CString p_parameter,int p_value)
 {
   CString value;
   if(p_value)
@@ -300,14 +300,14 @@ WebConfig::SetParameter(CString p_section,CString p_parameter,int p_value)
 }
 
 bool
-WebConfig::SetParameter(CString p_section,CString p_parameter,bool p_value)
+MarlinConfig::SetParameter(CString p_section,CString p_parameter,bool p_value)
 {
   CString value = p_value ? "true" : "false";
   return SetParameter(p_section,p_parameter,value);
 }
 
 bool 
-WebConfig::SetEncrypted(CString p_section,CString p_parameter,CString p_value)
+MarlinConfig::SetEncrypted(CString p_section,CString p_parameter,CString p_value)
 {
   Crypto crypt;
   CString encrypted;
@@ -316,13 +316,13 @@ WebConfig::SetEncrypted(CString p_section,CString p_parameter,CString p_value)
     CString reverse(p_value);
     reverse.MakeReverse();
     CString value = reverse + ":" + p_value;
-    encrypted = crypt.Encryption(value,WEBCONFIG_WACHTWOORD);
+    encrypted = crypt.Encryption(value,MARLINCONFIG_WACHTWOORD);
   }
   return SetParameter(p_section,p_parameter,encrypted);
 }
 
 bool 
-WebConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,CString p_value)
+MarlinConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,CString p_value)
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -341,7 +341,7 @@ WebConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,C
 }
 
 bool 
-WebConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,int p_value)
+MarlinConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,int p_value)
 {
   CString value;
   value.Format("%d",p_value);
@@ -349,7 +349,7 @@ WebConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,i
 }
 
 bool 
-WebConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,double p_value)
+MarlinConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,double p_value)
 {
   CString value;
   value.Format("%G",p_value);
@@ -358,7 +358,7 @@ WebConfig::SetAttribute(CString p_section,CString p_parameter,CString p_attrib,d
 
 // Remove an attribute
 void
-WebConfig::RemoveAttribute(XMLElement* p_parameter,CString p_attribute)
+MarlinConfig::RemoveAttribute(XMLElement* p_parameter,CString p_attribute)
 {
   // to be implemented
   if(DeleteAttribute(p_parameter,p_attribute))
@@ -368,7 +368,7 @@ WebConfig::RemoveAttribute(XMLElement* p_parameter,CString p_attribute)
 }
 
 bool 
-WebConfig::RemoveSection(CString p_section)
+MarlinConfig::RemoveSection(CString p_section)
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -383,7 +383,7 @@ WebConfig::RemoveSection(CString p_section)
 }
 
 bool 
-WebConfig::RemoveParameter(CString p_section,CString p_parameter)
+MarlinConfig::RemoveParameter(CString p_section,CString p_parameter)
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -401,7 +401,7 @@ WebConfig::RemoveParameter(CString p_section,CString p_parameter)
 }
 
 bool 
-WebConfig::RemoveAttribute(CString p_section,CString p_parameter,CString p_attrib)
+MarlinConfig::RemoveAttribute(CString p_section,CString p_parameter,CString p_attrib)
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -425,7 +425,7 @@ WebConfig::RemoveAttribute(CString p_section,CString p_parameter,CString p_attri
 //////////////////////////////////////////////////////////////////////////
 
 CString 
-WebConfig::GetParameterString(CString p_section,CString p_parameter,CString p_default)
+MarlinConfig::GetParameterString(CString p_section,CString p_parameter,CString p_default)
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -440,7 +440,7 @@ WebConfig::GetParameterString(CString p_section,CString p_parameter,CString p_de
 }
 
 int
-WebConfig::GetParameterInteger(CString p_section,CString p_parameter,int p_default)
+MarlinConfig::GetParameterInteger(CString p_section,CString p_parameter,int p_default)
 {
   CString param = GetParameterString(p_section,p_parameter,"");
   if(param.IsEmpty())
@@ -451,7 +451,7 @@ WebConfig::GetParameterInteger(CString p_section,CString p_parameter,int p_defau
 }
 
 bool
-WebConfig::GetParameterBoolean(CString p_section,CString p_parameter,bool p_default)
+MarlinConfig::GetParameterBoolean(CString p_section,CString p_parameter,bool p_default)
 {
   CString param = GetParameterString(p_section,p_parameter,"");
   if(param.IsEmpty())
@@ -471,7 +471,7 @@ WebConfig::GetParameterBoolean(CString p_section,CString p_parameter,bool p_defa
 }
 
 CString 
-WebConfig::GetEncryptedString (CString p_section,CString p_parameter,CString p_default)
+MarlinConfig::GetEncryptedString (CString p_section,CString p_parameter,CString p_default)
 {
   Crypto crypt;
   CString decrypted;
@@ -481,7 +481,7 @@ WebConfig::GetEncryptedString (CString p_section,CString p_parameter,CString p_d
     CString encrypted = GetParameterString(p_section,p_parameter,"");
     if(!encrypted.IsEmpty())
     {
-      decrypted = crypt.Decryption(encrypted,WEBCONFIG_WACHTWOORD);
+      decrypted = crypt.Decryption(encrypted,MARLINCONFIG_WACHTWOORD);
       int pos = decrypted.Find(':');
       if(pos > 0)
       {
@@ -510,7 +510,7 @@ WebConfig::GetEncryptedString (CString p_section,CString p_parameter,CString p_d
 }
 
 CString 
-WebConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,CString p_default)
+MarlinConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,CString p_default)
 {
   CString val = p_default;
 
@@ -527,7 +527,7 @@ WebConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,C
 }
 
 int
-WebConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,int p_default)
+MarlinConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,int p_default)
 {
   int val = p_default;
 
@@ -544,7 +544,7 @@ WebConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,i
 }
 
 double
-WebConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,double p_default)
+MarlinConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,double p_default)
 {
   double val = p_default;
 
@@ -563,13 +563,13 @@ WebConfig::GetAttribute(CString p_section,CString p_parameter,CString p_attrib,d
 // DISCOVERY
 
 bool
-WebConfig::HasSection(CString p_section)
+MarlinConfig::HasSection(CString p_section)
 {
   return FindSection(p_section) != nullptr;
 }
 
 bool    
-WebConfig::HasParameter(CString p_section,CString p_parameter)
+MarlinConfig::HasParameter(CString p_section,CString p_parameter)
 {
   XMLElement* section = FindSection(p_section);
   if(section != nullptr)
@@ -580,7 +580,7 @@ WebConfig::HasParameter(CString p_section,CString p_parameter)
 }
 
 bool
-WebConfig::HasAttribute(CString p_section,CString p_parameter,CString p_attribute)
+MarlinConfig::HasAttribute(CString p_section,CString p_parameter,CString p_attribute)
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -598,13 +598,13 @@ WebConfig::HasAttribute(CString p_section,CString p_parameter,CString p_attribut
 }
 
 bool
-WebConfig::IsChanged()
+MarlinConfig::IsChanged()
 {
   return m_changed;
 }
 
 CString
-WebConfig::GetFilename()
+MarlinConfig::GetFilename()
 {
   return m_fileName;
 }

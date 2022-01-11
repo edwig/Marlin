@@ -275,8 +275,8 @@
     <Image Include="res\HTTPManager.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="..\Documentation\MarlinConfig.txt" />
     <Text Include="..\Documentation\ReleaseNotes_v3.txt" />
-    <Text Include="..\Documentation\WebConfig.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

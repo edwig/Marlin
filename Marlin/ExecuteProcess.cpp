@@ -27,7 +27,7 @@
 //
 #include "stdafx.h"
 #include "ExecuteProcess.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "GetLastErrorAsString.h"
 #include <io.h>
 
@@ -74,7 +74,7 @@ int ExecuteProcess(CString          p_program
   CString program = p_program;
   if(p_currentdir)
   {
-    CString path = WebConfig::GetExePath();
+    CString path = MarlinConfig::GetExePath();
     program = path + p_program;
 
     if(_access(program,04) == -1)

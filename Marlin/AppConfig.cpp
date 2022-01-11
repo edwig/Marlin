@@ -29,7 +29,7 @@
 #include "Marlin.h"
 #include "AppConfig.h"
 #include "MarlinServer.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include <winhttp.h>
 #include <io.h>
 
@@ -104,7 +104,7 @@ CString
 AppConfig::GetConfigFilename()
 {
   // This is our config file
-  return WebConfig::GetExePath() + PRODUCT_NAME + ".Config";
+  return MarlinConfig::GetExePath() + PRODUCT_NAME + ".Config";
 }
 
 // Read the config from disk

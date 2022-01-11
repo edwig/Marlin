@@ -66,7 +66,7 @@ HTTPServerIIS::HTTPServerIIS(CString p_name)
 {
   m_counter.Start();
 
-  m_webConfig = new WebConfig("Marlin.config");
+  m_marlinConfig = new MarlinConfig("Marlin.config");
 }
 
 HTTPServerIIS::~HTTPServerIIS()

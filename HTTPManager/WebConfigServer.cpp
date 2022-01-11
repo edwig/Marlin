@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "HTTPManager.h"
 #include "WebConfigServer.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "MapDialoog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
@@ -296,7 +296,7 @@ WebConfigServer::InitIIS()
 }
 
 void
-WebConfigServer::ReadWebConfig(WebConfig& config)
+WebConfigServer::ReadWebConfig(MarlinConfig& config)
 {
   // READ THE SERVER OVERRIDES
   m_useWebroot        = config.HasParameter("Server","WebRoot");
@@ -418,7 +418,7 @@ WebConfigServer::ReadWebConfig(WebConfig& config)
 }
 
 void
-WebConfigServer::WriteWebConfig(WebConfig& config)
+WebConfigServer::WriteWebConfig(MarlinConfig& config)
 {
   // GET STRINGS
   CString port;       port      .Format("%d",m_port);

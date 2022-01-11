@@ -66,7 +66,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   DWORD    length   = 0;
   HANDLE   htok     = NULL;
   int      errors   = 0;
-  CString  fileName = WebConfig::GetExePath() + "FileOwner.txt";
+  CString  fileName = MarlinConfig::GetExePath() + "FileOwner.txt";
   CString  listing;
 
   // See if we have a token

@@ -142,10 +142,10 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\Documentation\WebConfig.txt">
+    <Text Include="..\Documentation\ReleaseNotes_v3.txt">
       <Filter>Documentation</Filter>
     </Text>
-    <Text Include="..\Documentation\ReleaseNotes_v3.txt">
+    <Text Include="..\Documentation\MarlinConfig.txt">
       <Filter>Documentation</Filter>
     </Text>
   </ItemGroup>

@@ -55,8 +55,8 @@ static char THIS_FILE[] = __FILE__;
 HTTPServerMarlin::HTTPServerMarlin(CString p_name)
                  :HTTPServer(p_name)
 {
-  // Default web.config
-  m_webConfig = new WebConfig();
+  // Default Marlin.config
+  m_marlinConfig = new MarlinConfig();
 }
 
 HTTPServerMarlin::~HTTPServerMarlin()
@@ -137,7 +137,7 @@ HTTPServerMarlin::Initialise()
 
   // STEP 7: SET THE LENGTH OF THE BACKLOG QUEUE FOR INCOMING TRAFFIC
   // Overrides for the HTTP Site. Test min/max via SetQueueLength
-  int queueLength = m_webConfig->GetParameterInteger("Server","QueueLength",m_queueLength);
+  int queueLength = m_marlinConfig->GetParameterInteger("Server","QueueLength",m_queueLength);
   SetQueueLength(queueLength);
   // Set backlog queue: using HttpSetRequestQueueProperty
   retCode = HttpSetRequestQueueProperty(m_requestQueue
@@ -301,8 +301,8 @@ HTTPServerMarlin::Cleanup()
 void
 HTTPServerMarlin::InitHeaders()
 {
-  CString name = m_webConfig->GetParameterString("Server","ServerName","");
-  CString type = m_webConfig->GetParameterString("Server","TypeServerName","Hide");
+  CString name = m_marlinConfig->GetParameterString("Server","ServerName","");
+  CString type = m_marlinConfig->GetParameterString("Server","TypeServerName","Hide");
 
   // Server name combo
   if(type.CompareNoCase("Microsoft")   == 0) m_sendHeader = SendHeader::HTTP_SH_MICROSOFT;
@@ -349,11 +349,11 @@ HTTPServerMarlin::CreateSite(PrefixType    p_type
     case PrefixType::URLPRE_Weak:   chanType = "weak";     break;
   }
 
-  // Getting the settings from the web.config, use parameters as defaults
-  chanType      = m_webConfig->GetParameterString ("Server","ChannelType",chanType);
-  chanSecure    = m_webConfig->GetParameterBoolean("Server","Secure",     p_secure);
-  chanPort      = m_webConfig->GetParameterInteger("Server","Port",       p_port);
-  chanBase      = m_webConfig->GetParameterString ("Server","BaseURL",    p_baseURL);
+  // Getting the settings from the Marlin.config, use parameters as defaults
+  chanType      = m_marlinConfig->GetParameterString ("Server","ChannelType",chanType);
+  chanSecure    = m_marlinConfig->GetParameterBoolean("Server","Secure",     p_secure);
+  chanPort      = m_marlinConfig->GetParameterInteger("Server","Port",       p_port);
+  chanBase      = m_marlinConfig->GetParameterString ("Server","BaseURL",    p_baseURL);
 
   // Recalculate the type
        if(chanType.CompareNoCase("strong")  == 0) p_type = PrefixType::URLPRE_Strong;

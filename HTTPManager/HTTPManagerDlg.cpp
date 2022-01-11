@@ -30,7 +30,7 @@
 #include "HTTPManagerDlg.h"
 #include "RunRedirect.h"
 #include "ResultDlg.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "WebConfigDlg.h"
 #include "HTTPServer.h"
 #include "SecurityDlg.h"
@@ -1067,7 +1067,7 @@ HTTPManagerDlg::MessagePump()
 CString
 HTTPManagerDlg::GetSiteConfig(CString p_prefix)
 {
-  CString pathName = WebConfig::GetExePath();
+  CString pathName = MarlinConfig::GetExePath();
 
   CString name(p_prefix);
   int pos = name.Find("//");
@@ -1106,7 +1106,7 @@ HTTPManagerDlg::OnBnClickedSiteWebConfig()
   }
 
   CString prefix = CreateURLPrefix(m_binding, m_secure, m_port, m_absPath);
-  CString filenm = WebConfig::GetSiteConfig(prefix);
+  CString filenm = MarlinConfig::GetSiteConfig(prefix);
 
   WebConfigDlg config(m_iis);
   config.SetSiteConfig(prefix,filenm);

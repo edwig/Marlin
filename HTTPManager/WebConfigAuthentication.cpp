@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "HTTPManager.h"
 #include "WebConfigAuthentication.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "MapDialoog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
@@ -182,7 +182,7 @@ WebConfigAuthentication::InitComboboxes()
 }
 
 void
-WebConfigAuthentication::ReadWebConfig(WebConfig& config)
+WebConfigAuthentication::ReadWebConfig(MarlinConfig& config)
 {
   // AUTHENTICATION OVERRIDES
   m_useScheme         = config.HasParameter("Authentication","Scheme");
@@ -243,7 +243,7 @@ WebConfigAuthentication::SetFields()
 }
 
 void
-WebConfigAuthentication::WriteWebConfig(WebConfig& config)
+WebConfigAuthentication::WriteWebConfig(MarlinConfig& config)
 {
   // WRITE THE CONFIG PARAMETERS
 

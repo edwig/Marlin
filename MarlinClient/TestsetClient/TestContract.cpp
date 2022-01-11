@@ -247,7 +247,7 @@ TestWSDLFloatingWrong(WebServiceClient& p_client,CString p_contract)
 int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
 {
   int errors = 6;
-  CString logfileName = WebConfig::GetExePath() + "ClientLog.txt";
+  CString logfileName = MarlinConfig::GetExePath() + "ClientLog.txt";
 
   CString url;
   CString wsdl;

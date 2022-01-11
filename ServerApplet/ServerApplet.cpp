@@ -31,7 +31,7 @@
 #include "InstallDlg.h"
 #include <GetLastErrorAsString.h>
 #include <Version.h>
-#include <WebConfig.h>
+#include <MarlinConfig.h>
 #include <ExecuteProcess.h>
 #include <io.h>
 
@@ -120,7 +120,7 @@ ServerAppletApp::StartProgram(CString& p_program
   CString path;
   if(p_currentdir)
   {
-    path = WebConfig::GetExePath();
+    path = MarlinConfig::GetExePath();
   }
   path += p_program;
 

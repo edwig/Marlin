@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "HTTPManager.h"
 #include "WebConfigWServices.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "MapDialoog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
@@ -142,7 +142,7 @@ WebConfigWServices::InitComboboxes()
 }
 
 void
-WebConfigWServices::ReadWebConfig(WebConfig& config)
+WebConfigWServices::ReadWebConfig(MarlinConfig& config)
 {
   // WEBSERVICE OVERRIDES
   m_useEncLevel       = config.HasParameter("Encryption", "Level");
@@ -187,7 +187,7 @@ WebConfigWServices::ReadWebConfig(WebConfig& config)
 }
 
 void
-WebConfigWServices::WriteWebConfig(WebConfig& config)
+WebConfigWServices::WriteWebConfig(MarlinConfig& config)
 {
 
   // WRITE THE CONFIG PARAMETERS

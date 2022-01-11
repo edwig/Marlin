@@ -94,7 +94,7 @@ constexpr const char* global_client_error =
 __declspec(thread) ULONG tls_lastError = 0;
 
 // Static globals for the server as a whole
-// Can be set through the web.config reading of the HTTPServer
+// Can be set through the Marlin.config reading of the HTTPServer
 unsigned long g_streaming_limit = STREAMING_LIMIT;
 unsigned long g_compress_limit  = COMPRESS_LIMIT;
 
@@ -145,11 +145,11 @@ HTTPServer::~HTTPServer()
   }
   m_requests.clear();
 
-  // Clean out the web.config
-  if(m_webConfig)
+  // Clean out the Marlin.config
+  if(m_marlinConfig)
   {
-    delete m_webConfig;
-    m_webConfig = nullptr;
+    delete m_marlinConfig;
+    m_marlinConfig = nullptr;
   }
 
   // Clean out the media types
@@ -189,16 +189,16 @@ HTTPServer::InitLogging()
   bool doLogging  = m_log->GetDoLogging();
   int  keepfiles  = m_log->GetKeepfiles();
 
-  // Get parameters from web.config
-  file      = m_webConfig->GetParameterString ("Logging","Logfile",  file);
-  doLogging = m_webConfig->GetParameterBoolean("Logging","DoLogging",doLogging);
-  logging   = m_webConfig->GetParameterInteger("Logging","LogLevel", logging);
-  timing    = m_webConfig->GetParameterBoolean("Logging","DoTiming", timing);
-  events    = m_webConfig->GetParameterBoolean("Logging","DoEvents", events);
-  cache     = m_webConfig->GetParameterInteger("Logging","Cache",    cache);
-  keepfiles = m_webConfig->GetParameterInteger("Logging","Keep",     keepfiles);
+  // Get parameters from Marlin.config
+  file      = m_marlinConfig->GetParameterString ("Logging","Logfile",  file);
+  doLogging = m_marlinConfig->GetParameterBoolean("Logging","DoLogging",doLogging);
+  logging   = m_marlinConfig->GetParameterInteger("Logging","LogLevel", logging);
+  timing    = m_marlinConfig->GetParameterBoolean("Logging","DoTiming", timing);
+  events    = m_marlinConfig->GetParameterBoolean("Logging","DoEvents", events);
+  cache     = m_marlinConfig->GetParameterInteger("Logging","Cache",    cache);
+  keepfiles = m_marlinConfig->GetParameterInteger("Logging","Keep",     keepfiles);
 
-  // Use if overridden in web.config
+  // Use if overridden in Marlin.config
   if(!file.IsEmpty())
   {
     m_log->SetLogFilename(file);
@@ -214,9 +214,9 @@ HTTPServer::InitLogging()
 void
 HTTPServer::InitThreadPool()
 {
-  int minThreads = m_webConfig->GetParameterInteger("Server","MinThreads",NUM_THREADS_MINIMUM);
-  int maxThreads = m_webConfig->GetParameterInteger("Server","MaxThreads",NUM_THREADS_MAXIMUM);
-  int stackSize  = m_webConfig->GetParameterInteger("Server","StackSize", THREAD_STACKSIZE);
+  int minThreads = m_marlinConfig->GetParameterInteger("Server","MinThreads",NUM_THREADS_MINIMUM);
+  int maxThreads = m_marlinConfig->GetParameterInteger("Server","MaxThreads",NUM_THREADS_MAXIMUM);
+  int stackSize  = m_marlinConfig->GetParameterInteger("Server","StackSize", THREAD_STACKSIZE);
 
   m_pool.TrySetMinimum(minThreads);
   m_pool.TrySetMaximum(maxThreads);
@@ -227,8 +227,8 @@ HTTPServer::InitThreadPool()
 void
 HTTPServer::InitHardLimits()
 {
-  g_streaming_limit = m_webConfig->GetParameterInteger("Server","StreamingLimit",g_streaming_limit);
-  g_compress_limit  = m_webConfig->GetParameterInteger("Server","CompressLimit", g_compress_limit);
+  g_streaming_limit = m_marlinConfig->GetParameterInteger("Server","StreamingLimit",g_streaming_limit);
+  g_compress_limit  = m_marlinConfig->GetParameterInteger("Server","CompressLimit", g_compress_limit);
 
   // Cannot be bigger than 2 GB, otherwise use indirect file access!
   if(g_streaming_limit > (0x7FFFFFFF))
@@ -254,8 +254,8 @@ HTTPServer::InitHardLimits()
 void
 HTTPServer::InitEventstreamKeepalive()
 {
-  m_eventKeepAlive = m_webConfig->GetParameterInteger("Server","EventKeepAlive",DEFAULT_EVENT_KEEPALIVE);
-  m_eventRetryTime = m_webConfig->GetParameterInteger("Server","EventRetryTime",DEFAULT_EVENT_RETRYTIME);
+  m_eventKeepAlive = m_marlinConfig->GetParameterInteger("Server","EventKeepAlive",DEFAULT_EVENT_KEEPALIVE);
+  m_eventRetryTime = m_marlinConfig->GetParameterInteger("Server","EventRetryTime",DEFAULT_EVENT_RETRYTIME);
 
   if(m_eventKeepAlive < EVENT_KEEPALIVE_MIN) m_eventKeepAlive = EVENT_KEEPALIVE_MIN;
   if(m_eventKeepAlive > EVENT_KEEPALIVE_MAX) m_eventKeepAlive = EVENT_KEEPALIVE_MAX;
@@ -446,7 +446,7 @@ void
 HTTPServer::SetWebroot(CString p_webroot)
 {
   // Check WebRoot against your config
-  m_webroot = m_webConfig->GetParameterString("Server","WebRoot",p_webroot);
+  m_webroot = m_marlinConfig->GetParameterString("Server","WebRoot",p_webroot);
 
   // Directly set WebRoot
   EnsureFile ensure(p_webroot);

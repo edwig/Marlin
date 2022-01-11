@@ -304,21 +304,21 @@ HTTPClient::Initialize()
   DETAILLOG("Initializing HTTP Client");
   m_initialized = true;
 
-  // If no "web.config" read, fall back to "Marlin.config" for IIS mode applications
-  if(m_webConfig.IsFilled())
+  // Try to read the Marlin.config file in the current directory
+  if(m_marlinConfig.IsFilled())
   {
-    DETAILLOG("Configuration file \'web.config\' has been read!");
+    DETAILLOG("Configuration file \'Marlin.config\' has already been read!");
   }
   else
   {
-    m_webConfig.ReadConfig("Marlin.config");
-    if(m_webConfig.IsFilled())
+    m_marlinConfig.ReadConfig("Marlin.config");
+    if(m_marlinConfig.IsFilled())
     {
       DETAILLOG("Configuration file \'marlin.config\' has been read!");
     }
     else
     {
-      ERRORLOG("No configuration files found (marlin.config; web.config)!");
+      DETAILLOG("No configuration file [Marlin.config] found!");
     }
   }
 
@@ -353,7 +353,7 @@ HTTPClient::Initialize()
                                        m_proxy       = m_proxyFinder.Find(totalURL,m_secure);
                                        m_proxyBypass = m_proxyFinder.GetIngoreList();
                                        break;
-    case ProxyType::PROXY_MYPROXY:     // Use proxy settings from the web.config. Do nothing
+    case ProxyType::PROXY_MYPROXY:     // Use proxy settings from the marlin.config. Do nothing
                                        break;
     case ProxyType::PROXY_NOPROXY:     // Reset all proxy settings. Forget everything
                                        m_proxy.Empty();
@@ -457,13 +457,13 @@ HTTPClient::InitLogging()
     return;
   }
 
-  // Get parameters from web.config
-  CString file = m_webConfig.GetParameterString ("Logging","Logfile",  "");
-  bool logging = m_webConfig.GetParameterBoolean("Logging","DoLogging",false);
-  bool timing  = m_webConfig.GetParameterBoolean("Logging","DoTiming", true);
-  bool events  = m_webConfig.GetParameterBoolean("Logging","DoEvents", false);
-  int  cache   = m_webConfig.GetParameterInteger("Logging","Cache",    100);
-  int  level   = m_webConfig.GetParameterBoolean("Logging","LogLevel", m_logLevel);
+  // Get parameters from Marlin.config
+  CString file = m_marlinConfig.GetParameterString ("Logging","Logfile",  "");
+  bool logging = m_marlinConfig.GetParameterBoolean("Logging","DoLogging",false);
+  bool timing  = m_marlinConfig.GetParameterBoolean("Logging","DoTiming", true);
+  bool events  = m_marlinConfig.GetParameterBoolean("Logging","DoEvents", false);
+  int  cache   = m_marlinConfig.GetParameterInteger("Logging","Cache",    100);
+  int  level   = m_marlinConfig.GetParameterBoolean("Logging","LogLevel", m_logLevel);
 
   // Check for a logging object
   if(m_log == NULL && !file.IsEmpty() && logging)
@@ -476,25 +476,25 @@ HTTPClient::InitLogging()
   {
     m_log->SetLogFilename(file);
   }
-  if(m_webConfig.HasParameter("Logging","DoLogging"))
+  if(m_marlinConfig.HasParameter("Logging","DoLogging"))
   {
     m_log->SetDoLogging(logging);
   }
-  if(m_webConfig.HasParameter("Logging","DoTiming"))
+  if(m_marlinConfig.HasParameter("Logging","DoTiming"))
   {
     m_log->SetDoTiming(timing);
   }
-  if(m_webConfig.HasParameter("Logging","DoEvents"))
+  if(m_marlinConfig.HasParameter("Logging","DoEvents"))
   {
     m_log->SetDoEvents(events);
   }
-  if(m_webConfig.HasParameter("Logging","Cache"))
+  if(m_marlinConfig.HasParameter("Logging","Cache"))
   {
     m_log->SetCache(cache);
   }
 
   // Detailed logging for client
-  if (m_webConfig.HasParameter("Logging","LogLevel"))
+  if (m_marlinConfig.HasParameter("Logging","LogLevel"))
   {
     m_logLevel = level;
     if(m_log)
@@ -536,30 +536,30 @@ void
 HTTPClient::InitSettings()
 {
   // General client settings
-  m_retries        =             m_webConfig.GetParameterInteger("Client","RetryCount",       m_retries);
-  m_agent          =             m_webConfig.GetParameterString ("Client","Agent",            m_agent);
-  m_useProxy       = (ProxyType) m_webConfig.GetParameterInteger("Client","UseProxy",         (int)m_useProxy);
-  m_proxy          =             m_webConfig.GetParameterString ("Client","Proxy",            m_proxy);
-  m_proxyBypass    =             m_webConfig.GetParameterString ("Client","ProxyBypass",      m_proxyBypass);
-  m_timeoutResolve =             m_webConfig.GetParameterInteger("Client","TimeoutResolve",   m_timeoutResolve);
-  m_timeoutConnect =             m_webConfig.GetParameterInteger("Client","TimeoutConnect",   m_timeoutConnect);
-  m_timeoutSend    =             m_webConfig.GetParameterInteger("Client","TimeoutSend",      m_timeoutSend);
-  m_timeoutReceive =             m_webConfig.GetParameterInteger("Client","TimeoutReceive",   m_timeoutReceive);
-  m_soapCompress   =             m_webConfig.GetParameterBoolean("Client","SOAPCompress",     m_soapCompress);
-  m_httpCompression=             m_webConfig.GetParameterBoolean("Client","HTTPCompression",  m_httpCompression);
-  m_sendUnicode    =             m_webConfig.GetParameterBoolean("Client","SendUnicode",      m_sendUnicode);
-  m_sendBOM        =             m_webConfig.GetParameterBoolean("Client","SendBOM",          m_sendBOM);
-  m_verbTunneling  =             m_webConfig.GetParameterBoolean("Client","VerbTunneling",    m_verbTunneling);
-  m_certPreset     =             m_webConfig.GetParameterBoolean("Client","CertificatePreset",m_certPreset);
-  m_certStore      =             m_webConfig.GetParameterString ("Client","CertificateStore", m_certStore);
-  m_certName       =             m_webConfig.GetParameterString ("Client","CertificateName",  m_certName);
-  m_corsOrigin     =             m_webConfig.GetParameterString ("Client","CORS_Origin",      m_corsOrigin);
+  m_retries        =             m_marlinConfig.GetParameterInteger("Client","RetryCount",       m_retries);
+  m_agent          =             m_marlinConfig.GetParameterString ("Client","Agent",            m_agent);
+  m_useProxy       = (ProxyType) m_marlinConfig.GetParameterInteger("Client","UseProxy",         (int)m_useProxy);
+  m_proxy          =             m_marlinConfig.GetParameterString ("Client","Proxy",            m_proxy);
+  m_proxyBypass    =             m_marlinConfig.GetParameterString ("Client","ProxyBypass",      m_proxyBypass);
+  m_timeoutResolve =             m_marlinConfig.GetParameterInteger("Client","TimeoutResolve",   m_timeoutResolve);
+  m_timeoutConnect =             m_marlinConfig.GetParameterInteger("Client","TimeoutConnect",   m_timeoutConnect);
+  m_timeoutSend    =             m_marlinConfig.GetParameterInteger("Client","TimeoutSend",      m_timeoutSend);
+  m_timeoutReceive =             m_marlinConfig.GetParameterInteger("Client","TimeoutReceive",   m_timeoutReceive);
+  m_soapCompress   =             m_marlinConfig.GetParameterBoolean("Client","SOAPCompress",     m_soapCompress);
+  m_httpCompression=             m_marlinConfig.GetParameterBoolean("Client","HTTPCompression",  m_httpCompression);
+  m_sendUnicode    =             m_marlinConfig.GetParameterBoolean("Client","SendUnicode",      m_sendUnicode);
+  m_sendBOM        =             m_marlinConfig.GetParameterBoolean("Client","SendBOM",          m_sendBOM);
+  m_verbTunneling  =             m_marlinConfig.GetParameterBoolean("Client","VerbTunneling",    m_verbTunneling);
+  m_certPreset     =             m_marlinConfig.GetParameterBoolean("Client","CertificatePreset",m_certPreset);
+  m_certStore      =             m_marlinConfig.GetParameterString ("Client","CertificateStore", m_certStore);
+  m_certName       =             m_marlinConfig.GetParameterString ("Client","CertificateName",  m_certName);
+  m_corsOrigin     =             m_marlinConfig.GetParameterString ("Client","CORS_Origin",      m_corsOrigin);
 
   // Test environments must often do with relaxed certificate settings
-  bool m_relaxValid     = m_webConfig.GetParameterBoolean("Client","RelaxCertificateValid",     false);
-  bool m_relaxDate      = m_webConfig.GetParameterBoolean("Client","RelaxCertificateDate",      false);
-  bool m_relaxAuthority = m_webConfig.GetParameterBoolean("Client","RelaxCertificateAuthority", false);
-  bool m_relaxUsage     = m_webConfig.GetParameterBoolean("Client","RelaxCertificateUsage",     false);
+  bool m_relaxValid     = m_marlinConfig.GetParameterBoolean("Client","RelaxCertificateValid",     false);
+  bool m_relaxDate      = m_marlinConfig.GetParameterBoolean("Client","RelaxCertificateDate",      false);
+  bool m_relaxAuthority = m_marlinConfig.GetParameterBoolean("Client","RelaxCertificateAuthority", false);
+  bool m_relaxUsage     = m_marlinConfig.GetParameterBoolean("Client","RelaxCertificateUsage",     false);
 
   if(m_relaxValid)      m_relax |= SECURITY_FLAG_IGNORE_CERT_CN_INVALID;
   if(m_relaxDate)       m_relax |= SECURITY_FLAG_IGNORE_CERT_DATE_INVALID;
@@ -569,27 +569,27 @@ HTTPClient::InitSettings()
   // Overrides for Secure HTTP protocol
   unsigned ssltls = 0;
   CString  ssltlsLogging(":");
-  if(m_webConfig.GetParameterBoolean("Client","SecureSSL20",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_SSL2) > 0))
+  if(m_marlinConfig.GetParameterBoolean("Client","SecureSSL20",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_SSL2) > 0))
   {
     ssltls |= WINHTTP_FLAG_SECURE_PROTOCOL_SSL2;
     ssltlsLogging += "SSL2:";
   }
-  if(m_webConfig.GetParameterBoolean("Client","SecureSSL30",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_SSL3) > 0))
+  if(m_marlinConfig.GetParameterBoolean("Client","SecureSSL30",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_SSL3) > 0))
   {
     ssltls |= WINHTTP_FLAG_SECURE_PROTOCOL_SSL3;
     ssltlsLogging += "SSL3:";
   }
-  if(m_webConfig.GetParameterBoolean("Client","SecureTLS10",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1) > 0))
+  if(m_marlinConfig.GetParameterBoolean("Client","SecureTLS10",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1) > 0))
   {
     ssltls |= WINHTTP_FLAG_SECURE_PROTOCOL_TLS1;
     ssltlsLogging += "TLS1:";
   }
-  if(m_webConfig.GetParameterBoolean("Client","SecureTLS11",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1) > 0))
+  if(m_marlinConfig.GetParameterBoolean("Client","SecureTLS11",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1) > 0))
   {
     ssltls |= WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1;
     ssltlsLogging += "TLS1.1:";
   }
-  if(m_webConfig.GetParameterBoolean("Client","SecureTLS12",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2) > 0))
+  if(m_marlinConfig.GetParameterBoolean("Client","SecureTLS12",(m_ssltls & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2) > 0))
   {
     ssltls |= WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2;
     ssltlsLogging += "TLS1.2:";
@@ -597,11 +597,11 @@ HTTPClient::InitSettings()
   m_ssltls = ssltls;
 
   // Overrides of the URL can be set manual
-  m_user          = m_webConfig.GetParameterString ("Authentication","User",         m_user);
-  m_password      = m_webConfig.GetEncryptedString ("Authentication","Password",     m_password);
-  m_sso           = m_webConfig.GetParameterBoolean("Authentication","SSO",          m_sso);
-  m_proxyUser     = m_webConfig.GetParameterString ("Client",        "ProxyUser",    m_proxyUser);
-  m_proxyPassword = m_webConfig.GetEncryptedString ("Client",        "ProxyPassword",m_proxyPassword);
+  m_user          = m_marlinConfig.GetParameterString ("Authentication","User",         m_user);
+  m_password      = m_marlinConfig.GetEncryptedString ("Authentication","Password",     m_password);
+  m_sso           = m_marlinConfig.GetParameterBoolean("Authentication","SSO",          m_sso);
+  m_proxyUser     = m_marlinConfig.GetParameterString ("Client",        "ProxyUser",    m_proxyUser);
+  m_proxyPassword = m_marlinConfig.GetEncryptedString ("Client",        "ProxyPassword",m_proxyPassword);
 
   // Test that we do not keep on nagging the server
   if(m_retries > CLIENT_MAX_RETRIES)
@@ -615,7 +615,7 @@ HTTPClient::InitSettings()
   {
     case ProxyType::PROXY_IEPROXY:   proxyType = "Always use IE autoproxy settings in the connect if possible (default)"; break;
     case ProxyType::PROXY_AUTOPROXY: proxyType = "Use IE autoproxy if connection fails as a default fallback";            break;
-    case ProxyType::PROXY_MYPROXY:   proxyType = "Use MY proxy settings from web.config";                                 break;
+    case ProxyType::PROXY_MYPROXY:   proxyType = "Use MY proxy settings from Marlin.config";                              break;
     case ProxyType::PROXY_NOPROXY:   proxyType = "Never use any proxy";                                                   break;
     default:                         proxyType = "Unknown and unsupported proxy settings!!";
                                      ERRORLOG(proxyType);
@@ -685,8 +685,8 @@ HTTPClient::InitSecurity()
     case XMLEncryption::XENC_Body:    level = "body";    break;
     case XMLEncryption::XENC_Message: level = "message"; break;
   }
-  level          = m_webConfig.GetParameterString("Encryption","Level",   level);
-  m_enc_password = m_webConfig.GetEncryptedString("Encryption","Password",m_enc_password);
+  level          = m_marlinConfig.GetParameterString("Encryption","Level",   level);
+  m_enc_password = m_marlinConfig.GetEncryptedString("Encryption","Password",m_enc_password);
 
   // Now set the resulting security level
        if(level == "sign")    m_securityLevel = XMLEncryption::XENC_Signing;
@@ -2774,7 +2774,7 @@ HTTPClient::Send()
   switch(m_useProxy)
   {
     case ProxyType::PROXY_IEPROXY:  // Use explicit proxy from settings 
-    case ProxyType::PROXY_MYPROXY:  // Use explicit proxy from web.config
+    case ProxyType::PROXY_MYPROXY:  // Use explicit proxy from Marlin.config
                                     if(!m_proxy.IsEmpty())
                                     {
                                       CrackedURL url(m_proxy);

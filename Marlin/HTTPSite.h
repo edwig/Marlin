@@ -99,7 +99,7 @@ void HTTPSiteCallbackEvent  (void* p_argument);
 constexpr long MAX_HTTP_THROTTLES = 1000;
 
 class HTTPURLGroup;
-class WebConfig;
+class MarlinConfig;
 class SiteFilter;
 class SiteHandler;
 
@@ -286,10 +286,10 @@ public:
   bool SendResponse(JSONMessage* p_message);
 
 protected:
-  // Init parameters from web.config
-  void              InitSite(WebConfig& p_config);
+  // Init parameters from Marlin.config
+  void              InitSite(MarlinConfig& p_config);
   // Set automatic headers upon starting site
-  void              SetAutomaticHeaders(WebConfig& p_config);
+  void              SetAutomaticHeaders(MarlinConfig& p_config);
   // Log all settings to the site
   void              LogSettings();
   // Cleanup the site when stopping

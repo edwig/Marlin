@@ -186,7 +186,7 @@
     <ClCompile Include="SOAPMessage.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="WebConfig.cpp">
+    <ClCompile Include="MarlinConfig.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="ThreadPool.cpp">
@@ -617,7 +617,7 @@
     <ClInclude Include="ThreadPool.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="WebConfig.h">
+    <ClInclude Include="MarlinConfig.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="WinINETError.h">

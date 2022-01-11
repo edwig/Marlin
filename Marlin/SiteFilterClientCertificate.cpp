@@ -76,7 +76,7 @@ void
 SiteFilterClientCertificate::SetSite(HTTPSite* p_site)
 {
   m_site = p_site;
-  WebConfig& config = m_site->GetHTTPServer()->GetWebConfig();
+  MarlinConfig& config = m_site->GetHTTPServer()->GetWebConfig();
 
   m_request        = config.GetParameterBoolean("Authentication","ClientCertificate",    m_request);
   m_certName       = config.GetParameterString ("Authentication","CertificateName",      m_certName);

@@ -90,7 +90,7 @@ HTTPSiteIIS::StartSite()
   // Getting the global settings
   InitSite();
  
-  // Now log the settings, once we read all web.config files
+  // Now log the settings, once we read all Marlin.config files
   LogSettings();
 
   // See if we have a reliable messaging WITH authentication

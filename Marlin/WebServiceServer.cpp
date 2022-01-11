@@ -385,26 +385,17 @@ WebServiceServer::StartWsdl()
 void
 WebServiceServer::ReadingWebconfig()
 {
-  HTTPServerMarlin* server = dynamic_cast<HTTPServerMarlin*>(m_httpServer);
+  // Read the general settings first
+  ReadingWebconfig("Marlin.config");
 
-  if(server)
-  {
-    // Read the general settings first
-    ReadingWebconfig("web.config");
-  }
-  else
-  {
-    // Or the settings for IIS
-    ReadingWebconfig("marlin.config");
-  }
-  CString siteConfigFile = WebConfig::GetSiteConfig(m_site->GetPrefixURL());
+  CString siteConfigFile = MarlinConfig::GetSiteConfig(m_site->GetPrefixURL());
   ReadingWebconfig(siteConfigFile);
 }
 
 void
 WebServiceServer::ReadingWebconfig(CString p_webconfig)
 {
-  WebConfig config(p_webconfig);
+  MarlinConfig config(p_webconfig);
 
   // Only process the config if it's filled
   if(config.IsFilled() == false)

@@ -227,7 +227,7 @@ public:
 protected:
   // Start WSDL
   void          StartWsdl();
-  // Reading the settings from web.config files
+  // Reading the settings from Marlin.config files
   void          ReadingWebconfig();
   void          ReadingWebconfig(CString p_webconfig);
   // Define for your derived class by using the WEBSERVICE* macros

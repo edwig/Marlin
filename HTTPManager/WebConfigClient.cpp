@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "HTTPManager.h"
 #include "WebConfigClient.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "MapDialoog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
@@ -278,7 +278,7 @@ WebConfigClient::InitComboboxes()
 }
 
 void
-WebConfigClient::ReadWebConfig(WebConfig& config)
+WebConfigClient::ReadWebConfig(MarlinConfig& config)
 {
   // READ THE CLIENT OVERRIDES
   m_useUseProxy       = config.HasParameter("Client","UseProxy");
@@ -394,7 +394,7 @@ WebConfigClient::ReadWebConfig(WebConfig& config)
 }
 
 void
-WebConfigClient::WriteWebConfig(WebConfig& config)
+WebConfigClient::WriteWebConfig(MarlinConfig& config)
 {
   // GET STRINGS
   CString retry;      retry     .Format("%d",m_retry);

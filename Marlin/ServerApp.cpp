@@ -198,7 +198,7 @@ ServerApp::InitInstance()
   m_httpServer = new HTTPServerIIS(m_applicationName);
   m_httpServer->SetWebroot(m_webroot);
 
-  // Reading our web.config and ApplicationHost.config info
+  // Reading our IIS web.config and ApplicationHost.config info
   m_config.ReadConfig(m_applicationName);
   m_httpServer->SetWebConfigIIS(&m_config);
 

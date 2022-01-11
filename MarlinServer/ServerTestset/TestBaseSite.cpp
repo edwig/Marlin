@@ -134,7 +134,7 @@ TestMarlinServer::TestBaseSite()
 
 #ifdef MARLIN_STANDALONE
   // Setting the virtual root directory
-  CString root = WebConfig::GetExePath() + "site";
+  CString root = MarlinConfig::GetExePath() + "site";
   EnsureFile ensure;
   root = ensure.ReduceDirectoryPath(root);
   root = "virtual://" + root;

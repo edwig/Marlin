@@ -35,7 +35,7 @@
 #include "RunRedirect.h"
 #include <AppConfig.h>
 #include <SOAPMessage.h>
-#include <WebConfig.h>
+#include <MarlinConfig.h>
 #include <StdException.h>
 #include <Version.h>
 #include <io.h>
@@ -434,7 +434,7 @@ ServerAppletDlg::OnBnClickedStart()
 
     // Starting the server
     CString result;
-    CString program = WebConfig::GetExePath() +  PRODUCT_NAME + ".exe";
+    CString program = MarlinConfig::GetExePath() +  PRODUCT_NAME + ".exe";
     CString arguments = "start";
     CString fout(CString("Cannot start the ") + PRODUCT_NAME);
     CString actie = CString("START: ") + program + "\n\n";
@@ -468,7 +468,7 @@ ServerAppletDlg::OnBnClickedStop()
       CWaitCursor takeADeepSigh;
 
       CString result;
-      CString program = WebConfig::GetExePath() + PRODUCT_NAME + ".exe";
+      CString program = MarlinConfig::GetExePath() + PRODUCT_NAME + ".exe";
       CString arguments = "stop";
       CString fout(CString("Cannot stop the ") +  PRODUCT_NAME);
       CString actie = CString("START: ") + program + "\n\n";

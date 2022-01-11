@@ -42,7 +42,7 @@
 #include "AutoCritical.h"
 #include "EnsureFile.h"
 #include "ConvertWideString.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include <string.h>
 #include <sys/timeb.h>
 #include <io.h>
@@ -671,7 +671,7 @@ void
 LogAnalysis::ReadConfig()
 {
   char buffer[256] = "";
-  CString fileName = WebConfig::GetExePath() + "Logfile.config";
+  CString fileName = MarlinConfig::GetExePath() + "Logfile.config";
 
   FILE* file = NULL;
   fopen_s(&file,fileName,"r");

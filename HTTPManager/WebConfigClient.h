@@ -29,7 +29,7 @@
 #include "SecureClientDlg.h"
 #include "ServerHeadersDlg.h"
 
-class WebConfig;
+class MarlinConfig;
 
 // WebConfigDlg dialog
 
@@ -41,8 +41,8 @@ public:
   WebConfigClient(bool p_iis,CWnd* pParent = NULL);   // standard constructor
  ~WebConfigClient();
   BOOL OnInitDialog();
-  void ReadWebConfig (WebConfig& p_config);
-  void WriteWebConfig(WebConfig& p_config);
+  void ReadWebConfig (MarlinConfig& p_config);
+  void WriteWebConfig(MarlinConfig& p_config);
  
 // Dialog Data
   enum { IDD = IDD_WC_CLIENT };

@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #pragma  once
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "HPFCounter.h"
 #include "SOAPTypes.h"
 #include "Cookie.h"
@@ -99,7 +99,7 @@ enum class ProxyType
 {
   PROXY_IEPROXY   = 1   // Use IE autoproxy settings in the connect
  ,PROXY_AUTOPROXY       // Use IE autoproxy if connection fails (handle default)
- ,PROXY_MYPROXY         // Use MY proxy settings from web.config
+ ,PROXY_MYPROXY         // Use MY proxy settings from Marlin.config
  ,PROXY_NOPROXY         // Never use any proxy
 };
 
@@ -485,7 +485,7 @@ private:
   unsigned      m_queueRetention  { QUEUE_WAITTIME };             // Seconds before queue thread dies
   bool          m_running         { false   };                    // Queue is running
   // Logging & settings
-  WebConfig     m_webConfig;                                      // Current web.config file
+  MarlinConfig     m_marlinConfig;                                   // Current Marlin.config file
   LogAnalysis*  m_log             { nullptr };                    // Current logging
   bool          m_logOwner        { false   };                    // Owner of the current logging
   int           m_logLevel        { HLL_NOLOG };                  // Logging level of the client

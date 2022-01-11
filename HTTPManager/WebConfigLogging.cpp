@@ -29,7 +29,7 @@
 #include "HTTPManager.h"
 #include "HTTPLoglevel.h"
 #include "WebConfigLogging.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "MapDialoog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
@@ -137,7 +137,7 @@ WebConfigLogging::OnInitDialog()
 }
 
 void
-WebConfigLogging::ReadWebConfig(WebConfig& config)
+WebConfigLogging::ReadWebConfig(MarlinConfig& config)
 {
   // LOGFILE OVERRIDES
   m_useLogfile    = config.HasParameter("Logging","Logfile");
@@ -172,7 +172,7 @@ WebConfigLogging::ReadWebConfig(WebConfig& config)
 }
 
 void
-WebConfigLogging::WriteWebConfig(WebConfig& config)
+WebConfigLogging::WriteWebConfig(MarlinConfig& config)
 {
   config.SetSection("Logging");
 

@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: WebConfig.h
+// SourceFile: MarlinConfig.h
 //
 // Marlin Server: Internet server/client
 // 
@@ -30,14 +30,14 @@
 #include <map>
 #include <list>
 
-#define WEBCONFIG_WACHTWOORD "W!e@b#.$C%o^n&f*i(g"
+#define MARLINCONFIG_WACHTWOORD "W!e@b#.$C%o^n&f*i(g"
 
-class WebConfig : public XMLMessage
+class MarlinConfig : public XMLMessage
 {
 public:
-  WebConfig();
-  WebConfig(CString p_filename);
-  virtual ~WebConfig();
+  MarlinConfig();
+  MarlinConfig(CString p_filename);
+  virtual ~MarlinConfig();
 
   // FILE METHODS
 

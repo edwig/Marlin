@@ -30,7 +30,7 @@
 #include "ServerHeadersDlg.h"
 #include <Cookie.h>
 
-class WebConfig;
+class MarlinConfig;
 
 // WebConfigDlg dialog
 
@@ -43,8 +43,8 @@ public:
  ~WebConfigServer();
   BOOL OnInitDialog();
   void SetSiteConfig(CString p_urlPrefix,CString m_fileName);
-  void ReadWebConfig(WebConfig& p_config);
-  void WriteWebConfig(WebConfig& p_config);
+  void ReadWebConfig (MarlinConfig& p_config);
+  void WriteWebConfig(MarlinConfig& p_config);
 
 // Dialog Data
   enum { IDD = IDD_WC_SERVER};

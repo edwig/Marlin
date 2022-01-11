@@ -11,6 +11,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A8F17E01-82AE-4A85-AAE9-945AF1FFB2BB}"
 	ProjectSection(SolutionItems) = preProject
 		Documentation\License.txt = Documentation\License.txt
+		Documentation\MarlinConfig.txt = Documentation\MarlinConfig.txt
 		README = README
 		Documentation\ReleaseNotes_v1.txt = Documentation\ReleaseNotes_v1.txt
 		Documentation\ReleaseNotes_v2.txt = Documentation\ReleaseNotes_v2.txt
@@ -19,7 +20,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Documentation\ReleaseNotes_v5.txt = Documentation\ReleaseNotes_v5.txt
 		Documentation\ReleaseNotes_v6.txt = Documentation\ReleaseNotes_v6.txt
 		Documentation\ReleaseNotes_v7.txt = Documentation\ReleaseNotes_v7.txt
-		Documentation\WebConfig.txt = Documentation\WebConfig.txt
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Marlin", "Marlin\Marlin.vcxproj", "{3CC23320-1FF0-41AF-9F3A-960C5F657C81}"

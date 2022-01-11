@@ -13,7 +13,16 @@ CHANGES in VERSION 7.3.0
 ------------------------
 1)  The IIS web.config has been expanded with an administrators emailadress for crash reports.
     This upgrades the MarlinModule to 7.3.0 and the ServerApp depends on that.
-	You must upgrade your application accordingly.
+    You must upgrade your application accordingly.
+2)  web.config as a configuration file has totally been replaced by "Marlin.config"
+    This removes the confusion between this web.config and that of the IIS system.
+    HTTPManager now only configures and edits 'marlin.config' files.
+3)  Removed all references to 'localhost'
+4)  Corrections for the 'bcd' class for the first 100,000,000 numbers above MAXINT32
+5)  HTTPClient retains the last OAuth2 bearer token, so it can be queried afterwards.
+6)  Simplifying the scanning for UTF-8 / MBCS characters in JSON strings.
+7)  The MarlinModule has been enhanced with SEH try-catch loops for starting and stopping an
+    IIS application. Applications must be ported to MarlinModule of this version (7.3.0)
 
 CHANGES IN VERSION 7.2.0
 ------------------------

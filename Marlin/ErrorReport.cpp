@@ -29,7 +29,7 @@
 #include "ErrorReport.h"
 #include "StackTrace.h"
 #include "ProcInfo.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "HTTPMessage.h"
 #include "AutoCritical.h"
 #include "Version.h"

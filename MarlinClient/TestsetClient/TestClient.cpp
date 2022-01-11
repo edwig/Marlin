@@ -71,7 +71,7 @@ static LogAnalysis* g_log = nullptr;
 HTTPClient*
 StartClient(int p_loglevel)
 {
-  CString logfileName = WebConfig::GetExePath() + "ClientLog.txt";
+  CString logfileName = MarlinConfig::GetExePath() + "ClientLog.txt";
 
   // Create log file and turn logging 'on'
   g_log = new LogAnalysis("TestHTTPClient");

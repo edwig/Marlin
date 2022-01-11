@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "HTTPManager.h"
 #include "WebConfigDlg.h"
-#include "WebConfig.h"
+#include "MarlinConfig.h"
 #include "afxdialogex.h"
 
 // WebConfigDlg dialog
@@ -84,17 +84,17 @@ WebConfigDlg::OnInitDialog()
   ReadWebConfig();
 
   // Setting the type of editor
-  CString base = m_iis ? "Marlin.Config" : "Web.Config";
+  CString base("Marlin.Config");
   if(m_siteConfigFile.IsEmpty())
   {
-    m_title = base + " Editor for: web.config";
+    m_title = base + " Editor for: Marlin.config";
   }
   else
   {
     CString subject = m_url.IsEmpty() ? CString("server") : m_url;
     m_title = base + " Editor for: " + subject;
   }
-  SetWindowText(m_iis ? "Marlin.Config" : "Web.Config");
+  SetWindowText("Marlin.Config");
 
   UpdateData(FALSE);
   return TRUE;
@@ -161,13 +161,13 @@ WebConfigDlg::ReadWebConfig()
   {
     if(m_siteConfigFile.IsEmpty())
     {
-      m_siteConfigFile = m_iis ? "marlin.config" : "web.config";
+      m_siteConfigFile = "Marlin.config";
     }
     else
     {
       RemoveLogTab();
     }
-    m_webconfig = new WebConfig(m_siteConfigFile);
+    m_webconfig = new MarlinConfig(m_siteConfigFile);
   }
   m_page1.ReadWebConfig(*m_webconfig);
   m_page2.ReadWebConfig(*m_webconfig);
@@ -183,9 +183,9 @@ WebConfigDlg::WriteWebConfig()
   {
     if(m_siteConfigFile.IsEmpty())
     {
-      m_siteConfigFile = m_iis ? "marlin.config" : "web.config";
+      m_siteConfigFile = "Marlin.config";
     }
-    m_webconfig = new WebConfig(m_siteConfigFile);
+    m_webconfig = new MarlinConfig(m_siteConfigFile);
   }
 
   m_page1.WriteWebConfig(*m_webconfig);
@@ -200,14 +200,14 @@ WebConfigDlg::WriteWebConfig()
     CString message("Cannot write the file. Check the rights of this file: ");
     if(m_siteConfigFile.IsEmpty())
     {
-      message += "web.config";
+      message += "Marlin.config";
     }
     else
     {
       message += "\nFile: ";
       message += m_siteConfigFile;
     }
-    MessageBox(message,"Web.Config Editor",MB_OK | MB_ICONERROR);
+    MessageBox(message,"Marlin.Config Editor",MB_OK | MB_ICONERROR);
     return false;
   }
   return true;
