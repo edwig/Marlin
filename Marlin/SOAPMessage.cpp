@@ -1535,6 +1535,7 @@ void
 SOAPMessage::ParseAsBody(CString& p_message)
 {
   SoapVersion oldVersion = m_soapVersion;
+  CreateHeaderAndBody();
   CleanNode(m_body);
 
   XMLElement* node = m_body;
