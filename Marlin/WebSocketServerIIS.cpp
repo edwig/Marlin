@@ -501,16 +501,16 @@ bool
 WebSocketServerIIS::ServerHandshake(HTTPMessage* p_message)
 {
   // Does nothing for IIS
-  CString version = p_message->GetHeader("Sec-WebSocket-Version");
+  CString version   = p_message->GetHeader("Sec-WebSocket-Version");
   CString clientKey = p_message->GetHeader("Sec-WebSocket-Key");
   CString serverKey = ServerAcceptKey(clientKey);
   // Get optional extensions
-  m_protocols = p_message->GetHeader("Sec-WebSocket-Protocol");
+  m_protocols  = p_message->GetHeader("Sec-WebSocket-Protocol");
   m_extensions = p_message->GetHeader("Sec-WebSocket-Extensions");
 
   // Change header fields
   p_message->DelHeader("Sec-WebSocket-Key");
-  p_message->AddHeader("Sec-WebSocket-Accept",serverKey,false);
+  p_message->AddHeader("Sec-WebSocket-Accept",serverKey);
 
   // Remove general headers
   p_message->DelHeader("Sec-WebSocket-Version");

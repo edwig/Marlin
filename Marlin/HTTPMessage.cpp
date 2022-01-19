@@ -198,6 +198,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
   m_status        = p_msg->GetStatus();
   m_user          = p_msg->GetUser();
   m_password      = p_msg->GetPassword();
+  m_headers       =*p_msg->GetHeaderMap();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Getting the URL of all parts
@@ -217,13 +218,6 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
 
   // Get sender (if any) from the soap message
   memcpy(&m_sender,p_msg->GetSender(),sizeof(SOCKADDR_IN6));
-
-  // Copy all headers from the SOAPmessage
-  HeaderMap* map = p_msg->GetHeaderMap();
-  for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
-  {
-    m_headers[it->first] = it->second;
-  }
 
   // Copy routing information
   m_routing = p_msg->GetRouting();
@@ -302,6 +296,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
   m_status         = p_msg->GetStatus();
   m_user           = p_msg->GetUser();
   m_password       = p_msg->GetPassword();
+  m_headers        =*p_msg->GetHeaderMap();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Getting the URL of all parts
@@ -321,13 +316,6 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
 
   // Get sender (if any) from the soap message
   memcpy(&m_sender,p_msg->GetSender(),sizeof(SOCKADDR_IN6));
-
-  // Copy all headers from the SOAPmessage
-  HeaderMap* map = p_msg->GetHeaderMap();
-  for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
-  {
-    m_headers[it->first] = it->second;
-  }
 
   // Copy all routing
   m_routing = p_msg->GetRouting();
@@ -578,7 +566,6 @@ void
 HTTPMessage::SetAcceptEncoding(CString p_encoding)
 {
   m_acceptEncoding = p_encoding;
-  m_acceptEncoding.MakeLower();
 }
 
 Cookie*
@@ -850,19 +837,24 @@ HTTPMessage::AddHeader(HTTP_HEADER_ID p_id,CString p_value)
 
 // Add header outside protocol
 void
-HTTPMessage::AddHeader(CString p_name,CString p_value,bool p_lower /*=true*/)
+HTTPMessage::AddHeader(CString p_name,CString p_value)
 {
-  if(p_lower)
-  {
-    p_name.MakeLower();
-  }
+  // Case-insensitive search!
   HeaderMap::iterator it = m_headers.find(p_name);
-  if(it != m_headers.end())
+  if(it != m_headers.end() && p_name.CompareNoCase("Set-Cookie") != 0)
   {
-    it->second = p_value;
+    // Check if we set it a duplicate time
+    if(p_value.CompareNoCase(it->second) == 0)
+    {
+      return;
+    }
+    // Append to already existing value
+    it->second += ", ";
+    it->second += p_value;
   }
   else
   {
+    // Insert as a new header
     m_headers.insert(std::make_pair(p_name,p_value));
   }
 }
@@ -871,8 +863,6 @@ HTTPMessage::AddHeader(CString p_name,CString p_value,bool p_lower /*=true*/)
 CString
 HTTPMessage::GetHeader(CString p_name)
 {
-  p_name.MakeLower();
-
   HeaderMap::iterator it = m_headers.find(p_name);
   if(it != m_headers.end())
   {
@@ -890,12 +880,6 @@ HTTPMessage::DelHeader(CString p_name)
   {
     m_headers.erase(it);
     return;
-  }
-  p_name.MakeLower();
-  it = m_headers.find(p_name);
-  if(it != m_headers.end())
-  {
-    m_headers.erase(it);
   }
 }
 

@@ -363,6 +363,7 @@
     <ClInclude Include="CRC32.h" />
     <ClInclude Include="EventLogRegistration.h" />
     <ClInclude Include="EventStream.h" />
+    <ClInclude Include="Headers.h" />
     <ClInclude Include="HostedWebCore.h" />
     <ClInclude Include="HTTPCertificate.h" />
     <ClInclude Include="ConvertWideString.h" />

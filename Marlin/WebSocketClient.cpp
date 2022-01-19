@@ -180,7 +180,7 @@ WebSocketClient::OpenSocket()
       if(m_socket)
       {
         // Remember the identity key
-        ResponseMap::iterator key = client.GetResponseHeaders().find("sec-websocket-accept");
+        HeaderMap::iterator key = client.GetResponseHeaders().find("Sec-Websocket-Accept");
         if(key != client.GetResponseHeaders().end())
         {
           m_key = key->second;

@@ -139,12 +139,12 @@ SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
   {
     CString maxAge;
     maxAge.Format("%d",m_site->GetCORSMaxAge());
-    p_message->AddHeader("Access-Control-Max-Age",maxAge,false);
+    p_message->AddHeader("Access-Control-Max-Age",maxAge);
   }
 
   if(m_site->GetCORSAllowCredentials())
   {
-    p_message->AddHeader("Access-Control-Allow-Credentials","true",false);
+    p_message->AddHeader("Access-Control-Allow-Credentials","true");
   }
   return true;
 }
@@ -192,7 +192,7 @@ SiteHandlerOptions::CheckCORSMethod(HTTPMessage* p_message,CString p_method)
     }
   }
   // These are the allowed methods for this site
-  p_message->AddHeader("Access-Control-Allow-Methods",handlers,false);
+  p_message->AddHeader("Access-Control-Allow-Methods",handlers);
   return true;
 }
 
@@ -228,7 +228,7 @@ SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,CString p_headers)
     }
   }
   // These are the allowed methods for this site
-  p_message->AddHeader("Access-Control-Allow-Headers",m_site->GetCORSHeaders(),false);
+  p_message->AddHeader("Access-Control-Allow-Headers",m_site->GetCORSHeaders());
   return true;
 }
 

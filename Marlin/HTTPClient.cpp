@@ -750,43 +750,41 @@ HTTPClient::SetURL(CString p_url)
 
 // Add extra header for the call
 bool 
-HTTPClient::AddHeader(CString p_header,bool p_unique /*=true*/)
+HTTPClient::AddHeader(CString p_header)
 {
   int pos = p_header.Find(':');
   if (pos > 0)
   {
     CString name   = p_header.Left(pos);
-    CString value  = p_header.Mid(pos + 1);
+    CString value  = p_header.Mid(pos + 1).Trim();
 
-    return AddHeader(name,value,p_unique);
+    return AddHeader(name,value);
   }
   return false;
 }
 
 // Add extra header by name and value pair
 bool
-HTTPClient::AddHeader(CString p_name,CString p_value,bool p_unique /*=true*/)
+HTTPClient::AddHeader(CString p_name,CString p_value)
 {
-  HttpHeader header;
-  header.m_name   = p_name;
-  header.m_value  = p_value;
-  header.m_unique = true;
-    
-  for(auto& head : m_requestHeaders)
+  // Case-insensitive search!
+  HeaderMap::iterator it = m_requestHeaders.find(p_name);
+  if(it != m_requestHeaders.end() && p_name.CompareNoCase("Set-Cookie") != 0)
   {
-    if(head.m_name.Compare(p_name) == 0)
+    // Check if we set it a duplicate time
+    if(p_value.CompareNoCase(it->second) == 0)
     {
-      if(p_unique)
-      {
-        // OVERWRITE
-        head.m_value = p_value;
-        return false;
-      }
-      header.m_unique = false;
-      head.m_unique   = false;
+      return true;
     }
+    // Append to already existing value
+    it->second += ", ";
+    it->second += p_value;
   }
-  m_requestHeaders.push_back(header);
+  else
+  {
+    // Insert as a new header
+    m_requestHeaders.insert(std::make_pair(p_name,p_value));
+  }
   return true;
 }
 
@@ -1101,11 +1099,11 @@ HTTPClient::AddExtraHeaders()
   USES_CONVERSION;
   for(auto& head : m_requestHeaders)
   {
-    CString header = head.m_name + ":" + head.m_value;
+    CString header = head.first + ":" + head.second;
     wstring theHeader = A2CW(header);
 
-    DWORD modifiers = head.m_unique ? WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE
-                                    : WINHTTP_ADDREQ_FLAG_COALESCE_WITH_SEMICOLON;
+    DWORD modifiers = WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE;
+                   // WINHTTP_ADDREQ_FLAG_COALESCE_WITH_SEMICOLON;
     if(!::WinHttpAddRequestHeaders(m_request
                                   ,theHeader.c_str()
                                   ,(DWORD)theHeader.size()
@@ -2125,7 +2123,7 @@ HTTPClient::Send(HTTPMessage* p_msg)
   // Getting all headers from the answer
   if(m_readAllHeaders)
   {
-    for(ResponseMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
+    for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
     {
       p_msg->AddHeader(it->first,it->second);
     }
@@ -2340,7 +2338,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   // Getting all headers from the answer
   if(m_readAllHeaders)
   {
-    for(ResponseMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
+    for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
     {
       p_msg->AddHeader(it->first,it->second);
     }
@@ -2561,7 +2559,7 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   // Getting all headers from the answer
   if(m_readAllHeaders)
   {
-    for(ResponseMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
+    for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
     {
       p_msg->AddHeader(it->first,it->second);
     }
@@ -3231,7 +3229,7 @@ HTTPClient::TraceTheSend()
   // Trace all other extra headers, including CORS headers
   for(auto& head : m_requestHeaders)
   {
-    header = head.m_name + ":" + head.m_value;
+    header = head.first + ":" + head.second;
     m_log->BareStringLog(header.GetString(),header.GetLength());
   }
 
@@ -3505,7 +3503,6 @@ HTTPClient::ReadAllResponseHeaders()
           {
             CString hname   = header.Left(namepos).Trim();
             CString hvalue  = header.Mid(namepos + 1).Trim();
-            hname.MakeLower();
             m_responseHeaders.insert(std::make_pair(hname,hvalue));
           }
           // Find next
@@ -3524,9 +3521,8 @@ HTTPClient::ReadAllResponseHeaders()
 CString  
 HTTPClient::FindHeader(CString p_header)
 {
-  p_header.MakeLower();
-
-  ResponseMap::iterator it = m_responseHeaders.find(p_header);
+  // Case insensitive find
+  HeaderMap::iterator it = m_responseHeaders.find(p_header);
   if(it != m_responseHeaders.end())
   {
     return it->second;

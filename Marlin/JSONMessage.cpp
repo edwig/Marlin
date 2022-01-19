@@ -504,18 +504,12 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
   m_sendUnicode = p_other->m_sendUnicode;
   m_sendBOM     = p_other->m_sendBOM;
   m_verbTunnel  = p_other->m_verbTunnel;
+  m_headers     = p_other->m_headers;
   m_acceptEncoding = p_other->m_acceptEncoding;
   // Duplicate all cookies
   m_cookies = p_other->GetCookies();
   // Duplicate all routing
   m_routing = p_other->GetRouting();
-
-  // Copy all headers from the HTTPmessage
-  HeaderMap* map = p_other->GetHeaderMap();
-  for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
-  {
-    m_headers[it->first] = it->second;
-  }
 
   // Get sender (if any) from the HTTP message
   memcpy(&m_sender,p_other->GetSender(),sizeof(SOCKADDR_IN6));
@@ -552,17 +546,11 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
   m_referrer       = p_message->GetReferrer();
   m_user           = p_message->GetUser();
   m_password       = p_message->GetPassword();
+  m_headers        =*p_message->GetHeaderMap();
   m_incoming       = (p_message->GetCommand() != HTTPCommand::http_response);
 
   // Duplicate all cookies
   m_cookies = p_message->GetCookies();
-
-  // Copy all headers from the HTTPmessage
-  HeaderMap* map = p_message->GetHeaderMap();
-  for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
-  {
-    m_headers[it->first] = it->second;
-  }
 
   // Copy routing
   m_routing = p_message->GetRouting();
@@ -655,19 +643,13 @@ JSONMessage::JSONMessage(SOAPMessage* p_message)
   m_acceptEncoding  = p_message->GetAcceptEncoding();
   m_user            = p_message->GetUser();
   m_password        = p_message->GetPassword();
+  m_headers         =*p_message->GetHeaderMap();
 
   // Duplicate all cookies
   m_cookies = p_message->GetCookies();
 
   // Duplicate routing
   m_routing = p_message->GetRouting();
-
-  // Copy all headers from the HTTPmessage
-  HeaderMap* map = p_message->GetHeaderMap();
-  for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
-  {
-    m_headers[it->first] = it->second;
-  }
 
   // Get sender (if any) from the HTTP message
   memcpy(&m_sender,p_message->GetSender(),sizeof(SOCKADDR_IN6));
@@ -782,20 +764,34 @@ void
 JSONMessage::SetAcceptEncoding(CString p_encoding)
 {
   m_acceptEncoding = p_encoding;
-  m_acceptEncoding.MakeLower();
 }
 
 void 
 JSONMessage::AddHeader(CString p_name,CString p_value)
 {
-  p_name.MakeLower();
-  m_headers.insert(std::make_pair(p_name,p_value));
+  // Case-insensitive search!
+  HeaderMap::iterator it = m_headers.find(p_name);
+  if(it != m_headers.end() && p_name.CompareNoCase("Set-Cookie") != 0)
+  {
+    // Check if we set it a duplicate time
+    if(p_value.CompareNoCase(it->second) == 0)
+    {
+      return;
+    }
+    // Append to already existing value
+    it->second += ", ";
+    it->second += p_value;
+  }
+  else
+  {
+    // Insert as a new header
+    m_headers.insert(std::make_pair(p_name,p_value));
+  }
 }
 
 void
 JSONMessage::DelHeader(CString p_name)
 {
-  p_name.MakeLower();
   HeaderMap::iterator it = m_headers.find(p_name);
   if(it != m_headers.end())
   {
@@ -807,8 +803,6 @@ JSONMessage::DelHeader(CString p_name)
 CString
 JSONMessage::GetHeader(CString p_name)
 {
-  p_name.MakeLower();
-
   HeaderMap::iterator it = m_headers.find(p_name);
   if(it != m_headers.end())
   {
@@ -892,7 +886,7 @@ JSONMessage::UseVerbTunneling()
 {
   if(m_verbTunnel)
   {
-    if(m_verb != "POST")
+    if(m_verb.Compare("POST") != 0)
     {
       // Change of identity!
       AddHeader("X-HTTP-Method-Override",m_verb);

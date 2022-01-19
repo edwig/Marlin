@@ -250,7 +250,7 @@ public:
   ULONG       GetEventKeepAlive();
   // Get the client retry connection time
   ULONG       GetEventRetryConnection();
-  // Reference to the WebConfig
+  // Reference to the WebConfigIIS
   MarlinConfig&  GetWebConfig();
   // Getting the logfile
   LogAnalysis* GetLogfile();

@@ -35,6 +35,7 @@
 // See SOAP 1.0 standard: <plain old soap>
 //
 #pragma once
+#include "Headers.h"
 #include "SoapTypes.h"
 #include "HTTPSite.h"
 #include "XMLMessage.h"

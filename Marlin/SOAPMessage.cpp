@@ -478,8 +478,24 @@ SOAPMessage::SetSoapVersion(SoapVersion p_version)
 void            
 SOAPMessage::AddHeader(CString p_name,CString p_value)
 {
-  p_name.MakeLower();
-  m_headers[p_name] = p_value;
+  // Case-insensitive search!
+  HeaderMap::iterator it = m_headers.find(p_name);
+  if(it != m_headers.end() && p_name.CompareNoCase("Set-Cookie") != 0)
+  {
+    // Check if we set it a duplicate time
+    if(p_value.CompareNoCase(it->second) == 0)
+    {
+      return;
+    }
+    // Append to already existing value
+    it->second += ", ";
+    it->second += p_value;
+  }
+  else
+  {
+    // Insert as a new header
+    m_headers.insert(std::make_pair(p_name,p_value));
+  }
 }
 
 // Add extra request/response header by well-known ID
@@ -499,7 +515,6 @@ SOAPMessage::AddHeader(HTTP_HEADER_ID p_id,CString p_value)
 void
 SOAPMessage::DelHeader(CString p_name)
 {
-  p_name.MakeLower();
   HeaderMap::iterator it = m_headers.find(p_name);
   if(it != m_headers.end())
   {
@@ -524,13 +539,11 @@ SOAPMessage::DelHeader(HTTP_HEADER_ID p_id)
 CString
 SOAPMessage::GetHeader(CString p_name)
 {
-  p_name.MakeLower();
-  for(auto& header : m_headers)
+  // Case-insensitive search
+  HeaderMap::iterator it = m_headers.find(p_name);
+  if(it != m_headers.end())
   {
-    if(header.first.Compare(p_name) == 0)
-    {
-      return header.second;
-    }
+    return it->second;
   }
   return "";
 }
@@ -551,16 +564,10 @@ SOAPMessage::operator=(JSONMessage& p_json)
   m_contentType   = p_json.GetContentType();
   m_sendBOM       = p_json.GetSendBOM();
   m_incoming      = p_json.GetIncoming();
+  m_headers       =*p_json.GetHeaderMap();
 
   // Duplicate all cookies
   m_cookies = p_json.GetCookies();
-
-  // Copy all headers from the HTTPmessage
-  HeaderMap* map = p_json.GetHeaderMap();
-  for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
-  {
-    m_headers[it->first] = it->second;
-  }
 
   // Get sender (if any) from the HTTP message
   memcpy(&m_sender,p_json.GetSender(),sizeof(SOCKADDR_IN6));
@@ -690,7 +697,6 @@ void
 SOAPMessage::SetAcceptEncoding(CString p_encoding)
 {
   m_acceptEncoding = p_encoding;
-  m_acceptEncoding.MakeLower();
 }
 
 // Addressing the message's has three levels
@@ -1535,7 +1541,6 @@ void
 SOAPMessage::ParseAsBody(CString& p_message)
 {
   SoapVersion oldVersion = m_soapVersion;
-  CreateHeaderAndBody();
   CleanNode(m_body);
 
   XMLElement* node = m_body;

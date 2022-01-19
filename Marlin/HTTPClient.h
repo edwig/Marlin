@@ -34,6 +34,7 @@
 
 #pragma  once
 #include "MarlinConfig.h"
+#include "Headers.h"
 #include "HPFCounter.h"
 #include "SOAPTypes.h"
 #include "Cookie.h"
@@ -126,19 +127,8 @@ public:
   m_message;
 };
 
-// Request headers
-class HttpHeader
-{
-public:
-  CString m_name;
-  CString m_value;
-  bool    m_unique;
-};
-
 // Used mappings in this class
 using HttpQueue   = std::list<MsgBuf>;
-using HttpHeadMap = std::vector<HttpHeader>;
-using ResponseMap = std::multimap<CString,CString>;
 
 class HTTPClient
 {
@@ -188,9 +178,9 @@ public:
 
   // FUNCTIONS
   // Add extra header for the call
-  bool AddHeader(CString p_header,bool p_unique = true);
+  bool AddHeader(CString p_header);
   // Add extra header by name and value pair
-  bool AddHeader(CString p_name,CString p_value,bool p_unique = true);
+  bool AddHeader(CString p_name,CString p_value);
   // Add extra cookie for the call
   bool AddCookie(CString p_cookie);
   // Disconnect from server
@@ -289,7 +279,6 @@ public:
   bool          GetReadAllHeaders()         { return m_readAllHeaders;    };
   HPFCounter*   GetCounter()                { return &m_counter;          };
   LogAnalysis*  GetLogging()                { return m_log;               };
-  ResponseMap&  GetAllHeadersMap()          { return m_responseHeaders;   };
   unsigned      GetSslTlsSettings()         { return m_ssltls;            }; 
   bool          GetSendBOM()                { return m_sendBOM;           };
   bool          GetVerbTunneling()          { return m_verbTunneling;     };
@@ -305,7 +294,7 @@ public:
   FileBuffer*   GetFileBuffer()             { return m_buffer;            };
   Cookies&      GetCookies()                { return m_cookies;           };
   Cookies&      GetResultCookies()          { return m_resultCookies;     };
-  ResponseMap&  GetResponseHeaders()        { return m_responseHeaders;   };
+  HeaderMap&    GetResponseHeaders()        { return m_responseHeaders;   };
   bool          GetPushEvents()             { return m_pushEvents;        };
   bool          GetOnCloseSeen()            { return m_onCloseSeen;       };
   int           GetQueueSize()              { return (int)m_queue.size(); };
@@ -462,8 +451,8 @@ private:
   unsigned      m_timeoutSend     { DEF_TIMEOUT_SEND    };        // Timeout in sending 
   unsigned      m_timeoutReceive  { DEF_TIMEOUT_RECEIVE };        // Timeout in receiving
   // Extra headers / Cookie
-  HttpHeadMap   m_requestHeaders;                                 // All request headers to the call
-  ResponseMap   m_responseHeaders;                                // All response headers from the call
+  HeaderMap     m_requestHeaders;                                 // All request headers to the call
+  HeaderMap     m_responseHeaders;                                // All response headers from the call
   Cookies       m_cookies;                                        // All cookies to send
   bool          m_readAllHeaders  { false   };                    // Get all response headers
   // CORS Cross Origin Resource Sharing
