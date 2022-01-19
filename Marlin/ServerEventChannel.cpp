@@ -324,10 +324,10 @@ ServerEventChannel::OnOpenSocket(WebSocket* p_socket)
     if(sock.m_socket == p_socket)
     {
       sock.m_open = true;
-    m_openSeen  = true;
-    m_closeSeen = false;
+      m_openSeen  = true;
+      m_closeSeen = false;
+    }
   }
-}
 }
 
 void

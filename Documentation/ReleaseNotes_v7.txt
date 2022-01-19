@@ -15,7 +15,7 @@ CHANGES IN VERSION 7.x.y
     Created a new case-insensitive multimap for these kind of headers.
     Only "Set-Cookie" can now be a duplicate header, as internet servers can send more than
     one (1) of these cookies back.
-
+2)  Corrections for the HTTPManager. All program resources are now in EN/US locale.
 
 CHANGES in VERSION 7.3.0
 ------------------------

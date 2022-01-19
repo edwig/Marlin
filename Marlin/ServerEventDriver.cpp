@@ -277,10 +277,10 @@ ServerEventDriver::UnRegisterChannel(int p_channel,bool p_flush /*=true*/)
   // See if we can flush the channel
   if(p_flush)
   {
-  if(!FlushChannel(p_channel))
-  {
-    // If not, the channel stays for now
-    return false;
+    if(!FlushChannel(p_channel))
+    {
+      // If not, the channel stays for now
+      return false;
     }
   }
 
