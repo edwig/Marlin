@@ -348,6 +348,7 @@ private:
   void     AddProxyAuthorization();
   void     AddPreEmptiveAuthorization();
   bool     AddOAuth2authorization();
+  void     FlushAllHeaders();
   void     AddMessageHeaders(HTTPMessage* p_message);
   void     AddMessageHeaders(SOAPMessage* p_message);
   void     AddMessageHeaders(JSONMessage* p_message);

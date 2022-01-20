@@ -228,7 +228,7 @@ void
 HTTPServer::InitHardLimits()
 {
   g_streaming_limit = m_marlinConfig->GetParameterInteger("Server","StreamingLimit",g_streaming_limit);
-  g_compress_limit  = m_marlinConfig->GetParameterInteger("Server","CompressLimit", g_compress_limit);
+  g_compress_limit = m_marlinConfig->GetParameterInteger("Server","CompressLimit",g_compress_limit);
 
   // Cannot be bigger than 2 GB, otherwise use indirect file access!
   if(g_streaming_limit > (0x7FFFFFFF))
@@ -244,6 +244,10 @@ HTTPServer::InitHardLimits()
   if(g_compress_limit > (25 * 4 * 1024))
   {
     g_compress_limit = (25 * 4 * 1024);
+  }
+  if(g_compress_limit < (4 * 1024))
+  {
+    g_compress_limit = (4 * 1024);
   }
 
   DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);

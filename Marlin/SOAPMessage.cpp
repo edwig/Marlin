@@ -483,7 +483,7 @@ SOAPMessage::AddHeader(CString p_name,CString p_value)
   if(it != m_headers.end() && p_name.CompareNoCase("Set-Cookie") != 0)
   {
     // Check if we set it a duplicate time
-    if(p_value.CompareNoCase(it->second) == 0)
+    if(it->second.Find(p_value) >= 0)
     {
       return;
     }

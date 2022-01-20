@@ -564,6 +564,7 @@ FileBuffer::ZipBuffer()
     {
       ((uint8_t *)m_buffer)[ind] = out_data[ind];
     }
+    m_buffer[m_binaryLength] = 0;
     return true;
   }
   return false;
@@ -602,6 +603,7 @@ FileBuffer::UnZipBuffer()
     {
       ((uint8_t *)m_buffer)[ind] = out_data[ind];
     }
+    m_buffer[m_binaryLength] = 0;
     return true;
   }
   return false;

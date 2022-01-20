@@ -428,24 +428,6 @@ HTTPClient::InitializeSingleSignOn()
     ErrorLog(__FUNCTION__,"Cannot set the auto-logon policy. Error [%d] %s");
     return;
   }
-
-//   COMMENTED OUT: NEVER SEEN WORKING ON ANY SYSTEM
-//   AND SYSTEM-WIDE SSO IS NOT VERY SECURE. SO DO NOT DO THIS AGAIN!!
-
-//   // See if we can optimize the single-sign-on procedure
-//   BOOL cred = TRUE;
-//   if(WinHttpSetOption(m_request,WINHTTP_OPTION_USE_GLOBAL_SERVER_CREDENTIALS,&cred,sizeof(BOOL)))
-//   {
-//     DETAILLOG("Single sign-on optimized to use global server credentials");
-//   }
-//   else
-//   {
-//     // NOT AN ERROR IF NOT SUCCEEDED!!!!!!
-//     // IT IS JUST AN OPTIMIZATION!!!
-//     // It's not very likely to work on Windows 2003 Server of Windows XP anyhow
-//     DETAILLOG("Cannot optimize the auto-logon with the use of global server credentials. Reason: %d",GetLastError());
-//     DETAILLOG("Maybe you must set the registry key: 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings!ShareCredsWithWinHttp' to TRUE");
-//   }
 }
 
 void
@@ -472,38 +454,33 @@ HTTPClient::InitLogging()
     m_log = new LogAnalysis(m_agent);
     m_logOwner = true;
   }
-  if(!file.IsEmpty())
+
+  // Make other settings effective on the created logfile
+  // BUT REMEMBER: "Logging.config" can override these settings.
+  if(m_log && !file.IsEmpty())
   {
     m_log->SetLogFilename(file);
   }
-  if(m_marlinConfig.HasParameter("Logging","DoLogging"))
+  if(m_log && m_marlinConfig.HasParameter("Logging","DoLogging"))
   {
     m_log->SetDoLogging(logging);
   }
-  if(m_marlinConfig.HasParameter("Logging","DoTiming"))
+  if(m_log && m_marlinConfig.HasParameter("Logging","DoTiming"))
   {
     m_log->SetDoTiming(timing);
   }
-  if(m_marlinConfig.HasParameter("Logging","DoEvents"))
+  if(m_log && m_marlinConfig.HasParameter("Logging","DoEvents"))
   {
     m_log->SetDoEvents(events);
   }
-  if(m_marlinConfig.HasParameter("Logging","Cache"))
+  if(m_log && m_marlinConfig.HasParameter("Logging","Cache"))
   {
     m_log->SetCache(cache);
   }
-
-  // Detailed logging for client
-  if (m_marlinConfig.HasParameter("Logging","LogLevel"))
+  if(m_log && m_marlinConfig.HasParameter("Logging","LogLevel"))
   {
-    m_logLevel = level;
-    if(m_log)
-    {
-      m_log->SetLogLevel(m_logLevel);
-    }
+    m_log->SetLogLevel(m_logLevel = level);
   }
-
-  // Now "Logging.config" can override these settings.
 }
 
 void
@@ -772,7 +749,7 @@ HTTPClient::AddHeader(CString p_name,CString p_value)
   if(it != m_requestHeaders.end() && p_name.CompareNoCase("Set-Cookie") != 0)
   {
     // Check if we set it a duplicate time
-    if(p_value.CompareNoCase(it->second) == 0)
+    if(it->second.Find(p_value) >= 0)
     {
       return true;
     }
@@ -943,45 +920,22 @@ HTTPClient::AddHostHeader()
   }
 
   // Create host header
-  USES_CONVERSION;
-  CString hostHeader = "Host: " + m_server;
-  if(m_port != INTERNET_DEFAULT_HTTP_PORT)
+  CString host(m_server);
+  if((m_secure && m_port != INTERNET_DEFAULT_HTTPS_PORT) ||
+    (!m_secure && m_port != INTERNET_DEFAULT_HTTP_PORT))
   {
-    hostHeader.AppendFormat(":%d",m_port);
+    host.AppendFormat(":%d",m_port);
   }
-  wstring hostString = A2CW(hostHeader);
-
-  if(!::WinHttpAddRequestHeaders(m_request
-                                ,hostString.c_str()
-                                ,(DWORD)hostString.size()
-                                ,WINHTTP_ADDREQ_FLAG_ADD | 
-                                 WINHTTP_ADDREQ_FLAG_REPLACE))
-  {
-    ErrorLog(__FUNCTION__,"Host header NOT set. Error [%d] %s");
-    return;
-  }
-  DETAILLOG("Header => %S",hostString.c_str());
+  AddHeader("Host",host);
 }
 
 // Add content length header
 void
 HTTPClient::AddLengthHeader()
 {
-  USES_CONVERSION;
   CString length;
-  length.Format("Content-Length: %lu",m_bodyLength);
-  wstring header = A2CW(length);
-
-  if(!::WinHttpAddRequestHeaders(m_request
-                                ,header.c_str()
-                                ,(DWORD)header.size()
-                                ,WINHTTP_ADDREQ_FLAG_ADD |
-                                 WINHTTP_ADDREQ_FLAG_REPLACE))
-  {
-    ErrorLog(__FUNCTION__,"Host header NOT set. Error [%d] %s");
-    return;
-  }
-  DETAILLOG("Header => %S",header.c_str());
+  length.Format("%lu",m_bodyLength);
+  AddHeader("Content-Length",length);
 }
 
 void
@@ -1068,17 +1022,17 @@ HTTPClient::AddExtraHeaders()
   {
     AddHeader("Content-Type",m_contentType);
   }
-  if (m_httpCompression)
+  if(m_httpCompression)
   {
     AddHeader("Accept-Encoding","gzip");
   }
-  if (m_soapAction.GetLength())
+  if(m_soapAction.GetLength())
   {
-    if (m_soapAction[0] != '\"' && m_soapAction.Find(':') >= 0)
+    if(m_soapAction[0] != '\"' && m_soapAction.Find(':') >= 0)
     {
       m_soapAction = "\"" + m_soapAction + "\"";
     }
-    AddHeader("SOAPAction", m_soapAction);
+    AddHeader("SOAPAction",m_soapAction);
   }
   if(m_terminalServices)
   {
@@ -1094,7 +1048,41 @@ HTTPClient::AddExtraHeaders()
       AddHeader("RemoteDesktop",number);
     }
   }
+}
 
+void
+HTTPClient::AddCookieHeaders()
+{
+  if(m_cookies.GetSize())
+  {
+    AddHeader("Cookie",m_cookies.GetCookieText());
+  }
+}
+
+// Add OAuth2 authorization if configured for this call
+bool
+HTTPClient::AddOAuth2authorization()
+{
+  bool result = false;
+
+  if(m_oauthCache && m_oauthSession)
+  {
+    CString token = m_oauthCache->GetBearerToken(m_oauthSession);
+    if(!token.IsEmpty())
+    {
+      CString bearerToken("Bearer ");
+      bearerToken += token;
+      AddHeader("Authorization",bearerToken);
+      m_lastBearerToken = token;
+      result = true;
+    }
+  }
+  return result;
+}
+
+void 
+HTTPClient::FlushAllHeaders()
+{
   // Set all of our headers
   USES_CONVERSION;
   for(auto& head : m_requestHeaders)
@@ -1103,7 +1091,6 @@ HTTPClient::AddExtraHeaders()
     wstring theHeader = A2CW(header);
 
     DWORD modifiers = WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE;
-                   // WINHTTP_ADDREQ_FLAG_COALESCE_WITH_SEMICOLON;
     if(!::WinHttpAddRequestHeaders(m_request
                                   ,theHeader.c_str()
                                   ,(DWORD)theHeader.size()
@@ -1113,36 +1100,6 @@ HTTPClient::AddExtraHeaders()
       ErrorLog(__FUNCTION__,"Request headers NOT set. Error [%d] %s");
     }
     DETAILLOG("Header => %S",theHeader.c_str());
-  }
-}
-
-void
-HTTPClient::AddCookieHeaders()
-{
-  // Remove previous cookies
-  wstring cookie(L"Cookie:");
-  WinHttpAddRequestHeaders(m_request
-                          ,cookie.c_str()
-                          ,(DWORD)cookie.size()
-                          ,WINHTTP_ADDREQ_FLAG_REPLACE);
-
-  if(m_cookies.GetSize())
-  {
-    USES_CONVERSION;
-
-    // Add our cookies, appended together
-    CString cookieText = "Cookie: " + m_cookies.GetCookieText();
-    wstring cookieStr  = A2CW(cookieText);
-
-    if(!::WinHttpAddRequestHeaders(m_request
-                                  ,cookieStr.c_str()
-                                  ,(DWORD)cookieStr.size()
-                                  ,WINHTTP_ADDREQ_FLAG_ADD|WINHTTP_ADDREQ_FLAG_REPLACE))
-    {
-      // Log error and continue. Some cookies are optional (e.g. advertorials)
-      ErrorLog(__FUNCTION__,"Cookie headers NOT set. Error [%d] %s");
-    }
-    DETAILLOG("Header => %S",cookieStr.c_str());
   }
 }
 
@@ -1213,40 +1170,6 @@ HTTPClient::AddPreEmptiveAuthorization()
       ERRORLOG("Illegal pre-emptive authorization setting: %d",m_preemtive);
     }
   }
-}
-
-// Add OAuth2 authorization if configured for this call
-bool
-HTTPClient::AddOAuth2authorization()
-{
-  bool result = false;
-
-  if(m_oauthCache && m_oauthSession)
-  {
-    CString token = m_oauthCache->GetBearerToken(m_oauthSession);
-    if(!token.IsEmpty())
-    {
-      USES_CONVERSION;
-      CString auth("Authorization: Bearer ");
-      auth += token;
-      wstring header = A2CW(auth);
-
-      if(!::WinHttpAddRequestHeaders(m_request
-                                    ,header.c_str()
-                                    ,(DWORD)header.size()
-                                    ,WINHTTP_ADDREQ_FLAG_ADD | 
-                                     WINHTTP_ADDREQ_FLAG_REPLACE))
-      {
-        ERRORLOG("Cannot add OAuth2 bearer token as 'Authorization' header");
-      }
-      else
-      {
-        result = true;
-        m_lastBearerToken = token;
-      }
-    }
-  }
-  return result;
 }
 
 void
@@ -2867,6 +2790,8 @@ HTTPClient::Send()
   AddWebSocketUpgrade();
   // Always add content length
   AddLengthHeader();
+  // Now flush all headers to the WinHTTP client
+  FlushAllHeaders();
 
   // If always using a client certificate, set it upfront
   if(m_certPreset)
@@ -3106,7 +3031,17 @@ HTTPClient::Send()
       {
         m_response[ind] = out_data[ind];
       }
+      m_response[m_responseLength] = 0;
       DETAILLOG("Unzipped gzip content from [%lu] to [%lu] (%d %%)",before,m_responseLength,(100 * before)/m_responseLength);
+
+      // Replace the already read response header for the length of the content
+      HeaderMap::iterator it = m_responseHeaders.find("Content-length");
+      if(it != m_responseHeaders.end())
+      {
+        CString newlen;
+        newlen.Format("%d",m_responseLength);
+        it->second = newlen;
+      }
     }
   }
 
@@ -3461,6 +3396,9 @@ HTTPClient::ReadHeaderField(int p_header)
 void
 HTTPClient::ReadAllResponseHeaders()
 {
+  // Clean out previous response headers
+  m_responseHeaders.clear();
+
   DWORD dwSize = 0;
   WinHttpQueryHeaders(m_request
                      ,WINHTTP_QUERY_RAW_HEADERS_CRLF
