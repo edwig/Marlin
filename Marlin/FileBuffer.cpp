@@ -76,8 +76,9 @@ FileBuffer::FileBuffer(FileBuffer& p_orig)
   // If it had a buffer, duplicate it
   if(m_binaryLength)
   {
-    m_buffer = new uchar[m_binaryLength];
+    m_buffer = new uchar[m_binaryLength + 1];
     memcpy(m_buffer,p_orig.m_buffer,m_binaryLength);
+    m_buffer[m_binaryLength] = 0;
   }
 
   // If it had buffer parts, duplicate them
@@ -87,10 +88,10 @@ FileBuffer::FileBuffer(FileBuffer& p_orig)
     dupli.m_length = part.m_length;
     dupli.m_buffer = new uchar[dupli.m_length];
     memcpy(dupli.m_buffer,part.m_buffer,dupli.m_length);
+    dupli.m_buffer[part.m_length] = 0;
     m_parts.push_back(dupli);
   }
 }
-
 
 FileBuffer::~FileBuffer()
 {
@@ -495,8 +496,9 @@ FileBuffer::operator=(FileBuffer& p_orig)
   // If it had a buffer, duplicate it
   if(m_binaryLength)
   {
-    m_buffer = new uchar[m_binaryLength];
+    m_buffer = new uchar[m_binaryLength + 1];
     memcpy(m_buffer,p_orig.m_buffer,m_binaryLength);
+    m_buffer[m_binaryLength] = 0;
   }
   // If it had buffer parts, duplicate them
   Parts::iterator it;
@@ -507,6 +509,7 @@ FileBuffer::operator=(FileBuffer& p_orig)
     dupli.m_length = part.m_length;
     dupli.m_buffer = new uchar[dupli.m_length];
     memcpy(dupli.m_buffer,part.m_buffer,dupli.m_length);
+    dupli.m_buffer[part.m_length] = 0;
     m_parts.push_back(dupli);
   }
 

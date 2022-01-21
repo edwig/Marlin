@@ -993,6 +993,10 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
                                           AddKnownHeader(response,HttpHeaderServer,"");
                                           break;
   }
+  p_message->DelHeader("Server");
+  p_message->DelHeader("Content-Type");
+  p_message->DelHeader("Content-Length");
+  p_message->DelHeader("Set-Cookie");
 
   // Cookie settings
   bool cookiesHasSecure(false);

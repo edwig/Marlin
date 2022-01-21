@@ -771,11 +771,17 @@ JSONMessage::AddHeader(CString p_name,CString p_value)
 {
   // Case-insensitive search!
   HeaderMap::iterator it = m_headers.find(p_name);
-  if(it != m_headers.end() && p_name.CompareNoCase("Set-Cookie") != 0)
+  if(it != m_headers.end())
   {
     // Check if we set it a duplicate time
     if(it->second.Find(p_value) >= 0)
     {
+      return;
+    }
+    if(p_name.CompareNoCase("Set-Cookie") == 0)
+    {
+      // Insert as a new header
+      m_headers.insert(std::make_pair(p_name,p_value));
       return;
     }
     // Append to already existing value

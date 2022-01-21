@@ -746,11 +746,17 @@ HTTPClient::AddHeader(CString p_name,CString p_value)
 {
   // Case-insensitive search!
   HeaderMap::iterator it = m_requestHeaders.find(p_name);
-  if(it != m_requestHeaders.end() && p_name.CompareNoCase("Set-Cookie") != 0)
+  if(it != m_requestHeaders.end())
   {
     // Check if we set it a duplicate time
     if(it->second.Find(p_value) >= 0)
     {
+      return true;
+    }
+    if(p_name.CompareNoCase("Set-Cookie") == 0)
+    {
+      // Insert as a new header
+      m_requestHeaders.insert(std::make_pair(p_name,p_value));
       return true;
     }
     // Append to already existing value
@@ -763,6 +769,19 @@ HTTPClient::AddHeader(CString p_name,CString p_value)
     m_requestHeaders.insert(std::make_pair(p_name,p_value));
   }
   return true;
+}
+
+// Delete a header
+bool 
+HTTPClient::DelHeader(CString p_name)
+{
+  HeaderMap::iterator it = m_requestHeaders.find(p_name);
+  if(it != m_requestHeaders.end())
+  {
+    m_requestHeaders.erase(it);
+    return true;
+  }
+  return false;
 }
 
 // Add extra cookie for the call
@@ -933,6 +952,10 @@ HTTPClient::AddHostHeader()
 void
 HTTPClient::AddLengthHeader()
 {
+  // Remove old/incorrect content-length header
+  DelHeader("Content-Length");
+
+  // Set our header according to what we are about to send
   CString length;
   length.Format("%lu",m_bodyLength);
   AddHeader("Content-Length",length);
@@ -2788,7 +2811,7 @@ HTTPClient::Send()
   AddExtraHeaders();
   // Add WebSocket preparation
   AddWebSocketUpgrade();
-  // Always add content length
+  // Always add OUR Content-length header
   AddLengthHeader();
   // Now flush all headers to the WinHTTP client
   FlushAllHeaders();

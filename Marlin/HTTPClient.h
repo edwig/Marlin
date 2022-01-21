@@ -181,6 +181,8 @@ public:
   bool AddHeader(CString p_header);
   // Add extra header by name and value pair
   bool AddHeader(CString p_name,CString p_value);
+  // Delete a header
+  bool DelHeader(CString p_name);
   // Add extra cookie for the call
   bool AddCookie(CString p_cookie);
   // Disconnect from server

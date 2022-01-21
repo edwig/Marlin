@@ -1166,6 +1166,10 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
                                           AddKnownHeader(HttpHeaderServer,"");
                                           break;
   }
+  m_message->DelHeader("Server");
+  m_message->DelHeader("Content-Type");
+  m_message->DelHeader("Content-Length");
+  m_message->DelHeader("Set-Cookie");
 
   // Cookie settings
   bool cookiesHasSecure(false);
