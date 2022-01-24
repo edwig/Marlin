@@ -302,34 +302,53 @@ CodepageToCharset(int p_codepage)
   return result;
 }
 
+// Find the value of a specific field within a HTTP header
+// Header: firstvalue; field=value2
+CString
+FindFieldInHTTPHeader(CString p_headervalue,CString p_field)
+{
+  CString value;
+  CString head(p_headervalue);
+  int length = p_headervalue.GetLength();
+  head.MakeLower();
+  p_field.MakeLower();
+  head.Replace(" =","=");
+  p_field += "=";
+
+  int pos = head.Find(p_field);
+  if(pos > 0)
+  {
+    // Skip past the fieldname
+    pos += p_field.GetLength();
+    // Skip white space
+    while(pos < length && isspace(head.GetAt(pos))) ++pos;
+    if(head.GetAt(pos) == '\"')
+    {
+      // field="value2 value3"
+      ++pos;
+      int end = head.Find('\"',pos+1);
+      if(end < 0) end = length+1;
+      value = p_headervalue.Mid(pos,end-pos);
+    }
+    else
+    {
+      // field=value3; fld=value4, part=somewhat
+      int end1 = head.Find(';',pos+1);
+      int end2 = head.Find(',',pos+1);
+      int end = end1 > 0 ? end1 : end2;
+      if(end < 0) end = length+1;
+      value = p_headervalue.Mid(pos,end-pos);
+    }
+  }
+  return value;
+}
+
 // Find the charset in the content-type header
 // content-type: application/json; charset=utf-16
 CString
 FindCharsetInContentType(CString p_contentType)
 {
-  CString charset;
-  int length = p_contentType.GetLength();
-  CString type(p_contentType);
-  type.MakeLower();
-  int pos = type.Find("charset");
-  if(pos > 0)
-  {
-    // Set after charset
-    pos += 7;
-    // Skip white space
-    while(pos < length && isspace(type.GetAt(pos))) ++pos;
-    if(type.GetAt(pos) == '=')
-    {
-      ++pos;
-      // Skip withe space
-      while(pos < length && isspace(type.GetAt(pos))) ++pos;
-      int begin = pos;
-      // Skip chars
-      while(pos < length && (isalnum(type.GetAt(pos)) || type.GetAt(pos) == '-' || type.GetAt(pos) == '_')) ++pos;
-      charset = p_contentType.Mid(begin,pos - begin);
-    }
-  }
-  return charset;
+  return FindFieldInHTTPHeader(p_contentType,"charset");
 }
 
 // Find the mime-type in the content-type header
@@ -345,7 +364,7 @@ FindMimeTypeInContentType(CString p_contentType)
   while(pos < length)
   {
     unsigned ch = mime.GetAt(pos);
-    if(ch == ';' || isspace(ch) || ch == 0)
+    if((ch == ';' || ch == ',') || isspace(ch) || ch == 0)
     {
       break;
     }

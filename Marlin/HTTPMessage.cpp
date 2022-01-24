@@ -844,6 +844,7 @@ HTTPMessage::AddHeader(CString p_name,CString p_value)
   if(it != m_headers.end())
   {
     // Check if we set it a duplicate time
+    // If appended, we do not append it a second time
     if(it->second.Find(p_value) >= 0)
     {
       return;
@@ -854,9 +855,8 @@ HTTPMessage::AddHeader(CString p_name,CString p_value)
       m_headers.insert(std::make_pair(p_name,p_value));
       return;
     }
-    // Append to already existing value
-    it->second += ", ";
-    it->second += p_value;
+    // New value of the header
+    it->second = p_value;
   }
   else
   {

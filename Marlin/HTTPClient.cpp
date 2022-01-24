@@ -735,13 +735,14 @@ HTTPClient::AddHeader(CString p_header)
     CString name   = p_header.Left(pos);
     CString value  = p_header.Mid(pos + 1).Trim();
 
-    return AddHeader(name,value);
+    AddHeader(name,value);
+    return true;
   }
   return false;
 }
 
 // Add extra header by name and value pair
-bool
+void
 HTTPClient::AddHeader(CString p_name,CString p_value)
 {
   // Case-insensitive search!
@@ -749,26 +750,25 @@ HTTPClient::AddHeader(CString p_name,CString p_value)
   if(it != m_requestHeaders.end())
   {
     // Check if we set it a duplicate time
+    // If appended, we do not append it a second time
     if(it->second.Find(p_value) >= 0)
     {
-      return true;
+      return;
     }
     if(p_name.CompareNoCase("Set-Cookie") == 0)
     {
       // Insert as a new header
       m_requestHeaders.insert(std::make_pair(p_name,p_value));
-      return true;
+      return;
     }
-    // Append to already existing value
-    it->second += ", ";
-    it->second += p_value;
+    // New value of the header
+    it->second = p_value;
   }
   else
   {
     // Insert as a new header
     m_requestHeaders.insert(std::make_pair(p_name,p_value));
   }
-  return true;
 }
 
 // Delete a header
@@ -3065,6 +3065,13 @@ HTTPClient::Send()
         newlen.Format("%d",m_responseLength);
         it->second = newlen;
       }
+
+      // Remove content-encoding
+      it = m_responseHeaders.find("Content-Encoding");
+      if(it != m_responseHeaders.end())
+      {
+        m_responseHeaders.erase(it);
+      }
     }
   }
 
@@ -3390,7 +3397,7 @@ HTTPClient::ReadHeaderField(int p_header)
 
   if(GetLastError() == ERROR_INSUFFICIENT_BUFFER)
   {
-    WCHAR* buffer = new WCHAR[dwSize];
+    WCHAR* buffer = new WCHAR[dwSize + 1];
     if(buffer)
     {
       if (::WinHttpQueryHeaders(m_request,

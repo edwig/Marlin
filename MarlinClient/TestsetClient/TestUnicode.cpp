@@ -77,7 +77,7 @@ int TestUnicode(void)
     // Do not forget to free the buffer
     delete [] buffer;
 
-    if(text == result)
+    if(result.Compare(text) == 0)
     {
       --errors;
     }

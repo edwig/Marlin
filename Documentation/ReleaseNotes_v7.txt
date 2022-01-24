@@ -20,6 +20,11 @@ CHANGES IN VERSION 7.x.y
     - HTTPServerIIS
     - HTTPServerSync
     - HTTPRequest
+4)  Strict separation of SOAP 1.1 and SOAP 1.2:
+    - 1.1  o Version is defined by namespace "http://schemas.xmlsoap.org/soap/envelope/" of the soap "<Envelope>" root element
+           o SoapAction is defined by HTTP-Header "SOAPAction"
+    - 1.2  o Version is defined by namespace "http://www.w3.org/2003/05/soap-envelope" of the soap "<Envelope>" root element
+           o SoapAction is defined by "action" element in the HTTP-Header "Content-Type"
 
 CHANGES in VERSION 7.3.0
 ------------------------

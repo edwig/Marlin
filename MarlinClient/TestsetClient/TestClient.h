@@ -58,6 +58,7 @@ extern int TestFindClientCertificate(void);
 extern int TestWebSocketAccept(void);
 extern int TestWebSocket(LogAnalysis* p_log);
 extern int TestCloseWebSocket(void);
+extern int TestHeaders(void);
 extern int TestEvents(HTTPClient* p_client);
 extern int TestCookies(HTTPClient& p_client);
 extern int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile);

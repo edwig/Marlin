@@ -141,9 +141,13 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
   if(m_soapVersion < SoapVersion::SOAP_12)
   {
     // Getting SOAP 1.0 or 1.1 SOAPAction from the unknown-headers
-    // It is optional in SOAP 1.2, but CAN be set as well!
-    // It is an override after parsing, if no soap-action found yet
     SetSoapActionFromHTTTP(p_msg->GetHeader("SOAPAction"));
+  }
+  else
+  {
+    // Getting SOAP 1.2 action from the Content-Type header
+    CString action = FindFieldInHTTPHeader(m_contentType,"Action");
+    SetSoapActionFromHTTTP(action);
   }
 }
 
@@ -355,46 +359,30 @@ SOAPMessage::SetSoapActionFromHTTTP(CString p_action)
   // Remove double quotes on both sides
   p_action.Trim('\"');
 
-  // Quick check whether it's filled, if not fail silently
-  if(p_action.IsEmpty())
-  {
-    return;
-  }
   // Split the (soap)action
   CString namesp,action;
-  SplitNamespaceAndAction(p_action,namesp,action);
-  // If empty after splitting: fail silently
-  if(action.IsEmpty())
-  {
-    return;
-  }
 
-  bool copyAction = false;
-  // STEP 1: If SOAP 1.0 or 1.1
-  if(m_soapVersion < SoapVersion::SOAP_12)
-  {
-    copyAction = true;
-  }
-  else
+  // STEP 1: Soap action from HTTPHeaders
+  SplitNamespaceAndAction(p_action,namesp,action);
+ 
+  if(m_soapVersion >= SoapVersion::SOAP_12)
   {
     // STEP 2: If SOAP 1.2
     if(m_header)
     {
-      // STEP 3: Find <Header>/<Action>
-      if(FindElement(m_header,"Action") == nullptr)
+      // STEP 3: Find WS-Adressing <Header>/<Action>
+      XMLElement* xmlaction = FindElement(m_header,"Action");
+      if(xmlaction)
       {
-        copyAction = true;
+        SplitNamespaceAndAction(xmlaction->GetValue(),namesp,action);
       }
     }
   }
-  // OK: Use the SOAPAction header from the HTTP Protocol
-  if(copyAction)
+  // OK: Use this set (action,namesp)
+  m_soapAction = action;
+  if(!namesp.IsEmpty())
   {
-    m_soapAction = action;
-    if(!namesp.IsEmpty())
-    {
-      m_namespace = namesp;
-    }
+    m_namespace = namesp;
   }
 }
 
@@ -475,7 +463,7 @@ SOAPMessage::SetSoapVersion(SoapVersion p_version)
 }
 
 // Add an extra header
-void            
+void
 SOAPMessage::AddHeader(CString p_name,CString p_value)
 {
   // Case-insensitive search!
@@ -483,6 +471,7 @@ SOAPMessage::AddHeader(CString p_name,CString p_value)
   if(it != m_headers.end())
   {
     // Check if we set it a duplicate time
+    // If appended, we do not append it a second time
     if(it->second.Find(p_value) >= 0)
     {
       return;
@@ -493,9 +482,8 @@ SOAPMessage::AddHeader(CString p_name,CString p_value)
       m_headers.insert(std::make_pair(p_name,p_value));
       return;
     }
-    // Append to already existing value
-    it->second += ", ";
-    it->second += p_value;
+    // New value of the header
+    it->second = p_value;
   }
   else
   {

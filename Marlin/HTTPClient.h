@@ -180,7 +180,7 @@ public:
   // Add extra header for the call
   bool AddHeader(CString p_header);
   // Add extra header by name and value pair
-  bool AddHeader(CString p_name,CString p_value);
+  void AddHeader(CString p_name,CString p_value);
   // Delete a header
   bool DelHeader(CString p_name);
   // Add extra cookie for the call

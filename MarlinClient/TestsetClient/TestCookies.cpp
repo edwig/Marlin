@@ -136,8 +136,8 @@ DoSend(HTTPClient& p_client,HTTPMessage* p_msg,CString p_expected)
   xprintf("\n");
   xprintf("READING ALL HTTP HEADERS FOR THIS SITE\n");
   xprintf("--------------------------------------\n");
-  ResponseMap& all = p_client.GetAllHeadersMap();
-  ResponseMap::iterator it = all.begin();
+  HeaderMap& all = p_client.GetResponseHeaders();
+  HeaderMap::iterator it = all.begin();
   while(it != all.end())
   {
     xprintf("%s : %s\n",it->first.GetString(),it->second.GetString());
