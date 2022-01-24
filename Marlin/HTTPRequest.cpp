@@ -1131,6 +1131,15 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     {
       contentType = m_message->GetContentType();
     }
+    else
+    {
+      CString cttype = m_message->GetHeader("Content-type");
+      if(!cttype.IsEmpty())
+      {
+        contentType = cttype;
+      }
+    }
+    m_message->DelHeader("Content-Type");
     AddKnownHeader(HttpHeaderContentType, contentType);
   }
 
@@ -1167,9 +1176,6 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
                                           break;
   }
   m_message->DelHeader("Server");
-  m_message->DelHeader("Content-Type");
-  m_message->DelHeader("Content-Length");
-  m_message->DelHeader("Set-Cookie");
 
   // Cookie settings
   bool cookiesHasSecure(false);
@@ -1197,16 +1203,30 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // and HTTP API just supports one set-cookie.
   UKHeaders ukheaders;
   Cookies& cookies = m_message->GetCookies();
-  for(auto& cookie : cookies.GetCookies())
+  if(cookies.GetCookies().empty())
   {
-    if(cookiesHasSecure)  cookie.SetSecure  (cookiesSecure);
-    if(cookiesHasHttp)    cookie.SetHttpOnly(cookiesHttpOnly);
-    if(cookiesHasSame)    cookie.SetSameSite(cookiesSameSite);
-
-    ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
+    CString cookie = m_message->GetHeader("Set-Cookie");
+    if(!cookie.IsEmpty())
+    {
+      AddKnownHeader(HttpHeaderSetCookie,cookie);
+    }
   }
+  else
+  {
+    for(auto& cookie : cookies.GetCookies())
+    {
+      if(cookiesHasSecure)  cookie.SetSecure  (cookiesSecure);
+      if(cookiesHasHttp)    cookie.SetHttpOnly(cookiesHttpOnly);
+      if(cookiesHasSame)    cookie.SetSameSite(cookiesSameSite);
 
-  // Add extra headers from the message
+      ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
+    }
+  }
+  m_message->DelHeader("Set-Cookie");
+
+  // Add extra headers from the message, except for content-length
+  m_message->DelHeader("Content-Length");
+
   if(p_status == HTTP_STATUS_SWITCH_PROTOCOLS)
   {
     FillResponseWebSocketHeaders(ukheaders);

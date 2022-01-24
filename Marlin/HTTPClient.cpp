@@ -2198,7 +2198,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   {
     m_soapAction = p_msg->GetNamespace();
 
-    if(!m_soapAction.IsEmpty() && m_soapAction.Right(1) != "/" && m_soapAction.Right(1) != "\\")
+    if(!m_soapAction.IsEmpty() && m_soapAction.Right(1) != '/' && m_soapAction.Right(1) != '\\')
     {
       m_soapAction += "/";
     }
@@ -2643,7 +2643,7 @@ HTTPClient::SendAndRedirect()
     {
       switch(m_status)
       {
-        case HTTP_STATUS_AMBIGUOUS:         if(m_verb != "HEAD")
+        case HTTP_STATUS_AMBIGUOUS:         if(m_verb.Compare("HEAD") != 0)
                                             {
                                               redirecting = DoRedirectionAfterSend();
                                             }
@@ -3103,7 +3103,7 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
 
 
   // Find secure call
-  CString secure = m_secure && m_scheme.Right(1) != "s" ? "s" : "";
+  CString secure = m_secure && m_scheme.Right(1) != 's' ? "s" : "";
 
   // Log in full, do the raw logging call directly
   m_log->AnalysisLog("HTTPClient::Send",LogType::LOG_INFO,true
@@ -3151,22 +3151,22 @@ HTTPClient::TraceTheSend()
                 ,m_url.GetString());
   m_log->BareStringLog(header, header.GetLength());
 
-  // TRACE ALL HEADERS
+  // TRACE ALL INTERNAL STATES
 
-  header.Format("Host: %s",m_server.GetString());
+  header.Format("INTERNAL -> Host: %s",m_server.GetString());
   m_log->BareStringLog(header.GetString(),header.GetLength());
-  header.Format("Content-Length: %lu",m_bodyLength);
+  header.Format("INTERNAL -> Content-Length: %lu",m_bodyLength);
   m_log->BareStringLog(header.GetString(),header.GetLength());
-  header.Format("Content-Type: %s",m_contentType.GetString());
+  header.Format("INTERNAL -> Content-Type: %s",m_contentType.GetString());
   m_log->BareStringLog(header.GetString(),header.GetLength());
   if (m_httpCompression)
   {
-    header = "Accept-Encoding: gzip";
+    header = "INTERNAL -> Accept-Encoding: gzip";
     m_log->BareStringLog(header.GetString(),header.GetLength());
   }
   if (m_soapAction.GetLength())
   {
-    header.Format("SOAPAction: %s",m_soapAction.GetString());
+    header.Format("INTERNAL -> SOAPAction: %s",m_soapAction.GetString());
     m_log->BareStringLog(header.GetString(),header.GetLength());
   }
   if (m_terminalServices)
@@ -3175,19 +3175,22 @@ HTTPClient::TraceTheSend()
     DWORD pid = GetCurrentProcessId();
     if (ProcessIdToSessionId(pid, &session))
     {
-      header.Format("RemoteDesktop: %d",session);
+      header.Format("INTERNAL -> RemoteDesktop: %d",session);
       m_log->BareStringLog(header.GetString(),header.GetLength());
     }
   }
   if(m_cookies.GetSize())
   {
-    header = "Cookie: " + m_cookies.GetCookieText();
+    header = "INTERNAL -> Cookie: " + m_cookies.GetCookieText();
     m_log->BareStringLog(header.GetString(),header.GetLength());
   }
+  // TRACE ALL HEADERS
+
   // Trace all other extra headers, including CORS headers
   for(auto& head : m_requestHeaders)
   {
-    header = head.first + ":" + head.second;
+    header  = "HTTP Header -> ";
+    header += head.first + ":" + head.second;
     m_log->BareStringLog(header.GetString(),header.GetLength());
   }
 

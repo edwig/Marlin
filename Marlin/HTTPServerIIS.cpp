@@ -913,6 +913,15 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   {
     contentType = p_message->GetContentType();
   }
+  else
+  {
+    CString cttype = p_message->GetHeader("Content-type");
+    if(!cttype.IsEmpty())
+    {
+      contentType = cttype;
+    }
+  }
+  p_message->DelHeader("Content-Type");
 
   // AddKnownHeader(response,HttpHeaderContentType,contentType);
   SetResponseHeader(response,HttpHeaderContentType,contentType,true);
@@ -933,9 +942,6 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
                                           break;
   }
   p_message->DelHeader("Server");
-  p_message->DelHeader("Content-Type");
-  p_message->DelHeader("Content-Length");
-  p_message->DelHeader("Set-Cookie");
 
   // Cookie settings
   bool cookiesHasSecure(false);
@@ -963,16 +969,31 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // and HTTP API just supports one set-cookie.
   UKHeaders ukheaders;
   Cookies& cookies = p_message->GetCookies();
-  for(auto& cookie : cookies.GetCookies())
+  if(cookies.GetCookies().empty())
   {
-    if(cookiesHasSecure)  cookie.SetSecure  (cookiesSecure);
-    if(cookiesHasHttp)    cookie.SetHttpOnly(cookiesHttpOnly);
-    if(cookiesHasSame)    cookie.SetSameSite(cookiesSameSite);
-
-    ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
+    CString cookie = p_message->GetHeader("Set-Cookie");
+    if(!cookie.IsEmpty())
+    {
+      SetResponseHeader(response,HttpHeaderSetCookie,cookie,false);
+    }
   }
+  else
+  {
+    for(auto& cookie : cookies.GetCookies())
+    {
+      if(cookiesHasSecure)  cookie.SetSecure  (cookiesSecure);
+      if(cookiesHasHttp)    cookie.SetHttpOnly(cookiesHttpOnly);
+      if(cookiesHasSame)    cookie.SetSameSite(cookiesSameSite);
 
-  // Add extra headers from the message
+      ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
+    }
+  }
+  p_message->DelHeader("Set-Cookie");
+
+
+  // Add extra headers from the message, except for content-length
+  p_message->DelHeader("Content-Length");
+
   HeaderMap* map = p_message->GetHeaderMap();
   for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
   {

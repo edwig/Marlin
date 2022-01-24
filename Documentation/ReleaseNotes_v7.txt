@@ -16,6 +16,10 @@ CHANGES IN VERSION 7.x.y
     Only "Set-Cookie" can now be a duplicate header, as internet servers can send more than
     one (1) of these cookies back.
 2)  Corrections for the HTTPManager. All program resources are now in EN/US locale.
+3)  Corrections for de-duplicating server headers in the following server modules
+    - HTTPServerIIS
+    - HTTPServerSync
+    - HTTPRequest
 
 CHANGES in VERSION 7.3.0
 ------------------------
