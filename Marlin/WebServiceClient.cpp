@@ -377,6 +377,9 @@ WebServiceClient::Send(SOAPMessage* p_message)
     p_message->SetPassword(m_password);
   }
 
+  // Override van de SOAPAction
+  m_httpClient->SetSoapAction(m_soapAction);
+
   // Send by the HTTP client
   if(m_jsonTranslation)
   {

@@ -93,30 +93,31 @@ public:
   bool      AddToQueue(SOAPMessage* p_message);
  
   // General Getters
-  bool      HasErrors()                  { return m_result == false;        };
-  bool      GetIsOpen()                  { return m_isopen;                 };
-  bool      GetWsdlCheck()               { return m_wsdlCheck;              };
-  int       GetMessageNumber()           { return ++m_clientMessageNumber;  }; // Automatic increment!
-  CString   GetUser()                    { return m_user;                   };
-  CString   GetPassword()                { return m_password;               };
-  CString   GetGuidSequenceServer()      { return m_guidSequenceServer;     };
-  CString   GetGuidSequenceClient()      { return m_guidSequenceClient;     };
-  CString   GetAddressing()              { return m_adr;                    };
-  CString   GetErrorText()               { return m_errorText;              };
-  bool      GetTokenProfile()            { return m_tokenProfile;           };
-  bool      GetReliable()                { return m_reliable;               };
-  CString   GetSecurityPassword()        { return m_encryptionPassword;     };
-  bool      GetSoapCompress()            { return m_soapCompress;           };
-  bool      GetJsonSoapTranslation()     { return m_jsonTranslation;        };
-  int       GetLogLevel()                { return m_logLevel;               };
-  CString   GetLogFilename()             { return m_logFilename;            };
-  ReliableType  GetReliableType()        { return m_reliableType;           };
-  XMLEncryption GetSecurityLevel()       { return m_encryptionLevel;        };
-  unsigned      GetSigningMethod()       { return m_signingMethod;          };
-  HTTPClient*   GetHTTPClient()          { return m_httpClient;             };
-  WSDLCache&    GetWSDLCache()           { return m_wsdl;                   };
-  CString       GetWSDLFilename()        { return m_wsdlFile;               };
-  SOAPSecurity* GetSOAPSecurity()        { return m_soapSecurity;           };
+  bool      HasErrors()                  { return m_result == false;        }
+  bool      GetIsOpen()                  { return m_isopen;                 }
+  bool      GetWsdlCheck()               { return m_wsdlCheck;              }
+  int       GetMessageNumber()           { return ++m_clientMessageNumber;  } // Automatic increment!
+  CString   GetUser()                    { return m_user;                   }
+  CString   GetPassword()                { return m_password;               }
+  CString   GetGuidSequenceServer()      { return m_guidSequenceServer;     }
+  CString   GetGuidSequenceClient()      { return m_guidSequenceClient;     }
+  CString   GetAddressing()              { return m_adr;                    }
+  CString   GetErrorText()               { return m_errorText;              }
+  bool      GetTokenProfile()            { return m_tokenProfile;           }
+  bool      GetReliable()                { return m_reliable;               }
+  CString   GetSecurityPassword()        { return m_encryptionPassword;     }
+  bool      GetSoapCompress()            { return m_soapCompress;           }
+  bool      GetJsonSoapTranslation()     { return m_jsonTranslation;        }
+  int       GetLogLevel()                { return m_logLevel;               }
+  CString   GetLogFilename()             { return m_logFilename;            }
+  ReliableType  GetReliableType()        { return m_reliableType;           }
+  XMLEncryption GetSecurityLevel()       { return m_encryptionLevel;        }
+  unsigned      GetSigningMethod()       { return m_signingMethod;          }
+  HTTPClient*   GetHTTPClient()          { return m_httpClient;             }
+  WSDLCache&    GetWSDLCache()           { return m_wsdl;                   }
+  CString       GetWSDLFilename()        { return m_wsdlFile;               }
+  SOAPSecurity* GetSOAPSecurity()        { return m_soapSecurity;           }
+  CString       GetSOAPAction()          { return m_soapAction;             }
   bool          GetDetailLogging();
 
   // General Setters
@@ -125,17 +126,18 @@ public:
   void      SetLogAnalysis(LogAnalysis* p_log);
   void      SetReliable(bool p_reliable,ReliableType p_type = ReliableType::RELIABLE_ONCE);
   void      SetTimeouts(int p_resolve,int p_connect,int p_send,int p_receive);
-  void      SetUser(CString p_user)                         { m_user               = p_user;        };
-  void      SetPassword(CString p_password)                 { m_password           = p_password;    };
-  void      SetTokenProfile(bool p_token)                   { m_tokenProfile       = p_token;       };
-  void      SetWsdlCheck(bool p_check)                      { m_wsdlCheck          = p_check;       };
-  void      SetLogFilename(CString p_logFilename)           { m_logFilename        = p_logFilename; };
-  void      SetSigningMethod(unsigned p_method)             { m_signingMethod      = p_method;      };
-  void      SetSecurityLevel(XMLEncryption p_encryption)    { m_encryptionLevel    = p_encryption;  };
-  void      SetSecurityPassword(CString p_password)         { m_encryptionPassword = p_password;    };
-  void      SetSoapCompress(bool p_compress)                { m_soapCompress       = p_compress;    };
-  void      SetWSDLFilename(CString p_file)                 { m_wsdlFile           = p_file;        };
-  void      SetJsonSoapTranslation(bool p_json)             { m_jsonTranslation    = p_json;        };
+  void      SetUser(CString p_user)                         { m_user               = p_user;        }
+  void      SetPassword(CString p_password)                 { m_password           = p_password;    }
+  void      SetTokenProfile(bool p_token)                   { m_tokenProfile       = p_token;       }
+  void      SetWsdlCheck(bool p_check)                      { m_wsdlCheck          = p_check;       }
+  void      SetLogFilename(CString p_logFilename)           { m_logFilename        = p_logFilename; }
+  void      SetSigningMethod(unsigned p_method)             { m_signingMethod      = p_method;      }
+  void      SetSecurityLevel(XMLEncryption p_encryption)    { m_encryptionLevel    = p_encryption;  }
+  void      SetSecurityPassword(CString p_password)         { m_encryptionPassword = p_password;    }
+  void      SetSoapCompress(bool p_compress)                { m_soapCompress       = p_compress;    }
+  void      SetWSDLFilename(CString p_file)                 { m_wsdlFile           = p_file;        }
+  void      SetJsonSoapTranslation(bool p_json)             { m_jsonTranslation    = p_json;        }
+  void      SetSOAPAction(CString p_soapAction)             { m_soapAction         = p_soapAction;  }
   void      SetLogLevel(int p_logLevel);
   void      SetDetailLogging(bool p_detail);
 
@@ -187,6 +189,7 @@ private:
   bool          m_logOwner            { false     };           // Owner of the logfile
   int           m_logLevel            { HLL_NOLOG };           // Loglevel of the client
   bool          m_soapCompress        { false     };           // Compress SOAP web services
+  CString       m_soapAction;                                  // Override for SOAPAction header
 
   // Send status
   bool          m_isSending           { false     };           // Currently in a send

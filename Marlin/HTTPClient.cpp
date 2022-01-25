@@ -445,7 +445,7 @@ HTTPClient::InitLogging()
   bool timing  = m_marlinConfig.GetParameterBoolean("Logging","DoTiming", true);
   bool events  = m_marlinConfig.GetParameterBoolean("Logging","DoEvents", false);
   int  cache   = m_marlinConfig.GetParameterInteger("Logging","Cache",    100);
-  int  level   = m_marlinConfig.GetParameterBoolean("Logging","LogLevel", m_logLevel);
+  int  level   = m_marlinConfig.GetParameterInteger("Logging","LogLevel", m_logLevel);
 
   // Check for a logging object
   if(m_log == NULL && !file.IsEmpty() && logging)
@@ -1048,14 +1048,6 @@ HTTPClient::AddExtraHeaders()
   if(m_httpCompression)
   {
     AddHeader("Accept-Encoding","gzip");
-  }
-  if(m_soapAction.GetLength())
-  {
-    if(m_soapAction[0] != '\"' && m_soapAction.Find(':') >= 0)
-    {
-      m_soapAction = "\"" + m_soapAction + "\"";
-    }
-    AddHeader("SOAPAction",m_soapAction);
   }
   if(m_terminalServices)
   {
@@ -2176,33 +2168,52 @@ HTTPClient::Send(SOAPMessage* p_msg)
     m_contentType = p_msg->GetContentType();
     XMLEncoding encoding = p_msg->GetEncoding();
 
-    // Take care of character encoding
-    int acp = -1;
-    switch(encoding)
+    if(FindCharsetInContentType(m_contentType).IsEmpty())
     {
-      case XMLEncoding::ENC_Plain:   acp =    -1; break; // Find Active Code Page
-      case XMLEncoding::ENC_UTF8:    acp = 65001; break; // See ConvertWideString.cpp
-      case XMLEncoding::ENC_UTF16:   acp =  1200; break; // See ConvertWideString.cpp
-      case XMLEncoding::ENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
-      default:                       break;
+      // Take care of character encoding
+      int acp = -1;
+      switch(encoding)
+      {
+        case XMLEncoding::ENC_Plain:   acp = -1;    break; // Find Active Code Page
+        case XMLEncoding::ENC_UTF8:    acp = 65001; break; // See ConvertWideString.cpp
+        case XMLEncoding::ENC_UTF16:   acp = 1200;  break; // See ConvertWideString.cpp
+        case XMLEncoding::ENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
+        default:                       break;
+      }
+      m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp).GetString());
     }
-    m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp).GetString());
     SetBody(soap);
   }
 
   // Transfer all headers to the client
   AddMessageHeaders(p_msg);
 
-  // For Plain-Old-Soap: make a SOAPAction header
-  if((p_msg->GetSoapVersion() < SoapVersion::SOAP_12) && m_soapAction.IsEmpty())
+  // Create a SOAPAction header value
+  CString soapAction(m_soapAction);
+  if(soapAction.IsEmpty())
   {
-    m_soapAction = p_msg->GetNamespace();
-
-    if(!m_soapAction.IsEmpty() && m_soapAction.Right(1) != '/' && m_soapAction.Right(1) != '\\')
+    soapAction += p_msg->GetSoapAction();
+    if(soapAction.Find('/') < 0)
     {
-      m_soapAction += "/";
+      CString namesp = p_msg->GetNamespace();
+      if(!namesp.IsEmpty() && namesp.Right(1) != '/')
+      {
+        namesp += "/";
+      }
+      soapAction = namesp + soapAction;
     }
-    m_soapAction += p_msg->GetSoapAction();
+  }
+  // Apply the SOAPAction header value to the appropriate HTTP header
+  if(p_msg->GetSoapVersion() < SoapVersion::SOAP_12) 
+  {
+    AddHeader("SOAPAction",soapAction);
+  }
+  else // SOAP 1.2
+  {
+    if(FindFieldInHTTPHeader(m_contentType,"action").IsEmpty())
+    {
+      m_contentType.AppendFormat("; action=\"%s\"",soapAction.GetString());
+    }
   }
 
   // Set cookies
@@ -2273,7 +2284,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   // Keep response as new body. Might contain an error!!
   p_msg->ParseMessage(answer);
 
-  CString soapAction = p_msg->GetSoapAction();
+  soapAction = p_msg->GetSoapAction();
   if(!soapAction.IsEmpty())
   {
     DETAILLOG("Incoming SOAP answer: %s",soapAction.GetString());
@@ -2300,9 +2311,19 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
   else
   {
+    CString response;
+    if(m_response)
+    {
+      response = m_response;
+      response += ". ";
+    }
+    if(m_lastError >= WINHTTP_ERROR_BASE && m_lastError <= WINHTTP_ERROR_LAST)
+    {
+      response.AppendFormat("%s. Error number [%d]",GetHTTPErrorText(m_lastError).GetString(),m_lastError);
+    }
     // In case of an error
     p_msg->Reset();
-    p_msg->SetFault("Client","Send error","HTTPClient send result",(const char*)m_response);
+    p_msg->SetFault("Client","Send error","HTTPClient send result",response);
   }
 
   // Freeing Unicode UTF-16 buffer

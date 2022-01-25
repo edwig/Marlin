@@ -434,7 +434,7 @@ private:
   ULONG         m_bodyLength      { 0       };                    // Length of body to send
   FileBuffer*   m_buffer          { nullptr };                    // File buffer to send
   CString       m_contentType;                                    // Content MIME type to send
-  CString       m_soapAction;                                     // Soap action if a SOAP 1.0 message
+  CString       m_soapAction;                                     // Soap action if a SOAPMessage WebService
   bool          m_sendUnicode     { false   };                    // Content is in Unicode-16
   bool          m_sniffCharset    { true    };                    // Sniff content charset on receive
   bool          m_sendBOM         { false   };                    // Prepend BOM to all messages

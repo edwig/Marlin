@@ -453,10 +453,14 @@ SOAPMessage::SetSoapVersion(SoapVersion p_version)
     m_root->SetName(m_soapAction);
     m_root->SetNamespace("");
   }
-  else if(m_soapVersion == SoapVersion::SOAP_10 && p_version > SoapVersion::SOAP_10)
+  else
   {
-    CreateHeaderAndBody();
-    CreateParametersObject();
+    if(m_soapVersion == SoapVersion::SOAP_10 && p_version > SoapVersion::SOAP_10)
+    {
+      CreateHeaderAndBody();
+      CreateParametersObject();
+    }
+    SetAttribute(m_root,"xmlns:s",p_version == SoapVersion::SOAP_11 ? NAMESPACE_SOAP11 : NAMESPACE_SOAP12);
   }
   // Record the change
   m_soapVersion = p_version;
@@ -1536,6 +1540,7 @@ SOAPMessage::ParseAsBody(CString& p_message)
 {
   SoapVersion oldVersion = m_soapVersion;
   CleanNode(m_body);
+  CreateHeaderAndBody();
 
   XMLElement* node = m_body;
   if(m_body == m_root)
