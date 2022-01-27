@@ -26,6 +26,8 @@ CHANGES IN VERSION 7.x.y
     - 1.2  o Version is defined by namespace "http://www.w3.org/2003/05/soap-envelope" of the soap "<Envelope>" root element
            o SoapAction is defined by "action" element in the HTTP-Header "Content-Type"
 5)  SOAPAction can be overridden in HTTPClient / WebServiceClient
+6)  Server authentication will only be retrieved from the HTTP stack in case we have a configured
+    authentication for a site. This prevents the 401 message in case of a non-authenticated site.
 
 CHANGES in VERSION 7.3.0
 ------------------------

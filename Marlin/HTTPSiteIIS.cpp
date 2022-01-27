@@ -78,6 +78,16 @@ HTTPSiteIIS::InitSite()
   m_domain          = config->GetSiteDomain   (m_site,m_domain);
   m_authScheme      = config->GetSiteScheme   (m_site,m_authScheme);
 
+  // Authentication scheme
+  m_scheme.Empty();
+  if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)     m_scheme += "Basic/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)    m_scheme += "Digest/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_NTLM)      m_scheme += "NTLM/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_NEGOTIATE) m_scheme += "Negotiate/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_KERBEROS)  m_scheme += "Kerberos/";
+  if(m_authScheme == 0)                         m_scheme += "Anonymous/";
+  m_scheme = m_scheme.TrimRight('/');
+
   // Call our main class InitSite
   HTTPSite::InitSite(m_server->GetWebConfig());
 }

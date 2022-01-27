@@ -483,16 +483,6 @@ HTTPSite::LogSettings()
     default:                          option = "UNKNOWN";     break;
   }
 
-  // Authentication scheme
-  CString schemes;
-  if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)     schemes += "Basic/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)    schemes += "Digest/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_NTLM)      schemes += "NTLM/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_NEGOTIATE) schemes += "Negotiate/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_KERBEROS)  schemes += "Kerberos/";
-  if(m_authScheme == 0)                         schemes += "Anonymous/";
-  schemes.TrimRight('/');
-
   // SameSite cookie setting
   CString sameSite;
   switch(m_cookieSameSite)
@@ -507,7 +497,7 @@ HTTPSite::LogSettings()
   //         "---------------------------------- : ------------"
   DETAILLOGV("Site HTTP port set to              : %d",     m_port);
   DETAILLOGS("Site SOAP WS-Security level        : ",       level);
-  DETAILLOGS("Site authentication scheme         : ",       schemes);
+  DETAILLOGS("Site authentication scheme         : ",       m_scheme);
   DETAILLOGV("Site authentication realm/domain   : %s/%s",  m_realm.GetString(),m_domain.GetString());
   DETAILLOGS("Site NT-LanManager caching         : ",       m_ntlmCache     ? "ON" : "OFF");
   DETAILLOGV("Site a-synchronious SOAP setting to: %sSYNC", m_async         ? "A-" : ""   );
@@ -532,10 +522,10 @@ HTTPSite::LogSettings()
   DETAILLOG1(CString("Site allows cross-origin           : ") + (m_allowOrigin.IsEmpty() ? CString("*") : m_allowOrigin));
   DETAILLOGS("Site CORS allows headers           : ",       m_allowHeaders);
   DETAILLOGV("Site CORS max age of pre-flight    : %d",     m_corsMaxAge);
-  DETAILLOGS("Site CORS allows credentials       : ",     m_corsCredentials ? "YES" : "NO");
-  DETAILLOGS("Site secure Cookie setting         : ",     m_cookieHasSecure ? m_cookieSecure   ? "YES" : "NO" : "NO");
-  DETAILLOGS("Site httpOnly Cookie setting       : ",     m_cookieHasHttp   ? m_cookieHttpOnly ? "YES" : "NO" : "NO");
-  DETAILLOGS("Site SameSite Cookie setting       : ",     m_cookieHasSame   ? sameSite.GetString() : "NO");
+  DETAILLOGS("Site CORS allows credentials       : ",       m_corsCredentials ? "YES" : "NO");
+  DETAILLOGS("Site secure Cookie setting         : ",       m_cookieHasSecure ? m_cookieSecure   ? "YES" : "NO" : "NO");
+  DETAILLOGS("Site httpOnly Cookie setting       : ",       m_cookieHasHttp   ? m_cookieHttpOnly ? "YES" : "NO" : "NO");
+  DETAILLOGS("Site SameSite Cookie setting       : ",       m_cookieHasSame   ? sameSite.GetString() : "NO");
 }
 
 // Remove the site from the URL group

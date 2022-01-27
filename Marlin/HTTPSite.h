@@ -243,6 +243,7 @@ public:
   CookieSameSite  GetCookiesSameSite()              { return m_cookieSameSite;   }
   bool            GetCookiesSecure()                { return m_cookieSecure;     }
   bool            GetCookiesHttpOnly()              { return m_cookieHttpOnly;   }
+  int             GetAuthentication()               { return m_authScheme;       }
   CString         GetAuthenticationScheme();
   bool            GetAuthenticationNTLMCache();
   CString         GetAuthenticationRealm();

@@ -315,11 +315,15 @@ HTTPRequest::ReceivedRequest()
     m_site = m_server->FindHTTPSite(m_site,absPath);
   }
 
-  // Now check for authentication and possible send 401 back
-  if(m_server->CheckAuthentication(m_request,(HTTP_OPAQUE_ID)this,m_site,rawUrl,authorize,accessToken) == false)
+  // Check our authentication
+  if(m_site->GetAuthentication())
   {
-    // Not authenticated, go back for next request
-    return;
+    // Now check for authentication and possible send 401 back
+    if(m_server->CheckAuthentication(m_request,(HTTP_OPAQUE_ID)this,m_site,rawUrl,authorize,accessToken) == false)
+    {
+      // Not authenticated, go back for next request
+      return;
+    }
   }
 
   // Remember the context: easy in API 2.0

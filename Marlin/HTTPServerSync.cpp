@@ -469,11 +469,14 @@ HTTPServerSync::RunHTTPServer()
       }
 
       // Check our authentication
-      if(!CheckAuthentication(request,request->RequestId,site,rawUrl,authorize,accessToken))
+      if(site->GetAuthentication())
       {
-        // Ready with this request
-        HTTP_SET_NULL_ID(&requestId);
-        continue;
+        if(!CheckAuthentication(request,request->RequestId,site,rawUrl,authorize,accessToken))
+        {
+          // Ready with this request
+          HTTP_SET_NULL_ID(&requestId);
+          continue;
+        }
       }
 
       // Remember the context: easy in API 2.0

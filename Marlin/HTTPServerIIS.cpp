@@ -478,11 +478,15 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
     p_site = FindHTTPSite(p_site,absPath);
   }
 
+  // Check our authentication
   HANDLE token = NULL;
-  if(!CheckAuthentication(p_request,(HTTP_OPAQUE_ID) p_context,p_site,rawUrl,authorize,token))
+  if(p_site->GetAuthentication())
   {
-    // No authentication, answer already sent
-    return nullptr;
+    if(!CheckAuthentication(p_request,(HTTP_OPAQUE_ID)p_context,p_site,rawUrl,authorize,token))
+    {
+      // No authentication, answer already sent
+      return nullptr;
+    }
   }
 
   // Translate the command. Now reduced to just this switch
