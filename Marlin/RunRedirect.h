@@ -34,6 +34,8 @@
 #define WM_CONSOLE_TITLE (WM_USER + 1)
 #define WM_CONSOLE_TEXT  (WM_USER + 2)
 
+class RunRedirect;
+
 // All global 'CallProgram' variants
 int  CallProgram           (LPCSTR p_program,LPCSTR p_commandLine);
 int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,CString& p_result);
@@ -49,7 +51,8 @@ int  PosixCallProgram(CString  p_directory
                      ,HWND     p_console        = NULL
                      ,UINT     p_showWindow     = SW_HIDE
                      ,BOOL     p_waitForIdle    = FALSE
-                     ,ULONG    p_maxRunningTime = INFINITE);
+                     ,ULONG    p_maxRunningTime = INFINITE
+                     ,RunRedirect** p_redirect  = nullptr);
 
 class RunRedirect : public Redirect
 {
