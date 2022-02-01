@@ -53,7 +53,7 @@ void LoadConstants(char* /*p_app_name*/)
   APPLICATION_NAME      = "MarlinServer.exe";                     // Name of the application EXE file!!
   PRODUCT_NAME          = MARLIN_PRODUCT_NAME;                    // Short name of the product (one word only)
   PRODUCT_DISPLAY_NAME  = "Service for MarlinServer tester";      // "Service for PRODUCT_NAME: <description of the service>"
-  PRODUCT_COPYRIGHT     = "Copyright (c) 2021 ir. W.E. Huisman";  // Copyright line of the product (c) <year> etc.
+  PRODUCT_COPYRIGHT     = "Copyright (c) 2022 ir. W.E. Huisman";  // Copyright line of the product (c) <year> etc.
   PRODUCT_VERSION       = MARLIN_VERSION_NUMBER;                  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
   PRODUCT_MESSAGES_DLL  = "MarlinServerMessages.dll";             // Filename of the WMI Messages dll.
   PRODUCT_SITE          = "/MarlinTest/";                         // Standard base URL absolute path e.g. "/MarlinServer/"
