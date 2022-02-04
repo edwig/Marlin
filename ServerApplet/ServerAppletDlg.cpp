@@ -71,7 +71,7 @@ protected:
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 {
   m_versie    = CString(PROGRAM_NAME) +  " " + MARLIN_VERSION_NUMBER;
-  m_copyright = "Copyright (c) 2021 ir. W.E. Huisman";
+  m_copyright = "Copyright (c) 2022 ir. W.E. Huisman";
 }
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)

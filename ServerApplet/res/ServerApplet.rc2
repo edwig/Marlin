@@ -36,7 +36,7 @@ BEGIN
             VALUE "FileVersion",      MARLIN_VERSION_NUMBER
             VALUE "BuildNumber",      MARLIN_VERSION_BUILD
             VALUE "SpecialBuild",     MARLIN_VERSION_BUILD
-            VALUE "LegalCopyright",   "Marlin (c) 2014-2021 ir. W.E. Huisman"
+            VALUE "LegalCopyright",   "Marlin (c) 2014-2022 ir. W.E. Huisman"
             VALUE "LegalTrademarks",  "Marlin"
             VALUE "ProductName",      "Marlin"
         END
