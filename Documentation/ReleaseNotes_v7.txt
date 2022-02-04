@@ -28,6 +28,9 @@ CHANGES IN VERSION 7.x.y
 5)  SOAPAction can be overridden in HTTPClient / WebServiceClient
 6)  Server authentication will only be retrieved from the HTTP stack in case we have a configured
     authentication for a site. This prevents the 401 message in case of a non-authenticated site.
+7)  Bug fix for OAuth2Cache. Stop asking for a new bearer token on each call.
+8)  De general utility function "StartProgram" now has an extra option to return the 'RunRedirect'
+    object and you will be able to call the "IsChildRunning" end "TerminateChildProcess".
 
 CHANGES in VERSION 7.3.0
 ------------------------

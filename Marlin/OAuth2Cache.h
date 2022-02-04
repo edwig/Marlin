@@ -83,7 +83,7 @@ public:
   bool      EndSession(int p_session);
 
   // GETTERS
-  CString   GetBearerToken(int p_session,bool p_refresh = true);
+  CString   GetBearerToken(int p_session,bool p_refresh = false);
   bool      GetIsExpired(int p_session);
   INT64     GetExpires(int p_session);
   INT64     GetDefaultExpirationPeriod();

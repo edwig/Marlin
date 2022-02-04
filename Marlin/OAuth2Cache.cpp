@@ -144,7 +144,7 @@ OAuth2Cache::EndSession(int p_session)
 }
 
 CString
-OAuth2Cache::GetBearerToken(int p_session,bool p_refresh /*= true*/)
+OAuth2Cache::GetBearerToken(int p_session,bool p_refresh /*= false*/)
 {
   AutoCritSec lock(&m_lock);
 

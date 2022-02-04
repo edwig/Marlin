@@ -297,10 +297,15 @@ PosixCallProgram(CString  p_directory
                 ,HWND     p_console         /*= NULL    */
                 ,UINT     p_showWindow      /*= SW_HIDE */
                 ,BOOL     p_waitForIdle     /*= FALSE   */
-                ,ULONG    p_maxRunningTime  /*= INFINITE*/)
+                ,ULONG    p_maxRunningTime  /*= INFINITE*/
+                ,RunRedirect** p_run        /*= nullptr */)
 {
   AFX_MANAGE_STATE(AfxGetStaticModuleState());
   RunRedirect run(p_maxRunningTime);
+  if(p_run)
+  {
+    *p_run = &run;
+  }
 
   // Result is initially empty
   p_stdout.Empty();
