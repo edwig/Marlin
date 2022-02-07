@@ -2758,6 +2758,14 @@ HTTPClient::Send()
     LogTheSend(server,port);
   }
 
+  // Check on localhost for development systems.
+  // IIS has a problem to service 'localhost' directly and can lead
+  // to system 'hangs' for up to 8 seconds.
+  if(_wcsicmp(server.c_str(),L"localhost") == 0)
+  {
+    server = L"127.0.0.1";
+  }
+
   // First: do the connection to the server:port pair
   // Connection could have been opened by earlier Send
   if(m_connect == NULL)
