@@ -98,7 +98,7 @@ bool SplitNamespaceAndAction(CString p_soapAction, CString& p_namespace, CString
       pos = apos = ++hpos;
     }
     // Split namespace and action command name
-    p_namespace = p_soapAction.Left(pos);
+    p_namespace = p_soapAction.Left(apos);
     p_action    = p_soapAction.Mid(apos);
   }
   else
@@ -123,7 +123,7 @@ CString CreateSoapAction(CString p_namespace, CString p_action)
   // Sanitize namespace
   CString soapAction(p_namespace);
   soapAction.Replace('\\','/');
-  if(soapAction.Right(1) != '/')
+  if(soapAction.Right(1) != "/")
   {
     soapAction += "/";
   }

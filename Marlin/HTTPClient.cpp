@@ -606,6 +606,7 @@ HTTPClient::InitSettings()
     case HLL_NOLOG:     loglevel = "No logging";          break;
     case HLL_ERRORS:    loglevel = "Errors and warnings"; break;
     case HLL_LOGGING:   loglevel = "Info logging";        break;
+    case HLL_LOGBODY:   loglevel = "Logging bodies";      break;
     case HLL_TRACE:     loglevel = "Tracing and bodies";  break;
     case HLL_TRACEDUMP: loglevel = "Tracing bodies, headers and hex-dump"; break;
   }
@@ -2196,7 +2197,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
     if(soapAction.Find('/') < 0)
     {
       CString namesp = p_msg->GetNamespace();
-      if(!namesp.IsEmpty() && namesp.Right(1) != '/')
+      if(!namesp.IsEmpty() && namesp.Right(1) != "/")
       {
         namesp += "/";
       }
@@ -2282,6 +2283,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
 
   // Keep response as new body. Might contain an error!!
+  SoapVersion oldVersion = p_msg->GetSoapVersion();
   p_msg->ParseMessage(answer);
 
   soapAction = p_msg->GetSoapAction();
@@ -2322,6 +2324,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
       response.AppendFormat("%s. Error number [%d]",GetHTTPErrorText(m_lastError).GetString(),m_lastError);
     }
     // In case of an error
+    p_msg->SetSoapVersion(oldVersion);
     p_msg->Reset();
     p_msg->SetFault("Client","Send error","HTTPClient send result",response);
   }

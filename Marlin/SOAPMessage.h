@@ -180,11 +180,15 @@ public:
   void            SetStatus(unsigned p_status);
   // Set parts of the URL
   void            SetSecure(bool p_secure);
-  void            SetUser(CString& p_user);
-  void            SetPassword(CString& p_password);
   void            SetServer(CString& p_server);
   void            SetPort(unsigned p_port);
   void            SetAbsolutePath(CString& p_path);
+  // Set security details
+  void            SetUser(CString& p_user);
+  void            SetPassword(CString& p_password);
+  void            SetTokenNonce(CString p_nonce);
+  void            SetTokenCreated(CString p_created);
+  bool            SetTokenProfile(CString p_user,CString p_password,CString p_nonce = "", CString p_created = "");
   // Set security access token
   void            SetAccessToken(HANDLE p_token);
   // Set senders address
@@ -259,11 +263,14 @@ public:
   CString         GetBasicURL() const;
   // Get URL Parts
   bool            GetSecure() const;
-  CString         GetUser() const;
-  CString         GetPassword() const;
   CString         GetServer() const;
   unsigned        GetPort() const;
   CString         GetAbsolutePath() const;
+  // Get Security parts
+  CString         GetUser() const;
+  CString         GetPassword() const;
+  CString         GetTokenNonce() const;
+  CString         GetTokenCreated() const;
   // Getting the JSON parameterized URL
   CString         GetJSON_URL();
   // Get the number of parameters
@@ -397,7 +404,9 @@ protected:
   // Encrypt the body: yielding a new body
   void            EncryptBody();
   // Get body signing value from header
-  CString         CheckBodySigning();
+  void            CheckBodySigning();
+  // Get incoming authentication from the Security/UsernameToken
+  void            CheckUsernameToken(XMLElement* p_token);
   // Get body encryption value from body
   CString         CheckBodyEncryption();
   // Get whole message encryption value
@@ -425,11 +434,14 @@ protected:
   HeaderMap       m_headers;                              // Extra HTTP headers (incoming / outgoing)
   // URL PARTS
   bool            m_secure        { false };              // Connection is secure
-  CString         m_user;                                 // Username in server part
-  CString         m_password;                             // Password in server part
   CString         m_server;                               // Server name
   int             m_port { INTERNET_DEFAULT_HTTP_PORT };  // Internet Port number
   CString         m_absPath;                              // Inclusive Query + anchor
+  // Security details
+  CString         m_user;                                 // Username in server part
+  CString         m_password;                             // Password in server part
+  CString         m_tokenNonce;                           // Username token profile nonce
+  CString         m_tokenCreated;                         // Username token profile created
   // Message details
   XMLElement*     m_header        { nullptr };            // SOAP Header in the envelope
   XMLElement*     m_body          { nullptr };            // SOAP Body   in the envelope
@@ -527,14 +539,24 @@ inline void
 SOAPMessage::SetUser(CString& p_user)
 {
   m_user = p_user;
-  ReparseURL();
 }
 
 inline void    
 SOAPMessage::SetPassword(CString& p_password)
 {
   m_password = p_password;
-  ReparseURL();
+}
+
+inline void
+SOAPMessage::SetTokenNonce(CString p_nonce)
+{
+  m_tokenNonce = p_nonce;
+}
+
+inline void
+SOAPMessage::SetTokenCreated(CString p_created)
+{
+  m_tokenCreated = p_created;
 }
 
 inline void    
@@ -574,6 +596,18 @@ inline CString
 SOAPMessage::GetPassword() const
 {
   return m_password;
+}
+
+inline CString
+SOAPMessage::GetTokenNonce() const
+{
+  return m_tokenNonce;
+}
+
+inline CString
+SOAPMessage::GetTokenCreated() const
+{
+  return m_tokenCreated;
 }
 
 inline CString  

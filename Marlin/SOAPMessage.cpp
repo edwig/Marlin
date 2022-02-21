@@ -1304,12 +1304,25 @@ SOAPMessage::SetSoapBody()
 
   if(m_soapVersion >= SoapVersion::SOAP_11) 
   {
-    if((m_body != m_root) && m_paramObject && !m_namespace.IsEmpty())
+    if((m_body != m_root) && m_paramObject && (m_paramObject != m_body) && !m_namespace.IsEmpty())
     {
-      XMLAttribute* xmlns = FindAttribute(m_paramObject,"xmlns");
-      if(!xmlns)
+      XMLAttribute* xmlns(nullptr);
+      xmlns = FindAttribute(m_paramObject,"xmlns:tns");
+      if(xmlns)
       {
-        SetAttribute(m_paramObject,"xmlns",m_namespace);
+        xmlns->m_value = m_namespace;
+      }
+      else
+      {
+        xmlns = FindAttribute(m_paramObject,"xmlns");
+        if(xmlns)
+        {
+          xmlns->m_value = m_namespace;
+        }
+        else
+        {
+          SetAttribute(m_paramObject,"xmlns",m_namespace);
+        }
       }
     }
   }
@@ -1425,17 +1438,21 @@ SOAPMessage::AddToHeaderToService()
 void
 SOAPMessage::AddToHeaderAction()
 {
+  CString action = CreateSoapAction(m_namespace, m_soapAction);
   XMLElement* actParam = FindElement(m_header,"Action");
   if(actParam == nullptr)
   {
-    CString action = CreateSoapAction(m_namespace,m_soapAction);
     // Must come as the first element of the header
     actParam = SetHeaderParameter("a:Action",action,true);
-    // Make sure other SOAP Roles (proxy, ESB) parses the action header part or not
-    if(actParam && m_addAttribute)
-    {
-      SetAttribute(actParam,"s:mustUnderstand",m_understand);
-    }
+  }
+  else
+  {
+    actParam->SetValue(action);
+  }
+  // Make sure other SOAP Roles (proxy, ESB) parses the action header part or not
+  if(actParam && m_addAttribute)
+  {
+    SetAttribute(actParam,"s:mustUnderstand",m_understand);
   }
 }
 
@@ -1595,16 +1612,41 @@ SOAPMessage::CheckAfterParsing()
     return;
   }
 
-  // get the name of first element within body/root
-  // SOAP Action (first guess)
-  m_soapAction = m_paramObject ? m_paramObject->GetName() : CString();
-  // SOAP namespace override (leave HTTP header SOAPAction intact)
-  CString namesp = GetAttribute(m_paramObject,"xmlns");
-  if(!namesp.IsEmpty())
+  if(m_soapVersion == SoapVersion::SOAP_POS)
   {
-    SetNamespace(namesp);
+    // Plain-Old-Soap
+    m_soapAction = m_paramObject ? m_paramObject->GetName() : CString();
+    if(m_paramObject) // Could be <Envelope> or <Body>
+    {
+      CString namesp = GetAttribute(m_paramObject,"xmlns");
+      if(!namesp.IsEmpty())
+      {
+        m_namespace = namesp;
+      }
+    }
   }
-
+  else
+  {
+    // get the name of first element within body/root
+    if(m_paramObject && m_paramObject != m_body && m_paramObject != m_root)
+    {
+      m_soapAction = m_paramObject ? m_paramObject->GetName() : CString();
+      // SOAP namespace override (leave HTTP header SOAPAction intact)
+      CString namesp = GetAttribute(m_paramObject, "xmlns");
+      if (namesp.IsEmpty())
+      {
+        XMLAttribute* targetns = FindAttribute(m_paramObject, "tns");
+        if (targetns && targetns->m_namespace.Compare("xmlns") == 0)
+        {
+          namesp = targetns->m_value;
+        }
+      }
+      if (!namesp.IsEmpty())
+      {
+        SetNamespace(namesp);
+      }
+    }
+  }
   // OPTIONAL ENCRYPTION CHECK
 
   // Check Encrypted body
@@ -1632,8 +1674,8 @@ SOAPMessage::CheckAfterParsing()
     // And check the addressing/reliability fields
     CheckHeader();
 
-    // Check for body signing
-    m_enc_password = CheckBodySigning();
+    // Check for body signing and authentication
+    CheckBodySigning();
   }
   // See if there exists a <Fault> node
   // SoapVersion already known
@@ -2250,26 +2292,29 @@ SOAPMessage::EncryptMessage(CString& p_message)
               "</Envelope>\n";
 }
 
-// Get body signing value from header
-CString
+// Get body signing and authentication from the security header
+void
 SOAPMessage::CheckBodySigning()
 {
-  CString signHash;
-  XMLElement* secur = FindElement(m_header,"Security");
+  XMLElement* secur = FindElement(m_header,"Security",false);
   if(secur)
   {
-    XMLElement* sign = FindElement(secur,"Signature");
+    XMLElement* usertok = FindElement(secur,"UsernameToken",false);
+    if(usertok)
+    {
+      CheckUsernameToken(usertok);
+    }
+    XMLElement* sign = FindElement(secur,"Signature",false);
     if(sign)
     {
-      XMLElement* sval = FindElement(sign,"SignatureValue");
+      XMLElement* sval = FindElement(sign,"SignatureValue",false);
       if(sval)
       {
         m_encryption = XMLEncryption::XENC_Signing;
-        signHash = sval->GetValue();
+        m_enc_password = sval->GetValue();
       }
     }
   }
-  return signHash;
 }
 
 // Get body encryption value from body
@@ -2335,6 +2380,108 @@ SOAPMessage::GetPasswordAsToken()
   token.ReleaseBufferSetLength(len);
 
   return token;
+}
+
+// Get incoming authentication from the Security/UsernameToken
+// See OASIS Web Services Username Token Profile 1.0
+// https://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0.pdf
+//
+void
+SOAPMessage::CheckUsernameToken(XMLElement* p_token)
+{
+  XMLElement* usern = FindElement(p_token,"Username",false);
+  XMLElement* psswd = FindElement(p_token,"Password",false);
+
+  // Nothing to do here
+  if(usern == nullptr || psswd == nullptr)
+  {
+    return;
+  }
+
+  // Keep username + password
+  m_user     = usern->GetValue();
+  m_password = psswd->GetValue();
+
+  // Find nonce/created
+  XMLAttribute* type = FindAttribute(psswd,"Type");
+  if(type && type->m_value.Find("#PasswordDigest") >= 0)
+  {
+    XMLElement*  nonce = FindElement(p_token,"Nonce",false);
+    XMLElement*  creat = FindElement(p_token,"Created",false);
+    // IMPLICIT: Password text = Base64 ( SHA1 ( nonce + created + password ))
+    if(nonce && creat)
+    {
+      m_tokenNonce   = nonce->GetValue();
+      m_tokenCreated = creat->GetValue();
+    }
+  }
+}
+
+bool
+SOAPMessage::SetTokenProfile(CString p_user,CString p_password,CString p_nonce /*=""*/, CString p_created /*=""*/)
+{
+  CString namesp(NAMESPACE_SECEXT);
+
+  XMLElement* header = FindElement("Header", false);
+  if(!header) return false;
+  XMLElement* secur = FindElement(header,"Security",false);
+  if(!secur)
+  {
+    SetElementNamespace(m_root,"wsse",namesp);
+    secur = AddElement(header,"wsse:Security",XDT_String,"");
+  }
+
+  XMLElement* token = FindElement(secur,"UsernameToken",false);
+  if(!token)
+  {
+    token = AddElement(secur,"wsse:UsernameToken",XDT_String,"");
+  }
+
+  XMLElement* user = FindElement(token,"Username",false);
+  if(!user)
+  {
+    user = AddElement(token,"wsse:Username",XDT_String,"");
+  }
+  user->SetValue(p_user);
+
+  XMLElement* passwd = FindElement(token,"Password",false);
+  if(!passwd)
+  {
+    passwd = AddElement(token,"wsse:Password",XDT_String,"");
+  }
+  passwd->SetValue(p_password);
+
+  if(!p_nonce.IsEmpty() && !p_created.IsEmpty())
+  {
+    Crypto crypt;
+    // Password text = Base64(SHA1(nonce + created + password))
+    CString combined = p_nonce + p_created + p_password;
+    m_password = crypt.Digest(combined.GetString(),combined.GetLength(),CALG_SHA1);
+    passwd->SetValue(m_password);
+    SetAttribute(passwd,"Type",namesp + "#PasswordDigest");
+
+    XMLElement* nonce = FindElement(token,"Nonce",false);
+    if(!nonce)
+    {
+      nonce = AddElement(token,"wsse:Nonce",XDT_String,"");
+    }
+    nonce->SetValue(Base64::Encrypt(p_nonce));
+    
+    XMLElement* creat = FindElement(token,"Created",false);
+    if(!creat)
+    {
+      creat = AddElement(token,"wsse:Created",XDT_String,"");
+    }
+    creat->SetValue(p_created);
+  }
+
+  // Keep all info in members
+  m_user         = p_user;
+  m_password     = p_password;
+  m_tokenNonce   = p_nonce;
+  m_tokenCreated = p_created;
+
+  return true;
 }
 
 #pragma endregion Signing and Encryption
