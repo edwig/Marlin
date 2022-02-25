@@ -656,6 +656,12 @@ HTTPServer::CalculateRouting(HTTPSite* p_site,HTTPMessage* p_message)
     }
     else
     {
+      // Record the extension
+      pos = route.Find('.');
+      if(pos >= 0)
+      {
+        p_message->SetExtension(route.Mid(pos + 1));
+      }
       // Last route part to add
       p_message->AddRoute(route);
       route.Empty();

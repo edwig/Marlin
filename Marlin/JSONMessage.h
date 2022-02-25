@@ -237,35 +237,36 @@ public:
   // GETTERS
   CString         GetJsonMessage       (JsonEncoding p_encoding = JsonEncoding::JENC_Plain) const;
   CString         GetJsonMessageWithBOM(JsonEncoding p_encoding = JsonEncoding::JENC_UTF8)  const;
-  JSONvalue&      GetValue()  const   { return *m_value;                };
-  CString         GetURL()            { return m_url;                   };
-  CrackedURL&     GetCrackedURL()     { return m_cracked;               };
-  unsigned        GetStatus()         { return m_status;                };
-  HTTP_OPAQUE_ID  GetRequestHandle()  { return m_request;               };
-  HTTPSite*       GetHTTPSite()       { return m_site;                  };
-  HeaderMap*      GetHeaderMap()      { return &m_headers;              };
-  CString         GetUser()           { return m_user;                  };
-  CString         GetPassword()       { return m_password;              };
-  bool            GetSecure()         { return m_cracked.m_secure;      };
-  CString         GetServer()         { return m_cracked.m_host;        };
-  int             GetPort()           { return m_cracked.m_port;        };
-  CString         GetAbsolutePath()   { return m_cracked.AbsolutePath();};
-  Cookies&        GetCookies()        { return m_cookies;               };
-  HANDLE          GetAccessToken()    { return m_token;                 };
-  PSOCKADDR_IN6   GetSender()         { return &m_sender;               };
-  UINT            GetDesktop()        { return m_desktop;               };
-  bool            GetErrorState()     { return m_errorstate;            };
-  CString         GetLastError()      { return m_lastError;             };
-  bool            GetWhitespace()     { return m_whitespace;            };
-  JsonEncoding    GetEncoding()       { return m_encoding;              };
-  CString         GetAcceptEncoding() { return m_acceptEncoding;        };
-  bool            GetSendBOM()        { return m_sendBOM;               };
-  bool            GetSendUnicode()    { return m_sendUnicode;           };
-  bool            GetVerbTunneling()  { return m_verbTunnel;            };
-  bool            GetIncoming()       { return m_incoming;              };
-  bool            GetHasBeenAnswered(){ return m_request == NULL;       };
-  CString         GetReferrer()       { return m_referrer;              };
-  Routing&        GetRouting()        { return m_routing;               };
+  JSONvalue&      GetValue()  const   { return *m_value;                }
+  CString         GetURL()            { return m_url;                   }
+  CrackedURL&     GetCrackedURL()     { return m_cracked;               }
+  unsigned        GetStatus()         { return m_status;                }
+  HTTP_OPAQUE_ID  GetRequestHandle()  { return m_request;               }
+  HTTPSite*       GetHTTPSite()       { return m_site;                  }
+  HeaderMap*      GetHeaderMap()      { return &m_headers;              }
+  CString         GetUser()           { return m_user;                  }
+  CString         GetPassword()       { return m_password;              }
+  bool            GetSecure()         { return m_cracked.m_secure;      }
+  CString         GetServer()         { return m_cracked.m_host;        }
+  int             GetPort()           { return m_cracked.m_port;        }
+  CString         GetAbsolutePath()   { return m_cracked.AbsolutePath();}
+  Cookies&        GetCookies()        { return m_cookies;               }
+  HANDLE          GetAccessToken()    { return m_token;                 }
+  PSOCKADDR_IN6   GetSender()         { return &m_sender;               }
+  UINT            GetDesktop()        { return m_desktop;               }
+  bool            GetErrorState()     { return m_errorstate;            }
+  CString         GetLastError()      { return m_lastError;             }
+  bool            GetWhitespace()     { return m_whitespace;            }
+  JsonEncoding    GetEncoding()       { return m_encoding;              }
+  CString         GetAcceptEncoding() { return m_acceptEncoding;        }
+  bool            GetSendBOM()        { return m_sendBOM;               }
+  bool            GetSendUnicode()    { return m_sendUnicode;           }
+  bool            GetVerbTunneling()  { return m_verbTunnel;            }
+  bool            GetIncoming()       { return m_incoming;              }
+  bool            GetHasBeenAnswered(){ return m_request == NULL;       }
+  CString         GetReferrer()       { return m_referrer;              }
+  Routing&        GetRouting()        { return m_routing;               }
+  CString         GetExtension()      { return m_extension;             }
   CString         GetHeader(CString p_name);
   CString         GetRoute(int p_index);
   CString         GetContentType();
@@ -273,26 +274,27 @@ public:
 
   // SETTERS
   void            SetURL(CString& p_url);
-  void            SetIncoming(bool p_incoming)            { m_incoming           = p_incoming; };
-  void            SetErrorstate(bool p_state)             { m_errorstate         = p_state;    };
-  void            SetLastError(CString p_error)           { m_lastError          = p_error;    };
-  void            SetUser(CString p_user)                 { m_user               = p_user;     };
-  void            SetPassword(CString p_password)         { m_password           = p_password; };
-  void            SetSecure(bool p_secure)                { m_cracked.m_secure   = p_secure;   ReparseURL(); };
-  void            SetServer(CString p_server)             { m_cracked.m_host     = p_server;   ReparseURL(); };
-  void            SetPort(int p_port)                     { m_cracked.m_port     = p_port;     ReparseURL(); };
-  void            SetAbsolutePath(CString p_path)         { m_cracked.SetPath(p_path);         ReparseURL(); };
-  void            SetStatus(unsigned p_status)            { m_status             = p_status;   };
-  void            SetDesktop(UINT p_desktop)              { m_desktop            = p_desktop;  };
-  void            SetRequestHandle(HTTP_OPAQUE_ID p_id)   { m_request            = p_id;       };
-  void            SetVerb(CString p_verb)                 { m_verb               = p_verb;     };
-  void            SetCookies(Cookies& p_cookies)          { m_cookies            = p_cookies;  };
-  void            SetContentType(CString p_type)          { m_contentType        = p_type;     };
-  void            SetWhitespace(bool p_white)             { m_whitespace         = p_white;    };
-  void            SetSendBOM(bool p_bom)                  { m_sendBOM            = p_bom;      };
-  void            SetVerbTunneling(bool p_tunnel)         { m_verbTunnel         = p_tunnel;   };
-  void            SetHasBeenAnswered()                    { m_request            = NULL;       };
-  void            SetReferrer(CString p_referrer)         { m_referrer           = p_referrer; };
+  void            SetIncoming(bool p_incoming)            { m_incoming           = p_incoming; }
+  void            SetErrorstate(bool p_state)             { m_errorstate         = p_state;    }
+  void            SetLastError(CString p_error)           { m_lastError          = p_error;    }
+  void            SetUser(CString p_user)                 { m_user               = p_user;     }
+  void            SetPassword(CString p_password)         { m_password           = p_password; }
+  void            SetSecure(bool p_secure)                { m_cracked.m_secure   = p_secure;   ReparseURL(); }
+  void            SetServer(CString p_server)             { m_cracked.m_host     = p_server;   ReparseURL(); }
+  void            SetPort(int p_port)                     { m_cracked.m_port     = p_port;     ReparseURL(); }
+  void            SetAbsolutePath(CString p_path)         { m_cracked.SetPath(p_path);         ReparseURL(); }
+  void            SetStatus(unsigned p_status)            { m_status             = p_status;   }
+  void            SetDesktop(UINT p_desktop)              { m_desktop            = p_desktop;  }
+  void            SetRequestHandle(HTTP_OPAQUE_ID p_id)   { m_request            = p_id;       }
+  void            SetVerb(CString p_verb)                 { m_verb               = p_verb;     }
+  void            SetCookies(Cookies& p_cookies)          { m_cookies            = p_cookies;  }
+  void            SetContentType(CString p_type)          { m_contentType        = p_type;     }
+  void            SetWhitespace(bool p_white)             { m_whitespace         = p_white;    }
+  void            SetSendBOM(bool p_bom)                  { m_sendBOM            = p_bom;      }
+  void            SetVerbTunneling(bool p_tunnel)         { m_verbTunnel         = p_tunnel;   }
+  void            SetHasBeenAnswered()                    { m_request            = NULL;       }
+  void            SetReferrer(CString p_referrer)         { m_referrer           = p_referrer; }
+  void            SetExtension(CString p_extension)       { m_extension          = p_extension;}
   void            SetAcceptEncoding(CString p_encoding);
   void            AddHeader(CString p_name,CString p_value);
   void            DelHeader(CString p_name);
@@ -349,4 +351,5 @@ private:
   UINT            m_desktop     { 0 };                          // Senders remote desktop
   long            m_references  { 0 };                          // Externally referenced
   Routing         m_routing;                                    // Routing information from HTTP
+  CString         m_extension;                                  // Extension of the resource (derived from URL)
 };

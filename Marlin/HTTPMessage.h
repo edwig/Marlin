@@ -132,26 +132,27 @@ public:
   void SetURL(CString& p_url);
   bool SetVerb(CString p_verb);
   void SetAcceptEncoding(CString p_encoding);
-  void SetCommand(HTTPCommand p_command)        { m_command            = p_command;   };
-  void SetReferrer(CString p_referrer)          { m_referrer           = p_referrer;  };
-  void SetStatus(unsigned p_status)             { m_status             = p_status;    };
-  void SetUser(CString p_user)                  { m_user               = p_user;      };
-  void SetPassword(CString p_password)          { m_password           = p_password;  };
-  void SetSecure(bool p_secure)                 { m_cracked.m_secure   = p_secure;    ReparseURL();  };
-  void SetServer(CString& p_server)             { m_cracked.m_host     = p_server;    ReparseURL();  };
-  void SetPort(unsigned p_port)                 { m_cracked.m_port     = p_port;      ReparseURL();  };
-  void SetAbsolutePath(CString& p_path)         { m_cracked.SetPath(p_path);          ReparseURL();  };
-  void SetRequestHandle(HTTP_OPAQUE_ID p_req)   { m_request            = p_req;       };
-  void SetAccessToken(HANDLE p_token)           { m_token              = p_token;     };
-  void SetRemoteDesktop(UINT p_desktop)         { m_desktop            = p_desktop;   };
-  void SetContentType(CString p_type)           { m_contentType        = p_type;      };
-  void SetContentLength(size_t p_length)        { m_contentLength      = p_length;    };
-  void SetUseIfModified(bool p_ifmodified)      { m_ifmodified         = p_ifmodified;};
-  void SetSendBOM(bool p_bom)                   { m_sendBOM            = p_bom;       };
-  void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    };
-  void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        };
-  void SetSystemTime(SYSTEMTIME p_time)         { m_systemtime         = p_time;      };
-  void SetHasBeenAnswered()                     { m_request            = NULL;        };
+  void SetCommand(HTTPCommand p_command)        { m_command            = p_command;   }
+  void SetReferrer(CString p_referrer)          { m_referrer           = p_referrer;  }
+  void SetStatus(unsigned p_status)             { m_status             = p_status;    }
+  void SetUser(CString p_user)                  { m_user               = p_user;      }
+  void SetPassword(CString p_password)          { m_password           = p_password;  }
+  void SetSecure(bool p_secure)                 { m_cracked.m_secure   = p_secure;    ReparseURL();  }
+  void SetServer(CString& p_server)             { m_cracked.m_host     = p_server;    ReparseURL();  }
+  void SetPort(unsigned p_port)                 { m_cracked.m_port     = p_port;      ReparseURL();  }
+  void SetAbsolutePath(CString& p_path)         { m_cracked.SetPath(p_path);          ReparseURL();  }
+  void SetRequestHandle(HTTP_OPAQUE_ID p_req)   { m_request            = p_req;       }
+  void SetAccessToken(HANDLE p_token)           { m_token              = p_token;     }
+  void SetRemoteDesktop(UINT p_desktop)         { m_desktop            = p_desktop;   }
+  void SetContentType(CString p_type)           { m_contentType        = p_type;      }
+  void SetContentLength(size_t p_length)        { m_contentLength      = p_length;    }
+  void SetUseIfModified(bool p_ifmodified)      { m_ifmodified         = p_ifmodified;}
+  void SetSendBOM(bool p_bom)                   { m_sendBOM            = p_bom;       }
+  void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    }
+  void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        }
+  void SetSystemTime(SYSTEMTIME p_time)         { m_systemtime         = p_time;      }
+  void SetHasBeenAnswered()                     { m_request            = NULL;        }
+  void SetExtension(CString p_extension)        { m_extension          = p_extension; }
   void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
   void SetReceiver(PSOCKADDR_IN6 p_address);
@@ -167,37 +168,38 @@ public:
   bool SetHTTPSite(HTTPSite* p_site);
 
   // GETTERS
-  HTTPCommand         GetCommand()              { return m_command;                   };
-  CString             GetURL()                  { return m_url;                       };
-  CString             GetReferrer()             { return m_referrer;                  };
-  CrackedURL&         GetCrackedURL()           { return m_cracked;                   };
-  unsigned            GetStatus()               { return m_status;                    };
-  CString             GetUser()                 { return m_user;                      };
-  CString             GetPassword()             { return m_password;                  };
-  bool                GetSecure()               { return m_cracked.m_secure;          };
-  CString             GetServer()               { return m_cracked.m_host;            };
-  unsigned            GetPort()                 { return m_cracked.m_port;            };
-  CString             GetAbsolutePath()         { return m_cracked.AbsolutePath();    };
-  CString             GetAbsoluteResource()     { return m_cracked.AbsoluteResource();};
-  HTTP_OPAQUE_ID      GetRequestHandle()        { return m_request;                   };
-  HTTPSite*           GetHTTPSite()             { return m_site;                      };
-  bool                GetReadBuffer()           { return m_readBuffer;                };
-  size_t              GetContentLength()        { return m_contentLength;             };
-  FileBuffer*         GetFileBuffer()           { return &m_buffer;                   };
-  CString             GetContentType()          { return m_contentType;               };
-  HANDLE              GetAccessToken()          { return m_token;                     };
-  UINT                GetRemoteDesktop()        { return m_desktop;                   };
-  PSOCKADDR_IN6       GetSender()               { return &m_sender;                   };
-  PSOCKADDR_IN6       GetReceiver()             { return &m_receiver;                 };
-  bool                GetUseIfModified()        { return m_ifmodified;                };
-  PSYSTEMTIME         GetSystemTime()           { return &m_systemtime;               };
-  HeaderMap*          GetHeaderMap()            { return &m_headers;                  };
-  bool                GetSendBOM()              { return m_sendBOM;                   };
-  bool                GetVerbTunneling()        { return m_verbTunnel;                };
-  HTTP_CONNECTION_ID  GetConnectionID()         { return m_connectID;                 };
-  CString             GetAcceptEncoding()       { return m_acceptEncoding;            };
-  Cookies&            GetCookies()              { return m_cookies;                   };
-  Routing&            GetRouting()              { return m_routing;                   };
+  HTTPCommand         GetCommand()              { return m_command;                   }
+  CString             GetURL()                  { return m_url;                       }
+  CString             GetReferrer()             { return m_referrer;                  }
+  CrackedURL&         GetCrackedURL()           { return m_cracked;                   }
+  unsigned            GetStatus()               { return m_status;                    }
+  CString             GetUser()                 { return m_user;                      }
+  CString             GetPassword()             { return m_password;                  }
+  bool                GetSecure()               { return m_cracked.m_secure;          }
+  CString             GetServer()               { return m_cracked.m_host;            }
+  unsigned            GetPort()                 { return m_cracked.m_port;            }
+  CString             GetAbsolutePath()         { return m_cracked.AbsolutePath();    }
+  CString             GetAbsoluteResource()     { return m_cracked.AbsoluteResource();}
+  HTTP_OPAQUE_ID      GetRequestHandle()        { return m_request;                   }
+  HTTPSite*           GetHTTPSite()             { return m_site;                      }
+  bool                GetReadBuffer()           { return m_readBuffer;                }
+  size_t              GetContentLength()        { return m_contentLength;             }
+  FileBuffer*         GetFileBuffer()           { return &m_buffer;                   }
+  CString             GetContentType()          { return m_contentType;               }
+  HANDLE              GetAccessToken()          { return m_token;                     }
+  UINT                GetRemoteDesktop()        { return m_desktop;                   }
+  PSOCKADDR_IN6       GetSender()               { return &m_sender;                   }
+  PSOCKADDR_IN6       GetReceiver()             { return &m_receiver;                 }
+  bool                GetUseIfModified()        { return m_ifmodified;                }
+  PSYSTEMTIME         GetSystemTime()           { return &m_systemtime;               }
+  HeaderMap*          GetHeaderMap()            { return &m_headers;                  }
+  bool                GetSendBOM()              { return m_sendBOM;                   }
+  bool                GetVerbTunneling()        { return m_verbTunnel;                }
+  HTTP_CONNECTION_ID  GetConnectionID()         { return m_connectID;                 }
+  CString             GetAcceptEncoding()       { return m_acceptEncoding;            }
+  Cookies&            GetCookies()              { return m_cookies;                   }
+  Routing&            GetRouting()              { return m_routing;                   }
+  CString             GetExtension()            { return m_extension;                 }
   CString             GetBody();
   size_t              GetBodyLength();
   CString             GetVerb();
@@ -277,6 +279,7 @@ private:
   CrackedURL          m_cracked;                                      // Cracked down URL
   HeaderMap           m_headers;                                      // All/Known headers
   Routing             m_routing;                                      // Routing information within a site
+  CString             m_extension;                                    // Extension of the resource (derived from URL)
   bool                m_ifmodified    { false   };                    // Use "if-modified-since"
   SYSTEMTIME          m_systemtime;                                   // System time for m_modified
   long                m_references    { 1       };                    // Referencing system

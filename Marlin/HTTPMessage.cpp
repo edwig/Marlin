@@ -147,6 +147,7 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
   m_referrer          = p_msg->m_referrer;
   m_user              = p_msg->m_user;
   m_password          = p_msg->m_password;
+  m_extension         = p_msg->m_extension;
 
   // Taking a duplicate token
   if(DuplicateTokenEx(p_msg->m_token
@@ -199,6 +200,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
   m_user          = p_msg->GetUser();
   m_password      = p_msg->GetPassword();
   m_headers       =*p_msg->GetHeaderMap();
+  m_extension     = p_msg->GetExtension();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Getting the URL of all parts
@@ -297,6 +299,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
   m_user           = p_msg->GetUser();
   m_password       = p_msg->GetPassword();
   m_headers        =*p_msg->GetHeaderMap();
+  m_extension      = p_msg->GetExtension();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Getting the URL of all parts
@@ -413,6 +416,7 @@ HTTPMessage::Reset()
   m_url.Empty();
   m_user.Empty();
   m_password.Empty();
+  m_extension.Empty();
   m_buffer.Reset();
   m_headers.clear();
   m_routing.clear();

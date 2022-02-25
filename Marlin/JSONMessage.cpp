@@ -505,6 +505,7 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
   m_sendBOM     = p_other->m_sendBOM;
   m_verbTunnel  = p_other->m_verbTunnel;
   m_headers     = p_other->m_headers;
+  m_extension   = p_other->m_extension;
   m_acceptEncoding = p_other->m_acceptEncoding;
   // Duplicate all cookies
   m_cookies = p_other->GetCookies();
@@ -547,6 +548,7 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
   m_user           = p_message->GetUser();
   m_password       = p_message->GetPassword();
   m_headers        =*p_message->GetHeaderMap();
+  m_extension      = p_message->GetExtension();
   m_incoming       = (p_message->GetCommand() != HTTPCommand::http_response);
 
   // Duplicate all cookies
@@ -644,6 +646,7 @@ JSONMessage::JSONMessage(SOAPMessage* p_message)
   m_user            = p_message->GetUser();
   m_password        = p_message->GetPassword();
   m_headers         =*p_message->GetHeaderMap();
+  m_extension       = p_message->GetExtension();
 
   // Duplicate all cookies
   m_cookies = p_message->GetCookies();

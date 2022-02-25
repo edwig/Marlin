@@ -183,6 +183,7 @@ public:
   void            SetServer(CString& p_server);
   void            SetPort(unsigned p_port);
   void            SetAbsolutePath(CString& p_path);
+  void            SetExtension(CString p_extension);
   // Set security details
   void            SetUser(CString& p_user);
   void            SetPassword(CString& p_password);
@@ -266,6 +267,7 @@ public:
   CString         GetServer() const;
   unsigned        GetPort() const;
   CString         GetAbsolutePath() const;
+  CString         GetExtension() const;
   // Get Security parts
   CString         GetUser() const;
   CString         GetPassword() const;
@@ -432,6 +434,7 @@ protected:
   HTTP_OPAQUE_ID  m_request       { NULL  };              // Request it must answer
   HTTPSite*       m_site          { nullptr };            // Site for which message is received
   HeaderMap       m_headers;                              // Extra HTTP headers (incoming / outgoing)
+  CString         m_extension;                            // Extension from the resource (derived from URL)
   // URL PARTS
   bool            m_secure        { false };              // Connection is secure
   CString         m_server;                               // Server name
@@ -573,6 +576,12 @@ SOAPMessage::SetPort(unsigned p_port)
   ReparseURL();
 }
 
+inline void
+SOAPMessage::SetExtension(CString p_extension)
+{
+  m_extension = p_extension;
+}
+
 inline void    
 SOAPMessage::SetAbsolutePath(CString& p_path)
 {
@@ -620,6 +629,12 @@ inline unsigned
 SOAPMessage::GetPort() const
 {
   return m_port;
+}
+
+inline CString
+SOAPMessage::GetExtension() const
+{
+  return m_extension;
 }
 
 inline CString  

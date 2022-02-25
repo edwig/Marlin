@@ -73,6 +73,7 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
   m_acceptEncoding= p_msg->GetAcceptEncoding();
   m_sendBOM       = p_msg->GetSendBOM();
   m_headers       =*p_msg->GetHeaderMap();
+  m_extension     = p_msg->GetExtension();
   m_incoming      = p_msg->GetCommand() != HTTPCommand::http_response;
 
   // Overrides from class defaults
@@ -169,6 +170,7 @@ SOAPMessage::SOAPMessage(JSONMessage* p_msg)
   m_incoming      = p_msg->GetIncoming();
   m_acceptEncoding= p_msg->GetAcceptEncoding();
   m_headers       =*p_msg->GetHeaderMap();
+  m_extension     = p_msg->GetExtension();
 
   // Duplicate all cookies
   m_cookies = p_msg->GetCookies();
@@ -307,6 +309,7 @@ SOAPMessage::SOAPMessage(SOAPMessage* p_orig)
   m_order         = p_orig->m_order;
   m_incoming      = p_orig->m_incoming;
   m_headers       = p_orig->m_headers;
+  m_extension     = p_orig->m_extension;
   // WS-Reliability
   m_addressing    = p_orig->m_addressing;
   m_reliable      = p_orig->m_reliable;
@@ -380,10 +383,10 @@ SOAPMessage::SetSoapActionFromHTTTP(CString p_action)
   }
   // OK: Use this set (action,namesp)
   m_soapAction = action;
-  if(!namesp.IsEmpty())
-  {
-    m_namespace = namesp;
-  }
+//   if(!namesp.IsEmpty())
+//   {
+//     m_namespace = namesp;
+//   }
 }
 
 #pragma endregion XTOR and DTOR of a SOAP message
@@ -563,6 +566,7 @@ SOAPMessage::operator=(JSONMessage& p_json)
   m_sendBOM       = p_json.GetSendBOM();
   m_incoming      = p_json.GetIncoming();
   m_headers       =*p_json.GetHeaderMap();
+  m_extension     = p_json.GetExtension();
 
   // Duplicate all cookies
   m_cookies = p_json.GetCookies();
