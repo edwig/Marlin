@@ -228,7 +228,6 @@ public:
   void SetEncryptionPassword(CString p_word)      { m_enc_password      = p_word;     };
   void SetSingleSignOn(bool p_sso)                { m_sso               = p_sso;      };
   void SetSoapCompress(bool p_compress)           { m_soapCompress      = p_compress; };
-  void SetReadAllHeaders(bool p_readAll)          { m_readAllHeaders    = p_readAll;  };
   void SetSslTlsSettings(unsigned p_ssltls)       { m_ssltls            = p_ssltls;   }; // WINHTTP_FLAG_SECURE_PROTOCOL_ALL
   void SetSendBOM(bool p_bom)                     { m_sendBOM           = p_bom;      };
   void SetVerbTunneling(bool p_tunnel)            { m_verbTunneling     = p_tunnel;   };
@@ -278,7 +277,6 @@ public:
   CString       GetEncryptionPassword()     { return m_enc_password;      };
   bool          GetSingleSignOn()           { return m_sso;               };
   bool          GetSoapCompress()           { return m_soapCompress;      };
-  bool          GetReadAllHeaders()         { return m_readAllHeaders;    };
   HPFCounter*   GetCounter()                { return &m_counter;          };
   LogAnalysis*  GetLogging()                { return m_log;               };
   unsigned      GetSslTlsSettings()         { return m_ssltls;            }; 
@@ -457,7 +455,6 @@ private:
   HeaderMap     m_requestHeaders;                                 // All request headers to the call
   HeaderMap     m_responseHeaders;                                // All response headers from the call
   Cookies       m_cookies;                                        // All cookies to send
-  bool          m_readAllHeaders  { false   };                    // Get all response headers
   // CORS Cross Origin Resource Sharing
   CString       m_corsOrigin;                                     // Use CORS header methods (sending "Origin:")
   CString       m_corsMethod;                                     // Pre-flight request method  in OPTIONS call

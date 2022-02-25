@@ -147,7 +147,6 @@ HTTPClient::Reset()
   m_sendUnicode     = false;
   m_sniffCharset    = true;
   m_sendBOM         = false;
-  m_readAllHeaders  = false;
   m_pushEvents      = false;
   m_onCloseSeen     = false;
   // Timeouts
@@ -1734,7 +1733,7 @@ HTTPClient::ReceiveResponseDataBuffer()
   }
   while (dwSize > 0);
 
-  // Handeling the result
+  // Handling the result
   if(m_response)
   {
     m_response[m_responseLength] = 0;
@@ -2060,12 +2059,9 @@ HTTPClient::Send(HTTPMessage* p_msg)
   p_msg->SetBody(m_response,m_responseLength);
   p_msg->SetCookies(m_resultCookies);
   // Getting all headers from the answer
-  if(m_readAllHeaders)
+  for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
   {
-    for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
-    {
-      p_msg->AddHeader(it->first,it->second);
-    }
+    p_msg->AddHeader(it->first,it->second);
   }
   // Set result
   p_msg->SetStatus(m_status);
@@ -2154,7 +2150,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
 
     if(TryCreateWideString(soap,"",p_msg->GetSendBOM(),&buffer,length))
     {
-      m_contentType = p_msg->GetContentType() + "; charset=utf-16";
+      m_contentType = SetFieldInHTTPHeader(p_msg->GetContentType(),"charset","utf-16");
       SetBody(buffer,length);
     }
     else
@@ -2181,7 +2177,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
         case XMLEncoding::ENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
         default:                       break;
       }
-      m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp).GetString());
+      m_contentType = SetFieldInHTTPHeader(m_contentType,"charset",CodepageToCharset(acp));
     }
     SetBody(soap);
   }
@@ -2197,7 +2193,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
     if(soapAction.Find('/') < 0)
     {
       CString namesp = p_msg->GetNamespace();
-      if(!namesp.IsEmpty() && namesp.Right(1) != "/")
+      if(!namesp.IsEmpty() && namesp.Right(1).Compare("/"))
       {
         namesp += "/";
       }
@@ -2211,10 +2207,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
   else // SOAP 1.2
   {
-    if(FindFieldInHTTPHeader(m_contentType,"action").IsEmpty())
-    {
-      m_contentType.AppendFormat("; action=\"%s\"",soapAction.GetString());
-    }
+    m_contentType = SetFieldInHTTPHeader(m_contentType,"action",m_soapAction);
   }
 
   // Set cookies
@@ -2295,12 +2288,9 @@ HTTPClient::Send(SOAPMessage* p_msg)
   p_msg->SetCookies(m_resultCookies);
 
   // Getting all headers from the answer
-  if(m_readAllHeaders)
+  for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
   {
-    for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
-    {
-      p_msg->AddHeader(it->first,it->second);
-    }
+    p_msg->AddHeader(it->first,it->second);
   }
 
   // Only check the answer in case of a correct HTTP answer
@@ -2387,7 +2377,7 @@ HTTPClient::Send(JSONMessage* p_msg)
     json = p_msg->GetJsonMessage(JsonEncoding::JENC_Plain);
     if(TryCreateWideString(json,"",p_msg->GetSendBOM(),&buffer,length))
     {
-      m_contentType = p_msg->GetContentType() + "; charset=utf-16";
+      m_contentType = SetFieldInHTTPHeader(p_msg->GetContentType(),"charset","utf-16");
       SetBody(buffer,length);
     }
     else
@@ -2413,7 +2403,7 @@ HTTPClient::Send(JSONMessage* p_msg)
       case JsonEncoding::JENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
       default:                         break;
     }
-    m_contentType.AppendFormat("; charset=%s",CodepageToCharset(acp).GetString());
+    m_contentType = SetFieldInHTTPHeader(m_contentType,"charset",CodepageToCharset(acp));
     SetBody(json);
   }
 
@@ -2527,12 +2517,9 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   // Keep cookies
   p_msg->SetCookies(m_resultCookies);
   // Getting all headers from the answer
-  if(m_readAllHeaders)
+  for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
   {
-    for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
-    {
-      p_msg->AddHeader(it->first,it->second);
-    }
+    p_msg->AddHeader(it->first,it->second);
   }
   // Reset our input buffer
   m_buffer     = NULL;
@@ -3018,11 +3005,8 @@ HTTPClient::Send()
           // Getting our results
           ProcessResultCookies();
 
-          // Optionally getting all response headers
-          if(m_readAllHeaders || MUSTLOG(HLL_LOGBODY))
-          {
-            ReadAllResponseHeaders();
-          }
+          // Get all response headers
+          ReadAllResponseHeaders();
 
           if(m_pushEvents)
           {
@@ -3660,11 +3644,6 @@ HTTPClient::SetCORSOrigin(CString p_origin)
 {
   // Remember CORS origin
   m_corsOrigin = p_origin;
-  // Must read all response headers for CORS answers
-  if(!m_corsOrigin.IsEmpty())
-  {
-    m_readAllHeaders = true;
-  }
 }
 
 // Simply note the Cross Origin Resource Sharing options
