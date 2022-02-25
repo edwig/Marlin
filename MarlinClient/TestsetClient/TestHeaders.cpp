@@ -30,24 +30,24 @@
 #include "SOAPMessage.h"
 #include "ConvertWideString.h"
 
-int TestHeaders(void)
+int TestSOAPHeaders()
 {
   int errors = 0;
 
   CString namesp(DEFAULT_NAMESPACE);
   CString action("FirstAction");
-  SOAPMessage msg(namesp,action,SoapVersion::SOAP_12);
+  SOAPMessage msg(namesp, action, SoapVersion::SOAP_12);
 
   msg.AddHeader("Content-Type","application/soap+xml; charset=UTF-8; action=\"FirstAction\"");
 
   CString charset = FindCharsetInContentType(msg.GetHeader("content-type"));
-  CString checkac = FindFieldInHTTPHeader(msg.GetHeader("content-type"),"Action");
+  CString checkac = FindFieldInHTTPHeader(msg.GetHeader("content-type"), "Action");
 
   errors += charset.CompareNoCase("utf-8") != 0;
   errors += checkac.Compare("FirstAction") != 0;
 
   // Test empty
-  CString test1 = FindFieldInHTTPHeader(msg.GetHeader("DoNotExist"),"ABC");
+  CString test1 = FindFieldInHTTPHeader(msg.GetHeader("DoNotExist"), "ABC");
 
   errors += !test1.IsEmpty();
 
@@ -55,5 +55,35 @@ int TestHeaders(void)
   // --- "---------------------------------------------- - ------
   printf("SOAPAction in Content-Type for SOAP 1.2        : %s\n", errors == 0 ? "OK" : "ERROR");
 
+  return errors;
+}
+
+int TestHTTPHeaders()
+{
+  int errors = 0;
+
+  // Search case insensitive
+  CString header("application/soap+xml; charset=UTF-8; action=\"FirstAction\"");
+  CString newheader1 = SetFieldInHTTPHeader(header,"action", "http://test.marlin.org/Function");
+  CString newheader2 = SetFieldInHTTPHeader(header,"charset","UTF16");
+  CString newheader3 = SetFieldInHTTPHeader("first","field","The Value");
+  CString newheader4 = SetFieldInHTTPHeader("first","field","something");
+  errors += newheader1.Compare("application/soap+xml; charset=UTF-8; action=\"http://test.marlin.org/Function\"") != 0;
+  errors += newheader2.Compare("application/soap+xml; charset=UTF16; action=\"FirstAction\"") != 0;
+  errors += newheader3.Compare("first; field=\"The Value\"") != 0;
+  errors += newheader4.Compare("first; field=something") != 0;
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("Setting and replacing fields in HTTP headers   : %s\n", errors == 0 ? "OK" : "ERROR");
+
+  return errors;
+}
+
+int TestHeaders(void)
+{
+  int errors = 0;
+  errors += TestSOAPHeaders();
+  errors += TestHTTPHeaders();
   return errors;
 }

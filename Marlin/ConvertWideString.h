@@ -51,6 +51,8 @@ CString CodepageToCharset(int p_codepage);
 CString CharsetToCodePageInfo(CString p_charset);
 // Find a field value within a HTTP header
 CString FindFieldInHTTPHeader(CString p_headervalue,CString p_field);
+// Set (modify) the field value within a HTTP header
+CString SetFieldInHTTPHeader(CString p_headervalue,CString p_field,CString p_value);
 // Find the charset in the content-type header
 CString FindCharsetInContentType(CString p_contentType);
 // Find the mimetype in the content-type header

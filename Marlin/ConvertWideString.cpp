@@ -303,7 +303,9 @@ CodepageToCharset(int p_codepage)
 }
 
 // Find the value of a specific field within a HTTP header
+// Header: theValue
 // Header: firstvalue; field=value2
+// Header: firstvalue; secondvalue="value2 with spaces", fld="value3"
 CString
 FindFieldInHTTPHeader(CString p_headervalue,CString p_field)
 {
@@ -318,7 +320,7 @@ FindFieldInHTTPHeader(CString p_headervalue,CString p_field)
   int pos = head.Find(p_field);
   if(pos > 0)
   {
-    // Skip past the fieldname
+    // Skip past the field name
     pos += p_field.GetLength();
     // Skip white space
     while(pos < length && isspace(head.GetAt(pos))) ++pos;
@@ -335,9 +337,72 @@ FindFieldInHTTPHeader(CString p_headervalue,CString p_field)
       // field=value3; fld=value4, part=somewhat
       int end1 = head.Find(';',pos+1);
       int end2 = head.Find(',',pos+1);
-      int end = end1 > 0 ? end1 : end2;
+      int end  = end1 > 0 ? end1 : end2;
       if(end < 0) end = length+1;
       value = p_headervalue.Mid(pos,end-pos);
+    }
+  }
+  return value;
+}
+
+// Set (modify) the field value within a HTTP header
+// Header: theValue
+// Header: firstvalue; field=value2
+// Header: firstvalue; secondvalue="value2 with spaces", fld="value3"
+CString
+SetFieldInHTTPHeader(CString p_headervalue,CString p_field,CString p_value)
+{
+  // No value yet, or the main first value. Simply return the new value
+  if(p_headervalue.IsEmpty() || p_field.IsEmpty())
+  {
+    return p_value;
+  }
+  // If doesn't exist yet: append to the header string
+  CString existing = FindFieldInHTTPHeader(p_headervalue,p_field);
+  if(existing.IsEmpty())
+  {
+    bool spaces = p_value.Find(' ') >= 0;
+    p_headervalue += "; ";
+    p_headervalue += p_field;
+    p_headervalue += "=";
+    if(spaces) p_headervalue += "\"";
+    p_headervalue += p_value;
+    if(spaces) p_headervalue += "\"";
+    return p_headervalue;
+  }
+
+  // The hard part: replace the header value
+  CString value;
+  CString head(p_headervalue);
+  int length = p_headervalue.GetLength();
+  head.MakeLower();
+  p_field.MakeLower();
+  head.Replace(" =", "=");
+  p_field += "=";
+
+  int pos = head.Find(p_field);
+  if(pos > 0)
+  {
+    // Skip past the field name
+    pos += p_field.GetLength();
+    // Skip white space
+    while (pos < length && isspace(head.GetAt(pos))) ++pos;
+    if (head.GetAt(pos) == '\"')
+    {
+      // field="value2 value3"
+      ++pos;
+      int end = head.Find('\"', pos + 1);
+      if (end < 0) end = length + 1;
+      value = p_headervalue.Left(pos) + p_value + p_headervalue.Mid(end);
+    }
+    else
+    {
+      // field=value3; fld=value4, part=somewhat
+      int end1 = head.Find(';', pos + 1);
+      int end2 = head.Find(',', pos + 1);
+      int end = end1 > 0 ? end1 : end2;
+      if (end < 0) end = length + 1;
+      value = p_headervalue.Left(pos) + p_value + p_headervalue.Mid(end);
     }
   }
   return value;
