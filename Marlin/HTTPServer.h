@@ -195,6 +195,8 @@ public:
   virtual void       CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_reset = false) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
+  // Sending a response as a chunk
+  virtual void       SendAsChunk(HTTPMessage* p_message,bool p_final = false) = 0;
 
   // SETTERS
  

@@ -536,21 +536,11 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   message->SetRequestHandle((HTTP_OPAQUE_ID)p_context);
   message->SetContentType(contentType);
   message->SetContentLength((size_t)atoll(contentLength));
+  message->SetAllHeaders(&p_request->Headers);
+  message->SetUnknownHeaders(&p_request->Headers);
 
   // Finding the impersonation access token (if any)
   FindingAccessToken(p_context,message);
-
-  if(p_site->GetAllHeaders())
-  {
-    // If requested so, copy all headers to the message
-    message->SetAllHeaders(&p_request->Headers);
-  }
-  else
-  {
-    // As a minimum, always add the unknown headers
-    // in case of a 'POST', as the SOAPAction header is here too!
-    message->SetUnknownHeaders(&p_request->Headers);
-  }
 
   // Handle modified-since 
   // Rest of the request is then not needed any more
@@ -853,6 +843,51 @@ HTTPServerIIS::SetResponseStatus(IHttpResponse* p_response,USHORT p_status,CStri
   p_response->SetStatus(p_status,p_statusMessage);
 }
 
+// Sending a response as a chunk
+void
+HTTPServerIIS::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
+{
+  // Check if multi-part buffer or file
+  FileBuffer* buffer = p_message->GetFileBuffer();
+  if(!buffer->GetFileName().IsEmpty() )
+  {
+    ERRORLOG(ERROR_INVALID_PARAMETER,"Send as chunk cannot send a file!");
+    return;
+  }
+  // Chunk encode the file buffer
+  if(!buffer->ChunkedEncoding(p_final))
+  {
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Cannot chunk-encode the message for transfer-encoding!");
+  }
+
+  // If we want to send a (g)zipped buffer, that should have been done already by now
+  p_message->SetAcceptEncoding("");
+
+  // Get the chunk number (first->next)
+  unsigned chunk = p_message->GetChunkNumber();
+  p_message->SetChunkNumber(++chunk);
+  if(chunk == 1)
+  {
+    // Send the first chunk
+    SendResponse(p_message);
+  }
+  else
+  {
+    // Send all next chunks
+    IHttpContext*  context  = reinterpret_cast<IHttpContext*>(p_message->GetRequestHandle());
+    IHttpResponse* response = context ? context->GetResponse() : nullptr;
+    SendResponseBuffer(response,buffer,buffer->GetLength(),!p_final);
+
+	// Possibly log and trace what we just sent
+	LogTraceResponse(response->GetRawHttpResponse(),buffer);
+  }
+  if(p_final)
+  {
+    // Do **NOT** send an answer twice
+    p_message->SetHasBeenAnswered();
+  }
+}
+
 // Sending response for an incoming message
 void       
 HTTPServerIIS::SendResponse(HTTPMessage* p_message)
@@ -866,7 +901,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // See if there is something to send
   if(context == nullptr || response == nullptr)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"SendResponse: nothing to send");
+    ERRORLOG(ERROR_INVALID_PARAMETER,"Nothing found to send");
     return;
   }
 
@@ -1028,15 +1063,22 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   AddUnknownHeaders(response,ukheaders);
 
   // Now after the compression, add the total content length
-  CString contentLength;
   size_t totalLength = buffer ? buffer->GetLength() : 0;
+  if(p_message->GetChunkNumber())
+  {
+    moredata = true;
+    SetResponseHeader(response,HttpHeaderTransferEncoding,"chunked",true);
+  }
+  else
+  {
+    CString contentLength;
 #ifdef _WIN64
-  contentLength.Format("%I64u",totalLength);
+    contentLength.Format("%I64u", totalLength);
 #else
-  contentLength.Format("%lu",totalLength);
+    contentLength.Format("%lu", totalLength);
 #endif
-  SetResponseHeader(response,HttpHeaderContentLength,contentLength,true);
-
+    SetResponseHeader(response,HttpHeaderContentLength,contentLength,true);
+  }
   // Dependent on the filling of FileBuffer
   // Send 1 or more buffers or the file
   if(buffer && buffer->GetHasBufferParts())
@@ -1063,8 +1105,11 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // Possibly log and trace what we just sent
   LogTraceResponse(response->GetRawHttpResponse(),buffer);
 
-  // Do **NOT** send an answer twice
-  p_message->SetHasBeenAnswered();
+  if(!p_message->GetChunkNumber())
+  {
+	// Do **NOT** send an answer twice
+	p_message->SetHasBeenAnswered();
+  }
 }
 
 // Subfunctions for SendResponse

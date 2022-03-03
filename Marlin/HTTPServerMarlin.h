@@ -61,6 +61,8 @@ public:
   virtual bool       FlushSocket(HTTP_OPAQUE_ID p_request,CString p_prefix);
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
+  // Sending a response as a chunk
+  virtual void       SendAsChunk(HTTPMessage* p_message,bool p_final = false);
 
   // FUNCTIONS FOR STAND-ALONE SERVER
 

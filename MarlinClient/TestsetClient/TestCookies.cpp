@@ -79,9 +79,7 @@ DoSend(HTTPClient& p_client,HTTPMessage* p_msg,CString p_expected)
   bool encryptie = false;
   bool success   = false;
   
-  // Setting the header to read all headers
-  p_client.SetReadAllHeaders(true);
-  
+  // Sending and testing
   success = p_client.Send(p_msg);
   if(success)
   {
@@ -145,9 +143,6 @@ DoSend(HTTPClient& p_client,HTTPMessage* p_msg,CString p_expected)
   }
   xprintf("--------------------------------------\n");
   xprintf("\n");
-
-  // Reset the all-headers reading
-  p_client.SetReadAllHeaders(false);
 
   delete p_msg;
   return errors;

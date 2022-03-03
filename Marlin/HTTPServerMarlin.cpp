@@ -739,6 +739,13 @@ HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* /*p_message*/)
   return false;
 }
 
+// Sending a response as a chunk
+void
+HTTPServerMarlin::SendAsChunk(HTTPMessage* p_message, bool /*p_final*/ /*= false*/)
+{
+  ERRORLOG(ERROR_IMPLEMENTATION_LIMIT,"To be implemented");
+  SendResponse(p_message);
+}
 
 // Sending response for an incoming message
 void       
@@ -755,7 +762,6 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
     request->StartResponse(p_message);
   }
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 //

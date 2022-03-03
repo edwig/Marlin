@@ -1616,6 +1616,7 @@ HTTPClient::ReceiveResponseData()
   else
   {
     ReceiveResponseDataBuffer();
+    ProcessChunkedEncoding();
   }
 }
 
@@ -1684,6 +1685,7 @@ HTTPClient::ReceiveResponseDataBuffer()
 
   do
   {
+    dwSize = 0;
     if(::WinHttpQueryDataAvailable(m_request,&dwSize))
     {
       if(dwSize)
@@ -1738,6 +1740,78 @@ HTTPClient::ReceiveResponseDataBuffer()
   {
     m_response[m_responseLength] = 0;
   }
+}
+
+// Process a chunked response to the 'normal' form
+// Normally WinHTTP already decodes the chunking
+// but cases exist where chunked input still comes in the input buffers
+void
+HTTPClient::ProcessChunkedEncoding()
+{
+  // Check if we received chunked transfer encoding
+  CString encoding = FindHeader("Transfer-encoding");
+  encoding.MakeLower();
+  if(encoding.Find("chunked") < 0)
+  {
+    return;
+  }
+
+  unsigned totalSize = 0;
+  unsigned chunkSize = 0;
+  uchar* writing = m_response;
+  uchar* reading = m_response;
+
+  reading = GetChunkSize(reading,chunkSize);
+  while(chunkSize)
+  {
+    totalSize += chunkSize;
+    // Check that we do not process past the end of the buffer
+    if(totalSize > m_responseLength)
+    {
+      break;
+    }
+
+    // Getting the chunk
+    while(chunkSize--)
+    {
+      *writing++ = *reading++;
+    }
+    *writing = 0;
+    if (*reading == '\r') ++reading;
+    if (*reading == '\n') ++reading;
+
+    reading = GetChunkSize(reading,chunkSize);
+  }
+
+  if(totalSize)
+  {
+    m_responseLength = totalSize;
+  }
+}
+
+// Determine next chunk size in chunked response
+uchar*
+HTTPClient::GetChunkSize(uchar* p_reading,unsigned& p_size)
+{
+  p_size = 0;
+  while(isxdigit(*p_reading))
+  {
+    p_size *= 16;
+    int ch = toupper(*p_reading);
+    if(ch >= 'A')
+    {
+      p_size += (10 + ch - 'A');
+    }
+    else
+    {
+      p_size += (ch - '0');
+    }
+    ++p_reading;
+  }
+  if(*p_reading == '\r') ++p_reading;
+  if(*p_reading == '\n') ++p_reading;
+
+  return p_reading;
 }
 
 void

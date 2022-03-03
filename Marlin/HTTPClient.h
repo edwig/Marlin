@@ -370,6 +370,8 @@ private:
   bool     CheckCORSAnswer();
   void     ResetOAuth2Session();
   bool     DoRedirectionAfterSend();
+  void     ProcessChunkedEncoding();
+  uchar*   GetChunkSize(uchar* p_reading,unsigned& p_size);
   // Methods for WS-Security
   void     CheckAnswerSecurity (SOAPMessage* p_msg,CString p_answer,XMLEncryption p_security,CString p_password);
   void     CheckBodySigning    (CString p_password,SOAPMessage* p_msg);

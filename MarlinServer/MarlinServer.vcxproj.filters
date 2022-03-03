@@ -107,6 +107,9 @@
     <ClCompile Include="ServerTestset\TestEventDriver.cpp">
       <Filter>Testset</Filter>
     </ClCompile>
+    <ClCompile Include="ServerTestset\TestChunking.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Web.Config">

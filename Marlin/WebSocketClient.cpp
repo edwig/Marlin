@@ -161,9 +161,6 @@ WebSocketClient::OpenSocket()
     }
   }
 
-  // We need all response headers for the handshake
-  client.SetReadAllHeaders(true);
-
   // We will do the WebSocket handshake on this client!
   // This keeps open the request handle for output as well
   client.SetWebsocketHandshake(true);

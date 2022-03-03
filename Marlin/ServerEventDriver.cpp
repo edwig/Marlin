@@ -110,7 +110,6 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
     SiteHandler* handler = new SiteHandlerEventSocket(this);
     socketSite->SetHandler(HTTPCommand::http_get,handler);
     socketSite->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
-    socketSite->SetAllHeaders(true);
 
     if(socketSite->StartSite()) ++started;
   }
@@ -129,7 +128,6 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
 
     // Tell site we handle SSE streams
     eventsSite->SetIsEventStream(true);
-    eventsSite->SetAllHeaders(true);
     eventsSite->AddContentType("txt","text/event-stream");
 
     // Server must now do keep-alive jobs for SSE streams
@@ -150,7 +148,6 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
     SiteHandler* handler = new SiteHandlerPolling(this);
     pollingSite->SetHandler(HTTPCommand::http_post,handler);
     pollingSite->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
-    pollingSite->SetAllHeaders(true);
     pollingSite->AddContentType("xml","application/soap+xml");
 
     // And start the site

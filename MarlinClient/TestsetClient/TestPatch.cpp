@@ -42,9 +42,7 @@ DoSend(HTTPClient* p_client,HTTPMessage* p_msg)
   int  errors  = 0;
   bool success = false;
 
-  // Setting the header to read all headers
-  p_client->SetReadAllHeaders(true);
-
+  // sending and testing
   success = p_client->Send(p_msg);
   if(success)
   {

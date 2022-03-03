@@ -464,11 +464,13 @@ TestMarlinServer::RegisterSiteHandlers()
   TestEventDriver();
   TestFilter();
   TestFormData();
+  // Sites
   TestInsecure();
   TestSecureSite       (m_runAsService != RUNAS_IISAPPPOOL);
   TestClientCertificate(m_runAsService != RUNAS_IISAPPPOOL);
   TestJsonData();
   TestPatch();
+  TestChunking();
   TestCompression();
   TestMessageEncryption();
   TestReliable();
@@ -500,6 +502,7 @@ TestMarlinServer::AfterTests()
   AfterTestClientCert();
   AfterTestJsonData();
   AfterTestPatch();
+  AfterTestChunking();
   AfterTestCompression();
   AfterTestMessageEncryption();
   AfterTestReliable();

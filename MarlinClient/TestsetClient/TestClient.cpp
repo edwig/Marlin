@@ -155,6 +155,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       errors += TestBaseSite(client);
       errors += TestSecureSite(client);
       errors += TestClientCertificate(client);
+      errors += TestChunkedTransfer(client);
 #ifdef TEST_WEBSOCKETS
       errors += TestWebSocketAccept();
       errors += TestWebSocket(g_log);

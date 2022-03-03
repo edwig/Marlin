@@ -502,7 +502,6 @@ HTTPSite::LogSettings()
   DETAILLOGS("Site NT-LanManager caching         : ",       m_ntlmCache     ? "ON" : "OFF");
   DETAILLOGV("Site a-synchronious SOAP setting to: %sSYNC", m_async         ? "A-" : ""   );
   DETAILLOGS("Site accepting Server-Sent-Events  : ",       m_isEventStream ? "ON" : "OFF");
-  DETAILLOGS("Site retaining all headers         : ",       m_allHeaders    ? "ON" : "OFF");
   DETAILLOGS("Site allows for HTTP-VERB Tunneling: ",       m_verbTunneling ? "ON" : "OFF");
   DETAILLOGS("Site uses HTTP Throtteling         : ",       m_throttling    ? "ON" : "OFF");
   DETAILLOGS("Site forces response to UTF-16     : ",       m_sendUnicode   ? "ON" : "OFF");
@@ -876,6 +875,17 @@ HTTPSite::GetAllowHandlers()
 }
 
 // Send responses to the HTTPServer (if any)
+bool 
+HTTPSite::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
+{
+  if(m_server)
+  {
+    m_server->SendAsChunk(p_message,p_final);
+    return true;
+  }
+  return false;
+}
+
 bool 
 HTTPSite::SendResponse(HTTPMessage* p_message)
 {

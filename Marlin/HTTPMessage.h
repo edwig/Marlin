@@ -153,6 +153,7 @@ public:
   void SetSystemTime(SYSTEMTIME p_time)         { m_systemtime         = p_time;      }
   void SetHasBeenAnswered()                     { m_request            = NULL;        }
   void SetExtension(CString p_extension)        { m_extension          = p_extension; }
+  void SetChunkNumber(unsigned p_number)        { m_chunkNumber        = p_number;    }
   void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
   void SetReceiver(PSOCKADDR_IN6 p_address);
@@ -200,6 +201,7 @@ public:
   Cookies&            GetCookies()              { return m_cookies;                   }
   Routing&            GetRouting()              { return m_routing;                   }
   CString             GetExtension()            { return m_extension;                 }
+  unsigned            GetChunkNumber()          { return m_chunkNumber;               }
   CString             GetBody();
   size_t              GetBodyLength();
   CString             GetVerb();
@@ -268,6 +270,7 @@ private:
   bool                m_sendBOM       { false   };                    // BOM discovered in content block
   bool                m_readBuffer    { false   };                    // HTTP content still to be read
   size_t              m_contentLength { 0       };                    // Total content to read for the message
+  unsigned            m_chunkNumber   { 0       };                    // Chunk number in case of transfer-encoding: chunked
   FileBuffer          m_buffer;                                       // Body or file buffer
   Cookies             m_cookies;                                      // Cookies
   CString             m_url;                                          // Full URL to service

@@ -52,13 +52,15 @@ public:
   virtual bool ReceiveIncomingRequest(HTTPMessage* p_message);
   // Sending response for an incoming message
   virtual void SendResponse(HTTPMessage* p_message);
+  // Sending a response as a chunk
+  virtual void SendAsChunk(HTTPMessage* p_message,bool p_final = false);
   // Create a new WebSocket in the subclass of our server
   virtual WebSocket* CreateWebSocket(CString p_uri);
 
   // FUNCTIONS FOR STAND-ALONE SERVER
 
   // Running the main loop of the WebServer in same thread
-  void         RunHTTPServer();
+  void RunHTTPServer();
 
 protected:
   // Cleanup the server
@@ -74,8 +76,9 @@ private:
   void      AddKnownHeader        (HTTP_RESPONSE& p_response,HTTP_HEADER_ID p_header,const char* p_value);
   PHTTP_UNKNOWN_HEADER AddUnknownHeaders(UKHeaders& p_headers);
   // Sub-functions for SendResponse
-  bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
+  bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_moreData = false);
   void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
+  void      SendResponseChunk      (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,bool p_last);
   void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer);
   void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,CString& p_page,int p_error,const char* p_reason);
 

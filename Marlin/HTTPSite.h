@@ -165,8 +165,6 @@ public:
   void            SetAuthenticationRealm(CString p_realm);
   // OPTIONAL: Set an authentication Domain
   void            SetAuthenticationDomain(CString p_domain);
-  // OPTIONAL: Set the 'retain-all-headers' code
-  void            SetAllHeaders(bool p_allHeaders);
   // OPTIONAL: Set WS-Reliability
   void            SetReliable(bool p_reliable);
   // OPTIONAL: Set WS-ReliableMessaging requires logged-in-user
@@ -220,7 +218,6 @@ public:
   MediaTypeMap&   GetContentTypeMap()               { return m_contentTypes;  };
   XMLEncryption   GetEncryptionLevel()              { return m_securityLevel; };
   CString         GetEncryptionPassword()           { return m_enc_password;  };
-  bool            GetAllHeaders()                   { return m_allHeaders;    };
   bool            GetReliable()                     { return m_reliable;      };
   bool            GetReliableLogIn()                { return m_reliableLogIn; };
   void*           GetPayload()                      { return m_payload;       };
@@ -282,6 +279,7 @@ public:
   // Add all optional extra headers of this site
   void AddSiteOptionalHeaders(UKHeaders& p_headers);
   // Send responses
+  bool SendAsChunk (HTTPMessage* p_message,bool p_final = false);
   bool SendResponse(HTTPMessage* p_message);
   bool SendResponse(SOAPMessage* p_message);
   bool SendResponse(JSONMessage* p_message);
@@ -351,7 +349,6 @@ protected:
   MediaTypeMap      m_contentTypes;                       // Text based content type
   XMLEncryption     m_securityLevel   { XMLEncryption::XENC_Plain };  // Security level
   CString           m_enc_password;                       // Security encryption password
-  bool              m_allHeaders      { false   };        // Retain all headers in the HTTPMessage
   bool              m_sendUnicode     { false   };        // Send UTF-16 Unicode answers
   bool              m_sendSoapBOM     { false   };        // Prepend UTF-16 SOAP message with BOM 
   bool              m_sendJsonBOM     { false   };        // Prepend UTF-16 JSON message with BOM
@@ -382,9 +379,9 @@ protected:
   CRITICAL_SECTION  m_sessionLock;                        // Adding/deleting sessions sequences
   ThrottlingMap     m_throttels;                          // Addresses to be throttled
   // Cookie settings enforcement
-  bool              m_cookieHasSecure { false };          // Site override voor 'secure'   cookies
-  bool              m_cookieHasHttp   { false };          // Site override voor 'httpOnly' cookies
-  bool              m_cookieHasSame   { false };          // Site override voor 'SameSite' cookies
+  bool              m_cookieHasSecure { false };          // Site override for 'secure'   cookies
+  bool              m_cookieHasHttp   { false };          // Site override for 'httpOnly' cookies
+  bool              m_cookieHasSame   { false };          // Site override for 'SameSite' cookies
   bool              m_cookieSecure    { false };          // All cookies have the 'secure'   attribute
   bool              m_cookieHttpOnly  { false };          // All cookies have the 'httpOnly' attribute
   CookieSameSite    m_cookieSameSite  { CookieSameSite::NoSameSite }; // Same site setting of cookies
@@ -392,7 +389,7 @@ protected:
   XFrameOption      m_xFrameOption    { XFrameOption::XFO_NO_OPTION };  // Standard frame options
   CString           m_xFrameAllowed;                      // IFrame allowed from this URI
   unsigned          m_hstsMaxAge      { 0       };        // Max age from HSTS
-  bool              m_hstsSubDomains  { false   };        // Subdomains allowed on HSTS
+  bool              m_hstsSubDomains  { false   };        // Sub-domains allowed on HSTS
   bool              m_xNoSniff        { false   };        // Block sniffing on ASCII content type
   bool              m_xXSSProtection  { false   };        // XSS Protection is on or off
   bool              m_xXSSBlockMode   { false   };        // No mode, or block mode
@@ -448,12 +445,6 @@ inline void
 HTTPSite::SetAuthenticationDomain(CString p_domain)
 {
   m_domain = p_domain;
-}
-
-inline void
-HTTPSite::SetAllHeaders(bool p_allHeaders)
-{
-  m_allHeaders = p_allHeaders;
 }
 
 inline void

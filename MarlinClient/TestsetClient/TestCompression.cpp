@@ -35,6 +35,37 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+int TestChunkedTransfer(HTTPClient* p_client)
+{
+  int errors = 0;
+
+  CString url;
+//  CString url("http://anglesharp.azurewebsites.net/Chunked");
+//  CString url("https://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.1693287678408546");
+  url.Format("http://%s:%d/MarlinTest/Chunking/Releasenotes.txt",MARLIN_HOST,TESTING_HTTP_PORT);
+  HTTPMessage msg(HTTPCommand::http_get,url);
+
+  bool result = p_client->Send(&msg);
+
+  if(result)
+  {
+    xprintf("Chunked result OK");
+    // Saving a double copy of our latest releasenotes as a test.
+    CString filename("C:\\TMP\\CHRelNotes.txt");
+    msg.GetFileBuffer()->SetFileName(filename);
+    msg.GetFileBuffer()->WriteFile();
+  }
+  else
+  {
+    ++errors; // test failed
+  }
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("Testing to receive chunked input in HTTPClient : %s\n", errors ? "ERROR" : "OK");
+
+  return errors;
+}
+
 int TestCompression(HTTPClient* p_client)
 {
   CString url;
@@ -47,7 +78,6 @@ int TestCompression(HTTPClient* p_client)
 
   // Set the compression mode
   p_client->SetHTTPCompression(true);
-  p_client->SetReadAllHeaders(true);
 
   // Send our message
   bool result = p_client->Send(&msg);
@@ -70,7 +100,6 @@ int TestCompression(HTTPClient* p_client)
 
   // Reset the compression mode
   p_client->SetHTTPCompression(false);
-  p_client->SetReadAllHeaders(false);
 
   return result ? 0 : 1;
 }

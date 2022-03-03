@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: TestCompression.cpp
+// SourceFile: TestChunked.cpp
 //
 // Marlin Server: Internet server/client
 // 
@@ -36,25 +36,47 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 1;
+static int totalChecks = 0;
 
-class SiteHandlerGetCompress: public SiteHandlerGet
+class SiteHandlerGetChunking : public SiteHandlerGet
 {
 protected:
   bool Handle(HTTPMessage* p_message);
 };
 
 bool
-SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
+SiteHandlerGetChunking::Handle(HTTPMessage* p_message)
 {
+  // Check if releasenotes where requested
+  Routing& routing = p_message->GetRouting();
+  if(routing.size() > 0)
+  {
+    if(routing.back().CompareNoCase("releasenotes.txt"))
+    {
+      return false;
+    }
+  }
+
   bool result = false;
-  CString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v1.txt");
+  CString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v7.txt");
+  CString empty;
 
   // NOT Much here. Always returns the release message file
   p_message->Reset();
   p_message->GetFileBuffer()->SetFileName(filename);
+  p_message->GetFileBuffer()->ReadFile();
+  p_message->GetFileBuffer()->SetFileName(empty);
 
-  if(_access(filename,0) == 0)
+  bool chunk1 = m_site->SendAsChunk(p_message,false);
+
+  p_message->Reset();
+  p_message->GetFileBuffer()->SetFileName(filename);
+  p_message->GetFileBuffer()->ReadFile();
+  p_message->GetFileBuffer()->SetFileName(empty);
+
+  bool chunk2 = m_site->SendAsChunk(p_message,true);
+
+  if(chunk1 && chunk2)
   {
     result = true;
     --totalChecks;
@@ -62,47 +84,44 @@ SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("GZIP of a file at a HTTP GET operation         : %s\n", result ? "OK" : "ERROR");
+  qprintf("Chunked operation sending 2 chunks             : %s\n", result ? "OK" : "ERROR");
 
   return true;
 }
 
 int
-TestMarlinServer::TestCompression()
+TestMarlinServer::TestChunking()
 {
   int error = 0;
   // If errors, change detail level
   m_doDetails = false;
 
-  xprintf("TESTING HTTP GZIP COMPRESSION OF THE HTTP SERVER\n");
-  xprintf("================================================\n");
+  xprintf("TESTING HTTP CHUNKED TRANSFER-ENCODING\n");
+  xprintf("======================================\n");
 
-  // Create URL channel to listen to "http://+:port/MarlinTest/Compression/"
+  // Create URL channel to listen to "http://+:port/MarlinTest/Chunking/"
   // Callback function is no longer required!
-  CString webaddress = "/MarlinTest/Compression/";
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
-  if(site)
+  CString webaddress = "/MarlinTest/Chunking/";
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong, false, m_inPortNumber, webaddress);
+  if (site)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite GZIP compression   : OK : %s\n",(LPCTSTR)site->GetPrefixURL());
+    qprintf("HTTPSite Chunked transfer  : OK : %s\n", (LPCTSTR)site->GetPrefixURL());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a website for : %s\n",(LPCTSTR)webaddress);
+    qprintf("ERROR: Cannot register a website for : %s\n", (LPCTSTR)webaddress);
     return error;
   }
 
   // Setting a site handler !!
-  site->SetHandler(HTTPCommand::http_get,new SiteHandlerGetCompress());
-
-  // set compression on this site
-  site->SetHTTPCompression(true);
+  site->SetHandler(HTTPCommand::http_get, new SiteHandlerGetChunking());
 
   // new: Start the site explicitly
-  if(site->StartSite())
+  if (site->StartSite())
   {
     xprintf("Site started correctly\n");
   }
@@ -110,16 +129,16 @@ TestMarlinServer::TestCompression()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)webaddress);
+    qprintf("ERROR STARTING SITE: %s\n", (LPCTSTR)webaddress);
   }
   return error;
 }
 
 int
-TestMarlinServer::AfterTestCompression()
+TestMarlinServer::AfterTestChunking()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("File compression with GZIP tested              : %s\n", totalChecks > 0 ? "ERROR" : "OK");
+  qprintf("File sending with Transfer-encoding: chunked   : %s\n", totalChecks > 0 ? "ERROR" : "OK");
   return totalChecks > 0;
 }

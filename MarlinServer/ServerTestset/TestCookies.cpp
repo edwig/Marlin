@@ -166,9 +166,6 @@ TestMarlinServer::TestCookies()
   site->SetXSSProtection(true,true);
   site->SetBlockCacheControl(true);
   
-  // Server should forward all headers to the messages
-  site->SetAllHeaders(true);
-
   // new: Start the site explicitly
   if(site->StartSite())
   {

@@ -165,7 +165,6 @@ TestMarlinServer::TestWebSocket()
   // Set a WebSocket handler on the GET handler of this site
   SiteHandlerTestSocket* handler = new SiteHandlerTestSocket(this);
   site->SetHandler(HTTPCommand::http_get,handler);
-  site->SetAllHeaders(true);
 
   // Start the site explicitly
   if(site->StartSite())

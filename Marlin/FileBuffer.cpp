@@ -537,7 +537,7 @@ FileBuffer::ZipBuffer()
   }
 
   // First see if we must defragment the buffer
-  if(Defragement() == false)
+  if(Defragment() == false)
   {
     return false;
   }
@@ -614,7 +614,7 @@ FileBuffer::UnZipBuffer()
 
 // Make sure the filebuffer is defragemented
 bool
-FileBuffer::Defragement()
+FileBuffer::Defragment()
 {
   // First see if we must defragment the file buffer
   if(GetHasBufferParts())
@@ -632,5 +632,34 @@ FileBuffer::Defragement()
       return false;
     }
   }
+  return true;
+}
+
+#define CHUNKED_OVERHEAD 20
+
+// Chunked encoding of the primary memory buffer
+bool
+FileBuffer::ChunkedEncoding(bool p_final)
+{
+  if(!Defragment())
+  {
+    return false;
+  }
+  // Encode the buffer
+  uchar* buffer = new uchar[m_binaryLength + CHUNKED_OVERHEAD];
+  int pos = sprintf_s((char*)buffer,CHUNKED_OVERHEAD,"%X\r\n",(int)m_binaryLength);
+  memcpy_s(buffer+pos,m_binaryLength,m_buffer,m_binaryLength);
+  memcpy_s(buffer+pos+m_binaryLength,3,"\r\n\0",3);
+  size_t newLength = m_binaryLength + pos + 2;
+  if(p_final)
+  {
+    memcpy_s(buffer + pos + m_binaryLength + 2,6,"0\r\n\r\n\0",6);
+    newLength += 5;
+  }
+  // Retain the result;
+  Reset();
+  m_buffer = buffer;
+  m_binaryLength = newLength;
+
   return true;
 }

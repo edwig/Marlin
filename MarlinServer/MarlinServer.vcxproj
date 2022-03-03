@@ -227,6 +227,7 @@ copy marlin.config $(OutDir)</Command>
     <ClCompile Include="ServerTestset\TestBaseSite.cpp" />
     <ClCompile Include="ServerTestset\TestBodyEncryption.cpp" />
     <ClCompile Include="ServerTestset\TestBodySigning.cpp" />
+    <ClCompile Include="ServerTestset\TestChunking.cpp" />
     <ClCompile Include="ServerTestset\TestClientCert.cpp" />
     <ClCompile Include="ServerTestset\TestCompression.cpp" />
     <ClCompile Include="ServerTestset\TestContract.cpp" />

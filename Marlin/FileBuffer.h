@@ -113,10 +113,12 @@ public:
   bool    ZipBuffer();
   // GunZIP the contents of the buffer
   bool    UnZipBuffer();
+  // Chunked encoding of the primary memory buffer
+  bool    ChunkedEncoding(bool p_final);
 
 private:
   // Defragment the buffer
-  bool    Defragement();
+  bool    Defragment();
 
   // Data contents of the HTTP buffer
   CString m_fileName;     // File to receive/send

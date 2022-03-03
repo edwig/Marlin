@@ -102,6 +102,7 @@ private:
   int TestBaseSite();
   int TestBodyEncryption();
   int TestBodySigning();
+  int TestChunking();
   int TestCompression();
   int TestCookies();
   int TestCrackURL();
@@ -133,6 +134,7 @@ private:
   int AfterTestBodyEncryption();
   int AfterTestBodySigning();
   int AfterTestClientCert();
+  int AfterTestChunking();
   int AfterTestCompression();
   int AfterTestContract();
   int AfterTestCookies();

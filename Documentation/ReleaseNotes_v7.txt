@@ -33,6 +33,18 @@ CHANGES IN VERSION 7.4.0
     object and you will be able to call the "IsChildRunning" end "TerminateChildProcess".
 9)  Added a 'SetFieldInHTTPHeader' function to encapsulate all cases of a HTTP header field value
     including working with appended fields an quotes for field values that have spaces in them
+10) All headers will now be retained in the HTTPMessage. This change is made for the HTTPClient
+    as well as for all server objects. The "SetAllHeaders" method of the HTTPSite and the
+    "ReadAllHeaders" method of the HTTPClient have been removed!
+11) As a extension to 'SendResponse', it is now possible to send a partial response with
+    the new HTTPSite method 'SendAsChunk(HTTPMessage* p_msg,bool p_final)'
+    This allows to send an answer in chunks. This works as long as you send multiple chunks
+    with the p_final parameter as false and 1 (one) last chunk with the parameter set to true!
+    Beware that it is not possible to send SOAP or JSON messages in chunks. This only works for
+    the general HTTPMessage.
+    See the 'TestChunking' testcase in the testset for an example.
+12) The HTTPClient is also aware of the chunking input. In cases where WinHTTP does not catch the
+    chunking of the input buffers, the HTTPClient now will kick in and de-chunk the input.
 
 CHANGES in VERSION 7.3.0
 ------------------------
@@ -181,3 +193,4 @@ CHANGES IN VERSION 7.0.0
     See the MarlinClient testset for an example.
 16) JSON's now support conversion of XML sets to JSON arrays.
 17) The ability to search recursively through a JSON or just the first chosen level.
+

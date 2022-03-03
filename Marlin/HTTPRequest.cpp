@@ -406,17 +406,8 @@ HTTPRequest::ReceivedRequest()
   m_message->SetReceiver((PSOCKADDR_IN6)receiver);
   m_message->SetCookiePairs(cookie);
   m_message->SetAcceptEncoding(acceptEncoding);
-  if(m_site->GetAllHeaders())
-  {
-    // If requested so, copy all headers to the message
-    m_message->SetAllHeaders(&m_request->Headers);
-  }
-  else
-  {
-    // As a minimum, always add the unknown headers
-    // in case of a 'POST', as the SOAPAction header is here too!
-    m_message->SetUnknownHeaders(&m_request->Headers);
-  }
+  m_message->SetAllHeaders(&m_request->Headers);
+  m_message->SetUnknownHeaders(&m_request->Headers);
 
   // Handle modified-since 
   // Rest of the request is then not needed any more

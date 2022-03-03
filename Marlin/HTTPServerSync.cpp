@@ -560,17 +560,8 @@ HTTPServerSync::RunHTTPServer()
       message->SetAcceptEncoding(acceptEncoding);
       message->SetContentType(contentType);
       message->SetContentLength((size_t)atoll(contentLength));
-      if(site->GetAllHeaders())
-      {
-        // If requested so, copy all headers to the message
-        message->SetAllHeaders(&request->Headers);
-      }
-      else
-      {
-        // As a minimum, always add the unknown headers
-        // in case of a 'POST', as the SOAPAction header is here too!
-        message->SetUnknownHeaders(&request->Headers);
-      }
+      message->SetAllHeaders(&request->Headers);
+      message->SetUnknownHeaders(&request->Headers);
 
       // Handle modified-since 
       // Rest of the request is then not needed any more
@@ -934,6 +925,52 @@ HTTPServerSync::AddUnknownHeaders(UKHeaders& p_headers)
   return header;
 }
 
+// Sending a response as a chunk
+void
+HTTPServerSync::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
+{
+  // Check if multi-part buffer or file
+  FileBuffer* buffer = p_message->GetFileBuffer();
+  if(!buffer->GetFileName().IsEmpty())
+  {
+    ERRORLOG(ERROR_INVALID_PARAMETER,"Send as chunk cannot send a file!");
+    return;
+  }
+  // Chunk encode the file buffer
+  if(!buffer->ChunkedEncoding(p_final))
+  {
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Cannot chunk-encode the message for transfer-encoding!");
+  }
+
+  // If we want to send a (g)zipped buffer, that should have been done already by now
+  p_message->SetAcceptEncoding("");
+
+  // Get the chunk number (first->next)
+  unsigned chunk = p_message->GetChunkNumber();
+  p_message->SetChunkNumber(++chunk);
+  DETAILLOGV("Transfer-encoding [Chunked] Sending chunk [%d]",chunk);
+
+  if(chunk == 1)
+  {
+    // Send the first chunk
+    SendResponse(p_message);
+  }
+  else
+  {
+    // Send all next chunks
+    HTTP_RESPONSE   response;
+    HTTP_OPAQUE_ID  requestID = p_message->GetRequestHandle();
+    int status = p_message->GetStatus();
+    InitializeHttpResponse(&response,(USHORT)status,(PSTR)GetHTTPStatusText(status));
+    SendResponseChunk(&response,requestID,buffer,p_final);
+  }
+  if(p_final)
+  {
+    // Do **NOT** send an answer twice
+    p_message->SetHasBeenAnswered();
+  }
+}
+
 // Sending response for an incoming message
 void       
 HTTPServerSync::SendResponse(HTTPMessage* p_message)
@@ -943,6 +980,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   HTTP_OPAQUE_ID  requestID   = p_message->GetRequestHandle();
   FileBuffer*     buffer      = p_message->GetFileBuffer();
   CString         contentType("application/octet-stream"); 
+  bool            moreData(false);
 
   // See if there is something to send
   if(requestID == NULL)
@@ -1089,15 +1127,23 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   response.Headers.UnknownHeaderCount = (USHORT) ukheaders.size();
   response.Headers.pUnknownHeaders    = unknown;
 
-  // Now after the compression, add the total content length
-  CString contentLength;
   size_t totalLength = buffer ? buffer->GetLength() : 0;
-#ifdef _WIN64
-  contentLength.Format("%I64u",totalLength);
-#else
-  contentLength.Format("%lu",totalLength);
-#endif
-  AddKnownHeader(response,HttpHeaderContentLength,contentLength);
+  if(p_message->GetChunkNumber())
+  {
+    moreData = true;
+    AddKnownHeader(response,HttpHeaderTransferEncoding,"chunked");
+  }
+  else
+  {
+    // Now after the compression, add the total content length
+    CString contentLength;
+  #ifdef _WIN64
+    contentLength.Format("%I64u",totalLength);
+  #else
+    contentLength.Format("%lu",totalLength);
+  #endif
+    AddKnownHeader(response,HttpHeaderContentLength,contentLength);
+  }
 
   // Dependent on the filling of FileBuffer
   // Send 1 or more buffers or the file
@@ -1107,7 +1153,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   }
   else if(buffer && buffer->GetFileName().IsEmpty())
   {
-    SendResponseBuffer(&response,requestID,buffer,totalLength);
+    SendResponseBuffer(&response,requestID,buffer,totalLength,moreData);
   }
   else
   {
@@ -1128,15 +1174,19 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   // Remove unknown header information
   delete [] unknown;
 
-  // Do **NOT** send an answer twice
-  p_message->SetHasBeenAnswered();
+  if(!p_message->GetChunkNumber())
+  {
+	// Do **NOT** send an answer twice
+	p_message->SetHasBeenAnswered();
+  }
 }
 
 bool      
 HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE p_response
                                   ,HTTP_OPAQUE_ID p_requestID
                                   ,FileBuffer*    p_buffer
-                                  ,size_t         p_totalLength)
+                                  ,size_t         p_totalLength
+                                  ,bool           p_moreData /*= false*/)
 {
   uchar* entity       = NULL;
   DWORD  result       = 0;
@@ -1166,11 +1216,13 @@ HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE p_response
   policy.Policy        = m_policy;
   policy.SecondsToLive = m_secondsToLive;
 
+  ULONG flags = p_moreData ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : 0;
+
   // Because the entity body is sent in one call, it is not
   // required to specify the Content-Length.
   result = HttpSendHttpResponse(m_requestQueue,      // ReqQueueHandle
                                 p_requestID,         // Request ID
-                                0,                   // Flags
+                                flags,               // Flags
                                 p_response,          // HTTP response
                                 &policy,             // Cache policy
                                 &bytesSent,          // bytes sent  (OPTIONAL)
@@ -1192,9 +1244,9 @@ HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE p_response
 
 void      
 HTTPServerSync::SendResponseBufferParts(PHTTP_RESPONSE  p_response
-                                         ,HTTP_OPAQUE_ID p_request
-                                         ,FileBuffer*     p_buffer
-                                         ,size_t          p_totalLength)
+                                       ,HTTP_OPAQUE_ID  p_request
+                                       ,FileBuffer*     p_buffer
+                                       ,size_t          p_totalLength)
 {
   int    transmitPart = 0;
   uchar* entityBuffer = NULL;
@@ -1355,6 +1407,54 @@ HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE p_response
   }
   // Now close our filehandle
   p_buffer->CloseFile();
+}
+
+void      
+HTTPServerSync::SendResponseChunk(PHTTP_RESPONSE  p_response
+                                 ,HTTP_OPAQUE_ID  p_request
+                                 ,FileBuffer*     p_buffer
+                                 ,bool            p_last)
+{
+  uchar* entityBuffer = NULL;
+  size_t entityLength = 0;
+  DWORD  bytesSent    = 0;
+  DWORD  result       = 0;
+  HTTP_DATA_CHUNK dataChunk;
+  memset(&dataChunk,0,sizeof(HTTP_DATA_CHUNK));
+
+  p_buffer->GetBuffer(entityBuffer,entityLength);
+  if(entityBuffer)
+  {
+    // Add an entity chunk.
+    dataChunk.DataChunkType           = HttpDataChunkFromMemory;
+    dataChunk.FromMemory.pBuffer      = entityBuffer;
+    dataChunk.FromMemory.BufferLength = (ULONG)entityLength;
+    p_response->EntityChunkCount      = 1;
+    p_response->pEntityChunks         = &dataChunk;
+
+    // Flag to calculate the last sending part
+    ULONG flags = p_last ?  0 : HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+
+    // Next part to send
+    result = HttpSendResponseEntityBody(m_requestQueue
+                                        ,p_request
+                                        ,flags
+                                        ,1
+                                        ,&dataChunk
+                                        ,&bytesSent
+                                        ,NULL
+                                        ,NULL
+                                        ,NULL
+                                        ,NULL);
+    if(result != NO_ERROR)
+    {
+      ERRORLOG(result,"HTTP SendResponsePart error");
+    }
+    else
+    {
+      DETAILLOGV("HTTP SendResponseChunk [%d] bytes sent",entityLength);
+    }
+  }
 }
 
 void      

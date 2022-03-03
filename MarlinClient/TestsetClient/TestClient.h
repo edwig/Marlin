@@ -68,6 +68,7 @@ extern int TestFormData(HTTPClient* p_client);
 extern int TestBaseSite(HTTPClient* p_client);
 extern int TestSecureSite(HTTPClient* p_client);
 extern int TestCompression(HTTPClient* p_client);
+extern int TestChunkedTransfer(HTTPClient* p_client);
 extern int TestWebservices(HTTPClient& p_client);
 extern int TestClientCertificate(HTTPClient* p_client);
 extern int TestMSGraph(HTTPClient* p_client);
