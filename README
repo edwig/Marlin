@@ -22,7 +22,7 @@ Another reason was the need to be able to run a webservice on remote desktops
 Although IIS 7.0 and higher has done much good with the new integrated pipelining of the 
 requests, enabling an IIS server on every desktop was not an option. 
 
-![The white marlin](https://github.com/Edwig/Marlin/tree/master/Documentation/Marlin.bmp)
+![The white marlin](https://github.com/Edwig/Marlin/tree/master/Documentation/Marlin.png)
 
 The name
 --------
