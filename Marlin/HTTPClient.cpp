@@ -1642,6 +1642,7 @@ HTTPClient::ReceiveResponseDataFile()
 
   do 
   {
+    dwSize = 0;
     if(WinHttpQueryDataAvailable(m_request,&dwSize))
     {
       if(dwSize)
