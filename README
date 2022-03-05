@@ -1,7 +1,7 @@
 Introduction and purpose
 ========================
 
-This is the Marlin webserver library. Version 7.2.0
+This is the Marlin webserver library. Version 7.4.0
 
 The ‘Marlin' components – webserver and web client – are built in C++ around a number 
 of general classes that take care of optimal performance and have the purpose that 
@@ -21,6 +21,8 @@ Another reason was the need to be able to run a webservice on remote desktops
 (Citrix !) environments. This was clearly not going to happen with the IIS ISAPI framework. 
 Although IIS 7.0 and higher has done much good with the new integrated pipelining of the 
 requests, enabling an IIS server on every desktop was not an option. 
+
+![The white marlin](https://github.com/Edwig/Marlin/Documentation/Marlin.bmp)
 
 The name
 --------
