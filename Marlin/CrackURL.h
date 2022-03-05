@@ -54,28 +54,30 @@ public:
 
   void      SetPath(CString p_path);
   bool      CrackURL(CString p_url);
-  bool      Valid();
+  bool      Valid() const;
   void      Reset();
 
   // Resulting URL
-  CString   URL();
+  CString   URL() const;
   // Safe URL (without the userinfo)
-  CString   SafeURL();
+  CString   SafeURL() const;
   // Resulting absolute path, including parameters & anchor
-  CString   AbsolutePath();
+  CString   AbsolutePath() const;
   // Resulting absolute designated resource
-  CString   AbsoluteResource();
+  CString   AbsoluteResource() const;
   // Getting the resource extension
-  CString   GetExtension();
+  CString   GetExtension() const;
+  // Setting a new extension on the path
+  void      SetExtension(CString p_extension);
   // Resulting UNC
-  CString   UNC();
+  CString   UNC() const;
   // Resulting parameter
-  unsigned  GetParameterCount();
-  UriParam* GetParameter(unsigned p_parameter);
-  CString   GetParameter(CString p_parameter);
-  bool      HasParameter(CString p_parameter);
-  void      SetParameter(CString p_parameter,CString p_value);
-  bool      DelParameter(CString p_parameter);
+  const     unsigned  GetParameterCount() const;
+  const     UriParam* GetParameter(unsigned p_parameter) const;
+  const     CString   GetParameter(CString p_parameter)  const;
+  const     bool      HasParameter(CString p_parameter)  const;
+            void      SetParameter(CString p_parameter,CString p_value);
+            bool      DelParameter(CString p_parameter);
 
   static    CString   EncodeURLChars(CString p_text,bool p_queryValue = false);
   static    CString   DecodeURLChars(CString p_text,bool p_queryValue = false);
@@ -91,7 +93,6 @@ public:
   CString   m_host;
   int       m_port    { INTERNET_DEFAULT_HTTP_PORT };
   CString   m_path;
-  CString   m_extension;
   UriParams m_parameters;
   CString   m_anchor;
 
@@ -105,25 +106,27 @@ public:
   bool      m_foundAnchor;
 
 private:
+  CString   m_extension;
+
   static LPCTSTR m_unsafeString;
   static LPCTSTR m_reservedString;
   static unsigned char GetHexcodedChar(CString& p_string,int& p_index,bool& p_queryValue);
 };
 
 inline bool
-CrackedURL::Valid() 
+CrackedURL::Valid() const
 {
   return m_valid;
 };
 
-inline unsigned
-CrackedURL::GetParameterCount()
+const inline unsigned
+CrackedURL::GetParameterCount() const
 {
   return (unsigned)m_parameters.size();
 }
 
 inline CString
-CrackedURL::GetExtension()
+CrackedURL::GetExtension() const
 {
   return m_extension;
 }

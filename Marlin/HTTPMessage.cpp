@@ -147,7 +147,6 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
   m_referrer          = p_msg->m_referrer;
   m_user              = p_msg->m_user;
   m_password          = p_msg->m_password;
-  m_extension         = p_msg->m_extension;
 
   // Taking a duplicate token
   if(DuplicateTokenEx(p_msg->m_token
@@ -200,12 +199,9 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
   m_user          = p_msg->GetUser();
   m_password      = p_msg->GetPassword();
   m_headers       =*p_msg->GetHeaderMap();
-  m_extension     = p_msg->GetExtension();
+  m_url           = p_msg->GetURL();
+  m_cracked       = p_msg->GetCrackedURL();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
-
-  // Getting the URL of all parts
-  m_url = p_msg->GetURL();
-  ParseURL(m_url);
 
   // Relay ownership of the token
   if(DuplicateTokenEx(p_msg->GetAccessToken()
@@ -299,12 +295,10 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
   m_user           = p_msg->GetUser();
   m_password       = p_msg->GetPassword();
   m_headers        =*p_msg->GetHeaderMap();
-  m_extension      = p_msg->GetExtension();
+  m_url            = p_msg->GetURL();
+  m_cracked        = p_msg->GetCrackedURL();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
-  // Getting the URL of all parts
-  m_url = p_msg->GetURL();
-  ParseURL(m_url);
 
   // Relay ownership of the token
   if(DuplicateTokenEx(p_msg->GetAccessToken()
@@ -405,18 +399,11 @@ HTTPMessage::Reset()
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Reset resulting cracked URL;
-  m_cracked.m_scheme = "http";
-  m_cracked.m_secure = false;
-  m_cracked.m_host.Empty();
-  m_cracked.m_port = INTERNET_DEFAULT_HTTP_PORT;
-  m_cracked.m_path.Empty();
-  m_cracked.m_parameters.clear();
-  m_cracked.m_anchor.Empty();
-
+  m_cracked.Reset();
+  // Resetting members
   m_url.Empty();
   m_user.Empty();
   m_password.Empty();
-  m_extension.Empty();
   m_buffer.Reset();
   m_headers.clear();
   m_routing.clear();
@@ -475,6 +462,21 @@ HTTPMessage::GetVerb()
   }
   return "";
 }
+
+void 
+HTTPMessage::SetAbsolutePath(CString& p_path) 
+{ 
+  m_cracked.SetPath(p_path);
+  ReparseURL(); 
+}
+
+void 
+HTTPMessage::SetExtension(CString p_extension) 
+{ 
+  m_cracked.SetExtension(p_extension);
+  ReparseURL();
+}
+
 
 // Getting the whole body as one string of chars
 // No embedded '0' are possible!!

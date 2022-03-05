@@ -45,6 +45,8 @@ CHANGES IN VERSION 7.4.0
     See the 'TestChunking' testcase in the testset for an example.
 12) The HTTPClient is also aware of the chunking input. In cases where WinHTTP does not catch the
     chunking of the input buffers, the HTTPClient now will kick in and de-chunk the input.
+13) The SOAPMessage object now also has a CrackedURL member as does the HTTPMessage and the JSONMessage.
+    Copying and inheriting the URL is now faster and much more transparent.
 
 CHANGES in VERSION 7.3.0
 ------------------------

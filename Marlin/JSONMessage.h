@@ -239,7 +239,7 @@ public:
   CString         GetJsonMessageWithBOM(JsonEncoding p_encoding = JsonEncoding::JENC_UTF8)  const;
   JSONvalue&      GetValue()  const   { return *m_value;                }
   CString         GetURL()            { return m_url;                   }
-  CrackedURL&     GetCrackedURL()     { return m_cracked;               }
+  const CrackedURL& GetCrackedURL()   { return m_cracked;               }
   unsigned        GetStatus()         { return m_status;                }
   HTTP_OPAQUE_ID  GetRequestHandle()  { return m_request;               }
   HTTPSite*       GetHTTPSite()       { return m_site;                  }
@@ -266,7 +266,7 @@ public:
   bool            GetHasBeenAnswered(){ return m_request == NULL;       }
   CString         GetReferrer()       { return m_referrer;              }
   Routing&        GetRouting()        { return m_routing;               }
-  CString         GetExtension()      { return m_extension;             }
+  CString         GetExtension()      { return m_cracked.GetExtension();}
   CString         GetHeader(CString p_name);
   CString         GetRoute(int p_index);
   CString         GetContentType();
@@ -283,6 +283,7 @@ public:
   void            SetServer(CString p_server)             { m_cracked.m_host     = p_server;   ReparseURL(); }
   void            SetPort(int p_port)                     { m_cracked.m_port     = p_port;     ReparseURL(); }
   void            SetAbsolutePath(CString p_path)         { m_cracked.SetPath(p_path);         ReparseURL(); }
+  void            SetExtension(CString p_ext)             { m_cracked.SetExtension(p_ext);     ReparseURL(); }
   void            SetStatus(unsigned p_status)            { m_status             = p_status;   }
   void            SetDesktop(UINT p_desktop)              { m_desktop            = p_desktop;  }
   void            SetRequestHandle(HTTP_OPAQUE_ID p_id)   { m_request            = p_id;       }
@@ -294,7 +295,6 @@ public:
   void            SetVerbTunneling(bool p_tunnel)         { m_verbTunnel         = p_tunnel;   }
   void            SetHasBeenAnswered()                    { m_request            = NULL;       }
   void            SetReferrer(CString p_referrer)         { m_referrer           = p_referrer; }
-  void            SetExtension(CString p_extension)       { m_extension          = p_extension;}
   void            SetAcceptEncoding(CString p_encoding);
   void            AddHeader(CString p_name,CString p_value);
   void            DelHeader(CString p_name);
@@ -332,9 +332,9 @@ private:
   bool            m_verbTunnel  { false };                      // HTTP-VERB Tunneling used
   // DESTINATION
   CString         m_url;                                        // Full URL of the JSON service
-  unsigned        m_status      { HTTP_STATUS_OK };             // HTTP status return code
   CrackedURL      m_cracked;                                    // Cracked down URL (all parts)
   CString         m_verb;                                       // HTTP verb, default = POST
+  unsigned        m_status      { HTTP_STATUS_OK };             // HTTP status return code
   HTTP_OPAQUE_ID  m_request     { NULL };                       // Request it must answer
   HTTPSite*       m_site        { nullptr };                    // Site for which message is received
   HeaderMap       m_headers;                                    // Extra HTTP headers (incoming / outgoing)
@@ -351,5 +351,4 @@ private:
   UINT            m_desktop     { 0 };                          // Senders remote desktop
   long            m_references  { 0 };                          // Externally referenced
   Routing         m_routing;                                    // Routing information from HTTP
-  CString         m_extension;                                  // Extension of the resource (derived from URL)
 };

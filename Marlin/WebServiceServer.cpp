@@ -746,9 +746,9 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
 bool
 WebServiceServer::ProcessGet(HTTPMessage* p_message)
 {
-  CString absPath   = p_message->GetAbsolutePath();
-  CrackedURL& crack = p_message->GetCrackedURL();
-  bool hasWsdlParam = crack.HasParameter("wsdl");
+        CString absPath   = p_message->GetAbsolutePath();
+  const CrackedURL& crack = p_message->GetCrackedURL();
+  const bool hasWsdlParam = crack.HasParameter("wsdl");
 
   // The following situations are processed as requesting the WSDL
   // 1: URL/servicename.wsdl

@@ -140,7 +140,6 @@ public:
   void SetSecure(bool p_secure)                 { m_cracked.m_secure   = p_secure;    ReparseURL();  }
   void SetServer(CString& p_server)             { m_cracked.m_host     = p_server;    ReparseURL();  }
   void SetPort(unsigned p_port)                 { m_cracked.m_port     = p_port;      ReparseURL();  }
-  void SetAbsolutePath(CString& p_path)         { m_cracked.SetPath(p_path);          ReparseURL();  }
   void SetRequestHandle(HTTP_OPAQUE_ID p_req)   { m_request            = p_req;       }
   void SetAccessToken(HANDLE p_token)           { m_token              = p_token;     }
   void SetRemoteDesktop(UINT p_desktop)         { m_desktop            = p_desktop;   }
@@ -152,8 +151,9 @@ public:
   void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        }
   void SetSystemTime(SYSTEMTIME p_time)         { m_systemtime         = p_time;      }
   void SetHasBeenAnswered()                     { m_request            = NULL;        }
-  void SetExtension(CString p_extension)        { m_extension          = p_extension; }
   void SetChunkNumber(unsigned p_number)        { m_chunkNumber        = p_number;    }
+  void SetAbsolutePath(CString& p_path);
+  void SetExtension(CString p_extension);
   void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
   void SetReceiver(PSOCKADDR_IN6 p_address);
@@ -172,7 +172,7 @@ public:
   HTTPCommand         GetCommand()              { return m_command;                   }
   CString             GetURL()                  { return m_url;                       }
   CString             GetReferrer()             { return m_referrer;                  }
-  CrackedURL&         GetCrackedURL()           { return m_cracked;                   }
+  const CrackedURL&   GetCrackedURL()           { return m_cracked;                   }
   unsigned            GetStatus()               { return m_status;                    }
   CString             GetUser()                 { return m_user;                      }
   CString             GetPassword()             { return m_password;                  }
@@ -181,6 +181,7 @@ public:
   unsigned            GetPort()                 { return m_cracked.m_port;            }
   CString             GetAbsolutePath()         { return m_cracked.AbsolutePath();    }
   CString             GetAbsoluteResource()     { return m_cracked.AbsoluteResource();}
+  CString             GetExtension()            { return m_cracked.GetExtension();    }
   HTTP_OPAQUE_ID      GetRequestHandle()        { return m_request;                   }
   HTTPSite*           GetHTTPSite()             { return m_site;                      }
   bool                GetReadBuffer()           { return m_readBuffer;                }
@@ -200,7 +201,6 @@ public:
   CString             GetAcceptEncoding()       { return m_acceptEncoding;            }
   Cookies&            GetCookies()              { return m_cookies;                   }
   Routing&            GetRouting()              { return m_routing;                   }
-  CString             GetExtension()            { return m_extension;                 }
   unsigned            GetChunkNumber()          { return m_chunkNumber;               }
   CString             GetBody();
   size_t              GetBodyLength();
@@ -274,15 +274,14 @@ private:
   FileBuffer          m_buffer;                                       // Body or file buffer
   Cookies             m_cookies;                                      // Cookies
   CString             m_url;                                          // Full URL to service
+  CrackedURL          m_cracked;                                      // Cracked down URL
   CString             m_referrer;                                     // Referrer of this call
   HANDLE              m_token         { NULL    };                    // Access token
   SOCKADDR_IN6        m_sender;                                       // Senders  address end
   SOCKADDR_IN6        m_receiver;                                     // Receiver address end
   UINT                m_desktop       { 0       };                    // Remote desktop number
-  CrackedURL          m_cracked;                                      // Cracked down URL
   HeaderMap           m_headers;                                      // All/Known headers
   Routing             m_routing;                                      // Routing information within a site
-  CString             m_extension;                                    // Extension of the resource (derived from URL)
   bool                m_ifmodified    { false   };                    // Use "if-modified-since"
   SYSTEMTIME          m_systemtime;                                   // System time for m_modified
   long                m_references    { 1       };                    // Referencing system

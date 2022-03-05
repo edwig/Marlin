@@ -139,7 +139,7 @@ public:
   // Parse incoming soap as new body of the message
   virtual void    ParseAsBody(CString& p_message);
   // Parse incoming GET URL to SOAP parameters
-  virtual void    Url2SoapParameters(CrackedURL& p_url);
+  virtual void    Url2SoapParameters(const CrackedURL& p_url);
 
   // FILE OPERATIONS
 
@@ -260,9 +260,8 @@ public:
   HTTPSite*       GetHTTPSite() const;
   // Get a header by name
   CString         GetHeader(CString p_name);
-  // Get basic URL from parts
-  CString         GetBasicURL() const;
   // Get URL Parts
+  const CrackedURL& GetCrackedURL() const;
   bool            GetSecure() const;
   CString         GetServer() const;
   unsigned        GetPort() const;
@@ -434,12 +433,8 @@ protected:
   HTTP_OPAQUE_ID  m_request       { NULL  };              // Request it must answer
   HTTPSite*       m_site          { nullptr };            // Site for which message is received
   HeaderMap       m_headers;                              // Extra HTTP headers (incoming / outgoing)
-  CString         m_extension;                            // Extension from the resource (derived from URL)
   // URL PARTS
-  bool            m_secure        { false };              // Connection is secure
-  CString         m_server;                               // Server name
-  int             m_port { INTERNET_DEFAULT_HTTP_PORT };  // Internet Port number
-  CString         m_absPath;                              // Inclusive Query + anchor
+  CrackedURL      m_cracked;                              // URL in cracked parts
   // Security details
   CString         m_user;                                 // Username in server part
   CString         m_password;                             // Password in server part
@@ -503,12 +498,6 @@ SOAPMessage::GetSoapAction() const
   return m_soapAction;
 }
 
-inline CString
-SOAPMessage::GetURL() const
-{
-  return m_url;
-}
-
 inline int
 SOAPMessage::GetParameterCount() const
 {
@@ -534,7 +523,7 @@ SOAPMessage::GetRequestHandle() const
 inline void
 SOAPMessage::SetSecure(bool p_secure)
 {
-  m_secure = p_secure;
+  m_cracked.m_secure = p_secure;
   ReparseURL();
 }
 
@@ -565,34 +554,41 @@ SOAPMessage::SetTokenCreated(CString p_created)
 inline void    
 SOAPMessage::SetServer(CString& p_server)
 {
-  m_server = p_server;
+  m_cracked.m_host = p_server;
   ReparseURL();
 }
 
 inline void    
 SOAPMessage::SetPort(unsigned p_port)
 {
-  m_port = p_port;
+  m_cracked.m_port = p_port;
   ReparseURL();
 }
 
 inline void
 SOAPMessage::SetExtension(CString p_extension)
 {
-  m_extension = p_extension;
+  m_cracked.SetExtension(p_extension);
+  ReparseURL();
 }
 
 inline void    
 SOAPMessage::SetAbsolutePath(CString& p_path)
 {
-  m_absPath = p_path;
+  m_cracked.m_path = p_path;
   ReparseURL();
+}
+
+inline const CrackedURL& 
+SOAPMessage::GetCrackedURL() const
+{
+  return m_cracked;
 }
 
 inline bool
 SOAPMessage::GetSecure() const
 {
-  return m_secure;
+  return m_cracked.m_secure;
 }
 
 inline CString  
@@ -622,25 +618,25 @@ SOAPMessage::GetTokenCreated() const
 inline CString  
 SOAPMessage::GetServer() const
 {
-  return m_server;
+  return m_cracked.m_host;
 }
 
 inline unsigned 
 SOAPMessage::GetPort() const
 {
-  return m_port;
+  return m_cracked.m_port;
 }
 
 inline CString
 SOAPMessage::GetExtension() const
 {
-  return m_extension;
+  return m_cracked.GetExtension();
 }
 
 inline CString  
 SOAPMessage::GetAbsolutePath() const
 {
-  return m_absPath;
+  return m_cracked.AbsolutePath();
 }
 
 inline SoapVersion 

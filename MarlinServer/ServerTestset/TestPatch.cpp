@@ -60,9 +60,9 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
   xprintf("HTTP PATCH VERB URL [%s] FROM: %s\n",(LPCTSTR)msg->GetURL(),(LPCTSTR)SocketToServer(msg->GetSender()));
   xprintf("%s\n",(LPCTSTR)body);
 
-  CrackedURL& url = msg->GetCrackedURL();
-  CString bloodType    = url.GetParameter("type");
-  CString rhesusFactor = url.GetParameter("rhesus");
+  const CrackedURL& url = msg->GetCrackedURL();
+  CString bloodType     = url.GetParameter("type");
+  CString rhesusFactor  = url.GetParameter("rhesus");
 
   // Reset our HTTP message
   p_message->Reset();

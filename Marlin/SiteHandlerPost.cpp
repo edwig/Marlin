@@ -102,7 +102,7 @@ SiteHandlerPost::PostHandle(HTTPMessage* p_message)
 // DO NOTHING: OVVERRIDE ME!
 // IMPLEMENT YOURSELF: YOUR IMPLEMENTATION HERE
 bool
-SiteHandlerPost::DoPostAction(CString p_filename,CString p_body,CrackedURL& p_full)
+SiteHandlerPost::DoPostAction(CString p_filename,CString p_body,const CrackedURL& p_full)
 {
   UNREFERENCED_PARAMETER(p_filename);
   UNREFERENCED_PARAMETER(p_body);

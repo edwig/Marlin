@@ -101,6 +101,7 @@ CrackedURL::Reset()
   m_path.Empty();
   m_parameters.clear();
   m_anchor.Empty();
+  m_extension.Empty();
 
   // reset the found-statuses
   m_foundScheme     = false;
@@ -410,7 +411,7 @@ CrackedURL::GetHexcodedChar(CString& p_text,int& p_index,bool& p_queryValue)
 // Reconstruct the URL parts to a complete URL
 // foo://username:password@example.com:8042/over/there/index.dtb?type=animal&name=white%20narwhal#nose
 CString
-CrackedURL::URL()
+CrackedURL::URL() const
 {
   CString url(m_scheme);
 
@@ -443,7 +444,7 @@ CrackedURL::URL()
 
 // Safe URL (without the userinfo)
 CString
-CrackedURL::SafeURL()
+CrackedURL::SafeURL() const
 {
   CString url(m_scheme);
 
@@ -476,7 +477,7 @@ CrackedURL::SafeURL()
 
 // Resulting absolute path
 CString 
-CrackedURL::AbsoluteResource()
+CrackedURL::AbsoluteResource() const
 {
   // Begin with the base path
   return EncodeURLChars(m_path);
@@ -485,7 +486,7 @@ CrackedURL::AbsoluteResource()
 // Resulting absolute path + parameters + anchor
 // But without protocol and user/password/server/port
 CString
-CrackedURL::AbsolutePath()
+CrackedURL::AbsolutePath() const
 {
   // Begin with the base path
   CString url = EncodeURLChars(m_path);
@@ -495,10 +496,10 @@ CrackedURL::AbsolutePath()
   {
     url += "?";
 
-    UriParams::iterator it;
+    UriParams::const_iterator it;
     for(it = m_parameters.begin();it != m_parameters.end(); ++it)
     {
-      UriParam& param = *it;
+      const UriParam& param = *it;
 
       // Next parameter
       if(it != m_parameters.begin())
@@ -525,10 +526,29 @@ CrackedURL::AbsolutePath()
   return url;
 }
 
+// Setting a new extension on the path
+void
+CrackedURL::SetExtension(CString p_extension)
+{
+  m_extension = p_extension;
+
+  int pos1 = m_path.ReverseFind('/');
+  int pos2 = m_path.ReverseFind('.');
+
+  if(pos1 > 0 && pos2 > 0 && pos2 > pos1)
+  {
+    m_path = m_path.Left(pos2);
+  }
+  if(!p_extension.IsEmpty())
+  {
+    m_path = m_path + "." + p_extension;
+  }
+}
+
 // As a resulting UNC path for a file
 // \\server@port\abs-path\file.ext
 CString
-CrackedURL::UNC()
+CrackedURL::UNC() const
 {
   CString path("\\\\");
 
@@ -589,8 +609,8 @@ CrackedURL::operator=(CrackedURL* p_orig)
 }
 
 // Has parameter value
-bool
-CrackedURL::HasParameter(CString p_parameter)
+const bool
+CrackedURL::HasParameter(CString p_parameter) const
 {
   for(unsigned i = 0; i < m_parameters.size(); ++i)
   {
@@ -602,8 +622,8 @@ CrackedURL::HasParameter(CString p_parameter)
   return false;
 }
 
-CString 
-CrackedURL::GetParameter(CString p_parameter)
+const CString 
+CrackedURL::GetParameter(CString p_parameter) const
 {
   for(auto& param : m_parameters)
   {
@@ -638,8 +658,8 @@ CrackedURL::SetParameter(CString p_parameter,CString p_value)
   m_foundParameters = true;
 }
 
-UriParam*
-CrackedURL::GetParameter(unsigned p_parameter)
+const UriParam*
+CrackedURL::GetParameter(unsigned p_parameter) const
 {
   if(p_parameter < (unsigned)m_parameters.size())
   {
