@@ -863,7 +863,11 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
     !p_message->GetSoapAction().IsEmpty() &&
      answer->GetHeader("SOAPAction").IsEmpty())
   {
-    answer->AddHeader("SOAPAction", "\"" + p_message->GetNamespace() + p_message->GetSoapAction() + "\"");
+    CString action = "\"" + p_message->GetNamespace();
+    if(action.Right(1) != "/") action += "/";
+    action += p_message->GetSoapAction() + "\"";
+
+    answer->AddHeader("SOAPAction", action);
   }
 
   // Set status in case of an error

@@ -3234,6 +3234,10 @@ HTTPClient::TraceTheSend()
   // Before showing the request we show the configuration of the HTTP channel
   if(MUSTLOG(HLL_TRACE))
   {
+    if(!m_trace)
+    {
+      m_trace = new HTTPClientTracing(this);
+    }
     m_trace->Trace((char*)"BEFORE SENDING",m_session,m_request);
   }
 

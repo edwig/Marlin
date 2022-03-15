@@ -1998,6 +1998,12 @@ SOAPMessage::HandleSoapFault(XMLElement* p_fault)
 void
 SOAPMessage::SetBodyToFault()
 {
+  if(FindElement(m_body,"Fault"))
+  {
+    // Presume that the Fault is already filled in
+    return;
+  }
+
   // Remove original body sofar
   CleanNode(m_body);
 
