@@ -27,6 +27,7 @@
 //
 #include "Stdafx.h"
 #include "EnsureFile.h"
+#include "CrackURL.h"
 #include <AclAPI.h>
 
 #ifdef _DEBUG
@@ -204,11 +205,9 @@ EnsureFile::EncodeSpecialChars(CString& p_value)
 CString
 EnsureFile::FileNameFromResourceName(CString p_resource)
 {
-  CString filename(p_resource);
-  ResolveSpecialChars(filename);
+  CString filename = CrackedURL::DecodeURLChars(p_resource);
   filename.Replace('/','\\');
   filename.Replace("\\\\","\\");
-
   return filename;
 }
 
