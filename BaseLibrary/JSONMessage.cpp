@@ -104,6 +104,90 @@ JSONvalue::operator=(JSONvalue& p_other)
   return *this;
 }
 
+JSONvalue& 
+JSONvalue::operator=(XString& p_other)
+{
+  m_type      = JsonType::JDT_string;
+  m_constant  = JsonConst::JSON_NONE;
+  m_string    = p_other;
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
+  m_array.clear();
+  m_object.clear();
+
+  return *this;
+}
+
+JSONvalue& 
+JSONvalue::operator=(const char* p_other)
+{
+  m_type      = JsonType::JDT_string;
+  m_constant  = JsonConst::JSON_NONE;
+  m_string    = p_other;
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
+  m_array.clear();
+  m_object.clear();
+
+  return *this;
+}
+
+JSONvalue& 
+JSONvalue::operator=(int& p_other)
+{
+  m_type      = JsonType::JDT_number_int;
+  m_constant  = JsonConst::JSON_NONE;
+  m_intNumber = p_other;
+  m_bcdNumber.Zero();
+  m_string.Empty();
+  m_array.clear();
+  m_object.clear();
+
+  return *this;
+}
+
+JSONvalue& 
+JSONvalue::operator=(bcd& p_other)
+{
+  m_type      = JsonType::JDT_number_bcd;
+  m_constant  = JsonConst::JSON_NONE;
+  m_intNumber = 0;
+  m_bcdNumber = p_other;
+  m_string.Empty();
+  m_array.clear();
+  m_object.clear();
+
+  return *this;
+}
+
+JSONvalue& 
+JSONvalue::operator=(JsonConst& p_other)
+{
+  m_type      = JsonType::JDT_const;
+  m_constant  = p_other;
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
+  m_string.Empty();
+  m_array.clear();
+  m_object.clear();
+
+  return *this;
+}
+
+JSONvalue& 
+JSONvalue::operator=(bool& p_other)
+{
+  m_type      = JsonType::JDT_const;
+  m_constant  = p_other ? JsonConst::JSON_TRUE : JsonConst::JSON_FALSE;
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
+  m_string.Empty();
+  m_array.clear();
+  m_object.clear();
+
+  return *this;
+}
+
 // Only set the type, clearing the rest
 void
 JSONvalue::SetDatatype(JsonType p_type)
@@ -121,6 +205,19 @@ JSONvalue::SetDatatype(JsonType p_type)
 
 void
 JSONvalue::SetValue(XString p_value)
+{
+  m_string = p_value;
+  m_type   = JsonType::JDT_string;
+  // Clear the rest
+  m_array .clear();
+  m_object.clear();
+  m_intNumber = 0;
+  m_bcdNumber.Zero();
+  m_constant = JsonConst::JSON_NONE;
+}
+
+void
+JSONvalue::SetValue(const char* p_value)
 {
   m_string = p_value;
   m_type   = JsonType::JDT_string;
@@ -393,6 +490,43 @@ JSONpair::JSONpair(XString p_name, JsonType p_type)
          ,m_value(p_type)
 {
 }
+
+JSONpair::JSONpair(XString p_name,XString p_value)
+         :m_name(p_name)
+         ,m_value(p_value)
+{
+}
+
+JSONpair::JSONpair(XString p_name,const char* p_value)
+         :m_name(p_name)
+         ,m_value(p_value)
+{
+}
+
+JSONpair::JSONpair(XString p_name,int p_value)
+         :m_name(p_name)
+         ,m_value(p_value)
+{
+}
+
+JSONpair::JSONpair(XString p_name,bcd p_value)
+         :m_name(p_name)
+         ,m_value(p_value)
+{
+}
+
+JSONpair::JSONpair(XString p_name,bool p_value)
+         :m_name(p_name)
+         ,m_value(p_value)
+{
+}
+
+JSONpair::JSONpair(XString p_name,JsonConst p_value)
+         :m_name(p_name)
+         ,m_value(p_value)
+{
+}
+
 
 JSONpair& 
 JSONpair::operator=(JSONpair& p_other)

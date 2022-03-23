@@ -2,7 +2,7 @@
 //
 // Getting the framework settings for this library/program
 // Uses the $(SolutionDir)Framework.h file for configuration of 
-// the MFC XString or the std::string SMX_String
+// the MFC CString or the std::string SMX_String
 //
 #pragma once
 

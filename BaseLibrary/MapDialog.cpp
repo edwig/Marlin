@@ -109,7 +109,7 @@ MapDialog::MapDialog()
 
 MapDialog::~MapDialog()
 {
-  // Back to the original dir
+  // Back to the original directory
   _chdir((LPCSTR) m_originalDir);
 }
 
@@ -179,7 +179,7 @@ void MapDialog::EnableOk(bool bEnable)
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
-    MessageBox(NULL,"Call from invalid context","Map dialoog",MB_OK|MB_ICONERROR);
+    MessageBox(NULL,"Call from invalid context","Map dialog",MB_OK|MB_ICONERROR);
   }
   //  Set the ok button state
   ::SendMessage(m_hwnd, BFFM_ENABLEOK, 0, bEnable);
@@ -191,7 +191,7 @@ void MapDialog::SetSelection(XString const& path)
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
-    MessageBox(NULL,"Call from invalid context","Map dialoog",MB_OK|MB_ICONERROR);
+    MessageBox(NULL,"Call from invalid context","Map dialog",MB_OK|MB_ICONERROR);
   }
   //  Set the current path in the tree
   ::SendMessage(m_hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)(char const*)path);  

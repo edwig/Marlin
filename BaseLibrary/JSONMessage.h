@@ -84,13 +84,14 @@ public:
 
   // SETTERS
   void        SetDatatype(JsonType p_type);
-  void        SetValue(XString    p_value);
-  void        SetValue(JsonConst  p_value);
-  void        SetValue(JSONobject p_value);
-  void        SetValue(JSONarray  p_value);
-  void        SetValue(int        p_value);
-  void        SetValue(bcd        p_value);
-  void        SetMark (bool       p_mark);
+  void        SetValue(XString     p_value);
+  void        SetValue(const char* p_value);
+  void        SetValue(JsonConst   p_value);
+  void        SetValue(JSONobject  p_value);
+  void        SetValue(JSONarray   p_value);
+  void        SetValue(int         p_value);
+  void        SetValue(bcd         p_value);
+  void        SetMark (bool        p_mark);
 
   // GETTERS
   JsonType    GetDataType()  const { return m_type;     }
@@ -113,7 +114,13 @@ public:
   // OPERATORS
 
   // Assignment of another value
-  JSONvalue&  operator=(JSONvalue& p_other);
+  JSONvalue&  operator=(JSONvalue&  p_other);
+  JSONvalue&  operator=(XString&    p_other);
+  JSONvalue&  operator=(const char* p_other);
+  JSONvalue&  operator=(int&        p_other);
+  JSONvalue&  operator=(bcd&        p_other);
+  JSONvalue&  operator=(JsonConst&  p_other);
+  JSONvalue&  operator=(bool&       p_other);
   // Getting the value from an JSONarray
   JSONvalue&  operator[](int p_index);
   // Getting the value from an JSONobject
@@ -149,21 +156,29 @@ class JSONpair
 public:
   JSONpair() = default;
   JSONpair(XString p_name);
-  JSONpair(XString p_name,JsonType p_type);
-  JSONpair(XString p_name,JSONvalue& p_value);
+  JSONpair(XString p_name,JsonType    p_type);
+  JSONpair(XString p_name,JSONvalue&  p_value);
+  JSONpair(XString p_name,XString     p_value);
+  JSONpair(XString p_name,const char* p_value);
+  JSONpair(XString p_name,int         p_value);
+  JSONpair(XString p_name,bcd         p_value);
+  JSONpair(XString p_name,bool        p_value);
+  JSONpair(XString p_name,JsonConst   p_value);
 
   // Currently public. Will be moved to private in a future version
   XString   m_name;
   JSONvalue m_value;
 
-  void        SetName(XString p_name)      { m_name = p_name;             }
-  void        SetDatatype(JsonType p_type) { m_value.SetDatatype(p_type); }
-  void        SetValue(XString    p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(JsonConst  p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(JSONobject p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(JSONarray  p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(int        p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(bcd        p_value) { m_value.SetValue(p_value);   }
+  void        SetName(XString p_name)       { m_name = p_name;             }
+  void        SetDatatype(JsonType p_type)  { m_value.SetDatatype(p_type); }
+  void        SetValue(XString     p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(const char* p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(JsonConst   p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(JSONobject  p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(JSONarray   p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(int         p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(bcd         p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(bool        p_value) { m_value.SetValue(p_value);   }
 
   JsonType    GetDataType()  const { return m_value.GetDataType();  }
   XString     GetString()    const { return m_value.GetString();    }
