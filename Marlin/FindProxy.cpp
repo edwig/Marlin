@@ -49,8 +49,8 @@ FindProxy::~FindProxy()
   }
 }
 
-CString
-FindProxy::Find(const CString& p_url,bool p_secure)
+XString
+FindProxy::Find(const XString& p_url,bool p_secure)
 {
   USES_CONVERSION;
 
@@ -64,7 +64,7 @@ FindProxy::Find(const CString& p_url,bool p_secure)
   m_proxy.Empty();
   m_ignored = "";
   m_perDest = false;
-  CString proxy;
+  XString proxy;
 
   ProxyConfig proxyCfg = { 0 };
 
@@ -134,7 +134,7 @@ FindProxy::Find(const CString& p_url,bool p_secure)
 }
 
 void
-FindProxy::SetInfo(CString p_proxy,CString p_bypass)
+FindProxy::SetInfo(XString p_proxy,XString p_bypass)
 {
   if(!m_info)
   {
@@ -154,11 +154,11 @@ FindProxy::SetInfo(CString p_proxy,CString p_bypass)
 }
 
 void
-FindProxy::FindUniqueProxy(CString p_proxyList,bool p_secure)
+FindProxy::FindUniqueProxy(XString p_proxyList,bool p_secure)
 {
   while(p_proxyList.GetLength())
   {
-    CString part;
+    XString part;
     int pos = p_proxyList.Find(';');
     if(pos > 0)
     {

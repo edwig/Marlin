@@ -34,7 +34,7 @@
 class SiteFilter
 {
 public:
-  SiteFilter(unsigned p_priority,CString p_name);
+  SiteFilter(unsigned p_priority,XString p_name);
   virtual ~SiteFilter();
 
   // When starting the site
@@ -47,13 +47,13 @@ public:
   // Getters and setters
   virtual void SetSite(HTTPSite* p_site) { m_site = p_site;   };
   HTTPSite*    GetSite()                 { return m_site;     };
-  CString      GetName()                 { return m_name;     };
+  XString      GetName()                 { return m_name;     };
   unsigned     GetPriority()             { return m_priority; };
 
 protected:
   HTTPSite* m_site      { nullptr };
   unsigned  m_priority  { 0       };
-  CString   m_name;
+  XString   m_name;
 };
 
 

@@ -45,7 +45,7 @@ public:
   virtual void ShutDown() override;   // Called from ServerMain / ServerApp
 
   // Register the objects from the ServerApp out of the IIS configuration
-  void    ConfigIISServer(CString p_appName,HTTPServer* p_server,ThreadPool* p_pool,LogAnalysis* p_log);
+  void    ConfigIISServer(XString p_appName,HTTPServer* p_server,ThreadPool* p_pool,LogAnalysis* p_log);
 
   // Registering an extra error while running: so we can report total errors
   void  Server_xerror();
@@ -53,7 +53,7 @@ public:
   void  Server_xprintf(const char* p_format, ...);
   void  Server_qprintf(const char* p_format, ...);
 
-  CString m_socket;
+  XString m_socket;
 
   // Testing the ServerEventDriver
   void IncomingEvent(LTEvent* p_event);
@@ -90,7 +90,7 @@ protected:
   WEBSERVICE_DECLARE(OnMarlinFifth)
 
   // Add service operations for WSDL and service handlers
-  void AddOperations(CString p_contract);
+  void AddOperations(XString p_contract);
 
   // Testing ServerEventDriver
   void PostEventsToDrivers();
@@ -156,23 +156,23 @@ private:
   int AfterTestWebSocket();
 
   // SERVICE TESTING OnMarlin.....
-  CString Translation(CString p_language, CString p_translation, CString p_word);
+  XString Translation(XString p_language, XString p_translation, XString p_word);
   // Set input/output languages
-  CString m_language;
-  CString m_translation;
+  XString m_language;
+  XString m_translation;
 
   // Server
-  CString         m_serverName;                         // Name of the server
-  CString         m_baseURL;
+  XString         m_serverName;                         // Name of the server
+  XString         m_baseURL;
   int             m_runAsService{ RUNAS_IISAPPPOOL };
   bool            m_serverSecure{ false };
-  CString         m_agent;                              // Agent's name (spoofing!!)
+  XString         m_agent;                              // Agent's name (spoofing!!)
   int             m_instance    { 1  };                 // Instance number on this machine
   ushort          m_inPortNumber{ 80 };                 // Port number of incoming port
   int             m_alertModule { -1 };                 // Server alert module
   // Others
   HPFCounter      m_counter;
-  CString         m_serverLogfile;
+  XString         m_serverLogfile;
   int             m_errors      { 0  };                 // Total number of errors
   bool            m_doDetails   { false };              // Do not log any detailed information
   bool            m_ownReport   { false };

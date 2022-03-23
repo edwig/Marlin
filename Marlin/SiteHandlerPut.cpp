@@ -46,7 +46,7 @@ SiteHandlerPut::PreHandle(HTTPMessage* /*p_message*/)
   m_site->SetCleanup(nullptr);
 
   // Check server authorization for server GUID!!
-  // CString author = p_message->GetCookieValue();
+  // XString author = p_message->GetCookieValue();
   // IMPLEMENT YOURSELF: Check authorization (HTTP_STATUS_DENIED)?
 
   // return true, to enter the default "Handle"
@@ -65,11 +65,11 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
 
   // Getting the primary information
   EnsureFile ensure;
-  CString resource = m_site->GetWebroot() + p_message->GetAbsolutePath();
+  XString resource = m_site->GetWebroot() + p_message->GetAbsolutePath();
   ensure.SetResourceName(resource);
   ensure.CheckCreateDirectory();
   // Getting the resulting filename
-  CString pathname = ensure.GetFilename();
+  XString pathname = ensure.GetFilename();
 
   FileBuffer* buf = p_message->GetFileBuffer();
   if(buf)
@@ -85,7 +85,7 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
     {
       status = HTTP_STATUS_FORBIDDEN;
       DWORD error = GetLastError();
-      CString message;
+      XString message;
       message.Format("HTTP PUT: File not written: %s\n",pathname.GetString());
       SITE_ERRORLOG(error,message);
     }
@@ -98,7 +98,7 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
   {
     status = HTTP_STATUS_BAD_REQUEST;
     // No file to put for this absolute path
-    CString message;
+    XString message;
     message.Format("HTTP PUT: No file given for: %s\n",pathname.GetString());
     SITE_ERRORLOG(ERROR_NOT_FOUND,message);
   }

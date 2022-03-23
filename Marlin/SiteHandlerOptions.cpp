@@ -72,9 +72,9 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
   if(m_site->GetUseCORS())
   {
     // Read the message
-    CString comesFrom = p_message->GetHeader("Origin");
-    CString reqMethod = p_message->GetHeader("Access-Control-Request-Method");
-    CString reqHeader = p_message->GetHeader("Access-Control-Request-Headers");
+    XString comesFrom = p_message->GetHeader("Origin");
+    XString reqMethod = p_message->GetHeader("Access-Control-Request-Method");
+    XString reqHeader = p_message->GetHeader("Access-Control-Request-Headers");
     p_message->Reset();
 
     if(CheckCrossOriginSettings(p_message,comesFrom,reqMethod,reqHeader) == false)
@@ -91,7 +91,7 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
   }
 
   // Empty the response part. Just to be sure!
-  CString empty;
+  XString empty;
   p_message->GetFileBuffer()->Reset();
   p_message->SetFile(empty);
   // Set the allow header for this site
@@ -125,9 +125,9 @@ SiteHandlerOptions::PostHandle(HTTPMessage* p_message)
 
 bool
 SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
-                                            ,CString      p_origin
-                                            ,CString      p_method
-                                            ,CString      p_headers)
+                                            ,XString      p_origin
+                                            ,XString      p_method
+                                            ,XString      p_headers)
 {
   // Check all requested header methods
   if(!CheckCORSOrigin (p_message,p_origin))  return false;
@@ -137,7 +137,7 @@ SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
   // Adding the max age if any
   if(m_site->GetCORSMaxAge() > 0)
   {
-    CString maxAge;
+    XString maxAge;
     maxAge.Format("%d",m_site->GetCORSMaxAge());
     p_message->AddHeader("Access-Control-Max-Age",maxAge);
   }
@@ -151,9 +151,9 @@ SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
 
 // Check that we have same origin
 bool 
-SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,CString p_origin)
+SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,XString p_origin)
 {
-  CString origin = m_site->GetCORSOrigin();
+  XString origin = m_site->GetCORSOrigin();
   p_origin.MakeLower();
   origin.MakeLower();
 
@@ -168,7 +168,7 @@ SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,CString p_origin)
   }
   // This call is NOT allowed
   p_message->SetStatus(HTTP_STATUS_DENIED);
-  CString error;
+  XString error;
   error.Format("Call refused: Not same CORS origin. Site allows [%s] but call was from: %s",origin.GetString(),p_origin.GetString());
   SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
   return false;
@@ -176,16 +176,16 @@ SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,CString p_origin)
 
 // Check that the site has this HTTP Method
 bool 
-SiteHandlerOptions::CheckCORSMethod(HTTPMessage* p_message,CString p_method)
+SiteHandlerOptions::CheckCORSMethod(HTTPMessage* p_message,XString p_method)
 {
-  CString handlers = m_site->GetAllowHandlers();
+  XString handlers = m_site->GetAllowHandlers();
   if(!p_method.IsEmpty())
   {
     if(handlers.Find(p_method) < 0)
     {
       // This method is NOT allowed
       p_message->SetStatus(HTTP_STATUS_DENIED);
-      CString error;
+      XString error;
       error.Format("Call refused: CORS method [%s] not implemented by the server.",p_method.GetString());
       SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
       return false;
@@ -198,15 +198,15 @@ SiteHandlerOptions::CheckCORSMethod(HTTPMessage* p_message,CString p_method)
 
 // Check that we can handle these headers
 bool 
-SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,CString p_headers)
+SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,XString p_headers)
 {
   // Make requested and allowed headers lower case to compare them
-  CString allowed = m_site->GetCORSHeaders();
+  XString allowed = m_site->GetCORSHeaders();
   allowed.MakeLower();
   p_headers.MakeLower();
 
   // Split all headers
-  std::vector<CString> map;
+  std::vector<XString> map;
   SplitHeaders(p_headers,map);
 
   // See if headers where requested
@@ -221,7 +221,7 @@ SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,CString p_headers)
     if(!header.IsEmpty() && allowed.Find(header) < 0)
     {
       p_message->SetStatus(HTTP_STATUS_DENIED);
-      CString error;
+      XString error;
       error.Format("Call refused: header [%s] not allowed by the server",p_headers.GetString());
       SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
       return false;
@@ -233,14 +233,14 @@ SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,CString p_headers)
 }
 
 void 
-SiteHandlerOptions::SplitHeaders(CString p_headers,std::vector<CString>& p_map)
+SiteHandlerOptions::SplitHeaders(XString p_headers,std::vector<XString>& p_map)
 {
   while(!p_headers.IsEmpty())
   {
     int pos = p_headers.Find(',');
     if(pos > 0)
     {
-      CString header = p_headers.Left(pos);
+      XString header = p_headers.Left(pos);
       p_headers = p_headers.Mid(pos + 1);
       header.Trim();
       if(!header.IsEmpty())

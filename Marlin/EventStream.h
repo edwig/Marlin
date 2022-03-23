@@ -47,15 +47,15 @@ public:
   SOCKADDR_IN6    m_sender;     // Stream originates from this address
   int             m_desktop;    // Stream originates from this desktop
   int             m_port;       // Port of the base URL of the stream
-  CString         m_baseURL;    // Base URL of the stream
-  CString         m_absPath;    // Absolute pathname of the URL
+  XString         m_baseURL;    // Base URL of the stream
+  XString         m_absPath;    // Absolute pathname of the URL
   HTTPSite*       m_site;       // HTTPSite that's handling the stream
   HTTP_RESPONSE   m_response;   // Response buffer
   HTTP_OPAQUE_ID  m_requestID;  // Outstanding HTTP request ID
   UINT            m_lastID;     // Last ID of this connection
   bool            m_alive;      // Connection still alive after sending
   __time64_t      m_lastPulse;  // Time of last sent event
-  CString         m_user;       // For authenticated user
+  XString         m_user;       // For authenticated user
   long            m_chunks;     // Send chunk counter
   CRITICAL_SECTION m_lock;       // Just one message from one thread please!
 

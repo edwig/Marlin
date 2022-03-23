@@ -54,8 +54,8 @@ SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
   xprintf("Incoming message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
-  CString paramOne = p_message->GetParameter("One");
-  CString paramTwo = p_message->GetParameter("Two");
+  XString paramOne = p_message->GetParameter("One");
+  XString paramTwo = p_message->GetParameter("Two");
   bool    doFault  = p_message->GetParameterBoolean("TestFault");
   xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
   xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
@@ -74,7 +74,7 @@ SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
   // TestSecurity(&msg);
 
   // reuse message for response
-  CString response = "TestMessageResponse";
+  XString response = "TestMessageResponse";
 
   p_message->Reset();
   p_message->SetSoapAction(response);
@@ -124,7 +124,7 @@ TestMarlinServer::TestInsecure()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/Insecure/");
+  XString url("/MarlinTest/Insecure/");
 
   xprintf("TESTING STANDARD SOAP RECEIVER FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("===========================================================\n");

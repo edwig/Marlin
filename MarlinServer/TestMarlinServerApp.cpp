@@ -27,6 +27,7 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServerApp.h"
+#include "ServiceReporting.h"
 #include "WebSocket.h"
 
 #ifdef _DEBUG
@@ -39,7 +40,7 @@ static char THIS_FILE[] = __FILE__;
 int g_errors = 0;
 WebConfigIIS* g_config = nullptr;
 
-// CString contract = "http://interface.marlin.org/testing/";
+// XString contract = "http://interface.marlin.org/testing/";
 
 // This is the ServerApp of the IIS server variant (running in W3SVC)
 
@@ -143,6 +144,25 @@ TestMarlinServerAppPool::CorrectlyStarted()
     return false;
   }
   return true;
+}
+
+bool
+TestMarlinServerAppPool::MinMarlinVersion(int p_version)
+{
+  int minVersion = (MARLIN_VERSION_MAJOR - 2) * 10000;    // Major version main
+  int maxVersion = (MARLIN_VERSION_MAJOR + 2) * 10000;    // Major version main
+
+  if(p_version < minVersion || maxVersion <= p_version)
+  {
+    SvcReportErrorEvent(0,true,__FUNCTION__
+                       ,"MarlinModule version is out of range: %d.%d.%d\n"
+                       ,"This application was compiled for: %d.%d.%d"
+                       ,p_version / 10000,(p_version % 10000)/100,p_version % 100
+                       ,MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP);
+    return 0;
+  }
+  // We have done our version check
+  return m_versionCheck = true;
 }
 
 

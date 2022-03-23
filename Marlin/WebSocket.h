@@ -27,7 +27,7 @@
 //
 #pragma once
 #include "HTTPClient.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include <deque>
 #include <map>
 
@@ -137,7 +137,7 @@ public:
 // Incoming stacks of data
 using FragmentStack = std::deque<RawFrame*>;
 using WSFrameStack  = std::deque<WSFrame*>;
-using SocketParams  = std::map<CString,CString>;
+using SocketParams  = std::map<XString,XString>;
 
 // Prototype for WebSocket callback handler
 typedef void(*LPFN_SOCKETHANDLER)(WebSocket* p_socket,WSFrame* p_event);
@@ -151,7 +151,7 @@ typedef void(*LPFN_SOCKETHANDLER)(WebSocket* p_socket,WSFrame* p_event);
 class WebSocket
 {
 public:
-  WebSocket(CString p_uri);
+  WebSocket(XString p_uri);
   virtual ~WebSocket();
 
   // FUNCTIONS
@@ -163,14 +163,14 @@ public:
   // Close the socket unconditionally
   virtual bool CloseSocket() = 0;
   // Close the socket with a closing frame
-  virtual bool SendCloseSocket(USHORT p_code,CString p_reason) = 0;
+  virtual bool SendCloseSocket(USHORT p_code,XString p_reason) = 0;
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) = 0;
   // Register the server request for sending info
   virtual bool RegisterSocket(HTTPMessage* p_message) = 0;
 
   // Decoded close connection (use in 'OnClose')
-  bool GetCloseSocket(USHORT& p_code,CString& p_reason);
+  bool GetCloseSocket(USHORT& p_code,XString& p_reason);
   // Socket still open?
   bool IsOpenForReading();
   bool IsOpenForWriting();
@@ -182,7 +182,7 @@ public:
   // HIGH LEVEL INTERFACE
 
   // Write as an UTF-8 string to the WebSocket
-  bool WriteString(CString p_string);
+  bool WriteString(XString p_string);
   // Write as a binary object to the channel
   bool WriteObject(BYTE* p_buffer,int64 p_length);
 
@@ -202,9 +202,9 @@ public:
   // Max fragmentation size
   void SetFragmentSize(ULONG p_fragment);
   // Setting the protocols
-  void SetProtocols(CString p_protocols);
+  void SetProtocols(XString p_protocols);
   // Setting the extensions
-  void SetExtensions(CString p_extensions);
+  void SetExtensions(XString p_extensions);
   // Setting the logfile
   void SetLogfile(LogAnalysis* p_logfile);
   // Set logging to on or off
@@ -227,37 +227,37 @@ public:
   // GETTERS
 
   // Getting the URI
-  CString GetURI()            { return m_uri;          }
-  CString GetIdentityKey()    { return m_key;          }
+  XString GetURI()            { return m_uri;          }
+  XString GetIdentityKey()    { return m_key;          }
   ULONG   GetKeepalive()      { return m_keepalive;    }
   ULONG   GetFragmentSize()   { return m_fragmentsize; }
-  CString GetProtocols()      { return m_protocols;    }
-  CString GetExtensions()     { return m_extensions;   }
+  XString GetProtocols()      { return m_protocols;    }
+  XString GetExtensions()     { return m_extensions;   }
   USHORT  GetClosingError()   { return m_closingError; }
-  CString GetClosingMessage() { return m_closing;      }
+  XString GetClosingMessage() { return m_closing;      }
   int     GetLogLevel()       { return m_logLevel;     }
   LogAnalysis* GetLogfile()   { return m_logfile;      }
   void*   GetApplication()    { return m_application;  }
   UINT64  GetApplicationData(){ return m_appData;      }
-  CString GetClosingErrorAsString();
+  XString GetClosingErrorAsString();
 
   // Add a URI parameter
-  void    AddParameter(CString p_name,CString p_value);
+  void    AddParameter(XString p_name,XString p_value);
   // Add a HTTP header
-  void    AddHeader(CString p_name,CString p_value);
+  void    AddHeader(XString p_name,XString p_value);
   // Find a URI parameter
-  CString GetParameter(CString p_name);
+  XString GetParameter(XString p_name);
 
   // LOGGING
   void    DetailLog (const char* p_function,LogType p_type,const char* p_text);
   void    DetailLogS(const char* p_function,LogType p_type,const char* p_text,const char* p_extra);
   void    DetailLogV(const char* p_function,LogType p_type,const char* p_text,...);
-  void    ErrorLog  (const char* p_function,DWORD p_code,CString p_text);
+  void    ErrorLog  (const char* p_function,DWORD p_code,XString p_text);
 
   // Perform the server handshake
   virtual bool ServerHandshake(HTTPMessage* p_message);
   // Generate a server key-answer
-  CString   ServerAcceptKey(CString p_clientKey);
+  XString   ServerAcceptKey(XString p_clientKey);
 
 protected:
   // Completely close the connection
@@ -270,17 +270,17 @@ protected:
   void    ConvertWSFrameToMBCS(WSFrame* p_frame);
 
   // GENERAL SOCKET DATA
-  CString m_uri;                      // ws[s]://resource URI for the socket
-  CString m_key;                      // Essential the accept-key that registers the socket
+  XString m_uri;                      // ws[s]://resource URI for the socket
+  XString m_key;                      // Essential the accept-key that registers the socket
   bool    m_openReading { false };    // WebSocket is opened and alive for reading
   bool    m_openWriting { false };    // WebSocket is opened and alive for writing
   ULONG   m_keepalive;                // Keep alive time of the socket
   ULONG   m_closingTimeout;           // Timeout for answering 'close' message
   ULONG   m_fragmentsize;             // Max fragment size
-  CString m_protocols;                // WebSocket main protocols
-  CString m_extensions;               // Extensions in 1,2,3 fields
+  XString m_protocols;                // WebSocket main protocols
+  XString m_extensions;               // Extensions in 1,2,3 fields
   USHORT  m_closingError{ 0     };    // Error on closing
-  CString m_closing;                  // Closing error text
+  XString m_closing;                  // Closing error text
   ULONG   m_pingTimeout { 30000 };    // How long we wait for a pong after a ping
   bool    m_pongSeen    { false };    // Seen a pong for a ping
   int     m_logLevel  {HLL_NOLOG};    // Logging level for the WebSocket
@@ -332,13 +332,13 @@ WebSocket::CloseForWriting()
 }
 
 inline void 
-WebSocket::SetProtocols(CString p_protocols)
+WebSocket::SetProtocols(XString p_protocols)
 {
   m_protocols = p_protocols;
 }
 
 inline void 
-WebSocket::SetExtensions(CString p_extensions)
+WebSocket::SetExtensions(XString p_extensions)
 {
   m_extensions = p_extensions;
 }

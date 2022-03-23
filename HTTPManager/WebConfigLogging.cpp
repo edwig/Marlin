@@ -30,7 +30,7 @@
 #include "HTTPLoglevel.h"
 #include "WebConfigLogging.h"
 #include "MarlinConfig.h"
-#include "MapDialoog.h"
+#include "MapDialog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
 #include "afxdialogex.h"
@@ -215,7 +215,7 @@ void WebConfigLogging::OnBnClickedButtLogfile()
                     ,"");
   if(file.DoModal() == IDOK)
   {
-    CString pad = file.GetChosenFile();
+    XString pad = file.GetChosenFile();
     if(m_logfile.CompareNoCase(pad))
     {
       m_logfile = pad;

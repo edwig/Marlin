@@ -41,11 +41,11 @@ static char THIS_FILE[] = __FILE__;
 // Open, close and 2 messages
 int totalChecks = 4;
 
-CString 
+XString 
 GenerateLargePushMessage()
 {
-  CString large;
-  CString extra;
+  XString large;
+  XString extra;
 
   for (int x = 0; x < 100; ++x)
   {
@@ -74,7 +74,7 @@ void OnOpen(WebSocket* p_socket,WSFrame* /*p_frame*/)
 
 void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 {
-  CString message((char*)p_frame->m_data);
+  XString message((char*)p_frame->m_data);
   qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetIdentityKey().GetString(),message.GetString());
   --totalChecks;
 
@@ -84,7 +84,7 @@ void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
   }
   else
   {
-    // CString msg = GenerateLargePushMessage();
+    // XString msg = GenerateLargePushMessage();
     // p_socket->WriteString(msg);
     p_socket->WriteString("We are the server!");
   }
@@ -92,7 +92,7 @@ void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 
 void OnClose(WebSocket* p_socket,WSFrame* p_frame)
 {
-  CString message((char*)p_frame->m_data);
+  XString message((char*)p_frame->m_data);
   if(!message.IsEmpty())
   {
     qprintf("TEST handler: Closing WebSocket message: %s",message.GetString());
@@ -142,7 +142,7 @@ TestMarlinServer::TestWebSocket()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/Sockets/");
+  XString url("/MarlinTest/Sockets/");
 
   xprintf("TESTING WEBSOCKET FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("==============================================\n");

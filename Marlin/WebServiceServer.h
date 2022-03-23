@@ -37,7 +37,7 @@
 #include "CreateURLPrefix.h"
 #include "HTTPMessage.h"
 #include "SOAPMessage.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include "SiteHandlerSoap.h"
 #include "SiteHandlerGet.h"
 
@@ -85,18 +85,18 @@ public:
 class WebServiceServer
 {
 public:
-  WebServiceServer(CString    p_name
-                  ,CString    p_webroot
-                  ,CString    p_url
+  WebServiceServer(XString    p_name
+                  ,XString    p_webroot
+                  ,XString    p_url
                   ,PrefixType p_channelType
-                  ,CString    p_targetNamespace
+                  ,XString    p_targetNamespace
                   ,unsigned   p_maxThreads);
   virtual ~WebServiceServer();
  
   // Reset: Use before starting again
   void            Reset();
   // Add SOAP message call and answer. Call once for all messages in the service
-  bool            AddOperation(int p_code,CString p_name,SOAPMessage* p_input,SOAPMessage* p_output);
+  bool            AddOperation(int p_code,XString p_name,SOAPMessage* p_input,SOAPMessage* p_output);
   // Running the service
   virtual bool    RunService();
   // Stopping the service
@@ -123,13 +123,13 @@ public:
   // HIGHLY RECOMMENDED:  Set the error report object
   void    SetErrorReport(ErrorReport* p_errorReport);
   // OPTIONAL:  Set a logfile name (if no LogAnalysis given)
-  void    SetLogFilename(CString p_logFilename);
+  void    SetLogFilename(XString p_logFilename);
   // OPTIONAL:  Set create as a subsite from another site
   void    SetSubsite(bool p_subsite)                 { m_subsite = p_subsite;              };
   // OPTIONAL:  Set the WSDLCache to generate a WSDL file
   void    SetGenerateWsdl(bool p_generate)           { m_generateWsdl = p_generate;        };
   // OPTIONAL:  Set an external WSDL file to be read
-  void    SetExternalWsdl(CString p_filename)        { m_externalWsdl = p_filename;        };
+  void    SetExternalWsdl(XString p_filename)        { m_externalWsdl = p_filename;        };
   // OPTIONAL:  Set checking of incoming messages
   void    SetCheckIncoming(bool p_check)             { m_checkIncoming = p_check;          };
   // OPTIONAL:  Set checking of outgoing messages
@@ -143,25 +143,25 @@ public:
   // OPTIONAL:  Set SOAP 1.2
   void    SetPerformSoap12(bool p_perform)           { m_wsdl->SetPerformSoap12(p_perform);};
   // OPTIONAL:  Set service postfix other than ".aspcxx"
-  void    SetServicePostfix(CString p_postfix)       { m_servicePostfix = p_postfix;       };
+  void    SetServicePostfix(XString p_postfix)       { m_servicePostfix = p_postfix;       };
   // OPTIONAL:  Set extra content type
-  void    SetContentType(CString p_extension,CString p_contentType);
+  void    SetContentType(XString p_extension,XString p_contentType);
   // OPTIONAL:  Set async mode for receiving of soap messages only
   void    SetAsynchroneous(bool p_async)             { m_asyncMode = p_async;              };
   // OPTIONAL:  Set authentication scheme (Basic, Digest, NTLM, Negotiate, All)
-  void    SetAuthenticationScheme(CString p_scheme)  { m_authentScheme = p_scheme;         };
+  void    SetAuthenticationScheme(XString p_scheme)  { m_authentScheme = p_scheme;         };
   // OPTIONAL:  Set WS-Reliability
   void    SetReliable(bool p_reliable)               { m_reliable = p_reliable;            };
   // OPTIONAL:  Set security encryption level
   void    SetEncryptionLevel(XMLEncryption p_level)  { m_securityLevel = p_level;          };
   // OPTIONAL:  Set security encryption password
-  void    SetEncryptionPassword(CString p_password)  { m_enc_password = p_password;        };
+  void    SetEncryptionPassword(XString p_password)  { m_enc_password = p_password;        };
   // OPTIONAL:  Set cache policy
   void    SetCachePolicy(HTTP_CACHE_POLICY_TYPE p_type,ULONG p_seconds);
   // OPTIONAL:  Set an authentication Realm
-  void    SetAuthenticationRealm(CString p_realm)    { m_authentRealm = p_realm;           };
+  void    SetAuthenticationRealm(XString p_realm)    { m_authentRealm = p_realm;           };
   // OPTIONAL:  Set an authentication Domain
-  void    SetAuthenticationDomain(CString p_domain)  { m_authentDomain = p_domain;         };
+  void    SetAuthenticationDomain(XString p_domain)  { m_authentDomain = p_domain;         };
   // OPTIONAL: Set a different SOAP handler, but beware!
   void    SetSoapHandler(SiteHandler* p_handler);
   // OPTIONAL: Set a different GET handler, but beware!
@@ -176,17 +176,17 @@ public:
 
   // GETTERS
 
-  CString       GetName()               { return m_name;              };
-  CString       GetWebroot()            { return m_webroot;           };
-  CString       GetURL()                { return m_url;               };
-  CString       GetAbsolutePath()       { return m_absPath;           };
+  XString       GetName()               { return m_name;              };
+  XString       GetWebroot()            { return m_webroot;           };
+  XString       GetURL()                { return m_url;               };
+  XString       GetAbsolutePath()       { return m_absPath;           };
   PrefixType    GetChannelType()        { return m_channelType;       };
   bool          GetSubsite()            { return m_subsite;           };
-  CString       GetContract()           { return m_targetNamespace;   };
-  CString       GetLogFilename()        { return m_logFilename;       };
+  XString       GetContract()           { return m_targetNamespace;   };
+  XString       GetLogFilename()        { return m_logFilename;       };
   bool          GetGenerateWsdl()       { return m_generateWsdl;      };
-  CString       GetErrorMessage()       { return m_errorMessage;      };
-  CString       GetServicePostfix()     { return m_servicePostfix;    };
+  XString       GetErrorMessage()       { return m_errorMessage;      };
+  XString       GetServicePostfix()     { return m_servicePostfix;    };
   int           GetMaxThreads()         { return m_maxThreads;        };
   bool          GetCheckIncoming()      { return m_checkIncoming;     };
   bool          GetCheckOutgoing()      { return m_checkOutgoing;     };
@@ -195,12 +195,12 @@ public:
   LogAnalysis*  GetLogfile()            { return m_log;               };
   ErrorReport*  GetErrorReport()        { return m_errorReport;       };
   bool          GetAsynchronous()       { return m_asyncMode;         };
-  CString       GetAuthentScheme()      { return m_authentScheme;     };
-  CString       GetAuthentRealm()       { return m_authentRealm;      };
-  CString       GetAuthentDomain()      { return m_authentDomain;     };
+  XString       GetAuthentScheme()      { return m_authentScheme;     };
+  XString       GetAuthentRealm()       { return m_authentRealm;      };
+  XString       GetAuthentDomain()      { return m_authentDomain;     };
   bool          GetReliable()           { return m_reliable;          };
   XMLEncryption GetEncryptionLevel()    { return m_securityLevel;     };
-  CString       GetEncryptionPassword() { return m_enc_password;      };
+  XString       GetEncryptionPassword() { return m_enc_password;      };
   CachePolicy   GetCachePolicy()        { return m_cachePolicy;       };
   int           GetCacheSeconds()       { return m_cacheSeconds;      };
   ThreadPool*   GetThreadpool()         { return m_pool;              };
@@ -210,7 +210,7 @@ public:
   SiteHandler*  GetPostHandler()        { return m_soapHandler;       };
   SiteHandler*  GetGetHandler()         { return m_getHandler;        };
   SiteHandler*  GetPutHandler()         { return m_putHandler;        };
-  int           GetCommandCode(CString p_commandName);
+  int           GetCommandCode(XString p_commandName);
   bool          GetDetailedLogging();
 
   // CALLBACKS FOR THE SITEHANDLERS
@@ -229,23 +229,23 @@ protected:
   void          StartWsdl();
   // Reading the settings from Marlin.config files
   void          ReadingWebconfig();
-  void          ReadingWebconfig(CString p_webconfig);
+  void          ReadingWebconfig(XString p_webconfig);
   // Define for your derived class by using the WEBSERVICE* macros
   // at the beginning of this interface description
   virtual void  OnProcessPost(int p_code,SOAPMessage* p_message);
 
   // Protected data of the service
-  CString         m_name;
-  CString         m_webroot;
-  CString         m_url;
-  CString         m_absPath;
+  XString         m_name;
+  XString         m_webroot;
+  XString         m_url;
+  XString         m_absPath;
   PrefixType      m_channelType       { PrefixType::URLPRE_Strong };
   bool            m_subsite           { false };
-  CString         m_targetNamespace;
-  CString         m_logFilename;
-  CString         m_servicePostfix    { ".acx" };
+  XString         m_targetNamespace;
+  XString         m_logFilename;
+  XString         m_servicePostfix    { ".acx" };
   int             m_maxThreads        { NUM_THREADS_MINIMUM };
-  CString         m_errorMessage;
+  XString         m_errorMessage;
   bool            m_checkIncoming     { true  };
   bool            m_checkOutgoing     { false };
   bool            m_checkFieldvalues  { false };
@@ -256,17 +256,17 @@ protected:
   bool            m_poolOwner         { false };
   bool            m_generateWsdl      { true  };
   int             m_logLevel          { HLL_NOLOG };
-  CString         m_externalWsdl; 
+  XString         m_externalWsdl; 
   // Server settings
   bool            m_isRunning         { false };
   bool            m_asyncMode         { false };
-  CString         m_authentScheme;
-  CString         m_authentRealm;
-  CString         m_authentDomain;
+  XString         m_authentScheme;
+  XString         m_authentRealm;
+  XString         m_authentDomain;
   bool            m_reliable          { false };
   bool            m_reliableLogin     { true  };
   XMLEncryption   m_securityLevel     { XMLEncryption::XENC_Plain };
-  CString         m_enc_password;
+  XString         m_enc_password;
   CachePolicy     m_cachePolicy       { HttpCachePolicyNocache };
   int             m_cacheSeconds      { 0 };
   // Complex objects

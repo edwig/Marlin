@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{2364c44b-2e4d-4631-a050-b47509afbc82}</ProjectGuid>
+    <RootNamespace>BaseLibrary</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)Lib\</OutDir>
+    <TargetName>$(ProjectName)_x64D</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)Lib\</OutDir>
+    <TargetName>$(ProjectName)_x64R</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <AdditionalIncludeDirectories>ZIP</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <AdditionalIncludeDirectories>ZIP</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Alert.h" />
+    <ClInclude Include="AutoCritical.h" />
+    <ClInclude Include="AutoFont.h" />
+    <ClInclude Include="Base64.h" />
+    <ClInclude Include="BaseLibrary.h" />
+    <ClInclude Include="bcd.h" />
+    <ClInclude Include="ConvertWideString.h" />
+    <ClInclude Include="Cookie.h" />
+    <ClInclude Include="CrackURL.h" />
+    <ClInclude Include="CRC32.h" />
+    <ClInclude Include="Crypto.h" />
+    <ClInclude Include="DefuseBOM.h" />
+    <ClInclude Include="EventLogRegistration.h" />
+    <ClInclude Include="ExecuteProcess.h" />
+    <ClInclude Include="FileBuffer.h" />
+    <ClInclude Include="FileDialog.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="GenerateGUID.h" />
+    <ClInclude Include="GetExePath.h" />
+    <ClInclude Include="GetLastErrorAsString.h" />
+    <ClInclude Include="GetUserAccount.h" />
+    <ClInclude Include="Headers.h" />
+    <ClInclude Include="HPFCounter.h" />
+    <ClInclude Include="HTTPError.h" />
+    <ClInclude Include="HTTPMessage.h" />
+    <ClInclude Include="HTTPTime.h" />
+    <ClInclude Include="JSONMessage.h" />
+    <ClInclude Include="JSONParser.h" />
+    <ClInclude Include="JSONPath.h" />
+    <ClInclude Include="JSONPointer.h" />
+    <ClInclude Include="LogAnalysis.h" />
+    <ClInclude Include="MapDialog.h" />
+    <ClInclude Include="MultiPartBuffer.h" />
+    <ClInclude Include="Namespace.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="PrintToken.h" />
+    <ClInclude Include="ProcInfo.h" />
+    <ClInclude Include="Redirect.h" />
+    <ClInclude Include="Routing.h" />
+    <ClInclude Include="RunRedirect.h" />
+    <ClInclude Include="SchemaReWriter.h" />
+    <ClInclude Include="ServiceReporting.h" />
+    <ClInclude Include="SOAPMessage.h" />
+    <ClInclude Include="SOAPSecurity.h" />
+    <ClInclude Include="SoapTypes.h" />
+    <ClInclude Include="StackTrace.h" />
+    <ClInclude Include="StdException.h" />
+    <ClInclude Include="StoreMessage.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="unzip.h" />
+    <ClInclude Include="WinFile.h" />
+    <ClInclude Include="WinINETError.h" />
+    <ClInclude Include="WinPing.h" />
+    <ClInclude Include="WinPingIPHeader.h" />
+    <ClInclude Include="xmem.h" />
+    <ClInclude Include="XMLDataType.h" />
+    <ClInclude Include="XMLMessage.h" />
+    <ClInclude Include="XMLParser.h" />
+    <ClInclude Include="XMLParserJSON.h" />
+    <ClInclude Include="XMLRestriction.h" />
+    <ClInclude Include="XMLTemporal.h" />
+    <ClInclude Include="XPath.h" />
+    <ClInclude Include="XString.h" />
+    <ClInclude Include="ZIP\deflate.h" />
+    <ClInclude Include="ZIP\gzguts.h" />
+    <ClInclude Include="ZIP\gzip.h" />
+    <ClInclude Include="ZIP\inffast.h" />
+    <ClInclude Include="ZIP\inffixed.h" />
+    <ClInclude Include="ZIP\inflate.h" />
+    <ClInclude Include="ZIP\inftrees.h" />
+    <ClInclude Include="ZIP\trees.h" />
+    <ClInclude Include="ZIP\zconf.h" />
+    <ClInclude Include="ZIP\zipcrc32.h" />
+    <ClInclude Include="ZIP\zlib.h" />
+    <ClInclude Include="ZIP\zutil.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Alert.cpp" />
+    <ClCompile Include="AutoCritical.cpp" />
+    <ClCompile Include="AutoFont.cpp" />
+    <ClCompile Include="Base64.cpp" />
+    <ClCompile Include="bcd.cpp" />
+    <ClCompile Include="ConvertWideString.cpp" />
+    <ClCompile Include="Cookie.cpp" />
+    <ClCompile Include="CrackURL.cpp" />
+    <ClCompile Include="CRC32.cpp" />
+    <ClCompile Include="Crypto.cpp" />
+    <ClCompile Include="DefuseBOM.cpp" />
+    <ClCompile Include="EventLogRegistration.cpp" />
+    <ClCompile Include="ExecuteProcess.cpp" />
+    <ClCompile Include="FileBuffer.cpp" />
+    <ClCompile Include="FileDialog.cpp" />
+    <ClCompile Include="GenerateGUID.cpp" />
+    <ClCompile Include="GetExePath.cpp" />
+    <ClCompile Include="GetLastErrorAsString.cpp" />
+    <ClCompile Include="GetUserAccount.cpp" />
+    <ClCompile Include="HPFCounter.cpp" />
+    <ClCompile Include="HTTPError.cpp" />
+    <ClCompile Include="HTTPMessage.cpp" />
+    <ClCompile Include="HTTPTime.cpp" />
+    <ClCompile Include="JSONMessage.cpp" />
+    <ClCompile Include="JSONParser.cpp" />
+    <ClCompile Include="JSONPath.cpp" />
+    <ClCompile Include="JSONPointer.cpp" />
+    <ClCompile Include="LogAnalysis.cpp" />
+    <ClCompile Include="MapDialog.cpp" />
+    <ClCompile Include="MultiPartBuffer.cpp" />
+    <ClCompile Include="Namespace.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="PrintToken.cpp" />
+    <ClCompile Include="ProcInfo.cpp" />
+    <ClCompile Include="Redirect.cpp" />
+    <ClCompile Include="RunRedirect.cpp" />
+    <ClCompile Include="SchemaReWriter.cpp" />
+    <ClCompile Include="ServiceReporting.cpp" />
+    <ClCompile Include="SOAPMessage.cpp" />
+    <ClCompile Include="SOAPSecurity.cpp" />
+    <ClCompile Include="StackTrace.cpp" />
+    <ClCompile Include="StdException.cpp" />
+    <ClCompile Include="StoreMessage.cpp" />
+    <ClCompile Include="unzip.cpp" />
+    <ClCompile Include="WinFile.cpp" />
+    <ClCompile Include="WinPing.cpp" />
+    <ClCompile Include="xmem.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="XMLDataType.cpp" />
+    <ClCompile Include="XMLMessage.cpp" />
+    <ClCompile Include="XMLParser.cpp" />
+    <ClCompile Include="XMLParserJSON.cpp" />
+    <ClCompile Include="XMLRestriction.cpp" />
+    <ClCompile Include="XMLTemporal.cpp" />
+    <ClCompile Include="XPath.cpp" />
+    <ClCompile Include="XString.cpp" />
+    <ClCompile Include="ZIP\adler32.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZIP\deflate.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZIP\gzip.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZIP\inffast.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZIP\inflate.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZIP\inftrees.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZIP\trees.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZIP\zipcrc32.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ZIP\zutil.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ZIP\deflate.d" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -84,14 +84,14 @@ WebConfigDlg::OnInitDialog()
   ReadWebConfig();
 
   // Setting the type of editor
-  CString base("Marlin.Config");
+  XString base("Marlin.Config");
   if(m_siteConfigFile.IsEmpty())
   {
     m_title = base + " Editor for: Marlin.config";
   }
   else
   {
-    CString subject = m_url.IsEmpty() ? CString("server") : m_url;
+    XString subject = m_url.IsEmpty() ? XString("server") : m_url;
     m_title = base + " Editor for: " + subject;
   }
   SetWindowText("Marlin.Config");
@@ -148,7 +148,7 @@ WebConfigDlg::RemoveLogTab()
 }
 
 void
-WebConfigDlg::SetSiteConfig(CString p_urlPrefix,CString p_fileName)
+WebConfigDlg::SetSiteConfig(XString p_urlPrefix,XString p_fileName)
 {
   m_url            = p_urlPrefix;
   m_siteConfigFile = p_fileName;
@@ -197,7 +197,7 @@ WebConfigDlg::WriteWebConfig()
   // WRITE THE WEB.CONFIG
   if(m_webconfig->WriteConfig() == false)
   {
-    CString message("Cannot write the file. Check the rights of this file: ");
+    XString message("Cannot write the file. Check the rights of this file: ");
     if(m_siteConfigFile.IsEmpty())
     {
       message += "Marlin.config";

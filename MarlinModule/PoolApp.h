@@ -42,11 +42,11 @@ public:
   // Conditional destructor!!
   ~PoolApp();
 
-  bool LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_physical,CString p_application);
+  bool LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_physical,XString p_application);
 
   // DATA
   WebConfigIIS        m_config;
-  CString             m_marlinDLL;
+  XString             m_marlinDLL;
   ServerApp*          m_application     { nullptr };
   LogAnalysis*        m_analysisLog     { nullptr };
   HMODULE             m_module          { NULL    };
@@ -60,9 +60,9 @@ public:
   MinVersionFunc      m_minVersion      { nullptr };
 
 private:
-  CString ConstructDLLLocation(CString p_rootpath, CString p_dllPath);
-  bool    CheckApplicationPresent(CString& p_dllPath, CString& p_dllName);
-  bool    AlreadyLoaded(CString p_path_to_dll);
+  XString ConstructDLLLocation(XString p_rootpath, XString p_dllPath);
+  bool    CheckApplicationPresent(XString& p_dllPath, XString& p_dllName);
+  bool    AlreadyLoaded(XString p_path_to_dll);
 
 };
 

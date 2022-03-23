@@ -38,17 +38,17 @@
 
 class HTTPSite;
 
-using UrlSiteMap = std::map<CString,HTTPSite*>;
+using UrlSiteMap = std::map<XString,HTTPSite*>;
 
 class HTTPURLGroup
 {
 public:
   HTTPURLGroup(HTTPServerMarlin* p_server
-              ,CString p_authName
+              ,XString p_authName
               ,ULONG   p_authScheme
               ,bool    p_cache
-              ,CString p_realm
-              ,CString p_domain);
+              ,XString p_realm
+              ,XString p_domain);
  ~HTTPURLGroup();
 
   // Starting a new URL Group
@@ -65,11 +65,11 @@ public:
   HTTPServerMarlin* GetHTTPServer()              { return m_server;     };
   bool              GetIsStarted()               { return m_isStarted;  };
   HTTP_URL_GROUP_ID GetUrlGroupID()              { return m_group;      };
-  CString           GetAuthenticationName()      { return m_authName;   };
+  XString           GetAuthenticationName()      { return m_authName;   };
   ULONG             GetAuthenticationScheme()    { return m_authScheme; };
   bool              GetAuthenticationNtlmCache() { return m_ntlmCache;  };
-  CString           GetAuthenticationRealm()     { return m_realm;      };
-  CString           GetAuthenticationDomain()    { return m_domain;     };
+  XString           GetAuthenticationRealm()     { return m_realm;      };
+  XString           GetAuthenticationDomain()    { return m_domain;     };
   unsigned          GetNumberOfSites();
 
 private:
@@ -77,11 +77,11 @@ private:
   HTTP_URL_GROUP_ID m_group       { NULL    };        // URL Group within Windows OS
   bool              m_isStarted   { false   };        // Group is started
   // Authentication
-  CString           m_authName;                       // Authentication scheme name
+  XString           m_authName;                       // Authentication scheme name
   ULONG             m_authScheme  { 0 };              // Authentication scheme
   bool              m_ntlmCache   { true };           // Authentication NTLM Cache 
-  CString           m_realm;                          // Authentication realm
-  CString           m_domain;                         // Authentication domain
+  XString           m_realm;                          // Authentication realm
+  XString           m_domain;                         // Authentication domain
   // All sites
   UrlSiteMap        m_sites;                          // All live sites in the URL-Group
 };

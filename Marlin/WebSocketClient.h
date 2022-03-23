@@ -49,7 +49,7 @@ typedef DWORD    (CALLBACK* WSOCK_RECEIVE)   (HINTERNET,PVOID,DWORD,DWORD*,WINHT
 class WebSocketClient: public WebSocket
 {
 public:
-  WebSocketClient(CString p_uri);
+  WebSocketClient(XString p_uri);
   virtual ~WebSocketClient();
 
   // FUNCTIONS
@@ -61,20 +61,20 @@ public:
   // Close the socket
   virtual bool CloseSocket();
   // Close the socket with a closing frame
-  virtual bool SendCloseSocket(USHORT p_code,CString p_reason);
+  virtual bool SendCloseSocket(USHORT p_code,XString p_reason);
   // Register the server request for sending info
   virtual bool RegisterSocket(HTTPMessage* p_message);
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
   // Generate a handshake key
-  CString      GenerateKey();
+  XString      GenerateKey();
   // Socket listener, entered by the StartClientListener only!
   void         SocketListener();
 
   // GETTERS
 
   // The handshake key the socket was started with
-  CString      GetHandshakeKey();
+  XString      GetHandshakeKey();
 
 protected:
   // Start listener thread for the client WebSocket
@@ -90,7 +90,7 @@ protected:
   // WinHTTP Client version of the WebSocket
   HINTERNET    m_socket   { NULL };   // Our socket handle for WinHTTP
   HANDLE       m_listener { NULL };   // Listener thread
-  CString      m_socketKey;           // Given at the start
+  XString      m_socketKey;           // Given at the start
   HMODULE      m_winhttp  { NULL };   // Handle to the extended library
 
   // Pointers to the extended functions on Windows 8 / Windows 10
@@ -101,7 +101,7 @@ protected:
   WSOCK_RECEIVE     m_websocket_receive   { nullptr };
 };
 
-inline CString
+inline XString
 WebSocketClient::GetHandshakeKey()
 {
   return m_socketKey;

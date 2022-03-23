@@ -30,12 +30,12 @@
 class TestMail
 {
 public:
-  TestMail(CString p_afzender,CString p_ontvanger,CString p_server);
+  TestMail(XString p_afzender,XString p_ontvanger,XString p_server);
 
   bool Send();
 
 private:
-  CString m_sender;
-  CString m_receiver;
-  CString m_server;
+  XString m_sender;
+  XString m_receiver;
+  XString m_server;
 };

@@ -346,7 +346,7 @@ ConfigDlg::CheckConfig()
   // Minimum base URL is one (1) char site "/x/"
   if(m_baseURL.IsEmpty() || m_baseURL.GetLength() < 3 || m_baseURL == "/" || m_baseURL.Left(1) != "/" || m_baseURL.Right(1) != "/")
   {
-    MessageBox(CString("The base URL of ") + PRODUCT_NAME + " cannot be empty or just the root reference!"
+    MessageBox(XString("The base URL of ") + PRODUCT_NAME + " cannot be empty or just the root reference!"
               ,"ERROR",MB_OK|MB_ICONERROR);
     return false;
   }
@@ -389,7 +389,7 @@ ConfigDlg::WriteConfig()
   if(config.WriteConfig() == false)
   {
     ::MessageBox(GetSafeHwnd()
-                ,CString("Cannot write the configuration file '") + PRODUCT_NAME + ".config' to disk.\n"
+                ,XString("Cannot write the configuration file '") + PRODUCT_NAME + ".config' to disk.\n"
                  "Check the rights on the file and the rights on the directory it is in!"
                 ,PROGRAM_NAME
                 ,MB_OK | MB_ICONERROR);
@@ -424,11 +424,11 @@ ConfigDlg::WarningWriteRights()
 }
 
 bool 
-ConfigDlg::CheckFRVeldIngevuld(const CString& frVeld, const CString& description)
+ConfigDlg::CheckFRVeldIngevuld(const XString& frVeld, const XString& description)
 {
   if (frVeld.IsEmpty())
   {
-    CString error;
+    XString error;
     error.Format("If sending error reports is 'on', the %s field needs to be filled in.",description.GetString());
 
     MessageBox(error,"ERROR",MB_OK|MB_ICONERROR);
@@ -567,7 +567,7 @@ ConfigDlg::OnEnChangeWebroot()
 void 
 ConfigDlg::OnBnClickedSearchroot()
 {
-  CString rootdir;
+  XString rootdir;
   BrowseForDirectory map;
   if(map.Browse(GetSafeHwnd()
                 ,"Get path to the WEBROOT directory"
@@ -576,7 +576,7 @@ ConfigDlg::OnBnClickedSearchroot()
                 ,false    // files
                 ,true))   // status
   {
-    CString path = map.GetPath();
+    XString path = map.GetPath();
     if(m_webroot.CompareNoCase(path))
     {
       m_webroot = path;
@@ -614,7 +614,7 @@ ConfigDlg::OnBnClickedSearchserverlog()
                         ,"");
   if(file.DoModal() == IDOK)
   {
-    CString path = file.GetChosenFile();
+    XString path = file.GetChosenFile();
     if(m_serverLogfile.CompareNoCase(path))
     {
       m_serverLogfile = path;
@@ -634,7 +634,7 @@ ConfigDlg::OnCbnRunAs()
 
 
     // Prepare the message box
-    CString message;
+    XString message;
     int     buttons = MB_OK|MB_ICONWARNING;
 
     // Get the correct warning

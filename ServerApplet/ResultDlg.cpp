@@ -40,7 +40,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(ResultDlg, CDialog)
 
-ResultDlg::ResultDlg(CWnd* pParent,CString p_result)
+ResultDlg::ResultDlg(CWnd* pParent,XString p_result)
           :CDialog(ResultDlg::IDD, pParent)
           ,m_result(p_result)
 {

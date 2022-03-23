@@ -265,15 +265,15 @@ HTTPRequest::ReceivedRequest()
   m_requestID = m_request->RequestId;
 
   // Grab the senders content
-  CString   acceptTypes     = m_request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
-  CString   contentType     = m_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
-  CString   contentLength   = m_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
-  CString   acceptEncoding  = m_request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
-  CString   cookie          = m_request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
-  CString   authorize       = m_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
-  CString   modified        = m_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
-  CString   referrer        = m_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
-  CString   rawUrl          = (CString) CW2A(m_request->CookedUrl.pFullUrl);
+  XString   acceptTypes     = m_request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
+  XString   contentType     = m_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
+  XString   contentLength   = m_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
+  XString   acceptEncoding  = m_request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
+  XString   cookie          = m_request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
+  XString   authorize       = m_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
+  XString   modified        = m_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
+  XString   referrer        = m_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
+  XString   rawUrl          = (XString) CW2A(m_request->CookedUrl.pFullUrl);
   PSOCKADDR sender          = m_request->Address.pRemoteAddress;
   PSOCKADDR receiver        = m_request->Address.pLocalAddress;
   int       remDesktop      = m_server->FindRemoteDesktop(m_request->Headers.UnknownHeaderCount
@@ -311,7 +311,7 @@ HTTPRequest::ReceivedRequest()
   // See if we must substitute for a sub-site
   if(m_server->GetHasSubsites())
   {
-    CString absPath = (CString) CW2A(m_request->CookedUrl.pAbsPath);
+    XString absPath = (XString) CW2A(m_request->CookedUrl.pAbsPath);
     m_site = m_server->FindHTTPSite(m_site,absPath);
   }
 
@@ -375,7 +375,7 @@ HTTPRequest::ReceivedRequest()
   EventStream* stream = nullptr;
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
-    CString absolutePath = (CString) CW2A(m_request->CookedUrl.pAbsPath);
+    XString absolutePath = (XString) CW2A(m_request->CookedUrl.pAbsPath);
     if(m_server->CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
     {
       return;
@@ -783,7 +783,7 @@ HTTPRequest::StartEventStreamResponse()
   TRACE0("Start EventStream Response\n");
 
   // First comment to push to the stream (not an event!)
-  CString init = m_server->GetEventBOM() ? ConstructBOM() : CString();
+  XString init = m_server->GetEventBOM() ? ConstructBOM() : XString();
   init += ":init event-stream\n";
 
   // Initialize the HTTP response structure.
@@ -1038,10 +1038,10 @@ HTTPRequest::Finalize()
 
 // Add a request string for a header
 void 
-HTTPRequest::AddRequestString(CString p_string,const char*& p_buffer,USHORT& p_size)
+HTTPRequest::AddRequestString(XString p_string,const char*& p_buffer,USHORT& p_size)
 {
   m_strings.push_back(p_string);
-  CString& string = m_strings.back();
+  XString& string = m_strings.back();
   p_buffer = string.GetString();
   p_size   = (USHORT) string.GetLength();
 }
@@ -1077,13 +1077,13 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
     const char* string = nullptr;
     USHORT size = 0;
 
-    CString name = unknown.first;
+    XString name = unknown.first;
     AddRequestString(name,string,size);
     m_unknown[ind].NameLength = size;
     m_unknown[ind].pName = string;
 
 
-    CString value = unknown.second;
+    XString value = unknown.second;
     AddRequestString(value,string,size);
     m_unknown[ind].RawValueLength = size;
     m_unknown[ind].pRawValue = string;
@@ -1121,14 +1121,14 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // Add content type as a known header. (octet-stream or the message content type)
   if(p_status != HTTP_STATUS_SWITCH_PROTOCOLS)
   {
-    CString contentType("application/octet-stream");
+    XString contentType("application/octet-stream");
     if(!m_message->GetContentType().IsEmpty())
     {
       contentType = m_message->GetContentType();
     }
     else
     {
-      CString cttype = m_message->GetHeader("Content-type");
+      XString cttype = m_message->GetHeader("Content-type");
       if(!cttype.IsEmpty())
       {
         contentType = cttype;
@@ -1141,10 +1141,10 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // In case of a 401, we challenge to the client to identify itself
   if(m_message->GetStatus() == HTTP_STATUS_DENIED)
   {
-    CString date = HTTPGetSystemTime();
+    XString date = HTTPGetSystemTime();
 
     // See if the message already has an authentication scheme header
-    CString challenge = m_message->GetHeader("AuthenticationScheme");
+    XString challenge = m_message->GetHeader("AuthenticationScheme");
     if(challenge.IsEmpty())
     {
       // Add authentication scheme
@@ -1200,7 +1200,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   Cookies& cookies = m_message->GetCookies();
   if(cookies.GetCookies().empty())
   {
-    CString cookie = m_message->GetHeader("Set-Cookie");
+    XString cookie = m_message->GetHeader("Set-Cookie");
     if(!cookie.IsEmpty())
     {
       AddKnownHeader(HttpHeaderSetCookie,cookie);
@@ -1295,7 +1295,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   {
     // Now after the compression, and after the calculation of the file length
     // add the total content length in the form of the content-length header
-    CString contentLength;
+    XString contentLength;
 #ifdef _WIN64
     contentLength.Format("%I64u",totalLength);
 #else

@@ -71,7 +71,7 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
   // Detect XML SOAP errors
   if(g_soapMessage->GetInternalError() != XmlError::XE_NoError)
   {
-    CString msg = g_soapMessage->GetInternalErrorString();
+    XString msg = g_soapMessage->GetInternalErrorString();
     if(g_soapMessage->GetFaultCode().IsEmpty())
     {
       g_soapMessage->Reset();

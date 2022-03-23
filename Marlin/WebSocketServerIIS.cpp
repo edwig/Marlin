@@ -52,7 +52,7 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
-WebSocketServerIIS::WebSocketServerIIS(CString p_uri)
+WebSocketServerIIS::WebSocketServerIIS(XString p_uri)
   :WebSocket(p_uri)
 {
 }
@@ -379,7 +379,7 @@ WebSocketServerIIS::SocketListener()
 }
 
 bool
-WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
+WebSocketServerIIS::SendCloseSocket(USHORT p_code,XString p_reason)
 {
   int     length  = 0;
   uchar*  buffer  = nullptr;
@@ -398,7 +398,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,CString p_reason)
 
   // Still other parameters and reason to do
   BOOL expected = FALSE;
-  CString message;
+  XString message;
   HRESULT hr = S_FALSE;
   try
   {
@@ -443,13 +443,13 @@ WebSocketServerIIS::ReceiveCloseSocket()
   HRESULT hr = m_iis_socket->GetCloseStatus(&m_closingError,&pointer,&length);
   if(SUCCEEDED(hr))
   {
-    CString encoded;
+    XString encoded;
     bool foundBom = false;
     if(TryConvertWideString((const uchar*)pointer,length,"",encoded,foundBom))
     {
       m_closing = encoded;
     }
-    CString explanation = GetClosingErrorAsString();
+    XString explanation = GetClosingErrorAsString();
     DETAILLOGV("Received closing message [%d:%s] -> [%s] on WebSocket [%s] on [%s]"
               ,m_closingError
               ,explanation.GetString()
@@ -501,9 +501,9 @@ bool
 WebSocketServerIIS::ServerHandshake(HTTPMessage* p_message)
 {
   // Does nothing for IIS
-  CString version   = p_message->GetHeader("Sec-WebSocket-Version");
-  CString clientKey = p_message->GetHeader("Sec-WebSocket-Key");
-  CString serverKey = ServerAcceptKey(clientKey);
+  XString version   = p_message->GetHeader("Sec-WebSocket-Version");
+  XString clientKey = p_message->GetHeader("Sec-WebSocket-Key");
+  XString serverKey = ServerAcceptKey(clientKey);
   // Get optional extensions
   m_protocols  = p_message->GetHeader("Sec-WebSocket-Protocol");
   m_extensions = p_message->GetHeader("Sec-WebSocket-Extensions");

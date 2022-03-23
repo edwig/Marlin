@@ -27,7 +27,7 @@
 //
 #include "stdafx.h"
 #include "LongPolling.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include "SOAPMessage.h"
 #include "AutoCritical.h"
 #include "Base64.h"
@@ -45,7 +45,7 @@ static char THIS_FILE[] = __FILE__;
 #define WARNINGLOG(text,...)    if(m_logfile) m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_WARN,true, text,__VA_ARGS__)
 #define ERRORLOG(code,text)     if(m_logfile) m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,true,text,code)
 
-static CString polling_namespace = "http://www.marlin.org/polling";
+static XString polling_namespace = "http://www.marlin.org/polling";
 
 LongPolling::LongPolling()
 {
@@ -59,7 +59,7 @@ LongPolling::~LongPolling()
 }
 
 bool
-LongPolling::StartLongPolling(CString p_session,CString p_cookie,CString p_secret)
+LongPolling::StartLongPolling(XString p_session,XString p_cookie,XString p_secret)
 {
   m_session = p_session;
   m_cookie  = p_cookie;
@@ -112,7 +112,7 @@ LongPolling::StopLongPolling()
 }
 
 void
-LongPolling::SetURL(CString p_url)
+LongPolling::SetURL(XString p_url)
 {
   m_url = p_url;
   DETAILLOGV("Registered long-polling URL: %s",m_url.GetString());
@@ -143,7 +143,7 @@ LongPolling::GetIsReceiving()
 }
 
 void 
-LongPolling::RegisterEvent(CString p_payload,EvtType p_type,int p_number /*=0*/)
+LongPolling::RegisterEvent(XString p_payload,EvtType p_type,int p_number /*=0*/)
 {
   LTEvent* event = new LTEvent();
   event->m_payload = p_payload;
@@ -222,8 +222,8 @@ LongPolling::AskForMessages(LTEvent* p_event /*=nullptr*/)
 {
   AutoCritSec lock(&m_lock);
 
-  CString url(m_url);
-  CString action("GetMessage");
+  XString url(m_url);
+  XString action("GetMessage");
   url += "/" + action;
   SOAPMessage msg(polling_namespace,action,SoapVersion::SOAP_12,url);
   msg.SetParameter("Acknowledged",m_lastNumber);
@@ -253,8 +253,8 @@ LongPolling::AskForMessages(LTEvent* p_event /*=nullptr*/)
       // Legal answer received!
       bool empty = msg.GetParameterBoolean("Empty");
       int number = msg.GetParameterInteger("Number");
-      CString eventType = msg.GetParameter("Type");
-      CString payload   = msg.GetParameter("Message");
+      XString eventType = msg.GetParameter("Type");
+      XString payload   = msg.GetParameter("Message");
       EvtType type      = LTEvent::StringToEventType(eventType);
 
       // OK. End of queue reached. Wait longer
@@ -275,14 +275,14 @@ LongPolling::AskForMessages(LTEvent* p_event /*=nullptr*/)
     else
     {
       // Error in handling SOAP message
-      CString fault = msg.GetFault();
+      XString fault = msg.GetFault();
       RegisterEvent(fault,EvtType::EV_Error);
     }
   }
   else
   {
     // No answer or channel now closed
-    CString error,message;
+    XString error,message;
     m_client.GetError(&error);
     message.Format("Error while asking for message. HTTP status [%d] %s",m_client.GetStatus(),error.GetString());
     RegisterEvent(message,EvtType::EV_Error);
@@ -301,8 +301,8 @@ LongPolling::SendCloseMessage()
 {
   AutoCritSec lock(&m_lock);
 
-  CString url(m_url);
-  CString action("GetMessage");
+  XString url(m_url);
+  XString action("GetMessage");
   url += "/" + action;
   SOAPMessage msg(polling_namespace,action,SoapVersion::SOAP_12,url);
   msg.SetParameter("Acknowledged",m_lastNumber);
@@ -321,7 +321,7 @@ LongPolling::SendCloseMessage()
     else
     {
       // Error in handling SOAP message
-      CString fault = msg.GetFault();
+      XString fault = msg.GetFault();
       // Log fault
       return -1;
     }

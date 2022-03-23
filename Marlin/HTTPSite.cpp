@@ -29,7 +29,7 @@
 #include "HTTPSite.h"
 #include "HTTPURLGroup.h"
 #include "EnsureFile.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include "AutoCritical.h"
 #include "GenerateGUID.h"
 #include "Crypto.h"
@@ -63,8 +63,8 @@ __declspec(thread) CRITICAL_SECTION* g_throttle = nullptr;
 // THE XTOR
 HTTPSite::HTTPSite(HTTPServer*   p_server
                   ,int           p_port
-                  ,CString       p_site
-                  ,CString       p_prefix
+                  ,XString       p_site
+                  ,XString       p_prefix
                   ,HTTPSite*     p_mainSite /* = nullptr */
                   ,LPFN_CALLBACK p_callback /* = nullptr */)
         :m_server(p_server)
@@ -138,7 +138,7 @@ HTTPSite::CleanupThrotteling()
 
 // OPTIONAL: Set one or more text-based content types
 void
-HTTPSite::AddContentType(CString p_extension,CString p_contentType)
+HTTPSite::AddContentType(XString p_extension,XString p_contentType)
 {
   // Mapping is on lower case
   p_extension.MakeLower();
@@ -160,8 +160,8 @@ HTTPSite::AddContentType(CString p_extension,CString p_contentType)
 }
 
 // Getting a registered content type for a file extension
-CString
-HTTPSite::GetContentType(CString p_extension)
+XString
+HTTPSite::GetContentType(XString p_extension)
 {
   // Mapping is on lower case
   p_extension.MakeLower();
@@ -183,11 +183,11 @@ HTTPSite::GetContentType(CString p_extension)
 }
 
 // Finding the registered content type from the full resource name
-CString
-HTTPSite::GetContentTypeByResourceName(CString p_pathname)
+XString
+HTTPSite::GetContentTypeByResourceName(XString p_pathname)
 {
   EnsureFile ensure;
-  CString extens = ensure.ExtensionPart(p_pathname);
+  XString extens = ensure.ExtensionPart(p_pathname);
   return GetContentType(extens);
 }
 
@@ -216,7 +216,7 @@ HTTPSite::SetFilter(unsigned p_priority,SiteFilter* p_filter)
     return true;
   }
   // already filter for this priority
-  CString msg;
+  XString msg;
   msg.Format("Site filter for [%s] with priority [%d] already exists!",m_site.GetString(),p_priority);
   ERRORLOG(ERROR_ALREADY_EXISTS,msg);
   return false;
@@ -325,7 +325,7 @@ HTTPSite::GetSiteHandler(HTTPCommand p_command)
   return nullptr;
 }
 
-CString
+XString
 HTTPSite::GetWebroot()
 {
   if(m_webroot.IsEmpty())
@@ -369,7 +369,7 @@ HTTPSite::InitSite(MarlinConfig& p_config)
   m_webroot = p_config.GetParameterString("Server", "WebRoot", m_webroot);
 
   // Read XML Signing en encryption from the config
-  CString level;
+  XString level;
   switch(m_securityLevel)
   {
     case XMLEncryption::XENC_Plain:   level = "";        break;
@@ -412,7 +412,7 @@ HTTPSite::InitSite(MarlinConfig& p_config)
   }
   if(m_cookieHasSame)
   {
-    CString sameSite = p_config.GetParameterString("Cookies","SameSite","");
+    XString sameSite = p_config.GetParameterString("Cookies","SameSite","");
     if(sameSite.CompareNoCase("None"))   m_cookieSameSite = CookieSameSite::None;
     if(sameSite.CompareNoCase("Lax"))    m_cookieSameSite = CookieSameSite::Lax;
     if(sameSite.CompareNoCase("Strict")) m_cookieSameSite = CookieSameSite::Strict;
@@ -462,7 +462,7 @@ HTTPSite::LogSettings()
   }
 
   // Read XML Signing en encryption from the config
-  CString level;
+  XString level;
   switch(m_securityLevel)
   {
     case XMLEncryption::XENC_Plain:   level = "plain";   break;
@@ -473,7 +473,7 @@ HTTPSite::LogSettings()
   }
 
   // Translate X-Frame options back
-  CString option;
+  XString option;
   switch(m_xFrameOption)
   {
     case XFrameOption::XFO_DENY:      option = "DENY";        break;
@@ -484,7 +484,7 @@ HTTPSite::LogSettings()
   }
 
   // SameSite cookie setting
-  CString sameSite;
+  XString sameSite;
   switch(m_cookieSameSite)
   {
     case CookieSameSite::NoSameSite: sameSite = "NoSameSite"; break;
@@ -518,7 +518,7 @@ HTTPSite::LogSettings()
   DETAILLOGS("Site has XSS Protection block mode : ",       m_xXSSBlockMode  ? "ON" : "OFF");
   DETAILLOGS("Site blocking the browser caching  : ",       m_blockCache     ? "ON" : "OFF");
   DETAILLOGS("Site Cross-Origin-Resource-Sharing : ",       m_useCORS        ? "ON" : "OFF");
-  DETAILLOG1(CString("Site allows cross-origin           : ") + (m_allowOrigin.IsEmpty() ? CString("*") : m_allowOrigin));
+  DETAILLOG1(XString("Site allows cross-origin           : ") + (m_allowOrigin.IsEmpty() ? XString("*") : m_allowOrigin));
   DETAILLOGS("Site CORS allows headers           : ",       m_allowHeaders);
   DETAILLOGV("Site CORS max age of pre-flight    : %d",     m_corsMaxAge);
   DETAILLOGS("Site CORS allows credentials       : ",       m_corsCredentials ? "YES" : "NO");
@@ -562,7 +562,7 @@ HTTPSite::RemoveSiteFromGroup()
   return false;
 }
 
-CString
+XString
 HTTPSite::GetAuthenticationScheme() 
 { 
   if(m_scheme.IsEmpty() && m_mainSite)
@@ -582,7 +582,7 @@ HTTPSite::GetAuthenticationNTLMCache()
   return m_ntlmCache; 
 }
 
-CString
+XString
 HTTPSite::GetAuthenticationRealm()
 { 
   if(m_realm.IsEmpty() && m_mainSite)
@@ -592,7 +592,7 @@ HTTPSite::GetAuthenticationRealm()
   return m_realm; 
 };
 
-CString
+XString
 HTTPSite::GetAuthenticationDomain() 
 { 
   if(m_domain.IsEmpty() && m_mainSite)
@@ -854,10 +854,10 @@ HTTPSite::HandleHTTPMessageDefault(HTTPMessage* p_message)
 
 // Getting the 'ALLOW'ed handlers for the HTTP OPTION request
 // This will make a list of all current handler types
-CString
+XString
 HTTPSite::GetAllowHandlers()
 {
-  CString allow;
+  XString allow;
 
   // Simply list all filled handlers
   for(auto& handler : m_handlers)
@@ -928,7 +928,7 @@ HTTPSite::RemoveFilter(unsigned p_priority)
   FilterMap::iterator it = m_filters.find(p_priority);
   if(it == m_filters.end())
   {
-    CString msg;
+    XString msg;
     msg.Format("Filter with priority [%d] for site [%s] not found!",p_priority,m_site.GetString());
     ERRORLOG(ERROR_NOT_FOUND,msg);
     return false;
@@ -1105,7 +1105,7 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
                   ,"Client"
                   ,"Unknown WS-ReliableMessaging request"
                   ,"Client program"
-                  ,CString("Encountered a WS-ReliableMessaging request that is unknown to the server: ") + p_message->GetSoapAction());
+                  ,XString("Encountered a WS-ReliableMessaging request that is unknown to the server: ") + p_message->GetSoapAction());
 
       return true;
     }
@@ -1145,7 +1145,7 @@ HTTPSite::RM_HandleMessage(SessionAddress& p_address,SOAPMessage* p_message)
   }
   // Check message
   // 1: Correct client GUID
-  CString clientGUID = p_message->GetClientSequence();
+  XString clientGUID = p_message->GetClientSequence();
   if(clientGUID.CompareNoCase(sequence->m_serverGUID))
   {
     // SOAP FAULT
@@ -1158,7 +1158,7 @@ HTTPSite::RM_HandleMessage(SessionAddress& p_address,SOAPMessage* p_message)
     return true;
   }
   // 2: Correct server GUID
-  CString serverGUID = p_message->GetServerSequence();
+  XString serverGUID = p_message->GetServerSequence();
   if(!serverGUID.IsEmpty() && serverGUID.CompareNoCase(sequence->m_clientGUID))
   {
     // SOAP FAULT
@@ -1213,7 +1213,7 @@ HTTPSite::RM_HandleCreateSequence(SessionAddress& p_address,SOAPMessage* p_messa
     return true;
   }
   // Client offers a nonce
-  CString guidSequenceClient;
+  XString guidSequenceClient;
   XMLElement* xmlOffer = p_message->FindElement("Offer");
   XMLElement* xmlIdent = p_message->FindElement(xmlOffer,"Identifier");
   if(xmlIdent)
@@ -1317,7 +1317,7 @@ HTTPSite::RM_HandleTerminateSequence(SessionAddress& p_address,SOAPMessage* p_me
   }
 
   // Check Sequence to be ended
-  CString serverGUID = p_message->GetParameter("Identifier");
+  XString serverGUID = p_message->GetParameter("Identifier");
   if(serverGUID.CompareNoCase(sequence->m_serverGUID))
   {
     // SOAP FAULT: Missing last message
@@ -1344,9 +1344,9 @@ HTTPSite::RM_HandleTerminateSequence(SessionAddress& p_address,SOAPMessage* p_me
 }
 
 void
-HTTPSite::DebugPrintSessionAddress(CString p_prefix,SessionAddress& p_address)
+HTTPSite::DebugPrintSessionAddress(XString p_prefix,SessionAddress& p_address)
 {
-  CString address;
+  XString address;
   for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
   {
     BYTE byte = ((BYTE*)&p_address.m_address)[ind];
@@ -1424,10 +1424,10 @@ HTTPSite::RemoveSequence(SessionAddress& p_address)
 void
 HTTPSite::SendSOAPFault(SessionAddress& p_address
                        ,SOAPMessage*    p_message
-                       ,CString         p_code 
-                       ,CString         p_actor
-                       ,CString         p_string
-                       ,CString         p_detail)
+                       ,XString         p_code 
+                       ,XString         p_actor
+                       ,XString         p_string
+                       ,XString         p_detail)
 {
   // Destroy the session.
   // Clients must start new RM session after a fault has been received
@@ -1468,10 +1468,10 @@ HTTPSite::ReliableResponse(SessionSequence* p_sequence,SOAPMessage* p_message)
 }
 
 // Get user SID from an internal SID
-CString
+XString
 HTTPSite::GetStringSID(HANDLE p_token)
 {
-  CString stringSID;
+  XString stringSID;
   LPTSTR  stringSIDpointer = NULL;
   DWORD   dwSize = 0;
   BYTE*   tokenUser = NULL;
@@ -1555,15 +1555,15 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
   XMLElement* sigValue = p_message->FindElement("SignatureValue");
   if(sigValue)
   {
-    CString signature = sigValue->GetValue();
+    XString signature = sigValue->GetValue();
     if(!signature.IsEmpty())
     {
       // Finding the signing method
-      CString method = "sha1"; // Default method
+      XString method = "sha1"; // Default method
       XMLElement* digMethod = p_message->FindElement("DigestMethod");
       if(digMethod)
       {
-        CString usedMethod = p_message->GetAttribute(digMethod,"Algorithm");
+        XString usedMethod = p_message->GetAttribute(digMethod,"Algorithm");
         if(!usedMethod.IsEmpty())
         {
           method = usedMethod;
@@ -1577,11 +1577,11 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
       }
 
       // Finding the reference ID
-      CString signedXML;
+      XString signedXML;
       XMLElement* refer = p_message->FindElement("Reference");
       if(refer)
       {
-        CString uri = p_message->GetAttribute(refer,"URI");
+        XString uri = p_message->GetAttribute(refer,"URI");
         if(!uri.IsEmpty())
         {
           uri = uri.TrimLeft("#");
@@ -1602,7 +1602,7 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
       Crypto sign;
       sign.SetHashMethod(method);
       p_message->SetSigningMethod(sign.GetHashMethod());
-      CString digest = sign.Digest(signedXML,m_enc_password);
+      XString digest = sign.Digest(signedXML,m_enc_password);
 
       if(signature.CompareNoCase(digest) == 0)
       {
@@ -1627,16 +1627,16 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
 bool
 HTTPSite::CheckBodyEncryption(SessionAddress& p_address
                              ,SOAPMessage*    p_soap
-                             ,CString         p_body)
+                             ,XString         p_body)
 {
   bool ready = true;
-  CString crypt = p_soap->GetSecurityPassword();
+  XString crypt = p_soap->GetSecurityPassword();
   // Restore password for return answer
   p_soap->SetSecurityPassword(m_enc_password);
 
   // Decrypt
   Crypto crypting;
-  CString newBody = crypting.Decryption(crypt,m_enc_password);
+  XString newBody = crypting.Decryption(crypt,m_enc_password);
 
   int beginPos = p_body.Find("Body>");
   int endPos   = p_body.Find("Body>",beginPos + 5);
@@ -1664,7 +1664,7 @@ HTTPSite::CheckBodyEncryption(SessionAddress& p_address
     }
 
     // Reparse from here and set to NOT-ENCRYPTED
-    CString message = p_body.Left(beginPos) + newBody + p_body.Mid(endPos + extra);
+    XString message = p_body.Left(beginPos) + newBody + p_body.Mid(endPos + extra);
     p_soap->Reset();
     p_soap->ParseMessage(message);
     p_soap->SetSecurityLevel(XMLEncryption::XENC_Plain);
@@ -1694,16 +1694,16 @@ HTTPSite::CheckBodyEncryption(SessionAddress& p_address
 bool
 HTTPSite::CheckMesgEncryption(SessionAddress& p_address
                              ,SOAPMessage*    p_soap
-                             ,CString         p_body)
+                             ,XString         p_body)
 {
   bool ready = true;
-  CString crypt = p_soap->GetSecurityPassword();
+  XString crypt = p_soap->GetSecurityPassword();
   // Restore password for return answer
   p_soap->SetSecurityPassword(m_enc_password);
 
   // Decrypt
   Crypto crypting;
-  CString newBody = crypting.Decryption(crypt,m_enc_password);
+  XString newBody = crypting.Decryption(crypt,m_enc_password);
 
   int beginPos = p_body.Find("Envelope>");
   int endPos   = p_body.Find("Envelope>",beginPos + 2);
@@ -1731,7 +1731,7 @@ HTTPSite::CheckMesgEncryption(SessionAddress& p_address
     }
 
     // Reparsing the message
-    CString message = p_body.Left(beginPos) + newBody + p_body.Mid(endPos + extra);
+    XString message = p_body.Left(beginPos) + newBody + p_body.Mid(endPos + extra);
     p_soap->Reset();
     p_soap->ParseMessage(message);
     p_soap->SetSecurityLevel(XMLEncryption::XENC_Plain);
@@ -1764,7 +1764,7 @@ HTTPSite::CheckMesgEncryption(SessionAddress& p_address
 //////////////////////////////////////////////////////////////////////////
 
 void
-HTTPSite::SetXFrameOptions(XFrameOption p_option,CString p_uri)
+HTTPSite::SetXFrameOptions(XFrameOption p_option,XString p_uri)
 {
   m_xFrameOption = p_option;
   if(m_xFrameOption == XFrameOption::XFO_ALLOWFROM)
@@ -1816,7 +1816,7 @@ void
 HTTPSite::SetAutomaticHeaders(MarlinConfig& p_config)
 {
   // Find default value for xFrame options
-  CString option;
+  XString option;
   switch(m_xFrameOption)
   {
     case XFrameOption::XFO_NO_OPTION: option = "NOT-SET";     break;
@@ -1852,7 +1852,7 @@ HTTPSite::SetAutomaticHeaders(MarlinConfig& p_config)
 void
 HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
 {
-  CString value;
+  XString value;
 
   // Add X-Frame-Options
   if(m_xFrameOption != XFrameOption::XFO_NO_OPTION)
@@ -1904,7 +1904,7 @@ HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
   // If we use CORS, make sure we advertise the origin
   if(m_useCORS)
   {
-    p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? CString("*") : m_allowOrigin));
+    p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? XString("*") : m_allowOrigin));
   }
 }
 

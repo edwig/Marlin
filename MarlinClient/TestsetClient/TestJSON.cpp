@@ -341,7 +341,7 @@ int TestAddObject()
   json.AddNamedObject("MyObject",object2,true);
 
   json.SetWhitespace(true);
-  CString total = json.GetJsonMessage(JsonEncoding::JENC_Plain);
+  CString total = json.GetJsonMessage(StringEncoding::ENC_Plain);
 
   CString expected = "{\n"
                      "\t\"MyObject\":[\n"

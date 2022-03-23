@@ -25,30 +25,12 @@
     <Filter Include="MarlinServer\Headers">
       <UniqueIdentifier>{06fced64-729c-47e5-a1d3-41e7c11c670e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{4700dbff-55de-4518-b58d-591d5bed2ef9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Analysis.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="Base64.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="ConvertWideString.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="Cookie.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="CrackURL.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="CreateURLPrefix.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="Crypto.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="DefuseBOM.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="EnsureFile.cpp">
@@ -60,23 +42,8 @@
     <ClCompile Include="EventSource.cpp">
       <Filter>MarlinClient</Filter>
     </ClCompile>
-    <ClCompile Include="FileBuffer.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="FindProxy.cpp">
       <Filter>MarlinClient</Filter>
-    </ClCompile>
-    <ClCompile Include="GenerateGUID.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="GetLastErrorAsString.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="GetUserAccount.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="HPFCounter.cpp">
-      <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="HTTPCertificate.cpp">
       <Filter>MarlinGeneral</Filter>
@@ -87,47 +54,14 @@
     <ClCompile Include="HTTPClientTracing.cpp">
       <Filter>MarlinClient</Filter>
     </ClCompile>
-    <ClCompile Include="HTTPError.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="HTTPMessage.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="HTTPServer.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
     <ClCompile Include="HTTPSite.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
-    <ClCompile Include="HTTPTime.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="HTTPURLGroup.cpp">
       <Filter>MarlinServer</Filter>
-    </ClCompile>
-    <ClCompile Include="JSONMessage.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="JSONParser.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="MultiPartBuffer.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="Namespace.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="PrintToken.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="ProcInfo.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="Redirect.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="RunRedirect.cpp">
-      <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="SiteFilter.cpp">
       <Filter>MarlinServer</Filter>
@@ -183,16 +117,10 @@
     <ClCompile Include="SiteHandlerWebDAV.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
-    <ClCompile Include="SOAPMessage.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="MarlinConfig.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="ThreadPool.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="StackTrace.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="WebServiceClient.cpp">
@@ -204,16 +132,7 @@
     <ClCompile Include="WSDLCache.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="XMLMessage.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="XMLParser.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="XMLParserImport.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="XMLRestriction.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="ZLib\inflate.c">
@@ -242,9 +161,6 @@
     </ClCompile>
     <ClCompile Include="Zlib\gzip.cpp">
       <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="MediaType.cpp">
       <Filter>MarlinServer</Filter>
@@ -276,9 +192,6 @@
     <ClCompile Include="CommandBus.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="XMLTemporal.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="HostedWebCore.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
@@ -295,15 +208,6 @@
       <Filter>MarlinServer</Filter>
     </ClCompile>
     <ClCompile Include="ThreadPoolED.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="SOAPSecurity.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="StdException.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="XMLDataType.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="WebSocketClient.cpp">
@@ -327,31 +231,7 @@
     <ClCompile Include="AppConfig.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="EventLogRegistration.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="ServiceReporting.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="ExecuteProcess.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="Marlin.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="AutoCritical.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="bcd.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="Alert.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="XMLParserJSON.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="StoreMessage.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="OAuth2Cache.cpp">
@@ -359,18 +239,6 @@
     </ClCompile>
     <ClCompile Include="WebSocketContext.cpp">
       <Filter>MarlinServer</Filter>
-    </ClCompile>
-    <ClCompile Include="JSONPointer.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="JSONPath.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="CRC32.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
-    <ClCompile Include="XPath.cpp">
-      <Filter>MarlinGeneral</Filter>
     </ClCompile>
     <ClCompile Include="ServerEventDriver.cpp">
       <Filter>MarlinServer</Filter>
@@ -386,6 +254,9 @@
     </ClCompile>
     <ClCompile Include="LongTermEvent.cpp">
       <Filter>MarlinGeneral</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Configuration</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -509,34 +380,10 @@
     <ClInclude Include="FindProxy.h">
       <Filter>MarlinClient\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Analysis.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="AutoCritical.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Base64.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ConvertWideString.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Cookie.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="CPULoad.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="CrackURL.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="CreateURLPrefix.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Crypto.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="DefuseBOM.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="EnsureFile.h">
@@ -545,73 +392,10 @@
     <ClInclude Include="ErrorReport.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="FileBuffer.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="GenerateGUID.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="GetLastErrorAsString.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="GetUserAccount.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="HPFCounter.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="HTTPCertificate.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="HTTPError.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="HTTPMessage.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="HTTPTime.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="JSONMessage.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="JSONParser.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="MultiPartBuffer.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Namespace.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="PrintToken.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcInfo.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Redirect.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RunRedirect.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="ServerEvent.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="SOAPMessage.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="SoapTypes.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="StackTrace.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ThreadPool.h">
@@ -626,16 +410,7 @@
     <ClInclude Include="WSDLCache.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="XMLMessage.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="XMLParser.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="XMLParserImport.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="XMLRestriction.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="HTTPServerMarlin.h">
@@ -659,16 +434,10 @@
     <ClInclude Include="WebConfigIIS.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="XMLDataType.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="SiteFilterXSS.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
     <ClInclude Include="CommandBus.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="XMLTemporal.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="HostedWebCore.h">
@@ -698,14 +467,6 @@
     <ClInclude Include="HTTPLoglevel.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="SOAPSecurity.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Version.h" />
-    <ClInclude Include="StdException.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Marlin.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="WebSocketClient.h">
       <Filter>MarlinClient\Headers</Filter>
@@ -728,47 +489,11 @@
     <ClInclude Include="AppConfig.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="EventLogRegistration.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ServiceReporting.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ExecuteProcess.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Routing.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="bcd.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Alert.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="XMLParserJSON.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="StoreMessage.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="OAuth2Cache.h">
       <Filter>MarlinClient\Headers</Filter>
     </ClInclude>
     <ClInclude Include="WebSocketContext.h">
       <Filter>MarlinServer\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="JSONPointer.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="JSONPath.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="CRC32.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="XPath.h">
-      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ServerEventDriver.h">
       <Filter>MarlinServer\Headers</Filter>
@@ -785,8 +510,20 @@
     <ClInclude Include="LongTermEvent.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers.h">
-      <Filter>MarlinGeneral\Headers</Filter>
+    <ClInclude Include="stdafx.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="Marlin.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="Version.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Configuration</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

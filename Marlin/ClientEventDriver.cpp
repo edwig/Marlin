@@ -31,7 +31,7 @@
 #include "EventSource.h"
 #include "LongPolling.h"
 #include "AutoCritical.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include "Base64.h"
 
 #ifdef _DEBUG
@@ -73,7 +73,7 @@ ClientEventDriver::SetApplicationCallback(LPFN_EVENTCALLBACK p_callback, void* p
 
 // Starting the driver in one go!
 bool
-ClientEventDriver::StartEventDriver(CString p_url,EVChannelPolicy p_policy,CString p_session,CString p_cookie,CString p_cookieValue)
+ClientEventDriver::StartEventDriver(XString p_url,EVChannelPolicy p_policy,XString p_session,XString p_cookie,XString p_cookieValue)
 {
   m_serverURL = p_url;
   m_policy    = p_policy;
@@ -104,7 +104,7 @@ ClientEventDriver::SetChannelPolicy(EVChannelPolicy p_policy)
 
 // Set server URL to change on next re-connect
 void  
-ClientEventDriver::SetServerURL(CString p_url)
+ClientEventDriver::SetServerURL(XString p_url)
 {
   m_serverURL = p_url;
   DETAILLOGV("Set event URL to: %s",m_serverURL.GetString());
@@ -112,7 +112,7 @@ ClientEventDriver::SetServerURL(CString p_url)
 
 // Start with session (Call SetChannelPolicy and SetServerURL first)
 bool
-ClientEventDriver::StartEventsForSession(CString p_session,CString p_cookie,CString p_cookieValue)
+ClientEventDriver::StartEventsForSession(XString p_session,XString p_cookie,XString p_cookieValue)
 {
   if(m_policy   != EVChannelPolicy::DP_NoPolicy &&
     !m_serverURL.IsEmpty() && 
@@ -435,7 +435,7 @@ static void OnWebsocketBinary(WebSocket* p_socket, WSFrame* p_event)
   event->m_type    = EvtType::EV_Binary;
   event->m_sent    = 0;
   event->m_number  = 0;
-  // Put the binary buffer forcibly in a CString!
+  // Put the binary buffer forcibly in a XString!
   char* buf = event->m_payload.GetBufferSetLength(p_event->m_length);
   memcpy_s(buf,p_event->m_length,(const char*)p_event->m_data,p_event->m_length);
   event->m_payload.ReleaseBufferSetLength(p_event->m_length);
@@ -472,7 +472,7 @@ static void OnWebsocketClose(WebSocket* p_socket, WSFrame* p_event)
 bool
 ClientEventDriver::StartSocketChannel()
 {
-  CString url = m_serverURL + "Sockets/" + m_session;
+  XString url = m_serverURL + "Sockets/" + m_session;
 //   url.Replace("http://", "ws://");
 //   url.Replace("https://","wss://");
 
@@ -495,7 +495,7 @@ ClientEventDriver::StartSocketChannel()
   m_websocket->SetOnClose  (OnWebsocketClose);
 
   // Add authorization
-  CString value = m_cookie + "=" + m_secret;
+  XString value = m_cookie + "=" + m_secret;
   m_websocket->AddHeader("Cookie",value);
 
   DETAILLOGV("Staring WebSocket channel on [%s]",url.GetString());
@@ -594,7 +594,7 @@ static void OnEventClose(ServerEvent* p_event,void* p_data)
 bool
 ClientEventDriver::StartEventsChannel()
 {
-  CString url = m_serverURL + "Events/" + m_session;
+  XString url = m_serverURL + "Events/" + m_session;
   m_source = m_client.CreateEventSource(url);
 
   // Until server tells us otherwise, wait 2 seconds before each reconnect
@@ -662,7 +662,7 @@ void OnPollingEvent(void* p_application,LTEvent* p_event)
 bool
 ClientEventDriver::StartPollingChannel()
 {
-  CString url = m_serverURL + "Polling/" + m_session;
+  XString url = m_serverURL + "Polling/" + m_session;
 
   m_polling = new LongPolling();
   m_polling->SetURL(url);

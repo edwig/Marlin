@@ -60,7 +60,7 @@ protected:
   bool        m_useLogLevel;
 
   // LOGFILE OVERRIDES
-  CString     m_logfile;
+  XString     m_logfile;
   int         m_logCache;
   bool        m_doLogging;
   bool        m_doTiming;

@@ -45,7 +45,7 @@
 #include "ConvertWideString.h"
 #include "EnsureFile.h"
 #include "GetLastErrorAsString.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include "AutoCritical.h"
 #include "PrintToken.h"
 #include "Cookie.h"
@@ -95,8 +95,8 @@ __declspec(thread) ULONG tls_lastError = 0;
 
 // Static globals for the server as a whole
 // Can be set through the Marlin.config reading of the HTTPServer
-unsigned long g_streaming_limit = STREAMING_LIMIT;
-unsigned long g_compress_limit  = COMPRESS_LIMIT;
+// unsigned long g_streaming_limit = STREAMING_LIMIT;
+// unsigned long g_compress_limit  = COMPRESS_LIMIT;
 
 // Logging macro's
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
@@ -115,7 +115,7 @@ MediaTypes* g_media = nullptr;
 //
 //////////////////////////////////////////////////////////////////////////
 
-HTTPServer::HTTPServer(CString p_name)
+HTTPServer::HTTPServer(XString p_name)
            :m_name(p_name)
 {
   // Set defaults
@@ -181,7 +181,7 @@ HTTPServer::InitLogging()
     m_log = new LogAnalysis(m_name);
     m_logOwner = true;
 
-  CString file    = m_log->GetLogFileName();
+  XString file    = m_log->GetLogFileName();
   int  cache      = m_log->GetCacheSize();
   int  logging    = m_log->GetLogLevel();
   bool timing     = m_log->GetDoTiming();
@@ -341,7 +341,7 @@ HTTPServer::DetailLogS(const char* p_function,LogType p_type,const char* p_text,
 {
   if(m_log && MUSTLOG(HLL_LOGGING))
   {
-    CString text(p_text);
+    XString text(p_text);
     text += p_extra;
 
     m_log->AnalysisLog(p_function,p_type,false,text);
@@ -355,7 +355,7 @@ HTTPServer::DetailLogV(const char* p_function,LogType p_type,const char* p_text,
   {
     va_list varargs;
     va_start(varargs,p_text);
-    CString text;
+    XString text;
     text.FormatV(p_text,varargs);
     va_end(varargs);
 
@@ -365,7 +365,7 @@ HTTPServer::DetailLogV(const char* p_function,LogType p_type,const char* p_text,
 
 // Error logging to the log file
 void
-HTTPServer::ErrorLog(const char* p_function,DWORD p_code,CString p_text)
+HTTPServer::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
 {
   bool result = false;
 
@@ -386,7 +386,7 @@ HTTPServer::ErrorLog(const char* p_function,DWORD p_code,CString p_text)
 }
 
 void
-HTTPServer::HTTPError(const char* p_function,int p_status,CString p_text)
+HTTPServer::HTTPError(const char* p_function,int p_status,XString p_text)
 {
   bool result = false;
 
@@ -447,7 +447,7 @@ HTTPServer::SetLogging(LogAnalysis* p_log)
 }
 
 void
-HTTPServer::SetWebroot(CString p_webroot)
+HTTPServer::SetWebroot(XString p_webroot)
 {
   // Check WebRoot against your config
   m_webroot = m_marlinConfig->GetParameterString("Server","WebRoot",p_webroot);
@@ -462,10 +462,10 @@ HTTPServer::SetWebroot(CString p_webroot)
   m_webroot = p_webroot;
 }
 
-CString
-HTTPServer::MakeSiteRegistrationName(int p_port,CString p_url)
+XString
+HTTPServer::MakeSiteRegistrationName(int p_port,XString p_url)
 {
-  CString registration;
+  XString registration;
   p_url.MakeLower();
 
   // Now chop off all parameters and anchors
@@ -491,7 +491,7 @@ HTTPServer::MakeSiteRegistrationName(int p_port,CString p_url)
 
 // Register a URL to listen on
 bool
-HTTPServer::RegisterSite(HTTPSite* p_site,CString p_urlPrefix)
+HTTPServer::RegisterSite(HTTPSite* p_site,XString p_urlPrefix)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -515,8 +515,8 @@ HTTPServer::RegisterSite(HTTPSite* p_site,CString p_urlPrefix)
 
   // Remember our context
   int port = p_site->GetPort();
-  CString base = p_site->GetSite();
-  CString site(MakeSiteRegistrationName(port,base));
+  XString base = p_site->GetSite();
+  XString site(MakeSiteRegistrationName(port,base));
   SiteMap::iterator it = m_allsites.find(site);
   if(it != m_allsites.end())
   {
@@ -577,14 +577,14 @@ HTTPSite*
 HTTPServer::FindHTTPSite(int p_port,PCWSTR p_url)
 {
   USES_CONVERSION;
-  CString site = (CString) CW2A(p_url);
+  XString site = (XString) CW2A(p_url);
 
   return FindHTTPSite(p_port,site);
 }
 
 // Find a site or a sub-site of the site
 HTTPSite*
-HTTPServer::FindHTTPSite(HTTPSite* p_site,CString& p_url)
+HTTPServer::FindHTTPSite(HTTPSite* p_site,XString& p_url)
 {
   HTTPSite* site = FindHTTPSite(p_site->GetPort(),p_url);
   if(site)
@@ -601,19 +601,19 @@ HTTPServer::FindHTTPSite(HTTPSite* p_site,CString& p_url)
 // Finding the HTTP site from the mappings of all sites
 // by the 'longest match' method, optimized for pathnames
 HTTPSite*
-HTTPServer::FindHTTPSite(int p_port,CString& p_url)
+HTTPServer::FindHTTPSite(int p_port,XString& p_url)
 {
   AutoCritSec lock(&m_sitesLock);
 
   // Prepare the URL
-  CString search(MakeSiteRegistrationName(p_port,p_url));
+  XString search(MakeSiteRegistrationName(p_port,p_url));
 
   // Search for longest match between incoming URL 
   // and registered sites from "RegisterSite"
   int pos = search.GetLength();
   while(pos > 0)
   {
-    CString finding = search.Left(pos);
+    XString finding = search.Left(pos);
     SiteMap::iterator it = m_allsites.find(finding);
     if(it != m_allsites.end())
     {
@@ -637,10 +637,10 @@ HTTPServer::FindHTTPSite(int p_port,CString& p_url)
 void
 HTTPServer::CalculateRouting(HTTPSite* p_site,HTTPMessage* p_message)
 {
-  CString url = p_message->GetCrackedURL().AbsoluteResource();
-  CString known(p_site->GetSite());
+  XString url = p_message->GetCrackedURL().AbsoluteResource();
+  XString known(p_site->GetSite());
 
-  CString route = url.Mid(known.GetLength());
+  XString route = url.Mid(known.GetLength());
   route = route.Trim('/');
   route = route.Trim('\\');
 
@@ -679,7 +679,7 @@ HTTPServer::FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers)
   // Take care: it could be Unicode!
   for(int ind = 0;ind < p_count; ++ind)
   {
-    CString name = p_headers[ind].pName;
+    XString name = p_headers[ind].pName;
     if(name.GetLength() != p_headers[ind].NameLength)
     {
       // Different length: suppose it's Unicode
@@ -707,8 +707,8 @@ bool
 HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
                                ,HTTP_OPAQUE_ID p_id
                                ,HTTPSite*      p_site
-                               ,CString&       p_rawUrl
-                               ,CString        p_authorize
+                               ,XString&       p_rawUrl
+                               ,XString        p_authorize
                                ,HANDLE&        p_token)
 {
   bool doReceive = true;
@@ -760,7 +760,7 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
         }
         else
         {
-          CString authError;
+          XString authError;
           authError.Format("Authentication mechanism failure. Unknown status: %d",auth->AuthStatus);
           ERRORLOG(ERROR_NOT_AUTHENTICATED,authError);
           HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_FORBIDDEN);
@@ -784,10 +784,10 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
 }
 
 // Build the www-auhtenticate challenge
-CString
-HTTPServer::BuildAuthenticationChallenge(CString p_authScheme,CString p_realm)
+XString
+HTTPServer::BuildAuthenticationChallenge(XString p_authScheme,XString p_realm)
 {
-  CString challenge;
+  XString challenge;
 
   if(p_authScheme.CompareNoCase("Basic") == 0)
   {
@@ -863,7 +863,7 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
     !p_message->GetSoapAction().IsEmpty() &&
      answer->GetHeader("SOAPAction").IsEmpty())
   {
-    CString action = "\"" + p_message->GetNamespace();
+    XString action = "\"" + p_message->GetNamespace();
     if(action.Right(1) != "/") action += "/";
     action += p_message->GetSoapAction() + "\"";
 
@@ -928,10 +928,10 @@ HTTPServer::SendResponse(JSONMessage* p_message)
 void
 HTTPServer::RespondWithServerError(HTTPMessage* p_message
                                   ,int          p_error
-                                  ,CString      p_reason)
+                                  ,XString      p_reason)
 {
   HTTPERROR(p_error,"Respond with server error");
-  CString page;
+  XString page;
   page.Format(m_serverErrorPage,p_error,p_reason.GetString());
 
   p_message->Reset();
@@ -953,12 +953,12 @@ HTTPServer::RespondWithServerError(HTTPMessage*    p_message
 void
 HTTPServer::RespondWithClientError(HTTPMessage* p_message
                                   ,int          p_error
-                                  ,CString      p_reason
-                                  ,CString      p_authScheme
-                                  ,CString      p_realm)
+                                  ,XString      p_reason
+                                  ,XString      p_authScheme
+                                  ,XString      p_realm)
 {
   HTTPERROR(p_error,"Respond with client error");
-  CString page;
+  XString page;
   page.Format(m_clientErrorPage,p_error,p_reason.GetString());
 
   p_message->Reset();
@@ -966,7 +966,7 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
   p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
   p_message->SetStatus(p_error);
 
-  CString challenge = BuildAuthenticationChallenge(p_authScheme,p_realm);
+  XString challenge = BuildAuthenticationChallenge(p_authScheme,p_realm);
   if(!challenge.IsEmpty())
   {
     p_message->AddHeader("AuthenticationScheme",challenge);
@@ -976,7 +976,7 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
 }
 
 void 
-HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,CString p_body)
+HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,XString p_body)
 {
 	p_message->Reset();
 	p_message->GetFileBuffer()->Reset();
@@ -986,10 +986,10 @@ HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,CString p_body)
 }
 
 // Authentication failed for this reason
-CString 
+XString 
 HTTPServer::AuthenticationStatus(SECURITY_STATUS p_secStatus)
 {
-  CString answer;
+  XString answer;
 
   switch(p_secStatus)
   {
@@ -1037,10 +1037,10 @@ HTTPServer::LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo)
   Crypto  crypt;
 
   // Getting the SSL Protocol / Cipher / Hash / KeyExchange descriptions
-  CString protocol = crypt.GetSSLProtocol(p_sslInfo->Protocol);
-  CString cipher   = crypt.GetCipherType (p_sslInfo->CipherType);
-  CString hash     = crypt.GetHashMethod (p_sslInfo->HashType);
-  CString exchange = crypt.GetKeyExchange(p_sslInfo->KeyExchangeType);
+  XString protocol = crypt.GetSSLProtocol(p_sslInfo->Protocol);
+  XString cipher   = crypt.GetCipherType (p_sslInfo->CipherType);
+  XString hash     = crypt.GetHashMethod (p_sslInfo->HashType);
+  XString exchange = crypt.GetKeyExchange(p_sslInfo->KeyExchangeType);
 
   hash.MakeUpper();
 
@@ -1066,10 +1066,10 @@ HTTPServer::HandleTextContent(HTTPMessage* p_message)
   int uni = IS_TEXT_UNICODE_UNICODE_MASK;   // Intel/AMD processors + BOM
   if(IsTextUnicode(body,(int)length,&uni))
   {
-    CString output;
+    XString output;
 
     // Find specific code page and try to convert
-    CString charset = FindCharsetInContentType(p_message->GetContentType());
+    XString charset = FindCharsetInContentType(p_message->GetContentType());
     DETAILLOGS("Try convert charset in pre-handle fase: ",charset);
     bool convert = TryConvertWideString(body,(int)length,"",output,doBOM);
 
@@ -1099,7 +1099,7 @@ HTTPServer::CheckSitesStarted()
   {
     if(site.second->GetIsStarted() == false)
     {
-      CString message;
+      XString message;
       message.Format("Forgotten to call 'StartSite' for: %s",site.second->GetPrefixURL().GetString());
       ERRORLOG(ERROR_CALL_NOT_IMPLEMENTED,message);
     }
@@ -1119,7 +1119,7 @@ HTTPServer::DoIsModifiedSince(HTTPMessage* p_msg)
   WIN32_FILE_ATTRIBUTE_DATA data;
   PSYSTEMTIME sinceTime = p_msg->GetSystemTime();
   HTTPSite* site   = p_msg->GetHTTPSite();
-  CString fileName;
+  XString fileName;
   
   // Getting the filename
   if(site)
@@ -1187,8 +1187,8 @@ EventStream*
 HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
                                 ,int              p_desktop
                                 ,HTTPSite*        p_site
-                                ,CString          p_url
-                                ,CString&         p_path
+                                ,XString          p_url
+                                ,XString&         p_path
                                 ,HTTP_OPAQUE_ID   p_requestId
                                 ,HANDLE           p_token)
 {
@@ -1245,7 +1245,7 @@ HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
 
 // Send to a server push event stream / deleting p_event
 bool
-HTTPServer::SendEvent(int p_port,CString p_site,ServerEvent* p_event,CString p_user /*=""*/)
+HTTPServer::SendEvent(int p_port,XString p_site,ServerEvent* p_event,XString p_user /*=""*/)
 {
   AutoCritSec lock(&m_eventLock);
   bool result = false;
@@ -1254,7 +1254,7 @@ HTTPServer::SendEvent(int p_port,CString p_site,ServerEvent* p_event,CString p_u
   p_site.TrimRight('/');
 
   // Get the stream-string of the event
-  CString sendString = EventToString(p_event);
+  XString sendString = EventToString(p_event);
 
   // Find the context of the URL (if any)
   HTTPSite* context = FindHTTPSite(p_port,p_site);
@@ -1337,14 +1337,14 @@ HTTPServer::SendEvent(EventStream* p_stream
   // Tell what we are about to do
   if (MUSTLOG(HLL_LOGGING) && m_log && p_stream->m_alive)
   {
-    CString text;
+    XString text;
     text.Format("Sent event id: %d to client(s) on URL: ", p_event->m_id);
     text += p_stream->m_baseURL;
     DETAILLOG1(text);
   }
 
   // Produce the event string
-  CString sendString = EventToString(p_event);
+  XString sendString = EventToString(p_event);
 
   // Send the event to the client. This can take an I/O wait time
   bool alive = SendResponseEventBuffer(p_stream->m_requestID,&p_stream->m_lock,sendString.GetString(),sendString.GetLength(),p_continue);
@@ -1394,10 +1394,10 @@ HTTPServer::SendEvent(EventStream* p_stream
 }
 
 // Form event to a stream string
-CString
+XString
 HTTPServer::EventToString(ServerEvent* p_event)
 {
-  CString stream;
+  XString stream;
 
   // Append client retry time to the first event
   if(p_event->m_id == 1)
@@ -1416,7 +1416,7 @@ HTTPServer::EventToString(ServerEvent* p_event)
   }
   if(!p_event->m_data.IsEmpty())
   {
-    CString buffer = p_event->m_data;
+    XString buffer = p_event->m_data;
     // Optimize our carriage returns
     if(buffer.Find('\r') >= 0)
     {
@@ -1525,7 +1525,7 @@ HTTPServer::CheckEventStreams()
   AutoCritSec lock(&m_eventLock);
   UINT number = 0;
   // Create keep alive buffer
-  CString keepAlive = ":keepalive\r\n\r\n";
+  XString keepAlive = ":keepalive\r\n\r\n";
 
   DETAILLOG1("Starting event heartbeat");
 
@@ -1605,7 +1605,7 @@ HTTPServer::HasEventStream(EventStream* p_stream)
 
 // Return the number of push-event-streams for this URL
 int
-HTTPServer::HasEventStreams(int p_port,CString p_url,CString p_user /*=""*/)
+HTTPServer::HasEventStreams(int p_port,XString p_url,XString p_user /*=""*/)
 {
   AutoCritSec lock(&m_eventLock);
   unsigned count = 0;
@@ -1661,7 +1661,7 @@ HTTPServer::CloseEventStream(EventStream* p_stream)
 
 // Close event streams for an URL and probably a user
 void
-HTTPServer::CloseEventStreams(int p_port,CString p_url,CString p_user /*=""*/)
+HTTPServer::CloseEventStreams(int p_port,XString p_url,XString p_user /*=""*/)
 {
   AutoCritSec lock(&m_eventLock);
 
@@ -1732,7 +1732,7 @@ HTTPServer::RegisterService(WebServiceServer* p_service)
 {
   AutoCritSec lock(&m_sitesLock);
 
-  CString name = p_service->GetName();
+  XString name = p_service->GetName();
   name.MakeLower();
   ServiceMap::iterator it = m_allServices.find(name);
   if(it == m_allServices.end())
@@ -1745,7 +1745,7 @@ HTTPServer::RegisterService(WebServiceServer* p_service)
 
 // Remove registration of a service
 bool
-HTTPServer::UnRegisterService(CString p_serviceName)
+HTTPServer::UnRegisterService(XString p_serviceName)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -1762,7 +1762,7 @@ HTTPServer::UnRegisterService(CString p_serviceName)
 
 // Finding a previous registered service endpoint
 WebServiceServer*
-HTTPServer::FindService(CString p_serviceName)
+HTTPServer::FindService(XString p_serviceName)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -1785,7 +1785,7 @@ HTTPServer::FindService(CString p_serviceName)
 bool
 HTTPServer::RegisterSocket(WebSocket* p_socket)
 {
-  CString key(p_socket->GetIdentityKey());
+  XString key(p_socket->GetIdentityKey());
   DETAILLOGV("Register websocket [%s] at the server",key.GetString());
   key.MakeLower();
 
@@ -1803,7 +1803,7 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
 bool
 HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
 {
-  CString key = p_socket->GetIdentityKey();
+  XString key = p_socket->GetIdentityKey();
   DETAILLOGV("Unregistering websocket [%s] from the server",key.GetString());
   key.MakeLower();
 
@@ -1820,7 +1820,7 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
 
 // Finding a previous registered websocket
 WebSocket*
-HTTPServer::FindWebSocket(CString p_key)
+HTTPServer::FindWebSocket(XString p_key)
 {
   p_key.MakeLower();
 
@@ -1879,7 +1879,7 @@ HTTPServer::TraceKnownRequestHeader(unsigned p_number,const char* p_value)
   }
 
   // Header fields are defined in HTTPMessage.cpp!!
-  CString line = header_fields[p_number];
+  XString line = header_fields[p_number];
   line += ": ";
   line += p_value;
   m_log->BareStringLog(line.GetString(),line.GetLength());
@@ -1891,11 +1891,11 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
   // Print HTTPSite context first before anything else of the call
   m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,true,"Incoming call for site context: %lX",p_request->UrlContext);
 
-  CString httpVersion;
+  XString httpVersion;
   httpVersion.Format("HTTP/%d.%d",p_request->Version.MajorVersion,p_request->Version.MinorVersion);
 
   // The request verb.
-  CString verb;
+  XString verb;
   if(p_request->Verb == HttpVerbUnknown && p_request->UnknownVerbLength)
   {
     verb = p_request->pUnknownVerb;
@@ -1926,7 +1926,7 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
   }
 
   // THE PRINCIPAL HTTP PROTOCOL CALL LINE
-  CString httpLine;
+  XString httpLine;
   httpLine.Format("%s %s %s",verb.GetString(),p_request->pRawUrl,httpVersion.GetString());
   m_log->BareStringLog(httpLine.GetString(),httpLine.GetLength());
 
@@ -1939,7 +1939,7 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
   // Print all 'unknown' headers
   for (unsigned ind = 0;ind < p_request->Headers.UnknownHeaderCount; ++ind)
   {
-    CString uheader;
+    XString uheader;
     uheader  = p_request->Headers.pUnknownHeaders[ind].pName;
     uheader += ": ";
     uheader += p_request->Headers.pUnknownHeaders[ind].pRawValue;
@@ -2028,7 +2028,7 @@ HTTPServer::TraceKnownResponseHeader(unsigned p_number,const char* p_value)
   }
 
   // Header fields are defined in HTTPMessage.cpp!!
-  CString line = p_number < HttpHeaderAcceptRanges ? header_fields[p_number] : header_response[p_number - HttpHeaderAcceptRanges];
+  XString line = p_number < HttpHeaderAcceptRanges ? header_fields[p_number] : header_response[p_number - HttpHeaderAcceptRanges];
   line += ": ";
   line += p_value;
   m_log->BareStringLog(line.GetString(),line.GetLength());
@@ -2044,7 +2044,7 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
   }
 
   // Print the principal first protocol line
-  CString line;
+  XString line;
   line.Format("HTTP/%d.%d %d %s"
              ,p_response->Version.MajorVersion
              ,p_response->Version.MinorVersion
@@ -2064,7 +2064,7 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
   {
     for(unsigned ind = 0;ind < p_response->Headers.UnknownHeaderCount; ++ind)
     {
-      CString uheader;
+      XString uheader;
       uheader = p_response->Headers.pUnknownHeaders[ind].pName;
       uheader += ": ";
       uheader += p_response->Headers.pUnknownHeaders[ind].pRawValue;
@@ -2151,7 +2151,7 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,u
 // Applications may call this registration after serveral failed 
 // login attempts of serveral failed SSE stream registration events
 void
-HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,CString p_path)
+HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -2165,14 +2165,14 @@ HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,CString p_path)
     m_attacks.push_back(attack);
 
     // REGISTER THE ATTACK
-    CString sender = SocketToServer(p_sender);
+    XString sender = SocketToServer(p_sender);
     ERRORLOG(ERROR_TOO_MANY_SESS,"DDOS ATTACK REGISTERED FOR: " + sender + " : " + p_path);
 
     // If we have a logfile where administrators may look
     // register the attack there for all to see!
     if(m_log)
     {
-      CString filename = m_log->GetLogFileName();
+      XString filename = m_log->GetLogFileName();
       int pos = filename.ReverseFind('\\');
       if(pos)
       {
@@ -2190,7 +2190,7 @@ HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,CString p_path)
 }
 
 bool
-HTTPServer::CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,CString p_path)
+HTTPServer::CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
 {
   AutoCritSec lock(&m_sitesLock);
 

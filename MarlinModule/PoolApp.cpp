@@ -39,7 +39,7 @@
 #define ERRORLOG(text)     SvcReportErrorEvent(0,false,__FUNCTION__,text);
 
 // General error function
-void Unhealthy(CString p_error, HRESULT p_code);
+void Unhealthy(XString p_error, HRESULT p_code);
 
 PoolApp::~PoolApp()
 {
@@ -53,22 +53,22 @@ PoolApp::~PoolApp()
 }
 
 bool
-PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_physical,CString p_application)
+PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_physical,XString p_application)
 {
   // Read Web config from "physical-application-path" + "web.config"
-  CString baseWebConfig = p_physical + "web.config";
+  XString baseWebConfig = p_physical + "web.config";
   baseWebConfig.MakeLower();
   m_config.ReadConfig(p_application,baseWebConfig);
 
   // Load the **real** application DLL from the settings of web.config
-  CString dllLocation = m_config.GetSetting(MODULE_NAME);
+  XString dllLocation = m_config.GetSetting(MODULE_NAME);
   if(dllLocation.IsEmpty())
   {
     Unhealthy("MarlinModule could **NOT** locate the 'Application' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
     return false;
   }
 
-  CString dllPath = m_config.GetSetting(MODULE_PATH);
+  XString dllPath = m_config.GetSetting(MODULE_PATH);
   if(dllPath.IsEmpty())
   {
     Unhealthy("MarlinModule could **NOT** locate the 'Directory' in web.config: " + baseWebConfig,ERROR_NOT_FOUND);
@@ -76,7 +76,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
   }
 
   // Find our default administrator email to send a Error report to
-  CString adminEmail = m_config.GetSetting(MODULE_EMAIL);
+  XString adminEmail = m_config.GetSetting(MODULE_EMAIL);
   if(adminEmail.IsEmpty())
   {
     Unhealthy("MarlinModule could **NOT** locate the 'AdministratorEmail' in the web.config: " + baseWebConfig,ERROR_NOT_FOUND);
@@ -121,7 +121,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
     else
     {
       HRESULT code = GetLastError();
-      CString error("MarlinModule could **NOT** load DLL from: " + dllLocation);
+      XString error("MarlinModule could **NOT** load DLL from: " + dllLocation);
       Unhealthy(error,code);
       return false;
     }
@@ -143,7 +143,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
        m_sitesInAppPool  == nullptr ||
        m_minVersion      == nullptr )
     {
-      CString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', "
+      XString error("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', "
                     "'GetHTTPMessageFromRequest', 'HandleHTTPMessage', 'SitesInApplicPool' or 'MinMarlinVersion'");
       Unhealthy(error,ERROR_NOT_FOUND);
       return false;
@@ -157,7 +157,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
                                       ,p_application.GetString()); // The application's name
   if(m_application == nullptr)
   {
-    CString error("NO APPLICATION CREATED IN THE APP-FACTORY!");
+    XString error("NO APPLICATION CREATED IN THE APP-FACTORY!");
     Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
     return false;
   }
@@ -168,7 +168,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
                 MARLIN_VERSION_SP;               // Service pack
   if(!(*m_minVersion)(m_application,version))
   {
-    CString error("ERROR WRONG VERSION Application: " + p_application);
+    XString error("ERROR WRONG VERSION Application: " + p_application);
     Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
     return false;
   }
@@ -185,7 +185,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
   // Check if everything went well
   if(m_application->CorrectlyStarted() == false)
   {
-    CString error("ERROR STARTING Application: " + p_application);
+    XString error("ERROR STARTING Application: " + p_application);
     Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
     return false;
   }
@@ -194,8 +194,8 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,CString p_webroot,CString p_phy
 
 // If the given DLL begins with a '@' it is an absolute pathname
 // Otherwise it is relative to the directory the 'web.config' is in
-CString
-PoolApp::ConstructDLLLocation(CString p_rootpath, CString p_dllPath)
+XString
+PoolApp::ConstructDLLLocation(XString p_rootpath, XString p_dllPath)
 {
 #ifdef _DEBUG
   // ONLY FOR DEVELOPMENT TEAMS RUNNING OUTSIDE THE WEBROOT
@@ -205,7 +205,7 @@ PoolApp::ConstructDLLLocation(CString p_rootpath, CString p_dllPath)
   }
 #endif
   // Default implementation
-  CString pathname = p_rootpath;
+  XString pathname = p_rootpath;
   if(pathname.Right(1) != "\\")
   {
     pathname += "\\";
@@ -220,7 +220,7 @@ PoolApp::ConstructDLLLocation(CString p_rootpath, CString p_dllPath)
 
 // Checking for the presence of the application DLL
 bool
-PoolApp::CheckApplicationPresent(CString& p_dllPath,CString& p_dllName)
+PoolApp::CheckApplicationPresent(XString& p_dllPath,XString& p_dllName)
 {
   // Check if the directory exists
   if(_access(p_dllPath, 0) == -1)
@@ -250,7 +250,7 @@ PoolApp::CheckApplicationPresent(CString& p_dllPath,CString& p_dllName)
 // See if we already did load the module
 // For some reason reference counting does not work from within IIS.
 bool
-PoolApp::AlreadyLoaded(CString p_path_to_dll)
+PoolApp::AlreadyLoaded(XString p_path_to_dll)
 {
   // All applications in the application pool
   extern std::map<int,PoolApp*> g_IISApplicationPool;

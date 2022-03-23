@@ -29,7 +29,7 @@
 #include "HTTPManager.h"
 #include "WebConfigClient.h"
 #include "MarlinConfig.h"
-#include "MapDialoog.h"
+#include "MapDialog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
 #include "afxdialogex.h"
@@ -397,11 +397,11 @@ void
 WebConfigClient::WriteWebConfig(MarlinConfig& config)
 {
   // GET STRINGS
-  CString retry;      retry     .Format("%d",m_retry);
-  CString toResolve;  toResolve .Format("%d",m_TO_resolve);
-  CString toConnect;  toConnect .Format("%d",m_TO_connect);
-  CString toSend;     toSend    .Format("%d",m_TO_send);
-  CString toReceive;  toReceive .Format("%d",m_TO_receive);
+  XString retry;      retry     .Format("%d",m_retry);
+  XString toResolve;  toResolve .Format("%d",m_TO_resolve);
+  XString toConnect;  toConnect .Format("%d",m_TO_connect);
+  XString toSend;     toSend    .Format("%d",m_TO_send);
+  XString toReceive;  toReceive .Format("%d",m_TO_receive);
 
   // WRITE THE CONFIG PARAMETERS
   config.SetSection("Client");

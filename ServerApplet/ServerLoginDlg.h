@@ -35,12 +35,12 @@ class ServerLoginDlg : public CDialog
 	DECLARE_DYNAMIC(ServerLoginDlg)
 
 public:
-	ServerLoginDlg(CString p_titel,CString p_url,CWnd* p_parent = NULL);
+	ServerLoginDlg(XString p_titel,XString p_url,CWnd* p_parent = NULL);
  ~ServerLoginDlg();
   BOOL    OnInitDialog();
-  CString GetURL()      { return m_url;   };
-  CString GetUser()     { return m_user;     };
-  CString GetPassword() { return m_password; };
+  XString GetURL()      { return m_url;   };
+  XString GetUser()     { return m_user;     };
+  XString GetPassword() { return m_password; };
 
 // Dialog Data
 	enum { IDD = IDD_LOGIN };
@@ -51,10 +51,10 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 
-  CString   m_titel;
-  CString   m_url;
-  CString   m_user;
-  CString   m_password;
+  XString   m_titel;
+  XString   m_url;
+  XString   m_user;
+  XString   m_password;
   ColorEdit m_passwordEdit;
 public:
   afx_msg void OnEnChangeUrl();

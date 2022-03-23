@@ -51,7 +51,7 @@ static char THIS_FILE[] = __FILE__;
 #define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
 #define HTTPERROR(code,text)      HTTPError(__FUNCTION__,code,text)
 
-HTTPServerSync::HTTPServerSync(CString p_name)
+HTTPServerSync::HTTPServerSync(XString p_name)
                :HTTPServerMarlin(p_name)
 {
 }
@@ -408,15 +408,15 @@ HTTPServerSync::RunHTTPServer()
     m_counter.Start();
 
     // Grab the senders content
-    CString   acceptTypes    = request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
-    CString   contentType    = request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
-    CString   acceptEncoding = request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
-    CString   cookie         = request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
-    CString   authorize      = request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
-    CString   modified       = request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
-    CString   referrer       = request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
-    CString   contentLength  = request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
-    CString   rawUrl         = (CString) CW2A(request->CookedUrl.pFullUrl);
+    XString   acceptTypes    = request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
+    XString   contentType    = request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
+    XString   acceptEncoding = request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
+    XString   cookie         = request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
+    XString   authorize      = request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
+    XString   modified       = request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
+    XString   referrer       = request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
+    XString   contentLength  = request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
+    XString   rawUrl         = (XString) CW2A(request->CookedUrl.pFullUrl);
     PSOCKADDR sender         = request->Address.pRemoteAddress;
     int       remDesktop     = FindRemoteDesktop(request->Headers.UnknownHeaderCount
                                                 ,request->Headers.pUnknownHeaders);
@@ -464,7 +464,7 @@ HTTPServerSync::RunHTTPServer()
       // See if we must substitute for a sub-site
       if(site && m_hasSubsites)
       {
-        CString absPath = (CString) CW2A(request->CookedUrl.pAbsPath);
+        XString absPath = (XString) CW2A(request->CookedUrl.pAbsPath);
         site = FindHTTPSite(site,absPath);
       }
 
@@ -532,7 +532,7 @@ HTTPServerSync::RunHTTPServer()
       EventStream* stream = nullptr;
       if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
       {
-        CString absolutePath = (CString) CW2A(request->CookedUrl.pAbsPath);
+        XString absolutePath = (XString) CW2A(request->CookedUrl.pAbsPath);
         if(CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
         {
           continue;
@@ -763,7 +763,7 @@ HTTPServerSync::StopServer()
 
 // Create a new WebSocket in the subclass of our server
 WebSocket*
-HTTPServerSync::CreateWebSocket(CString p_uri)
+HTTPServerSync::CreateWebSocket(XString p_uri)
 {
   return new WebSocketServerSync(p_uri);
 }
@@ -910,8 +910,8 @@ HTTPServerSync::AddUnknownHeaders(UKHeaders& p_headers)
   UKHeaders::iterator it = p_headers.begin();
   while(it != p_headers.end())
   {
-    CString name  = it->first;
-    CString value = it->second;
+    XString name  = it->first;
+    XString value = it->second;
 
     header[ind].NameLength      = (USHORT)name.GetLength();
     header[ind].RawValueLength  = (USHORT)value.GetLength();
@@ -976,10 +976,10 @@ void
 HTTPServerSync::SendResponse(HTTPMessage* p_message)
 {
   HTTP_RESPONSE   response;
-  CString         challenge;
+  XString         challenge;
   HTTP_OPAQUE_ID  requestID   = p_message->GetRequestHandle();
   FileBuffer*     buffer      = p_message->GetFileBuffer();
-  CString         contentType("application/octet-stream"); 
+  XString         contentType("application/octet-stream"); 
   bool            moreData(false);
 
   // See if there is something to send
@@ -991,7 +991,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
 
   // Respond to general HTTP status
   int status = p_message->GetStatus();
-  CString date = HTTPGetSystemTime();
+  XString date = HTTPGetSystemTime();
 
   // Initialize the HTTP response structure.
   InitializeHttpResponse(&response,(USHORT)status,(PSTR) GetHTTPStatusText(status));
@@ -1019,7 +1019,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   }
   else
   {
-    CString cttype = p_message->GetHeader("Content-type");
+    XString cttype = p_message->GetHeader("Content-type");
     if(!cttype.IsEmpty())
     {
       contentType = cttype;
@@ -1073,7 +1073,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   Cookies& cookies = p_message->GetCookies();
   if(cookies.GetCookies().empty())
   {
-    CString cookie = p_message->GetHeader("Set-Cookie");
+    XString cookie = p_message->GetHeader("Set-Cookie");
     if(!cookie.IsEmpty())
     {
       AddKnownHeader(response,HttpHeaderSetCookie,cookie);
@@ -1136,7 +1136,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   else
   {
     // Now after the compression, add the total content length
-    CString contentLength;
+    XString contentLength;
   #ifdef _WIN64
     contentLength.Format("%I64u",totalLength);
   #else
@@ -1162,7 +1162,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   if(GetLastError())
   {
     // Error handler
-    CString message = GetLastErrorAsString(tls_lastError);
+    XString message = GetLastErrorAsString(tls_lastError);
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",GetLastError(),message.GetString());
     // Reset the last error
     SetError(NO_ERROR);
@@ -1460,14 +1460,14 @@ HTTPServerSync::SendResponseChunk(PHTTP_RESPONSE  p_response
 void      
 HTTPServerSync::SendResponseError(PHTTP_RESPONSE p_response
                                  ,HTTP_OPAQUE_ID p_request
-                                 ,CString&       p_page
+                                 ,XString&       p_page
                                  ,int            p_error
                                  ,const char*    p_reason)
 {
   DWORD result = 0;
   DWORD bytesSent = 0;
   HTTP_DATA_CHUNK dataChunk;
-  CString sending;
+  XString sending;
 
   // Format our error page
   sending.Format(p_page,p_error,p_reason);
@@ -1520,7 +1520,7 @@ bool
 HTTPServerSync::InitEventStream(EventStream& p_stream)
 {
   // First comment to push to the stream (not an event!)
-  CString init = m_eventBOM ? ConstructBOM() : CString();
+  XString init = m_eventBOM ? ConstructBOM() : XString();
   init += ":init event-stream\n";
 
   // Initialize the HTTP response structure.

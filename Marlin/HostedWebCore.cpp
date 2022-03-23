@@ -40,7 +40,7 @@
 #include "stdafx.h"
 #include "HostedWebCore.h"
 #include "ServerApp.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include "Version.h"
 #include <winsvc.h>
 #include <conio.h>
@@ -64,7 +64,7 @@ using std::wstring;
 // Handle on the 'hwebcore.dll' module
 HMODULE g_webcore = nullptr;    // Web core module
 DWORD   g_hwcShutdownMode = 0;  // Shutdown mode 0=gracefull, 1=immediate
-CString g_poolName;
+XString g_poolName;
 
 // The Hosted Web Core API functions
 PFN_WEB_CORE_ACTIVATE               HWC_Activate    = nullptr;
@@ -72,8 +72,8 @@ PFN_WEB_CORE_SET_METADATA_DLL_ENTRY HWC_SetMetadata = nullptr;
 PFN_WEB_CORE_SHUTDOWN               HWC_Shutdown    = nullptr;
 
 // Names of the application config files
-CString g_applicationhost;      // ApplicationHost.config file to use
-CString g_webconfig;            // Web.config file to use
+XString g_applicationhost;      // ApplicationHost.config file to use
+XString g_webconfig;            // Web.config file to use
 
 // Server callbacks
 PFN_SERVERSTATUS g_ServerStatus = nullptr;
@@ -287,7 +287,7 @@ ShutdownWebCore()
 }
 
 bool 
-SetMetaData(CString p_datatype,CString p_value)
+SetMetaData(XString p_datatype,XString p_value)
 {
   USES_CONVERSION;
   bool    result = false;
@@ -329,7 +329,7 @@ SetMetaData(CString p_datatype,CString p_value)
 
 static char g_staticAddress;
 
-CString 
+XString 
 GetExeName()
 {
   char buffer[_MAX_PATH + 1];
@@ -346,7 +346,7 @@ GetExeName()
 
   // Retrieve the path
   GetModuleFileName(module,buffer,_MAX_PATH);
-  CString application(buffer);
+  XString application(buffer);
 
   int position = application.ReverseFind('\\');
   if(position == 0)
@@ -360,8 +360,8 @@ void
 ParseCommandLine(int argc,char* argv[])
 {
   // Setting the application pool name
-  CString exeName = GetExeName();
-  g_poolName = exeName.IsEmpty() ? CString(MARLIN_PRODUCT_NAME) : exeName;
+  XString exeName = GetExeName();
+  g_poolName = exeName.IsEmpty() ? XString(MARLIN_PRODUCT_NAME) : exeName;
 
   for(int ind = 1; ind < argc, argv[ind]; ++ind)
   {
@@ -384,7 +384,7 @@ void
 TrySetMetadata()
 {
   char buffer[80];
-  CString variable,value;
+  XString variable,value;
 
   // Trying to get metadata to set
   printf("ENTER METADATA\n");
@@ -413,7 +413,7 @@ TrySetMetadata()
 void 
 PrintMenu()
 {
-  CString line;
+  XString line;
   for(int ind = 0; ind < 51; ++ind) line += "-";
 
   printf("+%s+\n",line.GetString());

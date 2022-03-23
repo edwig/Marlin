@@ -48,14 +48,14 @@ public:
 bool
 SiteHandlerSoapMsgEncrypt::Handle(HTTPMessage* p_message)
 {
-  CString message = p_message->GetBody();
+  XString message = p_message->GetBody();
   bool cypherResult = false;
   XMLMessage check;
   check.ParseMessage(message);
   XMLElement* cypher = check.FindElement("ds:CypherValue");
   if(cypher)
   {
-    CString value = cypher->GetValue();
+    XString value = cypher->GetValue();
     if(value = "+YMEygqNvt7ZKFarTUa2qq6N9ZzFURb74TVbaAFwyKFkl75Tg0bU8pDPLDxYW1uBCzGJTqc4/xDounwbu"
                "8ksygubfcEGAX9q9UlT75E9Nk0qYqK7zys5zhwcd4W35DV3c5/hZf3kqXOx30TbJv8G/A8IF+JfGzXnQE"
                "c6ukBcrF2NXqkzfkThFZNq0slRvm37tMXWBWsP/FPh8lKqhUa7KdIMaQtnrdtXs7zkyBwnT+ab7XuJfUV"
@@ -96,13 +96,13 @@ SiteHandlerSoapMsgEncrypt::Handle(SOAPMessage* p_message)
   xprintf("Incoming message in XML:\n%s\n", p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
-  CString paramOne = p_message->GetParameter("One");
-  CString paramTwo = p_message->GetParameter("Two");
+  XString paramOne = p_message->GetParameter("One");
+  XString paramTwo = p_message->GetParameter("Two");
   xprintf("Incoming parameter: %s = %s\n", "One", paramOne.GetString());
   xprintf("Incoming parameter: %s = %s\n", "Two", paramTwo.GetString());
 
   // reuse message for response
-  CString response = "TestMessageResponse";
+  XString response = "TestMessageResponse";
 
   p_message->Reset();
   p_message->SetSoapAction(response);
@@ -142,7 +142,7 @@ TestMarlinServer::TestMessageEncryption()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/MessageSigning/"
   // But WebConfig can override all values except for the callback function address
-  CString url("/MarlinTest/MessageEncrypt/");
+  XString url("/MarlinTest/MessageEncrypt/");
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {

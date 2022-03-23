@@ -48,7 +48,7 @@ bool
 SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
 {
   bool result = false;
-  CString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v1.txt");
+  XString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v1.txt");
 
   // NOT Much here. Always returns the release message file
   p_message->Reset();
@@ -79,7 +79,7 @@ TestMarlinServer::TestCompression()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Compression/"
   // Callback function is no longer required!
-  CString webaddress = "/MarlinTest/Compression/";
+  XString webaddress = "/MarlinTest/Compression/";
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
   if(site)
   {

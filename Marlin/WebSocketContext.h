@@ -110,7 +110,7 @@ private:
   bool CreateServerHandle();
 
   WEB_SOCKET_HANDLE       m_handle { NULL };
-  CString                 m_subProtocol;
+  XString                 m_subProtocol;
 
   // Buffer parameters
   ULONG m_ws_recv_buffersize      { 4096  };

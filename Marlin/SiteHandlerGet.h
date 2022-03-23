@@ -40,6 +40,6 @@ protected:
   virtual void CleanUp   (HTTPMessage* p_message);
 
   // Filename handlers
-  virtual bool FileNameTransformations(CString& p_filename);
-  virtual bool FileNameRestrictions   (CString& p_filename);
+  virtual bool FileNameTransformations(XString& p_filename);
+  virtual bool FileNameRestrictions   (XString& p_filename);
 };

@@ -60,7 +60,7 @@ SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
   xprintf("Incoming ASYNC message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
-  CString displayText = p_message->GetParameter("Text");
+  XString displayText = p_message->GetParameter("Text");
   bool    doReset     = p_message->GetParameterBoolean("DoReset");
   p_message->Reset();
 
@@ -103,7 +103,7 @@ TestMarlinServer::TestAsynchrone()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/Asynchrone/");
+  XString url("/MarlinTest/Asynchrone/");
 
   xprintf("TESTING ASYNCHRONE SOAP RECEIVER FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=============================================================\n");

@@ -30,6 +30,7 @@
 #include "HTTPClient.h"
 #include "HTTPMessage.h"
 #include "SOAPMessage.h"
+#include "JSONMessage.h"
 #include "MultiPartBuffer.h"
 
 // Beware Debugging starting directory MUST be "$(OutDir)"

@@ -64,17 +64,17 @@ public:
   LTEvent();
   LTEvent(EvtType p_type);
 
-  static EvtType StringToEventType(CString p_type);
-  static CString EventTypeToString(EvtType p_type);
+  static EvtType StringToEventType(XString p_type);
+  static XString EventTypeToString(EvtType p_type);
 
-  static EVChannelPolicy StringToChannelPolicy(CString p_policy);
-  static CString ChannelPolicyToString(EVChannelPolicy p_policy);
+  static EVChannelPolicy StringToChannelPolicy(XString p_policy);
+  static XString ChannelPolicyToString(EVChannelPolicy p_policy);
 
   // DATA
   int     m_number { 0  };
   UINT64  m_sent   { 0L };
   EvtType m_type;
-  CString m_payload;
+  XString m_payload;
 };
 
 // Application callback to handle our dissipated events

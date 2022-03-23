@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SOAPMessage.h"
 #include "XMLMessage.h"
+#include "JSONMessage.h"
 #include "TestClient.h"
 #include <conio.h>
 
@@ -543,7 +544,7 @@ TestXMLMessage4()
 
   SOAPMessage msg(namesp,action);
   msg.SetParameter("PriceTag","€ 42,00");
-  msg.SetEncoding(XMLEncoding::ENC_UTF8);
+  msg.SetEncoding(StringEncoding::ENC_UTF8);
 
   CString test1 = msg.GetSoapMessage();
 
@@ -572,7 +573,7 @@ TestXMLMessage5()
 
   SOAPMessage msg(namesp,action);
   msg.SetParameter("PriceTag","€ 42,00");
-  msg.SetEncoding(XMLEncoding::ENC_ISO88591);
+  msg.SetEncoding(StringEncoding::ENC_ISO88591);
 
   CString test1 = msg.GetSoapMessage();
 
@@ -601,7 +602,7 @@ TestXMLMessage6()
 
   SOAPMessage msg(namesp,action);
   msg.SetParameter("PriceTag","€ 42,00");
-  msg.SetEncoding(XMLEncoding::ENC_Plain);
+  msg.SetEncoding(StringEncoding::ENC_Plain);
 
   CString test1 = msg.GetSoapMessage();
 
@@ -651,7 +652,7 @@ TestJSONMessage2()
 
   CString text = "{\"PriceTag\":\"€ 42,00\"}";
   JSONMessage msg(text);
-  CString test = msg.GetJsonMessage(JsonEncoding::JENC_UTF8);
+  CString test = msg.GetJsonMessage(StringEncoding::ENC_UTF8);
   CString mustbe = "{\"PriceTag\":\"\xe2\x82\xac 42,00\"}";
 
   if(test == mustbe)
@@ -681,7 +682,7 @@ TestJSONMessage3()
 
   CString text = "{\"PriceTag\":\"€ 42,00\"}";
   JSONMessage msg(text);
-  CString test = msg.GetJsonMessage(JsonEncoding::JENC_ISO88591);
+  CString test = msg.GetJsonMessage(StringEncoding::ENC_ISO88591);
   CString mustbe = "{\"PriceTag\":\"\x80 42,00\"}";
 
   if(test == mustbe)
@@ -689,7 +690,7 @@ TestJSONMessage3()
     --result;
   }
 
-  JSONMessage msg2(mustbe,false,JsonEncoding::JENC_Plain);
+  JSONMessage msg2(mustbe,false,StringEncoding::ENC_Plain);
   CString tt2 = msg2.GetJsonMessage();
 
   if(tt2 == text)

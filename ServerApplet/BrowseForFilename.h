@@ -223,16 +223,16 @@ class BrowseForFilename
 {
 public:
   BrowseForFilename(bool    p_open              // true = open, false = SaveAs
-                   ,CString p_title             // Title of the dialog
-                   ,CString p_defext   = ""     // Default extension
-                   ,CString p_filename = ""     // Default first file
+                   ,XString p_title             // Title of the dialog
+                   ,XString p_defext   = ""     // Default extension
+                   ,XString p_filename = ""     // Default first file
                    ,int     p_flags    = 0      // Default flags
-                   ,CString p_filter   = ""     // Filter for filename extensions
-                   ,CString p_direct   = "");   // Default directory to start in
+                   ,XString p_filter   = ""     // Filter for filename extensions
+                   ,XString p_direct   = "");   // Default directory to start in
   ~BrowseForFilename();
 
   int     DoModal();
-  CString GetChosenFile();
+  XString GetChosenFile();
 
 private:
   void FilterString(char *filter);
@@ -243,6 +243,6 @@ private:
   char          m_filter[1024];
   char          m_title [100];
   char          m_defext[100];
-  CString       m_initalDir;
+  XString       m_initalDir;
   OPENFILENAME  m_ofn;
 };

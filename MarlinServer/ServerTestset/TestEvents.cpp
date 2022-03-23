@@ -92,14 +92,14 @@ SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream
   }
 
   // Create very large event data message
-  CString otherData;
-  CString line;
+  XString otherData;
+  XString line;
   for (int y = 0; y < 26; ++y)
   {
     line += (char)('A' + y);
     line += (char)('z' - y);
   }
-  CString all = line + line + line + line;
+  XString all = line + line + line + line;
   all += "\r\n";
   for(int x = 0; x < 1000; ++x)
   {
@@ -162,7 +162,7 @@ TestMarlinServer::TestPushEvents()
 
   xprintf("TESTING SSE (Server-Sent-Events) CHANNEL FUNCTIONS OF THE HTTP-SERVER\n");
   xprintf("=====================================================================\n");
-  CString url("/MarlinTest/Events/");
+  XString url("/MarlinTest/Events/");
   // Create URL site to listen to events "http://+:port/MarlinTest/Events/"
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)

@@ -102,7 +102,7 @@
       <PreprocessorDefinitions>_USRDLL;_WINDLL;_DEBUG;MARLINMODULE_EXPORTS;_WINDOWS;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Marlin\;$(SolutionDir)ExtraParts;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Marlin\;$(SolutionDir)BaseLibrary\;$(SolutionDir)ExtraParts\</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -180,7 +180,7 @@
       <PreprocessorDefinitions>_USRDLL;_WINDLL;NDEBUG;MARLINMODULE_EXPORTS;_WINDOWS;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Marlin\;$(SolutionDir)ExtraParts;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Marlin\;$(SolutionDir)BaseLibrary\;$(SolutionDir)ExtraParts\</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -198,6 +198,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="targetver.h" />
     <ClInclude Include="MarlinModule.h" />
     <ClInclude Include="PoolApp.h" />
     <ClInclude Include="resource.h" />

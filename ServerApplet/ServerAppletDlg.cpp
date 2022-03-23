@@ -64,13 +64,13 @@ public:
 protected:
   DECLARE_MESSAGE_MAP()
 
-  CString m_versie;
-  CString m_copyright;
+  XString m_versie;
+  XString m_copyright;
 };
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 {
-  m_versie    = CString(PROGRAM_NAME) +  " " + MARLIN_VERSION_NUMBER;
+  m_versie    = XString(PROGRAM_NAME) +  " " + MARLIN_VERSION_NUMBER;
   m_copyright = "Copyright (c) 2022 ir. W.E. Huisman";
 }
 
@@ -351,9 +351,9 @@ ServerAppletDlg::OnEnChangeStatus()
 }
 
 bool
-ServerAppletDlg::AreYouSure(CString p_actie)
+ServerAppletDlg::AreYouSure(XString p_actie)
 {
-  CString melding("You are about to  ");
+  XString melding("You are about to  ");
   melding += p_actie;
   melding += " the server.\n\nAre you sure?";
   if(::MessageBox(GetSafeHwnd(),melding,"ServerApplet",MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDYES)
@@ -433,11 +433,11 @@ ServerAppletDlg::OnBnClickedStart()
     }
 
     // Starting the server
-    CString result;
-    CString program = MarlinConfig::GetExePath() +  PRODUCT_NAME + ".exe";
-    CString arguments = "start";
-    CString fout(CString("Cannot start the ") + PRODUCT_NAME);
-    CString actie = CString("START: ") + program + "\n\n";
+    XString result;
+    XString program = MarlinConfig::GetExePath() +  PRODUCT_NAME + ".exe";
+    XString arguments = "start";
+    XString fout(XString("Cannot start the ") + PRODUCT_NAME);
+    XString actie = XString("START: ") + program + "\n\n";
     int stat = CallProgram_For_String(program,arguments,result,3000);
     m_serverStatus = stat == 0 ? Server_running : Server_stopped;
     UpdateData(FALSE);
@@ -467,11 +467,11 @@ ServerAppletDlg::OnBnClickedStop()
       // Put a wait cursor on the stack
       CWaitCursor takeADeepSigh;
 
-      CString result;
-      CString program = MarlinConfig::GetExePath() + PRODUCT_NAME + ".exe";
-      CString arguments = "stop";
-      CString fout(CString("Cannot stop the ") +  PRODUCT_NAME);
-      CString actie = CString("START: ") + program + "\n\n";
+      XString result;
+      XString program = MarlinConfig::GetExePath() + PRODUCT_NAME + ".exe";
+      XString arguments = "stop";
+      XString fout(XString("Cannot stop the ") +  PRODUCT_NAME);
+      XString actie = XString("START: ") + program + "\n\n";
 
       int stat = CallProgram_For_String(program,arguments,result);
       m_serverStatus = stat == 0 ? Server_stopped : Server_running;
@@ -514,9 +514,9 @@ ServerAppletDlg::OnBnClickedBounce()
   UpdateData(FALSE);
   PumpMessage();
 
-  CString program = CString(PRODUCT_NAME) + ".exe";
-  CString arguments = "restart";
-  CString fout("Cannot restart (bounce) the server");
+  XString program = XString(PRODUCT_NAME) + ".exe";
+  XString arguments = "restart";
+  XString fout("Cannot restart (bounce) the server");
   theApp.StartProgram(program,arguments,true,fout);
 
   // Try multiple times
@@ -609,9 +609,9 @@ ServerAppletDlg::GetServerStatus()
 void
 ServerAppletDlg::GetServerStatusLocally()
 {
-  CString program   = CString(PRODUCT_NAME) + ".exe";
-  CString arguments = "query";
-  CString fout(CString("Cannot get the status of the ") + PRODUCT_NAME + " server");
+  XString program   = XString(PRODUCT_NAME) + ".exe";
+  XString arguments = "query";
+  XString fout(XString("Cannot get the status of the ") + PRODUCT_NAME + " server");
 
   int stat = theApp.StartProgram(program,arguments,true,fout);
 
@@ -659,12 +659,12 @@ void
 ServerAppletDlg::IISRestart()
 {
   CWaitCursor takeADeepSigh;
-  CString program;
+  XString program;
  
   program.GetEnvironmentVariable("windir");
   program += "\\system32\\iisreset.exe";
-  CString parameter("");
-  CString result;
+  XString parameter("");
+  XString result;
   CallProgram_For_String(program,parameter,result,10000);
   result.Remove('\r');
   result = result.Trim('\n');
@@ -675,12 +675,12 @@ void
 ServerAppletDlg::IISStart()
 {
   CWaitCursor takeADeepSigh;
-  CString program;
+  XString program;
 
   program.GetEnvironmentVariable("windir");
   program += "\\system32\\iisreset.exe";
-  CString parameter("/start");
-  CString result;
+  XString parameter("/start");
+  XString result;
   CallProgram_For_String(program,parameter,result,10000);
   result.Remove('\r');
   result = result.TrimLeft("\n");
@@ -691,12 +691,12 @@ void
 ServerAppletDlg::IISStop()
 {
   CWaitCursor takeADeepSigh;
-  CString program;
+  XString program;
 
   program.GetEnvironmentVariable("windir");
   program += "\\system32\\iisreset.exe";
-  CString parameter("/stop");
-  CString result;
+  XString parameter("/stop");
+  XString result;
   CallProgram_For_String(program,parameter,result,10000);
   result.Remove('\r');
   result = result.TrimLeft("\n");

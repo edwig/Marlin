@@ -110,8 +110,8 @@ private:
 //////////////////////////////////////////////////////////////////////////
 
 using ChannelMap  = std::map<int,    ServerEventChannel*>;
-using ChanNameMap = std::map<CString,ServerEventChannel*>;
-using SenderMap   = std::map<CString,long>;
+using ChanNameMap = std::map<XString,ServerEventChannel*>;
+using SenderMap   = std::map<XString,long>;
 
 class ServerEventDriver
 {
@@ -123,7 +123,7 @@ public:
   // Register our main site in the server
   bool  RegisterSites(HTTPServer* p_server,HTTPSite* p_site);
   // Create the three sites for the event driver for a user session
-  int   RegisterChannel(CString p_sessionName,CString p_cookie,CString p_token);
+  int   RegisterChannel(XString p_sessionName,XString p_cookie,XString p_token);
   // Force the authentication of the cookie
   void  SetForceAuthentication(bool p_force);
   // Setting the brute force attack interval
@@ -136,10 +136,10 @@ public:
   bool  StopEventDriver();
 
   // Flush messages as much as possible for a channel
-  bool  FlushChannel(CString p_cookie,CString p_token);
+  bool  FlushChannel(XString p_cookie,XString p_token);
   bool  FlushChannel(int p_channel);
   // RemoveChannel (possibly at the end of an user session)
-  bool  UnRegisterChannel(CString p_cookie,CString p_token,bool p_flush = true);
+  bool  UnRegisterChannel(XString p_cookie,XString p_token,bool p_flush = true);
   bool  UnRegisterChannel(int p_channel,bool p_flush = true);
   // Incoming new Socket/SSE Stream
   bool  IncomingNewSocket(HTTPMessage* p_message,WebSocket*   p_socket);
@@ -154,18 +154,18 @@ public:
   size_t      GetNumberOfChannels()     { return m_channels.size(); }
   int         GetBruteForceInterval()   { return m_interval;  }
   int         GetChannelQueueCount (int     p_channel);
-  int         GetChannelQueueCount (CString p_session);
+  int         GetChannelQueueCount (XString p_session);
   int         GetChannelClientCount(int     p_channel);
-  int         GetChannelClientCount(CString p_session);
+  int         GetChannelClientCount(XString p_session);
 
   // OUR WORKHORSE: Post an event to the client
   // If 'returnToSender' is filled, only this client will receive the message
-  int   PostEvent(int p_session,CString p_payload,CString p_returnToSender = "",EvtType p_type = EvtType::EV_Message);
+  int   PostEvent(int p_session,XString p_payload,XString p_returnToSender = "",EvtType p_type = EvtType::EV_Message);
 
   // Main loop of the event runner. DO NOT CALL!
   void  EventThreadRunning();
   // Brute force attack detection. Called by the ServerEventChannel
-  bool  CheckBruteForceAttack(CString p_sender);
+  bool  CheckBruteForceAttack(XString p_sender);
   // Incoming event. Called by the ServerEventChannel
   void  IncomingEvent();
 
@@ -175,10 +175,10 @@ private:
   // Start a thread for the streaming websocket/server-push event interface
   bool  StartEventThread();
   // Find a channel from the routing information
-  CString FindChannel(Routing& p_routing,CString p_base);
+  XString FindChannel(Routing& p_routing,XString p_base);
 
   // Find an event session
-  ServerEventChannel* FindSession(CString p_cookie,CString p_token);
+  ServerEventChannel* FindSession(XString p_cookie,XString p_token);
   ServerEventChannel* FindSession(int p_session);
 
   // Register incoming event/stream

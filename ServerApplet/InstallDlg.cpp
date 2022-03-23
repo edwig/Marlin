@@ -176,13 +176,13 @@ InstallDlg::OnBnClickedInstall()
                  ,"Be Sure!"
                  ,MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDYES) 
   {
-    CString result;
-    CString arguments;
-    CString program(CString(PRODUCT_NAME) + ".exe");
-    CString error("Cannot start the server application for a NT-Service installation");
+    XString result;
+    XString arguments;
+    XString program(XString(PRODUCT_NAME) + ".exe");
+    XString error("Cannot start the server application for a NT-Service installation");
 
     // Format the command
-    CString user(m_username);
+    XString user(m_username);
     if(!m_domain.IsEmpty())
     {
       user = m_domain + "\\" + m_username;
@@ -191,7 +191,7 @@ InstallDlg::OnBnClickedInstall()
     int res = CallProgram_For_String(program,arguments,result);
     if(res)
     {
-      CString melding;
+      XString melding;
       melding.Format("Installing the NT-Service failed. Error code: %d\n\n",res);
       melding += result;
       ::MessageBox(GetSafeHwnd(),melding,"ERROR",MB_OK|MB_ICONERROR);
@@ -218,10 +218,10 @@ InstallDlg::OnBnClickedRemove()
 void
 InstallDlg::RemoveService(bool p_tonen)
 {
-  CString result;
-  CString error("Cannot stop the NT-service");
-  CString arguments("stop");
-  CString program(CString(PRODUCT_NAME) + ".exe");
+  XString result;
+  XString error("Cannot stop the NT-service");
+  XString arguments("stop");
+  XString program(XString(PRODUCT_NAME) + ".exe");
 
   // First: stop the service
   int res = CallProgram_For_String(program,arguments,result);
@@ -229,7 +229,7 @@ InstallDlg::RemoveService(bool p_tonen)
   {
     if(res)
     {
-      CString melding;
+      XString melding;
       melding.Format("Stopping the NT-Service has failed. Error code: %d\n\n",res);
       melding += result;
       ::MessageBox(GetSafeHwnd(),melding,"ERROR",MB_OK | MB_ICONERROR);
@@ -244,7 +244,7 @@ InstallDlg::RemoveService(bool p_tonen)
   {
     if(res)
     {
-      CString message;
+      XString message;
       message.Format("Removing the NT-Service definition has failed. Error code: %d\n\n",res);
       message += result;
       ::MessageBox(GetSafeHwnd(),message,"ERROR",MB_OK|MB_ICONERROR);

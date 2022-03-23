@@ -128,7 +128,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.;..;..\..\Marlin;..\..\ExtraParts;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;..\..\Marlin;..\..\ExtraParts;$(SolutionDir)..\BaseLibrary\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -186,7 +186,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.;..;..\..\Marlin;..\..\ExtraParts;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;..\..\Marlin;..\..\ExtraParts;$(SolutionDir)..\BaseLibrary\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -214,7 +214,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\TestsetClient\TestClient.h" />
+    <ClInclude Include="framework.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
     <ClInclude Include="TestPorts.h" />
   </ItemGroup>
   <ItemGroup>

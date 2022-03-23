@@ -55,8 +55,8 @@ void EventCallback(void* p_data)
 void
 TestMarlinServer::IncomingEvent(LTEvent* p_event)
 {
-  CString text;
-  CString type;
+  XString text;
+  XString type;
   switch (p_event->m_type)
   {
     case EvtType::EV_Message: type = "Message"; 
@@ -86,7 +86,7 @@ TestMarlinServer::PostEventsToDrivers()
 
   if(mustsent)
   {
-    CString payload;
+    XString payload;
     for(int channel = 1; channel <= 3; ++channel)
     {
       for(int ind = 0; ind < NUM_TEST; ++ind)
@@ -108,7 +108,7 @@ int
 TestMarlinServer::TestEventDriver()
 {
   int error = 0;
-  CString url("/MarlinTest/Driver/");
+  XString url("/MarlinTest/Driver/");
 
   xprintf("TESTING SERVER-EVENT-DRIVER FUNCTIONS\n");
   xprintf("=====================================\n");

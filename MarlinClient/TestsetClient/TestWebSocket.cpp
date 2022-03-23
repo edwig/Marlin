@@ -29,7 +29,7 @@
 #include "TestClient.h"
 #include "WebSocketServer.h"
 #include "WebSocketClient.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 
 int g_closed = 0;
 

@@ -140,7 +140,7 @@ void HTTPManagerDlg::DoDataExchange(CDataExchange* pDX)
     m_buttonDisconnect.EnableWindow(m_secure && !m_iis);
     m_buttonSecurity  .EnableWindow(m_secure);
 
-    CString prefix = "URL Prefix: " + CreateURLPrefix(m_binding,m_secure,m_port,m_absPath);
+    XString prefix = "URL Prefix: " + CreateURLPrefix(m_binding,m_secure,m_port,m_absPath);
     m_editStatus.SetWindowText(prefix);
 
     m_editPortUpto.EnableWindow(m_doRange);
@@ -202,7 +202,7 @@ HTTPManagerDlg::OnInitDialog()
   if (pSysMenu != NULL)
   {
     BOOL bNameValid;
-    CString strAboutMenu;
+    XString strAboutMenu;
     bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
     ASSERT(bNameValid);
     if (!strAboutMenu.IsEmpty())
@@ -243,7 +243,7 @@ HTTPManagerDlg::OnInitDialog()
 
   m_buttonClientCert.SetCheck(FALSE);
 
-  CString text;
+  XString text;
   text.Format("%d",m_port);
   m_editPort.SetWindowText(text);
   text.Format("%d",m_portUpto);
@@ -359,7 +359,7 @@ HTTPManagerDlg::CheckPortRange()
     if(m_portUpto == 0 || m_portUpto < m_port)
     {
       m_portUpto = m_port;
-      CString text;
+      XString text;
       text.Format("%d",m_portUpto);
       m_editPortUpto.SetWindowText(text);
       UpdateData(FALSE);
@@ -370,7 +370,7 @@ HTTPManagerDlg::CheckPortRange()
       if(::MessageBox(GetSafeHwnd(),"You have selected more than 200 client ports!\nAre you sure?","HTTP Manager",MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDNO)
       {
         m_portUpto = m_port + 200;
-        CString text;
+        XString text;
         text.Format("%d",m_portUpto);
         m_editPortUpto.SetWindowText(text);
         UpdateData(FALSE);
@@ -391,13 +391,13 @@ HTTPManagerDlg::CheckPathname(bool p_allow)
   }
 }
 
-CString
-HTTPManagerDlg::MakeFirewallRuleName(CString& p_ports)
+XString
+HTTPManagerDlg::MakeFirewallRuleName(XString& p_ports)
 {
   CheckPathname();
 
-  CString naam(m_absPath);
-  CString ports;
+  XString naam(m_absPath);
+  XString ports;
 
   // Make sure the range is 1 long
   if(!m_doRange)
@@ -426,15 +426,15 @@ HTTPManagerDlg::MakeFirewallRuleName(CString& p_ports)
 
 bool
 HTTPManagerDlg::DoCommand(ConfigCmd p_config
-                         ,CString   p_prefix
-                         ,CString&  p_command
-                         ,CString&  p_parameters
-                         ,CString   p_prefix2
-                         ,CString   p_prefix3
-                         ,CString   p_prefix4)
+                         ,XString   p_prefix
+                         ,XString&  p_command
+                         ,XString&  p_parameters
+                         ,XString   p_prefix2
+                         ,XString   p_prefix3
+                         ,XString   p_prefix4)
 {
   bool result = true;
-  CString temp;
+  XString temp;
 
   // Get the command
   if(m_version == OSVERSIE_SERVER2003)
@@ -535,7 +535,7 @@ HTTPManagerDlg::OnCbnSelchangeBinding()
 void 
 HTTPManagerDlg::OnEnChangePort()
 {
-  CString text;
+  XString text;
   m_editPort.GetWindowText(text);
   m_port = atoi(text);
   UpdateData(FALSE);
@@ -545,7 +545,7 @@ HTTPManagerDlg::OnEnChangePort()
 void 
 HTTPManagerDlg::OnEnChangePortUpto()
 {
-  CString text;
+  XString text;
   m_editPortUpto.GetWindowText(text);
   m_portUpto = atoi(text);
   UpdateData(FALSE);
@@ -570,10 +570,10 @@ HTTPManagerDlg::OnEnChangeAbspath()
 void
 HTTPManagerDlg::OnBnClickedAskurl()
 {
-  CString show;
-  CString result;
-  CString parameters;
-  CString command;
+  XString show;
+  XString result;
+  XString parameters;
+  XString command;
   CWaitCursor deep_sigh;
 
   CheckPathname(true);
@@ -591,14 +591,14 @@ HTTPManagerDlg::OnBnClickedAskurl()
   // Do all the ports
   for(int port = m_port;port <= m_portUpto;++port)
   {
-    CString prefix = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
+    XString prefix = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
     m_editStatus.SetWindowText("Inquiring for URL reservation: " + prefix);
     MessagePump();
 
     if(DoCommand(CONFIG_ASKURL,prefix,command,parameters))
     {
       int res = CallProgram_For_String(command,parameters,result);
-      show   += CString(">") + command + " " + parameters + "\r\n" + result;
+      show   += XString(">") + command + " " + parameters + "\r\n" + result;
     }
     else return;
   }
@@ -615,10 +615,10 @@ void
 HTTPManagerDlg::OnBnClickedAddurl()
 {
   // Create command line
-  CString show;
-  CString result;
-  CString parameters;
-  CString command;
+  XString show;
+  XString result;
+  XString parameters;
+  XString command;
   CWaitCursor deep_sigh;
 
   CheckPathname(true);
@@ -636,7 +636,7 @@ HTTPManagerDlg::OnBnClickedAddurl()
   // Do all the ports
   for(int port = m_port;port <= m_portUpto;++port)
   {
-    CString prefix  = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
+    XString prefix  = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
     m_editStatus.SetWindowText("Adding URL reservation: " + prefix);
     MessagePump();
 
@@ -667,10 +667,10 @@ void
 HTTPManagerDlg::OnBnClickedDelurl()
 {
   // Create command line
-  CString show;
-  CString result;
-  CString parameters;
-  CString command;
+  XString show;
+  XString result;
+  XString parameters;
+  XString command;
   CWaitCursor deep_sigh;
 
   CheckPathname(true);
@@ -687,7 +687,7 @@ HTTPManagerDlg::OnBnClickedDelurl()
 
   for(int port = m_port;port <= m_portUpto;++port)
   {
-    CString prefix  = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
+    XString prefix  = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
     m_editStatus.SetWindowText("Deleting URL reservation: " + prefix);
     MessagePump();
 
@@ -711,21 +711,21 @@ void
 HTTPManagerDlg::OnBnClickedAskFW()
 {
   int res = 0;
-  CString show;
-  CString result;
-  CString command("netsh");
-  CString parameters;
-  CString ports;
+  XString show;
+  XString result;
+  XString command("netsh");
+  XString parameters;
+  XString ports;
   CWaitCursor diepe_zucht;
 
-  CString naam = MakeFirewallRuleName(ports);
+  XString naam = MakeFirewallRuleName(ports);
   parameters.Format("advfirewall firewall show rule name=\"%s\" verbose", naam);
 
   m_editStatus.SetWindowText("Inquiring for Firewall rules for: " + naam);
   MessagePump();
 
   res  += CallProgram_For_String(command,parameters,result);
-  show += CString(">") + command + " " + parameters + "\r\n" + result;
+  show += XString(">") + command + " " + parameters + "\r\n" + result;
 
   if(m_rulesResult == "TEST")
   {
@@ -745,12 +745,12 @@ void
 HTTPManagerDlg::OnBnClickedAddFW()
 {
   int res = 0;
-  CString ports;
-  CString show;
-  CString result;
-  CString command("netsh");
-  CString parameters1;
-  CString parameters2;
+  XString ports;
+  XString show;
+  XString result;
+  XString command("netsh");
+  XString parameters1;
+  XString parameters2;
   CWaitCursor diepe_zucht;
 
   // See if we must make a firewall rule
@@ -765,7 +765,7 @@ HTTPManagerDlg::OnBnClickedAddFW()
   }
   m_rulesResult.Empty();
 
-  CString naam = MakeFirewallRuleName(ports);
+  XString naam = MakeFirewallRuleName(ports);
   parameters1.Format("advfirewall firewall add rule name=\"%s\" "
                      "dir=in protocol=TCP localport=%s edge=yes action=allow profile=any"
                     ,naam,ports);
@@ -777,10 +777,10 @@ HTTPManagerDlg::OnBnClickedAddFW()
   MessagePump();
 
   res  += CallProgram_For_String(command,parameters1,result);
-  show += CString(">") + command + " " + parameters1 + "\r\n" + result;
+  show += XString(">") + command + " " + parameters1 + "\r\n" + result;
 
   res  += CallProgram_For_String(command,parameters2,result);
-  show += CString(">") + command + " " + parameters2 + "\r\n" + result;
+  show += XString(">") + command + " " + parameters2 + "\r\n" + result;
 
   // Show result
   ResultDlg dlg(this,show);
@@ -794,21 +794,21 @@ void
 HTTPManagerDlg::OnBnClickedDelFW()
 {
   int res = 0;
-  CString show;
-  CString result;
-  CString command("netsh");
-  CString parameters;
-  CString ports;
+  XString show;
+  XString result;
+  XString command("netsh");
+  XString parameters;
+  XString ports;
   CWaitCursor diepe_zucht;
 
-  CString naam = MakeFirewallRuleName(ports);
+  XString naam = MakeFirewallRuleName(ports);
   parameters.Format("advfirewall firewall delete rule name=\"%s\"",naam);
 
   m_editStatus.SetWindowText("Removing Firewall rules for: " + naam);
   MessagePump();
 
   res  += CallProgram_For_String(command,parameters,result);
-  show += CString(">") + command + " " + parameters + "\r\n" + result;
+  show += XString(">") + command + " " + parameters + "\r\n" + result;
 
   // Show result
   ResultDlg dlg(this,show);
@@ -827,11 +827,11 @@ HTTPManagerDlg::OnEnChangeThumbprint()
 void 
 HTTPManagerDlg::OnBnClickedAskcert()
 {
-  CString show;
-  CString result;
-  CString parameters;
-  CString prefix;
-  CString command;
+  XString show;
+  XString result;
+  XString parameters;
+  XString prefix;
+  XString command;
   CWaitCursor diepe_zucht;
 
   // Make sure the range is 1 long
@@ -855,7 +855,7 @@ HTTPManagerDlg::OnBnClickedAskcert()
     if(DoCommand(CONFIG_ASKSSL,prefix,command,parameters))
     {
       int res = CallProgram_For_String(command,parameters,result);
-      show   += CString(">") + command + " " + parameters + "\r\n" + result;
+      show   += XString(">") + command + " " + parameters + "\r\n" + result;
     }
     else return;
   }
@@ -869,14 +869,14 @@ HTTPManagerDlg::OnBnClickedAskcert()
 void 
 HTTPManagerDlg::OnBnClickedAddcert()
 {
-  CString showme;
-  CString result;
-  CString prefix;
-  CString parameters;
-  CString command;
-  CString certificate;
-  CString storename("TrustedPublisher");
-  CString clientCert;
+  XString showme;
+  XString result;
+  XString prefix;
+  XString parameters;
+  XString command;
+  XString certificate;
+  XString storename("TrustedPublisher");
+  XString clientCert;
   m_editCertificate.GetWindowText(certificate);
   certificate.Replace(" ","");
   certificate = certificate.TrimLeft("?");
@@ -928,11 +928,11 @@ HTTPManagerDlg::OnBnClickedAddcert()
 void 
 HTTPManagerDlg::OnBnClickedDelcert()
 {
-  CString showme;
-  CString result;
-  CString prefix;
-  CString parameters;
-  CString command;
+  XString showme;
+  XString result;
+  XString prefix;
+  XString parameters;
+  XString command;
   CWaitCursor deep_sigh;
 
   // Make sure the range is 1 long
@@ -977,11 +977,11 @@ HTTPManagerDlg::OnBnClickedDelcert()
 void 
 HTTPManagerDlg::OnBnClickedListner()
 {
-  CString result;
-  CString parameters;
-  CString command = "netsh";
+  XString result;
+  XString parameters;
+  XString command = "netsh";
   CWaitCursor deep_sigh;
-  CString showme;
+  XString showme;
 
   // See if it was added
   if(DoCommand(CONFIG_ASKLIST,"",command,parameters))
@@ -997,10 +997,10 @@ HTTPManagerDlg::OnBnClickedListner()
 void 
 HTTPManagerDlg::OnBnClickedListen()
 {
-  CString showme;
-  CString result;
-  CString parameters;
-  CString command = "netsh";
+  XString showme;
+  XString result;
+  XString parameters;
+  XString command = "netsh";
   CWaitCursor deep_sigh;
 
   // See if it was added
@@ -1017,15 +1017,15 @@ HTTPManagerDlg::OnBnClickedListen()
 void
 HTTPManagerDlg::OnBnClickedNetstat()
 {
-  CString result;
-  CString parameters;
-  CString command = "netstat";
+  XString result;
+  XString parameters;
+  XString command = "netstat";
   CWaitCursor deep_sigh;
 
   // See if it was added
   parameters = "-a -p TCP";
   int res = CallProgram_For_String(command,parameters,result);
-  CString tonen = ">" + command + " " + parameters + "\r\n" + result;
+  XString tonen = ">" + command + " " + parameters + "\r\n" + result;
 
   // Show result
   ResultDlg dlg(this,tonen);
@@ -1064,12 +1064,12 @@ HTTPManagerDlg::MessagePump()
   }
 }
 
-CString
-HTTPManagerDlg::GetSiteConfig(CString p_prefix)
+XString
+HTTPManagerDlg::GetSiteConfig(XString p_prefix)
 {
-  CString pathName = MarlinConfig::GetExePath();
+  XString pathName = MarlinConfig::GetExePath();
 
-  CString name(p_prefix);
+  XString name(p_prefix);
   int pos = name.Find("//");
   if (pos)
   {
@@ -1105,8 +1105,8 @@ HTTPManagerDlg::OnBnClickedSiteWebConfig()
     return;
   }
 
-  CString prefix = CreateURLPrefix(m_binding, m_secure, m_port, m_absPath);
-  CString filenm = MarlinConfig::GetSiteConfig(prefix);
+  XString prefix = CreateURLPrefix(m_binding, m_secure, m_port, m_absPath);
+  XString filenm = MarlinConfig::GetSiteConfig(prefix);
 
   WebConfigDlg config(m_iis);
   config.SetSiteConfig(prefix,filenm);

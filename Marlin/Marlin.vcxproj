@@ -110,7 +110,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)ExtraParts;ZLib;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ExtraParts\;ZLib\;$(SolutionDir)BaseLibrary\;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -153,7 +153,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)ExtraParts;ZLib;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ExtraParts\;ZLib\;$(SolutionDir)BaseLibrary\;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PreprocessorDefinitions>WIN32;_CONSOLE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -172,37 +172,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Alert.cpp" />
-    <ClCompile Include="Analysis.cpp" />
     <ClCompile Include="AppConfig.cpp" />
-    <ClCompile Include="AutoCritical.cpp" />
-    <ClCompile Include="Base64.cpp" />
-    <ClCompile Include="bcd.cpp" />
     <ClCompile Include="ClientEventDriver.cpp" />
     <ClCompile Include="CommandBus.cpp" />
-    <ClCompile Include="CRC32.cpp" />
-    <ClCompile Include="EventLogRegistration.cpp" />
     <ClCompile Include="HostedWebCore.cpp" />
     <ClCompile Include="HTTPCertificate.cpp" />
-    <ClCompile Include="ConvertWideString.cpp" />
-    <ClCompile Include="Cookie.cpp" />
-    <ClCompile Include="CrackURL.cpp" />
     <ClCompile Include="CreateURLPrefix.cpp" />
-    <ClCompile Include="Crypto.cpp" />
-    <ClCompile Include="DefuseBOM.cpp" />
     <ClCompile Include="EnsureFile.cpp" />
     <ClCompile Include="ErrorReport.cpp" />
     <ClCompile Include="EventSource.cpp" />
-    <ClCompile Include="FileBuffer.cpp" />
     <ClCompile Include="FindProxy.cpp" />
-    <ClCompile Include="GenerateGUID.cpp" />
-    <ClCompile Include="GetLastErrorAsString.cpp" />
-    <ClCompile Include="GetUserAccount.cpp" />
-    <ClCompile Include="HPFCounter.cpp" />
     <ClCompile Include="HTTPClient.cpp" />
     <ClCompile Include="HTTPClientTracing.cpp" />
-    <ClCompile Include="HTTPError.cpp" />
-    <ClCompile Include="HTTPMessage.cpp" />
     <ClCompile Include="HTTPRequest.cpp" />
     <ClCompile Include="HTTPServer.cpp" />
     <ClCompile Include="HTTPServerIIS.cpp" />
@@ -211,30 +192,18 @@
     <ClCompile Include="HTTPSite.cpp" />
     <ClCompile Include="HTTPSiteIIS.cpp" />
     <ClCompile Include="HTTPSiteMarlin.cpp" />
-    <ClCompile Include="HTTPTime.cpp" />
     <ClCompile Include="HTTPURLGroup.cpp" />
     <ClCompile Include="IISDebug.cpp" />
-    <ClCompile Include="JSONMessage.cpp" />
-    <ClCompile Include="JSONParser.cpp" />
-    <ClCompile Include="JSONPath.cpp" />
-    <ClCompile Include="JSONPointer.cpp" />
     <ClCompile Include="LongPolling.cpp" />
     <ClCompile Include="LongTermEvent.cpp" />
     <ClCompile Include="Marlin.cpp" />
     <ClCompile Include="MarlinServer.cpp" />
     <ClCompile Include="MediaType.cpp" />
-    <ClCompile Include="MultiPartBuffer.cpp" />
-    <ClCompile Include="Namespace.cpp" />
     <ClCompile Include="OAuth2Cache.cpp" />
-    <ClCompile Include="PrintToken.cpp" />
-    <ClCompile Include="ProcInfo.cpp" />
-    <ClCompile Include="Redirect.cpp" />
-    <ClCompile Include="RunRedirect.cpp" />
     <ClCompile Include="ServerApp.cpp" />
     <ClCompile Include="ServerEventChannel.cpp" />
     <ClCompile Include="ServerEventDriver.cpp" />
     <ClCompile Include="ServerMain.cpp" />
-    <ClCompile Include="ServiceReporting.cpp" />
     <ClCompile Include="SiteFilter.cpp" />
     <ClCompile Include="SiteFilterClientCertificate.cpp" />
     <ClCompile Include="SiteFilterXSS.cpp" />
@@ -255,18 +224,12 @@
     <ClCompile Include="SiteHandlerTrace.cpp" />
     <ClCompile Include="SiteHandlerWebDAV.cpp" />
     <ClCompile Include="SiteHandlerWebSocket.cpp" />
-    <ClCompile Include="SOAPMessage.cpp" />
-    <ClCompile Include="SOAPSecurity.cpp" />
-    <ClCompile Include="StackTrace.cpp" />
-    <ClCompile Include="ExecuteProcess.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="StdException.cpp" />
-    <ClCompile Include="StoreMessage.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="ThreadPoolED.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -288,14 +251,7 @@
     <ClCompile Include="WebSocketServerIIS.cpp" />
     <ClCompile Include="WebSocketServerSync.cpp" />
     <ClCompile Include="WSDLCache.cpp" />
-    <ClCompile Include="XMLDataType.cpp" />
-    <ClCompile Include="XMLMessage.cpp" />
-    <ClCompile Include="XMLParser.cpp" />
     <ClCompile Include="XMLParserImport.cpp" />
-    <ClCompile Include="XMLParserJSON.cpp" />
-    <ClCompile Include="XMLRestriction.cpp" />
-    <ClCompile Include="XMLTemporal.cpp" />
-    <ClCompile Include="XPath.cpp" />
     <ClCompile Include="ZLib\adler32.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -352,41 +308,22 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Alert.h" />
-    <ClInclude Include="Analysis.h" />
     <ClInclude Include="AppConfig.h" />
-    <ClInclude Include="AutoCritical.h" />
-    <ClInclude Include="Base64.h" />
-    <ClInclude Include="bcd.h" />
     <ClInclude Include="ClientEventDriver.h" />
     <ClInclude Include="CommandBus.h" />
-    <ClInclude Include="CRC32.h" />
-    <ClInclude Include="EventLogRegistration.h" />
     <ClInclude Include="EventStream.h" />
-    <ClInclude Include="Headers.h" />
+    <ClInclude Include="framework.h" />
     <ClInclude Include="HostedWebCore.h" />
     <ClInclude Include="HTTPCertificate.h" />
-    <ClInclude Include="ConvertWideString.h" />
-    <ClInclude Include="Cookie.h" />
     <ClInclude Include="CPULoad.h" />
-    <ClInclude Include="CrackURL.h" />
     <ClInclude Include="CreateURLPrefix.h" />
-    <ClInclude Include="Crypto.h" />
-    <ClInclude Include="DefuseBOM.h" />
     <ClInclude Include="EnsureFile.h" />
     <ClInclude Include="ErrorReport.h" />
     <ClInclude Include="EventSource.h" />
-    <ClInclude Include="FileBuffer.h" />
     <ClInclude Include="FindProxy.h" />
-    <ClInclude Include="GenerateGUID.h" />
-    <ClInclude Include="GetLastErrorAsString.h" />
-    <ClInclude Include="GetUserAccount.h" />
-    <ClInclude Include="HPFCounter.h" />
     <ClInclude Include="HTTPClient.h" />
     <ClInclude Include="HTTPClientTracing.h" />
-    <ClInclude Include="HTTPError.h" />
     <ClInclude Include="HTTPLoglevel.h" />
-    <ClInclude Include="HTTPMessage.h" />
     <ClInclude Include="HTTPRequest.h" />
     <ClInclude Include="HTTPServer.h" />
     <ClInclude Include="HTTPServerIIS.h" />
@@ -395,33 +332,20 @@
     <ClInclude Include="HTTPSite.h" />
     <ClInclude Include="HTTPSiteIIS.h" />
     <ClInclude Include="HTTPSiteMarlin.h" />
-    <ClInclude Include="HTTPTime.h" />
     <ClInclude Include="HTTPURLGroup.h" />
     <ClInclude Include="IISDebug.h" />
     <ClInclude Include="IISSiteConfig.h" />
-    <ClInclude Include="JSONMessage.h" />
-    <ClInclude Include="JSONParser.h" />
-    <ClInclude Include="JSONPath.h" />
-    <ClInclude Include="JSONPointer.h" />
     <ClInclude Include="LongPolling.h" />
     <ClInclude Include="LongTermEvent.h" />
     <ClInclude Include="Marlin.h" />
     <ClInclude Include="MarlinServer.h" />
     <ClInclude Include="MediaType.h" />
-    <ClInclude Include="MultiPartBuffer.h" />
-    <ClInclude Include="Namespace.h" />
     <ClInclude Include="OAuth2Cache.h" />
-    <ClInclude Include="PrintToken.h" />
-    <ClInclude Include="ProcInfo.h" />
-    <ClInclude Include="Redirect.h" />
-    <ClInclude Include="Routing.h" />
-    <ClInclude Include="RunRedirect.h" />
     <ClInclude Include="ServerApp.h" />
     <ClInclude Include="ServerEvent.h" />
     <ClInclude Include="ServerEventChannel.h" />
     <ClInclude Include="ServerEventDriver.h" />
     <ClInclude Include="ServerMain.h" />
-    <ClInclude Include="ServiceReporting.h" />
     <ClInclude Include="SiteFilter.h" />
     <ClInclude Include="SiteFilterClientCertificate.h" />
     <ClInclude Include="SiteFilterXSS.h" />
@@ -442,14 +366,7 @@
     <ClInclude Include="SiteHandlerTrace.h" />
     <ClInclude Include="SiteHandlerWebDAV.h" />
     <ClInclude Include="SiteHandlerWebSocket.h" />
-    <ClInclude Include="SOAPMessage.h" />
-    <ClInclude Include="SOAPSecurity.h" />
-    <ClInclude Include="SoapTypes.h" />
-    <ClInclude Include="StackTrace.h" />
-    <ClInclude Include="ExecuteProcess.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="StdException.h" />
-    <ClInclude Include="StoreMessage.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="ThreadPoolED.h" />
@@ -466,14 +383,7 @@
     <ClInclude Include="WebSocketServerSync.h" />
     <ClInclude Include="WinINETError.h" />
     <ClInclude Include="WSDLCache.h" />
-    <ClInclude Include="XMLDataType.h" />
-    <ClInclude Include="XMLMessage.h" />
-    <ClInclude Include="XMLParser.h" />
     <ClInclude Include="XMLParserImport.h" />
-    <ClInclude Include="XMLParserJSON.h" />
-    <ClInclude Include="XMLRestriction.h" />
-    <ClInclude Include="XMLTemporal.h" />
-    <ClInclude Include="XPath.h" />
     <ClInclude Include="ZLib\zipcrc32.h" />
     <ClInclude Include="ZLib\deflate.h" />
     <ClInclude Include="ZLib\gzguts.h" />

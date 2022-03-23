@@ -53,7 +53,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
 {
   bool opened = false;
   HTTPServer* server = m_site->GetHTTPServer();
-  CString uri = p_message->GetAbsolutePath();
+  XString uri = p_message->GetAbsolutePath();
 
   // Create socket by absolute path of the incoming URL
   WebSocket* socket = server->CreateWebSocket(uri);

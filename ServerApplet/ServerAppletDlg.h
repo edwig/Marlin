@@ -61,22 +61,22 @@ protected:
   bool            CheckConfiguration();
   void            SetInstallMenu(int p_service);
   void            PumpMessage();
-  bool            AreYouSure(CString p_actie);
+  bool            AreYouSure(XString p_actie);
   void            GetWSStatus();
   void            IISRestart();
   void            IISStop();
   void            IISStart();
 
-  CString         m_role;
+  XString         m_role;
   int             m_service;
   ServerStatus    m_serverStatus;
-  CString         m_status;
-  CString         m_logline;
-  CString         m_password;
+  XString         m_status;
+  XString         m_logline;
+  XString         m_password;
   bool            m_loginStatus;
-  CString         m_connection;
-  CString         m_url;
-  CString         m_loginURL;
+  XString         m_connection;
+  XString         m_url;
+  XString         m_loginURL;
 
 	HICON           m_hIcon;
   CButton         m_buttonConfig;

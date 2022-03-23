@@ -29,7 +29,7 @@
 #include "HTTPManager.h"
 #include "WebConfigServer.h"
 #include "MarlinConfig.h"
-#include "MapDialoog.h"
+#include "MapDialog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
 #include "EventStream.h"
@@ -242,7 +242,7 @@ WebConfigServer::OnInitDialog()
 }
 
 void 
-WebConfigServer::SetSiteConfig(CString p_urlPrefix,CString p_fileName)
+WebConfigServer::SetSiteConfig(XString p_urlPrefix,XString p_fileName)
 {
   m_url            = p_urlPrefix;
   m_siteConfigFile = p_fileName;
@@ -421,10 +421,10 @@ void
 WebConfigServer::WriteWebConfig(MarlinConfig& config)
 {
   // GET STRINGS
-  CString port;       port      .Format("%d",m_port);
-  CString minThreads; minThreads.Format("%d",m_minThreads);
-  CString maxThreads; maxThreads.Format("%d",m_maxThreads);
-  CString stackSize;  stackSize .Format("%d",m_stackSize);
+  XString port;       port      .Format("%d",m_port);
+  XString minThreads; minThreads.Format("%d",m_minThreads);
+  XString maxThreads; maxThreads.Format("%d",m_maxThreads);
+  XString stackSize;  stackSize .Format("%d",m_stackSize);
 
   // WRITE THE CONFIG PARAMETERS
   config.SetSection("Server");
@@ -524,8 +524,8 @@ WebConfigServer::OnEnChangeWebroot()
 void 
 WebConfigServer::OnBnClickedButtWebroot()
 {
-  CString rootdir;
-  MapDialoog map;
+  XString rootdir;
+  MapDialog map;
   if(map.Browse(GetSafeHwnd()
                ,"Get the path to the webroot directory"
                ,m_webroot
@@ -533,7 +533,7 @@ WebConfigServer::OnBnClickedButtWebroot()
                ,false    // files
                ,true))   // status
   {
-    CString pad = map.GetPath();
+    XString pad = map.GetPath();
     if(m_webroot.CompareNoCase(pad))
     {
       m_webroot = pad;
@@ -619,7 +619,7 @@ WebConfigServer::OnCbnSelchangeStacksize()
   int sel = m_comboStack.GetCurSel();
   if(sel >= 0)
   {
-    CString size;
+    XString size;
     m_comboStack.GetLBText(sel,size);
     m_stackSize = atoi(size);
   }

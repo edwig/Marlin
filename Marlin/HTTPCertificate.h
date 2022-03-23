@@ -38,23 +38,23 @@ public:
   HTTPCertificate(PUCHAR p_blob,ULONG p_size);
  ~HTTPCertificate();
 
-  CString GetSubject();
-  CString GetIssuer();
-  bool    VerifyThumbprint(CString p_thumbprint);
+  XString GetSubject();
+  XString GetIssuer();
+  bool    VerifyThumbprint(XString p_thumbprint);
   void    SetRawCertificate(PUCHAR p_blob,ULONG p_size);
   // Encoding a thumbprint string
   // Preparing it to search in the certificate stores
   // Or for verification purposes.
-  static  bool EncodeThumbprint(CString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len);
+  static  bool EncodeThumbprint(XString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len);
 
 private:
   bool    OpenContext();
-  CString CleanupCertificateString(CString p_name);
+  XString CleanupCertificateString(XString p_name);
 
   PUCHAR         m_blob    { nullptr };
   ULONG          m_size    { 0L      };
   PCCERT_CONTEXT m_context { nullptr };
-  CString        m_subject;
-  CString        m_issuer;
-  CString        m_thumbprint;
+  XString        m_subject;
+  XString        m_issuer;
+  XString        m_thumbprint;
 };

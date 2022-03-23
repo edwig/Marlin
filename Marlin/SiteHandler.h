@@ -29,7 +29,7 @@
 #include "HTTPSite.h"
 #include "HTTPMessage.h"
 #include "HTTPServer.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 
 // Macro's for logging in the site handlers
 #define SITE_DETAILLOG1(text)       m_site->GetHTTPServer()->DetailLog (__FUNCTION__,LogType::LOG_INFO,(text))

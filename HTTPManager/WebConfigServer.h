@@ -42,7 +42,7 @@ public:
   WebConfigServer(bool p_iis,CWnd* pParent = NULL);   // standard constructor
  ~WebConfigServer();
   BOOL OnInitDialog();
-  void SetSiteConfig(CString p_urlPrefix,CString m_fileName);
+  void SetSiteConfig(XString p_urlPrefix,XString m_fileName);
   void ReadWebConfig (MarlinConfig& p_config);
   void WriteWebConfig(MarlinConfig& p_config);
 
@@ -61,8 +61,8 @@ protected:
   friend      ServerHeadersDlg;
 
   // Special config to edit
-  CString     m_url;
-  CString     m_siteConfigFile;
+  XString     m_url;
+  XString     m_siteConfigFile;
 
   bool        m_iis;
   // SERVER OVERRIDES
@@ -97,10 +97,10 @@ protected:
   bool        m_useNoCache;
   bool        m_useCORS;
 
-  CString     m_webroot;
-  CString     m_baseURL;
+  XString     m_webroot;
+  XString     m_baseURL;
   bool        m_secureProtocol;
-  CString     m_binding;
+  XString     m_binding;
   int         m_port;
   int         m_backlogQueue;
   bool        m_tunneling;
@@ -116,10 +116,10 @@ protected:
   int         m_retrytime;
   bool        m_cookieSecure;
   bool        m_cookieHttpOnly;
-  CString     m_cookieSameSite;
+  XString     m_cookieSameSite;
   // Server headers
-  CString     m_xFrameOption;
-  CString     m_xFrameAllowed;
+  XString     m_xFrameOption;
+  XString     m_xFrameAllowed;
   unsigned    m_hstsMaxAge;
   bool        m_hstsSubDomain;
   bool        m_xNoSniff;
@@ -127,8 +127,8 @@ protected:
   bool        m_XSSBlockMode;
   bool        m_noCacheControl;
   bool        m_cors;
-  CString     m_allowOrigin;
-  CString     m_allowHeaders;
+  XString     m_allowOrigin;
+  XString     m_allowHeaders;
   int         m_allowMaxAge;
   bool        m_corsCredentials;
 

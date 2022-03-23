@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "HTTPURLGroup.h"
 #include "HTTPSite.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -45,11 +45,11 @@ static char THIS_FILE[] = __FILE__;
                                   }
 
 HTTPURLGroup::HTTPURLGroup(HTTPServerMarlin* p_server
-                          ,CString p_authName
+                          ,XString p_authName
                           ,ULONG   p_authScheme
                           ,bool    p_cache
-                          ,CString p_realm
-                          ,CString p_domain)
+                          ,XString p_realm
+                          ,XString p_domain)
              :m_server(p_server)
              ,m_authName(p_authName)
              ,m_authScheme(p_authScheme)
@@ -191,7 +191,7 @@ HTTPURLGroup::StopGroup()
 void
 HTTPURLGroup::RegisterSite(HTTPSite* p_site)
 {
-  CString site = p_site->GetPrefixURL();
+  XString site = p_site->GetPrefixURL();
   UrlSiteMap::iterator it = m_sites.find(site);
   if(it != m_sites.end())
   {
@@ -206,7 +206,7 @@ HTTPURLGroup::RegisterSite(HTTPSite* p_site)
 void
 HTTPURLGroup::UnRegisterSite(HTTPSite* p_site)
 {
-  CString site = p_site->GetPrefixURL();
+  XString site = p_site->GetPrefixURL();
   UrlSiteMap::iterator it = m_sites.find(site);
   if(it != m_sites.end())
   {

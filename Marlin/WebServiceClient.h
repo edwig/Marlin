@@ -40,7 +40,7 @@
 #include "HTTPClient.h"
 #include "SOAPMessage.h"
 #include "WSDLCache.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include <deque>
 
 // Default and maximum nr. of messages to store
@@ -77,9 +77,9 @@ using MessageStore = std::deque<SoapMsg>;
 class WebServiceClient
 {
 public:
-  WebServiceClient(CString p_contract
-                  ,CString p_url
-                  ,CString p_wsdlFile = ""
+  WebServiceClient(XString p_contract
+                  ,XString p_url
+                  ,XString p_wsdlFile = ""
                   ,bool    p_reliable = false);
  ~WebServiceClient();
 
@@ -97,27 +97,27 @@ public:
   bool      GetIsOpen()                  { return m_isopen;                 }
   bool      GetWsdlCheck()               { return m_wsdlCheck;              }
   int       GetMessageNumber()           { return ++m_clientMessageNumber;  } // Automatic increment!
-  CString   GetUser()                    { return m_user;                   }
-  CString   GetPassword()                { return m_password;               }
-  CString   GetGuidSequenceServer()      { return m_guidSequenceServer;     }
-  CString   GetGuidSequenceClient()      { return m_guidSequenceClient;     }
-  CString   GetAddressing()              { return m_adr;                    }
-  CString   GetErrorText()               { return m_errorText;              }
+  XString   GetUser()                    { return m_user;                   }
+  XString   GetPassword()                { return m_password;               }
+  XString   GetGuidSequenceServer()      { return m_guidSequenceServer;     }
+  XString   GetGuidSequenceClient()      { return m_guidSequenceClient;     }
+  XString   GetAddressing()              { return m_adr;                    }
+  XString   GetErrorText()               { return m_errorText;              }
   bool      GetTokenProfile()            { return m_tokenProfile;           }
   bool      GetReliable()                { return m_reliable;               }
-  CString   GetSecurityPassword()        { return m_encryptionPassword;     }
+  XString   GetSecurityPassword()        { return m_encryptionPassword;     }
   bool      GetSoapCompress()            { return m_soapCompress;           }
   bool      GetJsonSoapTranslation()     { return m_jsonTranslation;        }
   int       GetLogLevel()                { return m_logLevel;               }
-  CString   GetLogFilename()             { return m_logFilename;            }
+  XString   GetLogFilename()             { return m_logFilename;            }
   ReliableType  GetReliableType()        { return m_reliableType;           }
   XMLEncryption GetSecurityLevel()       { return m_encryptionLevel;        }
   unsigned      GetSigningMethod()       { return m_signingMethod;          }
   HTTPClient*   GetHTTPClient()          { return m_httpClient;             }
   WSDLCache&    GetWSDLCache()           { return m_wsdl;                   }
-  CString       GetWSDLFilename()        { return m_wsdlFile;               }
+  XString       GetWSDLFilename()        { return m_wsdlFile;               }
   SOAPSecurity* GetSOAPSecurity()        { return m_soapSecurity;           }
-  CString       GetSOAPAction()          { return m_soapAction;             }
+  XString       GetSOAPAction()          { return m_soapAction;             }
   bool          GetDetailLogging();
 
   // General Setters
@@ -126,18 +126,18 @@ public:
   void      SetLogAnalysis(LogAnalysis* p_log);
   void      SetReliable(bool p_reliable,ReliableType p_type = ReliableType::RELIABLE_ONCE);
   void      SetTimeouts(int p_resolve,int p_connect,int p_send,int p_receive);
-  void      SetUser(CString p_user)                         { m_user               = p_user;        }
-  void      SetPassword(CString p_password)                 { m_password           = p_password;    }
+  void      SetUser(XString p_user)                         { m_user               = p_user;        }
+  void      SetPassword(XString p_password)                 { m_password           = p_password;    }
   void      SetTokenProfile(bool p_token)                   { m_tokenProfile       = p_token;       }
   void      SetWsdlCheck(bool p_check)                      { m_wsdlCheck          = p_check;       }
-  void      SetLogFilename(CString p_logFilename)           { m_logFilename        = p_logFilename; }
+  void      SetLogFilename(XString p_logFilename)           { m_logFilename        = p_logFilename; }
   void      SetSigningMethod(unsigned p_method)             { m_signingMethod      = p_method;      }
   void      SetSecurityLevel(XMLEncryption p_encryption)    { m_encryptionLevel    = p_encryption;  }
-  void      SetSecurityPassword(CString p_password)         { m_encryptionPassword = p_password;    }
+  void      SetSecurityPassword(XString p_password)         { m_encryptionPassword = p_password;    }
   void      SetSoapCompress(bool p_compress)                { m_soapCompress       = p_compress;    }
-  void      SetWSDLFilename(CString p_file)                 { m_wsdlFile           = p_file;        }
+  void      SetWSDLFilename(XString p_file)                 { m_wsdlFile           = p_file;        }
   void      SetJsonSoapTranslation(bool p_json)             { m_jsonTranslation    = p_json;        }
-  void      SetSOAPAction(CString p_soapAction)             { m_soapAction         = p_soapAction;  }
+  void      SetSOAPAction(XString p_soapAction)             { m_soapAction         = p_soapAction;  }
   void      SetLogLevel(int p_logLevel);
   void      SetDetailLogging(bool p_detail);
 
@@ -171,37 +171,37 @@ private:
   WSDLCache     m_wsdl                { false     };           // Client side WSDL
   bool          m_owner               { false     };           // We created the HTTPClient
   bool          m_isopen              { false     };           // Status open/close
-  CString       m_url;                                         // URL to send to
-  CString       m_contract;                                    // Service contract
-  CString       m_wsdlFile;                                    // URL/File for WSDL definitions
-  CString       m_user;                                        // User for RM messages
-  CString       m_password;                                    // Password for RM messages
+  XString       m_url;                                         // URL to send to
+  XString       m_contract;                                    // Service contract
+  XString       m_wsdlFile;                                    // URL/File for WSDL definitions
+  XString       m_user;                                        // User for RM messages
+  XString       m_password;                                    // Password for RM messages
   bool          m_tokenProfile        { false     };           // Use WS-Security tokenProfile authentication
   bool          m_reliable            { false     };           // Using WS-RM?
   bool          m_wsdlCheck           { false     };           // Using WSDL checks
   ReliableType  m_reliableType { ReliableType::RELIABLE_ONCE };// 0=AtMostOnce,1=ExactlyOnce,2=AtLeastOnce
   XMLEncryption m_encryptionLevel{ XMLEncryption::XENC_Plain };// Signing, body encryption, message encryption
-  CString       m_encryptionPassword;                          // Password for encryption
+  XString       m_encryptionPassword;                          // Password for encryption
   unsigned      m_signingMethod       { CALG_SHA1 };           // Signing method
   bool          m_jsonTranslation     { false     };           // Do SOAP->JSON round trip translation
   LogAnalysis*  m_logfile             { nullptr   };           // Logfile
-  CString       m_logFilename;                                 // Filename for creating our own logfile
+  XString       m_logFilename;                                 // Filename for creating our own logfile
   bool          m_logOwner            { false     };           // Owner of the logfile
   int           m_logLevel            { HLL_NOLOG };           // Loglevel of the client
   bool          m_soapCompress        { false     };           // Compress SOAP web services
-  CString       m_soapAction;                                  // Override for SOAPAction header
+  XString       m_soapAction;                                  // Override for SOAPAction header
 
   // Send status
   bool          m_isSending           { false     };           // Currently in a send
-  CString       m_errorText;                                   // Error fault stack
+  XString       m_errorText;                                   // Error fault stack
   bool          m_result              { true      };           // Correct result(true) or error(false)
   // Sequence for WS-ReliableMessaging
-  CString       m_guidSequenceClient;                          // Offer GUID to server
-  CString       m_guidSequenceServer;                          // Answer to createSequence
+  XString       m_guidSequenceClient;                          // Offer GUID to server
+  XString       m_guidSequenceServer;                          // Answer to createSequence
   int           m_clientMessageNumber { 0         };           // Serial incrementing
   int           m_serverMessageNumber { 0         };           // Serial incrementing
-  CString       m_messageGuidID;                               // ID of current message
-  CString       m_request;                                     // Current request name 
+  XString       m_messageGuidID;                               // ID of current message
+  XString       m_request;                                     // Current request name 
   bool          m_retransmitLast      { false     };           // Do again for ReliableType = RELIABLE_ATLEAST1
   bool          m_inLastMessage       { false     };           // Final termination
   // WS-Security 
@@ -216,7 +216,7 @@ private:
   int           m_timeoutReceive      { DEF_TIMEOUT_RECEIVE }; // Timeout receiving answer from URL
 
   // Semi-Constants: make mutable later
-  CString       m_rm;  // WS-ReliableMessaging contract
-  CString       m_adr; // WS-Addressing contract
-  CString       m_env; // W3C Soap-envelope
+  XString       m_rm;  // WS-ReliableMessaging contract
+  XString       m_adr; // WS-Addressing contract
+  XString       m_env; // W3C Soap-envelope
 };

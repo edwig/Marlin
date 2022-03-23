@@ -78,13 +78,13 @@ public:
   // MANDATORY: Setting the application for which we work
   void  SetApplicationCallback(LPFN_EVENTCALLBACK p_callback,void* p_object);
   // OPTIONAL: Starting the driver in one go for the first (or only) session!
-  bool  StartEventDriver(CString p_url,EVChannelPolicy p_policy,CString p_session,CString p_cookie,CString p_cookieValue);
+  bool  StartEventDriver(XString p_url,EVChannelPolicy p_policy,XString p_session,XString p_cookie,XString p_cookieValue);
   // OPTIONAL: Set policy to change on next re-connect
   void  SetChannelPolicy(EVChannelPolicy p_policy);
   // OPTIONAL: Set server URL to change on next re-connect
-  void  SetServerURL(CString p_url);
+  void  SetServerURL(XString p_url);
   // OPTIONAL: Start with session (Call SetChannelPolicy and SetServerURL first)
-  bool  StartEventsForSession(CString p_session,CString p_cookie,CString p_cookieValiue);
+  bool  StartEventsForSession(XString p_session,XString p_cookie,XString p_cookieValiue);
   // OPTIONAL: Stop an events session
   bool  StopEventsForSession();
 
@@ -119,10 +119,10 @@ private:
   // Closing everything down
   bool  CloseDown();
 
-  CString          m_serverURL;
-  CString          m_session;
-  CString          m_cookie;
-  CString          m_secret;
+  XString          m_serverURL;
+  XString          m_session;
+  XString          m_cookie;
+  XString          m_secret;
   bool             m_running    { false };
   bool             m_closeSeen  { false };
   EVChannelPolicy  m_policy     { EVChannelPolicy::DP_Disconnected };

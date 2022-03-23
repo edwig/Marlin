@@ -39,7 +39,7 @@ static char THIS_FILE[] = __FILE__;
 // Remember the certificate for this thread
 __declspec(thread) PHTTP_SSL_CLIENT_CERT_INFO g_certificate = nullptr;
 
-SiteFilterClientCertificate::SiteFilterClientCertificate(unsigned p_priority,CString p_name)
+SiteFilterClientCertificate::SiteFilterClientCertificate(unsigned p_priority,XString p_name)
                             :SiteFilter(p_priority,p_name)
 {
 }
@@ -169,7 +169,7 @@ SiteFilterClientCertificate::CheckCertificateStatus()
     if(g_certificate->CertFlags)
     {
       // Possible error situations
-      CString status;
+      XString status;
       switch(g_certificate->CertFlags)
       {
         case CERT_E_EXPIRED:        status = "expired";                           break;
@@ -180,7 +180,7 @@ SiteFilterClientCertificate::CheckCertificateStatus()
         case CERT_E_CN_NO_MATCH:    status = "without matching certificate name"; break;
         default:                    status = "unknown certificate status";        break;
       }
-      CString logstring("Received client certificate with status: Certificate ");
+      XString logstring("Received client certificate with status: Certificate ");
       SITE_ERRORLOG(ERROR_ACCESS_DENIED,logstring + status);
     }
     else
@@ -212,8 +212,8 @@ SiteFilterClientCertificate::CheckClientCertificate()
   // See if we have a subject name's to check
   if(!m_certName.IsEmpty())
   {
-    CString toCheck(m_certName);
-    CString subject = cert.GetSubject();
+    XString toCheck(m_certName);
+    XString subject = cert.GetSubject();
     subject.MakeLower();
     toCheck.MakeLower();
     if(subject.Find(toCheck) < 0)

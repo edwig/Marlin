@@ -47,7 +47,7 @@ private:
   bool    QueryWord  (HINTERNET p_handle,DWORD p_option,DWORD* p_word,   const char* p_optionName);
   bool    QueryVoid  (HINTERNET p_handle,DWORD p_option,void** p_pointer,const char* p_optionName);
   bool    QueryObject(HINTERNET p_handle,DWORD p_option,void*  p_pointer,DWORD p_size,const char* p_optionName);
-  CString QueryString(HINTERNET p_handle,DWORD p_option,const char*  p_optionName);
+  XString QueryString(HINTERNET p_handle,DWORD p_option,const char*  p_optionName);
 
   // Works for this client
   HTTPClient*   m_client;

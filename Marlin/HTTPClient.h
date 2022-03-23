@@ -143,11 +143,11 @@ public:
   // Our primary function: send something
   bool Send();
   // Send HTTP to an URL
-  bool Send(CString& p_url);
+  bool Send(XString& p_url);
   // Send HTTP + body to an URL
-  bool Send(CString& p_url,CString& p_body);
+  bool Send(XString& p_url,XString& p_body);
   // Send HTTP + body-buffer to an URL
-  bool Send(CString& p_url,void* p_buffer,unsigned p_length);
+  bool Send(XString& p_url,void* p_buffer,unsigned p_length);
   // Send HTTPMessage
   bool Send(HTTPMessage* p_msg);
   // Send HTTP + SOAP Message
@@ -155,9 +155,9 @@ public:
   // Send HTTP + JSON Message
   bool Send(JSONMessage* p_msg);
   // Send to an URL to GET a file in a buffer
-  bool Send(CString&    p_url
+  bool Send(XString&    p_url
            ,FileBuffer* p_buffer
-           ,CString*    p_contentType = nullptr
+           ,XString*    p_contentType = nullptr
            ,Cookies*    p_cookies     = nullptr
            ,HeaderMap*  p_headers     = nullptr);
   // Translate SOAP to JSON, send/receive and translate back
@@ -178,13 +178,13 @@ public:
 
   // FUNCTIONS
   // Add extra header for the call
-  bool AddHeader(CString p_header);
+  bool AddHeader(XString p_header);
   // Add extra header by name and value pair
-  void AddHeader(CString p_name,CString p_value);
+  void AddHeader(XString p_name,XString p_value);
   // Delete a header
-  bool DelHeader(CString p_name);
+  bool DelHeader(XString p_name);
   // Add extra cookie for the call
-  bool AddCookie(CString p_cookie);
+  bool AddCookie(XString p_cookie);
   // Disconnect from server
   void Disconnect();
   // Lock the client (for MT use)
@@ -192,30 +192,30 @@ public:
   // Unlock the client (for MT use)
   void UnlockClient();
   // Find a result header
-  CString FindHeader(CString p_header);
+  XString FindHeader(XString p_header);
   
   // SETTERS
-  bool SetURL(CString p_url);
-  void SetBody(CString& p_body);
+  bool SetURL(XString p_url);
+  void SetBody(XString& p_body);
   void SetBody(void* p_body,unsigned p_length);
   void SetLogging(LogAnalysis* p_log,bool p_transferOwnership = false);
   void SetSecure(bool p_secure)                   { m_secure            = p_secure;   }; // URL Part secure
-  void SetUser(CString& p_user)                   { m_user              = p_user;     }; // URL Part user
-  void SetPassword(CString& p_password)           { m_password          = p_password; }; // URL Part password
-  void SetServer(CString& p_server)               { m_server            = p_server;   }; // URL Part server
+  void SetUser(XString& p_user)                   { m_user              = p_user;     }; // URL Part user
+  void SetPassword(XString& p_password)           { m_password          = p_password; }; // URL Part password
+  void SetServer(XString& p_server)               { m_server            = p_server;   }; // URL Part server
   void SetPort(int p_port)                        { m_port              = p_port;     }; // URL Part port
   void SetRetries(int p_retries)                  { m_retries           = p_retries;  };
-  void SetAgent(CString& p_agent)                 { m_agent             = p_agent;    };
+  void SetAgent(XString& p_agent)                 { m_agent             = p_agent;    };
   void SetUseProxy(ProxyType p_type)              { m_useProxy          = p_type;     };
-  void SetProxy(CString& p_proxy)                 { m_proxy             = p_proxy;    };
-  void SetProxyBypass(CString& p_bypass)          { m_proxyBypass       = p_bypass;   };
-  void SetProxyUser(CString& p_user)              { m_proxyUser         = p_user;     };
-  void SetProxyPassword(CString& p_pass)          { m_proxyPassword     = p_pass;     };
+  void SetProxy(XString& p_proxy)                 { m_proxy             = p_proxy;    };
+  void SetProxyBypass(XString& p_bypass)          { m_proxyBypass       = p_bypass;   };
+  void SetProxyUser(XString& p_user)              { m_proxyUser         = p_user;     };
+  void SetProxyPassword(XString& p_pass)          { m_proxyPassword     = p_pass;     };
   void SetSendUnicode(bool p_unicode)             { m_sendUnicode       = p_unicode;  };
-  void SetVerb(CString p_verb)                    { m_verb              = p_verb;     };
-  void SetContentType(CString& p_type)            { m_contentType       = p_type;     };
+  void SetVerb(XString p_verb)                    { m_verb              = p_verb;     };
+  void SetContentType(XString& p_type)            { m_contentType       = p_type;     };
   void SetHTTPCompression(bool p_compress)        { m_httpCompression   = p_compress; };
-  void SetSoapAction(CString& p_action)           { m_soapAction        = p_action;   };
+  void SetSoapAction(XString& p_action)           { m_soapAction        = p_action;   };
   void SetTimeoutResolve(int p_timeout)           { m_timeoutResolve    = p_timeout;  };
   void SetTimeoutConnect(int p_timeout)           { m_timeoutConnect    = p_timeout;  };
   void SetTimeoutSend   (int p_timeout)           { m_timeoutSend       = p_timeout;  };
@@ -225,44 +225,44 @@ public:
   void SetPreEmptiveAuthorization(DWORD p_pre)    { m_preemtive         = p_pre;      };
   void SetTerminalServices(bool p_term)           { m_terminalServices  = p_term;     };
   void SetEncryptionLevel(XMLEncryption p_level)  { m_securityLevel     = p_level;    };
-  void SetEncryptionPassword(CString p_word)      { m_enc_password      = p_word;     };
+  void SetEncryptionPassword(XString p_word)      { m_enc_password      = p_word;     };
   void SetSingleSignOn(bool p_sso)                { m_sso               = p_sso;      };
   void SetSoapCompress(bool p_compress)           { m_soapCompress      = p_compress; };
   void SetSslTlsSettings(unsigned p_ssltls)       { m_ssltls            = p_ssltls;   }; // WINHTTP_FLAG_SECURE_PROTOCOL_ALL
   void SetSendBOM(bool p_bom)                     { m_sendBOM           = p_bom;      };
   void SetVerbTunneling(bool p_tunnel)            { m_verbTunneling     = p_tunnel;   };
   void SetClientCertificatePreset(bool p_preset)  { m_certPreset        = p_preset;   };
-  void SetClientCertificateName(CString p_name)   { m_certName          = p_name;     };
-  void SetClientCertificateStore(CString p_store) { m_certStore         = p_store;    };
+  void SetClientCertificateName(XString p_name)   { m_certName          = p_name;     };
+  void SetClientCertificateStore(XString p_store) { m_certStore         = p_store;    };
   void SetWebsocketHandshake(bool p_socket)       { m_websocket         = p_socket;   };
   void SetOAuth2Cache(OAuth2Cache* p_cache)       { m_oauthCache        = p_cache;    };
   void SetOAuth2Session(int p_session)            { m_oauthSession      = p_session;  };
-  bool SetClientCertificateThumbprint(CString p_store,CString p_thumbprint);
-  void SetCORSOrigin(CString p_origin);
-  bool SetCORSPreFlight(CString p_method,CString p_headers);
+  bool SetClientCertificateThumbprint(XString p_store,XString p_thumbprint);
+  void SetCORSOrigin(XString p_origin);
+  bool SetCORSPreFlight(XString p_method,XString p_headers);
   void SetLogLevel(int p_logLevel);
   void SetDetailLogging(bool p_detail);
   void SetTraceData(bool p_trace);
   void SetTraceRequest(bool p_trace);
 
   // GETTERS
-  CString       GetURL()                    { return m_url;               }; // Full URL
+  XString       GetURL()                    { return m_url;               }; // Full URL
   bool          GetSecure()                 { return m_secure;            }; // URL Part secure
-  CString       GetUser()                   { return m_user;              }; // URL Part user
-  CString       GetPassword()               { return m_password;          }; // URL Part password
-  CString       GetServer()                 { return m_server;            }; // URL Part server
+  XString       GetUser()                   { return m_user;              }; // URL Part user
+  XString       GetPassword()               { return m_password;          }; // URL Part password
+  XString       GetServer()                 { return m_server;            }; // URL Part server
   int           GetPort()                   { return m_port;              }; // URL Part port
   void*         GetBody()                   { return m_body;              };
   bool          GetSendUnicode()            { return m_sendUnicode;       };
-  CString       GetAgent()                  { return m_agent;             };
+  XString       GetAgent()                  { return m_agent;             };
   ProxyType     GetUseProxy()               { return m_useProxy;          };
-  CString       GetProxy()                  { return m_proxy;             };
-  CString       GetProxyBypass()            { return m_proxyBypass;       };
-  CString       GetProxyUser()              { return m_proxyUser;         };
-  CString       GetProxyPassword()          { return m_proxyPassword;     };
-  CString       GetVerb()                   { return m_verb;              };
-  CString       GetContentType()            { return m_contentType;       };
-  CString       GetSoapAction()             { return m_soapAction;        };
+  XString       GetProxy()                  { return m_proxy;             };
+  XString       GetProxyBypass()            { return m_proxyBypass;       };
+  XString       GetProxyUser()              { return m_proxyUser;         };
+  XString       GetProxyPassword()          { return m_proxyPassword;     };
+  XString       GetVerb()                   { return m_verb;              };
+  XString       GetContentType()            { return m_contentType;       };
+  XString       GetSoapAction()             { return m_soapAction;        };
   int           GetTimeoutResolve()         { return m_timeoutResolve;    };
   int           GetTimeoutConnect()         { return m_timeoutConnect;    };
   int           GetTimeoutSend()            { return m_timeoutSend;       };
@@ -274,7 +274,7 @@ public:
   DWORD         GetPreEmptiveAuthorization(){ return m_preemtive;         };
   bool          GetTerminalServices()       { return m_terminalServices;  };
   XMLEncryption GetEncryptionLevel()        { return m_securityLevel;     };
-  CString       GetEncryptionPassword()     { return m_enc_password;      };
+  XString       GetEncryptionPassword()     { return m_enc_password;      };
   bool          GetSingleSignOn()           { return m_sso;               };
   bool          GetSoapCompress()           { return m_soapCompress;      };
   HPFCounter*   GetCounter()                { return &m_counter;          };
@@ -283,10 +283,10 @@ public:
   bool          GetSendBOM()                { return m_sendBOM;           };
   bool          GetVerbTunneling()          { return m_verbTunneling;     };
   bool          GetClientCertificatePreset(){ return m_certPreset;        };
-  CString       GetClientCertificateName()  { return m_certName;          };
-  CString       GetClientCertificateStore() { return m_certStore;         };
+  XString       GetClientCertificateName()  { return m_certName;          };
+  XString       GetClientCertificateStore() { return m_certStore;         };
   bool          GetHTTPCompression()        { return m_httpCompression;   };
-  CString       GetCORSOrigin()             { return m_corsOrigin;        };
+  XString       GetCORSOrigin()             { return m_corsOrigin;        };
   int           GetLogLevel()               { return m_logLevel;          };
   bool          GetIsInitialized()          { return m_initialized;       };
   unsigned      GetRetries()                { return m_retries;           };
@@ -300,9 +300,9 @@ public:
   int           GetQueueSize()              { return (int)m_queue.size(); };
   OAuth2Cache*  GetOAuth2Cace()             { return m_oauthCache;        };
   int           GetOAuth2Session()          { return m_oauthSession;      };
-  CString       GetLastBearerToken()        { return m_lastBearerToken;   };
-  int           GetError(CString* p_message = NULL);
-  CString       GetStatusText();
+  XString       GetLastBearerToken()        { return m_lastBearerToken;   };
+  int           GetError(XString* p_message = NULL);
+  XString       GetStatusText();
   void          GetBody(void*& p_body,unsigned& p_length);
   void          GetResponse(BYTE*& p_response,unsigned& p_length);
   HINTERNET     GetWebsocketHandle();
@@ -317,7 +317,7 @@ public:
   // EVENT STREAM INTERFACE
 
   // Start a new event stream object
-  EventSource*  CreateEventSource(CString p_url);
+  EventSource*  CreateEventSource(XString p_url);
   // Main loop of the event-interface (public: starting a thread)
   void          EventThreadRunning();
 
@@ -334,8 +334,8 @@ private:
   void     InitSettings();
   void     InitLogging();
   void     InitSecurity();
-  void     ReplaceSetting(CString* m_setting,CString p_potential);
-  bool     StartEventStream(CString& p_url); // Called from EventStream
+  void     ReplaceSetting(XString* m_setting,XString p_potential);
+  bool     StartEventStream(XString& p_url); // Called from EventStream
   // To be done inside a 'Send'
   void     AddProxyInfo();
   void     AddHostHeader();
@@ -356,7 +356,7 @@ private:
   void     TraceTheSend();
   void     TraceTheAnswer();
   void     ProcessResultCookies();
-  CString  GetResultHeader(DWORD p_header,DWORD p_index);
+  XString  GetResultHeader(DWORD p_header,DWORD p_index);
   DWORD    ChooseAuthScheme(DWORD p_dwSupportedSchemes);
   bool     AddAuthentication(bool p_ntlm3Step);
   bool     AddProxyAuthentication();
@@ -365,7 +365,7 @@ private:
   void     ReceiveResponseDataFile();
   void     ReceiveResponseDataBuffer();
   void     ReceivePushEvents();
-  CString  ReadHeaderField(int p_header);
+  XString  ReadHeaderField(int p_header);
   void     ReadAllResponseHeaders();
   bool     CheckCORSAnswer();
   void     ResetOAuth2Session();
@@ -373,10 +373,10 @@ private:
   void     ProcessChunkedEncoding();
   uchar*   GetChunkSize(uchar* p_reading,unsigned& p_size);
   // Methods for WS-Security
-  void     CheckAnswerSecurity (SOAPMessage* p_msg,CString p_answer,XMLEncryption p_security,CString p_password);
-  void     CheckBodySigning    (CString p_password,SOAPMessage* p_msg);
-  void     DecodeBodyEncryption(CString p_password,SOAPMessage* p_msg,CString p_answer);
-  void     DecodeMesgEncryption(CString p_password,SOAPMessage* p_msg,CString p_answer);
+  void     CheckAnswerSecurity (SOAPMessage* p_msg,XString p_answer,XMLEncryption p_security,XString p_password);
+  void     CheckBodySigning    (XString p_password,SOAPMessage* p_msg);
+  void     DecodeBodyEncryption(XString p_password,SOAPMessage* p_msg,XString p_answer);
+  void     DecodeMesgEncryption(XString p_password,SOAPMessage* p_msg,XString p_answer);
   // Get next message from the queue
   bool     GetFromQueue(HTTPMessage** p_entry1,SOAPMessage** p_entry2,JSONMessage** p_entry3);
   void     CreateQueueEvent();
@@ -398,43 +398,43 @@ private:
   // Connection specials
   bool          m_initialized     { false   };                    // Initialisation done
   unsigned      m_retries         { 0       };                    // Number of sending retries
-  CString       m_agent           { "HTTPClient/7.0" };           // User agents name (spoofing!!)
+  XString       m_agent           { "HTTPClient/7.0" };           // User agents name (spoofing!!)
   ProxyType     m_useProxy        { ProxyType::PROXY_IEPROXY };   // Which proxy to use
-  CString       m_proxy;                                          // Use proxy
-  CString       m_proxyBypass;                                    // Do not use these proxies
-  CString       m_proxyUser;                                      // Proxy authentication user
-  CString       m_proxyPassword;                                  // Proxy authentication password
-  CString       m_verb            { "GET"   };                    // Sending VERB
+  XString       m_proxy;                                          // Use proxy
+  XString       m_proxyBypass;                                    // Do not use these proxies
+  XString       m_proxyUser;                                      // Proxy authentication user
+  XString       m_proxyPassword;                                  // Proxy authentication password
+  XString       m_verb            { "GET"   };                    // Sending VERB
   bool          m_soapCompress    { false   };                    // Compress SOAP webservices
   FindProxy     m_proxyFinder;                                    // For finding our proxy
   bool          m_verbTunneling   { false   };                    // Use HTTP VERB-Tunneling
   bool          m_httpCompression { false   };                    // Accepts HTTP compression (gzip!)
   // URL
-  CString       m_url;                                            // Full URL
-  CString       m_scheme          { "http"  };                    // URL part: protocol scheme
+  XString       m_url;                                            // Full URL
+  XString       m_scheme          { "http"  };                    // URL part: protocol scheme
   bool          m_secure          { false   };                    // URL part: Secure connection (HTTPS)
-  CString       m_user;                                           // URL part: Authentication user
-  CString       m_password;                                       // URL part: Authentication password
-  CString       m_server;                                         // URL part: Server name part
+  XString       m_user;                                           // URL part: Authentication user
+  XString       m_password;                                       // URL part: Authentication password
+  XString       m_server;                                         // URL part: Server name part
   int           m_port            { INTERNET_DEFAULT_HTTP_PORT }; // URL part: port number
   // Connection variables
   DWORD         m_relax           { 0       };                    // Relax certificate security for test reasons
   bool          m_terminalServices{ false   };                    // Support TerminalServices desktops (Citrix)
   XMLEncryption m_securityLevel   { XMLEncryption::XENC_NoInit }; // Encryption level for SOAP messages
-  CString       m_enc_password;                                   // Encryption password for SOAP messages
+  XString       m_enc_password;                                   // Encryption password for SOAP messages
   bool          m_sso             { false   };                    // Use Windows Single-Sign-On
   unsigned      m_ssltls { WINHTTP_FLAG_SECURE_PROTOCOL_MARLIN }; // SSL / TLS settings of secure HTTPS
   DWORD         m_preemtive       { 0       };                    // Pre-emptive authentication schema
   // Client Certificate
   bool          m_certPreset      { false   };                    // Pre-set client certificate prior to request
-  CString       m_certStore       { "MY"    };                    // Certificate store of the current user
-  CString       m_certName;                                       // Client certificate name to search for
+  XString       m_certStore       { "MY"    };                    // Certificate store of the current user
+  XString       m_certName;                                       // Client certificate name to search for
   // The content to send/receive
   void*         m_body            { nullptr };                    // Body to send
   ULONG         m_bodyLength      { 0       };                    // Length of body to send
   FileBuffer*   m_buffer          { nullptr };                    // File buffer to send
-  CString       m_contentType;                                    // Content MIME type to send
-  CString       m_soapAction;                                     // Soap action if a SOAPMessage WebService
+  XString       m_contentType;                                    // Content MIME type to send
+  XString       m_soapAction;                                     // Soap action if a SOAPMessage WebService
   bool          m_sendUnicode     { false   };                    // Content is in Unicode-16
   bool          m_sniffCharset    { true    };                    // Sniff content charset on receive
   bool          m_sendBOM         { false   };                    // Prepend BOM to all messages
@@ -458,15 +458,15 @@ private:
   HeaderMap     m_responseHeaders;                                // All response headers from the call
   Cookies       m_cookies;                                        // All cookies to send
   // CORS Cross Origin Resource Sharing
-  CString       m_corsOrigin;                                     // Use CORS header methods (sending "Origin:")
-  CString       m_corsMethod;                                     // Pre-flight request method  in OPTIONS call
-  CString       m_corsHeaders;                                    // Pre-flight request headers in OPTIONS call
+  XString       m_corsOrigin;                                     // Use CORS header methods (sending "Origin:")
+  XString       m_corsMethod;                                     // Pre-flight request method  in OPTIONS call
+  XString       m_corsHeaders;                                    // Pre-flight request headers in OPTIONS call
   // Server-push-event stream
   bool          m_pushEvents      { false   };                    // Handles server-push-events
   EventSource*  m_eventSource     { nullptr };                    // Parsing of incoming stream
   bool          m_onCloseSeen     { false   };                    // OnClose has passed the interface, try new stream
   // Re-connect optimization
-  CString       m_lastServer;                                     // Last connected server.
+  XString       m_lastServer;                                     // Last connected server.
   int           m_lastPort        { 0       };                    // Last connected port
   bool          m_lastSecure      { false   };                    // Last connected secure status
   // Queuing of multiple messages
@@ -487,7 +487,7 @@ private:
   // OAuth2
   OAuth2Cache*  m_oauthCache      { nullptr };                    // OAuth tokens
   int           m_oauthSession    { 0       };                    // Session in the OAuth2 Cache
-  CString       m_lastBearerToken;                                // Last used OAuth2 bearer token
+  XString       m_lastBearerToken;                                // Last used OAuth2 bearer token
   // For syncing threads
   CRITICAL_SECTION m_queueSection;  // Synchronizing queue adding/sending
   CRITICAL_SECTION m_sendSection;   // Synchronizing sending for multiple threads

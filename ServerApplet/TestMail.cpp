@@ -30,9 +30,9 @@
 #include "ServerApplet.h"
 #include <version.h>
 
-static FILE* CreateTempFile(CString& p_filename,char* p_mode);
+static FILE* CreateTempFile(XString& p_filename,char* p_mode);
 
-TestMail::TestMail(CString p_afzender,CString p_ontvanger,CString p_server)
+TestMail::TestMail(XString p_afzender,XString p_ontvanger,XString p_server)
          :m_sender(p_afzender)
          ,m_receiver(p_ontvanger)
          ,m_server(p_server)
@@ -43,7 +43,7 @@ bool
 TestMail::Send()
 {
   int cc = 0;
-  CString filename("testmail");
+  XString filename("testmail");
   FILE* file = CreateTempFile(filename,(char*)"w");
   if(file)
   {
@@ -69,8 +69,8 @@ TestMail::Send()
     fclose(file);
 
     // Send via POSTMAIL
-    CString program("PostMail5.exe");
-    CString melding("Cannot find the e-mail program 'PostMail5' in the executable directory");
+    XString program("PostMail5.exe");
+    XString melding("Cannot find the e-mail program 'PostMail5' in the executable directory");
     cc = theApp.StartProgram(program,filename,true,melding);
   }
   return (cc == 0);
@@ -82,7 +82,7 @@ TestMail::Send()
 //
 //////////////////////////////////////////////////////////////////////////
 
-static CString
+static XString
 ErrorString(int p_error)
 {
   char buffer[1024];
@@ -94,14 +94,14 @@ ErrorString(int p_error)
                 (LPTSTR)buffer,
                 1024,
                 NULL);
-  return CString(buffer);
+  return XString(buffer);
 }
 
 // Create a temporary file from a template, returning:
 // 1) A file pointer to an open file, or NULL, and an error message
 // 2) The name of the temporary file
 static FILE* 
-CreateTempFile(CString& p_filename,char* p_mode)
+CreateTempFile(XString& p_filename,char* p_mode)
 {
   // Set up a file
   char tempname[MAX_PATH + 1];

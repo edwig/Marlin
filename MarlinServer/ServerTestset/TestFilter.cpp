@@ -47,11 +47,11 @@ static int totalChecks = 2;
 class SiteFilterTester1 : public SiteFilter
 {
 public:
-  SiteFilterTester1(unsigned p_priority,CString p_name);
+  SiteFilterTester1(unsigned p_priority,XString p_name);
   virtual bool Handle(HTTPMessage* p_message);
 };
 
-SiteFilterTester1::SiteFilterTester1(unsigned p_priority,CString p_name)
+SiteFilterTester1::SiteFilterTester1(unsigned p_priority,XString p_name)
                   :SiteFilter(p_priority,p_name)
 {
 }
@@ -74,11 +74,11 @@ SiteFilterTester1::Handle(HTTPMessage* p_message)
 class SiteFilterTester23 : public SiteFilter
 {
 public:
-  SiteFilterTester23(unsigned p_priority,CString p_name);
+  SiteFilterTester23(unsigned p_priority,XString p_name);
   virtual bool Handle(HTTPMessage* p_message);
 };
 
-SiteFilterTester23::SiteFilterTester23(unsigned p_priority,CString p_name)
+SiteFilterTester23::SiteFilterTester23(unsigned p_priority,XString p_name)
                    :SiteFilter(p_priority,p_name)
 {
 }
@@ -118,7 +118,7 @@ SiteHandlerSoapFiltering::Handle(SOAPMessage* p_message)
   // Display incoming message
   xprintf("Incoming message in XML:\n%s\n", p_message->GetSoapMessage().GetString());
 
-  CString param = p_message->GetParameter("Price");
+  XString param = p_message->GetParameter("Price");
   p_message->Reset(ResponseType::RESP_ACTION_NAME);
   double price = atof(param);
   price *= 1.21; // VAT percentage in the Netherlands
@@ -141,7 +141,7 @@ TestMarlinServer::TestFilter()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/Filter/");
+  XString url("/MarlinTest/Filter/");
 
   xprintf("TESTING SITE FILTERING FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("===================================================\n");

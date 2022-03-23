@@ -127,7 +127,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Marlin;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Marlin;..\ExtraParts;$(SolutionDir)BaseLibrary\</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
@@ -193,7 +193,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Marlin;..\ExtraParts</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Marlin;..\ExtraParts;$(SolutionDir)BaseLibrary\</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
@@ -220,11 +220,9 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Marlin\RunRedirect.h" />
-    <ClInclude Include="FileDialog.h" />
+    <ClInclude Include="framework.h" />
     <ClInclude Include="HTTPManager.h" />
     <ClInclude Include="HTTPManagerDlg.h" />
-    <ClInclude Include="MapDialoog.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ResultDlg.h" />
     <ClInclude Include="SecureClientDlg.h" />
@@ -240,12 +238,8 @@
     <ClInclude Include="WebConfigWServices.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Marlin\Redirect.cpp" />
-    <ClCompile Include="..\Marlin\RunRedirect.cpp" />
-    <ClCompile Include="FileDialog.cpp" />
     <ClCompile Include="HTTPManager.cpp" />
     <ClCompile Include="HTTPManagerDlg.cpp" />
-    <ClCompile Include="MapDialoog.cpp" />
     <ClCompile Include="ResultDlg.cpp" />
     <ClCompile Include="SecureClientDlg.cpp" />
     <ClCompile Include="SecurityDlg.cpp" />

@@ -90,12 +90,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TestMarlinServerApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -104,6 +98,15 @@
     </ClInclude>
     <ClInclude Include="TestMarlinServer.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Configuration</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +118,9 @@
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{c69ae080-ab14-4fa4-9cc8-dc276b56d04b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{07c734af-ee85-4248-9c4e-527456b72558}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

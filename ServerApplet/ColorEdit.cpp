@@ -152,7 +152,7 @@ ColorEdit::SetPasswordEyeColor(COLORREF p_colorPasswordEye)
 }
 
 void 
-ColorEdit::SetFontName(CString p_fontName,BYTE p_language /* = ENGLISH */)
+ColorEdit::SetFontName(XString p_fontName,BYTE p_language /* = ENGLISH */)
 {
   m_fontName = p_fontName;
   m_language = p_language;
@@ -198,7 +198,7 @@ ColorEdit::SetDoPixelShift(bool p_shift)
 }
 
 void
-ColorEdit::SetEmpty(bool p_empty, CString p_text)
+ColorEdit::SetEmpty(bool p_empty, XString p_text)
 {
   if(p_empty && p_text.IsEmpty())
   {
@@ -447,7 +447,7 @@ ColorEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
     }
     else
     {
-      CString text;
+      XString text;
       CEdit::GetWindowText(text);
       if(text.Compare(EDIT_EMPTYFIELD) == 0)
       {

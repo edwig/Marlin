@@ -46,7 +46,7 @@ SiteHandlerDelete::PreHandle(HTTPMessage* /*p_message*/)
   m_site->SetCleanup(nullptr);
 
   // Check server authorization for server GUID!!
-  // CString author = p_message->GetCookieValue();
+  // XString author = p_message->GetCookieValue();
   // IMPLEMENT YOURSELF: Check authorization (HTTP_STATUS_DENIED)?
 
   // return true, to enter the default "Handle"
@@ -62,7 +62,7 @@ bool
 SiteHandlerDelete::Handle(HTTPMessage* p_message)
 {
   // Getting the path of the file
-  CString pathname = m_site->GetWebroot() + p_message->GetAbsoluteResource();
+  XString pathname = m_site->GetWebroot() + p_message->GetAbsoluteResource();
 
   p_message->Reset();
   p_message->SetStatus(HTTP_STATUS_DENIED);
@@ -83,7 +83,7 @@ SiteHandlerDelete::Handle(HTTPMessage* p_message)
         // Server error
         DWORD error = GetLastError();
         p_message->SetStatus(HTTP_STATUS_SERVER_ERROR);
-        CString text;
+        XString text;
         text.Format("FAILED: HTTP DELETE: %s",pathname.GetString());
         SITE_ERRORLOG(error,text);
       }
@@ -94,7 +94,7 @@ SiteHandlerDelete::Handle(HTTPMessage* p_message)
   {
     // File does not exist, or no read access
     p_message->SetStatus(HTTP_STATUS_NOT_FOUND);
-    CString text;
+    XString text;
     text.Format("HTTP DELETE: File not found: %s\n",pathname.GetString());
     SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,text);
   }

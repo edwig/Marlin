@@ -27,7 +27,7 @@
 //
 #include "stdafx.h"
 #include "HTTPClient.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include "HTTPClientTracing.h"
 #include "HTTPCertificate.h"
 #include <wincrypt.h>
@@ -136,25 +136,25 @@ HTTPClientTracing::Trace(char* p_when,HINTERNET p_session,HINTERNET p_request)
     TRACE("WinHTTP allows for a response header size up to a total of [%d] bytes",theWord);
   }
   // OPTION 14: Cobranding text
-  CString cobrandingText = QueryString(p_request,WINHTTP_OPTION_PASSPORT_COBRANDING_TEXT,"WINHTTP_OPTION_PASSPORT_COBRANDING_TEXT");
+  XString cobrandingText = QueryString(p_request,WINHTTP_OPTION_PASSPORT_COBRANDING_TEXT,"WINHTTP_OPTION_PASSPORT_COBRANDING_TEXT");
   TRACE("Microsoft Passport cobranding text: %s",cobrandingText.GetString());
   // OPTION 15: Cobranding URL
-  CString cobrandingUrl  = QueryString(p_request,WINHTTP_OPTION_PASSPORT_COBRANDING_URL,"WINHTTP_OPTION_PASSPORT_COBRANDING_URL");
+  XString cobrandingUrl  = QueryString(p_request,WINHTTP_OPTION_PASSPORT_COBRANDING_URL,"WINHTTP_OPTION_PASSPORT_COBRANDING_URL");
   TRACE("Microsoft Passport cobranding URL: %s",cobrandingUrl.GetString());
   // OPTION 16: Cobranding returning URL
-  CString cobrandingRetUrl = QueryString(p_request,WINHTTP_OPTION_PASSPORT_RETURN_URL,"WINHTTP_OPTION_PASSPORT_RETURN_URL");
+  XString cobrandingRetUrl = QueryString(p_request,WINHTTP_OPTION_PASSPORT_RETURN_URL,"WINHTTP_OPTION_PASSPORT_RETURN_URL");
   TRACE("Microsoft Passport returning  URL: %s",cobrandingRetUrl.GetString());
   // OPTION 17: User name
-  CString user = QueryString(p_request,WINHTTP_OPTION_USERNAME,"WINHTTP_OPTION_USERNAME");
+  XString user = QueryString(p_request,WINHTTP_OPTION_USERNAME,"WINHTTP_OPTION_USERNAME");
   TRACE("WinHTTP uses the user name: %s",user.GetString());
   // OTPION 18: Password
-  CString password = QueryString(p_request,WINHTTP_OPTION_PASSWORD,"WINHTTP_OPTION_PASSWORD");
+  XString password = QueryString(p_request,WINHTTP_OPTION_PASSWORD,"WINHTTP_OPTION_PASSWORD");
   TRACE("Users password: %s",password.GetString());
   // OPTION 19: The agent name
-  CString agent = QueryString(p_session,WINHTTP_OPTION_USER_AGENT,"WINHTTP_OPTION_USER_AGENT");
+  XString agent = QueryString(p_session,WINHTTP_OPTION_USER_AGENT,"WINHTTP_OPTION_USER_AGENT");
   TRACE("WinHTTP uses the agent name: %s",agent.GetString());
   // OPTION 20: Configured URL
-  CString url = QueryString(p_request,WINHTTP_OPTION_URL,"WINHTTP_OPTION_URL");
+  XString url = QueryString(p_request,WINHTTP_OPTION_URL,"WINHTTP_OPTION_URL");
   TRACE("WinHTTP uses the configured URL: %s",url.GetString());
   // OPTION 21: Read buffer size
   if(QueryWord(p_request,WINHTTP_OPTION_READ_BUFFER_SIZE,&theWord,"WINHTTP_OPTION_READ_BUFFER_SIZE"))
@@ -171,7 +171,7 @@ HTTPClientTracing::Trace(char* p_when,HINTERNET p_session,HINTERNET p_request)
   memset(&proxy,0,sizeof(WINHTTP_PROXY_INFO));
   if(QueryObject(p_session,WINHTTP_OPTION_PROXY,&proxy,sizeof(WINHTTP_PROXY_INFO),"WINHTTP_OPTION_PROXY"))
   {
-    CString type;
+    XString type;
     switch(proxy.dwAccessType)
     {
       case WINHTTP_ACCESS_TYPE_DEFAULT_PROXY:  type = "Default proxy";  break;
@@ -184,13 +184,13 @@ HTTPClientTracing::Trace(char* p_when,HINTERNET p_session,HINTERNET p_request)
     TRACE("WinHTTP uses proxy bypass list: %s",proxy.lpszProxyBypass);
   }
   // OPTION 24: Proxy user
-  CString proxyUser = QueryString(p_request,WINHTTP_OPTION_PROXY_USERNAME,"WINHTTP_OPTION_PROXY_USERNAME");
+  XString proxyUser = QueryString(p_request,WINHTTP_OPTION_PROXY_USERNAME,"WINHTTP_OPTION_PROXY_USERNAME");
   TRACE("WinHTTP uses proxy user: %s",proxyUser.GetString());
   // OPTION 25: Proxy password
-  CString proxyPassword = QueryString(p_request,WINHTTP_OPTION_PROXY_PASSWORD,"WINHTTP_OPTION_PROXY_PASSWORD");
+  XString proxyPassword = QueryString(p_request,WINHTTP_OPTION_PROXY_PASSWORD,"WINHTTP_OPTION_PROXY_PASSWORD");
   TRACE("WinHTTP uses proxy password: %s",proxyPassword.GetString());
   // OPTION 26: Proxies principal server name
-  CString proxyServer = QueryString(p_request,WINHTTP_OPTION_PROXY_SPN_USED,"WINHTTP_OPTION_PROXY_SPN_USED");
+  XString proxyServer = QueryString(p_request,WINHTTP_OPTION_PROXY_SPN_USED,"WINHTTP_OPTION_PROXY_SPN_USED");
   TRACE("WinHTTP proxy's principal server name: %s",proxyServer.GetString());
   // OPTION 27: Resolve timeout
   if(QueryWord(p_request,WINHTTP_OPTION_RESOLVE_TIMEOUT,&theWord,"WINHTTP_OPTION_RESOLVE_TIMEOUT"))
@@ -220,7 +220,7 @@ HTTPClientTracing::Trace(char* p_when,HINTERNET p_session,HINTERNET p_request)
   // OPTION 32: Redirect policy
   if(QueryWord(p_request,WINHTTP_OPTION_REDIRECT_POLICY,&theWord,"WINHTTP_OPTION_REDIRECT_POLICY"))
   {
-    CString policy;
+    XString policy;
     switch(theWord)
     {
       case WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS: policy = "Redirect always"; break;
@@ -247,7 +247,7 @@ HTTPClientTracing::Trace(char* p_when,HINTERNET p_session,HINTERNET p_request)
     TRACE("WinHTTP uses encryption key of length [%d] bits",theWord);
   }
   // OPTION 35: Server Principal name used
-  CString serverSPN = QueryString(p_request,WINHTTP_OPTION_SERVER_SPN_USED,"WINHTTP_OPTION_SERVER_SPN_USED");
+  XString serverSPN = QueryString(p_request,WINHTTP_OPTION_SERVER_SPN_USED,"WINHTTP_OPTION_SERVER_SPN_USED");
   TRACE("WinHTTP used server principal name: %s",serverSPN.GetString());
 
   // OPTION 36: Secure Server Certificate
@@ -255,8 +255,8 @@ HTTPClientTracing::Trace(char* p_when,HINTERNET p_session,HINTERNET p_request)
   if(QueryObject(p_request,WINHTTP_OPTION_SERVER_CERT_CONTEXT,&context,sizeof(PCERT_CONTEXT),"WINHTTP_OPTION_SERVER_CERT_CONTEXT"))
   {
     HTTPCertificate certificate(context->pbCertEncoded,context->cbCertEncoded);
-    CString subject = certificate.GetSubject();
-    CString issuer  = certificate.GetIssuer();
+    XString subject = certificate.GetSubject();
+    XString issuer  = certificate.GetIssuer();
     TRACE("WinHTTP uses SSL certificate issuer/subject: %s/%s",issuer.GetString(),subject.GetString());
 
     CertFreeCertificateContext(context);
@@ -324,11 +324,11 @@ HTTPClientTracing::QueryObject(HINTERNET p_handle,DWORD p_option,void* p_pointer
   return (result == TRUE);
 }
 
-CString
+XString
 HTTPClientTracing::QueryString(HINTERNET p_handle,DWORD p_option,const char* p_optionName)
 {
   DWORD bufLength = 0L;
-  CString theString;
+  XString theString;
   bool result = WinHttpQueryOption(p_handle,p_option,&theString,&bufLength);
   if(result == false && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
   {

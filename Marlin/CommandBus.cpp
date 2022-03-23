@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-CommandBus::CommandBus(CString p_name,ThreadPool* p_pool)
+CommandBus::CommandBus(XString p_name,ThreadPool* p_pool)
            :m_name(p_name)
            ,m_pool(p_pool)
 {
@@ -67,7 +67,7 @@ CommandBus::Close()
 
 // Subscribe a function to a command
 bool
-CommandBus::SubscribeCommand(CString p_command,LPFN_CALLBACK p_function,void* p_default /*=NULL*/)
+CommandBus::SubscribeCommand(XString p_command,LPFN_CALLBACK p_function,void* p_default /*=NULL*/)
 {
   AutoCritSec lock(&m_lock);
 
@@ -97,7 +97,7 @@ CommandBus::SubscribeCommand(CString p_command,LPFN_CALLBACK p_function,void* p_
 
 // Find out if command has subscribers
 int  
-CommandBus::GetNumberOfSubscribers(CString p_command)
+CommandBus::GetNumberOfSubscribers(XString p_command)
 {
   AutoCritSec lock(&m_lock);
 
@@ -113,7 +113,7 @@ CommandBus::GetNumberOfSubscribers(CString p_command)
 
 // Un-Subscribe a command function
 bool 
-CommandBus::UnSubscribe(CString p_command,LPFN_CALLBACK p_function)
+CommandBus::UnSubscribe(XString p_command,LPFN_CALLBACK p_function)
 {
   AutoCritSec lock(&m_lock);
 
@@ -132,7 +132,7 @@ CommandBus::UnSubscribe(CString p_command,LPFN_CALLBACK p_function)
 
 // Publish new command for all subscribers
 bool 
-CommandBus::PublishCommand(CString p_command,void* p_argument)
+CommandBus::PublishCommand(XString p_command,void* p_argument)
 {
   AutoCritSec lock(&m_lock);
 

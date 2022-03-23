@@ -55,7 +55,7 @@ void EventChannelOnOpen(WebSocket* p_socket,WSFrame* p_event)
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
   {
-    CString message(p_event->m_data);
+    XString message(p_event->m_data);
     if(p_event->m_utf8)
     {
       message = DecodeStringFromTheWire(message);
@@ -70,7 +70,7 @@ void EventChannelOnMessage(WebSocket* p_socket,WSFrame* p_event)
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
   {
-    CString message(p_event->m_data);
+    XString message(p_event->m_data);
     if(p_event->m_utf8)
     {
       message = DecodeStringFromTheWire(message);
@@ -93,7 +93,7 @@ void EventChannelOnError(WebSocket* p_socket,WSFrame* p_event)
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel && p_event)
   {
-    CString message(p_event->m_data);
+    XString message(p_event->m_data);
     if(p_event->m_utf8)
     {
       message = DecodeStringFromTheWire(message);
@@ -107,7 +107,7 @@ void EventChannelOnClose(WebSocket* p_socket,WSFrame* p_event)
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
   {
-    CString message(p_event->m_data);
+    XString message(p_event->m_data);
     if(p_event->m_utf8)
     {
       message = DecodeStringFromTheWire(message);
@@ -125,9 +125,9 @@ void EventChannelOnClose(WebSocket* p_socket,WSFrame* p_event)
 
 ServerEventChannel::ServerEventChannel(ServerEventDriver* p_driver
                                       ,int     p_channel
-                                      ,CString p_sessionName
-                                      ,CString p_cookie
-                                      ,CString p_token)
+                                      ,XString p_sessionName
+                                      ,XString p_cookie
+                                      ,XString p_token)
                    :m_driver(p_driver)
                    ,m_channel(p_channel)
                    ,m_name(p_sessionName)
@@ -153,7 +153,7 @@ ServerEventChannel::Reset()
 }
 
 int 
-ServerEventChannel::PostEvent(CString p_payload,CString p_sender,EvtType p_type /*= EvtType::EV_Message*/)
+ServerEventChannel::PostEvent(XString p_payload,XString p_sender,EvtType p_type /*= EvtType::EV_Message*/)
 {
   AutoCritSec lock(&m_lock);
 
@@ -213,7 +213,7 @@ ServerEventChannel::RemoveEvents(int p_number)
   return true;
 }
 
-CString 
+XString 
 ServerEventChannel::GetCookieToken()
 {
   return m_cookie + ":" + m_token;
@@ -279,9 +279,9 @@ ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket
   p_socket->SetOnClose  (EventChannelOnClose);
 
   // Getting the senders URL + Citrix desktop
-  CString url;
-  CString sender  = SocketToServer(p_message->GetSender());
-  CString desktop = p_message->GetHeader("desktop").Trim();
+  XString url;
+  XString sender  = SocketToServer(p_message->GetSender());
+  XString desktop = p_message->GetHeader("desktop").Trim();
   url.Format("http://%s:c%s", sender.GetString(),desktop.GetString());
   url.MakeLower();
 
@@ -371,8 +371,8 @@ ServerEventChannel::RegisterNewStream(HTTPMessage* p_message,EventStream* p_stre
   }
 
   // Getting the senders URL + Citrix desktop
-  CString url;
-  CString sender = SocketToServer(p_message->GetSender());
+  XString url;
+  XString sender = SocketToServer(p_message->GetSender());
   url.Format("http://%s:c%d",sender.GetString(),p_stream->m_desktop);
   url.MakeLower();
 
@@ -432,8 +432,8 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
   }
   bool    close   = p_message->GetParameterBoolean("CloseChannel");
   int     acknl   = p_message->GetParameterInteger("Acknowledged");
-  CString message = p_message->GetParameter("Message");
-  CString type    = p_message->GetParameter("Type");
+  XString message = p_message->GetParameter("Message");
+  XString type    = p_message->GetParameter("Type");
 
   // Reset to response
   p_message->Reset(ResponseType::RESP_ACTION_RESP);
@@ -592,7 +592,7 @@ ServerEventChannel::SendQueueToStream()
     {
       if(ltevent->m_sent == 0 || ltevent->m_sent == it->m_sender)
       {
-      CString type = LTEvent::EventTypeToString(ltevent->m_type);
+      XString type = LTEvent::EventTypeToString(ltevent->m_type);
       ServerEvent* event = new ServerEvent(type);
       event->m_id = ltevent->m_number;
       if (ltevent->m_type == EvtType::EV_Binary)
@@ -764,7 +764,7 @@ ServerEventChannel::ChangeEventPolicy(EVChannelPolicy p_policy,LPFN_CALLBACK p_a
 
 // To be called by the socket handlers only!
 void
-ServerEventChannel::OnOpen(CString p_message)
+ServerEventChannel::OnOpen(XString p_message)
 {
   AutoCritSec lock(&m_lock);
 
@@ -782,7 +782,7 @@ ServerEventChannel::OnOpen(CString p_message)
 
 // Called by socket handler and long-polling handler
 void
-ServerEventChannel::OnMessage(CString p_message)
+ServerEventChannel::OnMessage(XString p_message)
 {
   AutoCritSec lock(&m_lock);
 
@@ -796,7 +796,7 @@ ServerEventChannel::OnMessage(CString p_message)
 }
 
 void
-ServerEventChannel::OnError(CString p_message)
+ServerEventChannel::OnError(XString p_message)
 {
   AutoCritSec lock(&m_lock);
 
@@ -810,7 +810,7 @@ ServerEventChannel::OnError(CString p_message)
 }
 
 void
-ServerEventChannel::OnClose(CString p_message)
+ServerEventChannel::OnClose(XString p_message)
 {
   AutoCritSec lock(&m_lock);
 

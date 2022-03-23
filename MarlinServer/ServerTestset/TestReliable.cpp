@@ -54,15 +54,15 @@ SiteHandlerSoapReliable::Handle(SOAPMessage* p_message)
   xprintf("Incoming message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
-  CString paramOne = p_message->GetParameter("One");
-  CString paramTwo = p_message->GetParameter("Two");
+  XString paramOne = p_message->GetParameter("One");
+  XString paramTwo = p_message->GetParameter("Two");
   xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
   xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
 
   // TestSecurity(&msg);
 
   // reuse message for response
-  CString response = "TestMessageResponse";
+  XString response = "TestMessageResponse";
 
   p_message->Reset();
   p_message->SetSoapAction(response);
@@ -102,7 +102,7 @@ TestMarlinServer::TestReliable()
   
   // Create URL channel to listen to "http://+:port/MarlinTest/Reliable/"
   // But WebConfig can override all values except for the callback function address
-  CString url("/MarlinTest/Reliable/");
+  XString url("/MarlinTest/Reliable/");
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {
@@ -152,7 +152,7 @@ TestMarlinServer::TestReliableBA()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/ReliableBA/"
   // But WebConfig can override all values except for the callback function address
-  CString url("/MarlinTest/ReliableBA/");
+  XString url("/MarlinTest/ReliableBA/");
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {

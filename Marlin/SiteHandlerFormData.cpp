@@ -42,9 +42,9 @@ bool
 SiteHandlerFormData::Handle(HTTPMessage* p_message)
 {
   int errors = 0;
-  CString message;
+  XString message;
 
-  CString contentType = p_message->GetContentType();
+  XString contentType = p_message->GetContentType();
   FileBuffer* buffer  = p_message->GetFileBuffer();
   MultiPartBuffer multi(FD_UNKNOWN);
 

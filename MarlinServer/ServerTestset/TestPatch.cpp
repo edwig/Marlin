@@ -56,13 +56,13 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
 {
   int errors = 0;
   HTTPMessage* msg = const_cast<HTTPMessage*>(p_message);
-  CString body = msg->GetBody();
+  XString body = msg->GetBody();
   xprintf("HTTP PATCH VERB URL [%s] FROM: %s\n",(LPCTSTR)msg->GetURL(),(LPCTSTR)SocketToServer(msg->GetSender()));
   xprintf("%s\n",(LPCTSTR)body);
 
   const CrackedURL& url = msg->GetCrackedURL();
-  CString bloodType     = url.GetParameter("type");
-  CString rhesusFactor  = url.GetParameter("rhesus");
+  XString bloodType     = url.GetParameter("type");
+  XString rhesusFactor  = url.GetParameter("rhesus");
 
   // Reset our HTTP message
   p_message->Reset();
@@ -104,7 +104,7 @@ TestMarlinServer::TestPatch()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/Patching/");
+  XString url("/MarlinTest/Patching/");
 
   xprintf("TESTING HTTP PATCH VERB FUNCTION OF THE HTTP SERVER\n");
   xprintf("===================================================\n");

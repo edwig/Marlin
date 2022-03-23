@@ -39,10 +39,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static CString
+static XString
 DebugVariable(IHttpContext* p_context,const char* p_description,const char* p_name)
 {
-  CString message;
+  XString message;
   DWORD size    = 1024;
   PCSTR pointer = (PCSTR)p_context->AllocateRequestMemory(size);
   HRESULT hr = p_context->GetServerVariable(p_name,&pointer,&size);
@@ -67,9 +67,9 @@ DebugVariable(IHttpContext* p_context,const char* p_description,const char* p_na
 void
 IISDebugAllVariables(IHttpContext* p_context)
 {
-  CString line("==============================================================");
+  XString line("==============================================================");
   
-  CString message("Listing of all IIS Server variables");
+  XString message("Listing of all IIS Server variables");
   message += line;
   message += DebugVariable(p_context,"All headers in HTTP form",        "ALL_HTTP");
   message += DebugVariable(p_context,"All headers in RAW form",         "ALL_RAW");

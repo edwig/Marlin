@@ -697,9 +697,9 @@ ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
   }
   catch(StdException& ex)
   {
-    CString temporary;
+    XString temporary;
     temporary.GetEnvironmentVariable("TMP");
-    CString sceneOfTheCrime("Threadpool");
+    XString sceneOfTheCrime("Threadpool");
 
     if(ex.GetSafeExceptionCode())
     {

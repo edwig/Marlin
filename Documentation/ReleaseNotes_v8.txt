@@ -1,0 +1,23 @@
+RELEASENOTES MARLIN VERSION 8.x
+===============================
+
+For releasenotes of the previous main version (7.x), see the separate file "Releasenotes_v7.txt".
+This document contains all release notes and remarks beginning with version 8.0. The document
+would otherwise grow to large and complex.
+
+Version 8.x contains the new BaseLibrary where all general classes are moved into a library
+that can be shared with other library modules like SQLComponents and CXHibernate
+----------------------------------------------------------------------------------------------
+
+CHANGES IN VERSION 8.0.0
+------------------------
+1)  Moved all general classes and functions to the "BaseLibrary"
+2)  To compile your programs with this version of Marlin, do the following
+    o   Replace #include "Analysis.h" for #include "LogAnalysis.h"
+    o   Replace all occurences of "JsonEncoding" with "StringEncoding"
+    o   Replace all occurences of "XmlEncoding"  with "StringEncoding"
+    o   Replace all occurences of "CString" with "XString"
+3)  Rewrite your 'stdafx.h' or 'pch.h' files to include the 'BaseLibrary.h'
+    See the 'readme.md' of https://github.com/edwig/BaseLibrary/readme.md
+4)  Add the path to '$(SolutionDir)BaseLibrary\' in your compiler settings
+    under 'Project properties/C++/General/Additional Include Directories'

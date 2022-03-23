@@ -112,19 +112,19 @@ BOOL ServerAppletApp::InitInstance()
 }
 
 int
-ServerAppletApp::StartProgram(CString& p_program
-                             ,CString& p_arguments
+ServerAppletApp::StartProgram(XString& p_program
+                             ,XString& p_arguments
                              ,bool     p_currentdir
-                             ,CString& p_errormessage)
+                             ,XString& p_errormessage)
 {
-  CString path;
+  XString path;
   if(p_currentdir)
   {
     path = MarlinConfig::GetExePath();
   }
   path += p_program;
 
-  CString result;
+  XString result;
   int exitCode = ExecuteProcess(p_program,p_arguments,p_currentdir,p_errormessage,SW_HIDE,true);
   if(exitCode < 0)
   {

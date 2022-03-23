@@ -47,7 +47,7 @@ static char g_hostName[NI_MAXHOST] = "";
 // HOSTNAME_SHORT  -> e.g. "myMachine" etc
 // HOSTNAME_FULL   -> e.g. "myMachine.network.org"
 //
-CString GetHostName(int p_type)
+XString GetHostName(int p_type)
 {
   char  buffer[MAX_PATH + 1];
   DWORD size = MAX_PATH;
@@ -55,12 +55,12 @@ CString GetHostName(int p_type)
 
   if(::GetComputerNameEx(format,buffer,&size))
   {
-    return CString(buffer);
+    return XString(buffer);
   }
   return "";
 }
 
-CString
+XString
 SocketToServer(PSOCKADDR_IN6 p_address)
 {
   char host[NI_MAXHOST+1] = { 0 };
@@ -96,7 +96,7 @@ SocketToServer(PSOCKADDR_IN6 p_address)
     // See if we need to make a FULL Teredo address of this
     if(p_address && p_address->sin6_family == AF_INET6)
     {
-      CString hostname;
+      XString hostname;
       hostname.Format("[%x:%x:%x:%x:%x:%x:%x:%x]"
                      ,ntohs(p_address->sin6_addr.u.Word[0])
                      ,ntohs(p_address->sin6_addr.u.Word[1])
@@ -108,18 +108,18 @@ SocketToServer(PSOCKADDR_IN6 p_address)
                      ,ntohs(p_address->sin6_addr.u.Word[7]));
       return hostname;
     }
-    return CString(host);
+    return XString(host);
   }
   return "";
 }
 
-CString 
+XString 
 CreateURLPrefix(PrefixType p_type
                ,bool       p_secure
                ,int        p_port
-               ,CString    p_path)
+               ,XString    p_path)
 {
-  CString prefix;
+  XString prefix;
   // Empty result and set protocol
   prefix = p_secure ? "https://" : "http://";
 
@@ -140,7 +140,7 @@ CreateURLPrefix(PrefixType p_type
 
   }
   // Add port 
-  CString portNum;
+  XString portNum;
   portNum.Format(":%d",p_port);
   prefix += portNum;
 

@@ -29,7 +29,7 @@
 #include "HTTPManager.h"
 #include "WebConfigWServices.h"
 #include "MarlinConfig.h"
-#include "MapDialoog.h"
+#include "MapDialog.h"
 #include "FileDialog.h"
 #include "HTTPClient.h"
 #include "afxdialogex.h"

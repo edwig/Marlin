@@ -49,7 +49,7 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
-WebSocketServerSync::WebSocketServerSync(CString p_uri)
+WebSocketServerSync::WebSocketServerSync(XString p_uri)
                     :WebSocketServer(p_uri)
 {
 }

@@ -41,10 +41,10 @@ public:
   // Overrides
 	public:
 	BOOL    InitInstance();
-  int     StartProgram(CString&  p_program
-                      ,CString&  p_arguments
+  int     StartProgram(XString&  p_program
+                      ,XString&  p_arguments
                       ,bool      p_currentdir
-                      ,CString&  p_errormessage);
+                      ,XString&  p_errormessage);
   // Implementation
 	DECLARE_MESSAGE_MAP()
 

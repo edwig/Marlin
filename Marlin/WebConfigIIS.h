@@ -39,29 +39,29 @@ IISError;
 
 typedef struct _iisHandler
 {
-  CString   m_path;
-  CString   m_verb;
-  CString   m_modules;
-  CString   m_resourceType;
-  CString   m_precondition;
+  XString   m_path;
+  XString   m_verb;
+  XString   m_modules;
+  XString   m_resourceType;
+  XString   m_precondition;
 }
 IISHandler;
 
-using IISHandlers = std::map<CString,IISHandler>;
+using IISHandlers = std::map<XString,IISHandler>;
 
 // What we want to remember about an IIS HTTP site
 typedef struct _iisSite
 {
-  CString     m_name;
-  CString     m_appPool;
-  CString     m_binding;
-  CString     m_protocol;
+  XString     m_name;
+  XString     m_appPool;
+  XString     m_binding;
+  XString     m_protocol;
   int         m_port;
   bool        m_secure;
-  CString     m_path;
+  XString     m_path;
   ULONG       m_authScheme;
-  CString     m_realm;
-  CString     m_domain;
+  XString     m_realm;
+  XString     m_domain;
   bool        m_ntlmCache;
   bool        m_preload;
   IISError    m_error;
@@ -72,75 +72,75 @@ IISSite;
 // Waht we want to remember about an IIS Application Pool
 typedef struct _appPool
 {
-  CString   m_name;
-  CString   m_startMode;
-  CString   m_periodicRestart;
-  CString   m_idleTimeout;
+  XString   m_name;
+  XString   m_startMode;
+  XString   m_periodicRestart;
+  XString   m_idleTimeout;
   bool      m_autoStart;
-  CString   m_pipelineMode;
+  XString   m_pipelineMode;
 }
 IISAppPool;
 
-using IISSites    = std::map<CString,IISSite>;
-using IISPools    = std::map<CString,IISAppPool>;
-using WCFiles     = std::map<CString,int>;
-using AppSettings = std::map<CString,CString>;
+using IISSites    = std::map<XString,IISSite>;
+using IISPools    = std::map<XString,IISAppPool>;
+using WCFiles     = std::map<XString,int>;
+using AppSettings = std::map<XString,XString>;
 
 class WebConfigIIS
 {
 public:
-  WebConfigIIS(CString p_application = "");
+  WebConfigIIS(XString p_application = "");
  ~WebConfigIIS();
 
   // Read total config
   bool ReadConfig();
-  bool ReadConfig(CString p_application,CString p_extraWebConfig = "");
+  bool ReadConfig(XString p_application,XString p_extraWebConfig = "");
   // Set a different application before re-reading the config
-  void SetApplication(CString p_app);
+  void SetApplication(XString p_app);
 
   // GETTERS
   
   // Getting information of the server
-  CString     GetLogfilePath()    { return m_logpath;         };
+  XString     GetLogfilePath()    { return m_logpath;         };
   bool        GetDoLogging()      { return m_logging;         };
   ULONG       GetStreamingLimit() { return m_streamingLimit;  };
 
   // Getting information of a site
-  IISSite*    GetSite         (CString p_site);
-  CString     GetSiteName     (CString p_site);
-  CString     GetSetting      (CString p_key);
-  CString     GetSiteAppPool  (CString p_site);
-  CString     GetSiteBinding  (CString p_site,CString p_default);
-  CString     GetSiteProtocol (CString p_site,CString p_default);
-  int         GetSitePort     (CString p_site,int     p_default);
-  bool        GetSiteSecure   (CString p_site,bool    p_default);
-  CString     GetSiteWebroot  (CString p_site,CString p_default);
-  CString     GetSitePathname (CString p_site,CString p_default);
-  ULONG       GetSiteScheme   (CString p_site,ULONG   p_default);
-  CString     GetSiteRealm    (CString p_site,CString p_default);
-  CString     GetSiteDomain   (CString p_site,CString p_default);
-  bool        GetSiteNTLMCache(CString p_site,bool    p_default);
-  bool        GetSitePreload  (CString p_site);
-  IISError    GetSiteError    (CString p_site);
+  IISSite*    GetSite         (XString p_site);
+  XString     GetSiteName     (XString p_site);
+  XString     GetSetting      (XString p_key);
+  XString     GetSiteAppPool  (XString p_site);
+  XString     GetSiteBinding  (XString p_site,XString p_default);
+  XString     GetSiteProtocol (XString p_site,XString p_default);
+  int         GetSitePort     (XString p_site,int     p_default);
+  bool        GetSiteSecure   (XString p_site,bool    p_default);
+  XString     GetSiteWebroot  (XString p_site,XString p_default);
+  XString     GetSitePathname (XString p_site,XString p_default);
+  ULONG       GetSiteScheme   (XString p_site,ULONG   p_default);
+  XString     GetSiteRealm    (XString p_site,XString p_default);
+  XString     GetSiteDomain   (XString p_site,XString p_default);
+  bool        GetSiteNTLMCache(XString p_site,bool    p_default);
+  bool        GetSitePreload  (XString p_site);
+  IISError    GetSiteError    (XString p_site);
 
-  IISHandlers* GetAllHandlers (CString p_site);
-  IISHandler*  GetHandler     (CString p_site,CString p_handler);
+  IISHandlers* GetAllHandlers (XString p_site);
+  IISHandler*  GetHandler     (XString p_site,XString p_handler);
 
   // Getting information of a application pool
-  CString     GetPoolStartMode      (CString p_pool);
-  CString     GetPoolPeriodicRestart(CString p_pool);
-  CString     GetPoolIdleTimeout    (CString p_pool);
-  bool        GetPoolAutostart      (CString p_pool);
-  CString     GetPoolPipelineMode   (CString p_pool);
+  XString     GetPoolStartMode      (XString p_pool);
+  XString     GetPoolPeriodicRestart(XString p_pool);
+  XString     GetPoolIdleTimeout    (XString p_pool);
+  bool        GetPoolAutostart      (XString p_pool);
+  XString     GetPoolPipelineMode   (XString p_pool);
 
   // Read one config file
-  bool        ReadConfig(CString p_configFile,IISSite* p_site);
+  bool        ReadConfig(XString p_configFile,IISSite* p_site);
 
 private:
   // Replace environment variables in a string
-  static bool ReplaceEnvironVars(CString& p_string);
+  static bool ReplaceEnvironVars(XString& p_string);
   // Pool registration
-  IISAppPool* GetPool(CString p_pool);
+  IISAppPool* GetPool(XString p_pool);
   // Reading of the internal structures of a config file
   void        ReadLogPath (XMLMessage& p_msg);
   void        ReadAppPools(XMLMessage& p_msg);
@@ -153,16 +153,16 @@ private:
   void        ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem);
 
   // For specific web application, or just defaults
-  CString     m_application;
+  XString     m_application;
   // Base web.config file
-  CString     m_webconfig;
+  XString     m_webconfig;
   // Files already read in
   WCFiles     m_files;
 
   AppSettings m_settings;
   IISPools    m_pools;
   IISSites    m_sites;
-  CString     m_logpath;
+  XString     m_logpath;
   bool        m_logging        { false };
   ULONG       m_streamingLimit { STREAMING_LIMIT };
 };

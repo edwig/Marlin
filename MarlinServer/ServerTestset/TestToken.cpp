@@ -66,8 +66,8 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   DWORD    length   = 0;
   HANDLE   htok     = NULL;
   int      errors   = 0;
-  CString  fileName = MarlinConfig::GetExePath() + "FileOwner.txt";
-  CString  listing;
+  XString  fileName = MarlinConfig::GetExePath() + "FileOwner.txt";
+  XString  listing;
 
   // See if we have a token
   if(token == NULL)
@@ -165,7 +165,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   else
   {
     DWORD written = 0;
-    CString msg = p_msg->GetSoapMessage();
+    XString msg = p_msg->GetSoapMessage();
     msg.Replace("\n","\r\n");
 
     if(WriteFile(file,msg.GetString(),msg.GetLength(),&written,NULL) == FALSE)
@@ -219,7 +219,7 @@ TestMarlinServer::TestToken()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/TestToken/");
+  XString url("/MarlinTest/TestToken/");
 
   xprintf("TESTING THE TOKEN FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("==============================================\n");

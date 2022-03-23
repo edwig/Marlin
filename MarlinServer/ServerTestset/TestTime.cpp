@@ -63,7 +63,7 @@ TestMarlinServer::TestHTTPTime()
   qprintf("Test function HTTPTime      : <+>");
 
   // MS-Exchange server does this (non-conforming!) format
-  CString string1("Sun, 06-Nov-1994 08:49:37 GMT");
+  XString string1("Sun, 06-Nov-1994 08:49:37 GMT");
   SYSTEMTIME time1;
 
 
@@ -81,7 +81,7 @@ TestMarlinServer::TestHTTPTime()
   }
 
   // Standard RFC822/RFC1123 time
-  CString string2("Sun, 06 Nov 1994 08:49:37 GMT");
+  XString string2("Sun, 06 Nov 1994 08:49:37 GMT");
   SYSTEMTIME time2;
 
   if(HTTPTimeToSystemTime(string2,&time2) == false)
@@ -98,7 +98,7 @@ TestMarlinServer::TestHTTPTime()
   }
 
   // Standard RFC 850 / RFC 1036 time
-  CString string3("Sunday, 06 - Nov - 94 08:49:37 GMT");
+  XString string3("Sunday, 06 - Nov - 94 08:49:37 GMT");
   SYSTEMTIME time3;
 
   if(HTTPTimeToSystemTime(string3,&time3) == false)
@@ -115,7 +115,7 @@ TestMarlinServer::TestHTTPTime()
   }
 
   // Standard ANSI C asctime format
-  CString string4("Sun Nov  6 08:49:37 1994");
+  XString string4("Sun Nov  6 08:49:37 1994");
   SYSTEMTIME time4;
 
   if(HTTPTimeToSystemTime(string4,&time4) == false)

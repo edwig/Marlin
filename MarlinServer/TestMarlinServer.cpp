@@ -116,7 +116,7 @@ TestMarlinServer::Startup()
     StartServerLog();
 
     // Log is running: We are starting
-    SvcReportInfoEvent(false,__FUNCTION__,(CString("Starting ") + CString(PRODUCT_NAME)).GetString());
+    SvcReportInfoEvent(false,__FUNCTION__,(XString("Starting ") + XString(PRODUCT_NAME)).GetString());
 
     // Starting the WSDL caching
     StartWsdl();
@@ -135,7 +135,7 @@ TestMarlinServer::Startup()
   }
   catch(CException& er)
   {
-    CString error = MessageFromException(er);
+    XString error = MessageFromException(er);
     SvcReportErrorEvent(0,true, __FUNCTION__, "Server initialization failed: %s",error.GetString());
   }
   catch(StdException& er)
@@ -166,7 +166,7 @@ TestMarlinServer::ShutDown()
 
 // Register the objects from the ServerApp out of the IIS configuration
 void
-TestMarlinServer::ConfigIISServer(CString      p_applicationName
+TestMarlinServer::ConfigIISServer(XString      p_applicationName
                                  ,HTTPServer*  p_server
                                  ,ThreadPool*  p_pool
                                  ,LogAnalysis* p_log)
@@ -200,7 +200,7 @@ TestMarlinServer::Server_xprintf(const char* p_format, ...)
   if(m_doDetails)
   {
     AutoCritSec lock(&m_std_stream);
-    CString info;
+    XString info;
 
     va_list vl;
     va_start(vl,p_format);
@@ -215,8 +215,8 @@ TestMarlinServer::Server_xprintf(const char* p_format, ...)
 void 
 TestMarlinServer::Server_qprintf(const char* p_format, ...)
 {
-  CString string;
-  static CString stringRegister;
+  XString string;
+  static XString stringRegister;
 
   va_list vl;
   va_start(vl, p_format);
@@ -286,7 +286,7 @@ TestMarlinServer::ReadConfig()
      (m_inPortNumber != INTERNET_DEFAULT_HTTPS_PORT) &&
      (m_inPortNumber  < 1025))
   {
-    CString error;
+    XString error;
     error.Format("%s Server port [%d] does not conform to IANA rules (80,443 or greater than 1024)",PRODUCT_NAME,m_inPortNumber);
     SvcReportErrorEvent(0,false,__FUNCTION__,error);
     throw StdException(error);
@@ -295,7 +295,7 @@ TestMarlinServer::ReadConfig()
   // Checking the Base-URL. Minimum base URL is a one (1) char site "/x/"
   if(m_baseURL.IsEmpty() || m_baseURL.GetLength() < 3 || m_baseURL == "/" || m_baseURL.Left(1) != "/" || m_baseURL.Right(1) != "/")
   {
-    CString error(PRODUCT_NAME);
+    XString error(PRODUCT_NAME);
     error += " Cannot start on an empty or illegal Base-URL";
     SvcReportErrorEvent(0,false,__FUNCTION__,error);
     throw StdException(error);
@@ -313,7 +313,7 @@ void
 TestMarlinServer::StartAlerts()
 {
   EnsureFile ensure;
-  CString path = ensure.DirectoryPart(m_serverLogfile);
+  XString path = ensure.DirectoryPart(m_serverLogfile);
   int pos = path.ReverseFind('\\');
   if(pos > 0)
   {
@@ -339,7 +339,7 @@ TestMarlinServer::StartAlerts()
 void
 TestMarlinServer::ConfigToServer()
 {
-  CString hostname = GetHostName(HOSTNAME_FULL);
+  XString hostname = GetHostName(HOSTNAME_FULL);
 
   // CONFIGURE URL / CHANNEL / NAMESPACE
   m_url.Format("http%s://%s:%u%s"
@@ -446,7 +446,6 @@ TestMarlinServer::StartWebServices()
     qprintf("ERROR Starting WebServiceServer for: %s\n",m_serverName.GetString());
     qprintf("ERROR Reported by the server: %s\n",GetErrorMessage().GetString());
   }
-
 }
 
 // Register all site handlers (besides SOAP handlers)

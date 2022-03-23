@@ -49,14 +49,14 @@ const int token_validity_time = 90;  // Refresh after 90 percent of time has exp
 typedef struct _oauthSession
 {
   OAuthFlow m_flow;           // Type of authorization flow
-  CString   m_url;            // URL of the token server
-  CString   m_appID;          // Client-id of the application
-  CString   m_appKey;         // Client-secret of the application
-  CString   m_username;       // For Resource-owners only!
-  CString   m_password;       // For Resource-owners only!
-  CString   m_scope;          // Scope of the grant
-  CString   m_bearerToken;    // Last returned "Bearer" token
-  CString   m_retryToken;     // Retry token (if any)
+  XString   m_url;            // URL of the token server
+  XString   m_appID;          // Client-id of the application
+  XString   m_appKey;         // Client-secret of the application
+  XString   m_username;       // For Resource-owners only!
+  XString   m_password;       // For Resource-owners only!
+  XString   m_scope;          // Scope of the grant
+  XString   m_bearerToken;    // Last returned "Bearer" token
+  XString   m_retryToken;     // Retry token (if any)
   INT64     m_expires;        // Moment the token expires
 }
 OAuthSession;
@@ -74,20 +74,20 @@ public:
   // FUNCIONS
 
   // Create a token server URL from  a template and a tenant
-  CString   CreateTokenURL(CString p_template,CString p_tenant);
+  XString   CreateTokenURL(XString p_template,XString p_tenant);
   // Create a credentials grant, returning a session ID
-  int       CreateClientCredentialsGrant(CString p_url,CString p_appID,CString p_appKey,CString p_scope);
+  int       CreateClientCredentialsGrant(XString p_url,XString p_appID,XString p_appKey,XString p_scope);
   // Create a resource owner grant, returning a session ID
-  int       CreateResourceOwnerCredentialsGrant(CString p_url,CString p_appID,CString p_appKey,CString p_scope,CString p_username,CString p_password);
+  int       CreateResourceOwnerCredentialsGrant(XString p_url,XString p_appID,XString p_appKey,XString p_scope,XString p_username,XString p_password);
   // Ending a session, removing from the cache
   bool      EndSession(int p_session);
 
   // GETTERS
-  CString   GetBearerToken(int p_session,bool p_refresh = false);
+  XString   GetBearerToken(int p_session,bool p_refresh = false);
   bool      GetIsExpired(int p_session);
   INT64     GetExpires(int p_session);
   INT64     GetDefaultExpirationPeriod();
-  int       GetHasSession(CString p_appID,CString p_appKey);
+  int       GetHasSession(XString p_appID,XString p_appKey);
 
   // SETTERS
   void      SetExpired(int p_session);
@@ -98,7 +98,7 @@ public:
 private:
   OAuthSession* FindSession(int p_session);
   void          StartCredentialsGrant(OAuthSession* p_session);
-  CString       CreateTokenRequest(OAuthSession* p_session);
+  XString       CreateTokenRequest(OAuthSession* p_session);
   HTTPClient*   GetClient();
 
   AuthCache     m_cache;                       // All cached authentications

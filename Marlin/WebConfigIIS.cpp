@@ -38,7 +38,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-WebConfigIIS::WebConfigIIS(CString p_application /*=""*/)
+WebConfigIIS::WebConfigIIS(XString p_application /*=""*/)
              :m_application(p_application)
 {
 }
@@ -56,7 +56,7 @@ WebConfigIIS::ReadConfig()
 }
 
 bool
-WebConfigIIS::ReadConfig(CString p_application,CString p_extraWebConfig /*= ""*/)
+WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/)
 {
   // Reads the central IIS application host configuration file first
   // this file contains the defaults for IIS.
@@ -73,14 +73,14 @@ WebConfigIIS::ReadConfig(CString p_application,CString p_extraWebConfig /*= ""*/
 }
 
 void
-WebConfigIIS::SetApplication(CString p_application)
+WebConfigIIS::SetApplication(XString p_application)
 {
   // Try reading applications web.config
   IISSite* site = GetSite(p_application);
   if(site)
   {
     // Get virtual directory: can be outside "inetpub\wwwroot"
-    CString config = site->m_path + "\\web.config";
+    XString config = site->m_path + "\\web.config";
     // Read the web.config of the application site, if any requested
     if(ReadConfig(config,site))
     {
@@ -91,8 +91,8 @@ WebConfigIIS::SetApplication(CString p_application)
   m_application = p_application;
 }
 
-CString
-WebConfigIIS::GetSiteName(CString p_site)
+XString
+WebConfigIIS::GetSiteName(XString p_site)
 {
   IISSite* site = GetSite(p_site);
   if (site)
@@ -102,25 +102,25 @@ WebConfigIIS::GetSiteName(CString p_site)
   return "";
 }
 
-CString
-WebConfigIIS::GetSetting(CString p_key)
+XString
+WebConfigIIS::GetSetting(XString p_key)
 {
   return m_settings[p_key];
 }
 
-CString
-WebConfigIIS::GetSiteAppPool(CString p_site)
+XString
+WebConfigIIS::GetSiteAppPool(XString p_site)
 {
   IISSite* site = GetSite(p_site);
   if(site)
   {
     return site->m_appPool;
   }
-  return CString();
+  return XString();
 }
 
-CString
-WebConfigIIS::GetSiteBinding(CString p_site,CString p_default)
+XString
+WebConfigIIS::GetSiteBinding(XString p_site,XString p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -130,8 +130,8 @@ WebConfigIIS::GetSiteBinding(CString p_site,CString p_default)
   return p_default;
 }
 
-CString
-WebConfigIIS::GetSiteProtocol(CString p_site,CString p_default)
+XString
+WebConfigIIS::GetSiteProtocol(XString p_site,XString p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -142,7 +142,7 @@ WebConfigIIS::GetSiteProtocol(CString p_site,CString p_default)
 }
 
 int
-WebConfigIIS::GetSitePort(CString p_site,int p_default)
+WebConfigIIS::GetSitePort(XString p_site,int p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -153,7 +153,7 @@ WebConfigIIS::GetSitePort(CString p_site,int p_default)
 }
 
 bool
-WebConfigIIS::GetSiteSecure(CString p_site,bool p_default)
+WebConfigIIS::GetSiteSecure(XString p_site,bool p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -163,8 +163,8 @@ WebConfigIIS::GetSiteSecure(CString p_site,bool p_default)
   return p_default;
 }
 
-CString
-WebConfigIIS::GetSiteWebroot(CString p_site,CString p_default)
+XString
+WebConfigIIS::GetSiteWebroot(XString p_site,XString p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -174,8 +174,8 @@ WebConfigIIS::GetSiteWebroot(CString p_site,CString p_default)
   return p_default;
 }
 
-CString
-WebConfigIIS::GetSitePathname(CString p_site,CString p_default)
+XString
+WebConfigIIS::GetSitePathname(XString p_site,XString p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -186,7 +186,7 @@ WebConfigIIS::GetSitePathname(CString p_site,CString p_default)
 }
 
 ULONG
-WebConfigIIS::GetSiteScheme(CString p_site,ULONG   p_default)
+WebConfigIIS::GetSiteScheme(XString p_site,ULONG   p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -196,8 +196,8 @@ WebConfigIIS::GetSiteScheme(CString p_site,ULONG   p_default)
   return p_default;
 }
 
-CString
-WebConfigIIS::GetSiteRealm(CString p_site,CString p_default)
+XString
+WebConfigIIS::GetSiteRealm(XString p_site,XString p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -207,8 +207,8 @@ WebConfigIIS::GetSiteRealm(CString p_site,CString p_default)
   return p_default;
 }
 
-CString
-WebConfigIIS::GetSiteDomain(CString p_site,CString p_default)
+XString
+WebConfigIIS::GetSiteDomain(XString p_site,XString p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -219,7 +219,7 @@ WebConfigIIS::GetSiteDomain(CString p_site,CString p_default)
 }
 
 bool
-WebConfigIIS::GetSiteNTLMCache(CString p_site,bool p_default)
+WebConfigIIS::GetSiteNTLMCache(XString p_site,bool p_default)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -230,7 +230,7 @@ WebConfigIIS::GetSiteNTLMCache(CString p_site,bool p_default)
 }
 
 bool
-WebConfigIIS::GetSitePreload(CString p_site)
+WebConfigIIS::GetSitePreload(XString p_site)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -241,7 +241,7 @@ WebConfigIIS::GetSitePreload(CString p_site)
 }
 
 IISError
-WebConfigIIS::GetSiteError(CString p_site)
+WebConfigIIS::GetSiteError(XString p_site)
 {
   IISSite* site = GetSite(p_site);
   if (site)
@@ -251,41 +251,41 @@ WebConfigIIS::GetSiteError(CString p_site)
   return IISER_NoError;
 }
 
-CString
-WebConfigIIS::GetPoolStartMode(CString p_pool)
+XString
+WebConfigIIS::GetPoolStartMode(XString p_pool)
 {
   IISAppPool* pool = GetPool(p_pool);
   if(pool)
   {
     return pool->m_startMode;
   }
-  return CString();
+  return XString();
 }
 
-CString
-WebConfigIIS::GetPoolPeriodicRestart(CString p_pool)
+XString
+WebConfigIIS::GetPoolPeriodicRestart(XString p_pool)
 {
   IISAppPool* pool = GetPool(p_pool);
   if(pool)
   {
     return pool->m_periodicRestart;
   }
-  return CString();
+  return XString();
 }
 
-CString
-WebConfigIIS::GetPoolIdleTimeout(CString p_pool)
+XString
+WebConfigIIS::GetPoolIdleTimeout(XString p_pool)
 {
   IISAppPool* pool = GetPool(p_pool);
   if(pool)
   {
     return pool->m_idleTimeout;
   }
-  return CString();
+  return XString();
 }
 
 bool
-WebConfigIIS::GetPoolAutostart(CString p_pool)
+WebConfigIIS::GetPoolAutostart(XString p_pool)
 {
   IISAppPool* pool = GetPool(p_pool);
   if(pool)
@@ -295,15 +295,15 @@ WebConfigIIS::GetPoolAutostart(CString p_pool)
   return false;
 }
 
-CString
-WebConfigIIS::GetPoolPipelineMode(CString p_pool)
+XString
+WebConfigIIS::GetPoolPipelineMode(XString p_pool)
 {
   IISAppPool* pool = GetPool(p_pool);
   if(pool)
   {
     return pool->m_pipelineMode;
   }
-  return CString();
+  return XString();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -314,10 +314,10 @@ WebConfigIIS::GetPoolPipelineMode(CString p_pool)
 
 // Replace environment variables in a string
 bool 
-WebConfigIIS::ReplaceEnvironVars(CString& p_string)
+WebConfigIIS::ReplaceEnvironVars(XString& p_string)
 {
   bool replaced = false;
-  CString local(p_string);
+  XString local(p_string);
 
   while(true)
   {
@@ -334,8 +334,8 @@ WebConfigIIS::ReplaceEnvironVars(CString& p_string)
     }
 
     // Two markers found
-    CString var = local.Mid(beginPos + 1, (endPos - beginPos - 1));
-    CString value;
+    XString var = local.Mid(beginPos + 1, (endPos - beginPos - 1));
+    XString value;
     value.GetEnvironmentVariable(var);
     if(!value.IsEmpty())
     {
@@ -352,7 +352,7 @@ WebConfigIIS::ReplaceEnvironVars(CString& p_string)
 }
 
 bool
-WebConfigIIS::ReadConfig(CString p_configFile,IISSite* p_site /*=nullptr*/)
+WebConfigIIS::ReadConfig(XString p_configFile,IISSite* p_site /*=nullptr*/)
 {
   // Find the file, see if we have read access at least
   ReplaceEnvironVars(p_configFile);
@@ -401,8 +401,8 @@ WebConfigIIS::ReadLogPath(XMLMessage& p_msg)
     XMLElement* central = p_msg.FindElement(log,"centralW3CLogFile");
     if(central)
     {
-      CString enabled   = p_msg.GetAttribute(central,"enabled");
-      CString directory = p_msg.GetAttribute(central,"directory");
+      XString enabled   = p_msg.GetAttribute(central,"enabled");
+      XString directory = p_msg.GetAttribute(central,"directory");
 
       // Process the directory
       ReplaceEnvironVars(directory);
@@ -420,8 +420,8 @@ WebConfigIIS::ReadAppPools(XMLMessage& p_msg)
   XMLElement* appPools = p_msg.FindElement("applicationPools");
   if(!appPools) return;
 
-  CString defaultStartmode; // empty or "AlwaysRunning"
-  CString defaultRecycling; // time "days.hours:minutes:seconds"
+  XString defaultStartmode; // empty or "AlwaysRunning"
+  XString defaultRecycling; // time "days.hours:minutes:seconds"
 
   // Find defaults for all the pools
   XMLElement* defs = p_msg.FindElement(appPools,"applicationPoolDefaults");
@@ -445,18 +445,18 @@ WebConfigIIS::ReadAppPools(XMLMessage& p_msg)
     pool.m_periodicRestart = defaultRecycling;
     
     // Getting pool name
-    CString name = p_msg.GetAttribute(pools,"name");
+    XString name = p_msg.GetAttribute(pools,"name");
     pool.m_name = name;
 
     // Getting pool startmode
-    CString startMode = p_msg.GetAttribute(pools,"startMode");
+    XString startMode = p_msg.GetAttribute(pools,"startMode");
     if(!startMode.IsEmpty())
     {
       pool.m_startMode = startMode;
     }
 
     // Getting pool autostart
-    CString autostart = p_msg.GetAttribute(pools,"autoStart");
+    XString autostart = p_msg.GetAttribute(pools,"autoStart");
     if(autostart.CompareNoCase("true") == 0)
     {
       pool.m_autoStart = true;
@@ -542,7 +542,7 @@ WebConfigIIS::ReadSites(XMLMessage& p_msg)
       ReadAuthentication(theSite,p_msg);
 
       // Add to sites
-      CString name = theSite.m_name;
+      XString name = theSite.m_name;
       name.MakeLower();
       m_sites.insert(std::make_pair(name,theSite));
     }
@@ -560,8 +560,8 @@ WebConfigIIS::ReadSettings(XMLMessage& p_msg)
     XMLElement* add = p_msg.FindElement(settings,"add");
     while(add)
     {
-      CString key   = p_msg.GetAttribute(add,"key");
-      CString value = p_msg.GetAttribute(add,"value");
+      XString key   = p_msg.GetAttribute(add,"key");
+      XString value = p_msg.GetAttribute(add,"value");
 
       m_settings[key] = value;
 
@@ -580,7 +580,7 @@ WebConfigIIS::ReadStreamingLimit(XMLMessage& p_msg,XMLElement* p_elem)
     XMLElement* limit = p_msg.FindElement(webserv,"requestLimits");
     if(limit)
     {
-      CString max = p_msg.GetAttribute(limit,"maxAllowedContentLength");
+      XString max = p_msg.GetAttribute(limit,"maxAllowedContentLength");
       long theLimit = atol(max);
       if(theLimit > 0)
       {
@@ -597,7 +597,7 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg)
 
   while(location)
   {
-    CString path = p_msg.GetAttribute(location,"path");
+    XString path = p_msg.GetAttribute(location,"path");
     if(path.CompareNoCase(p_site.m_name) == 0)
     {
        ReadAuthentication(p_site,p_msg,location);
@@ -620,7 +620,7 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
   XMLElement* anonymous = p_msg.FindElement(auth,"anonymousAuthentication");
   if(anonymous)
   {
-    CString enable = p_msg.GetAttribute(anonymous,"enabled");
+    XString enable = p_msg.GetAttribute(anonymous,"enabled");
     if(enable.CompareNoCase("true") == 0)
     {
       // Anonymous authentication IS enabled
@@ -635,17 +635,17 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
   XMLElement* basic = p_msg.FindElement(auth,"basicAuthentication");
   if(basic)
   {
-    CString enable = p_msg.GetAttribute(basic,"enabled");
+    XString enable = p_msg.GetAttribute(basic,"enabled");
     if(enable.CompareNoCase("true") == 0)
     {
       p_site.m_authScheme |= HTTP_AUTH_ENABLE_BASIC;
 
-      CString realm = p_msg.GetAttribute(basic,"realm");
+      XString realm = p_msg.GetAttribute(basic,"realm");
       if(!realm.IsEmpty())
       {
         p_site.m_realm = realm;
       }
-      CString domain = p_msg.GetAttribute(basic,"defaultLogonDomain");
+      XString domain = p_msg.GetAttribute(basic,"defaultLogonDomain");
       if(!domain.IsEmpty())
       {
         p_site.m_domain = domain;
@@ -657,12 +657,12 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
   XMLElement* digest = p_msg.FindElement(auth,"digestAuthentication");
   if(digest)
   {
-    CString enable = p_msg.GetAttribute(digest,"enabled");
+    XString enable = p_msg.GetAttribute(digest,"enabled");
     if(enable.CompareNoCase("true") == 0)
     {
       p_site.m_authScheme |= HTTP_AUTH_ENABLE_DIGEST;
 
-      CString realm = p_msg.GetAttribute(digest,"realm");
+      XString realm = p_msg.GetAttribute(digest,"realm");
       if(!realm.IsEmpty())
       {
         p_site.m_realm = realm;
@@ -674,11 +674,11 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
   XMLElement* windows = p_msg.FindElement(auth,"windowsAuthentication");
   if(windows)
   {
-    CString enable = p_msg.GetAttribute(windows,"enabled");
+    XString enable = p_msg.GetAttribute(windows,"enabled");
     if(enable.CompareNoCase("true") == 0)
     {
       // See if we must de-activate NTLM caching
-      CString persist = p_msg.GetAttribute(windows,"authPersistSingleRequest");
+      XString persist = p_msg.GetAttribute(windows,"authPersistSingleRequest");
       if(persist.CompareNoCase("true") == 0)
       {
         p_site.m_ntlmCache = false;
@@ -691,7 +691,7 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
         XMLElement* add = p_msg.FindElement(providers,"add");
         while(add)
         {
-          CString value = p_msg.GetAttribute(add,"value");
+          XString value = p_msg.GetAttribute(add,"value");
           if(value.CompareNoCase("NTLM") == 0)
           {
             p_site.m_authScheme |= HTTP_AUTH_ENABLE_NTLM;
@@ -727,7 +727,7 @@ WebConfigIIS::ReadHandlerMapping(IISSite& p_site, XMLMessage& p_msg)
 
   while(location)
   {
-    CString path = p_msg.GetAttribute(location, "path");
+    XString path = p_msg.GetAttribute(location, "path");
     if (path.CompareNoCase(p_site.m_name) == 0)
     {
       ReadHandlerMapping(p_site,p_msg,location);
@@ -753,7 +753,7 @@ WebConfigIIS::ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
   {
     IISHandler handler;
 
-    CString name           = p_msg.GetAttribute(add,"name");
+    XString name           = p_msg.GetAttribute(add,"name");
     handler.m_path         = p_msg.GetAttribute(add,"path");
     handler.m_verb         = p_msg.GetAttribute(add,"verb");
     handler.m_modules      = p_msg.GetAttribute(add,"modules");
@@ -768,7 +768,7 @@ WebConfigIIS::ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
 }
 
 IISHandlers*
-WebConfigIIS::GetAllHandlers(CString p_site)
+WebConfigIIS::GetAllHandlers(XString p_site)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -779,7 +779,7 @@ WebConfigIIS::GetAllHandlers(CString p_site)
 }
 
 IISHandler*
-WebConfigIIS::GetHandler(CString p_site,CString p_handler)
+WebConfigIIS::GetHandler(XString p_site,XString p_handler)
 {
   IISSite* site = GetSite(p_site);
   if(site)
@@ -797,7 +797,7 @@ WebConfigIIS::GetHandler(CString p_site,CString p_handler)
 // Site/Subsite -> Finds "site"
 // Site         -> FInds "site"
 IISSite*
-WebConfigIIS::GetSite(CString p_site)
+WebConfigIIS::GetSite(XString p_site)
 {
   // Registration is in lower case
   p_site.MakeLower();
@@ -821,7 +821,7 @@ WebConfigIIS::GetSite(CString p_site)
 
 // Finding a application pool registration
 IISAppPool* 
-WebConfigIIS::GetPool(CString p_pool)
+WebConfigIIS::GetPool(XString p_pool)
 {
   p_pool.MakeLower();
   IISPools::iterator it = m_pools.find(p_pool);

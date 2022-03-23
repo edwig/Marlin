@@ -43,11 +43,11 @@ enum class PrefixType
 #define HOSTNAME_IP     2
 #define HOSTNAME_FULL   3
 
-CString GetHostName(int p_type);
+XString GetHostName(int p_type);
 
-CString SocketToServer(PSOCKADDR_IN6 p_address);
+XString SocketToServer(PSOCKADDR_IN6 p_address);
 
-CString CreateURLPrefix(PrefixType p_type
+XString CreateURLPrefix(PrefixType p_type
                        ,bool       p_secure
                        ,int        p_port
-                       ,CString    p_path);
+                       ,XString    p_path);

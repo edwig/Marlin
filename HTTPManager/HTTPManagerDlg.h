@@ -69,19 +69,19 @@ public:
 // Implementation
 protected:
   void        ConfigureForIIS();
-  CString     GetSiteConfig(CString p_prefix);
+  XString     GetSiteConfig(XString p_prefix);
   void        CheckPortRange();
   void        MessagePump();
   void        SetVersion();
   void        CheckPathname(bool p_allow = false);
-  CString     MakeFirewallRuleName(CString& p_ports);
+  XString     MakeFirewallRuleName(XString& p_ports);
   bool        DoCommand(ConfigCmd p_config
-                       ,CString   p_prefix
-                       ,CString&  p_command
-                       ,CString&  p_parameters
-                       ,CString   p_prefix2 = ""
-                       ,CString   p_prefix3 = ""
-                       ,CString   p_prefix4 = "");
+                       ,XString   p_prefix
+                       ,XString&  p_command
+                       ,XString&  p_parameters
+                       ,XString   p_prefix2 = ""
+                       ,XString   p_prefix3 = ""
+                       ,XString   p_prefix4 = "");
     
   // Runmode: true for Microsoft-IIS, false for Marlin stand-alone
   bool        m_iis;
@@ -93,9 +93,9 @@ protected:
   bool        m_doRange;
   CButton     m_buttonSecurity;
   CButton     m_buttonRange;
-  CString     m_absPath;
+  XString     m_absPath;
   OsVersie    m_version;
-  CString     m_rulesResult;
+  XString     m_rulesResult;
 
   HICON       m_hIcon;
   CComboBox   m_comboProtocol;

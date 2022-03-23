@@ -35,7 +35,7 @@ class WebConfigIIS;
 class HTTPServerIIS : public HTTPServer
 {
 public:
-  HTTPServerIIS(CString p_name);
+  HTTPServerIIS(XString p_name);
   virtual ~HTTPServerIIS();
 
   // Running the server 
@@ -45,24 +45,24 @@ public:
   // Initialise a HTTP server and server-session
   virtual bool       Initialise();
   // Return a version string
-  virtual CString    GetVersion();
+  virtual XString    GetVersion();
   // Create a site to bind the traffic to
   virtual HTTPSite*  CreateSite(PrefixType    p_type
                                ,bool          p_secure
                                ,int           p_port
-                               ,CString       p_baseURL
+                               ,XString       p_baseURL
                                ,bool          p_subsite  = false
                                ,LPFN_CALLBACK p_callback = nullptr);
   // Delete a site from the remembered set of sites
-  virtual bool       DeleteSite(int p_port,CString p_baseURL,bool p_force = false);
+  virtual bool       DeleteSite(int p_port,XString p_baseURL,bool p_force = false);
   // Receive (the rest of the) incoming HTTP request
   virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message);
   // Create a new WebSocket in the subclass of our server
-  virtual WebSocket* CreateWebSocket(CString p_uri);
+  virtual WebSocket* CreateWebSocket(XString p_uri);
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request);
   // Flushing a WebSocket intermediate
-  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,CString p_prefix);
+  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,XString p_prefix);
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message);
   // Sending a response as a chunk
@@ -104,16 +104,16 @@ private:
   // Add unknown headers to the response
   void AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers);
   // Setting the overal status of the response message
-  void SetResponseStatus(IHttpResponse* p_response,USHORT p_status,CString p_statusMessage);
+  void SetResponseStatus(IHttpResponse* p_response,USHORT p_status,XString p_statusMessage);
   // Setting a reponse header by name
-  void SetResponseHeader(IHttpResponse* p_response,CString p_name,     CString p_value,bool p_replace);
-  void SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,CString p_value,bool p_replace);
+  void SetResponseHeader(IHttpResponse* p_response,XString p_name,     XString p_value,bool p_replace);
+  void SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,XString p_value,bool p_replace);
 
   // Subfunctions for SendResponse
   bool SendResponseBuffer     (IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
   void SendResponseBufferParts(IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
   void SendResponseFileHandle (IHttpResponse* p_response,FileBuffer* p_buffer,bool p_more = false);
-  void SendResponseError      (IHttpResponse* p_response,CString& p_page,int p_error,const char* p_reason);
+  void SendResponseError      (IHttpResponse* p_response,XString& p_page,int p_error,const char* p_reason);
 
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response

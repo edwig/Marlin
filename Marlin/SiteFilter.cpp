@@ -34,7 +34,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-SiteFilter::SiteFilter(unsigned p_priority,CString p_name)
+SiteFilter::SiteFilter(unsigned p_priority,XString p_name)
            :m_priority(p_priority)
            ,m_name(p_name)
 {

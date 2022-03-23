@@ -58,8 +58,8 @@ SiteHandlerGetChunking::Handle(HTTPMessage* p_message)
   }
 
   bool result = false;
-  CString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v7.txt");
-  CString empty;
+  XString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v7.txt");
+  XString empty;
 
   // NOT Much here. Always returns the release message file
   p_message->Reset();
@@ -101,7 +101,7 @@ TestMarlinServer::TestChunking()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Chunking/"
   // Callback function is no longer required!
-  CString webaddress = "/MarlinTest/Chunking/";
+  XString webaddress = "/MarlinTest/Chunking/";
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong, false, m_inPortNumber, webaddress);
   if (site)
   {

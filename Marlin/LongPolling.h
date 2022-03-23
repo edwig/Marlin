@@ -54,13 +54,13 @@ public:
   // SETTERS
   
   // MANDATORY: Set basic URL to ask for messages
-  void SetURL(CString p_url);
+  void SetURL(XString p_url);
   // MANDATORY: Set application callback
   void SetApplication(LPFN_EVENTCALLBACK p_callback,void* p_application);
   // OPTIONAL: Set a logfile
   void SetLogfile(LogAnalysis* p_logfile);
   // MANDATORY: Start the polling
-  bool StartLongPolling(CString p_session,CString p_cookie,CString p_secret);
+  bool StartLongPolling(XString p_session,XString p_cookie,XString p_secret);
   // Stopping the long polling channel
   void StopLongPolling();
 
@@ -70,7 +70,7 @@ public:
   // Application posting an event to the server
   void PostEvent(LTEvent* p_event);
   // Registering an incoming event to the client queue
-  void RegisterEvent(CString p_payload,EvtType p_type,int p_number = 0);
+  void RegisterEvent(XString p_payload,EvtType p_type,int p_number = 0);
   // Only to be called by background thread
   void PollingThreadRunning();
 
@@ -81,10 +81,10 @@ private:
   bool        StartPollingThread();
   void        AskingForMessages();
 
-  CString m_url;
-  CString m_session;
-  CString m_cookie;
-  CString m_secret;
+  XString m_url;
+  XString m_session;
+  XString m_cookie;
+  XString m_secret;
   void*   m_application { nullptr };
   int     m_interval    { 0 };
   bool    m_receiving   { false };

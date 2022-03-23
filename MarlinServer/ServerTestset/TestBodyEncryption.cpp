@@ -49,14 +49,14 @@ protected:
 bool
 SiteHandlerSoapBodyEncrypt::Handle(HTTPMessage* p_message)
 {
-  CString message = p_message->GetBody();
+  XString message = p_message->GetBody();
   bool cypherResult = false;
   XMLMessage check;
   check.ParseMessage(message);
   XMLElement* cypher = check.FindElement("ds:CypherValue");
   if(cypher)
   {
-    CString value = cypher->GetValue();
+    XString value = cypher->GetValue();
     if(value = "VcPqnfbozsqeFEGghOImY2ZlxjgA1xxnLnqOjglV3VD+4xqmxOe3WMRxlobfYmOJ23S0aS3aE"
                "/KrVOR15pfQINTmeBqOPcwbntbh5baefeyOK0+THsHHONYt7LJg3jP08G5DGat0LjdVukrSno"
                "4Wnc2wTTizMr2EL7/1ACrZbrG8tOqkghwScksUQc08cXh9vXTcWkk8Mn+d+fhrONzmGUkvOU8"
@@ -93,13 +93,13 @@ SiteHandlerSoapBodyEncrypt::Handle(SOAPMessage* p_message)
   xprintf("Incoming message in XML:\n%s\n", p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
-  CString paramOne = p_message->GetParameter("One");
-  CString paramTwo = p_message->GetParameter("Two");
+  XString paramOne = p_message->GetParameter("One");
+  XString paramTwo = p_message->GetParameter("Two");
   xprintf("Incoming parameter: %s = %s\n", "One", paramOne.GetString());
   xprintf("Incoming parameter: %s = %s\n", "Two", paramTwo.GetString());
 
   // reuse message for response
-  CString response = "TestMessageResponse";
+  XString response = "TestMessageResponse";
 
   p_message->Reset();
   p_message->SetSoapAction(response);
@@ -146,7 +146,7 @@ TestMarlinServer::TestBodyEncryption()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/BodyEncrypt/"
   // But WebConfig can override all values except for the callback function address
-  CString url("/MarlinTest/BodyEncrypt/");
+  XString url("/MarlinTest/BodyEncrypt/");
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {

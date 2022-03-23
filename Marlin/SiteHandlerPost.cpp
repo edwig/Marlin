@@ -45,7 +45,7 @@ SiteHandlerPost::PreHandle(HTTPMessage* /*p_message*/)
   m_site->SetCleanup(nullptr);
 
   // Check server authorization for server GUID!!
-  // CString author = p_message->GetCookieValue();
+  // XString author = p_message->GetCookieValue();
   // IMPLEMENT YOURSELF: Check authorization (HTTP_STATUS_DENIED)?
 
   // return true, to enter the default "Handle"
@@ -61,8 +61,8 @@ bool
 SiteHandlerPost::Handle(HTTPMessage* p_message)
 {
   // Getting the primary information
-  CString pathname = m_site->GetWebroot() + p_message->GetAbsolutePath();
-  CString body     = p_message->GetBody();
+  XString pathname = m_site->GetWebroot() + p_message->GetAbsolutePath();
+  XString body     = p_message->GetBody();
 
   // Reset the message
   p_message->Reset();
@@ -102,7 +102,7 @@ SiteHandlerPost::PostHandle(HTTPMessage* p_message)
 // DO NOTHING: OVVERRIDE ME!
 // IMPLEMENT YOURSELF: YOUR IMPLEMENTATION HERE
 bool
-SiteHandlerPost::DoPostAction(CString p_filename,CString p_body,const CrackedURL& p_full)
+SiteHandlerPost::DoPostAction(XString p_filename,XString p_body,const CrackedURL& p_full)
 {
   UNREFERENCED_PARAMETER(p_filename);
   UNREFERENCED_PARAMETER(p_body);

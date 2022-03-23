@@ -102,7 +102,7 @@ TestMarlinServer::TestBaseSite()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/Site/");
+  XString url("/MarlinTest/Site/");
 
   xprintf("TESTING STANDARD GET FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=================================================\n");
@@ -134,7 +134,7 @@ TestMarlinServer::TestBaseSite()
 
 #ifdef MARLIN_STANDALONE
   // Setting the virtual root directory
-  CString root = MarlinConfig::GetExePath() + "site";
+  XString root = MarlinConfig::GetExePath() + "site";
   EnsureFile ensure;
   root = ensure.ReduceDirectoryPath(root);
   root = "virtual://" + root;

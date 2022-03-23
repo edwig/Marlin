@@ -31,7 +31,7 @@
 #include "HTTPClient.h"
 #include "JSONMessage.h"
 #include "AutoCritical.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include <sys\timeb.h>
 
 //////////////////////////////////////////////////////////////////////////
@@ -77,20 +77,20 @@ OAuth2Cache::~OAuth2Cache()
 }
 
 // Create a token server URL from  a template and a tenant
-CString
-OAuth2Cache::CreateTokenURL(CString p_template,CString p_tenant)
+XString
+OAuth2Cache::CreateTokenURL(XString p_template,XString p_tenant)
 {
-  CString url;
+  XString url;
   url.Format(p_template,p_tenant.GetString());
   return url;
 }
 
 // Create a credentials grant, returning a session ID
 int
-OAuth2Cache::CreateClientCredentialsGrant(CString p_url
-                                         ,CString p_appID
-                                         ,CString p_appKey
-                                         ,CString p_scope)
+OAuth2Cache::CreateClientCredentialsGrant(XString p_url
+                                         ,XString p_appID
+                                         ,XString p_appKey
+                                         ,XString p_scope)
 {
   OAuthSession session;
   session.m_flow    = OAuthFlow::OA_CLIENT;
@@ -107,12 +107,12 @@ OAuth2Cache::CreateClientCredentialsGrant(CString p_url
 
 // Create a resource owner grant, returning a session ID
 int
-OAuth2Cache::CreateResourceOwnerCredentialsGrant(CString p_url
-                                                ,CString p_appID
-                                                ,CString p_appKey
-                                                ,CString p_scope
-                                                ,CString p_username
-                                                ,CString p_password)
+OAuth2Cache::CreateResourceOwnerCredentialsGrant(XString p_url
+                                                ,XString p_appID
+                                                ,XString p_appKey
+                                                ,XString p_scope
+                                                ,XString p_username
+                                                ,XString p_password)
 {
   OAuthSession session;
   session.m_flow     = OAuthFlow::OA_ROWNER;
@@ -143,12 +143,12 @@ OAuth2Cache::EndSession(int p_session)
   return false;
 }
 
-CString
+XString
 OAuth2Cache::GetBearerToken(int p_session,bool p_refresh /*= false*/)
 {
   AutoCritSec lock(&m_lock);
 
-  CString token;
+  XString token;
   OAuthSession* session = FindSession(p_session);
   if(session)
   {
@@ -238,7 +238,7 @@ OAuth2Cache::SetDevelopment(bool p_dev /*= true*/)
 
 // Slow lookup of a session
 int
-OAuth2Cache::GetHasSession(CString p_appID,CString p_appKey)
+OAuth2Cache::GetHasSession(XString p_appID,XString p_appKey)
 {
   for(auto& ses : m_cache)
   {
@@ -294,7 +294,7 @@ void
 OAuth2Cache::StartCredentialsGrant(OAuthSession* p_session)
 {
   bool valid = false;
-  CString typeFound;
+  XString typeFound;
 
   // Reset the token
   p_session->m_bearerToken.Empty();
@@ -310,7 +310,7 @@ OAuth2Cache::StartCredentialsGrant(OAuthSession* p_session)
   getToken.AddHeader("Accept","application/json");
   getToken.SetUser    (p_session->m_appID);
   getToken.SetPassword(p_session->m_appKey);
-  CString payload = CreateTokenRequest(p_session);
+  XString payload = CreateTokenRequest(p_session);
   getToken.SetBody(payload);
   
   // Send through extra HTTPClient
@@ -378,10 +378,10 @@ OAuth2Cache::StartCredentialsGrant(OAuthSession* p_session)
   }
 }
 
-CString
+XString
 OAuth2Cache::CreateTokenRequest(OAuthSession* p_session)
 {
-  CString request;
+  XString request;
   request.Format("client_id=%s",           p_session->m_appID.GetString());
   request.AppendFormat("&scope=%s",        p_session->m_scope.GetString());
   request.AppendFormat("&client_secret=%s",p_session->m_appKey.GetString());

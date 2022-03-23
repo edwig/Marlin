@@ -50,7 +50,7 @@ enum class EventDriverType
 typedef struct _regSocket
 {
   WebSocket* m_socket;
-  CString    m_url;
+  XString    m_url;
   UINT64     m_sender;
   bool       m_open;
 }
@@ -59,7 +59,7 @@ EventWebSocket;
 typedef struct _regStream
 {
   EventStream* m_stream;
-  CString      m_url;
+  XString      m_url;
   UINT64       m_sender;
 }
 EventSSEStream;
@@ -74,9 +74,9 @@ class ServerEventChannel
 public:
   ServerEventChannel(ServerEventDriver* p_driver
                     ,int     p_channel
-                    ,CString p_sesionName
-                    ,CString p_cookie
-                    ,CString p_token);
+                    ,XString p_sesionName
+                    ,XString p_cookie
+                    ,XString p_token);
  ~ServerEventChannel();
 
   // Send from this channel (if possible)
@@ -84,7 +84,7 @@ public:
   // Process the receiving part of the queue
   int  Receiving();
   // Post a new event, giving a new event numerator
-  int  PostEvent(CString p_payload,CString p_sender,EvtType p_type = EvtType::EV_Message);
+  int  PostEvent(XString p_payload,XString p_sender,EvtType p_type = EvtType::EV_Message);
   // Flushing a channel directly
   bool FlushChannel();
   // Closing an event channel
@@ -101,19 +101,19 @@ public:
 
   // GETTERS
   int     GetChannel()      { return m_channel; }
-  CString GetChannelName()  { return m_name;    }
-  CString GetToken()        { return m_token;   }
-  CString GetCookieToken();
+  XString GetChannelName()  { return m_name;    }
+  XString GetToken()        { return m_token;   }
+  XString GetCookieToken();
   int     GetQueueCount();
   int     GetClientCount();
   // Current active type
   EventDriverType GetDriverType() { return m_current; }
 
   // To be called by the socket handlers only!
-  void    OnOpen   (CString p_message);
-  void    OnMessage(CString p_message);
-  void    OnError  (CString p_message);
-  void    OnClose  (CString p_message);
+  void    OnOpen   (XString p_message);
+  void    OnMessage(XString p_message);
+  void    OnError  (XString p_message);
+  void    OnClose  (XString p_message);
   void    OnBinary (void* p_data,DWORD p_length);
   void    OnOpenSocket (WebSocket* p_socket);
   void    OnCloseSocket(WebSocket* p_socket);
@@ -128,9 +128,9 @@ private:
   bool RemoveEvents(int p_number);
 
   // DATA
-  CString             m_name;
-  CString             m_cookie;
-  CString             m_token;
+  XString             m_name;
+  XString             m_cookie;
+  XString             m_token;
   int                 m_channel     { 0 };
   bool                m_active      { false   };
   EVChannelPolicy     m_policy      { EVChannelPolicy::DP_SureDelivery   };

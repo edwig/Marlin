@@ -36,67 +36,67 @@ class MarlinConfig : public XMLMessage
 {
 public:
   MarlinConfig();
-  MarlinConfig(CString p_filename);
+  MarlinConfig(XString p_filename);
   virtual ~MarlinConfig();
 
   // FILE METHODS
 
-  bool   ReadConfig(CString p_filename);
+  bool   ReadConfig(XString p_filename);
   bool   WriteConfig();
-  static CString GetExePath();
-  static CString GetExeModule();
-  static CString GetSiteConfig(CString p_prefixURL);
-  static CString GetURLConfig(CString p_url);
+  static XString GetExePath();
+  static XString GetExeModule();
+  static XString GetSiteConfig(XString p_prefixURL);
+  static XString GetURLConfig(XString p_url);
 
   // SETTERS
 
-  bool SetSection  (CString p_section);
-  bool SetParameter(CString p_section,CString p_parameter,CString p_value);
-  bool SetParameter(CString p_section,CString p_parameter,int     p_value);
-  bool SetParameter(CString p_section,CString p_parameter,bool    p_value);
-  bool SetEncrypted(CString p_section,CString p_parameter,CString p_value);
-  bool SetAttribute(CString p_section,CString p_parameter,CString p_attrib,int     p_value);
-  bool SetAttribute(CString p_section,CString p_parameter,CString p_attrib,double  p_value);
-  bool SetAttribute(CString p_section,CString p_parameter,CString p_attrib,CString p_value);
+  bool SetSection  (XString p_section);
+  bool SetParameter(XString p_section,XString p_parameter,XString p_value);
+  bool SetParameter(XString p_section,XString p_parameter,int     p_value);
+  bool SetParameter(XString p_section,XString p_parameter,bool    p_value);
+  bool SetEncrypted(XString p_section,XString p_parameter,XString p_value);
+  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,int     p_value);
+  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,double  p_value);
+  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_value);
 
-  bool RemoveSection  (CString p_section);
-  bool RemoveParameter(CString p_section,CString p_parameter);
-  bool RemoveAttribute(CString p_section,CString p_parameter,CString p_attrib);
+  bool RemoveSection  (XString p_section);
+  bool RemoveParameter(XString p_section,XString p_parameter);
+  bool RemoveAttribute(XString p_section,XString p_parameter,XString p_attrib);
 
   // GETTERS
 
   bool    IsFilled() { return m_filled; };
-  CString GetFilename();
-  CString GetParameterString (CString p_section,CString p_parameter,CString p_default);
-  bool    GetParameterBoolean(CString p_section,CString p_parameter,bool    p_default);
-  int     GetParameterInteger(CString p_section,CString p_parameter,int     p_default);
-  CString GetEncryptedString (CString p_section,CString p_parameter,CString p_default);
-  int     GetAttribute(CString p_section,CString p_parameter,CString p_attrib,int     p_default);
-  double  GetAttribute(CString p_section,CString p_parameter,CString p_attrib,double  p_default);
-  CString GetAttribute(CString p_section,CString p_parameter,CString p_attrib,CString p_default);
+  XString GetFilename();
+  XString GetParameterString (XString p_section,XString p_parameter,XString p_default);
+  bool    GetParameterBoolean(XString p_section,XString p_parameter,bool    p_default);
+  int     GetParameterInteger(XString p_section,XString p_parameter,int     p_default);
+  XString GetEncryptedString (XString p_section,XString p_parameter,XString p_default);
+  int     GetAttribute(XString p_section,XString p_parameter,XString p_attrib,int     p_default);
+  double  GetAttribute(XString p_section,XString p_parameter,XString p_attrib,double  p_default);
+  XString GetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_default);
 
   // DISCOVERY
 
-  bool    HasSection  (CString p_section);
-  bool    HasParameter(CString p_section,CString p_parameter);
-  bool    HasAttribute(CString p_section,CString p_parameter,CString p_attribute);
+  bool    HasSection  (XString p_section);
+  bool    HasParameter(XString p_section,XString p_parameter);
+  bool    HasAttribute(XString p_section,XString p_parameter,XString p_attribute);
   bool    IsChanged();
   void    ForgetChanges(); // Thread with care!
 
 private:
   // Find section with this name
-  XMLElement*   FindSection(CString p_section);
+  XMLElement*   FindSection(XString p_section);
   // Find parameter within a section
-  XMLElement*   FindParameter(XMLElement* p_section,CString p_parameter);
+  XMLElement*   FindParameter(XMLElement* p_section,XString p_parameter);
   // Find an attribute within a parameter
-  XMLAttribute* FindAttribute(XMLElement* p_parameter,CString p_attribute);
+  XMLAttribute* FindAttribute(XMLElement* p_parameter,XString p_attribute);
   // Remove a parameter
-  void          RemoveParameter(XMLElement* p_section,CString p_parameter);
+  void          RemoveParameter(XMLElement* p_section,XString p_parameter);
   // Remove an attribute
-  void          RemoveAttribute(XMLElement* p_parameter,CString p_attribute);
+  void          RemoveAttribute(XMLElement* p_parameter,XString p_attribute);
 
   // Filename of read config file
-  CString   m_fileName;
+  XString   m_fileName;
   // Something was changed, so save the file
   bool      m_changed { false };
   // Correctly read from disk

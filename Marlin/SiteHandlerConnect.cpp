@@ -58,7 +58,7 @@ SiteHandlerConnect::Handle(HTTPMessage* p_message)
   p_message->SetCommand(HTTPCommand::http_response);
   p_message->SetStatus(HTTP_STATUS_OK);
   // Empty the response part. Just to be sure!
-  CString empty;
+  XString empty;
   p_message->GetFileBuffer()->Reset();
   p_message->SetFile(empty);
 

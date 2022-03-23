@@ -16,16 +16,25 @@
     <Filter Include="TestSet">
       <UniqueIdentifier>{6d8f6d7f-f2ae-4240-8251-976cc90606aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{e64f94e5-d365-49e7-9d51-db4eefe67359}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\TestsetClient\TestClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TestPorts.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Configuration</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

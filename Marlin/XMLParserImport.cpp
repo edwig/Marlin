@@ -50,8 +50,8 @@ XMLParserImport::ParseAfterElement()
   if(m_lastElement->GetName().CompareNoCase("import") == 0)
   {
     // Getting the attributes
-    CString namesp   = m_message->GetAttribute(m_lastElement,"namespace");
-    CString location = m_message->GetAttribute(m_lastElement,"schemaLocation");
+    XString namesp   = m_message->GetAttribute(m_lastElement,"namespace");
+    XString location = m_message->GetAttribute(m_lastElement,"schemaLocation");
 
     // Remove original <import> element
     m_message->DeleteElement(m_element,m_lastElement);
@@ -71,13 +71,13 @@ XMLParserImport::ParseAfterElement()
 }
 
 void
-XMLParserImport::ParseSchemaImport(CString p_location)
+XMLParserImport::ParseSchemaImport(XString p_location)
 {
   bool result = false;
 
-  CString filename(p_location);
-  CString protocol1 = filename.Left(8);
-  CString protocol2 = filename.Left(7);
+  XString filename(p_location);
+  XString protocol1 = filename.Left(8);
+  XString protocol2 = filename.Left(7);
   protocol1.MakeLower();
   protocol2.MakeLower();
   if(protocol1 == "https://" || protocol2 == "http://")
@@ -93,7 +93,7 @@ XMLParserImport::ParseSchemaImport(CString p_location)
 }
 
 bool
-XMLParserImport::ReadXSDFileFromURL(CString p_url)
+XMLParserImport::ReadXSDFileFromURL(XString p_url)
 {
   bool result = false;
 
@@ -106,7 +106,7 @@ XMLParserImport::ReadXSDFileFromURL(CString p_url)
     size_t size = 0;
     if(buffer.GetBufferCopy(contents,size))
     {
-      CString message((LPCTSTR)contents);
+      XString message((LPCTSTR)contents);
       result = ReadXSD(message);
     }
     delete [] contents;
@@ -115,7 +115,7 @@ XMLParserImport::ReadXSDFileFromURL(CString p_url)
 }
 
 bool
-XMLParserImport::ReadXSDLocalFile(CString p_filename)
+XMLParserImport::ReadXSDLocalFile(XString p_filename)
 {
   bool result = false;
   FileBuffer buf(p_filename);
@@ -126,7 +126,7 @@ XMLParserImport::ReadXSDLocalFile(CString p_filename)
     size_t size = 0;
     if(buf.GetBufferCopy(contents,size))
     {
-      CString message((LPCTSTR)contents);
+      XString message((LPCTSTR)contents);
       result = ReadXSD(message);
     }
     delete [] contents;
@@ -135,7 +135,7 @@ XMLParserImport::ReadXSDLocalFile(CString p_filename)
 }
 
 bool 
-XMLParserImport::ReadXSD(CString p_message)
+XMLParserImport::ReadXSD(XString p_message)
 {
   XMLMessage xsd;
   XMLParserImport parser(m_message);
@@ -156,7 +156,7 @@ XMLParserImport::ReadXSD(CString p_message)
   {
     return false;
   }
-  CString toParse = xsd.PrintElements(contents);
+  XString toParse = xsd.PrintElements(contents);
 
   // Restart parsing from here
   // Adding this part of the XSD to the original XML document

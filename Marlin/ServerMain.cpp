@@ -62,8 +62,8 @@ SERVICE_STATUS_HANDLE   g_svcStatusHandle;
 HANDLE                  g_svcStopEvent = NULL;
 SERVICE_STATUS_PROCESS  g_sspStatus; 
 int                     g_runAsService = RUNAS_IISAPPPOOL;
-CString                 g_serverName;
-CString                 g_baseURL;
+XString                 g_serverName;
+XString                 g_baseURL;
 
 // Handle to service manager and service
 SC_HANDLE g_schSCManager = NULL;
@@ -257,8 +257,8 @@ int main(int argc,char* argv[],char* /*envp[]*/)
   // If in error : Show what we know about it
   if(started == FALSE)
   { 
-    CString reason;
-    CString error = CString("The start of the  ") + CString(PRODUCT_NAME) +  " service has failed.";
+    XString reason;
+    XString error = XString("The start of the  ") + XString(PRODUCT_NAME) +  " service has failed.";
     int errorCode = GetLastError();
     switch(errorCode)
     {
@@ -358,7 +358,7 @@ CheckPlatform()
       // Windows NT 3 (dwMajorVersion == 3)
       // Windows NT 4 (dwMajorVersion == 4)
       // Windows 2000 (dwMajorVersion == 5 && dwMinorVersion == 0) // DisconnectEx voor sockets !!!!
-      CString msg;
+      XString msg;
       msg.Format("You are running a version of the MS-Windows operating system with a non-supported TCP/IP queuing mechanism.\n"
                  "%s only works on the Windows-7, 8, 8.1 & 10 and on the Windows 2008, 2012, 2016 Server platforms.\n"
                  "Sorry for the inconvenience. Please contact ir. W.E. Huisman.\n",PRODUCT_NAME);
@@ -391,7 +391,7 @@ VOID WINAPI SvcMain(DWORD dwArgc,LPTSTR *lpszArgv)
   g_svcStatus.dwServiceSpecificExitCode = 0;    
 
   // Tell it before we start
-  SvcReportSuccessEvent(CString(PRODUCT_NAME) + " Server starting...");
+  SvcReportSuccessEvent(XString(PRODUCT_NAME) + " Server starting...");
   // Report initial status to the SCM
   ReportSvcStatus(SERVICE_START_PENDING,NO_ERROR,SVC_DEFAULT_SERVICE_START_PENDING);
 
@@ -415,7 +415,7 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
   //   ReportSvcStatus with SERVICE_STOPPED.
 
   // Register event source for the WMI
-  CString eventlog = CString(PRODUCT_NAME) + "\\" + g_svcname;
+  XString eventlog = XString(PRODUCT_NAME) + "\\" + g_svcname;
 
   g_eventSource = RegisterEventSource(NULL,eventlog);
   DeregisterEventSource(g_eventSource);
@@ -439,7 +439,7 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
   if(s_theServer->Startup())
   {
     // Tell we have started
-    SvcReportSuccessEvent(CString(PRODUCT_NAME) + " server started.");
+    SvcReportSuccessEvent(XString(PRODUCT_NAME) + " server started.");
     // Report running status when initialization is complete.
     ReportSvcStatus(SERVICE_RUNNING,NO_ERROR,0);
 
@@ -448,14 +448,14 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
       // Check whether to stop the service.
       WaitForSingleObject(g_svcStopEvent, INFINITE);
 
-      SvcReportSuccessEvent(CString(PRODUCT_NAME) + " server about to stop.");
+      SvcReportSuccessEvent(XString(PRODUCT_NAME) + " server about to stop.");
       ReportSvcStatus(SERVICE_STOP_PENDING,NO_ERROR,0);
 
       // Stop the server
       // STOP THE SERVICE THREADS
       s_theServer->ShutDown();
 
-      SvcReportSuccessEvent(CString(PRODUCT_NAME) + " server is stopped.");
+      SvcReportSuccessEvent(XString(PRODUCT_NAME) + " server is stopped.");
       ReportSvcStatus(SERVICE_STOPPED,NO_ERROR,0);
 
       // Deallocate the logging buffer of the server
@@ -589,7 +589,7 @@ int SvcInstall(char* username,char* password)
   {
     printf("Service installed successfully!\n"); 
   }
-  CString installed;
+  XString installed;
   installed.Format("%s successfully installed!",g_svcname);
   SvcReportSuccessEvent(installed);
 
@@ -640,7 +640,7 @@ int SvcInstall(char* username,char* password)
 int
 InstallMessageDLL()
 {
-  CString error;
+  XString error;
   
   int result = RegisterMessagesDllForService(g_svcname,PRODUCT_MESSAGES_DLL,error);
   if(!result)
@@ -671,7 +671,7 @@ OpenMarlinService(DWORD p_access)
                              p_access);          // need delete access 
   if(g_schService == NULL)
   { 
-    CString reden;
+    XString reden;
     int error = GetLastError();
     switch(error)
     {
@@ -711,7 +711,7 @@ GetMarlinServiceStatus(bool p_close = true)
                             sizeof(SERVICE_STATUS_PROCESS), // size of structure
                             &dwBytesNeeded ) )              // size needed if buffer is too small
   {
-    CString reason;
+    XString reason;
     int error = GetLastError();
     switch(error)
     {
@@ -757,7 +757,7 @@ int SvcDelete()
   else 
   {
     printf("Service deleted successfully\n"); 
-    CString success;
+    XString success;
     success.Format("%s successfully removed from the system!",g_svcname);
     SvcReportSuccessEvent(success);
   }
@@ -772,7 +772,7 @@ int SvcDelete()
 void
 DeleteEventLogRegistration()
 {
-  CString error;
+  XString error;
   if(!UnRegisterMessagesDllForService(g_svcname, error))
   {
     printf(error);
@@ -1183,9 +1183,9 @@ int StandAloneStart()
   DWORD   dwStartTickCount = GetTickCount();
   DWORD   dwWaitTime;
   DWORD   dwWaited = 0;
-  CString emptyString;
-  CString program(APPLICATION_NAME);
-  CString arguments(g_svcname);
+  XString emptyString;
+  XString program(APPLICATION_NAME);
+  XString arguments(g_svcname);
 
   // Do not wait longer than the wait hint. A good interval is 
   // one-tenth of the wait hint but not less than 1 second  
@@ -1319,7 +1319,7 @@ BOOL SvcInitStandAlone()
   }
 
   // Tell that we are about to start
-  SvcReportSuccessEvent(CString(PRODUCT_NAME) + "Server about to start.");
+  SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server about to start.");
   ReportSvcStatusStandAlone(SERVICE_START_PENDING);
 
   // And register the message dll in the registry
@@ -1329,7 +1329,7 @@ BOOL SvcInitStandAlone()
   if(s_theServer->Startup())
   {
     // Tell we have started
-    SvcReportSuccessEvent(CString(PRODUCT_NAME) + "Server started.");
+    SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server started.");
     // Report running status when initialization is complete.
     ReportSvcStatusStandAlone(SERVICE_RUNNING);
     // create running mutex
@@ -1343,13 +1343,13 @@ BOOL SvcInitStandAlone()
       CloseHandle(g_svcStopEvent);
       g_svcStopEvent = NULL;
 
-      SvcReportSuccessEvent(CString(PRODUCT_NAME) + "Server about to stop.");
+      SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server about to stop.");
       ReportSvcStatusStandAlone(SERVICE_STOP_PENDING);
 
       // Stop the server
       s_theServer->ShutDown();
 
-      SvcReportSuccessEvent(CString(PRODUCT_NAME) + "Server stopped.");
+      SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server stopped.");
       ReportSvcStatusStandAlone(SERVICE_STOPPED);
       SvcFreeEventBuffer();
       break;
@@ -1618,7 +1618,7 @@ int QueryServiceStandAlone()
 //
 //////////////////////////////////////////////////////////////////////////
 
-CString applicationCommand;
+XString applicationCommand;
 
 bool
 FindApplicationCommand()
@@ -1629,7 +1629,7 @@ FindApplicationCommand()
     return true;
   }
 
-  CString pathname;
+  XString pathname;
   pathname.GetEnvironmentVariable("windir");
   pathname += "\\system32\\inetsrv";
 
@@ -1658,18 +1658,18 @@ int StartIISApp()
 
   if(FindApplicationCommand())
   {
-    CString fout("Cannot run program " + applicationCommand);
+    XString fout("Cannot run program " + applicationCommand);
  
     // STARTING THE APPLICATION POOL
     // APPCMD.EXE start APPPOOL <name>
-    CString parameter("start APPPOOL ");
+    XString parameter("start APPPOOL ");
     parameter += g_serverName;
     result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
 
     if(result == 0)
     {
       // STARTING THE SITE
-      CString site(g_baseURL);
+      XString site(g_baseURL);
       site.Remove('/');
       parameter = "start SITE " + site;
       result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
@@ -1686,12 +1686,12 @@ int StopIISApp()
 
   if(FindApplicationCommand())
   {
-    CString fout("Cannot run program " + applicationCommand);
+    XString fout("Cannot run program " + applicationCommand);
 
     // STOP THE SITE
     // APPCMD.EXE start SITE <name>
-    CString parameter("stop SITE ");
-    CString site(g_baseURL);
+    XString parameter("stop SITE ");
+    XString site(g_baseURL);
     site.Remove('/');
     parameter += site;
     result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
@@ -1713,15 +1713,15 @@ int QueryIISApp()
   if(FindApplicationCommand())
   {
     // APPCMD.EXE list APPPOOL <name>
-    CString parameter("list APPPOOL ");
+    XString parameter("list APPPOOL ");
     parameter += g_serverName;
-    CString output;
+    XString output;
     int res = CallProgram_For_String(applicationCommand,parameter,output);
     if(res == 0 && (output.Find("state:Started") >= 0))
     {
       // APPCMD.EXE list SITE <baseurl>
       parameter = "list SITE ";
-      CString site(g_baseURL);
+      XString site(g_baseURL);
       site.Remove('/');
       parameter += site;
       res = CallProgram_For_String(applicationCommand,parameter,output);

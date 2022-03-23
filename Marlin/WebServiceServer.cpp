@@ -82,11 +82,11 @@ SiteHandlerGetWSService::Handle(HTTPMessage* p_message)
 //
 //////////////////////////////////////////////////////////////////////////
 
-WebServiceServer::WebServiceServer(CString    p_name
-                                  ,CString    p_webroot
-                                  ,CString    p_url
+WebServiceServer::WebServiceServer(XString    p_name
+                                  ,XString    p_webroot
+                                  ,XString    p_url
                                   ,PrefixType p_channelType
-                                  ,CString    p_targetNamespace
+                                  ,XString    p_targetNamespace
                                   ,unsigned   p_maxThreads)
                  :m_name(p_name)
                  ,m_webroot(p_webroot)
@@ -330,14 +330,14 @@ WebServiceServer::SetThreadPool(ThreadPool* p_pool)
 
 // OPTIONAL: Set extra text content type
 void
-WebServiceServer::SetContentType(CString p_extension,CString p_contentType)
+WebServiceServer::SetContentType(XString p_extension,XString p_contentType)
 {
   m_contentTypes.insert(std::make_pair(p_extension,MediaType(p_extension,p_contentType)));
 }
 
 // OPTIONAL:  Set a logfile name (if no LogAnalysis given)
 void
-WebServiceServer::SetLogFilename(CString p_logFilename)
+WebServiceServer::SetLogFilename(XString p_logFilename)
 {
   if(m_log)
   {
@@ -362,7 +362,7 @@ WebServiceServer::SetDetailedLogging(bool p_logging)
 
 // Add SOAP message call and answer. Call once for all messages in the service
 bool
-WebServiceServer::AddOperation(int p_code,CString p_name,SOAPMessage* p_input,SOAPMessage* p_output)
+WebServiceServer::AddOperation(int p_code,XString p_name,SOAPMessage* p_input,SOAPMessage* p_output)
 {
   if(m_wsdl == nullptr)
   {
@@ -388,12 +388,12 @@ WebServiceServer::ReadingWebconfig()
   // Read the general settings first
   ReadingWebconfig("Marlin.config");
 
-  CString siteConfigFile = MarlinConfig::GetSiteConfig(m_site->GetPrefixURL());
+  XString siteConfigFile = MarlinConfig::GetSiteConfig(m_site->GetPrefixURL());
   ReadingWebconfig(siteConfigFile);
 }
 
 void
-WebServiceServer::ReadingWebconfig(CString p_webconfig)
+WebServiceServer::ReadingWebconfig(XString p_webconfig)
 {
   MarlinConfig config(p_webconfig);
 
@@ -634,7 +634,7 @@ WebServiceServer::RunService()
 }
 
 int  
-WebServiceServer::GetCommandCode(CString p_commandName)
+WebServiceServer::GetCommandCode(XString p_commandName)
 {
   return m_wsdl->GetCommandCode(p_commandName);
 }
@@ -670,7 +670,7 @@ WebServiceServer::SendResponse(SOAPMessage* p_response,int p_httpStatus)
 void 
 WebServiceServer::OnProcessPost(int p_code,SOAPMessage* p_message)
 {
-  CString fault;
+  XString fault;
   fault.Format("Programming error for interface [%d] %s",p_code,p_message->GetSoapAction().GetString());
   p_message->SetFault("Critical","Server",fault,"Derive your own handler class from WebServiceServer!");
 }
@@ -692,7 +692,7 @@ WebServiceServer::PostProcessPost(SOAPMessage* /*p_message*/)
 bool
 WebServiceServer::ProcessPost(SOAPMessage* p_message)
 {
-  CString action = p_message->GetSoapAction();
+  XString action = p_message->GetSoapAction();
   int code = GetCommandCode(action);
 
   if(code == 0)
@@ -746,7 +746,7 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
 bool
 WebServiceServer::ProcessGet(HTTPMessage* p_message)
 {
-        CString absPath   = p_message->GetAbsolutePath();
+        XString absPath   = p_message->GetAbsolutePath();
   const CrackedURL& crack = p_message->GetCrackedURL();
   const bool hasWsdlParam = crack.HasParameter("wsdl");
 
@@ -754,10 +754,10 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
   // 1: URL/servicename.wsdl
   // 2: URL/servicename<postfix>?wsdl
   // 3: URL/servicename?wsdl
-  CString wsdlBase = m_absPath + m_name;
-  CString wsdlPath = wsdlBase  + ".wsdl";
-  CString basePage = m_absPath + m_name + m_servicePostfix;
-  CString baseWsdl = basePage  + "?wsdl";
+  XString wsdlBase = m_absPath + m_name;
+  XString wsdlPath = wsdlBase  + ".wsdl";
+  XString basePage = m_absPath + m_name + m_servicePostfix;
+  XString baseWsdl = basePage  + "?wsdl";
 
   if((wsdlPath.CompareNoCase(absPath) == 0) ||
      (wsdlBase.CompareNoCase(absPath) == 0 && hasWsdlParam) ||
@@ -765,7 +765,7 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
      (baseWsdl.CompareNoCase(absPath) == 0 && hasWsdlParam)  )
   {
     p_message->Reset();
-    CString wsdlFileInWebroot = m_wsdl->GetWSDLFilename();
+    XString wsdlFileInWebroot = m_wsdl->GetWSDLFilename();
     p_message->GetFileBuffer()->SetFileName(wsdlFileInWebroot);
     p_message->SetContentType("text/xml");
     m_httpServer->SendResponse(p_message);
@@ -777,7 +777,7 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
   if(basePage.CompareNoCase(absPath) == 0)
   {
     p_message->Reset();
-    CString pagina = m_wsdl->GetServicePage();
+    XString pagina = m_wsdl->GetServicePage();
     p_message->AddBody((void*)pagina.GetString(),pagina.GetLength());
     p_message->SetContentType("text/html");
     m_httpServer->SendResponse(p_message);
@@ -805,7 +805,7 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
           absPath = absPath.Mid(1);
           // Naming convention applies
           p_message->Reset();
-          CString pagina = m_wsdl->GetOperationPage(absPath,m_httpServer->GetHostname());
+          XString pagina = m_wsdl->GetOperationPage(absPath,m_httpServer->GetHostname());
           if(!pagina.IsEmpty())
           {
             p_message->AddBody((void*)pagina.GetString(),pagina.GetLength());

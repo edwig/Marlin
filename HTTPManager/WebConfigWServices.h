@@ -62,8 +62,8 @@ protected:
   bool        m_useFieldCheck;
 
   // WEBSERVICE OVERRIDES
-  CString     m_encLevel;
-  CString     m_encPassword;
+  XString     m_encLevel;
+  XString     m_encPassword;
   bool        m_reliable;
   bool        m_reliableLogin;
   bool        m_checkWSDLin;

@@ -51,8 +51,8 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
   xprintf("Incoming message in XML:\n%s\n",(LPCTSTR) p_message->GetSoapMessage());
 
   // Get parameters from soap
-  CString paramOne = p_message->GetParameter("One");
-  CString paramTwo = p_message->GetParameter("Two");
+  XString paramOne = p_message->GetParameter("One");
+  XString paramTwo = p_message->GetParameter("Two");
   xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
   xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
 
@@ -63,7 +63,7 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
   {
     // BEWARE: Value is dependent on the message from Client:TestInsecure
     //         AND the body singing password in that file and this one!!
-    CString sigValue = signature->GetValue();
+    XString sigValue = signature->GetValue();
     if(sigValue == "cr4Eci/L8w+riKG+hK/v2kuIJGo=")
     {
       bodyResult = true;
@@ -77,7 +77,7 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
   if(!bodyResult) xerror();
 
   // reuse message for response
-  CString response = "TestMessageResponse";
+  XString response = "TestMessageResponse";
 
   p_message->Reset();
   p_message->SetSoapAction(response);
@@ -123,7 +123,7 @@ TestMarlinServer::TestBodySigning()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/BodySigning/"
   // But WebConfig can override all values except for the callback function address
-  CString url("/MarlinTest/BodySigning/");
+  XString url("/MarlinTest/BodySigning/");
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {

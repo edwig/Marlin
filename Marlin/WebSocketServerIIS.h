@@ -37,7 +37,7 @@
 class WebSocketServerIIS: public WebSocket
 {
 public:
-  WebSocketServerIIS(CString p_uri);
+  WebSocketServerIIS(XString p_uri);
   virtual ~WebSocketServerIIS();
 
   // FUNCTIONS
@@ -49,7 +49,7 @@ public:
   // Close the socket unconditionally
   virtual bool CloseSocket();
   // Close the socket with a closing frame
-  virtual bool SendCloseSocket(USHORT p_code,CString p_reason);
+  virtual bool SendCloseSocket(USHORT p_code,XString p_reason);
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
   // Register the server request for sending info

@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "TestClient.h"
 #include "HTTPClient.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

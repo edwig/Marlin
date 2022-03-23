@@ -48,8 +48,8 @@ bool
 SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
 {
   // Get parameters from soap
-  CString paramOne = p_message->GetParameter("One");
-  CString paramTwo = p_message->GetParameter("Two");
+  XString paramOne = p_message->GetParameter("One");
+  XString paramTwo = p_message->GetParameter("Two");
   xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
   xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
 
@@ -89,8 +89,8 @@ TestMarlinServer::TestSubSites()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url1("/MarlinTest/TestToken/One");
-  CString url2("/MarlinTest/TestToken/Two");
+  XString url1("/MarlinTest/TestToken/One");
+  XString url2("/MarlinTest/TestToken/Two");
 
   xprintf("TESTING SUB-SITE FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("=============================================\n");
@@ -127,7 +127,7 @@ TestMarlinServer::TestSubSites()
   }
 
 //   // Testing the functionality that the check on the main site is correct!
-//   CString url3("/MarlinTest/Rubish/One");
+//   XString url3("/MarlinTest/Rubish/One");
 //   HTTPSite* site3 = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url3,true);
 //   if(site3)
 //   {
@@ -186,9 +186,9 @@ TestMarlinServer::StopSubsites()
 {
   int error = 0;
 
-  CString url1("/MarlinTest/TestToken");
-  CString url2("/MarlinTest/TestToken/One");
-  CString url3("/MarlinTest/TestToken/Two");
+  XString url1("/MarlinTest/TestToken");
+  XString url2("/MarlinTest/TestToken/One");
+  XString url3("/MarlinTest/TestToken/Two");
 
   // Testing the main site. Should not be removed!!
   if(m_httpServer->DeleteSite(m_inPortNumber,url1))

@@ -46,11 +46,11 @@ typedef struct _iis_site_config
 {
   //                      What it is                  applicationHost.config
   // -------------------- -------------------------   -----------------------------------------------------
-  CString     m_name;     // Name of the site         sites/site/name=
+  XString     m_name;     // Name of the site         sites/site/name=
   unsigned    m_id { 0 }; // IIS ID of the site       sites/site/id
-  CString     m_pool;     // Application pool name    sites/site/application/applicationPool=
-  CString     m_base_url; // URL base path            sites/site/application/virtualDirectory/path=
-  CString     m_physical; // Physical working dir     sites/site/application/virtualDirectory/physicalPath=
+  XString     m_pool;     // Application pool name    sites/site/application/applicationPool=
+  XString     m_base_url; // URL base path            sites/site/application/virtualDirectory/path=
+  XString     m_physical; // Physical working dir     sites/site/application/virtualDirectory/physicalPath=
 
   BindMap     m_bindings; // Bindings to the internet
   IISHandlers m_handlers; // Handlers

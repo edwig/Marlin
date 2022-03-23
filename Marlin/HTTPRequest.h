@@ -67,7 +67,7 @@ void HandleAsynchroneousIO(OVERLAPPED* p_overlapped);
 
 // Strings for headers must be tied to the request, otherwise they do not
 // survive for the asynchronous I/O commands
-using RequestStrings = std::vector<CString>;
+using RequestStrings = std::vector<XString>;
 
 // Our outstanding request in the server
 class HTTPRequest
@@ -134,9 +134,9 @@ private:
   // Reset outstanding OVERLAPPED
   void ResetOutstanding(OutstandingIO& p_outstanding);
   // Add a request string for a header
-  void AddRequestString(CString p_string,const char*& p_buffer,USHORT& p_size);
+  void AddRequestString(XString p_string,const char*& p_buffer,USHORT& p_size);
   // Change response & unknown headers in one protocol string
-  CString ResponseToString();
+  XString ResponseToString();
 
   HTTPServer*       m_server;                   // Our server
   bool              m_active     { false   };   // Authentication done: may receive

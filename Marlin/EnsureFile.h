@@ -31,13 +31,13 @@ class EnsureFile
 {
 public:
   EnsureFile();
-  EnsureFile(CString p_filename);
+  EnsureFile(XString p_filename);
  ~EnsureFile();
 
   // Re-setting the filename
-  void     SetFilename(CString p_filename);
+  void     SetFilename(XString p_filename);
   // Setting a resource name (from HTTP)
-  void     SetResourceName(CString p_resource);
+  void     SetResourceName(XString p_resource);
   // Create/Open file
   int      OpenFile(FILE** p_file,char* p_mode);
   // Create/check existence of a directory
@@ -46,41 +46,41 @@ public:
   bool     GrantFullAccess();
 
   // Special optimized function to resolve %5C -> '\' in pathnames
-  int      ResolveSpecialChars(CString& p_value);
+  int      ResolveSpecialChars(XString& p_value);
   // Encode a filename in special characters
-  int      EncodeSpecialChars(CString& p_value);
+  int      EncodeSpecialChars(XString& p_value);
   // Create a file name from an HTTP resource name
-  CString  FileNameFromResourceName(CString p_resource);
+  XString  FileNameFromResourceName(XString p_resource);
   // Reduce file path name for RE-BASE of directories, removing \..\ parts
-  CString  ReduceDirectoryPath(CString& path);
+  XString  ReduceDirectoryPath(XString& path);
   // Makes a relative pathname from an absolute one
-  bool     MakeRelativePathname(CString& p_base,CString& p_absolute,CString& p_relative);
+  bool     MakeRelativePathname(XString& p_base,XString& p_absolute,XString& p_relative);
   // Generic strip protocol from URL to form OS filenames
-  CString  StripFileProtocol(CString fileref);
+  XString  StripFileProtocol(XString fileref);
   // Generic find case-insensitive
-  int      FindNoCase(CString line,CString part,int pos = 0);
+  int      FindNoCase(XString line,XString part,int pos = 0);
   // Getting the first (base) directory
-  CString  GetBaseDirectory(CString& p_path);
+  XString  GetBaseDirectory(XString& p_path);
 
   // GETTING PARTS OF THE FILENAME
-  CString  GetFilename();
-  CString  FilenamePart  (CString fullpath);
-  CString  ExtensionPart (CString fullpath);
-  CString  DirectoryPart (CString fullpath);
-  CString  RemoveBasePart(CString base,CString fullpath);
-  void     FilenameParts (CString fullpath,CString& p_drive,CString& p_directory,CString& p_file,CString& p_extension);
+  XString  GetFilename();
+  XString  FilenamePart  (XString fullpath);
+  XString  ExtensionPart (XString fullpath);
+  XString  DirectoryPart (XString fullpath);
+  XString  RemoveBasePart(XString base,XString fullpath);
+  void     FilenameParts (XString fullpath,XString& p_drive,XString& p_directory,XString& p_file,XString& p_extension);
 
 private:
-  CString m_filename;
+  XString m_filename;
 };
 
 inline void
-EnsureFile::SetFilename(CString p_filename)
+EnsureFile::SetFilename(XString p_filename)
 {
   m_filename = p_filename;
 }
 
-inline CString
+inline XString
 EnsureFile::GetFilename()
 {
   return m_filename;

@@ -43,7 +43,7 @@ static char THIS_FILE[] = __FILE__;
 // ServerLoginDlg dialog
 IMPLEMENT_DYNAMIC(ServerLoginDlg, CDialog)
 
-ServerLoginDlg::ServerLoginDlg(CString p_titel,CString p_url,CWnd* p_parent /*=NULL*/)
+ServerLoginDlg::ServerLoginDlg(XString p_titel,XString p_url,CWnd* p_parent /*=NULL*/)
                :CDialog(ServerLoginDlg::IDD,p_parent)
                ,m_titel(p_titel)
                ,m_url(p_url)

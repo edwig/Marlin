@@ -77,7 +77,7 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/SecureClientCert/");
+  XString url("/SecureClientCert/");
 
   xprintf("TESTING CLIENT CERTIFICATE FUNCTION OF THE HTTP SERVER\n");
   xprintf("======================================================\n");
@@ -106,8 +106,8 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
   // Standalone servers must filter on Client certificates
   if(p_standalone)
   {
-    CString certName   = "MarlinClient";
-    CString thumbprint = "8e02b7fe7d0e6a356d996664a542897fbae4d27e";
+    XString certName   = "MarlinClient";
+    XString thumbprint = "8e02b7fe7d0e6a356d996664a542897fbae4d27e";
 
     // Add a site filter for the client certificate
     SiteFilterClientCertificate* filter = new SiteFilterClientCertificate(10,"ClientCert");

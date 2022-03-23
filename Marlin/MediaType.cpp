@@ -35,7 +35,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-MediaType::MediaType(CString p_extension,CString p_contentType)
+MediaType::MediaType(XString p_extension,XString p_contentType)
           :m_extension(p_extension)
           ,m_contentType(p_contentType)
 {
@@ -48,14 +48,14 @@ MediaType::~MediaType()
 bool
 MediaType::IsVendorSpecific()
 {
-  CString content(m_contentType);
+  XString content(m_contentType);
   content.MakeLower();
   return (m_contentType.Find("/vnd.") > 0);
 }
 
 // Return the base type
 // e.g. "text/html" -> "text"
-CString 
+XString 
 MediaType::BaseType()
 {
   int pos = m_contentType.Find('/');
@@ -68,13 +68,13 @@ MediaType::BaseType()
 
 // Return the short content
 // e.g. "text/html" -> "html"
-CString 
+XString 
 MediaType::GetContent()
 {
   int pos = m_contentType.Find('/');
   if(pos > 0)
   {
-    CString content = m_contentType.Mid(pos + 1);
+    XString content = m_contentType.Mid(pos + 1);
     pos = content.Find('+');
     if(pos > 0)
     {
@@ -87,7 +87,7 @@ MediaType::GetContent()
 
 // Return the extended type
 // eg. "application/soap+xml" -> "xml"
-CString 
+XString 
 MediaType::ExtendedType()
 {
   int pos = m_contentType.Find('+');
@@ -211,13 +211,13 @@ MediaTypes::CheckValid()
 
 // Registering your own
 void   
-MediaTypes::AddContentType(CString p_extension,CString p_contentType)
+MediaTypes::AddContentType(XString p_extension,XString p_contentType)
 {
   m_types.insert(std::make_pair(p_extension, MediaType(p_extension,p_contentType)));
 }
 
-/* static */ CString  
-MediaTypes::FindContentTypeByExtension(CString p_extension)
+/* static */ XString  
+MediaTypes::FindContentTypeByExtension(XString p_extension)
 {
   CheckValid();
   p_extension.TrimLeft('.');
@@ -229,17 +229,17 @@ MediaTypes::FindContentTypeByExtension(CString p_extension)
   return "";
 }
 
-/* static */ CString
-MediaTypes::FindContentTypeByResouceName(CString p_resource)
+/* static */ XString
+MediaTypes::FindContentTypeByResouceName(XString p_resource)
 {
   CheckValid();
   EnsureFile ensure;
-  CString extens = ensure.ExtensionPart(p_resource);
+  XString extens = ensure.ExtensionPart(p_resource);
   return FindContentTypeByExtension(extens);
 }
 
 /* static */ MediaType*
-MediaTypes::FindMediaTypeByExtension(CString p_extension)
+MediaTypes::FindMediaTypeByExtension(XString p_extension)
 {
   CheckValid();
   p_extension.TrimLeft('.');
@@ -251,8 +251,8 @@ MediaTypes::FindMediaTypeByExtension(CString p_extension)
   return nullptr;
 }
 
-/* static */ CString  
-MediaTypes::FindExtensionByContentType(CString p_contentType)
+/* static */ XString  
+MediaTypes::FindExtensionByContentType(XString p_contentType)
 {
   for(auto& mt : g_mt_instance->m_types)
   {

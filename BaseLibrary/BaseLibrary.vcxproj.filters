@@ -1,0 +1,464 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\XML_SOAP">
+      <UniqueIdentifier>{ad72eca9-5975-4bc4-889a-d890b0cfa0d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\XML_SOAP">
+      <UniqueIdentifier>{0634f4da-cefc-4a41-9306-6a038fd92f10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HTTP_JSON">
+      <UniqueIdentifier>{c1dc0d57-395a-42a9-93eb-3e9e1e5c88d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\HTTP_JSON">
+      <UniqueIdentifier>{c33c50ca-89d6-4764-9a50-54253988ce6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZIP">
+      <UniqueIdentifier>{b24b982a-1539-4856-9d97-8e4e0ffd29e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZIP\Header Files">
+      <UniqueIdentifier>{4acdfd34-203c-4885-8007-1c1015bf365d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{05ebcef2-ddb3-44bd-8cae-36137d11d808}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bcd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StdException.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AutoFont.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchemaReWriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WinFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WinPing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WinPingIPHeader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HPFCounter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LogAnalysis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AutoCritical.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GetExePath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GetUserAccount.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConvertWideString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrackURL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DefuseBOM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Namespace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLDataType.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLMessage.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLParser.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLRestriction.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLTemporal.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="XPath.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="SOAPMessage.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="SOAPSecurity.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="SoapTypes.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Cookie.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Crypto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Base64.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GetLastErrorAsString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WinINETError.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HTTPError.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Routing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GenerateGUID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HTTPMessage.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="FileBuffer.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\deflate.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\gzguts.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\inffast.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\inffixed.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\inflate.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\inftrees.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\trees.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\zconf.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\zipcrc32.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\zlib.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\zutil.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZIP\gzip.h">
+      <Filter>ZIP\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HTTPTime.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiPartBuffer.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="JSONMessage.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="JSONParser.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="JSONPath.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="JSONPointer.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLParserJSON.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="CRC32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StoreMessage.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
+    <ClInclude Include="PrintToken.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StackTrace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExecuteProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Alert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventLogRegistration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceReporting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xmem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Redirect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RunRedirect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="unzip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseLibrary.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="FileDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MapDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bcd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StdException.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XString.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AutoFont.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchemaReWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WinFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WinPing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HPFCounter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LogAnalysis.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AutoCritical.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GetExePath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GetUserAccount.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConvertWideString.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrackURL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DefuseBOM.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Namespace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XMLDataType.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="XMLMessage.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="XMLParser.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="XMLRestriction.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="XMLTemporal.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="XPath.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="SOAPMessage.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="SOAPSecurity.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="Cookie.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Crypto.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Base64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GetLastErrorAsString.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GenerateGUID.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HTTPMessage.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="FileBuffer.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\adler32.c">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\deflate.c">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\gzip.cpp">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\inffast.c">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\inflate.c">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\inftrees.c">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\trees.c">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\zipcrc32.c">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\zutil.c">
+      <Filter>ZIP</Filter>
+    </ClCompile>
+    <ClCompile Include="HTTPTime.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiPartBuffer.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="JSONMessage.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="JSONParser.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="JSONPointer.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="JSONPath.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="HTTPError.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="XMLParserJSON.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="CRC32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PrintToken.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StoreMessage.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
+    </ClCompile>
+    <ClCompile Include="StackTrace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExecuteProcess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Alert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EventLogRegistration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceReporting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xmem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Redirect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RunRedirect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="unzip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MapDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ZIP\deflate.d">
+      <Filter>ZIP</Filter>
+    </None>
+  </ItemGroup>
+</Project>

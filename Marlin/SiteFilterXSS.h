@@ -31,7 +31,7 @@
 class SiteFilterXSS: public SiteFilter
 {
 public:
-  SiteFilterXSS(unsigned p_priority,CString p_name);
+  SiteFilterXSS(unsigned p_priority,XString p_name);
   virtual ~SiteFilterXSS();
 
   // Handle the filter

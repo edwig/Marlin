@@ -84,7 +84,7 @@ TestMarlinServer::OnMarlinFirst(int p_code,SOAPMessage* p_message)
   // --- "---------------------------------------------- - ------
   qprintf("WSDL Contract: First: Setting base language    : OK\n");
 
-  CString resp("ResponseFirst");
+  XString resp("ResponseFirst");
   p_message->SetSoapAction(resp);
   p_message->Reset(ResponseType::RESP_ACTION_NAME,m_targetNamespace);
   p_message->SetParameter("Accepted",m_language == "Dutch");
@@ -102,7 +102,7 @@ TestMarlinServer::OnMarlinSecond(int p_code,SOAPMessage* p_message)
   // --- "---------------------------------------------- - ------
   qprintf("WSDL Contract: Second: translation language    : OK\n");
 
-  CString resp("ResponseSecond");
+  XString resp("ResponseSecond");
   p_message->SetSoapAction(resp);
   p_message->Reset(ResponseType::RESP_ACTION_NAME,m_targetNamespace);
   bool cando = false;
@@ -129,12 +129,12 @@ TestMarlinServer::OnMarlinThird(int p_code,SOAPMessage* p_message)
   ASSERT(p_code == CONTRACT_MT);
   UNREFERENCED_PARAMETER(p_code);
 
-  CString word   = p_message->GetParameter("WordToTranslate");
-  CString result = Translation(m_language,m_translation,word);
+  XString word   = p_message->GetParameter("WordToTranslate");
+  XString result = Translation(m_language,m_translation,word);
   // --- "---------------------------------------------- - ------
   qprintf("WSDL Contract: Translated givven               : OK\n");
 
-  CString resp("ResponseThird");
+  XString resp("ResponseThird");
   p_message->SetSoapAction(resp);
   p_message->Reset(ResponseType::RESP_ACTION_NAME,m_targetNamespace);
   // Optional parameter, need not be set!
@@ -163,7 +163,7 @@ TestMarlinServer::OnMarlinFifth(int p_code,SOAPMessage* p_message)
   ASSERT(p_code == CONTRACT_MV);
   UNREFERENCED_PARAMETER(p_code);
 
-  CString pi;
+  XString pi;
   XMLElement* pielem = p_message->FindElement("PiApprox");
   if(pielem)
   {
@@ -199,15 +199,15 @@ TestMarlinServer::OnMarlinFifth(int p_code,SOAPMessage* p_message)
 //
 // VERY LIMITED TRANSLATION FUNCTION :-)
 //
-CString 
-TestMarlinServer::Translation(CString p_language,CString p_translation,CString p_word)
+XString 
+TestMarlinServer::Translation(XString p_language,XString p_translation,XString p_word)
 {
   if(p_language == "Dutch" && p_translation == "Français")
   {
-    if(p_word == "altijd")  return CString("toujours");
-    if(p_word == "maandag") return CString("lundi");
+    if(p_word == "altijd")  return XString("toujours");
+    if(p_word == "maandag") return XString("lundi");
   }
-  return CString("");
+  return XString("");
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -217,21 +217,21 @@ TestMarlinServer::Translation(CString p_language,CString p_translation,CString p
 //////////////////////////////////////////////////////////////////////////
 
 void
-TestMarlinServer::AddOperations(CString p_contract)
+TestMarlinServer::AddOperations(XString p_contract)
 {
   // Defining the names of the operations
-  CString first ("MarlinFirst");
-  CString second("MarlinSecond");
-  CString third ("MarlinThird");
-  CString fourth("MarlinFourth");
-  CString fifth ("MarlinFifth");
+  XString first ("MarlinFirst");
+  XString second("MarlinSecond");
+  XString third ("MarlinThird");
+  XString fourth("MarlinFourth");
+  XString fifth ("MarlinFifth");
 
   // Response with "Response" before name. Good testing WSDL / XSD
-  CString respFirst ("ResponseFirst");
-  CString respSecond("ResponseSecond");
-  CString respThird ("ResponseThird");
-  CString respFourth("ResponseFourth");
-  CString respFifth ("ResponseFifth");
+  XString respFirst ("ResponseFirst");
+  XString respSecond("ResponseSecond");
+  XString respThird ("ResponseThird");
+  XString respFourth("ResponseFourth");
+  XString respFifth ("ResponseFifth");
 
   // Defining input and output messages for the operations
   SOAPMessage input1 (p_contract,first);

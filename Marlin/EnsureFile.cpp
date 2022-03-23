@@ -40,7 +40,7 @@ EnsureFile::EnsureFile()
 {
 }
 
-EnsureFile::EnsureFile(CString p_filename)
+EnsureFile::EnsureFile(XString p_filename)
            :m_filename(p_filename)
 {
 }
@@ -51,7 +51,7 @@ EnsureFile::~EnsureFile()
 
 // Setting a resource name (from HTTP)
 void     
-EnsureFile::SetResourceName(CString p_resource)
+EnsureFile::SetResourceName(XString p_resource)
 {
   m_filename = FileNameFromResourceName(p_resource);
 }
@@ -69,13 +69,13 @@ EnsureFile::OpenFile(FILE** p_file,char* p_mode)
   *p_file = nullptr;
 
   // Split into parts
-  CString drive,directory,filename,extension;
+  XString drive,directory,filename,extension;
   FilenameParts(m_filename,drive,directory,filename,extension);
 
-  CString dirToBeOpened(drive);
+  XString dirToBeOpened(drive);
 
-  CString path(directory);
-  CString part = GetBaseDirectory(path);
+  XString path(directory);
+  XString part = GetBaseDirectory(path);
   while(part.GetLength())
   {
     dirToBeOpened += "\\" + part;
@@ -91,7 +91,7 @@ EnsureFile::OpenFile(FILE** p_file,char* p_mode)
     part = GetBaseDirectory(path);
   }
   // Directory now ensured
-  CString pathToBeOpened = dirToBeOpened + "\\"  + filename + extension;
+  XString pathToBeOpened = dirToBeOpened + "\\"  + filename + extension;
 
   return fopen_s(p_file,pathToBeOpened,p_mode);
 }
@@ -105,13 +105,13 @@ EnsureFile::CheckCreateDirectory()
   {
     return ERROR_NOT_FOUND;
   }
-  CString drive,directory,filename,extension;
+  XString drive,directory,filename,extension;
   FilenameParts(m_filename,drive,directory,filename,extension);
 
-  CString dirToBeOpened(drive);
+  XString dirToBeOpened(drive);
 
-  CString path(directory);
-  CString part = GetBaseDirectory(path);
+  XString path(directory);
+  XString part = GetBaseDirectory(path);
   while(part.GetLength())
   {
     dirToBeOpened += "\\" + part;
@@ -132,7 +132,7 @@ EnsureFile::CheckCreateDirectory()
 // Special optimized function to resolve %5C -> '\' in pathnames
 // Returns number of chars replaced
 int
-EnsureFile::ResolveSpecialChars(CString& p_value)
+EnsureFile::ResolveSpecialChars(XString& p_value)
 {
   int total = 0;
 
@@ -141,7 +141,7 @@ EnsureFile::ResolveSpecialChars(CString& p_value)
   {
     ++total;
     int num = 0;
-    CString hexstring = p_value.Mid(pos + 1,2);
+    XString hexstring = p_value.Mid(pos + 1,2);
     hexstring.MakeUpper();
     if(isdigit(hexstring.GetAt(0)))
     {
@@ -169,7 +169,7 @@ EnsureFile::ResolveSpecialChars(CString& p_value)
 
 // Encode a filename in special characters
 int
-EnsureFile::EncodeSpecialChars(CString& p_value)
+EnsureFile::EncodeSpecialChars(XString& p_value)
 {
   int total = 0;
 
@@ -180,12 +180,12 @@ EnsureFile::EncodeSpecialChars(CString& p_value)
     if(!isalnum(ch) && ch != '/')
     {
       // Encoding in 2 chars HEX
-      CString hexstring;
+      XString hexstring;
       hexstring.Format("%%%2.2X",ch);
 
       // Take left and right of the special char
-      CString left  = p_value.Left(pos);
-      CString right = p_value.Mid(pos + 1);
+      XString left  = p_value.Left(pos);
+      XString right = p_value.Mid(pos + 1);
 
       // Create a new value with the encoded char in it
       p_value = left + hexstring + right;
@@ -202,10 +202,10 @@ EnsureFile::EncodeSpecialChars(CString& p_value)
 }
 
 // Create a file name from an HTTP resource name
-CString
-EnsureFile::FileNameFromResourceName(CString p_resource)
+XString
+EnsureFile::FileNameFromResourceName(XString p_resource)
 {
-  CString filename = CrackedURL::DecodeURLChars(p_resource);
+  XString filename = CrackedURL::DecodeURLChars(p_resource);
   filename.Replace('/','\\');
   filename.Replace("\\\\","\\");
   return filename;
@@ -214,8 +214,8 @@ EnsureFile::FileNameFromResourceName(CString p_resource)
 // Reduce file path name for RE-BASE of directories
 // IN:  C:\direct1\direct2\direct3\..\..\direct4 
 // OUT: C:\direct1\direct4
-CString
-EnsureFile::ReduceDirectoryPath(CString& path)
+XString
+EnsureFile::ReduceDirectoryPath(XString& path)
 {
   char buffer[_MAX_PATH+1] = "";
   strncpy_s(buffer,path.GetString(),_MAX_PATH);
@@ -282,13 +282,13 @@ EnsureFile::ReduceDirectoryPath(CString& path)
 // output
 // Relative: "../../ddd/eee/file.ext"
 bool
-EnsureFile::MakeRelativePathname(CString& p_base
-                                ,CString& p_absolute
-                                ,CString& p_relative)
+EnsureFile::MakeRelativePathname(XString& p_base
+                                ,XString& p_absolute
+                                ,XString& p_relative)
 {
   p_relative = "";
-  CString base     = StripFileProtocol(p_base);
-  CString absolute = StripFileProtocol(p_absolute);
+  XString base     = StripFileProtocol(p_base);
+  XString absolute = StripFileProtocol(p_absolute);
 
   // Special case: no filename
   if(absolute.IsEmpty())
@@ -309,7 +309,7 @@ EnsureFile::MakeRelativePathname(CString& p_base
   if(absolute.Find('/') < 0)
   {
     // Cannot use this in *.HHP projects!
-    // p_relative = CString("./") + absolute;
+    // p_relative = XString("./") + absolute;
     p_relative = absolute;
     return true;
   }
@@ -325,8 +325,8 @@ EnsureFile::MakeRelativePathname(CString& p_base
   int  pos = absolute.Find('/');
   while(pos >= 0)
   {
-    CString left_base = base.Left(pos);
-    CString left_abso = absolute.Left(pos);
+    XString left_base = base.Left(pos);
+    XString left_abso = absolute.Left(pos);
     if(left_base.CompareNoCase(left_abso))
     {
       // Stop here. Pathnames are different from here.
@@ -354,7 +354,7 @@ EnsureFile::MakeRelativePathname(CString& p_base
   pos = base.Find('/');
   while(pos >= 0)
   {
-    absolute = CString("../") + absolute;
+    absolute = XString("../") + absolute;
     base = base.Mid(pos + 1);
     pos  = base.Find('/');
   }
@@ -376,8 +376,8 @@ EnsureFile::MakeRelativePathname(CString& p_base
 // Generic strip protocol from URL to form OS filenames
 // "file:///c|/Program%20Files/Program%23name/file%25name.exe" =>
 // "c:\Program Files\Program#name\file%name.exe"
-CString
-EnsureFile::StripFileProtocol(CString fileref)
+XString
+EnsureFile::StripFileProtocol(XString fileref)
 {
   if(fileref.GetLength() > 8)
   {
@@ -394,8 +394,8 @@ EnsureFile::StripFileProtocol(CString fileref)
   return fileref;
 }
 
-CString
-EnsureFile::FilenamePart(CString fullpath)
+XString
+EnsureFile::FilenamePart(XString fullpath)
 {
   char drive [_MAX_DRIVE + 1];
   char direct[_MAX_DIR   + 1];
@@ -404,12 +404,12 @@ EnsureFile::FilenamePart(CString fullpath)
 
   fullpath = StripFileProtocol(fullpath);
   _splitpath_s(fullpath.GetString(),drive,direct,fname,extens);
-  CString filename = CString(fname) + CString(extens);
+  XString filename = XString(fname) + XString(extens);
   return filename;
 }
 
-CString
-EnsureFile::ExtensionPart(CString fullpath)
+XString
+EnsureFile::ExtensionPart(XString fullpath)
 {
   char drive [_MAX_DRIVE + 1];
   char direct[_MAX_DIR   + 1];
@@ -418,11 +418,11 @@ EnsureFile::ExtensionPart(CString fullpath)
 
   fullpath = StripFileProtocol(fullpath);
   _splitpath_s(fullpath.GetString(),drive,direct,fname,extens);
-  return CString(extens);
+  return XString(extens);
 }
 
-CString
-EnsureFile::DirectoryPart(CString fullpath)
+XString
+EnsureFile::DirectoryPart(XString fullpath)
 {
   char drive [_MAX_DRIVE + 1];
   char direct[_MAX_DIR   + 1];
@@ -431,12 +431,12 @@ EnsureFile::DirectoryPart(CString fullpath)
 
   fullpath = StripFileProtocol(fullpath);
   _splitpath_s(fullpath.GetString(),drive,direct,fname,extens);
-  CString directory = CString(drive) + CString(direct);
+  XString directory = XString(drive) + XString(direct);
   return directory;
 }
 
-CString
-EnsureFile::RemoveBasePart(CString base,CString fullpath)
+XString
+EnsureFile::RemoveBasePart(XString base,XString fullpath)
 {
   fullpath = StripFileProtocol(fullpath);
   fullpath.Replace('/','\\');
@@ -449,17 +449,17 @@ EnsureFile::RemoveBasePart(CString base,CString fullpath)
 
 // Generic find case-insensitive
 int
-EnsureFile::FindNoCase(CString line,CString part,int pos/*=0*/)
+EnsureFile::FindNoCase(XString line,XString part,int pos/*=0*/)
 {
   line.MakeLower();
   part.MakeLower();
   return line.Find(part,pos);
 }
 // Getting the first (base) directory
-CString  
-EnsureFile::GetBaseDirectory(CString& p_path)
+XString  
+EnsureFile::GetBaseDirectory(XString& p_path)
 {
-  CString result;
+  XString result;
 
   // Strip of an extra path separator
   while(p_path.GetAt(0) == '\\')
@@ -485,7 +485,7 @@ EnsureFile::GetBaseDirectory(CString& p_path)
 }
 
 void     
-EnsureFile::FilenameParts(CString fullpath,CString& p_drive,CString& p_directory,CString& p_filename,CString& p_extension)
+EnsureFile::FilenameParts(XString fullpath,XString& p_drive,XString& p_directory,XString& p_filename,XString& p_extension)
 {
   char drive [_MAX_DRIVE + 1];
   char direct[_MAX_DIR   + 1];
@@ -494,10 +494,10 @@ EnsureFile::FilenameParts(CString fullpath,CString& p_drive,CString& p_directory
 
   fullpath = StripFileProtocol(fullpath);
   _splitpath_s(fullpath.GetString(),drive,direct,fname,extens);
-  p_drive     = CString(drive);
-  p_directory = CString(direct);
-  p_filename  = CString(fname);
-  p_extension = CString(extens);
+  p_drive     = XString(drive);
+  p_directory = XString(direct);
+  p_filename  = XString(fname);
+  p_extension = XString(extens);
 }
 
 // Grant full access on file or directory

@@ -16,16 +16,25 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{dc5db222-27c2-4d4c-9806-6a3e5f610977}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{a98be937-f7fb-45b8-b72b-9b017f81e1d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TestPorts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TestMarlinServer.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Configuration</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

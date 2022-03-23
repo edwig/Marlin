@@ -43,7 +43,7 @@ static char THIS_FILE[] = __FILE__;
 #pragma warning (disable: 4302)
 #pragma warning (disable: 4311)
 
-LPITEMIDLIST PathToPidl(CString const& path)
+LPITEMIDLIST PathToPidl(XString const& path)
 {
   LPITEMIDLIST  pidl = NULL;
   LPSHELLFOLDER pDesktopFolder;
@@ -79,7 +79,7 @@ LPITEMIDLIST PathToPidl(CString const& path)
 
 //=============================================================================
 
-CString PidlToPath(LPITEMIDLIST pidl, bool deletePidl = false)
+XString PidlToPath(LPITEMIDLIST pidl, bool deletePidl = false)
 {
   //  Convert the pidl to a path
   char szPath[MAX_PATH] = "";
@@ -89,7 +89,7 @@ CString PidlToPath(LPITEMIDLIST pidl, bool deletePidl = false)
     //throw some error?
   }
   //  Store in string
-  CString result = szPath;
+  XString result = szPath;
 
   //  Free the result pidl
   if(deletePidl)
@@ -121,9 +121,9 @@ BrowseForDirectory::~BrowseForDirectory()
 //=============================================================================
 
 bool BrowseForDirectory::Browse(HWND            hwndParent, 
-                                CString const&  title, 
-                                CString const&  initdir, 
-                                CString const&  rootdir, 
+                                XString const&  title, 
+                                XString const&  initdir, 
+                                XString const&  rootdir, 
                                 bool            showFiles,
                                 bool            showStatus)
 {
@@ -193,7 +193,7 @@ void BrowseForDirectory::EnableOk(bool bEnable)
 }
 
 //=============================================================================
-void BrowseForDirectory::SetSelection(CString const& path)
+void BrowseForDirectory::SetSelection(XString const& path)
 {
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == NULL || IsWindow(m_hwnd) == false)
@@ -207,7 +207,7 @@ void BrowseForDirectory::SetSelection(CString const& path)
 
 //=============================================================================
 void 
-BrowseForDirectory::SetStatusText(CString const& text)
+BrowseForDirectory::SetStatusText(XString const& text)
 {
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
@@ -227,7 +227,7 @@ void BrowseForDirectory::OnInitialized()
 }
 
 //=============================================================================
-void BrowseForDirectory::OnSelChange(CString const&)
+void BrowseForDirectory::OnSelChange(XString const&)
 {
   //  Only meant for derived classes
 }

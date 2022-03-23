@@ -36,40 +36,40 @@ typedef struct _subscriber
 }
 Subscriber;
 
-using CommandMap = std::multimap<CString,Subscriber>;
+using CommandMap = std::multimap<XString,Subscriber>;
 using Commands   = std::pair<CommandMap::iterator,CommandMap::iterator>;
 
 class CommandBus
 {
 public:
-  CommandBus(CString p_name,ThreadPool* p_pool);
+  CommandBus(XString p_name,ThreadPool* p_pool);
  ~CommandBus();
 
   // FUNCTIONS
  
   // Subscribe a function to a command
-  bool SubscribeCommand(CString p_command,LPFN_CALLBACK p_function,void* p_default = NULL);
+  bool SubscribeCommand(XString p_command,LPFN_CALLBACK p_function,void* p_default = NULL);
   // Un-Subscribe a command function
-  bool UnSubscribe(CString p_command,LPFN_CALLBACK p_function);
+  bool UnSubscribe(XString p_command,LPFN_CALLBACK p_function);
   // Publish new command for all subscribers
-  bool PublishCommand(CString p_command,void* p_argument);
+  bool PublishCommand(XString p_command,void* p_argument);
   // Find out if command bus is (still) open
   bool IsOpen();
   // Close bus for new publishing
   void Close();
   // Find out if command has subscribers
-  int  GetNumberOfSubscribers(CString p_command);
+  int  GetNumberOfSubscribers(XString p_command);
 
   // SETTERS
-  void SetName(CString p_name)     { m_name = p_name; };
+  void SetName(XString p_name)     { m_name = p_name; };
   void SetPool(ThreadPool* p_pool) { m_pool = p_pool; };
 
   // GETTERS
-  CString     GetName()   { return m_name; };
+  XString     GetName()   { return m_name; };
   ThreadPool* GetPool()   { return m_pool; };
 
 private:
-  CString     m_name;               // Name of the command bus
+  XString     m_name;               // Name of the command bus
   bool        m_open { false  };    // Open for publishing
   ThreadPool* m_pool { nullptr};    // Thread pool used by the bus
   CommandMap  m_subscribers;        // Command/subscriber-target pairs

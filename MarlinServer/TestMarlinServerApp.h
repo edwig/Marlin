@@ -44,6 +44,8 @@ public:
   virtual bool LoadSite(IISSiteConfig& p_config);
   virtual bool CorrectlyStarted();
 
+  virtual bool MinMarlinVersion(int p_version) override;
+
 private:
   // The real application 
   TestMarlinServer m_server;

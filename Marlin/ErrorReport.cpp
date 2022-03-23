@@ -120,7 +120,7 @@ Signals[] =
 //
 // Convert time to string
 //
-static CString
+static XString
 SystemTimeToString(SYSTEMTIME const& st, bool p_relative = false)
 {
   char buffer[25];
@@ -139,7 +139,7 @@ SystemTimeToString(SYSTEMTIME const& st, bool p_relative = false)
   return buffer;
 }
 
-CString
+XString
 FileTimeToString(FILETIME const& ft, bool p_relative = false)
 {
   SYSTEMTIME st;
@@ -157,7 +157,7 @@ FileTimeToString(FILETIME const& ft, bool p_relative = false)
   return SystemTimeToString(st, p_relative);
 }
 
-static CString
+static XString
 FileTimeToMarker(SYSTEMTIME const& st)
 {
   char buffer[25];
@@ -171,19 +171,19 @@ FileTimeToMarker(SYSTEMTIME const& st)
 
 // Write a string to a file and return the filename
 //
-CString
-ErrorReportWriteToFile(const CString& p_filename
-                      ,const CString& p_report
-                      ,const CString& p_webroot
-                      ,const CString& p_url)
+XString
+ErrorReportWriteToFile(const XString& p_filename
+                      ,const XString& p_report
+                      ,const XString& p_webroot
+                      ,const XString& p_url)
 {
   SYSTEMTIME nu;
   GetLocalTime(&nu);
-  CString current = FileTimeToMarker(nu);
-  CString pathname(p_webroot);
+  XString current = FileTimeToMarker(nu);
+  XString pathname(p_webroot);
 
   // Creating productdir
-  CString productDir(p_url);
+  XString productDir(p_url);
   productDir.Trim("/");
   productDir.Replace("/","\\");
   if(productDir.Right(1) != '\\')
@@ -198,8 +198,8 @@ ErrorReportWriteToFile(const CString& p_filename
   }
 
   // Getting the paths to try
-  CString path1 = pathname + productDir;
-  CString path2 = pathname;
+  XString path1 = pathname + productDir;
+  XString path2 = pathname;
 
   // Getting a file to write to
   if(p_filename.IsEmpty())
@@ -220,8 +220,8 @@ ErrorReportWriteToFile(const CString& p_filename
     {
       return "";
     }
-    path1 = CString(buffer1) + ".txt";
-    path2 = CString(buffer2) + ".txt";
+    path1 = XString(buffer1) + ".txt";
+    path2 = XString(buffer2) + ".txt";
   }
   else
   {
@@ -275,7 +275,7 @@ ErrorReport::~ErrorReport()
 }
 
 /*static*/ void
-ErrorReport::Report(const CString& p_subject, unsigned int p_skip /* = 0 */, CString p_directory, CString p_url)
+ErrorReport::Report(const XString& p_subject, unsigned int p_skip /* = 0 */, XString p_directory, XString p_url)
 {
   if(g_instance == nullptr)
   {
@@ -292,7 +292,7 @@ ErrorReport::Report(const CString& p_subject, unsigned int p_skip /* = 0 */, CSt
 }
 
 /*static*/ void
-ErrorReport::Report(const CString& p_subject,const StackTrace& p_trace,CString p_directory,CString p_url)
+ErrorReport::Report(const XString& p_subject,const StackTrace& p_trace,XString p_directory,XString p_url)
 {
   if(g_instance == nullptr)
   {
@@ -310,8 +310,8 @@ ErrorReport::Report(const CString& p_subject,const StackTrace& p_trace,CString p
 /*static*/ bool
 ErrorReport::Report(DWORD p_error,struct _EXCEPTION_POINTERS* p_exc)
 {
-  CString tempdir;
-  CString name("Crash_");
+  XString tempdir;
+  XString name("Crash_");
   if(tempdir.GetEnvironmentVariable("TMP"))
   {
     return Report(p_error,p_exc,tempdir,name);
@@ -322,8 +322,8 @@ ErrorReport::Report(DWORD p_error,struct _EXCEPTION_POINTERS* p_exc)
 /*static*/ bool
 ErrorReport::Report(DWORD p_errorCode
                    ,struct _EXCEPTION_POINTERS* p_exception
-                   ,CString& p_directory
-                   ,CString& p_url)
+                   ,XString& p_directory
+                   ,XString& p_url)
 {
   if (!g_reportException)
   {
@@ -340,7 +340,7 @@ ErrorReport::Report(DWORD p_errorCode
   AutoCritSec lock(&(g_instance->m_lock));
 
   // Getting the subject
-  CString subject;
+  XString subject;
   for (unsigned int i = 0;
        i < sizeof(Exceptions) / sizeof(Exceptions[0]);
        i++)
@@ -375,7 +375,7 @@ ErrorReport::Report(DWORD p_errorCode
 
       if (typeInfo != NULL)
       {
-        subject += CString(" (") + typeInfo->name() + ")";
+        subject += XString(" (") + typeInfo->name() + ")";
       }
     }
   }
@@ -390,7 +390,7 @@ ErrorReport::Report(DWORD p_errorCode
       case 8:  subject += " executing "; break;
       default: subject += " (unknown) "; break;
     }
-    CString tmp;
+    XString tmp;
 #ifdef _M_X64
     tmp.Format("0x%I64X", p_exception->ExceptionRecord->ExceptionInformation[1]);
 #else
@@ -409,7 +409,7 @@ ErrorReport::Report(DWORD p_errorCode
 }
 
 /*static*/ void
-ErrorReport::Report(int p_signal,unsigned int p_skip /* = 0 */,CString p_directory,CString p_url)
+ErrorReport::Report(int p_signal,unsigned int p_skip /* = 0 */,XString p_directory,XString p_url)
 {
   if(g_instance == nullptr)
   {
@@ -421,7 +421,7 @@ ErrorReport::Report(int p_signal,unsigned int p_skip /* = 0 */,CString p_directo
   AutoCritSec lock(&(g_instance->m_lock));
 
   // Getting the subject
-  CString subject;
+  XString subject;
   for (unsigned int i=0; i < sizeof(Signals) / sizeof(Signals[0]); i++)
   {
     if (Signals[i].code == p_signal)
@@ -444,10 +444,10 @@ ErrorReport::Report(int p_signal,unsigned int p_skip /* = 0 */,CString p_directo
 // Standard crash report as a file on the webroot URL directory
 //
 void
-ErrorReport::DoReport(const CString&    p_subject
+ErrorReport::DoReport(const XString&    p_subject
                      ,const StackTrace& p_trace
-                     ,const CString&    p_webroot
-                     ,const CString&    p_url) const
+                     ,const XString&    p_webroot
+                     ,const XString&    p_url) const
 {
   // Getting proces information
   std::unique_ptr<ProcInfo> procInfo(new ProcInfo);
@@ -459,13 +459,13 @@ ErrorReport::DoReport(const CString&    p_subject
                   &userTime);
 
   // Getting the error address
-  const CString &errorAddress = p_trace.FirstAsString();
+  const XString &errorAddress = p_trace.FirstAsString();
 
-  CString version;
+  XString version;
   version.Format("%s.%s",MARLIN_VERSION_NUMBER,MARLIN_VERSION_BUILD);
 
   // Format the message
-  CString message = "SYSTEMUSER: " + procInfo->m_username + " on " + procInfo->m_computer + "\n"
+  XString message = "SYSTEMUSER: " + procInfo->m_username + " on " + procInfo->m_computer + "\n"
                     "PROGRAM   : " MARLIN_PRODUCT_NAME ": version: " + version + ": " + p_subject + " in " + errorAddress + "\n"
                     "-------------\n"
                     "Version:       " + MARLIN_VERSION_NUMBER + "\n"
@@ -476,7 +476,7 @@ ErrorReport::DoReport(const CString&    p_subject
   /// Info about the proces
   message += "Process\n"
              "-------\n";
-  message += "Commandline:       " + CString(GetCommandLine()) + "\n";
+  message += "Commandline:       " + XString(GetCommandLine()) + "\n";
   message += "Starttime:         " + FileTimeToString(creationTime) + "\n";
   message += "Local time:        " + procInfo->m_datetime + "\n";
   message += "Processorusage:    " + FileTimeToString(userTime, true) + " (user), "
@@ -511,7 +511,7 @@ ErrorReport::DoReport(const CString&    p_subject
 
   }
   // Writing the crash message
-  CString filename;
+  XString filename;
   ErrorReportWriteToFile(filename,message,p_webroot,p_url);
 }
 
@@ -542,7 +542,7 @@ SignalHandler(int signal)
   }
 #endif // _DEBUG
 
-  CString tempdir;
+  XString tempdir;
   if(tempdir.GetEnvironmentVariable("TMP"))
   {
     // Gather stack information in our TMP directory

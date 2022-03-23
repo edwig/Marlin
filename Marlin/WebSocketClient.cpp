@@ -48,7 +48,7 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
-WebSocketClient::WebSocketClient(CString p_uri)
+WebSocketClient::WebSocketClient(XString p_uri)
                 :WebSocket(p_uri)
 {
   LoadHTTPLibrary();
@@ -203,7 +203,7 @@ WebSocketClient::OpenSocket()
       else
       {
         DWORD error = GetLastError();
-        CString message;
+        XString message;
         message.Format("Socket upgrade to WinSocket failed [%d] %s\n",error,GetHTTPErrorText(error).GetString());
         ERRORLOG(error,message);
       }
@@ -217,7 +217,7 @@ WebSocketClient::OpenSocket()
   else
   {
     // Error handling. Socket not found on URI
-    CString error;
+    XString error;
     error.Format("WebSocket protocol not found on URI [%s] HTTP status [%d]",m_uri.GetString(),client.GetStatus());
     ERRORLOG(ERROR_NOT_FOUND,error);
   }
@@ -257,7 +257,7 @@ WebSocketClient::CloseSocket()
 
 // Close the socket with a closing frame
 bool 
-WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
+WebSocketClient::SendCloseSocket(USHORT p_code,XString p_reason)
 {
   // Already closed?
   if(!m_socket)
@@ -281,7 +281,7 @@ WebSocketClient::SendCloseSocket(USHORT p_code,CString p_reason)
       return true;
     }
     // Failed to send a close socket message.
-    CString message = "Failed to send WebSocket 'close' message: " + GetLastErrorAsString(error);
+    XString message = "Failed to send WebSocket 'close' message: " + GetLastErrorAsString(error);
     ERRORLOG(error,message);
     return false;
   }
@@ -538,7 +538,7 @@ WebSocketClient::StartClientListner()
 
 // Client key generator for the WebSocket protocol
 // Now using the built-in key generator of WinHTTP
-CString
+XString
 WebSocketClient::GenerateKey()
 {
   // crank up the random generator

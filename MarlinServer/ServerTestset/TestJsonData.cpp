@@ -52,7 +52,7 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
 
   if(val.GetDataType() == JsonType::JDT_string)
   {
-    CString command = val.GetString();
+    XString command = val.GetString();
     p_message->Reset();
 
     if(command == "Test1")
@@ -75,8 +75,8 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
     }
 
     // Test parameters in JSON Message
-    CString test = p_message->GetCrackedURL().GetParameter("test");
-    CString size = p_message->GetCrackedURL().GetParameter("size");
+    XString test = p_message->GetCrackedURL().GetParameter("test");
+    XString size = p_message->GetCrackedURL().GetParameter("size");
     if(test != "2" || size != "medium large")
     {
       result = false;
@@ -117,7 +117,7 @@ TestMarlinServer::TestJsonData()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/Data/");
+  XString url("/MarlinTest/Data/");
 
   xprintf("TESTING STANDARD JSON RECEIVER FUNCTIONS OF THE HTTP SERVER\n");
   xprintf("===========================================================\n");

@@ -49,7 +49,7 @@ bool
 SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
 {
   bool result = false;
-  CString testname;
+  XString testname;
   Cookie* cookie = p_msg->GetCookie(0);
   if(!cookie)
   {
@@ -60,8 +60,8 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
   }
   else
   {
-    CString value = cookie->GetValue();
-    CString name  = cookie->GetName();
+    XString value = cookie->GetValue();
+    XString name  = cookie->GetName();
 
     if(name == "GUID" && value == "1-2-3-4-5-6-7-0-7-6-5-4-3-2-1")
     {
@@ -83,8 +83,8 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
   cookie = p_msg->GetCookie(1);
   if(cookie)
   {
-    CString value = cookie->GetValue();
-    CString name  = cookie->GetName();
+    XString value = cookie->GetValue();
+    XString name  = cookie->GetName();
 
     if(name == "BEAST" && value == "Monkey")
     {
@@ -108,7 +108,7 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     xerror();
   }
 
-  CString day = p_msg->GetHeader("EdosHeader");
+  XString day = p_msg->GetHeader("EdosHeader");
 
   p_msg->Reset();
   p_msg->ResetCookies();
@@ -136,7 +136,7 @@ TestMarlinServer::TestCookies()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/CookieTest/"
   // Callback function is no longer required!
-  CString webaddress = "/MarlinTest/CookieTest/";
+  XString webaddress = "/MarlinTest/CookieTest/";
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
   if(site)
   {

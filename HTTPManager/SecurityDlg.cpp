@@ -197,11 +197,11 @@ SecurityDlg::Save()
 // Reading of the MS-WIndows registry
 // Only to be used for the protocol registration
 int
-SecurityDlg::ReadRegistry(CString p_protocol,CString p_serverClient,CString p_variable,int p_default)
+SecurityDlg::ReadRegistry(XString p_protocol,XString p_serverClient,XString p_variable,int p_default)
 {
   int waarde = p_default;
   HKEY hkUserURL;
-  CString sleutel = "SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\" + 
+  XString sleutel = "SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\" + 
                     p_protocol + "\\" + p_serverClient;
 
   DWORD dwErr = RegOpenKeyEx(HKEY_LOCAL_MACHINE
@@ -247,13 +247,13 @@ SecurityDlg::ReadRegistry(CString p_protocol,CString p_serverClient,CString p_va
 
 // Writing to the MS-Windows registry
 void
-SecurityDlg::WriteRegistry(CString p_protocol,CString p_serverClient,CString p_variable,bool p_set)
+SecurityDlg::WriteRegistry(XString p_protocol,XString p_serverClient,XString p_variable,bool p_set)
 {
   HKEY    hUserKey;
   DWORD   disposition = 0;
   DWORD   value = p_set ? 1 : 0;
   DWORD   dwErr = 0;
-  CString key   = "SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\" + 
+  XString key   = "SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\" + 
                     p_protocol + "\\" + p_serverClient;
 
   dwErr = RegCreateKeyEx(HKEY_LOCAL_MACHINE
@@ -276,7 +276,7 @@ SecurityDlg::WriteRegistry(CString p_protocol,CString p_serverClient,CString p_v
   }
   if(dwErr != ERROR_SUCCESS)
   {
-    CString message;
+    XString message;
     message.Format("Cannot write registry key [%s] with value [%d]",key,value);
     ::MessageBox(GetSafeHwnd(),message,"ERROR",MB_OK|MB_ICONERROR);
   }

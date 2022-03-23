@@ -54,8 +54,8 @@ static char THIS_FILE[] = __FILE__;
 
 HTTPSiteIIS::HTTPSiteIIS(HTTPServerIIS* p_server
                         ,int            p_port
-                        ,CString        p_site
-                        ,CString        p_prefix
+                        ,XString        p_site
+                        ,XString        p_prefix
                         ,HTTPSite*      p_mainSite /*=nullptr*/
                         ,LPFN_CALLBACK  p_callback /*=nullptr*/)
             :HTTPSite(p_server,p_port,p_site,p_prefix,p_mainSite,p_callback)
@@ -137,12 +137,12 @@ HTTPSiteIIS::StartSite()
 }
 
 bool
-HTTPSiteIIS::SetWebroot(CString p_webroot)
+HTTPSiteIIS::SetWebroot(XString p_webroot)
 {
   UNREFERENCED_PARAMETER(p_webroot);
 
   // Getting the IIS server root
-  CString root = m_server->GetWebroot();
+  XString root = m_server->GetWebroot();
   root.TrimRight('\\');
 
   // IIS now expects you to add the site name
@@ -162,7 +162,7 @@ HTTPSiteIIS::SetWebroot(CString p_webroot)
 // Getting the sites directory within the IIS rootdir
 // /Site/         -> "\\Site\\"
 // /Site/Subsite/ -> "\\Site\\"
-CString 
+XString 
 HTTPSiteIIS::GetIISSiteDir()
 {
   // Follow the main site chain to the site
@@ -173,7 +173,7 @@ HTTPSiteIIS::GetIISSiteDir()
   }
 
   // This is the mainsite
-  CString dir = mainsite->GetSite();
+  XString dir = mainsite->GetSite();
 
   // Transpose site URL to directory name
   int pos1 = dir.Find('/',1);
@@ -200,7 +200,7 @@ HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
   GetTokenInformation(p_token,TokenOwner,NULL,0,&size);
   if(!size)
   {
-    CString text;
+    XString text;
     text.Format("Error getting token owner: error code0x%lx\n", GetLastError());
     ERRORLOG(ENOMEM,text);
     return false;

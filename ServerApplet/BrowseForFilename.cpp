@@ -38,12 +38,12 @@ static char THIS_FILE[] = __FILE__;
 #pragma warning (disable:4312)
 
 BrowseForFilename::BrowseForFilename(bool    p_open        // true = open, false = SaveAs
-                                    ,CString p_title       // Title of the dialog
-                                    ,CString p_defext      // Default extension
-                                    ,CString p_filename    // Default first file
+                                    ,XString p_title       // Title of the dialog
+                                    ,XString p_defext      // Default extension
+                                    ,XString p_filename    // Default first file
                                     ,int     p_flags       // Default flags
-                                    ,CString p_filter      // Filter for extensions
-                                    ,CString p_direct)     
+                                    ,XString p_filter      // Filter for extensions
+                                    ,XString p_direct)     
                   :m_open(p_open)
                   ,m_initalDir(p_direct)
 {
@@ -119,10 +119,10 @@ BrowseForFilename::DoModal()
   return res;
 }
 
-CString 
+XString 
 BrowseForFilename::GetChosenFile()
 {
-  return (CString) m_ofn.lpstrFile;
+  return (XString) m_ofn.lpstrFile;
 }
 
 void

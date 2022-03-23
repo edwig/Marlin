@@ -38,7 +38,7 @@ LTEvent::LTEvent(EvtType p_type)
 }
 
 EvtType
-LTEvent::StringToEventType(CString p_type)
+LTEvent::StringToEventType(XString p_type)
 {
   if(p_type.Compare("open")    == 0) return EvtType::EV_Open;
   if(p_type.Compare("message") == 0) return EvtType::EV_Message;
@@ -50,7 +50,7 @@ LTEvent::StringToEventType(CString p_type)
   return EvtType::EV_Message;
 }
 
-CString 
+XString 
 LTEvent::EventTypeToString(EvtType p_type)
 {
   switch (p_type)
@@ -65,7 +65,7 @@ LTEvent::EventTypeToString(EvtType p_type)
 }
 
 EVChannelPolicy 
-LTEvent::StringToChannelPolicy(CString p_policy)
+LTEvent::StringToChannelPolicy(XString p_policy)
 {
   if(p_policy.CompareNoCase("No policy")        == 0) return EVChannelPolicy::DP_NoPolicy;
   if(p_policy.CompareNoCase("Binary")           == 0) return EVChannelPolicy::DP_Binary;
@@ -78,7 +78,7 @@ LTEvent::StringToChannelPolicy(CString p_policy)
   return EVChannelPolicy::DP_NoPolicy;
 }
 
-CString 
+XString 
 LTEvent::ChannelPolicyToString(EVChannelPolicy p_policy)
 {
   switch(p_policy)

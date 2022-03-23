@@ -69,8 +69,8 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
   SITE_DETAILLOGS("Handling form-data data-part: ",p_part->GetName());
 
-  CString data = p_part->GetData();
-  CString name = p_part->GetName();
+  XString data = p_part->GetData();
+  XString name = p_part->GetName();
   xprintf("MULTI-PART DATA = Name : %s\n",(LPCTSTR)p_part->GetName());
   xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
   xprintf("MULTI-PART\n%s\n",             (LPCTSTR)p_part->GetData());
@@ -105,7 +105,7 @@ FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
   xprintf("File indicated size    : %d\n",(int)    p_part->GetSize());
 
   // Keep debugging things together, by resetting the filename
-  CString filename = MarlinConfig::GetExePath() + p_part->GetFileName();
+  XString filename = MarlinConfig::GetExePath() + p_part->GetFileName();
   p_part->SetFileName(filename);
   // Re-write the file part buffer + optional file times.
   bool result = p_part->WriteFile();
@@ -137,7 +137,7 @@ FormDataHandler::PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buff
     --totalChecks;
   }
 
-  CString resultString;
+  XString resultString;
   resultString.Format("RESULT=%s\n",result ? "OK" : "ERROR");
   p_message->AddBody(resultString);
   p_message->SetContentType("text/html");
@@ -162,7 +162,7 @@ TestMarlinServer::TestFormData()
   // If errors, change detail level
   m_doDetails = false;
 
-  CString url("/MarlinTest/FormData/");
+  XString url("/MarlinTest/FormData/");
 
   xprintf("TESTING FORM-DATA MULTI-PART-BUFFER FUNCTION OF THE HTTP SERVER\n");
   xprintf("===============================================================\n");

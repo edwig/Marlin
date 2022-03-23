@@ -16,6 +16,9 @@
     <Filter Include="Documentation">
       <UniqueIdentifier>{35271d3e-82b1-4ae3-982a-560fa388f137}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{955aa8b6-fba7-42a5-aceb-581c38a284d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HTTPManager.h">
@@ -24,22 +27,10 @@
     <ClInclude Include="HTTPManagerDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ResultDlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MapDialoog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FileDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SecurityDlg.h">
@@ -49,9 +40,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ServerHeadersDlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Marlin\RunRedirect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WebConfigDlg.h">
@@ -72,6 +60,15 @@
     <ClInclude Include="WebConfigLogging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HTTPManager.cpp">
@@ -86,12 +83,6 @@
     <ClCompile Include="ResultDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MapDialoog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FileDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SecurityDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -99,12 +90,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ServerHeadersDlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Marlin\Redirect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Marlin\RunRedirect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WebConfigDlg.cpp">

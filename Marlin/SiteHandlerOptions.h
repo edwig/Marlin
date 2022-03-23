@@ -43,11 +43,11 @@ protected:
   virtual void PostHandle(HTTPMessage* p_message) override;
 private:
   // Do the CORS Pre-Flight checking for an OPTIONS call
-  bool CheckCrossOriginSettings(HTTPMessage* p_message,CString p_origin,CString p_method,CString p_headers);
+  bool CheckCrossOriginSettings(HTTPMessage* p_message,XString p_origin,XString p_method,XString p_headers);
 
-  bool CheckCORSOrigin (HTTPMessage* p_message,CString p_origin);
-  bool CheckCORSMethod (HTTPMessage* p_message,CString p_method);
-  bool CheckCORSHeaders(HTTPMessage* p_message,CString p_headers);
+  bool CheckCORSOrigin (HTTPMessage* p_message,XString p_origin);
+  bool CheckCORSMethod (HTTPMessage* p_message,XString p_method);
+  bool CheckCORSHeaders(HTTPMessage* p_message,XString p_headers);
 
-  void SplitHeaders(CString p_headers,std::vector<CString>& p_map);
+  void SplitHeaders(XString p_headers,std::vector<XString>& p_map);
 };

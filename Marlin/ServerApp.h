@@ -30,7 +30,7 @@
 #include "IISSiteConfig.h"
 #include "ThreadPool.h"
 #include "HTTPLoglevel.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 #include "ErrorReport.h"
 #include <set>
 
@@ -39,7 +39,7 @@
 #include <httpserv.h>
 #pragma warning (error:4091)
 
-using IISModules = std::set<CString>;
+using IISModules = std::set<XString>;
 
 class ServerApp;
 
@@ -87,7 +87,7 @@ public:
   virtual void SetLogLevel(int p_logLevel);
 
   // Start our sites from the IIS configuration
-  virtual void LoadSites(IHttpApplication* p_app,CString p_physicalPath);
+  virtual void LoadSites(IHttpApplication* p_app,XString p_physicalPath);
   // Stopping all of our sites in the IIS configuration
   virtual void UnloadSites();
 
@@ -120,17 +120,17 @@ protected:
   void  StartLogging();
 
   // Read the site's configuration from the IIS internal structures
-  bool  ReadSite    (IAppHostElementCollection* p_sites,CString p_site,int p_num,IISSiteConfig& p_config);
+  bool  ReadSite    (IAppHostElementCollection* p_sites,XString p_site,int p_num,IISSiteConfig& p_config);
   bool  ReadBinding (IAppHostElementCollection* p_bindings,int p_item,IISBinding& p_binding);
   void  ReadModules (CComBSTR& p_configPath);
   void  ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config);
 
   // General way to read a property
-  CString GetProperty(IAppHostElement* p_elem,CString p_property);
+  XString GetProperty(IAppHostElement* p_elem,XString p_property);
 
   // DATA
-  CString        m_applicationName;             // Name of our application / IIS Site
-  CString        m_webroot;                     // WebRoot of our application
+  XString        m_applicationName;             // Name of our application / IIS Site
+  XString        m_webroot;                     // WebRoot of our application
   IISModules     m_modules;                     // Global IIS modules for this application
   IISSiteConfigs m_sites;                       // Configures sites, modules and handlers
   WebConfigIIS   m_config;                      // Our web.config object

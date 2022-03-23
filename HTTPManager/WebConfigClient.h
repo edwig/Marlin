@@ -84,19 +84,19 @@ protected:
   bool        m_useSendBOM;
 
   // CLIENT OVERRIDES
-  CString     m_agent;
+  XString     m_agent;
   int         m_retry;
   int         m_proxyType;
-  CString     m_proxy;
-  CString     m_proxyBypass;
-  CString     m_proxyUser;
-  CString     m_proxyPassword;
+  XString     m_proxy;
+  XString     m_proxyBypass;
+  XString     m_proxyUser;
+  XString     m_proxyPassword;
   bool        m_clientUnicode;
   bool        m_soapCompress;
-  CString     m_certStore;
-  CString     m_certName;
+  XString     m_certStore;
+  XString     m_certName;
   bool        m_certPreset;
-  CString     m_origin;
+  XString     m_origin;
   int         m_TO_resolve;
   int         m_TO_connect;
   int         m_TO_send;

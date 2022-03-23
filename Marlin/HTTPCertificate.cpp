@@ -77,7 +77,7 @@ HTTPCertificate::SetRawCertificate(PUCHAR p_blob,ULONG p_size)
   }
 }
 
-CString
+XString
 HTTPCertificate::GetSubject()
 {
   if(m_subject.IsEmpty())
@@ -110,7 +110,7 @@ HTTPCertificate::GetSubject()
   return m_subject;
 }
 
-CString
+XString
 HTTPCertificate::GetIssuer()
 {
   if(m_issuer.IsEmpty())
@@ -143,7 +143,7 @@ HTTPCertificate::GetIssuer()
 
 // Finding a thumbprint in a certificate
 bool 
-HTTPCertificate::VerifyThumbprint(CString p_thumbprint)
+HTTPCertificate::VerifyThumbprint(XString p_thumbprint)
 {
   bool result = false;
 
@@ -195,7 +195,7 @@ HTTPCertificate::VerifyThumbprint(CString p_thumbprint)
 // Without spaces: "db344064f2fc1318dd90f507fe78e81b031600"
 // P_blob must point to a blob that is sufficiently large (20 bytes)
 bool 
-HTTPCertificate::EncodeThumbprint(CString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len)
+HTTPCertificate::EncodeThumbprint(XString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len)
 {
   // Removing
   p_thumbprint.Replace(" ","");
@@ -221,8 +221,8 @@ HTTPCertificate::EncodeThumbprint(CString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,
   return true;
 }
 
-CString 
-HTTPCertificate::CleanupCertificateString(CString p_name)
+XString 
+HTTPCertificate::CleanupCertificateString(XString p_name)
 {
   int pos = p_name.GetLength();
   while(pos-- > 0)

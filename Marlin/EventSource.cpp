@@ -30,7 +30,7 @@
 #include "ServerEvent.h"
 #include "ThreadPool.h"
 #include "HTTPClient.h"
-#include "Analysis.h"
+#include "LogAnalysis.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -42,7 +42,7 @@ static char THIS_FILE[] = __FILE__;
 #define DETAILLOG(text) if(m_client->GetLogging()) m_client->GetLogging()->AnalysisLog(__FUNCTION__,LogType::LOG_INFO, false,(text))
 #define ERRORLOG(text)  if(m_client->GetLogging()) m_client->GetLogging()->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(text))
 
-EventSource::EventSource(HTTPClient* p_client,CString p_url)
+EventSource::EventSource(HTTPClient* p_client,XString p_url)
             :m_url(p_url)
             ,m_client(p_client)
             ,m_serialize(false)
@@ -132,7 +132,7 @@ EventSource::Close()
 
 // Add event listner to the source
 bool 
-EventSource::AddEventListener(CString p_event,LPFN_EVENTHANDLER p_handler,bool p_useCapture /*=false*/)
+EventSource::AddEventListener(XString p_event,LPFN_EVENTHANDLER p_handler,bool p_useCapture /*=false*/)
 {
   // Always search on lower case
   p_event.MakeLower();
@@ -207,7 +207,7 @@ EventSource::SetApplicationData(void* p_data)
 }
 
 void
-EventSource::SetSecurity(CString p_cookie, CString p_secret)
+EventSource::SetSecurity(XString p_cookie, XString p_secret)
 {
   m_cookie = p_cookie;
   m_secret = p_secret;
@@ -319,7 +319,7 @@ EventSource::OnComment(ServerEvent* p_event)
     return;
   }
   // Do the default comment handler
-  CString comment("Eventsource. Comment data received: ");
+  XString comment("Eventsource. Comment data received: ");
   comment += p_event->m_data;
   DETAILLOG(comment);
   delete p_event;
@@ -338,7 +338,7 @@ EventSource::OnRetry(ServerEvent* p_event)
     return;
   }
   // Default = Log the retry
-  CString retry("Eventsource: Retry received: ");
+  XString retry("Eventsource: Retry received: ");
   retry += p_event->m_data;
   DETAILLOG(retry);
   delete p_event;
@@ -359,7 +359,7 @@ EventSource::Parse(BYTE* p_buffer,unsigned& p_length)
     return;
   }
   // Getting the raw buffer
-  CString buffer(p_buffer);
+  XString buffer(p_buffer);
 
   // normalize lines
   if(buffer.Find('\r') >= 0)
@@ -390,11 +390,11 @@ EventSource::Parse(BYTE* p_buffer,unsigned& p_length)
 
 // Parse buffer in string form
 void
-EventSource::Parse(CString& p_buffer)
+EventSource::Parse(XString& p_buffer)
 {
   ULONG   id = 0;
   int     lineNo = 0;
-  CString line;
+  XString line;
   
   GetLine(p_buffer,line);
 
@@ -407,12 +407,12 @@ EventSource::Parse(CString& p_buffer)
   // Try to do multiple events
   while(!line.IsEmpty())
   {
-    CString field;
-    CString value;
+    XString field;
+    XString value;
     int pos = line.Find(':');
     if(pos == 0)
     {
-      CString event("comment");
+      XString event("comment");
       // Comment line found
       DispatchEvent(&event,0,&line);
       // Get next and continue
@@ -501,7 +501,7 @@ EventSource::Parse(CString& p_buffer)
 
 // Get one line from the incoming buffer
 bool
-EventSource::GetLine(CString& p_buffer,CString& p_line)
+EventSource::GetLine(XString& p_buffer,XString& p_line)
 {
   // Test for a BOM at the beginning of the stream
   unsigned char* buf = reinterpret_cast<unsigned char*>(p_buffer.GetBuffer());
@@ -541,14 +541,14 @@ EventSource::GetLine(CString& p_buffer,CString& p_line)
 
 // Dispatch this event
 void
-EventSource::DispatchEvent(CString* p_event,ULONG p_id,CString* p_data)
+EventSource::DispatchEvent(XString* p_event,ULONG p_id,XString* p_data)
 {
   // Check on correct ready state of the event source
   if(m_readyState == CLOSED ||
      m_readyState == CLOSED_BY_SERVER)
   {
     // Cannot handle events
-    CString error;
+    XString error;
     error.Format("Internal error: Ready state = closed, but event received: %s:%s",(*p_event).GetString(),(*p_data).GetString());
     ERRORLOG(error);
     return;
@@ -572,7 +572,7 @@ EventSource::DispatchEvent(CString* p_event,ULONG p_id,CString* p_data)
   // Now we must have seen an Open event
   if(m_readyState != OPEN)
   {
-    CString error;
+    XString error;
     error.Format("Internal error: Ready state is not open, but event received: %s:%s",
                  (*p_event).GetString(),(*p_data).GetString());
     ERRORLOG(error);
@@ -588,7 +588,7 @@ EventSource::DispatchEvent(CString* p_event,ULONG p_id,CString* p_data)
     if(p_id && p_id < m_lastEventID)
     {
       // Already seen this event, skip it
-      CString logMessage;
+      XString logMessage;
       logMessage.Format("Dropped event with duplicate ID: %d:%s"
                         ,(int)p_id,(*p_event).GetString());
       delete theEvent;
@@ -597,7 +597,7 @@ EventSource::DispatchEvent(CString* p_event,ULONG p_id,CString* p_data)
   }
 
   // Search on lowercase
-  CString event = *p_event;
+  XString event = *p_event;
   event.MakeLower();
 
   // Handle special cases 'message' and 'error'

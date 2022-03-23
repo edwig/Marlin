@@ -46,7 +46,7 @@ SiteHandlerGet::PreHandle(HTTPMessage* /*p_message*/)
   m_site->SetCleanup(nullptr);
 
   // Check server authorization for server GUID!!
-  // CString author = p_message->GetCookieValue();
+  // XString author = p_message->GetCookieValue();
   // IMPLEMENT YOURSELF: Check authorization (HTTP_STATUS_DENIED)?
   
   // return true, to enter the default "Handle"
@@ -65,14 +65,14 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
 
   // Getting the path of the file
   EnsureFile ensure;
-  CString resource = p_message->GetAbsoluteResource();
+  XString resource = p_message->GetAbsoluteResource();
   // See to transformations of derived handler
   FileNameTransformations(resource);
   // Convert into a filename
-  CString pathname = m_site->GetWebroot() + ensure.FileNameFromResourceName(resource);
+  XString pathname = m_site->GetWebroot() + ensure.FileNameFromResourceName(resource);
 
   // Finding and setting the content type
-  CString content  = m_site->GetContentTypeByResourceName(pathname);
+  XString content  = m_site->GetContentTypeByResourceName(pathname);
   p_message->SetContentType(content);
 
   // Check existence
@@ -94,7 +94,7 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
   {
     // File does not exist, or no read access
     p_message->SetStatus(HTTP_STATUS_NOT_FOUND);
-    CString text;
+    XString text;
     text.Format("HTTP GET: File not found: %s",pathname.GetString());
     SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,text);
   }
@@ -122,7 +122,7 @@ SiteHandlerGet::CleanUp(HTTPMessage* p_message)
 // Diverse checks on the filename.
 // Returns true if filename is altered
 bool 
-SiteHandlerGet::FileNameTransformations(CString & p_filename)
+SiteHandlerGet::FileNameTransformations(XString & p_filename)
 {
   // Almost **ALL** webservers in the world fall back to 'index.html'
   // if no resource given for a site or a subsite
@@ -138,7 +138,7 @@ SiteHandlerGet::FileNameTransformations(CString & p_filename)
 // You can implement your own override,
 // e.g. for implementing restrictions on subdirectories
 bool 
-SiteHandlerGet::FileNameRestrictions(CString& /*p_filename*/)
+SiteHandlerGet::FileNameRestrictions(XString& /*p_filename*/)
 {
   // Nothing done here!
   return false;
