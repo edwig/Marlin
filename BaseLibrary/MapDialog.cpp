@@ -246,7 +246,7 @@ int MapDialog::CallbackProc(
     }
     m_hwnd = 0;
   }
-  catch(CException& er)
+  catch(StdException& er)
   {
     m_hwnd = 0;
     UNREFERENCED_PARAMETER(er);

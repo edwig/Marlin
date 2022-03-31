@@ -24,7 +24,7 @@
 // Version number: See SQLComponents.h
 //
 #pragma once
-#include <afxdlgs.h>
+#include <commdlg.h>
 
 /* VLAGGEN
 
@@ -220,7 +220,8 @@ OFN_SHOWHELP          Causes the dialog box to display the Help button. The hwnd
 class DocFileDialog
 {
 public:
-  DocFileDialog(bool    p_open              // true = open, false = SaveAs
+  DocFileDialog(HWND    p_owner
+               ,bool    p_open              // true = open, false = SaveAs
                ,XString p_title             // Title of the dialog
                ,XString p_defext   = ""     // Default extension
                ,XString p_filename = ""     // Default first file

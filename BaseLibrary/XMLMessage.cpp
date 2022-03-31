@@ -1293,6 +1293,36 @@ XMLMessage::DeleteAttribute(XMLElement* p_element,XString p_attribName)
   return false;
 }
 
+// Clean up (delete) elements if empty
+bool
+XMLMessage::CleanUpElement(XMLElement* p_element,bool p_recurse)
+{
+  // Check element for root or nullptr reference
+  if(!p_element || p_element == m_root)
+  {
+    return false;
+  }
+
+  // Possible recurse through child elements
+  if(p_recurse && !p_element->GetChildren().empty())
+  {
+    // Use index number, as size can shrink during the loop!
+    for(int num = (int)p_element->GetChildren().size() - 1;num >= 0;--num)
+    {
+      if(!CleanUpElement(p_element->GetChildren()[num],true))
+      {
+        return false;
+      }
+    }
+  }
+  if(p_element->GetChildren().empty() && p_element->GetValue().IsEmpty())
+  {
+    XMLElement* parent = p_element->GetParent();
+    return DeleteElement(parent,p_element);
+  }
+  return false;
+}
+
 // Find an element by attribute
 // Attribute values must be unique for this method to work
 // Preferable: attribute = 'Id', value = unique-identifier-or-number

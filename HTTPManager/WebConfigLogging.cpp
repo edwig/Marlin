@@ -205,7 +205,8 @@ void WebConfigLogging::OnEnChangeLogfile()
 
 void WebConfigLogging::OnBnClickedButtLogfile()
 {
-  DocFileDialog file(true
+  DocFileDialog file(GetSafeHwnd()
+                    ,true
                     ,"Enter the path to the logfile"
                     ,"txt"
                     ,m_logfile

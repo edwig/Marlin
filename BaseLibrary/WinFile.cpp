@@ -290,7 +290,8 @@ WinFile::CreateDirectory()
   XString part = GetBaseDirectory(path);
   while(!part.IsEmpty())
   {
-    dirToBeOpened += "\\" + part;
+    dirToBeOpened += "\\";
+    dirToBeOpened += part;
     if (!::CreateDirectory(dirToBeOpened.GetString(),nullptr))
     {
       m_error = ::GetLastError();

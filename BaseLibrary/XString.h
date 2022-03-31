@@ -191,7 +191,7 @@ public:
   SMX_String   operator+=(const char p_char);
 
 private:
-//   In CString these are in / for StringData 
+//   In CString these are in StringData 
 //   We do not use it here, as we do not use the same locking scheme
 //   in a std::string derived class
 //

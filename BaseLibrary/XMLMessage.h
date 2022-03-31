@@ -277,6 +277,8 @@ public:
   bool            DeleteElement(XMLElement* p_base, XMLElement* p_element);
   // Delete exactly this attribute
   bool            DeleteAttribute(XMLElement* p_element, XString p_attribName);
+  // Clean up (delete) elements if empty
+  bool            CleanUpElement(XMLElement* p_element,bool p_recurse);
 
   // Finding an element by attribute value
   XMLElement*     FindElementByAttribute(XString p_attribute, XString p_value);

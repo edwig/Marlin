@@ -21,3 +21,6 @@ CHANGES IN VERSION 8.0.0
     See the 'readme.md' of https://github.com/edwig/BaseLibrary/readme.md
 4)  Add the path to '$(SolutionDir)BaseLibrary\' in your compiler settings
     under 'Project properties/C++/General/Additional Include Directories'
+5)  Added method XMLMessage::CleanUpElement and SOAPMessage::CleanUp
+    These can (recursively) clean out empty XMLElements that are no longer deemed relevant
+    for the functioning of the message.

@@ -29,7 +29,8 @@
 
 #pragma warning (disable:4312)
 
-DocFileDialog::DocFileDialog(bool    p_open        // true = open, false = SaveAs
+DocFileDialog::DocFileDialog(HWND    p_owner
+                            ,bool    p_open        // true = open, false = SaveAs
                             ,XString p_title       // Title of the dialog
                             ,XString p_defext      // Default extension
                             ,XString p_filename    // Default first file
@@ -60,7 +61,7 @@ DocFileDialog::DocFileDialog(bool    p_open        // true = open, false = SaveA
   p_flags &= ~(OFN_NODEREFERENCELINKS | OFN_NOLONGNAMES | OFN_NOTESTFILECREATE);
 
   m_ofn.lStructSize       = sizeof(OPENFILENAME);
-  m_ofn.hwndOwner         = AfxGetApp()->GetMainWnd()->GetSafeHwnd();
+  m_ofn.hwndOwner         = p_owner;
   m_ofn.hInstance         = (HINSTANCE) GetWindowLong(m_ofn.hwndOwner,GWLP_HINSTANCE);
   m_ofn.lpstrFile         = (LPSTR) m_filename;
   m_ofn.lpstrDefExt       = (LPSTR) m_defext;

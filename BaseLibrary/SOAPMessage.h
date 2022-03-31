@@ -325,11 +325,15 @@ public:
   // Set/Add parameter to the header section (level 1 only)
   XMLElement*     SetHeaderParameter(XString p_paramName, const char* p_value, bool p_first = false);
   // General add a parameter (always adds, so multiple parameters of same name can be added)
-  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,XString p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,const char* p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,int         p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,bool        p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,double      p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,XString           p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,const char*       p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,int               p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,unsigned          p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,bool              p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,double            p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,bcd               p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,__int64           p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,unsigned __int64  p_value,bool p_front = false);
 
   XString         GetParameter       (XString p_name);
   int             GetParameterInteger(XString p_name);
@@ -351,6 +355,8 @@ public:
 
   // Complete the message (members to XML)
   void            CompleteTheMessage();
+  // Clean up the empty elements in the message
+  bool            CleanUp();
 
 protected:
   // Encrypt the whole message: yielding a new message

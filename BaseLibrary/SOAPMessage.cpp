@@ -874,6 +874,30 @@ SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,int
 }
 
 XMLElement*
+SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,unsigned p_value,bool p_front /*=false*/)
+{
+  XString value;
+  value.Format("%u",p_value);
+  return AddElement(p_base,p_name,p_type,value,p_front);
+}
+
+XMLElement* 
+SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,__int64 p_value,bool p_front /*= false*/)
+{
+  XString value;
+  value.Format("%I64d",p_value);
+  return AddElement(p_base,p_name,p_type,value,p_front);
+}
+
+XMLElement* 
+SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,unsigned __int64 p_value,bool p_front /*= false*/)
+{
+  XString value;
+  value.Format("%I64u",p_value);
+  return AddElement(p_base,p_name,p_type,value,p_front);
+}
+
+XMLElement*
 SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,const char* p_value,bool p_front /*=false*/)
 {
   XString value(p_value);
@@ -893,6 +917,13 @@ SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,dou
   XString value;
   value.Format("16.16%g",p_value);
   value = value.TrimRight('0');
+  return AddElement(p_base,p_name,p_type,value,p_front);
+}
+
+XMLElement*
+SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,bcd p_value,bool p_front /*=false*/)
+{
+  XString value = p_value.AsString(bcd::Format::Bookkeeping,false,0);
   return AddElement(p_base,p_name,p_type,value,p_front);
 }
 
@@ -1185,6 +1216,26 @@ SOAPMessage::SetSoapEnvelope()
     SetElementNamespace(m_root,"wsse",NAMESPACE_SECEXT);
     SetElementNamespace(m_root,"wsu", NAMESPACE_SECUTILITY);
   }
+}
+
+// Clean up the empty elements in the message
+bool
+SOAPMessage::CleanUp()
+{
+  bool result = false;
+
+  if(m_body && m_paramObject)
+  {
+    result = true;
+    for(int num = (int)m_paramObject->GetChildren().size() - 1; num >= 0; --num)
+    {
+      if(!CleanUpElement(m_paramObject->GetChildren()[num],true))
+      {
+        result = false;
+      }
+    }
+  }
+  return result;
 }
 
 #pragma endregion XMLOutput
