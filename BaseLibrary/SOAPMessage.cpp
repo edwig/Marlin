@@ -1770,6 +1770,13 @@ SOAPMessage::CreateParametersObject(ResponseType p_responseType)
       }
       else
       {
+        // Make sure we have a valid XML name
+        // If not, we provice a generic default name to proceed with fingers crossed
+        if(m_soapAction.IsEmpty() || !XMLElement::IsValidName(m_soapAction))
+        {
+          m_soapAction = "SoapAction";
+        }
+
         // When soapVersion = 1.1 or 1.2
         switch(p_responseType)
         {

@@ -24,3 +24,6 @@ CHANGES IN VERSION 8.0.0
 5)  Added method XMLMessage::CleanUpElement and SOAPMessage::CleanUp
     These can (recursively) clean out empty XMLElements that are no longer deemed relevant
     for the functioning of the message.
+6)  In case of a SOAPMessage with an invalid 'SoapAction' name by XML rules, the SOAP 
+    message object and the parameter object (first node within the body) will temporarily
+    be generated as 'SoapAction'.
