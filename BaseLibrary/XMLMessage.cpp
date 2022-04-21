@@ -1309,10 +1309,7 @@ XMLMessage::CleanUpElement(XMLElement* p_element,bool p_recurse)
     // Use index number, as size can shrink during the loop!
     for(int num = (int)p_element->GetChildren().size() - 1;num >= 0;--num)
     {
-      if(!CleanUpElement(p_element->GetChildren()[num],true))
-      {
-        return false;
-      }
+      CleanUpElement(p_element->GetChildren()[num],true);
     }
   }
   if(p_element->GetChildren().empty() && p_element->GetValue().IsEmpty())
