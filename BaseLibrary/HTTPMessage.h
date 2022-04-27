@@ -243,6 +243,9 @@ public:
   void    AddReference();
   void    DropReference();
 
+  // Operators
+  HTTPMessage& operator=(JSONMessage& p_message);
+
 private:
   // Parse raw URL to cracked URL data
   bool    ParseURL(XString p_url);

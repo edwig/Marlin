@@ -31,21 +31,22 @@
 // Previous implementation: https://tools.ietf.org/html/rfc2388
 //
 #pragma once
-#include "FileBuffer.h"
 #include <vector>
+#include "FileBuffer.h"
+#include "Headers.h"
 
 class HTTPMessage;
 
 // Implements the "Content-Type: multipart/form-data" type of HTTP messages
 // or the default "Content-Type: application/x-www-form-urlencoded"
 
-typedef enum _fdtype
+enum class FormDataType
 {
   FD_UNKNOWN
  ,FD_URLENCODED
  ,FD_MULTIPART
-}
-FormDataType;
+ ,FD_MIXED
+};
 
 // The MultiPartBuffer consists of various MultiPart's
 // Normally you should only use the MultiPart on incoming messages
@@ -57,35 +58,41 @@ public:
   MultiPart(XString p_name,XString p_contentType);
 
   // SETTERS
-  void    SetName(XString p_name)             { m_name             = p_name;   };
-  void    SetData(XString p_data)             { m_data             = p_data;   };
-  void    SetContentType(XString p_type)      { m_contentType      = p_type;   };
-  void    SetCharset(XString p_charset)       { m_charset          = p_charset;};
-  void    SetFileName(XString p_file)         { m_filename         = p_file;   };
-  void    SetDateCreation(XString p_date)     { m_creationDate     = p_date;   };
-  void    SetDateModification(XString p_date) { m_modificationDate = p_date;   };
-  void    SetDateRead(XString p_date)         { m_readDate         = p_date;   };
-  void    SetSize(size_t p_size)              { m_size             = p_size;   };
+  void    SetName(XString p_name)             { m_name             = p_name;    }
+  void    SetData(XString p_data)             { m_data             = p_data;    }
+  void    SetContentType(XString p_type)      { m_contentType      = p_type;    }
+  void    SetCharset(XString p_charset)       { m_charset          = p_charset; }
+  void    SetBoundary(XString p_boundary)     { m_boundary         = p_boundary;}
+  void    SetFileName(XString p_file)         { m_shortFilename    = p_file;    }
+  void    SetDateCreation(XString p_date)     { m_creationDate     = p_date;    }
+  void    SetDateModification(XString p_date) { m_modificationDate = p_date;    }
+  void    SetDateRead(XString p_date)         { m_readDate         = p_date;    }
+  void    SetSize(size_t p_size)              { m_size             = p_size;    }
   // Setting filename and reading the new access times
   bool    SetFile(XString p_filename);
 
   // GETTERS
-  XString GetName()             { return m_name;              };
-  XString GetData()             { return m_data;              };
-  XString GetContentType()      { return m_contentType;       };
-  XString GetCharset()          { return m_charset;           };
-  XString GetFileName()         { return m_filename;          };
-  XString GetDateCreation()     { return m_creationDate;      };
-  XString GetDateModification() { return m_modificationDate;  };
-  XString GetDateRead()         { return m_readDate;          };
-  size_t  GetSize()             { return m_size;              };
-  FileBuffer* GetBuffer()       { return &m_file;             };
+  XString GetName()             { return m_name;              }
+  XString GetData()             { return m_data;              }
+  XString GetContentType()      { return m_contentType;       }
+  XString GetCharset()          { return m_charset;           }
+  XString GetBoundary()         { return m_boundary;          }
+  XString GetShortFileName()    { return m_shortFilename;     }
+  XString GetLongFileName()     { return m_longFilename;      }
+  XString GetDateCreation()     { return m_creationDate;      }
+  XString GetDateModification() { return m_modificationDate;  }
+  XString GetDateRead()         { return m_readDate;          }
+  size_t  GetSize()             { return m_size;              }
+  FileBuffer* GetBuffer()       { return &m_file;             }
 
   // Functions
   bool    WriteFile();
   bool    CheckBoundaryExists(XString p_boundary);
   XString CreateHeader(XString p_boundary,bool p_extensions = false);
   void    TrySettingFiletimes();
+  void    AddHeader(XString p_header,XString p_value);
+  XString GetHeader(XString p_header);
+  void    DelHeader(XString p_header);
 
 private:
   XString   FileTimeToString  (PFILETIME p_filetime);
@@ -94,9 +101,11 @@ private:
   // Content-Type: field
   XString m_contentType;
   XString m_charset;
+  XString m_boundary;
   // Content-disposition: fields
   XString m_name;
-  XString m_filename;
+  XString m_shortFilename;
+  XString m_longFilename;
   XString m_creationDate;
   XString m_modificationDate;
   XString m_readDate;
@@ -105,6 +114,8 @@ private:
   // File part
   FileBuffer m_file;        // File contents
   size_t     m_size { 0 };  // Indicative!!
+  // Additional headers
+  HeaderMap  m_headers;
 };
 
 using MultiPartMap = std::vector<MultiPart*>;
@@ -127,16 +138,21 @@ public:
   // Creating a MultiPartBuffer
   MultiPart*   AddPart(XString p_name,XString p_contentType,XString p_data,XString p_charset = "",bool p_conversion = false);
   MultiPart*   AddFile(XString p_name,XString p_contentType,XString p_filename);
+  // Delete a designated part
+  bool         DeletePart(XString p_name);
+  bool         DeletePart(MultiPart* p_part);
   // Getting a part of the MultiPartBuffer
   MultiPart*   GetPart(XString p_name);
   MultiPart*   GetPart(int p_index);
   size_t       GetParts();
   FormDataType GetFormDataType();
   XString      GetContentType();
+  XString      GetBoundary();
 
   // Functions for HTTPMessage
-  XString      CalculateBoundary();
+  XString      CalculateBoundary(XString p_special = "#");
   XString      CalculateAcceptHeader();
+  bool         SetBoundary(XString p_boundary);
   // Re-create from an existing (incoming!) buffer
   bool         ParseBuffer(XString p_contentType,FileBuffer* p_buffer,bool p_conversion = false);
 

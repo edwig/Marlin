@@ -231,7 +231,7 @@ int MultiJSON()
   buf.AddBuffer((uchar*)buffer,size);
   CString contentType("multipart/form-data; boundary=----WebKitFormBoundarydZ38XIr1QTTS2IMb");
 
-  MultiPartBuffer multi(FD_MULTIPART);
+  MultiPartBuffer multi(FormDataType::FD_MULTIPART);
   multi.ParseBuffer(contentType,&buf);
 
   size_t parts = multi.GetParts();

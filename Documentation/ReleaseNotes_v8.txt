@@ -9,8 +9,15 @@ Version 8.x contains the new BaseLibrary where all general classes are moved int
 that can be shared with other library modules like SQLComponents and CXHibernate
 ----------------------------------------------------------------------------------------------
 
-CHANGES IN VERSION 8.0.0
-------------------------
+CHANGES IN VERSION 8.0.1 of 27-04-2022
+--------------------------------------
+1)  Removed the ZIP and ZLib directories from Marlin, as these methods are now supported by
+    the new BaseLibrary
+2)  BaseLibrary upgraded to version 1.0.2
+3)  OAuth2Cache fixes for multithreaded environments
+
+CHANGES IN VERSION 8.0.0 of 21-03-2022
+--------------------------------------
 1)  Moved all general classes and functions to the "BaseLibrary"
 2)  To compile your programs with this version of Marlin, do the following
     o   Replace #include "Analysis.h" for #include "LogAnalysis.h"

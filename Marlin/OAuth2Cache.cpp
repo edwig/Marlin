@@ -240,6 +240,8 @@ OAuth2Cache::SetDevelopment(bool p_dev /*= true*/)
 int
 OAuth2Cache::GetHasSession(XString p_appID,XString p_appKey)
 {
+  AutoCritSec lock(&m_lock);
+
   for(auto& ses : m_cache)
   {
     if(ses.second.m_appID == p_appID && ses.second.m_appKey == p_appKey)
@@ -259,6 +261,8 @@ OAuth2Cache::GetHasSession(XString p_appID,XString p_appKey)
 OAuthSession* 
 OAuth2Cache::FindSession(int p_session)
 {
+  AutoCritSec lock(&m_lock);
+
   AuthCache::iterator it = m_cache.find(p_session);
   if(it != m_cache.end())
   {

@@ -10,12 +10,6 @@
     <Filter Include="MarlinGeneral">
       <UniqueIdentifier>{f10f91d4-2433-4cd1-8e4c-2d45e617e6ab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Zip">
-      <UniqueIdentifier>{9760d0db-1913-4e67-b522-9a3a5dfbf346}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Zip\Headers">
-      <UniqueIdentifier>{b816656f-1841-4ebc-b854-614c0c02c288}</UniqueIdentifier>
-    </Filter>
     <Filter Include="MarlinClient\Headers">
       <UniqueIdentifier>{9ca759bf-4e74-4ac9-a662-5e28d7f5c09e}</UniqueIdentifier>
     </Filter>
@@ -135,33 +129,6 @@
     <ClCompile Include="XMLParserImport.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="ZLib\inflate.c">
-      <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="ZLib\zutil.c">
-      <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="ZLib\inftrees.c">
-      <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="ZLib\inffast.c">
-      <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="ZLib\deflate.c">
-      <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="ZLib\adler32.c">
-      <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="ZLib\zipcrc32.c">
-      <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="ZLib\trees.c">
-      <Filter>Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="Zlib\gzip.cpp">
-      <Filter>Zip</Filter>
-    </ClCompile>
     <ClCompile Include="MediaType.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
@@ -260,42 +227,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ZLib\inflate.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\zutil.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\zlib.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\gzguts.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\zconf.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\inftrees.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\inffast.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\inffixed.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\deflate.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\zipcrc32.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ZLib\trees.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Zlib\gzip.h">
-      <Filter>Zip\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="SiteFilter.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
@@ -525,10 +456,5 @@
     <ClInclude Include="framework.h">
       <Filter>Configuration</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ZLib\deflate.d">
-      <Filter>Zip</Filter>
-    </None>
   </ItemGroup>
 </Project>

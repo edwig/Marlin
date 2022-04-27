@@ -46,7 +46,7 @@ SiteHandlerFormData::Handle(HTTPMessage* p_message)
 
   XString contentType = p_message->GetContentType();
   FileBuffer* buffer  = p_message->GetFileBuffer();
-  MultiPartBuffer multi(FD_UNKNOWN);
+  MultiPartBuffer multi(FormDataType::FD_UNKNOWN);
 
   if(buffer && !contentType.IsEmpty())
   {
@@ -67,7 +67,7 @@ SiteHandlerFormData::Handle(HTTPMessage* p_message)
         MultiPart* part = multi.GetPart((int)ind);
         if(part)
         {
-          if(part->GetFileName().IsEmpty())
+          if(part->GetShortFileName().IsEmpty())
           {
             errors += HandleData(p_message,part);
           }
@@ -131,7 +131,7 @@ SiteHandlerFormData::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 int
 SiteHandlerFormData::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
-  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName().GetString(),p_part->GetFileName().GetString());
+  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName().GetString(),p_part->GetShortFileName().GetString());
   SITE_ERRORLOG(ERROR_BAD_COMMAND,"Default multipart/form-data file-handler. Override me!");
   return 1;
 }

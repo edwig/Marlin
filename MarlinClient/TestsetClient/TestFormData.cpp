@@ -63,7 +63,7 @@ TestFormDataMP(HTTPClient* p_client)
 {
   CString data = GetJsonString();
 
-  MultiPartBuffer buffer(FD_MULTIPART);
+  MultiPartBuffer buffer(FormDataType::FD_MULTIPART);
   MultiPart* part1 = buffer.AddPart("json", "application/json",data);
   MultiPart* part2 = buffer.AddPart("empty","text/html",       ""); 
   MultiPart* part3 = buffer.AddFile("eventsource","application/js",file);
@@ -108,7 +108,7 @@ TestFormDataMP(HTTPClient* p_client)
 int 
 TestFormDataUE(HTTPClient* p_client)
 {
-  MultiPartBuffer buffer(FD_URLENCODED);
+  MultiPartBuffer buffer(FormDataType::FD_URLENCODED);
   buffer.AddPart("one","text/html","Monkey-Nut-Tree");
   buffer.AddPart("two","text/html","Tree-Leaf-Root");
   buffer.AddPart("three","text/rtf","normal{\\b bold} and {\\i italic}");
@@ -154,7 +154,7 @@ int TestFD()
     // fb.AddBuffer((uchar*)buffer, 2063);
     fb.SetBuffer((uchar*) buffer, 2063);
 
-    MultiPartBuffer mpb(FD_UNKNOWN);
+    MultiPartBuffer mpb(FormDataType::FD_UNKNOWN);
     mpb.ParseBuffer(contenttype, &fb);
 
     printf("Number of parts: %d\n",(int) mpb.GetParts());

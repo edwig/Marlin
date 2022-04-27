@@ -43,7 +43,7 @@
 #include "HTTPClientTracing.h"
 #include "HTTPError.h"
 #include "OAuth2Cache.h"
-#include "gzip.h"
+#include <ZIP\gzip.h>
 #include <winerror.h>
 #include <wincrypt.h>
 #include <atlconv.h>

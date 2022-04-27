@@ -94,18 +94,18 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 int 
 FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
-  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName().GetString(),p_part->GetFileName().GetString());
+  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName().GetString(),p_part->GetShortFileName().GetString());
 
   xprintf("MULTI-PART FILE = Name : %s\n",(LPCTSTR)p_part->GetName());
   xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
-  xprintf("MULTI-PART Filename    : %s\n",(LPCTSTR)p_part->GetFileName());
+  xprintf("MULTI-PART Filename    : %s\n",(LPCTSTR)p_part->GetShortFileName());
   xprintf("File date creation     : %s\n",(LPCTSTR)p_part->GetDateCreation());
   xprintf("File date modification : %s\n",(LPCTSTR)p_part->GetDateModification());
   xprintf("File date last-read    : %s\n",(LPCTSTR)p_part->GetDateRead());
   xprintf("File indicated size    : %d\n",(int)    p_part->GetSize());
 
   // Keep debugging things together, by resetting the filename
-  XString filename = MarlinConfig::GetExePath() + p_part->GetFileName();
+  XString filename = MarlinConfig::GetExePath() + p_part->GetShortFileName();
   p_part->SetFileName(filename);
   // Re-write the file part buffer + optional file times.
   bool result = p_part->WriteFile();

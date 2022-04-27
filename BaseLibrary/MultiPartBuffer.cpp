@@ -58,7 +58,7 @@ bool
 MultiPart::SetFile(XString p_filename)
 {
   // Initially empty file and all the times (new file!)
-  m_filename.Empty();
+  m_shortFilename.Empty();
   m_creationDate.Empty();
   m_modificationDate.Empty();
   m_readDate.Empty();
@@ -97,17 +97,14 @@ MultiPart::SetFile(XString p_filename)
   {
     return false;
   }
+  m_longFilename = p_filename;
 
   // Record filename and size in this MultiPart
   WinFile filenm(p_filename);
-  m_filename = XString(filenm.GetFilenamePartFilename());
-  m_size     = m_file.GetLength();
-
-
-#pragma message ("ENCODE special chars")
-  // Add % encoding in the name if so necessary
-  //ensure.EncodeSpecialChars(m_filename);
-
+  m_shortFilename = XString(filenm.GetFilenamePartFilename());
+  m_size = m_file.GetLength();
+  filenm.SetFilename(m_shortFilename);
+  m_shortFilename = filenm.GetNamePercentEncoded();
   return true;
 }
 
@@ -155,9 +152,9 @@ MultiPart::CreateHeader(XString p_boundary,bool p_extensions /*=false*/)
   header.AppendFormat("name=\"%s\"",m_name.GetString());
 
   // Filename attributes
-  if(!m_filename.IsEmpty())
+  if(!m_shortFilename.IsEmpty())
   {
-    header.AppendFormat("; filename=\"%s\"",m_filename.GetString());
+    header.AppendFormat("; filename=\"%s\"",m_shortFilename.GetString());
 
     // Eventually do the extensions for filetimes and size
     if(p_extensions)
@@ -183,8 +180,13 @@ MultiPart::CreateHeader(XString p_boundary,bool p_extensions /*=false*/)
   }
   // Add content type
   header += "\r\nContent-type: ";
-  header += m_contentType;
-  if (!m_charset.IsEmpty())
+  header += FindMimeTypeInContentType(m_contentType);
+  if(!m_boundary.IsEmpty())
+  {
+    header += "; boundary=";
+    header += m_boundary;
+  }
+  if(!m_charset.IsEmpty())
   {
     header += "; charset=\"";
     header += m_charset;
@@ -201,7 +203,7 @@ MultiPart::WriteFile()
   bool result = false;
 
   // Use our filename!
-  m_file.SetFileName(m_filename);
+  m_file.SetFileName(m_shortFilename);
   // Try to physically write the file
   result = m_file.WriteFile();
   // Forward our times
@@ -231,7 +233,7 @@ MultiPart::TrySettingFiletimes()
   pReadTime     = FileTimeFromString(pReadTime,    m_readDate);
 
   // Open file to set the filetimes in the filesystem
-  HANDLE fileHandle = CreateFile(m_filename
+  HANDLE fileHandle = CreateFile(m_shortFilename
                                 ,FILE_WRITE_ATTRIBUTES
                                 ,FILE_SHARE_READ 
                                 ,NULL
@@ -274,6 +276,51 @@ MultiPart::FileTimeFromString(PFILETIME p_filetime,XString& p_time)
   return nullptr;
 }
 
+void
+MultiPart::AddHeader(XString p_header,XString p_value)
+{
+  // Case-insensitive search!
+  HeaderMap::iterator it = m_headers.find(p_header);
+  if(it != m_headers.end())
+  {
+    // Check if we set it a duplicate time
+    // If appended, we do not append it a second time
+    if(it->second.Find(p_value) >= 0)
+    {
+      return;
+    }
+    // New value of the header
+    it->second = p_value;
+  }
+  else
+  {
+    // Insert as a new header
+    m_headers.insert(std::make_pair(p_header,p_value));
+  }
+}
+
+XString 
+MultiPart::GetHeader(XString p_header)
+{
+  HeaderMap::iterator it = m_headers.find(p_header);
+  if(it != m_headers.end())
+  {
+    return it->second;
+  }
+  return "";
+}
+
+void
+MultiPart::DelHeader(XString p_header)
+{
+  HeaderMap::iterator it = m_headers.find(p_header);
+  if(it != m_headers.end())
+  {
+    m_headers.erase(it);
+    return;
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // MULTIPART BUFFER
@@ -312,11 +359,23 @@ MultiPartBuffer::GetContentType()
   XString type;
   switch(m_type)
   {
-    case FD_URLENCODED: type = "application/x-www-form-urlencoded"; break;
-    case FD_MULTIPART:  type = "multipart/form-data";               break;
-    case FD_UNKNOWN:    break;
+    case FormDataType::FD_URLENCODED: type = "application/x-www-form-urlencoded"; break;
+    case FormDataType::FD_MULTIPART:  type = "multipart/form-data";               break;
+    case FormDataType::FD_MIXED:      type = "multipart/mixed";                   break;
+    case FormDataType::FD_UNKNOWN:    break;
   }
   return type;
+}
+
+XString
+MultiPartBuffer::GetBoundary()
+{
+  if(m_type == FormDataType::FD_MULTIPART ||
+     m_type == FormDataType::FD_MIXED     )
+  {
+    return m_boundary;
+  }
+  return "";
 }
 
 bool
@@ -324,11 +383,11 @@ MultiPartBuffer::SetFormDataType(FormDataType p_type)
 {
   // In case we 'reset'  to URL encoded
   // we cannot allow to any files entered as parts
-  if(p_type == FD_URLENCODED)
+  if(p_type == FormDataType::FD_URLENCODED)
   {
     for(auto& part : m_parts)
     {
-      if(!part->GetFileName().IsEmpty())
+      if(!part->GetShortFileName().IsEmpty())
       {
         return false;
       }
@@ -432,10 +491,43 @@ MultiPartBuffer::GetPart(int p_index)
   return nullptr;
 }
 
+// Delete a designated part
+bool
+MultiPartBuffer::DeletePart(XString p_name)
+{
+  MultiPartMap::iterator it = m_parts.begin();
+  while(it != m_parts.end())
+  {
+    if((*it)->GetName().Compare(p_name) == 0)
+    {
+      m_parts.erase(it);
+      return true;
+    }
+    ++it;
+  }
+  return false;
+}
+
+bool
+MultiPartBuffer::DeletePart(MultiPart* p_part)
+{
+  MultiPartMap::iterator it = m_parts.begin();
+  while(it != m_parts.end())
+  {
+    if (*it == p_part)
+    {
+      m_parts.erase(it);
+      return true;
+    }
+    ++it;
+  }
+  return false;
+}
+
 // Calculate a new part boundary and check that it does NOT 
 // exists in any of the parts of the message
 XString
-MultiPartBuffer::CalculateBoundary()
+MultiPartBuffer::CalculateBoundary(XString p_special /*= "#" */)
 {
   bool exists = false;
   do
@@ -443,34 +535,39 @@ MultiPartBuffer::CalculateBoundary()
     // Create boundary by using a globally unique identifier
     m_boundary = GenerateGUID();
     m_boundary.Replace("-","");
-    m_boundary = XString("#BOUNDARY#") + m_boundary + "#";
-
-    // Reset the search of the next boundary
-    exists = false;
+    m_boundary = p_special + XString("BOUNDARY") + p_special + m_boundary + p_special;
 
     // Search all parts for the existence of the boundary
-    for(auto& part : m_parts)
-    {
-      if(part->CheckBoundaryExists(m_boundary))
-      {
-        exists = true;
-        break;
-      }
-    }
+    exists = !SetBoundary(m_boundary);
   }
   while(exists);
 
   return m_boundary;
 }
 
-XString 
+bool
+MultiPartBuffer::SetBoundary(XString p_boundary)
+{
+  // Search all parts for the existence of the boundary
+  for(auto& part : m_parts)
+  {
+    if(part->CheckBoundaryExists(p_boundary))
+    {
+      return false;
+    }
+  }
+  m_boundary = p_boundary;
+  return true;
+}
+
+XString
 MultiPartBuffer::CalculateAcceptHeader()
 {
-  if(m_type == FD_URLENCODED)
+  if(m_type == FormDataType::FD_URLENCODED)
   {
     return "text/html, application/xhtml+xml";
   }
-  else if(m_type == FD_MULTIPART)
+  else if(m_type == FormDataType::FD_MULTIPART || m_type == FormDataType::FD_MIXED)
   {
     // De-double all content types of all parts
     std::map<XString,bool> types;
@@ -514,12 +611,13 @@ MultiPartBuffer::ParseBuffer(XString p_contentType,FileBuffer* p_buffer,bool p_c
     return false;
   }
 
-  FormDataType type = FindBufferType(p_contentType);
-  switch(type)
+  m_type = FindBufferType(p_contentType);
+  switch(m_type)
   {
-    case FD_URLENCODED: return ParseBufferUrlEncoded(p_buffer);
-    case FD_MULTIPART:  return ParseBufferFormData(p_contentType,p_buffer,p_conversion);
-    case FD_UNKNOWN:    [[fallthrough]];
+    case FormDataType::FD_URLENCODED: return ParseBufferUrlEncoded(p_buffer);
+    case FormDataType::FD_MULTIPART:  [[fallthrough]];
+    case FormDataType::FD_MIXED:      return ParseBufferFormData(p_contentType,p_buffer,p_conversion);
+    case FormDataType::FD_UNKNOWN:    [[fallthrough]];
     default:            return false;
   }
   return false;
@@ -533,8 +631,8 @@ MultiPartBuffer::ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,
   size_t length = 0;
 
   // Find the boundary between the parts
-  XString boundary = FindBoundaryInContentType(p_contentType);
-  if(boundary.IsEmpty())
+  m_boundary = FindFieldInHTTPHeader(p_contentType,"boundary");
+  if(m_boundary.IsEmpty())
   {
     return false;
   }
@@ -550,7 +648,7 @@ MultiPartBuffer::ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,
   size_t remain  = length;
   while(true)
   {
-    void* partBuffer = FindPartBuffer(finding,remain,boundary);
+    void* partBuffer = FindPartBuffer(finding,remain,m_boundary);
     if(partBuffer == nullptr)
     {
       break;
@@ -676,7 +774,7 @@ void
 MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool p_conversion)
 {
   MultiPart* part = new MultiPart();
-  XString charset;
+  XString charset,boundary;
 
   while(true)
   {
@@ -690,9 +788,11 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool
     // Finding the result for the header lines of the buffer part
     if(header.Left(12).CompareNoCase("Content-Type") == 0)
     {
-      charset = FindCharsetInContentType(header);
+      charset  = FindFieldInHTTPHeader(value,"charset");
+      boundary = FindFieldInHTTPHeader(value,"boundary");
       part->SetContentType(value);
       part->SetCharset(charset);
+      part->SetBoundary(boundary);
 
       // In case we have no charset in the Content-Type and we already
       // saw a incoming MultiPart with the name "_charset_"
@@ -711,6 +811,11 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool
       part->SetDateModification(GetAttributeFromLine(line,"modification-date"));
       part->SetDateRead        (GetAttributeFromLine(line,"read-date"));
     }
+    else
+    {
+      // Retain the header. Not directly known in this protocol
+      part->AddHeader(header,value);
+    }
   }
 
   // RFC 7578: No charset = conversion to UTF-8
@@ -722,7 +827,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool
   }
 
   // Getting the contents
-  if(part->GetFileName().IsEmpty())
+  if(part->GetShortFileName().IsEmpty())
   {
     // PART
     // Buffer is the data component
@@ -795,18 +900,18 @@ MultiPartBuffer::GetHeaderFromLine(XString& p_line,XString& p_header,XString& p_
   if(pos > 0)
   {
     p_header = p_line.Left(pos);
-    p_line   = p_line.Mid(pos + 1);
-    p_line.TrimLeft(' ');
-    // Find header value ending (if any)
-    pos = p_line.Find(';');
-    if(pos > 0)
-    {
-      p_value = p_line.Left(pos);
-    }
-    else
-    {
-      p_value = p_line;
-    }
+    p_value  = p_line.Mid(pos + 1);
+    p_value.TrimLeft(' ');
+//     // Find header value ending (if any)
+//     pos = p_line.Find(';');
+//     if(pos > 0)
+//     {
+//       p_value = p_line.Left(pos);
+//     }
+//     else
+//     {
+//       p_value = p_line;
+//     }
   }
   return result;
 }
@@ -840,19 +945,24 @@ MultiPartBuffer::GetAttributeFromLine(XString& p_line,XString p_name)
 
 // Find which type of FormData we are receiving
 // content-type: multipart/form-data; boundary="--#BOUNDARY#12345678901234"
+// content-type: multipart/mixed; boundary="--#BOUNDARY#12345678901234"
 // content-type: application/x-www-form-urlencoded
 FormDataType
 MultiPartBuffer::FindBufferType(XString p_contentType)
 {
   if(p_contentType.Find("urlencoded") > 0)
   {
-    return FD_URLENCODED;
+    return FormDataType::FD_URLENCODED;
   }
   if(p_contentType.Find("form-data") > 0)
   {
-    return FD_MULTIPART;
+    return FormDataType::FD_MULTIPART;
   }
-  return FD_UNKNOWN;
+  if(p_contentType.Find("mixed") > 0)
+  {
+    return FormDataType::FD_MIXED;
+  }
+  return FormDataType::FD_UNKNOWN;
 }
 
 // Find the boundary in the content-type header
