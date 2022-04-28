@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "TestClient.h"
 #include "Crypto.h"
+#include "Base64.h"
 #include <conio.h>
 #include <wincrypt.h>
 
@@ -36,6 +37,22 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+CString CreateNonce()
+{
+  // Init random generator
+  clock_t now = clock();
+  srand((unsigned int)now);
+
+  CString nonce;
+  for (int index = 0; index < 20; ++index)
+  {
+    long key = (rand() % 255) + 1;
+    nonce += (unsigned char)key;
+  }
+  return nonce;
+}
+
 
 int TestHashing()
 {
@@ -179,6 +196,34 @@ int TestHashing()
   // --- "---------------------------------------------- - ------
   printf("Cryptographic hashing provider SHA-512         : %s\n",(hash == expected9) ? "OK" : "ERROR");
   errors += (hash == expected9) ? 0 : 1;
+
+  // TEST 10
+  CString nonce = CreateNonce();
+  CString created("2022-04-25T10:23:55");
+
+  // Password text = Base64(SHA1(nonce + created + password))
+  CString combined = nonce + created + password;
+  CString total1 = crypt.Digest(combined.GetString(),combined.GetLength(), CALG_SHA1);
+  Crypto  crypt2;
+  CString total2 = crypt2.Digest(combined.GetString(),combined.GetLength(), CALG_SHA1);
+  errors += (total1 == total2) ? 0 : 1;
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("Re-hashing with SHA1 is stable (TokenProfile)  : %s\n", (total1 == total2) ? "OK" : "ERROR");
+
+  // TEST11
+  CString nonce64("ZmJEiZTMUu7IqTVuvZPy7g==");
+  nonce = Base64::Decrypt(nonce64);
+  combined = nonce + "2022-04-25T11:32:22.745Z" + "MijnWachtwoord$$";
+  CString total3 = crypt.Digest(combined.GetString(), combined.GetLength(), CALG_SHA1);
+  CString expected10("cvVPyMJr/9W6plAwmuG2wl27akU=");
+  errors += (total3 == expected10) ? 0 : 1;
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("SHA1 (TokenProfile) conforming standard        : %s\n", (total3 == expected10) ? "OK" : "ERROR");
+
 
   return errors;
 }
