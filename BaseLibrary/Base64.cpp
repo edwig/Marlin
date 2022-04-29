@@ -152,7 +152,7 @@ Base64::Decrypt(XString p_encrypted)
   int length = (int) Ascii_length(p_encrypted.GetLength());
   char* buffer = decrypt.GetBufferSetLength(length);
   Decrypt((const unsigned char*)p_encrypted.GetString(),p_encrypted.GetLength(),(unsigned char*)buffer);
-  decrypt.ReleaseBufferSetLength(length);
+  decrypt.ReleaseBuffer();
 
   return decrypt;
 }

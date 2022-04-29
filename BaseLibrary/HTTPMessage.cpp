@@ -651,6 +651,16 @@ HTTPMessage::SetCookiePairs(XString p_cookies)
   }
 }
 
+void 
+HTTPMessage::SetExtension(XString p_ext,bool p_reparse /*= true*/)
+{ 
+  m_cracked.m_extension = p_ext;
+  if(p_reparse)
+  {
+    ReparseURL();
+  }
+}
+
 // Parse the URL, true if legal
 bool
 HTTPMessage::ParseURL(XString p_url)

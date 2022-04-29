@@ -660,7 +660,7 @@ HTTPServer::CalculateRouting(HTTPSite* p_site,HTTPMessage* p_message)
       pos = route.Find('.');
       if(pos >= 0)
       {
-        p_message->SetExtension(route.Mid(pos + 1));
+        p_message->SetExtension(route.Mid(pos + 1),false);
       }
       // Last route part to add
       p_message->AddRoute(route);

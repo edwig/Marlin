@@ -95,6 +95,7 @@ public:
   XString   m_host;
   int       m_port    { INTERNET_DEFAULT_HTTP_PORT };
   XString   m_path;
+  XString   m_extension;
   UriParams m_parameters;
   XString   m_anchor;
 
@@ -108,7 +109,6 @@ public:
   bool      m_foundAnchor;
 
 private:
-  XString   m_extension;
   static LPCTSTR m_unsafeString;
   static LPCTSTR m_reservedString;
   static unsigned char GetHexcodedChar(XString& p_string,int& p_index,bool& p_queryValue);
