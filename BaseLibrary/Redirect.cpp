@@ -31,6 +31,12 @@
 #include <assert.h>
 #include <time.h>
 
+#ifdef _DEBUG
+#define verify(x)  assert(x)
+#else
+#define verify(x)  (x)
+#endif
+
 // This class is build from the following MSDN article.
 // Q190351 HOWTO: Spawn Console Processes with Redirected Standard Handles.
 
@@ -92,27 +98,27 @@ Redirect::StartChildProcess(LPCSTR lpszCmdLine,UINT uShowChildWindow /*=SW_HIDE*
   HANDLE hStdErrReadTmp = NULL;
 
   // Create the child stdin pipe.
-  assert(::CreatePipe(&m_hStdIn, &hStdInWriteTmp, &sa, 0));
+  verify(::CreatePipe(&m_hStdIn, &hStdInWriteTmp, &sa, 0));
 
   // Create the child stdout pipe.
-  assert(::CreatePipe(&hStdOutReadTmp, &m_hStdOut, &sa, 0));
+  verify(::CreatePipe(&hStdOutReadTmp, &m_hStdOut, &sa, 0));
 
   // Create the child stderr pipe.
-  assert(::CreatePipe(&hStdErrReadTmp, &m_hStdErr, &sa, 0));
+  verify(::CreatePipe(&hStdErrReadTmp, &m_hStdErr, &sa, 0));
 
   // Create new stdin write, stdout and stderr read handles.
   // Set the properties to FALSE. Otherwise, the child inherits the
   // properties and, as a result, non-closeable handles to the pipes
   // are created.
-  assert(::DuplicateHandle(hProcess,hStdInWriteTmp,hProcess,&m_hStdInWrite,0,FALSE,DUPLICATE_SAME_ACCESS));
-  assert(::DuplicateHandle(hProcess,hStdOutReadTmp,hProcess,&m_hStdOutRead,0,FALSE,DUPLICATE_SAME_ACCESS));
-  assert(::DuplicateHandle(hProcess,hStdErrReadTmp,hProcess,&m_hStdErrRead,0,FALSE,DUPLICATE_SAME_ACCESS));
+  verify(::DuplicateHandle(hProcess,hStdInWriteTmp,hProcess,&m_hStdInWrite,0,FALSE,DUPLICATE_SAME_ACCESS));
+  verify(::DuplicateHandle(hProcess,hStdOutReadTmp,hProcess,&m_hStdOutRead,0,FALSE,DUPLICATE_SAME_ACCESS));
+  verify(::DuplicateHandle(hProcess,hStdErrReadTmp,hProcess,&m_hStdErrRead,0,FALSE,DUPLICATE_SAME_ACCESS));
 
   // Close inheritable copies of the handles you do not want to be
   // inherited.
-  assert(::CloseHandle(hStdInWriteTmp));
-  assert(::CloseHandle(hStdOutReadTmp));
-  assert(::CloseHandle(hStdErrReadTmp));
+  verify(::CloseHandle(hStdInWriteTmp));
+  verify(::CloseHandle(hStdOutReadTmp));
+  verify(::CloseHandle(hStdErrReadTmp));
 
   // Start child process with redirected stdout, stdin & stderr
   m_hChildProcess = PrepAndLaunchRedirectedChild(lpszCmdLine,
@@ -130,12 +136,15 @@ Redirect::StartChildProcess(LPCSTR lpszCmdLine,UINT uShowChildWindow /*=SW_HIDE*
     OnChildStdErrWrite(lpszBuffer);
 
     // close all handles and return FALSE
-    assert(::CloseHandle(m_hStdIn));
+    verify(::CloseHandle(m_hStdIn));
     m_hStdIn = NULL;
-    assert(::CloseHandle(m_hStdOut));
+    verify(::CloseHandle(m_hStdOut));
     m_hStdOut = NULL;
-    assert(::CloseHandle(m_hStdErr));
+    verify(::CloseHandle(m_hStdErr));
     m_hStdErr = NULL;
+
+    m_terminated = 1;
+    m_eof_input  = 1;
 
     return FALSE;
   }
@@ -145,19 +154,19 @@ Redirect::StartChildProcess(LPCSTR lpszCmdLine,UINT uShowChildWindow /*=SW_HIDE*
 
   // Create Exit event
   m_hExitEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-  assert(m_hExitEvent != NULL);
+  verify(m_hExitEvent != NULL);
 
   // Launch the thread that read the child stdout.
   m_hStdOutThread = (HANDLE)_beginthreadex(NULL, 0, staticStdOutThread,(LPVOID)this, 0, &dwThreadID);
-  assert(m_hStdOutThread != NULL);
+  verify(m_hStdOutThread != NULL);
 
   // Launch the thread that read the child stderr.
   m_hStdErrThread = (HANDLE)_beginthreadex(NULL, 0, staticStdErrThread,(LPVOID)this, 0, &dwThreadID);
-  assert(m_hStdErrThread != NULL);
+  verify(m_hStdErrThread != NULL);
 
   // Launch the thread that monitoring the child process.
   m_hProcessThread = (HANDLE)_beginthreadex(NULL, 0, staticProcessThread,(LPVOID)this, 0, &dwThreadID);
-  assert(m_hProcessThread != NULL);
+  verify(m_hProcessThread != NULL);
 
   // Virtual function to notify derived class that the child is started.
   OnChildStarted(lpszCmdLine);
@@ -198,53 +207,53 @@ Redirect::TerminateChildProcess()
   // Check the process thread.
   if (m_hProcessThread != NULL)
   {
-    assert(::WaitForSingleObject(m_hProcessThread, 1000) != WAIT_TIMEOUT);
+    verify(::WaitForSingleObject(m_hProcessThread, 1000) != WAIT_TIMEOUT);
     m_hProcessThread = NULL;
   }
 
   // Close all child handles first.
   if (m_hStdIn != NULL)
   {
-    assert(::CloseHandle(m_hStdIn));
+    verify(::CloseHandle(m_hStdIn));
     m_hStdIn = NULL;
   }
   if (m_hStdOut != NULL)
   {
-    assert(::CloseHandle(m_hStdOut));
+    verify(::CloseHandle(m_hStdOut));
     m_hStdOut = NULL;
   }
   if (m_hStdErr != NULL)
   {
-    assert(::CloseHandle(m_hStdErr));
+    verify(::CloseHandle(m_hStdErr));
     m_hStdErr = NULL;
   }
   // Close all parent handles.
   if (m_hStdInWrite != NULL)
   {
-    assert(::CloseHandle(m_hStdInWrite));
+    verify(::CloseHandle(m_hStdInWrite));
     m_hStdInWrite = NULL;
   }
   if (m_hStdOutRead != NULL)
   {
-    assert(::CloseHandle(m_hStdOutRead));
+    verify(::CloseHandle(m_hStdOutRead));
     m_hStdOutRead = NULL;
   }
   if (m_hStdErrRead != NULL)
   {
-    assert(::CloseHandle(m_hStdErrRead));
+    verify(::CloseHandle(m_hStdErrRead));
     m_hStdErrRead = NULL;
   }
   // Stop the stdout read thread.
   if (m_hStdOutThread != NULL)
   {
-    assert(::WaitForSingleObject(m_hStdOutThread, 1000) != WAIT_TIMEOUT);
+    verify(::WaitForSingleObject(m_hStdOutThread, 1000) != WAIT_TIMEOUT);
     m_hStdOutThread = NULL;
   }
 
   // Stop the stderr read thread.
   if (m_hStdErrThread != NULL)
   {
-    assert(::WaitForSingleObject(m_hStdErrThread, 1000) != WAIT_TIMEOUT);
+    verify(::WaitForSingleObject(m_hStdErrThread, 1000) != WAIT_TIMEOUT);
     m_hStdErrThread = NULL;
   }
   // Stop the child process if not already stopped.
@@ -254,15 +263,15 @@ Redirect::TerminateChildProcess()
 
   if (IsChildRunning())
   {
-    assert(::TerminateProcess   (m_hChildProcess, 1));
-    assert(::WaitForSingleObject(m_hChildProcess, 1000) != WAIT_TIMEOUT);
+    verify(::TerminateProcess   (m_hChildProcess, 1));
+    verify(::WaitForSingleObject(m_hChildProcess, 1000) != WAIT_TIMEOUT);
   }
   m_hChildProcess = NULL;
 
   // cleanup the exit event
   if (m_hExitEvent != NULL)
   {
-    assert(::CloseHandle(m_hExitEvent));
+    verify(::CloseHandle(m_hExitEvent));
     m_hExitEvent = NULL;
   }
 }
@@ -305,8 +314,8 @@ Redirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
   // as using a NULL pointer for the security attribute!
 
   PSECURITY_DESCRIPTOR lpSD = new SECURITY_DESCRIPTOR;
-  assert(::InitializeSecurityDescriptor(lpSD, SECURITY_DESCRIPTOR_REVISION));
-  assert(::SetSecurityDescriptorDacl(lpSD, -1, 0, 0));
+  verify(::InitializeSecurityDescriptor(lpSD, SECURITY_DESCRIPTOR_REVISION));
+  verify(::SetSecurityDescriptorDacl(lpSD, -1, 0, 0));
 
   LPSECURITY_ATTRIBUTES lpSA = new SECURITY_ATTRIBUTES;
   lpSA->nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -341,7 +350,7 @@ Redirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
   }
 
   // Close any unnecessary handles.
-  assert(::CloseHandle(pi.hThread));
+  verify(::CloseHandle(pi.hThread));
 
   // Wait for the process so that it can begin processing the standard input
   if(bWaitForInputIdle && pi.hProcess)
@@ -492,7 +501,7 @@ Redirect::ProcessThread()
   // Close the stdout stream, so stdout thread can finish
   if (m_hStdOut != NULL)
   {
-    assert(::CloseHandle(m_hStdOut));
+    verify(::CloseHandle(m_hStdOut));
     m_hStdOut = NULL;
   }
   if(returnValue == -1)
@@ -533,7 +542,7 @@ Redirect::CloseChildStdIn()
 {
   if(m_hStdInWrite != NULL)
   {
-    assert(::CloseHandle(m_hStdInWrite));
+    verify(::CloseHandle(m_hStdInWrite));
     m_hStdInWrite = NULL;
   }
 }

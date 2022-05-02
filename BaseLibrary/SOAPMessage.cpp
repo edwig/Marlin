@@ -2426,7 +2426,7 @@ bool
 SOAPMessage::SetTokenProfile(XString p_user,XString p_password,XString p_created,XString p_nonce /*=""*/)
 {
   XString namesp(NAMESPACE_SECEXT);
-  CString secure(NAMESPACE_SECURITY);
+  XString secure(NAMESPACE_SECURITY);
 
   XMLElement* header = FindElement("Header", false);
   if(!header) return false;
