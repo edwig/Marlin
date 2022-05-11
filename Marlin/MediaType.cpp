@@ -256,7 +256,7 @@ MediaTypes::FindExtensionByContentType(XString p_contentType)
 {
   for(auto& mt : g_mt_instance->m_types)
   {
-    if(mt.second.GetContentType().CompareNoCase(p_contentType))
+    if(mt.second.GetContentType().CompareNoCase(p_contentType) == 0)
     {
       return mt.first;
     }

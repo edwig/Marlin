@@ -1084,14 +1084,15 @@ HTTPClient::AddOAuth2authorization()
   if(m_oauthCache && m_oauthSession)
   {
     XString token = m_oauthCache->GetBearerToken(m_oauthSession);
-    if(!token.IsEmpty())
+    if (token.IsEmpty())
     {
-      XString bearerToken("Bearer ");
-      bearerToken += token;
-      AddHeader("Authorization",bearerToken);
-      m_lastBearerToken = token;
-      result = true;
+      token = "NO-TOKEN-GOTTEN";
     }
+    XString bearerToken("Bearer ");
+    bearerToken += token;
+    AddHeader("Authorization", bearerToken);
+    m_lastBearerToken = token;
+    result = true;
   }
   return result;
 }
@@ -1334,6 +1335,12 @@ HTTPClient::AddAuthentication(bool p_ntlm3Step)
   DWORD dwSelectedScheme = 0;
   bool  setCredentials = false;
   
+  // See if we do OAuth2
+  if(m_oauthCache && m_oauthSession)
+  {
+    return AddOAuth2authorization();
+  }
+
   if(p_ntlm3Step)
   {
     dwSelectedScheme = WINHTTP_AUTH_SCHEME_NTLM;
@@ -3034,8 +3041,7 @@ HTTPClient::Send()
 
                                     // Add authentication headers
                                     ResetOAuth2Session();
-                                    if(AddOAuth2authorization()     == false &&
-                                       AddAuthentication(ntlm3Step) == false )
+                                    if(AddAuthentication(ntlm3Step) == false)
                                     {
                                       getReponseSucceed = true;
                                       iRetryTimes = retries + 1;
