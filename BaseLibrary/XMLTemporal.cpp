@@ -28,6 +28,12 @@
 #include "XMLTemporal.h"
 #include <time.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Number of days at the beginning of the month
 // 365 days at the end of the year
 //

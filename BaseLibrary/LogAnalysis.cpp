@@ -49,6 +49,12 @@
 #include <vector>
 #include <algorithm>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 LogAnalysis::LogAnalysis(XString p_name)
             :m_name(p_name)
 {

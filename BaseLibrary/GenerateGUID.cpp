@@ -29,6 +29,12 @@
 #include "GenerateGUID.h"
 #include <combaseapi.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Caller **MUST** do the COM+ (un)initialize with
 // CoInitialize
 // CoUninitialize

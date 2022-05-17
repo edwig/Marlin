@@ -39,6 +39,12 @@
 #include <assert.h>
 #include <tchar.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 static void
 PrintSidUse(XString& p_list,SID_NAME_USE p_sidType)
 {

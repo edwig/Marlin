@@ -28,6 +28,12 @@
 #include <map>
 #include <xstring>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 typedef struct _cpNames
 {
   int     m_codepage_ID;    // Active codepage ID

@@ -29,7 +29,13 @@
 #include "BaseLibrary.h"
 #include "GetUserAccount.h"
 
-XString 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+XString
 GetUserAccount(EXTENDED_NAME_FORMAT p_format /*=NameUnknown*/,bool p_normalized /*=false*/)
 {
   BOOL ret = FALSE;

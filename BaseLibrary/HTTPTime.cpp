@@ -28,6 +28,12 @@
 #include "pch.h"
 #include "HTTPTime.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 const char* weekday_short[7] =
 {
   "Sun","Mon","Tue","Wed","Thu","Fri","Sat"

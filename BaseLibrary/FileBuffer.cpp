@@ -29,6 +29,12 @@
 #include "FileBuffer.h"
 #include "gzip.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 unsigned long g_streaming_limit = STREAMING_LIMIT;
 unsigned long g_compress_limit  = COMPRESS_LIMIT;
 

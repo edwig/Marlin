@@ -29,6 +29,12 @@
 #include "BaseLibrary.h"
 #include "HPFCounter.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // XTOR: Started timer
 // No need to call ::Start() on it
 HPFCounter::HPFCounter()

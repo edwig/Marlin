@@ -30,6 +30,12 @@
 #include <winhttp.h>
 #include "HTTPError.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Essentially all the errors from <winhttp.h>
 
 HTTPError http_errors[] = 

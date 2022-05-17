@@ -26,6 +26,12 @@
 #include "pch.h"
 #include "XPath.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 XPath::XPath(XMLMessage* p_message,XString p_path)
       :m_message(p_message)
       ,m_path(p_path)

@@ -41,6 +41,12 @@
 // Do not complain about enum classes
 #pragma warning (disable: 26812)
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Not part of the public interface

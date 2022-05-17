@@ -28,6 +28,12 @@
 #include "pch.h"
 #include "DefuseBOM.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Check for a Byte-Order-Mark (BOM)
 BOMOpenResult CheckForBOM(const unsigned char* p_pointer
                          ,BOMType&             p_type

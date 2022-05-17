@@ -38,6 +38,12 @@
 #include <xutility>
 #include <string>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 using std::wstring;
 
 // All headers. Must be in sequence with HTTPCommand

@@ -73,3 +73,27 @@ public:
 private:
   CRITICAL_SECTION* m_section;
 };
+
+class AutoTrySection
+{
+public:
+  AutoTrySection(CRITICAL_SECTION* section) : m_section(section)
+  {
+    m_succeeded = TryEnterCriticalSection(m_section) != 0;
+  }
+  ~AutoTrySection()
+  {
+    if(m_succeeded)
+    {
+      LeaveCriticalSection(m_section);
+    }
+  }
+  bool HasLock()
+  {
+    return m_succeeded;
+  }
+private:
+  bool              m_succeeded;
+  CRITICAL_SECTION* m_section;
+};
+

@@ -29,6 +29,12 @@
 #include "XMLRestriction.h"
 #include "Namespace.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Defined in FileBuffer
 extern unsigned long g_streaming_limit; // = STREAMING_LIMIT;
 

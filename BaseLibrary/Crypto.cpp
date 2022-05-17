@@ -35,6 +35,12 @@
 #include <schannel.h>
 #include <vector>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // Encryption providers support password-hashing and encryption algorithms
 // See the documentation on: "Cryptographic Provider Types"
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa380244(v=vs.85).aspx

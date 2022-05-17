@@ -30,6 +30,12 @@
 #include "XMLParser.h"
 #include "GetExePath.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // To prevent:
 // C:\Program Files (x86)\Windows Kits\8.1\Include\um\dbghelp.h(1544): warning C4091: 'typedef ': ignored on left of '' when no variable is declared
 // The bug is in the Windows 8.1 SDK, not in our code base.
