@@ -204,6 +204,7 @@
     <ClCompile Include="ServerEventChannel.cpp" />
     <ClCompile Include="ServerEventDriver.cpp" />
     <ClCompile Include="ServerMain.cpp" />
+    <ClCompile Include="ServiceQuality.cpp" />
     <ClCompile Include="SiteFilter.cpp" />
     <ClCompile Include="SiteFilterClientCertificate.cpp" />
     <ClCompile Include="SiteFilterXSS.cpp" />
@@ -292,6 +293,7 @@
     <ClInclude Include="ServerEventChannel.h" />
     <ClInclude Include="ServerEventDriver.h" />
     <ClInclude Include="ServerMain.h" />
+    <ClInclude Include="ServiceQuality.h" />
     <ClInclude Include="SiteFilter.h" />
     <ClInclude Include="SiteFilterClientCertificate.h" />
     <ClInclude Include="SiteFilterXSS.h" />

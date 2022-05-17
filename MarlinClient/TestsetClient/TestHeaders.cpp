@@ -29,6 +29,7 @@
 #include "TestClient.h"
 #include "SOAPMessage.h"
 #include "ConvertWideString.h"
+#include <ServiceQuality.h>
 
 int TestSOAPHeaders()
 {
@@ -80,10 +81,42 @@ int TestHTTPHeaders()
   return errors;
 }
 
+int TestServiceQuality()
+{
+  int errors = 0;
+
+  XString header = "text/*;q=0.3, text/html;q=0.7, text/html;level=1, text/html;level=2;q=0.4, */*;q=0.5";
+  ServiceQuality serv(header);
+
+  // Check first option
+  QualityOption* opt = serv.GetOptionByPreference(0);
+  if(opt)
+  {
+    errors += opt->m_field    .CompareNoCase("text/html") != 0;
+    errors += opt->m_extension.CompareNoCase("level") != 0;
+    errors += opt->m_value    .CompareNoCase("1") != 0;
+  }
+  else ++errors;
+
+  // Check find by name
+  int pref = serv.GetPreferenceByName("*/*");
+  errors += pref != 50;
+
+  XString second = serv.GetStringByPreference(1);
+  errors += second.Compare("text/html");
+
+  // SUMMARY OF THE TEST
+  // --- "---------------------------------------------- - ------
+  printf("Recognizing service quality in HTTP headers    : %s\n", errors == 0 ? "OK" : "ERROR");
+
+  return errors;
+}
+
 int TestHeaders(void)
 {
   int errors = 0;
   errors += TestSOAPHeaders();
   errors += TestHTTPHeaders();
+  errors += TestServiceQuality();
   return errors;
 }

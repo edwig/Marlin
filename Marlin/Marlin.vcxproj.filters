@@ -225,6 +225,9 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Configuration</Filter>
     </ClCompile>
+    <ClCompile Include="ServiceQuality.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SiteFilter.h">
@@ -455,6 +458,9 @@
     </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceQuality.h">
+      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
