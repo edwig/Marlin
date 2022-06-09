@@ -164,6 +164,15 @@ public:
   void SetCookie(Cookie& p_cookie);
   void SetCookie(XString p_fromHttp);
   void SetCookie(XString p_name,XString p_value,XString p_metadata = "",bool p_secure = false,bool p_httpOnly = false);
+  void SetCookie(XString        p_name
+                ,XString        p_value
+                ,XString        p_metadata
+                ,XString        p_path
+                ,XString        p_domain
+                ,bool           p_secure   = false
+                ,bool           p_httpOnly = false
+                ,CookieSameSite p_samesite = CookieSameSite::NoSameSite
+                ,SYSTEMTIME*    p_expires  = nullptr);
   void SetCookiePairs(XString p_cookies);     // From "Cookie:" only
   void SetCookies(Cookies& p_cookies);
   bool SetHTTPSite(HTTPSite* p_site);

@@ -635,6 +635,30 @@ HTTPMessage::SetCookie(XString p_name
   m_cookies.AddCookie(monster);
 }
 
+void 
+HTTPMessage::SetCookie(XString        p_name
+                      ,XString        p_value
+                      ,XString        p_metadata
+                      ,XString        p_path
+                      ,XString        p_domain
+                      ,bool           p_secure   /*= false*/
+                      ,bool           p_httpOnly /*= false*/
+                      ,CookieSameSite p_samesite /*= CookieSameSite::NoSameSite*/
+                      ,SYSTEMTIME*    p_expires  /*= nullptr*/)
+{
+  Cookie monster;
+  monster.SetCookie(p_name,p_value,p_metadata,p_secure,p_httpOnly);
+
+  if(!p_path.IsEmpty())     monster.SetPath(p_path);
+  if(!p_domain.IsEmpty())   monster.SetDomain(p_domain);
+  if( p_expires)            monster.SetExpires(p_expires);
+  if(p_samesite != CookieSameSite::NoSameSite)
+  {
+    monster.SetSameSite(p_samesite);
+  }
+  m_cookies.AddCookie(monster);
+}
+
 // From "Cookie:" only.
 // Can have multiple cookies, but NO attributes
 void 

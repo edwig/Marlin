@@ -314,3 +314,22 @@ HTTPGetSystemTime()
   return time;
 }
 
+const double SecondsPer100ns = 100. * 1.E-9;
+
+void AddSecondsToSystemTime(SYSTEMTIME* p_timeIn,SYSTEMTIME* p_timeOut, double p_seconds)
+{
+  union 
+  {
+    ULARGE_INTEGER li;
+    FILETIME       ft;
+  };
+
+  // Convert timeIn to filetime
+  SystemTimeToFileTime(p_timeIn,&ft);
+
+  // Add in the seconds
+  li.QuadPart += (ULONGLONG) (p_seconds / SecondsPer100ns);
+
+  // Convert back to systemtime
+  FileTimeToSystemTime(&ft,p_timeOut);
+}

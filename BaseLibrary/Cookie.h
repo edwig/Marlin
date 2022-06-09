@@ -105,7 +105,7 @@ private:
   XString        m_path;                                 // Optional path
   CookieSameSite m_sameSite  { CookieSameSite::NoSameSite }; // SameSite attribute
   // Expiration time
-  SYSTEMTIME m_expires;
+  SYSTEMTIME     m_expires;
 };
 
 using BiscuitTin = std::vector<Cookie>;

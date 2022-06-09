@@ -81,6 +81,7 @@ WebConfigServer::WebConfigServer(bool p_iis,CWnd* pParent /*=NULL*/)
   m_minThreads      = 0;
   m_maxThreads      = 0;
   m_stackSize       = 0;
+  m_cookieExpires   = 0;
   m_serverUnicode   = false;
   m_gzip            = false;
   m_cors            = false;
@@ -116,9 +117,6 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_USE_THROTTLE,       m_buttonUseThrotteling);
   DDX_Control(pDX,IDC_USE_KEEPALIVE,      m_buttonUseKeepalive);
   DDX_Control(pDX,IDC_USE_RETRYTIME,      m_buttonUseRetrytime);
-  DDX_Control(pDX,IDC_USE_COOKIESECURE,   m_buttonUseCookieSecure);
-  DDX_Control(pDX,IDC_USE_COOKIEHTTPONLY, m_buttonUseCookieHttpOnly);
-  DDX_Control(pDX,IDC_USE_COOKIESAMESITE, m_buttonUseCookieSameSite);
 
   // SERVER OVERRIDES
   DDX_Text   (pDX,IDC_WEBROOT,        m_webroot);
@@ -139,9 +137,6 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_THROTTLE,       m_buttonThrotteling);
   DDX_Text   (pDX,IDC_KALIVE,         m_keepalive);
   DDX_Text   (pDX,IDC_RETRYTIME,      m_retrytime);
-  DDX_Control(pDX,IDC_COOKIESECURE,   m_buttonCookieSecure);
-  DDX_Control(pDX,IDC_COOKIEHTTPONLY, m_buttonCookieHttpOnly);
-  DDX_Control(pDX,IDC_COOKIESAMESITE, m_comboCookieSameSite);
 
   DDV_MinMaxInt(pDX,m_keepalive,EVENT_KEEPALIVE_MIN,EVENT_KEEPALIVE_MAX);
   DDV_MinMaxInt(pDX,m_retrytime,EVENT_RETRYTIME_MIN,EVENT_RETRYTIME_MAX);
@@ -161,9 +156,6 @@ void WebConfigServer::DoDataExchange(CDataExchange* pDX)
     w = GetDlgItem(IDC_COMP_LIMIT);     w->EnableWindow(m_useCompressLimit);
     w = GetDlgItem(IDC_KALIVE);         w->EnableWindow(m_useKeepalive);
     w = GetDlgItem(IDC_RETRYTIME);      w->EnableWindow(m_useRetrytime);
-    w = GetDlgItem(IDC_COOKIESECURE);   w->EnableWindow(m_useCookieSecure);
-    w = GetDlgItem(IDC_COOKIEHTTPONLY); w->EnableWindow(m_useCookieHttpOnly);
-    w = GetDlgItem(IDC_COOKIESAMESITE); w->EnableWindow(m_useCookieSameSite);
 
     m_comboProtocol      .EnableWindow(m_useProtocol);
     m_comboBinding       .EnableWindow(m_useBinding);
@@ -197,9 +189,7 @@ BEGIN_MESSAGE_MAP(WebConfigServer, CDialog)
   ON_BN_CLICKED   (IDC_THROTTLE,      &WebConfigServer::OnBnClickedThrotteling)
   ON_EN_KILLFOCUS (IDC_KALIVE,        &WebConfigServer::OnEnChangeKeepalive)
   ON_EN_KILLFOCUS (IDC_RETRYTIME,     &WebConfigServer::OnEnChangeRetrytime)
-  ON_BN_CLICKED   (IDC_COOKIESECURE,  &WebConfigServer::OnBnClickedCookieSecure)
-  ON_BN_CLICKED   (IDC_COOKIEHTTPONLY,&WebConfigServer::OnBnClickedCookieHttpOnly)
-  ON_CBN_SELCHANGE(IDC_COOKIESAMESITE,&WebConfigServer::OnCbnSelChangeCookieSameSite)
+  ON_BN_CLICKED   (IDC_SETCOOKIE,     &WebConfigServer::OnBnClickedSetCookie)
 
   // USING BUTTONS
   ON_BN_CLICKED(IDC_USE_WEBROOT,      &WebConfigServer::OnBnClickedUseWebroot)
@@ -219,9 +209,6 @@ BEGIN_MESSAGE_MAP(WebConfigServer, CDialog)
   ON_BN_CLICKED(IDC_USE_THROTTLE,     &WebConfigServer::OnBnClickedUseThrotteling)
   ON_BN_CLICKED(IDC_USE_KEEPALIVE,    &WebConfigServer::OnBnClickedUseKeepalive)
   ON_BN_CLICKED(IDC_USE_RETRYTIME,    &WebConfigServer::OnBnClickedUseRetrytime)
-  ON_BN_CLICKED(IDC_USE_COOKIESECURE,   &WebConfigServer::OnBnClickedUseCookieSecure)
-  ON_BN_CLICKED(IDC_USE_COOKIEHTTPONLY, &WebConfigServer::OnBnClickedUseCookieHttpOnly)
-  ON_BN_CLICKED(IDC_USE_COOKIESAMESITE, &WebConfigServer::OnBnClickedUseCookieSameSite)
 END_MESSAGE_MAP()
 
 BOOL
@@ -272,11 +259,6 @@ WebConfigServer::InitComboboxes()
   m_comboStack.AddString("6291456");
   m_comboStack.AddString("7340032");
   m_comboStack.AddString("8388608");
-
-  // Cookies same site
-  m_comboCookieSameSite.AddString("None");
-  m_comboCookieSameSite.AddString("Lax");
-  m_comboCookieSameSite.AddString("Strict");
 }
 
 void
@@ -364,10 +346,16 @@ WebConfigServer::ReadWebConfig(MarlinConfig& config)
   m_useCookieSecure   = config.HasParameter("Cookies","Secure");
   m_useCookieHttpOnly = config.HasParameter("Cookies","HttpOnly");
   m_useCookieSameSite = config.HasParameter("Cookies","SameSite");
-
+  m_useCookiePath     = config.HasParameter("Cookies","Path");
+  m_useCookieDomain   = config.HasParameter("Cookies","Domain");
+  m_useCookieExpires  = config.HasParameter("Cookies","Expires");
+  
   m_cookieSecure      = config.GetParameterBoolean("Cookies","Secure",  false);
   m_cookieHttpOnly    = config.GetParameterBoolean("Cookies","HttpOnly",false);
   m_cookieSameSite    = config.GetParameterString ("Cookies","SameSite","");
+  m_cookiePath        = config.GetParameterString ("Cookies","Path",    "");
+  m_cookieDomain      = config.GetParameterString ("Cookies","Domain",  "");
+  m_cookieExpires     = config.GetParameterInteger("Cookies","Expires", 0);
 
   // INIT THE COMBO BOXES
   m_comboProtocol.SetCurSel(m_secureProtocol ? 1 : 0);
@@ -379,18 +367,12 @@ WebConfigServer::ReadWebConfig(MarlinConfig& config)
   if(m_binding.CompareNoCase("full")    == 0) m_comboBinding.SetCurSel(4);
   if(m_binding.CompareNoCase("weak")    == 0) m_comboBinding.SetCurSel(5);
 
-  // Cookies
-  if(m_cookieSameSite.CompareNoCase("None")   == 0) m_comboCookieSameSite.SetCurSel(0);
-  if(m_cookieSameSite.CompareNoCase("Lax")    == 0) m_comboCookieSameSite.SetCurSel(1);
-  if(m_cookieSameSite.CompareNoCase("Strict") == 0) m_comboCookieSameSite.SetCurSel(2);
 
   // INIT THE CHECKBOXES
   m_buttonServerUnicode .SetCheck(m_serverUnicode);
   m_buttonTunneling     .SetCheck(m_tunneling);
   m_buttonGzip          .SetCheck(m_gzip);
   m_buttonThrotteling   .SetCheck(m_throtteling);
-  m_buttonCookieSecure  .SetCheck(m_cookieSecure);
-  m_buttonCookieHttpOnly.SetCheck(m_cookieHttpOnly);
 
   // INIT ALL USING FIELDS
   m_buttonUseWebroot       .SetCheck(m_useWebroot);
@@ -410,9 +392,6 @@ WebConfigServer::ReadWebConfig(MarlinConfig& config)
   m_buttonUseThrotteling   .SetCheck(m_useThrotteling);
   m_buttonUseKeepalive     .SetCheck(m_useKeepalive);
   m_buttonUseRetrytime     .SetCheck(m_useRetrytime);
-  m_buttonUseCookieSecure  .SetCheck(m_useCookieSecure);
-  m_buttonUseCookieHttpOnly.SetCheck(m_useCookieHttpOnly);
-  m_buttonUseCookieSameSite.SetCheck(m_useCookieSameSite);
 
   UpdateData(FALSE);
 }
@@ -505,6 +484,12 @@ WebConfigServer::WriteWebConfig(MarlinConfig& config)
   else                    config.RemoveParameter("Cookies","HttpOnly");
   if(m_useCookieSameSite) config.SetParameter   ("Cookies","SameSite",m_cookieSameSite);
   else                    config.RemoveParameter("Cookies","SameSite");
+  if(m_useCookiePath)     config.SetParameter   ("Cookies","Path",    m_cookiePath);
+  else                    config.RemoveParameter("Cookies","Path");
+  if(m_useCookieDomain)   config.SetParameter   ("Cookies","Domain",  m_cookieDomain);
+  else                    config.RemoveParameter("Cookies","Domain");
+  if(m_useCookieExpires)  config.SetParameter   ("Cookies","Expires", m_cookieExpires);
+  else                    config.RemoveParameter("Cookies","Expires");
 }
 
 // WebConfigDlg message handlers
@@ -674,30 +659,10 @@ WebConfigServer::OnEnChangeRetrytime()
 }
 
 void 
-WebConfigServer::OnBnClickedCookieSecure()
+WebConfigServer::OnBnClickedSetCookie()
 {
-  m_cookieSecure = m_buttonCookieSecure.GetCheck() > 0;
-}
-
-void 
-WebConfigServer::OnBnClickedCookieHttpOnly()
-{
-  m_cookieHttpOnly = m_buttonCookieHttpOnly.GetCheck() > 0;
-}
-
-void 
-WebConfigServer::OnCbnSelChangeCookieSameSite()
-{
-  int ind = m_comboCookieSameSite.GetCurSel();
-  if(ind >= 0)
-  {
-    switch(ind)
-    {
-      case 0: m_cookieSameSite = "None";   break;
-      case 1: m_cookieSameSite = "Lax";    break;
-      case 2: m_cookieSameSite = "Strict"; break;
-    }
-  }
+  SetCookieDlg dlg(this);
+  dlg.DoModal();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -827,23 +792,5 @@ void WebConfigServer::OnBnClickedUseKeepalive()
 void WebConfigServer::OnBnClickedUseRetrytime()
 {
   m_useRetrytime = m_buttonUseRetrytime.GetCheck() > 0;
-  UpdateData(FALSE);
-}
-
-void WebConfigServer::OnBnClickedUseCookieSecure()
-{
-  m_useCookieSecure = m_buttonUseCookieSecure.GetCheck() > 0;
-  UpdateData(FALSE);
-}
-
-void WebConfigServer::OnBnClickedUseCookieHttpOnly()
-{
-  m_useCookieHttpOnly = m_buttonUseCookieHttpOnly.GetCheck() > 0;
-  UpdateData(FALSE);
-}
-
-void WebConfigServer::OnBnClickedUseCookieSameSite()
-{
-  m_useCookieSameSite = m_buttonUseCookieSameSite.GetCheck() > 0;
   UpdateData(FALSE);
 }

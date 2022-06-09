@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: HTTPTime.cpp
+// SourceFile: ExecuteShell.h
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
@@ -26,18 +26,15 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include <winhttp.h>
 
-// Replacements for:
-// BOOL WINAPI WinHttpTimeFromSystemTime(_In_ const SYSTEMTIME *pst,_Out_ LPWSTR pwszTime);
-// BOOL WINAPI WinHttpTimeToSystemTime  (_In_ LPCWSTR pwszTime,_Out_ SYSTEMTIME *pst);
+// Maximum length of a command line in MS-Windows OS
+// See: https://support.microsoft.com/nl-nl/help/830473/command-prompt-cmd-exe-command-line-string-limitation
+#define MAX_COMMANDLINE 8191
 
-// As the MSDN documentation states: these functions should conform to RFC 2616 section 3.3
-// BUT THEY DONT!!!!!!!
-// Namely the MS-Exchange 2010 server sends dates that do not conform strictly to the RFC.
-// So in order to be able to interpret mixed definitions, we created a much looser implementation
-
-bool    HTTPTimeFromSystemTime(const SYSTEMTIME* p_systemTime,XString& p_string);
-bool    HTTPTimeToSystemTime  (const XString p_string,SYSTEMTIME* p_systemtime);
-XString HTTPGetSystemTime();
-void    AddSecondsToSystemTime(SYSTEMTIME* p_timeIn,SYSTEMTIME* p_timeOut,double p_seconds);
+bool
+ExecuteShell(XString  p_command
+            ,XString  p_program
+            ,XString  p_arguments
+            ,HWND     p_parent
+            ,int      p_show
+            ,XString* p_error = nullptr);

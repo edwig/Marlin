@@ -1049,21 +1049,34 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   bool cookiesHasSecure(false);
   bool cookiesHasHttp(false);
   bool cookiesHasSame(false);
-  bool cookiesSecure(false);
-  bool cookiesHttpOnly(false);
-  CookieSameSite cookiesSameSite(CookieSameSite::NoSameSite);
+  bool cookiesHasPath(false);
+  bool cookiesHasDomain(false);
+  bool cookiesHasExpires(false);
+
+  bool cookieSecure(false);
+  bool cookieHttpOnly(false);
+  CookieSameSite cookieSameSite(CookieSameSite::NoSameSite);
+  XString    cookiePath;
+  XString    cookieDomain;
+  int        cookieExpires = 0;
 
   // Getting the site settings
   HTTPSite* site = p_message->GetHTTPSite();
   if(site)
   {
-    cookiesHasSecure = site->GetCookieHasSecure();
-    cookiesHasHttp   = site->GetCookieHasHttpOnly();
-    cookiesHasSame   = site->GetCookieHasSameSite();
+    cookiesHasSecure  = site->GetCookieHasSecure();
+    cookiesHasHttp    = site->GetCookieHasHttpOnly();
+    cookiesHasSame    = site->GetCookieHasSameSite();
+    cookiesHasPath    = site->GetCookieHasPath();
+    cookiesHasDomain  = site->GetCookieHasDomain();
+    cookiesHasExpires = site->GetCookieHasExpires();
 
-    cookiesSecure    = site->GetCookiesSecure();
-    cookiesHttpOnly  = site->GetCookiesHttpOnly();
-    cookiesSameSite  = site->GetCookiesSameSite();
+    cookieSecure      = site->GetCookiesSecure();
+    cookieHttpOnly    = site->GetCookiesHttpOnly();
+    cookieSameSite    = site->GetCookiesSameSite();
+    cookiePath        = site->GetCookiesPath();
+    cookieDomain      = site->GetCookiesDomain();
+    cookieExpires     = site->GetCookiesExpires();
   }
 
   // Add cookies to the unknown response headers
@@ -1083,9 +1096,19 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   {
     for(auto& cookie : cookies.GetCookies())
     {
-      if(cookiesHasSecure)  cookie.SetSecure  (cookiesSecure);
-      if(cookiesHasHttp)    cookie.SetHttpOnly(cookiesHttpOnly);
-      if(cookiesHasSame)    cookie.SetSameSite(cookiesSameSite);
+      if(cookiesHasSecure)  cookie.SetSecure  (cookieSecure);
+      if(cookiesHasHttp)    cookie.SetHttpOnly(cookieHttpOnly);
+      if(cookiesHasSame)    cookie.SetSameSite(cookieSameSite);
+      if(cookiesHasPath)    cookie.SetPath    (cookiePath);
+      if(cookiesHasDomain)  cookie.SetDomain  (cookieDomain);
+
+      if(cookieExpires > 0)
+      {
+        SYSTEMTIME current;
+        GetSystemTime(&current);
+        AddSecondsToSystemTime(&current,&current,60 * cookieExpires);
+        cookie.SetExpires(&current);
+      }
 
       ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
     }

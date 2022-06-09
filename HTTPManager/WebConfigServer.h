@@ -28,6 +28,7 @@
 #pragma once
 #include "SecureClientDlg.h"
 #include "ServerHeadersDlg.h"
+#include "SetCookieDlg.h"
 #include <Cookie.h>
 
 class MarlinConfig;
@@ -59,6 +60,7 @@ protected:
   // Sub dialogs that make use of the members of this dialog
   friend      SecureClientDlg;
   friend      ServerHeadersDlg;
+  friend      SetCookieDlg;
 
   // Special config to edit
   XString     m_url;
@@ -86,6 +88,9 @@ protected:
   bool        m_useCookieSecure;
   bool        m_useCookieHttpOnly;
   bool        m_useCookieSameSite;
+  bool        m_useCookiePath;
+  bool        m_useCookieDomain;
+  bool        m_useCookieExpires;
   // Server headers
   bool        m_useXFrameOpt;
   bool        m_useXFrameAllow;
@@ -114,9 +119,6 @@ protected:
   bool        m_throtteling;
   int         m_keepalive;
   int         m_retrytime;
-  bool        m_cookieSecure;
-  bool        m_cookieHttpOnly;
-  XString     m_cookieSameSite;
   // Server headers
   XString     m_xFrameOption;
   XString     m_xFrameAllowed;
@@ -131,6 +133,12 @@ protected:
   XString     m_allowHeaders;
   int         m_allowMaxAge;
   bool        m_corsCredentials;
+  bool        m_cookieSecure;
+  bool        m_cookieHttpOnly;
+  XString     m_cookieSameSite;
+  XString     m_cookiePath;
+  XString     m_cookieDomain;
+  int         m_cookieExpires;
 
   // Interface items
   HICON       m_hIcon;
@@ -142,9 +150,6 @@ protected:
   CButton     m_buttonServerUnicode;
   CButton     m_buttonGzip;
   CButton     m_buttonThrotteling;
-  CButton     m_buttonCookieSecure;
-  CButton     m_buttonCookieHttpOnly;
-  CComboBox   m_comboCookieSameSite;
 
   CButton     m_buttonUseWebroot;
   CButton     m_buttonUseBaseURL;
@@ -163,9 +168,6 @@ protected:
   CButton     m_buttonUseThrotteling;
   CButton     m_buttonUseKeepalive;
   CButton     m_buttonUseRetrytime;
-  CButton     m_buttonUseCookieSecure;
-  CButton     m_buttonUseCookieHttpOnly;
-  CButton     m_buttonUseCookieSameSite;
   
 public:
   afx_msg void OnEnChangeWebroot();
@@ -188,9 +190,7 @@ public:
   afx_msg void OnBnClickedThrotteling();
   afx_msg void OnEnChangeKeepalive();
   afx_msg void OnEnChangeRetrytime();
-  afx_msg void OnBnClickedCookieSecure();
-  afx_msg void OnBnClickedCookieHttpOnly();
-  afx_msg void OnCbnSelChangeCookieSameSite();
+  afx_msg void OnBnClickedSetCookie();
 
   afx_msg void OnBnClickedUseWebroot();
   afx_msg void OnBnClickedUseUrl();
@@ -209,7 +209,4 @@ public:
   afx_msg void OnBnClickedUseThrotteling();
   afx_msg void OnBnClickedUseKeepalive();
   afx_msg void OnBnClickedUseRetrytime();
-  afx_msg void OnBnClickedUseCookieSecure();
-  afx_msg void OnBnClickedUseCookieHttpOnly();
-  afx_msg void OnBnClickedUseCookieSameSite();
 };

@@ -195,7 +195,10 @@ Cookie::GetCookieText()
 void  
 Cookie::SetExpires(SYSTEMTIME* p_expires)
 {
-  memcpy(&m_expires,p_expires,sizeof(SYSTEMTIME));
+  if(p_expires)
+  {
+    memcpy(&m_expires,p_expires,sizeof(SYSTEMTIME));
+  }
 }
 
 // Setting new system time from HTTP text
