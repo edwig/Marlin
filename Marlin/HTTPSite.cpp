@@ -1974,3 +1974,10 @@ HTTPSite::SetCookiesExpires(int p_minutes)
   m_cookieExpires    = p_minutes;
   m_cookieHasExpires = p_minutes > 0;
 }
+
+void
+HTTPSite::SetCookiesMaxAge(int p_seconds)
+{
+  m_cookieMaxAge    = p_seconds;
+  m_cookieHasMaxAge = p_seconds > 0;
+}

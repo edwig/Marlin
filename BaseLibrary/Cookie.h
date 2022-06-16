@@ -56,11 +56,12 @@ public:
   void  SetCookie(XString p_name,XString p_value,XString p_metadata);
   void  SetCookie(XString p_name,XString p_value,XString p_metadata,bool p_secure,bool p_httpOnly);
 
-  void  SetSecure   (bool p_secure)             { m_secure   = p_secure;   };
-  void  SetHttpOnly (bool p_httpOnly)           { m_httpOnly = p_httpOnly; };
-  void  SetDomain   (XString p_domain)          { m_domain   = p_domain;   };
-  void  SetPath     (XString p_path)            { m_path     = p_path;     };
-  void  SetSameSite (CookieSameSite p_sameSite) { m_sameSite = p_sameSite; };
+  void  SetSecure   (bool p_secure)             { m_secure   = p_secure;   }
+  void  SetHttpOnly (bool p_httpOnly)           { m_httpOnly = p_httpOnly; }
+  void  SetDomain   (XString p_domain)          { m_domain   = p_domain;   }
+  void  SetPath     (XString p_path)            { m_path     = p_path;     }
+  void  SetSameSite (CookieSameSite p_sameSite) { m_sameSite = p_sameSite; }
+  void  SetMaxAge   (int p_maxAge)              { m_maxAge   = p_maxAge;   }
   void  SetExpires  (SYSTEMTIME* p_expires);
 
   // GETTERS
@@ -70,13 +71,14 @@ public:
   XString        GetCookieText();
   XString        GetValue(XString p_metadata = "");
   // Individual getters
-  XString        GetName()       { return m_name;     };
-  bool           GetSecure()     { return m_secure;   };
-  bool           GetHttpOnly()   { return m_httpOnly; };
-  XString        GetDomain()     { return m_domain;   };
-  XString        GetPath()       { return m_path;     };
-  CookieSameSite GetSameSite()   { return m_sameSite; };
-  SYSTEMTIME*    GetExpires()    { return &m_expires; };
+  XString        GetName()       { return m_name;     }
+  bool           GetSecure()     { return m_secure;   }
+  bool           GetHttpOnly()   { return m_httpOnly; }
+  XString        GetDomain()     { return m_domain;   }
+  XString        GetPath()       { return m_path;     }
+  CookieSameSite GetSameSite()   { return m_sameSite; }
+  SYSTEMTIME*    GetExpires()    { return &m_expires; }
+  int            GetMaxAge()     { return m_maxAge;   }
   void           SetExpires(XString p_expires);
 
   // FUNCTIONS
@@ -96,16 +98,17 @@ private:
   friend  Cookies;
 
   // The cookie itself
-  XString m_name;                                       // Optional!
-  XString m_value;                                      // The dough of the cookie 
+  XString m_name;                                         // Optional!
+  XString m_value;                                        // The dough of the cookie 
   // Attributes to the cookie
-  bool           m_secure    { false };                  // Secure attribute of the cookie
-  bool           m_httpOnly  { false };                  // HTTP Only attribute 
-  XString        m_domain;                               // Optional domain
-  XString        m_path;                                 // Optional path
+  bool           m_secure    { false };                   // Secure attribute of the cookie
+  bool           m_httpOnly  { false };                   // HTTP Only attribute 
+  XString        m_domain;                                // Optional domain
+  XString        m_path;                                  // Optional path
   CookieSameSite m_sameSite  { CookieSameSite::NoSameSite }; // SameSite attribute
   // Expiration time
-  SYSTEMTIME     m_expires;
+  int            m_maxAge    { 0 };                       // Maximum number of seconds valid
+  SYSTEMTIME     m_expires;                               // Valid until this timestamp
 };
 
 using BiscuitTin = std::vector<Cookie>;

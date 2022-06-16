@@ -73,6 +73,7 @@ WebConfigServer::WebConfigServer(bool p_iis,CWnd* pParent /*=NULL*/)
   m_useCORS           = false;
   m_useKeepalive      = false;
   m_useRetrytime      = false;
+  m_useCookieMaxAge   = false;
 
   // SERVER OVERRIDES
   m_port            = 0;
@@ -349,6 +350,7 @@ WebConfigServer::ReadWebConfig(MarlinConfig& config)
   m_useCookiePath     = config.HasParameter("Cookies","Path");
   m_useCookieDomain   = config.HasParameter("Cookies","Domain");
   m_useCookieExpires  = config.HasParameter("Cookies","Expires");
+  m_useCookieMaxAge   = config.HasParameter("Cookies","MaxAge");
   
   m_cookieSecure      = config.GetParameterBoolean("Cookies","Secure",  false);
   m_cookieHttpOnly    = config.GetParameterBoolean("Cookies","HttpOnly",false);
@@ -356,6 +358,7 @@ WebConfigServer::ReadWebConfig(MarlinConfig& config)
   m_cookiePath        = config.GetParameterString ("Cookies","Path",    "");
   m_cookieDomain      = config.GetParameterString ("Cookies","Domain",  "");
   m_cookieExpires     = config.GetParameterInteger("Cookies","Expires", 0);
+  m_cookieMaxAge      = config.GetParameterInteger("Cookies","MaxAge",  0);
 
   // INIT THE COMBO BOXES
   m_comboProtocol.SetCurSel(m_secureProtocol ? 1 : 0);
@@ -490,6 +493,8 @@ WebConfigServer::WriteWebConfig(MarlinConfig& config)
   else                    config.RemoveParameter("Cookies","Domain");
   if(m_useCookieExpires)  config.SetParameter   ("Cookies","Expires", m_cookieExpires);
   else                    config.RemoveParameter("Cookies","Expires");
+  if(m_useCookieMaxAge)   config.SetParameter   ("Cookies","MaxAge",  m_cookieMaxAge);
+  else                    config.RemoveParameter("Cookies","MaxAge");
 }
 
 // WebConfigDlg message handlers

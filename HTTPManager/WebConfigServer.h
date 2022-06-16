@@ -91,6 +91,7 @@ protected:
   bool        m_useCookiePath;
   bool        m_useCookieDomain;
   bool        m_useCookieExpires;
+  bool        m_useCookieMaxAge;
   // Server headers
   bool        m_useXFrameOpt;
   bool        m_useXFrameAllow;
@@ -139,6 +140,7 @@ protected:
   XString     m_cookiePath;
   XString     m_cookieDomain;
   int         m_cookieExpires;
+  int         m_cookieMaxAge;
 
   // Interface items
   HICON       m_hIcon;

@@ -1179,6 +1179,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   bool cookiesHasPath(false);
   bool cookiesHasDomain(false);
   bool cookiesHasExpires(false);
+  bool cookiesHasMaxAge(false);
 
   bool cookieSecure(false);
   bool cookieHttpOnly(false);
@@ -1186,6 +1187,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   XString    cookiePath;
   XString    cookieDomain;
   int        cookieExpires = 0;
+  int        cookieMaxAge  = 0;
 
   // Getting the site settings
   HTTPSite* site = m_message->GetHTTPSite();
@@ -1197,6 +1199,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     cookiesHasPath    = site->GetCookieHasPath();
     cookiesHasDomain  = site->GetCookieHasDomain();
     cookiesHasExpires = site->GetCookieHasExpires();
+    cookiesHasMaxAge  = site->GetCookieHasMaxAge();
 
     cookieSecure      = site->GetCookiesSecure();
     cookieHttpOnly    = site->GetCookiesHttpOnly();
@@ -1204,6 +1207,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     cookiePath        = site->GetCookiesPath();
     cookieDomain      = site->GetCookiesDomain();
     cookieExpires     = site->GetCookiesExpires();
+    cookieMaxAge      = site->GetCookiesMaxAge();
   }
 
   // Add cookies to the unknown response headers
@@ -1228,6 +1232,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
       if(cookiesHasSame)    cookie.SetSameSite(cookieSameSite);
       if(cookiesHasPath)    cookie.SetPath    (cookiePath);
       if(cookiesHasDomain)  cookie.SetDomain  (cookieDomain);
+      if(cookiesHasMaxAge)  cookie.SetMaxAge  (cookieMaxAge);
 
       if(cookieExpires > 0)
       {

@@ -15,7 +15,7 @@ CHANGES IN VERSION 8.1.0 of 09-06-2022
     the new BaseLibrary
 2)  BaseLibrary upgraded to version 1.0.2
 3)  OAuth2Cache fixes for multithreaded environments
-4)  Cookie attributes 'path', 'domain' and 'expires' are now configurable in the Marlin.Config
+4)  Cookie attributes 'path', 'domain', Max-Age and 'expires' are now configurable in the Marlin.Config
     There is an extra dialog in the HTTPManager to set the values for these attributes.
     The server will honor these attributes when adding the Set-Cookie header to an HTTP answer.
 

@@ -56,6 +56,7 @@ SetCookieDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_USE_COOKIEPATH,     m_buttonUseCookiePath);
   DDX_Control(pDX,IDC_USE_COOKIEDOMAIN,   m_buttonUseCookieDomain);
   DDX_Control(pDX,IDC_USE_COOKIEEXPIRES,  m_buttonUseCookieExpires);
+  DDX_Control(pDX,IDC_USE_COOKIEMAXAGE,   m_buttonUseCookieMaxAge);
 
   DDX_Control(pDX,IDC_COOKIESECURE,       m_buttonCookieSecure);
   DDX_Control(pDX,IDC_COOKIEHTTPONLY,     m_buttonCookieHttpOnly);
@@ -63,6 +64,7 @@ SetCookieDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_COOKIESPATH,        m_editCookiePath);
   DDX_Control(pDX,IDC_COOKIEDOMAIN,       m_editCookieDomain);
   DDX_Control(pDX,IDC_COOKIEEXPIRES,      m_editCookieExpires);
+  DDX_Control(pDX,IDC_COOKIEMAXAGE,       m_editCookieMaxAge);
 
   if(pDX->m_bSaveAndValidate == FALSE)
   {
@@ -73,6 +75,7 @@ SetCookieDlg::DoDataExchange(CDataExchange* pDX)
     w = GetDlgItem(IDC_COOKIESPATH);    w->EnableWindow(m_config->m_useCookiePath);
     w = GetDlgItem(IDC_COOKIEDOMAIN);   w->EnableWindow(m_config->m_useCookieDomain);
     w = GetDlgItem(IDC_COOKIEEXPIRES);  w->EnableWindow(m_config->m_useCookieExpires);
+    w = GetDlgItem(IDC_COOKIEMAXAGE);   w->EnableWindow(m_config->m_useCookieMaxAge);
   }
 }
 
@@ -83,6 +86,7 @@ BEGIN_MESSAGE_MAP(SetCookieDlg, CDialogEx)
   ON_BN_CLICKED   (IDC_USE_COOKIEPATH,    &SetCookieDlg::OnBnClickedUseCookiepath)
   ON_BN_CLICKED   (IDC_USE_COOKIEDOMAIN,  &SetCookieDlg::OnBnClickedUseCookiedomain)
   ON_BN_CLICKED   (IDC_USE_COOKIEEXPIRES, &SetCookieDlg::OnBnClickedUseCookieexpires)
+  ON_BN_CLICKED   (IDC_USE_COOKIEMAXAGE,  &SetCookieDlg::OnBnClickedUseCookieMaxAge)
 
   ON_BN_CLICKED   (IDC_COOKIESECURE,      &SetCookieDlg::OnBnClickedCookiesecure)
   ON_BN_CLICKED   (IDC_COOKIEHTTPONLY,    &SetCookieDlg::OnBnClickedCookiehttponly)
@@ -90,6 +94,7 @@ BEGIN_MESSAGE_MAP(SetCookieDlg, CDialogEx)
   ON_EN_CHANGE    (IDC_COOKIESPATH,       &SetCookieDlg::OnEnChangeCookiespath)
   ON_EN_CHANGE    (IDC_COOKIEDOMAIN,      &SetCookieDlg::OnEnChangeCookiedomain)
   ON_EN_CHANGE    (IDC_COOKIEEXPIRES,     &SetCookieDlg::OnEnChangeCookieexpires)
+  ON_EN_CHANGE    (IDC_COOKIEMAXAGE,      &SetCookieDlg::OnEnChangeCookieMaxAge)
   ON_BN_CLICKED   (IDOK,                  &SetCookieDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
@@ -112,8 +117,10 @@ SetCookieDlg::OnInitDialog()
 void
 SetCookieDlg::InitFields()
 {
-  char buffer[20];
-  _itoa_s(m_config->m_cookieExpires,buffer,20,10);
+  char buffer1[20];
+  char buffer2[20];
+  _itoa_s(m_config->m_cookieExpires,buffer1,20,10);
+  _itoa_s(m_config->m_cookieMaxAge, buffer2,20,10);
 
   // Cookies
   if(m_config->m_cookieSameSite.CompareNoCase("None")   == 0) m_comboCookieSameSite.SetCurSel(0);
@@ -124,7 +131,8 @@ SetCookieDlg::InitFields()
   m_buttonCookieHttpOnly.SetCheck(m_config->m_cookieHttpOnly);
   m_editCookiePath      .SetWindowText(m_config->m_cookiePath);
   m_editCookieDomain    .SetWindowText(m_config->m_cookieDomain);
-  m_editCookieExpires   .SetWindowText(buffer);
+  m_editCookieExpires   .SetWindowText(buffer1);
+  m_editCookieMaxAge    .SetWindowText(buffer2);
 
   m_buttonUseCookieSecure  .SetCheck(m_config->m_useCookieSecure);
   m_buttonUseCookieHttpOnly.SetCheck(m_config->m_useCookieHttpOnly);
@@ -132,6 +140,7 @@ SetCookieDlg::InitFields()
   m_buttonUseCookiePath    .SetCheck(m_config->m_useCookiePath);
   m_buttonUseCookieDomain  .SetCheck(m_config->m_useCookieDomain);
   m_buttonUseCookieExpires .SetCheck(m_config->m_useCookieExpires);
+  m_buttonUseCookieMaxAge  .SetCheck(m_config->m_useCookieMaxAge);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -227,6 +236,22 @@ SetCookieDlg::OnEnChangeCookieexpires()
   CString expires;
   m_editCookieExpires.GetWindowText(expires);
   m_config->m_cookieExpires = atoi(expires);
+}
+
+void
+SetCookieDlg::OnBnClickedUseCookieMaxAge()
+{
+  m_config->m_useCookieMaxAge = m_buttonUseCookieMaxAge.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
+void
+SetCookieDlg::OnEnChangeCookieMaxAge()
+{
+  UpdateData();
+  CString maxage;
+  m_editCookieMaxAge.GetWindowText(maxage);
+  m_config->m_cookieMaxAge = atoi(maxage);
 }
 
 void 

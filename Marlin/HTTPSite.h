@@ -211,6 +211,8 @@ public:
   void            SetCookiesDomain(XString p_domain);
   // OPTIONAL: Set all cookies expire attribute
   void            SetCookiesExpires(int p_minutes);
+  // OPTIONAL: Set all cookies to max-age 
+  void            SetCookiesMaxAge(int p_seconds);
 
   // GETTERS
   XString         GetSite()                         { return m_site;          };
@@ -246,12 +248,14 @@ public:
   bool            GetCookieHasPath()                { return m_cookieHasPath;    }
   bool            GetCookieHasDomain()              { return m_cookieHasDomain;  }
   bool            GetCookieHasExpires()             { return m_cookieHasExpires; }
+  bool            GetCookieHasMaxAge()              { return m_cookieHasMaxAge;  }
   CookieSameSite  GetCookiesSameSite()              { return m_cookieSameSite;   }
   bool            GetCookiesSecure()                { return m_cookieSecure;     }
   bool            GetCookiesHttpOnly()              { return m_cookieHttpOnly;   }
   XString         GetCookiesPath()                  { return m_cookiePath;       }
   XString         GetCookiesDomain()                { return m_cookieDomain;     }
   int             GetCookiesExpires()               { return m_cookieExpires;    }
+  int             GetCookiesMaxAge()                { return m_cookieMaxAge;     }
   int             GetAuthentication()               { return m_authScheme;       }
   XString         GetAuthenticationScheme();
   bool            GetAuthenticationNTLMCache();
@@ -396,13 +400,15 @@ protected:
   bool              m_cookieHasSame   { false };          // Site override for 'SameSite' cookies
   bool              m_cookieHasPath   { false };          // Site override for 'path'     cookies
   bool              m_cookieHasDomain { false };          // Site override for 'domain'   cookies
-  bool              m_cookieHasExpires{ false };          // Stie override for 'expires'  cookies
+  bool              m_cookieHasExpires{ false };          // Site override for 'expires'  cookies
+  bool              m_cookieHasMaxAge { false };          // Site override for 'max-age'  cookies
   bool              m_cookieSecure    { false };          // All cookies have the 'secure'   attribute
   bool              m_cookieHttpOnly  { false };          // All cookies have the 'httpOnly' attribute
   CookieSameSite    m_cookieSameSite  { CookieSameSite::NoSameSite }; // Same site setting of cookies
   XString           m_cookiePath;                         // All cookies have the 'path' attribute
   XString           m_cookieDomain;                       // All cookies have the 'domain' attribute
   int               m_cookieExpires;                      // All cookies expire in x minutes
+  int               m_cookieMaxAge;                       // All cookies have x seconds validity
   // Auto HTTP headers added to all response traffic
   XFrameOption      m_xFrameOption    { XFrameOption::XFO_NO_OPTION };  // Standard frame options
   XString           m_xFrameAllowed;                      // IFrame allowed from this URI

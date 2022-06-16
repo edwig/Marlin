@@ -1052,6 +1052,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   bool cookiesHasPath(false);
   bool cookiesHasDomain(false);
   bool cookiesHasExpires(false);
+  bool cookiesHasMaxAge(false);
 
   bool cookieSecure(false);
   bool cookieHttpOnly(false);
@@ -1059,6 +1060,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   XString    cookiePath;
   XString    cookieDomain;
   int        cookieExpires = 0;
+  int        cookieMaxAge  = 0;
 
   // Getting the site settings
   HTTPSite* site = p_message->GetHTTPSite();
@@ -1070,6 +1072,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
     cookiesHasPath    = site->GetCookieHasPath();
     cookiesHasDomain  = site->GetCookieHasDomain();
     cookiesHasExpires = site->GetCookieHasExpires();
+    cookiesHasMaxAge  = site->GetCookieHasMaxAge();
 
     cookieSecure      = site->GetCookiesSecure();
     cookieHttpOnly    = site->GetCookiesHttpOnly();
@@ -1077,6 +1080,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
     cookiePath        = site->GetCookiesPath();
     cookieDomain      = site->GetCookiesDomain();
     cookieExpires     = site->GetCookiesExpires();
+    cookieMaxAge      = site->GetCookiesMaxAge();
   }
 
   // Add cookies to the unknown response headers
@@ -1101,6 +1105,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
       if(cookiesHasSame)    cookie.SetSameSite(cookieSameSite);
       if(cookiesHasPath)    cookie.SetPath    (cookiePath);
       if(cookiesHasDomain)  cookie.SetDomain  (cookieDomain);
+      if(cookiesHasMaxAge)  cookie.SetMaxAge  (cookieMaxAge);
 
       if(cookieExpires > 0)
       {

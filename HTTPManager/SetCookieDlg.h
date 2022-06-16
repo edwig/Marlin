@@ -58,6 +58,7 @@ protected:
   CButton     m_buttonUseCookiePath;
   CButton     m_buttonUseCookieDomain;
   CButton     m_buttonUseCookieExpires;
+  CButton     m_buttonUseCookieMaxAge;
 
   CButton     m_buttonCookieSecure;
   CButton     m_buttonCookieHttpOnly;
@@ -65,6 +66,7 @@ protected:
   CEdit       m_editCookiePath;
   CEdit       m_editCookieDomain;
   CEdit       m_editCookieExpires;
+  CEdit       m_editCookieMaxAge;
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -80,5 +82,7 @@ public:
   afx_msg void OnEnChangeCookiedomain();
   afx_msg void OnBnClickedUseCookieexpires();
   afx_msg void OnEnChangeCookieexpires();
+  afx_msg void OnBnClickedUseCookieMaxAge();
+  afx_msg void OnEnChangeCookieMaxAge();
   afx_msg void OnBnClickedOk();
 };
