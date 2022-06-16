@@ -644,6 +644,7 @@ HTTPMessage::SetCookie(XString        p_name
                       ,bool           p_secure   /*= false*/
                       ,bool           p_httpOnly /*= false*/
                       ,CookieSameSite p_samesite /*= CookieSameSite::NoSameSite*/
+                      ,int            p_maxAge   /*= 0*/
                       ,SYSTEMTIME*    p_expires  /*= nullptr*/)
 {
   Cookie monster;
@@ -652,6 +653,7 @@ HTTPMessage::SetCookie(XString        p_name
   if(!p_path.IsEmpty())     monster.SetPath(p_path);
   if(!p_domain.IsEmpty())   monster.SetDomain(p_domain);
   if( p_expires)            monster.SetExpires(p_expires);
+  if(!p_maxAge)             monster.SetMaxAge(p_maxAge);
   if(p_samesite != CookieSameSite::NoSameSite)
   {
     monster.SetSameSite(p_samesite);

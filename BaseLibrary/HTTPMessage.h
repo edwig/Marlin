@@ -172,6 +172,7 @@ public:
                 ,bool           p_secure   = false
                 ,bool           p_httpOnly = false
                 ,CookieSameSite p_samesite = CookieSameSite::NoSameSite
+                ,int            p_maxAge   = 0
                 ,SYSTEMTIME*    p_expires  = nullptr);
   void SetCookiePairs(XString p_cookies);     // From "Cookie:" only
   void SetCookies(Cookies& p_cookies);
