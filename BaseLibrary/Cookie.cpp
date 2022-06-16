@@ -186,7 +186,7 @@ Cookie::GetSetCookieText()
   }
   if(m_maxAge)
   {
-    cookie.AppendFormat("; Max- Age=%d",m_maxAge);
+    cookie.AppendFormat("; Max-Age=%d",m_maxAge);
   }
   return cookie;
 }

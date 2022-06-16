@@ -404,6 +404,7 @@ HTTPSite::InitSite(MarlinConfig& p_config)
   m_cookieHasPath   = p_config.HasParameter("Cookies","Path");
   m_cookieHasDomain = p_config.HasParameter("Cookies","Domain");
   m_cookieHasExpires= p_config.HasParameter("Cookies","Expires");
+  m_cookieHasMaxAge = p_config.HasParameter("Cookies","MaxAge");
 
   if(m_cookieHasSecure)
   {
@@ -416,9 +417,9 @@ HTTPSite::InitSite(MarlinConfig& p_config)
   if(m_cookieHasSame)
   {
     XString sameSite = p_config.GetParameterString("Cookies","SameSite","");
-    if(sameSite.CompareNoCase("None"))   m_cookieSameSite = CookieSameSite::None;
-    if(sameSite.CompareNoCase("Lax"))    m_cookieSameSite = CookieSameSite::Lax;
-    if(sameSite.CompareNoCase("Strict")) m_cookieSameSite = CookieSameSite::Strict;
+    if(sameSite.CompareNoCase("None")   == 0) m_cookieSameSite = CookieSameSite::None;
+    if(sameSite.CompareNoCase("Lax")    == 0) m_cookieSameSite = CookieSameSite::Lax;
+    if(sameSite.CompareNoCase("Strict") == 0) m_cookieSameSite = CookieSameSite::Strict;
   }
   if(m_cookieHasPath)
   {
@@ -431,6 +432,10 @@ HTTPSite::InitSite(MarlinConfig& p_config)
   if(m_cookieHasExpires)
   {
     m_cookieExpires = p_config.GetParameterInteger("Cookies","Expires",0);
+  }
+  if(m_cookieHasMaxAge)
+  {
+    m_cookieMaxAge = p_config.GetParameterInteger("Cookies","MaxAge",0);
   }
 
   // Add and report the automatic headers as a last resort for responsive app's

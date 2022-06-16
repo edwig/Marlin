@@ -407,8 +407,8 @@ protected:
   CookieSameSite    m_cookieSameSite  { CookieSameSite::NoSameSite }; // Same site setting of cookies
   XString           m_cookiePath;                         // All cookies have the 'path' attribute
   XString           m_cookieDomain;                       // All cookies have the 'domain' attribute
-  int               m_cookieExpires;                      // All cookies expire in x minutes
-  int               m_cookieMaxAge;                       // All cookies have x seconds validity
+  int               m_cookieExpires   { 0 };              // All cookies expire in x minutes
+  int               m_cookieMaxAge    { 0 };              // All cookies have x seconds validity
   // Auto HTTP headers added to all response traffic
   XFrameOption      m_xFrameOption    { XFrameOption::XFO_NO_OPTION };  // Standard frame options
   XString           m_xFrameAllowed;                      // IFrame allowed from this URI
