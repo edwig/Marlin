@@ -125,14 +125,19 @@ GetHTTPStatusText(int p_status)
     // 100
     case HTTP_STATUS_CONTINUE:           return "Continue";
     case HTTP_STATUS_SWITCH_PROTOCOLS:   return "Switching protocols";
+    case HTTP_STATUS_PROCESSING:         return "Processing";
+    case HTTP_STATUS_EARLYHINTS:         return "Early hints";
     // 200
     case HTTP_STATUS_OK:                 return "OK";
     case HTTP_STATUS_CREATED:            return "Created";
     case HTTP_STATUS_ACCEPTED:           return "Accepted";
     case HTTP_STATUS_PARTIAL:            return "Partial completion";
-    case HTTP_STATUS_NO_CONTENT:         return "No info";
+    case HTTP_STATUS_NO_CONTENT:         return "No content";
     case HTTP_STATUS_RESET_CONTENT:      return "Completed, form cleared";
     case HTTP_STATUS_PARTIAL_CONTENT:    return "Partial GET";
+    case HTTP_STATUS_MULTISTATUS:        return "Multi-status";
+    case HTTP_STATUS_ALREADYREPORTED:    return "Already reported";
+    case HTTP_STATUS_IM_USED:            return "IM used";
     // 300
     case HTTP_STATUS_AMBIGUOUS:          return "Server could not decide";
     case HTTP_STATUS_MOVED:              return "Moved resource";
@@ -140,7 +145,9 @@ GetHTTPStatusText(int p_status)
     case HTTP_STATUS_REDIRECT_METHOD:    return "Redirect to new access method";
     case HTTP_STATUS_NOT_MODIFIED:       return "Not modified since time";
     case HTTP_STATUS_USE_PROXY:          return "Use specified proxy";
+    case HTTP_STATUS_UNUSED:             return "Unused";
     case HTTP_STATUS_REDIRECT_KEEP_VERB: return "HTTP/1.1: Keep same verb";
+    case HTTP_STATUS_PERMANENT_REDIRECT: return "Permanent redirection with same verb";
     // 400
     case HTTP_STATUS_BAD_REQUEST:        return "Invalid syntax";
     case HTTP_STATUS_DENIED:             return "Access denied";
@@ -158,7 +165,20 @@ GetHTTPStatusText(int p_status)
     case HTTP_STATUS_REQUEST_TOO_LARGE:  return "Request body too large";
     case HTTP_STATUS_URI_TOO_LONG:       return "URI too long";
     case HTTP_STATUS_UNSUPPORTED_MEDIA:  return "Unsupported media type";
+    case HTTP_STATUS_RANGE_SATISFIABLE:  return "Range not satisfiable";
+    case HTTP_STATUS_EXPECTATION_FAILED: return "Expectation failed";
+    case HTTP_STATUS_IM_A_TEAPOT:        return "I'm a teapot";
+    case HTTP_STATUS_MISDIRECTED:        return "Misdirected request";
+    case HTTP_STATUS_UNPROCESSABLE:      return "Unprocessable entity";
+    case HTTP_STATUS_LOCKED:             return "Locked";
+    case HTTP_STATUS_FAILED_DEPENDENCY:  return "Failed dependency";
+    case HTTP_STATUS_TOO_EARLY:          return "Too early";
+    case HTTP_STATUS_UPGRADE_REQUIRED:   return "Upgrade required";
+    case HTTP_STATUS_PRECOND_REQUIRED:   return "Precondition required";
+    case HTTP_STATUS_TOO_MANY_REQUESTS:  return "Too many requests";
+    case HTTP_STATUS_HEADERS_TOO_LARGE:  return "Headers too large";
     case HTTP_STATUS_RETRY_WITH:         return "Retry after appropriate action";
+    case HTTP_STATUS_LEGALREASONS:       return "Unavailable for legal reasons";
     // 500
     case HTTP_STATUS_SERVER_ERROR:       return "Internal server error";
     case HTTP_STATUS_NOT_SUPPORTED:      return "Not supported";
@@ -166,7 +186,12 @@ GetHTTPStatusText(int p_status)
     case HTTP_STATUS_SERVICE_UNAVAIL:    return "Temporarily overloaded";
     case HTTP_STATUS_GATEWAY_TIMEOUT:    return "Gateway timeout";
     case HTTP_STATUS_VERSION_NOT_SUP:    return "HTTP version not supported";
-    case HTTP_STATUS_LEGALREASONS:       return "Unavailable for legal reasons";
+    case HTTP_STATUS_VARIANT_NEG:        return "Variant alsoo negotiates";
+    case HTTP_STATUS_INSUF_STORAGE:      return "Insufficient storage";
+    case HTTP_STATUS_LOOP_DETECTED:      return "Infinite loop detected";
+    case HTTP_STATUS_NOT_EXTENDED:       return "Server not extended";
+    case HTTP_STATUS_NETWORK_AUTHENT:    return "Network authentication required";
+    // Fallback
     default:                             return "Unknown HTTP Status";
   }
 }

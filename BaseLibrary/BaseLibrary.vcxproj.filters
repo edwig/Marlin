@@ -132,9 +132,6 @@
     <ClInclude Include="WinINETError.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HTTPError.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Routing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -264,6 +261,9 @@
     <ClInclude Include="ExecuteShell.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HTTPError.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -362,31 +362,28 @@
     <ClCompile Include="FileBuffer.cpp">
       <Filter>Source Files\HTTP_JSON</Filter>
     </ClCompile>
-    <ClCompile Include="ZIP\adler32.c">
-      <Filter>ZIP</Filter>
-    </ClCompile>
-    <ClCompile Include="ZIP\deflate.c">
+    <ClCompile Include="ZIP\deflate.cpp">
       <Filter>ZIP</Filter>
     </ClCompile>
     <ClCompile Include="ZIP\gzip.cpp">
       <Filter>ZIP</Filter>
     </ClCompile>
-    <ClCompile Include="ZIP\inffast.c">
+    <ClCompile Include="ZIP\inffast.cpp">
       <Filter>ZIP</Filter>
     </ClCompile>
-    <ClCompile Include="ZIP\inflate.c">
+    <ClCompile Include="ZIP\inflate.cpp">
       <Filter>ZIP</Filter>
     </ClCompile>
-    <ClCompile Include="ZIP\inftrees.c">
+    <ClCompile Include="ZIP\inftrees.cpp">
       <Filter>ZIP</Filter>
     </ClCompile>
-    <ClCompile Include="ZIP\trees.c">
+    <ClCompile Include="ZIP\trees.cpp">
       <Filter>ZIP</Filter>
     </ClCompile>
-    <ClCompile Include="ZIP\zipcrc32.c">
+    <ClCompile Include="ZIP\zipcrc32.cpp">
       <Filter>ZIP</Filter>
     </ClCompile>
-    <ClCompile Include="ZIP\zutil.c">
+    <ClCompile Include="ZIP\zutil.cpp">
       <Filter>ZIP</Filter>
     </ClCompile>
     <ClCompile Include="HTTPTime.cpp">
@@ -460,6 +457,9 @@
     </ClCompile>
     <ClCompile Include="ExecuteShell.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ZIP\adler32.cpp">
+      <Filter>ZIP</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
