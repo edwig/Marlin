@@ -160,7 +160,7 @@ public:
 
   // OUR WORKHORSE: Post an event to the client
   // If 'returnToSender' is filled, only this client will receive the message
-  int   PostEvent(int p_session,XString p_payload,XString p_returnToSender = "",EvtType p_type = EvtType::EV_Message);
+  int   PostEvent(int p_session,XString p_payload,XString p_returnToSender = "",EvtType p_type = EvtType::EV_Message,XString p_typeName = "");
 
   // Main loop of the event runner. DO NOT CALL!
   void  EventThreadRunning();

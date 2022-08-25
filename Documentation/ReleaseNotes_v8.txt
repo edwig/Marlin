@@ -9,6 +9,10 @@ Version 8.x contains the new BaseLibrary where all general classes are moved int
 that can be shared with other library modules like SQLComponents and CXHibernate
 ----------------------------------------------------------------------------------------------
 
+1)  Added named SSE Events in the ServerEventChannels. So that you can sent other 'normal'
+    messages, not named 'message' through an SSE channel.
+
+
 CHANGES IN VERSION 8.1.1 of 24-07-2022
 --------------------------------------
 1)  Updated the BaseLibrary to version 1.0.4

@@ -153,16 +153,20 @@ ServerEventChannel::Reset()
 }
 
 int 
-ServerEventChannel::PostEvent(XString p_payload,XString p_sender,EvtType p_type /*= EvtType::EV_Message*/)
+ServerEventChannel::PostEvent(XString p_payload
+                             ,XString p_sender
+                             ,EvtType p_type     /*= EvtType::EV_Message*/
+                             ,XString p_typeName /*= ""*/)
 {
   AutoCritSec lock(&m_lock);
 
   // Create event and store at the back of the queue
-  LTEvent* event   = new LTEvent();
-  event->m_number  = ++m_maxNumber;
-  event->m_sent    = 0; // Send to all clients
-  event->m_type    = p_type;
-  event->m_payload = p_payload;
+  LTEvent* event    = new LTEvent();
+  event->m_number   = ++m_maxNumber;
+  event->m_sent     = 0; // Send to all clients
+  event->m_type     = p_type;
+  event->m_typeName = p_typeName;
+  event->m_payload  = p_payload;
 
   // Send just to this sender
   if(!p_sender.IsEmpty())
@@ -592,32 +596,36 @@ ServerEventChannel::SendQueueToStream()
     {
       if(ltevent->m_sent == 0 || ltevent->m_sent == it->m_sender)
       {
-      XString type = LTEvent::EventTypeToString(ltevent->m_type);
-      ServerEvent* event = new ServerEvent(type);
-      event->m_id = ltevent->m_number;
-      if (ltevent->m_type == EvtType::EV_Binary)
-      {
-        event->m_data  = Base64::Encrypt(ltevent->m_payload);
-      }
-      else
-      {
-        // Simply send the payload text
-        event->m_data = ltevent->m_payload;
-      }
+        XString type = LTEvent::EventTypeToString(ltevent->m_type);
+        ServerEvent* event = new ServerEvent(type);
+        event->m_id = ltevent->m_number;
+        if (ltevent->m_type == EvtType::EV_Binary)
+        {
+          event->m_data  = Base64::Encrypt(ltevent->m_payload);
+        }
+        else
+        {
+          // Simply send the payload text
+          event->m_data  = ltevent->m_payload;
+          if(ltevent->m_type == EvtType::EV_Message && !ltevent->m_typeName.IsEmpty())
+          {
+            event->m_event = ltevent->m_typeName;
+          }
+        }
 
-      // Make sure channel is now open on the server side and 'in-use'
-      if (!m_openSeen)
-      {
-        OnOpen("");
-      }
+        // Make sure channel is now open on the server side and 'in-use'
+        if(!m_openSeen)
+        {
+          OnOpen("");
+        }
         if(!m_server->SendEvent(it->m_stream,event))
-      {
-        allok = false;
+        {
+          allok = false;
           CloseStream(it->m_stream);
-        it = m_streams.erase(it);
-        OnClose("");
-        continue;
-      }
+          it = m_streams.erase(it);
+          OnClose("");
+          continue;
+        }
       }
       ++it;
     }

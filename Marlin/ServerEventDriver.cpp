@@ -403,8 +403,9 @@ ServerEventDriver::IncomingLongPoll(SOAPMessage* p_message)
 int
 ServerEventDriver::PostEvent(int     p_session
                             ,XString p_payload
-                            ,XString p_returnToSender /*= ""*/
-                            ,EvtType p_type           /*= EvtType::EV_Message*/)
+                            ,XString p_returnToSender /*= "" */
+                            ,EvtType p_type           /*= EvtType::EV_Message */
+                            ,XString p_typeName       /*= "" */)
 {
   int number = 0;
   if(m_active)
@@ -414,7 +415,7 @@ ServerEventDriver::PostEvent(int     p_session
     ServerEventChannel* session = FindSession(p_session);
     if(session)
     {
-      number = session->PostEvent(p_payload,p_returnToSender,p_type);
+      number = session->PostEvent(p_payload,p_returnToSender,p_type,p_typeName);
       // Kick the worker bee to start sending
       ::SetEvent(m_event);
     }

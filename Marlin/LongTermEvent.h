@@ -74,6 +74,7 @@ public:
   int     m_number { 0  };
   UINT64  m_sent   { 0L };
   EvtType m_type;
+  XString m_typeName;
   XString m_payload;
 };
 
