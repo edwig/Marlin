@@ -158,7 +158,8 @@ ServerEventChannel::PostEvent(XString p_payload
                              ,EvtType p_type     /*= EvtType::EV_Message*/
                              ,XString p_typeName /*= ""*/)
 {
-  AutoCritSec lock(&m_lock);
+  // Already locked by ServerEventDriver!
+  // AutoCritSec lock(&m_lock);
 
   // Create event and store at the back of the queue
   LTEvent* event    = new LTEvent();
@@ -606,7 +607,7 @@ ServerEventChannel::SendQueueToStream()
         else
         {
           // Simply send the payload text
-          event->m_data  = ltevent->m_payload;
+          event->m_data = ltevent->m_payload;
           if(ltevent->m_type == EvtType::EV_Message && !ltevent->m_typeName.IsEmpty())
           {
             event->m_event = ltevent->m_typeName;
@@ -688,8 +689,8 @@ ServerEventChannel::CloseChannel()
     {
       try
       {
-    (*m_application)(event);
-  }
+        (*m_application)(event);
+      }
       catch(StdException& ex)
       {
         ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());

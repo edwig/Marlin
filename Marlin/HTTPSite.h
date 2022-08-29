@@ -278,7 +278,7 @@ public:
   // Call the correct HTTP handler!
   void HandleHTTPMessage(HTTPMessage* p_message);
   // Call the correct EventStream handler
-  void HandleEventStream(HTTPMessage* p_message,EventStream* p_stream);
+  bool HandleEventStream(HTTPMessage* p_message,EventStream* p_stream);
   // Check WS-ReliableMessaging protocol
   bool HttpReliableCheck(SOAPMessage* p_message);
   // Check WS-Security protocol

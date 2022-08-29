@@ -55,7 +55,7 @@ public:
 
   // Go handle this message
   virtual void HandleMessage(HTTPMessage* p_message);
-  virtual void HandleStream (HTTPMessage* p_message,EventStream* p_stream);
+  virtual bool HandleStream (HTTPMessage* p_message,EventStream* p_stream);
   virtual void CleanUp      (HTTPMessage* p_message);
 
   // When stopping the site

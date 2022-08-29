@@ -299,9 +299,13 @@ void HTTPSiteCallbackEvent(void* p_argument)
   if(stream)
   {
     HTTPSite* site = stream->m_site;
-    if (site)
+    if(site)
     {
-      site->HandleEventStream(message,stream);
+      if(!site->HandleEventStream(message,stream))
+      {
+        site->GetHTTPServer()->RemoveEventStream(stream);
+        delete stream;
+      }
     }
   }
   delete message;

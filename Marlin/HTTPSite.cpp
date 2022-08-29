@@ -843,23 +843,21 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
 }
 
 // Call the correct EventStream handler
-void 
+bool
 HTTPSite::HandleEventStream(HTTPMessage* p_message,EventStream* p_stream)
 {
   SiteHandler* handler = GetSiteHandler(HTTPCommand::http_get);
 
   if(handler)
   {
-    handler->HandleStream(p_message,p_stream);
+    return handler->HandleStream(p_message,p_stream);
   }
-  else
-  {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Event stream can only be initialized through a HTTP GET to a event-handling site.");
-    HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_BAD_REQUEST);
-    msg->SetRequestHandle(p_stream->m_requestID);
-    HandleHTTPMessageDefault(msg);
-    msg->DropReference();
-  }
+  ERRORLOG(ERROR_INVALID_PARAMETER,"Event stream can only be initialized through a HTTP GET to a event-handling site.");
+  HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_BAD_REQUEST);
+  msg->SetRequestHandle(p_stream->m_requestID);
+  HandleHTTPMessageDefault(msg);
+  msg->DropReference();
+  return false;
 }
 
 // Default is to respond with a status 400 (BAD REQUEST)

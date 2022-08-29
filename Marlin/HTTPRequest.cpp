@@ -437,7 +437,11 @@ HTTPRequest::ReceivedRequest()
   if(stream)
   {
     stream->m_baseURL = rawUrl;
-    m_site->HandleEventStream(m_message,stream);
+    if(!m_site->HandleEventStream(m_message,stream))
+    {
+      m_server->RemoveEventStream(stream);
+      delete stream;
+    }
     return;
   }
 

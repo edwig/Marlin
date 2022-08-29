@@ -63,10 +63,11 @@ SiteHandler::OnStopSite()
 {
 }
 
-void 
+bool 
 SiteHandler::HandleStream(HTTPMessage* /*p_message*/,EventStream* /*p_stream*/)
 {
   // Nothing to do
+  return false;
 }
 
 // Go handle this message

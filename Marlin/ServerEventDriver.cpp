@@ -55,10 +55,10 @@ SiteHandlerEventSocket::Handle(HTTPMessage* p_message,WebSocket* p_socket)
 
 // A new SSE stream is incoming. A client has decided to use this method!
 // So go deal with it: destroy WebSocket.
-void
+bool
 SiteHandlerEventStream::HandleStream(HTTPMessage* p_message,EventStream* p_stream)
 {
-  m_driver->IncomingNewStream(p_message,p_stream);
+  return m_driver->IncomingNewStream(p_message,p_stream);
 }
 
 bool
@@ -357,9 +357,10 @@ ServerEventDriver::IncomingNewSocket(HTTPMessage* p_message,WebSocket* p_socket)
   {
     if(!RegisterSocketByRouting(p_message,p_socket))
     {
-      XString errortext;
-      errortext.Format("No registered session found for incoming socket on [%s]",p_socket->GetURI().GetString());
-      ERRORLOG(ERROR_NOT_FOUND,errortext);
+      ERRORLOG(ERROR_NOT_FOUND,"No registered session found for incoming socket on: " + p_socket->GetURI());
+      p_message->Reset();
+      p_message->SetStatus(HTTP_STATUS_FORBIDDEN);
+      m_server->SendResponse(p_message);
       return false;
     }
   }
@@ -367,21 +368,23 @@ ServerEventDriver::IncomingNewSocket(HTTPMessage* p_message,WebSocket* p_socket)
 }
 
 // Incoming new SSE Stream
-void
+bool
 ServerEventDriver::IncomingNewStream(HTTPMessage* p_message,EventStream* p_stream)
 {
   if(!RegisterStreamByCookie(p_message,p_stream))
   {
     if(!RegisterStreamByRouting(p_message,p_stream))
     {
-      XString errortext;
-      errortext.Format("No registered session found for incoming stream on [%s]",p_stream->m_absPath.GetString());
-      ERRORLOG(ERROR_NOT_FOUND,errortext);
-      return;
+      ERRORLOG(ERROR_NOT_FOUND,"No registered session found for incoming stream on: " + p_stream->m_absPath);
+      p_message->Reset();
+      p_message->SetStatus(HTTP_STATUS_FORBIDDEN);
+      m_server->SendResponse(p_message);
+      return false;
     }
   }
   // Possibly sent messages to newfound channel right away
   SetEvent(m_event);
+  return true;
 }
 
 bool

@@ -1312,12 +1312,9 @@ HTTPServer::SendEvent(EventStream* p_stream
 
   // But we must now make sure the event stream still does exist
   // and has not been closed by the event monitor
+  if(!HasEventStream(p_stream))
   {
-    AutoCritSec lock(&m_eventLock);
-    if(!HasEventStream(p_stream))
-    {
-      return false;
-    }
+    return false;
   }
 
   // Set next stream id
@@ -1351,12 +1348,9 @@ HTTPServer::SendEvent(EventStream* p_stream
 
   // Lock server as short as possible to register the return status
   // But we must now make sure the event stream still does exist
+  if(HasEventStream(p_stream))
   {
-    AutoCritSec lock(&m_eventLock);
-    if(HasEventStream(p_stream))
-    {
-      p_stream->m_alive = alive;
-    }
+    p_stream->m_alive = alive;
   }
 
   // Remember the time we sent the event pulse
@@ -1474,6 +1468,7 @@ HTTPServer::EventMonitor()
 {
   DWORD streams  = 0;
   bool  startNew = false;
+  _set_se_translator(SeTranslator);
 
   DETAILLOG1("Event heartbeat monitor started");
   do
@@ -1530,18 +1525,36 @@ HTTPServer::CheckEventStreams()
   DETAILLOG1("Starting event heartbeat");
 
   // Pulse event stream with a comment
-  for(auto& str : m_eventStreams)
+  EventMap::iterator it = m_eventStreams.begin();
+  while(it != m_eventStreams.end())
   {
-    EventStream* stream = str.second;
-    // If we did not send anything for the last eventKeepAlive seconds,
-    // Keep a margin of half a second for the wakeup of the server
-    // we send a ":keepalive" comment to the clients
-    if((pulse - stream->m_lastPulse) > (m_eventKeepAlive - 500))
+    try
     {
-      stream->m_alive = SendResponseEventBuffer(stream->m_requestID,&stream->m_lock,keepAlive.GetString(),keepAlive.GetLength());
-      stream->m_lastPulse = pulse;
-      ++stream->m_chunks;
-      ++number;
+      EventStream* stream = it->second;
+      // If we did not send anything for the last eventKeepAlive seconds,
+      // Keep a margin of half a second for the wakeup of the server
+      // we send a ":keepalive" comment to the clients
+      if((pulse - stream->m_lastPulse) > (m_eventKeepAlive - 500))
+      {
+        stream->m_alive = SendResponseEventBuffer(stream->m_requestID,&stream->m_lock,keepAlive.GetString(),keepAlive.GetLength());
+        stream->m_lastPulse = pulse;
+        ++stream->m_chunks;
+        ++number;
+      }
+      ++it;
+    }
+    catch(StdException& ex)
+    {
+      ERRORLOG(ERROR_NOT_FOUND,"Cannot handle event stream: " + ex.GetErrorMessage());
+      try
+      {
+        delete it->second;
+      }
+      catch(StdException&)
+      {
+        ERRORLOG(ERROR_NOT_FOUND,"Event stream already gone!");
+      }
+      it = m_eventStreams.erase(it);
     }
   }
 
@@ -1549,37 +1562,52 @@ HTTPServer::CheckEventStreams()
   DETAILLOGV("Sent heartbeat to %d push-event clients.",number);
 
   // Clean up dead event streams
-  EventMap::iterator it = m_eventStreams.begin();
+  it = m_eventStreams.begin();
   while(it != m_eventStreams.end())
   {
-    EventStream* stream = it->second;
-
-    if(stream->m_chunks > MAX_DATACHUNKS)
+    try
     {
-      DETAILLOGS("Push-event stream out of data chunks: ",stream->m_baseURL);
+      EventStream* stream = it->second;
+          if(stream->m_chunks > MAX_DATACHUNKS)
+      {
+        DETAILLOGS("Push-event stream out of data chunks: ",stream->m_baseURL);
 
-      // Send a close-stream event
-      ServerEvent* event = new ServerEvent("close");
-      SendEvent(stream,event);
-      // Remove request from the request queue, closing the connection
-      CancelRequestStream(stream->m_requestID);
-      // Erase stream, it's out of chunks now
-      delete it->second;
-      it = m_eventStreams.erase(it);
+        // Send a close-stream event
+        ServerEvent* event = new ServerEvent("close");
+        SendEvent(stream,event);
+        // Remove request from the request queue, closing the connection
+        CancelRequestStream(stream->m_requestID);
+        // Erase stream, it's out of chunks now
+        delete it->second;
+        it = m_eventStreams.erase(it);
+      }
+      else if(stream->m_alive == false)
+      {
+        DETAILLOGS("Abandoned push-event client from: ",stream->m_baseURL);
+
+        // Remove request from the request queue, closing the connection
+        CancelRequestStream(stream->m_requestID);
+        // Erase dead stream, and goto next
+        delete it->second;
+        it = m_eventStreams.erase(it);
+      }
+      else
+      {
+        ++it; // Next stream
+      }
     }
-    else if(stream->m_alive == false)
+    catch(StdException& ex)
     {
-      DETAILLOGS("Abandoned push-event client from: ",stream->m_baseURL);
-
-      // Remove request from the request queue, closing the connection
-      CancelRequestStream(stream->m_requestID);
-      // Erase dead stream, and goto next
-      delete it->second;
+      ERRORLOG(ERROR_NOT_FOUND,"Cannot clean up event stream: " + ex.GetErrorMessage());
+      try
+      {
+        delete it->second;
+      }
+      catch(StdException&)
+      {
+        ERRORLOG(ERROR_NOT_FOUND,"Event stream already gone!");
+      }
       it = m_eventStreams.erase(it);
-    }
-    else
-    {
-      ++it; // Next stream
     }
   }
 
@@ -1718,6 +1746,35 @@ HTTPServer::AbortEventStream(EventStream* p_stream)
     ++it;
   }
   return false;
+}
+
+void
+HTTPServer::RemoveEventStream(CString p_url)
+{
+  // Event stream NOT accepted
+  AutoCritSec lock(&m_eventLock);
+  EventMap::iterator it = m_eventStreams.find(p_url);
+  if (it != m_eventStreams.end())
+  {
+    m_eventStreams.erase(it);
+  }
+}
+
+void
+HTTPServer::RemoveEventStream(EventStream* p_stream)
+{
+  AutoCritSec lock(&m_eventLock);
+
+  EventMap::iterator it = m_eventStreams.begin();
+  while(it != m_eventStreams.end())
+  {
+    if(it->second == p_stream)
+    {
+      m_eventStreams.erase(it);
+      return;
+    }
+    ++it;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////

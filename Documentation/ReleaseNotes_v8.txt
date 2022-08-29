@@ -11,7 +11,8 @@ that can be shared with other library modules like SQLComponents and CXHibernate
 
 1)  Added named SSE Events in the ServerEventChannels. So that you can sent other 'normal'
     messages, not named 'message' through an SSE channel.
-
+2)  Extra checks on the initial handling of an incoming SSE event channel. If the channel cannnot
+    be authenticated, the server must bail-out correctly and destroy the new stream.
 
 CHANGES IN VERSION 8.1.1 of 24-07-2022
 --------------------------------------

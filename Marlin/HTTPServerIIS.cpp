@@ -428,11 +428,15 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
 
       // To do for this stream, not for a message
       DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s", stream->m_user.GetString(), rawUrl.GetString());
-      p_site->HandleEventStream(message,stream);
-
-      // Return the fact that the request turned into a stream
+      if(p_site->HandleEventStream(message,stream))
+      {
+        // Return the fact that the request turned into a stream
+        delete message;
+        return stream;
+      }
+      RemoveEventStream(stream);
       delete message;
-      return stream;
+      delete stream;
     }
   }
   // Not a stream request or stream not initiated

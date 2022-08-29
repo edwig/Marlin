@@ -87,7 +87,7 @@ class SiteHandlerEventStream : public SiteHandler
 public:
   SiteHandlerEventStream(ServerEventDriver* p_driver) : m_driver(p_driver) {}
 
-  void HandleStream(HTTPMessage* p_message,EventStream* p_stream) override;
+  bool HandleStream(HTTPMessage* p_message,EventStream* p_stream) override;
 private:
   ServerEventDriver* m_driver;
 };
@@ -143,7 +143,7 @@ public:
   bool  UnRegisterChannel(int p_channel,bool p_flush = true);
   // Incoming new Socket/SSE Stream
   bool  IncomingNewSocket(HTTPMessage* p_message,WebSocket*   p_socket);
-  void  IncomingNewStream(HTTPMessage* p_message,EventStream* p_stream);
+  bool  IncomingNewStream(HTTPMessage* p_message,EventStream* p_stream);
   bool  IncomingLongPoll (SOAPMessage* p_message);
 
   // GETTERS
