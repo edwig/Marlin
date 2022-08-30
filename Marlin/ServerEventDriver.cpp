@@ -329,6 +329,11 @@ ServerEventDriver::StartEventDriver()
 bool
 ServerEventDriver::StopEventDriver()
 {
+  if(!m_active)
+  {
+    return true;
+  }
+
   DETAILLOG1("Stopping ServerEventDriver");
 
   // No more new postings from now on
