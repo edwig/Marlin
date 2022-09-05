@@ -975,14 +975,15 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
   SendResponse(p_message);
 }
 
-void 
+void
 HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,XString p_body)
 {
-	p_message->Reset();
-	p_message->GetFileBuffer()->Reset();
-	p_message->GetFileBuffer()->SetBuffer((uchar*)p_body.GetString(),p_body.GetLength());
-	p_message->SetStatus(412);
-	SendResponse(p_message);
+  p_message->Reset();
+  p_message->GetFileBuffer()->Reset();
+  p_message->GetFileBuffer()->SetBuffer((uchar*)p_body.GetString(),p_body.GetLength());
+  p_message->SetContentType("application/json");
+  p_message->SetStatus(412);
+  SendResponse(p_message);
 }
 
 // Authentication failed for this reason

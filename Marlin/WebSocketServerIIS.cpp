@@ -34,6 +34,7 @@
 #include "AutoCritical.h"
 #include "ConvertWideString.h"
 #include <iiswebsocket.h>
+#include <ServiceReporting.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -254,7 +255,15 @@ ServerReadCompletionIIS(HRESULT p_error,
   WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_completionContext);
   if(socket)
   {
-    socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+    _set_se_translator(SeTranslator);
+    try
+    {
+      socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+    }
+    catch(StdException& ex)
+    {
+      SvcReportErrorEvent(0,false,__FUNCTION__,"Error reading websocket (%lX,%d,%d,%d,%d) %s",p_error,p_bytes,p_utf8,p_final,p_close,ex.GetErrorMessage().GetString());
+    }
   }
 }
 

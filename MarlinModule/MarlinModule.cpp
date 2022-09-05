@@ -762,13 +762,19 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
 
   // Grab an event stream, if it was present, otherwise continue to the next handler
   // Use the HTTPServer() method GetHTTPStreamFromRequest to see if we must turn it into a stream
-  bool stream = (*app->m_getHttpStream)(serverapp,p_context,site,rawRequest);
-  if(stream)
+  int stream = (*app->m_getHttpStream)(serverapp,p_context,site,rawRequest);
+  if( stream > 0)
   {
     // If we turn into a stream, more notifications are pending
     // This means the context of this request will **NOT** end
     status = RQ_NOTIFICATION_PENDING;
   }
+  else if(stream < 0)
+  {
+    // In case of a failed stream (authentication, DDOS attack etc)
+    status = RQ_NOTIFICATION_FINISH_REQUEST;
+  }
+  // OR NOT a stream: return RQ_NOTIFICATION_CONTINUE
   return status;
 }
 

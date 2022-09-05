@@ -73,24 +73,43 @@ __declspec(dllexport)
 HTTPSite* _stdcall FindHTTPSite(ServerApp* p_application,int p_port, PCWSTR p_url)
 {
   HTTPSite* site = nullptr;
-  if (p_application)
+  if(p_application)
   {
-    p_application->StartCounter();
-    site = p_application->GetHTTPServer()->FindHTTPSite(p_port,p_url);
-    p_application->StopCounter();
+    _set_se_translator(SeTranslator);
+    try
+    {
+      p_application->StartCounter();
+      site = p_application->GetHTTPServer()->FindHTTPSite(p_port,p_url);
+      p_application->StopCounter();
+    }
+    catch(StdException& ex)
+    {
+      SvcReportErrorEvent(0,false,__FUNCTION__,"ERROR while finding HTTP Site: " + ex.GetErrorMessage());
+      site = nullptr;
+    }
   }
   return site;
 }
 
 __declspec(dllexport)
-bool _stdcall GetStreamFromRequest(ServerApp* p_application, IHttpContext* p_context, HTTPSite* p_site, PHTTP_REQUEST p_request)
+int _stdcall GetStreamFromRequest(ServerApp* p_application,IHttpContext* p_context,HTTPSite* p_site,PHTTP_REQUEST p_request)
 {
-  bool gotstream = false;
-  if (p_application)
+  int gotstream{0};
+
+  if(p_application)
   {
-    p_application->StartCounter();
-    gotstream = (p_application->GetHTTPServer()->GetHTTPStreamFromRequest(p_context,p_site,p_request) != nullptr);
-    p_application->StopCounter();
+    _set_se_translator(SeTranslator);
+    try
+    {
+      p_application->StartCounter();
+      gotstream = p_application->GetHTTPServer()->GetHTTPStreamFromRequest(p_context,p_site,p_request);
+      p_application->StopCounter();
+    }
+    catch(StdException& ex)
+    {
+      SvcReportErrorEvent(0,false,__FUNCTION__,"ERROR while getting new event stream: " + ex.GetErrorMessage());
+      gotstream = 0;
+    }
   }
   return gotstream;
 }
@@ -104,13 +123,22 @@ HTTPMessage* _stdcall GetHTTPMessageFromRequest(ServerApp*    p_application
   HTTPMessage* msg = nullptr;
   if(p_application)
   {
-    p_application->StartCounter();
-    HTTPServerIIS* server = p_application->GetHTTPServer();
-    if(server)
+    _set_se_translator(SeTranslator);
+    try
     {
-      msg = server->GetHTTPMessageFromRequest(p_context,p_site,p_request);
+      p_application->StartCounter();
+      HTTPServerIIS* server = p_application->GetHTTPServer();
+      if(server)
+      {
+        msg = server->GetHTTPMessageFromRequest(p_context,p_site,p_request);
+      }
+      p_application->StopCounter();
     }
-    p_application->StopCounter();
+    catch(StdException& ex)
+    {
+      SvcReportErrorEvent(0,false,__FUNCTION__,"ERROR while getting a new HTTPMessage: " + ex.GetErrorMessage());
+      msg = nullptr;
+    }
   }
   return msg;
 }
@@ -125,19 +153,27 @@ bool _stdcall HandleHTTPMessage(ServerApp* p_application,HTTPSite* p_site,HTTPMe
     // Install SEH to regular exception translator
     AutoSeTranslator trans(SeTranslator);
 
-    p_application->StartCounter();
-
-    // GO! Let the site handle the message
-    p_message->AddReference();
-    p_site->HandleHTTPMessage(p_message);
-
-    // If handled (Marlin has reset the request handle)
-    if (p_message->GetHasBeenAnswered())
+    try
     {
-      handled = true;
+      p_application->StartCounter();
+
+      // GO! Let the site handle the message
+      p_message->AddReference();
+      p_site->HandleHTTPMessage(p_message);
+
+      // If handled (Marlin has reset the request handle)
+      if (p_message->GetHasBeenAnswered())
+      {
+        handled = true;
+      }
+      p_message->DropReference();
+      p_application->StopCounter();
     }
-    p_message->DropReference();
-    p_application->StopCounter();
+    catch(StdException& ex)
+    {
+      SvcReportErrorEvent(0,false,__FUNCTION__,"ERROR while handeling a HTTPMessage: " + ex.GetErrorMessage());
+      handled = false;
+    }
   }
   return handled;
 }

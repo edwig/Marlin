@@ -378,7 +378,11 @@ HTTPServerIIS::GetWebConfigIIS()
   return m_webConfigIIS;
 }
 
-EventStream*
+// Get a stream: Valid return status are
+// 0:  -> Not a stream request
+// 1:  -> Valid new stream request
+// -1: -> Stream request, but invalid (e.q. authentication failed)
+int
 HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
                                        ,HTTPSite*     p_site
                                        ,PHTTP_REQUEST p_request)
@@ -399,7 +403,7 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
 
     if(CheckUnderDDOSAttack(sender,absolutePath))
     {
-      return nullptr;
+      return -1;
     }
 
     // Grab the raw URL and the dekstop for the stream
@@ -432,15 +436,16 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
       {
         // Return the fact that the request turned into a stream
         delete message;
-        return stream;
+        return 1;
       }
       RemoveEventStream(stream);
       delete message;
       delete stream;
     }
+    return -1;
   }
   // Not a stream request or stream not initiated
-  return nullptr;
+  return 0;
 }
 
 // Building the essential HTTPMessage from the request area
@@ -1125,6 +1130,13 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   {
     SendResponseFileHandle(response,buffer,moredata);
   }
+
+  if(status >= HTTP_STATUS_AMBIGUOUS)
+  {
+    DWORD sent = 0;
+    response->Flush(FALSE,moredata,&sent,NULL);
+  }
+
   if(GetLastError())
   {
     // Error handler
@@ -1139,8 +1151,8 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
 
   if(!p_message->GetChunkNumber())
   {
-	// Do **NOT** send an answer twice
-	p_message->SetHasBeenAnswered();
+	  // Do **NOT** send an answer twice
+	  p_message->SetHasBeenAnswered();
   }
 }
 

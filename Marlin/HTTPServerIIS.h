@@ -71,7 +71,7 @@ public:
   // FUNCTIONS FOR IIS
 
   // Building a EventStream from the request area
-  EventStream* GetHTTPStreamFromRequest(IHttpContext* p_context
+  int          GetHTTPStreamFromRequest(IHttpContext* p_context
                                        ,HTTPSite*     p_site
                                        ,PHTTP_REQUEST p_request);
 
