@@ -194,7 +194,6 @@ void
 HTTPServerMarlin::Cleanup()
 {
   ULONG retCode;
-  USES_CONVERSION;
   AutoCritSec lock1(&m_sitesLock);
   AutoCritSec lock2(&m_eventLock);
 
@@ -806,8 +805,7 @@ HTTPServerMarlin::SendResponseEventBuffer(HTTP_OPAQUE_ID p_requestID
 bool
 HTTPServerMarlin::FlushSocket(HTTP_OPAQUE_ID p_request,XString p_prefix)
 {
-  USES_CONVERSION;
-  wstring prefix = A2W(p_prefix);
+  wstring prefix = StringToWString(p_prefix);
   DWORD result = HttpFlushResponseCache(GetRequestQueue(),prefix.c_str(),HTTP_FLUSH_RESPONSE_FLAG_RECURSIVE,nullptr);
 
   if(result != NO_ERROR)

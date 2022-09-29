@@ -57,7 +57,7 @@ int CompareNamespaces(XString p_namespace1, XString p_namespace2)
 // http://server/uri/some#command" -> "http://server/uri/some#" + "command"
 // command                         -> ""                        + "command"
 // 
-bool SplitNamespaceAndAction(XString p_soapAction, XString& p_namespace, XString& p_action)
+bool SplitNamespaceAndAction(XString p_soapAction,XString& p_namespace,XString& p_action,bool p_nmsp_ends_in_slash /*= false*/)
 {
   // Quick check whether it's filled
   if(p_soapAction.IsEmpty())
@@ -92,12 +92,12 @@ bool SplitNamespaceAndAction(XString p_soapAction, XString& p_namespace, XString
       pos = apos = ++hpos;
     }
     // Split namespace and action command name
-    p_namespace = p_soapAction.Left(apos);
+    p_namespace = p_soapAction.Left(apos - (p_nmsp_ends_in_slash ? 1 : 0));
     p_action    = p_soapAction.Mid(apos);
   }
   else
   {
-    // Clearly no namespaces
+    // Clearly no namespace
     // Very ancient: SOAPAction is just the action name
     p_action = p_soapAction;
     return false;

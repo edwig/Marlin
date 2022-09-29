@@ -29,6 +29,7 @@
 #include "LongTermEvent.h"
 
 LTEvent::LTEvent()
+        :m_type(EvtType::EV_Message)
 {
 }
 

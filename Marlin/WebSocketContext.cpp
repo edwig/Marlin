@@ -51,8 +51,12 @@ WebSocketContext::PerformHandshake(_In_  WEB_SOCKET_HTTP_HEADER*  p_clientHeader
                                    _In_  ULONG                    p_clientHeadersCount,
                                    _Out_ WEB_SOCKET_HTTP_HEADER** p_serverHeaders,
                                    _Out_ ULONG*                   p_serverHeadersCount,
-                                   _In_  PCSTR                    p_subProtocol)
+                                   _In_  PCSTR                    /*p_subProtocol*/)
 {
+  // Init
+  *p_serverHeaders = nullptr;
+  *p_serverHeadersCount = 0;
+
   CreateServerHandle();
 
   if(m_handle)
@@ -67,7 +71,6 @@ WebSocketContext::PerformHandshake(_In_  WEB_SOCKET_HTTP_HEADER*  p_clientHeader
       // Keep the pointers for reclamation
       return true;
     }
-    strlen(p_subProtocol);
   }
   Reset();
   return false;
@@ -267,6 +270,9 @@ quit:
   return hr;
 }
 
+// NOT IMPLEMENTED !!
+#pragma warning (disable: 6101)
+#pragma warning (disable: 6054)
 HRESULT 
 WebSocketContext::GetCloseStatus(_Out_ USHORT*  /*pStatusCode*/,
                                  _Out_ LPCWSTR* /*ppszReason*/ /*= NULL*/,
@@ -302,7 +308,7 @@ WebSocketContext::CreateServerHandle()
   // Make sure we have enough buffering space for the socket
   if(!m_ws_buffer)
   {
-    m_ws_buffer = new BYTE[m_ws_recv_buffersize + m_ws_send_buffersize + WEBSOCKET_BUFFER_OVERHEAD];
+    m_ws_buffer = new BYTE[(size_t)m_ws_recv_buffersize + (size_t)m_ws_send_buffersize + WEBSOCKET_BUFFER_OVERHEAD];
   }
 
   WEB_SOCKET_PROPERTY properties[5] = 

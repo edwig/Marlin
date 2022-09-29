@@ -14,6 +14,12 @@ that can be shared with other library modules like SQLComponents and CXHibernate
 2)  Extra checks on the initial handling of an incoming SSE event channel. If the channel cannnot
     be authenticated, the server must bail-out correctly and destroy the new stream.
 
+CHANGES IN VERSION 8.1.2 of 29-09-2022
+--------------------------------------
+1)  Updated the BaseLibrary for the Code Analysis corrections
+2)  Ran "Code Analysis" with the standard "Microsoft Native ruleset" and corrected many little
+    bugs and quirks.
+
 CHANGES IN VERSION 8.1.1 of 24-07-2022
 --------------------------------------
 1)  Updated the BaseLibrary to version 1.0.4

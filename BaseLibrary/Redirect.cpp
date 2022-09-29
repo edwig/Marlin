@@ -321,6 +321,7 @@ Redirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
 
   PSECURITY_DESCRIPTOR lpSD = new SECURITY_DESCRIPTOR;
   verify(::InitializeSecurityDescriptor(lpSD, SECURITY_DESCRIPTOR_REVISION));
+#pragma warning(disable: 6248) // Setting ZERO DACL.
   verify(::SetSecurityDescriptorDacl(lpSD, -1, 0, 0));
 
   LPSECURITY_ATTRIBUTES lpSA = new SECURITY_ATTRIBUTES;

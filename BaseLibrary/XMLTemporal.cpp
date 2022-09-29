@@ -375,7 +375,7 @@ XMLTime::ParseXMLTime(const XString& p_string)
                       {
                         minutes = -minutes;
                       }
-                      m_value += minutes * ONE_MINUTE;
+                      m_value += (INT64)minutes * ONE_MINUTE;
                       Normalise();
                       UTC = true;
                     }
@@ -392,7 +392,7 @@ XMLTime::ParseXMLTime(const XString& p_string)
                       {
                         minutes = -minutes;
                       }
-                      m_value += minutes * ONE_MINUTE;
+                      m_value += (int64)minutes * ONE_MINUTE;
                       Normalise();
                       UTC = true;
                     }
@@ -405,7 +405,7 @@ XMLTime::ParseXMLTime(const XString& p_string)
       ::ZeroMemory(&tziCurrent,sizeof(tziCurrent));
       if(::GetTimeZoneInformation(&tziCurrent) != TIME_ZONE_ID_INVALID)
       {
-        m_value += -tziCurrent.Bias * ONE_MINUTE;
+        m_value += (INT64)-tziCurrent.Bias * ONE_MINUTE;
         Normalise();
       }
       return true;
@@ -434,9 +434,9 @@ XMLTime::SetTime()
      m_theTime.m_minute >= 0 && m_theTime.m_minute < 60 &&
      m_theTime.m_second >= 0 && m_theTime.m_second < 60)
   {
-    m_value = (m_theTime.m_hour   * ONE_HOUR  ) + 
-              (m_theTime.m_minute * ONE_MINUTE) +
-               m_theTime.m_second;
+    m_value = ((INT64)m_theTime.m_hour   * ONE_HOUR  ) + 
+              ((INT64)m_theTime.m_minute * ONE_MINUTE) +
+               (INT64)m_theTime.m_second;
   }
   else
   {
@@ -583,13 +583,13 @@ XMLDate::SetDate(int p_year,int p_month,int p_day)
   return SetMJD();
 }
 
-// Calucalate the DateValue m_mjd for a date
+// Calculate the DateValue m_mjd for a date
 bool
 XMLDate::SetMJD()
 {
-  int year  = m_date.m_year;
-  int month = m_date.m_month;
-  int day   = m_date.m_day;
+  long year  = m_date.m_year;
+  long month = m_date.m_month;
+  long day   = m_date.m_day;
 
   // Validate year, month and day by the ODBC definition
   if (year  > 0 && year  < 10000 &&
@@ -607,10 +607,10 @@ XMLDate::SetMJD()
     // Finish validating the date
     if (day <= daysInMonth)
     {
-      // Calculate Astronomical Modified Juliaanse Day Nummer (MJD)
+      // Calculate Astronomical Modified Julian Day Number (MJD)
       // Method P.D-Smith: Practical Astronomy
-      // Pagi 9: Paragraaf 4: Julian day numbers.
-      // See alsoo:
+      // Page 9: Paragraph 4: Julian day numbers.
+      // See also:
       // Robin.M. Green: Spherical Astronomy, page 250 and next.
       if(month < 3)
       {
@@ -626,11 +626,11 @@ XMLDate::SetMJD()
         gregorianB = 2 - gregorianA + (gregorianA / 4);
       }
       factorC = (long)(365.25  * (double) year);
-      factorD = (long)(30.6001 * (double)(month + 1));
+      factorD = (long)(30.6001 * (double)((size_t)month + 1));
       // The correction factor (Modified JD) 
-      // Falls on 16 november 1858 12:00 hours (noon), 
-      // so subtract 679006 (17 november 1858 00:00:00 hour)
-      m_value = gregorianB + factorC + factorD + day - 679006;
+      // Falls on 16 November 1858 12:00 hours (noon), 
+      // so subtract 679006 (17 November 1858 00:00:00 hour)
+      m_value = (INT64)gregorianB + (INT64)factorC + (INT64)factorD + (INT64)day - (INT64)679006;
       return true;
     }
   }
@@ -770,7 +770,7 @@ XMLTimestamp::RecalculateValue()
   // Calculate the Astronomical Julian Day Number (JD)
   // Method P.D-Smith: Practical Astronomy
   // Page 9: Paragraph 4: Julian day numbers.
-  // See alsoo: Robin M. Green: Spherical Astronomy, page 250
+  // See also: Robin M. Green: Spherical Astronomy, page 250
   if(month < 3)
   {
     month += 12;
@@ -785,15 +785,15 @@ XMLTimestamp::RecalculateValue()
     gregorianB = 2 - gregorianA + (gregorianA / 4);
   }
   factorC = (long) (365.25  * (double)year);
-  factorD = (long) (30.6001 * (double)(month + 1));
+  factorD = (long) (30.6001 * (double)((size_t)month + 1));
   // The correction factor (Modified JD) 
-  // Falls on 16 november 1858 12:00 hours (noon), 
-  // so subtract 679006 (17 november 1858 00:00:00 hour)
-  m_value  = gregorianB + factorC + factorD + day - 679006;
+  // Falls on 16 November 1858 12:00 hours (noon), 
+  // so subtract 679006 (17 November 1858 00:00:00 hour)
+  m_value  = (INT64)gregorianB + factorC + factorD + day - (INT64)679006;
   m_value *= ONE_DAY;
-  m_value += m_timestamp.m_hour   * ONE_HOUR   +
-             m_timestamp.m_minute * ONE_MINUTE +
-             m_timestamp.m_second;
+  m_value += (INT64)m_timestamp.m_hour   * ONE_HOUR   +
+             (INT64)m_timestamp.m_minute * ONE_MINUTE +
+             (INT64)m_timestamp.m_second;
 }
 
 void
@@ -806,12 +806,12 @@ XMLTimestamp::Normalise()
   long factorE = 0;
   long factorG = 0;
 
-  // Calculate Civil Day from the Modified Juliaanse Day Nummer (MJD)
+  // Calculate Civil Day from the Modified Julian Day Number (MJD)
   // Method P.D-Smith: Practical Astronomy
   // Page 11: Paragraph 5: Converting Julian day number to the calendar date
-  // See alsoo Robin M. Green: Spherical Astronomy, page 250 and next
+  // See also Robin M. Green: Spherical Astronomy, page 250 and next
 
-  // Correction factor is MJD (2,400,000.5) + 0.5 (17 nov 1858 instead of 16 nov 12:00 hours)
+  // Correction factor is MJD (2,400,000.5) + 0.5 (17 Nov 1858 instead of 16 Nov 12:00 hours)
   double JD = (double)((m_value / ONE_DAY) + 2400001);
   if(JD > 2299160)
   {
@@ -825,7 +825,7 @@ XMLTimestamp::Normalise()
   factorC = gregorianB + 1524;
   factorD = (long) (((double)factorC - 122.1) / 365.25);
   factorE = (long)  ((double)factorD * 365.25);
-  factorG = (long) (((double)(factorC - factorE)) / 30.6001);
+  factorG = (long) (((double)((size_t)factorC - (size_t)factorE)) / 30.6001);
   m_timestamp.m_day   = (char)   (factorC - factorE - (int)((double)factorG * 30.6001));
   m_timestamp.m_month = (char)  ((factorG > 13) ? factorG - 13 : factorG - 1);
   m_timestamp.m_year  = (short) ((m_timestamp.m_month > 2) ? factorD - 4716 : factorD - 4715);
@@ -886,7 +886,7 @@ XMLTimestamp::AddDays(int p_number) const
 {
   if(p_number)
   {
-    return XMLTimestamp((INT64)(m_value + (p_number * ONE_DAY)));
+    return XMLTimestamp((INT64)(m_value + ((INT64)p_number * ONE_DAY)));
   }
   return *this;
 }
@@ -896,7 +896,7 @@ XMLTimestamp::AddMinutes(int p_number) const
 {
   if(p_number)
   {
-    return XMLTimestamp((INT64)(m_value + p_number * ONE_MINUTE));
+    return XMLTimestamp((INT64)(m_value + (INT64)p_number * ONE_MINUTE));
   }
   return *this;
 }
@@ -1314,7 +1314,7 @@ XMLGregorianMD::ParseGregorianMD(XString p_value)
     XString result = "Gregorian month-day overflow: " + p_value;
     throw StdException(result);
   }
-  m_value = month * 31 + day;
+  m_value = (INT64)month * 31 + (INT64)day;
   if(negative)
   {
     m_value = - m_value;
@@ -1360,7 +1360,7 @@ XMLGregorianYM::ParseGregorianYM(XString p_value)
     result = "Gregorian year-month overflow: " + p_value;
     throw StdException(result);
   }
-  m_value = year * 12 + month;
+  m_value = (INT64)year * 12 + (INT64)month;
   if(negative)
   {
     m_value = - m_value;

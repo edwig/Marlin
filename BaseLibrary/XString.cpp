@@ -31,6 +31,7 @@
 #include "pch.h"
 #include "BaseLibrary.h"
 #include "XString.h"
+#include "ConvertWideString.h"
 #include <atlbase.h>
 
 #ifndef _ATL
@@ -78,8 +79,7 @@ SMX_String::SMX_String(const string& p_string)
 BSTR 
 SMX_String::AllocSysString()
 {
-  USES_CONVERSION;
-  wstring str(A2CW(this->c_str()));
+  wstring str = StringToWString(this->c_str());
   BSTR bstrResult = ::SysAllocString(str.c_str());
 
   if(bstrResult == NULL)
@@ -393,8 +393,7 @@ SMX_String::LoadString(HINSTANCE p_inst,UINT p_strID,WORD p_languageID)
   ((char*)temp)[realSize - 1] = 0;
   ((char*)temp)[realSize - 2] = 0;
 
-  USES_CONVERSION;
-  *this = (LPSTR) CW2A(temp);
+  *this = (LPSTR) WStringToString(temp).GetString();
 
   delete [] temp;
   return(TRUE);

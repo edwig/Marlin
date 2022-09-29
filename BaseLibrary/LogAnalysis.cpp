@@ -582,7 +582,7 @@ LogAnalysis::BareStringLog(const char* p_buffer,int p_length)
 
     XString buffer;
     char* pointer = buffer.GetBufferSetLength(p_length + 1);
-    memcpy_s(pointer, p_length + 1, p_buffer, p_length);
+    memcpy_s(pointer,(size_t)p_length + 1, p_buffer,(size_t)p_length);
     pointer[p_length] = 0;
     buffer.ReleaseBufferSetLength(p_length);
 

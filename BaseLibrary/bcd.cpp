@@ -1379,7 +1379,7 @@ bcd::Log() const
     res += between;
   }
   // Re-add powers of two (comes from  " < 1.2")
-  res *= bcd(::pow(2.0,(double)(k + 1)));
+  res *= bcd(::pow(2.0,(double)++k));
 
   // Re-apply the exponent
   if(expo != 0)

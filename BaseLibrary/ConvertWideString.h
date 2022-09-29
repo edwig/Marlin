@@ -53,6 +53,9 @@ bool    TryCreateWideString (const XString& p_string
                             ,const bool     p_doBom
                             ,      uchar**  p_buffer
                             ,      int&     p_length);
+// Convert directly
+std::wstring StringToWString(XString p_string);
+XString      WStringToString(std::wstring p_string);
 // Getting the codepage number from the charset
 int     CharsetToCodepage(XString p_charset);
 // Getting the name of the codepage

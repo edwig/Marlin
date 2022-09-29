@@ -28,6 +28,7 @@
 #include "pch.h"
 #include "MapDialog.h"
 #include <direct.h>
+#include <assert.h>
 #include <SHLOBJ.H>
 
 #ifndef BIF_NEWDIALOGSTYLE
@@ -44,9 +45,8 @@ LPITEMIDLIST PathToPidl(XString const& path)
 {
   LPITEMIDLIST  pidl = NULL;
   LPSHELLFOLDER pDesktopFolder;
-  OLECHAR       olePath[MAX_PATH];
-  ULONG         chEaten;
-  ULONG         dwAttributes;
+  OLECHAR       olePath[2 * MAX_PATH + 2];
+  ULONG         dwAttributes = 0;
 
   if (SUCCEEDED(SHGetDesktopFolder(&pDesktopFolder)))
   {
@@ -61,7 +61,7 @@ LPITEMIDLIST PathToPidl(XString const& path)
     hr = pDesktopFolder->ParseDisplayName(NULL
                                          ,NULL
                                          ,olePath
-                                         ,&chEaten
+                                         ,NULL
                                          ,&pidl
                                          ,&dwAttributes);
     if (FAILED(hr))
@@ -104,7 +104,11 @@ MapDialog::MapDialog()
   // Register original CWD (Current Working Directory) 
   m_hwnd = NULL;
   m_originalDir[0] = 0;
-  _getcwd(m_originalDir,MAX_PATH);
+  if(_getcwd(m_originalDir,MAX_PATH) == 0)
+  {
+    // Failed. remove any ill result
+    m_originalDir[0] = 0;
+  }
 }
 
 //=============================================================================
@@ -112,7 +116,13 @@ MapDialog::MapDialog()
 MapDialog::~MapDialog()
 {
   // Back to the original directory
-  _chdir((LPCSTR) m_originalDir);
+  if(m_originalDir[0])
+  {
+    if(_chdir((LPCSTR) m_originalDir) == 0)
+    {
+      assert(false);
+    }
+  }
 }
 
 //=============================================================================
@@ -146,7 +156,7 @@ bool MapDialog::Browse(HWND            hwndParent,
   //   bi.lParam = (LONG)this;
 
   //  Buffer in which the display name is returned
-  char szDisplayName[MAX_PATH];
+  char szDisplayName[MAX_PATH] = { 0 };
   bi.pszDisplayName = szDisplayName;
 
   //  Title
@@ -182,6 +192,7 @@ void MapDialog::EnableOk(bool bEnable)
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
     MessageBox(NULL,"Call from invalid context","Map dialog",MB_OK|MB_ICONERROR);
+    return;
   }
   //  Set the ok button state
   ::SendMessage(m_hwnd, BFFM_ENABLEOK, 0, bEnable);
@@ -194,6 +205,7 @@ void MapDialog::SetSelection(XString const& path)
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
     MessageBox(NULL,"Call from invalid context","Map dialog",MB_OK|MB_ICONERROR);
+    return;
   }
   //  Set the current path in the tree
   ::SendMessage(m_hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)(char const*)path);  
@@ -206,6 +218,7 @@ void MapDialog::SetStatusText(XString const& text)
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
     MessageBox(NULL,"Call from invalid context","MapDialog",MB_OK|MB_ICONERROR);
+    return;
   }
   //  Set the current path in the tree
   ::SendMessage(m_hwnd, BFFM_SETSTATUSTEXT, 0, (LPARAM)(char const*)text);  

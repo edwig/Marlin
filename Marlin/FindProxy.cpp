@@ -27,6 +27,7 @@
 //
 #include "stdafx.h"
 #include "FindProxy.h"
+#include <ConvertWideString.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -52,8 +53,6 @@ FindProxy::~FindProxy()
 XString
 FindProxy::Find(const XString& p_url,bool p_secure)
 {
-  USES_CONVERSION;
-
   // If already initialized
   if(!m_lastUsedDst.IsEmpty() && (m_lastUsedDst == p_url))
   {
@@ -73,10 +72,10 @@ FindProxy::Find(const XString& p_url,bool p_secure)
   {
     if(cfg.lpszProxy)
     {
-      proxy = CW2A(cfg.lpszProxy);
+      proxy = WStringToString(cfg.lpszProxy);
       if(!!cfg.lpszProxyBypass)
       {
-        m_ignored = CW2A(cfg.lpszProxyBypass);
+        m_ignored = WStringToString(cfg.lpszProxyBypass);
       }
     }
     LPWSTR autoCfgUrl = cfg.lpszAutoConfigUrl;
@@ -103,15 +102,15 @@ FindProxy::Find(const XString& p_url,bool p_secure)
       m_info = new ProxyInfo();
 
       WINHTTP_PROXY_INFO &autoCfg = m_info->cfg;
-      if(internet.hInter && ::WinHttpGetProxyForUrl(internet.hInter, A2CW(p_url), &autoOpts, &autoCfg))
+      if(internet.hInter && ::WinHttpGetProxyForUrl(internet.hInter, StringToWString(p_url).c_str(),&autoOpts,&autoCfg))
       {
         if(autoCfg.lpszProxy && autoCfg.dwAccessType != WINHTTP_ACCESS_TYPE_NO_PROXY)
         {
           m_perDest = true;
-          proxy = CW2A(autoCfg.lpszProxy);
+          proxy = WStringToString(autoCfg.lpszProxy);
           if(!!autoCfg.lpszProxyBypass)
           {
-            m_ignored = CW2A(autoCfg.lpszProxyBypass);
+            m_ignored = WStringToString(autoCfg.lpszProxyBypass);
           }
         }
       }
@@ -140,13 +139,11 @@ FindProxy::SetInfo(XString p_proxy,XString p_bypass)
   {
     m_info = new ProxyInfo();
   }
-  USES_CONVERSION;
-
   m_proxy   = p_proxy;
   m_ignored = p_bypass;
 
-  m_wProxy   = A2CW(m_proxy);
-  m_wIgnored = A2CW(m_ignored);
+  m_wProxy   = StringToWString(m_proxy);
+  m_wIgnored = StringToWString(m_ignored);
 
   m_info->cfg.dwAccessType    = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
   m_info->cfg.lpszProxy       = (LPWSTR) m_wProxy.c_str();

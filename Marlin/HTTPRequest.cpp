@@ -181,8 +181,15 @@ HTTPRequest::StartRequest()
   // Allocate the request object
   if(m_request == nullptr)
   {
-    m_request = (PHTTP_REQUEST) calloc(1,size + 1);
-  }  
+    m_request = (PHTTP_REQUEST) calloc(1,(size_t)size + 1);
+  }
+  if(!m_request)
+  {
+    // Error to the server log
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Starting new HTTP Request");
+    Finalize();
+    return;
+  }
   // Set type of request
   m_incoming.m_action = IO_Request;
   // Get queue handle
@@ -238,7 +245,6 @@ HTTPRequest::ReceivedRequest()
 {
   TRACE0("Received request\n");
 
-  USES_CONVERSION;
   HANDLE accessToken = nullptr;
 
   // Get status from the OVERLAPPED result
@@ -273,7 +279,7 @@ HTTPRequest::ReceivedRequest()
   XString   authorize       = m_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
   XString   modified        = m_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
   XString   referrer        = m_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
-  XString   rawUrl          = (XString) CW2A(m_request->CookedUrl.pFullUrl);
+  XString   rawUrl          = WStringToString(m_request->CookedUrl.pFullUrl);
   PSOCKADDR sender          = m_request->Address.pRemoteAddress;
   PSOCKADDR receiver        = m_request->Address.pLocalAddress;
   int       remDesktop      = m_server->FindRemoteDesktop(m_request->Headers.UnknownHeaderCount
@@ -311,7 +317,7 @@ HTTPRequest::ReceivedRequest()
   // See if we must substitute for a sub-site
   if(m_server->GetHasSubsites())
   {
-    XString absPath = (XString) CW2A(m_request->CookedUrl.pAbsPath);
+    XString absPath = WStringToString(m_request->CookedUrl.pAbsPath);
     m_site = m_server->FindHTTPSite(m_site,absPath);
   }
 
@@ -375,7 +381,7 @@ HTTPRequest::ReceivedRequest()
   EventStream* stream = nullptr;
   if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
-    XString absolutePath = (XString) CW2A(m_request->CookedUrl.pAbsPath);
+    XString absolutePath = WStringToString(m_request->CookedUrl.pAbsPath);
     if(m_server->CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
     {
       return;
@@ -801,8 +807,8 @@ HTTPRequest::StartEventStreamResponse()
   {
     free(m_sendBuffer);
   }
-  m_sendBuffer = (BYTE*) malloc(init.GetLength() + 1);
-  memcpy_s(m_sendBuffer,init.GetLength() + 1,init.GetString(),init.GetLength() + 1);
+  m_sendBuffer = (BYTE*) malloc((size_t)init.GetLength() + 1);
+  memcpy_s(m_sendBuffer,(size_t)init.GetLength() + 1,init.GetString(),(size_t)init.GetLength() + 1);
 
   // Setup as a data-chunk info structure
   memset(&m_sendChunk,0,sizeof(HTTP_DATA_CHUNK));
@@ -894,6 +900,12 @@ HTTPRequest::SendResponseStream(const char* p_buffer
     free(m_sendBuffer);
   }
   m_sendBuffer = (BYTE*) malloc(p_length + 1);
+  if(!m_sendBuffer)
+  {
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Sending a HTTP answer");
+    m_responding = false;
+    return;
+  }
   memcpy_s(m_sendBuffer,p_length + 1,p_buffer,p_length);
   m_sendBuffer[p_length] = 0;
 
@@ -1075,6 +1087,8 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
   // Allocate some space
   m_unknown = (PHTTP_UNKNOWN_HEADER) malloc((1 + p_headers.size()) * sizeof(HTTP_UNKNOWN_HEADER));
 
+#pragma warning(disable: 6386)
+
   unsigned ind = 0;
   for(auto& unknown : p_headers)
   {
@@ -1084,13 +1098,12 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
     XString name = unknown.first;
     AddRequestString(name,string,size);
     m_unknown[ind].NameLength = size;
-    m_unknown[ind].pName = string;
-
+    m_unknown[ind].pName      = string;
 
     XString value = unknown.second;
     AddRequestString(value,string,size);
     m_unknown[ind].RawValueLength = size;
-    m_unknown[ind].pRawValue = string;
+    m_unknown[ind].pRawValue      = string;
 
     // next header
     ++ind;
@@ -1242,7 +1255,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
       {
         SYSTEMTIME current;
         GetSystemTime(&current);
-        AddSecondsToSystemTime(&current,&current,60 * cookieExpires);
+        AddSecondsToSystemTime(&current,&current,60 * (double)cookieExpires);
         cookie.SetExpires(&current);
       }
 

@@ -654,8 +654,17 @@ WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
     if(TryConvertWideString(buffer_utf8,length_utf8,"",encoded,foundBom))
     {
       int len = encoded.GetLength() + 1;
-      p_frame->m_data = (BYTE*) realloc(p_frame->m_data,len);
-      strcpy_s((char*)p_frame->m_data,len,encoded.GetString());
+      BYTE* data = (BYTE*) realloc(p_frame->m_data,len);
+      if(data)
+      {
+        p_frame->m_data = data;
+        strcpy_s((char*) p_frame->m_data,len,encoded.GetString());
+      }
+      else
+      {
+        // Out of memory
+        ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"While receiving UTF-8 block");
+      }
     }
   }
   delete [] buffer_utf8;

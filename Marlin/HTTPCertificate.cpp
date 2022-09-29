@@ -100,7 +100,7 @@ HTTPCertificate::GetSubject()
         m_subject = (char*)ptr;
 
         char* str = m_subject.GetBufferSetLength(len + 1);
-        strncpy_s(str,len + 1,(char*)ptr,len);
+        strncpy_s(str,(size_t)len + 1,(char*)ptr,len);
         str[len] = 0;
         m_subject.ReleaseBuffer(len);
         m_subject = CleanupCertificateString(m_subject);
@@ -131,7 +131,7 @@ HTTPCertificate::GetIssuer()
 
         // Copy subject name from certificate blob
         char* str = m_issuer.GetBufferSetLength(len + 1);
-        strncpy_s(str,len + 1,(char*)ptr,len);
+        strncpy_s(str,(size_t)len + 1,(char*)ptr,len);
         str[len] = 0;
         m_issuer.ReleaseBuffer(len);
         m_issuer = CleanupCertificateString(m_issuer);

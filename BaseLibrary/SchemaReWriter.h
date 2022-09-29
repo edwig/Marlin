@@ -91,7 +91,7 @@ private:
 
   // Processing data
   int     m_position { 0 };
-  Token   m_token;
+  Token   m_token       { Token::TK_EOS };
   XString m_tokenString;
   int     m_level       { 0      };
   Token   m_inStatement { Token::TK_EOS };

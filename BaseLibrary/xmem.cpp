@@ -83,12 +83,14 @@ XMem::sto_ptr(char *p,size_t b,char* filename,int lineno)
 		bp->alloc = (ALLOCATION *)calloc(m_bucketsize,sizeof(ALLOCATION));
 	}
 	bno = bp->entries++;
+  if(bp->alloc)
+  {
 	bp->alloc[bno].ptr      = p;
 	bp->alloc[bno].freed    = NULL;
 	bp->alloc[bno].size     = b;
   bp->alloc[bno].filename = filename;
   bp->alloc[bno].lineno   = lineno;
-
+  }
   m_tot_mem += b;
   if(m_tot_mem > m_max_mem)
   {
@@ -262,7 +264,7 @@ void *
 XMem::x_strdup(void *s,char* filename,int lineno)
 {
 	unsigned int l = (unsigned int)strlen((char *)s);
-	void    *p = x_malloc((unsigned int)(l+1),filename,lineno);
+	void    *p = x_malloc((size_t)l+1,filename,lineno);
 	
 	strcpy((char *)p,(char *)s);
 	return p;

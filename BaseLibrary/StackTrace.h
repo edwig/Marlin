@@ -58,12 +58,12 @@ private:
   // Frame in a stacktrace
   struct Frame
   {
-    DWORD_PTR  m_address;
+    DWORD_PTR  m_address { NULL };
     XString    m_module;
     XString    m_function;
-    DWORD_PTR  m_offset;
+    DWORD_PTR  m_offset  { NULL };
     XString    m_fileName;
-    DWORD      m_line;
+    DWORD      m_line    { 0 };
   };
   // Full trace
   typedef std::list<Frame> Trace;

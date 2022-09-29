@@ -105,7 +105,7 @@ JSONParser::ParseMessage(XString& p_message,bool& p_whitespace,StringEncoding p_
   // Allocate scanning buffer
   // Individual string cannot be larger than this
   m_scanLength = p_message.GetLength();
-  m_scanString = new uchar[m_scanLength + 1];
+  m_scanString = new uchar[(size_t)m_scanLength + 1];
 
   // See if we have an empty message string
   SkipWhitespace();
@@ -593,7 +593,7 @@ JSONParser::ParseNumber()
         exp += (*m_pointer - '0');
         ++m_pointer;
       }
-      bcdNumber *= pow(10.0,exp * fac);
+      bcdNumber *= ::pow((double)10.0,(double)exp * (double)fac);
     }
 
     // Do not forget the sign
@@ -934,7 +934,7 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
         }
       }
     }
-    if(makeArray == 2)
+    if(makeArray == 2 && here)
     {
       // Change the just added pair to an array
       if(here->GetDataType() == JsonType::JDT_array && !here->GetArray().empty())
@@ -981,11 +981,11 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
     // Do the children
     if(element->GetChildren().size())
     {
-      if(here->GetDataType() == JsonType::JDT_const)
+      if(here && here->GetDataType() == JsonType::JDT_const)
       {
         here->SetDatatype(JsonType::JDT_object);
+        ParseLevel(*here,*element);
       }
-      ParseLevel(*here,*element);
     }
   }
 }

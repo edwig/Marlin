@@ -224,7 +224,7 @@ void ZLIB_INTERNAL inflate_fast(z_streamp strm,unsigned start)
                         }
                     }
                     else if (wnext < op) {      /* wrap around window */
-                        from += wsize + wnext - op;
+                        from += (INT64)wsize + (INT64)wnext - (INT64)op;
                         op -= wnext;
                         if (op < len) {         /* some from end of window */
                             len -= op;

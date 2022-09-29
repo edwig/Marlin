@@ -633,7 +633,10 @@ WinFile::OpenAsSharedMemory(XString   p_name
     DWORD protect  = PAGE_READWRITE;
     DWORD sizeLow  = p_size & 0x0FFFFFFF;
     DWORD sizeHigh = p_size >> 32;
+    if(m_file)
+    {
     m_file = CreateFileMapping(m_file,nullptr,protect,sizeLow,sizeHigh,p_name.GetString());
+    }
     if(m_file == NULL)
     {
       m_error = ::GetLastError();
@@ -781,14 +784,14 @@ WinFile::Read(XString& p_string)
 
   while(true)
   {
-    char ch = PageBufferRead();
+    int ch = PageBufferRead();
     if(ch == EOF)
     {
       m_error = ::GetLastError();
       p_string = result;
       return false;
     }
-    result += ch;
+    result += (char) ch;
 
     // Do the CR/LF to "\n" translation
     if(m_openMode & FFlag::open_trans_text)
@@ -800,7 +803,7 @@ WinFile::Read(XString& p_string)
       }
       if(crstate && ch == '\n')
       {
-        result.SetAt(result.GetLength() - 2,ch);
+        result.SetAt(result.GetLength() - 2,(char) ch);
         result = result.Left(result.GetLength()-1);
       }
     }
@@ -945,7 +948,7 @@ WinFile::FormatV(LPCSTR p_format, va_list p_list)
   // Formatting the parameters
   vsprintf_s(buffer, len, p_format, p_list);
   // Adding to the string
-  bool result = Write(buffer, len - 1);
+  bool result = Write(buffer,(size_t)len - 1);
   delete[] buffer;
   return result;
 }
@@ -962,7 +965,7 @@ WinFile::Position()
   if (m_file == nullptr)
   {
     m_error = ERROR_FILE_NOT_FOUND;
-    return -1;
+    return (size_t) -1;
   }
 
   // Read files should readjust the current position
@@ -974,7 +977,7 @@ WinFile::Position()
   if(::SetFilePointerEx(m_file, move, &pos, FILE_CURRENT) == 0)
   {
     m_error = ::GetLastError();
-    return -1;
+    return (size_t) -1;
   }
   return (size_t) pos.QuadPart;
 }
@@ -990,7 +993,7 @@ WinFile::Position(FSeek p_how,LONGLONG p_position /*= 0*/)
   if (m_file == nullptr)
   {
     m_error = ERROR_FILE_NOT_FOUND;
-    return -1;
+    return (size_t) -1;
   }
 
   // Check if we where opened for random access, 
@@ -998,7 +1001,7 @@ WinFile::Position(FSeek p_how,LONGLONG p_position /*= 0*/)
   if((m_openMode & FFlag::open_random_access) == 0)
   {
     m_error = ERROR_INVALID_FUNCTION;
-    return -1;
+    return (size_t) -1;
   }
 
   if(m_openMode & FFlag::open_write)
@@ -1025,14 +1028,14 @@ WinFile::Position(FSeek p_how,LONGLONG p_position /*= 0*/)
     case FSeek::file_current: method = FILE_CURRENT; break;
     case FSeek::file_end:     method = FILE_END;     break;
     default:                  m_error = ERROR_INVALID_FUNCTION;
-                              return -1;
+                              return (size_t) -1;
   }
 
   // Perform the file move
   if(::SetFilePointerEx(m_file,move,&pos,method) == 0)
   {
     m_error = ::GetLastError();
-    return -1;
+    return (size_t) -1;
   }
   PageBufferFree();
 
@@ -1096,7 +1099,7 @@ WinFile::Gets(uchar* p_buffer,size_t p_size)
   --p_size;
 
   // Make sure we have a read buffer
-  *p_buffer++ = Getch();
+  *p_buffer++ = (uchar) Getch();
 
   // Scan forward in the pagebuffer for a newline
   char* ending = strchr((char*)m_pagePointer,'\n');
@@ -2500,8 +2503,8 @@ WinFile::ResolveSpecialChars(XString& p_value)
     ++total;
     int num = 0;
     XString hexstring = p_value.Mid(pos+1,2);
-    hexstring.SetAt(0,toupper(hexstring[0]));
-    hexstring.SetAt(1,toupper(hexstring[1]));
+    hexstring.SetAt(0,(char) toupper(hexstring[0]));
+    hexstring.SetAt(1,(char) toupper(hexstring[1]));
 
     if(isdigit(hexstring[0]))
     {

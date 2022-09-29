@@ -336,8 +336,7 @@ WebConfigIIS::ReplaceEnvironVars(XString& p_string)
     // Two markers found
     XString var = local.Mid(beginPos + 1, (endPos - beginPos - 1));
     XString value;
-    value.GetEnvironmentVariable(var);
-    if(!value.IsEmpty())
+    if(value.GetEnvironmentVariable(var) && !value.IsEmpty())
     {
       local = local.Left(beginPos) + value + local.Mid(endPos + 1);
       p_string = local;

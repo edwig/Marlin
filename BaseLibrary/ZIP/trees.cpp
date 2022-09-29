@@ -508,6 +508,11 @@ local void gen_bitlen(deflate_state* s,tree_desc* desc)
     ush f;              /* frequency */
     int overflow = 0;   /* number of elements with bit length too large */
 
+    if(!s)
+    {
+      return;
+    }
+
     for(bits = 0; bits <= MAX_BITS; bits++)
     {
       s->bl_count[bits] = 0;
@@ -553,8 +558,12 @@ local void gen_bitlen(deflate_state* s,tree_desc* desc)
     do 
     {
         bits = max_length-1;
-        while (bits && s->bl_count[bits] == 0) bits--;
+
+        while(bits > 0 && (bits < MAX_BITS + 1) && s->bl_count[bits] == 0) bits--;
+        if(bits > 0 && bits < MAX_BITS + 1)
+        {
         s->bl_count[bits]--;      /* move one leaf down the tree */
+        }
         s->bl_count[bits+1] += 2; /* move one overflow item as its brother */
         s->bl_count[max_length]--;
         /* The brother of the overflow item also moves one step up,
@@ -1085,12 +1094,19 @@ void ZLIB_INTERNAL _tr_flush_block(deflate_state* s,charf* buf,ulg stored_len,in
  */
 int ZLIB_INTERNAL _tr_tally (deflate_state* s,unsigned dist,unsigned lc)
 {
+  if(!s)
+  {
+    return false;
+  }
+
     s->d_buf[s->last_lit] = (ush)dist;
     s->l_buf[s->last_lit++] = (uch)lc;
     if (dist == 0) {
         /* lc is the unmatched char */
         s->dyn_ltree[lc].Freq++;
-    } else {
+    } 
+    else 
+    {
         s->matches++;
         /* Here, lc is the match length - MIN_MATCH */
         dist--;             /* dist = match distance - 1 */
@@ -1098,7 +1114,10 @@ int ZLIB_INTERNAL _tr_tally (deflate_state* s,unsigned dist,unsigned lc)
                (ush)lc <= (ush)(MAX_MATCH-MIN_MATCH) &&
                (ush)d_code(dist) < (ush)D_CODES,  "_tr_tally: bad match");
 
+        if(lc < MAX_MATCH - MIN_MATCH + 1)
+        {
         s->dyn_ltree[_length_code[lc]+LITERALS+1].Freq++;
+        }
         s->dyn_dtree[d_code(dist)].Freq++;
     }
 
@@ -1155,13 +1174,19 @@ local void compress_block(deflate_state* s,const ct_data* ltree,const ct_data*  
             }
             dist--; /* dist is now the match distance - 1 */
             code = d_code(dist);
-            Assert (code < D_CODES, "bad d_code");
-
+            if(code < D_CODES)
+            {
             send_code(s, code, dtree);       /* send the distance code */
             extra = extra_dbits[code];
-            if (extra != 0) {
+              if(extra != 0)
+              {
                 dist -= base_dist[code];
                 send_bits(s, dist, extra);   /* send the extra distance bits */
+              }
+            }
+            else
+            {
+              Assert(code < D_CODES,"bad d_code");
             }
         } /* literal or match pair ? */
 

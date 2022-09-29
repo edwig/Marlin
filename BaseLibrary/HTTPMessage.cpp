@@ -850,7 +850,15 @@ HTTPMessage::AddHeader(HTTP_HEADER_ID p_id,XString p_value)
 
   if(p_id >= 0 && p_id < maximum)
   {
-    XString name = p_id < HttpHeaderAcceptRanges ? header_fields[p_id] : header_response[p_id - HttpHeaderAcceptRanges];
+    XString name;
+    if(p_id >= 0 && p_id < HttpHeaderAcceptRanges)
+    {
+      name = header_fields[p_id];
+    }
+    else if(p_id >= HttpHeaderAcceptRanges && p_id < HttpHeaderMaximum)
+    {
+      name = header_response[p_id - HttpHeaderAcceptRanges];
+    }
     AddHeader(name,p_value);
   }
 }

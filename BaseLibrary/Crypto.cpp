@@ -200,7 +200,7 @@ Crypto::Digest(XString& p_buffer,XString& p_password)
   }
 
   // Alloc memory for the hash data
-  pbHash = new BYTE[dwHashLen + 1];
+  pbHash = new BYTE[(size_t)dwHashLen + 1];
 
   // Getting the hash at last
   if(!CryptGetHashParam(hHashData, HP_HASHVAL, pbHash, &dwHashLen, 0))
@@ -295,7 +295,7 @@ Crypto::Digest(const void* data,const size_t data_size,unsigned hashType)
 
   Base64 base;
   XString hash;
-  char* pointer = hash.GetBufferSetLength((int)base.B64_length(cbHashSize + 1));
+  char* pointer = hash.GetBufferSetLength((int)base.B64_length((size_t)cbHashSize + 1));
   base.Encrypt((const unsigned char*)&buffer[0],cbHashSize,(unsigned char*)pointer);
   hash.ReleaseBuffer();
 
@@ -637,7 +637,7 @@ Crypto::FastDecryption(XString p_input,XString password)
   // Create a data string of the base64 string
   Base64 base64;
   DWORD dataLength = (DWORD)base64.Ascii_length(dwDataLen);
-  BYTE* pbData = new BYTE[dataLength + 2];
+  BYTE* pbData = new BYTE[(size_t)dataLength + 2];
   base64.Decrypt((const unsigned char*)p_input.GetString(),dwDataLen,(unsigned char*)pbData);
 
 
@@ -664,8 +664,14 @@ Crypto::FastDecryption(XString p_input,XString password)
   result.ReleaseBufferSetLength(cbCipherText);
 
 error_exit:
+  if(hKey)
+  {
   BCryptDestroyKey(hKey);
+  }
+  if(hAlgorithm)
+  {
   BCryptCloseAlgorithmProvider(hAlgorithm,0);
+  }
   delete[] pbData;
 
   return result;

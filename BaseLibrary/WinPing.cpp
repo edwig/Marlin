@@ -301,7 +301,7 @@ static USHORT ICMPChecksum(USHORT* buffer,int size)
 //
 static void SetIcmpSequence(char* buf,int p_family)
 {
-  ULONG    sequence = 0;
+  ULONGLONG sequence = 0;
 
   if(!buf)
   {
@@ -309,7 +309,7 @@ static void SetIcmpSequence(char* buf,int p_family)
     return;
   }
 
-  sequence = GetTickCount();
+  sequence = GetTickCount64();
   if(p_family == AF_INET)
   {
     ICMP_HDR* icmpv4 = NULL;
@@ -885,7 +885,7 @@ EXIT:
 
   if(all_times)
   {
-    for(int index = 0; index < p_sendCount; ++index)
+    for(index = 0; index < p_sendCount; ++index)
     {
       // Received packets
       if(all_times[index] != 0.0)

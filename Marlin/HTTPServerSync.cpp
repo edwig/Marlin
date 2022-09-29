@@ -176,7 +176,6 @@ void
 HTTPServerSync::Cleanup()
 {
   ULONG retCode;
-  USES_CONVERSION;
   AutoCritSec lock1(&m_sitesLock);
   AutoCritSec lock2(&m_eventLock);
 
@@ -351,7 +350,6 @@ HTTPServerSync::RunHTTPServer()
   PCHAR          requestBuffer = nullptr;
   ULONG          requestBufferLength = 0;
   HTTPMessage*   message = NULL;
-  USES_CONVERSION;
 
   // Use counter
   m_counter.Start();
@@ -420,7 +418,7 @@ HTTPServerSync::RunHTTPServer()
     XString   modified       = request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
     XString   referrer       = request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
     XString   contentLength  = request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
-    XString   rawUrl         = (XString) CW2A(request->CookedUrl.pFullUrl);
+    XString   rawUrl         = WStringToString(request->CookedUrl.pFullUrl);
     PSOCKADDR sender         = request->Address.pRemoteAddress;
     int       remDesktop     = FindRemoteDesktop(request->Headers.UnknownHeaderCount
                                                 ,request->Headers.pUnknownHeaders);
@@ -468,7 +466,7 @@ HTTPServerSync::RunHTTPServer()
       // See if we must substitute for a sub-site
       if(site && m_hasSubsites)
       {
-        XString absPath = (XString) CW2A(request->CookedUrl.pAbsPath);
+        XString absPath = WStringToString(request->CookedUrl.pAbsPath);
         site = FindHTTPSite(site,absPath);
       }
 
@@ -536,7 +534,7 @@ HTTPServerSync::RunHTTPServer()
       EventStream* stream = nullptr;
       if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
       {
-        XString absolutePath = (XString) CW2A(request->CookedUrl.pAbsPath);
+        XString absolutePath = WStringToString(request->CookedUrl.pAbsPath);
         if(CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
         {
           continue;
@@ -757,7 +755,10 @@ HTTPServerSync::StopServer()
     if(m_serverThread == nullptr)
     {
       Sleep(100);
-      CloseHandle(close);
+      if(close)
+      {
+        CloseHandle(close);
+      }
       break;
     }
   }
@@ -811,7 +812,7 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message)
   ULONG  entityBufferLength = INIT_HTTP_BUFFERSIZE;
 
   // Create a buffer + 1 extra byte for the closing 0
-  PUCHAR entityBuffer = new uchar[entityBufferLength + 1];
+  PUCHAR entityBuffer = new uchar[(size_t)entityBufferLength + 1];
   if(entityBuffer == NULL)
   {
     ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Out of memory");
@@ -1115,7 +1116,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
       {
         SYSTEMTIME current;
         GetSystemTime(&current);
-        AddSecondsToSystemTime(&current,&current,60 * cookieExpires);
+        AddSecondsToSystemTime(&current,&current,60 * (double)cookieExpires);
         cookie.SetExpires(&current);
       }
 

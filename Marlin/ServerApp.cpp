@@ -410,7 +410,8 @@ ServerApp::MinMarlinVersion(int p_version)
     return 0;
   }
   // We have done our version check
-  return m_versionCheck = true;
+  m_versionCheck = true;
+  return true;
 }
 
 // Default implementation. Use the Marlin error report
@@ -467,14 +468,12 @@ ServerApp::GetSiteConfig(int ind)
 void 
 ServerApp::LoadSites(IHttpApplication* p_app,XString p_physicalPath)
 {
-  USES_CONVERSION;
-
   XString config(p_app->GetAppConfigPath());
   int pos = config.ReverseFind('/');
   XString configSite = config.Mid(pos + 1);
 
   CComBSTR siteCollection = L"system.applicationHost/sites";
-  CComBSTR configPath = A2CW(config);
+  CComBSTR configPath = StringToWString(config).c_str();
 
   // Reading all global modules of the IIS installation
   ReadModules(configPath);
@@ -578,7 +577,6 @@ ServerApp::ReadModules(CComBSTR& /*p_configPath*/)
 void  
 ServerApp::ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config)
 {
-  USES_CONVERSION;
   IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
 
   // Finding all HTTP Handlers in the configuration
@@ -610,7 +608,7 @@ ServerApp::ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config)
 
           if (childElement->GetPropertyByName(CComBSTR(L"modules"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
           {
-            modules = W2A(vvar.bstrVal);
+            modules = WStringToString(vvar.bstrVal);
           }
           if (m_modules.find(modules.MakeLower()) == m_modules.end())
           {
@@ -618,15 +616,15 @@ ServerApp::ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config)
           }
           if (childElement->GetPropertyByName(CComBSTR(L"name"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
           {
-            name = W2A(vvar.bstrVal);
+            name = WStringToString(vvar.bstrVal);
           }
           if (childElement->GetPropertyByName(CComBSTR(L"path"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
           {
-            handler.m_path = W2A(vvar.bstrVal);
+            handler.m_path = WStringToString(vvar.bstrVal);
           }
           if (childElement->GetPropertyByName(CComBSTR(L"verb"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
           {
-            handler.m_verb = W2A(vvar.bstrVal);
+            handler.m_verb = WStringToString(vvar.bstrVal);
           }
           if (childElement->GetPropertyByName(CComBSTR(L"resourceType"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_I4)
           {
@@ -634,7 +632,7 @@ ServerApp::ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config)
           }
           if (childElement->GetPropertyByName(CComBSTR(L"preCondition"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
           {
-            handler.m_precondition = W2A(vvar.bstrVal);
+            handler.m_precondition = WStringToString(vvar.bstrVal);
           }
           // Add handler mapping to site
           p_config.m_handlers.insert(std::make_pair(name,handler));
@@ -757,10 +755,9 @@ ServerApp::ReadBinding(IAppHostElementCollection* p_bindings,int p_item,IISBindi
 XString
 ServerApp::GetProperty(IAppHostElement* p_elem,XString p_property)
 {
-  USES_CONVERSION;
-
   IAppHostProperty* prop = nullptr;
-  if(p_elem->GetPropertyByName(A2W(p_property),&prop) == S_OK)
+  CComBSTR proper = StringToWString(p_property).c_str();
+  if(p_elem->GetPropertyByName(proper,&prop) == S_OK)
   {
     BSTR strValue;
     prop->get_StringValue(&strValue);

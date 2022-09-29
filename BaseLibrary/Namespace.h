@@ -31,7 +31,7 @@ int CompareNamespaces(XString p_namespace1,XString p_namespace2);
 
 // Can be used to split SOAPAction from the HTTP protocol
 // or from the Soap envelope <Action>  node
-bool SplitNamespaceAndAction(XString p_soapAction,XString& p_namespace,XString& p_action);
+bool SplitNamespaceAndAction(XString p_soapAction,XString& p_namespace,XString& p_action,bool p_nmsp_ends_in_slash = false);
 
 // Concatenate namespace and action to a soapaction entry
 // Can be used in HTTP and in SOAP messages

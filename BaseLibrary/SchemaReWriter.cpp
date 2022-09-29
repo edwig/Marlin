@@ -425,7 +425,7 @@ SchemaReWriter::CommentCPP()
   {
     while(true)
     {
-      int ch = GetChar();
+      ch = GetChar();
       if(ch == 0 || ch == '\n')
       {
         break;
@@ -439,7 +439,7 @@ SchemaReWriter::CommentCPP()
     int lastchar = 0;
     while(true)
     {
-      int ch = GetChar();
+      ch = GetChar();
       if(ch == 0 || (ch == '/' && lastchar == '*'))
       {
         break;

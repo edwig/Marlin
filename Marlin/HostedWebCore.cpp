@@ -128,12 +128,12 @@ FindIISRunning()
         result = true;
       }
     }
+    CloseServiceHandle(service);
   }
   else
   {
     printf("Cannot find the IIS service! Have you installed it as a MS-Windows feature?\n");
   }
-  CloseServiceHandle(service);
   CloseServiceHandle(manager);
   return result;
 }
@@ -185,10 +185,9 @@ UnloadWebCore()
 bool 
 ActivateWebCore()
 {
-  USES_CONVERSION;
   bool    result    = false;
-  wstring apphost   = A2CW(g_applicationhost);
-  wstring webconfig = A2CW(g_webconfig);
+  wstring apphost   = StringToWString(g_applicationhost);
+  wstring webconfig = StringToWString(g_webconfig);
   wstring poolname  = L"POOLNAAM";
 
   if(HWC_Activate)
@@ -216,31 +215,23 @@ ActivateWebCore()
     // Handle result of the startup
     switch(HRESULT_CODE(hres))
     {
-      case S_OK: 
-        printf("IIS Hosted Web Core is started.\n");
-        result = true; 
-        break;
-      case ERROR_SERVICE_ALREADY_RUNNING:
-        printf("ERROR: Hosted Web Core already running!\n");
-        break;
-      case ERROR_INVALID_DATA:
-        printf("ERROR: Invalid data in Hosted Web Core config file(s)!\n");
-        break;
-      case ERROR_ALREADY_EXISTS:
-        printf("ERROR: The application pool is already running in IIS!\n");
-        break;
-      case ERROR_PROC_NOT_FOUND:
-        printf("ERROR: The 'RegisterModule' procedure could not be found!\n");
-        break;
-      case ERROR_ACCESS_DENIED:
-        printf("ERROR: Access denied. Are you running as local admin?\n");
-        break;
-      case ERROR_MOD_NOT_FOUND:
-        printf("ERROR: The specified module in the config files could not be found!\n");
-        break;
-      default:
-        printf("ERROR: Cannot start the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
-        break;
+      case S_OK:                          printf("IIS Hosted Web Core is started.\n");
+                                          result = true; 
+                                          break;
+      case ERROR_SERVICE_ALREADY_RUNNING: printf("ERROR: Hosted Web Core already running!\n");
+                                          break;
+      case ERROR_INVALID_DATA:            printf("ERROR: Invalid data in Hosted Web Core config file(s)!\n");
+                                          break;
+      case ERROR_ALREADY_EXISTS:          printf("ERROR: The application pool is already running in IIS!\n");
+                                          break;
+      case ERROR_PROC_NOT_FOUND:          printf("ERROR: The 'RegisterModule' procedure could not be found!\n");
+                                          break;
+      case ERROR_ACCESS_DENIED:           printf("ERROR: Access denied. Are you running as local administrator?\n");
+                                          break;
+      case ERROR_MOD_NOT_FOUND:           printf("ERROR: The specified module in the config files could not be found!\n");
+                                          break;
+      default:                            printf("ERROR: Cannot start the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
+                                          break;
     }
   }
   return result;
@@ -266,22 +257,17 @@ ShutdownWebCore()
     // Show any errors or warnings
     switch(HRESULT_CODE(hres))
     {
-      case S_OK: 
-        printf("IIS Hosted Web Core shutdown.\n");
-        break;
-      case ERROR_SERVICE_NOT_ACTIVE:
-        printf("ERROR: Hosted Web Core was not running!\n");
-        break;
-      case ERROR_INVALID_SERVICE_CONTROL:
-        printf("ERROR: Hosted Web Core shutdown already in progress!\n");
-        break;
-      case ERROR_SERVICE_REQUEST_TIMEOUT:
-        printf("ERROR: Hosted Web Core gracefull shutdown not possible!\n"
-               "See IIS Admin for further shutdown actions and optoins!\n");
-        break;
-      default:
-        printf("ERROR: Cannot shutdown the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
-        break;
+      case S_OK:                          printf("IIS Hosted Web Core shutdown.\n");
+                                          break;
+      case ERROR_SERVICE_NOT_ACTIVE:      printf("ERROR: Hosted Web Core was not running!\n");
+                                          break;
+      case ERROR_INVALID_SERVICE_CONTROL: printf("ERROR: Hosted Web Core shutdown already in progress!\n");
+                                          break;
+      case ERROR_SERVICE_REQUEST_TIMEOUT: printf("ERROR: Hosted Web Core graceful shutdown not possible!\n"
+                                                 "See IIS Admin for further shutdown actions and options!\n");
+                                          break;
+      default:                            printf("ERROR: Cannot shutdown the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
+                                          break;
     }
   }
 }
@@ -289,10 +275,9 @@ ShutdownWebCore()
 bool 
 SetMetaData(XString p_datatype,XString p_value)
 {
-  USES_CONVERSION;
   bool    result = false;
-  wstring type   = A2CW(p_datatype);
-  wstring value  = A2CW(p_value);
+  wstring type   = StringToWString(p_datatype);
+  wstring value  = StringToWString(p_value);
 
   if(HWC_SetMetadata)
   {
@@ -302,19 +287,15 @@ SetMetaData(XString p_datatype,XString p_value)
     // Show result from setting
     switch(HRESULT_CODE(hres))
     {
-      case S_OK: 
-        printf("METADATA [%s:%s] is set.\n",p_datatype.GetString(),p_value.GetString());
-        result = true;
-        break;
-      case ERROR_NOT_SUPPORTED:
-        printf("ERROR: Metadata not supported by Hosted Web Core [%s:%s]\n",p_datatype.GetString(),p_value.GetString());
-        break;
-      case ERROR_INVALID_DATA:
-        printf("ERROR: Metadata for Hosted Web Core [%s:%s] contains invalid data!\n",p_datatype.GetString(),p_value.GetString());
-        break;
-      default:
-        printf("ERROR: Metadata NOT set. Error number: %X\n",HRESULT_CODE(hres));
-        break;
+      case S_OK:                printf("METADATA [%s:%s] is set.\n",p_datatype.GetString(),p_value.GetString());
+                                result = true;
+                                break;
+      case ERROR_NOT_SUPPORTED: printf("ERROR: Metadata not supported by Hosted Web Core [%s:%s]\n",p_datatype.GetString(),p_value.GetString());
+                                break;
+      case ERROR_INVALID_DATA:  printf("ERROR: Metadata for Hosted Web Core [%s:%s] contains invalid data!\n",p_datatype.GetString(),p_value.GetString());
+                                break;
+      default:                  printf("ERROR: Metadata NOT set. Error number: %X\n",HRESULT_CODE(hres));
+                                break;
     }
   }
   return result;
@@ -363,7 +344,7 @@ ParseCommandLine(int argc,char* argv[])
   XString exeName = GetExeName();
   g_poolName = exeName.IsEmpty() ? XString(MARLIN_PRODUCT_NAME) : exeName;
 
-  for(int ind = 1; ind < argc, argv[ind]; ++ind)
+  for(int ind = 1; ind < argc && argv[ind]; ++ind)
   {
     switch(ind)
     {
@@ -500,6 +481,7 @@ HWC_main(int argc,char *argv[])
     }
   }
   printf("Press enter: ");
-  _getch();
+  int ch = _getch();
+  _putch(ch);
   return retval;
 }

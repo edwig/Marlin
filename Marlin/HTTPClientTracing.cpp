@@ -332,12 +332,11 @@ HTTPClientTracing::QueryString(HINTERNET p_handle,DWORD p_option,const char* p_o
   bool result = WinHttpQueryOption(p_handle,p_option,&theString,&bufLength);
   if(result == false && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
   {
-    wchar_t* name = new wchar_t[bufLength + 1];
+    wchar_t* name = new wchar_t[(size_t)bufLength + 1];
     result = WinHttpQueryOption(p_handle,p_option,name,&bufLength);
     if(result == TRUE)
     {
-      USES_CONVERSION;
-      theString = CW2A(name);
+      theString = WStringToString(name);
     }
     delete[] name;
   }

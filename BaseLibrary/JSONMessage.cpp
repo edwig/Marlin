@@ -805,7 +805,7 @@ JSONMessage::JSONMessage(SOAPMessage* p_message)
   }
 
   // The message itself
-  JSONParserSOAP(this,p_message);
+  JSONParserSOAP parse(this,p_message);
 }
 
 JSONMessage::~JSONMessage()
@@ -822,7 +822,7 @@ JSONMessage::~JSONMessage()
 }
 
 void
-JSONMessage::Reset()
+JSONMessage::Reset(bool p_resetURL /*= true*/)
 {
   // Let go of the value
   m_value->DropReference();
@@ -842,8 +842,11 @@ JSONMessage::Reset()
   m_headers.clear();
 
   // URL
+  if(p_resetURL)
+  {
   m_url.Empty();
   m_cracked.Reset();
+  }
 
   // Leave the rest for the destination
   // Leave access token untouched!
@@ -1054,32 +1057,29 @@ JSONMessage::LoadFile(const XString& p_fileName)
   {
     // Find the length of a file
     fseek(file, 0, SEEK_END);
-    unsigned long length = ftell(file);
+    long length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     // Check for the streaming limit
-    if(length > g_streaming_limit)
+    if(length > (long)g_streaming_limit)
     {
       fclose(file);
       return false;
     }
 
-    // Prepare buffer
-    // XString buffers are allocated on the heap
-    // so shut up the warning about stack overflow
-    XString inhoud;
-    char* buffer = inhoud.GetBufferSetLength(length + 1);
-
+    // Prepare buffer allocated on the heap
+    char* buffer = new char[(size_t)length + 1];
     // Read the buffer
-    if(fread(buffer,1,length,file) < length)
+    if(!fread_s(buffer,(size_t) length,(size_t) 1,(size_t)length,file))
     {
       fclose(file);
       return false;
     }
     buffer[length] = 0;
 
-    // Buffer unlock
-    inhoud.ReleaseBuffer(length);
+    // Buffer to string
+    XString inhoud(buffer);
+    delete[] buffer;
 
     // Close the file
     if(fclose(file))
@@ -1088,8 +1088,7 @@ JSONMessage::LoadFile(const XString& p_fileName)
     }
 
     // And parse it
-    ParseMessage(inhoud);
-    return true;
+    return ParseMessage(inhoud);
   }
   return false;
 }
@@ -1100,7 +1099,7 @@ JSONMessage::SaveFile(const XString& p_fileName, bool p_withBom /*= false*/)
 {
   bool result = false;
   FILE* file = nullptr;
-  if(fopen_s(&file, p_fileName, "w") == 0 && file)
+  if(fopen_s(&file, p_fileName, "wb") == 0 && file)
   {
     XString inhoud;
     if(p_withBom)

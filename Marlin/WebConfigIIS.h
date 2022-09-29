@@ -56,27 +56,27 @@ typedef struct _iisSite
   XString     m_appPool;
   XString     m_binding;
   XString     m_protocol;
-  int         m_port;
-  bool        m_secure;
+  int         m_port       { 0     };
+  bool        m_secure     { false };
   XString     m_path;
-  ULONG       m_authScheme;
+  ULONG       m_authScheme { 0     };
   XString     m_realm;
   XString     m_domain;
-  bool        m_ntlmCache;
-  bool        m_preload;
-  IISError    m_error;
+  bool        m_ntlmCache  { false };
+  bool        m_preload    { false };
+  IISError    m_error      { IISER_NoError };
   IISHandlers m_handlers;
 }
 IISSite;
 
-// Waht we want to remember about an IIS Application Pool
+// What we want to remember about an IIS Application Pool
 typedef struct _appPool
 {
   XString   m_name;
   XString   m_startMode;
   XString   m_periodicRestart;
   XString   m_idleTimeout;
-  bool      m_autoStart;
+  bool      m_autoStart  { false };
   XString   m_pipelineMode;
 }
 IISAppPool;

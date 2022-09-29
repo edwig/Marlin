@@ -46,6 +46,7 @@
 #pragma warning (disable:4091)
 #include <httpserv.h>
 #pragma warning (error:4091)
+#pragma warning (disable:6387)
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -124,7 +125,6 @@ HTTPServerIIS::Initialise()
 void
 HTTPServerIIS::Cleanup()
 {
-  USES_CONVERSION;
   AutoCritSec lock1(&m_sitesLock);
   AutoCritSec lock2(&m_eventLock);
 
@@ -395,19 +395,17 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
   if((p_request->Verb == HttpVerbGET) &&
      (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
   {
-    USES_CONVERSION;
-
     // Grab the rest of the needed content out of the request
     PSOCKADDR_IN6 sender   = (PSOCKADDR_IN6)p_request->Address.pRemoteAddress;
-    XString   absolutePath = (XString) CW2A(p_request->CookedUrl.pAbsPath);
+    XString   absolutePath = WStringToString(p_request->CookedUrl.pAbsPath);
 
     if(CheckUnderDDOSAttack(sender,absolutePath))
     {
       return -1;
     }
 
-    // Grab the raw URL and the dekstop for the stream
-    XString   rawUrl       = (XString) CW2A(p_request->CookedUrl.pFullUrl);
+    // Grab the raw URL and the dsektop for the stream
+    XString   rawUrl       = WStringToString(p_request->CookedUrl.pFullUrl);
     int       remDesktop   = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
                                               ,p_request->Headers.pUnknownHeaders);
     // Open an event stream
@@ -424,7 +422,7 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
       IHttpUser* user = p_context->GetUser();
       if(user)
       {
-        stream->m_user = CW2A(user->GetRemoteUserName());
+        stream->m_user = WStringToString(user->GetRemoteUserName());
       }
       stream->m_baseURL = rawUrl;
 
@@ -454,8 +452,6 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                                         ,HTTPSite*     p_site
                                         ,PHTTP_REQUEST p_request)
 {
-  USES_CONVERSION;
-
   // Grab the senders content
   XString   contentType    = p_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
   XString   contentLength  = p_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
@@ -464,7 +460,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   XString   authorize      = p_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
   XString   modified       = p_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
   XString   referrer       = p_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
-  XString   rawUrl         = (XString) CW2A(p_request->CookedUrl.pFullUrl);
+  XString   rawUrl         = WStringToString(p_request->CookedUrl.pFullUrl);
   PSOCKADDR sender         = p_request->Address.pRemoteAddress;
   int       remDesktop     = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
                                               ,p_request->Headers.pUnknownHeaders);
@@ -483,7 +479,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   // See if we must substitute for a sub-site
   if(m_hasSubsites)
   {
-    XString absPath = (XString) CW2A(p_request->CookedUrl.pAbsPath);
+    XString absPath = WStringToString(p_request->CookedUrl.pAbsPath);
     p_site = FindHTTPSite(p_site,absPath);
   }
 
@@ -641,7 +637,7 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   while(httpRequest->GetRemainingEntityBytes() > 0)
   {
     DWORD  received  = 0;
-    HRESULT hr = httpRequest->ReadEntityBody(bytebuffer,(DWORD)INIT_HTTP_BUFFERSIZE,FALSE,&received,NULL);
+    HRESULT hr = httpRequest->ReadEntityBody(bytebuffer,(DWORD)INIT_HTTP_BUFFERSIZE,FALSE,&received);
     if(HRESULT_CODE(hr) == ERROR_HANDLE_EOF)
     {
       // Ready reading the message
@@ -1057,7 +1053,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
       {
         SYSTEMTIME current;
         GetSystemTime(&current);
-        AddSecondsToSystemTime(&current,&current,60 * cookieExpires);
+        AddSecondsToSystemTime(&current,&current,60 * (double)cookieExpires);
         cookie.SetExpires(&current);
       }
 
@@ -1134,7 +1130,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   if(status >= HTTP_STATUS_AMBIGUOUS)
   {
     DWORD sent = 0;
-    response->Flush(FALSE,moredata,&sent,NULL);
+    response->Flush(FALSE,moredata,&sent);
   }
 
   if(GetLastError())

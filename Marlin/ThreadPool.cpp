@@ -698,18 +698,20 @@ ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
   catch(StdException& ex)
   {
     XString temporary;
-    temporary.GetEnvironmentVariable("TMP");
-    XString sceneOfTheCrime("Threadpool");
+    if(temporary.GetEnvironmentVariable("TMP"))
+    {
+      XString sceneOfTheCrime("Threadpool");
 
-    if(ex.GetSafeExceptionCode())
-    {
-      // SEH Exception: Report the full stacktrace
-      ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),temporary,sceneOfTheCrime);
-    }
-    else
-    {
-      // 'Normal' C++ exception: But we did forget to catch it
-      ErrorReport::Report(ex.GetErrorMessage(),0,temporary,sceneOfTheCrime);
+      if(ex.GetSafeExceptionCode())
+      {
+        // SEH Exception: Report the full stack trace
+        ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),temporary,sceneOfTheCrime);
+      }
+      else
+      {
+        // 'Normal' C++ exception: But we did forget to catch it
+        ErrorReport::Report(ex.GetErrorMessage(),0,temporary,sceneOfTheCrime);
+      }
     }
   }
 }
@@ -819,6 +821,13 @@ ThreadPool::SleepThread(DWORD_PTR p_unique,void* p_payload)
   sleep->m_payload  = p_payload;
   sleep->m_event    = CreateEvent(NULL,FALSE,FALSE,NULL);
   sleep->m_abort    = false;
+
+  // Tight spot: cannot create a new event
+  if(sleep->m_event == NULL)
+  {
+    delete sleep;
+    return nullptr;
+  }
 
   // Add sleeping thread info the queue
   { AutoLockTP lock(&m_critical);
@@ -1074,6 +1083,8 @@ ThreadPool::StopThreadPool()
     for(auto& thread : m_threads)
     {
       TP_TRACE1("!! TERMINATING thread: %d\n",ind);
+      // Since waiting on the thread did not work, we must preemptively terminate it.
+#pragma warning(disable:6258)
       TerminateThread(thread->m_thread,0);
     }
   }

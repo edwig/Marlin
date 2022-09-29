@@ -70,6 +70,8 @@ public:
     m_alive     = false;
     m_lastPulse = NULL;
     m_chunks    = 0;
+    memset(&m_sender,  0,sizeof(SOCKADDR_IN6));
+    memset(&m_response,0,sizeof(HTTP_RESPONSE));
     InitializeCriticalSection(&m_lock);
   }
 

@@ -2947,7 +2947,10 @@ unzFile unzOpenInternal(LUFILE *fin)
 
   unz_s *s = (unz_s*)zmalloc(sizeof(unz_s));
   // cppcheck-suppress uninitStructMember
+  if(s)
+  {
   *s=us;
+  }
   unzGoToFirstFile((unzFile)s);
   return (unzFile)s;
 }
@@ -3755,8 +3758,8 @@ public:
     if (pwd!=0) 
     {
       int len = (int) strlen(pwd);
-      password=new char[len+1]; 
-      strcpy_s(password,len + 1,pwd);
+      password=new char[(size_t)len + 1]; 
+      strcpy_s(password,(size_t)len + 1,pwd);
     }
   }
   ~TUnzip() {if (password!=0) delete[] password; password=0; if (unzbuf!=0) delete[] unzbuf; unzbuf=0;}

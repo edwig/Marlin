@@ -48,7 +48,7 @@ const int token_validity_time = 90;  // Refresh after 90 percent of time has exp
 
 typedef struct _oauthSession
 {
-  OAuthFlow m_flow;           // Type of authorization flow
+  OAuthFlow m_flow { OAuthFlow::OA_IMPLICIT}; // Type of authorization flow
   XString   m_url;            // URL of the token server
   XString   m_appID;          // Client-id of the application
   XString   m_appKey;         // Client-secret of the application
@@ -57,7 +57,7 @@ typedef struct _oauthSession
   XString   m_scope;          // Scope of the grant
   XString   m_bearerToken;    // Last returned "Bearer" token
   XString   m_retryToken;     // Retry token (if any)
-  INT64     m_expires;        // Moment the token expires
+  INT64     m_expires { 0 };  // Moment the token expires
 }
 OAuthSession;
 

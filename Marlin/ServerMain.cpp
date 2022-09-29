@@ -44,6 +44,7 @@
 #include "ServiceReporting.h"
 #include <winsvc.h>
 #include "winerror.h"
+#include <VersionHelpers.h>
 #include <io.h>
 
 #ifdef _DEBUG
@@ -348,24 +349,19 @@ void PrintHelp()
 void
 CheckPlatform()
 {
-  OSVERSIONINFO v_info;
-  v_info.dwOSVersionInfoSize = sizeof(v_info);
-  if(GetVersionEx(&v_info))
+  if(IsWindows7OrGreater() == false)
   {
-    if(v_info.dwPlatformId != VER_PLATFORM_WIN32_NT || v_info.dwMajorVersion < 6)
-    {
-      // Windows95, Windows98, WindowsME (VER_PLATFORM_WIN32_NT)
-      // Windows NT 3 (dwMajorVersion == 3)
-      // Windows NT 4 (dwMajorVersion == 4)
-      // Windows 2000 (dwMajorVersion == 5 && dwMinorVersion == 0) // DisconnectEx voor sockets !!!!
-      XString msg;
-      msg.Format("You are running a version of the MS-Windows operating system with a non-supported TCP/IP queuing mechanism.\n"
-                 "%s only works on the Windows-7, 8, 8.1 & 10 and on the Windows 2008, 2012, 2016 Server platforms.\n"
-                 "Sorry for the inconvenience. Please contact ir. W.E. Huisman.\n",PRODUCT_NAME);
-      printf(msg);
-      MessageBox(NULL,msg,PRODUCT_NAME,MB_OK|MB_ICONERROR);
-      _exit(-3);
-    }
+    // Windows95, Windows98, WindowsME (VER_PLATFORM_WIN32_NT)
+    // Windows NT 3 (dwMajorVersion == 3)
+    // Windows NT 4 (dwMajorVersion == 4)
+    // Windows 2000 (dwMajorVersion == 5 && dwMinorVersion == 0) // DisconnectEx voor sockets !!!!
+    XString msg;
+    msg.Format("You are running a version of the MS-Windows operating system with a non-supported TCP/IP queuing mechanism.\n"
+                "%s only works on the Windows-7, 8, 8.1 & 10 and on the Windows 2008, 2012, 2016 Server platforms.\n"
+                "Sorry for the inconvenience. Please contact ir. W.E. Huisman.\n",PRODUCT_NAME);
+    printf(msg);
+    MessageBox(NULL,msg,PRODUCT_NAME,MB_OK|MB_ICONERROR);
+    _exit(-3);
   }
 }
 
@@ -785,7 +781,7 @@ DeleteEventLogRegistration()
 int SvcStart()
 {
   DWORD dwOldCheckPoint; 
-  DWORD dwStartTickCount;
+  ULONGLONG dwStartTickCount;
   DWORD dwWaitTime;
   
   // According to all samples, this needs to be "SERVICE_ALL_ACCESS" 
@@ -810,7 +806,7 @@ int SvcStart()
   while (g_sspStatus.dwCurrentState == SERVICE_STOP_PENDING)
   {
     // Save the tick count and initial checkpoint.
-    dwStartTickCount = GetTickCount();
+    dwStartTickCount = GetTickCount64();
     dwOldCheckPoint  = g_sspStatus.dwCheckPoint;
 
     // Do not wait longer than the wait hint. A good interval is 
@@ -838,12 +834,12 @@ int SvcStart()
     if(g_sspStatus.dwCheckPoint > dwOldCheckPoint)
     {
       // Continue to wait and check.
-      dwStartTickCount = GetTickCount();
+      dwStartTickCount = GetTickCount64();
       dwOldCheckPoint = g_sspStatus.dwCheckPoint;
     }
     else
     {
-      if(GetTickCount()-dwStartTickCount > g_sspStatus.dwWaitHint)
+      if((GetTickCount64() - dwStartTickCount) > g_sspStatus.dwWaitHint)
       {
         printf("Timeout waiting for service to stop\n");
         CloseMarlinService();
@@ -869,8 +865,8 @@ int SvcStart()
     return 1;
   }
   // Save the tick count and initial checkpoint.
-  dwStartTickCount = GetTickCount();
-  dwOldCheckPoint = g_sspStatus.dwCheckPoint;
+  dwStartTickCount = GetTickCount64();
+  dwOldCheckPoint  = g_sspStatus.dwCheckPoint;
 
   while(g_sspStatus.dwCurrentState == SERVICE_START_PENDING) 
   { 
@@ -900,12 +896,12 @@ int SvcStart()
     {
       // Continue to wait and check.
 
-      dwStartTickCount = GetTickCount();
-      dwOldCheckPoint = g_sspStatus.dwCheckPoint;
+      dwStartTickCount = GetTickCount64();
+      dwOldCheckPoint  = g_sspStatus.dwCheckPoint;
     }
     else
     {
-      if(GetTickCount()-dwStartTickCount > g_sspStatus.dwWaitHint)
+      if((GetTickCount64() - dwStartTickCount) > g_sspStatus.dwWaitHint)
       {
         // No progress made within the wait hint.
         break;
@@ -971,7 +967,7 @@ int SvcStop()
       goto stop_cleanup;
     }
 
-    if ( GetTickCount() - dwStartTime > dwTimeout )
+    if ((GetTickCount64() - dwStartTime) > dwTimeout )
     {
       printf("Service stop timed out.\n");
       goto stop_cleanup;
@@ -1002,7 +998,7 @@ int SvcStop()
     {
       break;
     }
-    if ( GetTickCount() - dwStartTime > dwTimeout )
+    if((GetTickCount64() - dwStartTime) > dwTimeout )
     {
       printf( "Wait timed out\n" );
       goto stop_cleanup;
@@ -1180,12 +1176,12 @@ int StandAloneStart()
   int     retval = 1;  // Still not lucky
   int     startResult = 0;
   // Save the tick count and initial checkpoint.
-  DWORD   dwStartTickCount = GetTickCount();
-  DWORD   dwWaitTime;
-  DWORD   dwWaited = 0;
-  XString emptyString;
-  XString program(APPLICATION_NAME);
-  XString arguments(g_svcname);
+  ULONGLONG dwStartTickCount = GetTickCount64();
+  DWORD     dwWaitTime;
+  DWORD     dwWaited = 0;
+  XString   emptyString;
+  XString   program(APPLICATION_NAME);
+  XString   arguments(g_svcname);
 
   // Do not wait longer than the wait hint. A good interval is 
   // one-tenth of the wait hint but not less than 1 second  
@@ -1247,7 +1243,7 @@ int StandAloneStart()
   }
 
   // Save the tick count and initial checkpoint.
-  dwStartTickCount = GetTickCount();
+  dwStartTickCount = GetTickCount64();
   dwWaited = 0;
 
   // Do not wait longer than the wait hint. A good interval is 
@@ -1473,12 +1469,12 @@ GetMarlinServiceStatusStandAlone(int& p_status)
 int 
 StandAloneStop()
 {
-  int    status = 0;
-  int    retval = 2;   // still not lucky
-  DWORD  dwStartTime = GetTickCount();
-  DWORD  dwTimeout   = SVC_MAXIMUM_STOP_TIME; // 30-second time-out
-  DWORD  dwWaitTime  = SVC_MINIMUM_WAIT_HINT; // 1 second wait resolution
-  DWORD  dwWaited    = 0;
+  int       status = 0;
+  int       retval = 2;   // still not lucky
+  ULONGLONG dwStartTime = GetTickCount64();
+  DWORD     dwTimeout   = SVC_MAXIMUM_STOP_TIME; // 30-second time-out
+  DWORD     dwWaitTime  = SVC_MINIMUM_WAIT_HINT; // 1 second wait resolution
+  DWORD     dwWaited    = 0;
 
   // Make sure the service is not already stopped.
   if(!GetMarlinServiceStatusStandAlone(status))
@@ -1510,7 +1506,7 @@ StandAloneStop()
       goto end_of_stop_standalone;
     }
 
-    if(GetTickCount() - dwStartTime > dwTimeout)
+    if((GetTickCount64() - dwStartTime) > dwTimeout)
     {
       retval = 0;
       printf("Service stop timed out.\n");
@@ -1557,7 +1553,7 @@ StandAloneStop()
     {
       break;
     }
-    if(GetTickCount() - dwStartTime > dwTimeout)
+    if((GetTickCount64() - dwStartTime) > dwTimeout)
     {
       retval = 0;
       printf( "Wait timed out\n" );
@@ -1630,18 +1626,20 @@ FindApplicationCommand()
   }
 
   XString pathname;
-  pathname.GetEnvironmentVariable("windir");
-  pathname += "\\system32\\inetsrv";
-
-  DWORD attrib = GetFileAttributes(pathname);
-  if(attrib & FILE_ATTRIBUTE_DIRECTORY)
+  if(pathname.GetEnvironmentVariable("windir"))
   {
-    pathname += "\\appcmd.exe";
-    attrib = GetFileAttributes(pathname);
-    if(attrib != INVALID_FILE_ATTRIBUTES)
+    pathname += "\\system32\\inetsrv";
+
+    DWORD attrib = GetFileAttributes(pathname);
+    if(attrib & FILE_ATTRIBUTE_DIRECTORY)
     {
-      applicationCommand = pathname;
-      return true;
+      pathname += "\\appcmd.exe";
+      attrib = GetFileAttributes(pathname);
+      if(attrib != INVALID_FILE_ATTRIBUTES)
+      {
+        applicationCommand = pathname;
+        return true;
+      }
     }
   }
   printf("MS-Windows directory for IIS not found: is the IIS system installed?\n");

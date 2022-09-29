@@ -41,21 +41,21 @@
 class SessionAddress
 {
 public:
-  XString       m_userSID; // User in the SIDL form
-  ULONG         m_address; // sin6_flowinfo of IP address of caller
-  UINT          m_desktop; // TerminalServices desktop
-  XString       m_absPath; // Absolute path of session
+  XString       m_userSID;        // User in the SIDL form
+  ULONG         m_address { 0 };  // sin6_flowinfo of IP address of caller
+  UINT          m_desktop { 0 };  // TerminalServices desktop
+  XString       m_absPath;        // Absolute path of session
 };
 
 // Reliable messaging server sequence
 class SessionSequence
 {
 public:
-  XString m_clientGUID;       // Client challenging nonce
-  XString m_serverGUID;       // Server challenging nonce
-  int     m_clientMessageID;  // Clients message number
-  int     m_serverMessageID;  // Servers message number
-  bool    m_lastMessage;      // Last message in stream flag
+  XString m_clientGUID;             // Client challenging nonce
+  XString m_serverGUID;             // Server challenging nonce
+  int     m_clientMessageID { 0 };  // Clients message number
+  int     m_serverMessageID { 0 };  // Servers message number
+  bool    m_lastMessage { false };  // Last message in stream flag
 };
 
 // Operator for associative mapping for the internet addresses

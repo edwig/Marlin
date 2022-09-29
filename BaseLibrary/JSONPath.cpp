@@ -469,7 +469,7 @@ JSONPath::ProcessUnion(XString p_token)
 {
   while(!p_token.IsEmpty())
   {
-    size_t index = atoi(p_token) - m_origin;
+    size_t index = atoi(p_token) - (size_t)m_origin;
     int pos = p_token.Find(',');
     if(pos > 0)
     {
@@ -561,7 +561,7 @@ JSONPath::ParseLevel(XString& p_parsing)
         }
 
         // Search on through this array
-        size_t index = atoi(token) - m_origin;
+        size_t index = atoi(token) - (size_t) m_origin;
         if(index < 0)
         {
           // Negative index, take it from the end

@@ -132,9 +132,8 @@ HTTPSiteMarlin::StartSite()
     }
     else
     {
-      USES_CONVERSION;
       // Add URL to our URL-Group: using HttpAddUrlToUrlGroup
-      wstring uniURL = A2CW(m_prefixURL);
+      wstring uniURL = StringToWString(m_prefixURL);
       HTTP_URL_GROUP_ID group = m_group->GetUrlGroupID();
       ULONG retCode = HttpAddUrlToUrlGroup(group,uniURL.c_str(),(HTTP_URL_CONTEXT)this,0);
       if(retCode != NO_ERROR && retCode != ERROR_ALREADY_EXISTS)

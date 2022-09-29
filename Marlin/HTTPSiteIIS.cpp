@@ -133,7 +133,8 @@ HTTPSiteIIS::StartSite()
   // Register the site with an URL group for the stand-alone server
   DETAILLOGS("Site started for the IIS server: ",m_site);
   // Return the fact that we started successfully or not
-  return (m_isStarted = true);
+  m_isStarted = true;
+  return true;
 }
 
 bool

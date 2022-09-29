@@ -247,6 +247,8 @@ WebSocketClient::CloseSocket()
     m_socket = NULL;
 
     // Really get rid of the thread!
+    // Since waiting on the thread did not work, we must preemptively terminate it.
+#pragma warning(disable:6258)
     if(m_listener)
     {
       TerminateThread(m_listener,0);
@@ -407,12 +409,19 @@ WebSocketClient::SocketListener()
     if(!m_reading)
     {
       m_reading = new WSFrame;
-      m_reading->m_data = (BYTE*)malloc(m_fragmentsize + WS_OVERHEAD);
+      m_reading->m_data = (BYTE*)malloc((size_t)m_fragmentsize + WS_OVERHEAD);
     }
     // Happens on SocketClose from the server
     if(!m_socket)
     {
       break;
+    }
+
+    if(!m_reading->m_data)
+    {
+      ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Reading websocket data!");
+      CloseSocket();
+      return;
     }
 
     DWORD bytesRead = 0;

@@ -117,13 +117,19 @@ enum class SendHeader
 };
 
 // Registration of DDOS attacks on the server
-typedef struct
+class DDOS
 {
+public:
+  DDOS()
+  {
+    m_beginTime = 0;
+    memset(&m_sender,0,sizeof(SOCKADDR_IN6));
+  }
+
   SOCKADDR_IN6  m_sender;
   XString       m_abspath;
   clock_t       m_beginTime;
-}
-DDOS;
+};
 
 // Forward declarations
 class LogAnalysis;

@@ -46,7 +46,7 @@ static char THIS_FILE[] = __FILE__;
 
 // Macro to help with the display switch in GetErrorMessage()
 #define CASE(seCode,errorstring) case EXCEPTION_##seCode: \
-										errorstring.Format(_T("Exception %s (0x%.8X) at address 0x%.8X."),_T(#seCode),EXCEPTION_##seCode,m_exceptionPointers->ExceptionRecord->ExceptionAddress); \
+										errorstring.Format(_T("Exception %s (0x%.8X) at address 0x%.8I64X."),_T(#seCode),EXCEPTION_##seCode,(INT64)m_exceptionPointers->ExceptionRecord->ExceptionAddress); \
 										break;
 
 // Setting our Safe-Exception-Translator function
@@ -191,7 +191,7 @@ StdException::GetErrorMessage(char* p_error, unsigned p_maxSize, unsigned* p_hel
   // Get compound error message
   XString error = GetErrorMessage();
   // Copy it out
-  strncpy_s(p_error, p_maxSize, error.GetString(), error.GetLength() + 1);
+  strncpy_s(p_error, p_maxSize, error.GetString(),(size_t) error.GetLength() + 1);
   return true;
 }
 

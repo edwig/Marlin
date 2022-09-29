@@ -102,9 +102,8 @@ HTTPURLGroup::StartGroup()
   DETAILLOG("Bound request queue to URL-Group");
 
   // Get realm and domain
-  USES_CONVERSION;
-  wstring wrealm  = A2W(m_realm);
-  wstring wdomain = A2W(m_domain);
+  wstring wrealm  = StringToWString(m_realm);
+  wstring wdomain = StringToWString(m_domain);
 
   HTTP_SERVER_AUTHENTICATION_INFO authInfo;
   memset(&authInfo,0,sizeof(authInfo));
@@ -116,14 +115,14 @@ HTTPURLGroup::StartGroup()
   authInfo.DisableNTLMCredentialCaching = !m_ntlmCache;
   if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)
   {
-    authInfo.DigestParams.DomainName       = (PWSTR)wdomain .c_str();
+    authInfo.DigestParams.DomainName       = (PWSTR) wdomain.c_str();
     authInfo.DigestParams.DomainNameLength = (USHORT)wdomain.size() * 2;
-    authInfo.DigestParams.Realm            = (PWSTR)wrealm  .c_str();
+    authInfo.DigestParams.Realm            = (PWSTR) wrealm .c_str();
     authInfo.DigestParams.RealmLength      = (USHORT)wrealm .size() * 2;
   }
   if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)
   {
-    authInfo.BasicParams.Realm       = (PWSTR)wrealm.c_str();
+    authInfo.BasicParams.Realm       = (PWSTR) wrealm.c_str();
     authInfo.BasicParams.RealmLength = (USHORT)wrealm.size() * 2;
   }
 

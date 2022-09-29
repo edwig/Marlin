@@ -512,8 +512,8 @@ TryConvertWideString(const uchar* p_buffer
     // Unicode buffer not null terminated !!! 
     // Completely legal to get from the HTTP service.
     // So make it so, and expand with two (!!) extra null chars.
-    extraBuffer = new BYTE[p_length + 4];
-    memcpy_s(extraBuffer,p_length + 2,p_buffer,p_length + 2);
+    extraBuffer = new BYTE[(size_t)p_length + 4];
+    memcpy_s(extraBuffer,(size_t)p_length + 2,p_buffer,(size_t)p_length + 2);
     // Needs two (!) extra nulls in the buffer for conversion
     extraBuffer[++p_length] = 0;
     extraBuffer[++p_length] = 0;
@@ -622,7 +622,7 @@ TryCreateWideString(const XString& p_string
   {
     // Getting a UTF-16 wide-character buffer
     // +2 chars for a BOM, +2 chars for the closing zeros
-    *p_buffer = new uchar[2*iLength + 4];
+    *p_buffer = new uchar[2*(size_t)iLength + 4];
     unsigned char* buffer = (unsigned char*) *p_buffer;
 
     // Construct an UTF-16 Byte-Order-Mark
@@ -661,13 +661,100 @@ TryCreateWideString(const XString& p_string
   return result;
 }
 
+// Convert directly between XString and std::wstring
+// Thus removing the need for the "USES_CONVERSION" macros
+std::wstring 
+StringToWString(XString p_string)
+{
+  std::wstring result;      // Nothing yet
+  UINT codePage = GetACP(); // Default the current codepage
+  int    length = -1;       // I think it will be null terminated
+  DWORD   flags = MB_ERR_INVALID_CHARS;
+
+  // Getting the length of the buffer, by specifying no output
+  length = MultiByteToWideChar(codePage
+                               ,flags
+                               ,p_string.GetString()
+                               ,-1 // p_string.GetLength()
+                               ,NULL
+                               ,0);
+  if(length)
+  {
+    // Getting a UTF-16 wide-character buffer
+    // +2 chars for a BOM, +2 chars for the closing zeros
+    unsigned char* buffer = new uchar[2*(size_t)length + 4];
+
+    // Doing the 'real' conversion
+    length = MultiByteToWideChar(codePage
+                                 ,flags
+                                 ,p_string.GetString()
+                                 ,-1 // p_string.GetLength()
+                                 ,(LPWSTR)buffer
+                                 ,length);
+    if(length > 0)
+    {
+      // Buffer length is twice the number of logical characters
+      length *= 2;
+      // UTF-16 has two closing zeros
+      buffer[length    ] = 0;
+      buffer[length + 1] = 0;
+
+      result = (LPWSTR) buffer;
+    }
+    delete[] buffer;
+  }
+  return result;
+}
+
+XString
+WStringToString(std::wstring p_string)
+{
+  UINT codePage = GetACP(); // Default is to use the current codepage
+  int    length = -1;       // I think it will be null terminated
+  XString result;
+
+  // Getting the length of the translation buffer first
+  length = ::WideCharToMultiByte(codePage,
+                                  0,
+                                  p_string.c_str(),
+                                  -1, // p_length, 
+                                  NULL,
+                                  0,
+                                  NULL,
+                                  NULL);
+  // Convert the string if we find something
+  if(length > 0)
+  {
+    length *= 2; // Funny but needed in most cases with 3-byte composite chars
+    char* buffer = new char[length];
+    if(buffer != NULL)
+    {
+      DWORD dwFlag = 0; // WC_COMPOSITECHECK | WC_DISCARDNS;
+      memset(buffer,0,length * sizeof(char));
+      length = ::WideCharToMultiByte(codePage,
+                                      dwFlag,
+                                      p_string.c_str(),
+                                      -1, // p_length, 
+                                      (LPSTR) buffer,
+                                      length,
+                                      NULL,
+                                      NULL);
+      if(length > 0)
+      {
+        result = buffer;
+      }
+      delete[] buffer;
+    }
+  }
+  return result;
+}
 
 // Decoding incoming strings from the internet
 // Defaults to UTF-8 encoding
 XString
 DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/)
 {
-  // Check for empty charset
+  // Check for empty character set
   if(p_charset.IsEmpty())
   {
     p_charset = "utf-8";

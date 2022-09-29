@@ -133,7 +133,7 @@ WebSocketServer::SocketReader(HRESULT p_error
 
   if(!p_final)
   {
-    m_reading->m_data = (BYTE*)realloc(m_reading->m_data, m_reading->m_length + m_fragmentsize + WS_OVERHEAD);
+    m_reading->m_data = (BYTE*)realloc(m_reading->m_data,(size_t)m_reading->m_length + (size_t)m_fragmentsize + WS_OVERHEAD);
   }
 
   // Setting the type of message
@@ -195,7 +195,7 @@ WebSocketServer::SocketListener()
   {
     m_reading = new WSFrame();
     m_reading->m_length = 0;
-    m_reading->m_data   = (BYTE*)malloc(m_fragmentsize + WS_OVERHEAD);
+    m_reading->m_data   = (BYTE*)malloc((size_t)m_fragmentsize + WS_OVERHEAD);
   }
 
   // Issue the Asynchronous read-a-fragment command to the Asynchronous I/O WebSocket
@@ -205,6 +205,13 @@ WebSocketServer::SocketListener()
   BOOL  expected  = FALSE;
 
   m_reading->m_read = m_fragmentsize;
+
+  if(!m_reading->m_data)
+  {
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Reading websocket data.");
+    CloseSocket();
+    return;
+  }
 
   HRESULT hr = m_context->ReadFragment(&m_reading->m_data[m_reading->m_length]
                                       ,&m_reading->m_read

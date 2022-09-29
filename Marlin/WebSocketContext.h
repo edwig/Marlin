@@ -121,5 +121,4 @@ private:
   BYTE* m_ws_buffer               { nullptr };
   // Receiving data
   PVOID m_actionContext           { nullptr };
-
 };

@@ -211,99 +211,66 @@ ProcInfo::getRealOSVersion()
 void 
 ProcInfo::GetSystemType()
 {
-  OSVERSIONINFOEX ove;
+  m_platform.Empty();
 
-  //  Get regular info first
-  ove.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  GetVersionEx((LPOSVERSIONINFO)&ove);
-
-  //  For NT 5 and later, we can gather more info
-  bool isNT5 = ove.dwPlatformId == VER_PLATFORM_WIN32_NT && ove.dwMajorVersion >= 5;
-  bool WS = ove.wProductType == VER_NT_WORKSTATION;
-
-  if (isNT5)
+  if(IsWindows10OrGreater())
   {
-    ove.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    if (!GetVersionEx((LPOSVERSIONINFO)&ove))
-    {
-      return;
-    }
+    m_platform = "Windows 10 or greater.";
   }
-  //	Describe platform
-  if (ove.dwPlatformId == VER_PLATFORM_WIN32s)
-  {
-    switch (ove.dwMinorVersion)
+  else if(IsWindows8Point1OrGreater())
     {
-      case 51:		m_platform = "Windows NT 3.51";		break;
-      default:		m_platform = "Unknown NT 3.xx";		break;
+    m_platform = "Windows 8.1 or greater.";
     }
-  }
-  else if (ove.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+  else if(IsWindows8OrGreater())
   {
-    m_use_psapi = false;
-    switch (ove.dwMinorVersion)
+    m_platform = "Windows 8.0 or greater.";
+  }
+  else if(IsWindows7SP1OrGreater())
+  {
+    m_platform = "Windows 7 SP1 or greater.";
+  }
+  else if(IsWindows7OrGreater())
     {
-      case 0:			m_platform = "Windows 95";				break;
-      case 10:		m_platform = "Windows 98";				break;
-      case 90:		m_platform = "Windows Me";				break;
-      default:		m_platform = "Unknown 9x";				break;
+    m_platform = "Windows 7 or greater.";
     }
-  }
-  else if (ove.dwPlatformId == VER_PLATFORM_WIN32_NT)
+  else if(IsWindowsVistaSP2OrGreater())
   {
-    m_use_psapi = false;
-    switch (ove.dwMajorVersion)
+    m_platform = "Windows Vista SP2 or greater.";
+  }
+  else if(IsWindowsVistaSP1OrGreater())
+  {
+    m_platform = "Windows Vista SP1 or greater.";
+  }
+  else if(IsWindowsVistaOrGreater())
     {
-      case 4:     m_platform = "Windows NT 4.0";
-                  break;
-      case 5:     switch (ove.dwMinorVersion)
+    m_platform = "Windows Vista or greater.";
+    }
+  else if(IsWindowsXPSP3OrGreater())
+  {
+    m_platform = "Windows XP SP3 or greater";
+  }
+  else if(IsWindowsXPSP2OrGreater())
+  {
+    m_platform = "Windows XP SP2 or greater";
+  }
+  else if(IsWindowsXPSP1OrGreater())
                   {
-                    case 0:			m_platform = "Windows 2000";		break;
-                    case 1:			m_platform = "Windows XP";			break;
-                    case 2:			m_platform = "Windows 2003";		break;
-                    default:		m_platform = "Unknown NT";
-                                m_use_psapi = true;
-                                break;
+    m_platform = "Windows XP SP1 or greater";
                   }
-                  break;
-      case 6:			switch (ove.dwMinorVersion)
+  else if(IsWindowsXPOrGreater())
                   {
-                    case 0: m_platform = WS ? "Windows Server 2008" : "Windows Vista";
-                            break;
-                    case 1: m_platform = WS ? "Windows Server 2008 R2" : "Windows-7";
-                            break;
-                    case 2: m_platform = WS ? "Windows Server 2012" : "Windows-8";
-                            break;
-                  }
-                  break;
-      case 10:    m_platform = WS ? "Windows Server 2016" : "Windows 10";
-                  break;
-      default:    m_platform = "Yet unknown MS-Windows version";
-                  break;
-    }
+    m_platform = "Windows XP or greater";
   }
 
-  // Check voor Windows 10 : Not in app.manifest!!
-  if (ove.dwMajorVersion >= 6 && ove.dwMinorVersion >= 2 && ove.dwBuildNumber >= 9200)
+  // Check for Terminal Server versions
+  if(IsWindowsServer())
   {
-    m_platform = WS ? "Windows Server 2016" : "Windows 10";
+    m_platform += " Server.";
   }
-
-  //	Add version designation
-  if (strlen(ove.szCSDVersion))
+  if(IsActiveSessionCountLimited())
   {
-    m_platform += " ";
-    m_platform += ove.szCSDVersion;
+    m_platform += " (Limited sessions)";
   }
-  //	Add actual version number
-  char szVersion[25];
-  sprintf_s(szVersion, 25, "%d.%d.%d",
-            ove.dwMajorVersion,
-            ove.dwMinorVersion,
-            ove.dwBuildNumber);
-  m_platform += " (";
-  m_platform += szVersion;
-  m_platform += ")";
 }
 
 //=============================================================================

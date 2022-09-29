@@ -217,7 +217,7 @@ public:
  ~JSONMessage();
 
   // Resetting the message for answering
-  void Reset();
+  void Reset(bool p_resetURL = true);
   // Create from message stream
   bool ParseMessage(XString p_message,StringEncoding p_encoding = StringEncoding::ENC_Plain);
   // Load from file

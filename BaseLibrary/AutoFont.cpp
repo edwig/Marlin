@@ -274,7 +274,7 @@ BOOL AutoFont::SetItalic(BOOL i)
 	BOOL b=(BOOL)lf.lfItalic;
 
 	DeleteObject(m_font);
-	lf.lfItalic=i;
+	lf.lfItalic = (BYTE)i;
 	m_font = CreateFontIndirect(&lf);
 
 	return b;
@@ -285,7 +285,7 @@ BOOL AutoFont::SetUnderline(BOOL u)
 	BOOL b=(BOOL)lf.lfUnderline;
 
 	DeleteObject(m_font);
-	lf.lfUnderline=u;
+	lf.lfUnderline = (BYTE) u;
 	m_font = CreateFontIndirect(&lf);
 
 	return b;
@@ -296,7 +296,7 @@ BOOL AutoFont::SetStrikeOut(BOOL s)
 	BOOL b=(BOOL)lf.lfStrikeOut;
 
 	DeleteObject(m_font);
-	lf.lfStrikeOut=s;
+	lf.lfStrikeOut = (BYTE) s;
 	m_font = CreateFontIndirect(&lf);
 
 	return b;
@@ -417,14 +417,14 @@ void AutoFont::ExtractFont(XString& str)
 	lf.lfEscapement     = atol((LPCTSTR)GetToken(str, ","));
 	lf.lfOrientation    = atol((LPCTSTR)GetToken(str, ","));
 	lf.lfWeight         = atol((LPCTSTR)GetToken(str, ","));
-	lf.lfItalic         = atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfUnderline      = atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfStrikeOut      = atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfCharSet        = atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfOutPrecision   = atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfClipPrecision  = atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfQuality        = atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfPitchAndFamily = atoi((LPCTSTR)GetToken(str, ","));
+	lf.lfItalic         = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
+	lf.lfUnderline      = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
+	lf.lfStrikeOut      = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
+	lf.lfCharSet        = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
+	lf.lfOutPrecision   = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
+	lf.lfClipPrecision  = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
+	lf.lfQuality        = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
+	lf.lfPitchAndFamily = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
 	strcpy_s(lf.lfFaceName,LF_FACESIZE,(LPCTSTR)GetToken(str, ","));
 
 	DeleteObject(m_font);
@@ -445,7 +445,7 @@ XString AutoFont::GetToken(XString& str, LPCTSTR c)
 	return token;
 }
 
-void AutoFont::GetFontFromDialog(HFONT* f,DWORD* color,HDC* pPrinterDC,HWND* pParentWnd)
+void AutoFont::GetFontFromDialog(HFONT* /*f*/,DWORD* /*color*/,HDC* /*pPrinterDC*/,HWND* /*pParentWnd*/)
 {
 // 	LOGFONT tlf;
 //   if (f == NULL)

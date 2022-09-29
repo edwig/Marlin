@@ -100,7 +100,7 @@ XMLParser::PrintXmlString(const XString& p_string,bool p_utf8 /*=false*/)
 XString
 XMLParser::PrintJsonString(const XString& p_string,StringEncoding p_encoding)
 {
-  unsigned char* buffer  = new unsigned char[2 * p_string.GetLength() + 4];
+  unsigned char* buffer  = new unsigned char[2 * (size_t)p_string.GetLength() + 4];
   unsigned char* pointer = buffer;
 
   *pointer++ = '\"';

@@ -293,7 +293,6 @@ HTTPClient::ErrorLog(const char* p_function,const char* p_logText)
 bool
 HTTPClient::Initialize()
 {
-  USES_CONVERSION;
   XString totalURL;
 
   // Something to be done?
@@ -365,9 +364,9 @@ HTTPClient::Initialize()
   }
 
   // Use WinHttpOpen to obtain a session handle.
-  std::wstring wAgent       = A2CW(m_agent);
-  std::wstring wProxy       = A2CW(m_proxy);;
-  std::wstring wProxyBypass = A2CW(m_proxyBypass);
+  std::wstring wAgent       = StringToWString(m_agent);
+  std::wstring wProxy       = StringToWString(m_proxy);;
+  std::wstring wProxyBypass = StringToWString(m_proxyBypass);
 
   m_session = WinHttpOpen(wAgent.c_str()
                          ,m_proxy.GetLength()       ? WINHTTP_ACCESS_TYPE_NAMED_PROXY : WINHTTP_ACCESS_TYPE_NO_PROXY
@@ -1101,11 +1100,10 @@ void
 HTTPClient::FlushAllHeaders()
 {
   // Set all of our headers
-  USES_CONVERSION;
   for(auto& head : m_requestHeaders)
   {
     XString header = head.first + ":" + head.second;
-    wstring theHeader = A2CW(header);
+    wstring theHeader = StringToWString(header);
 
     DWORD modifiers = WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE;
     if(!::WinHttpAddRequestHeaders(m_request
@@ -1128,9 +1126,7 @@ HTTPClient::AddProxyAuthorization()
   {
     if(m_proxyUser.GetLength() > 0)
     {
-      USES_CONVERSION;
-
-      wstring user(A2CW(m_proxyUser));
+      wstring user = StringToWString(m_proxyUser);
       if(!::WinHttpSetOption(m_request, WINHTTP_OPTION_PROXY_USERNAME, (LPVOID)user.c_str(), (DWORD)user.size() * sizeof(wchar_t)))
       {
         ErrorLog(__FUNCTION__,"Proxy username NOT set. Error [%d] %s");
@@ -1138,7 +1134,7 @@ HTTPClient::AddProxyAuthorization()
       DETAILLOG("Proxy user: %s",m_proxyUser.GetString());
       if(m_proxyPassword.GetLength() > 0)
       {
-        wstring password(A2CW(m_proxyPassword));
+        wstring password = StringToWString(m_proxyPassword);
         if(!::WinHttpSetOption(m_request, WINHTTP_OPTION_PROXY_PASSWORD, (LPVOID)password.c_str(), (DWORD)password.size() * sizeof(wchar_t)))
         {
           ErrorLog(__FUNCTION__,"Proxy password NOT set. Error [%d] %s");
@@ -1162,10 +1158,8 @@ HTTPClient::AddPreEmptiveAuthorization()
                       WINHTTP_AUTH_SCHEME_DIGEST     |
                       WINHTTP_AUTH_SCHEME_NEGOTIATE  ))
     {
-      USES_CONVERSION;
-
-      wstring user = A2CW(m_user);
-      wstring pass = A2CW(m_password);
+      wstring user = StringToWString(m_user);
+      wstring pass = StringToWString(m_password);
 
       if(!WinHttpSetCredentials(m_request
                                ,WINHTTP_AUTH_TARGET_SERVER
@@ -1207,7 +1201,8 @@ HTTPClient::AddWebSocketUpgrade()
     return;
   }
   // Principal WebSocket handshake
-  if(::WinHttpSetOption(m_request,WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET,NULL,0))
+#pragma warning(disable: 6387) // Extra parameters must be zero!
+  if(::WinHttpSetOption(m_request,WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET,0,0))
   {
     DETAILLOG("Prepared for WebSocket upgrade.");
   }
@@ -1236,8 +1231,6 @@ HTTPClient::GetResultHeader(DWORD p_header,DWORD p_index)
     wchar_t* szValue = new wchar_t[dwSize];
     if (szValue != NULL)
     {
-      USES_CONVERSION;
-
       memset(szValue, 0, dwSize* sizeof(wchar_t));
       if (::WinHttpQueryHeaders(m_request,
                                 p_header,
@@ -1246,7 +1239,7 @@ HTTPClient::GetResultHeader(DWORD p_header,DWORD p_index)
                                 &dwSize,
                                 &p_index))
       {
-        result = CW2A(szValue);
+        result = WStringToString(szValue);
         DETAILLOG("Result header: %s",result.GetString());
       }
       else
@@ -1386,10 +1379,8 @@ HTTPClient::AddAuthentication(bool p_ntlm3Step)
   // Set the credentials
   if(setCredentials || p_ntlm3Step)
   {
-    USES_CONVERSION;
-
-    wstring user = A2CW(m_user);
-    wstring pass = A2CW(m_password);
+    wstring user = StringToWString(m_user);
+    wstring pass = StringToWString(m_password);
 
     if(!WinHttpSetCredentials(m_request
                              ,dwTarget
@@ -1429,10 +1420,8 @@ HTTPClient::AddProxyAuthentication()
     }
     else
     {
-      USES_CONVERSION;
-
-      static wstring user = A2CW(m_proxyUser);
-      static wstring pass = A2CW(m_proxyPassword);
+      static wstring user = StringToWString(m_proxyUser);
+      static wstring pass = StringToWString(m_proxyPassword);
 
       if(!WinHttpSetCredentials(m_request
                                ,WINHTTP_AUTH_TARGET_PROXY
@@ -1655,8 +1644,8 @@ HTTPClient::ReceiveResponseDataFile()
     {
       if(dwSize)
       {
-        BYTE* response = new BYTE[dwSize + 1];
-        memset(response,0,(dwSize+1) * sizeof(BYTE));
+        BYTE* response = new BYTE[(size_t)dwSize + 1];
+        memset(response,0,((size_t)dwSize + 1) * sizeof(BYTE));
         DWORD dwRead = 0;
         if(WinHttpReadData(m_request,response,dwSize,&dwRead))
         {
@@ -1699,8 +1688,8 @@ HTTPClient::ReceiveResponseDataBuffer()
     {
       if(dwSize)
       {
-        BYTE* response = new BYTE[dwSize + 1];
-        memset(response, 0,dwSize + 1);
+        BYTE* response = new BYTE[(size_t)dwSize + 1];
+        memset(response, 0,(size_t)dwSize + 1);
         DWORD dwRead = 0;
         if (::WinHttpReadData(m_request,
                               response,
@@ -1710,7 +1699,7 @@ HTTPClient::ReceiveResponseDataBuffer()
           DETAILLOG("Reading response data block. Size: %d",dwRead);
           if(m_response)
           {
-            BYTE* newResponse = new BYTE[m_responseLength + dwRead + 1];
+            BYTE* newResponse = new BYTE[(size_t)m_responseLength + (size_t)dwRead + 1];
             memcpy(newResponse,m_response,m_responseLength);
             memcpy(&newResponse[m_responseLength],response,dwRead);
             delete [] response;
@@ -1847,7 +1836,7 @@ HTTPClient::ReceivePushEvents()
         ErrorLog(__FUNCTION__,"Server closed event-stream prematurely. Error [%d] %s");
         break;
       }
-      BYTE* response = new BYTE[dwSize + 1];
+      BYTE* response = new BYTE[(size_t)dwSize + 1];
       if(response == NULL)
       {
         ERRORLOG("Out of memory");
@@ -1869,7 +1858,7 @@ HTTPClient::ReceivePushEvents()
         if(m_response)
         {
           // Append to a previous response (not parsed!)
-          BYTE* newResponse = new BYTE[m_responseLength + dwRead + 1];
+          BYTE* newResponse = new BYTE[(size_t)m_responseLength + (size_t)dwRead + 1];
           memcpy(newResponse,m_response,m_responseLength);
           memcpy(&newResponse[m_responseLength],response,dwRead);
           delete [] response;
@@ -2788,8 +2777,6 @@ HTTPClient::Send()
   bool retValue            = false;
   bool getReponseSucceed   = false;
   unsigned int iRetryTimes = 0;
-  // Use standard UNICODE conversion
-  USES_CONVERSION;
 
   // Reset error status
   m_lastError = 0;
@@ -2806,7 +2793,7 @@ HTTPClient::Send()
 
   // Establish the 'real' server/port by proxy replacement
   // In the case we must do any proxy replacement
-  wstring server(A2CW(m_server));
+  wstring server = StringToWString(m_server);
   int port(m_port);
 
   switch(m_useProxy)
@@ -2816,11 +2803,11 @@ HTTPClient::Send()
                                     if(!m_proxy.IsEmpty())
                                     {
                                       CrackedURL url(m_proxy);
-                                      server = A2CW(url.m_host);
+                                      server = StringToWString(url.m_host);
                                       port   = url.m_port;
                                     }
                                     break;
-    case ProxyType::PROXY_AUTOPROXY:// Try URL. Fallback is on the session level
+    case ProxyType::PROXY_AUTOPROXY:// Try URL. fall back is on the session level
     case ProxyType::PROXY_NOPROXY:  // No proxy. Do nothing
                                     break;
   }
@@ -2848,7 +2835,7 @@ HTTPClient::Send()
     if(m_connect == NULL)
     {
       XString msg;
-      msg.Format("Cannot connect to [%s:%d] Error [%%d] %%s",W2CA(server.c_str()),port);
+      msg.Format("Cannot connect to [%s:%d] Error [%%d] %%s",WStringToString(server).GetString(),port);
       ErrorLog(__FUNCTION__,msg);
       return false;
     }
@@ -2866,8 +2853,8 @@ HTTPClient::Send()
   }
 
   // Make a request header to be send
-  wstring verb = A2CW(m_verb);
-  wstring url  = A2CW(m_url);
+  wstring verb = StringToWString(m_verb);
+  wstring url  = StringToWString(m_url);
   m_request = WinHttpOpenRequest(m_connect
                                 ,verb.c_str()
                                 ,url.c_str()
@@ -3147,7 +3134,7 @@ HTTPClient::Send()
       m_responseLength = (unsigned int) out_data.size();
 
       delete [] m_response;
-      m_response = new BYTE[m_responseLength + 1];
+      m_response = new BYTE[(size_t)m_responseLength + 1];
       for(size_t ind = 0; ind < m_responseLength; ++ind)
       {
         m_response[ind] = out_data[ind];
@@ -3201,10 +3188,8 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
   {
     return;
   }
-
-  USES_CONVERSION;
   XString proxy;
-  XString server = (XString) CW2A(p_server.c_str());
+  XString server = WStringToString(p_server.c_str());
 
 
   // Find secure call
@@ -3230,8 +3215,6 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
 void
 HTTPClient::TraceTheSend()
 {
-  USES_CONVERSION;
-
   // See if we have anything to do
   if(m_log == nullptr || m_logLevel < HLL_LOGBODY)
   {
@@ -3499,7 +3482,7 @@ HTTPClient::ReadHeaderField(int p_header)
 
   if(GetLastError() == ERROR_INSUFFICIENT_BUFFER)
   {
-    WCHAR* buffer = new WCHAR[dwSize + 1];
+    WCHAR* buffer = new WCHAR[(size_t)dwSize + 1];
     if(buffer)
     {
       if (::WinHttpQueryHeaders(m_request,
@@ -3513,8 +3496,7 @@ HTTPClient::ReadHeaderField(int p_header)
       }
       else
       {
-        USES_CONVERSION;
-        field = CW2A(buffer);
+        field = WStringToString(buffer);
       }
       delete [] buffer;
     }
@@ -3558,8 +3540,7 @@ HTTPClient::ReadAllResponseHeaders()
       }
       else
       {
-        USES_CONVERSION;
-        XString all = (XString) CW2A(buffer);
+        XString all = WStringToString(buffer);
         m_responseHeaders.clear();
 
         int pos = all.Find("\r\n");
@@ -4355,6 +4336,7 @@ HTTPClient::StopClient()
     {
       // Only way to cancel from NTDLL.DLL on the HTTP Stack
       // Do not complain about "TermnateThread". It is the only way. We know!
+#pragma warning(disable:6258)
       TerminateThread(m_queueThread,0);
       m_queueThread = NULL;
       m_running = false;
@@ -4387,6 +4369,7 @@ HTTPClient::StopClient()
     // Do not complain about "TermnateThread". It is the only way. We know!
     if(m_queueThread)
     {
+#pragma warning(disable:6258)
       TerminateThread(m_queueThread,3);
       ErrorLog(__FUNCTION__,"Killed the HTTPClient queue thread. Error [%d] %s");
     }

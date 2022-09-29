@@ -224,7 +224,8 @@ WebServiceClient::Open()
   // See if we must do WS-ReliableMessaging
   if(m_reliable == false)
   {
-    return (m_isopen = true);
+    m_isopen = true;
+    return true;
   }
 
   // RM Needs a sequences
@@ -232,7 +233,8 @@ WebServiceClient::Open()
 
   // Gotten to the end without a throw
   DETAILLOG1("WebServiceClient ready to go");
-  return (m_isopen = true);
+  m_isopen = true;
+  return true;
 }
 
 // Closing

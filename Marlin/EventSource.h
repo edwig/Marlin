@@ -80,8 +80,8 @@ typedef void(* LPFN_EVENTHANDLER)(ServerEvent* p_event,void* p_data);
 typedef struct _eventListener
 {
   XString           m_event;
-  LPFN_EVENTHANDLER m_handler;
-  bool              m_capture;
+  LPFN_EVENTHANDLER m_handler { nullptr };
+  bool              m_capture { false   };
 }
 EventListener;
 

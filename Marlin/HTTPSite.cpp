@@ -557,9 +557,8 @@ HTTPSite::RemoveSiteFromGroup()
 {
   if(m_group)
   {
-    USES_CONVERSION;
     ULONG retCode  = NO_ERROR;
-    wstring uniURL = A2CW(m_prefixURL);
+    wstring uniURL = StringToWString(m_prefixURL);
     HTTP_URL_GROUP_ID group = m_group->GetUrlGroupID();
 
     if(m_isSubsite == false)

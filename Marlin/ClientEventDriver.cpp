@@ -268,7 +268,10 @@ ClientEventDriver::CloseDown()
   }
   if(m_thread)
   {
+    // Since waiting on the thread did not work, we must preemptively terminate it.
+#pragma warning(disable:6258)
     TerminateThread(m_thread, 3);
+    WaitForSingleObject(m_thread,MONITOR_END_INTERVAL);
     m_thread = NULL;
   }
 

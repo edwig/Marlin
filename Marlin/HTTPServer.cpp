@@ -576,8 +576,7 @@ HTTPServer::GetUnknownVerb(PCSTR p_verb)
 HTTPSite*
 HTTPServer::FindHTTPSite(int p_port,PCWSTR p_url)
 {
-  USES_CONVERSION;
-  XString site = (XString) CW2A(p_url);
+  XString site = WStringToString(p_url);
 
   return FindHTTPSite(p_port,site);
 }

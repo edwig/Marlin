@@ -148,7 +148,7 @@ TestMarlinServer::TestWebSocket()
   xprintf("==============================================\n");
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Sockets/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber,url);
   if(site)
   {
     // --- "---------------------------- - ------

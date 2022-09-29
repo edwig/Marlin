@@ -466,9 +466,8 @@ void
 SOAPMessage::AddHeader(HTTP_HEADER_ID p_id,XString p_value)
 {
   extern const char* header_fields[HttpHeaderMaximum];
-  int maximum = m_incoming ? HttpHeaderMaximum : HttpHeaderResponseMaximum;
 
-  if(p_id >= 0 && p_id < maximum)
+  if(p_id >= 0 && p_id < HttpHeaderMaximum)
   {
     XString name(header_fields[p_id]);
     AddHeader(name,p_value);
@@ -489,9 +488,8 @@ void
 SOAPMessage::DelHeader(HTTP_HEADER_ID p_id)
 {
   extern const char* header_fields[HttpHeaderMaximum];
-  int maximum = m_incoming ? HttpHeaderMaximum : HttpHeaderResponseMaximum;
 
-  if(p_id >= 0 && p_id < maximum)
+  if(p_id >= 0 && p_id < HttpHeaderMaximum)
   {
     XString name(header_fields[p_id]);
     DelHeader(name);
