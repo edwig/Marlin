@@ -203,8 +203,5 @@ SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_me
   }
 
   // Create alert file if requested
-  if (g_alertConfigured)
-  {
     CreateAlert(szFunction,buffer2,g_eventBuffer,p_module);
-  }
 }

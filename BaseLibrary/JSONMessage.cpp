@@ -1086,7 +1086,6 @@ JSONMessage::LoadFile(const XString& p_fileName)
     {
       return false;
     }
-
     // And parse it
     return ParseMessage(inhoud);
   }

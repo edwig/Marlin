@@ -27,14 +27,13 @@
 //
 #pragma once
 
-// Maximum number of alert modules possible
-#define MAX_ALERT_MODULES 10
-
-extern bool g_alertConfigured;
-
 // Registers an alert log path for a module
 // Returns the module's alert number
 int     ConfigureApplicationAlerts(XString p_path);
+// Remove a alert modules path name
+bool    DeregisterApplicationAlerts(int p_module);
+// Clean up all alert paths and modules
+void    CleanupAlerts();
 
 // Returns the alert log path for a module
 XString GetAlertlogPath(int p_module);

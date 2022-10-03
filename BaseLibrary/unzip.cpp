@@ -2949,7 +2949,7 @@ unzFile unzOpenInternal(LUFILE *fin)
   // cppcheck-suppress uninitStructMember
   if(s)
   {
-  *s=us;
+    *s = us;
   }
   unzGoToFirstFile((unzFile)s);
   return (unzFile)s;

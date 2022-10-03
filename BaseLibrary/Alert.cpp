@@ -28,9 +28,11 @@
 #include "pch.h"
 #include "Alert.h"
 #include "GetExePath.h"
+#include "AutoCritical.h"
 #include <strsafe.h>
 #include <sys/timeb.h>
 #include <time.h>
+#include <map>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -38,48 +40,101 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using AlertPaths = std::map<int,XString>;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // CONFIGURATION
 //
 //////////////////////////////////////////////////////////////////////////
 
-bool g_alertConfigured = false;
-int  g_alertModules    = 0;
-char g_alertPath[MAX_ALERT_MODULES][MAX_PATH + 1];
+long              g_alertModules = 0;
+AlertPaths*       g_alertPath    = nullptr;
 unsigned __int64 g_alertCounter = 0;
+CRITICAL_SECTION  g_alertCritical;
 
 // Registers an alert log path for a module
 // Returns the module's alert number
 int ConfigureApplicationAlerts(XString p_path)
 {
-  if(g_alertModules >= 0 && g_alertModules < MAX_ALERT_MODULES)
+  // Check that we have a registration
+  if(g_alertPath == nullptr)
   {
-    StringCchCopy(g_alertPath[g_alertModules],MAX_PATH,p_path.GetString());
-    if(p_path.GetLength() > 3)
-    {
-      g_alertConfigured = true;
+    InitializeCriticalSection(&g_alertCritical);
+
+    g_alertPath = new AlertPaths();
+    // Clean up at exit time of the process
+    atexit(CleanupAlerts);
+  }
+  AutoCritSec lock(&g_alertCritical);
+
+  // Check that the path always ends in a backslash
       if(p_path.Right(1) != "\\")
       {
-        StringCchCat(g_alertPath[g_alertModules],MAX_PATH,"\\");
+    p_path += '\\';
       }
+
+  // register new path
+  (*g_alertPath)[++g_alertModules] = p_path;
+
+  return g_alertModules;
+}
+
+bool DeregisterApplicationAlerts(int p_module)
+{
+  AutoCritSec lock(&g_alertCritical);
+
+  if(g_alertPath && p_module >= 0 && p_module <= g_alertModules)
+  {
+    AlertPaths::iterator it = g_alertPath->find(p_module);
+    if(it != g_alertPath->end())
+    {
+      g_alertPath->erase(it);
+      return true;
     }
-    // Return the registered module number
-    // To be used for every WMI log transaction and error log
-    return g_alertModules++;
   }
-  // Failed to register an extra module
-  return -1;
+  return false;
 }
 
 // Returns the alert log path for a module
 XString GetAlertlogPath(int p_module)
 {
-  if(p_module >= 0 && p_module < g_alertModules)
+  AutoCritSec lock(&g_alertCritical);
+
+  if(g_alertPath && p_module >= 0 && p_module < g_alertModules)
   {
-    return XString(g_alertPath[p_module]);
+    AlertPaths::iterator it = g_alertPath->find(p_module);
+    if(it != g_alertPath->end())
+    {
+      return it->second;
+    }
   }
   return "";
+}
+
+// Clean up all alert paths and modules
+void CleanupAlerts()
+{
+  bool deleted(false);
+
+  if(g_alertPath)
+  {
+    AutoCritSec lock(&g_alertCritical);
+
+    delete g_alertPath;
+
+    g_alertPath    = nullptr;
+    g_alertModules = 0;
+    g_alertCounter = 0;
+    deleted = true;
+  }
+
+  // If we removed the paths, also remove the critical section
+  // but do this outside the locked scope
+  if(deleted)
+  {
+    DeleteCriticalSection(&g_alertCritical);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -92,13 +147,14 @@ XString GetAlertlogPath(int p_module)
 __int64 CreateAlert(LPCTSTR p_function,LPCTSTR p_oserror,LPCTSTR p_eventdata,int p_module /*=0*/)
 {
   // See if we are configured
-  if(g_alertConfigured == false)
+  if(g_alertPath == nullptr)
   {
     return 0;
   }
 
   // Check that it is a valid alert module
-  if(p_module < 0 || p_module >= g_alertModules)
+  XString path = GetAlertlogPath(p_module);
+  if(path.IsEmpty())
   {
     return 0;
   }
@@ -118,7 +174,7 @@ __int64 CreateAlert(LPCTSTR p_function,LPCTSTR p_oserror,LPCTSTR p_eventdata,int
 
     // Creating a filename for the alert
     fileName.Format("%sAlert_%4.4d_%2.2d_%2.2d_%2.2d_%2.2d_%2.2d_%3.3d_%I64u.log"
-                    ,g_alertPath[p_module]
+                    ,path.GetString()
                     ,today.tm_year + 1900
                     ,today.tm_mon + 1
                     ,today.tm_mday

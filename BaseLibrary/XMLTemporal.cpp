@@ -597,7 +597,7 @@ XMLDate::SetMJD()
       day   > 0 && day   < 32)
   {
     // Check on the Gregorian definition of months
-    // Checks on leapyears and gets the days-in-the-month
+    // Checks on leap years and gets the days-in-the-month
     bool leapyear = ((year & 3) == 0) &&
                     ((year % 100) != 0 || (year % 400) == 0);
 

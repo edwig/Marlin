@@ -948,7 +948,7 @@ WinFile::FormatV(LPCSTR p_format, va_list p_list)
   // Formatting the parameters
   vsprintf_s(buffer, len, p_format, p_list);
   // Adding to the string
-  bool result = Write(buffer,(size_t)len - 1);
+  bool result = Write(buffer);
   delete[] buffer;
   return result;
 }
@@ -1101,7 +1101,7 @@ WinFile::Gets(uchar* p_buffer,size_t p_size)
   // Make sure we have a read buffer
   *p_buffer++ = (uchar) Getch();
 
-  // Scan forward in the pagebuffer for a newline
+  // Scan forward in the page buffer for a newline
   char* ending = strchr((char*)m_pagePointer,'\n');
   if(ending && ((size_t)ending < (size_t)m_pageTop))
   {

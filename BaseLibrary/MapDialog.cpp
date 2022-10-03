@@ -195,7 +195,7 @@ void MapDialog::EnableOk(bool bEnable)
     return;
   }
   //  Set the ok button state
-  ::SendMessage(m_hwnd, BFFM_ENABLEOK, 0, bEnable);
+  ::SendMessage(m_hwnd,BFFM_ENABLEOK,0,bEnable);
 }
 
 //=============================================================================
@@ -208,7 +208,7 @@ void MapDialog::SetSelection(XString const& path)
     return;
   }
   //  Set the current path in the tree
-  ::SendMessage(m_hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)(char const*)path);  
+  ::SendMessage(m_hwnd,BFFM_SETSELECTION,TRUE,(LPARAM)(char const*)path);  
 }
 
 //=============================================================================
@@ -221,7 +221,7 @@ void MapDialog::SetStatusText(XString const& text)
     return;
   }
   //  Set the current path in the tree
-  ::SendMessage(m_hwnd, BFFM_SETSTATUSTEXT, 0, (LPARAM)(char const*)text);  
+  ::SendMessage(m_hwnd,BFFM_SETSTATUSTEXT,0,(LPARAM)(char const*)text);  
 }
 
 //=============================================================================
