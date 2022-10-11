@@ -166,7 +166,8 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
 int
 ServerEventDriver::RegisterChannel(XString p_sessionName
                                   ,XString p_cookie
-                                  ,XString p_token)
+                                  ,XString p_token
+                                  ,XString p_metadata /*=""*/)
 {
   AutoCritSec lock(&m_lock);
 
@@ -184,6 +185,12 @@ ServerEventDriver::RegisterChannel(XString p_sessionName
   XString cookie = p_cookie + ":" + p_token;
   m_names  .insert(std::make_pair(p_sessionName,channel));
   m_cookies.insert(std::make_pair(cookie,channel));
+
+  // Register the first metadata we get!
+  if(m_metadata.IsEmpty())
+  {
+    m_metadata = p_metadata;
+  }
 
   return m_nextSession;
 }
@@ -569,7 +576,7 @@ ServerEventDriver::RegisterSocketByCookie(HTTPMessage* p_message,WebSocket* p_so
   Cookies& cookies = p_message->GetCookies();
   for(auto& cookie : cookies.GetCookies())
   {
-    session = cookie.GetName() + ":" + cookie.GetValue();
+    session = cookie.GetName() + ":" + cookie.GetValue(m_metadata);
     ChanNameMap::iterator it = m_cookies.find(session);
     if(it != m_cookies.end())
     {
@@ -588,7 +595,7 @@ ServerEventDriver::RegisterStreamByCookie(HTTPMessage* p_message,EventStream* p_
   Cookies& cookies = p_message->GetCookies();
   for(auto& cookie : cookies.GetCookies())
   {
-    session = cookie.GetName() + ":" + cookie.GetValue();
+    session = cookie.GetName() + ":" + cookie.GetValue(m_metadata);
     ChanNameMap::iterator it = m_cookies.find(session);
     if(it != m_cookies.end())
     {
@@ -607,7 +614,7 @@ ServerEventDriver::HandlePollingByCookie(SOAPMessage* p_message)
   Cookies& cookies = p_message->GetCookies();
   for(auto& cookie : cookies.GetCookies())
   {
-    session = cookie.GetName() + ":" + cookie.GetValue();
+    session = cookie.GetName() + ":" + cookie.GetValue(m_metadata);
     ChanNameMap::iterator it = m_cookies.find(session);
     if(it != m_cookies.end())
     {

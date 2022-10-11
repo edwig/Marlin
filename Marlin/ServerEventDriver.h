@@ -123,7 +123,7 @@ public:
   // Register our main site in the server
   bool  RegisterSites(HTTPServer* p_server,HTTPSite* p_site);
   // Create the three sites for the event driver for a user session
-  int   RegisterChannel(XString p_sessionName,XString p_cookie,XString p_token);
+  int   RegisterChannel(XString p_sessionName,XString p_cookie,XString p_token,XString p_metadata = "");
   // Force the authentication of the cookie
   void  SetForceAuthentication(bool p_force);
   // Setting the brute force attack interval
@@ -209,6 +209,9 @@ private:
   // The worker bee
   HANDLE          m_thread { NULL };
   HANDLE          m_event  { NULL };
+  // Metadata for secure cookie encryption
+  // Requires that the metadata for all cookies are the same
+  XString         m_metadata;
   // LOCKING
   CRITICAL_SECTION m_lock;
 };

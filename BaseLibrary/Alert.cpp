@@ -69,10 +69,10 @@ int ConfigureApplicationAlerts(XString p_path)
   AutoCritSec lock(&g_alertCritical);
 
   // Check that the path always ends in a backslash
-      if(p_path.Right(1) != "\\")
-      {
+  if(p_path.Right(1) != "\\")
+  {
     p_path += '\\';
-      }
+  }
 
   // register new path
   (*g_alertPath)[++g_alertModules] = p_path;
@@ -101,7 +101,7 @@ XString GetAlertlogPath(int p_module)
 {
   AutoCritSec lock(&g_alertCritical);
 
-  if(g_alertPath && p_module >= 0 && p_module < g_alertModules)
+  if(g_alertPath && p_module >= 0 && p_module <= g_alertModules)
   {
     AlertPaths::iterator it = g_alertPath->find(p_module);
     if(it != g_alertPath->end())
