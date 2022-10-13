@@ -46,44 +46,32 @@ char*            g_eventBuffer = nullptr;
 CRITICAL_SECTION g_eventBufferLock;
 char             g_svcname[SERVICE_NAME_LENGTH];
 
-void
-SvcStartEventBuffer()
-{
-  // Initialize the logging lock
-  InitializeCriticalSection(&g_eventBufferLock);
-  // Deallocate our event buffer at the end
-  atexit(SvcFreeEventBuffer);
-}
-
-void
+static void
 SvcFreeEventBuffer()
 {
   // Deallocate the logging buffer of the server
   if(g_eventBuffer)
   {
-    free(g_eventBuffer);
+    delete [] g_eventBuffer;
     g_eventBuffer = nullptr;
   }
   DeleteCriticalSection(&g_eventBufferLock);
 }
 
-void
-SvcAllocEventBuffer()
+static void
+SvcStartEventBuffer()
 {
   // Already there: nothing to be done
   if(g_eventBuffer)
   {
     return;
   }
-  g_eventBuffer = (char*)malloc(EVENTBUFFER + 1);
-  if(g_eventBuffer == nullptr)
-  {
-    SvcReportSuccessEvent("ERROR: Cannot make a buffer for errors and events");
-  }
-  else
-  {
-    SvcStartEventBuffer();
-  }
+  g_eventBuffer = new char[EVENTBUFFER];
+
+  // Initialize the logging lock
+  InitializeCriticalSection(&g_eventBufferLock);
+  // Deallocate our event buffer at the end
+  atexit(SvcFreeEventBuffer);
 }
 
 void
@@ -92,7 +80,10 @@ SvcReportInfoEvent(bool p_doFormat,LPCTSTR p_message,...)
   HANDLE hEventSource;
   LPCTSTR lpszStrings[2];
 
-  SvcAllocEventBuffer();
+  // Be sure our event system is started
+  SvcStartEventBuffer();
+
+//  AutoCritSec lock(&g_eventBufferLock);
   if(p_doFormat)
   {
     va_list vl;
@@ -131,6 +122,9 @@ SvcReportSuccessEvent(LPCTSTR p_message)
   HANDLE hEventSource;
   LPCTSTR lpszStrings[2];
 
+  // Be sure our event system is started
+  SvcStartEventBuffer();
+
   hEventSource = OpenEventLog(nullptr,g_svcname);
 
   if(hEventSource != nullptr)
@@ -166,7 +160,10 @@ SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_me
   TCHAR   buffer2[256];
   int     lastError = GetLastError();
 
-  SvcAllocEventBuffer();
+  // Be sure our event system is started
+  SvcStartEventBuffer();
+
+//  AutoCritSec lock(&g_eventBufferLock);
   if(p_doFormat)
   {
     va_list vl;
@@ -203,5 +200,8 @@ SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_me
   }
 
   // Create alert file if requested
-    CreateAlert(szFunction,buffer2,g_eventBuffer,p_module);
+  if(p_module)
+  {
+    CreateAlert(szFunction, buffer2, g_eventBuffer, p_module);
+  }
 }

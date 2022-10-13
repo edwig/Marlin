@@ -104,9 +104,6 @@ int main(int argc,char* argv[],char* /*envp[]*/)
   // Load ServerApp constants before anything else
   LoadConstants(argv[0]);
 
-  // Start the event buffer system
-  SvcStartEventBuffer();
-
   // Read the products config file
   ReadConfig();
 
@@ -453,9 +450,6 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
 
       SvcReportSuccessEvent(XString(PRODUCT_NAME) + " server is stopped.");
       ReportSvcStatus(SERVICE_STOPPED,NO_ERROR,0);
-
-      // Deallocate the logging buffer of the server
-      SvcFreeEventBuffer();
       return;
     }
   }
@@ -1347,7 +1341,6 @@ BOOL SvcInitStandAlone()
 
       SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server stopped.");
       ReportSvcStatusStandAlone(SERVICE_STOPPED);
-      SvcFreeEventBuffer();
       break;
     }
     return TRUE;
@@ -1566,10 +1559,6 @@ StandAloneStop()
   printf("Service stopped successfully\n");
 
 end_of_stop_standalone:
-
-  // Remove the message DLL for the WMI windows logging system
-  DeleteEventLogRegistration();
-
   // EOT = End of transmission. 
   // Looks very strange, and it IS!!
   // But it's the only way to work with a stream

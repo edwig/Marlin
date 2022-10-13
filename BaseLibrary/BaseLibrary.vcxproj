@@ -151,6 +151,7 @@
     <ClInclude Include="StackTrace.h" />
     <ClInclude Include="StdException.h" />
     <ClInclude Include="StoreMessage.h" />
+    <ClInclude Include="XStringBuilder.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="unzip.h" />
     <ClInclude Include="WideMessageBox.h" />
@@ -228,6 +229,7 @@
     <ClCompile Include="StackTrace.cpp" />
     <ClCompile Include="StdException.cpp" />
     <ClCompile Include="StoreMessage.cpp" />
+    <ClCompile Include="XStringBuilder.cpp" />
     <ClCompile Include="unzip.cpp" />
     <ClCompile Include="WideMessageBox.cpp" />
     <ClCompile Include="WinFile.cpp" />
