@@ -536,6 +536,10 @@ WebSocketServerIIS::ServerHandshake(HTTPMessage* p_message)
   m_protocols  = p_message->GetHeader("Sec-WebSocket-Protocol");
   m_extensions = p_message->GetHeader("Sec-WebSocket-Extensions");
 
+  // But do not reflect it back. We do not support extensions (yet)
+  // if we do not remove it, Google-Chrome WebSockets will not work!!
+  p_message->DelHeader("Sec-WebSocket-Extensions");
+
   // Change header fields
   p_message->DelHeader("Sec-WebSocket-Key");
   p_message->AddHeader("Sec-WebSocket-Accept",serverKey);
