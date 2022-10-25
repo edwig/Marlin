@@ -536,8 +536,8 @@ WebSocketServerIIS::ServerHandshake(HTTPMessage* p_message)
   m_protocols  = p_message->GetHeader("Sec-WebSocket-Protocol");
   m_extensions = p_message->GetHeader("Sec-WebSocket-Extensions");
 
-  // But do not reflect it back. We do not support extensions (yet)
-  // if we do not remove it, Google-Chrome WebSockets will not work!!
+  // But do not reflect it back. We do not support RFC 7692 Compression extensions
+  // If we do not remove it, Google-Chrome WebSockets will not work!!
   p_message->DelHeader("Sec-WebSocket-Extensions");
 
   // Change header fields
