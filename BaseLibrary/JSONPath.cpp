@@ -276,7 +276,7 @@ JSONPath::FindDelimiterType(XString& p_parsing)
 // -> ".book.*"
 // -> ".*"
 bool
-JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex)
+JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex,bool& p_isFilter)
 {
   char firstChar  = p_parsing.GetAt(0);
   char secondChar = p_parsing.GetAt(1);
@@ -284,10 +284,12 @@ JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex)
   // Reset
   p_token.Empty();
   p_isIndex = false;
+  p_isFilter = false;
 
   // Special case: recursive
   if(firstChar == '.' && secondChar == '.')
   {
+    m_rootWord = m_rootWord + firstChar + secondChar;
     m_recursive = true;
     p_parsing = p_parsing.Mid(1);
     firstChar = secondChar;
@@ -297,6 +299,7 @@ JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex)
   // Special case: Wildcard
   if(firstChar == '.' && secondChar == '*')
   {
+    m_rootWord += m_rootWord + firstChar + secondChar;
     p_token = "*";
     p_parsing = p_parsing.Mid(2);
     return true;
@@ -328,6 +331,7 @@ JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex)
       p_token = p_parsing.Mid(1);
       p_parsing.Empty();
     }
+    m_rootWord += p_token;
     return true;
   }
 
@@ -339,7 +343,7 @@ JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex)
   }
 
   // Find an index subscription
-  if(firstChar == '[')
+  if(firstChar == '[' && secondChar != '?')
   {
     int pos = p_parsing.Find(']');
     if(pos >= 2)
@@ -362,6 +366,20 @@ JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex)
       p_token = p_token.Trim('\'');
     }
     return true;
+  }
+
+  // Find a filter expression
+  if(firstChar == '[' && secondChar == '?')
+  {
+    int pos = p_parsing.Find(']');
+    if(pos >= 3)
+    {
+      p_token    = p_parsing.Mid(2,pos - 2);
+      p_parsing  = p_parsing.Mid(pos + 3);
+      p_token    = p_token.Trim();
+      p_isFilter = true;
+      return true;
+    }
   }
 
   // Not a valid path expression
@@ -463,13 +481,13 @@ JSONPath::ProcessSlice(XString p_token)
 }
 
 // Proces token BNF: num,num,num
-// Tokan has least one ',' seperator
+// Token has least one ',' seperator
 void 
 JSONPath::ProcessUnion(XString p_token)
 {
   while(!p_token.IsEmpty())
   {
-    size_t index = atoi(p_token) - (size_t)m_origin;
+    size_t index = atoi(p_token) - m_origin;
     int pos = p_token.Find(',');
     if(pos > 0)
     {
@@ -495,6 +513,148 @@ JSONPath::ProcessUnion(XString p_token)
     }
   }
   m_status = JPStatus::JP_Match_array;
+}
+
+void
+JSONPath::ProcessFilter(XString p_token)
+{  
+  // Remove all spaces
+  XString token{ "" };
+  for(int i = 0; i < p_token.GetLength(); i++)
+  {
+    if(!isspace(p_token.GetAt(i)))
+    {
+      token += p_token.GetAt(i);
+    }
+  }
+  ProcessFilterTokenCharacters(token);
+}
+
+void 
+JSONPath::ProcessFilterTokenCharacters(XString p_token)
+{
+  int pos = 0;
+  while(pos < p_token.GetLength())
+  {
+    HandleLogicalNot(p_token,pos);
+    pos++;
+  }
+}
+
+int 
+JSONPath::GetCurrentCharacter(XString p_token,int& p_pos)
+{
+  for(;;)
+  {
+    if(isspace(p_token.GetAt(p_pos)))
+    {
+      p_pos++;
+    }
+    else
+    {
+      return p_token.GetAt(p_pos);
+    }
+  }
+}
+
+int 
+JSONPath::GetNextCharacter(XString p_token,int& p_pos)
+{
+  int ch = -1;
+  if(p_pos + 1 <= p_token.GetLength())
+  {
+    ch = p_token.GetAt(p_pos + 1);
+  }
+  return ch;
+}
+
+int 
+JSONPath::GetEndOfPart(XString p_token,int& p_pos)
+{
+  // End can either be ')', '&&', '||', ' ' or end of string
+  int parenthesisPos = p_token.Find(')',p_pos);
+  int andPos   = p_token.Find("&&",p_pos);
+  int orPos    = p_token.Find("||",p_pos);
+  int spacePos = p_token.Find(" ",p_pos);
+
+  int tempPos = p_token.GetLength();
+  if(parenthesisPos > 0 &&
+    (parenthesisPos < andPos   || andPos   < 0) &&
+    (parenthesisPos < orPos    || orPos    < 0) &&
+    (parenthesisPos < spacePos || spacePos < 0))
+  {
+    tempPos = parenthesisPos;
+  }
+  else if(andPos > 0 &&
+    (andPos < parenthesisPos || parenthesisPos < 0) &&
+    (andPos < orPos    || orPos    < 0) &&
+    (andPos < spacePos || spacePos < 0))
+  {
+    tempPos = andPos;
+  }
+  else if(orPos > 0 &&
+    (orPos < parenthesisPos || parenthesisPos < 0) &&
+    (orPos < andPos   || andPos   < 0) &&
+    (orPos < spacePos || spacePos < 0))
+  {
+    tempPos = orPos;
+  }
+  else if(spacePos > 0 &&
+    (spacePos < parenthesisPos || parenthesisPos < 0) &&
+    (spacePos < andPos || andPos < 0) &&
+    (spacePos < orPos  || orPos  < 0))
+  {
+    tempPos = spacePos;
+  }
+  return tempPos;
+}
+
+void
+JSONPath::EvaluateFilter(Relation relation)
+{
+  bool contains{false};
+
+  if(m_results.empty())
+  {
+    if(m_searching->GetDataType() == JsonType::JDT_array)
+    {
+      for(int index = 0; index < m_searching->GetArray().size(); index++)
+      {
+        for(JSONpair pair : m_searching->GetArray().at(index).GetObject())
+        {
+          if(pair.m_name.Compare(relation.leftSide) == 0)
+          {
+            if(EvaluateFilterClause(relation,pair.m_value))
+            {
+              m_results.push_back(&m_searching->GetArray().at(index));
+              m_status = JPStatus::JP_Match_array;
+            };
+          }
+          else if(relation.leftSide.IsEmpty() && !relation.rightSide.IsEmpty())
+          {
+            if(relation.clause.CompareNoCase("!") == 0 || relation.clause.CompareNoCase("~") == 0)
+            {
+              if(pair.m_name.Compare(relation.rightSide) == 0)
+              {
+                contains = true;
+              }
+            }
+          }
+        }
+        // If contains is false here, the current rightside is not in the object
+        if(!contains && relation.clause.CompareNoCase("!") == 0)
+        {
+          m_results.push_back(&m_searching->GetArray().at(index));
+          m_status = JPStatus::JP_Match_array;
+        }
+        else if(contains && relation.clause.CompareNoCase("~") == 0)
+        {
+          m_results.push_back(&m_searching->GetArray().at(index));
+          m_status = JPStatus::JP_Match_array;
+        }
+      }
+    }
+  }
 }
 
 bool
@@ -525,8 +685,9 @@ JSONPath::ParseLevel(XString& p_parsing)
 
   XString token;
   bool isIndex = false;
+  bool isFilter = false;
 
-  if(GetNextToken(p_parsing,token,isIndex))
+  if(GetNextToken(p_parsing,token,isIndex,isFilter))
   {
     // Check for special recursive operator
     if(token.IsEmpty() && m_recursive)
@@ -561,7 +722,7 @@ JSONPath::ParseLevel(XString& p_parsing)
         }
 
         // Search on through this array
-        size_t index = atoi(token) - (size_t) m_origin;
+        size_t index = atoi(token) - m_origin;
         if(index < 0)
         {
           // Negative index, take it from the end
@@ -575,6 +736,19 @@ JSONPath::ParseLevel(XString& p_parsing)
         }
         // ERROR Index-out-of-bounds
         m_errorInfo.Format("Array index out of bounds: %d",(int)index);
+      }
+    }
+    else if(isFilter)
+    {
+      if(m_searching->GetDataType() == JsonType::JDT_array)
+      {
+        // Remove outer brackets
+        if(token.GetAt(0) == '(' && token.GetAt(token.GetLength() - 1) == ')')
+        {
+          token = token.Mid(1,token.GetLength() - 2);
+        }
+        ProcessFilter(token);
+        return false;
       }
     }
     else
@@ -596,3 +770,339 @@ JSONPath::ParseLevel(XString& p_parsing)
   return false;
 }
 
+void 
+JSONPath::HandleLogicalNot(XString p_token,int& p_pos)
+{
+  HandleRelationOperators(p_token,p_pos);
+  // Handle logical Not
+  if(GetCurrentCharacter(p_token,p_pos) == '!' && GetNextCharacter(p_token,p_pos) != '=')
+  {
+    int tempPos = GetEndOfPart(p_token,p_pos);
+
+    // Looks like !@.isbn
+    XString rightSide = p_token.Mid(p_pos,tempPos - p_pos);
+    p_pos = tempPos - 1;
+    rightSide.Replace("!@.","");
+    rightSide = rightSide.Trim();
+
+    Relation relation;
+    relation.clause = "!";
+    relation.leftSide = "";
+    relation.rightSide = rightSide;
+
+    // Now evaluate
+    EvaluateFilter(relation);
+  }
+  else if(GetCurrentCharacter(p_token,p_pos) == '@' && GetNextCharacter(p_token,p_pos) == '.')
+  {
+    // Check for @.isbn
+    int tempPos = GetEndOfPart(p_token,p_pos);
+
+    XString rightSide = p_token.Mid(0,tempPos);
+    // If the rightSide does not contain an operator, it looks like @.isbn
+    bool containsOperator{ false };
+    for(int i = 0; i < rightSide.GetLength(); i++)
+    {
+      XString op = DetermineRelationalOperator(rightSide,i);
+      if(!op.IsEmpty())
+      {
+        containsOperator = true;
+        break;
+      }
+    }
+
+    if(!containsOperator)
+    {
+      p_pos = tempPos - 1;
+      rightSide.Replace("@.","");
+      rightSide = rightSide.Trim();
+
+      Relation relation;
+      relation.clause    = "~";
+      relation.leftSide  = "";
+      relation.rightSide = rightSide;
+
+      // Now evaluate
+      EvaluateFilter(relation);
+    }
+  };
+}
+
+void 
+JSONPath::HandleRelationOperators(XString p_token,int& p_pos)
+{
+  HandleLogicalAnd(p_token,p_pos);
+  // Handle relational operators
+  XString op = DetermineRelationalOperator(p_token,p_pos);
+  if(!op.IsEmpty())
+  {
+    p_pos++;
+
+    // Look for the end of the current filterpart
+    int tempPos = GetEndOfPart(p_token,p_pos);
+
+    // Determine left side
+    XString leftSide = p_token.Mid(0,p_pos);
+    leftSide.Replace(op,"");
+    leftSide = leftSide.Trim();
+    leftSide.Replace("@.","");
+
+    // Determine right side
+    XString rightSide = p_token.Mid(p_pos,tempPos - p_pos).Trim();
+    p_pos = tempPos - 1;
+
+    rightSide.Replace("@.","");
+    rightSide.Replace("'","");
+
+    Relation relation;
+    relation.clause    = op;
+    relation.leftSide  = leftSide;
+    relation.rightSide = rightSide;
+
+    // Now evaluate
+    EvaluateFilter(relation);
+  };
+}
+
+void 
+JSONPath::HandleLogicalAnd(XString p_token,int& p_pos)
+{
+  HandleLogicalOr(p_token,p_pos);
+  // logical and afhandelen
+  if(GetCurrentCharacter(p_token,p_pos) == '&')
+  {
+    if(GetNextCharacter(p_token,p_pos) == '&')
+    {
+      p_pos += 2;
+      XString rightSide;
+      rightSide = p_token.Mid(p_pos,p_token.GetLength()).Trim();
+
+      // Deel na "&&" apart evalueren
+      JSONPath path(m_message,"$" + m_rootWord + "[?(" + rightSide + ")]");
+      JPResults newResults;
+
+      bool exist = false;
+      // We voegen het resultaat uit path.m_results alleen toe als het al in this.m_results aanwezig is
+      if(path.GetNumberOfMatches() == 1)
+      {
+        for(JSONvalue* val : m_results)
+        {
+          if(val == path.GetFirstResult())
+          {
+            exist = true;
+            break;
+          }
+        }
+        if(exist)
+        {
+          newResults.push_back(path.GetFirstResult());
+        }
+      }
+      else if(path.GetNumberOfMatches() > 1)
+      {
+        for(int index = 0; index < (int)path.GetNumberOfMatches(); ++index)
+        {
+          exist = false;
+          for(JSONvalue* val : m_results)
+          {
+            if(val == path.GetResult(index))
+            {
+              exist = true;
+              break;
+            }
+          }
+          if(exist)
+          {
+            newResults.push_back(path.GetResult(index));
+          }
+        }
+      }
+      m_results = newResults;
+      p_pos += rightSide.GetLength();
+    }
+  }
+}
+
+void 
+JSONPath::HandleLogicalOr(XString p_token,int& p_pos)
+{
+  HandleBrackets(p_token,p_pos);
+  // logical or afhandelen
+  if(GetCurrentCharacter(p_token,p_pos) == '|')
+  {
+    if(GetNextCharacter(p_token,p_pos) == '|')
+    {
+      p_pos += 2;
+      XString rightSide;
+      rightSide = p_token.Mid(p_pos,p_token.GetLength()).Trim();
+
+      // Deel na "||" apart evalueren
+      JSONPath path(m_message,"$" + m_rootWord + "[?(" + rightSide + ")]");
+
+      // Resultaat uit path.m_results alleen toevoegen indien nog niet aanwezig
+      bool exist = false;
+      if(path.GetNumberOfMatches() == 1)
+      {
+        for(JSONvalue* val : m_results)
+        {
+          if(val == path.GetFirstResult())
+          {
+            exist = true;
+            break;
+          }
+        }
+        if(!exist)
+        {
+          m_results.push_back(path.GetFirstResult());
+        }
+      }
+      else if(path.GetNumberOfMatches() > 1)
+      {
+        for(int index = 0; index < (int)path.GetNumberOfMatches(); ++index)
+        {
+          exist = false;
+          for(JSONvalue* val : m_results)
+          {
+            if(val == path.GetResult(index))
+            {
+              exist = true;
+              break;
+            }
+          }
+          if(!exist)
+          {
+            m_results.push_back(path.GetResult(index));
+          }
+        }
+      }
+      p_pos += rightSide.GetLength();
+    }
+  }
+}
+
+void 
+JSONPath::HandleBrackets(XString p_token,int& p_pos)
+{
+  if(GetCurrentCharacter(p_token,p_pos) == '(')
+  {
+    m_bracketStack.push((char)GetCurrentCharacter(p_token,p_pos));
+    if(GetNextCharacter(p_token,p_pos) != '(')
+    {
+      int closingBracket = p_token.Find(")",p_pos);
+      if(closingBracket > p_pos)
+      {
+        p_pos++;
+        XString token = p_token.Mid(p_pos,closingBracket - p_pos);
+        ProcessFilter(token);
+        p_pos += token.GetLength() - 1;
+      }
+    }
+  }
+  else if(GetCurrentCharacter(p_token,p_pos) == ')')
+  {
+    m_bracketStack.pop();
+  }
+}
+
+XString
+JSONPath::DetermineRelationalOperator(XString p_token,int& p_pos)
+{
+  switch(GetCurrentCharacter(p_token,p_pos))
+  {
+    case '=': if(GetNextCharacter(p_token,p_pos) == '=')
+              {
+                p_pos++;
+                return "==";
+              }
+              return "";
+    case '!': if(GetNextCharacter(p_token,p_pos) == '=')
+              {
+                p_pos++;
+                return "!=";
+              }
+              return "";
+    case '<': if(GetNextCharacter(p_token,p_pos) == '=')
+              {
+                p_pos++;
+                return "<=";
+              }
+              return "<";
+    case '>': if(GetNextCharacter(p_token,p_pos) == '=')
+              {
+                p_pos++;
+                return ">=";
+              }
+              return ">";
+    default:  return "";
+  }
+}
+
+bool 
+JSONPath::EvaluateFilterClause(Relation p_filter,JSONvalue p_value)
+{
+  JsonType type = p_value.GetDataType();
+  if(p_filter.clause.Compare("==") == 0)
+  {
+    switch(type)
+    {
+      case JsonType::JDT_string:     return p_value.GetString()    == p_filter.rightSide;
+      case JsonType::JDT_number_int: return p_value.GetNumberInt() == atoi(p_filter.rightSide);
+      case JsonType::JDT_number_bcd: return p_value.GetNumberBcd() == atof(p_filter.rightSide);
+    }
+  }
+  else if(p_filter.clause.Compare("!=") == 0)
+  {
+    switch(type)
+    {
+      case JsonType::JDT_string:     return p_value.GetString()    != p_filter.rightSide;
+      case JsonType::JDT_number_int: return p_value.GetNumberInt() != atoi(p_filter.rightSide);
+      case JsonType::JDT_number_bcd: return p_value.GetNumberBcd() != atof(p_filter.rightSide);
+    }
+  }
+  else if(p_filter.clause.Compare("<") == 0)
+  {
+    switch(type)
+    {
+      case JsonType::JDT_string:     return p_value.GetString()    < p_filter.rightSide;
+      case JsonType::JDT_number_int: return p_value.GetNumberInt() < atoi(p_filter.rightSide);
+      case JsonType::JDT_number_bcd: return p_value.GetNumberBcd() < atof(p_filter.rightSide);
+    }
+  }
+  else if(p_filter.clause.Compare("<=") == 0)
+  {
+    switch(type)
+    {
+      case JsonType::JDT_string:     return p_value.GetString()    <= p_filter.rightSide;
+      case JsonType::JDT_number_int: return p_value.GetNumberInt() <= atoi(p_filter.rightSide);
+      case JsonType::JDT_number_bcd: return p_value.GetNumberBcd() <= atof(p_filter.rightSide);
+    }
+  }
+  else if(p_filter.clause.Compare(">") == 0)
+  {
+    switch(type)
+    {
+      case JsonType::JDT_string:     return p_value.GetString()    > p_filter.rightSide;
+      case JsonType::JDT_number_int: return p_value.GetNumberInt() > atoi(p_filter.rightSide);
+      case JsonType::JDT_number_bcd: return p_value.GetNumberBcd() > atof(p_filter.rightSide);
+    }
+  }
+  else if(p_filter.clause.Compare(">=") == 0)
+  {
+    switch(type)
+    {
+      case JsonType::JDT_string:     return p_value.GetString()    >= p_filter.rightSide;
+      case JsonType::JDT_number_int: return p_value.GetNumberInt() >= atoi(p_filter.rightSide);
+      case JsonType::JDT_number_bcd: return p_value.GetNumberBcd() >= atof(p_filter.rightSide);
+    }
+  }
+  else if(p_filter.clause.IsEmpty() && p_filter.leftSide.IsEmpty() && !p_filter.rightSide.IsEmpty())
+  {
+    switch(type)
+    {
+      case JsonType::JDT_string:     return p_value.GetString()    >= p_filter.rightSide;
+      case JsonType::JDT_number_int: return p_value.GetNumberInt() >= atoi(p_filter.rightSide);
+      case JsonType::JDT_number_bcd: return p_value.GetNumberBcd() >= atof(p_filter.rightSide);
+    }
+  }
+  return false;
+}

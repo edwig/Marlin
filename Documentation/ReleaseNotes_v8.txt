@@ -14,6 +14,12 @@ that can be shared with other library modules like SQLComponents and CXHibernate
 2)  Extra checks on the initial handling of an incoming SSE event channel. If the channel cannnot
     be authenticated, the server must bail-out correctly and destroy the new stream.
 
+CHANGES IN VERSION 8.1.3 of 31-10-2022
+--------------------------------------
+1)  Updated to BaseLibrary 1.0.8. With JSONPath filters.
+2)  Simpler and reliable fixes for the EventLogRegistration.
+3)  Added websocket test HTML and minimal script example.
+
 CHANGES IN VERSION 8.1.2 of 29-09-2022
 --------------------------------------
 1)  Updated the BaseLibrary for the Code Analysis corrections

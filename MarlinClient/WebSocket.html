@@ -30,7 +30,7 @@
         };
 
         myWebSocket.onclose = function(evt) {
-            setTimeout(connectToWS,500);
+            setTimeout(connectToWS,1000);
             console.log("onclose.");
             return false;
         };

@@ -1116,7 +1116,7 @@ int ZLIB_INTERNAL _tr_tally (deflate_state* s,unsigned dist,unsigned lc)
 
         if(lc < MAX_MATCH - MIN_MATCH + 1)
         {
-        s->dyn_ltree[_length_code[lc]+LITERALS+1].Freq++;
+          s->dyn_ltree[_length_code[lc] + LITERALS + 1].Freq++;
         }
         s->dyn_dtree[d_code(dist)].Freq++;
     }
@@ -1176,12 +1176,12 @@ local void compress_block(deflate_state* s,const ct_data* ltree,const ct_data*  
             code = d_code(dist);
             if(code < D_CODES)
             {
-            send_code(s, code, dtree);       /* send the distance code */
+              send_code(s,code,dtree);       /* send the distance code */
             extra = extra_dbits[code];
               if(extra != 0)
               {
                 dist -= base_dist[code];
-                send_bits(s, dist, extra);   /* send the extra distance bits */
+                send_bits(s,dist,extra);   /* send the extra distance bits */
               }
             }
             else

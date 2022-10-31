@@ -58,6 +58,7 @@
 // $.one.two[:8:2]          -> Slice operator, array elements 0,2,4,6
 // $.one.two[2::3]          -> Slice operator, array elements 3,6,9,...
 // $.one.two[3,4,7]         -> Union operator, array elements 4,5,8
+// $.(?<filter>)            -> Filters with || (or), && (and), <, >, <=, >=, == and !=
 //
 // STILL TO BE IMPLEMENTED:
 // ------------------------
@@ -65,7 +66,6 @@
 //   $.one['two','five']    -> Selects object pairs 'two' and 'five' from object 'one'
 // - The combination of slice and union operators
 //   $.one.two[2,4,12:17]   -> Selects array elements 3,5,13,14,15,16
-// - Query operator '?'               (mentioned but not implemented in the draft)
 // - Expression selection with (...)  (mentioned but not implemented in the draft)
 // 
 //////////////////////////////////////////////////////////////////////////////
@@ -73,9 +73,17 @@
 #pragma once
 #include "JSONPointer.h"
 #include <vector>
+#include <stack>
 
 class JSONMessage;
 using JPResults = std::vector<JSONvalue*>;
+
+struct Relation
+{
+  CString leftSide;
+  CString rightSide;
+  CString clause;
+};
 
 class JSONPath
 {
@@ -109,10 +117,23 @@ private:
   void PresetStatus();
   bool ParseLevel(XString& p_parsing);
   bool FindDelimiterType(XString& p_parsing);
-  bool GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex);
+  bool    GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex,bool& p_isFilter);
   void ProcessWildcard();
   void ProcessSlice(XString p_token);
   void ProcessUnion(XString p_token);
+  void    ProcessFilter(XString p_token);
+  void    ProcessFilterTokenCharacters(XString p_token);
+  int     GetCurrentCharacter(XString p_token,int& p_pos);
+  int     GetNextCharacter(XString p_token,int& p_pos);
+  int     GetEndOfPart(XString p_token,int& p_pos);
+  void    EvaluateFilter(Relation relation);
+  XString DetermineRelationalOperator(XString p_token,int& p_pos);
+  bool    EvaluateFilterClause(Relation p_filter,JSONvalue p_value);
+  void    HandleLogicalNot(XString p_token,int& p_pos);
+  void    HandleRelationOperators(XString p_token,int& p_pos);
+  void    HandleLogicalAnd(XString p_token,int& p_pos);
+  void    HandleLogicalOr(XString p_token,int& p_pos);
+  void    HandleBrackets(XString p_token,int& p_pos);
 
   // DATA
   XString      m_path;
@@ -123,6 +144,8 @@ private:
   JSONvalue*   m_searching { nullptr };
   bool         m_recursive { false   };
   XString      m_errorInfo;
+  XString           m_rootWord  { "" };
+  std::stack<char>  m_bracketStack;
 
   // RESULT Pointers
   JPResults    m_results;
