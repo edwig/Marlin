@@ -435,7 +435,7 @@ ErrorReport::Report(int p_signal,unsigned int p_skip /* = 0 */,XString p_directo
     subject.Format("Unknown signal (%d)", p_signal);
   }
   // Getting the stacktrace
-  StackTrace trace(p_skip + 1);
+  StackTrace trace(p_skip);
 
   // Sending an error report
   g_instance->DoReport(subject,trace,p_directory,p_url);

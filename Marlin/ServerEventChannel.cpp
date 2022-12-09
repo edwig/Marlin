@@ -300,7 +300,7 @@ ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket
   bool found = false;
   for(auto& sock : m_sockets)
   {
-    if(sock.m_url.Compare(url) == 0)
+    if(sock.m_open && sock.m_url.Compare(url) == 0)
     {
       found = true;
     }
@@ -732,7 +732,7 @@ ServerEventChannel::CloseSocket(WebSocket* p_socket)
 {
   DETAILLOGV("Closing WebSocket for event channel [%s] Queue size: %d",m_name.GetString(),(int)m_outQueue.size());
   p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"ServerEventDriver is closing channel");
-  p_socket->CloseSocket();
+  Sleep(200); // Wait for close before deleting the socket
   m_server->UnRegisterWebSocket(p_socket);
 }
 

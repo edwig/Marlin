@@ -981,7 +981,7 @@ HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,XString p_body)
   p_message->GetFileBuffer()->Reset();
   p_message->GetFileBuffer()->SetBuffer((uchar*)p_body.GetString(),p_body.GetLength());
   p_message->SetContentType("application/json");
-  p_message->SetStatus(412);
+  p_message->SetStatus(HTTP_STATUS_OK);
   SendResponse(p_message);
 }
 
