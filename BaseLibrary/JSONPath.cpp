@@ -371,7 +371,7 @@ JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex,bool&
   // Find a filter expression
   if(firstChar == '[' && secondChar == '?')
   {
-    int pos = p_parsing.Find(']');
+    int pos = FindMatchingBracket(p_parsing,0);
     if(pos >= 3)
     {
       p_token    = p_parsing.Mid(2,pos - 2);
@@ -518,11 +518,21 @@ JSONPath::ProcessUnion(XString p_token)
 void
 JSONPath::ProcessFilter(XString p_token)
 {  
-  // Remove all spaces
+  // Remove all spaces if not within single quotes
   XString token{ "" };
+  int opening = -1;
   for(int i = 0; i < p_token.GetLength(); i++)
   {
-    if(!isspace(p_token.GetAt(i)))
+    if(opening >= 0 && p_token.GetAt(i) != '\'')
+    {
+      token += p_token.GetAt(i);
+    } 
+    else if(p_token.GetAt(i) == '\'')
+    {
+      token += p_token.GetAt(i);
+      opening = i;
+    }
+    else if(!isspace(p_token.GetAt(i)))
     {
       token += p_token.GetAt(i);
     }
@@ -575,36 +585,31 @@ JSONPath::GetEndOfPart(XString p_token,int& p_pos)
   int parenthesisPos = p_token.Find(')',p_pos);
   int andPos   = p_token.Find("&&",p_pos);
   int orPos    = p_token.Find("||",p_pos);
-  int spacePos = p_token.Find(" ",p_pos);
 
   int tempPos = p_token.GetLength();
   if(parenthesisPos > 0 &&
     (parenthesisPos < andPos   || andPos   < 0) &&
-    (parenthesisPos < orPos    || orPos    < 0) &&
-    (parenthesisPos < spacePos || spacePos < 0))
+    (parenthesisPos < orPos    || orPos    < 0))
   {
     tempPos = parenthesisPos;
   }
   else if(andPos > 0 &&
     (andPos < parenthesisPos || parenthesisPos < 0) &&
-    (andPos < orPos    || orPos    < 0) &&
-    (andPos < spacePos || spacePos < 0))
+    (andPos < orPos    || orPos    < 0))
   {
     tempPos = andPos;
   }
   else if(orPos > 0 &&
     (orPos < parenthesisPos || parenthesisPos < 0) &&
-    (orPos < andPos   || andPos   < 0) &&
-    (orPos < spacePos || spacePos < 0))
+    (orPos < andPos   || andPos   < 0))
   {
     tempPos = orPos;
   }
-  else if(spacePos > 0 &&
-    (spacePos < parenthesisPos || parenthesisPos < 0) &&
-    (spacePos < andPos || andPos < 0) &&
-    (spacePos < orPos  || orPos  < 0))
+
+  // return end of part encased in quotes if applicable
+  if(WithinQuotes(p_token,p_pos,tempPos))
   {
-    tempPos = spacePos;
+    tempPos = p_token.GetLength();
   }
   return tempPos;
 }
@@ -710,6 +715,24 @@ JSONPath::ParseLevel(XString& p_parsing)
         bool isSlice = token.Find(':') > 0 && p_parsing.IsEmpty();
         bool isUnion = token.Find(',') > 0 && p_parsing.IsEmpty();
 
+        // Check correct use of brackets
+        int found = -1;
+        for(int i = 0; i < token.GetLength(); i++)
+        {
+          if(token.GetAt(i) == '[')
+          {
+            found = FindMatchingBracket(token,i);
+            if(found < 0)
+            {
+              m_errorInfo = "Could not parse index filter in JsonPath: " + m_path;
+              return false;
+            }
+          }
+        }
+
+        // We do allow trailing brackets. So remove trailing ']'
+        p_parsing.Remove(']');
+
         if(isSlice)
         {
           ProcessSlice(token);
@@ -748,6 +771,10 @@ JSONPath::ParseLevel(XString& p_parsing)
           token = token.Mid(1,token.GetLength() - 2);
         }
         ProcessFilter(token);
+        if(m_bracketStack.size() > 0)
+        {
+          m_errorInfo.Format("Missing ')' in filter: " + token);
+        }
         return false;
       }
     }
@@ -988,11 +1015,11 @@ JSONPath::HandleBrackets(XString p_token,int& p_pos)
     m_bracketStack.push((char)GetCurrentCharacter(p_token,p_pos));
     if(GetNextCharacter(p_token,p_pos) != '(')
     {
-      int closingBracket = p_token.Find(")",p_pos);
+      int closingBracket = FindMatchingBracket(p_token,p_pos);
       if(closingBracket > p_pos)
       {
         p_pos++;
-        XString token = p_token.Mid(p_pos,closingBracket - p_pos);
+        XString token = p_token.Mid(p_pos,closingBracket - 1);
         ProcessFilter(token);
         p_pos += token.GetLength() - 1;
       }
@@ -1000,8 +1027,103 @@ JSONPath::HandleBrackets(XString p_token,int& p_pos)
   }
   else if(GetCurrentCharacter(p_token,p_pos) == ')')
   {
+    if(m_bracketStack.size() > 0)
+    {
     m_bracketStack.pop();
   }
+    else
+    {
+      m_errorInfo.Format("Unexpected token ')'");
+    }
+  }
+}
+
+// Check if a given char is within quotes
+bool 
+JSONPath::WithinQuotes(XString p_token,int p_pos,int p_charPos)
+{
+  int openingSingleQoute = p_token.Find('\'',p_pos);
+  int endingSingleQoute  = openingSingleQoute >= 0 ? p_token.Find('\'',openingSingleQoute + 1) : -1;
+  if(endingSingleQoute > openingSingleQoute)
+  {
+    return p_charPos > openingSingleQoute && p_charPos < endingSingleQoute;
+  }
+  return false;
+}
+
+int
+JSONPath::FindMatchingBracket(const CString& p_string, int p_bracketPos)
+{
+  char bracket = p_string[p_bracketPos];
+  char match   = char(0);
+  bool reverse = false;
+
+  switch (bracket)
+  {
+    case '(':    match = ')';    break;
+    case '{':    match = '}';    break;
+    case '[':    match = ']';    break;
+    case '<':    match = '>';    break;
+    case ')':    reverse = true;    
+                 match = '(';
+                 break;  
+    case '}':    reverse = true;
+                 match = '{';
+                 break;
+    case ']':    reverse = true;
+                 match = '[';
+                 break;
+    case '>':    reverse = true;
+                 match = '<';
+                 break;
+    default:     // Nothing to match
+                 return -1;
+  }
+
+  if (reverse)
+  {
+    for (int pos = p_bracketPos - 1, nest = 1; pos >= 0; --pos)
+    {
+      char c = p_string[pos];
+      if (c == bracket)
+      {
+        ++nest;
+      }
+      else if (c == match)
+      {
+        if (--nest == 0)
+        {
+          return pos;
+        }
+      }
+    }
+  }
+  else
+  {
+    for (int pos = p_bracketPos + 1, nest = 1, len = p_string.GetLength(); pos < len; ++pos)
+    {
+      char c = p_string[pos];
+
+      // skip finding matching bracket if encased in single qoutes
+      if(c == '\'')
+      {
+        pos = p_string.Find('\'',pos + 1);
+        continue;
+      }
+      if (c == bracket)
+      {
+        ++nest;
+      }
+      else if (c == match)
+      {
+        if (--nest == 0)
+        {
+          return pos;
+        }
+      }
+    }
+  }
+  return -1;
 }
 
 XString

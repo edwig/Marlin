@@ -244,8 +244,6 @@ HTTPServerSync::Cleanup()
       ERRORLOG(retCode,"Cannot close the HTTP server session");
     }
   }
-  // Reset error state
-  SetError(NO_ERROR);
 
   if(m_initialized)
   {
@@ -330,8 +328,7 @@ HTTPServerSync::Run()
     if((m_serverThread = (HANDLE)_beginthreadex(NULL,0,StartingTheServer,(void *)(this),0,&threadID)) == INVALID_HANDLE_VALUE)
     {
       m_serverThread = NULL;
-      tls_lastError = GetLastError();
-      ERRORLOG(tls_lastError,"Cannot create a thread for the MarlinServer.");
+      ERRORLOG(::GetLastError(),"Cannot create a thread for the MarlinServer.");
     }
   }
 }
@@ -661,10 +658,9 @@ HTTPServerSync::RunHTTPServer()
     }
 
     // Do error handler at the end of the mainloop
-    if(GetLastError())
+    if(::GetLastError())
     {
-      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Mainloop: %d",GetLastError());
-      SetError(NO_ERROR);
+      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Mainloop: %d",::GetLastError());
     }
   }
   // Free the request buffer
@@ -1195,10 +1191,8 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   if(GetLastError())
   {
     // Error handler
-    XString message = GetLastErrorAsString(tls_lastError);
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",GetLastError(),message.GetString());
-    // Reset the last error
-    SetError(NO_ERROR);
+    XString message = GetLastErrorAsString();
+    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",::GetLastError(),message.GetString());
   }
 
   // Possibly log and trace what we just sent

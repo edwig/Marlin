@@ -269,8 +269,6 @@ HTTPServerMarlin::Cleanup()
       ERRORLOG(retCode,"Cannot close the HTTP server session");
     }
   }
-  // Reset error state
-  SetError(NO_ERROR);
 
   if(m_initialized)
   {

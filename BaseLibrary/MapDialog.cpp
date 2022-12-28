@@ -118,9 +118,12 @@ MapDialog::~MapDialog()
   // Back to the original directory
   if(m_originalDir[0])
   {
-    if(_chdir((LPCSTR) m_originalDir) == 0)
+    if(_chdir((LPCSTR) m_originalDir) == -1)
+    {
+      if(errno != EINVAL)
     {
       assert(false);
+      }
     }
   }
 }

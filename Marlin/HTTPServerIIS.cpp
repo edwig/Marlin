@@ -1133,13 +1133,11 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     response->Flush(FALSE,moredata,&sent);
   }
 
-  if(GetLastError())
+  if(::GetLastError())
   {
     // Error handler
-    XString message = GetLastErrorAsString(tls_lastError);
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",GetLastError(),message.GetString());
-    // Reset the last error
-    SetError(NO_ERROR);
+    XString message = GetLastErrorAsString();
+    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",::GetLastError(),message.GetString());
   }
 
   // Possibly log and trace what we just sent

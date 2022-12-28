@@ -139,7 +139,7 @@ GetLastErrorAsString(DWORD p_error /*=0*/)
   DWORD dwError = p_error;
   if(dwError == 0)
   {
-    dwError = GetLastError();
+    dwError = ::GetLastError();
   }
   // Buffer that gets the error message string
   HLOCAL  hlocal = NULL;   
