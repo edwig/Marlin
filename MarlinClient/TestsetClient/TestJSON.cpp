@@ -591,7 +591,7 @@ int TestJSONPath(void)
                        "\t\t\t\t},\n"
                        "\t\t\t\t{\n"
                        "\t\t\t\t\t\"ford\": \"focus\",\n"
-                       "\t\t\t\t\t\"fiat\": \"750\"1,\n"
+                       "\t\t\t\t\t\"fiat\": \"750\",\n"
                        "\t\t\t\t\t\"seat\": \"leon\"\n"
                        "\t\t\t\t}\n"
                        "\t\t\t]\n"

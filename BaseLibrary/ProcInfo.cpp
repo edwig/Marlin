@@ -218,9 +218,9 @@ ProcInfo::GetSystemType()
     m_platform = "Windows 10 or greater.";
   }
   else if(IsWindows8Point1OrGreater())
-    {
+  {
     m_platform = "Windows 8.1 or greater.";
-    }
+  }
   else if(IsWindows8OrGreater())
   {
     m_platform = "Windows 8.0 or greater.";
@@ -230,9 +230,9 @@ ProcInfo::GetSystemType()
     m_platform = "Windows 7 SP1 or greater.";
   }
   else if(IsWindows7OrGreater())
-    {
+  {
     m_platform = "Windows 7 or greater.";
-    }
+  }
   else if(IsWindowsVistaSP2OrGreater())
   {
     m_platform = "Windows Vista SP2 or greater.";
@@ -242,9 +242,9 @@ ProcInfo::GetSystemType()
     m_platform = "Windows Vista SP1 or greater.";
   }
   else if(IsWindowsVistaOrGreater())
-    {
+  {
     m_platform = "Windows Vista or greater.";
-    }
+  }
   else if(IsWindowsXPSP3OrGreater())
   {
     m_platform = "Windows XP SP3 or greater";
@@ -254,11 +254,11 @@ ProcInfo::GetSystemType()
     m_platform = "Windows XP SP2 or greater";
   }
   else if(IsWindowsXPSP1OrGreater())
-                  {
+  {
     m_platform = "Windows XP SP1 or greater";
-                  }
+  }
   else if(IsWindowsXPOrGreater())
-                  {
+  {
     m_platform = "Windows XP or greater";
   }
 

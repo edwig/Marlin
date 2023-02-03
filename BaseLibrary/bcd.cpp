@@ -998,7 +998,7 @@ bcd::Round(int p_precision /*=0*/)
   precision += m_exponent;
 
   // Quick optimization
-  if(precision <= 0)
+  if(precision < 0)
   {
     Zero();
     return;
@@ -1084,7 +1084,7 @@ bcd::Truncate(int p_precision /*=0*/)
   precision += m_exponent;
 
   // Quick optimization
-  if(precision <= 0)
+  if(precision < 0)
   {
     // Number totally truncated
     Zero();

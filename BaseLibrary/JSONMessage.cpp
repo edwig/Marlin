@@ -844,8 +844,8 @@ JSONMessage::Reset(bool p_resetURL /*= true*/)
   // URL
   if(p_resetURL)
   {
-  m_url.Empty();
-  m_cracked.Reset();
+    m_url.Empty();
+    m_cracked.Reset();
   }
 
   // Leave the rest for the destination

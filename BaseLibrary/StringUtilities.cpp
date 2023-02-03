@@ -60,3 +60,39 @@ int SplitString(XString p_string,std::vector<XString>& p_vector,char p_separator
   }
   return (int)p_vector.size();
 }
+
+void NormalizeLineEndings(XString& p_string)
+{
+#define RETURNSTR "\r"
+#define LINEFEEDSTR "\n"
+
+  std::string tempStr(p_string.GetString());
+
+  int lfpos = -1;
+  while(true)
+  {
+    int crpos = (int)tempStr.find(RETURNSTR,++lfpos);
+        lfpos = (int)tempStr.find(LINEFEEDSTR,lfpos);
+
+    if(crpos >= 0)
+    {
+      if(lfpos == crpos + 1) //CRLF
+      {
+        continue;
+      }
+      else if(crpos < lfpos) //CR
+      {
+        lfpos = ++crpos;
+        tempStr.insert(lfpos,LINEFEEDSTR);
+        continue;
+      }
+    }
+    if(lfpos >= 0)           //LF
+    {
+      tempStr.insert(lfpos++,RETURNSTR);
+      continue;
+    }
+    break;
+  }
+  p_string = tempStr.c_str();
+}

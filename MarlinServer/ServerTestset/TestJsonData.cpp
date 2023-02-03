@@ -36,7 +36,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static int totalChecks = 8;
+static int totalChecks = 12;
 
 class SiteHandlerJsonData: public SiteHandlerJson
 {
@@ -49,6 +49,29 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
 {
   bool result = false;
   JSONvalue& val = p_message->GetValue();
+
+  // Test parameters in JSON Message
+  XString test = p_message->GetCrackedURL().GetParameter("test");
+  XString size = p_message->GetCrackedURL().GetParameter("size");
+  if(test != "2" || size != "medium large")
+  {
+    result = false;
+    xerror();
+  }
+  else
+  {
+    --totalChecks;
+  }
+  // Test headers in JSON message
+  if(p_message->GetHeader("GUID") != "888-777-666")
+  {
+    result = false;
+    xerror();
+  }
+  else
+  {
+    --totalChecks;
+  }
 
   if(val.GetDataType() == JsonType::JDT_string)
   {
@@ -74,28 +97,6 @@ SiteHandlerJsonData::Handle(JSONMessage* p_message)
       xerror();
     }
 
-    // Test parameters in JSON Message
-    XString test = p_message->GetCrackedURL().GetParameter("test");
-    XString size = p_message->GetCrackedURL().GetParameter("size");
-    if(test != "2" || size != "medium large")
-    {
-      result = false;
-      xerror();
-    }
-    else
-    {
-      --totalChecks;
-    }
-    // Test headers in JSON message
-    if(p_message->GetHeader("GUID") != "888-777-666")
-    {
-      result = false;
-      xerror();
-    }
-    else
-    {
-      --totalChecks;
-    }
   }
   else
   {
@@ -165,5 +166,9 @@ TestMarlinServer::AfterTestJsonData()
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
   qprintf("JSON Data tests processing                     : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  if(totalChecks > 0)
+  {
+    qprintf("JSON Data tests processing (not processed)     : %d\n",totalChecks);
+  }
   return totalChecks > 0;
 }

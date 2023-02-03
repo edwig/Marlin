@@ -635,7 +635,7 @@ WinFile::OpenAsSharedMemory(XString   p_name
     DWORD sizeHigh = p_size >> 32;
     if(m_file)
     {
-    m_file = CreateFileMapping(m_file,nullptr,protect,sizeLow,sizeHigh,p_name.GetString());
+      m_file = CreateFileMapping(m_file,nullptr,protect,sizeLow,sizeHigh,p_name.GetString());
     }
     if(m_file == NULL)
     {

@@ -731,8 +731,10 @@ JSONPath::ParseLevel(XString& p_parsing)
         }
 
         // We do allow trailing brackets. So remove trailing ']'
-        p_parsing.Remove(']');
-
+        if(found >= 0)
+        {
+          p_parsing.Remove(']');
+        }
         if(isSlice)
         {
           ProcessSlice(token);

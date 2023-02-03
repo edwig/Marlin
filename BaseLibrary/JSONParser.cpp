@@ -984,8 +984,8 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
       if(here)
       {
         if(here->GetDataType() == JsonType::JDT_const)
-      {
-        here->SetDatatype(JsonType::JDT_object);
+        {
+          here->SetDatatype(JsonType::JDT_object);
         }
         ParseLevel(*here,*element);
       }

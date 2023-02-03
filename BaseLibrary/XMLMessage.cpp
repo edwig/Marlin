@@ -250,7 +250,7 @@ XMLMessage::LoadFile(const XString& p_fileName)
 
     // Read the buffer
     size_t count = fread_s(buffer,length,1,length,file);
-      if(ferror(file) || count > length)
+    if(ferror(file) || count > length)
     {
       fclose(file);
       return false;

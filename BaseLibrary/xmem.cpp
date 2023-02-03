@@ -85,11 +85,11 @@ XMem::sto_ptr(char *p,size_t b,char* filename,int lineno)
 	bno = bp->entries++;
   if(bp->alloc)
   {
-	bp->alloc[bno].ptr      = p;
-	bp->alloc[bno].freed    = NULL;
-	bp->alloc[bno].size     = b;
-  bp->alloc[bno].filename = filename;
-  bp->alloc[bno].lineno   = lineno;
+	  bp->alloc[bno].ptr      = p;
+	  bp->alloc[bno].freed    = NULL;
+	  bp->alloc[bno].size     = b;
+    bp->alloc[bno].filename = filename;
+    bp->alloc[bno].lineno   = lineno;
   }
   m_tot_mem += b;
   if(m_tot_mem > m_max_mem)

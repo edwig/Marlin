@@ -97,7 +97,7 @@ TestMarlinServer::TestSecureSite(bool p_standalone)
   xprintf("=================================================\n");
 
   // Create URL channel to listen to "https://+:port/SecureTest"
-  int port = p_standalone ? TESTING_HTTPS_PORT : 443;
+  int port = p_standalone ? TESTING_HTTPS_PORT : 1220;
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,port,url);
   if(site)
   {

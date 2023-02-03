@@ -50,7 +50,7 @@ using AlertPaths = std::map<int,XString>;
 
 long              g_alertModules = 0;
 AlertPaths*       g_alertPath    = nullptr;
-unsigned __int64 g_alertCounter = 0;
+unsigned __int64  g_alertCounter = 0;
 CRITICAL_SECTION  g_alertCritical;
 
 // Registers an alert log path for a module

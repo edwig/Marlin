@@ -90,6 +90,9 @@ constexpr const char* global_client_error =
   "</body>\n"
   "</html>\n";
 
+// Error state is retained in TLS (Thread-Local-Storage) on a per-call basis for the server
+__declspec(thread) ULONG tls_lastError = 0;
+
 // Static globals for the server as a whole
 // Can be set through the Marlin.config reading of the HTTPServer
 // unsigned long g_streaming_limit = STREAMING_LIMIT;
@@ -280,6 +283,19 @@ HTTPServer::SetQueueLength(ULONG p_length)
     p_length = MAXX_HTTP_BACKLOGQUEUE;
   }
   m_queueLength = p_length;
+}
+
+// Setting the error in TLS, so no locking needed.
+void
+HTTPServer::SetError(int p_error)
+{
+  tls_lastError = p_error;
+}
+
+ULONG
+HTTPServer::GetLastError()
+{
+  return tls_lastError;
 }
 
 void

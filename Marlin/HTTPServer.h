@@ -240,6 +240,8 @@ public:
   XString     GetWebroot();
   // Get host name of the server's machine
   XString     GetHostname();
+  // Last error encountered
+  ULONG       GetLastError();
   // Is the server still running
   bool        GetIsRunning();
   // Get High Performance counter
@@ -422,6 +424,8 @@ protected:
   void      TryStartEventHeartbeat();
   // Check all event streams for the heartbeat monitor
   UINT      CheckEventStreams();
+  // Set the error status
+  void      SetError(int p_error);
   // For the handling of the event streams: implement this function
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
                                       ,CRITICAL_SECTION*  p_lock

@@ -108,7 +108,7 @@ int TestClientCertificate(HTTPClient* p_client)
     msg.GetFileBuffer()->WriteFile();
 
     // If OK and file does exists now!
-    if(_access(filename,0) == 0)
+    if((_access(filename,0) == 0) && (msg.GetFileBuffer()->GetLength() > 0))
     {
       result = true;
     }

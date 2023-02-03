@@ -666,11 +666,11 @@ Crypto::FastDecryption(XString p_input,XString password)
 error_exit:
   if(hKey)
   {
-  BCryptDestroyKey(hKey);
+    BCryptDestroyKey(hKey);
   }
   if(hAlgorithm)
   {
-  BCryptCloseAlgorithmProvider(hAlgorithm,0);
+    BCryptCloseAlgorithmProvider(hAlgorithm,0);
   }
   delete[] pbData;
 

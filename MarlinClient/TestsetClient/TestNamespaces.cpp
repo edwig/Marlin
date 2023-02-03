@@ -226,8 +226,8 @@ int TestNamespaces(void)
 
   xprintf("TESTING NAMESPACE + SOAP ACTION:\n");
   xprintf("========================================================\n");
-  errors += Testsplit("\"http://server/uri/command/\"","http://server/uri/");
-  errors += Testsplit("http://server/uri/some#command","http://server/uri/some#");
+  errors += Testsplit("\"http://server/uri/command/\"","http://server/uri");
+  errors += Testsplit("http://server/uri/some#command","http://server/uri/some");
   errors += Testsplit("command","");
 
   // Namespaces in SOAPMessage

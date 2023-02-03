@@ -82,14 +82,14 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
   StringCchPrintf(szBuf,cchSize,"SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s",eventLogCategory,p_serviceName.GetString()); 
 
   if(RegCreateKeyEx(HKEY_LOCAL_MACHINE
-                    ,szBuf
-                    ,0
-                    ,NULL
-                    ,REG_OPTION_NON_VOLATILE
-                    ,KEY_WRITE
-                    ,NULL
-                    ,&hk
-                    ,&dwDisp)) 
+                   ,szBuf
+                   ,0
+                   ,NULL
+                   ,REG_OPTION_NON_VOLATILE
+                   ,KEY_WRITE
+                   ,NULL
+                   ,&hk
+                   ,&dwDisp)) 
   {
     p_error.Format("Could not create the registry key for the %s.\n",p_messageDLL.GetString()); 
     return 0;
@@ -97,11 +97,11 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
 
   // Set the name of the message file. 
   if(RegSetValueEx(hk,                             // subkey handle 
-                   "EventMessageFile",              // value name 
-                    0,                              // must be zero 
-                    REG_EXPAND_SZ,                  // value type 
-                    (LPBYTE) pathname.GetString(),  // pointer to value data 
-                    (DWORD)  pathname.GetLength())) // data size
+                  "EventMessageFile",              // value name 
+                   0,                              // must be zero 
+                   REG_EXPAND_SZ,                  // value type 
+                   (LPBYTE) pathname.GetString(),  // pointer to value data 
+                   (DWORD)  pathname.GetLength())) // data size
   {
     p_error = "Could not set the logging \"EventMessageFile\" value.\n"; 
     RegCloseKey(hk); 
@@ -113,11 +113,11 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
                  EVENTLOG_INFORMATION_TYPE | EVENTLOG_AUDIT_SUCCESS | EVENTLOG_AUDIT_FAILURE;
 
   if(RegSetValueEx(hk,                // subkey handle 
-                   "TypesSupported",   // value name 
-                    0,                 // must be zero 
-                    REG_DWORD,         // value type 
-                    (LPBYTE)&dwData,   // pointer to value data 
-                    sizeof(DWORD)))    // length of value data 
+                  "TypesSupported",   // value name 
+                   0,                 // must be zero 
+                   REG_DWORD,         // value type 
+                   (LPBYTE)&dwData,   // pointer to value data 
+                   sizeof(DWORD)))    // length of value data 
   {
     p_error.Format("Could not set the supported types for the %s.\n",p_messageDLL.GetString()); 
     RegCloseKey(hk); 

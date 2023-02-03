@@ -92,7 +92,7 @@ bool SplitNamespaceAndAction(XString p_soapAction,XString& p_namespace,XString& 
       pos = apos = ++hpos;
     }
     // Split namespace and action command name
-    p_namespace = p_soapAction.Left(apos - (p_nmsp_ends_in_slash ? 1 : 0));
+    p_namespace = p_soapAction.Left(apos - (p_nmsp_ends_in_slash ? 0 : 1));
     p_action    = p_soapAction.Mid(apos);
   }
   else

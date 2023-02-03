@@ -35,7 +35,7 @@ int TestSecureSite(HTTPClient* p_client)
   {
     msg.GetFileBuffer()->SetFileName(filename);
     msg.GetFileBuffer()->WriteFile();
-    if(_access(filename,0) == 0)
+    if((_access(filename,0) == 0) && (msg.GetFileBuffer()->GetLength() > 0))
     {
       result = true;
     }

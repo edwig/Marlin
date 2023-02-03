@@ -9,3 +9,4 @@ double  AsDouble(XString p_string);
 bcd     AsBcd(XString p_string);
 
 int     SplitString(XString p_string,std::vector<XString>& p_vector,char p_separator = ',',bool p_trim = false);
+void    NormalizeLineEndings(XString& p_string);

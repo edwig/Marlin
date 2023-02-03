@@ -1138,6 +1138,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     // Error handler
     XString message = GetLastErrorAsString();
     m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",::GetLastError(),message.GetString());
+    SetLastError(NO_ERROR);
   }
 
   // Possibly log and trace what we just sent

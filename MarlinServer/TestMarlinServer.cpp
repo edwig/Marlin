@@ -399,7 +399,7 @@ TestMarlinServer::StartServerLog()
       m_log->SetLogFilename(m_serverLogfile);
     }
     // Only open it, if not yet opened by another session
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO, false, "*** DocumentServer logfile ****");
+    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO, false, "*** MarlinServer logfile ****");
     m_httpServer->SetLogging(m_log);
     m_log->ForceFlush();
   }

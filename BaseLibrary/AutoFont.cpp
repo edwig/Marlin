@@ -412,11 +412,11 @@ XString AutoFont::ContractFont()
 
 void AutoFont::ExtractFont(XString& str)
 {
-	lf.lfHeight         = atol((LPCTSTR)GetToken(str, ","));
-	lf.lfWidth          = atol((LPCTSTR)GetToken(str, ","));
-	lf.lfEscapement     = atol((LPCTSTR)GetToken(str, ","));
-	lf.lfOrientation    = atol((LPCTSTR)GetToken(str, ","));
-	lf.lfWeight         = atol((LPCTSTR)GetToken(str, ","));
+	lf.lfHeight         =        atol((LPCTSTR)GetToken(str, ","));
+	lf.lfWidth          =        atol((LPCTSTR)GetToken(str, ","));
+	lf.lfEscapement     =        atol((LPCTSTR)GetToken(str, ","));
+	lf.lfOrientation    =        atol((LPCTSTR)GetToken(str, ","));
+	lf.lfWeight         =        atol((LPCTSTR)GetToken(str, ","));
 	lf.lfItalic         = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
 	lf.lfUnderline      = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
 	lf.lfStrikeOut      = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
