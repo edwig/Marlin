@@ -616,7 +616,7 @@ WebSocketServerIIS::CloseSocket()
     }
 
     // Cancel the outstanding request altogether
-    server->CancelRequestStream(m_request,false);
+    server->CloseRequestStream(m_request);
 
     DETAILLOGV("Closed WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
 

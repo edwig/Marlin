@@ -43,6 +43,7 @@
 #include "HTTPClientTracing.h"
 #include "HTTPError.h"
 #include "OAuth2Cache.h"
+#include "Version.h"
 #include <ZIP\gzip.h>
 #include <winerror.h>
 #include <wincrypt.h>
@@ -121,7 +122,7 @@ HTTPClient::Reset()
   m_proxyPassword.Empty();
   m_enc_password.Empty();
 
-  m_agent           = "HTTPClient/1.0";
+  m_agent           = "HTTPClient/" MARLIN_VERSION_NUMBER;
   m_scheme          = "http";
   m_retries         = 0;
   m_useProxy        = ProxyType::PROXY_IEPROXY;
@@ -1828,6 +1829,7 @@ HTTPClient::ReceivePushEvents()
   {
     DWORD dwSize = 0;
     DWORD dwRead = 0;
+    DWORD status = 0;
 
     if(::WinHttpQueryDataAvailable(m_request,&dwSize))
     {
@@ -1919,8 +1921,33 @@ HTTPClient::ReceivePushEvents()
     }
     else
     {
+      // Already closing status found?
+      if(m_request == NULL)
+      {
+        m_status = HTTP_STATUS_NO_CONTENT;
+      }
+      else if(::WinHttpQueryHeaders(m_request,
+                               WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                               NULL, // WINHTTP_HEADER_NAME_BY_INDEX,
+                               &status,
+                               &dwSize,
+                               WINHTTP_NO_HEADER_INDEX))
+      {
+        m_status = status;
+      }
+      if(m_status == HTTP_STATUS_NO_CONTENT)
+      {
+        DETAILLOG("Server close event-stream properly with HTTP 204.");
+        if(m_eventSource->GetReadyState() == OPEN)
+        {
+          ServerEvent* event = new ServerEvent("close");
+          m_eventSource->OnClose(event);
+        }
+        return;
+      }
       // Error in polling HTTP Status
       DWORD er = GetLastError();
+      CString message = GetLastErrorAsString(er);
       switch(er)
       {
         case ERROR_WINHTTP_CONNECTION_ERROR:          m_status = HTTP_STATUS_SERVICE_UNAVAIL;   break;
@@ -1942,7 +1969,7 @@ HTTPClient::ReceivePushEvents()
 
       // Make error event and dispatch it
       ServerEvent* event = new ServerEvent("error");
-      event->m_data.Format("OS Error: %lu, HTTP Error: %u",er,m_status);
+      event->m_data.Format("OS Error [%lu:%s] HTTP Status [%u] %s",er,message.GetString(),m_status,GetHTTPStatusText(m_status));
       ERRORLOG(event->m_data);
       m_eventSource->OnError(event);
 
@@ -4321,7 +4348,6 @@ HTTPClient::StopClient()
     DETAILLOG("Stopping the EventSource");
     if(m_request)
     {
-      ERRORLOG("Stopping of the HTTP event-source channel");
       OnCloseSeen();
     }
     for (int i = 0; i < 10; ++i)

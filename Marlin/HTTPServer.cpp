@@ -369,9 +369,12 @@ HTTPServer::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
 {
   bool result = false;
 
+  // Record error for the current thread
+  SetError(p_code);
+
   if(m_log)
   {
-    p_text.AppendFormat(" Error [%d] %s",p_code,GetLastErrorAsString(p_code).GetString());
+    p_text.AppendFormat(" Error [%08lX] %s",p_code,GetLastErrorAsString(p_code).GetString());
     result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
   }
 
@@ -379,8 +382,8 @@ HTTPServer::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
   // nothing logged
   if(!result)
   {
-    // What can we do? As a last result: print to stdout
-    printf(MARLIN_SERVER_VERSION " Error [%d] %s\n",p_code,(LPCTSTR)p_text);
+    // What can we do? As a last result: print to trace output
+    TRACE("Marlin " MARLIN_SERVER_VERSION " Error [%08lX] %s\n",p_code,(LPCTSTR) p_text);
   }
 #endif
 }
@@ -400,8 +403,8 @@ HTTPServer::HTTPError(const char* p_function,int p_status,XString p_text)
   // nothing logged
   if(!result)
   {
-    // What can we do? As a last result: print to stdout
-    printf(MARLIN_SERVER_VERSION " Status [%d] %s\n",p_status,(LPCTSTR)p_text);
+    // What can we do? As a last result: print to trace output
+    TRACE("Marlin " MARLIN_SERVER_VERSION " Status [%d] %s\n",p_status,(LPCTSTR) p_text);
   }
 #endif
 }
@@ -1576,7 +1579,7 @@ HTTPServer::CheckEventStreams()
         ServerEvent* event = new ServerEvent("close");
         SendEvent(stream,event);
         // Remove request from the request queue, closing the connection
-        CancelRequestStream(stream->m_requestID);
+        CloseRequestStream(stream->m_requestID);
         // Erase stream, it's out of chunks now
         delete it->second;
         it = m_eventStreams.erase(it);
@@ -1586,7 +1589,7 @@ HTTPServer::CheckEventStreams()
         DETAILLOGS("Abandoned push-event client from: ",stream->m_baseURL);
 
         // Remove request from the request queue, closing the connection
-        CancelRequestStream(stream->m_requestID);
+        CloseRequestStream(stream->m_requestID);
         // Erase dead stream, and goto next
         delete it->second;
         it = m_eventStreams.erase(it);
@@ -1735,7 +1738,7 @@ HTTPServer::AbortEventStream(EventStream* p_stream)
       if(p_stream->m_alive)
       {
         // Abandon the stream in the correct server
-        CancelRequestStream(p_stream->m_requestID);
+        CloseRequestStream(p_stream->m_requestID);
       }
       // Done with the stream
       delete p_stream;

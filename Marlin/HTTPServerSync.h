@@ -68,7 +68,7 @@ protected:
   // Init the stream response
   virtual bool InitEventStream(EventStream& p_stream);
   // Used for canceling a WebSocket for an event stream
-  virtual void CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_reset = false);
+  virtual void CloseRequestStream(HTTP_OPAQUE_ID p_response);
 
 private:
   // Preparing a response

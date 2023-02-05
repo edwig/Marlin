@@ -700,7 +700,7 @@ HTTPServerMarlin::StopServer()
 
 // Used for canceling a WebSocket for an event stream
 void 
-HTTPServerMarlin::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/)
+HTTPServerMarlin::CloseRequestStream(HTTP_OPAQUE_ID p_response)
 {
   HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_response);
 
@@ -808,8 +808,8 @@ HTTPServerMarlin::FlushSocket(HTTP_OPAQUE_ID p_request,XString p_prefix)
 
   if(result != NO_ERROR)
   {
-    ERRORLOG(GetLastError(),"Flushing HTTP request for WebSocket failed!");
-    CancelRequestStream(p_request);
+    ERRORLOG(result,"Flushing HTTP request for WebSocket failed!");
+    CloseRequestStream(p_request);
     return false;
   }
   return true;

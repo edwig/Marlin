@@ -80,7 +80,9 @@ void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
 
   if(message.CompareNoCase("RequestClose") == 0)
   {
-    p_socket->SendCloseSocket(WS_CLOSE_NORMAL, "Marlin TestServer closing socket");
+    p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"Marlin TestServer closing socket");
+    // Simply close will NOT work!!
+    // p_socket->CloseSocket();
   }
   else
   {

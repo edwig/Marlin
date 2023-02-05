@@ -64,7 +64,7 @@ WebSocketServerSync::Reset()
 {
   WebSocket::Reset();
 
-  m_server->CancelRequestStream(m_request);
+  m_server->CloseRequestStream(m_request);
 }
 
 // Register the server request for sending info

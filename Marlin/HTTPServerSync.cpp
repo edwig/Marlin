@@ -782,7 +782,7 @@ HTTPServerSync::InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status
 
 // Used for canceling a WebSocket for an event stream
 void 
-HTTPServerSync::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/)
+HTTPServerSync::CloseRequestStream(HTTP_OPAQUE_ID p_response)
 {
   // Cancel the outstanding request from the request queue
   ULONG result = HttpCancelHttpRequest(m_requestQueue,p_response,NULL);
@@ -1360,7 +1360,7 @@ HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE p_response
   // File to transmit
   if(p_buffer->OpenFile() == false)
   {
-    ERRORLOG(GetLastError(),"OpenFile for SendHttpResponse");
+    ERRORLOG(::GetLastError(),"OpenFile for SendHttpResponse");
     return;
   }
   // Get the filehandle from buffer

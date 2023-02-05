@@ -611,7 +611,7 @@ HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
       case HttpDataChunkFromFileHandle:        // Should not happen upon receive
                                                [[fallthrough]];
       case HttpDataChunkFromFragmentCache:     [[fallthrough]];
-      case HttpDataChunkFromFragmentCacheEx:   ERRORLOG(87,"Unhandled HTTP chunk type from IIS");
+      case HttpDataChunkFromFragmentCacheEx:   ERRORLOG(ERROR_INVALID_PARAMETER,"Unhandled HTTP chunk type from IIS");
                                                break;
     }
   }
@@ -645,7 +645,7 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
     }
     if(!SUCCEEDED(hr) && HRESULT_CODE(hr) != ERROR_MORE_DATA)
     {
-      ERRORLOG(HRESULT_CODE(hr),"Cannot read incoming HTTP buffer");
+      ERRORLOG(HRESULT_FROM_WIN32(hr),"Cannot read incoming HTTP buffer");
       return false;
     }
     // Add to filebuffer
@@ -714,8 +714,8 @@ HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request,XString /*p_prefix*/)
   HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent,&completion);
   if(hr != S_OK)
   {
-    ERRORLOG(GetLastError(),"Flushing WebSocket failed!");
-    CancelRequestStream(p_request);
+    ERRORLOG(HRESULT_FROM_WIN32(hr),"Flushing WebSocket failed!");
+    CloseRequestStream(p_request);
     return false;
   }
   return true;
@@ -781,7 +781,7 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,true,&bytesSent);
   if(hr != S_OK)
   {
-    ERRORLOG(GetLastError(),"HttpSendResponseEntityBody failed initialisation of an event stream");
+    ERRORLOG(HRESULT_FROM_WIN32(hr),"HttpSendResponseEntityBody failed initialisation of an event stream");
   }
   else
   {
@@ -800,26 +800,24 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
 void
 HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,XString p_name,XString p_value,bool p_replace)
 {
-  if(p_response->SetHeader(p_name,p_value,(USHORT)p_value.GetLength(),p_replace) != S_OK)
+  HRESULT hr = p_response->SetHeader(p_name,p_value,(USHORT)p_value.GetLength(),p_replace);
+  if(hr != S_OK)
   {
-    DWORD   val   = GetLastError();
-    XString error = GetLastErrorAsString(val);
     XString bark;
-    bark.Format("Cannot set HTTP response header [%s] to value [%s] : %s",p_name.GetString(),p_value.GetString(),error.GetString());
-    ERRORLOG(val,bark);
+    bark.Format("Cannot set HTTP response header [%s] to value [%s] : %s",p_name.GetString(),p_value.GetString());
+    ERRORLOG(HRESULT_FROM_WIN32(hr),bark);
   }
 }
 
 void 
 HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,XString p_value,bool p_replace)
 {
-  if(p_response->SetHeader(p_id,p_value,(USHORT)p_value.GetLength(),p_replace) != S_OK)
+  HRESULT hr = p_response->SetHeader(p_id,p_value,(USHORT)p_value.GetLength(),p_replace);
+  if(hr != S_OK)
   {
-    DWORD   val   = GetLastError();
-    XString error = GetLastErrorAsString(val);
     XString bark;
-    bark.Format("Cannot set HTTP response header [%d] to value [%s] : %s",p_id,p_value.GetString(),error.GetString());
-    ERRORLOG(val,bark);
+    bark.Format("Cannot set HTTP response header [%d] to value [%s] : %s",p_id,p_value.GetString());
+    ERRORLOG(HRESULT_FROM_WIN32(hr),bark);
   }
 }
 
@@ -1186,7 +1184,7 @@ HTTPServerIIS::SendResponseBuffer(IHttpResponse*  p_response
     }
     else
     {
-      result = GetLastError();
+      result = HRESULT_FROM_WIN32(hr);
       ERRORLOG(result,"ResponseBuffer");
     }
   }
@@ -1232,7 +1230,7 @@ HTTPServerIIS::SendResponseBufferParts(IHttpResponse* p_response
     }
     else
     {
-      DWORD result = GetLastError();
+      DWORD result = HRESULT_FROM_WIN32(hr);
       ERRORLOG(result,"HTTP ResponseBufferPart error");
       break;
     }
@@ -1253,7 +1251,7 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
   // File to transmit
   if(p_buffer->OpenFile() == false)
   {
-    ERRORLOG(GetLastError(),"OpenFile for SendHttpResponse");
+    ERRORLOG(::GetLastError(),"OpenFile for SendHttpResponse");
     return;
   }
   // Get the file handle from buffer
@@ -1290,7 +1288,7 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
   }
   else
   {
-    result = GetLastError();
+    result = HRESULT_FROM_WIN32(hr);
     ERRORLOG(result,"SendResponseEntityBody for file");
   }
   // Now close our file handle
@@ -1333,7 +1331,7 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
   }
   else
   {
-    result = GetLastError();
+    result = HRESULT_FROM_WIN32(hr);
     ERRORLOG(result,"SendResponseEntityBody for file");
   }
 }
@@ -1374,7 +1372,7 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,p_continue,&bytesSent);
   if(hr != S_OK)
   {
-    ERRORLOG(GetLastError(),"WriteEntityChunks failed for SendEvent");
+    ERRORLOG(HRESULT_FROM_WIN32(hr),"WriteEntityChunks failed for SendEvent");
   }
   else
   {
@@ -1382,7 +1380,7 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
     hr = response->Flush(false,p_continue,&bytesSent);
     if(hr != S_OK && p_continue)
     {
-      ERRORLOG(GetLastError(),"Flushing event stream failed!");
+      ERRORLOG(HRESULT_FROM_WIN32(hr),"Flushing event stream failed!");
     }
     else
     {
@@ -1393,29 +1391,29 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
   // Final closing of the connection
   if(p_continue == false)
   {
-    CancelRequestStream(p_response);
+    CloseRequestStream(p_response);
   }
   return (hr == S_OK);
 }
 
-// Used for canceling a WebSocket or an event stream
+// Used for closing a WebSocket or an event stream
 void
-HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_doReset /*=false*/)
+HTTPServerIIS::CloseRequestStream(HTTP_OPAQUE_ID p_response)
 {
-  IHttpContext*  context = (IHttpContext*)p_response;
+  IHttpContext*  context  = reinterpret_cast<IHttpContext*>(p_response);
   IHttpResponse* response = context->GetResponse();
-  
+  HRESULT result = S_OK;
+
   try
   {
-    // Set disconnection
-    if(p_doReset)
-    {
-      context->PostCompletion(0);
-    }
-    else
-    {
-      response->SetNeedDisconnect();
-    }
+    // Set the response status codes
+    response->SetStatus(HTTP_STATUS_NO_CONTENT,GetHTTPStatusText(HTTP_STATUS_NO_CONTENT));
+    response->SetNeedDisconnect();
+
+    // Flush the response
+    DWORD sent(0);
+    result = response->Flush(FALSE,FALSE,&sent);
+
     // Now ready with the IIS context. Original request is finished
     context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
 
@@ -1424,7 +1422,7 @@ HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_doReset /*=f
   catch(StdException& er)
   {
     ReThrowSafeException(er);
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Cannot close Event/WebSocket stream! " + er.GetErrorMessage());
+    ERRORLOG(HRESULT_FROM_WIN32(result),"Cannot close Event/WebSocket stream! " + er.GetErrorMessage());
   }
 }
 

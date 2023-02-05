@@ -194,7 +194,7 @@ public:
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,XString p_prefix) = 0;
   // Used for canceling a WebSocket for an event stream
-  virtual void       CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_reset = false) = 0;
+  virtual void       CloseRequestStream(HTTP_OPAQUE_ID p_response) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
   // Sending a response as a chunk
