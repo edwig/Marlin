@@ -562,7 +562,7 @@ local void gen_bitlen(deflate_state* s,tree_desc* desc)
         while(bits > 0 && (bits < MAX_BITS + 1) && s->bl_count[bits] == 0) bits--;
         if(bits > 0 && bits < MAX_BITS + 1)
         {
-        s->bl_count[bits]--;      /* move one leaf down the tree */
+          s->bl_count[bits]--;      /* move one leaf down the tree */
         }
         s->bl_count[bits+1] += 2; /* move one overflow item as its brother */
         s->bl_count[max_length]--;
@@ -1177,7 +1177,7 @@ local void compress_block(deflate_state* s,const ct_data* ltree,const ct_data*  
             if(code < D_CODES)
             {
               send_code(s,code,dtree);       /* send the distance code */
-            extra = extra_dbits[code];
+              extra = extra_dbits[code];
               if(extra != 0)
               {
                 dist -= base_dist[code];

@@ -103,6 +103,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Alert.h" />
+    <ClInclude Include="AuthenticationHeader.h" />
     <ClInclude Include="AutoCritical.h" />
     <ClInclude Include="AutoFont.h" />
     <ClInclude Include="Base64.h" />
@@ -184,6 +185,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Alert.cpp" />
+    <ClCompile Include="AuthenticationHeader.cpp" />
     <ClCompile Include="AutoCritical.cpp" />
     <ClCompile Include="AutoFont.cpp" />
     <ClCompile Include="Base64.cpp" />

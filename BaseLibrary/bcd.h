@@ -119,10 +119,6 @@ extern int  g_locale_strCurrencyLen;
 class bcd
 {
 public:
-  enum class Sign     { Positive,    Negative    };
-  enum class Format   { Engineering, Bookkeeping };
-  enum class Operator { Addition,    Subtraction };
-
   // CONSTRUCTORS/DESTRUCTORS
 
   // Default constructor.
@@ -173,11 +169,46 @@ public:
   // BCD from a SQL_NUMERIC_STRUCT
   bcd(const SQL_NUMERIC_STRUCT* p_numeric);
 
+  // ENUMERATIONS
+
+  // Keep sign status in this order!
+  enum class Sign
+  {
+     Positive  // bcd number >= 0
+    ,Negative  // bcd number  < 0
+    ,ISNULL    // bcd number is NULL in the database
+    ,MIN_INF   // bcd number in negative infinity
+    ,INF       // bcd number in positive infinity
+    ,NaN       // Not a Number (e.g. a string)
+  };
+  // Formatting of a string (As<X>String())
+  enum class Format
+  {
+     Engineering
+    ,Bookkeeping
+  };
+  // For internal processing
+  enum class Operator
+  {
+     Addition
+    ,Subtraction
+  };
+
+  // BCD constructs as a NULL from the database
+  bcd(const bcd::Sign p_sign);
+
   // CONSTANTS
 
   static bcd PI();     // Circumference/Radius ratio of a circle
   static bcd LN2();    // Natural logarithm of 2
   static bcd LN10();   // Natural logarithm of 10
+
+  // ERROR HANDLING
+
+  // BCD throws on error or sets status (-INF, INF, NAN)
+  // BEWARE: Not thread safe to change in flight
+  // Applications must use ONE (1) setting at startup
+  static void ErrorThrows(bool p_throws = true);
 
   // OPERATORS
 
@@ -280,10 +311,14 @@ public:
   
   // Set the mantissa/exponent/sign to the number zero (0)
   void    Zero();
+  // Set to database NULL
+  void    SetNULL();
   // Round to a specified fraction (decimals behind the .)
   void    Round(int p_precision = 0);
   // Truncate to a specified fraction (decimals behind the .)
   void    Truncate(int p_precision = 0);  
+  // Change length and precision
+  void    SetLengthAndPrecision(int p_length = bcdPrecision,int p_precision = (bcdPrecision / 2));
   // Change the sign
   void    Negate();
   
@@ -302,7 +337,7 @@ public:
   // Absolute value (ABS)
   bcd     AbsoluteValue() const;
   // Reciproke / Inverse = 1/x
-  bcd     Reciproke() const;
+  bcd     Reciprocal() const;
   // Natural logarithm
   bcd     Log() const;
   // Exponent e tot the power 'this number'
@@ -351,15 +386,21 @@ public:
   XString AsDisplayString(int p_decimals = 2) const;
   // Get as an ODBC SQL NUMERIC(p,s)
   void    AsNumeric(SQL_NUMERIC_STRUCT* p_numeric) const;
-  
+
   // GETTER FUNCTIES
 
-  // Is bcd exactly 0.0?
-  bool    IsNull() const; 
+  // Is bcd exactly 0.0? (used to be called IsNull)
+  bool    IsZero() const; 
+  // Is bcd a database NULL
+  bool    IsNULL() const;
+  // Not an (-)INF or a NAN
+  bool    IsValid() const;
   // Is bcd nearly 0.0 (smaller than epsilon)
   bool    IsNearZero();
   // Gets the sign 0 (= 0.0), 1 (greater than 0) of -1 (smaller than 0)
   int     GetSign() const;
+  // Gets Signed status Positive, Negative, -INF, INF, NaN
+  Sign    GetStatus() const;
   // Total length (before and after decimal point)
   int     GetLength() const;
   // Total precision (length after the decimal point)
@@ -390,6 +431,8 @@ private:
 
   // INTERNALS
 
+  // Set infinity for overflows
+  bcd     SetInfinity(XString p_reason = "") const;
   // Sets one integer in this bcd number
   void    SetValueInt(const int p_value);
   // Sets one or two longs in this bcd number
@@ -423,6 +466,8 @@ private:
   bcd     SplitMantissa() const;
   // Compare two mantissa
   int     CompareMantissa(const bcd& p_value) const;
+  // Calculate the precision and scale for a SQL_NUMERIC
+  void    CalculatePrecisionAndScale(SQLCHAR& p_precision,SQLCHAR& p_scale) const;
   // Stopping criterion for internal iterations
   bcd&    Epsilon(long p_fraction) const;
 
@@ -455,7 +500,7 @@ private:
   bcd  PositiveDivision(bcd& p_arg1,bcd& p_arg2) const;
 
   // STORAGE OF THE NUMBER
-  Sign   m_sign;                // 0 = Positive, 1 = Negative
-  short  m_exponent;            // +/- 10E32767
-  long   m_mantissa[bcdLength]; // Up to (bcdDigits * bcdLength) digits
+  Sign          m_sign;                // 0 = Positive, 1 = Negative (INF, NaN)
+  short         m_exponent;            // +/- 10E32767
+  long          m_mantissa[bcdLength]; // Up to (bcdDigits * bcdLength) digits
 };
