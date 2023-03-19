@@ -120,7 +120,7 @@ ServerWriteCompletion(HRESULT p_error,
 // Duties to perform after writing of a fragment is completed
 void
 WebSocketServerIIS::SocketWriter(HRESULT p_error
-                                ,DWORD   p_bytes
+                                ,DWORD /*p_bytes*/
                                 ,BOOL  /*p_utf8*/
                                 ,BOOL  /*p_final*/
                                 ,BOOL    p_close)
@@ -135,7 +135,7 @@ WebSocketServerIIS::SocketWriter(HRESULT p_error
       m_writing.pop_front();
     }
   }
-  TRACE("WS BLOCK WRITTEN: %d\n",p_bytes);
+  // TRACE("WS BLOCK WRITTEN: %d\n",p_bytes);
 
   // Handle any error (if any)
   if(p_error != (HRESULT)0)

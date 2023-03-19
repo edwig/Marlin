@@ -916,7 +916,7 @@ HTTPServer::SendResponse(JSONMessage* p_message)
     HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
     if(answer->GetContentType().Find("json") < 0)
     {
-      answer->SetContentType("application/text+json");
+      answer->SetContentType("application/json");
     }
     // Send the HTTP Message as response
     SendResponse(answer);
@@ -940,6 +940,7 @@ HTTPServer::RespondWithServerError(HTTPMessage* p_message
   p_message->GetFileBuffer()->Reset();
   p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
   p_message->SetStatus(p_error);
+  p_message->SetContentType("text/html");
 
   SendResponse(p_message);
 }
@@ -967,6 +968,7 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
   p_message->GetFileBuffer()->Reset();
   p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
   p_message->SetStatus(p_error);
+  p_message->SetContentType("text/html");
 
   XString challenge = BuildAuthenticationChallenge(p_authScheme,p_realm);
   if(!challenge.IsEmpty())
