@@ -551,8 +551,10 @@ ServerEventChannel::SendQueueToSocket()
         if(!it->m_socket->WriteString(ltevent->m_payload))
         {
           allok = false;
-          CloseSocket(it->m_socket);
+          WebSocket* toclose = it->m_socket;
           it = m_sockets.erase(it);
+          CloseSocket(toclose,true);
+          // Alert application
           OnClose("");
           continue;
         }
@@ -728,11 +730,16 @@ ServerEventChannel::CloseChannel()
 }
 
 void 
-ServerEventChannel::CloseSocket(WebSocket* p_socket)
+ServerEventChannel::CloseSocket(WebSocket* p_socket,bool p_direct /*= false*/)
 {
   DETAILLOGV("Closing WebSocket for event channel [%s] Queue size: %d",m_name.GetString(),(int)m_outQueue.size());
-  p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"ServerEventDriver is closing channel");
-  Sleep(200); // Wait for close before deleting the socket
+  if(!p_direct)
+  {
+    // Tell the other side we are closing now
+    p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"ServerEventDriver is closing channel");
+    // Wait for close before deleting the socket
+    Sleep(500);
+  }
   m_server->UnRegisterWebSocket(p_socket);
 }
 

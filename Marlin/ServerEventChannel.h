@@ -119,7 +119,7 @@ public:
   void    OnCloseSocket(WebSocket* p_socket);
 
 private:
-  void CloseSocket(WebSocket* p_socket);
+  void CloseSocket(WebSocket* p_socket,bool p_direct = false);
   void CloseStream(EventStream* p_stream);
   int  SendQueueToSocket();
   int  SendQueueToStream();
