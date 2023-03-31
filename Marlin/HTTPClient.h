@@ -372,6 +372,7 @@ private:
   bool     DoRedirectionAfterSend();
   void     ProcessChunkedEncoding();
   uchar*   GetChunkSize(uchar* p_reading,unsigned& p_size);
+  void     ReCreateAsSOAPFault(SOAPMessage* p_msg,SoapVersion p_version,XString p_response);
   // Methods for WS-Security
   void     CheckAnswerSecurity (SOAPMessage* p_msg,XString p_answer,XMLEncryption p_security,XString p_password);
   void     CheckBodySigning    (XString p_password,SOAPMessage* p_msg);

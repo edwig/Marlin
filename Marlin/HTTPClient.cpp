@@ -2402,20 +2402,23 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
   else
   {
-    XString response;
-    if(m_response)
+    // No specific SOAPAction header
+    p_msg->DelHeader("SOAPAction");
+
+    // In case of an error and NO soap XML with a fault in the error body
+    if(p_msg->GetFaultCode().IsEmpty() && p_msg->GetFaultActor().IsEmpty())
     {
-      response = m_response;
-      response += ". ";
+      XString response;
+      if(m_lastError >= WINHTTP_ERROR_BASE && m_lastError <= WINHTTP_ERROR_LAST)
+      {
+        response.Format("Error number [%d] %s\n",m_lastError,GetHTTPErrorText(m_lastError).GetString());
+      }
+      if(m_response)
+      {
+        response += XString(m_response);
+      }
+      ReCreateAsSOAPFault(p_msg,oldVersion,response);
     }
-    if(m_lastError >= WINHTTP_ERROR_BASE && m_lastError <= WINHTTP_ERROR_LAST)
-    {
-      response.AppendFormat("%s. Error number [%d]",GetHTTPErrorText(m_lastError).GetString(),m_lastError);
-    }
-    // In case of an error
-    p_msg->SetSoapVersion(oldVersion);
-    p_msg->Reset();
-    p_msg->SetFault("Client","Send error","HTTPClient send result",response);
   }
 
   // Freeing Unicode UTF-16 buffer
@@ -3752,6 +3755,31 @@ HTTPClient::SetCORSPreFlight(XString p_method,XString p_headers)
     return true;
   }
   return false;
+}
+
+void
+HTTPClient::ReCreateAsSOAPFault(SOAPMessage* p_msg,SoapVersion p_version,XString p_response)
+{
+  p_msg->SetSoapVersion(p_version);
+  p_msg->Reset();
+
+  XMLElement* fault = p_msg->AddElement(p_msg->GetXMLBodyPart(),"Fault",XDT_String,"");
+  if(p_version == SoapVersion::SOAP_12)
+  {
+    // SOAP 1.2
+    XMLElement* fcode = p_msg->AddElement(fault,"Code",  XDT_String,"");
+                        p_msg->AddElement(fcode,"Value", XDT_String,"Client");
+    XMLElement* reasn = p_msg->AddElement(fault,"Reason",XDT_String,"");
+                        p_msg->AddElement(reasn,"Text",  XDT_String,p_response);
+  }
+  else
+  {
+    // SOAP 1.1 or less
+    p_msg->AddElement(fault,"faultcode",  XDT_String,"Client");
+    p_msg->AddElement(fault,"faultstring",XDT_String,"Send result");
+    p_msg->AddElement(fault,"detail",     XDT_String,p_response);
+  }
+  p_msg->SetFault("Client","Client","Send error",p_response);
 }
 
 //////////////////////////////////////////////////////////////////////////
