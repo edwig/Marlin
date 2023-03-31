@@ -122,9 +122,11 @@ public:
   bool        GetSiteNTLMCache(XString p_site,bool    p_default);
   bool        GetSitePreload  (XString p_site);
   IISError    GetSiteError    (XString p_site);
+  XString     GetWebConfig         ();
 
   IISHandlers* GetAllHandlers (XString p_site);
   IISHandler*  GetHandler     (XString p_site,XString p_handler);
+  IISHandlers* GetWebConfigHandlers();
 
   // Getting information of a application pool
   XString     GetPoolStartMode      (XString p_pool);
@@ -135,6 +137,7 @@ public:
 
   // Read one config file
   bool        ReadConfig(XString p_configFile,IISSite* p_site);
+  void        ReadWebConfigHandlers(XMLMessage& p_msg);
 
 private:
   // Replace environment variables in a string
@@ -159,6 +162,7 @@ private:
   // Files already read in
   WCFiles     m_files;
 
+  IISHandlers m_webConfigHandlers;
   AppSettings m_settings;
   IISPools    m_pools;
   IISSites    m_sites;

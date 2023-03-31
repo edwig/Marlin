@@ -252,6 +252,12 @@ WebConfigIIS::GetSiteError(XString p_site)
 }
 
 XString
+WebConfigIIS::GetWebConfig()
+{
+  return m_webconfig;
+}
+
+XString
 WebConfigIIS::GetPoolStartMode(XString p_pool)
 {
   IISAppPool* pool = GetPool(p_pool);
@@ -571,6 +577,32 @@ WebConfigIIS::ReadSettings(XMLMessage& p_msg)
 }
 
 void 
+WebConfigIIS::ReadWebConfigHandlers(XMLMessage& p_msg)
+{
+  XMLElement* handlers = p_msg.FindElement("handlers");
+  if(handlers)
+  {
+    XMLElement* add = p_msg.FindElement(handlers,"add");
+    while(add)
+    {
+      IISHandler handler;
+
+      XString name           = p_msg.GetAttribute(add,"name");
+      handler.m_path         = p_msg.GetAttribute(add,"path");
+      handler.m_verb         = p_msg.GetAttribute(add,"verb");
+      handler.m_modules      = p_msg.GetAttribute(add,"modules");
+      handler.m_resourceType = p_msg.GetAttribute(add,"resourceType");
+      handler.m_precondition = p_msg.GetAttribute(add,"preCondition");
+
+      m_webConfigHandlers.insert(std::make_pair(name,handler));
+
+      // Next handler mapping
+      add = p_msg.GetElementSibling(add);
+    }
+  }
+}
+
+void 
 WebConfigIIS::ReadStreamingLimit(XMLMessage& p_msg,XMLElement* p_elem)
 {
   XMLElement* webserv = p_msg.FindElement(p_elem,"system.webServer");
@@ -790,6 +822,12 @@ WebConfigIIS::GetHandler(XString p_site,XString p_handler)
     }
   }
   return nullptr;
+}
+
+IISHandlers* 
+WebConfigIIS::GetWebConfigHandlers()
+{
+  return &m_webConfigHandlers;
 }
 
 // Finding a site registration
