@@ -1866,7 +1866,6 @@ bool
 HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
 {
   XString key = p_socket->GetIdentityKey();
-  DETAILLOGV("Unregistering websocket [%s] from the server",key.GetString());
   key.MakeLower();
 
   SocketMap::iterator it = m_sockets.find(key);
@@ -1874,9 +1873,11 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
   {
     delete it->second;
     m_sockets.erase(it);
+    DETAILLOGV("Unregistering websocket [%s] from the server",key.GetString());
     return true;
   }
   // We don't have it
+  ERRORLOG(ERROR_FILE_NOT_FOUND,"Websocket [%s] to unregister NOT FOUND!",key.GetString());
   return false;
 }
 
