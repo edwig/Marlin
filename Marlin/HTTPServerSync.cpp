@@ -782,7 +782,7 @@ HTTPServerSync::InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status
 
 // Used for canceling a WebSocket for an event stream
 void 
-HTTPServerSync::CloseRequestStream(HTTP_OPAQUE_ID p_response)
+HTTPServerSync::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/)
 {
   // Cancel the outstanding request from the request queue
   ULONG result = HttpCancelHttpRequest(m_requestQueue,p_response,NULL);

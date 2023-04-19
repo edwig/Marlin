@@ -233,6 +233,7 @@ ServerEventChannel::GetQueueCount()
 
 // Count all 'opened' sockets and all SSE-streams
 // Giving the fact that a channel is 'connected' to a number of clients
+// Only looks at the reading state!
 int
 ServerEventChannel::GetClientCount()
 {
@@ -241,7 +242,10 @@ ServerEventChannel::GetClientCount()
 
   for(auto& socket : m_sockets)
   {
-    count += socket.m_open == true ? 1 : 0;
+    if(socket.m_open && socket.m_socket->IsOpenForReading())
+    {
+      ++count;
+    }
   }
   count += (int) m_streams.size();
 
@@ -251,7 +255,18 @@ ServerEventChannel::GetClientCount()
 bool 
 ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket,bool p_check /*=false*/)
 {
-  AutoCritSec lock(&m_lock);
+  // Getting the senders URL + Citrix desktop
+  XString url;
+  XString sender  = SocketToServer(p_message->GetSender());
+  XString desktop = p_message->GetHeader("desktop").Trim();
+  url.Format("http://%s:c%s", sender.GetString(),desktop.GetString());
+  url.MakeLower();
+
+  // Check for a brute-force attack. If so, already logged to the server
+  if(m_driver->CheckBruteForceAttack(url))
+  {
+    return false;
+  }
 
   if(p_check)
   {
@@ -283,21 +298,10 @@ ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket
   p_socket->SetOnError  (EventChannelOnError);
   p_socket->SetOnClose  (EventChannelOnClose);
 
-  // Getting the senders URL + Citrix desktop
-  XString url;
-  XString sender  = SocketToServer(p_message->GetSender());
-  XString desktop = p_message->GetHeader("desktop").Trim();
-  url.Format("http://%s:c%s", sender.GetString(),desktop.GetString());
-  url.MakeLower();
-
-  // Check for a brute-force attack. If so, already logged to the server
-  if (m_driver->CheckBruteForceAttack(url))
-  {
-    return false;
-  }
-
   // Register our socket
+  AutoCritSec lock(&m_lock);
   bool found = false;
+
   for(auto& sock : m_sockets)
   {
     if(sock.m_open && sock.m_url.Compare(url) == 0)
@@ -338,14 +342,14 @@ ServerEventChannel::OnOpenSocket(WebSocket* p_socket)
 void
 ServerEventChannel::OnCloseSocket(WebSocket* p_socket)
 {
-  AutoCritSec lock(&m_lock);
-
-  for(auto& sock : m_sockets)
+  // NO LOCK HERE ON m_sockets
+  // Just register the new state
+  for(AllSockets::iterator it = m_sockets.begin(); it != m_sockets.end();++it)
   {
-    if(sock.m_socket == p_socket)
+    if(it->m_socket == p_socket)
   {
-      sock.m_open = false;
     m_closeSeen = true;
+      return;
   }
 }
 }
@@ -543,6 +547,17 @@ ServerEventChannel::SendQueueToSocket()
     {
       if(it->m_open == true && (ltevent->m_sent == 0 || ltevent->m_sent == it->m_sender))
       {
+        // See if it was closed by the client side
+        if(!it->m_socket->IsOpenForWriting())
+        {
+          CloseSocket(it->m_socket);
+
+          AutoCritSec lock(&m_lock);
+          it = m_sockets.erase(it);
+          OnClose("");
+          continue;
+        }
+
         // Make sure channel is now open on the server side and 'in-use'
         if(!m_openSeen)
         {
@@ -551,10 +566,10 @@ ServerEventChannel::SendQueueToSocket()
         if(!it->m_socket->WriteString(ltevent->m_payload))
         {
           allok = false;
-          WebSocket* toclose = it->m_socket;
+          CloseSocket(it->m_socket);
+
+          AutoCritSec lock(&m_lock);
           it = m_sockets.erase(it);
-          CloseSocket(toclose,true);
-          // Alert application
           OnClose("");
           continue;
         }
@@ -679,18 +694,19 @@ ServerEventChannel::CloseChannel()
   // event channels to the client possibly still open.
   if(m_closeSeen == false)
   {
-    LTEvent* event = new LTEvent(EvtType::EV_Close);
-    event->m_payload = "Channel closed";
-    event->m_number  = ++m_maxNumber;
-    event->m_sent    = m_appData;
-
     // Do not come here again
     m_closeSeen = true;
-    // Tell it the server
+
+    // Tell it the server application
     if(m_application)
     {
       try
       {
+        LTEvent* event   = new LTEvent(EvtType::EV_Close);
+        event->m_payload = "Channel closed";
+        event->m_number  = ++m_maxNumber;
+        event->m_sent    = m_appData;
+
         (*m_application)(event);
       }
       catch(StdException& ex)
@@ -730,16 +746,12 @@ ServerEventChannel::CloseChannel()
 }
 
 void 
-ServerEventChannel::CloseSocket(WebSocket* p_socket,bool p_direct /*= false*/)
+ServerEventChannel::CloseSocket(WebSocket* p_socket)
 {
   DETAILLOGV("Closing WebSocket for event channel [%s] Queue size: %d",m_name.GetString(),(int)m_outQueue.size());
-  if(!p_direct)
-  {
-    // Tell the other side we are closing now
     p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"ServerEventDriver is closing channel");
-    // Wait for close before deleting the socket
-    Sleep(500);
-  }
+  Sleep(200); // Wait for close to be sent before deleting the socket
+  p_socket->CloseSocket();
   m_server->UnRegisterWebSocket(p_socket);
 }
 
@@ -828,7 +840,8 @@ ServerEventChannel::OnError(XString p_message)
 void
 ServerEventChannel::OnClose(XString p_message)
 {
-  AutoCritSec lock(&m_lock);
+  // Already locked by ServerEventChannel::CloseChannel()
+  // AutoCritSec lock(&m_lock);
 
   LTEvent* event = new LTEvent;
   event->m_payload = p_message;
@@ -896,4 +909,33 @@ ServerEventChannel::Receiving()
     ++received;
   }
   return received;
+}
+
+// Sanity check on channel
+void 
+ServerEventChannel::CheckChannel()
+{
+  // Only check if we do sockets
+  if(m_current != EventDriverType::EDT_Sockets)
+  {
+    return;
+  }
+
+  // See if we must close sockets
+  AllSockets::iterator it = m_sockets.begin();
+  while(it != m_sockets.end())
+  {
+    // See if it was closed by the client side
+    if(it->m_open == false || !it->m_socket->IsOpenForWriting())
+    {
+      CloseSocket(it->m_socket);
+
+      AutoCritSec lock(&m_lock);
+      it = m_sockets.erase(it);
+      OnClose("");
+      continue;
+    }
+    // Next socket
+    ++it;
+  }
 }

@@ -131,6 +131,7 @@ HTTPServer::HTTPServer(XString p_name)
 
   InitializeCriticalSection(&m_eventLock);
   InitializeCriticalSection(&m_sitesLock);
+  InitializeCriticalSection(&m_socketLock);
 
   // Initially the counter is stopped
   m_counter.Stop();
@@ -162,6 +163,7 @@ HTTPServer::~HTTPServer()
   // Free CS to the OS
   DeleteCriticalSection(&m_eventLock);
   DeleteCriticalSection(&m_sitesLock);
+  DeleteCriticalSection(&m_socketLock);
 
   // Resetting the signal handlers
   ResetProcessAfterSEH();
@@ -1581,7 +1583,7 @@ HTTPServer::CheckEventStreams()
         ServerEvent* event = new ServerEvent("close");
         SendEvent(stream,event);
         // Remove request from the request queue, closing the connection
-        CloseRequestStream(stream->m_requestID);
+        CancelRequestStream(stream->m_requestID);
         // Erase stream, it's out of chunks now
         delete it->second;
         it = m_eventStreams.erase(it);
@@ -1591,7 +1593,7 @@ HTTPServer::CheckEventStreams()
         DETAILLOGS("Abandoned push-event client from: ",stream->m_baseURL);
 
         // Remove request from the request queue, closing the connection
-        CloseRequestStream(stream->m_requestID);
+        CancelRequestStream(stream->m_requestID);
         // Erase dead stream, and goto next
         delete it->second;
         it = m_eventStreams.erase(it);
@@ -1740,7 +1742,7 @@ HTTPServer::AbortEventStream(EventStream* p_stream)
       if(p_stream->m_alive)
       {
         // Abandon the stream in the correct server
-        CloseRequestStream(p_stream->m_requestID);
+        CancelRequestStream(p_stream->m_requestID);
       }
       // Done with the stream
       delete p_stream;
@@ -1851,6 +1853,7 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
   DETAILLOGV("Register websocket [%s] at the server",key.GetString());
   key.MakeLower();
 
+  AutoCritSec lock(&m_socketLock);
   SocketMap::iterator it = m_sockets.find(key);
   if(it != m_sockets.end())
   {
@@ -1866,18 +1869,19 @@ bool
 HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
 {
   XString key = p_socket->GetIdentityKey();
+  DETAILLOGV("Unregistering websocket [%s] from the server",key.GetString());
   key.MakeLower();
 
+  AutoCritSec lock(&m_socketLock);
   SocketMap::iterator it = m_sockets.find(key);
   if(it != m_sockets.end())
   {
     delete it->second;
     m_sockets.erase(it);
-    DETAILLOGV("Unregistering websocket [%s] from the server",key.GetString());
     return true;
   }
   // We don't have it
-  ERRORLOG(ERROR_FILE_NOT_FOUND,"Websocket [%s] to unregister NOT FOUND!",key.GetString());
+  ERRORLOG(ERROR_FILE_NOT_FOUND,"Websocket to unregister NOT FOUND! : " + key);
   return false;
 }
 
@@ -1887,6 +1891,7 @@ HTTPServer::FindWebSocket(XString p_key)
 {
   p_key.MakeLower();
 
+  AutoCritSec lock(&m_socketLock);
   SocketMap::iterator it = m_sockets.find(p_key);
   if(it != m_sockets.end())
   {

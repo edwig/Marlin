@@ -258,7 +258,10 @@ ServerReadCompletionIIS(HRESULT p_error,
     _set_se_translator(SeTranslator);
     try
     {
+      if(!IsBadReadPtr(socket,sizeof(WebSocketServerIIS)))
+      {
       socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+    }
     }
     catch(StdException& ex)
     {
@@ -585,54 +588,42 @@ WebSocketServerIIS::PostCompletion(DWORD dwErrorCode, DWORD /*dwNumberOfBytes*/)
 bool
 WebSocketServerIIS::CloseSocket()
 {
-  if(m_iis_socket)
+  bool closed(false);
+
+  if(m_iis_socket && (m_openReading || m_openWriting))
   {
-    // Make local copies, so we are non-reentrant
+    // Make local copy, so we are non-reentrant
     // Canceling I/O can make read/write closing end up here!!
-    HTTPServer* server = m_server;
     IWebSocketContext* context = m_iis_socket;
     m_iis_socket = nullptr;
+
+    DETAILLOGV("Closing WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
 
     // Try to gracefully close the WebSocket
     try
     {
       context->CancelOutstandingIO();
-
       context->CloseTcpConnection();
-      Yield();
-      Sleep(100);
-      Yield();
+      Sleep(0); // Yield the thread to IIS
     }
-#ifndef MARLIN_USE_ATL_ONLY
-    catch(CException& er)
-    {
-      ERRORLOG(12102,MessageFromException(er).GetString());
-    }
-#endif
     catch(StdException& ex)
     {
       ReThrowSafeException(ex);
       ERRORLOG(12102,ex.GetErrorMessage().GetString());
     }
-
-    // Cancel the outstanding request altogether
-    server->CloseRequestStream(m_request);
-
-    DETAILLOGV("Closed WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
-
-    // Reduce memory, removing reading/writing stacks
-    Reset();
-
-    // Now find the IWebSocketContext
-//     IHttpContext* contextIIS = reinterpret_cast<IHttpContext*>(m_request);
-//     IHttpContext3* context3  = nullptr;
-//     HRESULT hr = HttpGetExtendedInterface(g_iisServer,contextIIS,&context3);
-//     if (SUCCEEDED(hr))
-//     {
-//       context3->PostCompletion(0,OverlappedCompletion,this);
-//     }
-    return true;
+    // We are no longer open
+    m_openReading = false;
+    m_openWriting = false;
+    closed = true;
   }
-  return false;
+    // Cancel the outstanding request altogether
+  // Otherwise the global application pool cannot close
+  if(m_request)
+  {
+    m_server->CancelRequestStream(m_request,false);
+    m_request = NULL;
+    Sleep(0); // Yield the thread to IIS
+  }
+  return closed;
 }
 

@@ -83,6 +83,8 @@ public:
   int  SendChannel();
   // Process the receiving part of the queue
   int  Receiving();
+  // Sanity check on channel
+  void CheckChannel();
   // Post a new event, giving a new event numerator
   int  PostEvent(XString p_payload,XString p_sender,EvtType p_type = EvtType::EV_Message,XString p_typeName = "");
   // Flushing a channel directly
@@ -119,7 +121,7 @@ public:
   void    OnCloseSocket(WebSocket* p_socket);
 
 private:
-  void CloseSocket(WebSocket* p_socket,bool p_direct = false);
+  void CloseSocket(WebSocket* p_socket);
   void CloseStream(EventStream* p_stream);
   int  SendQueueToSocket();
   int  SendQueueToStream();

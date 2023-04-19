@@ -715,7 +715,7 @@ HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request,XString /*p_prefix*/)
   if(hr != S_OK)
   {
     ERRORLOG(HRESULT_FROM_WIN32(hr),"Flushing WebSocket failed!");
-    CloseRequestStream(p_request);
+    CancelRequestStream(p_request);
     return false;
   }
   return true;
@@ -1391,29 +1391,29 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
   // Final closing of the connection
   if(p_continue == false)
   {
-    CloseRequestStream(p_response);
+    CancelRequestStream(p_response);
   }
   return (hr == S_OK);
 }
 
-// Used for closing a WebSocket or an event stream
+// Used for canceling a WebSocket or an event stream
 void
-HTTPServerIIS::CloseRequestStream(HTTP_OPAQUE_ID p_response)
+HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_doReset /*=false*/)
 {
   IHttpContext*  context  = reinterpret_cast<IHttpContext*>(p_response);
   IHttpResponse* response = context->GetResponse();
-  HRESULT result = S_OK;
 
   try
   {
-    // Set the response status codes
-    response->SetStatus(HTTP_STATUS_NO_CONTENT,GetHTTPStatusText(HTTP_STATUS_NO_CONTENT));
-    response->SetNeedDisconnect();
-
-    // Flush the response
-    DWORD sent(0);
-    result = response->Flush(FALSE,FALSE,&sent);
-
+    // Set disconnection
+    if(p_doReset)
+    {
+      context->PostCompletion(0);
+    }
+    else
+    {
+      response->SetNeedDisconnect();
+    }
     // Now ready with the IIS context. Original request is finished
     context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
 
@@ -1422,7 +1422,7 @@ HTTPServerIIS::CloseRequestStream(HTTP_OPAQUE_ID p_response)
   catch(StdException& er)
   {
     ReThrowSafeException(er);
-    ERRORLOG(HRESULT_FROM_WIN32(result),"Cannot close Event/WebSocket stream! " + er.GetErrorMessage());
+    ERRORLOG(ERROR_INVALID_PARAMETER,"Cannot close Event/WebSocket stream! " + er.GetErrorMessage());
   }
 }
 

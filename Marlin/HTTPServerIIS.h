@@ -92,7 +92,7 @@ protected:
   // Initialise general server header settings
   virtual void InitHeaders();
   // Used for canceling a WebSocket for an event stream
-  virtual void CloseRequestStream(HTTP_OPAQUE_ID p_response);
+  virtual void CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_doReset = false);
 
 private:
   // Finding the impersonation access token

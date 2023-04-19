@@ -832,7 +832,7 @@ ServerEventDriver::RecalculateInterval(int p_sent)
 void
 ServerEventDriver::SendChannels()
 {
-  DETAILLOG1("ServerEventDriver monitor waking up. Sending to client channels.");
+  DETAILLOG1("ServerEventDriver monitor waking up. Sending/Receiving client channels.");
   int sent = 0;
 
   try
@@ -843,6 +843,12 @@ ServerEventDriver::SendChannels()
     {
       AutoCritSec lock(&m_lock);
       channels = m_channels;
+    }
+
+    // Check all channels 
+    for(auto& channel : channels)
+    {
+      channel.second->CheckChannel();
     }
 
     // All outbound traffic

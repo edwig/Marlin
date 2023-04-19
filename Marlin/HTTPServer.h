@@ -194,7 +194,7 @@ public:
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,XString p_prefix) = 0;
   // Used for canceling a WebSocket for an event stream
-  virtual void       CloseRequestStream(HTTP_OPAQUE_ID p_response) = 0;
+  virtual void       CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_reset = false) = 0;
   // Sending a response on a message
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
   // Sending a response as a chunk
@@ -480,6 +480,7 @@ protected:
   CRITICAL_SECTION        m_eventLock;              // Pulsing events or accessing streams
   // WebSocket
   SocketMap               m_sockets;                // Registered WebSockets
+  CRITICAL_SECTION        m_socketLock;             // Lock to register, find, remove WebSockets
   // Registered DDOS Attacks
   DDOSMap                 m_attacks;                // Registration of DDOS attacks
 };
