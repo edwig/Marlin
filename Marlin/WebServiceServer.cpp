@@ -612,8 +612,9 @@ WebServiceServer::RunService()
     return false;
   }
 
-  // Only starting the server if no errors found
-  if(::GetLastError() == NO_ERROR)
+  // Only starting the server if no (real) errors found
+  if(::GetLastError() == NO_ERROR || 
+     ::GetLastError() == ERROR_ALREADY_EXISTS)
   {
     // Go run our service!!
     if(m_httpServer->GetIsRunning() == false)

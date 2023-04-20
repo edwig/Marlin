@@ -122,7 +122,7 @@ public:
   bool        GetSiteNTLMCache(XString p_site,bool    p_default);
   bool        GetSitePreload  (XString p_site);
   IISError    GetSiteError    (XString p_site);
-  XString     GetWebConfig         ();
+  XString     GetWebConfig();
 
   IISHandlers* GetAllHandlers (XString p_site);
   IISHandler*  GetHandler     (XString p_site,XString p_handler);
