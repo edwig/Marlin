@@ -417,7 +417,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,XString p_reason)
   LPCWSTR pointer = L"";
 
   // Check if already closed
-  if(m_iis_socket == nullptr)
+  if(m_iis_socket == nullptr || !m_openWriting)
   {
     return true;
   }
@@ -430,7 +430,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,XString p_reason)
   // Still other parameters and reason to do
   BOOL expected = FALSE;
   XString message;
-  HRESULT hr = S_FALSE;
+  HRESULT hr = E_FAIL;
   try
   {
     hr = m_iis_socket->SendConnectionClose(TRUE
@@ -443,11 +443,11 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,XString p_reason)
   catch (StdException& ex)
   {
     UNREFERENCED_PARAMETER(ex);
-    hr = S_FALSE;
+    hr = E_FAIL;
   }
-  delete[] buffer;
   if(FAILED(hr))
   {
+    delete[] buffer;
     ERRORLOG(ERROR_INVALID_OPERATION,"Cannot send a 'close' message on the WebSocket [" + m_key + "] on [" + m_uri + "] " + message);
     return false;
   }
@@ -455,6 +455,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,XString p_reason)
   {
     SocketWriter(hr,length,true,true,false);
   }
+  delete[] buffer;
   DETAILLOGV("Sent a 'close' message [%d:%s] on WebSocket [%s] on [%s]",p_code,p_reason.GetString(),m_key.GetString(),m_uri.GetString());
   return true;
 }
