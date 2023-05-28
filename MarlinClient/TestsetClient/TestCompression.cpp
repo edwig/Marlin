@@ -40,8 +40,9 @@ int TestChunkedTransfer(HTTPClient* p_client)
   int errors = 0;
 
   CString url;
-//  CString url("http://anglesharp.azurewebsites.net/Chunked");
-//  CString url("https://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.1693287678408546");
+  // url = "http://anglesharp.azurewebsites.net/Chunked";
+  // url = "https://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.1693287678408546";
+  // url = "https://jigsaw.w3.org/HTTP/ChunkedScript";
   url.Format("http://%s:%d/MarlinTest/Chunking/Releasenotes.txt",MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_get,url);
 

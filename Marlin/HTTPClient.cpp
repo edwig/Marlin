@@ -1048,7 +1048,7 @@ HTTPClient::AddExtraHeaders()
   }
   if(m_httpCompression)
   {
-    AddHeader("Accept-Encoding","gzip");
+    AddHeader("Accept-Encoding","chunked, gzip");
   }
   if(m_terminalServices)
   {
@@ -3152,9 +3152,10 @@ HTTPClient::Send()
   }
   DETAILLOG("Returned HTTP status: %d:%s",m_status,GetHTTPStatusText(m_status));
 
-  // See if we must do 'gzip' decompression
+  // See if we must do 'gzip' decompression.
+  // Header can contain other information (e.g. "chunked")
   XString compress = ReadHeaderField(WINHTTP_QUERY_CONTENT_ENCODING);
-  if(compress.CompareNoCase("gzip") == 0)
+  if(compress.Find("gzip") >= 0)
   {
     // DECompress in-memory with ZLib from a 'gzip' HTTP buffer 
     size_t before = m_responseLength;
