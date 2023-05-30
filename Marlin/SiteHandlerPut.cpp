@@ -53,11 +53,7 @@ SiteHandlerPut::PreHandle(HTTPMessage* /*p_message*/)
   return true;
 }
 
-// BEWARE!
-// Not what you want to do here. So why is this code here?
-// You should write your own override of this function, because this one 
-// does not have any security checking whatsoever!!!!!
-// But it shows, how it's done. So use this example
+// Handle our PUT request
 bool
 SiteHandlerPut::Handle(HTTPMessage* p_message)
 {
