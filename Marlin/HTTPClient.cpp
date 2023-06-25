@@ -398,7 +398,7 @@ HTTPClient::Initialize()
   DETAILLOG("HTTP Timeouts set [%d/%d/%d/%d]",m_timeoutResolve,m_timeoutConnect,m_timeoutSend,m_timeoutReceive);
 
   // Prepare a tracing agent
-  if(MUSTLOG(HLL_LOGBODY) && !m_trace)
+  if(MUSTLOG(HLL_LOGBODY) && !m_trace && m_log)
   {
     m_trace = new HTTPClientTracing(this);
   }
@@ -506,6 +506,11 @@ HTTPClient::SetLogging(LogAnalysis* p_log,bool p_transferOwnership /*= false*/)
   {
     m_logLevel = p_log->GetLogLevel();
     InitLogging();
+  }
+  else if(m_trace)
+  {
+    delete m_trace;
+    m_trace = nullptr;
   }
 }
 
