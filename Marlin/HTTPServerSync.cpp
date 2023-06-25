@@ -403,6 +403,15 @@ HTTPServerSync::RunHTTPServer()
                                     requestBufferLength,// request buffer length
                                     &bytesRead,         // bytes received
                                     NULL);              // LPOVERLAPPED
+    
+    // See if server was aborted by the closing of the request queue
+    if(result == ERROR_OPERATION_ABORTED)
+    {
+      DETAILLOG1("Operation on the HTTP server aborted!");
+      m_running = false;
+      break;
+    }
+
     // Use counter
     m_counter.Start();
 
@@ -1156,7 +1165,24 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   response.Headers.UnknownHeaderCount = (USHORT) ukheaders.size();
   response.Headers.pUnknownHeaders    = unknown;
 
+  // Calculate the content length
+  XString contentLength;
   size_t totalLength = buffer ? buffer->GetLength() : 0;
+
+  // Sync server providing our own error page
+  if(totalLength == 0 && status >= HTTP_STATUS_BAD_REQUEST)
+  {
+    if(status >= HTTP_STATUS_SERVER_ERROR)
+    {
+      buffer->SetBuffer((uchar*)m_serverErrorPage.GetString(),m_serverErrorPage.GetLength());
+    }
+    else
+    {
+      buffer->SetBuffer((uchar*)m_clientErrorPage.GetString(),m_clientErrorPage.GetLength());
+    }
+    totalLength = buffer->GetLength();
+  }
+
   if(p_message->GetChunkNumber())
   {
     moreData = true;
@@ -1165,7 +1191,6 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   else
   {
     // Now after the compression, add the total content length
-    XString contentLength;
   #ifdef _WIN64
     contentLength.Format("%I64u",totalLength);
   #else
@@ -1220,6 +1245,7 @@ HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE p_response
   DWORD  bytesSent    = 0;
   size_t entityLength = 0;
   HTTP_DATA_CHUNK dataChunk;
+  memset(&dataChunk,0,sizeof(HTTP_DATA_CHUNK));
 
   // Get buffer to send
   if(p_totalLength)
