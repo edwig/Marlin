@@ -69,7 +69,7 @@ int TestUnicode(void)
   {
     PrintBytes(buffer,length);
 
-    CString result;
+    XString result;
     if(TryConvertWideString(buffer,length,"",result,foundBOM))
     {
       PrintBytes((void*)result.GetString(),result.GetLength());
@@ -96,10 +96,10 @@ int TestURLChars(void)
   // Number of tests
   int errors = 2; 
 
-  CString urlString("http://" MARLIN_HOST "/Marlin Test all/URL?first=abc&second=באהגיטכךםלןמףעצפתשüû‎ÿחסץד");
-  CString mustBeUrl("http://" MARLIN_HOST "/Marlin%20Test%20all/URL?first=abc&second=%C3%A1%C3%A0%C3%A4%C3%A2%C3%A9%C3%A8%C3%AB%C3%AA%C3%AD%C3%AC%C3%AF%C3%AE%C3%B3%C3%B2%C3%B6%C3%B4%C3%BA%C3%B9%C3%BC%C3%BB%C3%BD%C3%BF%C3%A7%C3%B1%C3%B5%C3%A3");
+  XString urlString("http://" MARLIN_HOST "/Marlin Test all/URL?first=abc&second=באהגיטכךםלןמףעצפתשüû‎ÿחסץד");
+  XString mustBeUrl("http://" MARLIN_HOST "/Marlin%20Test%20all/URL?first=abc&second=%C3%A1%C3%A0%C3%A4%C3%A2%C3%A9%C3%A8%C3%AB%C3%AA%C3%AD%C3%AC%C3%AF%C3%AE%C3%B3%C3%B2%C3%B6%C3%B4%C3%BA%C3%B9%C3%BC%C3%BB%C3%BD%C3%BF%C3%A7%C3%B1%C3%B5%C3%A3");
   CrackedURL url1(urlString);
-  CString encoded = url1.URL();
+  XString encoded = url1.URL();
 
   // Test if success
   if(encoded == mustBeUrl)
@@ -122,5 +122,31 @@ int TestURLChars(void)
   // --- "---------------------------------------------- - ------
   printf("Testing URL %% encoding and Unicode chars       : %s\n",errors ? "ERROR" : "OK");
 
+  return errors;
+}
+
+int TestCrackURL(void)
+{
+  int errors = 3;
+
+  XString urlString1("https://" MARLIN_HOST "/One/Two/tim.berners-lee/room/error404");
+  XString urlString2("https://" MARLIN_HOST "/One/Two/tim.berners-lee/room/error404.html");
+  XString urlString3("https://" MARLIN_HOST "/One/Two/tim.berners-lee/room/error404.html?par1=cern&par2=geneve");
+  CrackedURL url1(urlString1);
+  CrackedURL url2(urlString2);
+  CrackedURL url3(urlString3);
+
+  if(url1.GetExtension().IsEmpty())
+  {
+    --errors;
+  }
+  if(url2.GetExtension() == "html")
+  {
+    --errors;
+  }
+  if(url3.GetExtension() == "html")
+  {
+    --errors;
+  }
   return errors;
 }
