@@ -57,11 +57,11 @@ int TestFindClientCertificate()
 int TestClientCertificate(HTTPClient* p_client)
 {
   bool result = false;
-  CString url;
+  XString url;
   url.Format("https://%s:%d/SecureClientCert/codes.html",MARLIN_HOST,TESTING_CLCERT_PORT);
 
   HTTPMessage msg(HTTPCommand::http_get,url);
-  CString filename("..\\Documentation\\codes.html");
+  XString filename("..\\Documentation\\codes.html");
   msg.SetContentType("text/html");
 
   xprintf("TESTING CLIENT CERTIFICATE FUNCTION TO /SecureClientCert/\n");

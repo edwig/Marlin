@@ -39,7 +39,7 @@ int TestChunkedTransfer(HTTPClient* p_client)
 {
   int errors = 0;
 
-  CString url;
+  XString url;
   // url = "http://anglesharp.azurewebsites.net/Chunked";
   // url = "https://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.1693287678408546";
   // url = "https://jigsaw.w3.org/HTTP/ChunkedScript";
@@ -52,7 +52,7 @@ int TestChunkedTransfer(HTTPClient* p_client)
   {
     xprintf("Chunked result OK");
     // Saving a double copy of our latest releasenotes as a test.
-    CString filename("C:\\TMP\\CHRelNotes.txt");
+    XString filename("C:\\TMP\\CHRelNotes.txt");
     msg.GetFileBuffer()->SetFileName(filename);
     msg.GetFileBuffer()->WriteFile();
   }
@@ -69,7 +69,7 @@ int TestChunkedTransfer(HTTPClient* p_client)
 
 int TestCompression(HTTPClient* p_client)
 {
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/Compression/Releasenotes_v1.txt",MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_get,url);
   msg.SetContentType("text/plain");
@@ -91,7 +91,7 @@ int TestCompression(HTTPClient* p_client)
   }
   else
   {
-    CString filename("CanBeDeleted.txt");
+    XString filename("CanBeDeleted.txt");
     msg.GetFileBuffer()->SetFileName(filename);
     msg.GetFileBuffer()->WriteFile();
   }

@@ -39,7 +39,7 @@ static char THIS_FILE[] = __FILE__;
 extern void WaitForKey();
 
 int 
-TestConvertFile(CString p_fileName,CString p_extraFile)
+TestConvertFile(XString p_fileName,XString p_extraFile)
 {
   bool result = false;
   xprintf("\nTESTING\n=======\n");
@@ -48,11 +48,11 @@ TestConvertFile(CString p_fileName,CString p_extraFile)
   fopen_s(&file,p_fileName,"r");
   if(file)
   {
-    CString inhoud;
+    XString inhoud;
     char buffer[1001];
     while(fgets(buffer,1000,file))
     {
-      inhoud += CString(buffer);
+      inhoud += XString(buffer);
     }
     fclose(file);
 
@@ -64,7 +64,7 @@ TestConvertFile(CString p_fileName,CString p_extraFile)
 
     if(msg.GetInternalError() == XmlError::XE_NoError)
     {
-      CString string1,string2;
+      XString string1,string2;
 
       XMLElement* vhe1 = msg.FindElement("Eenheid");
       if(vhe1)
@@ -105,7 +105,7 @@ TestConvertFile(CString p_fileName,CString p_extraFile)
         }
       }
 
-      CString resultaat = msg.Print();
+      XString resultaat = msg.Print();
       xprintf("OK\nMessage is now:\n%s\n",resultaat.GetString());
 
       if(doDetails)

@@ -38,13 +38,13 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-CString CreateNonce()
+XString CreateNonce()
 {
   // Init random generator
   clock_t now = clock();
   srand((unsigned int)now);
 
-  CString nonce;
+  XString nonce;
   for (int index = 0; index < 20; ++index)
   {
     long key = (rand() % 255) + 1;
@@ -57,9 +57,9 @@ CString CreateNonce()
 int TestHashing()
 {
   Crypto  crypt;
-  CString hash;
-  CString password("P@$$w03d4m3"); // Password for me
-  CString buffer("This is a somewhat longer string with an intentional message");
+  XString hash;
+  XString password("P@$$w03d4m3"); // Password for me
+  XString buffer("This is a somewhat longer string with an intentional message");
   int     errors = 0;
 
   // This is what we're testing
@@ -74,7 +74,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_SHA1);
   hash = crypt.Digest(buffer, password);
-  CString expected1("9M9TaD0gWVy4qwVSeN5DEzMYQFE=");
+  XString expected1("9M9TaD0gWVy4qwVSeN5DEzMYQFE=");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_SHA1\n");
   xprintf("DIGEST Expected: %s\n",expected1.GetString());
@@ -88,7 +88,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_HMAC);
   hash = crypt.Digest(buffer,password);
-  CString expected2("9M9TaD0gWVy4qwVSeN5DEzMYQFE=");
+  XString expected2("9M9TaD0gWVy4qwVSeN5DEzMYQFE=");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_HMAC\n");
   xprintf("DIGEST Expected: %s\n", expected2.GetString());
@@ -102,7 +102,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_DSS_SIGN);
   hash = crypt.Digest(buffer,password);
-  CString expected3("onrhIV34nZGqoThg6380Xvk1rT0=");
+  XString expected3("onrhIV34nZGqoThg6380Xvk1rT0=");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_DSS_SIGN\n");
   xprintf("DIGEST Expected: %s\n", expected3.GetString());
@@ -116,7 +116,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_RSA_SIGN);
   hash = crypt.Digest(buffer, password);
-  CString expected4("PtUUjwUxC2BrYogfGWBqIB4lUsGQK76PxBolbL8nAdk=");
+  XString expected4("PtUUjwUxC2BrYogfGWBqIB4lUsGQK76PxBolbL8nAdk=");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_RSA_SIGN\n");
   xprintf("DIGEST Expected: %s\n", expected4.GetString());
@@ -130,7 +130,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_MD2);
   hash = crypt.Digest(buffer, password);
-  CString expected5("Tbf0ESz3tTz/PqhHrJgc1g==");
+  XString expected5("Tbf0ESz3tTz/PqhHrJgc1g==");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_MD2\n");
   xprintf("DIGEST Expected: %s\n", expected5.GetString());
@@ -144,7 +144,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_MD4);
   hash = crypt.Digest(buffer, password);
-  CString expected6("po1oCGriWfvikcPUEBQ/Ow==");
+  XString expected6("po1oCGriWfvikcPUEBQ/Ow==");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_MD4\n");
   xprintf("DIGEST Expected: %s\n", expected6.GetString());
@@ -158,7 +158,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_MD5);
   hash = crypt.Digest(buffer, password);
-  CString expected7("03Ka00wHVBoHj1hzpontgg==");
+  XString expected7("03Ka00wHVBoHj1hzpontgg==");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_MD5\n");
   xprintf("DIGEST Expected: %s\n",expected7.GetString());
@@ -172,7 +172,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_SHA_384);
   hash = crypt.Digest(buffer, password);
-  CString expected8("B/W+IoBdT6Z9YNX584ixk3kaqQBtEXIYVs+O3teFc3z7sj/6oo1OlEkm6UOSUFzE");
+  XString expected8("B/W+IoBdT6Z9YNX584ixk3kaqQBtEXIYVs+O3teFc3z7sj/6oo1OlEkm6UOSUFzE");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_SHA_384\n");
   xprintf("DIGEST Expected: %s\n",expected8.GetString());
@@ -186,7 +186,7 @@ int TestHashing()
   hash.Empty();
   crypt.SetHashMethod(CALG_SHA_512);
   hash = crypt.Digest(buffer, password);
-  CString expected9("12Sw4ChvtCYQ2go9h39LArObGfUUmwtFatUTxfvN5e77w9SdsjzGpymhk0jS8CgZKzhkfvWmfWnSaHKFIvs7fQ==");
+  XString expected9("12Sw4ChvtCYQ2go9h39LArObGfUUmwtFatUTxfvN5e77w9SdsjzGpymhk0jS8CgZKzhkfvWmfWnSaHKFIvs7fQ==");
   xprintf("\n");
   xprintf("DIGEST Method  : CALG_SHA_512\n");
   xprintf("DIGEST Expected: %s\n", expected9.GetString());
@@ -198,14 +198,14 @@ int TestHashing()
   errors += (hash == expected9) ? 0 : 1;
 
   // TEST 10
-  CString nonce = CreateNonce();
-  CString created("2022-04-25T10:23:55");
+  XString nonce = CreateNonce();
+  XString created("2022-04-25T10:23:55");
 
   // Password text = Base64(SHA1(nonce + created + password))
-  CString combined = nonce + created + password;
-  CString total1 = crypt.Digest(combined.GetString(),combined.GetLength(), CALG_SHA1);
+  XString combined = nonce + created + password;
+  XString total1 = crypt.Digest(combined.GetString(),combined.GetLength(), CALG_SHA1);
   Crypto  crypt2;
-  CString total2 = crypt2.Digest(combined.GetString(),combined.GetLength(), CALG_SHA1);
+  XString total2 = crypt2.Digest(combined.GetString(),combined.GetLength(), CALG_SHA1);
   errors += (total1 == total2) ? 0 : 1;
 
   // SUMMARY OF THE TEST
@@ -213,11 +213,11 @@ int TestHashing()
   printf("Re-hashing with SHA1 is stable (TokenProfile)  : %s\n", (total1 == total2) ? "OK" : "ERROR");
 
   // TEST11
-  CString nonce64("ZmJEiZTMUu7IqTVuvZPy7g==");
+  XString nonce64("ZmJEiZTMUu7IqTVuvZPy7g==");
   nonce = Base64::Decrypt(nonce64);
   combined = nonce + "2022-04-25T11:32:22.745Z" + "MijnWachtwoord$$";
-  CString total3 = crypt.Digest(combined.GetString(), combined.GetLength(), CALG_SHA1);
-  CString expected10("cvVPyMJr/9W6plAwmuG2wl27akU=");
+  XString total3 = crypt.Digest(combined.GetString(), combined.GetLength(), CALG_SHA1);
+  XString expected10("cvVPyMJr/9W6plAwmuG2wl27akU=");
   errors += (total3 == expected10) ? 0 : 1;
 
   // SUMMARY OF THE TEST
@@ -231,9 +231,9 @@ int TestHashing()
 int  TestEncryption(void)
 {
   Crypto crypt;
-  CString result;
-  CString password("P@$$w03d4m3"); // Password for me
-  CString buffer("This is a somewhat longer string with an intentional message");
+  XString result;
+  XString password("P@$$w03d4m3"); // Password for me
+  XString buffer("This is a somewhat longer string with an intentional message");
 
   // This is what we test
   xprintf("TESTING ENCRYPTION PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");
@@ -269,8 +269,8 @@ int  TestEncryption(void)
 int TestEncryptionLongerStrings()
 {
   Crypto  crypt;
-  CString result;
-  CString password("V3ryL0ngP@$$w03dL0ng3rTh@n16Ch@r$"); // 38 chars long!
+  XString result;
+  XString password("V3ryL0ngP@$$w03dL0ng3rTh@n16Ch@r$"); // 38 chars long!
   int     errors = 0;
 
   xprintf("TESTING THE MICROSOFT ENCYRPTION PROVIDER FOR ALL SORTS OF STRING\n");
@@ -280,14 +280,14 @@ int TestEncryptionLongerStrings()
   for(int length = 1; length <= 3000; ++length)
   {
     // Construct original string
-    CString original;
+    XString original;
     for (int index = 0; index < length; ++index)
     {
       original += (char) ('A' + index % 26);
     }
 
-    CString encrypted = crypt.Encryption(original, password);
-    CString decrypted = crypt.Decryption(encrypted,password);
+    XString encrypted = crypt.Encryption(original, password);
+    XString decrypted = crypt.Decryption(encrypted,password);
 
     if(original != decrypted)
     {
@@ -307,9 +307,9 @@ int TestEncryptionLongerStrings()
 int  TestFastEncryption(void)
 {
   Crypto crypt;
-  CString result;
-  CString password("P@$$w03d4m3"); // Password for me
-  CString buffer("This is a somewhat longer string with an intentional message");
+  XString result;
+  XString password("P@$$w03d4m3"); // Password for me
+  XString buffer("This is a somewhat longer string with an intentional message");
 
   // This is what we test
   xprintf("TESTING ENCRYPTION PROVIDERS AND METHODS OF MS-Cryptographic-providers\n");

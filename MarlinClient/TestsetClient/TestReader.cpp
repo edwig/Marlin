@@ -49,7 +49,7 @@ PrintSoapFault(SOAPMessage& p_msg)
 int  SimplePOS()
 {
   bool result = false;
-  CString soap("<FirstCommand>\n"
+  XString soap("<FirstCommand>\n"
                "   <Param1>first</Param1>\n"
                "   <Param2 />\n"
                "   <Param3>third</Param3>\n"
@@ -65,10 +65,10 @@ int  SimplePOS()
   }
   else
   {
-    CString action = msg.GetSoapAction();
-    CString param1 = msg.GetParameter("Param1");
-    CString param2 = msg.GetParameter("Param2");
-    CString param3 = msg.GetParameter("Param3");
+    XString action = msg.GetSoapAction();
+    XString param1 = msg.GetParameter("Param1");
+    XString param2 = msg.GetParameter("Param2");
+    XString param3 = msg.GetParameter("Param3");
 
     xprintf("Soap action: %s\n", action.GetString());
     xprintf("Parameter 1: %s\n", param1.GetString());
@@ -93,7 +93,7 @@ int  SimplePOS()
 int Soap11_noADR()
 {
   bool result = false;
-  CString soap("<Envelope>\n"
+  XString soap("<Envelope>\n"
                "  <Header>\n"
                "    <MessageID>12345</MessageID>\n"
                "  </Header>\n"
@@ -116,10 +116,10 @@ int Soap11_noADR()
   }
   else
   {
-    CString action = msg.GetSoapAction();
-    CString param1 = msg.GetParameter("Param1");
-    CString param2 = msg.GetParameter("Param2");
-    CString param3 = msg.GetParameter("Param3");
+    XString action = msg.GetSoapAction();
+    XString param1 = msg.GetParameter("Param1");
+    XString param2 = msg.GetParameter("Param2");
+    XString param3 = msg.GetParameter("Param3");
 
     xprintf("Soap action: %s\n", action.GetString());
     xprintf("Parameter 1: %s\n", param1.GetString());
@@ -144,7 +144,7 @@ int Soap11_noADR()
 int Soap12_ADR()
 {
   bool result = false;
-  CString soap("<Envelope>\n"
+  XString soap("<Envelope>\n"
                "  <Header>\n"
                "    <Action mustUnderstand=\"1\">http://services.marlin.org/Test/SmallObject</Action>\n"
                "  </Header>\n"
@@ -167,10 +167,10 @@ int Soap12_ADR()
   }
   else
   {
-    CString action = msg.GetSoapAction();
-    CString param1 = msg.GetParameter("Param1");
-    CString param2 = msg.GetParameter("Param2");
-    CString param3 = msg.GetParameter("Param3");
+    XString action = msg.GetSoapAction();
+    XString param1 = msg.GetParameter("Param1");
+    XString param2 = msg.GetParameter("Param2");
+    XString param3 = msg.GetParameter("Param3");
 
     xprintf("Soap action: %s\n", action.GetString());
     xprintf("Parameter 1: %s\n", param1.GetString());
@@ -195,7 +195,7 @@ int Soap12_ADR()
 int Soap12_ADR_MDS()
 {
   bool result = false;
-  CString soap("<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\">\n"
+  XString soap("<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\">\n"
                "  <s:Header>\n"
                "    <a:Action s:mustUnderstand=\"1\">http://schemas.marlin.org/general/services/2015/IContainer/CreateContainerResponse</a:Action>\n"
                "    <a:RelatesTo>urn:uuid:b7681987-20f4-4fb5-9a74-383142da799c</a:RelatesTo>\n"
@@ -233,9 +233,9 @@ int Soap12_ADR_MDS()
   }
   else
   {
-    CString action  = msg.GetSoapAction();
-    CString resCode = msg.GetParameter("ResultCode");
-    CString folder;
+    XString action  = msg.GetSoapAction();
+    XString resCode = msg.GetParameter("ResultCode");
+    XString folder;
 
     xprintf("Soap action: %s\n", action.GetString());
     xprintf("Result code: %s\n", resCode.GetString());
@@ -267,7 +267,7 @@ int Soap12_ADR_MDS()
 int Soap12_NS_request()
 {
   bool result = false;
-  CString soap("<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\">\n"
+  XString soap("<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\">\n"
                "  <s:Header>\n"
                "    <a:Action s:mustUnderstand=\"1\">http://schemas.marlin.org/general/services/2012/IContent/GetContent</a:Action>\n"
                "    <h:Command xmlns:h=\"http://schemas.marlin.org/general/services/2012\"\n"
@@ -317,7 +317,7 @@ int Soap12_NS_request()
   }
   else
   {
-    CString action = msg.GetSoapAction();
+    XString action = msg.GetSoapAction();
     xprintf("Soap action: %s\n",action.GetString());
     result = (action == "IContent/GetContent");
     // SUMMARY OF THE TEST
@@ -330,7 +330,7 @@ int Soap12_NS_request()
 int Soap12_NS_response()
 {
   bool result = false;
-  CString soap("<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\">\n"
+  XString soap("<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://www.w3.org/2005/08/addressing\">\n"
                "  <s:Header>\n"
                "    <a:Action s:mustUnderstand=\"1\">http://schemas.marlin.org/general/services/2012/IContent/GetContentResponse</a:Action>\n"
                "    <a:RelatesTo>urn:uuid:82aca07f-88a8-4e05-be69-2c897e6b93bb</a:RelatesTo>\n"
@@ -364,7 +364,7 @@ int Soap12_NS_response()
   }
   else
   {
-    CString action = msg.GetSoapAction();
+    XString action = msg.GetSoapAction();
     xprintf("Soap action: %s\n",action.GetString());
     xprintf("OK\n%s\n",msg.Print().GetString());
 
@@ -381,7 +381,7 @@ int TestXMLMessage1()
   XMLMessage msg;
   bool result = false;
   // Message inclusief UTF-8 encoding (2e node <Address>)
-  CString text("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"
+  XString text("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"
                "<RootNode xmlns=\"one\">\n"
                "  <a:Node1 atr1=\"12\" xmlns:a=\"http://one.two.com/\">testing</a:Node1>\n"
                "  <Node2>two</Node2>\n"
@@ -425,7 +425,7 @@ int TestXMLMessage2()
   XMLMessage msg;
   bool result = false;
   // Incomplete message
-  CString text("<?xml  version=\"1.0\" encoding=\"utf-8\" ?>\n"
+  XString text("<?xml  version=\"1.0\" encoding=\"utf-8\" ?>\n"
                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope\">\n"
                "<soap:Body>\n"
                "  <TestSoapException_FirstOperation>\n"
@@ -479,7 +479,7 @@ TestXMLMessage3()
   SOAPMessage msg;
   bool result = false;
   // Incomplete message
-  CString text("<?xml  version=\"1.0\" encoding=\"utf-8\" ?>\n"
+  XString text("<?xml  version=\"1.0\" encoding=\"utf-8\" ?>\n"
                "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\"\n"
                "       soap:encodingStyle=\"http://www.w3.org/2003/12/soap-encoding\">\n"
                "<soap:Body>\n"
@@ -539,17 +539,17 @@ int
 TestXMLMessage4()
 {
   bool result = false;
-  CString namesp = DEFAULT_NAMESPACE;
-  CString action = "MyAction";
+  XString namesp = DEFAULT_NAMESPACE;
+  XString action = "MyAction";
 
   SOAPMessage msg(namesp,action);
   msg.SetParameter("PriceTag","€ 42,00");
   msg.SetEncoding(StringEncoding::ENC_UTF8);
 
-  CString test1 = msg.GetSoapMessage();
+  XString test1 = msg.GetSoapMessage();
 
   SOAPMessage msg2(test1,true);
-  CString priceTag = msg2.GetParameter("PriceTag");
+  XString priceTag = msg2.GetParameter("PriceTag");
 
   // Test for positive result
   if(priceTag == "€ 42,00")
@@ -568,17 +568,17 @@ int
 TestXMLMessage5()
 {
   bool result = false;
-  CString namesp = DEFAULT_NAMESPACE;
-  CString action = "MyAction";
+  XString namesp = DEFAULT_NAMESPACE;
+  XString action = "MyAction";
 
   SOAPMessage msg(namesp,action);
   msg.SetParameter("PriceTag","€ 42,00");
   msg.SetEncoding(StringEncoding::ENC_ISO88591);
 
-  CString test1 = msg.GetSoapMessage();
+  XString test1 = msg.GetSoapMessage();
 
   SOAPMessage msg2(test1,true);
-  CString priceTag = msg2.GetParameter("PriceTag");
+  XString priceTag = msg2.GetParameter("PriceTag");
 
   // Test for positive result
   if(priceTag == "€ 42,00")
@@ -597,17 +597,17 @@ int
 TestXMLMessage6()
 {
   bool result = false;
-  CString namesp = DEFAULT_NAMESPACE;
-  CString action = "MyAction";
+  XString namesp = DEFAULT_NAMESPACE;
+  XString action = "MyAction";
 
   SOAPMessage msg(namesp,action);
   msg.SetParameter("PriceTag","€ 42,00");
   msg.SetEncoding(StringEncoding::ENC_Plain);
 
-  CString test1 = msg.GetSoapMessage();
+  XString test1 = msg.GetSoapMessage();
 
   SOAPMessage msg2(test1,true);
-  CString priceTag = msg2.GetParameter("PriceTag");
+  XString priceTag = msg2.GetParameter("PriceTag");
 
   // Test for positive result
   if(priceTag == "€ 42,00")
@@ -626,9 +626,9 @@ int
 TestJSONMessage1()
 {
   bool result = false;
-  CString text = "{\"PriceTag\":\"€ 42,00\"}";
+  XString text = "{\"PriceTag\":\"€ 42,00\"}";
   JSONMessage msg(text);
-  CString test = msg.GetJsonMessage();
+  XString test = msg.GetJsonMessage();
 
   // msg.SetEncoding(JsonEncoding::JENC_UTF8);
   // test = msg.GetJsonMessage(JsonEncoding::JENC_UTF8);
@@ -650,10 +650,10 @@ TestJSONMessage2()
 {
   int result = 2;
 
-  CString text = "{\"PriceTag\":\"€ 42,00\"}";
+  XString text = "{\"PriceTag\":\"€ 42,00\"}";
   JSONMessage msg(text);
-  CString test = msg.GetJsonMessage(StringEncoding::ENC_UTF8);
-  CString mustbe = "{\"PriceTag\":\"\xe2\x82\xac 42,00\"}";
+  XString test = msg.GetJsonMessage(StringEncoding::ENC_UTF8);
+  XString mustbe = "{\"PriceTag\":\"\xe2\x82\xac 42,00\"}";
 
   if(test == mustbe)
   {
@@ -661,7 +661,7 @@ TestJSONMessage2()
   }
 
   JSONMessage msg2(mustbe);
-  CString tt2 = msg2.GetJsonMessage();
+  XString tt2 = msg2.GetJsonMessage();
 
   if(tt2 == text)
   {
@@ -680,10 +680,10 @@ TestJSONMessage3()
 {
   int result = 2;
 
-  CString text = "{\"PriceTag\":\"€ 42,00\"}";
+  XString text = "{\"PriceTag\":\"€ 42,00\"}";
   JSONMessage msg(text);
-  CString test = msg.GetJsonMessage(StringEncoding::ENC_ISO88591);
-  CString mustbe = "{\"PriceTag\":\"\x80 42,00\"}";
+  XString test = msg.GetJsonMessage(StringEncoding::ENC_ISO88591);
+  XString mustbe = "{\"PriceTag\":\"\x80 42,00\"}";
 
   if(test == mustbe)
   {
@@ -691,7 +691,7 @@ TestJSONMessage3()
   }
 
   JSONMessage msg2(mustbe,false,StringEncoding::ENC_Plain);
-  CString tt2 = msg2.GetJsonMessage();
+  XString tt2 = msg2.GetJsonMessage();
 
   if(tt2 == text)
   {

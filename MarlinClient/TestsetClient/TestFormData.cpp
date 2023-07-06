@@ -34,13 +34,13 @@
 #include "MultiPartBuffer.h"
 
 // Beware Debugging starting directory MUST be "$(OutDir)"
-CString file = "..\\Documentation\\HTML5-eventsource.js";
+XString file = "..\\Documentation\\HTML5-eventsource.js";
 
-CString GetJsonString()
+XString GetJsonString()
 {
   // TEST ROUNDTRIP SOAP -> JSON
-  CString namesp("http://test.marlin.org/interface");
-  CString action("FirstAction");
+  XString namesp("http://test.marlin.org/interface");
+  XString action("FirstAction");
   SOAPMessage msg(namesp,action);
   msg.SetParameter("First", 101);
   msg.SetParameter("Second",102);
@@ -53,7 +53,7 @@ CString GetJsonString()
   }
   JSONMessage json(&msg);
   json.SetWhitespace(true);
-  CString str = json.GetJsonMessage();
+  XString str = json.GetJsonMessage();
 
   return str;
 }
@@ -61,7 +61,7 @@ CString GetJsonString()
 int 
 TestFormDataMP(HTTPClient* p_client)
 {
-  CString data = GetJsonString();
+  XString data = GetJsonString();
 
   MultiPartBuffer buffer(FormDataType::FD_MULTIPART);
   MultiPart* part1 = buffer.AddPart("json", "application/json",data);
@@ -80,7 +80,7 @@ TestFormDataMP(HTTPClient* p_client)
   //         or even crash on it (WCF .NET returns HTTP status 500)
   buffer.SetFileExtensions(true);
 
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/FormData",MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_post,url);
   msg.SetMultiPartFormData(&buffer);
@@ -95,7 +95,7 @@ TestFormDataMP(HTTPClient* p_client)
 
   if(result == false)
   {
-    CString error;
+    XString error;
     p_client->GetError(&error);
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
@@ -113,7 +113,7 @@ TestFormDataUE(HTTPClient* p_client)
   buffer.AddPart("two","text/html","Tree-Leaf-Root");
   buffer.AddPart("three","text/rtf","normal{\\b bold} and {\\i italic}");
 
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/FormData",MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_post,url);
   msg.SetMultiPartFormData(&buffer);
@@ -128,7 +128,7 @@ TestFormDataUE(HTTPClient* p_client)
 
   if(result == false)
   {
-    CString error;
+    XString error;
     p_client->GetError(&error);
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
@@ -140,10 +140,10 @@ TestFormDataUE(HTTPClient* p_client)
 
 int TestFD()
 {
-  CString filename("C:\\TEMP\\mpbuffer.txt");
+  XString filename("C:\\TEMP\\mpbuffer.txt");
   FILE* fp = nullptr;
   char buffer[4004];
-  CString contenttype("multipart/form-data boundary=\"------WebKitFormBoundaryBFCjeYoxVSC92Luo\"");
+  XString contenttype("multipart/form-data boundary=\"------WebKitFormBoundaryBFCjeYoxVSC92Luo\"");
 
   fopen_s(&fp, filename, "rb");
   if (fp)

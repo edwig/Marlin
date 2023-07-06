@@ -36,10 +36,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-int Testsplit(CString p_soapAction,CString p_expect)
+int Testsplit(XString p_soapAction,XString p_expect)
 {
   int result = 0;
-  CString namesp,action;
+  XString namesp,action;
   xprintf("SOAPAction : %s\t",p_soapAction.GetString());
   if(SplitNamespaceAndAction(p_soapAction,namesp,action))
   {
@@ -77,15 +77,15 @@ int NamespaceInSOAP11()
   int errors = 0;
 
   double num(77.88);
-  CString namesp("http://www.myname.org/interface/");
-  CString action("FunctionCall");
+  XString namesp("http://www.myname.org/interface/");
+  XString action("FunctionCall");
   SOAPMessage msg(namesp,action,SoapVersion::SOAP_11);
   msg.SetParameter("ParameterOne", "One");
   msg.SetParameter("ParameterTwo", "Two");
   msg.SetParameter("Number",num);
 
-  CString message = msg.GetSoapMessage();
-  CString expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+  XString message = msg.GetSoapMessage();
+  XString expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                      "<s:Envelope xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
                      "  <s:Header />\n"
                      "  <s:Body>\n"
@@ -110,15 +110,15 @@ int NamespaceInSOAP12()
   int errors = 0;
 
   double num(77.88);
-  CString namesp("http://www.myname.org/interface/");
-  CString action("FunctionCall");
+  XString namesp("http://www.myname.org/interface/");
+  XString action("FunctionCall");
   SOAPMessage msg(namesp,action);
   msg.SetParameter("ParameterOne", "One");
   msg.SetParameter("ParameterTwo", "Two");
   msg.SetParameter("Number",num);
 
-  CString message = msg.GetSoapMessage();
-  CString expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+  XString message = msg.GetSoapMessage();
+  XString expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                      "<s:Envelope xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:a=\"http://www.w3.org/2005/08/addressing\" xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\">\n"
                      "  <s:Header>\n"
                      "    <a:Action s:mustUnderstand=\"true\">http://www.myname.org/interface/FunctionCall</a:Action>\n"
@@ -142,7 +142,7 @@ int NamespaceInSOAP_Parsed()
 {
   int errors = 0;
 
-  CString internal = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+  XString internal = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                      "<s:Envelope xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:a=\"http://www.w3.org/2005/08/addressing\" xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\">\n"
                      "  <s:Header>\n"
                      "    <a:Action s:mustUnderstand=\"true\">http://www.myname.org/interface/FunctionCall</a:Action>\n"
@@ -156,8 +156,8 @@ int NamespaceInSOAP_Parsed()
                      "  </s:Body>\n"
                      "</s:Envelope>\n";
   SOAPMessage msg(internal,false);
-  CString action = msg.GetSoapAction();
-  CString namesp = msg.GetNamespace();
+  XString action = msg.GetSoapAction();
+  XString namesp = msg.GetNamespace();
 
   errors += action.Compare("FunctionCall") != 0;
   errors += namesp.Compare("http://www.myname.org/interface/") != 0;
@@ -172,25 +172,25 @@ int NamespaceInSOAP_Reparsed()
   int errors = 0;
 
   double num(77.88);
-  CString namesp("http://www.myname.org/interface/");
-  CString action("FunctionCall");
+  XString namesp("http://www.myname.org/interface/");
+  XString action("FunctionCall");
   SOAPMessage msg(namesp, action);
   msg.SetParameter("ParameterOne", "One");
   msg.SetParameter("ParameterTwo", "Two");
   msg.SetParameter("Number", num);
   msg.CompleteTheMessage();
 
-  CString newmsg = "<MyFunction>\n"
+  XString newmsg = "<MyFunction>\n"
                    "   <One>1</One>\n"
                    "   <Two>2</Two>\n"
                    "</MyFunction>";
   msg.ParseAsBody(newmsg);
   msg.SetNamespace("http://www.other.au/api/");
-  CString newaction("MyTestFunction");
+  XString newaction("MyTestFunction");
   msg.SetSoapAction(newaction);
-  CString message = msg.GetSoapMessage();
+  XString message = msg.GetSoapMessage();
 
-  CString expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+  XString expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                      "<s:Envelope xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:a=\"http://www.w3.org/2005/08/addressing\" xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\">\n"
                      "  <s:Header>\n"
                      "    <a:Action s:mustUnderstand=\"true\">http://www.other.au/api/MyTestFunction</a:Action>\n"
@@ -212,8 +212,8 @@ int NamespaceInSOAP_Reparsed()
 int TestNamespaces(void)
 {
   int errors = 0;
-  CString left  ("http://Name.Test.lower\\something");
-  CString right("https://NAME.test.LOWER/SomeThing/");
+  XString left  ("http://Name.Test.lower\\something");
+  XString right("https://NAME.test.LOWER/SomeThing/");
 
   xprintf("TESTING NAMESPACE FUNCTIONS:\n");
   xprintf("========================================================\n");

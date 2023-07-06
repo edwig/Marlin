@@ -65,13 +65,13 @@ WaitForKey()
   gets_s(buffer,255);
 }
 
-CString hostname("localhost");
+XString hostname("localhost");
 static LogAnalysis* g_log = nullptr;
 
 HTTPClient*
 StartClient(int p_loglevel)
 {
-  CString logfileName = MarlinConfig::GetExePath() + "ClientLog.txt";
+  XString logfileName = MarlinConfig::GetExePath() + "ClientLog.txt";
 
   // Create log file and turn logging 'on'
   g_log = new LogAnalysis("TestHTTPClient");
@@ -141,6 +141,7 @@ int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
       // Do Unit testing of the client without connecting to the internet
       errors += TestUnicode();
       errors += TestURLChars();
+      errors += TestCrackURL();
       errors += TestXML();
       errors += TestCryptography();
       errors += TestReader();

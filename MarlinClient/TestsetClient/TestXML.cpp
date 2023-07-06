@@ -38,7 +38,7 @@ static char THIS_FILE[] = __FILE__;
 
 int TestXPath()
 {
-  CString xml;
+  XString xml;
   XMLMessage msg;
   int errors = 0;
 

@@ -53,14 +53,14 @@ static char THIS_FILE[] = __FILE__;
 int TestMSGraph(HTTPClient* p_client)
 {
   int errors = 0;
-  CString tenant("<MY AZURE TENANT GUID>");
-  CString applicationID("<MY-APPLICATION-ID>");
-  CString applicationKey("<NOT-CHECKED-IN> :-)");
+  XString tenant("<MY AZURE TENANT GUID>");
+  XString applicationID("<MY-APPLICATION-ID>");
+  XString applicationKey("<NOT-CHECKED-IN> :-)");
 
   OAuth2Cache cache;
   cache.SetAnalysisLog(p_client->GetLogging());
 
-  CString url = cache.CreateTokenURL(token_server_ms,tenant);
+  XString url = cache.CreateTokenURL(token_server_ms,tenant);
   int session = cache.CreateClientCredentialsGrant(url,applicationID,applicationKey,scope_ms_graph);
   if(!session)
   {
@@ -89,7 +89,7 @@ int TestMSGraph(HTTPClient* p_client)
     // All went well
     JSONMessage json(&msg);
     json.SetWhitespace(true);
-    CString result = json.GetJsonMessage();
+    XString result = json.GetJsonMessage();
     printf("All my calendar events of the next week:\n");
     std::cout << result.GetString();
   }
@@ -103,9 +103,9 @@ int TestMSGraph(HTTPClient* p_client)
     unsigned length = 0;
     p_client->GetResponse(response,length);
 
-    JSONMessage json((CString)(char*)response);
+    JSONMessage json((XString)(char*)response);
     json.SetWhitespace(true);
-    CString jsonmsg = json.GetJsonMessage();
+    XString jsonmsg = json.GetJsonMessage();
     std::cout << jsonmsg.GetString();
   }
 

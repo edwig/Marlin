@@ -48,6 +48,7 @@ void WaitForKey();
 extern int TestJSON(void);
 extern int TestUnicode(void);
 extern int TestURLChars(void);
+extern int TestCrackURL(void);
 extern int TestCryptography(void);
 extern int TestReader(void);
 extern int TestConvert(void);

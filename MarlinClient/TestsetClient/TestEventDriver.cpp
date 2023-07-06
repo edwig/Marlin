@@ -51,8 +51,8 @@ void CEDCallback(void* p_object, LTEvent* p_event)
 {
   UNREFERENCED_PARAMETER(p_object);
 
-  CString text;
-  CString type = LTEvent::EventTypeToString(p_event->m_type);
+  XString text;
+  XString type = LTEvent::EventTypeToString(p_event->m_type);
   text.Format("Server Event: [%d:%s] %s",p_event->m_number,type.GetString(),p_event->m_payload.GetString());
   xprintf("%s\n",text.GetString());
 
@@ -80,7 +80,7 @@ TestEventDriver(LogAnalysis* p_log)
   xprintf("TESTING ClientEventDriver INTERFACE FOR APPLICATIONS\n");
   xprintf("====================================================\n");
 
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/Driver/",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Run the threadpool
@@ -100,9 +100,9 @@ TestEventDriver(LogAnalysis* p_log)
   g_driver->SetChannelPolicy(EVChannelPolicy::DP_HighSecurity); // TESTING SSE
 
   // Starting the driver
-  CString session("secondsession_456");
-  CString cookie("GUID");
-  CString token("456-456-456-456");
+  XString session("secondsession_456");
+  XString cookie("GUID");
+  XString token("456-456-456-456");
 
   bool result = g_driver->StartEventsForSession(session,cookie,token);
   // SUMMARY OF THE TEST

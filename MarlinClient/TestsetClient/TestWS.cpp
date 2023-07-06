@@ -51,10 +51,10 @@ DoSend(HTTPClient& p_client,SOAPMessage* p_msg,char* p_what,bool p_fault = false
     {
       xprintf("Received: %s\n%s",p_msg->GetSoapAction().GetString(),p_msg->GetSoapMessage().GetString());
 
-      CString action  = p_msg->GetSoapAction();
-      CString test    = p_msg->GetParameter("Three");
+      XString action  = p_msg->GetSoapAction();
+      XString test    = p_msg->GetParameter("Three");
       int     number  = p_msg->GetParameterInteger("Four");
-      CString testing = p_msg->GetParameter("Testing");
+      XString testing = p_msg->GetParameter("Testing");
 
       xprintf("Answer: %s : %s\n","Three",test.GetString());
       xprintf("Answer: %s : %d\n","Four",number);
@@ -174,9 +174,9 @@ DoSendPrice(HTTPClient& p_client, SOAPMessage* p_msg,double p_price)
 }
 
 SOAPMessage*
-CreateSoapMessage(CString       p_namespace
-                 ,CString       p_command
-                 ,CString       p_url
+CreateSoapMessage(XString       p_namespace
+                 ,XString       p_command
+                 ,XString       p_url
                  ,SoapVersion   p_version = SoapVersion::SOAP_12
                  ,XMLEncryption p_encrypt = XMLEncryption::XENC_Plain)
 {
@@ -207,9 +207,9 @@ CreateSoapMessage(CString       p_namespace
 }
 
 SOAPMessage*
-CreateSoapPriceMessage(CString p_namespace
-                      ,CString p_command
-                      ,CString p_url
+CreateSoapPriceMessage(XString p_namespace
+                      ,XString p_command
+                      ,XString p_url
                       ,double  p_price)
 {
   SOAPMessage* msg = new SOAPMessage(p_namespace,p_command,SoapVersion::SOAP_12,p_url);
@@ -218,7 +218,7 @@ CreateSoapPriceMessage(CString p_namespace
 }
 
 int
-TestReliableMessaging(HTTPClient* p_client,CString p_namespace,CString p_action,CString p_url,bool p_tokenProfile)
+TestReliableMessaging(HTTPClient* p_client,XString p_namespace,XString p_action,XString p_url,bool p_tokenProfile)
 {
   int errors = 0;
   int totalDone = 0;
@@ -257,8 +257,8 @@ TestReliableMessaging(HTTPClient* p_client,CString p_namespace,CString p_action,
       {
         xprintf("Received: %s\n%s",message->GetSoapAction().GetString(),message->GetSoapMessage().GetString());
 
-        CString action = message->GetSoapAction();
-        CString test   = message->GetParameter("Three");
+        XString action = message->GetSoapAction();
+        XString test   = message->GetParameter("Three");
         int     number = message->GetParameterInteger("Four");
 
         xprintf("Answer: %s : %s\n","Three",test.GetString());
@@ -313,10 +313,10 @@ TestReliableMessaging(HTTPClient* p_client,CString p_namespace,CString p_action,
 }
 
 int
-DoSendByQueue(HTTPClient& p_client,CString p_namespace,CString p_action,CString p_url)
+DoSendByQueue(HTTPClient& p_client,XString p_namespace,XString p_action,XString p_url)
 {
   int times = 20;
-  CString name("TestNumber");
+  XString name("TestNumber");
 
   for(int x = 1; x <= times; ++x)
   {
@@ -331,11 +331,11 @@ DoSendByQueue(HTTPClient& p_client,CString p_namespace,CString p_action,CString 
 }
 
 int
-DoSendAsyncQueue(HTTPClient& p_client,CString p_namespace,CString p_url)
+DoSendAsyncQueue(HTTPClient& p_client,XString p_namespace,XString p_url)
 {
   int times = 10;
-  CString resetMess("MarlinReset");
-  CString textMess ("MarlinText");
+  XString resetMess("MarlinReset");
+  XString textMess ("MarlinText");
   
   SOAPMessage* reset1 = new SOAPMessage(p_namespace,resetMess,SoapVersion::SOAP_12,p_url);
   SOAPMessage* reset2 = new SOAPMessage(p_namespace,resetMess,SoapVersion::SOAP_12,p_url);
@@ -357,10 +357,10 @@ DoSendAsyncQueue(HTTPClient& p_client,CString p_namespace,CString p_url)
   return 0;
 }
 
-inline CString 
-CreateURL(CString p_extra)
+inline XString 
+CreateURL(XString p_extra)
 {
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/%s",MARLIN_HOST,TESTING_HTTP_PORT,p_extra.GetString());
   return url;
 }
@@ -368,16 +368,16 @@ CreateURL(CString p_extra)
 int TestWebservices(HTTPClient& client)
 {
   int errors = 0;
-  extern CString logfileName;
+  extern XString logfileName;
   SOAPMessage* msg = nullptr;
 
   // Testing cookie function
   errors += TestCookies(client);
 
   // Standard values for messages
-  CString namesp("http://interface.marlin.org/services");
-  CString command("TestMessage");
-  CString url(CreateURL("Insecure"));
+  XString namesp("http://interface.marlin.org/services");
+  XString command("TestMessage");
+  XString url(CreateURL("Insecure"));
 
   // Test 1
   xprintf("TESTING STANDARD SOAP MESSAGE TO /MarlinTest/Insecure/\n");
@@ -424,8 +424,8 @@ int TestWebservices(HTTPClient& client)
   url = CreateURL("TestToken");
   msg = CreateSoapMessage(namesp,command,url);
   client.SetSingleSignOn(true);
-  CString user("CERT6\\Beheerder");
-  CString password("altijd");
+  XString user("CERT6\\Beheerder");
+  XString password("altijd");
   client.SetUser(user);
   client.SetPassword(password);
   errors += DoSend(client,msg,(char*)"token testing");
@@ -435,8 +435,8 @@ int TestWebservices(HTTPClient& client)
   xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n");
   xprintf("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/Two/\n");
   xprintf("============================================================\n");
-  CString url1 = CreateURL("TestToken/One");
-  CString url2 = CreateURL("TestToken/Two");
+  XString url1 = CreateURL("TestToken/One");
+  XString url2 = CreateURL("TestToken/Two");
   msg = CreateSoapMessage(namesp,command,url1);
   client.SetSingleSignOn(true);
   client.SetUser(user);
@@ -501,11 +501,11 @@ int TestWebservices(HTTPClient& client)
   printf("The client is %s\n",client.GetIsRunning() ? "still running!\n" : "stopped.\n");
 
   // Any error found
-  CString boodschap;
+  XString boodschap;
   int error = client.GetError(&boodschap);
   if(error)
   {
-    CString systeemText = GetLastErrorAsString(error);
+    XString systeemText = GetLastErrorAsString(error);
     printf("ERROR! Code: %d = %s\nErrortext: %s\n",error,systeemText.GetString(),boodschap.GetString());
   }
   return errors;

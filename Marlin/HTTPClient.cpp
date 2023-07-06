@@ -1952,7 +1952,7 @@ HTTPClient::ReceivePushEvents()
       }
       // Error in polling HTTP Status
       DWORD er = GetLastError();
-      CString message = GetLastErrorAsString(er);
+      XString message = GetLastErrorAsString(er);
       switch(er)
       {
         case ERROR_WINHTTP_CONNECTION_ERROR:          m_status = HTTP_STATUS_SERVICE_UNAVAIL;   break;

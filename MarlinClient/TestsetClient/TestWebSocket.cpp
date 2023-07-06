@@ -39,10 +39,10 @@ int
 TestWebSocketAccept(void)
 {
   bool result = false;
-  CString clientkey = "dGhlIHNhbXBsZSBub25jZQ==";
+  XString clientkey = "dGhlIHNhbXBsZSBub25jZQ==";
 
   WebSocketServer socket("ws://localhost/testing");
-  CString serverkey = socket.ServerAcceptKey(clientkey);
+  XString serverkey = socket.ServerAcceptKey(clientkey);
 
   xprintf("Client Key: %s\n",clientkey.GetString());
   xprintf("Server Key: %s\n",serverkey.GetString());
@@ -79,7 +79,7 @@ OnOpenWebsocket(WebSocket* /*p_socket*/,WSFrame* /*p_frame*/)
 void
 OnMessageWebsocket(WebSocket* p_socket,WSFrame* p_frame)
 {
-  CString message;
+  XString message;
   
   if(p_frame)
   {
@@ -114,7 +114,7 @@ OnMessageWebsocket(WebSocket* p_socket,WSFrame* p_frame)
 void
 OnErrorWebSocket(WebSocket* p_socket,WSFrame* p_frame)
 {
-  CString message;
+  XString message;
   message.Format("ERROR from WebSocket at URI: %s\n",p_socket->GetIdentityKey().GetString());
   if(p_frame)
   {
@@ -130,7 +130,7 @@ OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 {
   if (p_frame)
   {
-    CString message((char*)p_frame->m_data);
+    XString message((char*)p_frame->m_data);
     if (!message.IsEmpty())
     {
       printf("CLOSING message: %s\n", message.GetString());
@@ -147,10 +147,10 @@ OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
 
 //////////////////////////////////////////////////////////////////////////
 
-CString 
+XString 
 CreateLargeMessage()
 {
-  CString large;
+  XString large;
 
   for(unsigned ind = 0; ind < 200; ++ind)
   {
@@ -175,7 +175,7 @@ int
 TestWebSocket(LogAnalysis* p_log)
 {
   int errors = 0;
-  CString uri;
+  XString uri;
   uri.Format("ws://%s:%d/MarlinTest/Sockets/socket_123",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Independent 3th party test website, to check whether our WebSocket works correct
@@ -220,7 +220,7 @@ TestWebSocket(LogAnalysis* p_log)
         // Testing strings that are longer than the TCP/IP buffering for WebSockets
         // So strings longer than typical 8K bytes must be transportable
         // This string is 23501 bytes long
-        CString large = CreateLargeMessage();
+        XString large = CreateLargeMessage();
         if(!socket->WriteString(large))
         {
            ++errors;
@@ -236,7 +236,7 @@ TestWebSocket(LogAnalysis* p_log)
   printf("WebSocket waiting for the server %d seconds     : OK\n", seconds);
   Sleep(seconds * CLOCKS_PER_SEC);
 
-  CString key = socket->GetIdentityKey();
+  XString key = socket->GetIdentityKey();
 
   if(!g_closed)
   {

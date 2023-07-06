@@ -40,7 +40,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-int TestValue1(CString p_object)
+int TestValue1(XString p_object)
 {
   JSONMessage json(p_object);
 
@@ -51,7 +51,7 @@ int TestValue1(CString p_object)
   }
 
   // Reprint the message
-  CString object = json.GetJsonMessage();
+  XString object = json.GetJsonMessage();
 
   if(object != p_object)
   {
@@ -62,7 +62,7 @@ int TestValue1(CString p_object)
   return 0;
 }
 
-int TestValue1Double(CString p_object)
+int TestValue1Double(XString p_object)
 {
   JSONMessage json(p_object);
 
@@ -73,7 +73,7 @@ int TestValue1Double(CString p_object)
   }
 
   // Reprint the message
-  CString object = json.GetJsonMessage();
+  XString object = json.GetJsonMessage();
 
   // Engineering breaking criterion on small IEEE number
   if(abs(atof(object) - atof(p_object)) > 1.0E-13)
@@ -85,7 +85,7 @@ int TestValue1Double(CString p_object)
   return 0;
 }
 
-int TestArray(CString p_array)
+int TestArray(XString p_array)
 {
   JSONMessage json(p_array);
 
@@ -95,7 +95,7 @@ int TestArray(CString p_array)
     return 1;
   }
 
-  CString array = json.GetJsonMessage();
+  XString array = json.GetJsonMessage();
 
   if(p_array != array)
   {
@@ -105,7 +105,7 @@ int TestArray(CString p_array)
   return 0;
 }
 
-int TestObject(CString p_object)
+int TestObject(XString p_object)
 {
   JSONMessage json(p_object);
 
@@ -115,7 +115,7 @@ int TestObject(CString p_object)
     return 1;
   }
 
-  CString object = json.GetJsonMessage();
+  XString object = json.GetJsonMessage();
 
   if(object != p_object)
   {
@@ -128,7 +128,7 @@ int TestObject(CString p_object)
 int TestArray()
 {
   int errors = 0;
-  CString msg1 = "<Applications>\n"
+  XString msg1 = "<Applications>\n"
                  "  <Datasources>\n"
                  "     <Datasource>develop</Datasource>\n"
                  "     <Datasource>test</Datasource>\n"
@@ -144,9 +144,9 @@ int TestArray()
                  "</Applications>";
   SOAPMessage soap1(msg1);
   JSONMessage json(&soap1);
-  CString res = json.GetJsonMessage();
+  XString res = json.GetJsonMessage();
   xprintf(res);
-  CString expect1 = "{\n"
+  XString expect1 = "{\n"
                     "\t\"Applications\":{\n"
                     "\t\t\"Datasources\":{\n"
                     "\t\t\t\"Datasource\":[\n"
@@ -172,9 +172,9 @@ int TestArray()
 
   // Now transform back to SOAP
   SOAPMessage soap2(&json);
-  CString msg2 = soap2.GetSoapMessage();
+  XString msg2 = soap2.GetSoapMessage();
   
-  CString expect2 = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+  XString expect2 = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                     "<s:Envelope>\n"
                     "  <s:Header />\n"
                     "  <s:Body>\n"
@@ -229,7 +229,7 @@ int MultiJSON()
 
   FileBuffer buf;
   buf.AddBuffer((uchar*)buffer,size);
-  CString contentType("multipart/form-data; boundary=----WebKitFormBoundarydZ38XIr1QTTS2IMb");
+  XString contentType("multipart/form-data; boundary=----WebKitFormBoundarydZ38XIr1QTTS2IMb");
 
   MultiPartBuffer multi(FormDataType::FD_MULTIPART);
   multi.ParseBuffer(contentType,&buf);
@@ -241,7 +241,7 @@ int MultiJSON()
 
     xprintf("Part %d: %s\n",(int)ind,part->GetData().GetString());
   }
-  CString test = multi.GetPart(3)->GetData();
+  XString test = multi.GetPart(3)->GetData();
   if(test.Compare("{\"ID\":\"0\",\"Old: \":\"\",\"New\":\"\",\"Event\":\"Sluit\"}\r\n"))
   {
     xprintf("ERROR: Multipart buffer of 4 JSON's not working\n");
@@ -258,7 +258,7 @@ int MultiJSON()
 int TestFindValue()
 {
   int errors = 0;
-  CString jsonstring = "{ \n"
+  XString jsonstring = "{ \n"
                        "  \"name1\" : \"value1\"\n"
                        " ,\"name2\" : \"value2\"\n"
                        " ,\"name3\" : 33\n"
@@ -341,9 +341,9 @@ int TestAddObject()
   json.AddNamedObject("MyObject",object2,true);
 
   json.SetWhitespace(true);
-  CString total = json.GetJsonMessage(StringEncoding::ENC_Plain);
+  XString total = json.GetJsonMessage(StringEncoding::ENC_Plain);
 
-  CString expected = "{\n"
+  XString expected = "{\n"
                      "\t\"MyObject\":[\n"
                      "\t\t{\n"
                      "\t\t\t\"one\":1,\n"
@@ -373,7 +373,7 @@ int TestAddObject()
 int TestJSONPointer(void)
 {
   int errors = 0;
-  CString jsonString = "{\n"
+  XString jsonString = "{\n"
                        "\t\"MyObject\":[\n"
                        "\t\t{\n"
                        "\t\t\t\"one\":1,\n"
@@ -389,7 +389,7 @@ int TestJSONPointer(void)
                        "\t\t}\n"
                        "\t]\n"
                        "}";
-  CString jsonCompressed(jsonString);
+  XString jsonCompressed(jsonString);
   jsonCompressed.Replace("\t","");
   jsonCompressed.Replace("\n","");
 
@@ -406,7 +406,7 @@ int TestJSONPointer(void)
   errors += jp.GetStatus() != JPStatus::JP_Match_number_int;
 
   jp.SetPointer("");
-  CString resultJson = jp.GetResultForceToString();
+  XString resultJson = jp.GetResultForceToString();
   errors += resultJson.Compare(jsonCompressed) != 0;
 
   resultJson = jp.GetResultForceToString(true);
@@ -431,7 +431,7 @@ int TestJSONPointer(void)
   errors += jp.GetStatus() != JPStatus::JP_Match_number_bcd;
 
   jp.SetPointer("/MyObject/1/four");
-  CString four = jp.GetResultString();
+  XString four = jp.GetResultString();
   errors += four.Compare("The Fantastic 4") != 0;
   errors += jp.GetType()   != JsonType::JDT_string;
   errors += jp.GetStatus() != JPStatus::JP_Match_string;
@@ -443,7 +443,7 @@ int TestJSONPointer(void)
 
   // Escape of an '/' char in a name
   jp.SetPointer("/MyObject/1/sp~11");
-  CString version = jp.GetResultString();
+  XString version = jp.GetResultString();
   errors += version.Compare("7.1.12") != 0;
 
   // Escape of an '~' char in a name
@@ -461,7 +461,7 @@ int TestJSONPathInPointer(void)
 {
   int errors = 0;
 
-  CString jsonString = "{\n"
+  XString jsonString = "{\n"
                        "\t\"MyObject\":[\n"
                        "\t\t{\n"
                        "\t\t\t\"one\":1,\n"
@@ -477,7 +477,7 @@ int TestJSONPathInPointer(void)
                        "\t\t}\n"
                        "\t]\n"
                        "}";
-  CString jsonCompressed(jsonString);
+  XString jsonCompressed(jsonString);
   jsonCompressed.Replace("\t","");
   jsonCompressed.Replace("\n","");
 
@@ -494,7 +494,7 @@ int TestJSONPathInPointer(void)
   errors += jp.GetStatus() != JPStatus::JP_Match_number_int;
 
   jp.SetPointer("$");
-  CString resultJson = jp.GetResultForceToString();
+  XString resultJson = jp.GetResultForceToString();
   errors += resultJson.Compare(jsonCompressed) != 0;
 
   resultJson = jp.GetResultForceToString(true);
@@ -519,7 +519,7 @@ int TestJSONPathInPointer(void)
   errors += jp.GetStatus() != JPStatus::JP_Match_number_bcd;
 
   jp.SetPointer("$.MyObject.1.four");
-  CString four = jp.GetResultString();
+  XString four = jp.GetResultString();
   errors += four.Compare("The Fantastic 4") != 0;
   errors += jp.GetType() != JsonType::JDT_string;
   errors += jp.GetStatus() != JPStatus::JP_Match_string;
@@ -531,7 +531,7 @@ int TestJSONPathInPointer(void)
 
   // Escape of an '/' char in a name
   jp.SetPointer("$.MyObject.1.sp~11");
-  CString version = jp.GetResultString();
+  XString version = jp.GetResultString();
   errors += version.Compare("7.1.12") != 0;
 
   // Escape of an '~' char in a name
@@ -550,10 +550,10 @@ int TestJSONUnicode()
 {
   int errors = 0;
 
-  CString jsonString = "{ \"dollar\" : \"\\u00E9\\u00E9\\u006E \\u20AC = one €\" }";
+  XString jsonString = "{ \"dollar\" : \"\\u00E9\\u00E9\\u006E \\u20AC = one €\" }";
   JSONMessage json(jsonString);
-  CString test = json.GetJsonMessage();
-  CString expected("{\"dollar\":\"één € = one €\"}");
+  XString test = json.GetJsonMessage();
+  XString expected("{\"dollar\":\"één € = one €\"}");
   errors = test.Compare(expected) != 0;
 
   // SUMMARY OF THE TEST
@@ -567,7 +567,7 @@ int TestJSONPath(void)
 {
   int errors = 0;
 
-  CString jsonString = "{\t\"array\": [\n"
+  XString jsonString = "{\t\"array\": [\n"
                        "\t\t{\t\"one\"  : 1  },\n"
                        "\t\t{\t\"two\"  : 2  },\n"
                        "\t\t{\t\"three\": 3  },\n"
@@ -611,7 +611,7 @@ int TestJSONPath(void)
   path.SetPath("$.array[10].eleven[2].ford");
   if(path.GetStatus() != JPStatus::JP_INVALID)
   {
-    CString name = path.GetFirstResult()->GetString();
+    XString name = path.GetFirstResult()->GetString();
     errors = name.Compare("focus") != 0;
   }
 
@@ -674,8 +674,8 @@ int TestJSON(void)
 
 
   // TEST ROUNDTRIP SOAP -> JSON
-  CString namesp("http://test.marlin.org/interface");
-  CString action("FirstAction");
+  XString namesp("http://test.marlin.org/interface");
+  XString action("FirstAction");
   SOAPMessage msg(namesp,action);
   msg.SetParameter("First",101);
   msg.SetParameter("Second",102);
@@ -686,7 +686,7 @@ int TestJSON(void)
     msg.AddElement(elem,"Glory",  XDT_String, "Indiana Jones");
   }
   JSONMessage json(&msg);
-  CString str = json.GetJsonMessage();
+  XString str = json.GetJsonMessage();
   errors += TestObject(str);
 
   // And test the way back
@@ -698,7 +698,7 @@ int TestJSON(void)
   XMLElement* fort = soap.FindElement("Fortune");
   XMLElement* glor = soap.FindElement("Glory");
   int FirstFortune = fort ? atoi(fort->GetValue()) : 0;
-  CString glory    = glor ? glor->GetValue() : CString();
+  XString glory    = glor ? glor->GetValue() : XString();
   if(FirstAction1 != 101 || FirstAction2 != 102 || FirstFortune != 1000000 || glory.Compare("Indiana Jones"))
   {
     printf("ERROR: ROUND TRIP ENGINEERING SOAP -> JSON -> SOAP FAILED\n");
@@ -744,7 +744,7 @@ int DoSend(HTTPClient* p_client,JSONMessage* p_msg)
 
   if(p_client->Send(p_msg))
   {
-    CString msg = p_msg->GetJsonMessage();
+    XString msg = p_msg->GetJsonMessage();
     JSONvalue& val = p_msg->GetValue();
     if(val.GetDataType() == JsonType::JDT_object)
     {
@@ -784,7 +784,7 @@ int DoSend(HTTPClient* p_client,JSONMessage* p_msg)
 int TestJsonData(HTTPClient* p_client)
 {
   int errors = 0;
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/Data?test=2&size=medium%%20large",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Test standard JSON

@@ -5,7 +5,7 @@
 #include <io.h>
 
 bool 
-PreFlight(HTTPClient* p_client,HTTPMessage& p_msg,CString p_method,CString p_headers)
+PreFlight(HTTPClient* p_client,HTTPMessage& p_msg,XString p_method,XString p_headers)
 {
   // See if we may do a GET on this site
   p_client->SetCORSPreFlight(p_method,p_headers);
@@ -24,12 +24,12 @@ int
 TestGet(HTTPClient* p_client)
 {
   bool result = false;
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/Site/FileOne.html",MARLIN_HOST,TESTING_HTTP_PORT);
 
   HTTPMessage pre(HTTPCommand::http_options,url);
   HTTPMessage msg(HTTPCommand::http_get,url);
-  CString filename("C:\\TEMP\\FileOne.html");
+  XString filename("C:\\TEMP\\FileOne.html");
   msg.SetContentType("text/html");
 
   // Remove the file !!
@@ -88,12 +88,12 @@ int
 TestPut(HTTPClient* p_client)
 {
   bool result = false;
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/Site/FileThree.html",MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_put,url);
 
   // This file was downloaded in the last 'get' test
-  CString filename("C:\\TEMP\\FileOne.html");
+  XString filename("C:\\TEMP\\FileOne.html");
   msg.GetFileBuffer()->SetFileName(filename);
 
   // Remove the file !!

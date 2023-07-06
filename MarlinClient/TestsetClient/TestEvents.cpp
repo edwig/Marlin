@@ -164,7 +164,7 @@ TestEvents(HTTPClient* p_client)
   xprintf("TESTING EVENTSOURCE SIDE OF SSE (SERVER-SENT-EVENTS) PUSH INTERFACE\n");
   xprintf("===================================================================\n");
 
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/Events/",MARLIN_HOST,TESTING_HTTP_PORT);
 
   HTTPClient client;

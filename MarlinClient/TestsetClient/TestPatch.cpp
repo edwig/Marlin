@@ -48,7 +48,7 @@ DoSend(HTTPClient* p_client,HTTPMessage* p_msg)
   {
     if(p_msg->GetStatus() == HTTP_STATUS_OK)
     {
-      CString body = p_msg->GetBody();
+      XString body = p_msg->GetBody();
       if(body == "AB-\n")
       {
         xprintf("Succesfully patched\n");
@@ -81,7 +81,7 @@ int TestPatching(HTTPClient* p_client)
   int errors = 0;
 
   // URL with resource and parameters
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/Patching/FirstPatchTest?type=ab&rhesus=neg",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Test 1: Send through a HTTP-VERB Tunnel

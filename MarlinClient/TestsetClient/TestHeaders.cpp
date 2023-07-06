@@ -35,20 +35,20 @@ int TestSOAPHeaders()
 {
   int errors = 0;
 
-  CString namesp(DEFAULT_NAMESPACE);
-  CString action("FirstAction");
+  XString namesp(DEFAULT_NAMESPACE);
+  XString action("FirstAction");
   SOAPMessage msg(namesp, action, SoapVersion::SOAP_12);
 
   msg.AddHeader("Content-Type","application/soap+xml; charset=UTF-8; action=\"FirstAction\"");
 
-  CString charset = FindCharsetInContentType(msg.GetHeader("content-type"));
-  CString checkac = FindFieldInHTTPHeader(msg.GetHeader("content-type"), "Action");
+  XString charset = FindCharsetInContentType(msg.GetHeader("content-type"));
+  XString checkac = FindFieldInHTTPHeader(msg.GetHeader("content-type"), "Action");
 
   errors += charset.CompareNoCase("utf-8") != 0;
   errors += checkac.Compare("FirstAction") != 0;
 
   // Test empty
-  CString test1 = FindFieldInHTTPHeader(msg.GetHeader("DoNotExist"), "ABC");
+  XString test1 = FindFieldInHTTPHeader(msg.GetHeader("DoNotExist"), "ABC");
 
   errors += !test1.IsEmpty();
 
@@ -64,11 +64,11 @@ int TestHTTPHeaders()
   int errors = 0;
 
   // Search case insensitive
-  CString header("application/soap+xml; charset=UTF-8; action=\"FirstAction\"");
-  CString newheader1 = SetFieldInHTTPHeader(header,"action", "http://test.marlin.org/Function");
-  CString newheader2 = SetFieldInHTTPHeader(header,"charset","UTF16");
-  CString newheader3 = SetFieldInHTTPHeader("first","field","The Value");
-  CString newheader4 = SetFieldInHTTPHeader("first","field","something");
+  XString header("application/soap+xml; charset=UTF-8; action=\"FirstAction\"");
+  XString newheader1 = SetFieldInHTTPHeader(header,"action", "http://test.marlin.org/Function");
+  XString newheader2 = SetFieldInHTTPHeader(header,"charset","UTF16");
+  XString newheader3 = SetFieldInHTTPHeader("first","field","The Value");
+  XString newheader4 = SetFieldInHTTPHeader("first","field","something");
   errors += newheader1.Compare("application/soap+xml; charset=UTF-8; action=\"http://test.marlin.org/Function\"") != 0;
   errors += newheader2.Compare("application/soap+xml; charset=UTF16; action=\"FirstAction\"") != 0;
   errors += newheader3.Compare("first; field=\"The Value\"") != 0;

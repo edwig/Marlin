@@ -43,8 +43,8 @@ DoTestApplication(HTTPMessage* p_msg)
 {
   SOAPMessage msg(p_msg);
 
-  CString text1 = msg.GetCookie("session");
-  CString text2 = msg.GetCookie("SECRET","BLOKZIJL"); // SHOULD NOT WORK 
+  XString text1 = msg.GetCookie("session");
+  XString text2 = msg.GetCookie("SECRET","BLOKZIJL"); // SHOULD NOT WORK 
 
   int error1 = text1 != "456";
   int error2 = text2 != "";
@@ -64,7 +64,7 @@ TestDecryptCookie(void)
 
   HTTPMessage msg;
   msg.SetCookie("MYCOOKIE","ea415e3b69bc8383ff4342ad736d8f3d","webenab-03-01-2019 10:02:43",true,true);
-  CString val = msg.GetCookieValue("MYCOOKIE","webenab-03-01-2019 10:02:43");
+  XString val = msg.GetCookieValue("MYCOOKIE","webenab-03-01-2019 10:02:43");
 
   errors += val.Compare("ea415e3b69bc8383ff4342ad736d8f3d") != 0;
   printf("Testing decryption of the cookie               : %s\n",errors ? "ERROR" : "OK");
@@ -73,7 +73,7 @@ TestDecryptCookie(void)
 }
 
 int
-DoSend(HTTPClient& p_client,HTTPMessage* p_msg,CString p_expected)
+DoSend(HTTPClient& p_client,HTTPMessage* p_msg,XString p_expected)
 {
   int  errors    = 0;
   bool encryptie = false;
@@ -83,7 +83,7 @@ DoSend(HTTPClient& p_client,HTTPMessage* p_msg,CString p_expected)
   success = p_client.Send(p_msg);
   if(success)
   {
-    CString test = p_msg->GetCookieValue();
+    XString test = p_msg->GetCookieValue();
     if(test != "456")
     {
       success = false;
@@ -101,7 +101,7 @@ DoSend(HTTPClient& p_client,HTTPMessage* p_msg,CString p_expected)
     cookie = p_msg->GetCookie(1);
     if(cookie && cookie->GetName() == "SECRET")
     {
-      CString decrypt =  cookie->GetValue("BLOKZIJL");
+      XString decrypt =  cookie->GetValue("BLOKZIJL");
       if(decrypt == "THIS IS THE BIG SECRET OF THE FAMILY HUISMAN")
       {
         encryptie = true;
@@ -112,7 +112,7 @@ DoSend(HTTPClient& p_client,HTTPMessage* p_msg,CString p_expected)
 
     // Check extra header
     bool extraHeader = false;
-    CString dayOfTheWeek = p_msg->GetHeader("EdosHeader");
+    XString dayOfTheWeek = p_msg->GetHeader("EdosHeader");
     if(dayOfTheWeek != "Thursday")
     {
       ++errors;
@@ -154,7 +154,7 @@ TestCookies(HTTPClient& p_client)
   int errors = 0;
 
   // Standard values
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/CookieTest/",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Test 1
@@ -174,9 +174,9 @@ TestCookies(HTTPClient& p_client)
 }
 
 int 
-TestCookie(HTTPMessage* p_msg,CString p_meta,CString p_expect)
+TestCookie(HTTPMessage* p_msg,XString p_meta,XString p_expect)
 {
-  CString value = p_msg->GetCookieValue("SESSIONCOOKIE",p_meta);
+  XString value = p_msg->GetCookieValue("SESSIONCOOKIE",p_meta);
   return value.Compare(p_expect) != 0;
 }
 
@@ -187,7 +187,7 @@ TestCookiesOverwrite()
   int errors = 0;
 
   // Standard values
-  CString url;
+  XString url;
   url.Format("http://%s:%d/MarlinTest/CookieTest/",MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Test 1

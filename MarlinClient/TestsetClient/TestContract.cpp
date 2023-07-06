@@ -36,10 +36,10 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 bool 
-SettingTheBaseLanguage(WebServiceClient& p_client,CString p_contract)
+SettingTheBaseLanguage(WebServiceClient& p_client,XString p_contract)
 {
-  CString command("MarlinFirst");
-  CString language("Dutch");
+  XString command("MarlinFirst");
+  XString language("Dutch");
   SOAPMessage msg1(p_contract,command);
   msg1.SetParameter("Language",language);
   msg1.SetParameter("Version",1);
@@ -70,10 +70,10 @@ SettingTheBaseLanguage(WebServiceClient& p_client,CString p_contract)
 }
 
 bool
-SettingTheTranslateLanguage(WebServiceClient& p_client,CString p_contract)
+SettingTheTranslateLanguage(WebServiceClient& p_client,XString p_contract)
 {
-  CString command("MarlinSecond");
-  CString translate("Français");
+  XString command("MarlinSecond");
+  XString translate("Français");
   SOAPMessage msg2(p_contract,command);
   msg2.SetParameter("Translation",translate);
 
@@ -103,17 +103,17 @@ SettingTheTranslateLanguage(WebServiceClient& p_client,CString p_contract)
 
 bool
 Translate(WebServiceClient& p_client
-         ,CString p_contract
-         ,CString p_word
-         ,CString p_expected)
+         ,XString p_contract
+         ,XString p_word
+         ,XString p_expected)
 {
-  CString command("MarlinThird");
+  XString command("MarlinThird");
   SOAPMessage msg3(p_contract,command);
   msg3.SetParameter("WordToTranslate",p_word);
 
   if(p_client.Send(&msg3))
   {
-    CString todayString = msg3.GetParameter("TranslatedWord");
+    XString todayString = msg3.GetParameter("TranslatedWord");
     
     // --- "---------------------------------------------- - ------
     xprintf("TRANSLATED [%s] to [%s]\n",(LPCTSTR)p_word,(LPCTSTR)p_expected);
@@ -140,10 +140,10 @@ Translate(WebServiceClient& p_client
 }
 
 bool
-TestWSDLDatatype(WebServiceClient& p_client,CString p_contract)
+TestWSDLDatatype(WebServiceClient& p_client,XString p_contract)
 {
-  CString command("MarlinFirst");
-  CString language("Dutch");
+  XString command("MarlinFirst");
+  XString language("Dutch");
   SOAPMessage msg1(p_contract,command);
   msg1.SetParameter("Language",language);
   msg1.SetParameter("Version","MyVersion");
@@ -178,10 +178,10 @@ TestWSDLDatatype(WebServiceClient& p_client,CString p_contract)
 }
 
 bool
-TestWSDLFloating(WebServiceClient& p_client,CString p_contract)
+TestWSDLFloating(WebServiceClient& p_client,XString p_contract)
 {
-  CString command("MarlinFifth");
-  CString pi = "3.141592653589793";
+  XString command("MarlinFifth");
+  XString pi = "3.141592653589793";
   SOAPMessage msg(p_contract,command);
   XMLElement* param = msg.SetParameter("Parameters","");
   msg.AddElement(param,"Dialect", XDT_String,"Math");
@@ -210,10 +210,10 @@ TestWSDLFloating(WebServiceClient& p_client,CString p_contract)
 }
 
 bool
-TestWSDLFloatingWrong(WebServiceClient& p_client,CString p_contract)
+TestWSDLFloatingWrong(WebServiceClient& p_client,XString p_contract)
 {
-  CString command("MarlinFifth");
-  CString pi = "3,141592653589793"; // THIS IS THE WRONG NUMBER !!
+  XString command("MarlinFifth");
+  XString pi = "3,141592653589793"; // THIS IS THE WRONG NUMBER !!
   SOAPMessage msg(p_contract,command);
   XMLElement* param = msg.SetParameter("Parameters","");
   msg.AddElement(param,"Dialect", XDT_String,"Math");
@@ -247,11 +247,11 @@ TestWSDLFloatingWrong(WebServiceClient& p_client,CString p_contract)
 int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
 {
   int errors = 6;
-  CString logfileName = MarlinConfig::GetExePath() + "ClientLog.txt";
+  XString logfileName = MarlinConfig::GetExePath() + "ClientLog.txt";
 
-  CString url;
-  CString wsdl;
-  CString contract("http://interface.marlin.org/testing/");
+  XString url;
+  XString wsdl;
+  XString contract("http://interface.marlin.org/testing/");
 
 //  url .Format("http://%s:%d/MarlinTest/TestInterface/",              MARLIN_HOST,TESTING_HTTP_PORT);
 //  wsdl.Format("http://%s:%d/MarlinTest/TestInterface/MarlinWeb.wsdl",MARLIN_HOST,TESTING_HTTP_PORT);
