@@ -144,10 +144,9 @@ HTTPSiteIIS::SetWebroot(XString p_webroot)
 
   // Getting the IIS server root
   XString root = m_server->GetWebroot();
-  root.TrimRight('\\');
 
   // IIS now expects you to add the site name
-  m_webroot = root + GetIISSiteDir();
+  m_webroot = root + m_server->GetName() + GetIISSiteDir();
 
   // Make sure the directory is there
   EnsureFile ensure(m_webroot);
