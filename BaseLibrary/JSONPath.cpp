@@ -611,6 +611,7 @@ JSONPath::GetEndOfPart(XString p_token,int& p_pos)
   {
     tempPos = p_token.GetLength();
   }
+
   return tempPos;
 }
 

@@ -73,6 +73,8 @@ static const char* all_tokens[] =
   ,"HAVING"
   ,"INTO"
   ,"UNION"
+  ,"STATISTICS"
+  ,"FOR"
 };
 
 // All registered SQL words including tokens and special registrations
@@ -334,6 +336,17 @@ QueryReWriter::ParseStatement(bool p_closingEscape /*= false*/)
       odbc = true;
     }
 
+    if(m_token == Token::TK_STATISTICS)
+    {
+      m_inStatement = m_token;
+      PrintToken();
+      continue;
+    }
+    if(m_token == Token::TK_FOR)
+    {
+      m_nextTable = false;
+    }
+
     // Append schema
     if(m_nextTable)
     {
@@ -348,6 +361,10 @@ QueryReWriter::ParseStatement(bool p_closingEscape /*= false*/)
       {
         m_inFrom = true;
       }
+    }
+    if(m_inStatement == Token::TK_STATISTICS && m_token == Token::TK_FOR)
+    {
+      m_nextTable = true;
     }
     if(m_inStatement == Token::TK_SELECT && m_inFrom && m_token == Token::TK_COMMA)
     {
@@ -454,6 +471,8 @@ QueryReWriter::PrintToken()
     case Token::TK_ORDER:     [[fallthrough]];
     case Token::TK_HAVING:    [[fallthrough]];
     case Token::TK_INTO:      [[fallthrough]];
+    case Token::TK_STATISTICS:[[fallthrough]];
+    case Token::TK_FOR:       [[fallthrough]];
     case Token::TK_UNION:     m_output += all_tokens[(int)m_token];
                               break;
     case Token::TK_EOS:       break;

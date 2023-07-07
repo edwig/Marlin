@@ -26,11 +26,17 @@
 // THE SOFTWARE.
 //
 #pragma once
+#include "AutoCritical.h"
 
 // Command line length in NT technology
 #define BUFFER_SIZE 8192
 // Maximum wait 1 minute for input idle
 #define MAXWAIT_FOR_INPUT_IDLE 60000
+// After the process we must wait for the stdout to be completely read
+#define DRAIN_STDOUT_MAXWAIT   10000
+#define DRAIN_STDOUT_INTERVAL     50
+// END-OF-TRANSMISSION is ASCII 4
+#define EOT '\x4'
 
 /////////////////////////////////////////////////////////////////////////////
 // Redirect class
@@ -58,6 +64,7 @@ public:
 
   mutable int m_exitCode;
   mutable int m_eof_input;
+  mutable int m_eof_error;
   mutable int m_terminated;
 protected:
   HANDLE m_hExitEvent;
@@ -83,7 +90,7 @@ protected:
                                      ,UINT   uShowChildWindow  = SW_HIDE
                                      ,BOOL   bWaitForInputIdle = FALSE);
 
-  static BOOL m_bRunThread;
+  BOOL m_bRunThread;
   static unsigned int WINAPI staticStdOutThread(void* pRedirect)
   { 
     Redirect* redir = reinterpret_cast<Redirect*>(pRedirect);
@@ -102,4 +109,7 @@ protected:
   int StdOutThread(HANDLE hStdOutRead);
   int StdErrThread(HANDLE hStdErrRead);
   int ProcessThread();
+
+protected:
+  CRITICAL_SECTION m_critical;
 };

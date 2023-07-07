@@ -55,7 +55,7 @@ static char THIS_FILE[] = __FILE__;
 //    converts it to a string representation. This string is printed
 //    to the console via stdout.
 //
-static int PrintAddress(SOCKADDR* sa,int salen)
+static int PrintAddress(SOCKADDR* sa,int salen,char* p_errorbuffer)
 {
   char host[NI_MAXHOST];
   char serv[NI_MAXSERV];
@@ -72,7 +72,7 @@ static int PrintAddress(SOCKADDR* sa,int salen)
   rc = getnameinfo(sa,salen,host,hostlen,serv,servlen,NI_NUMERICHOST | NI_NUMERICSERV);
   if(rc != 0)
   {
-    fprintf(stderr,"%s: getnameinfo failed: %d\n",__FILE__,rc);
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"%s: getnameinfo failed: %d\n",__FILE__,rc);
     return rc;
   }
 
@@ -103,7 +103,7 @@ static int PrintAddress(SOCKADDR* sa,int salen)
 //    printing the string address to the console, it is formatted into
 //    the supplied string buffer.
 //
-static int FormatAddress(SOCKADDR* sa,int salen,char* addrbuf,int addrbuflen)
+static int FormatAddress(SOCKADDR* sa,int salen,char* addrbuf,int addrbuflen,char* p_errorbuffer)
 {
   char    host[NI_MAXHOST];
   char    serv[NI_MAXSERV];
@@ -114,14 +114,14 @@ static int FormatAddress(SOCKADDR* sa,int salen,char* addrbuf,int addrbuflen)
 
   if(!sa || !addrbuf || salen == 0 || addrbuflen == 0)
   {
-    fprintf(stderr,"<NO ADDRESS>\n");
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"<NO ADDRESS>\n");
     return ERROR_INVALID_FUNCTION;
   }
 
   rc = getnameinfo(sa,salen,host,hostlen,serv,servlen,NI_NUMERICHOST | NI_NUMERICSERV);
   if(rc != 0)
   {
-    fprintf(stderr,"%s: getnameinfo failed: %d\n",__FILE__,rc);
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"%s: getnameinfo failed: %d\n",__FILE__,rc);
     return rc;
   }
 
@@ -135,7 +135,7 @@ static int FormatAddress(SOCKADDR* sa,int salen,char* addrbuf,int addrbuflen)
   {
     if(FAILED(hRet = StringCchPrintf(addrbuf,addrbuflen,"%s:%s",host,serv)))
     {
-      fprintf(stderr,"%s StringCchPrintf failed: 0x%x\n",__FILE__,hRet);
+      sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"%s StringCchPrintf failed: 0x%x\n",__FILE__,hRet);
       return (int)hRet;
     }
   }
@@ -143,7 +143,7 @@ static int FormatAddress(SOCKADDR* sa,int salen,char* addrbuf,int addrbuflen)
   {
     if(FAILED(hRet = StringCchPrintf(addrbuf,addrbuflen,"[%s]:%s",host,serv)))
     {
-      fprintf(stderr,"%s StringCchPrintf failed: 0x%x\n",__FILE__,hRet);
+      sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"%s StringCchPrintf failed: 0x%x\n",__FILE__,hRet);
       return (int)hRet;
     }
   }
@@ -157,7 +157,7 @@ static int FormatAddress(SOCKADDR* sa,int salen,char* addrbuf,int addrbuflen)
 //    This routine resolves the specified address and returns a list of addrinfo
 //    structure containing SOCKADDR structures representing the resolved addresses.
 //    Note that if 'addr' is non-NULL, then getaddrinfo will resolve it whether
-//    it is a string listeral address or a hostname.
+//    it is a string literal address or a host name.
 //
 static struct addrinfo* ResolveAddress(char* addr,char* port,int af,int type,int proto,char* p_errorbuffer)
 {
@@ -187,7 +187,7 @@ static struct addrinfo* ResolveAddress(char* addr,char* port,int af,int type,int
 //    This routine takes a SOCKADDR and does a reverse lookup for the name
 //    corresponding to that address.
 //
-static int ReverseLookup(SOCKADDR* sa,int salen,char* buf,int buflen)
+static int ReverseLookup(SOCKADDR* sa,int salen,char* buf,int buflen,char* p_errorbuffer)
 {
   char    host[NI_MAXHOST];
   int     hostlen = NI_MAXHOST;
@@ -197,14 +197,14 @@ static int ReverseLookup(SOCKADDR* sa,int salen,char* buf,int buflen)
   rc = getnameinfo(sa,salen,host,hostlen,NULL,0,0);
   if(rc != 0)
   {
-    fprintf(stderr,"getnameinfo failed: %d\n",rc);
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"getnameinfo failed: %d\n",rc);
     return rc;
   }
 
   buf[0] = '\0';
   if(FAILED(hRet = StringCchCopy(buf,buflen,host)))
   {
-    fprintf(stderr,"StringCchCopy failed: 0x%x\n",hRet);
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"StringCchCopy failed: 0x%x\n",hRet);
     return (int)hRet;
   }
   return NO_ERROR;
@@ -216,14 +216,14 @@ static int ReverseLookup(SOCKADDR* sa,int salen,char* buf,int buflen)
 // Description:
 //    Helper function to fill in various stuff in our ICMP request.
 //
-static void InitIcmpHeader(char* buf,int datasize)
+static void InitIcmpHeader(char* buf,int datasize,char* p_errorbuffer)
 {
   ICMP_HDR* icmp_hdr = NULL;
   char* datapart = NULL;
 
   if(!buf || datasize <= 0)
   {
-    fprintf(stderr,"<NO ICMP HEADER>\n");
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"<NO ICMP HEADER>\n");
     return;
   }
 
@@ -299,13 +299,13 @@ static USHORT ICMPChecksum(USHORT* buffer,int size)
 // Description:
 //    This routine sets the sequence number of the ICMP request packet.
 //
-static void SetIcmpSequence(char* buf,int p_family)
+static void SetIcmpSequence(char* buf,int p_family,char* p_errorbuffer)
 {
   ULONGLONG sequence = 0;
 
   if(!buf)
   {
-    fprintf(stderr,"<NO ICMP SEQUENCE>\n");
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"<NO ICMP SEQUENCE>\n");
     return;
   }
 
@@ -344,7 +344,7 @@ static void SetIcmpSequence(char* buf,int p_family)
 //    To do this we call the SIO_ROUTING_INTERFACE_QUERY ioctl to find which
 //    local interface for the outgoing packet.
 //
-static USHORT ComputeIcmp6PseudoHeaderChecksum(SOCKET s,char* icmppacket,int icmplen,struct addrinfo* dest)
+static USHORT ComputeIcmp6PseudoHeaderChecksum(SOCKET s,char* icmppacket,int icmplen,struct addrinfo* dest,char* p_errorbuffer)
 {
   SOCKADDR_STORAGE localif;
   DWORD            bytes;
@@ -353,7 +353,7 @@ static USHORT ComputeIcmp6PseudoHeaderChecksum(SOCKET s,char* icmppacket,int icm
 
   if(!s || !icmppacket || !dest)
   {
-    fprintf(stderr,"<Compute ICMP6 failed>\n");
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"<Compute ICMP6 failed>\n");
     return 0xFFFF;
   }
 
@@ -369,7 +369,7 @@ static USHORT ComputeIcmp6PseudoHeaderChecksum(SOCKET s,char* icmppacket,int icm
                 NULL);
   if(rc == SOCKET_ERROR)
   {
-    fprintf(stderr,"WSAIoctl failed: %d\n",WSAGetLastError());
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"WSAIoctl failed: %d\n",WSAGetLastError());
     return 0xFFFF;
   }
 
@@ -451,11 +451,11 @@ static USHORT ComputeIcmp6PseudoHeaderChecksum(SOCKET s,char* icmppacket,int icm
 //    header which is difficult since we aren't building our own IPv6
 //    header.
 //
-static void ComputeIcmpChecksum(SOCKET s,char* buf,int packetlen,struct addrinfo* dest,int p_family)
+static void ComputeIcmpChecksum(SOCKET s,char* buf,int packetlen,struct addrinfo* dest,int p_family,char* p_errorbuffer)
 {
   if(!buf)
   {
-    fprintf(stderr,"<COMPUTE ICMP CHECKSUM>\n");
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"<COMPUTE ICMP CHECKSUM>\n");
     return;
   }
 
@@ -473,7 +473,7 @@ static void ComputeIcmpChecksum(SOCKET s,char* buf,int packetlen,struct addrinfo
 
     icmpv6 = (ICMPV6_HDR*)buf;
     icmpv6->icmp6_checksum = 0;
-    icmpv6->icmp6_checksum = ComputeIcmp6PseudoHeaderChecksum(s,buf,packetlen,dest);
+    icmpv6->icmp6_checksum = ComputeIcmp6PseudoHeaderChecksum(s,buf,packetlen,dest,p_errorbuffer);
   }
 }
 
@@ -483,7 +483,7 @@ static void ComputeIcmpChecksum(SOCKET s,char* buf,int packetlen,struct addrinfo
 // Description:
 //    This routine posts an overlapped WSARecvFrom on the raw socket.
 //
-static int PostRecvfrom(SOCKET s,char* buf,int buflen,SOCKADDR* from,int* fromlen,WSAOVERLAPPED* ol)
+static int PostRecvfrom(SOCKET s,char* buf,int buflen,SOCKADDR* from,int* fromlen,WSAOVERLAPPED* ol,char* p_errorbuffer)
 {
   WSABUF  wbuf;
   DWORD   flags;
@@ -500,7 +500,7 @@ static int PostRecvfrom(SOCKET s,char* buf,int buflen,SOCKADDR* from,int* fromle
   {
     if(WSAGetLastError() != WSA_IO_PENDING)
     {
-      fprintf(stderr,"WSARecvFrom failed: %d\n",WSAGetLastError());
+      sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"WSARecvFrom failed: %d\n",WSAGetLastError());
       return SOCKET_ERROR;
     }
   }
@@ -515,7 +515,7 @@ static int PostRecvfrom(SOCKET s,char* buf,int buflen,SOCKADDR* from,int* fromle
 //    present (by seeing if the IP header length is greater than 20 bytes) and
 //    if so it prints the IP record route options.
 //
-static void PrintPayload(char* buf,int bytes,int p_family)
+static void PrintPayload(char* buf,int bytes,int p_family,char* p_errorbuffer)
 {
   int hdrlen = 0;
   int routes = 0;
@@ -534,7 +534,7 @@ static void PrintPayload(char* buf,int bytes,int p_family)
 
     if(!buf)
     {
-      fprintf(stderr,"<PrintPayload failed>\n");
+      sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"<PrintPayload failed>\n");
       return;
     }
 
@@ -555,7 +555,7 @@ static void PrintPayload(char* buf,int bytes,int p_family)
         if(i == 0) printf("    Route: ");
         else       printf("           ");
 
-        PrintAddress((SOCKADDR*)&hop,sizeof(hop));
+        PrintAddress((SOCKADDR*)&hop,sizeof(hop),p_errorbuffer);
 
         if(i < routes - 1) printf(" ->\n");
         else               printf("\n");
@@ -571,7 +571,7 @@ static void PrintPayload(char* buf,int bytes,int p_family)
 // Description:
 //    Sets the TTL on the socket.
 //
-static int SetTTL(SOCKET p_socket,int p_ttl,int p_family)
+static int SetTTL(SOCKET p_socket,int p_ttl,int p_family,char* p_errorbuffer)
 {
   int optlevel = 0;
   int option   = 0;
@@ -598,7 +598,7 @@ static int SetTTL(SOCKET p_socket,int p_ttl,int p_family)
   }
   if(rc == SOCKET_ERROR)
   {
-    fprintf(stderr,"SetTTL: setsockopt failed: %d\n",WSAGetLastError());
+    sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"SetTTL: setsockopt failed: %d\n",WSAGetLastError());
   }
   return rc;
 }
@@ -619,8 +619,7 @@ double WinPing(char* p_destination // internet address to ping
               ,int   p_sendCount   /*= DEFAULT_SEND_COUNT  */
               ,int   p_family      /*= AF_UNSPEC           */
               ,int   p_timeToLive  /*= DEFAULT_TTL         */
-              ,int   p_dataSize    /*= DEFAULT_DATA_SIZE   */
-              ,bool  p_recordRoute /*= false               */)
+              ,int   p_dataSize    /*= DEFAULT_DATA_SIZE   */)
 {
   WSADATA             wsd;
   WSAOVERLAPPED       recvol;
@@ -632,7 +631,7 @@ double WinPing(char* p_destination // internet address to ping
   struct addrinfo*    dest       = nullptr;
   struct addrinfo*    local      = nullptr;
   double*             all_times  = nullptr;
-  IPV4_OPTION_HDR     ipopt;
+//IPV4_OPTION_HDR     ipopt;                          // Record route
   SOCKADDR_STORAGE    from;
   double              time       = 0.0;
   DWORD               bytes      = 0;
@@ -640,7 +639,6 @@ double WinPing(char* p_destination // internet address to ping
   int                 packetlen  = 0;
   int                 fromlen    = 0;
   int                 rc         = 0;
-  int                 index      = 0;
   int                 status     = 0;
   HPFCounter counter;
 
@@ -697,7 +695,7 @@ double WinPing(char* p_destination // internet address to ping
     goto CLEANUP;
   }
 
-  SetTTL(sock,p_timeToLive,p_family);
+  SetTTL(sock,p_timeToLive,p_family,p_errorbuffer);
 
   // Figure out the size of the ICMP header and payload
   if(p_family == AF_INET)
@@ -723,23 +721,23 @@ double WinPing(char* p_destination // internet address to ping
   // Initialize the ICMP headers
   if(p_family == AF_INET)
   {
-    if(p_recordRoute)
-    {
-        // Setup the IP option header to go out on every ICMP packet
-      ZeroMemory(&ipopt,sizeof(ipopt));
-      ipopt.opt_code = IP_RECORD_ROUTE; // record route option
-      ipopt.opt_ptr = 4;               // point to the first addr offset
-      ipopt.opt_len = 39;              // length of option header
-
-      rc = setsockopt(sock,IPPROTO_IP,IP_OPTIONS,(char*)&ipopt,sizeof(ipopt));
-      if(rc == SOCKET_ERROR)
-      {
-        sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"setsockopt(IP_OPTIONS) failed: %d\n",WSAGetLastError());
-        status = -6;
-        goto CLEANUP;
-      }
-    }
-    InitIcmpHeader(icmpbuf,p_dataSize);
+//     if(p_recordRoute)
+//     {
+//       // Setup the IP option header to go out on every ICMP packet
+//       ZeroMemory(&ipopt,sizeof(ipopt));
+//       ipopt.opt_code = IP_RECORD_ROUTE; // record route option
+//       ipopt.opt_ptr = 4;                // point to the first addr offset
+//       ipopt.opt_len = 39;               // length of option header
+// 
+//       rc = setsockopt(sock,IPPROTO_IP,IP_OPTIONS,(char*)&ipopt,sizeof(ipopt));
+//       if(rc == SOCKET_ERROR)
+//       {
+//         sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"setsockopt(IP_OPTIONS) failed: %d\n",WSAGetLastError());
+//         status = -6;
+//         goto CLEANUP;
+//       }
+//     }
+    InitIcmpHeader(icmpbuf,p_dataSize,p_errorbuffer);
   }
   else if(p_family == AF_INET6)
   {
@@ -770,23 +768,23 @@ double WinPing(char* p_destination // internet address to ping
 
   // Post the first overlapped receive
   fromlen = sizeof(from);
-  PostRecvfrom(sock,recvbuf,recvbuflen,(SOCKADDR*)&from,&fromlen,&recvol);
+  PostRecvfrom(sock,recvbuf,recvbuflen,(SOCKADDR*)&from,&fromlen,&recvol,p_errorbuffer);
 
   if(p_print)
   {
     printf("\nPinging %s [",p_destination);
-    PrintAddress(dest->ai_addr,(int)dest->ai_addrlen);
+    PrintAddress(dest->ai_addr,(int)dest->ai_addrlen,p_errorbuffer);
     printf("] with %d bytes of data\n\n",p_dataSize);
   }
   // Allocate mean-times array
   all_times = (double*) calloc(p_sendCount,sizeof(double));
 
   // Start sending the ICMP requests
-  for(index = 0; index < p_sendCount;index++)
+  for(int index = 0; index < p_sendCount;++index)
   {
       // Set the sequence number and compute the checksum
-    SetIcmpSequence(icmpbuf,p_family);
-    ComputeIcmpChecksum(sock,icmpbuf,packetlen,dest,p_family);
+    SetIcmpSequence(icmpbuf,p_family,p_errorbuffer);
+    ComputeIcmpChecksum(sock,icmpbuf,packetlen,dest,p_family,p_errorbuffer);
 
     all_times[index] = 0.0;
     counter.Reset();
@@ -827,19 +825,19 @@ double WinPing(char* p_destination // internet address to ping
       if(p_print)
       {
         printf("Reply from ");
-        PrintAddress((SOCKADDR*)&from,fromlen);
-        printf(": bytes=%d time=%.4fms TTL=%d\n",p_dataSize,time,p_timeToLive);
-        PrintPayload(recvbuf,bytes,p_family);
+        PrintAddress((SOCKADDR*)&from,fromlen,p_errorbuffer);
+        printf(": bytes=%d TTL=%d time=%.4fms\n",p_dataSize,p_timeToLive,time);
+        PrintPayload(recvbuf,bytes,p_family,p_errorbuffer);
       }
       if(index < p_sendCount - 1)
       {
         fromlen = sizeof(from);
-        PostRecvfrom(sock,recvbuf,recvbuflen,(SOCKADDR*)&from,&fromlen,&recvol);
+        PostRecvfrom(sock,recvbuf,recvbuflen,(SOCKADDR*)&from,&fromlen,&recvol,p_errorbuffer);
       }
     }
     if(index < (p_sendCount - 1))
     {
-      Sleep(1000);
+      Sleep(500);
     }
   }
 
@@ -885,7 +883,7 @@ EXIT:
 
   if(all_times)
   {
-    for(index = 0; index < p_sendCount; ++index)
+    for(int index = 0; index < p_sendCount; ++index)
     {
       // Received packets
       if(all_times[index] != 0.0)
@@ -903,7 +901,10 @@ EXIT:
       // Account for total
       totalTime += all_times[index];
     }
+  }
       // Dispose of timing array
+  if(all_times)
+  {
     free(all_times);
   }
 

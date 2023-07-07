@@ -115,6 +115,7 @@
     <ClInclude Include="CRC32.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="DefuseBOM.h" />
+    <ClInclude Include="Environment.h" />
     <ClInclude Include="EventLogRegistration.h" />
     <ClInclude Include="ExecuteProcess.h" />
     <ClInclude Include="ExecuteShell.h" />
@@ -153,6 +154,7 @@
     <ClInclude Include="StdException.h" />
     <ClInclude Include="StoreMessage.h" />
     <ClInclude Include="StringUtilities.h" />
+    <ClInclude Include="XSDSchema.h" />
     <ClInclude Include="XStringBuilder.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="unzip.h" />
@@ -196,6 +198,7 @@
     <ClCompile Include="CRC32.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="DefuseBOM.cpp" />
+    <ClCompile Include="Environment.cpp" />
     <ClCompile Include="EventLogRegistration.cpp" />
     <ClCompile Include="ExecuteProcess.cpp" />
     <ClCompile Include="ExecuteShell.cpp" />
@@ -233,6 +236,7 @@
     <ClCompile Include="StdException.cpp" />
     <ClCompile Include="StoreMessage.cpp" />
     <ClCompile Include="StringUtilities.cpp" />
+    <ClCompile Include="XSDSchema.cpp" />
     <ClCompile Include="XStringBuilder.cpp" />
     <ClCompile Include="unzip.cpp" />
     <ClCompile Include="WideMessageBox.cpp" />

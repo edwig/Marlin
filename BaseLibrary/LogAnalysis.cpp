@@ -690,7 +690,7 @@ LogAnalysis::ReadConfig()
         else break;
       }
       // Look for a comment
-      if(buffer[0] == ';' || buffer[0] == '#')
+      if(buffer[0] == ';' || buffer[0] == '#' || !buffer[0])
       {
         continue;
       }
@@ -699,9 +699,9 @@ LogAnalysis::ReadConfig()
         m_logFileName = &buffer[8];
         continue;
       }
-      if(_strnicmp(buffer,"loglevel=",8) == 0)
+      if(_strnicmp(buffer,"loglevel=",9) == 0)
       {
-        int logLevel = atoi(&buffer[8]) > 0;
+        int logLevel = atoi(&buffer[9]);
         SetLogLevel(logLevel);
         continue;
       }

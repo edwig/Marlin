@@ -84,6 +84,31 @@ XMLRestriction::AddMinInclusive(XString p_max)
   m_minInclusiveInteger = _atoi64(p_max);
 }
 
+void
+XMLRestriction::AddMinOccurs(XString p_min)
+{
+  m_minOccurs = (unsigned) atoll(p_min);
+  if(m_minOccurs > m_maxOccurs)
+  {
+    m_minOccurs = m_maxOccurs;
+  }
+}
+
+void
+XMLRestriction::AddMaxOccurs(XString p_max)
+{
+  if(p_max.Compare("unbounded") == 0)
+  {
+    m_maxOccurs = UINT_MAX;
+    return;
+  }
+  m_maxOccurs = (unsigned) atoll(p_max);
+  if(m_maxOccurs < m_minOccurs)
+  {
+    m_maxOccurs = m_minOccurs;
+  }
+}
+
 bool 
 XMLRestriction::HasEnumeration(XString p_enum)
 {
@@ -742,24 +767,37 @@ XString
 XMLRestriction::CheckDate(XString p_value)
 {
   XString result;
-  int pos1 = p_value.Find('Z');
-  int pos2 = p_value.Find('+');
-  int pos3 = p_value.Find('-');
+  int dash1 = p_value.Find('-');
+  int dash2 = p_value.Find('-',dash1 + 1);
 
-  if(pos1 > 0) 
+  // Must have a datepart
+  if(dash1 < 0 || dash2 < 0)
   {
-    result += CheckDatePart(p_value.Left(pos1));
-    result += CheckTimeZone(p_value.Mid(pos1 + 1));
+    return "Not a date: " + p_value;
   }
-  else if(pos2 > 0 || pos3 > 0)
+
+  int tz1 = p_value.Find('Z',dash2 + 1);
+  int tz2 = p_value.Find('+',dash2 + 1);
+  int tz3 = p_value.Find('-',dash2 + 1);
+
+  if(tz1 < 0 && tz2 < 0 && tz3 < 0)
   {
-    pos1 = max(pos2,pos3);
-    result += CheckDatePart(p_value.Left(pos1));
-    result += CheckTimeZone(p_value.Mid(pos1 + 1));
+    result += CheckDatePart(p_value);
+  }
+  else if(tz1 > 0) 
+  {
+    result += CheckDatePart(p_value.Left(tz1));
+    result += CheckTimeZone(p_value.Mid(tz1 + 1));
+  }
+  else if(tz2 > 0 || tz3 > 0)
+  {
+    tz1 = max(tz2,tz3);
+    result += CheckDatePart(p_value.Left(tz1));
+    result += CheckTimeZone(p_value.Mid(tz1 + 1));
   }
   else
   {
-    result = CheckDatePart(p_value);
+    result = "Invalid date: " + p_value;
   }
   return result;
 }
@@ -920,7 +958,7 @@ XMLRestriction::CheckGregYear(XString p_value)
   int num = atoi(p_value);
   XString result;
 
-  if(num < 01 || num > 99)
+  if(num < 01 || num > 9999)
   {
     result = "Not a Gregorian XML year: " + p_value;
     return result;
@@ -1570,7 +1608,7 @@ XMLRestriction::CheckFractionDigits(XString p_value)
   int pos = p_value.Find('.');
   if(pos >= 0)
   {
-    // Take fractin part
+    // Take fraction part
     p_value = p_value.Mid(pos + 1);
    
     int count = 0;
@@ -1646,7 +1684,7 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,XString p_value)
   {
     if(m_enums.empty())
     {
-      result = "NOTATION must declare an enumarator list of QNames";
+      result = "NOTATION must declare an enumerator list of QNames";
       return result;
     }
     for(auto& value : m_enums)
@@ -1672,7 +1710,7 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,XString p_value)
     }
   }
   
-  // If no enums, then we are done
+  // If no enumerations, then we are done
   if(m_enums.empty())
   {
     return result;

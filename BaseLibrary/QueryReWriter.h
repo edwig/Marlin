@@ -64,6 +64,8 @@ enum class Token
  ,TK_HAVING 
  ,TK_INTO
  ,TK_UNION
+ ,TK_STATISTICS
+ ,TK_FOR
 };
 
 enum class SROption
@@ -137,6 +139,7 @@ private:
   void    PrintOuterJoin();
   Token   FindToken();
   void    AppendSchema();
+
   void    SkipSpaceAndComment();
   Token   CommentSQL();
   Token   CommentCPP();

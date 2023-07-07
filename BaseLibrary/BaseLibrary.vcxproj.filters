@@ -276,11 +276,14 @@
     <ClInclude Include="AuthenticationHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="XSDSchema.h">
+      <Filter>Header Files\XML_SOAP</Filter>
+    </ClInclude>
+    <ClInclude Include="Environment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bcd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -483,6 +486,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AuthenticationHeader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XSDSchema.cpp">
+      <Filter>Source Files\XML_SOAP</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,3 +1,30 @@
+/////////////////////////////////////////////////////////////////////////////////
+//
+// SourceFile: StringUtilities.cpp
+//
+// BaseLibrary: Indispensable general objects and functions
+// 
+// Copyright (c) 2014-2022 ir. W.E. Huisman
+// All rights reserved
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
 #include "pch.h"
 #include "StringUtilities.h"
 
@@ -95,4 +122,107 @@ void NormalizeLineEndings(XString& p_string)
     break;
   }
   p_string = tempStr.c_str();
+}
+
+// Find the position of the matching bracket
+// starting at the bracket in the parameters bracketPos
+//
+int FindMatchingBracket(const CString& p_string,int p_bracketPos)
+{
+  char bracket = p_string[p_bracketPos];
+  char match = char(0);
+  bool reverse = false;
+
+  switch(bracket)
+  {
+    case '(':   match = ')';    break;
+    case '{':   match = '}';    break;
+    case '[':   match = ']';    break;
+    case '<':   match = '>';    break;
+    case ')':   reverse = true;
+                 match = '(';
+                break;
+    case '}':   reverse = true;
+                match = '{';
+                break;
+    case ']':   reverse = true;
+                match = '[';
+                break;
+    case '>':   reverse = true;
+                match = '<';
+                break;
+    default:    // Nothing to match
+                return -1;
+  }
+
+  if(reverse)
+  {
+    for(int pos = p_bracketPos - 1,nest = 1; pos >= 0; --pos)
+    {
+      char c = p_string[pos];
+      if(c == bracket)
+      {
+        ++nest;
+      }
+      else if(c == match)
+      {
+        if(--nest == 0)
+        {
+          return pos;
+        }
+      }
+    }
+  }
+  else
+  {
+    for(int pos = p_bracketPos + 1,nest = 1,len = p_string.GetLength(); pos < len; ++pos)
+    {
+      char c = p_string[pos];
+      if(c == bracket)
+      {
+        ++nest;
+      }
+      else if(c == match)
+      {
+        if(--nest == 0)
+        {
+          return pos;
+        }
+      }
+    }
+  }
+  return -1;
+}
+
+// Split arguments with p_splitter not within brackets
+// p_pos must be 0 initially
+bool SplitArgument(int& p_pos,const CString& p_data,char p_splitter,CString& p_argument)
+{
+  int len = p_data.GetLength();
+  if(p_pos >= len)
+  {
+    return false;
+  }
+  for(int pos = p_pos,nest = 0; pos < len; ++pos)
+  {
+    switch(char c = p_data[pos])
+    {
+      case '(': ++nest;
+                break;
+      case ')': if(--nest < 0)
+                {
+                  pos = len;
+                }
+                break;
+      default:  if(nest == 0 && c == p_splitter)
+                {
+                  p_argument = p_data.Mid(p_pos,pos - p_pos).Trim();
+                  p_pos = pos + 1;
+                  return true;
+                }
+    }
+  }
+  p_argument = p_data.Mid(p_pos).Trim();
+  p_pos = len;
+  return true;
 }
