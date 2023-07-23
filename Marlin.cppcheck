@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="1">
+    <builddir>Marlin-cppcheck-build-dir</builddir>
+    <platform>win64</platform>
+    <analyze-all-vs-configs>false</analyze-all-vs-configs>
+    <check-headers>true</check-headers>
+    <check-unused-templates>true</check-unused-templates>
+    <max-ctu-depth>2</max-ctu-depth>
+    <max-template-recursion>100</max-template-recursion>
+    <paths>
+        <dir name="Marlin"/>
+        <dir name="MarlinModule"/>
+        <dir name="MarlinClient"/>
+        <dir name="MarlinServer"/>
+        <dir name="HTTPManager"/>
+    </paths>
+    <exclude>
+        <path name="C:/Develop/Marlin/Marlin/ThreadPoolED.cpp"/>
+        <path name="C:/Develop/Marlin/Marlin/ThreadPoolED.h"/>
+    </exclude>
+    <libraries>
+        <library>mfc</library>
+        <library>microsoft_atl</library>
+        <library>windows</library>
+    </libraries>
+    <suppressions>
+        <suppression>unusedFunction</suppression>
+        <suppression>useStlAlgorithm</suppression>
+    </suppressions>
+</project>

@@ -47,7 +47,7 @@ class XMLParser
 {
 public:
   XMLParser() = default;
-  XMLParser(XMLMessage* p_message);
+  explicit XMLParser(XMLMessage* p_message);
 
   // Parse a complete XML message string
   void          ParseMessage(XString& p_message,WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);

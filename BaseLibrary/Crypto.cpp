@@ -83,21 +83,21 @@ Crypto::Digest(XString& p_buffer,XString& p_password)
 {
   AutoCritSec lock(&m_lock);
 
-  HCRYPTPROV hCryptProv = NULL; 
-  HCRYPTHASH hHashPass  = NULL;
-  HCRYPTHASH hHashData  = NULL;
-  HCRYPTKEY  hKey       = NULL;
-  PBYTE      pbHash     = NULL;
-  DWORD      dwHashLen  = 0;
-  DWORD      cbContent  = p_buffer.GetLength(); 
-  DWORD      cbPassword = p_password.GetLength();
-  BYTE*      pbContent  = (BYTE*)p_buffer.GetString(); 
-  BYTE*      pbPassword = (BYTE*)p_password.GetString();
-  Base64     base64;
-  HMAC_INFO  hMacInfo;
-  unsigned   hashMethod = m_hashMethod;
-  DWORD      provider   = PROV_RSA_FULL; // Default provider
-  DWORD      keyHash    = CALG_RC4;      // Default password hashing
+  HCRYPTPROV  hCryptProv = NULL; 
+  HCRYPTHASH  hHashPass  = NULL;
+  HCRYPTHASH  hHashData  = NULL;
+  HCRYPTKEY   hKey       = NULL;
+  PBYTE       pbHash     = NULL;
+  DWORD       dwHashLen  = 0;
+  DWORD       cbContent  = p_buffer.GetLength(); 
+  DWORD       cbPassword = p_password.GetLength();
+  const BYTE* pbContent  = reinterpret_cast<const BYTE*>(p_buffer.GetString()); 
+  const BYTE* pbPassword = reinterpret_cast<const BYTE*>(p_password.GetString());
+  Base64      base64;
+  HMAC_INFO   hMacInfo;
+  unsigned    hashMethod = m_hashMethod;
+  DWORD       provider   = PROV_RSA_FULL; // Default provider
+  DWORD       keyHash    = CALG_RC4;      // Default password hashing
 
   // Check combinations to get the MS-Windows standard crypto provider working
   // See remarks in MSDN for ::GetHashMethod()
@@ -142,7 +142,7 @@ Crypto::Digest(XString& p_buffer,XString& p_password)
                         ,provider // PROV_* macro
                         ,CRYPT_VERIFYCONTEXT))
   {
-    m_error.Format("Error acquiring encryption context: 0x%08x",GetLastError());
+    m_error.Format("Error acquiring encryption context: 0x%08Xl",GetLastError());
     goto error_exit;
   }
 
@@ -153,35 +153,35 @@ Crypto::Digest(XString& p_buffer,XString& p_password)
                       0, 
                       &hHashPass)) 
   {
-    m_error.Format("Error creating password hash: 0x%08x",GetLastError());
+    m_error.Format("Error creating password hash: 0x%08Xl",GetLastError());
     goto error_exit;
   }
 
   // Crypt the password
   if(!CryptHashData(hHashPass,pbPassword,cbPassword,0))
   {
-    m_error.Format("Error hashing the password: 0x%08x",GetLastError());
+    m_error.Format("Error hashing the password: 0x%08Xl",GetLastError());
     goto error_exit;
   }
 
   // Getting the key handle of the password
   if(!CryptDeriveKey(hCryptProv,keyHash,hHashPass,0,&hKey)) //CALG_RC4
   {
-    m_error.Format("Getting derived encryption key: 0x%08x",GetLastError());
+    m_error.Format("Getting derived encryption key: 0x%08Xl",GetLastError());
     goto error_exit;
   }
 
   // Create a hash for the data
   if(!CryptCreateHash(hCryptProv,CALG_HMAC,hKey,0,&hHashData))
   {
-    m_error.Format("Error creating data hash: 0x%08x",GetLastError());
+    m_error.Format("Error creating data hash: 0x%08Xl",GetLastError());
     goto error_exit;
   }
 
   // Set info parameter
-  if(!CryptSetHashParam(hHashData,HP_HMAC_INFO,(BYTE*)&hMacInfo,0))
+  if(!CryptSetHashParam(hHashData,HP_HMAC_INFO,reinterpret_cast<BYTE*>(&hMacInfo),0))
   {
-    m_error.Format("Error setting hash-hmac-info parameter: 0x%08x",GetLastError());
+    m_error.Format("Error setting hash-hmac-info parameter: 0x%08Xl",GetLastError());
     goto error_exit;
   }
 
@@ -195,7 +195,7 @@ Crypto::Digest(XString& p_buffer,XString& p_password)
   // Getting the hashvalue data length
   if(!CryptGetHashParam(hHashData, HP_HASHVAL, NULL, &dwHashLen, 0)) 
   {
-    m_error.Format("Error getting hash data length: 0x%08x",GetLastError());
+    m_error.Format("Error getting hash data length: 0x%08Xl",GetLastError());
     goto error_exit;
   }
 
@@ -205,7 +205,7 @@ Crypto::Digest(XString& p_buffer,XString& p_password)
   // Getting the hash at last
   if(!CryptGetHashParam(hHashData, HP_HASHVAL, pbHash, &dwHashLen, 0))
   {
-    m_error.Format("Getting final hash data: 0x%08x",GetLastError());
+    m_error.Format("Getting final hash data: 0x%08Xl",GetLastError());
     goto error_exit;
   }
 
@@ -216,7 +216,7 @@ Crypto::Digest(XString& p_buffer,XString& p_password)
     // Create a base64 string of the hash data
     int b64length = (int)base64.B64_length(dwHashLen);
     char* buffer = m_digest.GetBufferSetLength(b64length);
-    base64.Encrypt((const unsigned char*)pbHash,dwHashLen,(unsigned char*)buffer);
+    base64.Encrypt(reinterpret_cast<const unsigned char*>(pbHash),dwHashLen,reinterpret_cast<unsigned char*>(buffer));
     m_digest.ReleaseBuffer(b64length);
   }
 error_exit:
@@ -278,7 +278,7 @@ Crypto::Digest(const void* data,const size_t data_size,unsigned hashType)
   }
 
   DWORD cbHashSize = 0,dwCount = sizeof(DWORD);
-  if(!CryptGetHashParam(hHash,HP_HASHSIZE,(BYTE *)&cbHashSize,&dwCount,0))
+  if(!CryptGetHashParam(hHash,HP_HASHSIZE,reinterpret_cast<BYTE *>(&cbHashSize),&dwCount,0))
   {
     CryptDestroyHash(hHash);
     CryptReleaseContext(hProv,0);
@@ -296,7 +296,7 @@ Crypto::Digest(const void* data,const size_t data_size,unsigned hashType)
   Base64 base;
   XString hash;
   char* pointer = hash.GetBufferSetLength((int)base.B64_length((size_t)cbHashSize + 1));
-  base.Encrypt((const unsigned char*)&buffer[0],cbHashSize,(unsigned char*)pointer);
+  base.Encrypt(reinterpret_cast<const unsigned char*>(&buffer[0]),cbHashSize,reinterpret_cast<unsigned char*>(pointer));
   hash.ReleaseBuffer();
 
   CryptDestroyHash(hHash);
@@ -340,7 +340,7 @@ Crypto::Encryption(XString p_input,XString p_password)
     goto error_exit;
   }
 
-  if(!CryptHashData(hCryptHash,(BYTE *)p_password.GetString(),p_password.GetLength(),0))
+  if(!CryptHashData(hCryptHash,reinterpret_cast<const BYTE *>(p_password.GetString()),p_password.GetLength(),0))
   {
     m_error.Format("Error hashing password for encryption: 0x%08x",GetLastError());
     goto error_exit;
@@ -352,7 +352,7 @@ Crypto::Encryption(XString p_input,XString p_password)
     goto error_exit;
   }
 
-  if(!CryptGetKeyParam(hCryptKey,KP_BLOCKLEN,(BYTE*)&blocklen,&cbBlocklen,0))
+  if(!CryptGetKeyParam(hCryptKey,KP_BLOCKLEN,reinterpret_cast<BYTE*>(&blocklen),&cbBlocklen,0))
   {
     m_error = "Cannot get the block length of the encryption method";
     goto error_exit;
@@ -362,7 +362,7 @@ Crypto::Encryption(XString p_input,XString p_password)
   dwDataLen =   p_input.GetLength();
   dwBuffLen = ((p_input.GetLength() + blocklen) / blocklen) * blocklen;
   pbData = new BYTE[dwBuffLen];
-  strcpy_s((char*)pbData,dwBuffLen,p_input.GetString());
+  strcpy_s(reinterpret_cast<char*>(pbData),dwBuffLen,p_input.GetString());
   crypting = pbData;
   
   do
@@ -407,7 +407,7 @@ Crypto::Encryption(XString p_input,XString p_password)
   // Create a base64 string of the hash data
   b64length = (int)base64.B64_length(totallen);
   buffer    = result.GetBufferSetLength(b64length);
-  base64.Encrypt((const unsigned char*)pbData,totallen,(unsigned char*)buffer);
+  base64.Encrypt(reinterpret_cast<const unsigned char*>(pbData),totallen,reinterpret_cast<unsigned char*>(buffer));
   result.ReleaseBuffer(b64length);
 
 error_exit:
@@ -473,7 +473,7 @@ Crypto::Decryption(XString p_input,XString p_password)
     goto error_exit;
   }
 
-  if(!CryptHashData(hCryptHash,(BYTE *)p_password.GetString(),p_password.GetLength(),0))
+  if(!CryptHashData(hCryptHash,reinterpret_cast<const BYTE *>(p_password.GetString()),p_password.GetLength(),0))
   {
     m_error.Format("Error hashing password data for decryption: 0x%08x",GetLastError());
     goto error_exit;
@@ -485,7 +485,7 @@ Crypto::Decryption(XString p_input,XString p_password)
     goto error_exit;
   }
 
-  if(!CryptGetKeyParam(hCryptKey,KP_BLOCKLEN,(BYTE*)&blocklen,&cbBlocklen,0))
+  if(!CryptGetKeyParam(hCryptKey,KP_BLOCKLEN,reinterpret_cast<BYTE*>(&blocklen),&cbBlocklen,0))
   {
     m_error = "Cannot get the block length of the encryption method";
     goto error_exit;
@@ -502,7 +502,7 @@ Crypto::Decryption(XString p_input,XString p_password)
 
   bufferSize = ((dataLength + blocklen) / blocklen) * blocklen;
   pbData = new BYTE[bufferSize];
-  base64.Decrypt((const unsigned char*)p_input.GetString(), dwDataLen, (unsigned char*)pbData);
+  base64.Decrypt(reinterpret_cast<const unsigned char*>(p_input.GetString()),dwDataLen,reinterpret_cast<unsigned char*>(pbData));
   decrypting = pbData;
 
   do 
@@ -583,7 +583,7 @@ Crypto::FastEncryption(XString p_input, XString password)
   }
 
   BCRYPT_KEY_HANDLE hKey;
-  if(BCryptGenerateSymmetricKey(hAlgorithm, &hKey, NULL, NULL, (PUCHAR)password.GetString(), password.GetLength(), NULL) != STATUS_SUCCESS)
+  if(BCryptGenerateSymmetricKey(hAlgorithm, &hKey, NULL, NULL,(PUCHAR)password.GetString(),password.GetLength(),NULL) != STATUS_SUCCESS)
   {
     return result;
   }
@@ -596,7 +596,7 @@ Crypto::FastEncryption(XString p_input, XString password)
     
   XString data;
   char* datapointer = data.GetBufferSetLength(cbCipherText);
-  if (BCryptEncrypt(hKey, (PUCHAR)p_input.GetString(), p_input.GetLength(), NULL, NULL, NULL, (PUCHAR)datapointer, cbCipherText, &cbCipherText, NULL) != STATUS_SUCCESS)
+  if (BCryptEncrypt(hKey,(PUCHAR)p_input.GetString(), p_input.GetLength(), NULL, NULL, NULL, reinterpret_cast<PUCHAR>(datapointer), cbCipherText, &cbCipherText, NULL) != STATUS_SUCCESS)
   {
     return result;
   }
@@ -610,7 +610,7 @@ Crypto::FastEncryption(XString p_input, XString password)
   Base64 base64;
   int b64length = (int)base64.B64_length(cbCipherText);
   char* buffer = result.GetBufferSetLength(b64length);
-  base64.Encrypt((const unsigned char*)data.GetString(),cbCipherText,(unsigned char*)buffer);
+  base64.Encrypt(reinterpret_cast<const unsigned char*>(data.GetString()),cbCipherText,reinterpret_cast<unsigned char*>(buffer));
   result.ReleaseBuffer(b64length);
 
   return result;
@@ -638,7 +638,7 @@ Crypto::FastDecryption(XString p_input,XString password)
   Base64 base64;
   DWORD dataLength = (DWORD)base64.Ascii_length(dwDataLen);
   BYTE* pbData = new BYTE[(size_t)dataLength + 2];
-  base64.Decrypt((const unsigned char*)p_input.GetString(),dwDataLen,(unsigned char*)pbData);
+  base64.Decrypt(reinterpret_cast<const unsigned char*>(p_input.GetString()),dwDataLen,reinterpret_cast<unsigned char*>(pbData));
 
 
   if(BCryptOpenAlgorithmProvider(&hAlgorithm, L"RC4", NULL, 0/*BCRYPT_HASH_REUSABLE_FLAG*/) != STATUS_SUCCESS)
@@ -646,18 +646,18 @@ Crypto::FastDecryption(XString p_input,XString password)
     goto error_exit;
   }
 
-  if(BCryptGenerateSymmetricKey(hAlgorithm, &hKey, NULL, NULL, (PUCHAR)password.GetString(), password.GetLength(), NULL) != STATUS_SUCCESS)
+  if(BCryptGenerateSymmetricKey(hAlgorithm, &hKey, NULL, NULL,(PUCHAR)password.GetString(), password.GetLength(), NULL) != STATUS_SUCCESS)
   {
     goto error_exit;
   }
 
-  if(BCryptDecrypt(hKey, (PUCHAR)pbData, dataLength, NULL, NULL, NULL, NULL, NULL, &cbCipherText, NULL) != STATUS_SUCCESS)
+  if(BCryptDecrypt(hKey,reinterpret_cast<PUCHAR>(pbData), dataLength, NULL, NULL, NULL, NULL, NULL, &cbCipherText, NULL) != STATUS_SUCCESS)
   {
     goto error_exit;
   }
 
   data = result.GetBufferSetLength(cbCipherText);
-  if(BCryptDecrypt(hKey, (PUCHAR)pbData, dataLength, NULL, NULL, NULL, (PUCHAR)data, cbCipherText, &cbCipherText, NULL) != STATUS_SUCCESS)
+  if(BCryptDecrypt(hKey,reinterpret_cast<PUCHAR>(pbData),dataLength,NULL,NULL,NULL,reinterpret_cast<PUCHAR>(data),cbCipherText,&cbCipherText,NULL) != STATUS_SUCCESS)
   {
     goto error_exit;
   }

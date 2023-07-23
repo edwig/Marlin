@@ -36,11 +36,11 @@ public:
   XStringBuilder();
 
   // Copy XTOR
-  XStringBuilder(XStringBuilder const& rhs);
+  explicit XStringBuilder(XStringBuilder const& rhs);
 
   // XTOR from XString
   //
-  XStringBuilder(XString const& rhs);
+  explicit XStringBuilder(XString const& rhs);
 
   // Assignment from XStringBuilder
   XStringBuilder const& operator = (XStringBuilder const& rhs);

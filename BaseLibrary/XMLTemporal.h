@@ -71,7 +71,7 @@ class XMLTimestamp;
 class XMLTemporal
 {
 public:
-  XMLTemporal(XString p_value);
+  explicit XMLTemporal(XString p_value);
 
   XString GetString() { return m_string; };
   INT64   GetValue()  { return m_value;  };
@@ -90,7 +90,7 @@ protected:
 class XMLTime : public XMLTemporal
 {
 public:
-  XMLTime(XString p_value);
+  explicit XMLTime(XString p_value);
   int Hour()   { return m_theTime.m_hour;   };
   int Minute() { return m_theTime.m_minute; };
   int Second() { return m_theTime.m_second; };
@@ -111,7 +111,7 @@ class XMLDate : public XMLTemporal
 {
 public:
   XMLDate();
-  XMLDate(XString p_value);
+  explicit XMLDate(XString p_value);
   int  Year()  { return m_date.m_year;  };
   int  Month() { return m_date.m_month; };
   int  Day()   { return m_date.m_day;   };
@@ -132,8 +132,8 @@ class XMLTimestamp : public XMLTemporal
 {
 public:
   XMLTimestamp();
-  XMLTimestamp(XString p_value);
-  XMLTimestamp(INT64   p_value);
+  explicit XMLTimestamp(XString p_value);
+  explicit XMLTimestamp(INT64   p_value);
   void SetTimestamp(int p_year,int p_month,int p_day
                    ,int p_hour,int p_minute,int p_second
                    ,int p_fraction = 0);
@@ -167,7 +167,7 @@ private:
 class XMLDuration : public XMLTemporal
 {
 public:
-  XMLDuration(XString p_value);
+  explicit XMLDuration(XString p_value);
 private:
   bool ParseDuration(XString p_value);
   // Parsing/scanning one value of a XML duration string
@@ -186,7 +186,7 @@ private:
 class XMLGregorianMD : public XMLTemporal
 {
 public:
-  XMLGregorianMD(XString p_value);
+  explicit XMLGregorianMD(XString p_value);
 private:
   void ParseGregorianMD(XString p_value);
 };
@@ -197,7 +197,7 @@ private:
 class XMLGregorianYM: public XMLTemporal
 {
 public:
-  XMLGregorianYM(XString p_value);
+  explicit XMLGregorianYM(XString p_value);
 private:
   void ParseGregorianYM(XString p_value);
 };

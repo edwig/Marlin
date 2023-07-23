@@ -117,12 +117,12 @@ public:
   void    OnError  (XString p_message);
   void    OnClose  (XString p_message);
   void    OnBinary (void* p_data,DWORD p_length);
-  void    OnOpenSocket (WebSocket* p_socket);
-  void    OnCloseSocket(WebSocket* p_socket);
+  void    OnOpenSocket (const WebSocket* p_socket);
+  void    OnCloseSocket(const WebSocket* p_socket);
 
 private:
   void CloseSocket(WebSocket* p_socket);
-  void CloseStream(EventStream* p_stream);
+  void CloseStream(const EventStream* p_stream);
   int  SendQueueToSocket();
   int  SendQueueToStream();
   int  LogLongPolling();

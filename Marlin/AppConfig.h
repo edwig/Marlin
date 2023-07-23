@@ -47,7 +47,7 @@
 class AppConfig : public XMLMessage
 {
 public:
-  AppConfig(XString p_rootname);
+  explicit AppConfig(XString p_rootname);
   virtual ~AppConfig();
 
   // Read the config from disk

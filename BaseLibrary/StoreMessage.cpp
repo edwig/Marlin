@@ -501,11 +501,11 @@ StoreMessage::WriteDesktop(unsigned p_desktop)
 }
 
 void
-StoreMessage::WriteHeaders(HeaderMap* p_headers)
+StoreMessage::WriteHeaders(const HeaderMap* p_headers)
 {
   WriteHeader(MSGFieldType::FT_HEADERS);
   WriteNumber16((short)p_headers->size());
-  for(auto& header : *p_headers)
+  for(const auto& header : *p_headers)
   {
     WriteString(header.first);
     WriteString(header.second);
@@ -517,7 +517,7 @@ StoreMessage::WriteRouting(Routing& p_routing)
 {
   WriteHeader(MSGFieldType::FT_ROUTING);
   WriteNumber16((short)p_routing.size());
-  for(auto& route : p_routing)
+  for(const auto& route : p_routing)
   {
     WriteString(route);
   }
@@ -819,6 +819,7 @@ StoreMessage::ReadBody(HTTPMessage* p_msg)
     unsigned char* buffer = new unsigned char[length];
     if(fread(buffer,1,length,m_file) != length)
     {
+      delete[] buffer;
       throw StdException(ERROR_FT_BODY);
     }
     p_msg->SetBody(buffer,(unsigned)length);

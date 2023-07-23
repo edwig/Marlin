@@ -66,15 +66,15 @@ GenerateLargePushMessage()
 //
 //////////////////////////////////////////////////////////////////////////
 
-void OnOpen(WebSocket* p_socket,WSFrame* /*p_frame*/)
+void OnOpen(WebSocket* p_socket,const WSFrame* /*p_frame*/)
 {
   qprintf("TEST handler: Opened a websocket for: %s",p_socket->GetIdentityKey().GetString());
   --totalChecks;
 }
 
-void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
+void OnMessage(WebSocket* p_socket,const WSFrame* p_frame)
 {
-  XString message((char*)p_frame->m_data);
+  XString message(reinterpret_cast<char*>(p_frame->m_data));
   qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetIdentityKey().GetString(),message.GetString());
   --totalChecks;
 
@@ -92,14 +92,14 @@ void OnMessage(WebSocket* p_socket,WSFrame* p_frame)
   }
 }
 
-void OnClose(WebSocket* p_socket,WSFrame* p_frame)
+void OnClose(WebSocket* p_socket,const WSFrame* p_frame)
 {
-  XString message((char*)p_frame->m_data);
+  XString message(reinterpret_cast<char*>(p_frame->m_data));
   if(!message.IsEmpty())
   {
     qprintf("TEST handler: Closing WebSocket message: %s",message.GetString());
   }
-  qprintf("TEST handler: Closed the websocket for: %s",p_socket->GetIdentityKey().GetString());
+  qprintf("TEST handler: Closed the WebSocket for: %s",p_socket->GetIdentityKey().GetString());
   --totalChecks;
 }
 
@@ -112,9 +112,9 @@ void OnClose(WebSocket* p_socket,WSFrame* p_frame)
 class SiteHandlerTestSocket : public SiteHandlerWebSocket
 {
 public:
-  SiteHandlerTestSocket(TestMarlinServer* p_server) : m_server(p_server) {}
+  explicit SiteHandlerTestSocket(TestMarlinServer* p_server) : m_server(p_server) {}
 protected:
-  virtual bool Handle(HTTPMessage* p_message,WebSocket* p_socket);
+  virtual bool Handle(HTTPMessage* p_message,WebSocket* p_socket) override;
   TestMarlinServer* m_server;
 };
 
@@ -160,7 +160,7 @@ TestMarlinServer::TestWebSocket()
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -177,7 +177,7 @@ TestMarlinServer::TestWebSocket()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

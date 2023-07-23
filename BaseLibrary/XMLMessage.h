@@ -93,8 +93,8 @@ class XMLElement
 {
 public:
   XMLElement();
-  XMLElement(XMLElement* p_parent);
-  XMLElement(const XMLElement& p_source);
+  explicit XMLElement(XMLElement* p_parent);
+  explicit XMLElement(const XMLElement& p_source);
 
  ~XMLElement();
   void            Reset();
@@ -150,7 +150,7 @@ public:
   // General XTOR
   XMLMessage();
   // XTOR from another message
-  XMLMessage(XMLMessage* p_orig);
+  explicit XMLMessage(XMLMessage* p_orig);
   // DTOR
   virtual ~XMLMessage();
 
@@ -203,17 +203,17 @@ public:
   void            SetStylesheetType(XString p_type);
   void            SetStylesheet(XString p_sheet);
   // Setting an element
-  XMLElement*     SetElement(XString p_name, XString&    p_value);
-  XMLElement*     SetElement(XString p_name, const char* p_value);
-  XMLElement*     SetElement(XString p_name, int         p_value);
-  XMLElement*     SetElement(XString p_name, bool        p_value);
-  XMLElement*     SetElement(XString p_name, double      p_value);
+  XMLElement*     SetElement(XString p_name, const XString& p_value);
+  XMLElement*     SetElement(XString p_name, const char*    p_value);
+  XMLElement*     SetElement(XString p_name, int            p_value);
+  XMLElement*     SetElement(XString p_name, bool           p_value);
+  XMLElement*     SetElement(XString p_name, double         p_value);
 
-  XMLElement*     SetElement(XMLElement* p_base, XString p_name, XString&    p_value);
-  XMLElement*     SetElement(XMLElement* p_base, XString p_name, const char* p_value);
-  XMLElement*     SetElement(XMLElement* p_base, XString p_name, int         p_value);
-  XMLElement*     SetElement(XMLElement* p_base, XString p_name, bool        p_value);
-  XMLElement*     SetElement(XMLElement* p_base, XString p_name, double      p_value);
+  XMLElement*     SetElement(XMLElement* p_base, XString p_name, const XString& p_value);
+  XMLElement*     SetElement(XMLElement* p_base, XString p_name, const char*    p_value);
+  XMLElement*     SetElement(XMLElement* p_base, XString p_name, int            p_value);
+  XMLElement*     SetElement(XMLElement* p_base, XString p_name, bool           p_value);
+  XMLElement*     SetElement(XMLElement* p_base, XString p_name, double         p_value);
 
   // Special setters for elements
   void            SetElementValue(XMLElement* p_elem, XmlDataType p_type, XString p_value);
@@ -225,21 +225,21 @@ public:
   // General add an element (always adds, so multiple parameters of same name can be added)
   XMLElement*     AddElement(XMLElement* p_base, XString p_name, XmlDataType p_type, XString p_value, bool p_front = false);
   // Set attribute of an element
-  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, XString&    p_value);
-  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, const char* p_value);
-  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, int         p_value);
-  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, bool        p_value);
-  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, double      p_value);
+  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, const XString& p_value);
+  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, const char*    p_value);
+  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, int            p_value);
+  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, bool           p_value);
+  XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, double         p_value);
 
   // GETTERS
   XString         GetRootNodeName();
   XmlError        GetInternalError();
   XString         GetInternalErrorString();
-  StringEncoding  GetEncoding();
+  StringEncoding  GetEncoding() const;
   bool            GetCondensed();
   bool            GetPrintRestrictions();
-  bool            GetSendUnicode();
-  bool            GetSendBOM();
+  bool            GetSendUnicode() const;
+  bool            GetSendBOM() const;
   XMLElement*     GetRoot();
   void            SetRoot(XMLElement* p_root);
   XString         GetElement(XString p_name);
@@ -356,7 +356,7 @@ XMLMessage::GetRootNodeName()
 }
 
 inline StringEncoding
-XMLMessage::GetEncoding()
+XMLMessage::GetEncoding() const
 {
   return m_encoding;
 }
@@ -368,13 +368,13 @@ XMLMessage::GetCondensed()
 }
 
 inline bool
-XMLMessage::GetSendUnicode()
+XMLMessage::GetSendUnicode() const
 {
   return m_sendUnicode;
 }
 
 inline bool
-XMLMessage::GetSendBOM()
+XMLMessage::GetSendBOM() const
 {
   return m_sendBOM;
 }

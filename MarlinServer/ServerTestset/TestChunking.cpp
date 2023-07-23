@@ -107,13 +107,13 @@ TestMarlinServer::TestChunking()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite Chunked transfer  : OK : %s\n", (LPCTSTR)site->GetPrefixURL());
+    qprintf("HTTPSite Chunked transfer  : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a website for : %s\n", (LPCTSTR)webaddress);
+    qprintf("ERROR: Cannot register a website for : %s\n",webaddress.GetString());
     return error;
   }
 
@@ -129,7 +129,7 @@ TestMarlinServer::TestChunking()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n", (LPCTSTR)webaddress);
+    qprintf("ERROR STARTING SITE: %s\n",webaddress.GetString());
   }
   return error;
 }

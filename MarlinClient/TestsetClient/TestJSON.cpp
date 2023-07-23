@@ -46,7 +46,7 @@ int TestValue1(XString p_object)
 
   if(json.GetErrorState())
   {
-    printf("UNEXPECTED ERROR JSON object 1: %s\n",(LPCSTR)json.GetLastError());
+    printf("UNEXPECTED ERROR JSON object 1: %s\n",json.GetLastError().GetString());
     return 1;
   }
 
@@ -55,7 +55,7 @@ int TestValue1(XString p_object)
 
   if(object != p_object)
   {
-    printf("JSON Parser error:\n%s\n%s\n",(LPCTSTR)p_object,(LPCTSTR)object);
+    printf("JSON Parser error:\n%s\n%s\n",p_object.GetString(),object.GetString());
     return 1;
   }
 
@@ -68,7 +68,7 @@ int TestValue1Double(XString p_object)
 
   if(json.GetErrorState())
   {
-    printf("UNEXPECTED ERROR JSON object 1: %s\n",(LPCSTR)json.GetLastError());
+    printf("UNEXPECTED ERROR JSON object 1: %s\n",json.GetLastError().GetString());
     return 1;
   }
 
@@ -78,7 +78,7 @@ int TestValue1Double(XString p_object)
   // Engineering breaking criterion on small IEEE number
   if(abs(atof(object) - atof(p_object)) > 1.0E-13)
   {
-    printf("JSON Parser error:\n%s\n%s\n",(LPCTSTR)p_object,(LPCTSTR)object);
+    printf("JSON Parser error:\n%s\n%s\n",p_object.GetString(),object.GetString());
     return 1;
   }
 
@@ -91,7 +91,7 @@ int TestArray(XString p_array)
 
   if(json.GetErrorState())
   {
-    printf("UNEXPECTED ERROR JSON array 1: %s\n",(LPCSTR)json.GetLastError());
+    printf("UNEXPECTED ERROR JSON array 1: %s\n",json.GetLastError().GetString());
     return 1;
   }
 
@@ -99,7 +99,7 @@ int TestArray(XString p_array)
 
   if(p_array != array)
   {
-    printf("JSON Parser error:\n%s\n%s\n",(LPCTSTR)p_array,(LPCTSTR)array);
+    printf("JSON Parser error:\n%s\n%s\n",p_array.GetString(),array.GetString());
     return 1;
   }
   return 0;
@@ -111,7 +111,7 @@ int TestObject(XString p_object)
 
   if(json.GetErrorState())
   {
-    printf("UNEXPECTED ERROR JSON object 1: %s\n",(LPCSTR)json.GetLastError());
+    printf("UNEXPECTED ERROR JSON object 1: %s\n",json.GetLastError().GetString());
     return 1;
   }
 
@@ -119,7 +119,7 @@ int TestObject(XString p_object)
 
   if(object != p_object)
   {
-    printf("JSON Parser error:\n%s\n%s\n",(LPCTSTR)p_object,(LPCTSTR)object);
+    printf("JSON Parser error:\n%s\n%s\n",p_object.GetString(),object.GetString());
     return 1;
   }
   return 0;
@@ -228,7 +228,7 @@ int MultiJSON()
   xprintf("Buffer size : %d\n",size);
 
   FileBuffer buf;
-  buf.AddBuffer((uchar*)buffer,size);
+  buf.AddBuffer(reinterpret_cast<uchar*>(const_cast<char*>(buffer)),size);
   XString contentType("multipart/form-data; boundary=----WebKitFormBoundarydZ38XIr1QTTS2IMb");
 
   MultiPartBuffer multi(FormDataType::FD_MULTIPART);
@@ -770,7 +770,7 @@ int DoSend(HTTPClient* p_client,JSONMessage* p_msg)
     unsigned length = 0;
     p_client->GetResponse(response,length);
     printf("Message not sent!\n");
-    printf("Service answer: %s\n",(char*)response);
+    printf("Service answer: %s\n",reinterpret_cast<char*>(response));
     // Raw HTTP error
     printf("HTTP Client error: %s\n",p_client->GetStatusText().GetString());
   }

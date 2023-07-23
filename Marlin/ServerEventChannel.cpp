@@ -50,7 +50,7 @@ static char THIS_FILE[] = __FILE__;
 
 // Socket message handlers
 
-void EventChannelOnOpen(WebSocket* p_socket,WSFrame* p_event)
+void EventChannelOnOpen(WebSocket* p_socket,const WSFrame* p_event)
 {
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
@@ -65,7 +65,7 @@ void EventChannelOnOpen(WebSocket* p_socket,WSFrame* p_event)
   }
 }
 
-void EventChannelOnMessage(WebSocket* p_socket,WSFrame* p_event)
+void EventChannelOnMessage(WebSocket* p_socket,const WSFrame* p_event)
 {
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
@@ -79,7 +79,7 @@ void EventChannelOnMessage(WebSocket* p_socket,WSFrame* p_event)
   }
 }
 
-void EventChannelOnBinary(WebSocket* p_socket,WSFrame* p_event)
+void EventChannelOnBinary(WebSocket* p_socket,const WSFrame* p_event)
 {
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
@@ -88,7 +88,7 @@ void EventChannelOnBinary(WebSocket* p_socket,WSFrame* p_event)
   }
 }
 
-void EventChannelOnError(WebSocket* p_socket,WSFrame* p_event)
+void EventChannelOnError(WebSocket* p_socket,const WSFrame* p_event)
 {
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel && p_event)
@@ -102,7 +102,7 @@ void EventChannelOnError(WebSocket* p_socket,WSFrame* p_event)
   }
 }
 
-void EventChannelOnClose(WebSocket* p_socket,WSFrame* p_event)
+void EventChannelOnClose(WebSocket* p_socket,const WSFrame* p_event)
 {
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
@@ -324,7 +324,7 @@ ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket
 }
 
 void
-ServerEventChannel::OnOpenSocket(WebSocket* p_socket)
+ServerEventChannel::OnOpenSocket(const WebSocket* p_socket)
 {
   AutoCritSec lock(&m_lock);
 
@@ -340,7 +340,7 @@ ServerEventChannel::OnOpenSocket(WebSocket* p_socket)
 }
 
 void
-ServerEventChannel::OnCloseSocket(WebSocket* p_socket)
+ServerEventChannel::OnCloseSocket(const WebSocket* p_socket)
 {
   // NO LOCK HERE ON m_sockets
   // Just register the new state
@@ -423,7 +423,7 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
   if(p_check)
   {
     bool found = false;
-    Cookies& cookies = p_message->GetCookies();
+    Cookies& cookies = const_cast<Cookies&>(p_message->GetCookies());
     for(auto& cookie : cookies.GetCookies())
     {
       if(m_cookie.CompareNoCase(cookie.GetName())  == 0 &&
@@ -454,7 +454,7 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
     {
       case EvtType::EV_Open:    OnOpen   (message); break;
       case EvtType::EV_Message: OnMessage(message); break;
-      case EvtType::EV_Binary:  OnBinary ((void*)message.GetString(),message.GetLength()); break;
+      case EvtType::EV_Binary:  OnBinary (reinterpret_cast<void*>(const_cast<char*>(message.GetString())),message.GetLength()); break;
       case EvtType::EV_Error:   OnError  (message); break;
       case EvtType::EV_Close:   OnClose  (message); break;
     }
@@ -531,7 +531,6 @@ ServerEventChannel::SendQueueToSocket()
 {
   int sent     = 0;
   int lastSent = 0;
-  bool allok   = true;
   
   // No sockets connected. Nothing to send
   if(m_sockets.empty())
@@ -541,7 +540,7 @@ ServerEventChannel::SendQueueToSocket()
 
   for(auto& ltevent : m_outQueue)
   {
-    allok = true;
+    bool allok = true;
     AllSockets::iterator it = m_sockets.begin();
     while(it != m_sockets.end())
     {
@@ -598,7 +597,6 @@ ServerEventChannel::SendQueueToStream()
 {
   int sent     = 0;
   int lastSent = 0;
-  bool allok   = true;
 
   // No streams. nothing to send
   if(m_streams.empty())
@@ -608,7 +606,7 @@ ServerEventChannel::SendQueueToStream()
 
   for(auto& ltevent : m_outQueue)
   {
-    allok = true;
+    bool allok = true;
     AllStreams::iterator it = m_streams.begin();
     while (it != m_streams.end())
     {
@@ -718,27 +716,27 @@ ServerEventChannel::CloseChannel()
 
   // Closing open channels to the client
   m_current = EventDriverType::EDT_NotConnected;
-  for(auto& sock : m_sockets)
+  for(const auto& sock : m_sockets)
   {
     CloseSocket(sock.m_socket);
   }
   m_sockets.clear();
 
-  for(auto& stream : m_streams)
+  for(const auto& stream : m_streams)
   {
     CloseStream(stream.m_stream);
   }
   m_streams.clear();
 
   // Clean out the out queue
-  for(auto& ltevent : m_outQueue)
+  for(const auto& ltevent : m_outQueue)
   {
     delete ltevent;
   }
   m_outQueue.clear();
 
   // Clean out the input queue
-  for(auto& ltevent : m_inQueue)
+  for(const auto& ltevent : m_inQueue)
   {
     delete ltevent;
   }
@@ -749,14 +747,14 @@ void
 ServerEventChannel::CloseSocket(WebSocket* p_socket)
 {
   DETAILLOGV("Closing WebSocket for event channel [%s] Queue size: %d",m_name.GetString(),(int)m_outQueue.size());
-    p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"ServerEventDriver is closing channel");
+  p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"ServerEventDriver is closing channel");
   Sleep(200); // Wait for close to be sent before deleting the socket
   p_socket->CloseSocket();
   m_server->UnRegisterWebSocket(p_socket);
 }
 
 void 
-ServerEventChannel::CloseStream(EventStream* p_stream)
+ServerEventChannel::CloseStream(const EventStream* p_stream)
 {
   DETAILLOGV("Closing EventStream for event channel [%s] Queue size: %d",m_name.GetString(),(int)m_outQueue.size());
   m_server->CloseEventStream(p_stream);
@@ -867,7 +865,7 @@ ServerEventChannel::OnBinary(void* p_data,DWORD p_length)
   event->m_number  = p_length;
   event->m_sent    = m_appData;
   char* buffer = event->m_payload.GetBufferSetLength(p_length);
-  strcpy_s(buffer,p_length,(char*)p_data);
+  strcpy_s(buffer,p_length,reinterpret_cast<char*>(p_data));
   event->m_payload.ReleaseBufferSetLength(p_length);
 
   m_inQueue.push_back(event);

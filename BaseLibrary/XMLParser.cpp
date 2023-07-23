@@ -636,7 +636,7 @@ XMLParser::ParseElement()
       m_pointer++;
 
       SkipOuterWhiteSpace();
-      if(*m_pointer && *m_pointer == '<')
+      if(*m_pointer == '<')
       {
         // Push element and space-preserving and parse next level
         XMLElement* level = m_element;

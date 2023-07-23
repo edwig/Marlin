@@ -39,24 +39,24 @@ class WebSocketContext;
 class WebSocketServer : public WebSocket
 {
 public:
-  WebSocketServer(XString p_uri);
+  explicit WebSocketServer(XString p_uri);
   virtual ~WebSocketServer();
 
   // Reset the socket
-  virtual void Reset();
+  virtual void Reset() override;
   // Open the socket
-  virtual bool OpenSocket();
+  virtual bool OpenSocket() override;
   // Close the socket unconditionally
-  virtual bool CloseSocket();
+  virtual bool CloseSocket() override;
   // Close the socket with a closing frame
-  virtual bool SendCloseSocket(USHORT p_code,XString p_reason);
+  virtual bool SendCloseSocket(USHORT p_code,XString p_reason) override;
   // Write fragment to a WebSocket
-  virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
+  virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) override;
 
   // Register the server request for sending info
-  virtual bool RegisterSocket(HTTPMessage* p_message);
+  virtual bool RegisterSocket(HTTPMessage* p_message) override;
   // Perform the server handshake
-  virtual bool ServerHandshake(HTTPMessage* p_message);
+  virtual bool ServerHandshake(HTTPMessage* p_message) override;
 
   // To be called for ASYNC I/O completion!
   void      SocketReader(HRESULT p_error, DWORD p_bytes, BOOL p_utf8, BOOL p_final, BOOL p_close);

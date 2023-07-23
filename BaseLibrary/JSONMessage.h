@@ -73,13 +73,13 @@ class JSONvalue
 {
 public:
   JSONvalue();
-  JSONvalue(JSONvalue* p_other);
-  JSONvalue(JsonType   p_type);
-  JSONvalue(JsonConst  p_value);
-  JSONvalue(XString    p_value);
-  JSONvalue(int        p_value);
-  JSONvalue(bcd        p_value);
-  JSONvalue(bool       p_value);
+  explicit JSONvalue(const JSONvalue* p_other);
+  explicit JSONvalue(const JsonType   p_type);
+  explicit JSONvalue(const JsonConst  p_value);
+  explicit JSONvalue(const XString    p_value);
+  explicit JSONvalue(const int        p_value);
+  explicit JSONvalue(const bcd&       p_value);
+  explicit JSONvalue(const bool       p_value);
  ~JSONvalue();
 
   // SETTERS
@@ -90,7 +90,7 @@ public:
   void        SetValue(JSONobject  p_value);
   void        SetValue(JSONarray   p_value);
   void        SetValue(int         p_value);
-  void        SetValue(bcd         p_value);
+  void        SetValue(const bcd&  p_value);
   void        SetMark (bool        p_mark);
 
   // GETTERS
@@ -114,13 +114,13 @@ public:
   // OPERATORS
 
   // Assignment of another value
-  JSONvalue&  operator=(JSONvalue&  p_other);
-  JSONvalue&  operator=(XString&    p_other);
-  JSONvalue&  operator=(const char* p_other);
-  JSONvalue&  operator=(int&        p_other);
-  JSONvalue&  operator=(bcd&        p_other);
-  JSONvalue&  operator=(JsonConst&  p_other);
-  JSONvalue&  operator=(bool&       p_other);
+  JSONvalue&  operator=(const JSONvalue&  p_other);
+  JSONvalue&  operator=(const XString&    p_other);
+  JSONvalue&  operator=(const char*       p_other);
+  JSONvalue&  operator=(const int&        p_other);
+  JSONvalue&  operator=(const bcd&        p_other);
+  JSONvalue&  operator=(JsonConst&        p_other);
+  JSONvalue&  operator=(const bool&       p_other);
   // Getting the value from an JSONarray
   JSONvalue&  operator[](int p_index);
   // Getting the value from an JSONobject
@@ -155,30 +155,30 @@ class JSONpair
 {
 public:
   JSONpair() = default;
-  JSONpair(XString p_name);
-  JSONpair(XString p_name,JsonType    p_type);
-  JSONpair(XString p_name,JSONvalue&  p_value);
-  JSONpair(XString p_name,XString     p_value);
-  JSONpair(XString p_name,const char* p_value);
-  JSONpair(XString p_name,int         p_value);
-  JSONpair(XString p_name,bcd         p_value);
-  JSONpair(XString p_name,bool        p_value);
-  JSONpair(XString p_name,JsonConst   p_value);
+  explicit JSONpair(XString p_name);
+  explicit JSONpair(XString p_name,JsonType    p_type);
+  explicit JSONpair(XString p_name,JSONvalue&  p_value);
+  explicit JSONpair(XString p_name,XString     p_value);
+  explicit JSONpair(XString p_name,const char* p_value);
+  explicit JSONpair(XString p_name,int         p_value);
+  explicit JSONpair(XString p_name,const bcd&  p_value);
+  explicit JSONpair(XString p_name,bool        p_value);
+  explicit JSONpair(XString p_name,JsonConst   p_value);
 
   // Currently public. Will be moved to private in a future version
   XString   m_name;
   JSONvalue m_value;
 
-  void        SetName(XString p_name)       { m_name = p_name;             }
-  void        SetDatatype(JsonType p_type)  { m_value.SetDatatype(p_type); }
-  void        SetValue(XString     p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(const char* p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(JsonConst   p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(JSONobject  p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(JSONarray   p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(int         p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(bcd         p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(bool        p_value) { m_value.SetValue(p_value);   }
+  void        SetName(XString p_name)             { m_name = p_name;             }
+  void        SetDatatype(JsonType       p_type)  { m_value.SetDatatype(p_type); }
+  void        SetValue(XString           p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(const char*       p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(JsonConst         p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(const JSONobject& p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(const JSONarray&  p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(int               p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(const bcd&        p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(bool              p_value) { m_value.SetValue(p_value);   }
 
   JsonType    GetDataType()  const { return m_value.GetDataType();  }
   XString     GetString()    const { return m_value.GetString();    }
@@ -192,7 +192,7 @@ public:
   void        Add(JSONvalue& p_value) { m_value.Add(p_value); }
   void        Add(JSONpair& p_value)  { m_value.Add(p_value); }
 
-  JSONpair&   operator=(JSONpair&);
+  JSONpair&   operator=(const JSONpair&);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -204,15 +204,15 @@ class JSONMessage
 public:
   JSONMessage();
   // XTOR: For incoming UTF-8 String
-  JSONMessage(XString p_message);
+  explicit JSONMessage(XString p_message);
   // XTOR: Internal construction from MBCS string
-  JSONMessage(XString p_message,bool p_whitespace,StringEncoding p_encoding);
+  explicit JSONMessage(XString p_message,bool p_whitespace,StringEncoding p_encoding);
   // XTOR: Outgoing to a URL
-  JSONMessage(XString p_message,XString p_url);
+  explicit JSONMessage(XString p_message,XString p_url);
   // XTOR: From another XXXmessage
-  JSONMessage(JSONMessage* p_other);
-  JSONMessage(HTTPMessage* p_message);
-  JSONMessage(SOAPMessage* p_message);
+  explicit JSONMessage(JSONMessage* p_other);
+  explicit JSONMessage(HTTPMessage* p_message);
+  explicit JSONMessage(SOAPMessage* p_message);
   // General DTOR
  ~JSONMessage();
 
@@ -236,48 +236,48 @@ public:
   long            GetValueInteger (XString p_name);
   bcd             GetValueNumber  (XString p_name);
   JsonConst       GetValueConstant(XString p_name);
-  bool            AddNamedObject(XString p_name,JSONobject& p_object,bool p_forceArray = false);
+  bool            AddNamedObject(XString p_name,const JSONobject& p_object,bool p_forceArray = false);
 
   // GETTERS
   XString         GetJsonMessage       (StringEncoding p_encoding = StringEncoding::ENC_Plain) const;
   XString         GetJsonMessageWithBOM(StringEncoding p_encoding = StringEncoding::ENC_UTF8)  const;
-  JSONvalue&      GetValue()  const   { return *m_value;                }
-  XString         GetURL()            { return m_url;                   }
-  CrackedURL&     GetCrackedURL()     { return m_cracked;               }
-  unsigned        GetStatus()         { return m_status;                }
-  HTTP_OPAQUE_ID  GetRequestHandle()  { return m_request;               }
-  HTTPSite*       GetHTTPSite()       { return m_site;                  }
-  HeaderMap*      GetHeaderMap()      { return &m_headers;              }
-  XString         GetUser()           { return m_user;                  }
-  XString         GetPassword()       { return m_password;              }
-  bool            GetSecure()         { return m_cracked.m_secure;      }
-  XString         GetServer()         { return m_cracked.m_host;        }
-  int             GetPort()           { return m_cracked.m_port;        }
-  XString         GetAbsolutePath()   { return m_cracked.AbsolutePath();}
-  Cookies&        GetCookies()        { return m_cookies;               }
-  HANDLE          GetAccessToken()    { return m_token;                 }
-  PSOCKADDR_IN6   GetSender()         { return &m_sender;               }
-  UINT            GetDesktop()        { return m_desktop;               }
-  bool            GetErrorState()     { return m_errorstate;            }
-  XString         GetLastError()      { return m_lastError;             }
-  bool            GetWhitespace()     { return m_whitespace;            }
-  StringEncoding  GetEncoding()       { return m_encoding;              }
-  XString         GetAcceptEncoding() { return m_acceptEncoding;        }
-  bool            GetSendBOM()        { return m_sendBOM;               }
-  bool            GetSendUnicode()    { return m_sendUnicode;           }
-  bool            GetVerbTunneling()  { return m_verbTunnel;            }
-  bool            GetIncoming()       { return m_incoming;              }
-  bool            GetHasBeenAnswered(){ return m_request == NULL;       }
-  XString         GetReferrer()       { return m_referrer;              }
-  Routing&        GetRouting()        { return m_routing;               }
-  XString         GetExtension()      { return m_cracked.GetExtension();}
+  JSONvalue&      GetValue() const         { return *m_value;                }
+  XString         GetURL() const           { return m_url;                   }
+  const CrackedURL& GetCrackedURL() const  { return m_cracked;               }
+  unsigned        GetStatus() const        { return m_status;                }
+  HTTP_OPAQUE_ID  GetRequestHandle() const { return m_request;               }
+  HTTPSite*       GetHTTPSite() const      { return m_site;                  }
+  const HeaderMap* GetHeaderMap() const    { return &m_headers;              }
+  XString         GetUser() const          { return m_user;                  }
+  XString         GetPassword() const      { return m_password;              }
+  bool            GetSecure() const        { return m_cracked.m_secure;      }
+  XString         GetServer() const        { return m_cracked.m_host;        }
+  int             GetPort() const          { return m_cracked.m_port;        }
+  XString         GetAbsolutePath() const  { return m_cracked.AbsolutePath();}
+  const Cookies&  GetCookies() const       { return m_cookies;               }
+  HANDLE          GetAccessToken() const   { return m_token;                 }
+  PSOCKADDR_IN6   GetSender()              { return &m_sender;               }
+  UINT            GetDesktop() const       { return m_desktop;               }
+  bool            GetErrorState() const    { return m_errorstate;            }
+  XString         GetLastError() const     { return m_lastError;             }
+  bool            GetWhitespace() const    { return m_whitespace;            }
+  StringEncoding  GetEncoding() const      { return m_encoding;              }
+  XString         GetAcceptEncoding() const { return m_acceptEncoding;        }
+  bool            GetSendBOM() const       { return m_sendBOM;               }
+  bool            GetSendUnicode() const   { return m_sendUnicode;           }
+  bool            GetVerbTunneling() const { return m_verbTunnel;            }
+  bool            GetIncoming() const      { return m_incoming;              }
+  bool            GetHasBeenAnswered()const{ return m_request == NULL;       }
+  XString         GetReferrer() const      { return m_referrer;              }
+  const Routing&  GetRouting() const       { return m_routing;               }
+  XString         GetExtension() const     { return m_cracked.GetExtension();}
   XString         GetHeader(XString p_name);
   XString         GetRoute(int p_index);
-  XString         GetContentType();
+  XString         GetContentType() const;
   XString         GetVerb();
 
   // SETTERS
-  void            SetURL(XString& p_url);
+  void            SetURL(const XString& p_url);
   void            SetIncoming(bool p_incoming)            { m_incoming           = p_incoming; }
   void            SetErrorstate(bool p_state)             { m_errorstate         = p_state;    }
   void            SetLastError(XString p_error)           { m_lastError          = p_error;    }
@@ -292,7 +292,7 @@ public:
   void            SetDesktop(UINT p_desktop)              { m_desktop            = p_desktop;  }
   void            SetRequestHandle(HTTP_OPAQUE_ID p_id)   { m_request            = p_id;       }
   void            SetVerb(XString p_verb)                 { m_verb               = p_verb;     }
-  void            SetCookies(Cookies& p_cookies)          { m_cookies            = p_cookies;  }
+  void            SetCookies(const Cookies& p_cookies)    { m_cookies            = p_cookies;  }
   void            SetContentType(XString p_type)          { m_contentType        = p_type;     }
   void            SetWhitespace(bool p_white)             { m_whitespace         = p_white;    }
   void            SetSendBOM(bool p_bom)                  { m_sendBOM            = p_bom;      }

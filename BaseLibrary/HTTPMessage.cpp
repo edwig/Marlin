@@ -127,26 +127,24 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,XString p_url)
 }
 
 // XTOR from another HTTPMessage
-// DEFAULT is a 'shallow' copy, without the filebuffer payload!
+// DEFAULT is a 'shallow' copy, without the FileBuffer payload!
 HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
-            :m_buffer(p_msg->m_buffer)
+            :m_buffer        (p_msg->m_buffer)
+            ,m_command       (p_msg->m_command)
+            ,m_status        (p_msg->m_status)
+            ,m_request       (p_msg->m_request)
+            ,m_contentType   (p_msg->m_contentType)
+            ,m_acceptEncoding(p_msg->m_acceptEncoding)
+            ,m_verbTunnel    (p_msg->m_verbTunnel)
+            ,m_url           (p_msg->m_url)
+            ,m_site          (p_msg->m_site)
+            ,m_desktop       (p_msg->m_desktop)
+            ,m_ifmodified    (p_msg->m_ifmodified)
+            ,m_sendBOM       (p_msg->m_sendBOM)
+            ,m_referrer      (p_msg->m_referrer)
+            ,m_user          (p_msg->m_user)
+            ,m_password      (p_msg->m_password)
 {
-  // Member copies
-  m_command           = p_msg->m_command;
-  m_status            = p_msg->m_status;
-  m_request           = p_msg->m_request;
-  m_contentType       = p_msg->m_contentType;
-  m_acceptEncoding    = p_msg->m_acceptEncoding;
-  m_verbTunnel        = p_msg->m_verbTunnel;
-  m_url               = p_msg->m_url;
-  m_site              = p_msg->m_site;
-  m_desktop           = p_msg->m_desktop;
-  m_ifmodified        = p_msg->m_ifmodified;
-  m_sendBOM           = p_msg->m_sendBOM;
-  m_referrer          = p_msg->m_referrer;
-  m_user              = p_msg->m_user;
-  m_password          = p_msg->m_password;
-
   // Taking a duplicate token
   if(DuplicateTokenEx(p_msg->m_token
                      ,TOKEN_DUPLICATE|TOKEN_IMPERSONATE|TOKEN_ALL_ACCESS |TOKEN_READ|TOKEN_WRITE
@@ -184,22 +182,22 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
 }
 
 // XTOR from a SOAPServerMessage
-HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
-            :m_command(p_command)
+HTTPMessage::HTTPMessage(HTTPCommand p_command,const SOAPMessage* p_msg)
+            :m_command       (p_command)
+            ,m_request       (p_msg->GetRequestHandle())
+            ,m_cookies       (p_msg->GetCookies())
+            ,m_contentType   (p_msg->GetContentType())
+            ,m_desktop       (p_msg->GetRemoteDesktop())
+            ,m_site          (p_msg->GetHTTPSite())
+            ,m_sendBOM       (p_msg->GetSendBOM())
+            ,m_acceptEncoding(p_msg->GetAcceptEncoding())
+            ,m_status        (p_msg->GetStatus())
+            ,m_user          (p_msg->GetUser())
+            ,m_password      (p_msg->GetPassword())
+            ,m_headers       (*p_msg->GetHeaderMap())
+            ,m_url           (p_msg->GetURL())
+            ,m_cracked       (p_msg->GetCrackedURL())
 {
-  m_request       = p_msg->GetRequestHandle();
-  m_cookies       = p_msg->GetCookies();
-  m_contentType   = p_msg->GetContentType();
-  m_desktop       = p_msg->GetRemoteDesktop();
-  m_site          = p_msg->GetHTTPSite();
-  m_sendBOM       = p_msg->GetSendBOM();
-  m_acceptEncoding= p_msg->GetAcceptEncoding();
-  m_status        = p_msg->GetStatus();
-  m_user          = p_msg->GetUser();
-  m_password      = p_msg->GetPassword();
-  m_headers       =*p_msg->GetHeaderMap();
-  m_url           = p_msg->GetURL();
-  m_cracked       = p_msg->GetCrackedURL();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Relay ownership of the token
@@ -214,7 +212,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
   }
 
   // Get sender (if any) from the soap message
-  memcpy(&m_sender,p_msg->GetSender(),sizeof(SOCKADDR_IN6));
+  memcpy(&m_sender,const_cast<SOAPMessage*>(p_msg)->GetSender(),sizeof(SOCKADDR_IN6));
 
   // Copy routing information
   m_routing = p_msg->GetRouting();
@@ -245,8 +243,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
   // Set body and contentLength
   if(acp == 1200)
   {
-    p_msg->SetSendUnicode(true);
-    XString soap = p_msg->GetSoapMessage();
+    XString  soap = const_cast<SOAPMessage*>(p_msg)->GetSoapMessage();
     uchar* buffer = nullptr;
     int    length = 0;
     if(TryCreateWideString(soap,"",p_msg->GetSendBOM(),&buffer,length))
@@ -265,21 +262,21 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,SOAPMessage* p_msg)
   else
   {
     // Simply record as our body
-    SetBody(p_msg->GetSoapMessageWithBOM());
+    SetBody(const_cast<SOAPMessage*>(p_msg)->GetSoapMessageWithBOM());
   }
   // Make sure we have a server name for host headers
   CheckServer();
 }
 
 // XTOR from a JSONMessage
-HTTPMessage::HTTPMessage(HTTPCommand p_command,JSONMessage* p_msg)
+HTTPMessage::HTTPMessage(HTTPCommand p_command,const JSONMessage* p_msg)
             :m_command(p_command)
 {
   *this = *p_msg;
 }
 
 HTTPMessage&
-HTTPMessage::operator=(JSONMessage& p_msg)
+HTTPMessage::operator=(const JSONMessage& p_msg)
 {
   m_request        = p_msg.GetRequestHandle();
   m_cookies        = p_msg.GetCookies();
@@ -311,7 +308,7 @@ HTTPMessage::operator=(JSONMessage& p_msg)
   }
 
   // Get sender (if any) from the soap message
-  memcpy(&m_sender,p_msg.GetSender(),sizeof(SOCKADDR_IN6));
+  memcpy(&m_sender,const_cast<JSONMessage&>(p_msg).GetSender(),sizeof(SOCKADDR_IN6));
 
   // Copy all routing
   m_routing = p_msg.GetRouting();
@@ -345,7 +342,6 @@ HTTPMessage::operator=(JSONMessage& p_msg)
   // Set body and contentLength
   if(acp == 1200)
   {
-    p_msg.SetSendUnicode(true);
     XString soap = p_msg.GetJsonMessage(StringEncoding::ENC_Plain);
     uchar* buffer = nullptr;
     int    length = 0;
@@ -465,7 +461,7 @@ HTTPMessage::GetBody()
     {
       if(buffer)
       {
-        answer.Append((const char*)buffer,(int)length);
+        answer.Append(reinterpret_cast<const char*>(buffer),(int)length);
       }
     }
   }
@@ -474,7 +470,7 @@ HTTPMessage::GetBody()
     m_buffer.GetBuffer(buffer,length);
     if(buffer)
     {
-      answer.Append((const char*)buffer,(int)length);
+      answer.Append(reinterpret_cast<const char*>(buffer),(int)length);
     }
   }
   return answer;
@@ -523,7 +519,7 @@ HTTPMessage::GetRawBody(uchar** p_body,size_t& p_length)
 }
 
 void
-HTTPMessage::SetURL(XString& p_url)
+HTTPMessage::SetURL(const XString& p_url)
 {
   m_url = p_url;
   ParseURL(p_url);
@@ -536,7 +532,7 @@ HTTPMessage::SetBody(XString p_body,XString p_encoding /*=""*/)
   {
     p_body = EncodeStringForTheWire(p_body.GetString(),p_encoding);
   }
-  m_buffer.SetBuffer((uchar*)p_body.GetString(),p_body.GetLength());
+  m_buffer.SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(p_body.GetString())),p_body.GetLength());
 }
 
 void
@@ -600,7 +596,7 @@ HTTPMessage::SetReceiver(PSOCKADDR_IN6 p_address)
 }
 
 void 
-HTTPMessage::SetFile(XString& p_fileName)
+HTTPMessage::SetFile(const XString& p_fileName)
 {
   m_buffer.Reset();
   m_buffer.SetFileName(p_fileName);
@@ -726,7 +722,7 @@ HTTPMessage::CheckServer()
 }
 
 // Getting the user/password from the base authorization
-// for use in this and other programs for autorization purposes
+// for use in this and other programs for authorization purposes
 void
 HTTPMessage::SetAuthorization(XString& p_authorization)
 {
@@ -736,9 +732,9 @@ HTTPMessage::SetAuthorization(XString& p_authorization)
     Base64 base;
     XString decrypted;
     decrypted.GetBufferSetLength((int)base.Ascii_length(p_authorization.GetLength()) + 1);
-    base.Decrypt((const unsigned char*) p_authorization.GetString()
+    base.Decrypt(reinterpret_cast<const unsigned char*>(p_authorization.GetString())
                 ,p_authorization.GetLength()
-                ,(unsigned char*)decrypted.GetString());
+                ,reinterpret_cast<unsigned char*>(const_cast<char*>(decrypted.GetString())));
     int from = decrypted.Find(':');
     if(from > 0)
     {
@@ -925,7 +921,7 @@ HTTPMessage::HTTPTimeFormat(PSYSTEMTIME p_systime /*=NULL*/)
   XString    result;
   SYSTEMTIME sTime;
 
-  // Getting the current time if not givven
+  // Getting the current time if not given
   // WINDOWS API does also this if p_systime is empty
   if(p_systime == nullptr)
   {
@@ -960,7 +956,7 @@ HTTPMessage::FindVerbTunneling()
 {
   HTTPCommand oldCommand = m_command;
   XString method1 = GetHeader("X-HTTP-Method");           // The 'Microsoft/IIS' way
-  XString method2 = GetHeader("X-HTTP-Method-Override");  // The 'Google/Gdata' way
+  XString method2 = GetHeader("X-HTTP-Method-Override");  // The 'Google/GData' way
   XString method3 = GetHeader("X-METHOD-OVERRIDE");       // The 'IBM/Domino' way
   if(method1.IsEmpty() && method2.IsEmpty() && method3.IsEmpty())
   {
@@ -1017,7 +1013,7 @@ HTTPMessage::SetMultiPartFormData(MultiPartBuffer* p_buffer)
   XString accept = p_buffer->CalculateAcceptHeader();
   AddHeader("Accept",accept);
 
-  // Get type of formdata buffer
+  // Get type of FormData buffer
   FormDataType type = p_buffer->GetFormDataType();
   switch(type)
   {
@@ -1102,11 +1098,11 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
   do
   {
     XString header = part->CreateHeader(boundary,p_buffer->GetFileExtensions());
-    m_buffer.AddBuffer((uchar*)header.GetString(),(size_t)header.GetLength());
+    m_buffer.AddBuffer(reinterpret_cast<uchar*>(const_cast<char*>(header.GetString())),(size_t)header.GetLength());
     if(part->GetShortFileName().IsEmpty())
     {
       // Add data
-      m_buffer.AddBufferCRLF((uchar*)part->GetData().GetString()
+      m_buffer.AddBufferCRLF(reinterpret_cast<uchar*>(const_cast<char*>(part->GetData().GetString()))
                             ,(size_t)part->GetData().GetLength());
     }
     else
@@ -1129,9 +1125,9 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
   while(part);
 
   // The ending boundary after the last part
-  // Beware. Does NOT end with CR-LF but two hypens!
+  // Beware. Does NOT end with CR-LF but two hyphens!
   XString lastBoundary = "--" + boundary + "--";
-  m_buffer.AddBuffer((uchar*)lastBoundary.GetString()
+  m_buffer.AddBuffer(reinterpret_cast<uchar*>(const_cast<char*>(lastBoundary.GetString()))
                     ,(size_t)lastBoundary.GetLength());
 
   return result;

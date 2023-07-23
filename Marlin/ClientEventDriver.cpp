@@ -277,7 +277,7 @@ ClientEventDriver::CloseDown()
 
   DETAILLOG1("Stopping the event channels");
 
-  // Close websocket
+  // Close WebSocket
   if(m_websocket)
   {
     StopSocketChannel();
@@ -288,14 +288,14 @@ ClientEventDriver::CloseDown()
   // Stop the SSE channel
   if(m_source)
   {
-    m_client.StopClient();
+    StopEventsChannel();
     m_source = nullptr;
   }
 
   // Stop the Long Polling
   if(m_polling)
   {
-    m_polling->StopLongPolling();
+    StopPollingChannel();
     delete m_polling;
     m_polling = nullptr;
   }
@@ -404,7 +404,7 @@ ClientEventDriver::TestDispatcher()
 //
 //////////////////////////////////////////////////////////////////////////
 
-static void OnWebsocketOpen(WebSocket* p_socket, WSFrame* p_event)
+static void OnWebsocketOpen(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
@@ -417,7 +417,7 @@ static void OnWebsocketOpen(WebSocket* p_socket, WSFrame* p_event)
   driver->RegisterIncomingEvent(event);
 }
 
-static void OnWebsocketMessage(WebSocket* p_socket, WSFrame* p_event)
+static void OnWebsocketMessage(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
@@ -430,7 +430,7 @@ static void OnWebsocketMessage(WebSocket* p_socket, WSFrame* p_event)
   driver->RegisterIncomingEvent(event);
 }
 
-static void OnWebsocketBinary(WebSocket* p_socket, WSFrame* p_event)
+static void OnWebsocketBinary(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
@@ -440,13 +440,13 @@ static void OnWebsocketBinary(WebSocket* p_socket, WSFrame* p_event)
   event->m_number  = 0;
   // Put the binary buffer forcibly in a XString!
   char* buf = event->m_payload.GetBufferSetLength(p_event->m_length);
-  memcpy_s(buf,p_event->m_length,(const char*)p_event->m_data,p_event->m_length);
+  memcpy_s(buf,p_event->m_length,reinterpret_cast<const char*>(p_event->m_data),p_event->m_length);
   event->m_payload.ReleaseBufferSetLength(p_event->m_length);
 
   driver->RegisterIncomingEvent(event);
 }
 
-static void OnWebsocketError(WebSocket* p_socket, WSFrame* p_event)
+static void OnWebsocketError(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
@@ -459,7 +459,7 @@ static void OnWebsocketError(WebSocket* p_socket, WSFrame* p_event)
   driver->RegisterIncomingEvent(event);
 }
 
-static void OnWebsocketClose(WebSocket* p_socket, WSFrame* p_event)
+static void OnWebsocketClose(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
@@ -693,7 +693,7 @@ ClientEventDriver::SendToServer(LTEvent* p_event)
     {
       case EvtType::EV_Message: m_websocket->WriteString(p_event->m_payload);
                                 break;
-      case EvtType::EV_Binary:  m_websocket->WriteObject((BYTE*)p_event->m_payload.GetString(),p_event->m_payload.GetLength());
+      case EvtType::EV_Binary:  m_websocket->WriteObject(reinterpret_cast<BYTE*>(const_cast<LPSTR>(p_event->m_payload.GetString())),p_event->m_payload.GetLength());
                                 break;
       case EvtType::EV_Close:   m_websocket->SendCloseSocket(WS_CLOSE_NORMAL,p_event->m_payload);
                                 // Restart channel!!
@@ -743,7 +743,7 @@ ClientEventDriver::StartEventThread()
   {
     // Thread for the client queue
     unsigned int threadID = 0;
-    if((m_thread = (HANDLE)_beginthreadex(NULL,0,StartingTheDriverThread,(void*)(this),0,&threadID)) == INVALID_HANDLE_VALUE)
+    if((m_thread = reinterpret_cast<HANDLE>(_beginthreadex(NULL,0,StartingTheDriverThread,reinterpret_cast<void*>(this),0,&threadID))) == INVALID_HANDLE_VALUE)
     {
       m_thread = NULL;
       threadID = 0;
@@ -772,7 +772,6 @@ ClientEventDriver::EventThreadRunning()
   DETAILLOG1("ServerEventDriver monitor started.");
   do
   {
-    int sent = 0;
     // Wake every now and then and send events to the application
     DWORD waited = WaitForSingleObjectEx(m_event,m_interval,true);
     switch(waited)
@@ -781,8 +780,8 @@ ClientEventDriver::EventThreadRunning()
       case WAIT_OBJECT_0:       // Explicit wake up by posting an event
                                 if(m_running)
                                 {
-                                  sent += SendChannelsToApplication();
-                                  sent += SendChannelsToServer();
+                                  int sent = SendChannelsToApplication();
+                                  sent    += SendChannelsToServer();
                                   RecalculateInterval(sent);
                                 }
                                 break;
@@ -937,6 +936,7 @@ ClientEventDriver::StopSocketChannel()
 void
 ClientEventDriver::StopEventsChannel()
 {
+  m_client.StopClient();
   m_client.Reset();
 }
 

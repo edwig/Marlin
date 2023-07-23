@@ -85,13 +85,13 @@ TestMarlinServer::TestCompression()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite GZIP compression   : OK : %s\n",(LPCTSTR)site->GetPrefixURL());
+    qprintf("HTTPSite GZIP compression   : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a website for : %s\n",(LPCTSTR)webaddress);
+    qprintf("ERROR: Cannot register a website for : %s\n",webaddress.GetString());
     return error;
   }
 
@@ -110,7 +110,7 @@ TestMarlinServer::TestCompression()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)webaddress);
+    qprintf("ERROR STARTING SITE: %s\n",webaddress.GetString());
   }
   return error;
 }

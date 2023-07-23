@@ -509,7 +509,7 @@ TestXMLMessage3()
   {
     printf("XML Message internal error [%d] %s\n"
           ,msg.GetInternalError()
-          ,(LPCTSTR)msg.GetInternalErrorString());
+          ,msg.GetInternalErrorString().GetString());
   }
   else
   {

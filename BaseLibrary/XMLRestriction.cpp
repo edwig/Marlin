@@ -336,7 +336,7 @@ XMLRestrictions::GiveDisplayValue(XString p_name,XString p_enum)
 XString   
 XMLRestriction::CheckRangeFloat(XString p_value)
 {
-  bcd value = atof(p_value);
+  bcd value(atof(p_value));
   if(errno == ERANGE)
   {
     return "Floating point overflow";
@@ -1340,7 +1340,6 @@ XMLRestriction::CheckNames(XString p_value)
 XString
 XMLRestriction::CheckDuration(XString p_value,int& p_type)
 {
-  bool negative    = false;
   bool didTime     = false;
   int  value       = 0;
   int  fraction    = 0;
@@ -1356,7 +1355,6 @@ XMLRestriction::CheckDuration(XString p_value,int& p_type)
   duration.Trim();
   if(duration.Left(1) == "-")
   {
-    negative = true;
     duration = duration.Mid(1);
   }
 
@@ -1687,7 +1685,7 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,XString p_value)
       result = "NOTATION must declare an enumerator list of QNames";
       return result;
     }
-    for(auto& value : m_enums)
+    for(const auto& value : m_enums)
     {
       result = CheckQName(value.first);
       if(!result.IsEmpty())
@@ -1716,7 +1714,7 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,XString p_value)
     return result;
   }
   // See if the value is one of the stated enum values
-  for(auto& value : m_enums)
+  for(const auto& value : m_enums)
   {
     if(p_value.CompareNoCase(value.first) == 0)
     {

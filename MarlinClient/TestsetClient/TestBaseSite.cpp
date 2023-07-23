@@ -62,8 +62,8 @@ TestGet(HTTPClient* p_client)
   }
   else
   {
-    xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+    printf("ERROR Client received status: %d\n",p_client->GetStatus());
+    printf("ERROR %s\n",p_client->GetStatusText().GetString());
 
     BYTE*  response = nullptr;
     unsigned length = 0;
@@ -71,7 +71,7 @@ TestGet(HTTPClient* p_client)
     if(response && length)
     {
       response[length] = 0;
-      printf((char*)response);
+      printf(reinterpret_cast<char*>(response));
     }
   }
   // SUMMARY OF THE TEST
@@ -119,7 +119,7 @@ TestPut(HTTPClient* p_client)
   else
   {
     xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+    xprintf("ERROR %s\n",p_client->GetStatusText().GetString());
 
     BYTE*  response = nullptr;
     unsigned length = 0;
@@ -127,7 +127,7 @@ TestPut(HTTPClient* p_client)
     if(response && length)
     {
       response[length] = 0;
-      printf((char*)response);
+      printf(reinterpret_cast<char*>(response));
     }
   }
 

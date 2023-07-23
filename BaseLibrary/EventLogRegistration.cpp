@@ -43,6 +43,7 @@ static char THIS_FILE[] = __FILE__;
 // Name of the event log category in the WMI
 static const char* eventLogCategory = "Application";
 
+// Register our DLL. Return '1' if succesfull, otherwise '0'
 int
 RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString& p_error)
 {
@@ -51,7 +52,11 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
   // Record our service name for service reporting purposes, if not already set
   if(!g_svcname[0])
   {
-    StringCchCopy(g_svcname,SERVICE_NAME_LENGTH,p_serviceName);
+    if(StringCchCopy(g_svcname,SERVICE_NAME_LENGTH,p_serviceName) != S_OK)
+    {
+      p_error = "The service name cannot be registered: " + p_serviceName;
+      return 0;
+    }
   }
 
   // Construct absolute filename of the DLL
@@ -61,7 +66,7 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
     p_error.Format("No working directory found. Cannot install service: [%s] Error: %s\n"
                    ,p_serviceName.GetString()
                    ,GetLastErrorAsString().GetString());
-    return 3;
+    return 0;
   }
   // Add the message DLL filename
   pathname += p_messageDLL;

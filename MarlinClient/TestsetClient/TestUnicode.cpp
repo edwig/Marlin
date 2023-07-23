@@ -46,7 +46,7 @@ void PrintBytes(void* p_buffer,int p_length)
 
   for(int ind = 0; ind < p_length; ++ind)
   {
-    unsigned ch = ((uchar*)p_buffer)[ind];
+    unsigned ch = (reinterpret_cast<uchar*>(p_buffer))[ind];
     xprintf("  byte: %02X %c\n",ch,ch);
   }
   xprintf("\n");
@@ -56,13 +56,12 @@ int TestUnicode(void)
 {
 //const char *text = "Sôn bôn de magnà el véder, el me fa minga mal.";
   uchar* buffer = NULL;
-  const char* text = "áàäâéèëêíìïîóòöôúùüûıÿçñõã";
+  const char* text   = "áàäâéèëêíìïîóòöôúùüûıÿçñõã";
   int   length = 0;
   int   errors = 1;
   bool  doBom  = true;
-  bool  foundBOM = false;
 
-  PrintBytes((void*)text,(int)strlen(text));
+  PrintBytes(reinterpret_cast<void*>(const_cast<char*>(text)),static_cast<int>(strlen(text)));
 
   // Try to convert to Unicode UTF-16
   if(TryCreateWideString(text,"",doBom,&buffer,length))
@@ -70,9 +69,10 @@ int TestUnicode(void)
     PrintBytes(buffer,length);
 
     XString result;
+    bool  foundBOM = false;
     if(TryConvertWideString(buffer,length,"",result,foundBOM))
     {
-      PrintBytes((void*)result.GetString(),result.GetLength());
+      PrintBytes(reinterpret_cast<void*>(const_cast<char*>(result.GetString())),result.GetLength());
     }
     // Do not forget to free the buffer
     delete [] buffer;

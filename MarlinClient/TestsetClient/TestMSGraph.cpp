@@ -103,7 +103,7 @@ int TestMSGraph(HTTPClient* p_client)
     unsigned length = 0;
     p_client->GetResponse(response,length);
 
-    JSONMessage json((XString)(char*)response);
+    JSONMessage json(reinterpret_cast<char*>(response));
     json.SetWhitespace(true);
     XString jsonmsg = json.GetJsonMessage();
     std::cout << jsonmsg.GetString();

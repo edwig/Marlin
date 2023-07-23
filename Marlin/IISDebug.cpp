@@ -44,8 +44,8 @@ DebugVariable(IHttpContext* p_context,const char* p_description,const char* p_na
 {
   XString message;
   DWORD size    = 1024;
-  PCSTR pointer = (PCSTR)p_context->AllocateRequestMemory(size);
-  HRESULT hr = p_context->GetServerVariable(p_name,&pointer,&size);
+  PCSTR pointer = reinterpret_cast<PCSTR>(p_context->AllocateRequestMemory(size));
+  HRESULT hr    = p_context->GetServerVariable(p_name,&pointer,&size);
   if(SUCCEEDED(hr))
   {
     message.Format("%s (%s): %s\n",p_description,p_name,pointer);

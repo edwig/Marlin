@@ -72,16 +72,18 @@ FindProxy::Find(const XString& p_url,bool p_secure)
   {
     if(cfg.lpszProxy)
     {
-      proxy = WStringToString(cfg.lpszProxy);
+      std::wstring wproxy(cfg.lpszProxy);
+      proxy = WStringToString(wproxy);
       if(!!cfg.lpszProxyBypass)
       {
-        m_ignored = WStringToString(cfg.lpszProxyBypass);
+        std::wstring bypass(cfg.lpszProxyBypass);
+        m_ignored = WStringToString(bypass);
       }
     }
     LPWSTR autoCfgUrl = cfg.lpszAutoConfigUrl;
     if(proxy.IsEmpty() && (cfg.fAutoDetect || !!autoCfgUrl))
     {
-      //check for autoproxy settings
+      //check for auto proxy settings
       WINHTTP_AUTOPROXY_OPTIONS autoOpts = { 0, };
       autoOpts.fAutoLogonIfChallenged = TRUE;
       if(cfg.fAutoDetect)
@@ -107,10 +109,12 @@ FindProxy::Find(const XString& p_url,bool p_secure)
         if(autoCfg.lpszProxy && autoCfg.dwAccessType != WINHTTP_ACCESS_TYPE_NO_PROXY)
         {
           m_perDest = true;
-          proxy = WStringToString(autoCfg.lpszProxy);
+          std::wstring wproxy(autoCfg.lpszProxy);
+          proxy = WStringToString(wproxy);
           if(!!autoCfg.lpszProxyBypass)
           {
-            m_ignored = WStringToString(autoCfg.lpszProxyBypass);
+            std::wstring bypass(autoCfg.lpszProxyBypass);
+            m_ignored = WStringToString(bypass);
           }
         }
       }
@@ -146,8 +150,8 @@ FindProxy::SetInfo(XString p_proxy,XString p_bypass)
   m_wIgnored = StringToWString(m_ignored);
 
   m_info->cfg.dwAccessType    = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
-  m_info->cfg.lpszProxy       = (LPWSTR) m_wProxy.c_str();
-  m_info->cfg.lpszProxyBypass = (LPWSTR) m_wIgnored.c_str();
+  m_info->cfg.lpszProxy       = reinterpret_cast<LPWSTR>(const_cast<wchar_t*>(m_wProxy.  c_str()));
+  m_info->cfg.lpszProxyBypass = reinterpret_cast<LPWSTR>(const_cast<wchar_t*>(m_wIgnored.c_str()));
 }
 
 void

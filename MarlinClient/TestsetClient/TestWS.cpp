@@ -40,7 +40,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 int
-DoSend(HTTPClient& p_client,SOAPMessage* p_msg,char* p_what,bool p_fault = false)
+DoSend(HTTPClient& p_client,SOAPMessage* p_msg,const char* p_what,bool p_fault = false)
 {
   bool result = false;
 
@@ -86,12 +86,12 @@ DoSend(HTTPClient& p_client,SOAPMessage* p_msg,char* p_what,bool p_fault = false
       else
       {
         // But we where NOT expecting a FAULT!
-        printf("Answer with error: %s\n",(LPCTSTR)p_msg->GetFault());
+        printf("Answer with error: %s\n",p_msg->GetFault().GetString());
 
-        printf("SOAP Fault code:   %s\n",(LPCTSTR)p_msg->GetFaultCode());
-        printf("SOAP Fault actor:  %s\n",(LPCTSTR)p_msg->GetFaultActor());
-        printf("SOAP Fault string: %s\n",(LPCTSTR)p_msg->GetFaultString());
-        printf("SOAP FAULT detail: %s\n",(LPCTSTR)p_msg->GetFaultDetail());
+        printf("SOAP Fault code:   %s\n",p_msg->GetFaultCode().GetString());
+        printf("SOAP Fault actor:  %s\n",p_msg->GetFaultActor().GetString());
+        printf("SOAP Fault string: %s\n",p_msg->GetFaultString().GetString());
+        printf("SOAP FAULT detail: %s\n",p_msg->GetFaultDetail().GetString());
       }
     }
   }
@@ -109,7 +109,7 @@ DoSend(HTTPClient& p_client,SOAPMessage* p_msg,char* p_what,bool p_fault = false
       unsigned length = 0;
       p_client.GetResponse(response, length);
       printf("Message not sent!\n");
-      printf("Service answer: %s\n", (char*)response);
+      printf("Service answer: %s\n",reinterpret_cast<char*>(response));
       printf("HTTP Client error: %s\n", p_client.GetStatusText().GetString());
     }
   }
@@ -137,12 +137,12 @@ DoSendPrice(HTTPClient& p_client, SOAPMessage* p_msg,double p_price)
     }
     else
     {
-      printf("Answer with error: %s\n", (LPCTSTR)p_msg->GetFault());
+      printf("Answer with error: %s\n", p_msg->GetFault().GetString());
 
-      printf("SOAP Fault code:   %s\n", (LPCTSTR)p_msg->GetFaultCode());
-      printf("SOAP Fault actor:  %s\n", (LPCTSTR)p_msg->GetFaultActor());
-      printf("SOAP Fault string: %s\n", (LPCTSTR)p_msg->GetFaultString());
-      printf("SOAP FAULT detail: %s\n", (LPCTSTR)p_msg->GetFaultDetail());
+      printf("SOAP Fault code:   %s\n", p_msg->GetFaultCode().GetString());
+      printf("SOAP Fault actor:  %s\n", p_msg->GetFaultActor().GetString());
+      printf("SOAP Fault string: %s\n", p_msg->GetFaultString().GetString());
+      printf("SOAP FAULT detail: %s\n", p_msg->GetFaultDetail().GetString());
     }
   }
   else
@@ -159,7 +159,7 @@ DoSendPrice(HTTPClient& p_client, SOAPMessage* p_msg,double p_price)
       unsigned length = 0;
       p_client.GetResponse(response, length);
       printf("Message not sent!\n");
-      printf("Service answer: %s\n", (char*)response);
+      printf("Service answer: %s\n",reinterpret_cast<char*>(response));
       printf("HTTP Client error: %s\n", p_client.GetStatusText().GetString());
     }
   }
@@ -200,7 +200,7 @@ CreateSoapMessage(XString       p_namespace
 
     if(p_encrypt == XMLEncryption::XENC_Body)
     {
-      // msg->SetSigningMethod(CALG_RSA_SIGN);
+      msg->SetSigningMethod(CALG_RSA_SIGN);
     }
   }
   return msg;
@@ -309,6 +309,10 @@ TestReliableMessaging(HTTPClient* p_client,XString p_namespace,XString p_action,
     delete message;
     message = nullptr;
   }
+  if(errors)
+  {
+    return errors;
+  }
   return (totalDone == NUM_RM_TESTS) ? 0 : 1;
 }
 
@@ -383,28 +387,28 @@ int TestWebservices(HTTPClient& client)
   xprintf("TESTING STANDARD SOAP MESSAGE TO /MarlinTest/Insecure/\n");
   xprintf("====================================================\n");
   msg = CreateSoapMessage(namesp,command,url);
-  errors += DoSend(client,msg,(char*)"insecure");
+  errors += DoSend(client,msg,"insecure");
 
   // Test 2
   xprintf("TESTING BODY SIGNING SOAP TO /MarlinTest/BodySigning/\n");
   xprintf("===================================================\n");
   url = CreateURL("BodySigning");
   msg = CreateSoapMessage(namesp,command,url,SoapVersion::SOAP_12, XMLEncryption::XENC_Signing);
-  errors += DoSend(client,msg,(char*)"body signing");
+  errors += DoSend(client,msg,"body signing");
 
   // Test 3
   xprintf("TESTING BODY ENCRYPTION SOAP TO /MarlinTest/BodyEncrypt/\n");
   xprintf("======================================================\n");
   url = CreateURL("BodyEncrypt");
   msg = CreateSoapMessage(namesp,command,url, SoapVersion::SOAP_12, XMLEncryption::XENC_Body);
-  errors += DoSend(client,msg,(char*)"body encrypting");
+  errors += DoSend(client,msg,"body encrypting");
 
   // Test 4
   xprintf("TESTING WHOLE MESSAGE ENCRYPTION TO /MarlinTest/MessageEncrypt/\n");
   xprintf("=============================================================\n");
   url = CreateURL("MessageEncrypt");
-  msg = CreateSoapMessage(namesp,command,url, SoapVersion::SOAP_12, XMLEncryption::XENC_Message);
-  errors += DoSend(client,msg,(char*)"message encrypting");
+  msg = CreateSoapMessage(namesp,command,url,SoapVersion::SOAP_12,XMLEncryption::XENC_Message);
+  errors += DoSend(client,msg,"message encrypting");
 
   // Test 5
   xprintf("TESTING RELIABLE MESSAGING TO /MarlinTest/Reliable/\n");
@@ -428,7 +432,7 @@ int TestWebservices(HTTPClient& client)
   XString password("altijd");
   client.SetUser(user);
   client.SetPassword(password);
-  errors += DoSend(client,msg,(char*)"token testing");
+  errors += DoSend(client,msg,"token testing");
   client.SetSingleSignOn(false);
 
   // Test 8
@@ -441,9 +445,9 @@ int TestWebservices(HTTPClient& client)
   client.SetSingleSignOn(true);
   client.SetUser(user);
   client.SetPassword(password);
-  errors += DoSend(client,msg,(char*)"single sign on");
+  errors += DoSend(client,msg,"single sign on");
   msg = CreateSoapMessage(namesp,command,url2);
-  errors += DoSend(client,msg,(char*)"single sign on");
+  errors += DoSend(client,msg,"single sign on");
   client.SetSingleSignOn(false);
 
   // Test 9
@@ -452,7 +456,7 @@ int TestWebservices(HTTPClient& client)
   url = CreateURL("Insecure");
   msg = CreateSoapMessage(namesp,command,url);
   msg->SetParameter("TestFault",true);
-  errors += DoSend(client,msg,(char*)"soap fault",true);
+  errors += DoSend(client,msg,"soap fault",true);
 
   // Test 10
   xprintf("TESTING UNICODE SENDING TO /MarlinTest/Insecure/\n");
@@ -460,7 +464,7 @@ int TestWebservices(HTTPClient& client)
   url = CreateURL("Insecure");
   msg = CreateSoapMessage(namesp,command,url);
   msg->SetSendUnicode(true);
-  errors += DoSend(client,msg,(char*)"sending unicode");
+  errors += DoSend(client,msg,"sending unicode");
 
   // Test 11
   xprintf("TESTING FILTERING CAPABILITIES TO /MarlinTest/Filter/\n");

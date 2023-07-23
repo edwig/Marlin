@@ -57,13 +57,13 @@ SiteHandlerSoapBodyEncrypt::Handle(HTTPMessage* p_message)
   if(cypher)
   {
     XString value = cypher->GetValue();
-    if(value = "VcPqnfbozsqeFEGghOImY2ZlxjgA1xxnLnqOjglV3VD+4xqmxOe3WMRxlobfYmOJ23S0aS3aE"
-               "/KrVOR15pfQINTmeBqOPcwbntbh5baefeyOK0+THsHHONYt7LJg3jP08G5DGat0LjdVukrSno"
-               "4Wnc2wTTizMr2EL7/1ACrZbrG8tOqkghwScksUQc08cXh9vXTcWkk8Mn+d+fhrONzmGUkvOU8"
-               "bW5UV4y14+SC5nffAADFX8O9m70Wqr169L6HNjqo1BuiGIhDr03kB87ZTSpql60DmsiUfYXxl"
-               "3TJM47Z+G6tW7S8tLnWElIBXLzkcaGD/FAx0+JFVVOKFVBXAwG8mJflwzu0bsAlJSTmueTc17"
-               "fvf0ddbq8GWcEvys4MLRdCVeInzvV6TLw21LAFXQwUeEitypfM3zOfZhCTwqdxKvKoAx8ZRWq"
-               "0e5qlk7F+s")
+    if(value == "VcPqnfbozsqeFEGghOImY2ZlxjgA1xxnLnqOjglV3VD+4xqmxOe3WMRxlobfYmOJ23S0aS3aE"
+                "/KrVOR15pfQINTmeBqOPcwbntbh5baefeyOK0+THsHHONYt7LJg3jP08G5DGat0LjdVukrSno"
+                "4Wnc2wTTizMr2EL7/1ACrZbrG8tOqkghwScksUQc08cXh9vXTcWkk8Mn+d+fhrONzmGUkvOU8"
+                "bW5UV4y14+SC5nffAADFX8O9m70Wqr169L6HNjqo1BuiGIhDr03kB87ZTSpql60DmsiUfYXxl"
+                "3TJM47Z+G6tW7S8tLnWElIBXLzkcaGD/FAx0+JFVVOKFVBXAwG8mJflwzu0bsAlJSTmueTc17"
+                "fvf0ddbq8GWcEvys4MLRdCVeInzvV6TLw21LAFXQwUeEitypfM3zOfZhCTwqdxKvKoAx8ZRWq"
+                "0e5qlk7F+s")
     {
       cypherResult = true;
     }
@@ -152,13 +152,13 @@ TestMarlinServer::TestBodyEncryption()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for body encryption: OK : %s\n",(LPCTSTR)site->GetPrefixURL());
+    qprintf("HTTPSite for body encryption: OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot create an HTTP site: %s\n",(LPCTSTR) url);
+    qprintf("ERROR: Cannot create an HTTP site: %s\n",url.GetString());
     return error;
   }
 
@@ -179,7 +179,7 @@ TestMarlinServer::TestBodyEncryption()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR) url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

@@ -227,8 +227,6 @@ EnsureFile::ReduceDirectoryPath(XString& path)
     foundReduction = false;
 
     char* pnt1 = buffer;
-    char* pnt2 = pnt1;
-    char* pnt3 = pnt1;
 
     while(*pnt1 && *pnt1!='\\' && *pnt1!='/') ++pnt1;
     if(!*pnt1++)
@@ -236,14 +234,14 @@ EnsureFile::ReduceDirectoryPath(XString& path)
       // Not one directory separator
       return path;
     }
-    pnt3 = pnt1;
+    char* pnt3 = pnt1;
     while(*pnt1 && *pnt1!='\\' && *pnt1!='/') ++pnt1;
     if(!*pnt1++)
     {
       // Not a second directory separator
       return path;
     }
-    pnt2 = pnt1;
+    char* pnt2 = pnt1;
     while(*pnt1 && *pnt1!='\\' && *pnt1!='/') ++pnt1;
     while(*pnt1)
     {
@@ -282,9 +280,9 @@ EnsureFile::ReduceDirectoryPath(XString& path)
 // output
 // Relative: "../../ddd/eee/file.ext"
 bool
-EnsureFile::MakeRelativePathname(XString& p_base
-                                ,XString& p_absolute
-                                ,XString& p_relative)
+EnsureFile::MakeRelativePathname(const XString& p_base
+                                ,const XString& p_absolute
+                                ,      XString& p_relative)
 {
   p_relative = "";
   XString base     = StripFileProtocol(p_base);
@@ -533,7 +531,7 @@ EnsureFile::GrantFullAccess()
     ea.grfInheritance       = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
     ea.Trustee.TrusteeForm  = TRUSTEE_IS_SID;
     ea.Trustee.TrusteeType  = TRUSTEE_IS_WELL_KNOWN_GROUP;
-    ea.Trustee.ptstrName    = (LPTSTR)SIDEveryone;
+    ea.Trustee.ptstrName    = reinterpret_cast<LPTSTR>(SIDEveryone);
 
     if(ERROR_SUCCESS != SetEntriesInAcl(1,&ea,nullptr,&acl))
     {
@@ -541,12 +539,12 @@ EnsureFile::GrantFullAccess()
       __leave;
     }
     // Try to modify the object's DACL.
-    if(ERROR_SUCCESS != SetNamedSecurityInfo((LPSTR)m_filename.GetString() // name of the object
-                                             ,SE_FILE_OBJECT               // type of object: file or directory
-                                             ,DACL_SECURITY_INFORMATION    // change only the object's DACL
-                                             ,nullptr,nullptr              // do not change owner or group
-                                             ,acl                          // DACL specified
-                                             ,nullptr))                    // do not change SACL
+    if(ERROR_SUCCESS != SetNamedSecurityInfo(const_cast<LPSTR>(m_filename.GetString())  // name of the object
+                                            ,SE_FILE_OBJECT               // type of object: file or directory
+                                            ,DACL_SECURITY_INFORMATION    // change only the object's DACL
+                                            ,nullptr,nullptr              // do not change owner or group
+                                            ,acl                          // DACL specified
+                                            ,nullptr))                    // do not change SACL
     {
       // SetNamedSecurityInfo failed to change the DACL Maximum Allowed Access
       __leave;

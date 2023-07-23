@@ -142,13 +142,13 @@ TestMarlinServer::TestCookies()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for cookie tests   : OK : %s\n",(LPCTSTR)site->GetPrefixURL());
+    qprintf("HTTPSite for cookie tests   : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a website for : %s\n",(LPCTSTR)webaddress);
+    qprintf("ERROR: Cannot register a website for : %s\n",webaddress.GetString());
     return error;
   }
 
@@ -175,7 +175,7 @@ TestMarlinServer::TestCookies()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)webaddress);
+    qprintf("ERROR STARTING SITE: %s\n",webaddress.GetString());
   }
   return error;
 }

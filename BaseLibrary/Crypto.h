@@ -51,7 +51,7 @@ class Crypto
 {
 public:
   Crypto();
-  Crypto(unsigned p_hash);
+  explicit Crypto(unsigned p_hash);
  ~Crypto();
 
   // Set hashing digest method

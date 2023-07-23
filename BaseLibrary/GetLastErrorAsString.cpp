@@ -153,12 +153,12 @@ GetLastErrorAsString(DWORD p_error /*=0*/)
   BOOL fOk = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM     | 
                            FORMAT_MESSAGE_IGNORE_INSERTS  |
                            FORMAT_MESSAGE_ALLOCATE_BUFFER 
-                          ,NULL               // DLL
-                          ,dwError            // The error code
-                          ,systemLocale       // Language
-                          ,(PTSTR) &hlocal    // Buffer handle
-                          ,0                  // Size if not buffer handle
-                          ,NULL);             // Variable arguments
+                          ,NULL                               // DLL
+                          ,dwError                            // The error code
+                          ,systemLocale                       // Language
+                          ,reinterpret_cast<PTSTR>(&hlocal)   // Buffer handle
+                          ,0                                  // Size if not buffer handle
+                          ,NULL);                             // Variable arguments
   // If not found: try most generic HTTP errors
   if(!fOk)
   {
@@ -185,7 +185,7 @@ GetLastErrorAsString(DWORD p_error /*=0*/)
                          ,hDll
                          ,dwError
                          ,systemLocale
-                         ,(PTSTR) &hlocal
+                         ,reinterpret_cast<PTSTR>(&hlocal)
                          ,0
                          ,NULL);
     }
@@ -193,7 +193,7 @@ GetLastErrorAsString(DWORD p_error /*=0*/)
   if(fOk && (hlocal != NULL)) 
   {
     // Getting the message from the buffer;
-    message = (PCTSTR) LocalLock(hlocal);
+    message = reinterpret_cast<PCTSTR>(LocalLock(hlocal));
     LocalFree(hlocal);
     // Formatting the message in one line
     message.Replace('\n',' ');

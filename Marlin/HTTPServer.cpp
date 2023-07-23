@@ -50,6 +50,7 @@
 #include "PrintToken.h"
 #include "Cookie.h"
 #include "Crypto.h"
+#include <ServiceReporting.h>
 #include <algorithm>
 #include <io.h>
 #include <sys/timeb.h>
@@ -117,12 +118,11 @@ MediaTypes* g_media = nullptr;
 
 HTTPServer::HTTPServer(XString p_name)
            :m_name(p_name)
+           ,m_marlinConfig(nullptr)
+           ,m_clientErrorPage(global_client_error)
+           ,m_serverErrorPage(global_server_error)
+           ,m_hostName(GetHostName(HOSTNAME_SHORT))
 {
-  // Set defaults
-  m_clientErrorPage = global_client_error;
-  m_serverErrorPage = global_server_error;
-  m_hostName        = GetHostName(HOSTNAME_SHORT);
-
   // Preparing for error reporting
   PrepareProcessForSEH();
 
@@ -380,14 +380,12 @@ HTTPServer::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
     result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
   }
 
-#ifdef _DEBUG
   // nothing logged
   if(!result)
   {
-    // What can we do? As a last result: print to trace output
-    TRACE("Marlin " MARLIN_SERVER_VERSION " Error [%08lX] %s\n",p_code,(LPCTSTR) p_text);
+    // What can we do? As a last result: print to the MS-Windows event log
+    SvcReportErrorEvent(0,true,__FUNCTION__,"Marlin " MARLIN_SERVER_VERSION " Error [%08lX] %s\n",p_code,p_text.GetString());
   }
-#endif
 }
 
 void
@@ -401,14 +399,12 @@ HTTPServer::HTTPError(const char* p_function,int p_status,XString p_text)
     result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
   }
 
-#ifdef _DEBUG
   // nothing logged
   if(!result)
   {
-    // What can we do? As a last result: print to trace output
-    TRACE("Marlin " MARLIN_SERVER_VERSION " Status [%d] %s\n",p_status,(LPCTSTR) p_text);
+    // What can we do? As a last result: print to the MS-Windows event log
+    SvcReportErrorEvent(0,true,__FUNCTION__,"Marlin " MARLIN_SERVER_VERSION " Status [%d] %s\n",p_status,p_text.GetString());
   }
-#endif
 }
 
 // General checks before starting
@@ -496,7 +492,7 @@ HTTPServer::MakeSiteRegistrationName(int p_port,XString p_url)
 
 // Register a URL to listen on
 bool
-HTTPServer::RegisterSite(HTTPSite* p_site,XString p_urlPrefix)
+HTTPServer::RegisterSite(const HTTPSite* p_site,const XString& p_urlPrefix)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -506,6 +502,11 @@ HTTPServer::RegisterSite(HTTPSite* p_site,XString p_urlPrefix)
   if(GetLastError())
   {
     ERRORLOG(ERROR_INVALID_PARAMETER,"RegisterSite called too early");
+    return false;
+  }
+  if(p_site == nullptr)
+  {
+    ERRORLOG(ERROR_INVALID_PARAMETER,"RegisterSite: no site to register");
     return false;
   }
 
@@ -519,7 +520,7 @@ HTTPServer::RegisterSite(HTTPSite* p_site,XString p_urlPrefix)
   }
 
   // Remember our context
-  int port = p_site->GetPort();
+  int     port = p_site->GetPort();
   XString base = p_site->GetSite();
   XString site(MakeSiteRegistrationName(port,base));
   SiteMap::iterator it = m_allsites.find(site);
@@ -527,17 +528,15 @@ HTTPServer::RegisterSite(HTTPSite* p_site,XString p_urlPrefix)
   {
     if(p_urlPrefix.CompareNoCase(it->second->GetPrefixURL()) == 0)
     {
-      // Duplicate site found: Not necesseraly an error
+      // Duplicate site found: Not necessarily an error
       WARNINGLOG("Site was already registered: %s",base.GetString());
       return false;
     }
   }
 
   // Remember the site 
-  if(p_site)
-  {
-    m_allsites[site] = p_site;
-  }
+  m_allsites[site] = const_cast<HTTPSite*>(p_site);
+
   // Use counter
   m_counter.Stop();
 
@@ -588,7 +587,7 @@ HTTPServer::FindHTTPSite(int p_port,PCWSTR p_url)
 
 // Find a site or a sub-site of the site
 HTTPSite*
-HTTPServer::FindHTTPSite(HTTPSite* p_site,XString& p_url)
+HTTPServer::FindHTTPSite(HTTPSite* p_site,const XString& p_url)
 {
   HTTPSite* site = FindHTTPSite(p_site->GetPort(),p_url);
   if(site)
@@ -605,7 +604,7 @@ HTTPServer::FindHTTPSite(HTTPSite* p_site,XString& p_url)
 // Finding the HTTP site from the mappings of all sites
 // by the 'longest match' method, optimized for pathnames
 HTTPSite*
-HTTPServer::FindHTTPSite(int p_port,XString& p_url)
+HTTPServer::FindHTTPSite(int p_port,const XString& p_url)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -639,7 +638,7 @@ HTTPServer::FindHTTPSite(int p_port,XString& p_url)
 
 // Find routing information within the site
 void
-HTTPServer::CalculateRouting(HTTPSite* p_site,HTTPMessage* p_message)
+HTTPServer::CalculateRouting(const HTTPSite* p_site,HTTPMessage* p_message)
 {
   XString url = p_message->GetCrackedURL().AbsoluteResource();
   XString known(p_site->GetSite());
@@ -681,10 +680,10 @@ HTTPServer::FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers)
     if(name.GetLength() != p_headers[ind].NameLength)
     {
       // Different length: suppose it's Unicode
-      wstring nameDesk = (wchar_t*)p_headers[ind].pName;
+      wstring nameDesk = reinterpret_cast<const wchar_t*>(p_headers[ind].pName);
       if(nameDesk.compare(L"RemoteDesktop") == 0)
       {
-        remDesktop = _wtoi((const wchar_t*)p_headers[ind].pRawValue);
+        remDesktop = _wtoi(reinterpret_cast<const wchar_t*>(p_headers[ind].pRawValue));
         break;
       }
     }
@@ -772,7 +771,7 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
         // Only exists on Windows 10 / Server 2016
         if (GetLogLevel() >= HLL_TRACE)
         {
-          PHTTP_SSL_PROTOCOL_INFO sslInfo = (PHTTP_SSL_PROTOCOL_INFO) p_request->pRequestInfo[ind].pInfo;
+          PHTTP_SSL_PROTOCOL_INFO sslInfo = reinterpret_cast<PHTTP_SSL_PROTOCOL_INFO>(p_request->pRequestInfo[ind].pInfo);
           LogSSLConnection(sslInfo);
         }
       }
@@ -934,7 +933,7 @@ HTTPServer::RespondWithServerError(HTTPMessage* p_message
 
   p_message->Reset();
   p_message->GetFileBuffer()->Reset();
-  p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
+  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(page.GetString())),page.GetLength());
   p_message->SetStatus(p_error);
   p_message->SetContentType("text/html");
 
@@ -962,7 +961,7 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
 
   p_message->Reset();
   p_message->GetFileBuffer()->Reset();
-  p_message->GetFileBuffer()->SetBuffer((uchar*)page.GetString(),page.GetLength());
+  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(page.GetString())),page.GetLength());
   p_message->SetStatus(p_error);
   p_message->SetContentType("text/html");
 
@@ -980,7 +979,7 @@ HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,XString p_body)
 {
   p_message->Reset();
   p_message->GetFileBuffer()->Reset();
-  p_message->GetFileBuffer()->SetBuffer((uchar*)p_body.GetString(),p_body.GetLength());
+  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(p_body.GetString())),p_body.GetLength());
   p_message->SetContentType("application/json");
   p_message->SetStatus(HTTP_STATUS_OK);
   SendResponse(p_message);
@@ -1059,7 +1058,6 @@ HTTPServer::HandleTextContent(HTTPMessage* p_message)
 {
   uchar* body   = nullptr;
   size_t length = 0;
-  bool   doBOM  = false;
   
   // Get a copy of the body
   p_message->GetRawBody(&body,length);
@@ -1068,17 +1066,18 @@ HTTPServer::HandleTextContent(HTTPMessage* p_message)
   if(IsTextUnicode(body,(int)length,&uni))
   {
     XString output;
+    bool doBOM = false;
 
     // Find specific code page and try to convert
     XString charset = FindCharsetInContentType(p_message->GetContentType());
     DETAILLOGS("Try convert charset in pre-handle fase: ",charset);
-    bool convert = TryConvertWideString(body,(int)length,"",output,doBOM);
+    bool convert = TryConvertWideString(body,static_cast<int>(length),"",output,doBOM);
 
     // Output to message->body
     if(convert)
     {
       // Copy back the converted string (does a copy!!)
-      p_message->GetFileBuffer()->SetBuffer((uchar*)output.GetString(),output.GetLength());
+      p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(output.GetString())),output.GetLength());
       p_message->SetSendBOM(doBOM);
     }
     else
@@ -1189,7 +1188,7 @@ HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
                                 ,int              p_desktop
                                 ,HTTPSite*        p_site
                                 ,XString          p_url
-                                ,XString&         p_path
+                                ,const XString&   p_path
                                 ,HTTP_OPAQUE_ID   p_requestId
                                 ,HANDLE           p_token)
 {
@@ -1461,7 +1460,7 @@ HTTPServer::TryStartEventHeartbeat()
     return;
   }
   m_eventEvent   = CreateEvent(NULL,FALSE,FALSE,NULL);
-  m_eventMonitor = (HANDLE)_beginthread(RunEventMonitor,0L,(void*)this);
+  m_eventMonitor = reinterpret_cast<HANDLE>(_beginthread(RunEventMonitor,0L,reinterpret_cast<void*>(this)));
 }
 
 void
@@ -1618,13 +1617,13 @@ HTTPServer::CheckEventStreams()
 
 // Return the fact that we have an event stream
 bool
-HTTPServer::HasEventStream(EventStream* p_stream)
+HTTPServer::HasEventStream(const EventStream* p_stream)
 {
   AutoCritSec lock(&m_eventLock);
 
-  for(auto& it : m_eventStreams)
+  for(const auto& stream : m_eventStreams)
   {
-    if(p_stream == it.second)
+    if(p_stream == stream.second)
     {
       return true;
     }
@@ -1661,11 +1660,11 @@ HTTPServer::HasEventStreams(int p_port,XString p_url,XString p_user /*=""*/)
 
 // Close an event stream for one stream only
 bool
-HTTPServer::CloseEventStream(EventStream* p_stream)
+HTTPServer::CloseEventStream(const EventStream* p_stream)
 {
   AutoCritSec lock(&m_eventLock);
 
-  for(auto& stream : m_eventStreams)
+  for(const auto& stream : m_eventStreams)
   {
     if(stream.second == p_stream)
     {
@@ -1762,7 +1761,7 @@ HTTPServer::RemoveEventStream(CString p_url)
 }
 
 void
-HTTPServer::RemoveEventStream(EventStream* p_stream)
+HTTPServer::RemoveEventStream(const EventStream* p_stream)
 {
   AutoCritSec lock(&m_eventLock);
 
@@ -1910,7 +1909,7 @@ HTTPServer::RegisterHTTPRequest(HTTPRequest* p_request)
 }
 
 void
-HTTPServer::UnRegisterHTTPRequest(HTTPRequest* p_request)
+HTTPServer::UnRegisterHTTPRequest(const HTTPRequest* p_request)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -2063,10 +2062,10 @@ HTTPServer::LogTraceRequestBody(FileBuffer* p_buffer)
     size_t length = 0;
     p_buffer->GetBufferCopy(buffer,length);
 
-    m_log->BareStringLog((const char*) buffer,(int) length);
+    m_log->BareStringLog(reinterpret_cast<const char*>(buffer),static_cast<int>(length));
     if(MUSTLOG(HLL_TRACEDUMP))
     {
-      m_log->AnalysisHex(__FUNCTION__,"Incoming",buffer,(unsigned) length);
+      m_log->AnalysisHex(__FUNCTION__,"Incoming",buffer,static_cast<unsigned>(length));
     }
 
     // Delete buffer copy
@@ -2162,10 +2161,10 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer)
         size_t length = 0;
         p_buffer->GetBufferCopy(buffer,length);
 
-        m_log->BareStringLog((const char*) buffer,(int) length);
+        m_log->BareStringLog(reinterpret_cast<const char*>(buffer),static_cast<int>(length));
         if(MUSTLOG(HLL_TRACEDUMP))
         {
-          m_log->AnalysisHex(__FUNCTION__,"Outgoing",buffer,(unsigned) length);
+          m_log->AnalysisHex(__FUNCTION__,"Outgoing",buffer,static_cast<unsigned>(length));
         }
         // Delete buffer copy
         delete[] buffer;
@@ -2196,7 +2195,7 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,u
   // Log&Trace the body
   if(MUSTLOG(HLL_LOGBODY) && p_buffer)
   {
-    m_log->BareStringLog((const char*)p_buffer,p_length);
+    m_log->BareStringLog(reinterpret_cast<const char*>(p_buffer),p_length);
     if(MUSTLOG(HLL_TRACEDUMP))
     {
       m_log->AnalysisHex(__FUNCTION__,"Outgoing",p_buffer,p_length);
@@ -2262,15 +2261,16 @@ HTTPServer::CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
     return false;
   }
   // See if we find the attack vector.
-  for(DDOSMap::iterator it = m_attacks.begin(); it != m_attacks.end();++it)
+  for(DDOSMap::iterator it = m_attacks.begin();it != m_attacks.end();++it)
   {
     if((memcmp(&it->m_sender,p_sender,sizeof(SOCKADDR_IN6)) == 0) &&
        (it->m_abspath.CompareNoCase(p_path) == 0))
     {
       if(it->m_beginTime < (clock() - TIMEOUT_BRUTEFORCE))
       {
-        // DDOS Attack is now offically over
+        // DDOS Attack is now officially over from this sender
         m_attacks.erase(it);
+        return false;
       }
       else
       {
@@ -2280,7 +2280,7 @@ HTTPServer::CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
       }
     }
   }
-  // Nothing found: we are *NOT* under attack
+  // Nothing found: we are *NOT* part of any attack
   return false;
 }
 

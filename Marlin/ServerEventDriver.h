@@ -74,9 +74,9 @@ class ServerEventChannel;
 class SiteHandlerEventSocket : public SiteHandlerWebSocket
 {
 public:
-  SiteHandlerEventSocket(ServerEventDriver* p_driver) : m_driver(p_driver) {}
+  explicit SiteHandlerEventSocket(ServerEventDriver* p_driver) : m_driver(p_driver) {}
 
-  virtual bool Handle(HTTPMessage* p_message,WebSocket* p_socket);
+  virtual bool Handle(HTTPMessage* p_message,WebSocket* p_socket) override;
 protected:
   ServerEventDriver* m_driver;
 };
@@ -85,7 +85,7 @@ protected:
 class SiteHandlerEventStream : public SiteHandler
 {
 public:
-  SiteHandlerEventStream(ServerEventDriver* p_driver) : m_driver(p_driver) {}
+  explicit SiteHandlerEventStream(ServerEventDriver* p_driver) : m_driver(p_driver) {}
 
   bool HandleStream(HTTPMessage* p_message,EventStream* p_stream) override;
 private:
@@ -96,7 +96,7 @@ private:
 class SiteHandlerPolling : public SiteHandlerSoap
 {
 public:
-  SiteHandlerPolling(ServerEventDriver* p_driver) : m_driver(p_driver) {}
+  explicit SiteHandlerPolling(ServerEventDriver* p_driver) : m_driver(p_driver) {}
 
   bool Handle(SOAPMessage* p_message) override;
 private:
@@ -175,7 +175,7 @@ private:
   // Start a thread for the streaming websocket/server-push event interface
   bool  StartEventThread();
   // Find a channel from the routing information
-  XString FindChannel(Routing& p_routing,XString p_base);
+  XString FindChannel(const Routing& p_routing,XString p_base);
 
   // Find an event session
   ServerEventChannel* FindSession(XString p_cookie,XString p_token);

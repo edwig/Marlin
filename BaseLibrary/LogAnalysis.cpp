@@ -774,7 +774,7 @@ LogAnalysis::RunLog()
     m_event = CreateEvent(NULL,FALSE,FALSE,NULL);
     // Basis thread of the InOutPort
     unsigned int threadID;
-    if((m_logThread = (HANDLE)_beginthreadex(NULL,0,StartingTheLog,(void *)(this),0,&threadID)) == INVALID_HANDLE_VALUE)
+    if((m_logThread = reinterpret_cast<HANDLE>(_beginthreadex(NULL,0,StartingTheLog,(void *)(this),0,&threadID))) == INVALID_HANDLE_VALUE)
     {
       m_logThread = NULL;
       //ATLTRACE("Cannot make a thread for the LogAnalysis function\n");
@@ -877,7 +877,7 @@ LogAnalysis::RemoveLastMonthsFiles(struct tm& p_today)
   // Even works on relative file paths
   intptr_t nHandle = 0;
   struct _finddata_t fileInfo;
-  nHandle = _findfirst((LPCSTR)pattern,&fileInfo);
+  nHandle = _findfirst(pattern.GetString(),&fileInfo);
   if(nHandle != -1)
   {
     do
@@ -907,7 +907,7 @@ LogAnalysis::RemoveLogfilesKeeping()
   // Read in all files
   intptr_t nHandle = 0;
   struct _finddata_t fileInfo;
-  nHandle = _findfirst((LPCSTR)pattern,&fileInfo);
+  nHandle = _findfirst(pattern.GetString(),&fileInfo);
   if(nHandle != -1)
   {
     do

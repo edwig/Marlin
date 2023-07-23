@@ -55,7 +55,7 @@ class MultiPart
 {
 public: 
   MultiPart();
-  MultiPart(XString p_name,XString p_contentType);
+  explicit MultiPart(XString p_name,XString p_contentType);
 
   // SETTERS
   void    SetName(XString p_name)             { m_name             = p_name;    }
@@ -96,7 +96,7 @@ public:
 
 private:
   XString   FileTimeToString  (PFILETIME p_filetime);
-  PFILETIME FileTimeFromString(PFILETIME p_filetime,XString& p_time);
+  PFILETIME FileTimeFromString(PFILETIME p_filetime,const XString& p_time);
 
   // Content-Type: field
   XString m_contentType;
@@ -130,7 +130,7 @@ using uchar        = unsigned char;
 class MultiPartBuffer
 {
 public:
-  MultiPartBuffer(FormDataType p_type);
+  explicit MultiPartBuffer(FormDataType p_type);
  ~MultiPartBuffer();
 
   void         Reset();
@@ -140,7 +140,7 @@ public:
   MultiPart*   AddFile(XString p_name,XString p_contentType,XString p_filename);
   // Delete a designated part
   bool         DeletePart(XString p_name);
-  bool         DeletePart(MultiPart* p_part);
+  bool         DeletePart(const MultiPart* p_part);
   // Getting a part of the MultiPartBuffer
   MultiPart*   GetPart(XString p_name);
   MultiPart*   GetPart(int p_index);
@@ -177,11 +177,11 @@ private:
   bool         ParseBufferUrlEncoded(FileBuffer* p_buffer);
   // Finding a new partial message
   void*        FindPartBuffer(uchar*& p_vinding,size_t& p_remaining,XString& p_boundary);
-  XString      GetLineFromBuffer(uchar*& p_begin,uchar* p_end);
-  bool         GetHeaderFromLine(XString& p_line,XString& p_header,XString& p_value);
-  XString      GetAttributeFromLine(XString& p_line,XString p_name);
+  XString      GetLineFromBuffer(uchar*& p_begin,const uchar* p_end);
+  bool         GetHeaderFromLine   (const XString& p_line,XString& p_header,XString& p_value);
+  XString      GetAttributeFromLine(const XString& p_line,XString p_name);
   // Adding a part from a raw buffer
-  void         AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool p_conversion);
+  void         AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEnd,bool p_conversion);
   // Check that name is in the ASCII range for a data part
   bool         CheckName(XString p_name);
 

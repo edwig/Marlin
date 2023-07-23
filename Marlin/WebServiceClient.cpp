@@ -54,11 +54,11 @@ WebServiceClient::WebServiceClient(XString p_contract
            ,m_url(p_url)
            ,m_wsdlFile(p_wsdl)
            ,m_reliable(p_reliable)
+           // Set semi-constants from SOAPMessage.h
+           ,m_rm (NAMESPACE_RELIABLE)
+           ,m_adr(NAMESPACE_WSADDRESS)
+           ,m_env(NAMESPACE_ENVELOPE)
 {
-  // Set semi-constants from SOAPMessage.h
-  m_rm  = NAMESPACE_RELIABLE;
-  m_adr = NAMESPACE_WSADDRESS;
-  m_env = NAMESPACE_ENVELOPE;
 
   // Initialize COM+ for GUID creation
   // S_FALSE is for already initialized
@@ -276,7 +276,7 @@ WebServiceClient::Close()
   if(m_messages.size())
   {
     DETAILLOG1("Freeing the WS message store");
-    for(auto& msg : m_messages)
+    for(const auto& msg : m_messages)
     {
       delete msg.m_message;
     }
@@ -691,7 +691,7 @@ WebServiceClient::DoRetransmit()
   {
     // Transmit at most 1. So don't retransmit
     // Transmit exactly 1. So don't retransmit
-    for(auto& msg : m_messages)
+    for(const auto& msg : m_messages)
     {
       delete msg.m_message;
     }

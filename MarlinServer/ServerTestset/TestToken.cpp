@@ -178,7 +178,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     else
     {
       --totalChecks;
-      xprintf("SOAP message written to: %s\n",(LPCTSTR)fileName);
+      xprintf("SOAP message written to: %s\n",fileName.GetString());
     }
 
     listing.Replace("\n","\r\n");
@@ -192,7 +192,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     else
     {
       --totalChecks;
-      xprintf("TOKEN Access written to: %s\n",(LPCTSTR)fileName);
+      xprintf("TOKEN Access written to: %s\n",fileName.GetString());
     }
     // Close the file
     CloseHandle(file);
@@ -236,7 +236,7 @@ TestMarlinServer::TestToken()
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -261,7 +261,7 @@ TestMarlinServer::TestToken()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

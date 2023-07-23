@@ -125,7 +125,7 @@ TestMarlinServer::TestEventDriver()
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n", (LPCTSTR)url);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -186,8 +186,8 @@ TestMarlinServer::AfterTestEventDriver()
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
   qprintf("ServerEventDriver all messages delivered [%d]   : %s\n",errors,errors > 0 ? "ERROR" : "OK");
-  qprintf("ServerEventDriver all open messages delivered  : %s\n", m_openSeen  != 3  ? "ERROR" : "OK");
-  qprintf("ServerEventDriver all close messages delivered : %s\n", m_closeSeen != 3  ? "ERROR" : "OK");
+  qprintf("ServerEventDriver all open messages delivered  : %s\n", m_openSeen    < 3 ? "ERROR" : "OK");
+  qprintf("ServerEventDriver all close messages delivered : %s\n", m_closeSeen   < 3 ? "ERROR" : "OK");
 
   return errors;
 }

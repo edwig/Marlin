@@ -205,24 +205,22 @@ SecurityDlg::ReadRegistry(XString p_protocol,XString p_serverClient,XString p_va
                     p_protocol + "\\" + p_serverClient;
 
   DWORD dwErr = RegOpenKeyEx(HKEY_LOCAL_MACHINE
-                            ,(LPCSTR) sleutel
+                            ,sleutel.GetString()
                             ,0
                             ,KEY_QUERY_VALUE
                             ,&hkUserURL);
   if(dwErr == ERROR_SUCCESS)
   {
-    DWORD dwIndex    = 0;
-    DWORD dwType     = 0;
-    DWORD dwNameSize = 0;
-    DWORD dwDataSize = 0;
+    DWORD dwIndex = 0;
+    DWORD dwType  = 0;
     TCHAR buffName[BUFF_LEN];
     BYTE  buffData[BUFF_LEN];
 
     //enumerate this key's values
     while(ERROR_SUCCESS == dwErr)
     {
-      dwNameSize = BUFF_LEN;
-      dwDataSize = BUFF_LEN;
+      DWORD dwNameSize = BUFF_LEN;
+      DWORD dwDataSize = BUFF_LEN;
       dwErr = RegEnumValue(hkUserURL
                           ,dwIndex++
                           ,buffName
@@ -235,7 +233,7 @@ SecurityDlg::ReadRegistry(XString p_protocol,XString p_serverClient,XString p_va
       {
         if(p_variable.CompareNoCase(buffName) == 0)
         {
-          waarde = *((DWORD*)buffData);
+          waarde = *(reinterpret_cast<DWORD*>(buffData));
           break;
         }
       }
@@ -257,7 +255,7 @@ SecurityDlg::WriteRegistry(XString p_protocol,XString p_serverClient,XString p_v
                     p_protocol + "\\" + p_serverClient;
 
   dwErr = RegCreateKeyEx(HKEY_LOCAL_MACHINE
-                        ,(LPCSTR)key
+                        ,key.GetString()
                         ,0
                         ,NULL
                         ,REG_OPTION_NON_VOLATILE
@@ -268,16 +266,16 @@ SecurityDlg::WriteRegistry(XString p_protocol,XString p_serverClient,XString p_v
   if(dwErr == ERROR_SUCCESS)
   {
     dwErr = RegSetValueEx(hUserKey
-                         ,(LPCSTR)p_variable
+                         ,p_variable.GetString()
                          ,0
                          ,REG_DWORD
-                         ,(const BYTE*) &value
+                         ,reinterpret_cast<const BYTE*>(&value)
                          ,sizeof(DWORD));
   }
   if(dwErr != ERROR_SUCCESS)
   {
     XString message;
-    message.Format("Cannot write registry key [%s] with value [%d]",key,value);
+    message.Format("Cannot write registry key [%s] with value [%d]",key.GetString(),value);
     ::MessageBox(GetSafeHwnd(),message,"ERROR",MB_OK|MB_ICONERROR);
   }
   RegCloseKey(hUserKey);

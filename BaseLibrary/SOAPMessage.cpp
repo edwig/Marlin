@@ -57,19 +57,19 @@ SOAPMessage::SOAPMessage()
 // XTOR from an incoming message
 // Purpose: Incoming SOAP message from HTTP/POST
 SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
+            :m_request       (p_msg->GetRequestHandle())
+            ,m_site          (p_msg->GetHTTPSite())
+            ,m_url           (p_msg->GetURL())
+            ,m_cracked       (p_msg->GetCrackedURL())
+            ,m_status        (p_msg->GetStatus())
+            ,m_user          (p_msg->GetUser())
+            ,m_password      (p_msg->GetPassword())
+            ,m_contentType   (p_msg->GetContentType())
+            ,m_acceptEncoding(p_msg->GetAcceptEncoding())
+            ,m_headers       (*p_msg->GetHeaderMap())
 {
-  m_request       = p_msg->GetRequestHandle();
-  m_site          = p_msg->GetHTTPSite();
-  m_url           = p_msg->GetURL();
-  m_cracked       = p_msg->GetCrackedURL();
-  m_status        = p_msg->GetStatus();
-  m_user          = p_msg->GetUser();
-  m_password      = p_msg->GetPassword();
-  m_contentType   = p_msg->GetContentType();
-  m_acceptEncoding= p_msg->GetAcceptEncoding();
-  m_sendBOM       = p_msg->GetSendBOM();
-  m_headers       =*p_msg->GetHeaderMap();
-  m_incoming      = p_msg->GetCommand() != HTTPCommand::http_response;
+  m_sendBOM  = p_msg->GetSendBOM();
+  m_incoming = p_msg->GetCommand() != HTTPCommand::http_response;
 
   // Overrides from class defaults
   m_soapVersion   = SoapVersion::SOAP_10;
@@ -149,19 +149,19 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
 
 // XTOR from a JSON message
 SOAPMessage::SOAPMessage(JSONMessage* p_msg)
+            :m_request       (p_msg->GetRequestHandle())
+            ,m_site          (p_msg->GetHTTPSite())
+            ,m_url           (p_msg->GetURL())
+            ,m_cracked       (p_msg->GetCrackedURL())
+            ,m_status        (p_msg->GetStatus())
+            ,m_user          (p_msg->GetUser())
+            ,m_password      (p_msg->GetPassword())
+            ,m_contentType   (p_msg->GetContentType())
+            ,m_incoming      (p_msg->GetIncoming())
+            ,m_acceptEncoding(p_msg->GetAcceptEncoding())
+            ,m_headers       (*p_msg->GetHeaderMap())
 {
-  m_request       = p_msg->GetRequestHandle();
-  m_site          = p_msg->GetHTTPSite();
-  m_url           = p_msg->GetURL();
-  m_cracked       = p_msg->GetCrackedURL();
-  m_status        = p_msg->GetStatus();
-  m_user          = p_msg->GetUser();
-  m_password      = p_msg->GetPassword();
-  m_contentType   = p_msg->GetContentType();
-  m_sendBOM       = p_msg->GetSendBOM();
-  m_incoming      = p_msg->GetIncoming();
-  m_acceptEncoding= p_msg->GetAcceptEncoding();
-  m_headers       =*p_msg->GetHeaderMap();
+  m_sendBOM = p_msg->GetSendBOM();
 
   // Duplicate all cookies
   m_cookies = p_msg->GetCookies();
@@ -251,27 +251,29 @@ SOAPMessage::SOAPMessage(const char* p_soapMessage,bool p_incoming /*=true*/)
 // XTOR for a copy constructor
 SOAPMessage::SOAPMessage(SOAPMessage* p_orig)
             :XMLMessage(p_orig)
+            ,m_errorstate    (p_orig->m_errorstate)
+            ,m_namespace     (p_orig->m_namespace)
+            ,m_soapAction    (p_orig->m_soapAction)
+            ,m_soapVersion   (p_orig->m_soapVersion)
+            ,m_acceptEncoding(p_orig->m_acceptEncoding)
+            ,m_url           (p_orig->m_url)
+            ,m_cracked       (p_orig->m_cracked)
+            ,m_status        (p_orig->m_status)
+            ,m_request       (p_orig->m_request)
+            ,m_user          (p_orig->m_user)
+            ,m_password      (p_orig->m_password)
+            ,m_site          (p_orig->m_site)
+            ,m_desktop       (p_orig->m_desktop)
+            ,m_order         (p_orig->m_order)
+            ,m_incoming      (p_orig->m_incoming)
+            ,m_headers       (p_orig->m_headers)
+            ,m_cookies       (p_orig->m_cookies)
+            ,m_routing       (p_orig->m_routing)
 {
   // Copy all data members
-  m_errorstate    = p_orig->m_errorstate;
-  m_namespace     = p_orig->m_namespace;
-  m_soapAction    = p_orig->m_soapAction;
-  m_soapVersion   = p_orig->m_soapVersion;
-  m_encoding      = p_orig->m_encoding;
-  m_acceptEncoding= p_orig->m_acceptEncoding;
-  m_sendUnicode   = p_orig->m_sendUnicode;
-  m_sendBOM       = p_orig->m_sendBOM;
-  m_url           = p_orig->m_url;
-  m_cracked       = p_orig->m_cracked;
-  m_status        = p_orig->m_status;
-  m_request       = p_orig->m_request;
-  m_user          = p_orig->m_user;
-  m_password      = p_orig->m_password;
-  m_site          = p_orig->m_site;
-  m_desktop       = p_orig->m_desktop;
-  m_order         = p_orig->m_order;
-  m_incoming      = p_orig->m_incoming;
-  m_headers       = p_orig->m_headers;
+  m_encoding    = p_orig->m_encoding;
+  m_sendUnicode = p_orig->m_sendUnicode;
+  m_sendBOM     = p_orig->m_sendBOM;
   // WS-Reliability
   m_addressing    = p_orig->m_addressing;
   m_reliable      = p_orig->m_reliable;
@@ -282,11 +284,6 @@ SOAPMessage::SOAPMessage(SOAPMessage* p_orig)
   m_encryption    = p_orig->m_encryption;
   m_signingMethod = p_orig->m_signingMethod;
   m_initialAction = p_orig->m_initialAction;
-
-  // Duplicate cookies
-  m_cookies = p_orig->m_cookies;
-  // Duplicate routing
-  m_routing = p_orig->m_routing;
 
   // Duplicate the HTTP token for ourselves
   if(DuplicateTokenEx(p_orig->m_token
@@ -465,8 +462,6 @@ SOAPMessage::AddHeader(XString p_name,XString p_value)
 void
 SOAPMessage::AddHeader(HTTP_HEADER_ID p_id,XString p_value)
 {
-  extern const char* header_fields[HttpHeaderMaximum];
-
   if(p_id >= 0 && p_id < HttpHeaderMaximum)
   {
     XString name(header_fields[p_id]);
@@ -487,8 +482,6 @@ SOAPMessage::DelHeader(XString p_name)
 void
 SOAPMessage::DelHeader(HTTP_HEADER_ID p_id)
 {
-  extern const char* header_fields[HttpHeaderMaximum];
-
   if(p_id >= 0 && p_id < HttpHeaderMaximum)
   {
     XString name(header_fields[p_id]);
@@ -659,10 +652,10 @@ SOAPMessage::SetAcceptEncoding(XString p_encoding)
 
 // Addressing the message's has three levels
 // 1) The complete url containing both server and port number
-// 2) Setting server/port/absolutepath separately
+// 2) Setting server/port/absolute-path separately
 // 3) By remembering the requestID of the caller
 void
-SOAPMessage::SetURL(XString& p_url)
+SOAPMessage::SetURL(const XString& p_url)
 {
   m_url = p_url;
   m_cracked.CrackURL(p_url);
@@ -921,7 +914,7 @@ SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,dou
 }
 
 XMLElement*
-SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,bcd p_value,bool p_front /*=false*/)
+SOAPMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,const bcd& p_value,bool p_front /*=false*/)
 {
   XString value = p_value.AsString(bcd::Format::Bookkeeping,false,0);
   return AddElement(p_base,p_name,p_type,value,p_front);
@@ -1621,7 +1614,7 @@ SOAPMessage::CheckAfterParsing()
     // get the name of first element within body/root
     if(m_paramObject && m_paramObject != m_body && m_paramObject != m_root)
     {
-      m_soapAction = m_paramObject ? m_paramObject->GetName() : XString();
+      m_soapAction = m_paramObject->GetName();
       // SOAP namespace override (leave HTTP header SOAPAction intact)
       XString namesp = GetAttribute(m_paramObject, "xmlns");
       if (namesp.IsEmpty())
@@ -1837,7 +1830,7 @@ SOAPMessage::CheckHeaderHasSequence()
   m_serverMessageNumber = atoi(messageNumber->GetValue());
 
   // Find last message
-  XMLElement* lastMessage = FindElement(sequence,"LastMessage");
+  const XMLElement* lastMessage = FindElement(sequence,"LastMessage");
   m_lastMessage = (lastMessage != NULL);
 }
 
@@ -1975,9 +1968,9 @@ SOAPMessage::CheckHeaderAction()
     }
   }
   // Check for further WS-Addressing above only <Action>
-  XMLElement* messID = FindElement(m_header,"MessageID");
-  XMLElement* replTO = FindElement(m_header,"ReplyTo");
-  XMLElement* parmTO = FindElement(m_header,"To");
+        XMLElement* messID = FindElement(m_header,"MessageID");
+  const XMLElement* replTO = FindElement(m_header,"ReplyTo");
+  const XMLElement* parmTO = FindElement(m_header,"To");
   if(messID || replTO || parmTO)
   {
     m_addressing = true;
@@ -2213,7 +2206,7 @@ SOAPMessage::EncryptBody()
     return;
   }
   // See if already encrypted. If so, don't do it twice
-  XMLElement* crypt = FindElement(m_body,"xenc:EncryptionData",false);
+  const XMLElement* crypt = FindElement(m_body,"xenc:EncryptionData",false);
   if(crypt)
   {
     return;

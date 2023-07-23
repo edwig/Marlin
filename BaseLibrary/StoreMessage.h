@@ -74,7 +74,7 @@ class StoreMessage
 {
 public:
   StoreMessage();
-  StoreMessage(XString p_filename);
+  explicit StoreMessage(XString p_filename);
   virtual ~StoreMessage();
 
   // OUR MAIN WORK
@@ -147,7 +147,7 @@ private:
   void    WriteCookies(Cookies& p_cookies);
   void    WriteReferrer(XString p_referrer);
   void    WriteDesktop(unsigned p_desktop);
-  void    WriteHeaders(HeaderMap* p_headers);
+  void    WriteHeaders(const HeaderMap* p_headers);
   void    WriteRouting(Routing& p_routing);
   void    WriteIsModified(bool p_isModified);
   void    WriteSystemTime(PSYSTEMTIME p_systemtime);

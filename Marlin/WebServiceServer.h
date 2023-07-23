@@ -67,13 +67,13 @@
 class SiteHandlerSoapWSService: public SiteHandlerSoap
 {
 public:
-  virtual bool Handle(SOAPMessage* p_message);
+  virtual bool Handle(SOAPMessage* p_message) override;
 };
 
 class SiteHandlerGetWSService: public SiteHandlerGet
 {
 public:
-  virtual bool Handle(HTTPMessage* p_message);
+  virtual bool Handle(HTTPMessage* p_message) override;
 };
 
 //////////////////////////////////////////////////////////////////////////

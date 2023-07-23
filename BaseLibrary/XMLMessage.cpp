@@ -64,7 +64,7 @@ XMLElement::XMLElement(const XMLElement& source)
            ,m_restriction(source.m_restriction)
            ,m_parent     (nullptr)
 {
-  for(auto& element : source.m_elements)
+  for(const auto& element : source.m_elements)
   {
     XMLElement* param = new XMLElement(*element);
     param->m_parent = this;
@@ -641,7 +641,7 @@ XMLMessage::PrintElementsJson(XMLElement*     p_element
   {
     message += XString("{") + newline;
 
-    for(auto& attrib : p_element->GetAttributes())
+    for(const auto& attrib : p_element->GetAttributes())
     {
       XString attrName  = attrib.m_name;
       XString attrValue = attrib.m_value;
@@ -768,7 +768,7 @@ XMLMessage::SetElement(XMLElement* p_base,XString p_name,XmlDataType p_type,XStr
 }
 
 XMLElement*
-XMLMessage::SetElement(XString p_name,XString& p_value)
+XMLMessage::SetElement(XString p_name,const XString& p_value)
 {
   return SetElement(m_root,p_name,XDT_String,p_value);
 }
@@ -805,7 +805,7 @@ XMLMessage::SetElement(XString p_name,double p_value)
 }
 
 XMLElement*
-XMLMessage::SetElement(XMLElement* p_base,XString p_name,XString& p_value)
+XMLMessage::SetElement(XMLElement* p_base,XString p_name,const XString& p_value)
 {
   return SetElement(p_base,p_name,XDT_String,p_value);
 }
@@ -813,7 +813,6 @@ XMLMessage::SetElement(XMLElement* p_base,XString p_name,XString& p_value)
 XMLElement*
 XMLMessage::SetElement(XMLElement* p_base,XString p_name,const char* p_value)
 {
-  XString value(p_value);
   return SetElement(p_base,p_name,XDT_String,p_value);
 }
 
@@ -883,7 +882,7 @@ XMLMessage::SetElementNamespace(XMLElement* p_elem, XString p_namespace, XString
 
 // Set attribute of an element
 XMLAttribute*
-XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,XString& p_value)
+XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,const XString& p_value)
 {
   if(p_elem == NULL)
   {

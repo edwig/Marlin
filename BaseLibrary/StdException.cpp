@@ -46,8 +46,8 @@ static char THIS_FILE[] = __FILE__;
 
 // Macro to help with the display switch in GetErrorMessage()
 #define CASE(seCode,errorstring) case EXCEPTION_##seCode: \
-										errorstring.Format(_T("Exception %s (0x%.8X) at address 0x%.8I64X."),_T(#seCode),EXCEPTION_##seCode,(INT64)m_exceptionPointers->ExceptionRecord->ExceptionAddress); \
-										break;
+                    errorstring.Format(_T("Exception %s (0x%.8X) at address 0x%.8I64X."),_T(#seCode),(unsigned int)EXCEPTION_##seCode,(INT64)m_exceptionPointers->ExceptionRecord->ExceptionAddress); \
+                    break;
 
 // Setting our Safe-Exception-Translator function
 // So that the C++ runtime can call and create our StdException
@@ -168,7 +168,7 @@ StdException::GetErrorMessage()
 		CASE(INVALID_HANDLE,          errorstring);
     case 0:   if(m_applicationCode)
               {
-                errorstring.Format("Error: %d", m_applicationCode);
+                errorstring.Format("Error: %u", m_applicationCode);
               }
               errorstring += m_applicationFault;
               break;

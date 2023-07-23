@@ -70,8 +70,8 @@ XMLParserImport::ParseAfterElement()
   }
 }
 
-void
-XMLParserImport::ParseSchemaImport(XString p_location)
+bool
+XMLParserImport::ParseSchemaImport(const XString& p_location)
 {
   bool result = false;
 
@@ -90,10 +90,12 @@ XMLParserImport::ParseSchemaImport(XString p_location)
   }
   // Reset last element of the parser
   m_lastElement = nullptr;
+
+  return result;
 }
 
 bool
-XMLParserImport::ReadXSDFileFromURL(XString p_url)
+XMLParserImport::ReadXSDFileFromURL(const XString& p_url)
 {
   bool result = false;
 
@@ -106,7 +108,7 @@ XMLParserImport::ReadXSDFileFromURL(XString p_url)
     size_t size = 0;
     if(buffer.GetBufferCopy(contents,size))
     {
-      XString message((LPCTSTR)contents);
+      XString message(reinterpret_cast<LPCTSTR>(contents));
       result = ReadXSD(message);
     }
     delete [] contents;
@@ -115,7 +117,7 @@ XMLParserImport::ReadXSDFileFromURL(XString p_url)
 }
 
 bool
-XMLParserImport::ReadXSDLocalFile(XString p_filename)
+XMLParserImport::ReadXSDLocalFile(const XString& p_filename)
 {
   bool result = false;
   FileBuffer buf(p_filename);
@@ -126,7 +128,7 @@ XMLParserImport::ReadXSDLocalFile(XString p_filename)
     size_t size = 0;
     if(buf.GetBufferCopy(contents,size))
     {
-      XString message((LPCTSTR)contents);
+      XString message(reinterpret_cast<LPCTSTR>(contents));
       result = ReadXSD(message);
     }
     delete [] contents;
@@ -135,11 +137,11 @@ XMLParserImport::ReadXSDLocalFile(XString p_filename)
 }
 
 bool 
-XMLParserImport::ReadXSD(XString p_message)
+XMLParserImport::ReadXSD(const XString& p_message)
 {
   XMLMessage xsd;
   XMLParserImport parser(m_message);
-  xsd.ParseMessage(&parser,p_message);
+  xsd.ParseMessage(&parser,const_cast<XString&>(p_message));
   
   // Check if XSD is legal XML
   if(xsd.GetInternalError() != XmlError::XE_NoError)
@@ -160,7 +162,7 @@ XMLParserImport::ReadXSD(XString p_message)
 
   // Restart parsing from here
   // Adding this part of the XSD to the original XML document
-  m_pointer = (uchar*) toParse.GetString();
+  m_pointer = reinterpret_cast<uchar*>(const_cast<char*>(toParse.GetString()));
 
   // MAIN PARSING LOOP
   try
@@ -174,7 +176,7 @@ XMLParserImport::ReadXSD(XString p_message)
       SetError(XmlError::XE_ExtraText,m_pointer);
     }
   }
-  catch(XmlError& error)
+  catch(const XmlError& error)
   {
     // Error message text already set
     m_message->m_internalError = error;

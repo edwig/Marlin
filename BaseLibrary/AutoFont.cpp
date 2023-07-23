@@ -37,67 +37,66 @@ static char THIS_FILE[] = __FILE__;
 
 AutoFont::AutoFont()
 {
-	lf.lfHeight=-12;
-	lf.lfWidth=0;
-	lf.lfEscapement=0;
-	lf.lfOrientation=0;
-	lf.lfWeight=FW_NORMAL;
-	lf.lfItalic=0;
-	lf.lfUnderline=0;
-	lf.lfStrikeOut=0;
-	lf.lfCharSet=ANSI_CHARSET;
-	lf.lfOutPrecision=OUT_DEFAULT_PRECIS;
-	lf.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-	lf.lfQuality=PROOF_QUALITY;
-	lf.lfPitchAndFamily=VARIABLE_PITCH | FF_ROMAN;
-	strcpy_s(lf.lfFaceName,LF_FACESIZE,"Times New Roman");
+	m_lf.lfHeight         = -12;
+	m_lf.lfWidth          = 0;
+	m_lf.lfEscapement     = 0;
+	m_lf.lfOrientation    = 0;
+	m_lf.lfWeight         = FW_NORMAL;
+	m_lf.lfItalic         = 0;
+	m_lf.lfUnderline      = 0;
+	m_lf.lfStrikeOut      = 0;
+	m_lf.lfCharSet        = ANSI_CHARSET;
+	m_lf.lfOutPrecision   = OUT_DEFAULT_PRECIS;
+	m_lf.lfClipPrecision  = CLIP_DEFAULT_PRECIS;
+	m_lf.lfQuality        = PROOF_QUALITY;
+	m_lf.lfPitchAndFamily = VARIABLE_PITCH | FF_ROMAN;
+	strcpy_s(m_lf.lfFaceName,LF_FACESIZE,"Times New Roman");
 
-	CreateFontIndirect(&lf);
+	CreateFontIndirect(&m_lf);
 
-	fontColor=0;
-	hDC=NULL;
+	m_fontColor = 0;
+	m_hDC       = NULL;
 }
 
 AutoFont::AutoFont(XString facename)
 {
-	lf.lfHeight=-12;
-	lf.lfWidth=0;
-	lf.lfEscapement=0;
-	lf.lfOrientation=0;
-	lf.lfWeight=FW_NORMAL;
-	lf.lfItalic=0;
-	lf.lfUnderline=0;
-	lf.lfStrikeOut=0;
-	lf.lfCharSet=ANSI_CHARSET;
-	lf.lfOutPrecision=OUT_DEFAULT_PRECIS;
-	lf.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-	lf.lfQuality=PROOF_QUALITY;
-	lf.lfPitchAndFamily=VARIABLE_PITCH | FF_ROMAN;
-	strcpy_s(lf.lfFaceName,LF_FACESIZE,(LPCTSTR)facename);
+	m_lf.lfHeight         = -12;
+	m_lf.lfWidth          = 0;
+	m_lf.lfEscapement     = 0;
+	m_lf.lfOrientation    = 0;
+	m_lf.lfWeight         = FW_NORMAL;
+	m_lf.lfItalic         = 0;
+	m_lf.lfUnderline      = 0;
+	m_lf.lfStrikeOut      = 0;
+	m_lf.lfCharSet        = ANSI_CHARSET;
+	m_lf.lfOutPrecision   = OUT_DEFAULT_PRECIS;
+	m_lf.lfClipPrecision  = CLIP_DEFAULT_PRECIS;
+	m_lf.lfQuality        = PROOF_QUALITY;
+	m_lf.lfPitchAndFamily = VARIABLE_PITCH | FF_ROMAN;
+	strcpy_s(m_lf.lfFaceName,LF_FACESIZE,reinterpret_cast<LPCTSTR>(facename.GetString()));
 
-	CreateFontIndirect(&lf);
+	CreateFontIndirect(&m_lf);
 
-	fontColor=0;
-	hDC=NULL;
+	m_fontColor = 0;
+	m_hDC       = NULL;
 }
 
 AutoFont::AutoFont(LOGFONT& logfont)
+         :m_lf(logfont)
 {
-	lf=logfont;
-	CreateFontIndirect(&lf);
+	CreateFontIndirect(&m_lf);
 
-	fontColor=0;
-	hDC=NULL;
+	m_fontColor = 0;
+	m_hDC       = NULL;
 }
 
 AutoFont::AutoFont(HFONT font)
 {
-	HFONT hFont=(HFONT)font;
+	HFONT hFont = reinterpret_cast<HFONT>(font);
+  GetObject(reinterpret_cast<HANDLE>(hFont), sizeof(LOGFONT),&m_lf);
 
-  GetObject((HANDLE)hFont, sizeof(LOGFONT),&lf);
-
-	fontColor=0;
-	hDC=NULL;
+	m_fontColor = 0;
+	m_hDC = NULL;
 }
 
 AutoFont::~AutoFont()
@@ -106,136 +105,136 @@ AutoFont::~AutoFont()
 
 LONG AutoFont::SetHeight(LONG height)
 {
-	LONG l=lf.lfHeight;
+	LONG l = m_lf.lfHeight;
 
 	DeleteObject(m_font);
-	lf.lfHeight=height;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfHeight = height;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return l;
 }
 
 LONG AutoFont::SetHeightA(LONG height)
 {
-	LONG l=lf.lfHeight;
+	LONG l = m_lf.lfHeight;
 
 	DeleteObject(m_font);
   if(height > 0)
   {
     height = 0 - height;
   }
-	lf.lfHeight = height;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfHeight = height;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return l;
 }
 
 LONG AutoFont::SetWidth(LONG width)
 {
-	LONG l=lf.lfWidth;
+	LONG l = m_lf.lfWidth;
 
 	DeleteObject(m_font);
-	lf.lfWidth=width;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfWidth = width;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return l;
 }
 
 LONG AutoFont::SetEscapement(LONG esc)
 {
-	LONG l=lf.lfEscapement;
+	LONG l = m_lf.lfEscapement;
 
 	DeleteObject(m_font);
-	lf.lfEscapement=esc;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfEscapement = esc;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return l;
 }
 
 LONG AutoFont::SetOrientation(LONG orientation)
 {
-	LONG l=lf.lfOrientation;
+	LONG l = m_lf.lfOrientation;
 
 	DeleteObject(m_font);
-	lf.lfOrientation=orientation;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfOrientation = orientation;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return l;
 }
 
 LONG AutoFont::SetWeight(LONG weight)
 {
-	LONG l=lf.lfWeight;
+	LONG l = m_lf.lfWeight;
 
 	DeleteObject(m_font);
-	lf.lfWeight=weight;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfWeight = weight;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return l;
 }
 
 BYTE AutoFont::SetCharset(BYTE charset)
 {
-	BYTE b=lf.lfCharSet;
+	BYTE b = m_lf.lfCharSet;
 
 	DeleteObject(m_font);
-	lf.lfCharSet=charset;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfCharSet = charset;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return b;
 }
 
 BYTE AutoFont::SetOutPrecision(BYTE op)
 {
-	BYTE b=lf.lfOutPrecision;
+	BYTE b = m_lf.lfOutPrecision;
 
 	DeleteObject(m_font);
-	lf.lfOutPrecision=op;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfOutPrecision=op;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return b;
 }
 
 BYTE AutoFont::SetClipPrecision(BYTE cp)
 {
-	BYTE b=lf.lfClipPrecision;
+	BYTE b = m_lf.lfClipPrecision;
 
 	DeleteObject(m_font);
-	lf.lfClipPrecision=cp;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfClipPrecision = cp;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return b;
 }
 
 BYTE AutoFont::SetQuality(BYTE qual)
 {
-	BYTE b=lf.lfQuality;
+	BYTE b = m_lf.lfQuality;
 
 	DeleteObject(m_font);
-	lf.lfQuality=qual;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfQuality = qual;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return b;
 }
 
 BYTE AutoFont::SetPitchAndFamily(BYTE paf)
 {
-	BYTE b=lf.lfPitchAndFamily;
+	BYTE b = m_lf.lfPitchAndFamily;
 
 	DeleteObject(m_font);
-	lf.lfPitchAndFamily=paf;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfPitchAndFamily = paf;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return b;
 }
 
 XString AutoFont::SetFaceName(XString facename)
 {
-	XString str=lf.lfFaceName;
+	XString str = m_lf.lfFaceName;
 
 	DeleteObject(m_font);
-	strcpy_s(lf.lfFaceName,LF_FACESIZE, facename.GetString());
-	m_font = CreateFontIndirect(&lf);
+	strcpy_s(m_lf.lfFaceName,LF_FACESIZE, facename.GetString());
+	m_font = CreateFontIndirect(&m_lf);
 
 	return str;
 }
@@ -245,11 +244,11 @@ LPCTSTR
 AutoFont::SetFaceName(LPCTSTR facename)
 {
   static char buffer[LF_FACESIZE + 1];
-  strcpy_s(buffer,LF_FACESIZE,lf.lfFaceName);
+  strcpy_s(buffer,LF_FACESIZE,m_lf.lfFaceName);
 
 	DeleteObject(m_font);
-	strcpy_s(lf.lfFaceName,LF_FACESIZE,facename);
-	m_font = CreateFontIndirect(&lf);
+	strcpy_s(m_lf.lfFaceName,LF_FACESIZE,facename);
+	m_font = CreateFontIndirect(&m_lf);
 
   return (LPCTSTR) &buffer;
 }
@@ -258,179 +257,179 @@ BOOL AutoFont::SetBold(BOOL B)
 {
 	BOOL b;
 
-	if (B)
-		b=SetWeight(FW_BOLD);
-	else
-		b=SetWeight(FW_NORMAL);
-
-	if (b >= FW_MEDIUM)
-		return TRUE;
-	else
-		return FALSE;
+  if(B)
+  {
+    b = SetWeight(FW_BOLD);
+  }
+  else
+  {
+    b = SetWeight(FW_NORMAL);
+  }
+  return (b >= FW_MEDIUM);
 }
 
 BOOL AutoFont::SetItalic(BOOL i)
 {
-	BOOL b=(BOOL)lf.lfItalic;
+	BOOL b = (BOOL)m_lf.lfItalic;
 
 	DeleteObject(m_font);
-	lf.lfItalic = (BYTE)i;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfItalic = (BYTE)i;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return b;
 }
 
 BOOL AutoFont::SetUnderline(BOOL u)
 {
-	BOOL b=(BOOL)lf.lfUnderline;
+	BOOL b=(BOOL)m_lf.lfUnderline;
 
 	DeleteObject(m_font);
-	lf.lfUnderline = (BYTE) u;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfUnderline = (BYTE) u;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return b;
 }
 
 BOOL AutoFont::SetStrikeOut(BOOL s)
 {
-	BOOL b=(BOOL)lf.lfStrikeOut;
+	BOOL b=(BOOL)m_lf.lfStrikeOut;
 
 	DeleteObject(m_font);
-	lf.lfStrikeOut = (BYTE) s;
-	m_font = CreateFontIndirect(&lf);
+	m_lf.lfStrikeOut = (BYTE) s;
+	m_font = CreateFontIndirect(&m_lf);
 
 	return b;
 }
 
-void AutoFont::SetLogFont(LOGFONT& logfont)
+void AutoFont::SetLogFont(const LOGFONT& logfont)
 {
-	lf=logfont;
+	m_lf=logfont;
 	DeleteObject(m_font);
-	m_font = CreateFontIndirect(&lf);
+	m_font = CreateFontIndirect(&m_lf);
 }
 
 LONG AutoFont::GetHeight()
 {
-	return lf.lfHeight;
+	return m_lf.lfHeight;
 }
 
 LONG AutoFont::GetWidth()
 {
-	return lf.lfWidth;
+	return m_lf.lfWidth;
 }
 
 LONG AutoFont::GetEscapement()
 {
-	return lf.lfEscapement;
+	return m_lf.lfEscapement;
 }
 
 LONG AutoFont::GetOrientation()
 {
-	return lf.lfEscapement;
+	return m_lf.lfEscapement;
 }
 
 LONG AutoFont::GetWeight()
 {
-	return lf.lfWeight;
+	return m_lf.lfWeight;
 }
 
 BYTE AutoFont::GetCharset()
 {
-	return lf.lfCharSet;
+	return m_lf.lfCharSet;
 }
 
 BYTE AutoFont::GetOutPrecision()
 {
-	return lf.lfOutPrecision;
+	return m_lf.lfOutPrecision;
 }
 
 BYTE AutoFont::GetClipPrecision()
 {
-	return lf.lfClipPrecision;
+	return m_lf.lfClipPrecision;
 }
 
 BYTE AutoFont::GetQuality()
 {
-	return lf.lfQuality;
+	return m_lf.lfQuality;
 }
 
 BYTE AutoFont::GetPitchAndFamily()
 {
-	return lf.lfPitchAndFamily;
+	return m_lf.lfPitchAndFamily;
 }
 
 LPCTSTR AutoFont::GetFaceName()
 {
-	return lf.lfFaceName;
+	return m_lf.lfFaceName;
 }
 
 BOOL AutoFont::GetBold()
 {
-	return lf.lfWeight >= FW_MEDIUM ? TRUE : FALSE;
+	return m_lf.lfWeight >= FW_MEDIUM ? TRUE : FALSE;
 }
 
 BOOL AutoFont::GetItalic()
 {
-	return (BOOL)lf.lfItalic;
+	return (BOOL)m_lf.lfItalic;
 }
 
 BOOL AutoFont::GetUnderline()
 {
-	return (BOOL)lf.lfUnderline;
+	return (BOOL)m_lf.lfUnderline;
 }
 
 BOOL AutoFont::GetStrikeOut()
 {
-	return (BOOL)lf.lfStrikeOut;
+	return (BOOL)m_lf.lfStrikeOut;
 }
 
 XString AutoFont::ContractFont()
 {
 	XString str, color;
 
-	str.Format("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%s",
-		lf.lfHeight,
-		lf.lfWidth,
-		lf.lfEscapement,
-		lf.lfOrientation,
-		lf.lfWeight,
-		lf.lfItalic,
-		lf.lfUnderline,
-		lf.lfStrikeOut,
-		lf.lfCharSet,
-		lf.lfOutPrecision,
-		lf.lfClipPrecision,
-		lf.lfQuality,
-		lf.lfPitchAndFamily,
-		lf.lfFaceName);
-	color.Format("%u", fontColor);
-	str+=",";
-	str+=color;
+  str.Format("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%s",
+            m_lf.lfHeight,
+            m_lf.lfWidth,
+            m_lf.lfEscapement,
+            m_lf.lfOrientation,
+            m_lf.lfWeight,
+            m_lf.lfItalic,
+            m_lf.lfUnderline,
+            m_lf.lfStrikeOut,
+            m_lf.lfCharSet,
+            m_lf.lfOutPrecision,
+            m_lf.lfClipPrecision,
+            m_lf.lfQuality,
+            m_lf.lfPitchAndFamily,
+            m_lf.lfFaceName);
+  color.Format("%ul",m_fontColor);
+  str += ",";
+  str += color;
 
 	return str;
 }
 
 void AutoFont::ExtractFont(XString& str)
 {
-	lf.lfHeight         =        atol((LPCTSTR)GetToken(str, ","));
-	lf.lfWidth          =        atol((LPCTSTR)GetToken(str, ","));
-	lf.lfEscapement     =        atol((LPCTSTR)GetToken(str, ","));
-	lf.lfOrientation    =        atol((LPCTSTR)GetToken(str, ","));
-	lf.lfWeight         =        atol((LPCTSTR)GetToken(str, ","));
-	lf.lfItalic         = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfUnderline      = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfStrikeOut      = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfCharSet        = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfOutPrecision   = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfClipPrecision  = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfQuality        = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
-	lf.lfPitchAndFamily = (BYTE) atoi((LPCTSTR)GetToken(str, ","));
-	strcpy_s(lf.lfFaceName,LF_FACESIZE,(LPCTSTR)GetToken(str, ","));
+	m_lf.lfHeight         =        atol(GetToken(str, ","));
+	m_lf.lfWidth          =        atol(GetToken(str, ","));
+	m_lf.lfEscapement     =        atol(GetToken(str, ","));
+	m_lf.lfOrientation    =        atol(GetToken(str, ","));
+	m_lf.lfWeight         =        atol(GetToken(str, ","));
+	m_lf.lfItalic         = (BYTE) atoi(GetToken(str, ","));
+	m_lf.lfUnderline      = (BYTE) atoi(GetToken(str, ","));
+	m_lf.lfStrikeOut      = (BYTE) atoi(GetToken(str, ","));
+	m_lf.lfCharSet        = (BYTE) atoi(GetToken(str, ","));
+	m_lf.lfOutPrecision   = (BYTE) atoi(GetToken(str, ","));
+	m_lf.lfClipPrecision  = (BYTE) atoi(GetToken(str, ","));
+	m_lf.lfQuality        = (BYTE) atoi(GetToken(str, ","));
+	m_lf.lfPitchAndFamily = (BYTE) atoi(GetToken(str, ","));
+	strcpy_s(m_lf.lfFaceName,LF_FACESIZE,GetToken(str, ","));
 
 	DeleteObject(m_font);
-	m_font = CreateFontIndirect(&lf);
+	m_font = CreateFontIndirect(&m_lf);
 
-	fontColor=atol((LPCTSTR)str);
+	m_fontColor = atol(str);
 }
 
 XString AutoFont::GetToken(XString& str, LPCTSTR c)
@@ -476,17 +475,19 @@ void AutoFont::GetFontFromDialog(HFONT* /*f*/,DWORD* /*color*/,HDC* /*pPrinterDC
 
 void AutoFont::SetFontColor(COLORREF color)
 {
-	fontColor=color;
-	if (hDC!=NULL)
-		::SetTextColor(hDC, color);
+	m_fontColor=color;
+  if(m_hDC != NULL)
+  {
+    ::SetTextColor(m_hDC,color);
+  }
 }
 
 COLORREF AutoFont::GetFontColor()
 {
-	return fontColor;
+	return m_fontColor;
 }
 
 void AutoFont::SetDC(HDC dc)
 {
-	hDC=dc;
+	m_hDC = dc;
 }

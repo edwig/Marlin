@@ -282,8 +282,8 @@ int main(int argc,char* argv[],char* /*envp[]*/)
     printf("%s\n%s\n\n",PRODUCT_DISPLAY_NAME,PRODUCT_COPYRIGHT);
     printf("ERROR : %s\n"
            "REASON: %s.\n"
-          ,(LPCTSTR)error
-          ,(LPCTSTR)reason);
+          ,error.GetString()
+          ,reason.GetString());
   }
   return 0;
 }
@@ -455,6 +455,9 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
   }
 }
 
+// Number of times we report the service status (starting at 1)
+static DWORD dwCheckPoint = 1;
+
 // Purpose:     Sets the current service status and reports it to the SCM.
 //
 // Parameters:  dwCurrentState  - The current state (see SERVICE_STATUS)
@@ -467,7 +470,6 @@ VOID ReportSvcStatus(DWORD dwCurrentState
                     ,DWORD dwWin32ExitCode
                     ,DWORD dwWaitHint)
 {
-  static DWORD dwCheckPoint = 1;
 
   // Fill in the SERVICE_STATUS structure.
 
@@ -493,7 +495,7 @@ VOID ReportSvcStatus(DWORD dwCurrentState
     g_svcStatus.dwCheckPoint = dwCheckPoint++;
   }
   // Report the status of the service to the SCM.
-  SetServiceStatus( g_svcStatusHandle, &g_svcStatus );
+  SetServiceStatus(g_svcStatusHandle,&g_svcStatus);
 }
 
 // Purpose:      Called by SCM whenever a control code is sent to the service
@@ -538,7 +540,7 @@ int SvcInstall(char* username,char* password)
 
   if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
   {
-    printf("Cannot install service. %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("Cannot install service. %s\n",GetLastErrorAsString().GetString());
     return 3;
   }
 
@@ -550,7 +552,7 @@ int SvcInstall(char* username,char* password)
   if(schSCManager == NULL) 
   {
     printf("Making connection with the service manager has failed\n");
-    printf("Function OpenSCManager failed. %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("Function OpenSCManager failed. %s\n",GetLastErrorAsString().GetString());
     return 3;
   }
 
@@ -571,7 +573,7 @@ int SvcInstall(char* username,char* password)
   if(schService == NULL) 
   {
     printf("Creating the service has failed\n");
-    printf("Function CreateService failed. %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("Function CreateService failed. %s\n",GetLastErrorAsString().GetString());
     CloseServiceHandle(schSCManager);
     return 3;
   }
@@ -586,12 +588,12 @@ int SvcInstall(char* username,char* password)
 
   // Set the service description
   SERVICE_DESCRIPTION desc;
-  desc.lpDescription = (LPSTR) PRODUCT_DISPLAY_NAME;
+  desc.lpDescription = const_cast<char*>(PRODUCT_DISPLAY_NAME);
 
-  if(!ChangeServiceConfig2(schService,SERVICE_CONFIG_DESCRIPTION,(void*)&desc))
+  if(!ChangeServiceConfig2(schService,SERVICE_CONFIG_DESCRIPTION,reinterpret_cast<void*>(&desc)))
   {
     printf("WARNING: Service description NOT set.\n");
-    printf("ChangeServiceConfig2 failed: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("ChangeServiceConfig2 failed: %s\n",GetLastErrorAsString().GetString());
   }
 
   // Set actions after failure
@@ -605,15 +607,15 @@ int SvcInstall(char* username,char* password)
    ,{ SC_ACTION_NONE,       0 }
   };
   actions.dwResetPeriod = 600;  // reset count after 10 minutes
-  actions.lpRebootMsg   = (LPSTR) PRODUCT_NAME;
-  actions.lpCommand     = (LPSTR) "";
+  actions.lpRebootMsg   = const_cast<char*>(PRODUCT_NAME);
+  actions.lpCommand     = "";
   actions.cActions      = 5;
   actions.lpsaActions   = restart;
 
-  if(!ChangeServiceConfig2(schService,SERVICE_CONFIG_FAILURE_ACTIONS,(void*)&actions))
+  if(!ChangeServiceConfig2(schService,SERVICE_CONFIG_FAILURE_ACTIONS,reinterpret_cast<void*>(&actions)))
   {
     printf("WARNING: Service failure actions NOT set.\n");
-    printf("ChangeServiceConfig2 failed: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("ChangeServiceConfig2 failed: %s\n",GetLastErrorAsString().GetString());
   }
 
   // And register the message dll in the registry
@@ -652,7 +654,7 @@ OpenMarlinService(DWORD p_access)
   if(g_schSCManager == NULL) 
   {
     printf("Making connection with the service manager has failed\n");
-    printf("OpenSCManager failed: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("OpenSCManager failed: %s\n",GetLastErrorAsString().GetString());
     return false;
   }
   // Get a handle to the service.
@@ -661,17 +663,17 @@ OpenMarlinService(DWORD p_access)
                              p_access);          // need delete access 
   if(g_schService == NULL)
   { 
-    XString reden;
+    XString reason;
     int error = GetLastError();
     switch(error)
     {
-      case ERROR_ACCESS_DENIED:           reden = "No access to this service";break;
-      case ERROR_INVALID_NAME:            reden = "Misspelled service name";   break;
-      case ERROR_SERVICE_DOES_NOT_EXIST:  reden = "Service does not exist";   break;
-      default:                            reden = "Unknown error code";       break;
+      case ERROR_ACCESS_DENIED:           reason = "No access to this service";break;
+      case ERROR_INVALID_NAME:            reason = "Misspelled service name";   break;
+      case ERROR_SERVICE_DOES_NOT_EXIST:  reason = "Service does not exist";   break;
+      default:                            reason = "Unknown error code";       break;
     }
     printf("Could not open the service with name [%s]\n",g_svcname);
-    printf("OpenService failed: [%d] %s\n",error,(LPCTSTR)reden);
+    printf("OpenService failed: [%d] %s\n",error,reason.GetString());
     CloseServiceHandle(g_schSCManager);
     g_schSCManager = NULL;
     return false;
@@ -695,11 +697,11 @@ GetMarlinServiceStatus(bool p_close = true)
 {
   DWORD dwBytesNeeded;
 
-  if (!QueryServiceStatusEx(g_schService,                     // handle to service 
-                            SC_STATUS_PROCESS_INFO,         // information level
-                            (LPBYTE) &g_sspStatus,             // address of structure
-                            sizeof(SERVICE_STATUS_PROCESS), // size of structure
-                            &dwBytesNeeded ) )              // size needed if buffer is too small
+  if (!QueryServiceStatusEx(g_schService,                           // handle to service 
+                            SC_STATUS_PROCESS_INFO,                 // information level
+                            reinterpret_cast<LPBYTE>(&g_sspStatus), // address of structure
+                            sizeof(SERVICE_STATUS_PROCESS),         // size of structure
+                            &dwBytesNeeded ) )                      // size needed if buffer is too small
   {
     XString reason;
     int error = GetLastError();
@@ -713,7 +715,7 @@ GetMarlinServiceStatus(bool p_close = true)
       default:                        reason = "Unknown error";        break;
     }
     printf("The service status could not be determined\n");
-    printf("QueryServiceStatusEx failed [%d] %s\n",error,(LPCTSTR)reason);
+    printf("QueryServiceStatusEx failed [%d] %s\n",error,reason.GetString());
     if(p_close)
     {
       CloseMarlinService();
@@ -736,7 +738,7 @@ int SvcDelete()
   if(!DeleteService(g_schService)) 
   {
     printf("The service cannot be removed\n");
-    printf("DeleteService failed: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("DeleteService failed: %s\n",GetLastErrorAsString().GetString());
     if(GetLastError() == ERROR_SERVICE_MARKED_FOR_DELETE)
     {
       printf("The service has been marked for delete, but not yet removed\n");
@@ -774,10 +776,6 @@ DeleteEventLogRegistration()
 // Return value:0 = OK, 1 = error
 int SvcStart()
 {
-  DWORD dwOldCheckPoint; 
-  ULONGLONG dwStartTickCount;
-  DWORD dwWaitTime;
-  
   // According to all samples, this needs to be "SERVICE_ALL_ACCESS" 
   // But starting rights + query rights is sufficient
   OpenMarlinService(SERVICE_START|SERVICE_QUERY_STATUS);  
@@ -786,6 +784,10 @@ int SvcStart()
   {
     return 1;
   }
+
+  // Save the tick count and initial checkpoint.
+  ULONGLONG dwStartTickCount = GetTickCount64();
+  DWORD     dwOldCheckPoint  = g_sspStatus.dwCheckPoint;
 
   // Check if the service is already running. It would be possible 
   // to stop the service here, but for simplicity this example just returns. 
@@ -797,16 +799,12 @@ int SvcStart()
   }
 
   // Wait for the service to stop before attempting to start it.
-  while (g_sspStatus.dwCurrentState == SERVICE_STOP_PENDING)
+  while(g_sspStatus.dwCurrentState == SERVICE_STOP_PENDING)
   {
-    // Save the tick count and initial checkpoint.
-    dwStartTickCount = GetTickCount64();
-    dwOldCheckPoint  = g_sspStatus.dwCheckPoint;
-
     // Do not wait longer than the wait hint. A good interval is 
     // one-tenth of the wait hint but not less than 1 second  
     // and not more than 10 seconds. 
-    dwWaitTime = g_sspStatus.dwWaitHint / 10;
+    DWORD dwWaitTime = g_sspStatus.dwWaitHint / 10;
 
     // Wait for a minimum of 1 second and a maximum of 10 second
     if(dwWaitTime < SVC_MINIMUM_WAIT_HINT)
@@ -829,7 +827,7 @@ int SvcStart()
     {
       // Continue to wait and check.
       dwStartTickCount = GetTickCount64();
-      dwOldCheckPoint = g_sspStatus.dwCheckPoint;
+      dwOldCheckPoint  = g_sspStatus.dwCheckPoint;
     }
     else
     {
@@ -847,7 +845,7 @@ int SvcStart()
                     0,             // number of arguments 
                     NULL) )        // no arguments 
   {
-    printf("StartService failed: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("StartService failed: %s\n",GetLastErrorAsString().GetString());
     CloseMarlinService();
     return 1;  
   }
@@ -858,6 +856,7 @@ int SvcStart()
   {
     return 1;
   }
+
   // Save the tick count and initial checkpoint.
   dwStartTickCount = GetTickCount64();
   dwOldCheckPoint  = g_sspStatus.dwCheckPoint;
@@ -868,7 +867,7 @@ int SvcStart()
     // one-tenth the wait hint, but no less than 1 second and no 
     // more than 10 seconds. 
 
-    dwWaitTime = g_sspStatus.dwWaitHint / 10;
+    DWORD dwWaitTime = g_sspStatus.dwWaitHint / 10;
 
     if(dwWaitTime < SVC_MINIMUM_WAIT_HINT)
     {
@@ -886,7 +885,7 @@ int SvcStart()
       break;
     }
 
-    if ( g_sspStatus.dwCheckPoint > dwOldCheckPoint )
+    if(g_sspStatus.dwCheckPoint > dwOldCheckPoint)
     {
       // Continue to wait and check.
 
@@ -976,7 +975,7 @@ int SvcStop()
   // Send a stop code to the service.
   if(!ControlService(g_schService,SERVICE_CONTROL_STOP,(LPSERVICE_STATUS) &g_sspStatus))
   {
-    printf( "ControlService failed: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf( "ControlService failed: %s\n",GetLastErrorAsString().GetString());
     goto stop_cleanup;
   }
 
@@ -1007,18 +1006,15 @@ stop_cleanup:
 
 BOOL StopDependentServices()
 {
-  DWORD i;
   DWORD dwBytesNeeded;
   DWORD dwCount;
   BOOL  result = TRUE;
 
   LPENUM_SERVICE_STATUS   lpDependencies = NULL;
   ENUM_SERVICE_STATUS     ess;
-  SC_HANDLE               hDepService;
   SERVICE_STATUS_PROCESS  ssp;
 
   ULONGLONG dwStartTime = GetTickCount64();
-  ULONGLONG dwTimeout   = SVC_MAXIMUM_STOP_TIME; // 30-second time-out
 
   // Pass a zero-length buffer to get the required buffer size.
   if(EnumDependentServices(g_schService
@@ -1059,13 +1055,13 @@ BOOL StopDependentServices()
         result = FALSE;
         __leave;
       }
-      for ( i = 0; i < dwCount; i++ ) 
+      for(DWORD index = 0; index < dwCount;++index) 
       {
-        ess = *(lpDependencies + i);
+        ess = *(lpDependencies + index);
         // Open the service.
-        hDepService = OpenService(g_schSCManager, 
-                                  ess.lpServiceName, 
-                                  SERVICE_STOP | SERVICE_QUERY_STATUS );
+        SC_HANDLE hDepService = OpenService(g_schSCManager, 
+                                            ess.lpServiceName, 
+                                            SERVICE_STOP | SERVICE_QUERY_STATUS );
         if ( !hDepService )
         {
           result = FALSE;
@@ -1083,14 +1079,14 @@ BOOL StopDependentServices()
             __leave;
           }
           // Wait for the service to stop.
-          while ( ssp.dwCurrentState != SERVICE_STOPPED ) 
+          while(ssp.dwCurrentState != SERVICE_STOPPED) 
           {
-            Sleep( ssp.dwWaitHint );
-            if( !QueryServiceStatusEx(hDepService, 
-                                      SC_STATUS_PROCESS_INFO,
-                                      (LPBYTE)&ssp, 
-                                      sizeof(SERVICE_STATUS_PROCESS),
-                                      &dwBytesNeeded ) )
+            Sleep(ssp.dwWaitHint);
+            if(!QueryServiceStatusEx(hDepService,
+                                     SC_STATUS_PROCESS_INFO,
+                                     reinterpret_cast<LPBYTE>(&ssp),
+                                     sizeof(SERVICE_STATUS_PROCESS),
+                                     &dwBytesNeeded))
             {
               result = FALSE;
               __leave;
@@ -1099,7 +1095,7 @@ BOOL StopDependentServices()
             {
               break;
             }
-            if(GetTickCount64() - dwStartTime > dwTimeout )
+            if(GetTickCount64() - dwStartTime > SVC_MAXIMUM_STOP_TIME)
             {
               result = FALSE;
               __leave;
@@ -1169,13 +1165,11 @@ int StandAloneStart()
   int     status = 0;
   int     retval = 1;  // Still not lucky
   int     startResult = 0;
-  // Save the tick count and initial checkpoint.
-  ULONGLONG dwStartTickCount = GetTickCount64();
-  DWORD     dwWaitTime;
-  DWORD     dwWaited = 0;
-  XString   emptyString;
-  XString   program(APPLICATION_NAME);
-  XString   arguments(g_svcname);
+  DWORD   dwWaitTime;
+  DWORD   dwWaited = 0;
+  XString emptyString;
+  XString program(APPLICATION_NAME);
+  XString arguments(g_svcname);
 
   // Do not wait longer than the wait hint. A good interval is 
   // one-tenth of the wait hint but not less than 1 second  
@@ -1219,7 +1213,7 @@ int StandAloneStart()
   startResult = ExecuteProcess(program,arguments,true,emptyString,SW_HIDE);
   if(startResult)
   {
-    printf("StartService failed: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("StartService failed: %s\n",GetLastErrorAsString().GetString());
     goto end_of_startalone;
   }
   else 
@@ -1237,7 +1231,6 @@ int StandAloneStart()
   }
 
   // Save the tick count and initial checkpoint.
-  dwStartTickCount = GetTickCount64();
   dwWaited = 0;
 
   // Do not wait longer than the wait hint. A good interval is 
@@ -1450,6 +1443,10 @@ GetMarlinServiceStatusStandAlone(int& p_status)
         p_status = SERVICE_STOP_PENDING;
         CloseHandle(stopping);
       }
+      else
+      {
+        return 0;
+      }
     }
   }
   // Ready getting service status
@@ -1514,14 +1511,14 @@ StandAloneStop()
   if(g_svcStopEvent == NULL)
   {
     retval = 0;
-    printf("Cannot find a running server: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("Cannot find a running server: %s\n",GetLastErrorAsString().GetString());
     goto end_of_stop_standalone;
   }
   // Send a stop code to the service.
   if(!SetEvent(g_svcStopEvent))
   {
     retval = 0;
-    printf("Sending stop event failed: %s\n",(LPCTSTR)GetLastErrorAsString());
+    printf("Sending stop event failed: %s\n",GetLastErrorAsString().GetString());
     goto end_of_stop_standalone;
   }
 
@@ -1687,7 +1684,7 @@ int StopIISApp()
     // APPCMD.EXE start APPPOOL <name>
     parameter = "stop APPPOOL ";
     parameter += g_serverName;
-    result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
+    result    += ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
   }
   return result;
 }

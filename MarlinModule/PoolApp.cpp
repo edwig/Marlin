@@ -263,7 +263,6 @@ PoolApp::AlreadyLoaded(XString p_path_to_dll)
       m_module          = app.second->m_module;
       m_createServerApp = app.second->m_createServerApp;
       // Function pointers
-      m_createServerApp = app.second->m_createServerApp;
       m_findSite        = app.second->m_findSite;
       m_getHttpStream   = app.second->m_getHttpStream;
       m_getHttpMessage  = app.second->m_getHttpMessage;

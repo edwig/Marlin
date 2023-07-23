@@ -79,7 +79,7 @@ void SetThreadName(char* threadName, DWORD dwThreadID)
 
   __try
   {
-    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR),reinterpret_cast<ULONG_PTR*>(&info));
   }
   __except (EXCEPTION_EXECUTE_HANDLER)
   {
@@ -210,7 +210,7 @@ ThreadPool::CreateThreadPoolThread()
 
     // Now create our thread
     TP_TRACE0("Creating thread pool thread\n");
-    th->m_thread = (HANDLE) _beginthreadex(nullptr,m_stackSize,RunThread,(void*)th,0,&th->m_threadId);
+    th->m_thread = reinterpret_cast<HANDLE>(_beginthreadex(nullptr,m_stackSize,RunThread,reinterpret_cast<void*>(th),0,&th->m_threadId));
 
     if(th->m_thread == INVALID_HANDLE_VALUE)
     {
@@ -271,7 +271,7 @@ ThreadPool::IsThreadInThreadPool(unsigned p_threadID)
 {
   AutoLockTP lock(&m_critical);
 
-  for(auto& thread : m_threads)
+  for(const auto thread : m_threads)
   {
     if(thread->m_threadId == p_threadID)
     {
@@ -341,8 +341,8 @@ ThreadPool::ExtendMaximumThreads(AutoIncrementPoolMax& p_increment)
 {
   if(this == p_increment.m_pool)
   {
-    InterlockedIncrement((long*)&m_minThreads);
-    InterlockedIncrement((long*)&m_maxThreads);
+    InterlockedIncrement(reinterpret_cast<long*>(&m_minThreads));
+    InterlockedIncrement(reinterpret_cast<long*>(&m_maxThreads));
     TP_TRACE2("Number of minimum/maximum threads extended to: %d/%d\n",m_minThreads,m_maxThreads);
   }
 }
@@ -352,8 +352,8 @@ ThreadPool::RestoreMaximumThreads(AutoIncrementPoolMax& p_increment)
 {
   if(this == p_increment.m_pool)
   {
-    InterlockedDecrement((long*)&m_minThreads);
-    InterlockedDecrement((long*)&m_maxThreads);
+    InterlockedDecrement(reinterpret_cast<long*>(&m_minThreads));
+    InterlockedDecrement(reinterpret_cast<long*>(&m_maxThreads));
     TP_TRACE2("Number of minimum/maximum threads decreased to: %d/%d\n",m_minThreads,m_maxThreads);
   }
 }
@@ -505,7 +505,7 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
       else
       {
         // 3: The completion key **IS** the callback mechanism
-        LPFN_CALLBACK callback = (LPFN_CALLBACK)key;
+        LPFN_CALLBACK callback = reinterpret_cast<LPFN_CALLBACK>(key);
         (*callback)(overlapped);
       }
     }
@@ -618,7 +618,7 @@ ThreadPool::CreateHeartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_
 
   if(m_heartbeatEvent)
   {
-    HANDLE thread = (HANDLE)_beginthreadex(nullptr,m_stackSize,RunHeartBeat,(void*)this,0,NULL);
+    HANDLE thread = reinterpret_cast<HANDLE>(_beginthreadex(nullptr,m_stackSize,RunHeartBeat,reinterpret_cast<void*>(this),0,NULL));
     if(thread)
     {
       TP_TRACE0("Created a heartbeat thread!\n");
@@ -974,7 +974,7 @@ ThreadPool::WakeUpAllSleepers()
   {
     // Wake up all sleeping threads
     TP_TRACE1("Waking up %d sleeping threads\n",map.size());
-    for(auto& unique : map)
+    for(const auto& unique : map)
     {
       WakeUpThread(unique);
     }

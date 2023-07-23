@@ -14,6 +14,14 @@ that can be shared with other library modules like SQLComponents and CXHibernate
 2)  Extra checks on the initial handling of an incoming SSE event channel. If the channel cannnot
     be authenticated, the server must bail-out correctly and destroy the new stream.
 
+CHANGES IN VERSION 8.2.0 of 23-07-2032
+--------------------------------------
+1)  Fully checked with CPPCheck 2.11
+    As much as possible of all category "errors", "warnings", "style" and "performance"
+    removed from the source code. A 'BaseLibrary.cppcheck' project file is checked in
+2)  As a result of the CCPCheck, many declarations are now 'const reference'
+    Beware as you take this version into production on another project
+
 CHANGES IN VERSION 8.1.3 of 31-10-2022
 --------------------------------------
 1)  Updated to BaseLibrary 1.0.8. With JSONPath filters.

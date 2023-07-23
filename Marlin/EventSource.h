@@ -136,7 +136,7 @@ private:
   // Set to connection state
   void        SetConnecting();
   // Handle the last-event-id of a generic listener
-  void        HandleLastID(ServerEvent* p_event);
+  void        HandleLastID(const ServerEvent* p_event);
   // Parse incoming data
   void        Parse(BYTE* p_buffer,unsigned& p_length);
   // Parse buffer in string form

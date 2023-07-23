@@ -45,37 +45,37 @@ JSONvalue::JSONvalue()
 {
 }
 
-JSONvalue::JSONvalue(JSONvalue* p_other)
+JSONvalue::JSONvalue(const JSONvalue* p_other)
 {
   *this = *p_other;
 }
 
-JSONvalue::JSONvalue(JsonType p_type)
+JSONvalue::JSONvalue(const JsonType p_type)
 {
   SetDatatype(p_type);
 }
 
-JSONvalue::JSONvalue(JsonConst  p_value)
+JSONvalue::JSONvalue(const JsonConst  p_value)
 {
   SetValue(p_value);
 }
 
-JSONvalue::JSONvalue(XString p_value)
+JSONvalue::JSONvalue(const XString p_value)
 {
   SetValue(p_value);
 }
 
-JSONvalue::JSONvalue(int p_value)
+JSONvalue::JSONvalue(const int p_value)
 {
   SetValue(p_value);
 }
 
-JSONvalue::JSONvalue(bcd p_value)
+JSONvalue::JSONvalue(const bcd& p_value)
 {
   SetValue(p_value);
 }
 
-JSONvalue::JSONvalue(bool p_value)
+JSONvalue::JSONvalue(const bool p_value)
 {
   SetValue(p_value ? JsonConst::JSON_TRUE : JsonConst::JSON_FALSE);
 }
@@ -87,7 +87,7 @@ JSONvalue::~JSONvalue()
 }
 
 JSONvalue&
-JSONvalue::operator=(JSONvalue& p_other)
+JSONvalue::operator=(const JSONvalue& p_other)
 {
   // Check if we do not assign ourselves
   if(&p_other == this)
@@ -111,7 +111,7 @@ JSONvalue::operator=(JSONvalue& p_other)
 }
 
 JSONvalue& 
-JSONvalue::operator=(XString& p_other)
+JSONvalue::operator=(const XString& p_other)
 {
   m_type      = JsonType::JDT_string;
   m_constant  = JsonConst::JSON_NONE;
@@ -139,7 +139,7 @@ JSONvalue::operator=(const char* p_other)
 }
 
 JSONvalue& 
-JSONvalue::operator=(int& p_other)
+JSONvalue::operator=(const int& p_other)
 {
   m_type      = JsonType::JDT_number_int;
   m_constant  = JsonConst::JSON_NONE;
@@ -153,7 +153,7 @@ JSONvalue::operator=(int& p_other)
 }
 
 JSONvalue& 
-JSONvalue::operator=(bcd& p_other)
+JSONvalue::operator=(const bcd& p_other)
 {
   m_type      = JsonType::JDT_number_bcd;
   m_constant  = JsonConst::JSON_NONE;
@@ -181,7 +181,7 @@ JSONvalue::operator=(JsonConst& p_other)
 }
 
 JSONvalue& 
-JSONvalue::operator=(bool& p_other)
+JSONvalue::operator=(const bool& p_other)
 {
   m_type      = JsonType::JDT_const;
   m_constant  = p_other ? JsonConst::JSON_TRUE : JsonConst::JSON_FALSE;
@@ -290,7 +290,7 @@ JSONvalue::SetValue(int p_value)
 }
 
 void
-JSONvalue::SetValue(bcd p_value)
+JSONvalue::SetValue(const bcd& p_value)
 {
   m_type = JsonType::JDT_number_bcd;
   m_bcdNumber = p_value;
@@ -377,7 +377,7 @@ JSONvalue::GetAsJsonString(bool p_white,StringEncoding p_encoding,unsigned p_lev
                                     }
                                     break;
     case JsonType::JDT_string:      return XMLParser::PrintJsonString(m_string,p_encoding);
-    case JsonType::JDT_number_int:  result.Format("%ld",m_intNumber);
+    case JsonType::JDT_number_int:  result.Format("%d",m_intNumber);
                                     break;
     case JsonType::JDT_number_bcd:  result = m_bcdNumber.AsString(bcd::Format::Bookkeeping,false,0);
                                     break;
@@ -515,7 +515,7 @@ JSONpair::JSONpair(XString p_name,int p_value)
 {
 }
 
-JSONpair::JSONpair(XString p_name,bcd p_value)
+JSONpair::JSONpair(XString p_name,const bcd& p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {
@@ -535,7 +535,7 @@ JSONpair::JSONpair(XString p_name,JsonConst p_value)
 
 
 JSONpair& 
-JSONpair::operator=(JSONpair& p_other)
+JSONpair::operator=(const JSONpair& p_other)
 {
   m_name  = p_other.m_name;
   m_value = p_other.m_value;
@@ -874,7 +874,7 @@ JSONMessage::ReparseURL()
 }
 
 XString
-JSONMessage::GetContentType()
+JSONMessage::GetContentType() const
 {
   if(m_contentType.IsEmpty())
   {
@@ -967,7 +967,7 @@ JSONMessage::GetHeader(XString p_name)
 // 2) Setting server/port/absolute path separately
 // 3) By remembering the requestID of the caller
 void
-JSONMessage::SetURL(XString& p_url)
+JSONMessage::SetURL(const XString& p_url)
 {
   m_url = p_url;
 
@@ -1279,7 +1279,7 @@ XString
 JSONMessage::GetValueString(XString p_name)
 {
   XString value;
-  JSONvalue* val = FindValue(p_name);
+  const JSONvalue* val = FindValue(p_name);
   if(val && val->GetDataType() == JsonType::JDT_string)
   {
     value = val->GetString();
@@ -1292,7 +1292,7 @@ long
 JSONMessage::GetValueInteger(XString p_name)
 {
   long value = 0;
-  JSONvalue* val = FindValue(p_name);
+  const JSONvalue* val = FindValue(p_name);
   if (val && val->GetDataType() == JsonType::JDT_number_int)
   {
     value = val->GetNumberInt();
@@ -1305,7 +1305,7 @@ bcd
 JSONMessage::GetValueNumber(XString p_name)
 {
   bcd value;
-  JSONvalue* val = FindValue(p_name);
+  const JSONvalue* val = FindValue(p_name);
   if (val && val->GetDataType() == JsonType::JDT_number_bcd)
   {
     value = val->GetNumberBcd();
@@ -1317,7 +1317,7 @@ JSONMessage::GetValueNumber(XString p_name)
 JsonConst
 JSONMessage::GetValueConstant(XString p_name)
 {
-  JSONvalue* val = FindValue(p_name);
+  const JSONvalue* val = FindValue(p_name);
   if (val && val->GetDataType() == JsonType::JDT_const)
   {
     return val->GetConstant();
@@ -1326,7 +1326,7 @@ JSONMessage::GetValueConstant(XString p_name)
 }
 
 bool
-JSONMessage::AddNamedObject(XString p_name,JSONobject& p_object,bool p_forceArray /*=false*/)
+JSONMessage::AddNamedObject(XString p_name,const JSONobject& p_object,bool p_forceArray /*=false*/)
 {
   // if JSONMessage still empty, turn it into an object
   if(m_value->GetDataType() == JsonType::JDT_const && 

@@ -34,7 +34,7 @@ class XMLParserJSON : public XMLParser
 {
 public:
   XMLParserJSON();
-  XMLParserJSON(XMLMessage* p_xml,JSONMessage* p_json);
+  explicit XMLParserJSON(XMLMessage* p_xml,const JSONMessage* p_json);
  ~XMLParserJSON() = default;
 
  void  ParseMain(XMLElement* p_element,JSONvalue& p_value);

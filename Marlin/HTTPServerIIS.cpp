@@ -73,7 +73,7 @@ HTTPServerIIS::HTTPServerIIS(XString p_name)
 HTTPServerIIS::~HTTPServerIIS()
 {
   // Cleanup the server objects
-  Cleanup();
+  HTTPServerIIS::Cleanup();
 }
 
 XString
@@ -129,14 +129,14 @@ HTTPServerIIS::Cleanup()
   AutoCritSec lock2(&m_eventLock);
 
   // Remove all remaining sockets
-  for(auto& it : m_sockets)
+  for(const auto& it : m_sockets)
   {
     delete it.second;
   }
   m_sockets.clear();
 
   // Remove all event streams within the scope of the eventLock
-  for(auto& it : m_eventStreams)
+  for(const auto& it : m_eventStreams)
   {
     delete it.second;
   }
@@ -240,7 +240,7 @@ HTTPServerIIS::StopServer()
   // Try to remove all event streams
   while(!m_eventStreams.empty())
   {
-    EventStream* stream = m_eventStreams.begin()->second;
+    const EventStream* stream = m_eventStreams.begin()->second;
     CloseEventStream(stream);
   }
 
@@ -604,8 +604,8 @@ HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
     PHTTP_DATA_CHUNK chunk = &p_request->pEntityChunks[ind];
     switch(chunk->DataChunkType)
     {
-      case HttpDataChunkFromMemory:            buffer->AddBuffer((uchar*)
-                                                                 chunk->FromMemory.pBuffer
+      case HttpDataChunkFromMemory:            buffer->AddBuffer(reinterpret_cast<uchar*>
+                                                                (chunk->FromMemory.pBuffer)
                                                                 ,chunk->FromMemory.BufferLength);
                                                break;
       case HttpDataChunkFromFileHandle:        // Should not happen upon receive
@@ -752,7 +752,7 @@ HTTPServerIIS::FindingAccessToken(IHttpContext* p_context,HTTPMessage* p_message
 bool
 HTTPServerIIS::InitEventStream(EventStream& p_stream)
 {
-  IHttpContext*    context = (IHttpContext*)p_stream.m_requestID;
+  IHttpContext*    context = reinterpret_cast<IHttpContext*>(p_stream.m_requestID);
   IHttpResponse*  response = context->GetResponse();
   IHttpCachePolicy* policy = response->GetCachePolicy();
 
@@ -769,9 +769,9 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
   DWORD bytesSent = 0;
 
   // Only if a buffer present
-  dataChunk.DataChunkType = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer = (void*)init.GetString();
-  dataChunk.FromMemory.BufferLength = (ULONG)init.GetLength();
+  dataChunk.DataChunkType           = HttpDataChunkFromMemory;
+  dataChunk.FromMemory.pBuffer      = reinterpret_cast<void*>(const_cast<char*>(init.GetString()));
+  dataChunk.FromMemory.BufferLength = static_cast<ULONG>(init.GetLength());
 
   // Buffering should be turned off, so chunks get written right away
   response->DisableBuffering();    // Disable buffering
@@ -790,7 +790,7 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
 
     DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",bytesSent);
     // Possibly log and trace what we just sent
-    LogTraceResponse(response->GetRawHttpResponse(),(unsigned char*)init.GetString(),init.GetLength());
+    LogTraceResponse(response->GetRawHttpResponse(),reinterpret_cast<uchar*>(const_cast<char*>(init.GetString())),init.GetLength());
 
     hr = response->Flush(false,true,&bytesSent);
   }
@@ -879,10 +879,13 @@ HTTPServerIIS::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
     // Send all next chunks
     IHttpContext*  context  = reinterpret_cast<IHttpContext*>(p_message->GetRequestHandle());
     IHttpResponse* response = context ? context->GetResponse() : nullptr;
-    SendResponseBuffer(response,buffer,buffer->GetLength(),!p_final);
-
-	// Possibly log and trace what we just sent
-	LogTraceResponse(response->GetRawHttpResponse(),buffer);
+    if(response)
+    {
+      // Send the response
+      SendResponseBuffer(response,buffer,buffer->GetLength(),!p_final);
+      // Possibly log and trace what we just sent
+      LogTraceResponse(response->GetRawHttpResponse(),buffer);
+    }
   }
   if(p_final)
   {
@@ -1047,7 +1050,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
       if(cookiesHasDomain)  cookie.SetDomain  (cookieDomain);
       if(cookiesHasMaxAge)  cookie.SetMaxAge  (cookieMaxAge);
 
-      if(cookieExpires > 0)
+      if(cookiesHasExpires && cookieExpires > 0)
       {
         SYSTEMTIME current;
         GetSystemTime(&current);
@@ -1243,10 +1246,16 @@ HTTPServerIIS::SendResponseBufferParts(IHttpResponse* p_response
 void
 HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_buffer,bool p_more /*= false*/)
 {
-  DWORD  result    = 0;
-  HANDLE file      = NULL;
+  HANDLE file = NULL;
   HTTP_DATA_CHUNK dataChunk;
   memset(&dataChunk,0,sizeof(HTTP_DATA_CHUNK));
+
+  // Check input
+  if(!p_response || !p_buffer)
+  {
+    ERRORLOG(ERROR_INVALID_PARAMETER,"FATAL Error sending FILE handle!");
+    return;
+  }
 
   // File to transmit
   if(p_buffer->OpenFile() == false)
@@ -1288,7 +1297,7 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
   }
   else
   {
-    result = HRESULT_FROM_WIN32(hr);
+    DWORD result = HRESULT_FROM_WIN32(hr);
     ERRORLOG(result,"SendResponseEntityBody for file");
   }
   // Now close our file handle
@@ -1301,7 +1310,6 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
                                 ,int            p_error
                                 ,const char*    p_reason)
 {
-  DWORD result = 0;
   XString sending;
   HTTP_DATA_CHUNK dataChunk;
   memset(&dataChunk,0,sizeof(HTTP_DATA_CHUNK));
@@ -1311,7 +1319,7 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
 
   // Add an entity chunk.
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer      = (void*) sending.GetString();
+  dataChunk.FromMemory.pBuffer      = reinterpret_cast<void*>(const_cast<char*>(sending.GetString()));
   dataChunk.FromMemory.BufferLength = sending.GetLength();
 
   DWORD sent = 0L;
@@ -1327,22 +1335,22 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
       ERRORLOG(ERROR_INVALID_FUNCTION,"ResponseFileHandle: But IIS does not expect to deliver the contents!!");
     }
     // Possibly log and trace what we just sent
-    LogTraceResponse(p_response->GetRawHttpResponse(),(unsigned char*)sending.GetString(),sending.GetLength());
+    LogTraceResponse(p_response->GetRawHttpResponse(),reinterpret_cast<uchar*>(const_cast<char*>(sending.GetString())),sending.GetLength());
   }
   else
   {
-    result = HRESULT_FROM_WIN32(hr);
+    DWORD result = HRESULT_FROM_WIN32(hr);
     ERRORLOG(result,"SendResponseEntityBody for file");
   }
 }
 
 // Sending a chunk to an event stream
 bool 
-HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
+HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
                                       ,CRITICAL_SECTION*  p_lock
-                                      ,const char*    p_buffer
-                                      ,size_t         p_length
-                                      ,bool           p_continue /*= true*/)
+                                      ,const char*        p_buffer
+                                      ,size_t             p_length
+                                      ,bool               p_continue /*= true*/)
 {
   AutoCritSec lockme(p_lock);
 
@@ -1355,7 +1363,7 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
   // Getting our context
   DWORD  bytesSent = 0;
   HTTP_DATA_CHUNK dataChunk;
-  IHttpContext*   context  = (IHttpContext*)p_response;
+  IHttpContext*   context  = reinterpret_cast<IHttpContext*>(p_response);
   IHttpResponse*  response = context->GetResponse();
 
   // Check that we have a response object
@@ -1366,7 +1374,7 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
 
   // Only if a buffer present
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer      = (void*)p_buffer;
+  dataChunk.FromMemory.pBuffer      = reinterpret_cast<void*>(const_cast<char*>(p_buffer));
   dataChunk.FromMemory.BufferLength = (ULONG)p_length;
 
   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,p_continue,&bytesSent);
@@ -1385,7 +1393,7 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID p_response
     else
     {
       // Possibly log and trace what we just sent
-      LogTraceResponse(nullptr,(unsigned char*) p_buffer,(int) p_length);
+      LogTraceResponse(nullptr,reinterpret_cast<uchar*>(const_cast<char*>(p_buffer)),static_cast<unsigned>(p_length));
     }
   }
   // Final closing of the connection

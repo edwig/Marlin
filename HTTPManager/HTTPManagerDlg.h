@@ -56,7 +56,7 @@ class HTTPManagerDlg : public CDialogEx
 {
 // Construction
 public:
-  HTTPManagerDlg(bool p_iis,CWnd* pParent = NULL);
+  explicit HTTPManagerDlg(bool p_iis,CWnd* pParent = NULL);
   virtual ~HTTPManagerDlg();
 
   // Dialog Data

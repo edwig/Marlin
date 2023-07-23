@@ -203,13 +203,11 @@ ServerApp::ServerApp(IHttpServer* p_iis
                     ,const char*  p_webroot
                     ,const char*  p_appName)
           :m_iis(p_iis)
+          ,m_webroot(p_webroot)
+          ,m_applicationName(p_appName)
 {
   // Keep global pointer to the server
   g_iisServer = p_iis;
-
-  // Construct local MFC CStrings from char pointers
-  m_webroot         = p_webroot;
-  m_applicationName = p_appName;
 }
 
 // DTOR
@@ -220,9 +218,6 @@ ServerApp::~ServerApp()
   {
     delete site;
   }
-
-  // Just to be sure
-  ExitInstance();
 }
 
 // Init our server app.
@@ -356,7 +351,7 @@ bool
 ServerApp::CorrectlyStarted()
 {
   // MINIMUM REQUIREMENT:
-  // If a derived class has been statically declared
+  // If a derived class has been statically declared and version-checked
   // and a IHttpServer and a HTTPServerIIS has been found
   // and a ThreadPool is initialized, we are good to go
   if(m_iis && m_httpServer && m_threadPool && m_logfile && m_versionCheck)
@@ -370,18 +365,22 @@ ServerApp::CorrectlyStarted()
   {
     ERRORLOG(ERROR_NOT_FOUND,"No connected IIS server found!");
   }
-  if(!m_httpServer)
-  {
-    ERRORLOG(ERROR_NOT_FOUND,"No connected MarlinIIS server found!");
-  }
-  if(!m_threadPool)
+  else if(!m_threadPool)
   {
     ERRORLOG(ERROR_NOT_FOUND,"No connected threadpool found!");
   }
-  if(!m_versionCheck)
+  else if(!m_logfile)
+  {
+    ERRORLOG(ERROR_NOT_FOUND,"No connected logfile found!");
+  }
+  else if(!m_versionCheck)
   {
     ERRORLOG(ERROR_VALIDATE_CONTINUE,"MarlinModule version check not done! Did you use a MarlinModule prior to version 7.0.0 ?");
     return false;
+  }
+  else
+  {
+    ERRORLOG(ERROR_NOT_FOUND,"No connected MarlinIIS server found!");
   }
   return false;
 }

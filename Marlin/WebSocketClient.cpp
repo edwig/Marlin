@@ -56,7 +56,7 @@ WebSocketClient::WebSocketClient(XString p_uri)
 
 WebSocketClient::~WebSocketClient()
 {
-  CloseSocket();
+  WebSocketClient::CloseSocket();
   FreeHTTPLibrary();
 }
 
@@ -79,11 +79,11 @@ WebSocketClient::LoadHTTPLibrary()
   m_winhttp = LoadLibrary("WinHTTP.dll");
   if(m_winhttp)
   {
-    m_websocket_complete    = (WSOCK_COMPLETE)  GetProcAddress(m_winhttp,"WinHttpWebSocketCompleteUpgrade");
-    m_websocket_close       = (WSOCK_CLOSE)     GetProcAddress(m_winhttp,"WinHttpWebSocketClose");
-    m_websocket_queryclose  = (WSOCK_QUERYCLOSE)GetProcAddress(m_winhttp,"WinHttpWebSocketQueryCloseStatus");  
-    m_websocket_send        = (WSOCK_SEND)      GetProcAddress(m_winhttp,"WinHttpWebSocketSend");
-    m_websocket_receive     = (WSOCK_RECEIVE)   GetProcAddress(m_winhttp,"WinHttpWebSocketReceive");
+    m_websocket_complete    = reinterpret_cast<WSOCK_COMPLETE>  (GetProcAddress(m_winhttp,"WinHttpWebSocketCompleteUpgrade"));
+    m_websocket_close       = reinterpret_cast<WSOCK_CLOSE>     (GetProcAddress(m_winhttp,"WinHttpWebSocketClose"));
+    m_websocket_queryclose  = reinterpret_cast<WSOCK_QUERYCLOSE>(GetProcAddress(m_winhttp,"WinHttpWebSocketQueryCloseStatus"));
+    m_websocket_send        = reinterpret_cast<WSOCK_SEND>      (GetProcAddress(m_winhttp,"WinHttpWebSocketSend"));
+    m_websocket_receive     = reinterpret_cast<WSOCK_RECEIVE>   (GetProcAddress(m_winhttp,"WinHttpWebSocketReceive"));
   }
 
   if(m_websocket_complete   == nullptr ||
@@ -155,7 +155,7 @@ WebSocketClient::OpenSocket()
   }
   if(!m_headers.empty())
   {
-    for(auto& header : m_headers)
+    for(const auto& header : m_headers)
     {
       client.AddHeader(header.first,header.second);
     }
@@ -274,7 +274,7 @@ WebSocketClient::SendCloseSocket(USHORT p_code,XString p_reason)
     length = WS_CLOSE_MAXIMUM;
   }
   DETAILLOGV("Send close WebSocket [%d:%s] for: %s",p_code,p_reason.GetString(),m_uri.GetString());
-  DWORD error = m_websocket_close(m_socket,p_code,(void*)p_reason.GetString(),length); // WinHttpWebSocketClose
+  DWORD error = m_websocket_close(m_socket,p_code,reinterpret_cast<void*>(const_cast<char*>(p_reason.GetString())),length); // WinHttpWebSocketClose
   if(error && (error != ERROR_WINHTTP_OPERATION_CANCELLED))
   {
     // We could be in a tight spot (socket already closed)
@@ -409,7 +409,7 @@ WebSocketClient::SocketListener()
     if(!m_reading)
     {
       m_reading = new WSFrame;
-      m_reading->m_data = (BYTE*)malloc((size_t)m_fragmentsize + WS_OVERHEAD);
+      m_reading->m_data = reinterpret_cast<BYTE*>(malloc((size_t)m_fragmentsize + WS_OVERHEAD));
     }
     // Happens on SocketClose from the server
     if(!m_socket)
@@ -491,7 +491,7 @@ WebSocketClient::SocketListener()
           // Just append another fragment after the current one
           // And keep reading until we find the final UTF-8 fragment
           DWORD newsize = m_reading->m_length + bytesRead + m_fragmentsize + WS_OVERHEAD;
-          m_reading->m_data = (BYTE*)realloc(m_reading->m_data,newsize);
+          m_reading->m_data = reinterpret_cast<BYTE*>(realloc(m_reading->m_data,newsize));
           m_reading->m_length += bytesRead;
         }
         else
@@ -531,7 +531,7 @@ WebSocketClient::StartClientListner()
   {
     // Thread for the client queue
     unsigned int threadID = 0;
-    if((m_listener = (HANDLE)_beginthreadex(NULL,0,StartingClientListenerThread,(void *)(this),0,&threadID)) == INVALID_HANDLE_VALUE)
+    if((m_listener = reinterpret_cast<HANDLE>(_beginthreadex(NULL,0,StartingClientListenerThread,reinterpret_cast<void *>(this),0,&threadID))) == INVALID_HANDLE_VALUE)
     {
       m_listener = NULL;
       ERRORLOG(GetLastError(),"Cannot start client listener thread for a WebSocket");
@@ -565,7 +565,7 @@ WebSocketClient::GenerateKey()
   // Set key in a base64 encoded string
   Base64 base;
   char* buffer = m_socketKey.GetBufferSetLength((int)base.B64_length(16) + 1);
-  base.Encrypt(key,16,(unsigned char*)buffer);
+  base.Encrypt(key,16,reinterpret_cast<unsigned char*>(buffer));
   m_socketKey.ReleaseBuffer();
 
   DETAILLOGS("Generated client WebSocket key: ",m_socketKey);

@@ -35,6 +35,7 @@
 #include "WebSocketServer.h"
 #include "AutoCritical.h"
 #include "ConvertWideString.h"
+#include <ServiceReporting.h>
 #include <WebSocket.h>
 
 #ifdef _DEBUG
@@ -245,6 +246,12 @@ HTTPRequest::ReceivedRequest()
 {
   TRACE0("Received request\n");
 
+  // Check server pointer
+  if(m_server == nullptr)
+  {
+    SvcReportErrorEvent(0,false,__FUNCTION__,"FATAL ERROR: No server when receiving HTTP request!");
+    return;
+  }
   HANDLE accessToken = nullptr;
 
   // Get status from the OVERLAPPED result
@@ -298,7 +305,10 @@ HTTPRequest::ReceivedRequest()
     DETAILLOGS("Got a request for: ",rawUrl);
 
     // Trace the request in full
-    m_server->LogTraceRequest(m_request,nullptr);
+    if(m_server)
+    {
+      m_server->LogTraceRequest(m_request,nullptr);
+    }
   }
 
   // Recording expected content length
@@ -562,7 +572,7 @@ HTTPRequest::PostReceive()
   }
   DETAILLOGV("Received %s message from: %s Size: %lu"
              ,headers[(unsigned)m_message->GetCommand()]
-             ,(LPCTSTR)SocketToServer(m_message->GetSender())
+             ,SocketToServer(m_message->GetSender()).GetString()
              ,m_message->GetBodyLength());
 
   // Message is now complete
@@ -807,7 +817,7 @@ HTTPRequest::StartEventStreamResponse()
   {
     free(m_sendBuffer);
   }
-  m_sendBuffer = (BYTE*) malloc((size_t)init.GetLength() + 1);
+  m_sendBuffer = reinterpret_cast<BYTE*>(malloc((size_t)init.GetLength() + 1));
   memcpy_s(m_sendBuffer,(size_t)init.GetLength() + 1,init.GetString(),(size_t)init.GetLength() + 1);
 
   // Setup as a data-chunk info structure
@@ -882,6 +892,13 @@ HTTPRequest::SendResponseStream(const char* p_buffer
 {
   TRACE0("Send Response stream\n");
 
+  // Check server pointer
+  if(m_server == nullptr)
+  {
+    SvcReportErrorEvent(0,false,__FUNCTION__,"FATAL ERROR: No server when sending HTTP response stream!");
+    return;
+  }
+
   // Now begin writing our response body parts
   ResetOutstanding(m_writing);
   m_writing.m_action = IO_WriteStream;
@@ -889,7 +906,6 @@ HTTPRequest::SendResponseStream(const char* p_buffer
   // Prepare send buffer
   memset(&m_sendChunk,0,sizeof(HTTP_DATA_CHUNK));
   PHTTP_DATA_CHUNK chunks = &m_sendChunk;
-  USHORT chunkcount = 1;
 
   // Default is that we continue sending
   ULONG flags = p_continue ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
@@ -899,7 +915,7 @@ HTTPRequest::SendResponseStream(const char* p_buffer
   {
     free(m_sendBuffer);
   }
-  m_sendBuffer = (BYTE*) malloc(p_length + 1);
+  m_sendBuffer = reinterpret_cast<BYTE*>(malloc(p_length + 1));
   if(!m_sendBuffer)
   {
     ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Sending a HTTP answer");
@@ -915,36 +931,38 @@ HTTPRequest::SendResponseStream(const char* p_buffer
   m_sendChunk.FromMemory.BufferLength = (ULONG)p_length;
 
   DETAILLOGV("Stream part [%d] bytes to send",p_length);
-  m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length);
-
-  ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
-                                            m_requestID,    // Our request
-                                            flags,          // More/Last data
-                                            chunkcount,     // Entity Chunk Count.
-                                            chunks,         // CHUNCK
-                                            nullptr,        // Bytes
-                                            nullptr,        // Reserved1
-                                            0,              // Reserved2
-                                            &m_writing,     // OVERLAPPED
-                                            nullptr);       // LOGDATA
-
-  // Check for error
-  if(result != ERROR_IO_PENDING && result != NO_ERROR)
+  if(m_server)
   {
-    ERRORLOG(result,"Sending stream part");
-    m_responding = false;
-    CancelRequest();
-    return;
-  }
-  else
-  {
-    // Final closing of the connection
-    if(p_continue == false)
+    USHORT chunkcount = 1;
+    m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length);
+    ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
+                                              m_requestID,    // Our request
+                                              flags,          // More/Last data
+                                              chunkcount,     // Entity Chunk Count.
+                                              chunks,         // CHUNCK
+                                              nullptr,        // Bytes
+                                              nullptr,        // Reserved1
+                                              0,              // Reserved2
+                                              &m_writing,     // OVERLAPPED
+                                              nullptr);       // LOGDATA
+
+    // Check for error
+    if(result != ERROR_IO_PENDING && result != NO_ERROR)
     {
-      DETAILLOG1("Stream connection closed");
+      ERRORLOG(result,"Sending stream part");
+      m_responding = false;
+      CancelRequest();
+      return;
+    }
+    else
+    {
+      // Final closing of the connection
+      if(p_continue == false)
+      {
+        DETAILLOG1("Stream connection closed");
+      }
     }
   }
-
   // Still responding or done?
   m_responding = p_continue;
 }
@@ -1090,7 +1108,7 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
 #pragma warning(disable: 6386)
 
   unsigned ind = 0;
-  for(auto& unknown : p_headers)
+  for(const auto& unknown : p_headers)
   {
     const char* string = nullptr;
     USHORT size = 0;
@@ -1114,6 +1132,13 @@ void
 HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
 {
   TRACE0("Fill Response\n");
+
+  // Check site pointer
+  if(m_site == nullptr)
+  {
+    SvcReportErrorEvent(0,false,__FUNCTION__,"FATAL ERROR: No site when filling in HTTP response!");
+    return;
+  }
 
   // Initialize the response body
   if(m_response == nullptr)
@@ -1207,25 +1232,21 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   int        cookieMaxAge  = 0;
 
   // Getting the site settings
-  HTTPSite* site = m_message->GetHTTPSite();
-  if(site)
-  {
-    cookiesHasSecure  = site->GetCookieHasSecure();
-    cookiesHasHttp    = site->GetCookieHasHttpOnly();
-    cookiesHasSame    = site->GetCookieHasSameSite();
-    cookiesHasPath    = site->GetCookieHasPath();
-    cookiesHasDomain  = site->GetCookieHasDomain();
-    cookiesHasExpires = site->GetCookieHasExpires();
-    cookiesHasMaxAge  = site->GetCookieHasMaxAge();
+  cookiesHasSecure  = m_site->GetCookieHasSecure();
+  cookiesHasHttp    = m_site->GetCookieHasHttpOnly();
+  cookiesHasSame    = m_site->GetCookieHasSameSite();
+  cookiesHasPath    = m_site->GetCookieHasPath();
+  cookiesHasDomain  = m_site->GetCookieHasDomain();
+  cookiesHasExpires = m_site->GetCookieHasExpires();
+  cookiesHasMaxAge  = m_site->GetCookieHasMaxAge();
 
-    cookieSecure      = site->GetCookiesSecure();
-    cookieHttpOnly    = site->GetCookiesHttpOnly();
-    cookieSameSite    = site->GetCookiesSameSite();
-    cookiePath        = site->GetCookiesPath();
-    cookieDomain      = site->GetCookiesDomain();
-    cookieExpires     = site->GetCookiesExpires();
-    cookieMaxAge      = site->GetCookiesMaxAge();
-  }
+  cookieSecure      = m_site->GetCookiesSecure();
+  cookieHttpOnly    = m_site->GetCookiesHttpOnly();
+  cookieSameSite    = m_site->GetCookiesSameSite();
+  cookiePath        = m_site->GetCookiesPath();
+  cookieDomain      = m_site->GetCookiesDomain();
+  cookieExpires     = m_site->GetCookiesExpires();
+  cookieMaxAge      = m_site->GetCookiesMaxAge();
 
   // Add cookies to the unknown response headers
   // Because we can have more than one Set-Cookie: header
@@ -1251,7 +1272,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
       if(cookiesHasDomain)  cookie.SetDomain  (cookieDomain);
       if(cookiesHasMaxAge)  cookie.SetMaxAge  (cookieMaxAge);
 
-      if(cookieExpires > 0)
+      if(cookiesHasExpires && cookieExpires > 0)
       {
         SYSTEMTIME current;
         GetSystemTime(&current);
@@ -1280,10 +1301,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   }
 
   // Add other optional security headers like CORS etc.
-  if(m_site)
-  {
-    m_site->AddSiteOptionalHeaders(ukheaders);
-  }
+  m_site->AddSiteOptionalHeaders(ukheaders);
 
   // Possible zip the contents, and add content-encoding header
   FileBuffer* buffer = m_message->GetFileBuffer();

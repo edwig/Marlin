@@ -45,7 +45,7 @@
 class HTTPManagerApp : public CWinApp
 {
 public:
-	HTTPManagerApp();
+	explicit HTTPManagerApp();
   virtual ~HTTPManagerApp();
 
 // Overrides

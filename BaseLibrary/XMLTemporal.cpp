@@ -315,7 +315,7 @@ XMLTime::ParseXMLTime(const XString& p_string)
   //  Parse the string
   // changed char to unsigned int for 64 bit implementation
   char sep1,sep2,sep3,sep4,sep5;
-  int n = sscanf_s(p_string,"%1d%1d%c%1d%1d%c%1d%1d%c%d%c%1d%1d%c%1d%1d",
+  int n = sscanf_s(p_string,"%1u%1u%c%1u%1u%c%1u%1u%c%u%c%1u%1u%c%1u%1u",
                    &uu[0],&uu[1],
                    &sep1,(unsigned int) sizeof(char),
                    &mi[0],&mi[1],
@@ -499,15 +499,13 @@ XMLDate::ParseDate(XString p_value)
     return true;
   }
 
-  if(!success)
+  XMLTimestamp mom;
+  if(ParseXMLDate(datum,mom))
   {
-    XMLTimestamp mom;
-    if(ParseXMLDate(datum,mom))
-    {
-      SetDate(mom.Year(),mom.Month(),mom.Day());
-      success = true;
-    }
+    SetDate(mom.Year(),mom.Month(),mom.Day());
+    success = true;
   }
+
   if(!success)
   {
     int jaar = 0;
@@ -563,10 +561,10 @@ void
 XMLDate::Today()
 {
   _tzset();
-  time_t ltime;
-  time(&ltime);
+  __time64_t ltime;
+  _time64(&ltime);
   struct tm now;
-  localtime_s(&now,&ltime);
+  _localtime64_s(&now,&ltime);
 
   // Return as SQLDate object
   SetDate(now.tm_year + 1900,now.tm_mon + 1,now.tm_mday);
@@ -667,9 +665,6 @@ void
 XMLTimestamp::ParseMoment(XString p_value)
 {
   XString string(p_value);
-  XString CurrentDate = "";
-  XString Sign = "";
-  XString ExtraTime = "";
 
   // Trim spaces from string
   string.Trim();
@@ -709,7 +704,7 @@ XMLTimestamp::ParseMoment(XString p_value)
   // See if we have a time only
   if(string.Find(':') > 0)
   {
-    // It is a timestring for today
+    // It is a time string for today
     XMLDate date;
     date.Today();
     XMLTime time(string);
@@ -757,7 +752,7 @@ XMLTimestamp::RecalculateValue()
   bool leapYear = ((year & 3) == 0) &&
                   ((year % 100) != 0 || (year % 400) == 0);
 
-  long daysInMonth = g_daysInTheMonth[month] - g_daysInTheMonth[month-1] +
+  int  daysInMonth = g_daysInTheMonth[month] - g_daysInTheMonth[month-1] +
                      ((leapYear && day == 29 && month == 2) ? 1 : 0);
 
   if (day <= 0 || day > daysInMonth)
@@ -776,12 +771,11 @@ XMLTimestamp::RecalculateValue()
     month += 12;
     --year;
   }
-  long gregorianA = 0;
   long gregorianB = 0;
   long factorC, factorD;
   if(year > 1582)
   {
-    gregorianA = year / 100;
+    long gregorianA = year / 100;
     gregorianB = 2 - gregorianA + (gregorianA / 4);
   }
   factorC = (long) (365.25  * (double)year);
@@ -799,7 +793,6 @@ XMLTimestamp::RecalculateValue()
 void
 XMLTimestamp::Normalise()
 {
-  long gregorianA = 0;
   long gregorianB = 0;
   long factorC = 0;
   long factorD = 0;
@@ -815,7 +808,7 @@ XMLTimestamp::Normalise()
   double JD = (double)((m_value / ONE_DAY) + 2400001);
   if(JD > 2299160)
   {
-    gregorianA = (long) ((JD - 1867216.25) / 36524.25);
+    long gregorianA = (long) ((JD - 1867216.25) / 36524.25);
     gregorianB = (long) (JD + 1 + gregorianA - (gregorianA / 4));
   }
   else

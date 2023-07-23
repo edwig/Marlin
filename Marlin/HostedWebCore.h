@@ -45,4 +45,4 @@ extern XString g_webconfig;            // Web.config file to use
 extern DWORD g_hwcShutdownMode;
 
 // The main entry for a Hosted Web Core application
-int HWC_main(int argc,char* argv[]);
+int HWC_main(int argc,const char* argv[]);

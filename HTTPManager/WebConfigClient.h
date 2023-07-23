@@ -38,8 +38,8 @@ class WebConfigClient : public CDialog
   DECLARE_DYNAMIC(WebConfigClient)
 
 public:
-  WebConfigClient(bool p_iis,CWnd* pParent = NULL);   // standard constructor
- ~WebConfigClient();
+  explicit WebConfigClient(bool p_iis,CWnd* pParent = NULL);   // standard constructor
+  virtual ~WebConfigClient();
   BOOL OnInitDialog();
   void ReadWebConfig (MarlinConfig& p_config);
   void WriteWebConfig(MarlinConfig& p_config);

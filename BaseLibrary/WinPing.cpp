@@ -321,11 +321,9 @@ static void SetIcmpSequence(char* buf,int p_family,char* p_errorbuffer)
   }
   else if(p_family == AF_INET6)
   {
-    ICMPV6_HDR* icmpv6 = NULL;
     ICMPV6_ECHO_REQUEST* req6 = NULL;
 
-    icmpv6 = (ICMPV6_HDR*)buf;
-    req6   = (ICMPV6_ECHO_REQUEST*)(buf + sizeof(ICMPV6_HDR));
+    req6 = (ICMPV6_ECHO_REQUEST*)(buf + sizeof(ICMPV6_HDR));
 
     if(req6->icmp6_echo_sequence)
     {
@@ -517,9 +515,6 @@ static int PostRecvfrom(SOCKET s,char* buf,int buflen,SOCKADDR* from,int* fromle
 //
 static void PrintPayload(char* buf,int bytes,int p_family,char* p_errorbuffer)
 {
-  int hdrlen = 0;
-  int routes = 0;
-  int i;
 
   UNREFERENCED_PARAMETER(bytes);
 
@@ -528,6 +523,7 @@ static void PrintPayload(char* buf,int bytes,int p_family,char* p_errorbuffer)
     SOCKADDR_IN      hop;
     IPV4_OPTION_HDR* v4opt = NULL;
     IPV4_HDR* v4hdr = NULL;
+    int hdrlen = 0;
 
     hop.sin_family = (USHORT)p_family;
     hop.sin_port = 0;
@@ -546,8 +542,8 @@ static void PrintPayload(char* buf,int bytes,int p_family,char* p_errorbuffer)
     if(hdrlen > sizeof(IPV4_HDR))
     {
       v4opt = (IPV4_OPTION_HDR*)(buf + sizeof(IPV4_HDR));
-      routes = (v4opt->opt_ptr / sizeof(ULONG)) - 1;
-      for(i = 0; i < routes;i++)
+      int routes = (v4opt->opt_ptr / sizeof(ULONG)) - 1;
+      for(int i = 0; i < routes;i++)
       {
         hop.sin_addr.s_addr = v4opt->opt_addr[i];
 
@@ -623,7 +619,7 @@ double WinPing(char* p_destination // internet address to ping
 {
   WSADATA             wsd;
   WSAOVERLAPPED       recvol;
-  int                 protocol   = IPPROTO_ICMP;        // Protocol value
+  int                 protocol   = IPPROTO_ICMP;      // Protocol value
   SOCKET              sock       = INVALID_SOCKET;
   int                 recvbuflen = MAX_RECV_BUF_LEN;  // Length of received packets.
   char*               recvbuf    = nullptr;
@@ -782,7 +778,7 @@ double WinPing(char* p_destination // internet address to ping
   // Start sending the ICMP requests
   for(int index = 0; index < p_sendCount;++index)
   {
-      // Set the sequence number and compute the checksum
+    // Set the sequence number and compute the checksum
     SetIcmpSequence(icmpbuf,p_family,p_errorbuffer);
     ComputeIcmpChecksum(sock,icmpbuf,packetlen,dest,p_family,p_errorbuffer);
 
@@ -901,10 +897,6 @@ EXIT:
       // Account for total
       totalTime += all_times[index];
     }
-  }
-      // Dispose of timing array
-  if(all_times)
-  {
     free(all_times);
   }
 

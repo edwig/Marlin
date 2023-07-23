@@ -77,13 +77,10 @@ SvcStartEventBuffer()
 void
 SvcReportInfoEvent(bool p_doFormat,LPCTSTR p_message,...)
 {
-  HANDLE hEventSource;
-  LPCTSTR lpszStrings[2];
-
   // Be sure our event system is started
   SvcStartEventBuffer();
 
-//  AutoCritSec lock(&g_eventBufferLock);
+  AutoCritSec lock(&g_eventBufferLock);
   if(p_doFormat)
   {
     va_list vl;
@@ -93,13 +90,13 @@ SvcReportInfoEvent(bool p_doFormat,LPCTSTR p_message,...)
   }
   else
   {
-    StringCchCopy(g_eventBuffer,EVENTBUFFER,p_message);
+    strcpy_s(g_eventBuffer,EVENTBUFFER,p_message);
   }
 
-  hEventSource = OpenEventLog(nullptr,g_svcname);
-
+  HANDLE hEventSource = OpenEventLog(nullptr,g_svcname);
   if(hEventSource != nullptr)
   {
+    LPCTSTR lpszStrings[2];
     lpszStrings[0] = g_svcname;
     lpszStrings[1] = g_eventBuffer;
 
@@ -119,16 +116,14 @@ SvcReportInfoEvent(bool p_doFormat,LPCTSTR p_message,...)
 void
 SvcReportSuccessEvent(LPCTSTR p_message)
 {
-  HANDLE hEventSource;
-  LPCTSTR lpszStrings[2];
-
   // Be sure our event system is started
   SvcStartEventBuffer();
 
-  hEventSource = OpenEventLog(nullptr,g_svcname);
+  HANDLE hEventSource = OpenEventLog(nullptr,g_svcname);
 
   if(hEventSource != nullptr)
   {
+    LPCTSTR lpszStrings[2];
     lpszStrings[0] = g_svcname;
     lpszStrings[1] = p_message;
 
@@ -154,8 +149,6 @@ SvcReportSuccessEvent(LPCTSTR p_message)
 void
 SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_message,...)
 {
-  HANDLE  hEventSource = NULL;
-  LPCTSTR lpszStrings[4];
   TCHAR   buffer1[256];
   TCHAR   buffer2[256];
   int     lastError = GetLastError();
@@ -163,7 +156,7 @@ SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_me
   // Be sure our event system is started
   SvcStartEventBuffer();
 
-//  AutoCritSec lock(&g_eventBufferLock);
+  AutoCritSec lock(&g_eventBufferLock);
   if(p_doFormat)
   {
     va_list vl;
@@ -173,15 +166,17 @@ SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_me
   }
   else
   {
-    StringCchCopy(g_eventBuffer,EVENTBUFFER,p_message);
+    strcpy_s(g_eventBuffer,EVENTBUFFER,p_message);
   }
-  StringCchPrintf(buffer1, 256, "Function %s", szFunction);
-  StringCchPrintf(buffer2, 256, "Last OS error: [%d] %s", lastError, GetLastErrorAsString(lastError).GetString());
+  sprintf_s(buffer1, 256, "Function %s", szFunction);
+  sprintf_s(buffer2, 256, "Last OS error: [%d] %s", lastError, GetLastErrorAsString(lastError).GetString());
 
-  hEventSource = OpenEventLog(nullptr,g_svcname);
+  HANDLE hEventSource = OpenEventLog(nullptr,g_svcname);
 
   if(hEventSource != nullptr)
   {
+    LPCTSTR lpszStrings[4];
+
     lpszStrings[0] = g_svcname;
     lpszStrings[1] = g_eventBuffer;
     lpszStrings[2] = buffer1;

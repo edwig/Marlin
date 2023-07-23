@@ -122,13 +122,12 @@ class DDOS
 public:
   DDOS()
   {
-    m_beginTime = 0;
     memset(&m_sender,0,sizeof(SOCKADDR_IN6));
   }
 
   SOCKADDR_IN6  m_sender;
   XString       m_abspath;
-  clock_t       m_beginTime;
+  clock_t       m_beginTime { 0 };
 };
 
 // Forward declarations
@@ -207,9 +206,9 @@ public:
   // MANDATORY: Set the ErrorReport object
   void       SetErrorReport(ErrorReport* p_report);
   // OPTIONAL: Set the client error page (range 400-417)
-  void       SetClientErrorPage(XString& p_errorPage);
+  void       SetClientErrorPage(const XString& p_errorPage);
   // OPTIONAL: Set the server error page (range 500-505)
-  void       SetServerErrorPage(XString& p_errorPage);
+  void       SetServerErrorPage(const XString& p_errorPage);
   // OPTIONAL: Set a logging object (lest we create our own!)
   void       SetLogging(LogAnalysis* p_log);
   // OPTIONAL: Set another name
@@ -293,9 +292,9 @@ public:
   void       LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo);
 
   // Find HTTPSite for an URL
-  HTTPSite*  FindHTTPSite(int p_port,PCWSTR   p_url);
-  HTTPSite*  FindHTTPSite(int p_port,XString& p_url);
-  HTTPSite*  FindHTTPSite(HTTPSite* p_default,XString& p_url);
+  HTTPSite*  FindHTTPSite(int p_port,PCWSTR p_url);
+  HTTPSite*  FindHTTPSite(int p_port,const XString& p_url);
+  HTTPSite*  FindHTTPSite(HTTPSite* p_default,const XString& p_url);
 
   // Logging and tracing: The response
   void      LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer);
@@ -306,7 +305,7 @@ public:
 
   // Outstanding asynchronous I/O requests
   void         RegisterHTTPRequest(HTTPRequest* p_request);
-  void       UnRegisterHTTPRequest(HTTPRequest* p_request);
+  void       UnRegisterHTTPRequest(const HTTPRequest* p_request);
 
   // Check authentication of a HTTP request
   bool       CheckAuthentication(PHTTP_REQUEST  p_request
@@ -321,20 +320,20 @@ public:
   // Return the number of push-event-streams for this URL, and probably for a user
   int        HasEventStreams(int p_port,XString p_url,XString p_user = "");
   // Return the fact that we have an event stream
-  bool       HasEventStream(EventStream* p_stream);
+  bool       HasEventStream(const EventStream* p_stream);
   // Send to a server push event stream / deleting p_event
   bool       SendEvent(int p_port,XString p_site,ServerEvent* p_event,XString p_user = "");
   // Send to a server push event stream on EventStream basis
   bool       SendEvent(EventStream* p_stream,ServerEvent* p_event,bool p_continue = true);
   // Close an event stream for one stream only
-  bool       CloseEventStream(EventStream* p_stream);
+  bool       CloseEventStream(const EventStream* p_stream);
   // Close and abort an event stream for whatever reason
   bool       AbortEventStream(EventStream* p_stream);
   // Close event streams for an URL and probably a user
   void       CloseEventStreams(int p_port,XString p_url,XString p_user = "");
   // Delete event stream
   void       RemoveEventStream(CString p_url);
-  void       RemoveEventStream(EventStream* p_stream);
+  void       RemoveEventStream(const EventStream* p_stream);
   // Monitor all server push event streams
   void       EventMonitor();
   // Register a WebServiceServer
@@ -350,7 +349,7 @@ public:
   // Authentication failed for this reason
   XString    AuthenticationStatus(SECURITY_STATUS p_secStatus);
   // Find routing information within the site
-  void       CalculateRouting(HTTPSite* p_site,HTTPMessage* p_message);
+  void       CalculateRouting(const HTTPSite* p_site,HTTPMessage* p_message);
   // Finding a previous registered service endpoint
   WebServiceServer* FindService(XString p_serviceName);
   // Finding a previous registered WebSocket
@@ -387,7 +386,7 @@ public:
                                     ,int             p_desktop
                                     ,HTTPSite*       p_site
                                     ,XString         p_url
-                                    ,XString&        p_pad
+                                    ,const XString&  p_pad
                                     ,HTTP_OPAQUE_ID  p_requestID
                                     ,HANDLE          p_token);
   // DDOS Attack mechanism
@@ -411,7 +410,7 @@ protected:
   virtual void  InitThreadPool();
 
   // Register a URL to listen on
-  bool      RegisterSite(HTTPSite* p_site,XString p_urlPrefix);
+  bool      RegisterSite(const HTTPSite* p_site,const XString& p_urlPrefix);
   // General checks before starting
   bool      GeneralChecks();
   // Checks if all sites are started
@@ -510,13 +509,13 @@ HTTPServer::GetHostname()
 }
 
 inline void
-HTTPServer::SetClientErrorPage(XString& p_errorPage)
+HTTPServer::SetClientErrorPage(const XString& p_errorPage)
 {
   m_clientErrorPage = p_errorPage;
 }
 
 inline void
-HTTPServer::SetServerErrorPage(XString& p_errorPage)
+HTTPServer::SetServerErrorPage(const XString& p_errorPage)
 {
   m_serverErrorPage = p_errorPage;
 }

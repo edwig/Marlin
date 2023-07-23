@@ -37,7 +37,7 @@ class SetCookieDlg : public CDialogEx
 	DECLARE_DYNAMIC(SetCookieDlg)
 
 public:
-	SetCookieDlg(CWnd* p_parent);
+	explicit SetCookieDlg(CWnd* p_parent);
 	virtual ~SetCookieDlg();
 
 // Dialog Data

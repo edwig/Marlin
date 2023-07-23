@@ -59,7 +59,7 @@ WebSocketServer::WebSocketServer(XString p_uri)
 
 WebSocketServer::~WebSocketServer()
 {
-  Reset();
+  WebSocketServer::Reset();
 }
 
 void
@@ -133,7 +133,7 @@ WebSocketServer::SocketReader(HRESULT p_error
 
   if(!p_final)
   {
-    m_reading->m_data = (BYTE*)realloc(m_reading->m_data,(size_t)m_reading->m_length + (size_t)m_fragmentsize + WS_OVERHEAD);
+    m_reading->m_data = reinterpret_cast<BYTE*>(realloc(m_reading->m_data,static_cast<size_t>(m_reading->m_length) + static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
   }
 
   // Setting the type of message
@@ -142,7 +142,7 @@ WebSocketServer::SocketReader(HRESULT p_error
     ReceiveCloseSocket();
     m_reading->m_utf8   = true;
     m_reading->m_final  = true;
-    m_reading->m_data   = (BYTE*)_strdup(m_closing.GetString());
+    m_reading->m_data   = reinterpret_cast<BYTE*>(_strdup(m_closing.GetString()));
     m_reading->m_length = m_closing.GetLength();
 
     // Store frame without UTF-8 conversion
@@ -195,7 +195,7 @@ WebSocketServer::SocketListener()
   {
     m_reading = new WSFrame();
     m_reading->m_length = 0;
-    m_reading->m_data   = (BYTE*)malloc((size_t)m_fragmentsize + WS_OVERHEAD);
+    m_reading->m_data   = reinterpret_cast<BYTE*>(malloc(static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
   }
 
   // Issue the Asynchronous read-a-fragment command to the Asynchronous I/O WebSocket
@@ -255,7 +255,7 @@ WebSocketServer::ReceiveCloseSocket()
   {
     XString encoded;
     bool foundBom = false;
-    if(TryConvertWideString((const uchar*)pointer,length,"",encoded,foundBom))
+    if(TryConvertWideString(reinterpret_cast<const uchar*>(pointer),length,"",encoded,foundBom))
     {
       m_closing = encoded;
     }
@@ -345,30 +345,30 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
   // Construct the WEBSOCKET protocol headers from the client
   WEB_SOCKET_HTTP_HEADER clientHeaders[5];
 
-  clientHeaders[0].pcName        = (PCHAR) wsClientKey.GetString();
-  clientHeaders[0].ulNameLength  =         wsClientKey.GetLength();
-  clientHeaders[0].pcValue       = (PCHAR) clientKey.GetString();
-  clientHeaders[0].ulValueLength =         clientKey.GetLength();
+  clientHeaders[0].pcName        = const_cast<PCHAR>(wsClientKey.GetString());
+  clientHeaders[0].ulNameLength  =                   wsClientKey.GetLength();
+  clientHeaders[0].pcValue       = const_cast<PCHAR>(clientKey.GetString());
+  clientHeaders[0].ulValueLength =                   clientKey.GetLength();
 
-  clientHeaders[1].pcName        = (PCHAR) wsConnection.GetString();
-  clientHeaders[1].ulNameLength  =         wsConnection.GetLength();
-  clientHeaders[1].pcValue       = (PCHAR) connection.GetString();
-  clientHeaders[1].ulValueLength =         connection.GetLength();
+  clientHeaders[1].pcName        = const_cast<PCHAR>(wsConnection.GetString());
+  clientHeaders[1].ulNameLength  =                   wsConnection.GetLength();
+  clientHeaders[1].pcValue       = const_cast<PCHAR>(connection.GetString());
+  clientHeaders[1].ulValueLength =                   connection.GetLength();
   
-  clientHeaders[2].pcName        = (PCHAR) wsUpgrade.GetString();
-  clientHeaders[2].ulNameLength  =         wsUpgrade.GetLength();
-  clientHeaders[2].pcValue       = (PCHAR) upgrade.GetString();
-  clientHeaders[2].ulValueLength =         upgrade.GetLength();
+  clientHeaders[2].pcName        = const_cast<PCHAR>(wsUpgrade.GetString());
+  clientHeaders[2].ulNameLength  =                   wsUpgrade.GetLength();
+  clientHeaders[2].pcValue       = const_cast<PCHAR>(upgrade.GetString());
+  clientHeaders[2].ulValueLength =                   upgrade.GetLength();
   
-  clientHeaders[3].pcName        = (PCHAR) wsVersion.GetString();
-  clientHeaders[3].ulNameLength  =         wsVersion.GetLength();
-  clientHeaders[3].pcValue       = (PCHAR) version.GetString();
-  clientHeaders[3].ulValueLength =         version.GetLength();
+  clientHeaders[3].pcName        = const_cast<PCHAR>(wsVersion.GetString());
+  clientHeaders[3].ulNameLength  =                   wsVersion.GetLength();
+  clientHeaders[3].pcValue       = const_cast<PCHAR>(version.GetString());
+  clientHeaders[3].ulValueLength =                   version.GetLength();
 
-  clientHeaders[4].pcName        = (PCHAR) wsHost.GetString();
-  clientHeaders[4].ulNameLength  =         wsHost.GetLength();
-  clientHeaders[4].pcValue       = (PCHAR) host.GetString();
-  clientHeaders[4].ulValueLength =         host.GetLength();
+  clientHeaders[4].pcName        = const_cast<PCHAR>(wsHost.GetString());
+  clientHeaders[4].ulNameLength  =                   wsHost.GetLength();
+  clientHeaders[4].pcValue       = const_cast<PCHAR>(host.GetString());
+  clientHeaders[4].ulValueLength =                   host.GetLength();
 
   WEB_SOCKET_HTTP_HEADER* serverheaders = nullptr;
   ULONG serverheadersCount = 0L;

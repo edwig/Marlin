@@ -130,11 +130,11 @@ MultiPart::CheckBoundaryExists(XString p_boundary)
     // Holy shit: Sequentially scan our buffer for the boundary
     uchar* buffer = nullptr;
     size_t length = 0L;
-    int    bdlen  = p_boundary.GetLength();
 
     m_file.GetBuffer(buffer,length);
     if(buffer && length > (size_t)p_boundary.GetLength())
     {
+      int bdlen = p_boundary.GetLength();
       for(char* buf = (char*)buffer; buf < (char*)((char*)buffer + length - bdlen); ++buf)
       {
         if(memcmp(buf,p_boundary,bdlen) == 0)
@@ -200,7 +200,7 @@ MultiPart::CreateHeader(XString p_boundary,bool p_extensions /*=false*/)
   }
   header += "\r\n";
   // Add variable headers
-  for(auto& head : m_headers)
+  for(const auto& head : m_headers)
   {
     header += head.first;
     header += ": ";
@@ -276,7 +276,7 @@ MultiPart::FileTimeToString(PFILETIME p_filetime)
 }
 
 PFILETIME
-MultiPart::FileTimeFromString(PFILETIME p_filetime,XString& p_time)
+MultiPart::FileTimeFromString(PFILETIME p_filetime,const XString& p_time)
 {
   if(!p_time.IsEmpty())
   {
@@ -525,7 +525,7 @@ MultiPartBuffer::DeletePart(XString p_name)
 }
 
 bool
-MultiPartBuffer::DeletePart(MultiPart* p_part)
+MultiPartBuffer::DeletePart(const MultiPart* p_part)
 {
   MultiPartMap::iterator it = m_parts.begin();
   while(it != m_parts.end())
@@ -593,7 +593,7 @@ MultiPartBuffer::CalculateAcceptHeader()
     }
     // Build accept types string
     XString accept;
-    for(auto& type : types)
+    for(const auto& type : types)
     {
       if(!accept.IsEmpty())
       {
@@ -669,7 +669,7 @@ MultiPartBuffer::ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,
     {
       break;
     }
-    AddRawBufferPart((uchar*)partBuffer,finding,p_conversion);
+    AddRawBufferPart(reinterpret_cast<uchar*>(partBuffer),finding,p_conversion);
     result = true;
   }
   // Release the buffer copy 
@@ -690,7 +690,7 @@ MultiPartBuffer::ParseBufferUrlEncoded(FileBuffer* p_buffer)
   }
   XString parameters;
   char* pnt = parameters.GetBufferSetLength((int)length + 1);
-  strcpy_s(pnt,length + 1,(const char*)buffer);
+  strcpy_s(pnt,length + 1,reinterpret_cast<const char*>(buffer));
   pnt[length] = 0;
   parameters.ReleaseBuffer();
   delete[] buffer;
@@ -743,7 +743,7 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,XString& p
   while(p_remaining > (length + 4))
   {
     --p_remaining;
-    if(memcmp(p_finding,(char*)p_boundary.GetString(),length) == 0)
+    if(memcmp(p_finding,p_boundary.GetString(),length) == 0)
     {
       // Positioning of the boundary found
       p_finding   += length + 2; // 2 is for CR/LF of the HTTP protocol 
@@ -752,7 +752,7 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,XString& p
 
       while(p_remaining)
       {
-        if(memcmp(p_finding,(char*) p_boundary.GetString(),length) == 0)
+        if(memcmp(p_finding,p_boundary.GetString(),length) == 0)
         {
           // Two '-' signs before the boundary  
           if((*(p_finding - 1)) == '-') --p_finding;
@@ -787,7 +787,7 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,XString& p
 // }
 // --#BOUNDARY#12345678901234
 void
-MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool p_conversion)
+MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEnd,bool p_conversion)
 {
   MultiPart* part = new MultiPart();
   XString charset,boundary;
@@ -850,7 +850,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool
     XString data;
     size_t length = p_partialEnd - p_partialBegin;
     char*  buffer = data.GetBufferSetLength((int)length + 1);
-    strncpy_s(buffer,length + 1,(const char*)p_partialBegin,length);
+    strncpy_s(buffer,length + 1,reinterpret_cast<const char*>(p_partialBegin),length);
     buffer[length] = 0;
     data.ReleaseBuffer((int)length);
 
@@ -883,17 +883,20 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,uchar* p_partialEnd,bool
 }
 
 XString
-MultiPartBuffer::GetLineFromBuffer(uchar*& p_begin,uchar* p_end)
+MultiPartBuffer::GetLineFromBuffer(uchar*& p_begin,const uchar* p_end)
 {
   XString line;
 
-  const char* end = strchr((const char*)p_begin,'\n');
-  if(end > (const char*)p_end) return line;
-  size_t length = end - (const char*)p_begin;
+  const char* end = strchr(reinterpret_cast<const char*>(p_begin),'\n');
+  if(end > reinterpret_cast<const char*>(p_end))
+  {
+    return line;
+  }
+  size_t length = end - reinterpret_cast<const char*>(p_begin);
   char* buf = line.GetBufferSetLength((int)length + 1);
-  strncpy_s(buf,length+1,(const char*)p_begin,length);
+  strncpy_s(buf,length+1,reinterpret_cast<const char*>(p_begin),length);
   buf[length] = 0;
-  line.ReleaseBuffer((int)length);
+  line.ReleaseBuffer(static_cast<int>(length));
   line.TrimRight('\r');
 
   // Position after the end
@@ -904,7 +907,7 @@ MultiPartBuffer::GetLineFromBuffer(uchar*& p_begin,uchar* p_end)
 // Splitting a header/value pair from a line
 // e.g. "Content-type: application/json;"
 bool
-MultiPartBuffer::GetHeaderFromLine(XString& p_line,XString& p_header,XString& p_value)
+MultiPartBuffer::GetHeaderFromLine(const XString& p_line,XString& p_header,XString& p_value)
 {
   // Reset
   bool result = false;
@@ -933,7 +936,7 @@ MultiPartBuffer::GetHeaderFromLine(XString& p_line,XString& p_header,XString& p_
 }
 
 XString
-MultiPartBuffer::GetAttributeFromLine(XString& p_line,XString p_name)
+MultiPartBuffer::GetAttributeFromLine(const XString& p_line,XString p_name)
 {
   XString attribute;
   XString line(p_line);
@@ -987,13 +990,13 @@ XString
 MultiPartBuffer::FindBoundaryInContentType(XString p_contentType)
 {
   XString boundary;
-  int length = p_contentType.GetLength();
   XString content(p_contentType);
   content.MakeLower();
   int pos = content.Find("boundary");
   if(pos >= 0)
   {
     pos += 8; // skip the word 'boundary"
+    int length = p_contentType.GetLength();
     while(pos < length && isspace(content.GetAt(pos))) ++pos;
     if(content.GetAt(pos) == '=')
     {

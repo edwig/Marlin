@@ -49,23 +49,23 @@ typedef DWORD    (CALLBACK* WSOCK_RECEIVE)   (HINTERNET,PVOID,DWORD,DWORD*,WINHT
 class WebSocketClient: public WebSocket
 {
 public:
-  WebSocketClient(XString p_uri);
+  explicit WebSocketClient(XString p_uri);
   virtual ~WebSocketClient();
 
   // FUNCTIONS
 
   // Reset the socket
-  virtual void Reset();
+  virtual void Reset() override;
   // Open the socket
-  virtual bool OpenSocket();
+  virtual bool OpenSocket() override;
   // Close the socket
-  virtual bool CloseSocket();
+  virtual bool CloseSocket() override;
   // Close the socket with a closing frame
-  virtual bool SendCloseSocket(USHORT p_code,XString p_reason);
+  virtual bool SendCloseSocket(USHORT p_code,XString p_reason) override;
   // Register the server request for sending info
-  virtual bool RegisterSocket(HTTPMessage* p_message);
+  virtual bool RegisterSocket(HTTPMessage* p_message) override;
   // Write fragment to a WebSocket
-  virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
+  virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) override;
   // Generate a handshake key
   XString      GenerateKey();
   // Socket listener, entered by the StartClientListener only!

@@ -597,7 +597,7 @@ HTTPManagerDlg::OnBnClickedAskurl()
 
     if(DoCommand(CONFIG_ASKURL,prefix,command,parameters))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       show   += XString(">") + command + " " + parameters + "\r\n" + result;
     }
     else return;
@@ -642,14 +642,14 @@ HTTPManagerDlg::OnBnClickedAddurl()
 
     if(DoCommand(CONFIG_ADDURL,prefix,command,parameters))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       show   += ">" + command + " " + parameters + "\r\n" + result + "\r\n";
     }
     else return;
 
     if(DoCommand(CONFIG_ASKURL,prefix,command,parameters))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       show   += ">" + command + " " + parameters + "\r\n" + result;
     }
     else return;
@@ -693,7 +693,7 @@ HTTPManagerDlg::OnBnClickedDelurl()
 
     if(DoCommand(CONFIG_DELURL,prefix,command,parameters))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       show   += ">" + command + " " + parameters + "\r\n" + result;
     }
     else return;
@@ -710,7 +710,6 @@ HTTPManagerDlg::OnBnClickedDelurl()
 void
 HTTPManagerDlg::OnBnClickedAskFW()
 {
-  int res = 0;
   XString show;
   XString result;
   XString command("netsh");
@@ -724,7 +723,7 @@ HTTPManagerDlg::OnBnClickedAskFW()
   m_editStatus.SetWindowText("Inquiring for Firewall rules for: " + naam);
   MessagePump();
 
-  res  += CallProgram_For_String(command,parameters,result);
+  CallProgram_For_String(command,parameters,result);
   show += XString(">") + command + " " + parameters + "\r\n" + result;
 
   if(m_rulesResult == "TEST")
@@ -744,7 +743,6 @@ HTTPManagerDlg::OnBnClickedAskFW()
 void
 HTTPManagerDlg::OnBnClickedAddFW()
 {
-  int res = 0;
   XString ports;
   XString show;
   XString result;
@@ -776,10 +774,10 @@ HTTPManagerDlg::OnBnClickedAddFW()
   m_editStatus.SetWindowText("Creating Firewall rules for: " + naam);
   MessagePump();
 
-  res  += CallProgram_For_String(command,parameters1,result);
+  CallProgram_For_String(command,parameters1,result);
   show += XString(">") + command + " " + parameters1 + "\r\n" + result;
 
-  res  += CallProgram_For_String(command,parameters2,result);
+  CallProgram_For_String(command,parameters2,result);
   show += XString(">") + command + " " + parameters2 + "\r\n" + result;
 
   // Show result
@@ -793,7 +791,6 @@ HTTPManagerDlg::OnBnClickedAddFW()
 void
 HTTPManagerDlg::OnBnClickedDelFW()
 {
-  int res = 0;
   XString show;
   XString result;
   XString command("netsh");
@@ -807,7 +804,7 @@ HTTPManagerDlg::OnBnClickedDelFW()
   m_editStatus.SetWindowText("Removing Firewall rules for: " + naam);
   MessagePump();
 
-  res  += CallProgram_For_String(command,parameters,result);
+  CallProgram_For_String(command,parameters,result);
   show += XString(">") + command + " " + parameters + "\r\n" + result;
 
   // Show result
@@ -854,7 +851,7 @@ HTTPManagerDlg::OnBnClickedAskcert()
     prefix.Format("%d",port);
     if(DoCommand(CONFIG_ASKSSL,prefix,command,parameters))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       show   += XString(">") + command + " " + parameters + "\r\n" + result;
     }
     else return;
@@ -907,7 +904,7 @@ HTTPManagerDlg::OnBnClickedAddcert()
 
     if(DoCommand(CONFIG_ADDSSL,prefix,command,parameters,certificate,storename,clientCert))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       showme += ">" + command + " " + parameters + "\r\n" + result;
     }
     else return;
@@ -915,7 +912,7 @@ HTTPManagerDlg::OnBnClickedAddcert()
     // Kijken of het toegevoegd is
     if(DoCommand(CONFIG_ASKSSL,prefix,command,parameters))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       showme += ">" + command + " " + parameters + "\r\n" + result;
     }
     else return;
@@ -955,7 +952,7 @@ HTTPManagerDlg::OnBnClickedDelcert()
 
     if(DoCommand(CONFIG_DELSSL,prefix,command,parameters))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       showme += ">" + command + " " + parameters + "\r\n" + result;
     }
     else return;
@@ -963,7 +960,7 @@ HTTPManagerDlg::OnBnClickedDelcert()
     // See if it was added
     if(DoCommand(CONFIG_ASKSSL,prefix,command,parameters))
     {
-      int res = CallProgram_For_String(command,parameters,result);
+      CallProgram_For_String(command,parameters,result);
       showme  += ">" + command + " " + parameters + "\r\n" + result;
     }
     else return;
@@ -986,7 +983,7 @@ HTTPManagerDlg::OnBnClickedListner()
   // See if it was added
   if(DoCommand(CONFIG_ASKLIST,"",command,parameters))
   {
-    int res = CallProgram_For_String(command,parameters,result);
+    CallProgram_For_String(command,parameters,result);
     showme  = ">" + command + " " + parameters + "\r\n" + result;
   }
   // Show result
@@ -1006,7 +1003,7 @@ HTTPManagerDlg::OnBnClickedListen()
   // See if it was added
   if(DoCommand(CONFIG_ADDLIST,"",command,parameters))
   {
-    int res = CallProgram_For_String(command,parameters,result);
+    CallProgram_For_String(command,parameters,result);
     showme  = ">" + command + " " + parameters + "\r\n" + result;
   }
   // Show result
@@ -1024,7 +1021,7 @@ HTTPManagerDlg::OnBnClickedNetstat()
 
   // See if it was added
   parameters = "-a -p TCP";
-  int res = CallProgram_For_String(command,parameters,result);
+  CallProgram_For_String(command,parameters,result);
   XString tonen = ">" + command + " " + parameters + "\r\n" + result;
 
   // Show result

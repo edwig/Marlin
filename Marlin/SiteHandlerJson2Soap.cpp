@@ -96,10 +96,7 @@ SiteHandlerJson2Soap::Handle(SOAPMessage* p_message)
   if(handler)
   {
     SiteHandlerSoap* soapHandler = reinterpret_cast<SiteHandlerSoap*>(handler);
-    if(soapHandler)
-    {
-      return soapHandler->Handle(p_message);
-    }
+    return soapHandler->Handle(p_message);
   }
 
   // Handler on a site without a SOAP POST handler

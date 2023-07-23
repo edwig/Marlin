@@ -45,7 +45,7 @@ private:
 class CritSection
 {
 public:
-  CritSection(Critical& p_section) : m_section(&p_section)
+  explicit CritSection(Critical& p_section) : m_section(&p_section)
   {
     p_section.Lock();
   }
@@ -62,7 +62,7 @@ private:
 class AutoCritSec
 {
 public:
-  AutoCritSec(CRITICAL_SECTION* section) : m_section(section)
+  explicit AutoCritSec(CRITICAL_SECTION* section) : m_section(section)
   {
     EnterCriticalSection(m_section);
   }
@@ -77,7 +77,7 @@ private:
 class AutoTrySection
 {
 public:
-  AutoTrySection(CRITICAL_SECTION* section) : m_section(section)
+  explicit AutoTrySection(CRITICAL_SECTION* section) : m_section(section)
   {
     m_succeeded = TryEnterCriticalSection(m_section) != 0;
   }

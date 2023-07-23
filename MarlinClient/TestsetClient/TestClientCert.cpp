@@ -116,7 +116,7 @@ int TestClientCertificate(HTTPClient* p_client)
   else
   {
     xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+    xprintf("ERROR %s\n",p_client->GetStatusText().GetString());
   }
 
   // SUMMARY OF THE TEST

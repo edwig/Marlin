@@ -62,7 +62,7 @@ class LTEvent
 {
 public:
   LTEvent();
-  LTEvent(EvtType p_type);
+  explicit LTEvent(EvtType p_type);
 
   static EvtType StringToEventType(XString p_type);
   static XString EventTypeToString(EvtType p_type);

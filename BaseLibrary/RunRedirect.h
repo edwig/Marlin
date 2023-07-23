@@ -58,8 +58,8 @@ int  PosixCallProgram(XString  p_directory
 class RunRedirect : public Redirect
 {
 public:
-   RunRedirect(ULONG p_maxTime = INFINITE);
-  ~RunRedirect();
+  explicit RunRedirect(ULONG p_maxTime = INFINITE);
+ ~RunRedirect();
 
   void RunCommand(LPCSTR p_commandLine,bool p_show);
   void RunCommand(LPCSTR p_commandLine,LPCSTR p_stdInput,bool p_show);

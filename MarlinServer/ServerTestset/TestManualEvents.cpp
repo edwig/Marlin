@@ -26,7 +26,8 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "TestServer.h"
+#include "TestMarlinServer.h"
+#include "TestPorts.h"
 #include "HTTPServer.h"
 #include "HTTPSite.h"
 #include "HTTPMessage.h"
@@ -74,13 +75,13 @@ TestStreams(HTTPServer* p_server)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("Site for manual streams    : OK : %s\n",(LPCTSTR)site->GetPrefixURL());
+    qprintf("Site for manual streams    : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("Cannot create a HTTP site for: %s\n",(LPCTSTR)url);
+    qprintf("Cannot create a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -100,12 +101,10 @@ TestStreams(HTTPServer* p_server)
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -129,9 +128,9 @@ FormsHandler::HandleData(HTTPMessage* p_message,MultiPart* p_part)
   int errors = 0;
   CString data = p_part->GetData();
   CString name = p_part->GetName();
-  xprintf("MANUAL FORMS DATA = Name : %s\n",(LPCTSTR)name);
-  xprintf("MANUAL FORMS Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
-  xprintf("MANUAL FORMS \n%s\n",(LPCTSTR)data);
+  xprintf("MANUAL FORMS DATA = Name : %s\n",name.GetString());
+  xprintf("MANUAL FORMS Content-type: %s\n",p_part->GetContentType().GetString());
+  xprintf("MANUAL FORMS \n%s\n",data.GetString());
 
   JSONMessage json(data);
   JSONvalue val = json.GetValue();
@@ -157,7 +156,7 @@ int TestForms(HTTPServer* p_server)
   int error = 0;
 
   // If errors, change detail level
-  doDetails = false;
+  // doDetails = false;
 
   CString url("/MarlinTest/Forms/");
 
@@ -176,7 +175,7 @@ int TestForms(HTTPServer* p_server)
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -195,7 +194,7 @@ int TestForms(HTTPServer* p_server)
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

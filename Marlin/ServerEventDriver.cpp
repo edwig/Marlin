@@ -521,7 +521,7 @@ ServerEventDriver::Reset()
     session.second->Reset();
   }
   // Remove all session
-  for(auto& session : m_channels)
+  for(const auto& session : m_channels)
   {
     delete session.second;
   }
@@ -611,7 +611,7 @@ ServerEventDriver::HandlePollingByCookie(SOAPMessage* p_message)
   AutoCritSec lock(&m_lock);
 
   XString session;
-  Cookies& cookies = p_message->GetCookies();
+  Cookies& cookies = const_cast<Cookies&>(p_message->GetCookies());
   for(auto& cookie : cookies.GetCookies())
   {
     session = cookie.GetName() + ":" + cookie.GetValue(m_metadata);
@@ -681,7 +681,7 @@ ServerEventDriver::HandlePollingByRouting(SOAPMessage* p_message)
 // Finding the session name from the routing
 // Applications can do "BaseURL/Events/a/b/c" for session "a/b/c"
 XString
-ServerEventDriver::FindChannel(Routing& p_routing,XString p_base)
+ServerEventDriver::FindChannel(const Routing& p_routing,XString p_base)
 {
   XString session;
   bool found = false;
@@ -759,7 +759,7 @@ ServerEventDriver::StartEventThread()
   {
     // Thread for the client queue
     unsigned int threadID = 0;
-    if((m_thread = (HANDLE)_beginthreadex(NULL,0,StartingTheDriverThread,(void*)(this),0,&threadID)) == INVALID_HANDLE_VALUE)
+    if((m_thread = reinterpret_cast<HANDLE>(_beginthreadex(NULL,0,StartingTheDriverThread,reinterpret_cast<void*>(this),0,&threadID))) == INVALID_HANDLE_VALUE)
     {
       m_thread = NULL;
       threadID = 0;

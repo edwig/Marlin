@@ -50,7 +50,7 @@ SettingTheBaseLanguage(WebServiceClient& p_client,XString p_contract)
     {
       // --- "---------------------------------------------- - ------
       printf("Service contract: accepting base language      : OK\n");
-      xprintf("Base language is: %s\n",(LPCTSTR)language);
+      xprintf("Base language is: %s\n",language.GetString());
       return true;
     }
     else
@@ -83,7 +83,7 @@ SettingTheTranslateLanguage(WebServiceClient& p_client,XString p_contract)
     {
       // --- "---------------------------------------------- - ------
       printf("Service contract: set 'translate to' language  : OK\n");
-      xprintf("%s\n",(LPCTSTR)translate);
+      xprintf("%s\n",translate.GetString());
       return true;
     }
     else
@@ -116,7 +116,7 @@ Translate(WebServiceClient& p_client
     XString todayString = msg3.GetParameter("TranslatedWord");
     
     // --- "---------------------------------------------- - ------
-    xprintf("TRANSLATED [%s] to [%s]\n",(LPCTSTR)p_word,(LPCTSTR)p_expected);
+    xprintf("TRANSLATED [%s] to [%s]\n",p_word.GetString(),p_expected.GetString());
 
     if(todayString == p_expected)
     {
@@ -264,9 +264,9 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
   }
 
   xprintf("TESTING THE WebServiceClient ON THE FOLLOWING CONTRACT:\n");
-  xprintf("Contract: %s\n",(LPCTSTR)contract);
-  xprintf("URL     : %s\n",(LPCTSTR)url);
-  xprintf("WSDL    : %s\n",(LPCTSTR)wsdl);
+  xprintf("Contract: %s\n",contract.GetString());
+  xprintf("URL     : %s\n",url.GetString());
+  xprintf("WSDL    : %s\n",wsdl.GetString());
   xprintf("---------------------------------------------------------\n");
 
 

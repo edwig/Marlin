@@ -53,7 +53,7 @@ void callback1(void* p_pnt)
   {
     number = index;
   }
-  xprintf("Going to sleep on: %s\n",(LPCTSTR)p_pnt);
+  xprintf("Going to sleep on: %s\n",reinterpret_cast<LPCTSTR>(p_pnt));
   p_pnt = pool->SleepThread(TH_SLEEP,p_pnt);
   if(p_pnt == nullptr)
   {
@@ -61,7 +61,7 @@ void callback1(void* p_pnt)
   }
   else
   {
-    xprintf("Waking from sleep: %s\n",(LPCTSTR)p_pnt);
+    xprintf("Waking from sleep: %s\n",reinterpret_cast<LPCTSTR>(p_pnt));
     result = true;
     --totalChecks;
   }
@@ -76,13 +76,13 @@ TestMarlinServer::TestThreadPool(ThreadPool* p_pool)
 {
   pool = p_pool;
   int errors = 0;
-  const char* text1("This is a longer text for the pool.");
-  const char* text2("This is another! text for the pool.");
+  char* text1("This is a longer text for the pool.");
+  char* text2("This is another! text for the pool.");
 
   xprintf("TESTING SLEEPING/WAKING THREAD FUNCTIONS OF THREADPOOL\n");
   xprintf("======================================================\n");
 
-  p_pool->SubmitWork(callback1,(void*)text1);
+  p_pool->SubmitWork(callback1,reinterpret_cast<void*>(text1));
 
   // Wait until thread has done work and is gone sleeping
   while(number < (CYCLES - 1))
@@ -92,7 +92,7 @@ TestMarlinServer::TestThreadPool(ThreadPool* p_pool)
   Sleep(3 * WAITTIME);
   
   // Waking the thread with another string as result
-  bool result = p_pool->WakeUpThread(TH_SLEEP,(void*)text2);
+  bool result = p_pool->WakeUpThread(TH_SLEEP,reinterpret_cast<void*>(text2));
   if(result)
   {
     --totalChecks;
@@ -104,7 +104,7 @@ TestMarlinServer::TestThreadPool(ThreadPool* p_pool)
 
   // AGAIN NOW ELIMINATING THE THREAD
   number = 0;
-  p_pool->SubmitWork(callback1,(void*)text1);
+  p_pool->SubmitWork(callback1,reinterpret_cast<void*>(text1));
   
   // Wait until thread has done work and is gone sleeping
   while(number < (CYCLES - 1))
@@ -115,8 +115,11 @@ TestMarlinServer::TestThreadPool(ThreadPool* p_pool)
 
   // Remove the thread and test for no leaking memory
   // p_pool->EliminateSleepingThread(TH_SLEEP);
-  result = p_pool->WakeUpThread(TH_SLEEP,(void*)text2);
-
+  result = p_pool->WakeUpThread(TH_SLEEP,reinterpret_cast<void*>(text2));
+  if(!result)
+  {
+    ++errors;
+  }
   return errors;
 }
 

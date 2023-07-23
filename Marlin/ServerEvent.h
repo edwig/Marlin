@@ -31,15 +31,25 @@
 class ServerEvent
 {
 public:
-  // Standard constructores
-  ServerEvent()                 { m_id = 0; };
-  ServerEvent(XString p_event)  { m_id = 0;m_event = p_event; };
-  ServerEvent(ServerEvent* p_event)
-  {
-    m_id    = p_event->m_id;
-    m_event = p_event->m_event;
-    m_data  = p_event->m_data;
+  // Standard constructors
+  ServerEvent() 
+    :m_id(0)
+  { 
   }
+  
+  explicit ServerEvent(XString p_event)
+    :m_event(p_event)
+    ,m_id(0)
+  { 
+  }
+
+  explicit ServerEvent(const ServerEvent* p_event)
+    :m_id   (p_event->m_id)
+    ,m_event(p_event->m_event)
+    ,m_data (p_event->m_data)
+  {
+  }
+
   // Event data
   UINT    m_id;
   XString m_event;

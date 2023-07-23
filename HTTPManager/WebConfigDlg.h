@@ -41,7 +41,7 @@ class WebConfigDlg : public CDialogEx
   DECLARE_DYNAMIC(WebConfigDlg)
 
 public:
-  WebConfigDlg(bool p_iis,CWnd* pParent = NULL);   // standard constructor
+  explicit WebConfigDlg(bool p_iis,CWnd* pParent = NULL);   // standard constructor
   virtual ~WebConfigDlg();
   BOOL     OnInitDialog();
   void     SetSiteConfig(XString p_urlPrefix,XString p_fileName);

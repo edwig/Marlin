@@ -41,10 +41,10 @@ public:
                 ,LPFN_CALLBACK      p_callback = nullptr);
 
   // MANDATORY: Explicitly starting after configuration of the site
-  virtual bool StartSite();
+  virtual bool StartSite() override;
 
   // OPTIONAL: Set the webroot of the site
-  virtual bool SetWebroot(XString p_webroot);
+  virtual bool SetWebroot(XString p_webroot) override;
 
 protected:
   // Initialize the site from automatic settings in the config

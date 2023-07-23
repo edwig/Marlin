@@ -143,11 +143,11 @@ public:
   // Our primary function: send something
   bool Send();
   // Send HTTP to an URL
-  bool Send(XString& p_url);
+  bool Send(const XString& p_url);
   // Send HTTP + body to an URL
   bool Send(XString& p_url,XString& p_body);
   // Send HTTP + body-buffer to an URL
-  bool Send(XString& p_url,void* p_buffer,unsigned p_length);
+  bool Send(const XString& p_url,const void* p_buffer,unsigned p_length);
   // Send HTTPMessage
   bool Send(HTTPMessage* p_msg);
   // Send HTTP + SOAP Message
@@ -155,11 +155,11 @@ public:
   // Send HTTP + JSON Message
   bool Send(JSONMessage* p_msg);
   // Send to an URL to GET a file in a buffer
-  bool Send(XString&    p_url
-           ,FileBuffer* p_buffer
-           ,XString*    p_contentType = nullptr
-           ,Cookies*    p_cookies     = nullptr
-           ,HeaderMap*  p_headers     = nullptr);
+  bool Send(const XString&    p_url
+           ,      FileBuffer* p_buffer
+           ,const XString*    p_contentType = nullptr
+           ,const Cookies*    p_cookies     = nullptr
+           ,const HeaderMap*  p_headers     = nullptr);
   // Translate SOAP to JSON, send/receive and translate back
   bool SendAsJSON(SOAPMessage* p_msg);
   // Send and redirect
@@ -197,49 +197,49 @@ public:
   // SETTERS
   bool SetURL(XString p_url);
   void SetBody(XString& p_body);
-  void SetBody(void* p_body,unsigned p_length);
+  void SetBody(const void* p_body,unsigned p_length);
   void SetLogging(LogAnalysis* p_log,bool p_transferOwnership = false);
-  void SetSecure(bool p_secure)                   { m_secure            = p_secure;   }; // URL Part secure
-  void SetUser(XString& p_user)                   { m_user              = p_user;     }; // URL Part user
-  void SetPassword(XString& p_password)           { m_password          = p_password; }; // URL Part password
-  void SetServer(XString& p_server)               { m_server            = p_server;   }; // URL Part server
-  void SetPort(int p_port)                        { m_port              = p_port;     }; // URL Part port
-  void SetRetries(int p_retries)                  { m_retries           = p_retries;  };
-  void SetAgent(XString& p_agent)                 { m_agent             = p_agent;    };
-  void SetUseProxy(ProxyType p_type)              { m_useProxy          = p_type;     };
-  void SetProxy(XString& p_proxy)                 { m_proxy             = p_proxy;    };
-  void SetProxyBypass(XString& p_bypass)          { m_proxyBypass       = p_bypass;   };
-  void SetProxyUser(XString& p_user)              { m_proxyUser         = p_user;     };
-  void SetProxyPassword(XString& p_pass)          { m_proxyPassword     = p_pass;     };
-  void SetSendUnicode(bool p_unicode)             { m_sendUnicode       = p_unicode;  };
-  void SetVerb(XString p_verb)                    { m_verb              = p_verb;     };
-  void SetContentType(XString& p_type)            { m_contentType       = p_type;     };
-  void SetHTTPCompression(bool p_compress)        { m_httpCompression   = p_compress; };
-  void SetSoapAction(XString& p_action)           { m_soapAction        = p_action;   };
-  void SetTimeoutResolve(int p_timeout)           { m_timeoutResolve    = p_timeout;  };
-  void SetTimeoutConnect(int p_timeout)           { m_timeoutConnect    = p_timeout;  };
-  void SetTimeoutSend   (int p_timeout)           { m_timeoutSend       = p_timeout;  };
-  void SetTimeoutReceive(int p_timeout)           { m_timeoutReceive    = p_timeout;  };
-  void SetQueueRetention(int p_wait)              { m_queueRetention    = p_wait;     };
-  void SetRelaxOptions(DWORD p_options)           { m_relax             = p_options;  };
-  void SetPreEmptiveAuthorization(DWORD p_pre)    { m_preemtive         = p_pre;      };
-  void SetTerminalServices(bool p_term)           { m_terminalServices  = p_term;     };
-  void SetEncryptionLevel(XMLEncryption p_level)  { m_securityLevel     = p_level;    };
-  void SetEncryptionPassword(XString p_word)      { m_enc_password      = p_word;     };
-  void SetSingleSignOn(bool p_sso)                { m_sso               = p_sso;      };
-  void SetSoapCompress(bool p_compress)           { m_soapCompress      = p_compress; };
-  void SetSslTlsSettings(unsigned p_ssltls)       { m_ssltls            = p_ssltls;   }; // WINHTTP_FLAG_SECURE_PROTOCOL_ALL
-  void SetSendBOM(bool p_bom)                     { m_sendBOM           = p_bom;      };
-  void SetVerbTunneling(bool p_tunnel)            { m_verbTunneling     = p_tunnel;   };
-  void SetClientCertificatePreset(bool p_preset)  { m_certPreset        = p_preset;   };
-  void SetClientCertificateName(XString p_name)   { m_certName          = p_name;     };
-  void SetClientCertificateStore(XString p_store) { m_certStore         = p_store;    };
-  void SetWebsocketHandshake(bool p_socket)       { m_websocket         = p_socket;   };
-  void SetOAuth2Cache(OAuth2Cache* p_cache)       { m_oauthCache        = p_cache;    };
-  void SetOAuth2Session(int p_session)            { m_oauthSession      = p_session;  };
-  bool SetClientCertificateThumbprint(XString p_store,XString p_thumbprint);
-  void SetCORSOrigin(XString p_origin);
-  bool SetCORSPreFlight(XString p_method,XString p_headers);
+  void SetSecure(bool p_secure)                         { m_secure            = p_secure;   }; // URL Part secure
+  void SetUser(const XString& p_user)                   { m_user              = p_user;     }; // URL Part user
+  void SetPassword(const XString& p_password)           { m_password          = p_password; }; // URL Part password
+  void SetServer(const XString& p_server)               { m_server            = p_server;   }; // URL Part server
+  void SetPort(int p_port)                              { m_port              = p_port;     }; // URL Part port
+  void SetRetries(int p_retries)                        { m_retries           = p_retries;  };
+  void SetAgent(const XString& p_agent)                 { m_agent             = p_agent;    };
+  void SetUseProxy(ProxyType p_type)                    { m_useProxy          = p_type;     };
+  void SetProxy(const XString& p_proxy)                 { m_proxy             = p_proxy;    };
+  void SetProxyBypass(const XString& p_bypass)          { m_proxyBypass       = p_bypass;   };
+  void SetProxyUser(const XString& p_user)              { m_proxyUser         = p_user;     };
+  void SetProxyPassword(const XString& p_pass)          { m_proxyPassword     = p_pass;     };
+  void SetSendUnicode(bool p_unicode)                   { m_sendUnicode       = p_unicode;  };
+  void SetVerb(XString p_verb)                          { m_verb              = p_verb;     };
+  void SetContentType(const XString& p_type)            { m_contentType       = p_type;     };
+  void SetHTTPCompression(bool p_compress)              { m_httpCompression   = p_compress; };
+  void SetSoapAction(const XString& p_action)           { m_soapAction        = p_action;   };
+  void SetTimeoutResolve(int p_timeout)                 { m_timeoutResolve    = p_timeout;  };
+  void SetTimeoutConnect(int p_timeout)                 { m_timeoutConnect    = p_timeout;  };
+  void SetTimeoutSend   (int p_timeout)                 { m_timeoutSend       = p_timeout;  };
+  void SetTimeoutReceive(int p_timeout)                 { m_timeoutReceive    = p_timeout;  };
+  void SetQueueRetention(int p_wait)                    { m_queueRetention    = p_wait;     };
+  void SetRelaxOptions(DWORD p_options)                 { m_relax             = p_options;  };
+  void SetPreEmptiveAuthorization(DWORD p_pre)          { m_preemtive         = p_pre;      };
+  void SetTerminalServices(bool p_term)                 { m_terminalServices  = p_term;     };
+  void SetEncryptionLevel(XMLEncryption p_level)        { m_securityLevel     = p_level;    };
+  void SetEncryptionPassword(const XString& p_word)     { m_enc_password      = p_word;     };
+  void SetSingleSignOn(bool p_sso)                      { m_sso               = p_sso;      };
+  void SetSoapCompress(bool p_compress)                 { m_soapCompress      = p_compress; };
+  void SetSslTlsSettings(unsigned p_ssltls)             { m_ssltls            = p_ssltls;   }; // WINHTTP_FLAG_SECURE_PROTOCOL_ALL
+  void SetSendBOM(bool p_bom)                           { m_sendBOM           = p_bom;      };
+  void SetVerbTunneling(bool p_tunnel)                  { m_verbTunneling     = p_tunnel;   };
+  void SetClientCertificatePreset(bool p_preset)        { m_certPreset        = p_preset;   };
+  void SetClientCertificateName(const XString& p_name)  { m_certName          = p_name;     };
+  void SetClientCertificateStore(const XString& p_store){ m_certStore         = p_store;    };
+  void SetWebsocketHandshake(bool p_socket)             { m_websocket         = p_socket;   };
+  void SetOAuth2Cache(OAuth2Cache* p_cache)             { m_oauthCache        = p_cache;    };
+  void SetOAuth2Session(int p_session)                  { m_oauthSession      = p_session;  };
+  bool SetClientCertificateThumbprint(const XString& p_store,const XString& p_thumbprint);
+  void SetCORSOrigin(const XString& p_origin);
+  bool SetCORSPreFlight(const XString& p_method,const XString& p_headers);
   void SetLogLevel(int p_logLevel);
   void SetDetailLogging(bool p_detail);
   void SetTraceData(bool p_trace);
@@ -335,7 +335,7 @@ private:
   void     InitLogging();
   void     InitSecurity();
   void     ReplaceSetting(XString* m_setting,XString p_potential);
-  bool     StartEventStream(XString& p_url); // Called from EventStream
+  bool     StartEventStream(const XString& p_url); // Called from EventStream
   // To be done inside a 'Send'
   void     AddProxyInfo();
   void     AddHostHeader();

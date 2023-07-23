@@ -146,7 +146,7 @@ HTTPSiteIIS::SetWebroot(XString p_webroot)
   XString root = m_server->GetWebroot();
 
   // IIS now expects you to add the site name
-  m_webroot = root + m_server->GetName() + GetIISSiteDir();
+  m_webroot = root + GetIISSiteDir();
 
   // Make sure the directory is there
   EnsureFile ensure(m_webroot);
@@ -207,7 +207,7 @@ HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
   }
 
   // Get owner information
-  TOKEN_OWNER* owner = (TOKEN_OWNER *)new uchar[size];
+  TOKEN_OWNER* owner = reinterpret_cast<TOKEN_OWNER *>(new uchar[size]);
   GetTokenInformation(p_token,TokenOwner,owner,size,&size);
   if(owner == nullptr)
   {
@@ -217,7 +217,7 @@ HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
 
   // Get a copy of the SID
   size = GetLengthSid(owner->Owner);
-  SID* sid = (SID *) new uchar[size];
+  SID* sid = reinterpret_cast<SID *>(new uchar[size]);
   CopySid(size,sid,owner->Owner);
 
   TCHAR userName  [MAX_USER_NAME];

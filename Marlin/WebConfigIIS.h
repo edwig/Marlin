@@ -89,7 +89,7 @@ using AppSettings = std::map<XString,XString>;
 class WebConfigIIS
 {
 public:
-  WebConfigIIS(XString p_application = "");
+  explicit WebConfigIIS(XString p_application = "");
  ~WebConfigIIS();
 
   // Read total config

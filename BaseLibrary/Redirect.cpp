@@ -73,7 +73,6 @@ Redirect::Redirect()
   m_timeoutChild    = INFINITE;
   m_timeoutIdle     = MAXWAIT_FOR_INPUT_IDLE;
   m_terminated      = false;
-  m_bRunThread      = TRUE;
 
   InitializeCriticalSection((LPCRITICAL_SECTION)&m_critical);
 }
@@ -222,9 +221,9 @@ Redirect::TerminateChildProcess()
   // Check the process thread.
   if(m_hProcessThread != NULL)
   {
-  // Tell the threads to exit and wait for process thread to die.
-  m_bRunThread = FALSE;
-  ::SetEvent(m_hExitEvent);
+    // Tell the threads to exit and wait for process thread to die.
+    m_bRunThread = FALSE;
+    ::SetEvent(m_hExitEvent);
 
     WaitForSingleObject(m_hProcessThread,1000);
     m_hProcessThread = NULL;
@@ -233,38 +232,38 @@ Redirect::TerminateChildProcess()
   // Close all child handles first.
   {
     AutoCritSec lock((LPCRITICAL_SECTION)&m_critical);
-  if (m_hStdIn != NULL)
-  {
+    if(m_hStdIn != NULL)
+    {
       CloseHandle(m_hStdIn);
-    m_hStdIn = NULL;
-  }
-  if (m_hStdOut != NULL)
-  {
+      m_hStdIn = NULL;
+    }
+    if(m_hStdOut != NULL)
+    {
       CloseHandle(m_hStdOut);
-    m_hStdOut = NULL;
-  }
-  if (m_hStdErr != NULL)
-  {
+      m_hStdOut = NULL;
+    }
+    if(m_hStdErr != NULL)
+    {
       CloseHandle(m_hStdErr);
-    m_hStdErr = NULL;
-  }
+      m_hStdErr = NULL;
+    }
 
-  // Close all parent handles.
-  if (m_hStdInWrite != NULL)
-  {
+    // Close all parent handles.
+    if(m_hStdInWrite != NULL)
+    {
       CloseHandle(m_hStdInWrite);
-    m_hStdInWrite = NULL;
-  }
-  if (m_hStdOutRead != NULL)
-  {
+      m_hStdInWrite = NULL;
+    }
+    if(m_hStdOutRead != NULL)
+    {
       CloseHandle(m_hStdOutRead);
-    m_hStdOutRead = NULL;
-  }
-  if (m_hStdErrRead != NULL)
-  {
+      m_hStdOutRead = NULL;
+    }
+    if(m_hStdErrRead != NULL)
+    {
       CloseHandle(m_hStdErrRead);
-    m_hStdErrRead = NULL;
-  }
+      m_hStdErrRead = NULL;
+    }
   }
 
   // Wait for the stdout to drain
@@ -292,14 +291,14 @@ Redirect::TerminateChildProcess()
   }
 
   // Stop the stdout read thread.
-  if (m_hStdOutThread != NULL)
+  if(m_hStdOutThread != NULL)
   {
     WaitForSingleObject(m_hStdOutThread, 1000);
     m_hStdOutThread = NULL;
   }
 
   // Stop the stderr read thread.
-  if (m_hStdErrThread != NULL)
+  if(m_hStdErrThread != NULL)
   {
     WaitForSingleObject(m_hStdErrThread, 1000);
     m_hStdErrThread = NULL;
@@ -319,12 +318,12 @@ Redirect::TerminateChildProcess()
   // cleanup the exit event
   {
     AutoCritSec lock((LPCRITICAL_SECTION)&m_critical);
-  if (m_hExitEvent != NULL)
-  {
+    if(m_hExitEvent != NULL)
+    {
       CloseHandle(m_hExitEvent);
-    m_hExitEvent = NULL;
+      m_hExitEvent = NULL;
+    }
   }
-}
 }
 
 // Launch the process that you want to redirect.
@@ -438,7 +437,7 @@ Redirect::StdOutThread(HANDLE hStdOutRead)
         OnChildStdOutWrite(lineBuffer);
       }
       m_eof_input = 1;
-      break;			
+      break;
     }
     // Add to line
     *linePointer++ = lpszBuffer[0];
@@ -560,7 +559,7 @@ Redirect::ProcessThread()
   // Virtual function to notify derived class that child process is terminated.
   // Application must call TerminateChildProcess() but not direcly from this thread!
   OnChildTerminate();
-
+  
   // We are ready running
   m_bRunThread = NULL;
   return returnValue;

@@ -47,6 +47,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// Page sizes for the file system
+#define PAGE4K       (4    * 1024)
+#define OPT_PAGESIZE (128  * 1024)
+#define MAX_PAGESIZE (1024 * 1024)
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Not part of the public interface
@@ -55,7 +60,7 @@ static char THIS_FILE[] = __FILE__;
 //
 // Or optimized for the size of a memory page of a X86 processor of 4K
 //
-static DWORD PAGESIZE = (128 * 1024);
+static DWORD PAGESIZE = OPT_PAGESIZE;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -75,7 +80,7 @@ WinFile::WinFile(XString p_filename)
 }
 
 // CTOR from another file pointer
-WinFile::WinFile(WinFile& p_other)
+WinFile::WinFile(const WinFile& p_other)
 {
   *this = p_other;
 }
@@ -630,11 +635,11 @@ WinFile::OpenAsSharedMemory(XString   p_name
     }
 
     // File is now opened: try to create a file mapping
-    DWORD protect  = PAGE_READWRITE;
     DWORD sizeLow  = p_size & 0x0FFFFFFF;
     DWORD sizeHigh = p_size >> 32;
     if(m_file)
     {
+      DWORD protect = PAGE_READWRITE;
       m_file = CreateFileMapping(m_file,nullptr,protect,sizeLow,sizeHigh,p_name.GetString());
     }
     if(m_file == NULL)
@@ -1728,11 +1733,16 @@ WinFile::SetFileTimeAccessed(SYSTEMTIME& p_accessed)
 
 // NOT thread safe: Must be set for the total process!
 // And can only be set in multiples of 4K up to 1024K
+// Note that the optimum is 128K and anything below this
+// is degrading the performance of the file system
+
+// Tinkering with this function when files are open is 
+// likely to crash your process. YOU WHERE WARNED!!!
 bool
 WinFile::SetBufferPageSize(DWORD p_pageSize)
 {
-  DWORD size = p_pageSize % (4 * 1024);
-  if (size > 0 && size <= (1024 * 1024))
+  DWORD size = (p_pageSize % PAGE4K) * PAGE4K;
+  if (size > 0 && size <= MAX_PAGESIZE)
   {
     PAGESIZE = size;
     return true;
@@ -2314,15 +2324,10 @@ WinFile::SetFilenameByDialog(HWND   p_parent      // Parent window (if any)
 bool
 WinFile::operator==(const WinFile& p_other)
 {
-  // Must be the same object in the OS!
-  if(m_file == p_other.m_file)
-  {
-    return true;
-  }
   // If one or both are opened: cannot be the same
   // even if it is an open handle to the same filesystem file
   // because they can be in different states
-  if(m_file != nullptr || p_other.m_file != nullptr)
+  if(m_file != NULL || p_other.m_file != NULL)
   {
     return false;
   }

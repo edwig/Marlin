@@ -68,7 +68,7 @@ SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   qprintf("Subsite SOAP handler on main site              : %s\n",result ? "OK" : "ERROR");
-  xprintf("Site of this message was    : %s\n",(LPCTSTR)p_message->GetHTTPSite()->GetSite());
+  xprintf("Site of this message was    : %s\n",p_message->GetHTTPSite()->GetSite().GetString());
   if(!result) xerror();
 
   // Set the result
@@ -102,13 +102,13 @@ TestMarlinServer::TestSubSites()
   {
     // SUMMARY OF THE TEST
     // ---- "--------------------------- - ------\n"
-    qprintf("HTTP subsite TestToken/One  : OK : %s\n",(LPCTSTR)site1->GetPrefixURL());
+    qprintf("HTTP subsite TestToken/One  : OK : %s\n",site1->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url1);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url1.GetString());
     return error;
   }
   HTTPSite* site2 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url2,true);
@@ -116,13 +116,13 @@ TestMarlinServer::TestSubSites()
   {
     // SUMMARY OF THE TEST
     // ---- "--------------------------- - ------\n"
-    qprintf("HTTP subsite TestToken/Two  : OK : %s\n",(LPCTSTR)site2->GetPrefixURL());
+    qprintf("HTTP subsite TestToken/Two  : OK : %s\n",site2->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url2);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url2.GetString());
     return error;
   }
 
@@ -163,7 +163,7 @@ TestMarlinServer::TestSubSites()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url1);
+    qprintf("ERROR STARTING SITE: %s\n",url1.GetString());
   }
 
   if(site2->StartSite())
@@ -174,7 +174,7 @@ TestMarlinServer::TestSubSites()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url2);
+    qprintf("ERROR STARTING SITE: %s\n",url2.GetString());
   }
 
   return error;
@@ -193,22 +193,22 @@ TestMarlinServer::StopSubsites()
   // Testing the main site. Should not be removed!!
   if(m_httpServer->DeleteSite(m_inPortNumber,url1))
   {
-    qprintf("ERROR Incorrectly removed a main site: %s\n",(LPCTSTR)url1);
-    qprintf("ERROR Other sites are dependend on it\n");
+    qprintf("ERROR Incorrectly removed a main site: %s\n",url1.GetString());
+    qprintf("ERROR Other sites are dependent on it\n");
     xerror();
     ++error;
   }
 
-  // Removing subsites. Should work
+  // Removing sub-sites. Should work
   if(m_httpServer->DeleteSite(m_inPortNumber,url2) == false)
   {
-    qprintf("ERROR Deleting site : %s\n",(LPCTSTR)url2);
+    qprintf("ERROR Deleting site : %s\n",url2.GetString());
     xerror();
     ++error;
   }
   if(m_httpServer->DeleteSite(m_inPortNumber,url3) == false)
   {
-    qprintf("ERROR Deleting site : %s\n",(LPCTSTR)url3);
+    qprintf("ERROR Deleting site : %s\n",url3.GetString());
     xerror();
     ++error;
   }
@@ -216,7 +216,7 @@ TestMarlinServer::StopSubsites()
   // Now removing main site
   if(m_httpServer->DeleteSite(m_inPortNumber,url1) == false)
   {
-    qprintf("ERROR Deleting site : %s\n",(LPCTSTR)url1);
+    qprintf("ERROR Deleting site : %s\n",url1.GetString());
     xerror();
     ++error;
   }

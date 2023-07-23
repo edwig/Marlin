@@ -116,11 +116,11 @@ FindIISRunning()
   {
     DWORD bytesNeeded;
     SERVICE_STATUS_PROCESS  status; 
-    if(QueryServiceStatusEx(service,                        // handle to service 
-                            SC_STATUS_PROCESS_INFO,         // information level
-                            (LPBYTE)&status,                // address of structure
-                            sizeof(SERVICE_STATUS_PROCESS), // size of structure
-                            &bytesNeeded))                  // size needed if buffer is too small
+    if(QueryServiceStatusEx(service,                            // handle to service 
+                            SC_STATUS_PROCESS_INFO,             // information level
+                            reinterpret_cast<LPBYTE>(&status),  // address of structure
+                            sizeof(SERVICE_STATUS_PROCESS),     // size of structure
+                            &bytesNeeded))                      // size needed if buffer is too small
     {
       // Process ID is filled if service is really running
       if(status.dwProcessId)
@@ -188,7 +188,6 @@ ActivateWebCore()
   bool    result    = false;
   wstring apphost   = StringToWString(g_applicationhost);
   wstring webconfig = StringToWString(g_webconfig);
-  wstring poolname  = L"POOLNAAM";
 
   if(HWC_Activate)
   {
@@ -210,6 +209,7 @@ ActivateWebCore()
     }
 
     // GO STARTING WEB CORE
+    wstring poolname = L"POOLNAAM";
     HRESULT hres = (*HWC_Activate)(apphost.c_str(),webconfig.c_str(),poolname.c_str());
 
     // Handle result of the startup
@@ -338,7 +338,7 @@ GetExeName()
 }
 
 void
-ParseCommandLine(int argc,char* argv[])
+ParseCommandLine(int argc,const char* argv[])
 {
   // Setting the application pool name
   XString exeName = GetExeName();
@@ -456,7 +456,7 @@ RunHostedMenu()
 //////////////////////////////////////////////////////////////////////////
 
 int 
-HWC_main(int argc,char *argv[])
+HWC_main(int argc,const char *argv[])
 {
   int retval = 1;
 

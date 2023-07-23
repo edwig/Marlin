@@ -69,7 +69,7 @@ WebSocketClient* g_socket = nullptr;
 //////////////////////////////////////////////////////////////////////////
 
 void
-OnOpenWebsocket(WebSocket* /*p_socket*/,WSFrame* /*p_frame*/)
+OnOpenWebsocket(WebSocket* /*p_socket*/,const WSFrame* /*p_frame*/)
 {
   // WebSocket has been opened
   // --- "---------------------------------------------- - ------
@@ -77,13 +77,13 @@ OnOpenWebsocket(WebSocket* /*p_socket*/,WSFrame* /*p_frame*/)
 }
 
 void
-OnMessageWebsocket(WebSocket* p_socket,WSFrame* p_frame)
+OnMessageWebsocket(WebSocket* p_socket,const WSFrame* p_frame)
 {
   XString message;
   
   if(p_frame)
   {
-    message = ((char*)p_frame->m_data);
+    message = reinterpret_cast<char*>(p_frame->m_data);
   }
   if(!message.IsEmpty())
   {
@@ -112,13 +112,13 @@ OnMessageWebsocket(WebSocket* p_socket,WSFrame* p_frame)
 }
 
 void
-OnErrorWebSocket(WebSocket* p_socket,WSFrame* p_frame)
+OnErrorWebSocket(WebSocket* p_socket,const WSFrame* p_frame)
 {
   XString message;
   message.Format("ERROR from WebSocket at URI: %s\n",p_socket->GetIdentityKey().GetString());
   if(p_frame)
   {
-    message += (char*)p_frame->m_data;
+    message += reinterpret_cast<char*>(p_frame->m_data);
   }
   message += "\n";
 
@@ -126,11 +126,11 @@ OnErrorWebSocket(WebSocket* p_socket,WSFrame* p_frame)
 }
 
 void
-OnCloseWebsocket(WebSocket* /*p_socket*/,WSFrame* p_frame)
+OnCloseWebsocket(WebSocket* /*p_socket*/,const WSFrame* p_frame)
 {
   if (p_frame)
   {
-    XString message((char*)p_frame->m_data);
+    XString message(reinterpret_cast<char*>(p_frame->m_data));
     if (!message.IsEmpty())
     {
       printf("CLOSING message: %s\n", message.GetString());

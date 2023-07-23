@@ -680,6 +680,13 @@ CrackedURL::GetParameter(unsigned p_parameter) const
 bool
 CrackedURL::DelParameter(XString p_parameter)
 {
+//   auto it = std::find_if(m_parameters.begin(),m_parameters.end(),p_parameter);
+//   if(it != m_parameters.end())
+//   {
+//     m_parameters.erase(it);
+//     return true;
+//   }
+
   for(UriParams::iterator it = m_parameters.begin(); it != m_parameters.end();++it)
   {
     if(it->m_key.CompareNoCase(p_parameter) == 0)

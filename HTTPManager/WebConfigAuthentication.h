@@ -36,8 +36,8 @@ class WebConfigAuthentication : public CDialogEx
   DECLARE_DYNAMIC(WebConfigAuthentication)
 
 public:
-  WebConfigAuthentication(bool p_iis,CWnd* pParent = NULL);   // standard constructor
- ~WebConfigAuthentication();
+  explicit WebConfigAuthentication(bool p_iis,CWnd* pParent = NULL);   // standard constructor
+  virtual ~WebConfigAuthentication();
   BOOL OnInitDialog();
   void ReadWebConfig (MarlinConfig& config);
   void WriteWebConfig(MarlinConfig& config);

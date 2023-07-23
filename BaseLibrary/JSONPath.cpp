@@ -257,7 +257,7 @@ JSONPath::PresetStatus()
 }
 
 bool
-JSONPath::FindDelimiterType(XString& p_parsing)
+JSONPath::FindDelimiterType(const XString& p_parsing)
 {
   char ch = p_parsing.GetAt(0);
   if(ch == '.' || ch == '[')
@@ -500,7 +500,7 @@ JSONPath::ProcessUnion(XString p_token)
       p_token.Empty();
     }
 
-    if(0 <= index && index < m_searching->GetArray().size())
+    if(index < m_searching->GetArray().size())
     {
       m_results.push_back(&m_searching->GetArray()[index]);
     }
@@ -568,7 +568,7 @@ JSONPath::GetCurrentCharacter(XString p_token,int& p_pos)
 }
 
 int 
-JSONPath::GetNextCharacter(XString p_token,int& p_pos)
+JSONPath::GetNextCharacter(XString p_token,const int& p_pos)
 {
   int ch = -1;
   if(p_pos + 1 <= p_token.GetLength())
@@ -579,7 +579,7 @@ JSONPath::GetNextCharacter(XString p_token,int& p_pos)
 }
 
 int 
-JSONPath::GetEndOfPart(XString p_token,int& p_pos)
+JSONPath::GetEndOfPart(XString p_token,const int& p_pos)
 {
   // End can either be ')', '&&', '||', ' ' or end of string
   int parenthesisPos = p_token.Find(')',p_pos);
@@ -618,14 +618,13 @@ JSONPath::GetEndOfPart(XString p_token,int& p_pos)
 void
 JSONPath::EvaluateFilter(Relation relation)
 {
-  bool contains{false};
-
   if(m_results.empty())
   {
     if(m_searching->GetDataType() == JsonType::JDT_array)
     {
       for(int index = 0; index < m_searching->GetArray().size(); index++)
       {
+        bool contains(false);
         for(JSONpair pair : m_searching->GetArray().at(index).GetObject())
         {
           if(pair.m_name.Compare(relation.leftSide) == 0)
@@ -748,11 +747,11 @@ JSONPath::ParseLevel(XString& p_parsing)
         }
 
         // Search on through this array
-        size_t index = atoi(token) - m_origin;
+        int index = atoi(token) - m_origin;
         if(index < 0)
         {
           // Negative index, take it from the end
-          index = m_searching->GetArray().size() + index;
+          index = (int)(m_searching->GetArray().size()) + index;
         }
         if(0 <= index && index < m_searching->GetArray().size())
         {
@@ -915,7 +914,7 @@ JSONPath::HandleLogicalAnd(XString p_token,int& p_pos)
       // We voegen het resultaat uit path.m_results alleen toe als het al in this.m_results aanwezig is
       if(path.GetNumberOfMatches() == 1)
       {
-        for(JSONvalue* val : m_results)
+        for(const JSONvalue* val : m_results)
         {
           if(val == path.GetFirstResult())
           {
@@ -933,7 +932,7 @@ JSONPath::HandleLogicalAnd(XString p_token,int& p_pos)
         for(int index = 0; index < (int)path.GetNumberOfMatches(); ++index)
         {
           exist = false;
-          for(JSONvalue* val : m_results)
+          for(const JSONvalue* val : m_results)
           {
             if(val == path.GetResult(index))
             {
@@ -957,7 +956,7 @@ void
 JSONPath::HandleLogicalOr(XString p_token,int& p_pos)
 {
   HandleBrackets(p_token,p_pos);
-  // logical or afhandelen
+  // Handle the logical "or"
   if(GetCurrentCharacter(p_token,p_pos) == '|')
   {
     if(GetNextCharacter(p_token,p_pos) == '|')
@@ -966,14 +965,14 @@ JSONPath::HandleLogicalOr(XString p_token,int& p_pos)
       XString rightSide;
       rightSide = p_token.Mid(p_pos,p_token.GetLength()).Trim();
 
-      // Deel na "||" apart evalueren
+      // Evaluate the part after the "||"
       JSONPath path(m_message,"$" + m_rootWord + "[?(" + rightSide + ")]");
 
-      // Resultaat uit path.m_results alleen toevoegen indien nog niet aanwezig
+      // Result from path.m_reuslts only to be appended if not already present
       bool exist = false;
       if(path.GetNumberOfMatches() == 1)
       {
-        for(JSONvalue* val : m_results)
+        for(const JSONvalue* val : m_results)
         {
           if(val == path.GetFirstResult())
           {
@@ -991,7 +990,7 @@ JSONPath::HandleLogicalOr(XString p_token,int& p_pos)
         for(int index = 0; index < (int)path.GetNumberOfMatches(); ++index)
         {
           exist = false;
-          for(JSONvalue* val : m_results)
+          for(const JSONvalue* val : m_results)
           {
             if(val == path.GetResult(index))
             {
@@ -1163,7 +1162,7 @@ JSONPath::DetermineRelationalOperator(XString p_token,int& p_pos)
 }
 
 bool 
-JSONPath::EvaluateFilterClause(Relation p_filter,JSONvalue p_value)
+JSONPath::EvaluateFilterClause(Relation p_filter,const JSONvalue& p_value)
 {
   JsonType type = p_value.GetDataType();
   if(p_filter.clause.Compare("==") == 0)

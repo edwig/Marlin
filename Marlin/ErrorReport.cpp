@@ -498,7 +498,7 @@ ErrorReport::DoReport(const XString&    p_subject
   message += "Modules\n"
              "-------";
 
-  for(auto& module : procInfo->m_modules)
+  for(const auto& module : procInfo->m_modules)
   {
     // Info about this module
     message += "\n"                 + module->m_full_path + "\n"

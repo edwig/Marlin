@@ -106,7 +106,7 @@ void OnMessage(ServerEvent* p_event,void* p_data)
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("EVENT channel OnMessage received               : OK\n");
-  xprintf("%d %s\n",p_event->m_id,(LPCTSTR)p_event->m_data);
+  xprintf("%d %s\n",p_event->m_id,p_event->m_data.GetString());
 
   // Now dispose of the event!!
   delete p_event;
@@ -127,7 +127,7 @@ void OnOther(ServerEvent* p_event,void* p_data)
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("EVENT channel OnOther received                 : OK\n");
-  xprintf("%d %s\n",p_event->m_id, (LPCTSTR)p_event->m_data);
+  xprintf("%d %s\n",p_event->m_id,p_event->m_data.GetString());
 
   // Now dispose of the event!!
   delete p_event;
@@ -148,7 +148,7 @@ void OnError(ServerEvent* p_event,void* p_data)
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   printf("EVENT channel OnError received                 : OK\n");
-  xprintf("%d %s\n", p_event->m_id, (LPCTSTR)p_event->m_data);
+  xprintf("%d %s\n", p_event->m_id,p_event->m_data.GetString());
 
   // Now dispose of the event!!
   delete p_event;

@@ -748,11 +748,8 @@ SMX_String::TrimRight(PCSTR p_string)
     }
   }
 
-  if(pos >= 0)
-  {
-    // truncate at left-most matching character
-    erase(pos,string::npos);
-  }
+  // truncate at left-most matching character
+  erase(pos,string::npos);
   return(*this);
 }
 

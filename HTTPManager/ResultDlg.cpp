@@ -88,7 +88,7 @@ ResultDlg::OnInitDialog()
   }
   m_font.CreatePointFontIndirect(&lgFont);
 
-  CEdit* edit = (CEdit*) GetDlgItem(IDC_RESULT);
+  CEdit* edit = reinterpret_cast<CEdit*>(GetDlgItem(IDC_RESULT));
   edit->SetFont(&m_font);
 
   return TRUE;

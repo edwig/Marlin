@@ -87,10 +87,10 @@ typedef HRESULT (WINAPI* TDIF)(const TASKDIALOGCONFIG*,int*,int*,BOOL*);
 static TDIF TaskDialogIndirectFunc = NULL;
 static HMODULE common = NULL;
 
-// Loaded status van TaskDialog
-// 0 -> Nog niet getest
-// 1 -> Getest, niet aanwezig
-// 2 -> Getest, geladen
+// Loaded status of TaskDialog
+// 0 -> Not yet tested
+// 1 -> Tested, not found, or not loaded
+// 2 -> Tested and loaded
 static int loaded = 0;
 
 // Decrement the counter of the DLL, so it can get unloaded
@@ -122,11 +122,11 @@ LoadCommonControls()
   // Check version of your operating system
   if(::IsWindowsVistaOrGreater())
   {
-    HMODULE mod = ::LoadLibrary("comctl32.dll");
-    if(mod)
+    common = ::LoadLibrary("comctl32.dll");
+    if(common)
     {
       atexit(UnloadCommonControls);
-      TaskDialogIndirectFunc = (TDIF)GetProcAddress(mod,"TaskDialogIndirect");
+      TaskDialogIndirectFunc = (TDIF)GetProcAddress(common,"TaskDialogIndirect");
     }
     if(TaskDialogIndirectFunc)
     {
@@ -134,6 +134,7 @@ LoadCommonControls()
       return true;
     }
   }
+  // Not loaded: do not try again
   loaded = 1;
   return false;
 }

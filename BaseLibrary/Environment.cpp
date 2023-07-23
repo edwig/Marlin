@@ -74,7 +74,7 @@ void RemoveNewline(char* buffer)
 
 // Skip lines that begin with a comment character
 //
-bool SkipComment(char* buffer)
+bool SkipComment(const char* buffer)
 {
   if(buffer[0] == ';' || buffer[0] == '#')
   {
@@ -91,7 +91,7 @@ bool SkipComment(char* buffer)
 //
 void ProcessVariable(char* buffer)
 {
-  // Finding the delimter character (operator)
+  // Finding the delimiter character (operator)
   int pos = (int) strcspn(buffer,"+=<>!");
   if(pos == (int) strlen(buffer))
   {

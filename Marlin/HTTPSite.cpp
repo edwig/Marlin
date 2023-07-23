@@ -103,7 +103,7 @@ HTTPSite::SetCallback(LPFN_CALLBACK p_callback)
 void
 HTTPSite::CleanupHandlers()
 {
-  for(auto& handler : m_handlers)
+  for(const auto& handler : m_handlers)
   {
     if(handler.second.m_owner)
     {
@@ -1370,7 +1370,7 @@ HTTPSite::DebugPrintSessionAddress(XString p_prefix,SessionAddress& p_address)
   XString address;
   for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
   {
-    BYTE byte = ((BYTE*)&p_address.m_address)[ind];
+    BYTE byte = (reinterpret_cast<BYTE*>(&p_address.m_address))[ind];
     address.AppendFormat("%2.2X",byte);
   }
   

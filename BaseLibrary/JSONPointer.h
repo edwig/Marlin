@@ -54,8 +54,8 @@ enum class JPStatus
 class JSONPointer
 {
 public:
-  JSONPointer(bool p_originOne = false);
-  JSONPointer(JSONMessage* p_message,XString p_pointer,bool p_originOne = false);
+  explicit JSONPointer(bool p_originOne = false);
+  explicit JSONPointer(JSONMessage* p_message,XString p_pointer,bool p_originOne = false);
  ~JSONPointer();
 
   // Our main purpose: evaluate the pointer in the message

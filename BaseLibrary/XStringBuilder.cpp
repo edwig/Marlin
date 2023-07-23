@@ -47,7 +47,7 @@ class XAppender
 
 public:
 
-  XAppender(char* dst): m_dst(dst)
+  explicit XAppender(char* dst): m_dst(dst)
   {
   }
 

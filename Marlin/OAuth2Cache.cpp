@@ -170,7 +170,7 @@ OAuth2Cache::GetIsExpired(int p_session)
   AutoCritSec lock(&m_lock);
 
   bool expired = true;
-  OAuthSession* session = FindSession(p_session);
+  const OAuthSession* session = FindSession(p_session);
   if(session)
   {
     __timeb64 now;
@@ -242,7 +242,7 @@ OAuth2Cache::GetHasSession(XString p_appID,XString p_appKey)
 {
   AutoCritSec lock(&m_lock);
 
-  for(auto& ses : m_cache)
+  for(const auto& ses : m_cache)
   {
     if(ses.second.m_appID == p_appID && ses.second.m_appKey == p_appKey)
     {
@@ -377,7 +377,7 @@ OAuth2Cache::StartCredentialsGrant(OAuthSession* p_session)
       m_client->GetResponse(response,length);
 
       m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,true,"Invalid response from token server. HTTP [%d]",m_client->GetStatus());
-      m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,(char*)response);
+      m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,reinterpret_cast<char*>(response));
     }
   }
 }

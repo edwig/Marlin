@@ -136,10 +136,10 @@ class WinFile
 public:
   // CTOR 
   WinFile();
-  // CTOR from a filename
-  WinFile(XString p_filename);
   // CTOR from another file pointer
-  WinFile(WinFile& p_other);
+  WinFile(const WinFile& p_other);
+  // CTOR from a filename
+  explicit WinFile(XString p_filename);
   // DTOR
   ~WinFile();
 

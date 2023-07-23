@@ -45,7 +45,7 @@ public:
   // Encoding a thumbprint string
   // Preparing it to search in the certificate stores
   // Or for verification purposes.
-  static  bool EncodeThumbprint(XString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len);
+  static  bool EncodeThumbprint(const XString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len);
 
 private:
   bool    OpenContext();

@@ -265,7 +265,7 @@ CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,LPCSTR p_stdInput,X
   return run.m_exitCode;
 }
 
-int 
+int
 CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,XString& p_result,int p_waittime,bool p_show /*= false*/)
 {
 #ifdef _ATL
@@ -380,7 +380,7 @@ PosixCallProgram(XString  p_directory
   run.TerminateChildProcess();
 
   // Reset console title
-  if (p_console)
+  if(p_console)
   {
     SendMessage(p_console,WM_CONSOLE_TITLE,0,(LPARAM)"");
   }
@@ -388,6 +388,12 @@ PosixCallProgram(XString  p_directory
   // Remember our output
   p_stdout = run.m_output;
   p_stderr = run.m_error;
+
+  // Reset the RunRedirect pointer for our caller!
+  if(p_run)
+  {
+    *p_run = nullptr;
+  }
 
   // And return the exit code
   return run.m_exitCode;

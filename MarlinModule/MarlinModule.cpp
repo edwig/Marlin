@@ -429,7 +429,7 @@ int
 MarlinGlobalFactory::CountAppPoolApplications(ServerApp* p_application)
 {
   int count = 0;
-  for(auto& app : g_IISApplicationPool)
+  for(const auto& app : g_IISApplicationPool)
   {
     if(app.second->m_application == p_application)
     {
@@ -493,7 +493,7 @@ MarlinGlobalFactory::ExtractAppSite(XString p_configPath)
 bool    
 MarlinGlobalFactory::StillUsed(const HMODULE& p_module)
 {
-  for(auto& app : g_IISApplicationPool)
+  for(const auto& app : g_IISApplicationPool)
   {
     if(app.second->m_module == p_module)
     {
@@ -913,7 +913,7 @@ MarlinModule::GetServerPort(IHttpContext* p_context)
   char  portNumber[20];
   int   serverPort = INTERNET_DEFAULT_HTTP_PORT;
   DWORD size = 20;
-  PCSTR port = (PCSTR) &portNumber[0];
+  PCSTR port = reinterpret_cast<PCSTR>(&portNumber[0]);
   HRESULT hr = p_context->GetServerVariable("SERVER_PORT",&port,&size);
   if(SUCCEEDED(hr))
   {

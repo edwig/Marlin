@@ -63,7 +63,7 @@ SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream
   HTTPServer* server = p_stream->m_site->GetHTTPServer();
 
   // Report it
-  xprintf("NEW EVENT STREAM : %p\n", (void*)testStream);
+  xprintf("NEW EVENT STREAM : %p\n", reinterpret_cast<void*>(testStream));
 
   for(int x = 1; x <= EventTests; ++x)
   {
@@ -170,13 +170,13 @@ TestMarlinServer::TestPushEvents()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for event streams  : OK : %s\n",(LPCTSTR) site->GetPrefixURL());
+    qprintf("HTTPSite for event streams  : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("Cannot create a HTTP site for: %s\n",(LPCTSTR) url);
+    qprintf("Cannot create a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -196,7 +196,7 @@ TestMarlinServer::TestPushEvents()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

@@ -39,23 +39,23 @@ MsgStream;
 class HTTPServerSync: public HTTPServerMarlin
 {
 public:
-  HTTPServerSync(XString p_name);
+  explicit HTTPServerSync(XString p_name);
   virtual ~HTTPServerSync();
 
   // Running the server 
-  virtual void Run();
+  virtual void Run() override;
   // Stop the server
-  virtual void StopServer();
+  virtual void StopServer() override;
   // Initialise a HTTP server and server-session
-  virtual bool Initialise();
+  virtual bool Initialise() override;
   // Receive (the rest of the) incoming HTTP request
-  virtual bool ReceiveIncomingRequest(HTTPMessage* p_message);
+  virtual bool ReceiveIncomingRequest(HTTPMessage* p_message) override;
   // Sending response for an incoming message
-  virtual void SendResponse(HTTPMessage* p_message);
+  virtual void SendResponse(HTTPMessage* p_message) override;
   // Sending a response as a chunk
-  virtual void SendAsChunk(HTTPMessage* p_message,bool p_final = false);
+  virtual void SendAsChunk(HTTPMessage* p_message,bool p_final = false) override;
   // Create a new WebSocket in the subclass of our server
-  virtual WebSocket* CreateWebSocket(XString p_uri);
+  virtual WebSocket* CreateWebSocket(XString p_uri) override;
 
   // FUNCTIONS FOR STAND-ALONE SERVER
 
@@ -64,11 +64,11 @@ public:
 
 protected:
   // Cleanup the server
-  virtual void Cleanup();
+  virtual void Cleanup() override;
   // Init the stream response
-  virtual bool InitEventStream(EventStream& p_stream);
+  virtual bool InitEventStream(EventStream& p_stream) override;
   // Used for canceling a WebSocket for an event stream
-  virtual void CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_reset = false);
+  virtual void CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_reset = false) override;
 
 private:
   // Preparing a response
@@ -87,7 +87,7 @@ private:
                                       ,CRITICAL_SECTION*  p_lock
                                       ,const char*        p_buffer
                                       ,size_t             p_totalLength
-                                      ,bool               p_continue = true);
+                                      ,bool               p_continue = true) override;
 
   // PRIVATE DATA of the stand-alone HTTPServer
   URLGroupMap  m_urlGroups;              // All URL Groups

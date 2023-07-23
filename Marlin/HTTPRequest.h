@@ -55,7 +55,7 @@ IOAction;
 class OutstandingIO : public OVERLAPPED
 {
 public:
-  OutstandingIO(HTTPRequest* p_request);
+  explicit OutstandingIO(HTTPRequest* p_request);
   HTTPRequest* m_request;
   IOAction     m_action;
 };
@@ -73,7 +73,7 @@ using RequestStrings = std::vector<XString>;
 class HTTPRequest
 {
 public:
-  HTTPRequest(HTTPServer* p_server);
+  explicit HTTPRequest(HTTPServer* p_server);
  ~HTTPRequest();
  
   // Start a new request against the server

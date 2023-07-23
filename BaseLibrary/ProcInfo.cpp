@@ -60,7 +60,7 @@ typedef BOOL (WINAPI *Module32NextProc)  (HANDLE hSnapshot, LPMODULEENTRY32  lpm
 class CDllLoader
 {
 public:
-  CDllLoader(XString const& name)
+  explicit CDllLoader(XString const& name)
   {
     m_hDll = LoadLibrary(name); 
   }
@@ -95,7 +95,7 @@ public:
   }
 
 private:
-  HINSTANCE m_hDll;
+  HINSTANCE m_hDll { NULL };
 };
 
 //=============================================================================
@@ -181,7 +181,7 @@ ProcInfo::~ProcInfo()
 #pragma warning (disable: 4996)
 
 bool 
-ProcInfo::isWin10AnniversaryOrHigher()
+ProcInfo::IsWin10AnniversaryOrHigher()
 {
   return getRealOSVersion().dwBuildNumber >= 14393;
 }
@@ -216,6 +216,10 @@ ProcInfo::GetSystemType()
   if(IsWindows10OrGreater())
   {
     m_platform = "Windows 10 or greater.";
+  }
+  else if(IsWin10AnniversaryOrHigher())
+  {
+    m_platform = "Windows 10 Anniversary or greater.";
   }
   else if(IsWindows8Point1OrGreater())
   {
@@ -511,7 +515,7 @@ sprintf_s(buff,40, "0x%08I64X", (__int64)hModule);
       {
         //  Determine language-specific key
         DWORD dwLCP = lpvi[2] + (lpvi[3] << 8) + (lpvi[0] << 16) + (lpvi[1] << 24);
-        char szLangFormat[] = "\\StringFileInfo\\%08X\\%s";
+        const char szLangFormat[] = "\\StringFileInfo\\%08X\\%s";
 
         //  Read strings
         module->m_company_name       = ReadLangString(pVI, szLangFormat, dwLCP, "CompanyName");

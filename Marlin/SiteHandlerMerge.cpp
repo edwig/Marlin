@@ -65,7 +65,6 @@ SiteHandlerMerge::Handle(HTTPMessage* p_message)
 {
   // Getting the path of the file
   XString pathname = m_site->GetWebroot() + p_message->GetAbsoluteResource();
-  DWORD error = 0;
 
   p_message->Reset();
   p_message->SetStatus(HTTP_STATUS_DENIED);
@@ -73,6 +72,7 @@ SiteHandlerMerge::Handle(HTTPMessage* p_message)
   // Check existence
   if(_access(pathname,0) == 0)
   {
+    DWORD error = 0;
     // Check for write access
     if(_access(pathname,2) == 0)
     {

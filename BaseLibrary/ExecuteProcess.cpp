@@ -109,16 +109,16 @@ int ExecuteProcess(XString  p_program
     sprintf_s(commandLine,MAX_COMMANDLINE,"\"%s\" %s",lpProgram,p_arguments.GetString());
   }
   // Create the process and catch the return value if this succeeded
-  BOOL res = CreateProcess(lpProgram              // Program to start or NULL
-                          ,(LPSTR)commandLine     // Command line with program or arguments only
-                          ,NULL         				  // Security
-                          ,NULL  				          // ThreadAttributes
-                          ,FALSE                  // Inherit handles
-                          ,NORMAL_PRIORITY_CLASS  // Priority
-                          ,NULL 				          // Environment
-                          ,NULL            				// Current directory
-                          ,&startupInfo           // Startup info
-                          ,&processInfo		        // process info
+  BOOL res = CreateProcess(lpProgram                            // Program to start or NULL
+                          ,reinterpret_cast<LPSTR>(commandLine) // Command line with program or arguments only
+                          ,NULL                                 // Security
+                          ,NULL                                 // ThreadAttributes
+                          ,FALSE                                // Inherit handles
+                          ,NORMAL_PRIORITY_CLASS                // Priority
+                          ,NULL                                 // Environment
+                          ,NULL            	                    // Current directory
+                          ,&startupInfo                         // Startup info
+                          ,&processInfo                         // process info
                           );
   int exitCode = EXECUTE_NOT_STARTED;
   if(res)
@@ -149,11 +149,10 @@ int ExecuteProcess(XString  p_program
       if (p_factor == 0)     p_factor = 1;
       if (p_factor > 100000) p_factor = 100000;
       waiting *= p_factor;
-      if (p_factor < 0)      p_factor = INFINITE;
 
       if(WaitForSingleObject(processInfo.hProcess,waiting) == WAIT_OBJECT_0)
       {
-        GetExitCodeProcess(processInfo.hProcess,(LPDWORD)&exitCode);
+        GetExitCodeProcess(processInfo.hProcess,reinterpret_cast<LPDWORD>(&exitCode));
       }
       else
       {

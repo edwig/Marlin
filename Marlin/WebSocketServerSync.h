@@ -37,19 +37,19 @@
 class WebSocketServerSync: public WebSocketServer
 {
 public:
-  WebSocketServerSync(XString p_uri);
+  explicit WebSocketServerSync(XString p_uri);
   virtual ~WebSocketServerSync();
 
   // Reset the socket
-  virtual void Reset();
+  virtual void Reset() override;
   // Open the socket
-  virtual bool OpenSocket();
+  virtual bool OpenSocket() override;
   // Close the socket unconditionally
-  virtual bool CloseSocket();
+  virtual bool CloseSocket() override;
   // Write fragment to a WebSocket
-  virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true);
+  virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) override;
   // Register the server request for sending info
-  virtual bool RegisterSocket(HTTPMessage* p_message);
+  virtual bool RegisterSocket(HTTPMessage* p_message) override;
 };
 
 

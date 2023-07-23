@@ -85,7 +85,7 @@ SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
   }
   if(!displayText.IsEmpty())
   {
-    xprintf("Async display text: %s\n",(LPCTSTR)displayText);
+    xprintf("Async display text: %s\n",displayText.GetString());
     ++m_current;
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
@@ -121,7 +121,7 @@ TestMarlinServer::TestAsynchrone()
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -145,7 +145,7 @@ TestMarlinServer::TestAsynchrone()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

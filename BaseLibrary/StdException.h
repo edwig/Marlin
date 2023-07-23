@@ -46,10 +46,10 @@ class StdException
 {
 public:
   // Application type constructors
-  StdException(int p_errorCode);
-  StdException(const char* p_fault);
-  StdException(const XString& p_fault);
-  StdException(int p_errorCode,const char* p_fault);
+  explicit StdException(int p_errorCode);
+  explicit StdException(const char* p_fault);
+  explicit StdException(const XString& p_fault);
+  explicit StdException(int p_errorCode,const char* p_fault);
   // Construct from a SafeExceptionHandler (SEH)
 	StdException(unsigned p_safe,_EXCEPTION_POINTERS* p_exceptionPointers);
 	StdException(const StdException& p_other);

@@ -102,7 +102,7 @@ StopClient(HTTPClient* p_client)
   g_log = nullptr;
 }
 
-int main(int argc, TCHAR* argv[], TCHAR* /*envp[]*/)
+int main(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
 {
   int nRetCode = 0;
   int errors   = 0;

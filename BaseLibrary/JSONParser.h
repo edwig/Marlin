@@ -52,7 +52,7 @@ enum class JsonError
 class JSONParser
 {
 public:
-  JSONParser(JSONMessage* p_message);
+  explicit JSONParser(JSONMessage* p_message);
  ~JSONParser();
 
   // Parse a complete JSON message string
@@ -90,9 +90,9 @@ protected:
 class JSONParserSOAP : public JSONParser
 {
 public:
-  JSONParserSOAP(JSONMessage* p_message);
-  JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap);
-  JSONParserSOAP(JSONMessage* p_message,XMLMessage*  p_xml);
+  explicit JSONParserSOAP(JSONMessage* p_message);
+  explicit JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap);
+  explicit JSONParserSOAP(JSONMessage* p_message,XMLMessage*  p_xml);
 
   void Parse(XMLElement* p_element,bool p_forceerArray = false);
 private:

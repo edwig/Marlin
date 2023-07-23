@@ -761,11 +761,9 @@ QueryReWriter::Parenthesis()
 void
 QueryReWriter::QuoteString(int p_ending)
 {
-  int ch = 0;
-
   while(true)
   {
-    ch = GetChar();
+    int ch = GetChar();
     if(ch == p_ending || ch == 0)
     {
       return;

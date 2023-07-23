@@ -56,24 +56,25 @@ SiteHandlerSoapMsgEncrypt::Handle(HTTPMessage* p_message)
   if(cypher)
   {
     XString value = cypher->GetValue();
-    if(value = "+YMEygqNvt7ZKFarTUa2qq6N9ZzFURb74TVbaAFwyKFkl75Tg0bU8pDPLDxYW1uBCzGJTqc4/xDounwbu"
-               "8ksygubfcEGAX9q9UlT75E9Nk0qYqK7zys5zhwcd4W35DV3c5/hZf3kqXOx30TbJv8G/A8IF+JfGzXnQE"
-               "c6ukBcrF2NXqkzfkThFZNq0slRvm37tMXWBWsP/FPh8lKqhUa7KdIMaQtnrdtXs7zkyBwnT+ab7XuJfUV"
-               "8duz6QMA397Hhuly2GgkaERSP8IGSfMKewbfo7GKibRu3VRL96pna9qCPXx4toWDRUJN/TrTsIiWg1zW2"
-               "v4YX7yYfPruo5oJlNbdKSXgQOhkJd0OcEbhYWzyyHsp2q342QhnJplkmjglP5pW6Yxuu51xfgNYTnGNto"
-               "7wRUG9nOn6D2kgdGJUBu62a89yh7wrBwFdhy8U8kq45ldeifVi5UMlkYhK9YZNyONalGlWhrfU/PMZf8E"
-               "tbs7/RRToICs6ydZAjZFNhs5z9dldbQbopMZOrf6tTBlFI1BaM+ByxHkWV8gxhhpEARsXNoaHAI93h7kv"
-               "RlqGKRcgKthVbTVeRp8YQM4yx/zM//WYckz55VVAdWvzhniuiAB9VoOHzqL4txyGV94bt1rPBJROMilQz"
-               "HmEghAzHceX9N/iiKw8L+NPiaGiAOuOi6fcGUL2K9UZjjlj+ECNH8H3/wRMGcQ3IZosPwVGKEK36GQVQr"
-               "oZM5WL3Yg+hpy55UqvrEElNefpeedb2e7EVVa5HonYxPKK3NoEgBT5Bmh0s2trn5ObsWYvBEVQCYaDe0p"
-               "UrQJkAhn5SAGRfAFMQMkBEmNUP+snhLPNxVnj9rZ1B6w1D/dRk3pLEpKPLuQFc22PVNdPjC/JBJcUWgfT"
-               "aid2kxy6iLo2Dy3gKz/Wt0TW4Mphd8jr2iJ3GxWidSWltWM3/9mlINEr9ij9UJq5WTtd9bpDILgd1IveG"
-               "cKemuMZN/UMOpdyPldE3U+XnZ9VGO1+Jgohm8SZcPSQH6JTAga65zqdRx1mNCM3sr0wo7/3RV4aHm7kyT"
-               "uSE63cDF+x4CnpuAH3kljoQuJ7l+TsB7UW6GPusuzWviBhxkRj0iAwNdPaGcgTJ6zllb09huzNZ77m6So"
-               "+b8A5YyfG1EwUE4+IAzPc91feJdjBoDZ4oRwyx42nSi2HQcebfAj8q5Amyc/avBxvoLELn+rjt1QL3IHU"
-               "4tMLcbCt8K015FGIrOSAiRtpWNoujz6WljEzFVTeMGZmiPlIq8mldN34WtLOTEkcQK/i1WCxq0UTSWBJW"
-               "6xFZ8z2xlzoj+yRbNVPZYzk/ucFr5gI+fYOaZXzCq26tCJOMrw66923JAqXgj9sVybxQUaSrUgONIM/0a"
-               "eG/phQKDfg=" )
+    //          "---------------------------------------------------------------------------------"
+    if(value == "+YMEygqNvt7ZKFarTUa2qq6N9ZzFURb74TVbaAFwyKFkl75Tg0bU8pDPLDxYW1uBCzGJTqc4/xDounwbu"
+                "8ksygubfcEGAX9q9UlT75E9Nk0qYqK7zys5zhwcd4W35DV3c5/hZf3kqXOx30TbJv8G/A8IF+JfGzXnQE"
+                "c6ukBcrF2NXqkzfkThFZNq0slRvm37tMXWBWsP/FPh8lKqhUa7KdIMaQtnrdtXs7zkyBwnT+ab7XuJfUV"
+                "8duz6QMA397Hhuly2GgkaERSP8IGSfMKewbfo7GKibRu3VRL96pna9qCPXx4toWDRUJN/TrTsIiWg1zW2"
+                "v4YX7yYfPruo5oJlNbdKSXgQOhkJd0OcEbhYWzyyHsp2q342QhnJplkmjglP5pW6Yxuu51xfgNYTnGNto"
+                "7wRUG9nOn6D2kgdGJUBu62a89yh7wrBwFdhy8U8kq45ldeifVi5UMlkYhK9YZNyONalGlWhrfU/PMZf8E"
+                "tbs7/RRToICs6ydZAjZFNhs5z9dldbQbopMZOrf6tTBlFI1N7YqPBR3rjhR4y0LB8riwERfjgLdnDKISd"
+                "1odGUZHAT0viHbVgn/plgGZQlW4V/ZVELUrK0ETw49CHolOGCvukC9qxkUx3r0CiomxA97QPNwCOnb+ti"
+                "9jhJO8+bmIZCXjHnMjj/Cva/X34zCOkaoYcBdNYD75hdW4VbS7mzKWvk6j3F6j1E7wIfYJwT8fu8GHKRe"
+                "8yGqJ0wlHKwnSrt7LdxBkYovWB7+sBP06YCKDtNsNCeWoT5HINzM4khuiRUAGXUp6tp13ac1lDoQueCHW"
+                "6QuPZpfd8sZMu7nZH1tvdWRMsT6OArXZ0IJ4qQj73ATbIAY0X8kKSoqOmjc4xI0uNQUM37OXJ/feYnI1a"
+                "HArPNeFfBP1PkMZp8Rb2sgeo5CH+pg5Eix2QIgohTyBeE5vtNuDYbSZ/yvS9NDQHRAkjRCJvuMsMAEJ3A"
+                "0vEV95ruA/B9eMebIaXr/UDiSRR5+xFPBjj+fLpqKcYavMCZxR+BSCpOKqbCZyPyEkn3UA8cvK4hjxLQl"
+                "bhUMLiCNrKryY8FoIo7AwgoWvVRidlBEjm/Iby2ZovIVv69SntNoaiiKBFL7K6X/MoOKpWm92zPXjWaqW"
+                "yUkPwJtDUWzUz0vbzd9C/Yue67bU0tfdh5I4ERonEwOGRWQrtZBGTFrfSLR4ROvIiwevQNVUDV8oCH+dd"
+                "S4dN9ZIDbSna7h4RyR+p2CcLJ5SVgR/GvWFrltkWXgoLccJfMTYAAvdwa+k7GHMJ/Deq/NHRYxSYzD7c0"
+                "kYzfOMye0fWrrGRgj/dY6wEu6PYMVnG2wl5Ff1/3LOkNY5HAyVmVEeE5gmeUwO5IB+l1PyGKI6CJdAs+r"
+                "TCVse2zgeo=")
     {
       cypherResult = true;
       --totalChecks;
@@ -119,8 +120,10 @@ SiteHandlerSoapMsgEncrypt::Handle(SOAPMessage* p_message)
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
   qprintf("Total encrypted message received contents      : %s\n", result ? "OK" : "ERROR");
-  if(!result) xerror();
-
+  if(!result)
+  {
+    xerror();
+  }
   p_message->SetParameter("Three", paramOne);
   p_message->SetParameter("Four",  paramTwo);
   xprintf("Outgoing parameter: %s = %s\n", "Three", paramOne.GetString());
@@ -148,13 +151,13 @@ TestMarlinServer::TestMessageEncryption()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for full encryption: OK : %s\n",(LPCTSTR) site->GetPrefixURL());
+    qprintf("HTTPSite for full encryption: OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot create an HTTP site: %s\n",(LPCTSTR) url);
+    qprintf("ERROR: Cannot create an HTTP site: %s\n",url.GetString());
     return error;
   }
 
@@ -175,7 +178,7 @@ TestMarlinServer::TestMessageEncryption()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR) url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

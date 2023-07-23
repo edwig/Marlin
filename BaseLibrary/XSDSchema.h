@@ -73,7 +73,7 @@ using RestrictMap = std::vector<XMLRestriction*>;
 class XSDComplexType: public XMLElement
 {
 public:
-  XSDComplexType(XString p_name);
+  explicit XSDComplexType(XString p_name);
  ~XSDComplexType();
 
   XString    m_name;

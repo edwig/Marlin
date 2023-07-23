@@ -94,9 +94,9 @@ WebServiceServer::WebServiceServer(XString    p_name
                  ,m_channelType(p_channelType)
                  ,m_targetNamespace(p_targetNamespace)
                  ,m_maxThreads(p_maxThreads)
+                 // Default settings for: ActiveServerPages (ASP) C++ = CXX
+                 ,m_servicePostfix(".acx")
 {
-  // Default settings for: ActiveServerPages (ASP) C++ = CXX
-  m_servicePostfix = ".acx";
 }
 
 WebServiceServer::~WebServiceServer()
@@ -779,7 +779,7 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
   {
     p_message->Reset();
     XString pagina = m_wsdl->GetServicePage();
-    p_message->AddBody((void*)pagina.GetString(),pagina.GetLength());
+    p_message->AddBody(reinterpret_cast<void*>(const_cast<char*>(pagina.GetString())),pagina.GetLength());
     p_message->SetContentType("text/html");
     m_httpServer->SendResponse(p_message);
     return true;
@@ -809,7 +809,7 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
           XString pagina = m_wsdl->GetOperationPage(absPath,m_httpServer->GetHostname());
           if(!pagina.IsEmpty())
           {
-            p_message->AddBody((void*)pagina.GetString(),pagina.GetLength());
+            p_message->AddBody(reinterpret_cast<void*>(const_cast<char*>(pagina.GetString())),pagina.GetLength());
             p_message->SetContentType("text/html");
             m_httpServer->SendResponse(p_message);
             return true;

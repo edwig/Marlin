@@ -117,7 +117,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <CallingConvention>Cdecl</CallingConvention>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <FunctionLevelLinking>true</FunctionLevelLinking>

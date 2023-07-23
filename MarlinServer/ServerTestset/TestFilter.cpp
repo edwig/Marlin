@@ -59,8 +59,8 @@ SiteFilterTester1::SiteFilterTester1(unsigned p_priority,XString p_name)
 bool
 SiteFilterTester1::Handle(HTTPMessage* p_message)
 {
-  xprintf("FILTER TESTER NR 1: %s FROM %s\n", (LPCTSTR)p_message->GetURL(),(LPCTSTR)SocketToServer(p_message->GetSender()));
-  xprintf("%s\n",(LPCTSTR)p_message->GetBody());
+  xprintf("FILTER TESTER NR 1: %s FROM %s\n",p_message->GetURL().GetString(),SocketToServer(p_message->GetSender()).GetString());
+  xprintf("%s\n",p_message->GetBody().GetString());
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
@@ -88,8 +88,8 @@ bool
 SiteFilterTester23::Handle(HTTPMessage* p_message)
 {
   HTTPMessage* msg = const_cast<HTTPMessage*>(p_message);
-  xprintf("FILTER TESTER NR 23: %s FROM %s\n", (LPCTSTR)msg->GetURL(), (LPCTSTR)SocketToServer(msg->GetSender()));
-  xprintf("Registering the body length: %lu\n",(unsigned long)msg->GetBodyLength());
+  xprintf("FILTER TESTER NR 23: %s FROM %s\n", msg->GetURL().GetString(),SocketToServer(msg->GetSender()).GetString());
+  xprintf("Registering the body length: %lu\n",static_cast<unsigned long>(msg->GetBodyLength()));
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
@@ -159,7 +159,7 @@ TestMarlinServer::TestFilter()
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n", (LPCTSTR)url);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -183,7 +183,7 @@ TestMarlinServer::TestFilter()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n", (LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

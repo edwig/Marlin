@@ -188,7 +188,7 @@ EventSource::AddEventListener(XString p_event,LPFN_EVENTHANDLER p_handler,bool p
 
 // Handle the last-event-id of a generic listener
 void
-EventSource::HandleLastID(ServerEvent* p_event)
+EventSource::HandleLastID(const ServerEvent* p_event)
 {
   if(p_event->m_id)
   {
@@ -272,7 +272,7 @@ EventSource::OnMessage(ServerEvent* p_event)
   else if(m_onmessage)
   {
     // Submit to threadpool
-    m_pool->SubmitWork((LPFN_CALLBACK)m_onmessage,(void*)p_event);
+    m_pool->SubmitWork(reinterpret_cast<LPFN_CALLBACK>(m_onmessage),reinterpret_cast<void*>(p_event));
     return;
   }
   DETAILLOG("EventSource: Unhandeled OnMessage event");
@@ -640,7 +640,7 @@ EventSource::DispatchEvent(XString* p_event,ULONG p_id,XString* p_data)
         HandleLastID(theEvent);
 
         // Async call
-        m_pool->SubmitWork((LPFN_CALLBACK)listener.m_handler,(void*)theEvent);
+        m_pool->SubmitWork(reinterpret_cast<LPFN_CALLBACK>(listener.m_handler),reinterpret_cast<void*>(theEvent));
         return;
       }
     }

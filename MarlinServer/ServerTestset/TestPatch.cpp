@@ -57,8 +57,8 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
   int errors = 0;
   HTTPMessage* msg = const_cast<HTTPMessage*>(p_message);
   XString body = msg->GetBody();
-  xprintf("HTTP PATCH VERB URL [%s] FROM: %s\n",(LPCTSTR)msg->GetURL(),(LPCTSTR)SocketToServer(msg->GetSender()));
-  xprintf("%s\n",(LPCTSTR)body);
+  xprintf("HTTP PATCH VERB URL [%s] FROM: %s\n",msg->GetURL().GetString(),SocketToServer(msg->GetSender()).GetString());
+  xprintf("%s\n",body.GetString());
 
   const CrackedURL& url = msg->GetCrackedURL();
   XString bloodType     = url.GetParameter("type");
@@ -122,7 +122,7 @@ TestMarlinServer::TestPatch()
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -147,7 +147,7 @@ TestMarlinServer::TestPatch()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

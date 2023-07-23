@@ -49,6 +49,7 @@ static char THIS_FILE[] = __FILE__;
 
 XSDComplexType::XSDComplexType(XString p_name)
                :m_name(p_name)
+               ,m_order(WsdlOrder::WS_Sequence)
 {
 }
 
@@ -82,7 +83,7 @@ XSDSchema::~XSDSchema()
   m_elements.clear();
 
   // Delete all complex types
-  for(auto& type : m_types)
+  for(const auto& type : m_types)
   {
     if(type.second)
     {
@@ -537,7 +538,7 @@ XSDSchema::WriteXSDElements(XMLMessage& p_doc,XMLElement* p_base,ElementMap& p_e
 void
 XSDSchema::WriteXSDComplexTypes(XMLMessage& p_doc)
 {
-  for(auto& comp : m_types)
+  for(const auto& comp : m_types)
   {
     XSDComplexType* complex = comp.second;
     XMLElement* type = p_doc.AddElement(nullptr,"xs:complexType",XDT_String,"");
@@ -879,7 +880,7 @@ XSDSchema::ValidateOrderAll(XMLMessage& p_doc,XMLElement* p_compare,ElementMap& 
   XMLElement* elem = p_doc.GetElementFirstChild(p_compare);
   while(elem)
   {
-    XMLElement* found = FindElement(p_elements,elem->GetName());
+    const XMLElement* found = FindElement(p_elements,elem->GetName());
     if(found == nullptr)
     {
       p_error = "Element not found in type definition: " + elem->GetName();

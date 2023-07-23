@@ -1252,7 +1252,7 @@ bcd::SetLengthAndPrecision(int p_precision /*= bcdPrecision*/,int p_scale /*= (b
   // Strip this on mantissa part
   if(mpos)
   {
-    static int significations[] = {1,10000000,1000000,100000,10000,1000,100,10,1};
+    static const int significations[] = {1,10000000,1000000,100000,10000,1000,100,10,1};
     int  significant = significations[mpos];
     int64       accu = m_mantissa[mant] / significant;
     m_mantissa[mant] = (long) (accu * significant);
@@ -1326,8 +1326,7 @@ bcd::Floor() const
 bcd     
 bcd::Fraction() const
 {
-  bcd floor = Floor();
-  return (*this) - floor;
+  return (*this) - Floor();
 }
 
 // Value after the decimal point
@@ -1589,10 +1588,8 @@ bcd
 bcd::Exp() const
 {
   long step, k = 0;
-  long expo;
   bcd between, result, number;
   bcd half("0.5");
-  bcd ten(10L);
   bcd epsilon = Epsilon(5);
 
   // Check if we can do this
@@ -1618,7 +1615,7 @@ bcd::Exp() const
   }
   for( k = 0; number > half; )
   {
-    expo = number.GetExponent();
+    long expo = number.GetExponent();
     if( expo > 0 )
     {
       step   = 3 * min( 10, expo );  // 2^3
@@ -2128,7 +2125,7 @@ bcd::ArcTangent() const
 //              use atan() to calculate atan2()
 //
 bcd
-bcd::ArcTangent2Points(bcd p_x) const
+bcd::ArcTangent2Points(const bcd& p_x) const
 {
   bcd result;
   bcd number = *this;
@@ -2452,7 +2449,6 @@ bcd::AsInt64() const
   {
     return 0L;
   }
-  int64 carry   = 0L;
   int64 result1 = 0L;
   int64 result2 = 0L;
   int exponent  = 4 * bcdDigits - m_exponent - 1;
@@ -2466,7 +2462,7 @@ bcd::AsInt64() const
   // Adjust to exponent
   while(exponent--)
   {
-    carry    = result1 %10;
+    int64 carry = result1 %10;
     result1 /= 10;
     result2 /= 10;
     result2 += carry * base;
@@ -2507,7 +2503,6 @@ bcd::AsUInt64() const
   {
     return 0L;
   }
-  uint64 carry   = 0L;
   uint64 result1 = 0L;
   uint64 result2 = 0L;
   int exponent   = 4 * bcdDigits - m_exponent - 1;
@@ -2521,7 +2516,7 @@ bcd::AsUInt64() const
   // Adjust to exponent
   while(exponent--)
   {
-    carry    = result1 %10;
+    uint64 carry    = result1 %10;
     result1 /= 10;
     result2 /= 10;
     result2 += carry * base;
@@ -2549,7 +2544,7 @@ XString
 bcd::AsString(Format p_format /*=Bookkeeping*/,bool p_printPositive /*=false*/,int p_decimals /*=2*/) const
 {
   XString result;
-  int exp    = m_exponent;
+  int expo   = m_exponent;
   int prec   = bcdDigits * bcdLength;
 
   // Shortcut for infinity and not-a-number
@@ -2562,7 +2557,7 @@ bcd::AsString(Format p_format /*=Bookkeeping*/,bool p_printPositive /*=false*/,i
   }
 
   // Check format possibilities
-  if(exp < -(prec/2) || exp > (prec/2))
+  if(expo < -(prec/2) || expo > (prec/2))
   {
     p_format = Format::Engineering;
   }
@@ -2589,7 +2584,7 @@ bcd::AsString(Format p_format /*=Bookkeeping*/,bool p_printPositive /*=false*/,i
   {
     XString left = result.Left(1);
     result = left + XString(".") + result.Mid(1) + XString("E");
-    result += LongToString(exp);
+    result += LongToString(expo);
   }
   else // Bookkeeping
   {
@@ -3596,13 +3591,12 @@ bcd::Mult10(int p_times /* = 1 */)
   }
   while(p_times--)
   {
-    long between = 0;
     long carry   = 0;
 
     // Multiply all positions by 10
     for(int ind = bcdLength -1; ind >= 0; --ind)
     {
-      between         = m_mantissa[ind] * 10 + carry;
+      long between    = m_mantissa[ind] * 10 + carry;
       m_mantissa[ind] = between % bcdBase;
       carry           = between / bcdBase;
     }
@@ -3629,12 +3623,11 @@ bcd::Div10(int p_times /*=1*/)
   }
   while(p_times--)
   {
-    long between = 0;
     long carry   = 0;
 
     for(int ind = 0; ind < bcdLength; ++ind)
     {
-      between         = m_mantissa[ind] + (carry * bcdBase);
+      long between    = m_mantissa[ind] + (carry * bcdBase);
       carry           = between % 10;
       m_mantissa[ind] = between / 10;
     }
@@ -3823,6 +3816,10 @@ bcd::CalculatePrecisionAndScale(SQLCHAR& p_precision,SQLCHAR& p_scale) const
       p_precision -= bcdDigits;
     }
     else break;
+  }
+  if(index < 0)
+  {
+    return;
   }
   // Find the number of digits in this mantissa
   // Change this optimalization when changing bcdDigits or bcdLength !!
@@ -4146,11 +4143,10 @@ bcd::PositiveAddition(bcd& arg1,bcd& arg2) const
     }
   }
   // Do the addition of the mantissa
-  int64 reg   = 0L;
   int64 carry = 0L;
   for(int ind = bcdLength - 1;ind >= 0; --ind)
   {
-    reg   = ((int64)arg1.m_mantissa[ind]) + ((int64)arg2.m_mantissa[ind]) + carry;
+    int64 reg = ((int64)arg1.m_mantissa[ind]) + ((int64)arg2.m_mantissa[ind]) + carry;
     carry = reg / bcdBase;
     arg1.m_mantissa[ind] = reg % bcdBase;
   }
@@ -4193,7 +4189,6 @@ bcd::PositiveSubtraction(bcd& arg1,bcd& arg2) const
     }
   }
   // Do the subtraction of the mantissa
-  int64 reg   = 0L;
   for(int ind = bcdLength - 1;ind >= 0; --ind)
   {
     if(arg1.m_mantissa[ind] >= arg2.m_mantissa[ind])
@@ -4202,7 +4197,7 @@ bcd::PositiveSubtraction(bcd& arg1,bcd& arg2) const
     }
     else
     {
-      reg = ((int64)bcdBase + arg1.m_mantissa[ind]) - arg2.m_mantissa[ind];
+      int64 reg = ((int64)bcdBase + arg1.m_mantissa[ind]) - arg2.m_mantissa[ind];
       arg1.m_mantissa[ind] = (long) reg;
       // Take care of carry
       if(ind > 0)
@@ -4230,12 +4225,11 @@ bcd::PositiveMultiplication(const bcd& p_arg1,const bcd& p_arg2) const
   int64 res[2 * bcdLength] = { 0 };
 
   // Multiplication of the mantissa
-  int64 between = 0;
   for(int i = bcdLength - 1; i >= 0; --i)
   {
     for(int j = bcdLength - 1; j >= 0; --j)
     {
-      between = (int64)p_arg1.m_mantissa[i] * (int64)p_arg2.m_mantissa[j];
+      int64 between = (int64)p_arg1.m_mantissa[i] * (int64)p_arg2.m_mantissa[j];
       res[i + j + 1] += between % bcdBase; // result
       res[i + j    ] += between / bcdBase; // carry
     }
@@ -4284,7 +4278,6 @@ bcd::PositiveDivision(bcd& p_arg1,bcd& p_arg2) const
   long divisor   = 0; 
   long quotient  = 0;
   int  guess     = 2;
-  bool zero      = true;
 
   // Grade down arg2 one position
   p_arg2.Div10();
@@ -4296,7 +4289,7 @@ bcd::PositiveDivision(bcd& p_arg1,bcd& p_arg2) const
 //     p_arg2.DebugPrint("argument2");
 
     // Check for intermediate of zero. Arg1 != zero, so it must end!!
-    zero = true;
+    bool zero = true;
     for(int x = 0;x < bcdLength; ++x)
     {
       if(p_arg1.m_mantissa[x]) 
@@ -4349,10 +4342,9 @@ bcd::PositiveDivision(bcd& p_arg1,bcd& p_arg2) const
     {
       // quotient * p_arg2 -> subtrahend
       int64 carry  = 0;
-      int64 number = 0;
       for(int pos = bcdLength - 1; pos >= 0; --pos)
       {
-        number = (int64)quotient * (int64)p_arg2.m_mantissa[pos] + carry;
+        int64 number = (int64)quotient * (int64)p_arg2.m_mantissa[pos] + carry;
         subtrahend.m_mantissa[pos] = number % bcdBase;
         carry = number / bcdBase;
       }
@@ -4381,7 +4373,7 @@ bcd::PositiveDivision(bcd& p_arg1,bcd& p_arg2) const
           }
           else
           {
-            number = ((int64)bcdBase + p_arg1.m_mantissa[pos]) - subtrahend.m_mantissa[pos];
+            int64 number = ((int64)bcdBase + p_arg1.m_mantissa[pos]) - subtrahend.m_mantissa[pos];
             p_arg1.m_mantissa[pos] = (long)number;
             if(pos > 0)
             {
@@ -4466,64 +4458,64 @@ bcd::SetInfinity(XString p_reason /*= ""*/) const
 // Overloaded math precision floating point functions equivalent with the std C functions
 // Overloaded to work with the BCD number class, always yielding a bcd number.
 
-bcd modf(bcd p_number, bcd* p_intpart)
+bcd modf(const bcd& p_number, bcd* p_intpart)
 {
   *p_intpart = p_number.Floor();
   return p_number.Fraction();
 }
 
-bcd fmod(bcd p_number,bcd p_divisor)
+bcd fmod(const bcd& p_number,const bcd& p_divisor)
 {
   return p_number % p_divisor;
 }
 
-bcd floor(bcd p_number)
+bcd floor(const bcd& p_number)
 {
   return p_number.Floor();
 }
 
-bcd ceil(bcd p_number)
+bcd ceil(const bcd& p_number)
 {
   return p_number.Ceiling();
 }
 
-bcd fabs(bcd p_number)
+bcd fabs(const bcd& p_number)
 {
   return p_number.AbsoluteValue();
 }
 
-bcd sqrt(bcd p_number)
+bcd sqrt(const bcd& p_number)
 {
   return p_number.SquareRoot();
 }
 
-bcd log10(bcd p_number)
+bcd log10(const bcd& p_number)
 {
   return p_number.Log10();
 }
 
-bcd log(bcd p_number)
+bcd log(const bcd& p_number)
 {
   return p_number.Log();
 }
 
-bcd exp(bcd p_number)
+bcd exp(const bcd& p_number)
 {
   return p_number.Exp();
 }
 
-bcd pow(bcd p_number,bcd  p_power)
+bcd pow(const bcd& p_number,const bcd& p_power)
 {
   return p_number.Power(p_power);
 }
 
-bcd frexp(bcd p_number,int* p_exponent)
+bcd frexp(const bcd& p_number,int* p_exponent)
 {
   *p_exponent = p_number.GetExponent();
   return p_number.GetMantissa();
 }
 
-bcd ldexp(bcd p_number,int p_power)
+bcd ldexp(const bcd& p_number,int p_power)
 {
   if(p_power == 0)
   {
@@ -4538,37 +4530,37 @@ bcd ldexp(bcd p_number,int p_power)
 
 // Overloaded trigonometric functions on a bcd number
 
-bcd atan (bcd p_number) 
+bcd atan (const bcd& p_number) 
 { 
   return p_number.ArcTangent(); 
 }
 
-bcd atan2(bcd p_y,bcd p_x)
+bcd atan2(const bcd& p_y,const bcd& p_x)
 {
   return p_y.ArcTangent2Points(p_x);
 }
 
-bcd asin(bcd p_number)
+bcd asin(const bcd& p_number)
 {
   return p_number.ArcSine();
 }
 
-bcd acos(bcd p_number)
+bcd acos(const bcd& p_number)
 {
   return p_number.ArcCosine();
 }
 
-bcd sin(bcd p_number)
+bcd sin(const bcd& p_number)
 {
   return p_number.Sine();
 }
 
-bcd cos(bcd p_number)
+bcd cos(const bcd& p_number)
 {
   return p_number.Cosine();
 }
 
-bcd tan(bcd p_number)
+bcd tan(const bcd& p_number)
 {
   return p_number.Tangent();
 }

@@ -63,9 +63,9 @@ static char THIS_FILE[] = __FILE__;
 // CTOR for the WSDL cache
 WSDLCache::WSDLCache(bool p_server)
           :m_server(p_server)
+          // Not seen anywhere else: The service postfix is 'active server pages for C ++'
+          ,m_servicePostfix(".acx")
 {
-  // Not seen anywhere else: The service postfix is 'active server pages for C ++'
-  m_servicePostfix = ".acx";
 }
 
 WSDLCache::~WSDLCache()
@@ -188,7 +188,7 @@ WSDLCache::GenerateWSDL()
   // Open file;
   FILE* file = nullptr;
   EnsureFile ensfile(m_filename);
-  ensfile.OpenFile(&file,(char*)"w");
+  ensfile.OpenFile(&file,"w");
   if(file)
   {
     XString wsdlcontent;
@@ -920,7 +920,7 @@ WSDLCache::GetOperationPage(XString p_operation,XString p_hostname)
   {
     return page;
   }
-  WsdlOperation& operation = it->second;
+  const WsdlOperation& operation = it->second;
   page  = GetPageHeader();
   page += GetOperationPageIntro(p_operation);
 
@@ -1266,7 +1266,7 @@ WSDLCache::ReadWSDLFileFromURL(XString p_url)
     size_t size = 0;
     if(buffer.GetBufferCopy(contents,size))
     {
-      XString message((LPCTSTR)contents);
+      XString message(reinterpret_cast<LPCTSTR>(contents));
       XMLMessage wsdl;
       wsdl.ParseMessage(message);
       if(wsdl.GetInternalError() == XmlError::XE_NoError)
@@ -1339,11 +1339,12 @@ WSDLCache::ReadWSDL(XMLMessage& p_wsdl)
   }
 
   // Step 3: Read bindings
-  if(ReadBindings(p_wsdl) == false)
-  {
-    Reset();
-    return false;
-  }
+  ReadBindings(p_wsdl);
+//   if(ReadBindings(p_wsdl) == false)
+//   {
+//     Reset();
+//     return false;
+//   }
 
   // Step 4: Read porttypes / messages / types
   if(ReadPortTypes(p_wsdl) == false)
@@ -1434,7 +1435,7 @@ WSDLCache::ReadServiceBindings(XMLMessage& p_wsdl)
     return false;
   }
 
-  XMLAttribute* name = p_wsdl.FindAttribute(service,"name");
+  const XMLAttribute* name = p_wsdl.FindAttribute(service,"name");
   if(name)
   {
     m_serviceName = name->m_value;
@@ -1462,7 +1463,7 @@ WSDLCache::ReadServiceBindings(XMLMessage& p_wsdl)
 
   // Use highest soap version
   XMLElement* address = address12 ? address12 : address10;
-  XMLAttribute* location = p_wsdl.FindAttribute(address,"location");
+  const XMLAttribute* location = p_wsdl.FindAttribute(address,"location");
   if(!location)
   {
     m_errormessage = "Missing <location> in <wsdl:service>";
@@ -1528,7 +1529,7 @@ WSDLCache::ReadPortTypes(XMLMessage& p_wsdl)
     XString name;
     XString msgInput;
     XString msgOutput;
-    XMLAttribute* nameAtt = p_wsdl.FindAttribute(operation,"name");
+    const XMLAttribute* nameAtt = p_wsdl.FindAttribute(operation,"name");
     if(nameAtt)
     {
       name = nameAtt->m_value;

@@ -54,7 +54,7 @@ private:
 
   virtual void OnInitialized();
   virtual void OnSelChange(XString const& path);
-  int CallbackProc(HWND hwnd,UINT uMsg,LPARAM lParam);
+          int  CallbackProc(HWND hwnd,UINT uMsg,LPARAM lParam);
   static int CALLBACK CallbackProcS(HWND hwnd,UINT uMsg,LPARAM lParam,LPARAM lpData);
 
   HWND      m_hwnd;

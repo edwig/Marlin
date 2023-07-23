@@ -40,18 +40,18 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 AppConfig::AppConfig(XString p_rootname)
-          :m_rootname(p_rootname)
+          :m_rootname  (p_rootname)
+	  ,m_name      (DEFAULT_NAME)
+	  ,m_instance  (DEFAULT_INSTANCE)
+	  ,m_server    (DEFAULT_SERVER)
+	  ,m_secure    (false)
+	  ,m_serverPort(INTERNET_DEFAULT_HTTPS_PORT)
+	  ,m_baseUrl   (DEFAULT_URL)
+	  ,m_webroot   (DEFAULT_WEBROOT)
+	  ,m_serverLog (DEFAULT_SERVERLOG)
+	  ,m_serverLoglevel(false)
+	  ,m_runAsService(false)
 {
-  m_name               = DEFAULT_NAME;
-  m_instance           = DEFAULT_INSTANCE;
-  m_server             = DEFAULT_SERVER;
-  m_secure             = false;
-  m_serverPort         = INTERNET_DEFAULT_HTTP_PORT;
-  m_baseUrl            = DEFAULT_URL;
-  m_serverLog          = DEFAULT_SERVERLOG;
-  m_serverLoglevel      = false;
-  m_webroot            = DEFAULT_WEBROOT;
-  m_runAsService       = false;
 }
 
 AppConfig::~AppConfig()

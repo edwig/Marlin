@@ -36,8 +36,8 @@ class WebConfigLogging : public CDialogEx
   DECLARE_DYNAMIC(WebConfigLogging)
 
 public:
-  WebConfigLogging(bool p_iis,CWnd* pParent = NULL);   // standard constructor
- ~WebConfigLogging();
+  explicit WebConfigLogging(bool p_iis,CWnd* pParent = NULL);   // standard constructor
+  virtual ~WebConfigLogging();
   BOOL OnInitDialog();
   void ReadWebConfig (MarlinConfig& p_config);
   void WriteWebConfig(MarlinConfig& p_config);

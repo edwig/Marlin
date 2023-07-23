@@ -34,7 +34,7 @@ class ResultDlg : public CDialogEx
 	DECLARE_DYNAMIC(ResultDlg)
 
 public:
-	ResultDlg(CWnd* pParent,XString p_result);
+  explicit ResultDlg(CWnd* pParent,XString p_result);
 	virtual ~ResultDlg();
   BOOL OnInitDialog();
 

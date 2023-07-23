@@ -47,15 +47,15 @@ public:
   // Empty CTOR
   SMX_String();
   // CTOR from character pointer
-  SMX_String(const char* p_string);
+  explicit SMX_String(const char* p_string);
   // CTOR from unsigned char
-  SMX_String(const unsigned char* p_string);
+  explicit SMX_String(const unsigned char* p_string);
   // CTOR from a number of characters
-  SMX_String(char p_char,int p_count);
+  explicit SMX_String(char p_char,int p_count);
   // CTOR from other string
-  SMX_String(const SMX_String& p_string);
+  explicit SMX_String(const SMX_String& p_string);
   // CTOR from std::string
-  SMX_String(const string& p_string);
+  explicit SMX_String(const string& p_string);
 
   // Convert String to BSTR. Free it with "SysFreeString"
   BSTR        AllocSysString();
@@ -227,7 +227,7 @@ inline void SMX_String::AppendChar(char p_char)
 inline void SMX_String::AnsiToOem()
 {
   // Only works for MBCS, not for Unicode
-  ::CharToOemBuff((LPCSTR)c_str(),(LPSTR)c_str(),(DWORD)length());
+  ::CharToOemBuff(reinterpret_cast<LPCSTR>(c_str()),reinterpret_cast<LPSTR>(c_str()),reinterpret_cast<DWORD>(length()));
 }
 
 inline int SMX_String::Collate(LPCSTR p_string)
@@ -308,7 +308,7 @@ inline BOOL SMX_String::LoadString(HINSTANCE p_inst,UINT p_strID)
 
 inline void SMX_String::MakeReverse()
 {
-  _strrev((char*)c_str());
+  _strrev(reinterpret_cast<char*>(c_str()));
 }
 
 inline SMX_String SMX_String::Mid(int p_index) const
@@ -324,7 +324,7 @@ inline SMX_String SMX_String::Mid(int p_index,int p_length) const
 inline void SMX_String::OemToAnsi()
 {
   // Only works for MBCS, not for Unicode
-  ::OemToCharBuff(c_str(),(LPTSTR)c_str(),(DWORD)length());
+  ::OemToCharBuff(c_str(),reinterpret_cast<LPTSTR>(c_str()),reinterpret_cast<DWORD>(length()));
 }
 
 inline void SMX_String::Preallocate(int p_length)

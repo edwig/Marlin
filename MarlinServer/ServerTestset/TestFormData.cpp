@@ -71,9 +71,9 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 
   XString data = p_part->GetData();
   XString name = p_part->GetName();
-  xprintf("MULTI-PART DATA = Name : %s\n",(LPCTSTR)p_part->GetName());
-  xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
-  xprintf("MULTI-PART\n%s\n",             (LPCTSTR)p_part->GetData());
+  xprintf("MULTI-PART DATA = Name : %s\n",p_part->GetName().GetString());
+  xprintf("MULTI-PART Content-type: %s\n",p_part->GetContentType().GetString());
+  xprintf("MULTI-PART\n%s\n",             p_part->GetData().GetString());
 
   // Remember the fact that we where called
   bool result = !data.IsEmpty() || !name.IsEmpty();
@@ -96,13 +96,13 @@ FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
   SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName().GetString(),p_part->GetShortFileName().GetString());
 
-  xprintf("MULTI-PART FILE = Name : %s\n",(LPCTSTR)p_part->GetName());
-  xprintf("MULTI-PART Content-type: %s\n",(LPCTSTR)p_part->GetContentType());
-  xprintf("MULTI-PART Filename    : %s\n",(LPCTSTR)p_part->GetShortFileName());
-  xprintf("File date creation     : %s\n",(LPCTSTR)p_part->GetDateCreation());
-  xprintf("File date modification : %s\n",(LPCTSTR)p_part->GetDateModification());
-  xprintf("File date last-read    : %s\n",(LPCTSTR)p_part->GetDateRead());
-  xprintf("File indicated size    : %d\n",(int)    p_part->GetSize());
+  xprintf("MULTI-PART FILE = Name : %s\n",p_part->GetName().GetString());
+  xprintf("MULTI-PART Content-type: %s\n",p_part->GetContentType().GetString());
+  xprintf("MULTI-PART Filename    : %s\n",p_part->GetShortFileName().GetString());
+  xprintf("File date creation     : %s\n",p_part->GetDateCreation().GetString());
+  xprintf("File date modification : %s\n",p_part->GetDateModification().GetString());
+  xprintf("File date last-read    : %s\n",p_part->GetDateRead().GetString());
+  xprintf("File indicated size    : %d\n",static_cast<int>(p_part->GetSize()));
 
   // Keep debugging things together, by resetting the filename
   XString filename = MarlinConfig::GetExePath() + p_part->GetShortFileName();
@@ -179,7 +179,7 @@ TestMarlinServer::TestFormData()
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",(LPCTSTR)url);
+    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -198,7 +198,7 @@ TestMarlinServer::TestFormData()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

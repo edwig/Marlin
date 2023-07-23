@@ -54,7 +54,7 @@ using TypeMap      = std::map<XString,XMLElement*>;
 class WSDLCache
 {
 public:
-  WSDLCache(bool p_server = true);
+  explicit WSDLCache(bool p_server = true);
  ~WSDLCache();
 
   // Reset the complete WSDLCache

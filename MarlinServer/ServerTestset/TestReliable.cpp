@@ -108,13 +108,13 @@ TestMarlinServer::TestReliable()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite reliable messaging : OK : %s\n",(LPCTSTR) site->GetPrefixURL());
+    qprintf("HTTPSite reliable messaging : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a HTTP site for: %s\n",(LPCTSTR) url);
+    qprintf("ERROR: Cannot register a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -134,7 +134,7 @@ TestMarlinServer::TestReliable()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR) url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }
@@ -158,13 +158,13 @@ TestMarlinServer::TestReliableBA()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite reliable messaging : OK : %s\n",(LPCTSTR)site->GetPrefixURL());
+    qprintf("HTTPSite reliable messaging : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a HTTP site for: %s\n",(LPCTSTR)url);
+    qprintf("ERROR: Cannot register a HTTP site for: %s\n",url.GetString());
     return error;
   }
 
@@ -193,7 +193,7 @@ TestMarlinServer::TestReliableBA()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

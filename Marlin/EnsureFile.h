@@ -31,7 +31,7 @@ class EnsureFile
 {
 public:
   EnsureFile();
-  EnsureFile(XString p_filename);
+  explicit EnsureFile(XString p_filename);
  ~EnsureFile();
 
   // Re-setting the filename
@@ -54,7 +54,7 @@ public:
   // Reduce file path name for RE-BASE of directories, removing \..\ parts
   XString  ReduceDirectoryPath(XString& path);
   // Makes a relative pathname from an absolute one
-  bool     MakeRelativePathname(XString& p_base,XString& p_absolute,XString& p_relative);
+  bool     MakeRelativePathname(const XString& p_base,const XString& p_absolute,XString& p_relative);
   // Generic strip protocol from URL to form OS filenames
   XString  StripFileProtocol(XString fileref);
   // Generic find case-insensitive

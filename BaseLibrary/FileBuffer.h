@@ -56,12 +56,12 @@ class FileBuffer
 {
 public:
   FileBuffer();
-  FileBuffer(XString p_fileName);
-  FileBuffer(uchar* p_buffer,size_t p_length);
-  FileBuffer(FileBuffer& p_buffer);
+  explicit FileBuffer(XString p_fileName);
+  explicit FileBuffer(uchar* p_buffer,size_t p_length);
+  explicit FileBuffer(FileBuffer& p_buffer);
  ~FileBuffer();
 
-  // Clean the filebuffer
+  // Clean the FileBuffer
   void    Reset();
   void    ResetFilename();
 
@@ -77,7 +77,7 @@ public:
   // SETTERS
 
   // Set the filename
-  void    SetFileName(XString& p_fileName);
+  void    SetFileName(const XString& p_fileName);
   // Set the buffer in one go
   void    SetBuffer(uchar* p_buffer,size_t p_length);
   // Add buffer part
@@ -135,7 +135,7 @@ FileBuffer::GetHasBufferParts()
 }
 
 inline void    
-FileBuffer::SetFileName(XString& p_fileName)
+FileBuffer::SetFileName(const XString& p_fileName)
 {
   m_fileName = p_fileName;
 }

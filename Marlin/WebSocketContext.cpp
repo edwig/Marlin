@@ -148,7 +148,7 @@ WebSocketContext::ReadFragment(_Out_   VOID*  pData,
   ULONG bytesTransferred = 0;
 
   // Keeping the buffer
-  buffers[0].Data.pbBuffer = (PBYTE) pData;
+  buffers[0].Data.pbBuffer = reinterpret_cast<PBYTE>(pData);
   buffers[0].Data.ulBufferLength = *pcbData;
 
   // Setting reasonable default answers

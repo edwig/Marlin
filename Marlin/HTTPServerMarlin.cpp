@@ -62,7 +62,7 @@ HTTPServerMarlin::HTTPServerMarlin(XString p_name)
 HTTPServerMarlin::~HTTPServerMarlin()
 {
   // Cleanup the server objects
-  Cleanup();
+  HTTPServerMarlin::Cleanup();
 }
 
 XString
@@ -198,14 +198,14 @@ HTTPServerMarlin::Cleanup()
   AutoCritSec lock2(&m_eventLock);
 
   // Remove all remaining sockets
-  for(auto& it : m_sockets)
+  for(const auto& it : m_sockets)
   {
     delete it.second;
   }
   m_sockets.clear();
 
   // Remove all event streams within the scope of the eventLock
-  for(auto& it : m_eventStreams)
+  for(const auto& it : m_eventStreams)
   {
     delete it.second;
   }
@@ -499,7 +499,7 @@ HTTPServerMarlin::FindUrlGroup(XString p_authName
 
 // Remove an URLGroup. Called by HTTPURLGroup itself
 void
-HTTPServerMarlin::RemoveURLGroup(HTTPURLGroup* p_group)
+HTTPServerMarlin::RemoveURLGroup(const HTTPURLGroup* p_group)
 {
   for(URLGroupMap::iterator it = m_urlGroups.begin(); it != m_urlGroups.end(); ++it)
   {
@@ -531,51 +531,54 @@ StartHTTPRequest(void* p_argument)
 /*static*/ bool
 CancelHTTPRequest(void* p_argument,bool p_stayInThePool,bool p_forcedAbort)
 {
-  // Check if we have an OVERLAPPED argument
-  if(p_argument == INVALID_HANDLE_VALUE)
+  // Check that we have an argument
+  if(p_argument == NULL)
   {
     return p_stayInThePool;
   }
-
+  // Getting the outstanding I/O registration
   OutstandingIO* outstanding = reinterpret_cast<OutstandingIO*>(p_argument);
-  if(outstanding)
+
+  // Check if we have an OVERLAPPED argument (could be already canceled)
+  if(outstanding == INVALID_HANDLE_VALUE)
   {
-    try
+    return p_stayInThePool;
+  }
+  try
+  {
+    DWORD status = (DWORD)(outstanding->Internal & 0x0FFFF);
+    if (status == 0 && outstanding->Offset == 0 && outstanding->OffsetHigh == 0)
     {
-      DWORD status = (DWORD)(outstanding->Internal & 0x0FFFF);
-      if (status == 0 && outstanding->Offset == 0 && outstanding->OffsetHigh == 0)
+      HTTPRequest* request = reinterpret_cast<HTTPRequest*>(outstanding->m_request);
+      if (request)
       {
-        HTTPRequest* request = reinterpret_cast<HTTPRequest*>(outstanding->m_request);
-        if (request)
+        if ((!request->GetIsActive() && !p_stayInThePool) || p_forcedAbort)
         {
-          if ((!request->GetIsActive() && !p_stayInThePool) || p_forcedAbort)
+          HTTPServer* server = request->GetHTTPServer();
+          if (server)
           {
-            HTTPServer* server = request->GetHTTPServer();
-            if (server)
-            {
-              server->UnRegisterHTTPRequest(request);
-            }
-            delete request;
-            return false;
+            server->UnRegisterHTTPRequest(request);
           }
-          else if (p_stayInThePool && !request->GetIsActive())
-          {
-            // Start a new request, in case we completed the previous one
-            request->StartRequest();
-            return true;
-          }
-          else if (request->GetIsActive())
-          {
-            // Still processing, we must stay in the pool
-            return true;
-          }
+          delete request;
+          return false;
+        }
+        else if (p_stayInThePool && !request->GetIsActive())
+        {
+          // Start a new request, in case we completed the previous one
+          request->StartRequest();
+          return true;
+        }
+        else if (request->GetIsActive())
+        {
+          // Still processing, we must stay in the pool
+          return true;
         }
       }
     }
-    catch(StdException& ex)
-    {
-      SvcReportErrorEvent(0,true,__FUNCTION__,"Handle already invalid: %s",ex.GetErrorMessage().GetString());
-    }
+  }
+  catch(StdException& ex)
+  {
+    SvcReportErrorEvent(0,true,__FUNCTION__,"Handle already invalid: %s",ex.GetErrorMessage().GetString());
   }
   return p_stayInThePool;
 }
@@ -601,7 +604,7 @@ HTTPServerMarlin::Run()
 
   // Registering the init for the threadpool
   // This get new threads started on a HTTPRequest
-  if(m_pool.SetThreadInitFunction(StartHTTPRequest,CancelHTTPRequest,(void*)this))
+  if(m_pool.SetThreadInitFunction(StartHTTPRequest,CancelHTTPRequest,reinterpret_cast<void*>(this)))
   {
     DETAILLOG1("HTTPServer registered for the threadpool init loop");
   }
@@ -654,7 +657,7 @@ HTTPServerMarlin::StopServer()
   // Try to remove all event streams
   while(!m_eventStreams.empty())
   {
-    EventStream* stream = m_eventStreams.begin()->second;
+    const EventStream* stream = m_eventStreams.begin()->second;
     CloseEventStream(stream);
   }
 

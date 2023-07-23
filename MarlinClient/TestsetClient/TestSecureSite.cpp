@@ -43,7 +43,7 @@ int TestSecureSite(HTTPClient* p_client)
   else
   {
     xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+    xprintf("ERROR %s\n",p_client->GetStatusText().GetString());
 
     BYTE*  response = nullptr;
     unsigned length = 0;
@@ -51,7 +51,7 @@ int TestSecureSite(HTTPClient* p_client)
     if(response && length)
     {
       response[length] = 0;
-      printf((char*) response);
+      printf(reinterpret_cast<char*>(response));
     }
   }
   // SUMMARY OF THE TEST

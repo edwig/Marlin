@@ -236,7 +236,7 @@ ThreadPool::GetCurrentThreads()
 class AutoLockTP
 {
 public:
-  AutoLockTP(CRITICAL_SECTION* p_lock)
+  explicit AutoLockTP(CRITICAL_SECTION* p_lock)
   {
     EnterCriticalSection(m_lock = p_lock);
   }
@@ -255,7 +255,7 @@ private:
 class AutoIncrementPoolMax
 {
 public:
-  AutoIncrementPoolMax(ThreadPool* p_pool)
+  explicit AutoIncrementPoolMax(ThreadPool* p_pool)
   {
     m_pool = p_pool;
     m_pool->ExtendMaximumThreads(*this);

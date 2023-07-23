@@ -56,7 +56,7 @@ JSONParser::SetError(JsonError p_error,const char* p_text,bool p_throw /*= true*
   if(m_message)
   {
     m_message->m_errorstate = true;
-    m_message->m_lastError.Format("ERROR [%d] on line [%d] ",p_error,m_lines);
+    m_message->m_lastError.Format("ERROR [%d] on line [%u] ",p_error,m_lines);
     m_message->m_lastError += p_text;
   }
   if(p_throw)
@@ -76,7 +76,7 @@ JSONParser::ParseMessage(XString& p_message,bool& p_whitespace,StringEncoding p_
   }
 
   // Initializing the parser
-  m_pointer    = (uchar*) p_message.GetString();
+  m_pointer    = reinterpret_cast<uchar*>(const_cast<char*>(p_message.GetString()));
   m_valPointer = m_message->m_value;
   m_lines      = 1;
   m_objects    = 0;
@@ -124,7 +124,7 @@ JSONParser::ParseMessage(XString& p_message,bool& p_whitespace,StringEncoding p_
 
     if(m_pointer && *m_pointer)
     {
-      SetError(JsonError::JE_ExtraText,(const char*)m_pointer);
+      SetError(JsonError::JE_ExtraText,reinterpret_cast<const char*>(m_pointer));
     }
   }
   catch(JsonError& /*error*/)
@@ -181,17 +181,17 @@ JSONParser::ParseLevel()
 bool
 JSONParser::ParseConstant()
 {
-  if(_strnicmp((const char*)m_pointer,"null",4) == 0)
+  if(_strnicmp(reinterpret_cast<const char*>(m_pointer),"null",4) == 0)
   {
     m_valPointer->SetValue(JsonConst::JSON_NULL);
     m_pointer += 4;
   }
-  else if(_strnicmp((const char*)m_pointer,"true",4) == 0)
+  else if(_strnicmp(reinterpret_cast<const char*>(m_pointer),"true",4) == 0)
   {
     m_valPointer->SetValue(JsonConst::JSON_TRUE);
     m_pointer += 4;
   }
-  else if(_strnicmp((const char*)m_pointer,"false",5) == 0)
+  else if(_strnicmp(reinterpret_cast<const char*>(m_pointer),"false",5) == 0)
   {
     m_valPointer->SetValue(JsonConst::JSON_FALSE);
     m_pointer += 5;
@@ -314,7 +314,7 @@ JSONParser::UnicodeChar()
 
   bool foundBOM(false);
   XString result;
-  if(TryConvertWideString((const uchar*)buffer,1,"",result,foundBOM))
+  if(TryConvertWideString(reinterpret_cast<const uchar*>(buffer),1,"",result,foundBOM))
   {
     return result.GetAt(0);
   }
@@ -562,7 +562,7 @@ JSONParser::ParseNumber()
       ++m_pointer;
       type = JsonType::JDT_number_bcd;
       bcdNumber = number;
-      bcd decimPart = 1;
+      bcd decimPart(1);
 
       while(*m_pointer && isdigit(*m_pointer))
       {
@@ -576,24 +576,24 @@ JSONParser::ParseNumber()
     {
       // Prepare
       ++m_pointer;
-      int exp = 0;
-      int fac = 1;
+      int exponent = 0;
+      int factorex = 1;
 
       // Negative exponential?
       if(*m_pointer == '-')
       {
-        fac = -1;
+        factorex = -1;
         ++m_pointer;
       }
 
       // Find all exponential digits
       while(*m_pointer && isdigit(*m_pointer))
       {
-        exp *= 10;
-        exp += (*m_pointer - '0');
+        exponent *= 10;
+        exponent += (*m_pointer - '0');
         ++m_pointer;
       }
-      bcdNumber *= ::pow((double)10.0,(double)exp * (double)fac);
+      bcdNumber *= ::pow((double)10.0,(double)exponent * (double)factorex);
     }
 
     // Do not forget the sign
@@ -678,11 +678,11 @@ JSONParserSOAP::ParseMain(JSONvalue& p_valPointer,XMLElement& p_element)
   object.push_back(pair);
   p_valPointer.SetValue(object);
 
-  JSONpair& npair = p_valPointer.GetObject().back();
-  JSONvalue& value = npair.m_value;
-
   if(!p_element.GetChildren().empty())
   {
+    JSONpair& npair  = p_valPointer.GetObject().back();
+    JSONvalue& value = npair.m_value;
+
     value.SetDatatype(JsonType::JDT_object);
     ParseLevel(value,p_element);
   }
@@ -837,11 +837,11 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,XStrin
     XString text = element->GetValue();
     Trim(text);
 
-    JSONobject objVal;
-
     if(element->GetAttributes().size() > 0)
     {
-      for(auto& attribute : element->GetAttributes())
+      JSONobject objVal;
+
+      for(const auto& attribute : element->GetAttributes())
       {
         JSONpair attrPair;
         attrPair.m_name = attribute.m_name;
@@ -916,7 +916,7 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
       JSONarray* arr = &(val->GetArray());
       JSONvalue object(JsonType::JDT_object);
       arr->push_back(object);
-      valPointer = here = &(arr->back());
+      here  = &(arr->back());
       value = element->GetValue();
       Trim(value);
     }
@@ -961,7 +961,7 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
       objPtr = &here->GetObject();
         
       JSONpair attrPair;
-      for(auto& attribute : element->GetAttributes())
+      for(const auto& attribute : element->GetAttributes())
       {
         attrPair.m_name = attribute.m_name;
         attrPair.m_value.SetValue(attribute.m_value);

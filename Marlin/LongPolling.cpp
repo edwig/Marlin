@@ -365,7 +365,7 @@ LongPolling::StartPollingThread()
   {
     // Thread for the client queue
     unsigned int threadID = 0;
-    if((m_thread = (HANDLE)_beginthreadex(NULL,0,StartingThePollingThread,(void*)(this),0,&threadID)) == INVALID_HANDLE_VALUE)
+    if((m_thread = reinterpret_cast<HANDLE>(_beginthreadex(NULL,0,StartingThePollingThread,reinterpret_cast<void*>(this),0,&threadID))) == INVALID_HANDLE_VALUE)
     {
       m_thread = NULL;
       threadID = 0;

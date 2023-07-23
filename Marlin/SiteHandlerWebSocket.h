@@ -39,9 +39,9 @@ class SiteHandlerWebSocket: public SiteHandler
 {
 protected:
   // Handlers: Override and return 'true' if handling is ready
-  virtual bool  PreHandle(HTTPMessage* p_message);
+  virtual bool  PreHandle(HTTPMessage* p_message) override;
   virtual bool     Handle(HTTPMessage* p_message) final;
   virtual bool     Handle(HTTPMessage* p_message,WebSocket* p_socket);
-  virtual void PostHandle(HTTPMessage* p_message);
-  virtual void    CleanUp(HTTPMessage* p_message);
+  virtual void PostHandle(HTTPMessage* p_message) override;
+  virtual void    CleanUp(HTTPMessage* p_message) override;
 };

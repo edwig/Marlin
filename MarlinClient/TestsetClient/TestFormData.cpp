@@ -64,9 +64,9 @@ TestFormDataMP(HTTPClient* p_client)
   XString data = GetJsonString();
 
   MultiPartBuffer buffer(FormDataType::FD_MULTIPART);
-  MultiPart* part1 = buffer.AddPart("json", "application/json",data);
-  MultiPart* part2 = buffer.AddPart("empty","text/html",       ""); 
-  MultiPart* part3 = buffer.AddFile("eventsource","application/js",file);
+  const MultiPart* part1 = buffer.AddPart("json", "application/json",data);
+  const MultiPart* part2 = buffer.AddPart("empty","text/html",       ""); 
+  const MultiPart* part3 = buffer.AddFile("eventsource","application/js",file);
 
   // Test if we created all parts
   if(part1 == nullptr || part2 == nullptr || part3 == nullptr)
@@ -99,8 +99,8 @@ TestFormDataMP(HTTPClient* p_client)
     p_client->GetError(&error);
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    printf("HTTP ERROR                  : %s\n",(LPCTSTR)p_client->GetStatusText());
-    printf("HTTP CLIENT Message         : %s\n",(LPCTSTR)error);
+    printf("HTTP ERROR                  : %s\n",p_client->GetStatusText().GetString());
+    printf("HTTP CLIENT Message         : %s\n",error.GetString());
   }
   return result ? 0 : 1;
 }
@@ -132,8 +132,8 @@ TestFormDataUE(HTTPClient* p_client)
     p_client->GetError(&error);
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    printf("HTTP ERROR                  : %s\n",(LPCTSTR)p_client->GetStatusText());
-    printf("HTTP CLIENT Message         : %s\n",(LPCTSTR)error);
+    printf("HTTP ERROR                  : %s\n",p_client->GetStatusText().GetString());
+    printf("HTTP CLIENT Message         : %s\n",error.GetString());
   }
   return result ? 0 : 1;
 }
@@ -142,17 +142,18 @@ int TestFD()
 {
   XString filename("C:\\TEMP\\mpbuffer.txt");
   FILE* fp = nullptr;
-  char buffer[4004];
   XString contenttype("multipart/form-data boundary=\"------WebKitFormBoundaryBFCjeYoxVSC92Luo\"");
 
   fopen_s(&fp, filename, "rb");
   if (fp)
   {
+    char buffer[4004];
+
     fread(buffer, 1, 4000, fp);
     buffer[2063] = 0;
     FileBuffer fb;
     // fb.AddBuffer((uchar*)buffer, 2063);
-    fb.SetBuffer((uchar*) buffer, 2063);
+    fb.SetBuffer(reinterpret_cast<uchar*>(buffer),2063);
 
     MultiPartBuffer mpb(FormDataType::FD_UNKNOWN);
     mpb.ParseBuffer(contenttype, &fb);

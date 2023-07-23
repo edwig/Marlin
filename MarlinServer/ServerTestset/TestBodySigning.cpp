@@ -48,7 +48,7 @@ bool
 SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
 {
   // Display incoming message
-  xprintf("Incoming message in XML:\n%s\n",(LPCTSTR) p_message->GetSoapMessage());
+  xprintf("Incoming message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
   XString paramOne = p_message->GetParameter("One");
@@ -129,13 +129,13 @@ TestMarlinServer::TestBodySigning()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for body signing   : OK : %s\n",(LPCTSTR)site->GetPrefixURL());
+    qprintf("HTTPSite for body signing   : OK : %s\n",site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot create an HTTP site: %s\n",(LPCTSTR)url);
+    qprintf("ERROR: Cannot create an HTTP site: %s\n",url.GetString());
     return error;
   }
   site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapBodySign());
@@ -155,7 +155,7 @@ TestMarlinServer::TestBodySigning()
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",(LPCTSTR)url);
+    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
   }
   return error;
 }

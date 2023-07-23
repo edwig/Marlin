@@ -60,7 +60,7 @@ WebSocketServerIIS::WebSocketServerIIS(XString p_uri)
 
 WebSocketServerIIS::~WebSocketServerIIS()
 {
-  Reset();
+  WebSocketServerIIS::Reset();
 }
 
 void
@@ -178,7 +178,7 @@ WebSocketServerIIS::WriteFragment(BYTE*  p_buffer
   WSFrame* frame  = new WSFrame();
   frame->m_utf8   = (p_opcode == Opcode::SO_UTF8);
   frame->m_length = p_length;
-  frame->m_data   = (BYTE*)malloc((size_t)p_length + WS_OVERHEAD);
+  frame->m_data   = reinterpret_cast<BYTE*>(malloc((size_t)p_length + WS_OVERHEAD));
   frame->m_final  = p_last;
   memcpy_s(frame->m_data,(size_t)p_length + WS_OVERHEAD,p_buffer,p_length);
 
@@ -302,7 +302,7 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
 
   if(!p_final)
   {
-    BYTE* data = (BYTE*)realloc(m_reading->m_data,(size_t)m_reading->m_length + (size_t)m_fragmentsize + WS_OVERHEAD);
+    BYTE* data = reinterpret_cast<BYTE*>(realloc(m_reading->m_data,(size_t)m_reading->m_length + (size_t)m_fragmentsize + WS_OVERHEAD));
     if(data)
     {
       m_reading->m_data = data;
@@ -322,7 +322,7 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
 
     // Closing fragment is always ONE websocket frame, and thus always fits 
     // in the reading data buffer of two frames.
-    strcpy_s((char*)m_reading->m_data,m_fragmentsize,m_closing.GetString());
+    strcpy_s(reinterpret_cast<char*>(m_reading->m_data),m_fragmentsize,m_closing.GetString());
     m_reading->m_length = m_closing.GetLength();
     m_reading->m_utf8   = true;
     m_reading->m_final  = true;
@@ -367,7 +367,7 @@ WebSocketServerIIS::SocketListener()
   {
     m_reading = new WSFrame();
     m_reading->m_length = 0;
-    BYTE* data = (BYTE*)malloc((size_t)m_fragmentsize + WS_OVERHEAD);
+    BYTE* data = reinterpret_cast<BYTE*>(malloc((size_t)m_fragmentsize + WS_OVERHEAD));
     if(data)
     {
       m_reading->m_data = data;
@@ -424,7 +424,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,XString p_reason)
 
   if(TryCreateWideString(p_reason,"",false,&buffer,length))
   {
-    pointer = (LPCWSTR)buffer;
+    pointer = reinterpret_cast<LPCWSTR>(buffer);
   }
 
   // Still other parameters and reason to do
@@ -477,7 +477,7 @@ WebSocketServerIIS::ReceiveCloseSocket()
   {
     XString encoded;
     bool foundBom = false;
-    if(TryConvertWideString((const uchar*)pointer,length,"",encoded,foundBom))
+    if(TryConvertWideString(reinterpret_cast<const uchar*>(pointer),length,"",encoded,foundBom))
     {
       m_closing = encoded;
     }

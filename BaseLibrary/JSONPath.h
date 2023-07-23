@@ -88,9 +88,9 @@ struct Relation
 class JSONPath
 {
 public:
-  JSONPath(bool p_originOne = false);
-  JSONPath(JSONMessage* p_message,XString p_path,bool p_originOne = false);
-  JSONPath(JSONMessage& p_message,XString p_path,bool p_originOne = false);
+  explicit JSONPath(bool p_originOne = false);
+  explicit JSONPath(JSONMessage* p_message,XString p_path,bool p_originOne = false);
+  explicit JSONPath(JSONMessage& p_message,XString p_path,bool p_originOne = false);
  ~JSONPath();
 
   // Our main purpose: evaluate the path in the message
@@ -116,7 +116,7 @@ private:
   void    Reset();
   void    PresetStatus();
   bool    ParseLevel(XString& p_parsing);
-  bool    FindDelimiterType(XString& p_parsing);
+  bool    FindDelimiterType(const XString& p_parsing);
   bool    GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex,bool& p_isFilter);
   void    ProcessWildcard();
   void    ProcessSlice(XString p_token);
@@ -124,11 +124,11 @@ private:
   void    ProcessFilter(XString p_token);
   void    ProcessFilterTokenCharacters(XString p_token);
   int     GetCurrentCharacter(XString p_token,int& p_pos);
-  int     GetNextCharacter(XString p_token,int& p_pos);
-  int     GetEndOfPart(XString p_token,int& p_pos);
+  int     GetNextCharacter(XString p_token,const int& p_pos);
+  int     GetEndOfPart(XString p_token,const int& p_pos);
   void    EvaluateFilter(Relation relation);
   XString DetermineRelationalOperator(XString p_token,int& p_pos);
-  bool    EvaluateFilterClause(Relation p_filter,JSONvalue p_value);
+  bool    EvaluateFilterClause(Relation p_filter,const JSONvalue& p_value);
   void    HandleLogicalNot(XString p_token,int& p_pos);
   void    HandleRelationOperators(XString p_token,int& p_pos);
   void    HandleLogicalAnd(XString p_token,int& p_pos);

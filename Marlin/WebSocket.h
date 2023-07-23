@@ -140,7 +140,7 @@ using WSFrameStack  = std::deque<WSFrame*>;
 using SocketParams  = std::map<XString,XString>;
 
 // Prototype for WebSocket callback handler
-typedef void(*LPFN_SOCKETHANDLER)(WebSocket* p_socket,WSFrame* p_event);
+typedef void(*LPFN_SOCKETHANDLER)(WebSocket* p_socket,const WSFrame* p_event);
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -151,7 +151,7 @@ typedef void(*LPFN_SOCKETHANDLER)(WebSocket* p_socket,WSFrame* p_event);
 class WebSocket
 {
 public:
-  WebSocket(XString p_uri);
+  explicit WebSocket(XString p_uri);
   virtual ~WebSocket();
 
   // FUNCTIONS

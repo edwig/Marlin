@@ -54,7 +54,7 @@ using QOptionMap = std::map<int,QualityOption>;
 class ServiceQuality
 {
 public:
-  ServiceQuality(XString p_header);
+  explicit ServiceQuality(XString p_header);
  ~ServiceQuality() = default;
 
   // Request options from the HTTP header in order of preference. Starts with 0.

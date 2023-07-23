@@ -36,7 +36,7 @@ class MarlinConfig : public XMLMessage
 {
 public:
   MarlinConfig();
-  MarlinConfig(XString p_filename);
+  explicit MarlinConfig(XString p_filename);
   virtual ~MarlinConfig();
 
   // FILE METHODS

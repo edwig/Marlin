@@ -51,7 +51,7 @@ class CrackedURL
 {
 public:
   CrackedURL();
-  CrackedURL(XString p_url);
+  explicit CrackedURL(XString p_url);
  ~CrackedURL();
 
   void      SetPath(XString p_path);

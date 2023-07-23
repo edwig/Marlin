@@ -44,7 +44,7 @@ XMLParserJSON::XMLParserJSON()
 {
 }
 
-XMLParserJSON::XMLParserJSON(XMLMessage* p_xml,JSONMessage* p_json)
+XMLParserJSON::XMLParserJSON(XMLMessage* p_xml,const JSONMessage* p_json)
               :XMLParser(p_xml)
 {
   m_soap = reinterpret_cast<SOAPMessage*>(p_xml);

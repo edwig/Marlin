@@ -115,22 +115,22 @@ public:
   // Default XTOR
   SOAPMessage();
   // XTOR from an incoming message
-  SOAPMessage(HTTPMessage*  p_msg);
+  explicit SOAPMessage(HTTPMessage*  p_msg);
   // XTOR from a JSON message
-  SOAPMessage(JSONMessage* p_msg);
+  explicit SOAPMessage(JSONMessage* p_msg);
   // XTOR from an incoming message or string data
-  SOAPMessage(const char* p_soapMessage,bool p_incoming = true);
+  explicit SOAPMessage(const char* p_soapMessage,bool p_incoming = true);
   // XTOR for a copy
-  SOAPMessage(SOAPMessage* p_orig);
+  explicit SOAPMessage(SOAPMessage* p_orig);
   // XTOR for new outgoing message
-  SOAPMessage(XString&    p_namespace
-             ,XString&    p_soapAction
-             ,SoapVersion p_version = SoapVersion::SOAP_12
-             ,XString     p_url     = ""
-             ,bool        p_secure  = false
-             ,XString     p_server  = ""
-             ,int         p_port    = INTERNET_DEFAULT_HTTP_PORT
-             ,XString     p_absPath = "");
+  explicit SOAPMessage(XString&    p_namespace
+                      ,XString&    p_soapAction
+                      ,SoapVersion p_version = SoapVersion::SOAP_12
+                      ,XString     p_url     = ""
+                      ,bool        p_secure  = false
+                      ,XString     p_server  = ""
+                      ,int         p_port    = INTERNET_DEFAULT_HTTP_PORT
+                      ,XString     p_absPath = "");
   // DTOR
   virtual ~SOAPMessage();
 
@@ -146,18 +146,18 @@ public:
   // FILE OPERATIONS
 
   // Load from file
-  virtual bool    LoadFile(const XString& p_fileName);
-  virtual bool    LoadFile(const XString& p_fileName, StringEncoding p_encoding);
+  virtual bool    LoadFile(const XString& p_fileName) override;
+  virtual bool    LoadFile(const XString& p_fileName, StringEncoding p_encoding) override;
   // Save to file
-  virtual bool    SaveFile(const XString& p_fileName, bool p_withBom = false);
-  virtual bool    SaveFile(const XString& p_fileName, StringEncoding p_encoding, bool p_withBom = false);
+  virtual bool    SaveFile(const XString& p_fileName, bool p_withBom = false) override;
+  virtual bool    SaveFile(const XString& p_fileName, StringEncoding p_encoding, bool p_withBom = false) override;
 
   // SETTERS
 
   // Set the alternative namespace
   void            SetNamespace(XString p_namespace);
   // Set Command name
-  void            SetSoapAction(XString& p_name);
+  void            SetSoapAction(const XString& p_name);
   void            SetHasInitialAction(bool p_initial);
   void            SetSoapMustBeUnderstood(bool p_addAttribute = true,bool p_understand = true);
   // Set the SOAP version
@@ -174,21 +174,21 @@ public:
   // Set the cookies
   void            SetCookie(Cookie& p_cookie);
   void            SetCookie(XString p_name,XString p_value,XString p_metadata = "",bool p_secure = false);
-  void            SetCookies(Cookies& p_cookies);
+  void            SetCookies(const Cookies& p_cookies);
   // Set request Handle
   void            SetRequestHandle(HTTP_OPAQUE_ID p_request);
   // Set URL to send message to
-  void            SetURL(XString& p_url);
+  void            SetURL(const XString& p_url);
   void            SetStatus(unsigned p_status);
   // Set parts of the URL
   void            SetSecure(bool p_secure);
-  void            SetServer(XString& p_server);
+  void            SetServer(const XString& p_server);
   void            SetPort(unsigned p_port);
-  void            SetAbsolutePath(XString& p_path);
+  void            SetAbsolutePath(const XString& p_path);
   void            SetExtension(XString p_extension);
   // Set security details
-  void            SetUser(XString& p_user);
-  void            SetPassword(XString& p_password);
+  void            SetUser(const XString& p_user);
+  void            SetPassword(const XString& p_password);
   void            SetTokenNonce(XString p_nonce);
   void            SetTokenCreated(XString p_created);
   bool            SetTokenProfile(XString p_user,XString p_password,XString p_created,XString p_nonce = "");
@@ -252,12 +252,12 @@ public:
   Cookie*         GetCookie(unsigned p_ind);
   XString         GetCookie(unsigned p_ind = 0, XString p_metadata = "");
   XString         GetCookie(XString p_name = "",XString p_metadata = "");
-  Cookies&        GetCookies();
+  const Cookies&  GetCookies() const;
   // Get URL destination
   XString         GetURL() const;
   const CrackedURL& GetCrackedURL() const;
   XString         GetUnAuthorisedURL() const;
-  unsigned        GetStatus();
+  unsigned        GetStatus() const;
   // Get Request handle
   HTTP_OPAQUE_ID  GetRequestHandle() const;
   HTTPSite*       GetHTTPSite() const;
@@ -302,7 +302,7 @@ public:
   XString         GetMessageNonce() const;
   bool            GetLastMessage()  const;
   RangeMap&       GetRangeMap();
-  HeaderMap*      GetHeaderMap();
+  const HeaderMap* GetHeaderMap() const;
   XMLEncryption   GetSecurityLevel() const;
   XString         GetSecurityPassword() const;
   WsdlOrder       GetWSDLOrder() const;
@@ -312,7 +312,7 @@ public:
   XString         GetCanonicalForm(XMLElement* p_element);
   bool            GetHasInitialAction() const;
   bool            GetHasBeenAnswered();
-  Routing&        GetRouting();
+  const Routing&  GetRouting() const;
   XString         GetRoute(int p_index);
 
   // PARAMETER INTERFACE
@@ -333,7 +333,7 @@ public:
   XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,unsigned          p_value,bool p_front = false);
   XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,bool              p_value,bool p_front = false);
   XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,double            p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,bcd               p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,const bcd&        p_value,bool p_front = false);
   XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,__int64           p_value,bool p_front = false);
   XMLElement*     AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,unsigned __int64  p_value,bool p_front = false);
 
@@ -362,7 +362,7 @@ public:
 
 protected:
   // Encrypt the whole message: yielding a new message
-  virtual void    EncryptMessage(XString& p_message);
+  virtual void    EncryptMessage(XString& p_message) override;
 
   // Set the SOAP 1.1 SOAPAction from the HTTP protocol
   void            SetSoapActionFromHTTTP(XString p_action);
@@ -495,7 +495,7 @@ SOAPMessage::GetNamespace() const
 }
 
 inline void
-SOAPMessage::SetSoapAction(XString& p_name)
+SOAPMessage::SetSoapAction(const XString& p_name)
 {
   m_soapAction = p_name;
 }
@@ -536,13 +536,13 @@ SOAPMessage::SetSecure(bool p_secure)
 }
 
 inline void    
-SOAPMessage::SetUser(XString& p_user)
+SOAPMessage::SetUser(const XString& p_user)
 {
   m_user = p_user;
 }
 
 inline void    
-SOAPMessage::SetPassword(XString& p_password)
+SOAPMessage::SetPassword(const XString& p_password)
 {
   m_password = p_password;
 }
@@ -560,7 +560,7 @@ SOAPMessage::SetTokenCreated(XString p_created)
 }
 
 inline void    
-SOAPMessage::SetServer(XString& p_server)
+SOAPMessage::SetServer(const XString& p_server)
 {
   m_cracked.m_host = p_server;
   ReparseURL();
@@ -581,7 +581,7 @@ SOAPMessage::SetExtension(XString p_extension)
 }
 
 inline void    
-SOAPMessage::SetAbsolutePath(XString& p_path)
+SOAPMessage::SetAbsolutePath(const XString& p_path)
 {
   m_cracked.m_path = p_path;
   ReparseURL();
@@ -815,8 +815,8 @@ SOAPMessage::GetRangeMap()
   return m_ranges;
 }
 
-inline HeaderMap*
-SOAPMessage::GetHeaderMap()
+inline const HeaderMap*
+SOAPMessage::GetHeaderMap() const
 {
   return &m_headers;
 }
@@ -864,14 +864,14 @@ SOAPMessage::SetCookie(Cookie& p_cookie)
   m_cookies.AddCookie(p_cookie);
 }
 
-inline Cookies&
-SOAPMessage::GetCookies()
+inline const Cookies&
+SOAPMessage::GetCookies() const
 {
   return m_cookies;
 }
 
 inline void
-SOAPMessage::SetCookies(Cookies& p_cookies)
+SOAPMessage::SetCookies(const Cookies& p_cookies)
 {
   m_cookies = p_cookies;
 }
@@ -978,14 +978,14 @@ SOAPMessage::AddRoute(XString p_route)
   m_routing.push_back(p_route);
 }
 
-inline Routing&
-SOAPMessage::GetRouting()
+inline const Routing&
+SOAPMessage::GetRouting() const
 {
   return m_routing;
 }
 
 inline unsigned
-SOAPMessage::GetStatus() 
+SOAPMessage::GetStatus() const
 {
   return m_status; 
 };

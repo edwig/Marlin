@@ -308,7 +308,6 @@ FindFieldInHTTPHeader(XString p_headervalue,XString p_field)
 {
   XString value;
   XString head(p_headervalue);
-  int length = p_headervalue.GetLength();
   head.MakeLower();
   p_field.MakeLower();
   head.Replace(" =","=");
@@ -317,6 +316,7 @@ FindFieldInHTTPHeader(XString p_headervalue,XString p_field)
   int pos = head.Find(p_field);
   if(pos > 0)
   {
+    int length = p_headervalue.GetLength();
     // Skip past the fieldname
     pos += p_field.GetLength();
     // Skip white space
@@ -371,7 +371,6 @@ SetFieldInHTTPHeader(XString p_headervalue,XString p_field,XString p_value)
   // The hard part: replace the header value
   XString value;
   XString head(p_headervalue);
-  int length = p_headervalue.GetLength();
   head.MakeLower();
   p_field.MakeLower();
   head.Replace(" =", "=");
@@ -380,6 +379,8 @@ SetFieldInHTTPHeader(XString p_headervalue,XString p_field,XString p_value)
   int pos = head.Find(p_field);
   if(pos > 0)
   {
+    int length = p_headervalue.GetLength();
+
     // Skip past the field name
     pos += p_field.GetLength();
     // Skip white space
@@ -506,8 +507,8 @@ TryConvertWideString(const uchar* p_buffer
   // Fill the code page names the first time
   InitCodePageNames();
 
-  if(((BYTE*)p_buffer)[p_length    ] != 0 &&
-     ((BYTE*)p_buffer)[p_length + 1] != 0)
+  if(reinterpret_cast<const BYTE*>(p_buffer)[p_length    ] != 0 &&
+     reinterpret_cast<const BYTE*>(p_buffer)[p_length + 1] != 0)
   {
     // Unicode buffer not null terminated !!! 
     // Completely legal to get from the HTTP service.
@@ -532,10 +533,10 @@ TryConvertWideString(const uchar* p_buffer
 
   // Scanning for a BOM UTF-16 in Little-endian mode for Intel processors
   DWORD_PTR extra = 0;
-  if(((BYTE*)p_buffer)[0] == 0xFF && ((BYTE*)p_buffer)[1] == 0xFE)
+  if(reinterpret_cast<const BYTE*>(p_buffer)[0] == 0xFF && 
+     reinterpret_cast<const BYTE*>(p_buffer)[1] == 0xFE)
   {
     extra      = 2;     // Offset in buffer for conversion
-    p_length  -= 2;     // Buffer is effectively 2 shorter
     p_foundBOM = true;  // Remember we found a BOM
   }
 
@@ -561,7 +562,7 @@ TryConvertWideString(const uchar* p_buffer
                                       dwFlag, 
                                       (LPCWSTR)((DWORD_PTR)p_buffer + extra),
                                       -1, // p_length, 
-                                      (LPSTR)buffer, 
+                                      reinterpret_cast<LPSTR>(buffer), 
                                       iLength,
                                       NULL,
                                       NULL);
@@ -638,7 +639,7 @@ TryCreateWideString(const XString& p_string
                                   ,dwFlags
                                   ,p_string.GetString()
                                   ,-1 // p_string.GetLength()
-                                  ,(LPWSTR)buffer
+                                  ,reinterpret_cast<LPWSTR>(buffer)
                                   ,iLength);
     if(iLength > 0)
     {
@@ -689,7 +690,7 @@ StringToWString(XString p_string)
                                  ,flags
                                  ,p_string.GetString()
                                  ,-1 // p_string.GetLength()
-                                 ,(LPWSTR)buffer
+                                 ,reinterpret_cast<LPWSTR>(buffer)
                                  ,length);
     if(length > 0)
     {
@@ -699,7 +700,7 @@ StringToWString(XString p_string)
       buffer[length    ] = 0;
       buffer[length + 1] = 0;
 
-      result = (LPWSTR) buffer;
+      result = reinterpret_cast<LPWSTR>(buffer);
     }
     delete[] buffer;
   }
@@ -735,7 +736,7 @@ WStringToString(std::wstring p_string)
                                       dwFlag,
                                       p_string.c_str(),
                                       -1, // p_length, 
-                                      (LPSTR) buffer,
+                                      reinterpret_cast<LPSTR>(buffer),
                                       length,
                                       NULL,
                                       NULL);
@@ -808,7 +809,7 @@ EncodeStringForTheWire(XString p_string,XString p_charset /*="utf-8"*/)
 bool
 DetectUTF8(XString& p_string)
 {
-  const unsigned char* bytes = (const unsigned char*)p_string.GetString();
+  const unsigned char* bytes = reinterpret_cast<const unsigned char*>(p_string.GetString());
   bool detectedUTF8 = false;
   unsigned int cp = 0;
   int num = 0;

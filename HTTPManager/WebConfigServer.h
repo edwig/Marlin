@@ -40,8 +40,8 @@ class WebConfigServer : public CDialog
   DECLARE_DYNAMIC(WebConfigServer)
 
 public:
-  WebConfigServer(bool p_iis,CWnd* pParent = NULL);   // standard constructor
- ~WebConfigServer();
+  explicit WebConfigServer(bool p_iis,CWnd* pParent = NULL);   // standard constructor
+  virtual ~WebConfigServer();
   BOOL OnInitDialog();
   void SetSiteConfig(XString p_urlPrefix,XString m_fileName);
   void ReadWebConfig (MarlinConfig& p_config);

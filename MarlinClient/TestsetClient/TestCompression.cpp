@@ -87,7 +87,7 @@ int TestCompression(HTTPClient* p_client)
   {
     // --- "---------------------------------------------- - ------
     xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-    xprintf("ERROR %s\n",(LPCTSTR)p_client->GetStatusText());
+    xprintf("ERROR %s\n",p_client->GetStatusText().GetString());
   }
   else
   {

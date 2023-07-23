@@ -40,8 +40,8 @@ public:
   enum { MaxFrames = 64 };
 
   // Construction
-  StackTrace(unsigned int p_skip = 0);
-  StackTrace(CONTEXT* p_context, unsigned int p_skip = 0)
+  explicit StackTrace(unsigned int p_skip = 0);
+  explicit StackTrace(CONTEXT* p_context, unsigned int p_skip = 0)
   {
     Process(p_context, p_skip);
   }
@@ -69,7 +69,7 @@ private:
   typedef std::list<Frame> Trace;
   Trace   m_trace;
 
-  // Getting the stacktrace
+  // Getting the StackTrace
   void Process(CONTEXT *p_context, unsigned int p_skip);
 };
 

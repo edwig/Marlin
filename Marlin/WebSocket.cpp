@@ -32,6 +32,7 @@
 #include "ConvertWideString.h"
 #include "GetLastErrorAsString.h"
 #include "Version.h"
+#include <ServiceReporting.h>
 #include <wincrypt.h>
 #include <vadefs.h>
 
@@ -100,7 +101,7 @@ WebSocket::WebSocket(XString p_uri)
           ,m_openReading(false)
           ,m_openWriting(false)
 {
-  Reset();
+  WebSocket::Reset();
   // Init synchronization
   InitializeCriticalSection(&m_lock);
   InitializeCriticalSection(&m_disp);
@@ -325,7 +326,7 @@ WebSocket::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
     result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,p_text);
 
     WSFrame* frame  = new WSFrame();
-    frame->m_data   = (BYTE*) _strdup(p_text.GetString());
+    frame->m_data   = reinterpret_cast<BYTE*>(_strdup(p_text.GetString()));
     frame->m_length = p_text.GetLength();
     frame->m_utf8   = true;
     frame->m_final  = true;
@@ -335,14 +336,12 @@ WebSocket::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
     OnError();
   }
 
-#ifdef _DEBUG
   // nothing logged
   if(!result)
   {
     // What can we do? As a last result: print debug pane
-    TRACE("%s Error [%d] %s\n",MARLIN_SERVER_VERSION,p_code,(LPCTSTR)p_text);
+    SvcReportErrorEvent(0,true,__FUNCTION__,"%s Error [%d] %s\n",MARLIN_SERVER_VERSION,p_code,p_text.GetString());
   }
-#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -516,11 +515,11 @@ WebSocket::WriteString(XString p_string)
     {
       DWORD toSend  = encoded.GetLength();
       DWORD total   = 0;
-      BYTE* pointer = (BYTE*)encoded.GetString();
+      BYTE* pointer = reinterpret_cast<BYTE*>(const_cast<char*>(encoded.GetString()));
 
       if(MUSTLOG(HLL_TRACEDUMP))
       {
-        m_logfile->AnalysisHex(__FUNCTION__,m_key,(void*)pointer,toSend);
+        m_logfile->AnalysisHex(__FUNCTION__,m_key,reinterpret_cast<void*>(pointer),toSend);
       }
   
       do
@@ -654,11 +653,11 @@ WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
     if(TryConvertWideString(buffer_utf8,length_utf8,"",encoded,foundBom))
     {
       int len = encoded.GetLength() + 1;
-      BYTE* data = (BYTE*) realloc(p_frame->m_data,len);
+      BYTE* data = reinterpret_cast<BYTE*>(realloc(p_frame->m_data,len));
       if(data)
       {
         p_frame->m_data = data;
-        strcpy_s((char*) p_frame->m_data,len,encoded.GetString());
+        strcpy_s(reinterpret_cast<char*>(p_frame->m_data),len,encoded.GetString());
       }
       else
       {
@@ -672,7 +671,7 @@ WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
   // This is the data, as we interpret it in MBCS
   if(MUSTLOG(HLL_LOGBODY))
   {
-    DETAILLOG1((char*)p_frame->m_data);
+    DETAILLOG1(reinterpret_cast<char*>(p_frame->m_data));
   }
 }
 

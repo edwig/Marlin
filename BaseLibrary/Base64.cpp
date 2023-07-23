@@ -139,7 +139,7 @@ Base64::Encrypt(XString p_unencrypted)
   XString encrypt;
   int length = (int) B64_length(p_unencrypted.GetLength());
   char* buffer = encrypt.GetBufferSetLength(length);
-  Encrypt((const unsigned char*)p_unencrypted.GetString(),p_unencrypted.GetLength(),(unsigned char*)buffer);
+  Encrypt(reinterpret_cast<const unsigned char*>(p_unencrypted.GetString()),p_unencrypted.GetLength(),reinterpret_cast<unsigned char*>(buffer));
   encrypt.ReleaseBufferSetLength(length);
 
   return encrypt;
@@ -151,7 +151,7 @@ Base64::Decrypt(XString p_encrypted)
   XString decrypt;
   int length = (int) Ascii_length(p_encrypted.GetLength());
   char* buffer = decrypt.GetBufferSetLength(length);
-  Decrypt((const unsigned char*)p_encrypted.GetString(),p_encrypted.GetLength(),(unsigned char*)buffer);
+  Decrypt(reinterpret_cast<const unsigned char*>(p_encrypted.GetString()),p_encrypted.GetLength(),reinterpret_cast<unsigned char*>(buffer));
   decrypt.ReleaseBuffer();
 
   return decrypt;

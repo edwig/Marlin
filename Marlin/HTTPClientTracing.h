@@ -36,7 +36,7 @@ class LogAnalysis;
 class HTTPClientTracing
 {
 public:
-  HTTPClientTracing(HTTPClient* p_client);
+  explicit HTTPClientTracing(HTTPClient* p_client);
  ~HTTPClientTracing();
 
   // Trace of all the settings of the session and the request handle

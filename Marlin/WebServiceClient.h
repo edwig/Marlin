@@ -77,10 +77,10 @@ using MessageStore = std::deque<SoapMsg>;
 class WebServiceClient
 {
 public:
-  WebServiceClient(XString p_contract
-                  ,XString p_url
-                  ,XString p_wsdlFile = ""
-                  ,bool    p_reliable = false);
+  explicit WebServiceClient(XString p_contract
+                           ,XString p_url
+                           ,XString p_wsdlFile = ""
+                           ,bool    p_reliable = false);
  ~WebServiceClient();
 
   // Opening and closing the sendport (HTTPClient)

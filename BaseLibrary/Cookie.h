@@ -47,7 +47,7 @@ class Cookie
 {
 public:
   Cookie();
-  Cookie(XString p_fromHTTP);
+  explicit Cookie(XString p_fromHTTP);
 
   // SETTERS
 

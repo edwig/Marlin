@@ -56,7 +56,7 @@ WebSocketServerSync::WebSocketServerSync(XString p_uri)
 
 WebSocketServerSync::~WebSocketServerSync()
 {
-  Reset();
+  WebSocketServerSync::Reset();
 }
 
 void

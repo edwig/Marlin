@@ -33,23 +33,23 @@ class HTTPServerIIS;
 class HTTPSiteIIS : public HTTPSite
 {
 public:
-  HTTPSiteIIS(HTTPServerIIS* p_server
-             ,int            p_port
-             ,XString        p_site
-             ,XString        p_prefix
-             ,HTTPSite*      p_mainSite = nullptr
-             ,LPFN_CALLBACK  p_callback = nullptr);
+  explicit HTTPSiteIIS(HTTPServerIIS* p_server
+                      ,int            p_port
+                      ,XString        p_site
+                      ,XString        p_prefix
+                      ,HTTPSite*      p_mainSite = nullptr
+                      ,LPFN_CALLBACK  p_callback = nullptr);
 
   // MANDATORY: Explicitly starting after configuration of the site
-  virtual bool StartSite();
+  virtual bool StartSite() override;
 
   // OPTIONAL: Set the webroot of the site
-  virtual bool SetWebroot(XString p_webroot);
+  virtual bool SetWebroot(XString p_webroot) override;
   // Anonymous authentication?
-  virtual bool GetHasAnonymousAuthentication(HANDLE p_token);
+  virtual bool GetHasAnonymousAuthentication(HANDLE p_token) override;
 
 private:
-  // Getting the sites directory within the IIS rootdir
+  // Getting the sites directory within the IIS root directory
   XString GetIISSiteDir();
   // Init the site from the ApplicationHost.Config and web.config
   void    InitSite();

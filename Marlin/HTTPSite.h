@@ -215,8 +215,8 @@ public:
   void            SetCookiesMaxAge(int p_seconds);
 
   // GETTERS
-  XString         GetSite()                         { return m_site;          };
-  int             GetPort()                         { return m_port;          };
+  XString         GetSite() const                   { return m_site;          };
+  int             GetPort() const                   { return m_port;          };
   bool            GetIsStarted()                    { return m_isStarted;     };
   bool            GetIsSubsite()                    { return m_isSubsite;     };
   bool            GetAsync()                        { return m_async;         };

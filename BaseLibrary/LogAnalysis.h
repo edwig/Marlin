@@ -87,7 +87,7 @@ using LogList = std::deque<XString>;
 class LogAnalysis
 {
 public:
-  LogAnalysis(XString p_name);
+  explicit LogAnalysis(XString p_name);
  ~LogAnalysis();
 
   // Log this line

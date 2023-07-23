@@ -31,11 +31,11 @@
 class SiteFilterXSS: public SiteFilter
 {
 public:
-  SiteFilterXSS(unsigned p_priority,XString p_name);
+  explicit SiteFilterXSS(unsigned p_priority,XString p_name);
   virtual ~SiteFilterXSS();
 
   // Handle the filter
-  virtual bool Handle(HTTPMessage* p_message);
+  virtual bool Handle(HTTPMessage* p_message) override;
 
 private:
 

@@ -34,7 +34,7 @@ class SecurityDlg : public CDialogEx
 	DECLARE_DYNAMIC(SecurityDlg)
 
 public:
-	SecurityDlg(CWnd* pParent = NULL);   // standard constructor
+  explicit SecurityDlg(CWnd* pParent = NULL);   // standard constructor
   virtual ~SecurityDlg();
   BOOL OnInitDialog();
 

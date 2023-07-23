@@ -118,7 +118,7 @@ MapDialog::~MapDialog()
   // Back to the original directory
   if(m_originalDir[0])
   {
-    if(_chdir((LPCSTR) m_originalDir) == -1)
+    if(_chdir(m_originalDir) == -1)
     {
       if(errno != EINVAL)
       {
@@ -241,26 +241,20 @@ void MapDialog::OnSelChange(XString const&)
 }
 
 //=============================================================================
-int MapDialog::CallbackProc(    
-    HWND hwnd, 
-    UINT uMsg, 
-    LPARAM lParam)
+int MapDialog::CallbackProc(HWND hwnd,UINT uMsg,LPARAM lParam)
 {
   try
   {
     m_hwnd = hwnd;
     switch(uMsg)
     {
-    case BFFM_INITIALIZED:
-      if(m_init != "") SetSelection(m_init);
-      OnInitialized();
-      break;
-    case BFFM_SELCHANGED:
-      OnSelChange(PidlToPath((LPITEMIDLIST)lParam));
-      break;
-    case BFFM_VALIDATEFAILED:
-      MessageBox(NULL,"Directory path is incorrect. Adjust the directory name.","MapDialog",MB_OK|MB_ICONERROR);
-      break;
+      case BFFM_INITIALIZED:    if(m_init != "") SetSelection(m_init);
+                                OnInitialized();
+                                break;
+      case BFFM_SELCHANGED:     OnSelChange(PidlToPath((LPITEMIDLIST)lParam));
+                                break;
+      case BFFM_VALIDATEFAILED: MessageBox(NULL,"Directory path is incorrect. Adjust the directory name.","MapDialog",MB_OK|MB_ICONERROR);
+                                break;
     }
     m_hwnd = 0;
   }
@@ -272,17 +266,11 @@ int MapDialog::CallbackProc(
   return 0;
 }
 
-
 //=============================================================================
 
-int CALLBACK MapDialog::CallbackProcS(
-    HWND hwnd, 
-    UINT uMsg, 
-    LPARAM lParam, 
-    LPARAM lpData
-    )
+int CALLBACK MapDialog::CallbackProcS(HWND hwnd,UINT uMsg, LPARAM lParam,LPARAM lpData)
 {
-  return ((MapDialog*)lpData)->CallbackProc(hwnd, uMsg, lParam);
+  return (reinterpret_cast<MapDialog*>(lpData))->CallbackProc(hwnd, uMsg, lParam);
 }
 
 //=============================================================================

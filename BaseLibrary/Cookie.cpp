@@ -148,15 +148,15 @@ Cookie::GetSetCookieText()
     WCHAR pwszTimeStr[WINHTTP_TIME_FORMAT_BUFSIZE+2];
 
     // Convert the current time to HTTP format.
-    if(!WinHttpTimeFromSystemTime(&m_expires,(LPWSTR) &pwszTimeStr))
+    if(!WinHttpTimeFromSystemTime(&m_expires,reinterpret_cast<LPWSTR>(&pwszTimeStr)))
     {
       XString error;
-      error.Format("Error %u in WinHttpTimeFromSystemTime.\n",GetLastError());
+      error.Format("Error %ul in WinHttpTimeFromSystemTime.\n",GetLastError());
       throw StdException(error.GetString());
     }
     XString time;
     bool foundBom(false);
-    TryConvertWideString((const uchar*)pwszTimeStr,WINHTTP_TIME_FORMAT_BUFSIZE,"utf-8",time,foundBom);
+    TryConvertWideString(reinterpret_cast<const uchar*>(pwszTimeStr),WINHTTP_TIME_FORMAT_BUFSIZE,"utf-8",time,foundBom);
     cookie.AppendFormat("; Expires=%s",time.GetString());
   }
 
@@ -221,7 +221,7 @@ Cookie::SetExpires(XString p_expires)
   if(!HTTPTimeToSystemTime(p_expires,&m_expires))
   {
     XString error;
-    error.Format("Error %u in HTTPTimeToSystemTime.\n",GetLastError());
+    error.Format("Error %ul in HTTPTimeToSystemTime.\n",GetLastError());
     throw StdException(error);
   }
 }

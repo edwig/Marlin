@@ -32,7 +32,7 @@ using XmlEnums = std::map<XString,XString>;
 class XMLRestriction
 {
 public:
-  XMLRestriction(XString p_name);
+  explicit XMLRestriction(XString p_name);
   XString PrintRestriction(XString p_name);
   XString CheckRestriction(XmlDataType p_type,XString p_value);
   XString CheckDatatype   (XmlDataType p_type,XString p_value);

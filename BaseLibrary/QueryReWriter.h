@@ -115,7 +115,7 @@ using SQLWords = std::map<XString,SQLWord,StringICompare>;
 class QueryReWriter
 {
 public:
-  QueryReWriter(XString p_schema);
+  explicit QueryReWriter(XString p_schema);
   // Our primary function
   XString Parse(XString p_input);
 

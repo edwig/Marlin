@@ -115,15 +115,15 @@ HTTPURLGroup::StartGroup()
   authInfo.DisableNTLMCredentialCaching = !m_ntlmCache;
   if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)
   {
-    authInfo.DigestParams.DomainName       = (PWSTR) wdomain.c_str();
-    authInfo.DigestParams.DomainNameLength = (USHORT)wdomain.size() * 2;
-    authInfo.DigestParams.Realm            = (PWSTR) wrealm .c_str();
-    authInfo.DigestParams.RealmLength      = (USHORT)wrealm .size() * 2;
+    authInfo.DigestParams.DomainName       = reinterpret_cast<PWSTR>(const_cast<wchar_t*>(wdomain.c_str()));
+    authInfo.DigestParams.DomainNameLength = static_cast<USHORT>(wdomain.size() * 2);
+    authInfo.DigestParams.Realm            = reinterpret_cast<PWSTR>(const_cast<wchar_t*>(wrealm .c_str()));
+    authInfo.DigestParams.RealmLength      = static_cast<USHORT>(wrealm .size() * 2);
   }
   if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)
   {
-    authInfo.BasicParams.Realm       = (PWSTR) wrealm.c_str();
-    authInfo.BasicParams.RealmLength = (USHORT)wrealm.size() * 2;
+    authInfo.BasicParams.Realm       = reinterpret_cast<PWSTR>(const_cast<wchar_t*>(wrealm.c_str()));
+    authInfo.BasicParams.RealmLength = static_cast<USHORT>(wrealm.size() * 2);
   }
 
   // See which we must use
