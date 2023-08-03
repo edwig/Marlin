@@ -55,12 +55,16 @@ WebConfigLogging::WebConfigLogging(bool p_iis,CWnd* pParent /*=NULL*/)
   m_useLogTiming    = false;
   m_useLogEvents    = false;
   m_useLogLevel     = false;
+  m_useRotate       = false;
+  m_usePerUser      = false;
 
   // LOGFILE OVERRIDES
   m_logCache        = false;
   m_doLogging       = false;
   m_doTiming        = false;
   m_doEvents        = false;
+  m_doRotate        = false;
+  m_doPerUser       = false;
   m_logLevel        = HLL_NOLOG;
 }
 
@@ -78,6 +82,8 @@ void WebConfigLogging::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_USE_LOG_TIMING, m_buttonUseLogTiming);
   DDX_Control(pDX,IDC_USE_LOG_EVENTS, m_buttonUseLogEvents);
   DDX_Control(pDX,IDC_USE_LOGLEVEL,   m_buttonUseLogLevel);
+  DDX_Control(pDX,IDC_USE_ROTATION,   m_buttonUseRotation);
+  DDX_Control(pDX,IDC_USE_PERUSER,    m_buttonUsePerUser);
 
   // LOGFILE OVERRIDES
   DDX_Text   (pDX,IDC_LOGFILE,        m_logfile);
@@ -86,6 +92,8 @@ void WebConfigLogging::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX,IDC_LOG_TIMING,     m_buttonTiming);
   DDX_Control(pDX,IDC_LOG_EVENTS,     m_buttonEvents);
   DDX_Control(pDX,IDC_LOGLEVEL,       m_comboLogLevel);
+  DDX_Control(pDX,IDC_LOG_ROTATE,     m_buttonRotation);
+  DDX_Control(pDX,IDC_LOG_PERUSER,    m_buttonPerUser);
 
   if(pDX->m_bSaveAndValidate == FALSE)
   {
@@ -95,10 +103,12 @@ void WebConfigLogging::DoDataExchange(CDataExchange* pDX)
     w = GetDlgItem(IDC_BUTT_LOGFILE);   w->EnableWindow(m_useLogfile);
     w = GetDlgItem(IDC_LOG_CACHELINES); w->EnableWindow(m_useLogCaching);
 
-    m_buttonLogging.EnableWindow(m_useLogging);
-    m_buttonTiming .EnableWindow(m_useLogTiming);
-    m_buttonEvents .EnableWindow(m_useLogEvents);
-    m_comboLogLevel.EnableWindow(m_useLogLevel);
+    m_buttonLogging .EnableWindow(m_useLogging);
+    m_buttonTiming  .EnableWindow(m_useLogTiming);
+    m_buttonEvents  .EnableWindow(m_useLogEvents);
+    m_comboLogLevel .EnableWindow(m_useLogLevel);
+    m_buttonRotation.EnableWindow(m_useRotate);
+    m_buttonPerUser. EnableWindow(m_usePerUser);
   }
 }
 
@@ -111,6 +121,8 @@ BEGIN_MESSAGE_MAP(WebConfigLogging, CDialogEx)
   ON_BN_CLICKED   (IDC_LOG_TIMING,    &WebConfigLogging::OnBnClickedLogTiming)
   ON_BN_CLICKED   (IDC_LOG_EVENTS,    &WebConfigLogging::OnBnClickedLogEvents)
   ON_CBN_CLOSEUP  (IDC_LOGLEVEL,      &WebConfigLogging::OnCbnSelchangeLogLevel)
+  ON_BN_CLICKED   (IDC_LOG_ROTATE,    &WebConfigLogging::OnBnClickedRotation)
+  ON_BN_CLICKED   (IDC_LOG_PERUSER,   &WebConfigLogging::OnBnClickedPerUser)
   // USING BUTTONS
   ON_BN_CLICKED(IDC_USE_LOGFILE,      &WebConfigLogging::OnBnClickedUseLogfile)
   ON_BN_CLICKED(IDC_USE_CACHING,      &WebConfigLogging::OnBnClickedUseCaching)
@@ -118,6 +130,8 @@ BEGIN_MESSAGE_MAP(WebConfigLogging, CDialogEx)
   ON_BN_CLICKED(IDC_USE_LOG_TIMING,   &WebConfigLogging::OnBnClickedUseLogTiming)
   ON_BN_CLICKED(IDC_USE_LOG_EVENTS,   &WebConfigLogging::OnBnClickedUseLogEvents)
   ON_BN_CLICKED(IDC_USE_LOG_DETAILS,  &WebConfigLogging::OnBnClickedUseLogLevel)
+  ON_BN_CLICKED(IDC_USE_ROTATION,     &WebConfigLogging::OnBnClickedUseRotation)
+  ON_BN_CLICKED(IDC_USE_PERUSER,      &WebConfigLogging::OnBnClickedUserPerUser)
 END_MESSAGE_MAP()
 
 BOOL
@@ -146,6 +160,8 @@ WebConfigLogging::ReadWebConfig(MarlinConfig& config)
   m_useLogTiming  = config.HasParameter("Logging","DoTiming");
   m_useLogEvents  = config.HasParameter("Logging","DoEvents");
   m_useLogLevel   = config.HasParameter("Logging","LogLevel");
+  m_useRotate     = config.HasParameter("Logging","Rotate");
+  m_usePerUser    = config.HasParameter("Logging","PerUser");
 
   m_logfile       = config.GetParameterString ("Logging","Logfile",         "");
   m_logCache      = config.GetParameterInteger("Logging","Cache",            0);
@@ -153,12 +169,16 @@ WebConfigLogging::ReadWebConfig(MarlinConfig& config)
   m_doTiming      = config.GetParameterBoolean("Logging","DoTiming",     false);
   m_doEvents      = config.GetParameterBoolean("Logging","DoEvents",     false);
   m_logLevel      = config.GetParameterInteger("Logging","LogLevel",         0);
+  m_doRotate      = config.GetParameterBoolean("Logging","Rotate",       false);
+  m_doPerUser     = config.GetParameterBoolean("Logging","PerUser",      false);
 
   // INIT THE CHECKBOXES
-  m_buttonLogging.SetCheck(m_doLogging);
-  m_buttonTiming .SetCheck(m_doTiming);
-  m_buttonEvents .SetCheck(m_doEvents);
-  m_comboLogLevel.SetCurSel(m_logLevel);
+  m_buttonLogging .SetCheck(m_doLogging);
+  m_buttonTiming  .SetCheck(m_doTiming);
+  m_buttonEvents  .SetCheck(m_doEvents);
+  m_comboLogLevel .SetCurSel(m_logLevel);
+  m_buttonRotation.SetCheck(m_doRotate);
+  m_buttonPerUser .SetCheck(m_doPerUser);
 
   // INIT ALL USING FIELDS
   m_buttonUseLogfile   .SetCheck(m_useLogfile);
@@ -167,6 +187,8 @@ WebConfigLogging::ReadWebConfig(MarlinConfig& config)
   m_buttonUseLogTiming .SetCheck(m_useLogTiming);
   m_buttonUseLogEvents .SetCheck(m_useLogEvents);
   m_buttonUseLogLevel  .SetCheck(m_useLogLevel);
+  m_buttonUseRotation  .SetCheck(m_useRotate);
+  m_buttonUsePerUser   .SetCheck(m_usePerUser);
 
   UpdateData(FALSE);
 }
@@ -188,6 +210,10 @@ WebConfigLogging::WriteWebConfig(MarlinConfig& config)
   else                config.RemoveParameter("Logging","DoEvents");
   if(m_useLogLevel)   config.SetParameter   ("Logging","LogLevel", m_logLevel);
   else                config.RemoveParameter("Logging","LogLevel");
+  if(m_useRotate)     config.SetParameter   ("Logging","Rotate",   m_doRotate);
+  else                config.RemoveParameter("Logging","Rotate");
+  if(m_usePerUser)    config.SetParameter   ("Logging","PerUser",  m_doPerUser);
+  else                config.RemoveParameter("Logging","PerUsër");
 }
 
 // WebConfigDlg message handlers
@@ -254,6 +280,18 @@ void WebConfigLogging::OnCbnSelchangeLogLevel()
   }
 }
 
+void
+WebConfigLogging::OnBnClickedRotation()
+{
+  m_doRotate = m_buttonRotation.GetCheck() > 0;
+}
+
+void
+WebConfigLogging::OnBnClickedPerUser()
+{
+  m_doPerUser = m_buttonPerUser.GetCheck() > 0;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // USING FIELDS EVENTS
@@ -299,6 +337,20 @@ void
 WebConfigLogging::OnBnClickedUseLogLevel()
 {
   m_useLogLevel = m_buttonUseLogLevel.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
+void
+WebConfigLogging::OnBnClickedUseRotation()
+{
+  m_useRotate = m_buttonUseRotation.GetCheck() > 0;
+  UpdateData(FALSE);
+}
+
+void
+WebConfigLogging::OnBnClickedUserPerUser()
+{
+  m_usePerUser = m_buttonUsePerUser.GetCheck() > 0;
   UpdateData(FALSE);
 }
 

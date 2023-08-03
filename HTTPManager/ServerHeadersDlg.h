@@ -35,7 +35,7 @@ class ServerHeadersDlg : public CDialog
 {
 	DECLARE_DYNAMIC(ServerHeadersDlg)
 public:
-	explicit ServerHeadersDlg(CWnd* p_parent);
+  explicit ServerHeadersDlg(CWnd* p_parent);
   virtual ~ServerHeadersDlg();
 
 // Dialog Data

@@ -447,6 +447,8 @@ HTTPClient::InitLogging()
   bool events  = m_marlinConfig.GetParameterBoolean("Logging","DoEvents", false);
   int  cache   = m_marlinConfig.GetParameterInteger("Logging","Cache",    100);
   int  level   = m_marlinConfig.GetParameterInteger("Logging","LogLevel", m_logLevel);
+  bool rotate  = m_marlinConfig.GetParameterBoolean("Logging","Rotate",   false);
+  bool perUser = m_marlinConfig.GetParameterBoolean("Logging","PerUser",  false);
 
   // Check for a logging object
   if(m_log == NULL && !file.IsEmpty() && logging)
@@ -460,7 +462,11 @@ HTTPClient::InitLogging()
   // BUT REMEMBER: "Logging.config" can override these settings.
   if(m_log && !file.IsEmpty())
   {
-    m_log->SetLogFilename(file);
+    m_log->SetLogFilename(file,perUser);
+  }
+  if(m_log && m_marlinConfig.HasParameter("Logging","Rotate"))
+  {
+    m_log->SetLogRotation(rotate);
   }
   if(m_log && m_marlinConfig.HasParameter("Logging","DoLogging"))
   {

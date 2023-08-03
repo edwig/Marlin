@@ -36,7 +36,7 @@ class SecureClientDlg : public CDialogEx
 	DECLARE_DYNAMIC(SecureClientDlg)
 
 public:
-	explicit SecureClientDlg(CWnd* p_parent);   // standard constructor
+  explicit SecureClientDlg(CWnd* p_parent);   // standard constructor
   virtual ~SecureClientDlg();
   BOOL OnInitDialog();
 

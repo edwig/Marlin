@@ -58,6 +58,8 @@ protected:
   bool        m_useLogTiming;
   bool        m_useLogEvents;
   bool        m_useLogLevel;
+  bool        m_useRotate;
+  bool        m_usePerUser;
 
   // LOGFILE OVERRIDES
   XString     m_logfile;
@@ -66,11 +68,15 @@ protected:
   bool        m_doTiming;
   bool        m_doEvents;
   int         m_logLevel;
+  bool        m_doRotate;
+  bool        m_doPerUser;
 
   // Interface items
   CButton     m_buttonLogging;
   CButton     m_buttonTiming;
   CButton     m_buttonEvents;
+  CButton     m_buttonRotation;
+  CButton     m_buttonPerUser;
   CComboBox   m_comboLogLevel;
   CButton     m_buttonUseLogfile;
   CButton     m_buttonUseLogCaching;
@@ -78,6 +84,8 @@ protected:
   CButton     m_buttonUseLogTiming;
   CButton     m_buttonUseLogEvents;
   CButton     m_buttonUseLogLevel;
+  CButton     m_buttonUseRotation;
+  CButton     m_buttonUsePerUser;
 
 public:
   afx_msg void OnEnChangeLogfile();
@@ -87,6 +95,8 @@ public:
   afx_msg void OnBnClickedLogTiming();
   afx_msg void OnBnClickedLogEvents();
   afx_msg void OnCbnSelchangeLogLevel();
+  afx_msg void OnBnClickedRotation();
+  afx_msg void OnBnClickedPerUser();
 
   afx_msg void OnBnClickedUseLogfile();
   afx_msg void OnBnClickedUseCaching();
@@ -94,4 +104,6 @@ public:
   afx_msg void OnBnClickedUseLogTiming();
   afx_msg void OnBnClickedUseLogEvents();
   afx_msg void OnBnClickedUseLogLevel();
+  afx_msg void OnBnClickedUseRotation();
+  afx_msg void OnBnClickedUserPerUser();
 };

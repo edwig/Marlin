@@ -672,6 +672,7 @@ LogAnalysis::ReadConfig()
 {
   char buffer[256] = "";
   XString fileName = GetExePath() + "Logfile.config";
+  bool perUser = false;
 
   FILE* file = NULL;
   fopen_s(&file,fileName,"r");
@@ -694,9 +695,15 @@ LogAnalysis::ReadConfig()
       {
         continue;
       }
+      if(_strnicmp(buffer,"peruser=",8) == 0)
+      {
+        perUser = atoi(&buffer[8]) > 0;
+        continue;
+      }
       if(_strnicmp(buffer,"logfile=",8) == 0)
       {
-        m_logFileName = &buffer[8];
+        XString logfile = &buffer[8];
+        SetLogFilename(logfile,perUser);
         continue;
       }
       if(_strnicmp(buffer,"loglevel=",9) == 0)
