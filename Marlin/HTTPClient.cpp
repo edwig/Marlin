@@ -1109,6 +1109,7 @@ HTTPClient::AddOAuth2authorization()
     }
     XString bearerToken("Bearer ");
     bearerToken += token;
+    DelHeader("Authorization");
     AddHeader("Authorization", bearerToken);
     m_lastBearerToken = token;
     result = true;
@@ -1216,6 +1217,8 @@ HTTPClient::ResetOAuth2Session()
   {
     m_oauthCache->SetExpired(m_oauthSession);
   }
+  AddOAuth2authorization();
+  FlushAllHeaders();
 }
 
 void
@@ -3070,7 +3073,8 @@ HTTPClient::Send()
                                   // Get the content type header
                                   m_contentType = ReadHeaderField(WINHTTP_QUERY_CONTENT_TYPE);
                                   break;
-          case HTTP_STATUS_DENIED:if(lastStatus == HTTP_STATUS_DENIED)
+          case HTTP_STATUS_FORBIDDEN: [[fallthrough]];
+          case HTTP_STATUS_DENIED:if(lastStatus == m_status)
                                   {
                                     // Cannot do this twice!
                                     getReponseSucceed = true;
