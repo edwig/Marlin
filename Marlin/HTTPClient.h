@@ -397,7 +397,8 @@ private:
   // PRIVATE DATA
 
   // Connection specials
-  bool          m_initialized     { false   };                    // Initialisation done
+  bool          m_initialized     { false   };                    // Initialisation done?
+  bool          m_initializedLog  { false   };                    // Initialisation logfile done?
   unsigned      m_retries         { 0       };                    // Number of sending retries
   XString       m_agent           { "HTTPClient/8.1" };           // User agents name (spoofing!!)
   ProxyType     m_useProxy        { ProxyType::PROXY_IEPROXY };   // Which proxy to use

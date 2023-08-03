@@ -199,6 +199,7 @@ HTTPClient::Reset()
 
   // Reset status
   m_initialized = false;
+  m_initializedLog = false;
 }
 
 void
@@ -301,7 +302,6 @@ HTTPClient::Initialize()
     return true;
   }
   DETAILLOG("Initializing HTTP Client");
-  m_initialized = true;
 
   // Try to read the Marlin.config file in the current directory
   if(m_marlinConfig.IsFilled())
@@ -401,7 +401,9 @@ HTTPClient::Initialize()
   {
     m_trace = new HTTPClientTracing(this);
   }
-  return true;
+  // Ready initializing
+  // Logging and tracing now initialized
+  return m_initialized = true;
 }
 
 void
@@ -433,7 +435,7 @@ void
 HTTPClient::InitLogging()
 {
   // Something to be done?
-  if(m_initialized)
+  if(m_initializedLog)
   {
     return;
   }
@@ -478,8 +480,12 @@ HTTPClient::InitLogging()
   }
   if(m_log && m_marlinConfig.HasParameter("Logging","LogLevel"))
   {
-    m_log->SetLogLevel(m_logLevel = level);
+    if(level > m_logLevel)
+    {
+      m_log->SetLogLevel(m_logLevel = level);
+    }
   }
+  m_initializedLog = true;
 }
 
 void
@@ -504,10 +510,13 @@ HTTPClient::SetLogging(LogAnalysis* p_log,bool p_transferOwnership /*= false*/)
   if(m_log)
   {
     m_logLevel = p_log->GetLogLevel();
+    // Re-Initialize the logfile
+    m_initializedLog = false;
     InitLogging();
   }
   else if(m_trace)
   {
+    // No logging, so no tracing needed
     delete m_trace;
     m_trace = nullptr;
   }
