@@ -982,7 +982,6 @@ void
 HTTPServerSync::SendResponse(HTTPMessage* p_message)
 {
   HTTP_RESPONSE   response;
-  XString         challenge;
   HTTP_OPAQUE_ID  requestID   = p_message->GetRequestHandle();
   FileBuffer*     buffer      = p_message->GetFileBuffer();
   XString         contentType("application/octet-stream"); 
@@ -1005,16 +1004,19 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   // In case of a HTTP 401
   if(status == HTTP_STATUS_DENIED)
   {
-    // See if the message already has an authentication scheme header
-    challenge = p_message->GetHeader("AuthenticationScheme");
-    if(challenge.IsEmpty())
+    if(!p_message->GetXMLHttpRequest())
     {
-      // Add authentication scheme challenge
-      HTTPSite* site = p_message->GetHTTPSite();
-      challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
-                                              ,site->GetAuthenticationRealm());
+      // See if the message already has an authentication scheme header
+      XString challenge = p_message->GetHeader("AuthenticationScheme");
+      if(challenge.IsEmpty())
+      {
+        // Add authentication scheme
+        HTTPSite* site = p_message->GetHTTPSite();
+        challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
+                                                 ,site->GetAuthenticationRealm());
+        AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
+      }
     }
-    AddKnownHeader(response,HttpHeaderWwwAuthenticate,challenge);
     AddKnownHeader(response,HttpHeaderDate,date);
   }
 

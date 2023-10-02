@@ -153,6 +153,7 @@ public:
   void SetSystemTime(SYSTEMTIME p_time)         { m_systemtime         = p_time;      }
   void SetHasBeenAnswered()                     { m_request            = NULL;        }
   void SetChunkNumber(int p_chunk)              { m_chunkNumber        = p_chunk;     }
+  void SetXMLHttpRequest(boolean p_value)       { m_XMLHttpRequest     = p_value;     }
   void SetExtension(XString p_ext,bool p_reparse = true);
   void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
@@ -212,6 +213,7 @@ public:
   Cookies&            GetCookies()              { return m_cookies;                   }
   Routing&            GetRouting()              { return m_routing;                   }
   unsigned            GetChunkNumber()          { return m_chunkNumber;               }
+  boolean             GetXMLHttpRequest()       { return m_XMLHttpRequest;            }
   XString             GetBody();
   size_t              GetBodyLength();
   XString             GetVerb();
@@ -298,6 +300,7 @@ private:
   bool                m_ifmodified    { false   };                    // Use "if-modified-since"
   SYSTEMTIME          m_systemtime;                                   // System time for m_modified
   long                m_references    { 1       };                    // Referencing system
+  boolean             m_XMLHttpRequest{ false   };                    // Ajax Request (Triggers CORS!)
 };
 
 inline void 

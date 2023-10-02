@@ -927,16 +927,19 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // In case of a 401, we challenge to the client to identify itself
   if (status == HTTP_STATUS_DENIED)
   {
-    // See if the message already has an authentication scheme header
-    XString challenge = p_message->GetHeader("AuthenticationScheme");
-    if(challenge.IsEmpty())
+    if(!p_message->GetXMLHttpRequest())
     {
-      // Add authentication scheme
-      HTTPSite* site = p_message->GetHTTPSite();
-      challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
-                                              ,site->GetAuthenticationRealm());
+      // See if the message already has an authentication scheme header
+      XString challenge = p_message->GetHeader("AuthenticationScheme");
+      if(challenge.IsEmpty())
+      {
+        // Add authentication scheme
+        HTTPSite* site = p_message->GetHTTPSite();
+        challenge = BuildAuthenticationChallenge(site->GetAuthenticationScheme()
+                                                ,site->GetAuthenticationRealm());
+        SetResponseHeader(response,HttpHeaderWwwAuthenticate,challenge,true);
+      }
     }
-    SetResponseHeader(response,HttpHeaderWwwAuthenticate, challenge,true);
     SetResponseHeader(response,HttpHeaderDate,date,true);
   }
 

@@ -1183,17 +1183,20 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // In case of a 401, we challenge to the client to identify itself
   if(m_message->GetStatus() == HTTP_STATUS_DENIED)
   {
-    XString date = HTTPGetSystemTime();
-
-    // See if the message already has an authentication scheme header
-    XString challenge = m_message->GetHeader("AuthenticationScheme");
-    if(challenge.IsEmpty())
+    if(!m_message->GetXMLHttpRequest())
     {
-      // Add authentication scheme
-      challenge = m_server->BuildAuthenticationChallenge(m_site->GetAuthenticationScheme()
-                                                        ,m_site->GetAuthenticationRealm());
+      // See if the message already has an authentication scheme header
+      XString challenge = m_message->GetHeader("AuthenticationScheme");
+      if(challenge.IsEmpty())
+      {
+        // Add authentication scheme
+        HTTPSite* site = m_message->GetHTTPSite();
+        challenge = m_server->BuildAuthenticationChallenge(site->GetAuthenticationScheme()
+                                                          ,site->GetAuthenticationRealm());
+        AddKnownHeader(HttpHeaderWwwAuthenticate,challenge);
+      }
     }
-    AddKnownHeader(HttpHeaderWwwAuthenticate,challenge);
+    XString date = HTTPGetSystemTime();
     AddKnownHeader(HttpHeaderDate,date);
   }
 

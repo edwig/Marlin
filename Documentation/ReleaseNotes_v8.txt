@@ -68,3 +68,6 @@ CHANGES IN VERSION 8.0.0 of 21-03-2022
 6)  In case of a SOAPMessage with an invalid 'SoapAction' name by XML rules, the SOAP 
     message object and the parameter object (first node within the body) will temporarily
     be generated as 'SoapAction'.
+
+1)  Authentication challenges can be ignored in case of an Ajax XHTTPRequest in the server
+    by setting the "SetXHTTPRequest" member with the boolean parameter to 'true'.
