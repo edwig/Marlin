@@ -13,6 +13,12 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     messages, not named 'message' through an SSE channel.
 2)  Extra checks on the initial handling of an incoming SSE event channel. If the channel cannnot
     be authenticated, the server must bail-out correctly and destroy the new stream.
+3)  Authentication challenges can be ignored in case of an Ajax XHTTPRequest in the server
+    by setting the "SetXHTTPRequest" member with the boolean parameter to 'true'.
+4)  Removed the checking of the 'last-error-status' when registering a site.
+    Despite the fact that this was done in a thread-local-storage variable, this could go wrong
+    in real life production scenario's. The 'tls_lastErrror' variable has been removed from the 
+    HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
 
 CHANGES IN VERSION 8.2.0 of 23-07-2032
 --------------------------------------
@@ -69,5 +75,4 @@ CHANGES IN VERSION 8.0.0 of 21-03-2022
     message object and the parameter object (first node within the body) will temporarily
     be generated as 'SoapAction'.
 
-1)  Authentication challenges can be ignored in case of an Ajax XHTTPRequest in the server
-    by setting the "SetXHTTPRequest" member with the boolean parameter to 'true'.
+

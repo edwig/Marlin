@@ -91,9 +91,7 @@ constexpr const char* global_client_error =
   "</body>\n"
   "</html>\n";
 
-// Error state is retained in TLS (Thread-Local-Storage) on a per-call basis for the server
-__declspec(thread) ULONG tls_lastError = 0;
-
+// Error state is retained in
 // Static globals for the server as a whole
 // Can be set through the Marlin.config reading of the HTTPServer
 // unsigned long g_streaming_limit = STREAMING_LIMIT;
@@ -287,19 +285,6 @@ HTTPServer::SetQueueLength(ULONG p_length)
   m_queueLength = p_length;
 }
 
-// Setting the error in TLS, so no locking needed.
-void
-HTTPServer::SetError(int p_error)
-{
-  tls_lastError = p_error;
-}
-
-ULONG
-HTTPServer::GetLastError()
-{
-  return tls_lastError;
-}
-
 void
 HTTPServer::SetLogLevel(int p_logLevel)
 {
@@ -370,9 +355,6 @@ void
 HTTPServer::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
 {
   bool result = false;
-
-  // Record error for the current thread
-  SetError(p_code);
 
   if(m_log)
   {
@@ -499,11 +481,6 @@ HTTPServer::RegisterSite(const HTTPSite* p_site,const XString& p_urlPrefix)
   // Use counter
   m_counter.Start();
 
-  if(GetLastError())
-  {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"RegisterSite called too early");
-    return false;
-  }
   if(p_site == nullptr)
   {
     ERRORLOG(ERROR_INVALID_PARAMETER,"RegisterSite: no site to register");

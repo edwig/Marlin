@@ -239,8 +239,6 @@ public:
   XString     GetWebroot();
   // Get host name of the server's machine
   XString     GetHostname();
-  // Last error encountered
-  ULONG       GetLastError();
   // Is the server still running
   bool        GetIsRunning();
   // Get High Performance counter
@@ -423,8 +421,6 @@ protected:
   void      TryStartEventHeartbeat();
   // Check all event streams for the heartbeat monitor
   UINT      CheckEventStreams();
-  // Set the error status
-  void      SetError(int p_error);
   // For the handling of the event streams: implement this function
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
                                       ,CRITICAL_SECTION*  p_lock
@@ -454,7 +450,7 @@ protected:
   HTTP_CACHE_POLICY_TYPE  m_policy   { HttpCachePolicyNocache };        // Cache policy
   ULONG                   m_secondsToLive  { 0 };   // Seconds to live in the cache
   ThreadPool              m_pool;                   // Our threadpool for the server
-  MarlinConfig*              m_marlinConfig;           // Web.config or Marlin.Config in our current directory
+  MarlinConfig*           m_marlinConfig;           // Web.config or Marlin.Config in our current directory
   LogAnalysis*            m_log      { nullptr };   // Logging object
   bool                    m_logOwner { false   };   // Server owns the log
   int                     m_logLevel { HLL_NOLOG }; // Detailed logging of the server
