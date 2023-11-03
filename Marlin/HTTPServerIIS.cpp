@@ -190,7 +190,7 @@ HTTPServerIIS::Run()
   Initialise();
 
   // See if we are in a state to receive requests
-  if(GetLastError() || !m_initialized)
+  if(!m_initialized)
   {
     ERRORLOG(ERROR_INVALID_PARAMETER,_T("RunHTTPServer called too early"));
     return;
