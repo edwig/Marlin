@@ -29,9 +29,9 @@
 #include "ServerApp.h"
 #include "WebConfigIIS.h"
 #include "HTTPSite.h"
-#include "EnsureFile.h"
 #include "Version.h"
 #include "ServiceReporting.h"
+#include <WinFile.h>
 #include <string>
 #include <set>
 
@@ -41,9 +41,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define DETAILLOGV(text,...)    m_httpServer->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__)
-#define WARNINGLOG(text,...)    m_httpServer->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__)
-#define ERRORLOG(code,text)     m_httpServer->ErrorLog  (__FUNCTION__,code,text)
+#define DETAILLOGV(text,...)    m_httpServer->DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__)
+#define WARNINGLOG(text,...)    m_httpServer->DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__)
+#define ERRORLOG(code,text)     m_httpServer->ErrorLog  (_T(__FUNCTION__),code,text)
 
 IHttpServer*  g_iisServer   = nullptr;
 LogAnalysis*  g_analysisLog = nullptr;
@@ -63,8 +63,8 @@ extern "C"
 //
 __declspec(dllexport)
 ServerApp* _stdcall CreateServerApp(IHttpServer* p_server
-                                   ,const char*  p_webroot
-                                   ,const char*  p_appName)
+                                   ,LPCTSTR      p_webroot
+                                   ,LPCTSTR     p_appName)
 {
   return appFactory->CreateServerApp(p_server,p_webroot,p_appName);
 }
@@ -84,7 +84,7 @@ HTTPSite* _stdcall FindHTTPSite(ServerApp* p_application,int p_port, PCWSTR p_ur
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,__FUNCTION__,"ERROR while finding HTTP Site: " + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while finding HTTP Site: ") + ex.GetErrorMessage());
       site = nullptr;
     }
   }
@@ -107,7 +107,7 @@ int _stdcall GetStreamFromRequest(ServerApp* p_application,IHttpContext* p_conte
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,__FUNCTION__,"ERROR while getting new event stream: " + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while getting new event stream: ") + ex.GetErrorMessage());
       gotstream = 0;
     }
   }
@@ -136,7 +136,7 @@ HTTPMessage* _stdcall GetHTTPMessageFromRequest(ServerApp*    p_application
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,__FUNCTION__,"ERROR while getting a new HTTPMessage: " + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while getting a new HTTPMessage: ") + ex.GetErrorMessage());
       msg = nullptr;
     }
   }
@@ -171,7 +171,7 @@ bool _stdcall HandleHTTPMessage(ServerApp* p_application,HTTPSite* p_site,HTTPMe
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,__FUNCTION__,"ERROR while handeling a HTTPMessage: " + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while handeling a HTTPMessage: ") + ex.GetErrorMessage());
       handled = false;
     }
   }
@@ -200,8 +200,8 @@ bool __stdcall MinMarlinVersion(ServerApp* p_application,int p_version)
 
 // XTOR
 ServerApp::ServerApp(IHttpServer* p_iis
-                    ,const char*  p_webroot
-                    ,const char*  p_appName)
+                    ,LPCTSTR      p_webroot
+                    ,LPCTSTR      p_appName)
           :m_iis(p_iis)
           ,m_webroot(p_webroot)
           ,m_applicationName(p_appName)
@@ -272,10 +272,10 @@ ServerApp::ExitInstance()
   // Stopping our logfile
   if(m_logfile)
   {
-    m_logfile->AnalysisLog(__FUNCTION__, LogType::LOG_INFO, true, "%s closed",m_applicationName.GetString());
+    m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,_T("%s closed"),m_applicationName.GetString());
 
     delete m_logfile;
-    m_logfile     = nullptr;
+    m_logfile = nullptr;
   }
 
   // Destroy the general error report
@@ -326,9 +326,9 @@ ServerApp::StartLogging()
   if(m_logfile == nullptr)
   {
     // Create the directory for the logfile
-    XString logfile = m_config.GetLogfilePath() + "\\" + m_applicationName + "\\Logfile.txt";
-    EnsureFile ensure(logfile);
-    ensure.CheckCreateDirectory();
+    XString logfile = m_config.GetLogfilePath() + _T("\\") + m_applicationName + _T("\\Logfile.txt");
+    WinFile ensure(logfile);
+    ensure.CreateDirectory();
 
     // Create the logfile
     m_logfile = new LogAnalysis(m_applicationName);
@@ -342,8 +342,8 @@ ServerApp::StartLogging()
   }
 
   // Tell that we started the logfile
-  m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true
-                        ,"Started the application: %s",m_applicationName.GetString());
+  m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true
+                        ,_T("Started the application: %s"),m_applicationName.GetString());
 }
 
 // Server app was correctly started by MarlinIISModule
@@ -363,24 +363,24 @@ ServerApp::CorrectlyStarted()
   // See to it that we did our version check
   if(!m_iis)
   {
-    ERRORLOG(ERROR_NOT_FOUND,"No connected IIS server found!");
+    ERRORLOG(ERROR_NOT_FOUND,_T("No connected IIS server found!"));
   }
   else if(!m_threadPool)
   {
-    ERRORLOG(ERROR_NOT_FOUND,"No connected threadpool found!");
+    ERRORLOG(ERROR_NOT_FOUND,_T("No connected threadpool found!"));
   }
   else if(!m_logfile)
   {
-    ERRORLOG(ERROR_NOT_FOUND,"No connected logfile found!");
+    ERRORLOG(ERROR_NOT_FOUND,_T("No connected logfile found!"));
   }
   else if(!m_versionCheck)
   {
-    ERRORLOG(ERROR_VALIDATE_CONTINUE,"MarlinModule version check not done! Did you use a MarlinModule prior to version 7.0.0 ?");
+    ERRORLOG(ERROR_VALIDATE_CONTINUE,_T("MarlinModule version check not done! Did you use a MarlinModule prior to version 7.0.0 ?"));
     return false;
   }
   else
   {
-    ERRORLOG(ERROR_NOT_FOUND,"No connected MarlinIIS server found!");
+    ERRORLOG(ERROR_NOT_FOUND,_T("No connected MarlinIIS server found!"));
   }
   return false;
 }
@@ -401,9 +401,9 @@ ServerApp::MinMarlinVersion(int p_version)
 
   if(p_version < minVersion || maxVersion <= p_version)
   {
-    SvcReportErrorEvent(0,true,__FUNCTION__
-                       ,"MarlinModule version is out of range: %d.%d.%d\n"
-                       ,"This application was compiled for: %d.%d.%d"
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__)
+                       ,_T("MarlinModule version is out of range: %d.%d.%d\n")
+                       ,_T("This application was compiled for: %d.%d.%d")
                        ,p_version / 10000,(p_version % 10000)/100,p_version % 100
                        ,MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP);
     return 0;
@@ -501,7 +501,7 @@ ServerApp::LoadSites(IHttpApplication* p_app,XString p_physicalPath)
 
           if(LoadSite(*iisConfig))
           {
-            DETAILLOGV("Loaded IIS Site: %s",config.GetString());
+            DETAILLOGV(_T("Loaded IIS Site: %s"),config.GetString());
             // Save the site config
             m_sites.push_back(iisConfig);
             return;
@@ -511,7 +511,7 @@ ServerApp::LoadSites(IHttpApplication* p_app,XString p_physicalPath)
       }
     }
   }
-  XString text("ERROR Loading IIS Site: ");
+  XString text(_T("ERROR Loading IIS Site: "));
   text += config;
   ERRORLOG(ERROR_NO_SITENAME,text);
 }
@@ -627,7 +627,7 @@ ServerApp::ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config)
           }
           if (childElement->GetPropertyByName(CComBSTR(L"resourceType"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_I4)
           {
-            handler.m_resourceType.Format("%d",vvar.intVal);
+            handler.m_resourceType.Format(_T("%d"),vvar.intVal);
           }
           if (childElement->GetPropertyByName(CComBSTR(L"preCondition"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
           {
@@ -655,7 +655,7 @@ ServerApp::ReadSite(IAppHostElementCollection* p_sites,XString p_siteName,int p_
   }
 
   // Find our site
-  XString name = GetProperty(site,"name");
+  XString name = GetProperty(site,_T("name"));
   if(p_siteName.CompareNoCase(name) != 0)
   {
     return false;
@@ -664,14 +664,14 @@ ServerApp::ReadSite(IAppHostElementCollection* p_sites,XString p_siteName,int p_
   // Remember our site name
   p_config.m_name = name;
   // Record IIS ID of the site
-  p_config.m_id = atoi(GetProperty(site,"id"));
+  p_config.m_id = _ttoi(GetProperty(site,_T("id")));
 
   // Load Application
   IAppHostElement* application = nullptr;
   CComBSTR applic = L"application";
   if(site->GetElementByName(applic,&application) == S_OK)
   {
-    p_config.m_pool = GetProperty(application,"applicationPool");
+    p_config.m_pool = GetProperty(application,_T("applicationPool"));
   }
 
   // Load Directories
@@ -679,8 +679,8 @@ ServerApp::ReadSite(IAppHostElementCollection* p_sites,XString p_siteName,int p_
   CComBSTR virtDir = L"virtualDirectory";
   if(site->GetElementByName(virtDir,&virtualDir) == S_OK)
   {
-    p_config.m_base_url = GetProperty(virtualDir,"path");
-    p_config.m_physical = GetProperty(virtualDir,"physicalPath");
+    p_config.m_base_url = GetProperty(virtualDir,_T("path"));
+    p_config.m_physical = GetProperty(virtualDir,_T("physicalPath"));
   }
 
   // Load Bindings
@@ -706,7 +706,7 @@ ServerApp::ReadSite(IAppHostElementCollection* p_sites,XString p_siteName,int p_
   }
   if(p_config.m_bindings.empty())
   {
-    ERRORLOG(ERROR_NOT_FOUND,"Site bindings not found for: " + p_siteName);
+    ERRORLOG(ERROR_NOT_FOUND,_T("Site bindings not found for: ") + p_siteName);
     return false;
   }
   return true;
@@ -725,15 +725,15 @@ ServerApp::ReadBinding(IAppHostElementCollection* p_bindings,int p_item,IISBindi
     return false;
   }
   // Finding the protocol
-  XString protocol = GetProperty(binding,"protocol");
-  p_binding.m_secure = protocol.CompareNoCase("https") == 0 ? true : false;
+  XString protocol = GetProperty(binding,_T("protocol"));
+  p_binding.m_secure = protocol.CompareNoCase(_T("https")) == 0 ? true : false;
 
   // Binding information
-  XString info = GetProperty(binding,"bindingInformation");
+  XString info = GetProperty(binding,_T("bindingInformation"));
   switch(info.GetAt(0))
   {
-    case '*': p_binding.m_prefix = PrefixType::URLPRE_Weak;    break;
-    case '+': p_binding.m_prefix = PrefixType::URLPRE_Strong;  break;
+    case _T('*'): p_binding.m_prefix = PrefixType::URLPRE_Weak;    break;
+    case _T('+'): p_binding.m_prefix = PrefixType::URLPRE_Strong;  break;
     default:  p_binding.m_prefix = PrefixType::URLPRE_Address; break;
   }
 
@@ -742,11 +742,11 @@ ServerApp::ReadBinding(IAppHostElementCollection* p_bindings,int p_item,IISBindi
   int pos = info.Find(':');
   if(pos >= 0)
   { 
-    p_binding.m_port = atoi(info.Mid(pos + 1));
+    p_binding.m_port = _ttoi(info.Mid(pos + 1));
   }
 
   // Client certificate flags
-  p_binding.m_flags = atoi(GetProperty(binding,"sslFlags"));
+  p_binding.m_flags = _ttoi(GetProperty(binding,_T("sslFlags")));
 
   return true;
 }
@@ -763,7 +763,7 @@ ServerApp::GetProperty(IAppHostElement* p_elem,XString p_property)
 
     return XString(strValue);
   }
-  return "";
+  return _T("");
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -777,7 +777,7 @@ ServerAppFactory::ServerAppFactory()
 {
   if(appFactory)
   {
-    TRACE("You can only have ONE singleton ServerAppFactory in your program logic");
+    TRACE(_T("You can only have ONE singleton ServerAppFactory in your program logic"));
     ASSERT(FALSE);
   }
   else
@@ -788,8 +788,8 @@ ServerAppFactory::ServerAppFactory()
 
 ServerApp* 
 ServerAppFactory::CreateServerApp(IHttpServer*  p_iis
-                                 ,const char*   p_webroot
-                                 ,const char*   p_appName)
+                                 ,const TCHAR*   p_webroot
+                                 ,const TCHAR*   p_appName)
 {
   return new ServerApp(p_iis,p_webroot,p_appName);
 }

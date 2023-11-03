@@ -60,73 +60,73 @@ TestMarlinServer::TestHTTPTime()
 
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
-  qprintf("Test function HTTPTime      : <+>");
+  qprintf(_T("Test function HTTPTime      : <+>"));
 
   // MS-Exchange server does this (non-conforming!) format
-  XString string1("Sun, 06-Nov-1994 08:49:37 GMT");
+  XString string1(_T("Sun, 06-Nov-1994 08:49:37 GMT"));
   SYSTEMTIME time1;
 
 
   if(HTTPTimeToSystemTime(string1,&time1) == false)
   {
-    qprintf("broken for MS-Exchange times!\n");
+    qprintf(_T("broken for MS-Exchange times!\n"));
     xerror();
     ++errors;
   }
   if(memcmp(&result,&time1,sizeof(SYSTEMTIME)) != 0)
   {
-    qprintf("wrong result for MS-Exchange times!\n");
+    qprintf(_T("wrong result for MS-Exchange times!\n"));
     xerror();
     ++errors;
   }
 
   // Standard RFC822/RFC1123 time
-  XString string2("Sun, 06 Nov 1994 08:49:37 GMT");
+  XString string2(_T("Sun, 06 Nov 1994 08:49:37 GMT"));
   SYSTEMTIME time2;
 
   if(HTTPTimeToSystemTime(string2,&time2) == false)
   {
-    qprintf("broken for RFC 822 / RFC 1123 times!\n");
+    qprintf(_T("broken for RFC 822 / RFC 1123 times!\n"));
     xerror();
     ++errors;
   }
   if(memcmp(&result,&time2,sizeof(SYSTEMTIME)) != 0)
   {
-    qprintf("wrong result for RFC 822/1123 times!\n");
+    qprintf(_T("wrong result for RFC 822/1123 times!\n"));
     xerror();
     ++errors;
   }
 
   // Standard RFC 850 / RFC 1036 time
-  XString string3("Sunday, 06 - Nov - 94 08:49:37 GMT");
+  XString string3(_T("Sunday, 06 - Nov - 94 08:49:37 GMT"));
   SYSTEMTIME time3;
 
   if(HTTPTimeToSystemTime(string3,&time3) == false)
   {
-    qprintf("broken for RFC 850 / RFC 1036 times!\n");
+    qprintf(_T("broken for RFC 850 / RFC 1036 times!\n"));
     xerror();
     ++errors;
   }
   if(memcmp(&result,&time3,sizeof(SYSTEMTIME)) != 0)
   {
-    qprintf("wrong result for RFC 850/1036 times!\n");
+    qprintf(_T("wrong result for RFC 850/1036 times!\n"));
     xerror();
     ++errors;
   }
 
   // Standard ANSI C asctime format
-  XString string4("Sun Nov  6 08:49:37 1994");
+  XString string4(_T("Sun Nov  6 08:49:37 1994"));
   SYSTEMTIME time4;
 
   if(HTTPTimeToSystemTime(string4,&time4) == false)
   {
-    qprintf("broken for ANSI C asctime!\n");
+    qprintf(_T("broken for ANSI C asctime!\n"));
     xerror();
     ++errors;
   }
   if(memcmp(&result,&time4,sizeof(SYSTEMTIME)) != 0)
   {
-    qprintf("wrong result for ANSI C asctime!\n");
+    qprintf(_T("wrong result for ANSI C asctime!\n"));
     xerror();
     ++errors;
   }
@@ -134,7 +134,7 @@ TestMarlinServer::TestHTTPTime()
   // End reached with success
   if(errors == 0)
   {
-    qprintf("OK\n");
+    qprintf(_T("OK\n"));
     --totalChecks;
   }
   return errors;
@@ -145,6 +145,6 @@ TestMarlinServer::AfterTestHTTPTime()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("HTTPTime / RFC 822/1123 / Ansi-C asctime       : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("HTTPTime / RFC 822/1123 / Ansi-C asctime       : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

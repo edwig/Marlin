@@ -104,9 +104,9 @@ SetCookieDlg::OnInitDialog()
   CDialogEx::OnInitDialog();
 
   // Cookies same site
-  m_comboCookieSameSite.AddString("None");
-  m_comboCookieSameSite.AddString("Lax");
-  m_comboCookieSameSite.AddString("Strict");
+  m_comboCookieSameSite.AddString(_T("None"));
+  m_comboCookieSameSite.AddString(_T("Lax"));
+  m_comboCookieSameSite.AddString(_T("Strict"));
 
   InitFields();
 
@@ -117,15 +117,15 @@ SetCookieDlg::OnInitDialog()
 void
 SetCookieDlg::InitFields()
 {
-  char buffer1[20];
-  char buffer2[20];
-  _itoa_s(m_config->m_cookieExpires,buffer1,20,10);
-  _itoa_s(m_config->m_cookieMaxAge, buffer2,20,10);
+  TCHAR buffer1[20];
+  TCHAR buffer2[20];
+  _itot_s(m_config->m_cookieExpires,buffer1,20,10);
+  _itot_s(m_config->m_cookieMaxAge, buffer2,20,10);
 
   // Cookies
-  if(m_config->m_cookieSameSite.CompareNoCase("None")   == 0) m_comboCookieSameSite.SetCurSel(0);
-  if(m_config->m_cookieSameSite.CompareNoCase("Lax")    == 0) m_comboCookieSameSite.SetCurSel(1);
-  if(m_config->m_cookieSameSite.CompareNoCase("Strict") == 0) m_comboCookieSameSite.SetCurSel(2);
+  if(m_config->m_cookieSameSite.CompareNoCase(_T("None"))   == 0) m_comboCookieSameSite.SetCurSel(0);
+  if(m_config->m_cookieSameSite.CompareNoCase(_T("Lax"))    == 0) m_comboCookieSameSite.SetCurSel(1);
+  if(m_config->m_cookieSameSite.CompareNoCase(_T("Strict")) == 0) m_comboCookieSameSite.SetCurSel(2);
 
   m_buttonCookieSecure  .SetCheck(m_config->m_cookieSecure);
   m_buttonCookieHttpOnly.SetCheck(m_config->m_cookieHttpOnly);
@@ -187,9 +187,9 @@ void SetCookieDlg::OnCbnSelchangeCookiesamesite()
   {
     switch(ind)
     {
-      case 0: m_config->m_cookieSameSite = "None";   break;
-      case 1: m_config->m_cookieSameSite = "Lax";    break;
-      case 2: m_config->m_cookieSameSite = "Strict"; break;
+      case 0: m_config->m_cookieSameSite = _T("None");   break;
+      case 1: m_config->m_cookieSameSite = _T("Lax");    break;
+      case 2: m_config->m_cookieSameSite = _T("Strict"); break;
     }
   }
 }
@@ -235,7 +235,7 @@ SetCookieDlg::OnEnChangeCookieexpires()
   UpdateData();
   CString expires;
   m_editCookieExpires.GetWindowText(expires);
-  m_config->m_cookieExpires = atoi(expires);
+  m_config->m_cookieExpires = _ttoi(expires);
 }
 
 void
@@ -251,7 +251,7 @@ SetCookieDlg::OnEnChangeCookieMaxAge()
   UpdateData();
   CString maxage;
   m_editCookieMaxAge.GetWindowText(maxage);
-  m_config->m_cookieMaxAge = atoi(maxage);
+  m_config->m_cookieMaxAge = _ttoi(maxage);
 }
 
 void 

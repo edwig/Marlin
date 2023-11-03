@@ -27,10 +27,10 @@ HTTPReadRegister(CString  p_sectie,CString p_key,DWORD p_type
 {
   HKEY    hkUserURL;
   bool    result = false;
-  CString key = "SYSTEM\\ControlSet001\\Services\\HTTP\\Parameters\\" + p_sectie;
+  CString key = _T("SYSTEM\\ControlSet001\\Services\\HTTP\\Parameters\\") + p_sectie;
 
   DWORD dwErr = RegOpenKeyEx(HKEY_LOCAL_MACHINE
-                            ,(LPCSTR) key
+                            ,(LPCTSTR) key
                             ,0
                             ,KEY_QUERY_VALUE
                             ,&hkUserURL);

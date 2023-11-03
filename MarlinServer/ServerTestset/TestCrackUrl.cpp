@@ -49,79 +49,79 @@ TestMarlinServer::TestCrackURL()
 {
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
-  qprintf("Test function CrackURL      : <+>");
+  qprintf(_T("Test function CrackURL      : <+>"));
 
-  CrackedURL url1("http://server/index.html");
-  CrackedURL url2("http://server:2108/path1/path2/pathname.pdf?val1=monkey&val2=nut&val3=mies#my_anchor");
-  CrackedURL url3("http://server:2108/path1/path2/pathname.pdf?value");
+  CrackedURL url1(_T("http://server/index.html"));
+  CrackedURL url2(_T("http://server:2108/path1/path2/pathname.pdf?val1=monkey&val2=nut&val3=mies#my_anchor"));
+  CrackedURL url3(_T("http://server:2108/path1/path2/pathname.pdf?value"));
 
   bool res1 = url1.Valid();
   bool res2 = url2.Valid();
   if(!res1 || !res2)
   {
-    qprintf("broken. returns false. FixMe\n");
+    qprintf(_T("broken. returns false. FixMe\n"));
     xerror();
     return 1;
   }
   --totalChecks;
 
-  if(url2.m_scheme   != "http"     ||
-     url2.m_host     != "server"   ||
+  if(url2.m_scheme   != _T("http")     ||
+     url2.m_host     != _T("server")   ||
      url2.m_port     != 2108       ||
-     url2.m_path     != "/path1/path2/pathname.pdf" ||
-     url2.m_anchor   != "my_anchor"  )
+     url2.m_path     != _T("/path1/path2/pathname.pdf") ||
+     url2.m_anchor   != _T("my_anchor")  )
   {
-    qprintf("broken. Wrong parts. FixMe\n");
+    qprintf(_T("broken. Wrong parts. FixMe\n"));
     xerror();
     return 1;
   }
   --totalChecks;
   if(url2.m_parameters.size() == 3)
   {
-    if(url2.m_parameters[0].m_key   != "val1"   ||
-       url2.m_parameters[1].m_key   != "val2"   ||
-       url2.m_parameters[2].m_key   != "val3"   ||
-       url2.m_parameters[0].m_value != "monkey" ||
-       url2.m_parameters[1].m_value != "nut"    ||
-       url2.m_parameters[2].m_value != "mies"  )
+    if(url2.m_parameters[0].m_key   != _T("val1")   ||
+       url2.m_parameters[1].m_key   != _T("val2")   ||
+       url2.m_parameters[2].m_key   != _T("val3")   ||
+       url2.m_parameters[0].m_value != _T("monkey") ||
+       url2.m_parameters[1].m_value != _T("nut")    ||
+       url2.m_parameters[2].m_value != _T("mies")  )
     {
-      qprintf("broken. Wrong parameters. FixMe\n");
+      qprintf(_T("broken. Wrong parameters. FixMe\n"));
       xerror();
       return 1;
     }
   }
   else
   {
-    qprintf("broken. Nr. of parameters is not 3. Fix me\n");
+    qprintf(_T("broken. Nr. of parameters is not 3. Fix me\n"));
     xerror();
     return 1;
   }
   --totalChecks;
   if(url3.m_parameters.size() == 1)
   {
-    if(url3.m_parameters[0].m_key   != "value" ||
-       url3.m_parameters[0].m_value != ""      )
+    if(url3.m_parameters[0].m_key   != _T("value") ||
+       url3.m_parameters[0].m_value != _T("")      )
     {
-      qprintf("Broken. Parameter without value doesn't work. FixMe\n");
+      qprintf(_T("Broken. Parameter without value doesn't work. FixMe\n"));
       xerror();
     }
   }
   else
   {
-    qprintf("Broken. Parameter without value doesn't work. FixMe\n");
+    qprintf(_T("Broken. Parameter without value doesn't work. FixMe\n"));
     xerror();
   }
   --totalChecks;
-  CrackedURL url4("https://server/test.html");
+  CrackedURL url4(_T("https://server/test.html"));
   bool res3 = url4.Valid();
   if(!res3 || url4.m_port != INTERNET_DEFAULT_HTTPS_PORT)
   {
-    qprintf("broken. No default HTTPS port. Fix me\n");
+    qprintf(_T("broken. No default HTTPS port. Fix me\n"));
     xerror();
     return 1;
   }
   --totalChecks;
-  qprintf("OK\n");
+  qprintf(_T("OK\n"));
   return 0;
 }
 
@@ -130,6 +130,6 @@ TestMarlinServer::AfterTestCrackURL()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("CrackURL to path/parameters/anchor             : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("CrackURL to path/parameters/anchor             : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

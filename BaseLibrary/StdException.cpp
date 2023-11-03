@@ -72,7 +72,7 @@ StdException::StdException(const StdException& p_other)
 }
 
 // CTOR: Create exception from static text or XString
-StdException::StdException(const char* p_fault)
+StdException::StdException(const PTCHAR p_fault)
              :m_applicationFault(p_fault)
 {
 }
@@ -88,7 +88,7 @@ StdException::StdException(int p_errorCode)
 {
 }
 
-StdException::StdException(int p_errorCode, const char* p_fault)
+StdException::StdException(int p_errorCode,LPCTSTR p_fault)
              :m_applicationCode(p_errorCode)
              ,m_applicationFault(p_fault)
 {
@@ -168,11 +168,11 @@ StdException::GetErrorMessage()
 		CASE(INVALID_HANDLE,          errorstring);
     case 0:   if(m_applicationCode)
               {
-                errorstring.Format("Error: %u", m_applicationCode);
+                errorstring.Format(_T("Error: %u"), m_applicationCode);
               }
               errorstring += m_applicationFault;
               break;
-	  default:  errorstring = "Unknown exception.";
+	  default:  errorstring = _T("Unknown exception.");
 		          break;
 	}
 	return errorstring;
@@ -181,7 +181,7 @@ StdException::GetErrorMessage()
 // The CException way of getting an error message
 // By copying it out of the object through a string pointer
 bool
-StdException::GetErrorMessage(char* p_error, unsigned p_maxSize, unsigned* p_helpContext /*= NULL*/)
+StdException::GetErrorMessage(PTCHAR p_error, unsigned p_maxSize, unsigned* p_helpContext /*= NULL*/)
 {
   // Reset help context
   if (p_helpContext)
@@ -191,7 +191,7 @@ StdException::GetErrorMessage(char* p_error, unsigned p_maxSize, unsigned* p_hel
   // Get compound error message
   XString error = GetErrorMessage();
   // Copy it out
-  strncpy_s(p_error, p_maxSize, error.GetString(),(size_t) error.GetLength() + 1);
+  _tcsncpy_s(p_error, p_maxSize, error.GetString(),(size_t) error.GetLength() + 1);
   return true;
 }
 
@@ -199,7 +199,7 @@ StdException::GetErrorMessage(char* p_error, unsigned p_maxSize, unsigned* p_hel
 XString
 MessageFromException(CException& p_exception)
 {
-  char buffer[4 * _MAX_PATH + 1];
+  TCHAR buffer[4 * _MAX_PATH + 1];
   p_exception.GetErrorMessage(buffer,4 * _MAX_PATH);
   return XString(buffer);
 }

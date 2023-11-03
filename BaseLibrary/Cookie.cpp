@@ -130,34 +130,37 @@ Cookie::GetSetCookieText()
   // Elementary name-value pair (cookie-crumble)
   if(!m_name.IsEmpty())
   {
-    cookie = m_name + "=";
+    cookie = m_name + _T("=");
   }
   cookie += m_value;
 
   // Path/domain/expires
   if(!m_path.IsEmpty())
   {
-    cookie.AppendFormat("; Path=%s",m_path.GetString());
+    cookie.AppendFormat(_T("; Path=%s"),m_path.GetString());
   }
   if(!m_domain.IsEmpty())
   {
-    cookie.AppendFormat("; Domain=%s",m_domain.GetString());
+    cookie.AppendFormat(_T("; Domain=%s"),m_domain.GetString());
   }
   if(m_expires.wYear != 0)
   {
-    WCHAR pwszTimeStr[WINHTTP_TIME_FORMAT_BUFSIZE+2];
-
     // Convert the current time to HTTP format.
+    WCHAR pwszTimeStr[WINHTTP_TIME_FORMAT_BUFSIZE+1];
     if(!WinHttpTimeFromSystemTime(&m_expires,reinterpret_cast<LPWSTR>(&pwszTimeStr)))
     {
       XString error;
-      error.Format("Error %ul in WinHttpTimeFromSystemTime.\n",GetLastError());
+      error.Format(_T("Error %ul in WinHttpTimeFromSystemTime.\n"),GetLastError());
       throw StdException(error.GetString());
     }
+#ifdef UNICODE
+    cookie.AppendFormat(_T("; Expires=%s"),pwszTimeStr);
+#else
     XString time;
     bool foundBom(false);
     TryConvertWideString(reinterpret_cast<const uchar*>(pwszTimeStr),WINHTTP_TIME_FORMAT_BUFSIZE,"utf-8",time,foundBom);
     cookie.AppendFormat("; Expires=%s",time.GetString());
+#endif
   }
 
   // Samesite setting
@@ -166,27 +169,27 @@ Cookie::GetSetCookieText()
     XString value;
     switch(m_sameSite)
     {
-      case CookieSameSite::Strict: value = "Strict"; break;
-      case CookieSameSite::Lax:    value = "Lax";    break;
-      case CookieSameSite::None:   value = "None";   break;
+      case CookieSameSite::Strict: value = _T("Strict"); break;
+      case CookieSameSite::Lax:    value = _T("Lax");    break;
+      case CookieSameSite::None:   value = _T("None");   break;
     }
     if(!value.IsEmpty())
     {
-      cookie.AppendFormat("; SameSite=%s", value.GetString());
+      cookie.AppendFormat(_T("; SameSite=%s"), value.GetString());
     }
   }
   // Optional flags
   if(m_secure)
   {
-    cookie += "; Secure";
+    cookie += _T("; Secure");
   }
   if(m_httpOnly)
   {
-    cookie += "; HttpOnly";
+    cookie += _T("; HttpOnly");
   }
   if(m_maxAge)
   {
-    cookie.AppendFormat("; Max-Age=%d",m_maxAge);
+    cookie.AppendFormat(_T("; Max-Age=%d"),m_maxAge);
   }
   return cookie;
 }
@@ -198,7 +201,7 @@ Cookie::GetCookieText()
   XString cookie;
   if(!m_name.IsEmpty())
   {
-    cookie = m_name + "=";
+    cookie = m_name + _T("=");
   }
   cookie += m_value;
   return cookie;
@@ -221,7 +224,7 @@ Cookie::SetExpires(XString p_expires)
   if(!HTTPTimeToSystemTime(p_expires,&m_expires))
   {
     XString error;
-    error.Format("Error %ul in HTTPTimeToSystemTime.\n",GetLastError());
+    error.Format(_T("Error %ul in HTTPTimeToSystemTime.\n"),GetLastError());
     throw StdException(error);
   }
 }
@@ -289,11 +292,11 @@ Cookie::ParseCookie(XString p_cookieText)
     }
 
     // interpret the part
-    if(partname.CompareNoCase("path")    == 0) m_path = part;
-    if(partname.CompareNoCase("domain")  == 0) m_domain = part;
-    if(partname.CompareNoCase("expires") == 0) SetExpires(part);
-    if(part.CompareNoCase("secure")      == 0) m_secure = true;
-    if(part.CompareNoCase("httponly")    == 0) m_httpOnly = true;
+    if(partname.CompareNoCase(_T("path"))    == 0) m_path   = part;
+    if(partname.CompareNoCase(_T("domain"))  == 0) m_domain = part;
+    if(partname.CompareNoCase(_T("expires")) == 0) SetExpires(part);
+    if(part.CompareNoCase(_T("secure"))      == 0) m_secure   = true;
+    if(part.CompareNoCase(_T("httponly"))    == 0) m_httpOnly = true;
   }
   return;
 }
@@ -304,10 +307,10 @@ Cookie::CheckName()
 {
   for(int ind = 0; ind < m_name.GetLength(); ++ind)
   {
-    unsigned char ch = m_name.GetAt(ind);
+    XString::XCHAR ch = m_name.GetAt(ind);
     if((ch < MIN_COOKIE_CHAR || ch > MAX_COOKIE_CHAR) || (ch == '=') || (ch == ';'))
     {
-      throw StdException("Cookie name characters out of range 0x21-0x7E");
+      throw StdException(_T("Cookie name characters out of range 0x21-0x7E"));
     }
   }
 }
@@ -318,10 +321,10 @@ Cookie::CheckValue()
 {
   for(int ind = 0;ind < m_value.GetLength(); ++ind)
   {
-    unsigned char ch = m_value.GetAt(ind);
+    XString::XCHAR ch = m_value.GetAt(ind);
     if((ch < MIN_COOKIE_CHAR || ch > MAX_COOKIE_CHAR) || (ch == ';'))
     {
-      throw StdException("Cookie value characters out of range 0x21-0x7E");
+      throw StdException(_T("Cookie value characters out of range 0x21-0x7E"));
     }
   }
 }
@@ -438,7 +441,7 @@ Cookies::GetCookieText()
   {
     if(!text.IsEmpty())
     {
-      text += "; ";
+      text += _T("; ");
     }
     text += cookie.GetCookieText();
   }

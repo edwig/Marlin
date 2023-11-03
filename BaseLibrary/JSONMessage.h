@@ -85,7 +85,7 @@ public:
   // SETTERS
   void        SetDatatype(JsonType p_type);
   void        SetValue(XString     p_value);
-  void        SetValue(const char* p_value);
+  void        SetValue(LPCTSTR     p_value);
   void        SetValue(JsonConst   p_value);
   void        SetValue(JSONobject  p_value);
   void        SetValue(JSONarray   p_value);
@@ -102,7 +102,7 @@ public:
   bool        GetMark()      const { return m_mark;     }
   JSONarray&  GetArray()           { return m_array;    }
   JSONobject& GetObject()          { return m_object;   }
-  XString     GetAsJsonString(bool p_white,StringEncoding p_encoding,unsigned p_level = 0);
+  XString     GetAsJsonString(bool p_white,Encoding p_encoding,unsigned p_level = 0);
 
   // Specials for the empty/null state
   void        Empty();
@@ -116,7 +116,7 @@ public:
   // Assignment of another value
   JSONvalue&  operator=(const JSONvalue&  p_other);
   JSONvalue&  operator=(const XString&    p_other);
-  JSONvalue&  operator=(const char*       p_other);
+  JSONvalue&  operator=(      LPCTSTR p_other);
   JSONvalue&  operator=(const int&        p_other);
   JSONvalue&  operator=(const bcd&        p_other);
   JSONvalue&  operator=(JsonConst&        p_other);
@@ -159,7 +159,7 @@ public:
   explicit JSONpair(XString p_name,JsonType    p_type);
   explicit JSONpair(XString p_name,JSONvalue&  p_value);
   explicit JSONpair(XString p_name,XString     p_value);
-  explicit JSONpair(XString p_name,const char* p_value);
+  explicit JSONpair(XString p_name,LPCTSTR     p_value);
   explicit JSONpair(XString p_name,int         p_value);
   explicit JSONpair(XString p_name,const bcd&  p_value);
   explicit JSONpair(XString p_name,bool        p_value);
@@ -172,7 +172,7 @@ public:
   void        SetName(XString p_name)             { m_name = p_name;             }
   void        SetDatatype(JsonType       p_type)  { m_value.SetDatatype(p_type); }
   void        SetValue(XString           p_value) { m_value.SetValue(p_value);   }
-  void        SetValue(const char*       p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(LPCTSTR           p_value) { m_value.SetValue(p_value);   }
   void        SetValue(JsonConst         p_value) { m_value.SetValue(p_value);   }
   void        SetValue(const JSONobject& p_value) { m_value.SetValue(p_value);   }
   void        SetValue(const JSONarray&  p_value) { m_value.SetValue(p_value);   }
@@ -206,7 +206,7 @@ public:
   // XTOR: For incoming UTF-8 String
   explicit JSONMessage(XString p_message);
   // XTOR: Internal construction from MBCS string
-  explicit JSONMessage(XString p_message,bool p_whitespace,StringEncoding p_encoding);
+  explicit JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding);
   // XTOR: Outgoing to a URL
   explicit JSONMessage(XString p_message,XString p_url);
   // XTOR: From another XXXmessage
@@ -219,11 +219,11 @@ public:
   // Resetting the message for answering
   void Reset(bool p_resetURL = true);
   // Create from message stream
-  bool ParseMessage(XString p_message,StringEncoding p_encoding = StringEncoding::ENC_Plain);
+  bool ParseMessage(XString p_message,Encoding p_encoding = Encoding::Default);
   // Load from file
   bool LoadFile(const XString& p_fileName);
   // Save to file
-  bool SaveFile(const XString& p_fileName, bool p_withBom = true);
+  bool SaveFile(const XString& p_fileName);
 
   // Finding value nodes within the JSON structure
   JSONvalue*      FindValue (XString    p_name,               bool p_recurse = true,bool p_object = false,JsonType* p_type = nullptr);
@@ -239,8 +239,8 @@ public:
   bool            AddNamedObject(XString p_name,const JSONobject& p_object,bool p_forceArray = false);
 
   // GETTERS
-  XString         GetJsonMessage       (StringEncoding p_encoding = StringEncoding::ENC_Plain) const;
-  XString         GetJsonMessageWithBOM(StringEncoding p_encoding = StringEncoding::ENC_UTF8)  const;
+  XString         GetJsonMessage       (Encoding p_encoding = Encoding::Default) const;
+  XString         GetJsonMessageWithBOM(Encoding p_encoding = Encoding::UTF8)   const;
   JSONvalue&      GetValue() const         { return *m_value;                }
   XString         GetURL() const           { return m_url;                   }
   const CrackedURL& GetCrackedURL() const  { return m_cracked;               }
@@ -261,13 +261,14 @@ public:
   bool            GetErrorState() const    { return m_errorstate;            }
   XString         GetLastError() const     { return m_lastError;             }
   bool            GetWhitespace() const    { return m_whitespace;            }
-  StringEncoding  GetEncoding() const      { return m_encoding;              }
-  XString         GetAcceptEncoding() const { return m_acceptEncoding;        }
+  Encoding        GetEncoding() const      { return m_encoding;              }
+  XString         GetAcceptEncoding() const{ return m_acceptEncoding;        }
   bool            GetSendBOM() const       { return m_sendBOM;               }
   bool            GetSendUnicode() const   { return m_sendUnicode;           }
   bool            GetVerbTunneling() const { return m_verbTunnel;            }
   bool            GetIncoming() const      { return m_incoming;              }
   bool            GetHasBeenAnswered()const{ return m_request == NULL;       }
+  Encoding        GetEncoding()            { return m_encoding;              }
   XString         GetReferrer() const      { return m_referrer;              }
   const Routing&  GetRouting() const       { return m_routing;               }
   XString         GetExtension() const     { return m_cracked.GetExtension();}
@@ -302,7 +303,7 @@ public:
   void            SetAcceptEncoding(XString p_encoding);
   void            AddHeader(XString p_name,XString p_value);
   void            DelHeader(XString p_name);
-  void            SetEncoding(StringEncoding p_encoding);
+  void            SetEncoding(Encoding p_encoding);
   void            SetSendUnicode(bool p_unicode);
 
   // Use POST method for PUT/MERGE/PATCH/DELETE
@@ -314,10 +315,12 @@ public:
   void            DropReference();
 
 private:
+  // TO BE CALLED FROM THE XTOR!!
+  XString ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_charset);
   // Parse the URL, true if legal
-  bool ParseURL(XString p_url);
+  bool    ParseURL(XString p_url);
   // Re-parse URL after setting a part of the URL
-  void ReparseURL();
+  void    ReparseURL();
 
   // The message is contained in a JSON value
   JSONvalue*      m_value;
@@ -330,7 +333,7 @@ private:
   bool            m_incoming    { false };                      // Incoming JSON message
   bool            m_errorstate  { false };                      // Internal for parsing errors
   XString         m_lastError;                                  // Error as text
-  StringEncoding  m_encoding    { StringEncoding::ENC_UTF8 };   // Encoding details
+  Encoding        m_encoding    { Encoding::UTF8 };             // Encoding details
   bool            m_sendUnicode { false };                      // Send message in UTF-16 Unicode
   bool            m_sendBOM     { false };                      // Prepend message with UTF-8 or UTF-16 Byte-Order-Mark
   bool            m_verbTunnel  { false };                      // HTTP-VERB Tunneling used

@@ -27,6 +27,7 @@
 //
 #include "stdafx.h"
 #include "ColorEdit.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -326,7 +327,7 @@ ColorEdit::ResetFont()
   lgFont.lfCharSet        = m_language;
   lgFont.lfClipPrecision  = 0;
   lgFont.lfEscapement     = 0;
-  strcpy_s(lgFont.lfFaceName,32,m_fontName);
+  _tcscpy_s(lgFont.lfFaceName,32,m_fontName);
   lgFont.lfHeight         = m_fontSize;
   lgFont.lfItalic         = m_italic;
   lgFont.lfOrientation    = 0;
@@ -441,19 +442,19 @@ ColorEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
     if(m_isPassword)
     {
       // Hide empty text and start a password
-      SetEmpty(false,"");
-      SendMessage(EM_SETPASSWORDCHAR,'o',0);
+      SetEmpty(false,_T(""));
+      SendMessage(EM_SETPASSWORDCHAR,_T('•'),0);
       DrawEditFrame();
     }
     else
     {
       XString text;
       CEdit::GetWindowText(text);
-      if(text.Compare(EDIT_EMPTYFIELD) == 0)
+      if(text.Compare(_T(EDIT_EMPTYFIELD)) == 0)
       {
-        CEdit::SetWindowText("");
+        CEdit::SetWindowText(_T(""));
       }
-      SetEmpty(false,"");
+      SetEmpty(false,_T(""));
     }
   }
   CEdit::OnChar(nChar,nRepCnt,nFlags);

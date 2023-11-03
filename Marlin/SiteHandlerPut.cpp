@@ -30,7 +30,7 @@
 #include "HTTPMessage.h"
 #include "HTTPSite.h"
 #include "HTTPServer.h"
-#include "EnsureFile.h"
+#include <WinFile.h>
 #include <winhttp.h>
 
 #ifdef _DEBUG
@@ -60,10 +60,10 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
   int status = 0;
 
   // Getting the primary information
-  EnsureFile ensure;
+  WinFile ensure;
   XString resource = m_site->GetWebroot() + p_message->GetAbsolutePath();
-  ensure.SetResourceName(resource);
-  ensure.CheckCreateDirectory();
+  ensure.SetFilenameFromResource(resource);
+  ensure.CreateDirectory();
   // Getting the resulting filename
   XString pathname = ensure.GetFilename();
 
@@ -75,14 +75,14 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
     {
       // Success!!!
       status = HTTP_STATUS_CREATED;
-      SITE_DETAILLOGS("Connection HTTP PUT ",pathname);
+      SITE_DETAILLOGS(_T("Connection HTTP PUT "),pathname);
     }
     else
     {
       status = HTTP_STATUS_FORBIDDEN;
       DWORD error = GetLastError();
       XString message;
-      message.Format("HTTP PUT: File not written: %s\n",pathname.GetString());
+      message.Format(_T("HTTP PUT: File not written: %s\n"),pathname.GetString());
       SITE_ERRORLOG(error,message);
     }
     // RESET THE BUFFER AS FAST AS POSSIBLE
@@ -95,7 +95,7 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
     status = HTTP_STATUS_BAD_REQUEST;
     // No file to put for this absolute path
     XString message;
-    message.Format("HTTP PUT: No file given for: %s\n",pathname.GetString());
+    message.Format(_T("HTTP PUT: No file given for: %s\n"),pathname.GetString());
     SITE_ERRORLOG(ERROR_NOT_FOUND,message);
   }
   // Remember result

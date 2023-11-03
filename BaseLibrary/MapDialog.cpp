@@ -50,12 +50,16 @@ LPITEMIDLIST PathToPidl(XString const& path)
 
   if (SUCCEEDED(SHGetDesktopFolder(&pDesktopFolder)))
   {
+#ifdef UNICODE
+    _tcsncpy_s(olePath,path.GetString(),path.GetLength());
+#else
     MultiByteToWideChar(CP_ACP
                        ,MB_PRECOMPOSED
                        ,path
                        ,-1
                        ,olePath
                        ,MAX_PATH);
+#endif
 
     HRESULT hr;
     hr = pDesktopFolder->ParseDisplayName(NULL
@@ -79,7 +83,7 @@ LPITEMIDLIST PathToPidl(XString const& path)
 XString PidlToPath(LPITEMIDLIST pidl, bool deletePidl = false)
 {
   //  Convert the pidl to a path
-  char szPath[MAX_PATH] = "";
+  TCHAR szPath[MAX_PATH] = _T("");
   BOOL cvtResult = SHGetPathFromIDList(pidl, szPath);
   if(!cvtResult) 
   {
@@ -104,7 +108,7 @@ MapDialog::MapDialog()
   // Register original CWD (Current Working Directory) 
   m_hwnd = NULL;
   m_originalDir[0] = 0;
-  if(_getcwd(m_originalDir,MAX_PATH) == 0)
+  if(_tgetcwd(m_originalDir,MAX_PATH) == 0)
   {
     // Failed. remove any ill result
     m_originalDir[0] = 0;
@@ -118,7 +122,7 @@ MapDialog::~MapDialog()
   // Back to the original directory
   if(m_originalDir[0])
   {
-    if(_chdir(m_originalDir) == -1)
+    if(_tchdir(m_originalDir) == -1)
     {
       if(errno != EINVAL)
       {
@@ -149,7 +153,7 @@ bool MapDialog::Browse(HWND            hwndParent,
   bi.hwndOwner = hwndParent;
 
   //  Allow root to be set
-  if(rootdir != "") 
+  if(rootdir != _T("")) 
   {
     bi.pidlRoot = PathToPidl(m_root);
   }
@@ -159,7 +163,7 @@ bool MapDialog::Browse(HWND            hwndParent,
   //   bi.lParam = (LONG)this;
 
   //  Buffer in which the display name is returned
-  char szDisplayName[MAX_PATH] = { 0 };
+  TCHAR szDisplayName[MAX_PATH] = { 0 };
   bi.pszDisplayName = szDisplayName;
 
   //  Title
@@ -194,7 +198,7 @@ void MapDialog::EnableOk(bool bEnable)
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
-    MessageBox(NULL,"Call from invalid context","Map dialog",MB_OK|MB_ICONERROR);
+    MessageBox(NULL,_T("Call from invalid context"),_T("Map dialog"),MB_OK|MB_ICONERROR);
     return;
   }
   //  Set the ok button state
@@ -207,11 +211,11 @@ void MapDialog::SetSelection(XString const& path)
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
-    MessageBox(NULL,"Call from invalid context","Map dialog",MB_OK|MB_ICONERROR);
+    MessageBox(NULL,_T("Call from invalid context"),_T("Map dialog"),MB_OK|MB_ICONERROR);
     return;
   }
   //  Set the current path in the tree
-  ::SendMessage(m_hwnd,BFFM_SETSELECTION,TRUE,(LPARAM)(char const*)path);  
+  ::SendMessage(m_hwnd,BFFM_SETSELECTION,TRUE,(LPARAM)(PTCHAR)path.GetString());  
 }
 
 //=============================================================================
@@ -220,11 +224,11 @@ void MapDialog::SetStatusText(XString const& text)
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
-    MessageBox(NULL,"Call from invalid context","MapDialog",MB_OK|MB_ICONERROR);
+    MessageBox(NULL,_T("Call from invalid context"),_T("MapDialog"),MB_OK|MB_ICONERROR);
     return;
   }
   //  Set the current path in the tree
-  ::SendMessage(m_hwnd,BFFM_SETSTATUSTEXT,0,(LPARAM)(char const*)text);  
+  ::SendMessage(m_hwnd,BFFM_SETSTATUSTEXT,0,(LPARAM)(PTCHAR)text.GetString());  
 }
 
 //=============================================================================
@@ -248,12 +252,12 @@ int MapDialog::CallbackProc(HWND hwnd,UINT uMsg,LPARAM lParam)
     m_hwnd = hwnd;
     switch(uMsg)
     {
-      case BFFM_INITIALIZED:    if(m_init != "") SetSelection(m_init);
+      case BFFM_INITIALIZED:    if(m_init != _T("")) SetSelection(m_init);
                                 OnInitialized();
                                 break;
       case BFFM_SELCHANGED:     OnSelChange(PidlToPath((LPITEMIDLIST)lParam));
                                 break;
-      case BFFM_VALIDATEFAILED: MessageBox(NULL,"Directory path is incorrect. Adjust the directory name.","MapDialog",MB_OK|MB_ICONERROR);
+      case BFFM_VALIDATEFAILED: MessageBox(NULL,_T("Directory path is incorrect. Adjust the directory name."),_T("MapDialog"),MB_OK|MB_ICONERROR);
                                 break;
     }
     m_hwnd = 0;

@@ -66,7 +66,7 @@ SiteFilterXSS::Handle(HTTPMessage* p_message)
   {
     int status = HTTP_STATUS_FORBIDDEN;
     // Tell the log that we are very sorry
-    SITE_ERRORLOG(status,"Detected Cross-Site-Scripting from: " + referrer);
+    SITE_ERRORLOG(status,_T("Detected Cross-Site-Scripting from: ") + referrer);
 
     // Bounce the HTTPMessage immediately as a 403: Status forbidden
     p_message->Reset();

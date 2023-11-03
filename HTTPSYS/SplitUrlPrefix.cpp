@@ -40,21 +40,21 @@ SplitURLPrefix(CString p_fullprefix,PURL p_url)
   CString prefix(p_fullprefix);
 
   // Check if it begins with HTTP
-  if(prefix.Left(4).CompareNoCase("http"))
+  if(prefix.Left(4).CompareNoCase(_T("http")))
   {
     return ERROR_INVALID_PARAMETER;
   }
   prefix = prefix.Mid(4);
 
   // Check if we are secure
-  if(prefix.Left(1).CompareNoCase("s") == 0)
+  if(prefix.Left(1).CompareNoCase(_T("s")) == 0)
   {
     p_url->m_secure = true;
     prefix = prefix.Mid(1);
   }
 
   // Check that we now find "://"
-  if(prefix.Left(3).Compare("://"))
+  if(prefix.Left(3).Compare(_T("://")))
   {
     return ERROR_INVALID_PARAMETER;
   }
@@ -81,11 +81,11 @@ SplitURLPrefix(CString p_fullprefix,PURL p_url)
     return ERROR_INVALID_PARAMETER;
   }
 
-  if (host == "+")
+  if (host == _T("+"))
   {
     p_url->m_type = UrlPrefixType::URLPRE_Strong;
   }
-  else if (host == "*")
+  else if (host == _T("*"))
   {
     p_url->m_type = UrlPrefixType::URLPRE_Weak;
   }
@@ -108,7 +108,7 @@ SplitURLPrefix(CString p_fullprefix,PURL p_url)
   // See if different port
   if(prefix.GetAt(0) == ':')
   {
-    p_url->m_port = (USHORT)atoi(prefix.Mid(1));
+    p_url->m_port = (USHORT)_ttoi(prefix.Mid(1));
   }
   else
   {

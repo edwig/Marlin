@@ -30,7 +30,6 @@
 #include "HTTPSite.h"
 #include "SiteHandlerGet.h"
 #include "SiteHandlerPut.h"
-#include "EnsureFile.h"
 #include "TestPorts.h"
 
 #ifdef _DEBUG
@@ -57,7 +56,7 @@ SiteHandlerGetSecure::Handle(HTTPMessage* p_message)
   {
     ++g_gotten;
   }
-  qprintf("File gotten with GET from secure site          : %s\n", g_gotten > 0 ? "OK" : "ERROR");
+  qprintf(_T("File gotten with GET from secure site          : %s\n"), g_gotten > 0 ? _T("OK") : _T("ERROR"));
   return result;
 }
 
@@ -76,7 +75,7 @@ SiteHandlerPutSecure::Handle(HTTPMessage* p_message)
   {
     ++g_placed;
   }
-  qprintf("File sent with PUT to secure site              : %s\n", g_placed > 0 ? "OK" : "ERROR");
+  qprintf(_T("File sent with PUT to secure site              : %s\n"), g_placed > 0 ? _T("OK") : _T("ERROR"));
   return result;
 }
 
@@ -91,10 +90,10 @@ TestMarlinServer::TestSecureSite(bool p_standalone)
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/SecureTest/");
+  XString url(_T("/SecureTest/"));
 
-  xprintf("TESTING STANDARD GET FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("=================================================\n");
+  xprintf(_T("TESTING STANDARD GET FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("=================================================\n"));
 
   // Create URL channel to listen to "https://+:port/SecureTest"
   int port = p_standalone ? TESTING_HTTPS_PORT : 1220;
@@ -103,14 +102,14 @@ TestMarlinServer::TestSecureSite(bool p_standalone)
   {
     // SUMMARY OF THE TEST
     // ---- "--------------------------- - ------
-    qprintf("HTTPSite for 'get' test     : OK : %s\n",site->GetPrefixURL().GetString());
-    qprintf("HTTPSite for 'put' test     : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for 'get' test     : OK : %s\n"),site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for 'put' test     : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -122,23 +121,23 @@ TestMarlinServer::TestSecureSite(bool p_standalone)
 
 #ifdef MARLIN_STANDALONE
   // Setting the virtual root directory
-  XString root = MarlinConfig::GetExePath() + "site";
+  XString root = MarlinConfig::GetExePath() + _T("site");
   EnsureFile ensure;
   root = ensure.ReduceDirectoryPath(root);
-  root = "virtual://" + root;
+  root = _T("virtual://") + root;
   site->SetWebroot(root);
 #endif
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -149,7 +148,7 @@ TestMarlinServer::AfterTestSecureSite()
 {
   // SUMMARY OF THE TEST
   //- --- "---------------------------------------------- - ------
-  qprintf("File gotten with GET from secure site          : %s", g_gotten  > 0 ? "OK" : "ERROR");
+  qprintf(_T("File gotten with GET from secure site          : %s"), g_gotten  > 0 ? _T("OK") : _T("ERROR"));
   return (g_gotten > 0) ? 0 : 1;
 }
 

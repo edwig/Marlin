@@ -39,7 +39,7 @@ public:
   XString HandleWhitespace(XmlDataType p_type,XString p_value);
 
   // Set restrictions
-  void    AddEnumeration(XString p_enum,XString p_displayValue = "");
+  void    AddEnumeration(XString p_enum,XString p_displayValue = _T(""));
   void    AddBaseType(XString p_type)     { m_baseType       = p_type;   }
   void    AddLength(int p_length)         { m_length         = p_length; }
   void    AddMinLength(int p_length)      { m_minLength      = p_length; }
@@ -123,7 +123,7 @@ private:
   XString   CheckNMTOKENS (XString p_value);
   XString   CheckNames    (XString p_value);
   XString   CheckDuration (XString p_value,int& p_type);
-  bool      ScanDurationValue  (XString& p_duration,int& p_value,int& p_fraction,char& p_marker,bool& p_didTime);
+  bool      ScanDurationValue  (XString& p_duration,int& p_value,int& p_fraction,TCHAR& p_marker,bool& p_didTime);
   // Check max decimal/fraction digits
   XString   CheckTotalDigits   (XString p_value);
   XString   CheckFractionDigits(XString p_value);
@@ -171,7 +171,7 @@ class XMLRestrictions
 public:
   XMLRestriction* FindRestriction (XString p_name);
   XMLRestriction* AddRestriction  (XString p_name);
-  void            AddEnumeration  (XString p_name,XString p_enum,XString p_displayValue = "");
+  void            AddEnumeration  (XString p_name,XString p_enum,XString p_displayValue = _T(""));
   bool            HasEnumeration  (XString p_name,XString p_enum);
   XString         GiveDisplayValue(XString p_name,XString p_enum);
 

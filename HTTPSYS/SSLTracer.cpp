@@ -10,6 +10,7 @@
 #include "SSLTracer.h"
 #include "SecureServerSocket.h"
 #include "Logging.h"
+#include <LogAnalysis.h>
 #include "SSLUtilities.h"
 #include <memory>
 #include <algorithm>
@@ -82,54 +83,54 @@ void SSLTracer::TraceHandshake()
 {
   if(MaxBufBytes < 5)
   {
-    LogError("Buffer space too small");
+    LogError(_T("Buffer space too small"));
   }
   else
   {
     const byte * BufPtr = DataPtr;
     if(length + 5 == MaxBufBytes)
     {
-      DebugMsg("Exactly one buffer is present");
+      DebugMsg(_T("Exactly one buffer is present"));
     }
     else if(length + 5 <= MaxBufBytes)
     {
-      DebugMsg("Whole buffer is present");
+      DebugMsg(_T("Whole buffer is present"));
     }
     else
     {
-      DebugMsg("Only part of the buffer is present");
+      DebugMsg(_T("Only part of the buffer is present"));
     }
     if (major == 3)
     {
-           if (minor == 0)  DebugMsg("SSL version 3.0");
-      else if (minor == 1)  DebugMsg("TLS version 1.0");
-      else if (minor == 2)  DebugMsg("TLS version 1.1");
-      else if (minor == 3)  DebugMsg("TLS version 1.2");
-      else                  DebugMsg("TLS version after 1.2");
+           if (minor == 0)  DebugMsg(_T("SSL version 3.0"));
+      else if (minor == 1)  DebugMsg(_T("TLS version 1.0"));
+      else if (minor == 2)  DebugMsg(_T("TLS version 1.1"));
+      else if (minor == 3)  DebugMsg(_T("TLS version 1.2"));
+      else                  DebugMsg(_T("TLS version after 1.2"));
     }
     else
     {
-        DebugMsg("Content Type = %d, Major.Minor Version = %d.%d, length %d (0x%04X)", contentType, major, minor, length, length);
-        DebugMsg("This version is not recognized so no more information is available");
+        DebugMsg(_T("Content Type = %d, Major.Minor Version = %d.%d, length %d (0x%04X)"), contentType, major, minor, length, length);
+        DebugMsg(_T("This version is not recognized so no more information is available"));
         PrintHexDump(MaxBufBytes, OriginalBufPtr);
         return;
     }
     // This is a version we recognize
     if (contentType != 22)
     {
-        DebugMsg("This content type (%d) is not recognized", contentType);
+        DebugMsg(_T("This content type (%d) is not recognized"), contentType);
         PrintHexDump(MaxBufBytes, OriginalBufPtr);
         return;
     }
     // This is a handshake message (content type 22)
     if (handshakeType != 1)
     {
-        DebugMsg("This handshake type (%d) is not recognized", handshakeType);
+        DebugMsg(_T("This handshake type (%d) is not recognized"), handshakeType);
         PrintHexDump(MaxBufBytes, OriginalBufPtr);
         return;
     }
     // This is a client hello message (handshake type 1)
-    DebugMsg("client_hello");
+    DebugMsg(_T("client_hello"));
     BufPtr += 2; // Skip ClientVersion
     BufPtr += 32; // Skip Random
     UINT8 sessionidLength = *BufPtr;
@@ -143,7 +144,7 @@ void SSLTracer::TraceHandshake()
     BufPtr += 2;
     if(extensionsLength == BufEnd - BufPtr)
     {
-      DebugMsg("There are %d bytes of extension data",extensionsLength);
+      DebugMsg(_T("There are %d bytes of extension data"),extensionsLength);
     }
     while (BufPtr < BufEnd)
     {
@@ -155,7 +156,7 @@ void SSLTracer::TraceHandshake()
       {
         UINT16 serverNameListLength = (*(BufPtr) << 8) + *(BufPtr + 1);
         BufPtr += 2;
-        DebugMsg("Server name list extension, length %d", serverNameListLength);
+        DebugMsg(_T("Server name list extension, length %d"), serverNameListLength);
         const byte * serverNameListEnd = BufPtr + serverNameListLength;
         while (BufPtr < serverNameListEnd)
         {
@@ -164,28 +165,28 @@ void SSLTracer::TraceHandshake()
           BufPtr += 2;
           if(serverNameType == 0)
           {
-            DebugMsg("   Requested name \"%*s\"",serverNameLength,BufPtr);
+            DebugMsg(_T("   Requested name \"%*s\""),serverNameLength,BufPtr);
           }
           else
           {
-            DebugMsg("   Server name Type %d, length %d, data \"%*s\"",serverNameType,serverNameLength,serverNameLength,BufPtr);
+            DebugMsg(_T("   Server name Type %d, length %d, data \"%*s\""),serverNameType,serverNameLength,serverNameLength,BufPtr);
           }
           BufPtr += serverNameLength;
         }
       }
       else
       {
-        DebugMsg("Extension Type %d, length %d", extensionType, extensionDataLength);
+        DebugMsg(_T("Extension Type %d, length %d"), extensionType, extensionDataLength);
         BufPtr += extensionDataLength;
       }
     }
     if(BufPtr == BufEnd)
     {
-      DebugMsg("Extensions exactly filled the header, as expected");
+      DebugMsg(_T("Extensions exactly filled the header, as expected"));
     }
     else
     {
-      LogError("** Error ** Extensions did not fill the header");
+      LogError(_T("** Error ** Extensions did not fill the header"));
     }
   }
   PrintHexDump(MaxBufBytes, OriginalBufPtr);
@@ -234,7 +235,7 @@ CString SSLTracer::GetSNIHostname()
                BufPtr += 2;
                if(serverNameType == 0)
                {
-                 return CString((char*)BufPtr,serverNameLength);
+                 return CString((TCHAR*)BufPtr,serverNameLength);
                }
                BufPtr += serverNameLength;
             }

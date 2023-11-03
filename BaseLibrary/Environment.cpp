@@ -33,17 +33,17 @@
 //
 XString GetEnvironmentFile()
 {
-  char buffer[_MAX_PATH];
+  TCHAR buffer[_MAX_PATH];
 
   GetModuleFileName(GetModuleHandle(NULL), buffer, _MAX_PATH);
-  XString module(buffer);
-  if(module.Right(4).CompareNoCase(".exe") == 0)
+  XString loadModule(buffer);
+  if(loadModule.Right(4).CompareNoCase(_T(".exe")) == 0)
   {
-    module = module.Left(module.GetLength() - 4);
-    module += ".env";
-    return module;
+    loadModule = loadModule.Left(loadModule.GetLength() - 4);
+    loadModule += _T(".env");
+    return loadModule;
   }
-  return "";
+  return _T("");
 }
 
 // Get the general file for the whole directory
@@ -53,30 +53,31 @@ XString GetGeneralFile(XString p_file)
   int pos = p_file.ReverseFind('\\');
   if(pos >= 0)
   {
-    return p_file.Left(pos + 1) + "Environment.env";
+    return p_file.Left(pos + 1) + _T("Environment.env");
   }
-  return "";
+  return _T("");
 }
 
 // Remove newline characters from the line buffer
 //
-void RemoveNewline(char* buffer)
+void RemoveNewline(CString& buffer)
 {
-  int len = (int) strlen(buffer);
-  while(len-- > 0)
+  for(int len = 0;len < buffer.GetLength();++len)
   {
-    if(buffer[len] == '\n' || buffer[len] == '\r')
+    TCHAR ch = buffer.GetAt(len);
+    if(ch == '\n' || ch == '\r')
     {
-      buffer[len] = 0;
+      buffer.Truncate(len);
+      return;
     }
   }
 }
 
 // Skip lines that begin with a comment character
 //
-bool SkipComment(const char* buffer)
+bool SkipComment(CString& p_buffer)
 {
-  if(buffer[0] == ';' || buffer[0] == '#')
+  if(p_buffer[0] == ';' || p_buffer[0] == '#')
   {
     return true;
   }
@@ -89,29 +90,28 @@ bool SkipComment(const char* buffer)
 // variable > value   ->   variable=<oldvalue>value
 // variable !         ->   Delete variable from the environment
 //
-void ProcessVariable(char* buffer)
+void ProcessVariable(CString& p_string)
 {
   // Finding the delimiter character (operator)
-  int pos = (int) strcspn(buffer,"+=<>!");
-  if(pos == (int) strlen(buffer))
+  int pos = p_string.FindOneOf(_T("+=<>!"));
+  if(pos < 0)
   {
     return;
   }
   // Finding the variable and the value
-  XString line(buffer);
-  XString variable = line.Left(pos);
-  XString value    = line.Mid(pos + 1);
+  XString variable = p_string.Left(pos);
+  XString value    = p_string.Mid(pos + 1);
   variable = variable.Trim();
   value    = value.Trim();
 
   // Get size of the variable value
-  char* envvar = nullptr;
+  PTCHAR envvar = nullptr;
   int size = GetEnvironmentVariable(variable,envvar,0);
-  envvar = new char[size+1];
+  envvar = new TCHAR[size+1];
   GetEnvironmentVariable(variable,envvar,size);
 
   // Perform the operator calculation
-  switch(buffer[pos])
+  switch(p_string[pos])
   {
     case '=': break;
     case '!': value.Empty(); 
@@ -135,29 +135,27 @@ void DoProcessEnvironment()
 {
   // Find name for this executable first
   XString filename = GetEnvironmentFile();
-  FILE*   file = nullptr;
-  fopen_s(&file,filename,"r");
+  WinFile file(filename);
 
-  if(file == nullptr)
+  if(!file.Open(winfile_read))
   {
-    // fallback to general "environment.env" file
-    filename = GetGeneralFile(filename);
-    fopen_s(&file,filename,"r");
+    file.SetFilename(GetGeneralFile(filename));
+    file.Open(winfile_read);
+
   }
-
   // Process if found
-  if(file)
+  if(file.GetIsOpen())
   {
-    char buffer[BUFFER_LINE + 1];
-    while(fgets(buffer,BUFFER_LINE,file))
+    CString line;
+    while(file.Read(line))
     {
-      RemoveNewline(buffer);
-      if(SkipComment(buffer))
+      RemoveNewline(line);
+      if(SkipComment(line))
       {
         continue;
       }
-      ProcessVariable(buffer);
+      ProcessVariable(line);
     }
-    fclose(file);
+    file.Close();
   }
 }

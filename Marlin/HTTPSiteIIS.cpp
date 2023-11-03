@@ -30,9 +30,9 @@
 #include "HTTPSiteIIS.h"
 #include "HTTPServerIIS.h"
 #include "HTTPURLGroup.h"
-#include "EnsureFile.h"
 #include "WebConfigIIS.h"
 #include "GetUserAccount.h"
+#include <WinFile.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -41,15 +41,15 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Logging via the server
-#define DETAILLOG1(text)        m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text)
-#define DETAILLOGS(text,extra)  m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra)
-#define DETAILLOGV(text,...)    m_server->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__)
-#define WARNINGLOG(text,...)    m_server->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__)
-#define ERRORLOG(code,text)     m_server->ErrorLog  (__FUNCTION__,code,text)
+#define DETAILLOG1(text)        m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text)
+#define DETAILLOGS(text,extra)  m_server->DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra)
+#define DETAILLOGV(text,...)    m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__)
+#define WARNINGLOG(text,...)    m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__)
+#define ERRORLOG(code,text)     m_server->ErrorLog  (_T(__FUNCTION__),code,text)
 #define CRASHLOG(code,text)     if(m_server->GetLogfile())\
                                 {\
-                                  m_server->GetLogfile()->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,text); \
-                                  m_server->GetLogfile()->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,true,"Error code: %d",code); \
+                                  m_server->GetLogfile()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,text); \
+                                  m_server->GetLogfile()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,true,_T("Error code: %d"),code); \
                                 }
 
 HTTPSiteIIS::HTTPSiteIIS(HTTPServerIIS* p_server
@@ -80,12 +80,12 @@ HTTPSiteIIS::InitSite()
 
   // Authentication scheme
   m_scheme.Empty();
-  if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)     m_scheme += "Basic/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)    m_scheme += "Digest/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_NTLM)      m_scheme += "NTLM/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_NEGOTIATE) m_scheme += "Negotiate/";
-  if(m_authScheme & HTTP_AUTH_ENABLE_KERBEROS)  m_scheme += "Kerberos/";
-  if(m_authScheme == 0)                         m_scheme += "Anonymous/";
+  if(m_authScheme & HTTP_AUTH_ENABLE_BASIC)     m_scheme += _T("Basic/");
+  if(m_authScheme & HTTP_AUTH_ENABLE_DIGEST)    m_scheme += _T("Digest/");
+  if(m_authScheme & HTTP_AUTH_ENABLE_NTLM)      m_scheme += _T("NTLM/");
+  if(m_authScheme & HTTP_AUTH_ENABLE_NEGOTIATE) m_scheme += _T("Negotiate/");
+  if(m_authScheme & HTTP_AUTH_ENABLE_KERBEROS)  m_scheme += _T("Kerberos/");
+  if(m_authScheme == 0)                         m_scheme += _T("Anonymous/");
   m_scheme = m_scheme.TrimRight('/');
 
   // Call our main class InitSite
@@ -95,7 +95,7 @@ HTTPSiteIIS::InitSite()
 bool
 HTTPSiteIIS::StartSite()
 {
-  DETAILLOGS("Starting website. URL: ",m_site);
+  DETAILLOGS(_T("Starting website. URL: "),m_site);
 
   // Getting the global settings
   InitSite();
@@ -109,7 +109,7 @@ HTTPSiteIIS::StartSite()
   // Checking our webroot
   if(!SetWebroot(m_webroot))
   {
-    ERRORLOG(ERROR_INVALID_NAME,"Cannot start site: invalid webroot");
+    ERRORLOG(ERROR_INVALID_NAME,_T("Cannot start site: invalid webroot"));
     return false;
   }
 
@@ -131,7 +131,7 @@ HTTPSiteIIS::StartSite()
   }
 
   // Register the site with an URL group for the stand-alone server
-  DETAILLOGS("Site started for the IIS server: ",m_site);
+  DETAILLOGS(_T("Site started for the IIS server: "),m_site);
   // Return the fact that we started successfully or not
   m_isStarted = true;
   return true;
@@ -149,11 +149,10 @@ HTTPSiteIIS::SetWebroot(XString p_webroot)
   m_webroot = root + GetIISSiteDir();
 
   // Make sure the directory is there
-  EnsureFile ensure(m_webroot);
-  int error = ensure.CheckCreateDirectory();
-  if(error)
+  WinFile ensure(m_webroot);
+  if(!ensure.CreateDirectory())
   {
-    ERRORLOG(error,"Website's root directory does not exist and cannot create it");
+    ERRORLOG(ensure.GetLastError(),_T("Website's root directory does not exist and cannot create it"));
     return false;
   }
   return true;
@@ -176,12 +175,12 @@ HTTPSiteIIS::GetIISSiteDir()
   XString dir = mainsite->GetSite();
 
   // Transpose site URL to directory name
-  int pos1 = dir.Find('/',1);
+  int pos1 = dir.Find(_T('/'),1);
   if(pos1 < dir.GetLength() - 1)
   {
     dir = dir.Left(pos1 + 1);
   }
-  dir.Replace("/","\\");
+  dir.Replace(_T("/"),_T("\\"));
   return dir;
 }
 
@@ -201,7 +200,7 @@ HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
   if(!size)
   {
     XString text;
-    text.Format("Error getting token owner: error code0x%lx\n", GetLastError());
+    text.Format(_T("Error getting token owner: error code0x%lx\n"), GetLastError());
     ERRORLOG(ENOMEM,text);
     return false;
   }
@@ -211,7 +210,7 @@ HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
   GetTokenInformation(p_token,TokenOwner,owner,size,&size);
   if(owner == nullptr)
   {
-    ERRORLOG(EACCES,"Error getting token information of logged user");
+    ERRORLOG(EACCES,_T("Error getting token information of logged user"));
     return false;
   }
 
@@ -231,8 +230,8 @@ HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
   delete[] sid;
 
   // Test for "NT AUTHORITY\IUSR" code of IIS
-  if((_strnicmp(domainName,"NT AUTHORITY", MAX_DOMAIN_NAME_LEN) == 0) &&
-     (_strnicmp(userName,  "IUSR",         MAX_USER_NAME)       == 0))
+  if((_tcsncicmp(domainName,_T("NT AUTHORITY"), MAX_DOMAIN_NAME_LEN) == 0) &&
+     (_tcsncicmp(userName,  _T("IUSR"),         MAX_USER_NAME)       == 0))
   {
     return true;
   }

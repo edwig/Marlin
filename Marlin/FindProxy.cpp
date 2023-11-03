@@ -96,7 +96,7 @@ FindProxy::Find(const XString& p_url,bool p_secure)
         autoOpts.lpszAutoConfigUrl = autoCfgUrl;
         autoOpts.dwFlags |= WINHTTP_AUTOPROXY_CONFIG_URL;
       }
-      Internet internet   = { ::WinHttpOpen(L"", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0) };
+      Internet internet { ::WinHttpOpen(L"", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0) };
       if(m_info)
       {
         delete m_info;
@@ -146,8 +146,13 @@ FindProxy::SetInfo(XString p_proxy,XString p_bypass)
   m_proxy   = p_proxy;
   m_ignored = p_bypass;
 
+#ifdef UNICODE
+  m_wProxy   = p_proxy;
+  m_wIgnored = m_ignored;
+#else
   m_wProxy   = StringToWString(m_proxy);
   m_wIgnored = StringToWString(m_ignored);
+#endif
 
   m_info->cfg.dwAccessType    = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
   m_info->cfg.lpszProxy       = reinterpret_cast<LPWSTR>(const_cast<wchar_t*>(m_wProxy.  c_str()));
@@ -174,18 +179,18 @@ FindProxy::FindUniqueProxy(XString p_proxyList,bool p_secure)
     // Secure proxy goes before insecure proxy
     if(p_secure)
     {
-      if(part.Find("https=") == 0)
+      if(part.Find(_T("https=")) == 0)
       {
-        part.Replace("=","://");
+        part.Replace(_T("="),_T("://"));
         m_proxy = part;
         return;
       }
     }
     else
     {
-      if(part.Find("http=") == 0)
+      if(part.Find(_T("http=")) == 0)
       {
-        part.Replace("=","://");
+        part.Replace(_T("="),_T("://"));
         m_proxy = part;
         return;
       }

@@ -57,21 +57,21 @@ bool
 SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
 {
   // Display incoming message
-  xprintf("Incoming ASYNC message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
+  xprintf(_T("Incoming ASYNC message in XML:\n%s\n"),p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
-  XString displayText = p_message->GetParameter("Text");
-  bool    doReset     = p_message->GetParameterBoolean("DoReset");
+  XString displayText = p_message->GetParameter(_T("Text"));
+  bool    doReset     = p_message->GetParameterBoolean(_T("DoReset"));
   p_message->Reset();
 
   if(doReset)
   {
-    xprintf("Async reset received\n");
+    xprintf(_T("Async reset received\n"));
     if(m_current == m_default)
     {
       // SUMMARY OF THE TEST
       // --- "---------------------------------------------- - ------
-      qprintf("Received all of the asynchronous SOAP messages : OK\n");
+      qprintf(_T("Received all of the asynchronous SOAP messages : OK\n"));
       highSpeed = 1;
     }
     else if(m_current > 0)
@@ -79,17 +79,17 @@ SiteHandlerSoapAsynchrone::Handle(SOAPMessage* p_message)
       // Some, but not all tests appeared before us
       xerror();
       // --- "---------------------------------------------- - ------
-      qprintf("Not all asynchronous SOAP messages received    : ERROR\n");
+      qprintf(_T("Not all asynchronous SOAP messages received    : ERROR\n"));
     }
     m_current = 0;
   }
   if(!displayText.IsEmpty())
   {
-    xprintf("Async display text: %s\n",displayText.GetString());
+    xprintf(_T("Async display text: %s\n"),displayText.GetString());
     ++m_current;
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
-    qprintf("Received an asynchronous SOAP message [%2.2d]     : OK\n",m_current);
+    qprintf(_T("Received an asynchronous SOAP message [%2.2d]     : OK\n"),m_current);
   }
   // Ready with the message.
   return true;
@@ -103,10 +103,10 @@ TestMarlinServer::TestAsynchrone()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/MarlinTest/Asynchrone/");
+  XString url(_T("/MarlinTest/Asynchrone/"));
 
-  xprintf("TESTING ASYNCHRONE SOAP RECEIVER FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("=============================================================\n");
+  xprintf(_T("TESTING ASYNCHRONE SOAP RECEIVER FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("=============================================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Asynchrone/"
   // Callback function is no longer required!
@@ -115,13 +115,13 @@ TestMarlinServer::TestAsynchrone()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite A-synchrone SOAP   : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite A-synchrone SOAP   : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -130,8 +130,8 @@ TestMarlinServer::TestAsynchrone()
   site->SetHandler(HTTPCommand::http_post,handler);
 
   // Modify the standard settings for this site
-  site->AddContentType("","text/xml");
-  site->AddContentType("xml","application/soap+xml");
+  site->AddContentType(_T(""),_T("text/xml"));
+  site->AddContentType(_T("xml"),_T("application/soap+xml"));
 
   // This is a asynchronous test site
   site->SetAsync(true);
@@ -139,13 +139,13 @@ TestMarlinServer::TestAsynchrone()
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -155,6 +155,6 @@ int
 TestMarlinServer::AfterTestAsynchrone()
 {
   // ---- "---------------------------------------------- - ------
-  qprintf("Received all of the asynchronous SOAP messages : %s\n", highSpeed == 1 ? "OK" : "ERROR");
+  qprintf(_T("Received all of the asynchronous SOAP messages : %s\n"), highSpeed == 1 ? _T("OK") : _T("ERROR"));
   return highSpeed == 1 ? 0 : 1;
 }

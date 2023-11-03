@@ -66,14 +66,14 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   DWORD    length   = 0;
   HANDLE   htok     = NULL;
   int      errors   = 0;
-  XString  fileName = MarlinConfig::GetExePath() + "FileOwner.txt";
+  XString  fileName = MarlinConfig::GetExePath() + _T("FileOwner.txt");
   XString  listing;
 
   // See if we have a token
   if(token == NULL)
   {
     // --- "---------------------------------------------- - ------
-    qprintf("Test token: Not an authenticated call          : ERROR\n");
+    qprintf(_T("Test token: Not an authenticated call          : ERROR\n"));
     xerror();
     ++errors;
     goto END;
@@ -87,8 +87,8 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     if(!OpenProcessToken(GetCurrentProcess(),MAXIMUM_ALLOWED,&htok))
     {
       // --- "---------------------------------------------- - ------
-      qprintf("OpenProcessToken failed                        : ERROR\n");
-      xprintf("Error code 0x%lx\n",GetLastError());
+      qprintf(_T("OpenProcessToken failed                        : ERROR\n"));
+      xprintf(_T("Error code 0x%lx\n"),GetLastError());
       ++errors;
       xerror();
       goto END;
@@ -96,14 +96,14 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   }
   --totalChecks;
 
-  listing = "\nPRIMARY SERVER TOKEN\n";
+  listing = _T("\nPRIMARY SERVER TOKEN\n");
 
-  xprintf("Processing primary server token\n");
+  xprintf(_T("Processing primary server token\n"));
 
   if(!DumpToken(listing,htok))
   {
     // --- "---------------------------------------------- - ------
-    qprintf("DumpTokenInformation for process failed        : ERROR\n");
+    qprintf(_T("DumpTokenInformation for process failed        : ERROR\n"));
     CloseHandle(htok);
     xerror();
     ++errors;
@@ -111,11 +111,11 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   }
   --totalChecks;
   CloseHandle(htok);
-  listing += "\n\n";
+  listing += _T("\n\n");
 
   // Print The passed token
-  xprintf("Processing received HTTP token\n");
-  listing += "RECEIVED HTTP TOKEN\n";
+  xprintf(_T("Processing received HTTP token\n"));
+  listing += _T("RECEIVED HTTP TOKEN\n");
   DumpToken(listing,token);
 
   // Check if token holds the 'owner' information
@@ -123,7 +123,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   if(!length)
   {
     // --- "---------------------------------------------- - ------
-    qprintf("Cannot find the token owner, or no token       : ERROR\n");
+    qprintf(_T("Cannot find the token owner, or no token       : ERROR\n"));
     xerror();
     ++errors;
     goto END;
@@ -134,7 +134,7 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
   if(ImpersonateLoggedOnUser(token) == FALSE)
   {
     // --- "---------------------------------------------- - ------
-    qprintf("Cannot impersonate logged on user by token     : ERROR\n");
+    qprintf(_T("Cannot impersonate logged on user by token     : ERROR\n"));
     // Cannot continue, otherwise a security breach could occur
     xerror();
     ++errors;
@@ -159,40 +159,40 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
     xerror();
     int error = GetLastError();
     // --- "---------------------------------------------- - ------
-    qprintf("Cannot create file for file token owner        : ERROR\n");
-    xprintf("ERROR %d : %s\n",error,GetLastErrorAsString(error).GetString());
+    qprintf(_T("Cannot create file for file token owner        : ERROR\n"));
+    xprintf(_T("ERROR %d : %s\n"),error,GetLastErrorAsString(error).GetString());
   }
   else
   {
     DWORD written = 0;
     XString msg = p_msg->GetSoapMessage();
-    msg.Replace("\n","\r\n");
+    msg.Replace(_T("\n"),_T("\r\n"));
 
     if(WriteFile(file,msg.GetString(),msg.GetLength(),&written,NULL) == FALSE)
     {
       // --- "---------------------------------------------- - ------
-      qprintf("Writing to file. Error [%d]                    : ERROR\n",GetLastError());
+      qprintf(_T("Writing to file. Error [%d]                    : ERROR\n"),GetLastError());
       xerror();
       ++errors;
     }
     else
     {
       --totalChecks;
-      xprintf("SOAP message written to: %s\n",fileName.GetString());
+      xprintf(_T("SOAP message written to: %s\n"),fileName.GetString());
     }
 
-    listing.Replace("\n","\r\n");
+    listing.Replace(_T("\n"),_T("\r\n"));
     if(WriteFile(file,listing.GetString(),listing.GetLength(),&written,NULL) == FALSE)
     {
       // --- "---------------------------------------------- - ------
-      qprintf("Writing to file. Error [%d]                    : ERROR\n",GetLastError());
+      qprintf(_T("Writing to file. Error [%d]                    : ERROR\n"),GetLastError());
       xerror();
       ++errors;
     }
     else
     {
       --totalChecks;
-      xprintf("TOKEN Access written to: %s\n",fileName.GetString());
+      xprintf(_T("TOKEN Access written to: %s\n"),fileName.GetString());
     }
     // Close the file
     CloseHandle(file);
@@ -201,10 +201,10 @@ SiteHandlerSoapToken::TestSecurity(SOAPMessage* p_msg)
 END:
   // Correctly came to the end
   p_msg->Reset();
-  p_msg->SetParameter("Testing",errors ? "ERRORS" : "OK");
+  p_msg->SetParameter(_T("Testing"),errors ? _T("ERRORS") : _T("OK"));
 
   // --- "---------------------------------------------- - ------
-  qprintf("Token handling on incoming message             : %s\n",errors ? "ERROR" : "OK");
+  qprintf(_T("Token handling on incoming message             : %s\n"),errors ? _T("ERROR") : _T("OK"));
 
   // NO LONGER NEEDED: SiteHandler does this now!
   // End of identity crisis :-)
@@ -219,10 +219,10 @@ TestMarlinServer::TestToken()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/MarlinTest/TestToken/");
+  XString url(_T("/MarlinTest/TestToken/"));
 
-  xprintf("TESTING THE TOKEN FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("==============================================\n");
+  xprintf(_T("TESTING THE TOKEN FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("==============================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/TestToken/"
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
@@ -230,13 +230,13 @@ TestMarlinServer::TestToken()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite DACL token testing : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite DACL token testing : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -244,24 +244,24 @@ TestMarlinServer::TestToken()
   site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapToken());
 
   // Modify the standard settings for this site
-  site->AddContentType("","text/xml");
-  site->AddContentType("xml","application/soap+xml");
+  site->AddContentType(_T(""),_T("text/xml"));
+  site->AddContentType(_T("xml"),_T("application/soap+xml"));
 
   // Set site to use NTLM authentication for the "MerlinTest" user
   // So we can get a different token, then the current server token
-  site->SetAuthenticationScheme("NTLM");
+  site->SetAuthenticationScheme(_T("NTLM"));
   site->SetAuthenticationNTLMCache(true);
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -271,6 +271,6 @@ TestMarlinServer::AfterTestToken()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Testing of authentication token capabilities   : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("Testing of authentication token capabilities   : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

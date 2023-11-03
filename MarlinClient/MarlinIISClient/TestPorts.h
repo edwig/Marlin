@@ -35,7 +35,7 @@ const int TESTING_HTTPS_PORT  = 1220;
 const int TESTING_CLCERT_PORT = 1222;
 
 // COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST
-#define MARLIN_HOST "localhost"
+#define MARLIN_HOST _T("localhost")
 
 // UNCOMMENT to test the WebSockets functionality
 #define TEST_WEBSOCKETS 1

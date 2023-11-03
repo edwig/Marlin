@@ -67,15 +67,15 @@ AppConfig::GetServerURL()
 
   if (m_serverPort == INTERNET_DEFAULT_HTTP_PORT)
   {
-    MDAServerURL.Format("http://%s%s", m_server.GetString(), m_baseUrl.GetString());
+    MDAServerURL.Format(_T("http://%s%s"), m_server.GetString(), m_baseUrl.GetString());
   }
   else if (m_serverPort == INTERNET_DEFAULT_HTTPS_PORT)
   {
-    MDAServerURL.Format("https://%s%s", m_server.GetString(), m_baseUrl.GetString());
+    MDAServerURL.Format(_T("https://%s%s"), m_server.GetString(), m_baseUrl.GetString());
   }
   else
   {
-    MDAServerURL.Format("http://%s:%d%s", m_server.GetString(), m_serverPort, m_baseUrl.GetString());
+    MDAServerURL.Format(_T("http://%s:%d%s"), m_server.GetString(), m_serverPort, m_baseUrl.GetString());
   }
   return MDAServerURL;
 }
@@ -85,13 +85,13 @@ bool
 AppConfig::GetConfigWritable()
 {
   XString fileNaam = GetConfigFilename();
-  if (_access(fileNaam, 00) == -1)
+  if (_taccess(fileNaam, 00) == -1)
   {
     // File does not exist. Assume that we can create it
     // for instance in the ServerApplet config dialog
     return true;
   }
-  if (_access(fileNaam, 06) == 0)
+  if (_taccess(fileNaam, 06) == 0)
   {
     // Read AND write access tot the file
     return true;
@@ -104,7 +104,7 @@ XString
 AppConfig::GetConfigFilename()
 {
   // This is our config file
-  return MarlinConfig::GetExePath() + PRODUCT_NAME + ".Config";
+  return MarlinConfig::GetExePath() + PRODUCT_NAME + _T(".Config");
 }
 
 // Read the config from disk
@@ -155,17 +155,17 @@ AppConfig::WriteConfig()
   // Rebuild the XML structure
   Clean();
 
-  SetElement("Name",          m_name);
-  SetElement("Role",          m_role);
-  SetElement("Instance",      m_instance);
-  SetElement("Server",        m_server);
-  SetElement("Secure",        m_secure);
-  SetElement("ServerPort",    (int)m_serverPort);
-  SetElement("BaseURL",       m_baseUrl);
-  SetElement("ServerLog", m_serverLog);
-  SetElement("ServerLogging", m_serverLoglevel);
-  SetElement("WebRoot",       m_webroot);
-  SetElement("RunAsService",  m_runAsService);
+  SetElement(_T("Name"),          m_name);
+  SetElement(_T("Role"),          m_role);
+  SetElement(_T("Instance"),      m_instance);
+  SetElement(_T("Server"),        m_server);
+  SetElement(_T("Secure"),        m_secure);
+  SetElement(_T("ServerPort"),    (int)m_serverPort);
+  SetElement(_T("BaseURL"),       m_baseUrl);
+  SetElement(_T("ServerLog"),     m_serverLog);
+  SetElement(_T("ServerLogging"), m_serverLoglevel);
+  SetElement(_T("WebRoot"),       m_webroot);
+  SetElement(_T("RunAsService"),  m_runAsService);
 
   WriteConfigElements();
 
@@ -199,17 +199,17 @@ AppConfig::WriteConfigElements()
 bool
 AppConfig::AddParameter(XString& p_param,XString& p_value)
 {
-       if(p_param.Compare("Name")          == 0) m_name           = p_value;
-  else if(p_param.Compare("Role")          == 0) m_role           = p_value;
-  else if(p_param.Compare("Instance")      == 0) m_instance       = atoi(p_value);
-  else if(p_param.Compare("Server")        == 0) m_server         = p_value;
-  else if(p_param.Compare("Secure")        == 0) m_secure         = (p_value.CompareNoCase("true") == 0);
-  else if(p_param.Compare("ServerPort")    == 0) m_serverPort     = atoi(p_value);
-  else if(p_param.Compare("BaseURL")       == 0) m_baseUrl        = p_value;
-  else if(p_param.Compare("ServerLog")     == 0) m_serverLog      = p_value;
-  else if(p_param.Compare("ServerLogging") == 0) m_serverLoglevel = atoi(p_value);
-  else if(p_param.Compare("WebRoot")       == 0) m_webroot        = p_value;
-  else if(p_param.Compare("RunAsService")  == 0) m_runAsService   = atoi(p_value);
+       if(p_param.Compare(_T("Name"))          == 0) m_name           = p_value;
+  else if(p_param.Compare(_T("Role"))          == 0) m_role           = p_value;
+  else if(p_param.Compare(_T("Instance"))      == 0) m_instance       = _ttoi(p_value);
+  else if(p_param.Compare(_T("Server"))        == 0) m_server         = p_value;
+  else if(p_param.Compare(_T("Secure"))        == 0) m_secure         = (p_value.CompareNoCase(_T("true")) == 0);
+  else if(p_param.Compare(_T("ServerPort"))    == 0) m_serverPort     = _ttoi(p_value);
+  else if(p_param.Compare(_T("BaseURL"))       == 0) m_baseUrl        = p_value;
+  else if(p_param.Compare(_T("ServerLog"))     == 0) m_serverLog      = p_value;
+  else if(p_param.Compare(_T("ServerLogging")) == 0) m_serverLoglevel = _ttoi(p_value);
+  else if(p_param.Compare(_T("WebRoot"))       == 0) m_webroot        = p_value;
+  else if(p_param.Compare(_T("RunAsService"))  == 0) m_runAsService   = _ttoi(p_value);
   else return false;
 
   return true;
@@ -263,9 +263,9 @@ AppConfig::CheckConsistency()
   else
   {
     // Must end on a directory separator 
-    if(m_webroot.Right(1) != "\\" && m_webroot.Right(1) != "/")
+    if(m_webroot.Right(1) != _T("\\") && m_webroot.Right(1) != _T("/"))
     {
-      m_webroot += "\\";
+      m_webroot += _T("\\");
     }
   }
 
@@ -273,13 +273,13 @@ AppConfig::CheckConsistency()
   // It needs to begin and end with an '/' marker
   if(m_baseUrl.GetLength() > 1)
   {
-    if(m_baseUrl.Left(1) != "/")
+    if(m_baseUrl.Left(1) != _T("/"))
     {
-      m_baseUrl = "/" + m_baseUrl;
+      m_baseUrl = _T("/") + m_baseUrl;
     }
-    if(m_baseUrl.Right(1) != "/")
+    if(m_baseUrl.Right(1) != _T("/"))
     {
-      m_baseUrl += "/";
+      m_baseUrl += _T("/");
     }
   }
 

@@ -28,13 +28,13 @@
 #include "stdafx.h"
 #include "HTTPSite.h"
 #include "HTTPURLGroup.h"
-#include "EnsureFile.h"
 #include "LogAnalysis.h"
 #include "AutoCritical.h"
 #include "GenerateGUID.h"
 #include "Crypto.h"
 #include "WinINETError.h"
 #include "ErrorReport.h"
+#include <WinFile.h>
 #include <winerror.h>
 #include <sddl.h>
 
@@ -45,15 +45,15 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Logging via the server
-#define DETAILLOG1(text)        m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text)
-#define DETAILLOGS(text,extra)  m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra)
-#define DETAILLOGV(text,...)    m_server->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__)
-#define WARNINGLOG(text,...)    m_server->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__)
-#define ERRORLOG(code,text)     m_server->ErrorLog  (__FUNCTION__,code,text)
+#define DETAILLOG1(text)        m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text)
+#define DETAILLOGS(text,extra)  m_server->DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra)
+#define DETAILLOGV(text,...)    m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__)
+#define WARNINGLOG(text,...)    m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__)
+#define ERRORLOG(code,text)     m_server->ErrorLog  (_T(__FUNCTION__),code,text)
 #define CRASHLOG(code,text)     if(m_server->GetLogfile())\
                                 {\
-                                  m_server->GetLogfile()->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,text); \
-                                  m_server->GetLogfile()->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,true,"Error code: %d",code); \
+                                  m_server->GetLogfile()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,text); \
+                                  m_server->GetLogfile()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,true,_T("Error code: %d"),code); \
                                 }
 
 // Cleanup handler after a crash-report
@@ -124,7 +124,7 @@ HTTPSite::CleanupFilters()
   m_filters.clear();
 }
 
-// Remove all critical sections from the throtteling map
+// Remove all critical sections from the throttling map
 void
 HTTPSite::CleanupThrotteling()
 {
@@ -186,8 +186,8 @@ HTTPSite::GetContentType(XString p_extension)
 XString
 HTTPSite::GetContentTypeByResourceName(XString p_pathname)
 {
-  EnsureFile ensure;
-  XString extens = ensure.ExtensionPart(p_pathname);
+  WinFile ensure(p_pathname);
+  XString extens = ensure.GetFilenamePartExtension();
   return GetContentType(extens);
 }
 
@@ -211,13 +211,13 @@ HTTPSite::SetFilter(unsigned p_priority,SiteFilter* p_filter)
   {
     // Not found: we can add it
     m_filters.insert(std::make_pair(p_priority,p_filter));
-    DETAILLOGV("Setting site filter [%s] for [%s] with priority: %d"
+    DETAILLOGV(_T("Setting site filter [%s] for [%s] with priority: %d")
               ,p_filter->GetName().GetString(),m_site.GetString(),p_priority);
     return true;
   }
   // already filter for this priority
   XString msg;
-  msg.Format("Site filter for [%s] with priority [%d] already exists!",m_site.GetString(),p_priority);
+  msg.Format(_T("Site filter for [%s] with priority [%d] already exists!"),m_site.GetString(),p_priority);
   ERRORLOG(ERROR_ALREADY_EXISTS,msg);
   return false;
 }
@@ -246,7 +246,7 @@ void
 HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /*=true*/)
 {
   // Names are in HTTPMessage.cpp!
-  extern const char* headers[];
+  extern const TCHAR* headers[];
 
   HandlerMap::iterator it = m_handlers.find(p_command);
 
@@ -260,7 +260,7 @@ HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /
         delete it->second.m_handler;
       }
       m_handlers.erase(it);
-      DETAILLOGS("Removing site handler for HTTP ",headers[(unsigned)p_command]);
+      DETAILLOGS(_T("Removing site handler for HTTP "),headers[(unsigned)p_command]);
     }
     return;
   }
@@ -268,7 +268,7 @@ HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /
   // Check the command
   if(p_command == HTTPCommand::http_no_command || p_command == HTTPCommand::http_response)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Invalid HTTPCommand for HTTPSite::SetHandler");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("Invalid HTTPCommand for HTTPSite::SetHandler"));
     return;
   }
 
@@ -299,7 +299,7 @@ HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /
     reg.m_handler = p_handler;
     m_handlers[p_command] = reg;
   }
-  DETAILLOGS("Setting site handler for HTTP ",headers[(unsigned)p_command]);
+  DETAILLOGS(_T("Setting site handler for HTTP "),headers[(unsigned)p_command]);
 }
 
 // Finding the SiteHandler registration
@@ -350,13 +350,13 @@ HTTPSite::CheckReliable()
 {
   if(m_reliable && m_async)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Asynchrone mode and reliable-messaging do not mix together");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("Asynchrone mode and reliable-messaging do not mix together"));
     return false;
   }
   if(m_reliable && m_scheme.IsEmpty())
   {
     // Not strictly an error, but issue a serious warning against using RM without authorization
-    WARNINGLOG("ReliableMessaging protocol used without an authorization scheme.");
+    WARNINGLOG(_T("ReliableMessaging protocol used without an authorization scheme."));
   }
   return true;
 }
@@ -366,79 +366,79 @@ void
 HTTPSite::InitSite(MarlinConfig& p_config)
 {
   // Get the WebRoot
-  m_webroot = p_config.GetParameterString("Server", "WebRoot", m_webroot);
+  m_webroot = p_config.GetParameterString(_T("Server"), _T("WebRoot"), m_webroot);
 
   // Read XML Signing en encryption from the config
   XString level;
   switch(m_securityLevel)
   {
-    case XMLEncryption::XENC_Plain:   level = "";        break;
-    case XMLEncryption::XENC_Signing: level = "sign";    break;
-    case XMLEncryption::XENC_Body:    level = "body";    break;
-    case XMLEncryption::XENC_Message: level = "message"; break;
+    case XMLEncryption::XENC_Plain:   level = _T("");        break;
+    case XMLEncryption::XENC_Signing: level = _T("sign");    break;
+    case XMLEncryption::XENC_Body:    level = _T("body");    break;
+    case XMLEncryption::XENC_Message: level = _T("message"); break;
   }
   // Getting various settings
-  level           = p_config.GetParameterString ("Encryption","Level",          level);
-  m_enc_password  = p_config.GetEncryptedString ("Encryption","Password",       m_enc_password);
+  level           = p_config.GetParameterString (_T("Encryption"),_T("Level"),          level);
+  m_enc_password  = p_config.GetEncryptedString (_T("Encryption"),_T("Password"),       m_enc_password);
 
   // Now set the resulting security level
-       if(level == "sign")    m_securityLevel = XMLEncryption::XENC_Signing;
-  else if(level == "body")    m_securityLevel = XMLEncryption::XENC_Body;
-  else if(level == "message") m_securityLevel = XMLEncryption::XENC_Message;
+       if(level == _T("sign"))    m_securityLevel = XMLEncryption::XENC_Signing;
+  else if(level == _T("body"))    m_securityLevel = XMLEncryption::XENC_Body;
+  else if(level == _T("message")) m_securityLevel = XMLEncryption::XENC_Message;
   else                        m_securityLevel = XMLEncryption::XENC_Plain;
 
   // Check Unicode forcing
-  m_sendUnicode = p_config.GetParameterBoolean("Server","RespondUnicode",m_sendUnicode);
-  m_sendSoapBOM = p_config.GetParameterBoolean("Server","RespondSoapBOM",m_sendSoapBOM);
-  m_sendJsonBOM = p_config.GetParameterBoolean("Server","RespondJsonBOM",m_sendJsonBOM);
+  m_sendUnicode = p_config.GetParameterBoolean(_T("Server"),_T("RespondUnicode"),m_sendUnicode);
+  m_sendSoapBOM = p_config.GetParameterBoolean(_T("Server"),_T("RespondSoapBOM"),m_sendSoapBOM);
+  m_sendJsonBOM = p_config.GetParameterBoolean(_T("Server"),_T("RespondJsonBOM"),m_sendJsonBOM);
 
   // Getting various settings
-  m_verbTunneling = p_config.GetParameterBoolean("Server","VerbTunneling",  m_verbTunneling);
-  m_compression   = p_config.GetParameterBoolean("Server","HTTPCompression",m_compression);
-  m_throttling    = p_config.GetParameterBoolean("Server","HTTPThrotteling",m_throttling);
+  m_verbTunneling = p_config.GetParameterBoolean(_T("Server"),_T("VerbTunneling"),  m_verbTunneling);
+  m_compression   = p_config.GetParameterBoolean(_T("Server"),_T("HTTPCompression"),m_compression);
+  m_throttling    = p_config.GetParameterBoolean(_T("Server"),_T("HTTPThrotteling"),m_throttling);
 
   // Getting cookie settings
-  m_cookieHasSecure = p_config.HasParameter("Cookies","Secure");
-  m_cookieHasHttp   = p_config.HasParameter("Cookies","HttpOnly");
-  m_cookieHasSame   = p_config.HasParameter("Cookies","SameSite");
-  m_cookieHasPath   = p_config.HasParameter("Cookies","Path");
-  m_cookieHasDomain = p_config.HasParameter("Cookies","Domain");
-  m_cookieHasExpires= p_config.HasParameter("Cookies","Expires");
-  m_cookieHasMaxAge = p_config.HasParameter("Cookies","MaxAge");
+  m_cookieHasSecure = p_config.HasParameter(_T("Cookies"),_T("Secure"));
+  m_cookieHasHttp   = p_config.HasParameter(_T("Cookies"),_T("HttpOnly"));
+  m_cookieHasSame   = p_config.HasParameter(_T("Cookies"),_T("SameSite"));
+  m_cookieHasPath   = p_config.HasParameter(_T("Cookies"),_T("Path"));
+  m_cookieHasDomain = p_config.HasParameter(_T("Cookies"),_T("Domain"));
+  m_cookieHasExpires= p_config.HasParameter(_T("Cookies"),_T("Expires"));
+  m_cookieHasMaxAge = p_config.HasParameter(_T("Cookies"),_T("MaxAge"));
 
   if(m_cookieHasSecure)
   {
-    m_cookieSecure = p_config.GetParameterBoolean("Cookies","Secure",m_cookieSecure);
+    m_cookieSecure = p_config.GetParameterBoolean(_T("Cookies"),_T("Secure"),m_cookieSecure);
   }
   if(m_cookieHasHttp)
   {
-    m_cookieHttpOnly = p_config.GetParameterBoolean("Cookies","HttpOnly",m_cookieHttpOnly);
+    m_cookieHttpOnly = p_config.GetParameterBoolean(_T("Cookies"),_T("HttpOnly"),m_cookieHttpOnly);
   }
   if(m_cookieHasSame)
   {
-    XString sameSite = p_config.GetParameterString("Cookies","SameSite","");
-    if(sameSite.CompareNoCase("None")   == 0) m_cookieSameSite = CookieSameSite::None;
-    if(sameSite.CompareNoCase("Lax")    == 0) m_cookieSameSite = CookieSameSite::Lax;
-    if(sameSite.CompareNoCase("Strict") == 0) m_cookieSameSite = CookieSameSite::Strict;
+    XString sameSite = p_config.GetParameterString(_T("Cookies"),_T("SameSite"),_T(""));
+    if(sameSite.CompareNoCase(_T("None"))   == 0) m_cookieSameSite = CookieSameSite::None;
+    if(sameSite.CompareNoCase(_T("Lax"))    == 0) m_cookieSameSite = CookieSameSite::Lax;
+    if(sameSite.CompareNoCase(_T("Strict")) == 0) m_cookieSameSite = CookieSameSite::Strict;
   }
   if(m_cookieHasPath)
   {
-    m_cookiePath = p_config.GetParameterString("Cookies","Path","");
+    m_cookiePath = p_config.GetParameterString(_T("Cookies"),_T("Path"),_T(""));
   }
   if(m_cookieHasDomain)
   {
-    m_cookieDomain = p_config.GetParameterString("Cookies","Domain","");
+    m_cookieDomain = p_config.GetParameterString(_T("Cookies"),_T("Domain"),_T(""));
   }
   if(m_cookieHasExpires)
   {
-    m_cookieExpires = p_config.GetParameterInteger("Cookies","Expires",0);
+    m_cookieExpires = p_config.GetParameterInteger(_T("Cookies"),_T("Expires"),0);
   }
   if(m_cookieHasMaxAge)
   {
-    m_cookieMaxAge = p_config.GetParameterInteger("Cookies","MaxAge",0);
+    m_cookieMaxAge = p_config.GetParameterInteger(_T("Cookies"),_T("MaxAge"),0);
   }
 
-  // Add and report the automatic headers as a last resort for responsive app's
+  // Add and report the automatic headers as a last resort for responsive apps
   SetAutomaticHeaders(p_config);
 }
 
@@ -465,7 +465,7 @@ HTTPSite::StopSite(bool p_force /*=false*/)
   // Try to remove site from the server
   if(m_server->DeleteSite(m_port,m_site,p_force) == false)
   {
-    ERRORLOG(ERROR_ACCESS_DENIED,"Cannot remove sub-site before main site: " + m_site);
+    ERRORLOG(ERROR_ACCESS_DENIED,_T("Cannot remove sub-site before main site: ") + m_site);
     return false;
   }
   return true;
@@ -486,69 +486,69 @@ HTTPSite::LogSettings()
   XString level;
   switch(m_securityLevel)
   {
-    case XMLEncryption::XENC_Plain:   level = "plain";   break;
-    case XMLEncryption::XENC_Signing: level = "sign";    break;
-    case XMLEncryption::XENC_Body:    level = "body";    break;
-    case XMLEncryption::XENC_Message: level = "message"; break;
-    default:                          level = "UNKNOWN"; break;
+    case XMLEncryption::XENC_Plain:   level = _T("plain");   break;
+    case XMLEncryption::XENC_Signing: level = _T("sign");    break;
+    case XMLEncryption::XENC_Body:    level = _T("body");    break;
+    case XMLEncryption::XENC_Message: level = _T("message"); break;
+    default:                          level = _T("UNKNOWN"); break;
   }
 
   // Translate X-Frame options back
   XString option;
   switch(m_xFrameOption)
   {
-    case XFrameOption::XFO_DENY:      option = "DENY";        break;
-    case XFrameOption::XFO_SAMEORIGIN:option = "SAME-ORIGIN"; break;
-    case XFrameOption::XFO_ALLOWFROM: option = "ALLOW-FROM";  break;
-    case XFrameOption::XFO_NO_OPTION: option = "";            break;
-    default:                          option = "UNKNOWN";     break;
+    case XFrameOption::XFO_DENY:      option = _T("DENY");        break;
+    case XFrameOption::XFO_SAMEORIGIN:option = _T("SAME-ORIGIN"); break;
+    case XFrameOption::XFO_ALLOWFROM: option = _T("ALLOW-FROM");  break;
+    case XFrameOption::XFO_NO_OPTION: option = _T("");            break;
+    default:                          option = _T("UNKNOWN");     break;
   }
 
   // SameSite cookie setting
   XString sameSite;
   switch(m_cookieSameSite)
   {
-    case CookieSameSite::NoSameSite: sameSite = "NoSameSite"; break;
-    case CookieSameSite::None:       sameSite = "None";       break;
-    case CookieSameSite::Lax:        sameSite = "Lax";        break;
-    case CookieSameSite::Strict:     sameSite = "Strict";     break;
+    case CookieSameSite::NoSameSite: sameSite = _T("NoSameSite"); break;
+    case CookieSameSite::None:       sameSite = _T("None");       break;
+    case CookieSameSite::Lax:        sameSite = _T("Lax");        break;
+    case CookieSameSite::Strict:     sameSite = _T("Strict");     break;
   }
 
   // List other settings of the site
   //         "---------------------------------- : ------------"
-  DETAILLOGV("Site HTTP port set to              : %d",     m_port);
-  DETAILLOGS("Site SOAP WS-Security level        : ",       level);
-  DETAILLOGS("Site authentication scheme         : ",       m_scheme);
-  DETAILLOGV("Site authentication realm/domain   : %s/%s",  m_realm.GetString(),m_domain.GetString());
-  DETAILLOGS("Site NT-LanManager caching         : ",       m_ntlmCache     ? "ON" : "OFF");
-  DETAILLOGV("Site a-synchronious SOAP setting to: %sSYNC", m_async         ? "A-" : ""   );
-  DETAILLOGS("Site accepting Server-Sent-Events  : ",       m_isEventStream ? "ON" : "OFF");
-  DETAILLOGS("Site allows for HTTP-VERB Tunneling: ",       m_verbTunneling ? "ON" : "OFF");
-  DETAILLOGS("Site uses HTTP Throtteling         : ",       m_throttling    ? "ON" : "OFF");
-  DETAILLOGS("Site forces response to UTF-16     : ",       m_sendUnicode   ? "ON" : "OFF");
-  DETAILLOGS("Site forces SOAP response UTF BOM  : ",       m_sendSoapBOM   ? "ON" : "OFF");
-  DETAILLOGS("Site forces JSON response UTF BOM  : ",       m_sendJsonBOM   ? "ON" : "OFF");
-  DETAILLOGS("Site WS-ReliableMessaging setting  : ",       m_reliable      ? "ON" : "OFF");
-  DETAILLOGS("Site WS-RM needs logged in user    : ",       m_reliableLogIn ? "ON" : "OFF");
-  DETAILLOGS("Site IFRAME options header         : ",       option);
-  DETAILLOGS("Site allows to be IFRAME'd from    : ",       m_xFrameAllowed);
-  DETAILLOGV("Site is HTTPS-only for at least    : %d seconds",m_hstsMaxAge);
-  DETAILLOGS("Site does allow HTTPS subdomains   : ",       m_hstsSubDomains ? "YES":  "NO");
-  DETAILLOGS("Site does allow content sniffing   : ",       m_xNoSniff       ? "NO" : "YES");
-  DETAILLOGS("Site has XSS Protection set to     : ",       m_xXSSProtection ? "ON" : "OFF");
-  DETAILLOGS("Site has XSS Protection block mode : ",       m_xXSSBlockMode  ? "ON" : "OFF");
-  DETAILLOGS("Site blocking the browser caching  : ",       m_blockCache     ? "ON" : "OFF");
-  DETAILLOGS("Site Cross-Origin-Resource-Sharing : ",       m_useCORS        ? "ON" : "OFF");
-  DETAILLOG1(XString("Site allows cross-origin           : ") + (m_allowOrigin.IsEmpty() ? XString("*") : m_allowOrigin));
-  DETAILLOGS("Site CORS allows headers           : ",       m_allowHeaders);
-  DETAILLOGV("Site CORS max age of pre-flight    : %d",     m_corsMaxAge);
-  DETAILLOGS("Site CORS allows credentials       : ",       m_corsCredentials ? "YES" : "NO");
-  DETAILLOGS("Site Cookie secure setting         : ",       m_cookieHasSecure ? m_cookieSecure   ? "YES" : "NO" : "NO");
-  DETAILLOGS("Site Cookie httpOnly setting       : ",       m_cookieHasHttp   ? m_cookieHttpOnly ? "YES" : "NO" : "NO");
-  DETAILLOGS("Site Cookie sameSite setting       : ",       m_cookieHasSame   ? sameSite.GetString() : "NO");
-  DETAILLOGS("Site Cookie path setting           : ",       m_cookiePath);
-  DETAILLOGS("Site Cookie domain setting         : ",       m_cookieDomain);
-  DETAILLOGV("Site Cookie expires setting        : %d min", m_cookieExpires);
+  DETAILLOGV(_T("Site HTTP port set to              : %d"),     m_port);
+  DETAILLOGS(_T("Site SOAP WS-Security level        : "),       level);
+  DETAILLOGS(_T("Site authentication scheme         : "),       m_scheme);
+  DETAILLOGV(_T("Site authentication realm/domain   : %s/%s"),  m_realm.GetString(),m_domain.GetString());
+  DETAILLOGS(_T("Site NT-LanManager caching         : "),       m_ntlmCache     ? _T("ON") : _T("OFF"));
+  DETAILLOGV(_T("Site a-synchronious SOAP setting to: %sSYNC"), m_async         ? _T("A-") : _T("")   );
+  DETAILLOGS(_T("Site accepting Server-Sent-Events  : "),       m_isEventStream ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site allows for HTTP-VERB Tunneling: "),       m_verbTunneling ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site uses HTTP Throtteling         : "),       m_throttling    ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site forces response to UTF-16     : "),       m_sendUnicode   ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site forces SOAP response UTF BOM  : "),       m_sendSoapBOM   ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site forces JSON response UTF BOM  : "),       m_sendJsonBOM   ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site WS-ReliableMessaging setting  : "),       m_reliable      ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site WS-RM needs logged in user    : "),       m_reliableLogIn ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site IFRAME options header         : "),       option);
+  DETAILLOGS(_T("Site allows to be IFRAME'd from    : "),       m_xFrameAllowed);
+  DETAILLOGV(_T("Site is HTTPS-only for at least    : %d seconds"),m_hstsMaxAge);
+  DETAILLOGS(_T("Site does allow HTTPS subdomains   : "),       m_hstsSubDomains ? _T("YES"):  _T("NO"));
+  DETAILLOGS(_T("Site does allow content sniffing   : "),       m_xNoSniff       ? _T("NO") : _T("YES"));
+  DETAILLOGS(_T("Site has XSS Protection set to     : "),       m_xXSSProtection ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site has XSS Protection block mode : "),       m_xXSSBlockMode  ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site blocking the browser caching  : "),       m_blockCache     ? _T("ON") : _T("OFF"));
+  DETAILLOGS(_T("Site Cross-Origin-Resource-Sharing : "),       m_useCORS        ? _T("ON") : _T("OFF"));
+  DETAILLOG1(XString(_T("Site allows cross-origin           : ")) + (m_allowOrigin.IsEmpty() ? XString(_T("*")) : m_allowOrigin));
+  DETAILLOGS(_T("Site CORS allows headers           : "),       m_allowHeaders);
+  DETAILLOGV(_T("Site CORS max age of pre-flight    : %d"),     m_corsMaxAge);
+  DETAILLOGS(_T("Site CORS allows credentials       : "),       m_corsCredentials ? _T("YES") : _T("NO"));
+  DETAILLOGS(_T("Site Cookie secure setting         : "),       m_cookieHasSecure ? m_cookieSecure   ? _T("YES") : _T("NO") : _T("NO"));
+  DETAILLOGS(_T("Site Cookie httpOnly setting       : "),       m_cookieHasHttp   ? m_cookieHttpOnly ? _T("YES") : _T("NO") : _T("NO"));
+  DETAILLOGS(_T("Site Cookie sameSite setting       : "),       m_cookieHasSame   ? sameSite.GetString() : _T("NO"));
+  DETAILLOGS(_T("Site Cookie path setting           : "),       m_cookiePath);
+  DETAILLOGS(_T("Site Cookie domain setting         : "),       m_cookieDomain);
+  DETAILLOGV(_T("Site Cookie expires setting        : %d min"), m_cookieExpires);
 }
 
 // Remove the site from the URL group
@@ -566,7 +566,7 @@ HTTPSite::RemoveSiteFromGroup()
       retCode = HttpRemoveUrlFromUrlGroup(group,uniURL.c_str(),0);
       if(retCode != NO_ERROR)
       {
-        ERRORLOG(retCode,"Cannot remove site from URL group: " + m_prefixURL);
+        ERRORLOG(retCode,_T("Cannot remove site from URL group: ") + m_prefixURL);
       }
     }
     if(retCode == NO_ERROR)
@@ -574,13 +574,13 @@ HTTPSite::RemoveSiteFromGroup()
       // Unregister the site
       m_group->UnRegisterSite(this);
 
-      DETAILLOGS("Removed URL site: ",m_prefixURL);
+      DETAILLOGS(_T("Removed URL site: "),m_prefixURL);
       return true;
     }
   }
   else
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"No recorded URL-Group. Cannot remove URL Site: " + m_site);
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("No recorded URL-Group. Cannot remove URL Site: ") + m_site);
   }
   return false;
 }
@@ -650,7 +650,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
     // Try to read the body / rest of the message
     // This is now done by the threadpool thread, so the central
     // server has more time to handle the incoming requests.
-    if(p_message->GetReadBuffer() && m_server->ReceiveIncomingRequest(p_message) == false)
+    if(p_message->GetReadBuffer() && m_server->ReceiveIncomingRequest(p_message,p_message->GetSendUnicode()) == false)
     {
       // Error already report to log, EOF or stream not read
       p_message->Reset();
@@ -713,12 +713,12 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       {
         // Error while sending an error report
         // This error can originate from another thread, OR from the sending of this error report
-        CRASHLOG(310L,"DOUBLE INTERNAL ERROR while making an error report.!!");
+        CRASHLOG(310L,_T("DOUBLE INTERNAL ERROR while making an error report.!!"));
         g_exception = false;
       }
       else
       {
-        CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport has been made");
+        CRASHLOG(WER_S_REPORT_UPLOADED,_T("CRASH: Errorreport has been made"));
       }
     }
     else
@@ -787,12 +787,12 @@ HTTPSite::PostHandle(HTTPMessage* p_message,bool p_reset /*=true*/)
       {
         // Error while sending an error report
         // This error can originate from another thread, OR from the sending of this error report
-        CRASHLOG(0xFFFF,"DOUBLE INTERNAL ERROR while making an error report.!!");
+        CRASHLOG(0xFFFF,_T("DOUBLE INTERNAL ERROR while making an error report.!!"));
         g_exception = false;
       }
       else
       {
-        CRASHLOG(WER_S_REPORT_UPLOADED,"CRASH: Errorreport has been made");
+        CRASHLOG(WER_S_REPORT_UPLOADED,_T("CRASH: Errorreport has been made"));
       }
     }
     else
@@ -835,7 +835,7 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
   msg->DropReference();
 
   // Log what we just did
-  DETAILLOG1("Sent a HTTP status 200 = OK for asynchroneous message");
+  DETAILLOG1(_T("Sent a HTTP status 200 = OK for asynchroneous message"));
 
   // This message is ready. Do not send again
   p_message->SetHasBeenAnswered();
@@ -851,7 +851,7 @@ HTTPSite::HandleEventStream(HTTPMessage* p_message,EventStream* p_stream)
   {
     return handler->HandleStream(p_message,p_stream);
   }
-  ERRORLOG(ERROR_INVALID_PARAMETER,"Event stream can only be initialized through a HTTP GET to a event-handling site.");
+  ERRORLOG(ERROR_INVALID_PARAMETER,_T("Event stream can only be initialized through a HTTP GET to a event-handling site."));
   HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_BAD_REQUEST);
   msg->SetRequestHandle(p_stream->m_requestID);
   HandleHTTPMessageDefault(msg);
@@ -865,7 +865,7 @@ HTTPSite::HandleEventStream(HTTPMessage* p_message,EventStream* p_stream)
 void
 HTTPSite::HandleHTTPMessageDefault(HTTPMessage* p_message)
 {
-  DETAILLOG1("Default HTTPSite repsonse HTTP_STATUS_BAD_REQUEST (400)");
+  DETAILLOG1(_T("Default HTTPSite repsonse HTTP_STATUS_BAD_REQUEST (400)"));
   p_message->Reset();
   p_message->GetFileBuffer()->Reset();
   p_message->SetCommand(HTTPCommand::http_response);
@@ -883,14 +883,14 @@ HTTPSite::GetAllowHandlers()
   // Simply list all filled handlers
   for(auto& handler : m_handlers)
   {
-    allow += " ";
+    allow += _T(" ");
     allow += headers[(unsigned)handler.first];
-    allow += " ";
+    allow += _T(" ");
   }
 
   // Create comma separated list
   allow.Trim();
-  allow.Replace("  ",", ");
+  allow.Replace(_T("  "),_T(", "));
 
   return allow;
 }
@@ -950,7 +950,7 @@ HTTPSite::RemoveFilter(unsigned p_priority)
   if(it == m_filters.end())
   {
     XString msg;
-    msg.Format("Filter with priority [%d] for site [%s] not found!",p_priority,m_site.GetString());
+    msg.Format(_T("Filter with priority [%d] for site [%s] not found!"),p_priority,m_site.GetString());
     ERRORLOG(ERROR_NOT_FOUND,msg);
     return false;
   }
@@ -1070,10 +1070,10 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
     // Must at least get a SOAP/XML message
     SendSOAPFault(address
                  ,p_message
-                 ,"Client"
-                 ,"Not a valid SOAP/XML message"
-                 ,"Client program"
-                 ,"Ill formed XML message. Review your program logic. Reported: " + p_message->GetInternalErrorString());
+                 ,_T("Client")
+                 ,_T("Not a valid SOAP/XML message")
+                 ,_T("Client program")
+                 ,_T("Ill formed XML message. Review your program logic. Reported: ") + p_message->GetInternalErrorString());
     return true;
   }
 
@@ -1084,10 +1084,10 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
     {
       SendSOAPFault(address
                    ,p_message
-                   ,"Client"
-                   ,"Must not use WS-ReliableMessaging"
-                   ,"Settings"
-                   ,"Encountered a SOAP/XML request using the WS-ReliableMessaging protocol. Review your settings!");
+                   ,_T("Client")
+                   ,_T("Must not use WS-ReliableMessaging")
+                   ,_T("Settings")
+                   ,_T("Encountered a SOAP/XML request using the WS-ReliableMessaging protocol. Review your settings!"));
       return true;
     }
     // For WS-ReliableMessaging we must use a logged in session
@@ -1096,24 +1096,24 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
       // Return SOAP FAULT: Not logged with a user/password combination
       SendSOAPFault(address
                    ,p_message
-                   ,"Client"
-                   ,"Not logged with a user/password combination"
-                   ,"User"
-                   ,"User should login with a user/password combination to make use of a reliable webservice connection");
+                   ,_T("Client")
+                   ,_T("Not logged with a user/password combination")
+                   ,_T("User")
+                   ,_T("User should login with a user/password combination to make use of a reliable webservice connection"));
       return true;
     }
 
-    if(p_message->GetSoapAction() == "CreateSequence")
+    if(p_message->GetSoapAction() == _T("CreateSequence"))
     {
       RM_HandleCreateSequence(address,p_message);
       return true;
     }
-    if(p_message->GetSoapAction() == "LastMessage")
+    if(p_message->GetSoapAction() == _T("LastMessage"))
     {
       RM_HandleLastMessage(address,p_message);
       return true;
     }
-    if(p_message->GetSoapAction() == "TerminateSequence")
+    if(p_message->GetSoapAction() == _T("TerminateSequence"))
     {
       RM_HandleTerminateSequence(address,p_message);
       return true;
@@ -1123,10 +1123,10 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
       // return SOAP FAULT: Unknown RM message type
       SendSOAPFault(address
                    ,p_message
-                  ,"Client"
-                  ,"Unknown WS-ReliableMessaging request"
-                  ,"Client program"
-                  ,XString("Encountered a WS-ReliableMessaging request that is unknown to the server: ") + p_message->GetSoapAction());
+                  ,_T("Client")
+                  ,_T("Unknown WS-ReliableMessaging request")
+                  ,_T("Client program")
+                  ,XString(_T("Encountered a WS-ReliableMessaging request that is unknown to the server: ")) + p_message->GetSoapAction());
 
       return true;
     }
@@ -1137,10 +1137,10 @@ HTTPSite::HttpReliableCheck(SOAPMessage* p_message)
     // return SOAP FAULT: No RM used
     SendSOAPFault(address
                  ,p_message
-                ,"Client"
-                ,"Must use WS-ReliableMessaging"
-                ,"Settings"
-                ,"Encountered a SOAP/XML request without using the WS-ReliableMessaging protocol. Review your settings!");
+                ,_T("Client")
+                ,_T("Must use WS-ReliableMessaging")
+                ,_T("Settings")
+                ,_T("Encountered a SOAP/XML request without using the WS-ReliableMessaging protocol. Review your settings!"));
     return true;
   }
   // Normal message, try to increment server ID
@@ -1157,11 +1157,11 @@ HTTPSite::RM_HandleMessage(SessionAddress& p_address,SOAPMessage* p_message)
     // Return SOAP Fault: Already a sequence for this session
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"No RM sequence found"
-                 ,"Client program"
-                 ,"No reliable-messaging protocol with 'CreateSequence' found for this connection yet\n"
-                  "Server can only respond to WS-ReliableMessaging SOAP protocol. Review your program logic.");
+                 ,_T("Client")
+                 ,_T("No RM sequence found")
+                 ,_T("Client program")
+                 ,_T("No reliable-messaging protocol with 'CreateSequence' found for this connection yet\n")
+                  _T("Server can only respond to WS-ReliableMessaging SOAP protocol. Review your program logic."));
     return true;
   }
   // Check message
@@ -1172,10 +1172,10 @@ HTTPSite::RM_HandleMessage(SessionAddress& p_address,SOAPMessage* p_message)
     // SOAP FAULT
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"Wrong RM sequence found"
-                 ,"Client program"
-                 ,"Client send wrong server sequence nonce in ReliableMessaging protocol. Review your program logic");
+                 ,_T("Client")
+                 ,_T("Wrong RM sequence found")
+                 ,_T("Client program")
+                 ,_T("Client send wrong server sequence nonce in ReliableMessaging protocol. Review your program logic"));
     return true;
   }
   // 2: Correct server GUID
@@ -1185,10 +1185,10 @@ HTTPSite::RM_HandleMessage(SessionAddress& p_address,SOAPMessage* p_message)
     // SOAP FAULT
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"Wrong RM sequence found"
-                 ,"Client program"
-                 ,"Client send wrong client sequence nonce in ReliableMessaging protocol. Review your program logic");
+                 ,_T("Client")
+                 ,_T("Wrong RM sequence found")
+                 ,_T("Client program")
+                 ,_T("Client send wrong client sequence nonce in ReliableMessaging protocol. Review your program logic"));
     return true;
   }
   // 3: Check client ID is 1 (one) higher than last
@@ -1227,16 +1227,16 @@ HTTPSite::RM_HandleCreateSequence(SessionAddress& p_address,SOAPMessage* p_messa
     // Return SOAP Fault: Already a sequence for this session
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"Already a RM sequence"
-                 ,"Client program"
-                 ,"Program requested a new RM-sequence, but a sequence for this session already exists. Review your program logic.");
+                 ,_T("Client")
+                 ,_T("Already a RM sequence")
+                 ,_T("Client program")
+                 ,_T("Program requested a new RM-sequence, but a sequence for this session already exists. Review your program logic."));
     return true;
   }
   // Client offers a nonce
   XString guidSequenceClient;
-  XMLElement* xmlOffer = p_message->FindElement("Offer");
-  XMLElement* xmlIdent = p_message->FindElement(xmlOffer,"Identifier");
+  XMLElement* xmlOffer = p_message->FindElement(_T("Offer"));
+  XMLElement* xmlIdent = p_message->FindElement(xmlOffer,_T("Identifier"));
   if(xmlIdent)
   {
     guidSequenceClient = xmlIdent->GetValue();
@@ -1248,10 +1248,10 @@ HTTPSite::RM_HandleCreateSequence(SessionAddress& p_address,SOAPMessage* p_messa
     // SOAP Fault: no client sequence nonce offered
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"No ReliableMessage nonce"
-                 ,"Client program"
-                 ,"Program requested a new RM-sequence, but did not offer a client nonce (GUID). Review your program logic.");
+                 ,_T("Client")
+                 ,_T("No ReliableMessage nonce")
+                 ,_T("Client program")
+                 ,_T("Program requested a new RM-sequence, but did not offer a client nonce (GUID). Review your program logic."));
     return true;
   }
 
@@ -1265,9 +1265,9 @@ HTTPSite::RM_HandleCreateSequence(SessionAddress& p_address,SOAPMessage* p_messa
   p_message->Reset();
 
   // Message body 
-  p_message->SetParameter("Identifier",sequence->m_serverGUID);
-  XMLElement* accept = p_message->SetParameter("Accept","");
-  p_message->SetElement(accept,"Address",p_message->GetUnAuthorisedURL());
+  p_message->SetParameter(_T("Identifier"),sequence->m_serverGUID);
+  XMLElement* accept = p_message->SetParameter(_T("Accept"),_T(""));
+  p_message->SetElement(accept,_T("Address"),p_message->GetUnAuthorisedURL());
 
   ReliableResponse(sequence,p_message);
   return true;
@@ -1282,10 +1282,10 @@ HTTPSite::RM_HandleLastMessage(SessionAddress& p_address,SOAPMessage* p_message)
     // Return SOAP Fault: no sequence for this session
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"No RM sequence"
-                 ,"Client program"
-                 ,"Program flagged a last-message in a RM-sequence, but the sequence doesn't exist. Review your program logic.");
+                 ,_T("Client")
+                 ,_T("No RM sequence")
+                 ,_T("Client program")
+                 ,_T("Program flagged a last-message in a RM-sequence, but the sequence doesn't exist. Review your program logic."));
     return true;
   }
   if(sequence->m_lastMessage)
@@ -1293,10 +1293,10 @@ HTTPSite::RM_HandleLastMessage(SessionAddress& p_address,SOAPMessage* p_message)
     // SOAP FAULT: already last message
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"LastMessage already passed"
-                 ,"Client program"
-                 ,"Program has sent the 'LastMessage' more than once. Review your program logic.");
+                 ,_T("Client")
+                 ,_T("LastMessage already passed")
+                 ,_T("Client program")
+                 ,_T("Program has sent the 'LastMessage' more than once. Review your program logic."));
     return true;
   }
   // Record the fact that we saw the last message
@@ -1318,10 +1318,10 @@ HTTPSite::RM_HandleTerminateSequence(SessionAddress& p_address,SOAPMessage* p_me
     // Return SOAP Fault: no sequence for this session
     SendSOAPFault(p_address
                  ,p_message
-                ,"Client"
-                ,"No RM sequence"
-                ,"Client program"
-                ,"Program flagged a 'TerminateSequence' in a RM-sequence, but the sequence doesn't exist. Review your program logic.");
+                ,_T("Client")
+                ,_T("No RM sequence")
+                ,_T("Client program")
+                ,_T("Program flagged a 'TerminateSequence' in a RM-sequence, but the sequence doesn't exist. Review your program logic."));
     return true;
 
   }
@@ -1330,30 +1330,30 @@ HTTPSite::RM_HandleTerminateSequence(SessionAddress& p_address,SOAPMessage* p_me
     // SOAP FAULT: Missing last message
     SendSOAPFault(p_address
                  ,p_message
-                ,"Client"
-                ,"No LastMessage before TerminateSequence"
-                ,"Client program"
-                ,"Encountered a 'TerminateSequence' of the RM protocol, but no 'LastMessage' has passed.");
+                ,_T("Client")
+                ,_T("No LastMessage before TerminateSequence")
+                ,_T("Client program")
+                ,_T("Encountered a 'TerminateSequence' of the RM protocol, but no 'LastMessage' has passed."));
     return true;
   }
 
   // Check Sequence to be ended
-  XString serverGUID = p_message->GetParameter("Identifier");
+  XString serverGUID = p_message->GetParameter(_T("Identifier"));
   if(serverGUID.CompareNoCase(sequence->m_serverGUID))
   {
     // SOAP FAULT: Missing last message
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"TerminateSequence for wrong sequence"
-                 ,"Client program"
-                 ,"Encountered a 'TerminateSequence' of the RM protocol, but for a different client. Review your settings.");
+                 ,_T("Client")
+                 ,_T("TerminateSequence for wrong sequence")
+                 ,_T("Client program")
+                 ,_T("Encountered a 'TerminateSequence' of the RM protocol, but for a different client. Review your settings."));
     return true;
   }
 
   // Tell our client that we will end it's nonce
   p_message->Reset();
-  p_message->SetParameter("Identifier",sequence->m_clientGUID);
+  p_message->SetParameter(_T("Identifier"),sequence->m_clientGUID);
 
   // Return last response
   RM_HandleMessage(p_address,p_message);
@@ -1371,14 +1371,14 @@ HTTPSite::DebugPrintSessionAddress(XString p_prefix,SessionAddress& p_address)
   for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
   {
     BYTE byte = (reinterpret_cast<BYTE*>(&p_address.m_address))[ind];
-    address.AppendFormat("%2.2X",byte);
+    address.AppendFormat(_T("%2.2X"),byte);
   }
   
-  DETAILLOGV("DEBUG ADDRESS AT   : %s",p_prefix.GetString());
-  DETAILLOGV("Session address    : %s",address .GetString());
-  DETAILLOGV("Session address SID: %s",p_address.m_userSID.GetString());
-  DETAILLOGV("Session desktop    : %d",p_address.m_desktop);
-  DETAILLOGV("Session abs. path  : %s",p_address.m_absPath.GetString());
+  DETAILLOGV(_T("DEBUG ADDRESS AT   : %s"),p_prefix.GetString());
+  DETAILLOGV(_T("Session address    : %s"),address .GetString());
+  DETAILLOGV(_T("Session address SID: %s"),p_address.m_userSID.GetString());
+  DETAILLOGV(_T("Session desktop    : %d"),p_address.m_desktop);
+  DETAILLOGV(_T("Session abs. path  : %s"),p_address.m_absPath.GetString());
 }
 
 SessionSequence*
@@ -1410,7 +1410,7 @@ HTTPSite::CreateSequence(SessionAddress& p_address)
 // #endif
 
   SessionSequence sequence;
-  sequence.m_serverGUID      = "urn:uuid:" + GenerateGUID();
+  sequence.m_serverGUID      = _T("urn:uuid:") + GenerateGUID();
   sequence.m_clientMessageID = 1;
   sequence.m_serverMessageID = 0;
   sequence.m_lastMessage     = false;
@@ -1546,10 +1546,10 @@ HTTPSite::HttpSecurityCheck(HTTPMessage* p_http,SOAPMessage* p_soap)
   {
     SendSOAPFault(address
                  ,p_soap
-                 ,"Client"
-                 ,"Configuration"
-                 ,"Same security level"
-                 ,"Client and server should have the same security level (Signing, body-encryption or message-encryption).");
+                 ,_T("Client")
+                 ,_T("Configuration")
+                 ,_T("Same security level")
+                 ,_T("Client and server should have the same security level (Signing, body-encryption or message-encryption)."));
     return true;
   }
 
@@ -1573,18 +1573,18 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
   bool ready = true;
 
   // Finding the Signature value
-  XMLElement* sigValue = p_message->FindElement("SignatureValue");
+  XMLElement* sigValue = p_message->FindElement(_T("SignatureValue"));
   if(sigValue)
   {
     XString signature = sigValue->GetValue();
     if(!signature.IsEmpty())
     {
       // Finding the signing method
-      XString method = "sha1"; // Default method
-      XMLElement* digMethod = p_message->FindElement("DigestMethod");
+      XString method = _T("sha1"); // Default method
+      XMLElement* digMethod = p_message->FindElement(_T("DigestMethod"));
       if(digMethod)
       {
-        XString usedMethod = p_message->GetAttribute(digMethod,"Algorithm");
+        XString usedMethod = p_message->GetAttribute(digMethod,_T("Algorithm"));
         if(!usedMethod.IsEmpty())
         {
           method = usedMethod;
@@ -1599,14 +1599,14 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
 
       // Finding the reference ID
       XString signedXML;
-      XMLElement* refer = p_message->FindElement("Reference");
+      XMLElement* refer = p_message->FindElement(_T("Reference"));
       if(refer)
       {
-        XString uri = p_message->GetAttribute(refer,"URI");
+        XString uri = p_message->GetAttribute(refer,_T("URI"));
         if(!uri.IsEmpty())
         {
-          uri = uri.TrimLeft("#");
-          XMLElement* uriPart = p_message->FindElementByAttribute("Id",uri);
+          uri = uri.TrimLeft(_T("#"));
+          XMLElement* uriPart = p_message->FindElementByAttribute(_T("Id"),uri);
           if(uriPart)
           {
             signedXML = p_message->GetCanonicalForm(uriPart);
@@ -1623,7 +1623,7 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
       Crypto sign;
       sign.SetHashMethod(method);
       p_message->SetSigningMethod(sign.GetHashMethod());
-      XString digest = sign.Digest(signedXML,m_enc_password);
+      XString digest = sign.Digest(signedXML.GetString(),signedXML.GetLength() * sizeof(TCHAR));
 
       if(signature.CompareNoCase(digest) == 0)
       {
@@ -1636,10 +1636,10 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
   {
     SendSOAPFault(p_address
                  ,p_message
-                 ,"Client"
-                 ,"Configuration"
-                 ,"No signing"
-                 ,"SOAP message should have a signed body. Signing is incorrect or missing.");
+                 ,_T("Client")
+                 ,_T("Configuration")
+                 ,_T("No signing")
+                 ,_T("SOAP message should have a signed body. Signing is incorrect or missing."));
   }
   // ALL OK?
   return ready;
@@ -1659,8 +1659,8 @@ HTTPSite::CheckBodyEncryption(SessionAddress& p_address
   Crypto crypting;
   XString newBody = crypting.Decryption(crypt,m_enc_password);
 
-  int beginPos = p_body.Find("Body>");
-  int endPos   = p_body.Find("Body>",beginPos + 5);
+  int beginPos = p_body.Find(_T("Body>"));
+  int endPos   = p_body.Find(_T("Body>"),beginPos + 5);
   if(beginPos > 0 && endPos > 0 && endPos > beginPos)
   {
     // Finding begin of the body before the namespace
@@ -1704,10 +1704,10 @@ HTTPSite::CheckBodyEncryption(SessionAddress& p_address
   {
     SendSOAPFault(p_address
                  ,p_soap
-                 ,"Client"
-                 ,"Configuration"
-                 ,"No encryption"
-                 ,"SOAP message should have a encrypted body. Encryption is incorrect or missing.");
+                 ,_T("Client")
+                 ,_T("Configuration")
+                 ,_T("No encryption")
+                 ,_T("SOAP message should have a encrypted body. Encryption is incorrect or missing."));
   }
   return ready;
 }
@@ -1726,8 +1726,8 @@ HTTPSite::CheckMesgEncryption(SessionAddress& p_address
   Crypto crypting;
   XString newBody = crypting.Decryption(crypt,m_enc_password);
 
-  int beginPos = p_body.Find("Envelope>");
-  int endPos   = p_body.Find("Envelope>",beginPos + 2);
+  int beginPos = p_body.Find(_T("Envelope>"));
+  int endPos   = p_body.Find(_T("Envelope>"),beginPos + 2);
   if(beginPos > 0 && endPos > 0 && endPos > beginPos)
   {
     // Finding begin of the envelope before the namespace
@@ -1770,10 +1770,10 @@ HTTPSite::CheckMesgEncryption(SessionAddress& p_address
   {
     SendSOAPFault(p_address
                  ,p_soap
-                 ,"Client"
-                 ,"WS-Security"
-                 ,"No encryption"
-                 ,"SOAP message should have a encrypted message. Encryption is incorrect or missing.");
+                 ,_T("Client")
+                 ,_T("WS-Security")
+                 ,_T("No encryption")
+                 ,_T("SOAP message should have a encrypted message. Encryption is incorrect or missing."));
   }
   return ready;
 }
@@ -1840,32 +1840,32 @@ HTTPSite::SetAutomaticHeaders(MarlinConfig& p_config)
   XString option;
   switch(m_xFrameOption)
   {
-    case XFrameOption::XFO_NO_OPTION: option = "NOT-SET";     break;
-    case XFrameOption::XFO_DENY:      option = "DENY";        break;
-    case XFrameOption::XFO_SAMEORIGIN:option = "SAME-ORIGIN"; break;
-    case XFrameOption::XFO_ALLOWFROM: option = "ALLOW-FROM";  break;
-    default:                          option = "Unknown";     break;
+    case XFrameOption::XFO_NO_OPTION: option = _T("NOT-SET");     break;
+    case XFrameOption::XFO_DENY:      option = _T("DENY");        break;
+    case XFrameOption::XFO_SAMEORIGIN:option = _T("SAME-ORIGIN"); break;
+    case XFrameOption::XFO_ALLOWFROM: option = _T("ALLOW-FROM");  break;
+    default:                          option = _T("Unknown");     break;
   }
 
   // Read everything from the webconfig
-  option            = p_config.GetParameterString ("Security", "XFrameOption",          option);
-  m_xFrameAllowed   = p_config.GetParameterString ("Security", "XFrameAllowed",         m_xFrameAllowed);
-  m_hstsMaxAge      = p_config.GetParameterInteger("Security", "HSTSMaxAge",            m_hstsMaxAge);
-  m_hstsSubDomains  = p_config.GetParameterBoolean("Security", "HSTSSubDomains",        m_hstsSubDomains);
-  m_xNoSniff        = p_config.GetParameterBoolean("Security", "ContentNoSniff",        m_xNoSniff);
-  m_xXSSProtection  = p_config.GetParameterBoolean("Security", "XSSProtection",         m_xXSSProtection);
-  m_xXSSBlockMode   = p_config.GetParameterBoolean("Security", "XSSBlockMode",          m_xXSSBlockMode);
-  m_blockCache      = p_config.GetParameterBoolean("Security", "NoCacheControl",        m_blockCache);
-  m_useCORS         = p_config.GetParameterBoolean("Security", "CORS",                  m_useCORS);
-  m_allowOrigin     = p_config.GetParameterString ("Security", "CORS_AllowOrigin",      m_allowOrigin);
-  m_allowHeaders    = p_config.GetParameterString ("Security", "CORS_AllowHeaders",     m_allowHeaders);
-  m_corsMaxAge      = p_config.GetParameterInteger("Security", "CORS_MaxAge",           m_corsMaxAge);
-  m_corsCredentials = p_config.GetParameterBoolean("Security", "CORS_AllowCredentials", m_corsCredentials);
+  option            = p_config.GetParameterString (_T("Security"), _T("XFrameOption"),          option);
+  m_xFrameAllowed   = p_config.GetParameterString (_T("Security"), _T("XFrameAllowed"),         m_xFrameAllowed);
+  m_hstsMaxAge      = p_config.GetParameterInteger(_T("Security"), _T("HSTSMaxAge"),            m_hstsMaxAge);
+  m_hstsSubDomains  = p_config.GetParameterBoolean(_T("Security"), _T("HSTSSubDomains"),        m_hstsSubDomains);
+  m_xNoSniff        = p_config.GetParameterBoolean(_T("Security"), _T("ContentNoSniff"),        m_xNoSniff);
+  m_xXSSProtection  = p_config.GetParameterBoolean(_T("Security"), _T("XSSProtection"),         m_xXSSProtection);
+  m_xXSSBlockMode   = p_config.GetParameterBoolean(_T("Security"), _T("XSSBlockMode"),          m_xXSSBlockMode);
+  m_blockCache      = p_config.GetParameterBoolean(_T("Security"), _T("NoCacheControl"),        m_blockCache);
+  m_useCORS         = p_config.GetParameterBoolean(_T("Security"), _T("CORS"),                  m_useCORS);
+  m_allowOrigin     = p_config.GetParameterString (_T("Security"), _T("CORS_AllowOrigin"),      m_allowOrigin);
+  m_allowHeaders    = p_config.GetParameterString (_T("Security"), _T("CORS_AllowHeaders"),     m_allowHeaders);
+  m_corsMaxAge      = p_config.GetParameterInteger(_T("Security"), _T("CORS_MaxAge"),           m_corsMaxAge);
+  m_corsCredentials = p_config.GetParameterBoolean(_T("Security"), _T("CORS_AllowCredentials"), m_corsCredentials);
 
   // Translate X-Frame options back
-       if(option.CompareNoCase("DENY")        == 0) m_xFrameOption = XFrameOption::XFO_DENY;
-  else if(option.CompareNoCase("SAME-ORIGIN") == 0) m_xFrameOption = XFrameOption::XFO_SAMEORIGIN;
-  else if(option.CompareNoCase("ALLOW-FROM")  == 0) m_xFrameOption = XFrameOption::XFO_ALLOWFROM;
+       if(option.CompareNoCase(_T("DENY"))        == 0) m_xFrameOption = XFrameOption::XFO_DENY;
+  else if(option.CompareNoCase(_T("SAME-ORIGIN")) == 0) m_xFrameOption = XFrameOption::XFO_SAMEORIGIN;
+  else if(option.CompareNoCase(_T("ALLOW-FROM"))  == 0) m_xFrameOption = XFrameOption::XFO_ALLOWFROM;
   else                                              m_xFrameOption = XFrameOption::XFO_NO_OPTION;
 }
 
@@ -1880,52 +1880,52 @@ HTTPSite::AddSiteOptionalHeaders(UKHeaders& p_headers)
   {
     switch(m_xFrameOption)
     {
-      case XFrameOption::XFO_DENY:        value = "DENY";        break;
-      case XFrameOption::XFO_SAMEORIGIN:  value = "SAMEORIGIN";  break;
-      case XFrameOption::XFO_ALLOWFROM:   value = "ALLOW-FROM ";
+      case XFrameOption::XFO_DENY:        value = _T("DENY");        break;
+      case XFrameOption::XFO_SAMEORIGIN:  value = _T("SAMEORIGIN");  break;
+      case XFrameOption::XFO_ALLOWFROM:   value = _T("ALLOW-FROM ");
                                           value += m_xFrameAllowed;
       default:                            break;
     }
-    p_headers.insert(std::make_pair("X-Frame-Options",value));
+    p_headers.push_back(UKHeader(_T("X-Frame-Options"),value));
   }
   // Add HSTS headers
   if(m_hstsMaxAge > 0)
   {
-    value.Format("max-age=%u",m_hstsMaxAge);
+    value.Format(_T("max-age=%u"),m_hstsMaxAge);
     if(m_hstsSubDomains)
     {
-      value += "; includeSubDomains";
+      value += _T("; includeSubDomains");
     }
-    p_headers.insert(std::make_pair("Strict-Transport-Security",value));
+    p_headers.push_back(UKHeader(_T("Strict-Transport-Security"),value));
   }
   // Browsers should take our content-type for granted!!
   if(m_xNoSniff)
   {
-    p_headers.insert(std::make_pair("X-Content-Type-Options","nosniff"));
+    p_headers.push_back(UKHeader(_T("X-Content-Type-Options"),_T("nosniff")));
   }
   // Add protection against XSS 
   if(m_xXSSProtection)
   {
-    value = "1";
+    value = _T("1");
     if(m_xXSSBlockMode)
     {
-      value += "; mode=block";
+      value += _T("; mode=block");
     }
-    p_headers.insert(std::make_pair("X-XSS-Protection",value));
+    p_headers.push_back(UKHeader(_T("X-XSS-Protection"),value));
   }
   // Blocking the browser cache for this site!
   // Use for responsive applications only!
   if(m_blockCache)
   {
-    p_headers.insert(std::make_pair("Cache-Control","no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0"));
-    p_headers.insert(std::make_pair("Pragma","no-cache"));
-    p_headers.insert(std::make_pair("Expires","0"));
+    p_headers.push_back(UKHeader(_T("Cache-Control"),_T("no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0")));
+    p_headers.push_back(UKHeader(_T("Pragma"),_T("no-cache")));
+    p_headers.push_back(UKHeader(_T("Expires"),_T("0")));
   }
 
   // If we use CORS, make sure we advertise the origin
   if(m_useCORS)
   {
-    p_headers.insert(std::make_pair("Access-Control-Allow-Origin",m_allowOrigin.IsEmpty() ? XString("*") : m_allowOrigin));
+    p_headers.push_back(UKHeader(_T("Access-Control-Allow-Origin"),m_allowOrigin.IsEmpty() ? XString(_T("*")) : m_allowOrigin));
   }
 }
 

@@ -63,18 +63,18 @@ SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream
   HTTPServer* server = p_stream->m_site->GetHTTPServer();
 
   // Report it
-  xprintf("NEW EVENT STREAM : %p\n", reinterpret_cast<void*>(testStream));
+  xprintf(_T("NEW EVENT STREAM : %p\n"), reinterpret_cast<void*>(testStream));
 
   for(int x = 1; x <= EventTests; ++x)
   {
-    ServerEvent* eventx = new ServerEvent("message");
+    ServerEvent* eventx = new ServerEvent(_T("message"));
     eventx->m_id = x;
-    eventx->m_data.Format("This is message number: %u\n",x);
+    eventx->m_data.Format(_T("This is message number: %u\n"),x);
 
     result = server->SendEvent(p_stream,eventx);
 
     // --- "---------------------------------------------- - ------
-    qprintf("Event stream OnMessage %d sent                  : %s\n", x, result ? "OK" : "ERROR");
+    qprintf(_T("Event stream OnMessage %d sent                  : %s\n"), x, result ? _T("OK") : _T("ERROR"));
     if(result) 
     {
       --totalChecks;
@@ -96,23 +96,23 @@ SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream
   XString line;
   for (int y = 0; y < 26; ++y)
   {
-    line += (char)('A' + y);
-    line += (char)('z' - y);
+    line += (TCHAR)(_T('A') + y);
+    line += (TCHAR)(_T('z') - y);
   }
   XString all = line + line + line + line;
-  all += "\r\n";
+  all += _T("\r\n");
   for(int x = 0; x < 1000; ++x)
   {
     otherData += all;
   }
 
-  xprintf("Sending other message\n");
-  ServerEvent* other = new ServerEvent("other");
-  other->m_data = "This is a complete different message in another set of stories.\r\n";
+  xprintf(_T("Sending other message\n"));
+  ServerEvent* other = new ServerEvent(_T("other"));
+  other->m_data = _T("This is a complete different message in another set of stories.\r\n");
   other->m_data += otherData;
   result = server->SendEvent(p_stream,other);
   // --- "---------------------------------------------- - ------
-  qprintf("Event stream 'other' message sent              : %s\n", result ? "OK" : "ERROR");
+  qprintf(_T("Event stream 'other' message sent              : %s\n"), result ? _T("OK") : _T("ERROR"));
   if(result) 
   {
     --totalChecks;
@@ -122,12 +122,12 @@ SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream
     xerror();
   }
 
-  xprintf("Sending an error message\n");
-  ServerEvent* err = new ServerEvent("error");
-  err->m_data = "This is a very serious bug report from your server! Heed attention to it!";
+  xprintf(_T("Sending an error message\n"));
+  ServerEvent* err = new ServerEvent(_T("error"));
+  err->m_data = _T("This is a very serious bug report from your server! Heed attention to it!");
   result = server->SendEvent(p_stream,err);
   // --- "---------------------------------------------- - ------
-  qprintf("Event stream 'OnError' message sent            : %s\n", result ? "OK" : "ERROR");
+  qprintf(_T("Event stream 'OnError' message sent            : %s\n"), result ? _T("OK") : _T("ERROR"));
   if(result)
   {
     --totalChecks;
@@ -138,13 +138,13 @@ SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream
   }
 
   // Implicitly sending an OnClose
-  xprintf("Closing event stream\n");
+  xprintf(_T("Closing event stream\n"));
   server->CloseEventStream(p_stream);
 
   // Check for closed stream
   result = !server->HasEventStream(p_stream);
   // --- "---------------------------------------------- - ------
-  qprintf("Event stream closed by server (OnClose sent)   : %s\n", result ? "OK" : "ERROR");
+  qprintf(_T("Event stream closed by server (OnClose sent)   : %s\n"), result ? _T("OK") : _T("ERROR"));
   if(result)
   {
     --totalChecks;
@@ -161,22 +161,22 @@ TestMarlinServer::TestPushEvents()
 {
   int error = 0;
 
-  xprintf("TESTING SSE (Server-Sent-Events) CHANNEL FUNCTIONS OF THE HTTP-SERVER\n");
-  xprintf("=====================================================================\n");
-  XString url("/MarlinTest/Events/");
+  xprintf(_T("TESTING SSE (Server-Sent-Events) CHANNEL FUNCTIONS OF THE HTTP-SERVER\n"));
+  xprintf(_T("=====================================================================\n"));
+  XString url(_T("/MarlinTest/Events/"));
   // Create URL site to listen to events "http://+:port/MarlinTest/Events/"
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for event streams  : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for event streams  : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("Cannot create a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("Cannot create a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -184,19 +184,19 @@ TestMarlinServer::TestPushEvents()
 
   // HERE IS THE MAGIC. MAKE IT INTO AN EVENT STREAM HANDLER!!!
   // Modify standard settings for this site
-  site->AddContentType("txt","text/event-stream");
+  site->AddContentType(_T("txt"),_T("text/event-stream"));
   site->SetIsEventStream(true);
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly\n");
+    xprintf(_T("Site started correctly\n"));
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -207,6 +207,6 @@ TestMarlinServer::AfterTestEvents()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Event streams On-Message/Error/Other/Close     : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("Event streams On-Message/Error/Other/Close     : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

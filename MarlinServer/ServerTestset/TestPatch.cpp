@@ -57,12 +57,12 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
   int errors = 0;
   HTTPMessage* msg = const_cast<HTTPMessage*>(p_message);
   XString body = msg->GetBody();
-  xprintf("HTTP PATCH VERB URL [%s] FROM: %s\n",msg->GetURL().GetString(),SocketToServer(msg->GetSender()).GetString());
-  xprintf("%s\n",body.GetString());
+  xprintf(_T("HTTP PATCH VERB URL [%s] FROM: %s\n"),msg->GetURL().GetString(),SocketToServer(msg->GetSender()).GetString());
+  xprintf(_T("%s\n"),body.GetString());
 
   const CrackedURL& url = msg->GetCrackedURL();
-  XString bloodType     = url.GetParameter("type");
-  XString rhesusFactor  = url.GetParameter("rhesus");
+  XString bloodType     = url.GetParameter(_T("type"));
+  XString rhesusFactor  = url.GetParameter(_T("rhesus"));
 
   // Reset our HTTP message
   p_message->Reset();
@@ -70,7 +70,7 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
   p_message->GetFileBuffer()->ResetFilename();
 
   // Test URL parameters
-  if(bloodType != "ab" || rhesusFactor != "neg")
+  if(bloodType != _T("ab") || rhesusFactor != _T("neg"))
   {
     ++errors;
     xerror();
@@ -78,14 +78,14 @@ SiteHandlerPatchMe::Handle(HTTPMessage* p_message)
   else
   {
     --totalChecks;
-    p_message->SetBody("AB-\n");
+    p_message->SetBody(_T("AB-\n"));
   }
 
   // Check done
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  qprintf("Less known HTTP verbs (PATCH)                  : %s\n",errors ? "ERROR" : "OK");
+  qprintf(_T("Less known HTTP verbs (PATCH)                  : %s\n"),errors ? _T("ERROR") : _T("OK"));
 
   return true;
 }
@@ -104,10 +104,10 @@ TestMarlinServer::TestPatch()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/MarlinTest/Patching/");
+  XString url(_T("/MarlinTest/Patching/"));
 
-  xprintf("TESTING HTTP PATCH VERB FUNCTION OF THE HTTP SERVER\n");
-  xprintf("===================================================\n");
+  xprintf(_T("TESTING HTTP PATCH VERB FUNCTION OF THE HTTP SERVER\n"));
+  xprintf(_T("===================================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Patching/"
   // Callback function is no longer required!
@@ -116,13 +116,13 @@ TestMarlinServer::TestPatch()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for PATCH/OPTIONS  : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for PATCH/OPTIONS  : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -135,19 +135,19 @@ TestMarlinServer::TestPatch()
   site->SetVerbTunneling(true);
 
   // Modify the standard settings for this site
-  site->AddContentType("","text/xml");
-  site->AddContentType("xml","application/soap+xml");
+  site->AddContentType(_T(""),_T("text/xml"));
+  site->AddContentType(_T("xml"),_T("application/soap+xml"));
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -157,6 +157,6 @@ TestMarlinServer::AfterTestPatch()
 {
   // SUMMARY OF THE TEST
   //- --- "---------------------------------------------- - ------
-  qprintf("HTTP PATCH verb tested                         : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("HTTP PATCH verb tested                         : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

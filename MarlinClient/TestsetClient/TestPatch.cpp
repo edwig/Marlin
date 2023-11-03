@@ -49,9 +49,9 @@ DoSend(HTTPClient* p_client,HTTPMessage* p_msg)
     if(p_msg->GetStatus() == HTTP_STATUS_OK)
     {
       XString body = p_msg->GetBody();
-      if(body == "AB-\n")
+      if(body == _T("AB-\n"))
       {
-        xprintf("Succesfully patched\n");
+        xprintf(_T("Succesfully patched\n"));
       }
       else ++errors;
     }
@@ -69,7 +69,7 @@ DoSend(HTTPClient* p_client,HTTPMessage* p_msg)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Send: HTTP PATCH verb (less known protocol)    : %s\n", errors ? "ERROR" : "OK");
+  _tprintf(_T("Send: HTTP PATCH verb (less known protocol)    : %s\n"), errors ? _T("ERROR") : _T("OK"));
 
   // Ready with the message
   delete p_msg;
@@ -82,30 +82,32 @@ int TestPatching(HTTPClient* p_client)
 
   // URL with resource and parameters
   XString url;
-  url.Format("http://%s:%d/MarlinTest/Patching/FirstPatchTest?type=ab&rhesus=neg",MARLIN_HOST,TESTING_HTTP_PORT);
+  url.Format(_T("http://%s:%d/MarlinTest/Patching/FirstPatchTest?type=ab&rhesus=neg"),MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Test 1: Send through a HTTP-VERB Tunnel
-  xprintf("TESTING STANDARD HTTP MESSAGE TO /Key2Test/Patching/\n");
-  xprintf("======================================================\n");
+  xprintf(_T("TESTING STANDARD HTTP MESSAGE TO /Key2Test/Patching/\n"));
+  xprintf(_T("======================================================\n"));
   HTTPMessage* msg1 = new HTTPMessage(HTTPCommand::http_patch,url);
-  msg1->SetBody("Example one: 56123\n"
-                "Example two: 98127\n");
+  msg1->SetContentType(_T("text/plain; charset=utf-8"));
+  msg1->SetBody(_T("Example one: 56123\n")
+                _T("Example two: 98127\n"));
   // Test with or without HTTP-VERB tunneling
   msg1->SetVerbTunneling(true);
   // Set extra headers
-  msg1->AddHeader("EdosHeader","16-05-1986");
+  msg1->AddHeader(_T("EdosHeader"),_T("16-05-1986"));
 
   errors += DoSend(p_client,msg1);
 
 
   // Test 2: Now send as a RAW HTTP PATCH command
   HTTPMessage* msg2 = new HTTPMessage(HTTPCommand::http_patch,url);
-  msg2->SetBody("Example one: 56123\n"
-                "Example two: 98127\n");
+  msg2->AddHeader(_T("Content-Type"),_T("text/plain; charset=utf-8"));
+  msg2->SetBody(_T("Example one: 56123\n")
+                _T("Example two: 98127\n"));
   // Test with or without HTTP-VERB tunneling
   msg2->SetVerbTunneling(false);
   // Set extra headers
-  msg2->AddHeader("EdosHeader","16-05-1986");
+  msg2->AddHeader(_T("EdosHeader"),_T("16-05-1986"));
 
   errors += DoSend(p_client,msg2);
 

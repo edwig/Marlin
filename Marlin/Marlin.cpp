@@ -44,11 +44,11 @@
 // Actual values are set in LoadConstants() in:
 // StandAlone : ServerMain.cpp
 // IIS Server : MarlinServer derived class
-const char* APPLICATION_NAME     = nullptr;  // Name of the application EXE file!!
-const char* PRODUCT_NAME         = nullptr;  // Short name of the product (one word only). Also used in the WMI event log.
-const char* PRODUCT_DISPLAY_NAME = nullptr;  // "Service for PRODUCT_NAME: <description of the service>"
-const char* PRODUCT_COPYRIGHT    = nullptr;  // Copyright line of the product (c) <year> etc.
-const char* PRODUCT_VERSION      = nullptr;  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
-const char* PRODUCT_MESSAGES_DLL = nullptr;  // Filename of the WMI Messages dll.
-const char* PRODUCT_SITE         = nullptr;  // Standard base URL absolute path e.g. "/MarlinServer/"
-const char* PRODUCT_ADMIN_EMAIL  = nullptr;  // Default administrator to be notified in case of a problem
+LPCTSTR APPLICATION_NAME     = nullptr;  // Name of the application EXE file!!
+LPCTSTR PRODUCT_NAME         = nullptr;  // Short name of the product (one word only). Also used in the WMI event log.
+LPCTSTR PRODUCT_DISPLAY_NAME = nullptr;  // "Service for PRODUCT_NAME: <description of the service>"
+LPCTSTR PRODUCT_COPYRIGHT    = nullptr;  // Copyright line of the product (c) <year> etc.
+LPCTSTR PRODUCT_VERSION      = nullptr;  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
+LPCTSTR PRODUCT_MESSAGES_DLL = nullptr;  // Filename of the WMI Messages dll.
+LPCTSTR PRODUCT_SITE         = nullptr;  // Standard base URL absolute path e.g. "/MarlinServer/"
+LPCTSTR PRODUCT_ADMIN_EMAIL  = nullptr;  // Default administrator to be notified in case of a problem

@@ -45,29 +45,29 @@ const  unsigned WAITTIME =  100;
 void callback1(void* p_pnt)
 {
   bool result = false;
-  xprintf("TESTING THE THREADPOOL\n");
-  xprintf("======================\n");
+  xprintf(_T("TESTING THE THREADPOOL\n"));
+  xprintf(_T("======================\n"));
 
   // Counting (doing work :-) )
   for(unsigned int index = 0;index < CYCLES; ++index)
   {
     number = index;
   }
-  xprintf("Going to sleep on: %s\n",reinterpret_cast<LPCTSTR>(p_pnt));
+  xprintf(_T("Going to sleep on: %s\n"),reinterpret_cast<LPCTSTR>(p_pnt));
   p_pnt = pool->SleepThread(TH_SLEEP,p_pnt);
   if(p_pnt == nullptr)
   {
-    xprintf("Cannot sleep on thread, or thread terminated\n");
+    xprintf(_T("Cannot sleep on thread, or thread terminated\n"));
   }
   else
   {
-    xprintf("Waking from sleep: %s\n",reinterpret_cast<LPCTSTR>(p_pnt));
+    xprintf(_T("Waking from sleep: %s\n"),reinterpret_cast<LPCTSTR>(p_pnt));
     result = true;
     --totalChecks;
   }
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
-  qprintf("Test awoken thread result   : %s\n",result ? "OK" : "ERROR");
+  qprintf(_T("Test awoken thread result   : %s\n"),result ? _T("OK") : _T("ERROR"));
   // Ready with the thread
 }
 
@@ -76,11 +76,11 @@ TestMarlinServer::TestThreadPool(ThreadPool* p_pool)
 {
   pool = p_pool;
   int errors = 0;
-  char* text1("This is a longer text for the pool.");
-  char* text2("This is another! text for the pool.");
+  TCHAR* text1(_T("This is a longer text for the pool."));
+  TCHAR* text2(_T("This is another! text for the pool."));
 
-  xprintf("TESTING SLEEPING/WAKING THREAD FUNCTIONS OF THREADPOOL\n");
-  xprintf("======================================================\n");
+  xprintf(_T("TESTING SLEEPING/WAKING THREAD FUNCTIONS OF THREADPOOL\n"));
+  xprintf(_T("======================================================\n"));
 
   p_pool->SubmitWork(callback1,reinterpret_cast<void*>(text1));
 
@@ -100,7 +100,7 @@ TestMarlinServer::TestThreadPool(ThreadPool* p_pool)
 
   // SUMMARY OF THE TEST
   // --- "--------------------------- - ------\n"
-  qprintf("Test sleep/waking thread    : %s\n",result ? "OK" : "ERROR");
+  qprintf(_T("Test sleep/waking thread    : %s\n"),result ? _T("OK") : _T("ERROR"));
 
   // AGAIN NOW ELIMINATING THE THREAD
   number = 0;
@@ -128,6 +128,6 @@ TestMarlinServer::AfterTestThreadpool()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("(HTTP)Threadpool sleeping/waking/submitwork    : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("(HTTP)Threadpool sleeping/waking/submitwork    : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

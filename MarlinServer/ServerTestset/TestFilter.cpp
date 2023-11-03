@@ -59,12 +59,12 @@ SiteFilterTester1::SiteFilterTester1(unsigned p_priority,XString p_name)
 bool
 SiteFilterTester1::Handle(HTTPMessage* p_message)
 {
-  xprintf("FILTER TESTER NR 1: %s FROM %s\n",p_message->GetURL().GetString(),SocketToServer(p_message->GetSender()).GetString());
-  xprintf("%s\n",p_message->GetBody().GetString());
+  xprintf(_T("FILTER TESTER NR 1: %s FROM %s\n"),p_message->GetURL().GetString(),SocketToServer(p_message->GetSender()).GetString());
+  xprintf(_T("%s\n"),p_message->GetBody().GetString());
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  qprintf("Filter handler with priority 1                 : OK\n");
+  qprintf(_T("Filter handler with priority 1                 : OK\n"));
 
   --totalChecks;
 
@@ -88,12 +88,12 @@ bool
 SiteFilterTester23::Handle(HTTPMessage* p_message)
 {
   HTTPMessage* msg = const_cast<HTTPMessage*>(p_message);
-  xprintf("FILTER TESTER NR 23: %s FROM %s\n", msg->GetURL().GetString(),SocketToServer(msg->GetSender()).GetString());
-  xprintf("Registering the body length: %lu\n",static_cast<unsigned long>(msg->GetBodyLength()));
+  xprintf(_T("FILTER TESTER NR 23: %s FROM %s\n"), msg->GetURL().GetString(),SocketToServer(msg->GetSender()).GetString());
+  xprintf(_T("Registering the body length: %lu\n"),static_cast<unsigned long>(msg->GetBodyLength()));
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  qprintf("Filter handler with priority 23                : OK\n");
+  qprintf(_T("Filter handler with priority 23                : OK\n"));
 
   --totalChecks;
 
@@ -116,13 +116,13 @@ bool
 SiteHandlerSoapFiltering::Handle(SOAPMessage* p_message)
 {
   // Display incoming message
-  xprintf("Incoming message in XML:\n%s\n", p_message->GetSoapMessage().GetString());
+  xprintf(_T("Incoming message in XML:\n%s\n"), p_message->GetSoapMessage().GetString());
 
-  XString param = p_message->GetParameter("Price");
+  XString param = p_message->GetParameter(_T("Price"));
   p_message->Reset(ResponseType::RESP_ACTION_NAME);
-  double price = atof(param);
+  double price = _ttof(param);
   price *= 1.21; // VAT percentage in the Netherlands
-  p_message->SetParameter("PriceInclusive", price);
+  p_message->SetParameter(_T("PriceInclusive"), price);
 
   return true;
 }
@@ -141,10 +141,10 @@ TestMarlinServer::TestFilter()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/MarlinTest/Filter/");
+  XString url(_T("/MarlinTest/Filter/"));
 
-  xprintf("TESTING SITE FILTERING FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("===================================================\n");
+  xprintf(_T("TESTING SITE FILTERING FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("===================================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Filter/"
   // Callback function is no longer required!
@@ -153,13 +153,13 @@ TestMarlinServer::TestFilter()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for filter testing : OK : %s\n", site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for filter testing : OK : %s\n"), site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -167,23 +167,23 @@ TestMarlinServer::TestFilter()
   site->SetHandler(HTTPCommand::http_post, new SiteHandlerSoapFiltering());
 
   // Add filters to this site by priority of handling
-  site->SetFilter( 1, new SiteFilterTester1 ( 1,"Tester1"));
-  site->SetFilter(23, new SiteFilterTester23(23,"Tester23"));
+  site->SetFilter( 1, new SiteFilterTester1 ( 1,_T("Tester1")));
+  site->SetFilter(23, new SiteFilterTester23(23,_T("Tester23")));
 
   // Modify the standard settings for this site
-  site->AddContentType("","text/xml");
-  site->AddContentType("xml","application/soap+xml");
+  site->AddContentType(_T(""),_T("text/xml"));
+  site->AddContentType(_T("xml"),_T("application/soap+xml"));
 
   // Start the site explicitly
   if (site->StartSite())
   {
-    xprintf("Site started correctly: %s\n", url.GetString());
+    xprintf(_T("Site started correctly: %s\n"), url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -194,7 +194,7 @@ TestMarlinServer::AfterTestFilter()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Firing of the filter handlers                  : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("Firing of the filter handlers                  : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }
 

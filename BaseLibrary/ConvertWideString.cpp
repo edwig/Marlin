@@ -25,6 +25,7 @@
 //
 #include "pch.h"
 #include "ConvertWideString.h"
+#include "WinFile.h"
 #include <map>
 #include <xstring>
 
@@ -44,163 +45,163 @@ CodePageName;
 
 static CodePageName cpNames[] =
 {
-  { 000,    "ACP",                "Default ANSI code page"                                                                  }
- ,{ 001,    "OEMCP",              "Default OEM code page"                                                                   }
- ,{ 002,    "MACCP",              "Default MAC code page"                                                                   }
- ,{ 003,    "THREAD",             "Current thread's ANSI code page"                                                         }
- ,{ 037,    "IBM037",             "IBM EBCDIC US-Canada"                                                                    }
- ,{ 042,    "SYMBOL",             "Symbol translations"                                                                     }
- ,{ 437,    "IBM437",             "OEM United States"                                                                       }
- ,{ 500,    "IBM500",             "IBM EBCDIC International"                                                                }
- ,{ 708,    "ASMO-708",           "Arabic (ASMO 708)"                                                                       }
- ,{ 709,    "",                   "Arabic (ASMO-449+, BCON V4)"                                                             }
- ,{ 710,    "",                   "Arabic - Transparent-Arabic"                                                             }
- ,{ 720,    "DOS-720",            "Arabic(Transparent ASMO); Arabic (DOS)"                                                  }
- ,{ 737,    "ibm737",             "OEM Greek (Formerly 437G); Greek (DOS)"                                                  }
- ,{ 775,    "ibm775",             "OEM Baltic; Baltic (DOS)"                                                                }
- ,{ 850,    "ibm850",             "OEM Multilingual Latin 1; Western European (DOS)"                                        }
- ,{ 852,    "imb852",             "OEM Latin 2; Central European (DOS)"                                                     }
- ,{ 855,    "ibm855",             "OEM Cyrillic (primarily Russian)"                                                        }
- ,{ 857,    "ibm857",             "OEM Turkish; Turkish (DOS)"                                                              }
- ,{ 858,    "IBM00858",           "OEM Multilingual Latin 1 + Euro symbol"                                                  }
- ,{ 860,    "IBM860",             "OEM Portuguese; Portuguese (DOS)"                                                        }
- ,{ 861,    "ibm861",             "OEM Icelandic; Icelandic (DOS)"                                                          }
- ,{ 862,    "DOS-862",            "OEM Hebrew; Hebrew (DOS)"                                                                }
- ,{ 863,    "IBM863",             "OEM French Canadian; French Canadian (DOS)"                                              }
- ,{ 864,    "IBM864",             "OEM Arabic; Arabic (864)"                                                                }
- ,{ 865,    "IBM865",             "OEM Nordic; Nordic (DOS)"                                                                }
- ,{ 866,    "cp866",              "OEM Russian; Cyrillic (DOS)"                                                             }
- ,{ 869,    "ibm869",             "OEM Modern Greek; Greek, Modern (DOS)"                                                   }
- ,{ 870,    "IBM870",             "IBM EBCDIC Multilingual/ROECE (Latin 2); IBM EBCDIC Multilingual Latin 2"                }
- ,{ 874,    "windows-874",        "ANSI/OEM Thai (same as 28605, ISO 8859-15); Thai (Windows)"                              }
- ,{ 875,    "cp875",              "IBM EBCDIC Greek Modern"                                                                 }
- ,{ 932,    "shift_jis",          "ANSI/OEM Japanese; Japanese (Shift-JIS)"                                                 }
- ,{ 936,    "gb2312",             "ANSI/OEM Simplified Chinese (PRC, Singapore); Chinese Simplified (GB2312)"               }
- ,{ 949,    "ks_c_5601-1987",     "ANSI/OEM Korean (Unified Hangul Code)"                                                   }
- ,{ 950,    "big5",               "ANSI/OEM Traditional Chinese (Taiwan; Hong Kong SAR, PRC); Chinese Traditional (Big5)"   }
- ,{ 1026,   "IBM1026",            "IBM EBCDIC Turkish (Latin 5)"                                                            }
- ,{ 1047,   "IBM01047",           "IBM EBCDIC Latin 1/Open System"                                                          }
- ,{ 1140,   "IBM01140",           "IBM EBCDIC US-Canada (037 + Euro symbol); IBM EBCDIC (US-Canada-Euro)"                   }
- ,{ 1141,   "IBM01141",           "IBM EBCDIC Germany (20273 + Euro symbol); IBM EBCDIC (Germany-Euro)"                     }
- ,{ 1142,   "IBM01142",           "IBM EBCDIC Denmark-Norway (20277 + Euro symbol); IBM EBCDIC (Denmark-Norway-Euro)"       }
- ,{ 1143,   "IBM01143",           "IBM EBCDIC Finland-Sweden (20278 + Euro symbol); IBM EBCDIC (Finland-Sweden-Euro)"       }
- ,{ 1144,   "IBM01144",           "IBM EBCDIC Italy (20280 + Euro symbol); IBM EBCDIC (Italy-Euro)"                         }
- ,{ 1145,   "IBM01145",           "IBM EBCDIC Latin America-Spain (20284 + Euro symbol); IBM EBCDIC (Spain-Euro)"           }
- ,{ 1146,   "IBM01146",           "IBM EBCDIC United Kingdom (20285 + Euro symbol); IBM EBCDIC (UK-Euro)"                   }
- ,{ 1147,   "IBM01147",           "IBM EBCDIC France (20297 + Euro symbol); IBM EBCDIC (France-Euro)"                       }
- ,{ 1148,   "IBM01148",           "IBM EBCDIC International (500 + Euro symbol); IBM EBCDIC (International-Euro)"           }
- ,{ 1149,   "IBM01149",           "IBM EBCDIC Icelandic (20871 + Euro symbol); IBM EBCDIC (Icelandic-Euro)"                 }
- ,{ 1200,   "utf-16",             "Unicode UTF-16, little endian byte order (BMP of ISO 10646);"                            }
- ,{ 1201,   "unicodeFFFE",        "Unicode UTF-16, big endian byte order"                                                   }
- ,{ 1250,   "windows-1250",       "ANSI Central European; Central European (Windows) "                                      }
- ,{ 1251,   "windows-1251",       "ANSI Cyrillic; Cyrillic (Windows)"                                                       }
- ,{ 1252,   "windows-1252",       "ANSI Latin 1; Western European (Windows)"                                                }
- ,{ 1253,   "windows-1253",       "ANSI Greek; Greek (Windows)"                                                             }
- ,{ 1254,   "windows-1254",       "ANSI Turkish; Turkish (Windows)"                                                         }
- ,{ 1255,   "windows-1255",       "ANSI Hebrew; Hebrew (Windows)"                                                           }
- ,{ 1256,   "windows-1256",       "ANSI Arabic; Arabic (Windows)"                                                           }
- ,{ 1257,   "windows-1257",       "ANSI Baltic; Baltic (Windows)"                                                           }
- ,{ 1258,   "windows-1258",       "ANSI/OEM Vietnamese; Vietnamese (Windows)"                                               }
- ,{ 1361,   "Johab",              "Korean (Johab)"                                                                          }
- ,{ 10000,  "macintosh",          "MAC Roman; Western European (Mac)"                                                       }
- ,{ 10001,  "x-mac-japanese",     "Japanese (Mac)"                                                                          }
- ,{ 10002,  "x-mac-chinesetrad",  "MAC Traditional Chinese (Big5); Chinese Traditional (Mac)"                               }
- ,{ 10003,  "x-mac-korean",       "Korean (Mac)"                                                                            }
- ,{ 10004,  "x-mac-arabic",       "Arabic (Mac)"                                                                            }
- ,{ 10005,  "x-mac-hebrew",       "Hebrew (Mac)"                                                                            }
- ,{ 10006,  "x-mac-greek",        "Greek (Mac)"                                                                             }
- ,{ 10007,  "x-mac-cyrillic",     "Cyrillic (Mac)"                                                                          }
- ,{ 10008,  "x-mac-chinesesimp",  "MAC Simplified Chinese (GB 2312); Chinese Simplified (Mac)"                              }
- ,{ 10010,  "x-mac-romanian",     "Romanian (Mac)"                                                                          }
- ,{ 10017,  "x-mac-ukranian",     "Ukranian (Mac)"                                                                          }
- ,{ 10021,  "x-mac-thai",         "Thai (Mac)"                                                                              }
- ,{ 10029,  "x-mac-ce",           "MAC Latin 2; Central European (Mac)"                                                     }
- ,{ 10079,  "x-mac-icelandic",    "Icelandic (Mac)"                                                                         }
- ,{ 10081,  "x-mac-turkish",      "Turkish (Mac)"                                                                           }
- ,{ 10082,  "x-mac-croatian",     "Croatian (Mac)"                                                                          }
- ,{ 12000,  "utf-32",             "Unicode UTF-32, little endian byte order"                                                }
- ,{ 12001,  "utf-32BE",           "Unicode UTF-32, big endian byte order"                                                   }
- ,{ 20000,  "x-Chinese_CNS",      "CNS Taiwan; Chinese Traditional (CNS) "                                                  }
- ,{ 20001,  "x-cp20001",          "TCA Taiwan"                                                                              }
- ,{ 20002,  "x_Chinese-Eten",     "Eten Taiwan; Chinese Traditional (Eten)"                                                 }
- ,{ 20003,  "x-cp20003",          "IBM5550 Taiwan"                                                                          }
- ,{ 20004,  "x-cp20004",          "TeleText Taiwan"                                                                         }
- ,{ 20005,  "x-cp20005",          "Want Taiwan"                                                                             }
- ,{ 20105,  "x-IA5",              "IA5 (IRV International Alphabet No. 5, 7-bit); Western European (IA5)"                   }
- ,{ 20106,  "x-IA5-German",       "IA5 German (7-bit)"                                                                      }
- ,{ 20107,  "x-IA5-Swedish",      "IA5 Swedish (7-bit)"                                                                     }
- ,{ 20108,  "x-IA5-Norwegian",    "IA5 Norwegian (7-bit)"                                                                   }
- ,{ 20127,  "us-ascii",           "US-ASCII (7-bit)"                                                                        }
- ,{ 20261,  "x-cp20261",          "T.61"                                                                                    }
- ,{ 20269,  "x-cp20269",          "ISO 6937 Non-Spacing Accent"                                                             }
- ,{ 20273,  "IBM273",             "IBM EBCDIC Germany"                                                                      }
- ,{ 20277,  "IBM277",             "IBM EBCDIC Denmark-Norway"                                                               }
- ,{ 20278,  "IBM278",             "IBM EBCDIC Finland-Sweden"                                                               }
- ,{ 20280,  "IBM280",             "IBM EBCDIC Italy"                                                                        }
- ,{ 20284,  "IBM284",             "IBM EBCDIC Latin America-Spain"                                                          }
- ,{ 20285,  "IBM285",             "IBM EBCDIC United Kingdom"                                                               }
- ,{ 20290,  "IBM290",             "IBM EBCDIC Japanese Katakana Extended"                                                   }
- ,{ 20297,  "IBM297",             "IBM EBCDIC France"                                                                       }
- ,{ 20420,  "IBM420",             "IBM EBCDIC Arabic"                                                                       }
- ,{ 20423,  "IBM423",             "IBM EBCDIC Greek"                                                                        }
- ,{ 20424,  "IBM424",             "IBM EBCDIC Hebrew"                                                                       }
- ,{ 20833,  "x-EBCDIC-KoreanExtended", "IBM EBCDIC Korean Extended"                                                         }
- ,{ 20838,  "IBM-Thai",           "IBM EBCDIC Thai"                                                                         }
- ,{ 20866,  "koi8-r",             "Russian (KOI8-R); Cyrillic (KOI8-R)"                                                     }
- ,{ 20871,  "IBM871",             "IBM EBCDIC Icelandic"                                                                    }
- ,{ 20880,  "IBM880",             "IBM EBCDIC Cyrillic Russian"                                                             }
- ,{ 20905,  "IMB905",             "IBM EBCDIC Turkish"                                                                      }
- ,{ 20924,  "IBM00924",           "IBM EBCDIC Latin 1/Open System (1047 + Euro symbol)"                                     }
- ,{ 20932,  "EUC-JP",             "Japanese (JIS 0208-1990 and 0121-1990)"                                                  }
- ,{ 20936,  "x-cp20936",          "Simplified Chinese (GB2312); Chinese Simplified (GB2312-80)"                             }
- ,{ 20949,  "x-cp20949",          "Korean Wansung"                                                                          }
- ,{ 21025,  "cp1025",             "IBM EBCDIC Cyrillic Serbian-Bulgarian"                                                   }
- ,{ 21866,  "koi8-u",             "Ukrainian (KOI8-U); Cyrillic (KOI8-U)"                                                   }
- ,{ 28591,  "iso-8859-1",         "ISO 8859-1 Latin 1; Western European (ISO)"                                              }
- ,{ 28592,  "iso-8859-2",         "ISO 8859-2 Central European; Central European (ISO)"                                     }
- ,{ 28593,  "iso-8859-3",         "ISO 8859-3 Latin 3 "                                                                     }
- ,{ 28594,  "iso-8859-4",         "ISO 8859-4 Baltic"                                                                       }
- ,{ 28595,  "iso-8859-5",         "ISO 8859-5 Cyrillic"                                                                     }
- ,{ 28596,  "iso-8859-6",         "ISO 8859-6 Arabic"                                                                       }
- ,{ 28597,  "iso-8859-7",         "ISO 8859-7 Greek"                                                                        }
- ,{ 28598,  "iso-8859-8",         "ISO 8859-8 Hebrew; Hebrew (ISO-Visual)"                                                  }
- ,{ 28599,  "iso-8859-9",         "ISO 8859-9 Turkish"                                                                      }
- ,{ 28603,  "iso-8859-13",        "ISO 8859-13 Estonian"                                                                    }
- ,{ 28605,  "iso-8859-15",        "ISO 8859-15 Latin 9"                                                                     }
- ,{ 29001,  "x-Europa",           "Europa 3"                                                                                }
- ,{ 38598,  "iso-8859-8-i",       "ISO 8859-8 Hebrew; Hebrew (ISO-Logical)"                                                 }
- ,{ 50220,  "iso-2022",           "ISO 2022 Japanese with no halfwidth Katakana; Japanese (JIS)"                            }
- ,{ 50221,  "csISO20220JP",       "ISO 2022 Japanese with halfwidth Katakana; Japanese (JIS-Allow 1 byte Kana)"             }
- ,{ 50222,  "iso-2022-jp",        "ISO 2022 Japanese JIS X 0201-1989; Japanese (JIS-Allow 1 byte Kana - SO/SI)"             }
- ,{ 50225,  "iso-2022-kr",        "ISO 2022 Korean"                                                                         }
- ,{ 50227,  "x-cp50227",          "ISO 2022 Simplified Chinese; Chinese Simplified (ISO 2022)"                              }
- ,{ 50229,  "",                   "ISO 2022 Traditional Chinese"                                                            }
- ,{ 50930,  "",                   "EBCDIC Japanese (Katakana) Extended"                                                     }
- ,{ 50931,  "",                   "EBCDIC US-Canada and Japanese"                                                           }
- ,{ 50933,  "",                   "EBCDIC Korean Extended and Korean"                                                       }
- ,{ 50935,  "",                   "EBCDIC Simplified Chinese Extended and Simplified Chinese"                               }
- ,{ 50936,  "",                   "EBCDIC Simplified Chinese"                                                               }
- ,{ 50937,  "",                   "EBCDIC US-Canada and Traditional Chinese"                                                }
- ,{ 50939,  "",                   "EBCDIC Japanese (Latin) Extended and Japanese"                                           }
- ,{ 51932,  "euc-jp",             "EUC Japanese"                                                                            }
- ,{ 51936,  "EUC-CN",             "EUC Simplified Chinese; Chinese Simplified (EUC)"                                        }
- ,{ 51949,  "euc-kr",             "EUC Korean"                                                                              }
- ,{ 51950,  "",                   "EUC Traditional Chinese"                                                                 }
- ,{ 52936,  "hz-gb-2312",         "HZ-GB2312 Simplified Chinese; Chinese Simplified (HZ)"                                   }
- ,{ 54936,  "GB18030",            "GB18030 Simplified Chinese (4 byte); Chinese Simplified (GB18030)"                       }
- ,{ 57002,  "x-iscii-de",         "ISCII Devanagari"                                                                        }
- ,{ 57003,  "x-iscii-be",         "ISCII Bengali"                                                                           }
- ,{ 57004,  "x-iscii-ta",         "ISCII Tamil"                                                                             }
- ,{ 57005,  "x-iscii-te",         "ISCII Telugu"                                                                            }
- ,{ 57006,  "x-iscii-as",         "ISCII Assamese"                                                                          }
- ,{ 57007,  "x-iscii-or",         "ISCII Oriya"                                                                             }
- ,{ 57008,  "x-iscii-ka",         "ISCII Kannada"                                                                           }
- ,{ 57009,  "x-iscii-ma",         "ISCII Malayalam"                                                                         }
- ,{ 57010,  "x-iscii-gu",         "ISCII Gujarati"                                                                          }
- ,{ 57011,  "x-iscii-pa",         "ISCII Punjabi"                                                                           }
- ,{ 65000,  "utf-7",              "Unicode (UTF-7)"                                                                         }
- ,{ 65001,  "utf-8",              "Unicode (UTF-8)"                                                                         }
- ,{    -1,  "",                   ""                                                                                        }
+  { 000,     _T("ACP"),                 _T("Default ANSI code page")                                                                  }
+ ,{ 001,     _T("OEMCP"),               _T("Default OEM code page")                                                                   }
+ ,{ 002,     _T("MACCP"),               _T("Default MAC code page")                                                                   }
+ ,{ 003,     _T("THREAD"),              _T("Current thread's ANSI code page")                                                         }
+ ,{ 037,     _T("IBM037"),              _T("IBM EBCDIC US-Canada")                                                                    }
+ ,{ 042,     _T("SYMBOL"),              _T("Symbol translations")                                                                     }
+ ,{ 437,     _T("IBM437"),              _T("OEM United States")                                                                       }
+ ,{ 500,     _T("IBM500"),              _T("IBM EBCDIC International")                                                                }
+ ,{ 708,     _T("ASMO-708"),            _T("Arabic (ASMO 708)")                                                                       }
+ ,{ 709,     _T(""),                    _T("Arabic (ASMO-449+, BCON V4)")                                                             }
+ ,{ 710,     _T(""),                    _T("Arabic - Transparent-Arabic")                                                             }
+ ,{ 720,     _T("DOS-720"),             _T("Arabic(Transparent ASMO); Arabic (DOS)")                                                  }
+ ,{ 737,     _T("ibm737"),              _T("OEM Greek (Formerly 437G); Greek (DOS)")                                                  }
+ ,{ 775,     _T("ibm775"),              _T("OEM Baltic; Baltic (DOS)")                                                                }
+ ,{ 850,     _T("ibm850"),              _T("OEM Multilingual Latin 1; Western European (DOS)")                                        }
+ ,{ 852,     _T("imb852"),              _T("OEM Latin 2; Central European (DOS)")                                                     }
+ ,{ 855,     _T("ibm855"),              _T("OEM Cyrillic (primarily Russian)")                                                        }
+ ,{ 857,     _T("ibm857"),              _T("OEM Turkish; Turkish (DOS)")                                                              }
+ ,{ 858,     _T("IBM00858"),            _T("OEM Multilingual Latin 1 + Euro symbol")                                                  }
+ ,{ 860,     _T("IBM860"),              _T("OEM Portuguese; Portuguese (DOS)")                                                        }
+ ,{ 861,     _T("ibm861"),              _T("OEM Icelandic; Icelandic (DOS)")                                                          }
+ ,{ 862,     _T("DOS-862"),             _T("OEM Hebrew; Hebrew (DOS)")                                                                }
+ ,{ 863,     _T("IBM863"),              _T("OEM French Canadian; French Canadian (DOS)")                                              }
+ ,{ 864,     _T("IBM864"),              _T("OEM Arabic; Arabic (864)")                                                                }
+ ,{ 865,     _T("IBM865"),              _T("OEM Nordic; Nordic (DOS)")                                                                }
+ ,{ 866,     _T("cp866"),               _T("OEM Russian; Cyrillic (DOS)")                                                             }
+ ,{ 869,     _T("ibm869"),              _T("OEM Modern Greek; Greek, Modern (DOS)")                                                   }
+ ,{ 870,     _T("IBM870"),              _T("IBM EBCDIC Multilingual/ROECE (Latin 2); IBM EBCDIC Multilingual Latin 2")                }
+ ,{ 874,     _T("windows-874"),         _T("ANSI/OEM Thai (same as 28605, ISO 8859-15); Thai (Windows)")                              }
+ ,{ 875,     _T("cp875"),               _T("IBM EBCDIC Greek Modern")                                                                 }
+ ,{ 932,     _T("shift_jis"),           _T("ANSI/OEM Japanese; Japanese (Shift-JIS)")                                                 }
+ ,{ 936,     _T("gb2312"),              _T("ANSI/OEM Simplified Chinese (PRC, Singapore); Chinese Simplified (GB2312)")               }
+ ,{ 949,     _T("ks_c_5601-1987"),      _T("ANSI/OEM Korean (Unified Hangul Code)")                                                   }
+ ,{ 950,     _T("big5"),                _T("ANSI/OEM Traditional Chinese (Taiwan; Hong Kong SAR, PRC); Chinese Traditional (Big5)")   }
+ ,{ 1026,    _T("IBM1026"),             _T("IBM EBCDIC Turkish (Latin 5)")                                                            }
+ ,{ 1047,    _T("IBM01047"),            _T("IBM EBCDIC Latin 1/Open System")                                                          }
+ ,{ 1140,    _T("IBM01140"),            _T("IBM EBCDIC US-Canada (037 + Euro symbol); IBM EBCDIC (US-Canada-Euro)")                   }
+ ,{ 1141,    _T("IBM01141"),            _T("IBM EBCDIC Germany (20273 + Euro symbol); IBM EBCDIC (Germany-Euro)")                     }
+ ,{ 1142,    _T("IBM01142"),            _T("IBM EBCDIC Denmark-Norway (20277 + Euro symbol); IBM EBCDIC (Denmark-Norway-Euro)")       }
+ ,{ 1143,    _T("IBM01143"),            _T("IBM EBCDIC Finland-Sweden (20278 + Euro symbol); IBM EBCDIC (Finland-Sweden-Euro)")       }
+ ,{ 1144,    _T("IBM01144"),            _T("IBM EBCDIC Italy (20280 + Euro symbol); IBM EBCDIC (Italy-Euro)")                         }
+ ,{ 1145,    _T("IBM01145"),            _T("IBM EBCDIC Latin America-Spain (20284 + Euro symbol); IBM EBCDIC (Spain-Euro)")           }
+ ,{ 1146,    _T("IBM01146"),            _T("IBM EBCDIC United Kingdom (20285 + Euro symbol); IBM EBCDIC (UK-Euro)")                   }
+ ,{ 1147,    _T("IBM01147"),            _T("IBM EBCDIC France (20297 + Euro symbol); IBM EBCDIC (France-Euro)")                       }
+ ,{ 1148,    _T("IBM01148"),            _T("IBM EBCDIC International (500 + Euro symbol); IBM EBCDIC (International-Euro)")           }
+ ,{ 1149,    _T("IBM01149"),            _T("IBM EBCDIC Icelandic (20871 + Euro symbol); IBM EBCDIC (Icelandic-Euro)")                 }
+ ,{ 1200,    _T("utf-16"),              _T("Unicode UTF-16, little endian byte order (BMP of ISO 10646);")                            }
+ ,{ 1201,    _T("unicodeFFFE"),         _T("Unicode UTF-16, big endian byte order")                                                   }
+ ,{ 1250,    _T("windows-1250"),        _T("ANSI Central European; Central European (Windows) ")                                      }
+ ,{ 1251,    _T("windows-1251"),        _T("ANSI Cyrillic; Cyrillic (Windows)")                                                       }
+ ,{ 1252,    _T("windows-1252"),        _T("ANSI Latin 1; Western European (Windows)")                                                }
+ ,{ 1253,    _T("windows-1253"),        _T("ANSI Greek; Greek (Windows)")                                                             }
+ ,{ 1254,    _T("windows-1254"),        _T("ANSI Turkish; Turkish (Windows)")                                                         }
+ ,{ 1255,    _T("windows-1255"),        _T("ANSI Hebrew; Hebrew (Windows)")                                                           }
+ ,{ 1256,    _T("windows-1256"),        _T("ANSI Arabic; Arabic (Windows)")                                                           }
+ ,{ 1257,    _T("windows-1257"),        _T("ANSI Baltic; Baltic (Windows)")                                                           }
+ ,{ 1258,    _T("windows-1258"),        _T("ANSI/OEM Vietnamese; Vietnamese (Windows)")                                               }
+ ,{ 1361,    _T("Johab"),               _T("Korean (Johab)")                                                                          }
+ ,{ 10000,   _T("macintosh"),           _T("MAC Roman; Western European (Mac)")                                                       }
+ ,{ 10001,   _T("x-mac-japanese"),      _T("Japanese (Mac)")                                                                          }
+ ,{ 10002,   _T("x-mac-chinesetrad"),   _T("MAC Traditional Chinese (Big5); Chinese Traditional (Mac)")                               }
+ ,{ 10003,   _T("x-mac-korean"),        _T("Korean (Mac)")                                                                            }
+ ,{ 10004,   _T("x-mac-arabic"),        _T("Arabic (Mac)")                                                                            }
+ ,{ 10005,   _T("x-mac-hebrew"),        _T("Hebrew (Mac)")                                                                            }
+ ,{ 10006,   _T("x-mac-greek"),         _T("Greek (Mac)")                                                                             }
+ ,{ 10007,   _T("x-mac-cyrillic"),      _T("Cyrillic (Mac)")                                                                          }
+ ,{ 10008,   _T("x-mac-chinesesimp"),   _T("MAC Simplified Chinese (GB 2312); Chinese Simplified (Mac)")                              }
+ ,{ 10010,   _T("x-mac-romanian"),      _T("Romanian (Mac)")                                                                          }
+ ,{ 10017,   _T("x-mac-ukranian"),      _T("Ukranian (Mac)")                                                                          }
+ ,{ 10021,   _T("x-mac-thai"),          _T("Thai (Mac)")                                                                              }
+ ,{ 10029,   _T("x-mac-ce"),            _T("MAC Latin 2; Central European (Mac)")                                                     }
+ ,{ 10079,   _T("x-mac-icelandic"),     _T("Icelandic (Mac)")                                                                         }
+ ,{ 10081,   _T("x-mac-turkish"),       _T("Turkish (Mac)")                                                                           }
+ ,{ 10082,   _T("x-mac-croatian"),      _T("Croatian (Mac)")                                                                          }
+ ,{ 12000,   _T("utf-32"),              _T("Unicode UTF-32, little endian byte order")                                                }
+ ,{ 12001,   _T("utf-32BE"),            _T("Unicode UTF-32, big endian byte order")                                                   }
+ ,{ 20000,   _T("x-Chinese_CNS"),       _T("CNS Taiwan; Chinese Traditional (CNS) ")                                                  }
+ ,{ 20001,   _T("x-cp20001"),           _T("TCA Taiwan")                                                                              }
+ ,{ 20002,   _T("x_Chinese-Eten"),      _T("Eten Taiwan; Chinese Traditional (Eten)")                                                 }
+ ,{ 20003,   _T("x-cp20003"),           _T("IBM5550 Taiwan")                                                                          }
+ ,{ 20004,   _T("x-cp20004"),           _T("TeleText Taiwan")                                                                         }
+ ,{ 20005,   _T("x-cp20005"),           _T("Want Taiwan")                                                                             }
+ ,{ 20105,   _T("x-IA5"),               _T("IA5 (IRV International Alphabet No. 5, 7-bit); Western European (IA5)")                   }
+ ,{ 20106,   _T("x-IA5-German"),        _T("IA5 German (7-bit)")                                                                      }
+ ,{ 20107,   _T("x-IA5-Swedish"),       _T("IA5 Swedish (7-bit)")                                                                     }
+ ,{ 20108,   _T("x-IA5-Norwegian"),     _T("IA5 Norwegian (7-bit)")                                                                   }
+ ,{ 20127,   _T("us-ascii"),            _T("US-ASCII (7-bit)")                                                                        }
+ ,{ 20261,   _T("x-cp20261"),           _T("T.61")                                                                                    }
+ ,{ 20269,   _T("x-cp20269"),           _T("ISO 6937 Non-Spacing Accent")                                                             }
+ ,{ 20273,   _T("IBM273"),              _T("IBM EBCDIC Germany")                                                                      }
+ ,{ 20277,   _T("IBM277"),              _T("IBM EBCDIC Denmark-Norway")                                                               }
+ ,{ 20278,   _T("IBM278"),              _T("IBM EBCDIC Finland-Sweden")                                                               }
+ ,{ 20280,   _T("IBM280"),              _T("IBM EBCDIC Italy")                                                                        }
+ ,{ 20284,   _T("IBM284"),              _T("IBM EBCDIC Latin America-Spain")                                                          }
+ ,{ 20285,   _T("IBM285"),              _T("IBM EBCDIC United Kingdom")                                                               }
+ ,{ 20290,   _T("IBM290"),              _T("IBM EBCDIC Japanese Katakana Extended")                                                   }
+ ,{ 20297,   _T("IBM297"),              _T("IBM EBCDIC France")                                                                       }
+ ,{ 20420,   _T("IBM420"),              _T("IBM EBCDIC Arabic")                                                                       }
+ ,{ 20423,   _T("IBM423"),              _T("IBM EBCDIC Greek")                                                                        }
+ ,{ 20424,   _T("IBM424"),              _T("IBM EBCDIC Hebrew")                                                                       }
+ ,{ 20833,   _T("x-EBCDIC-KoreanExtended"),  _T("IBM EBCDIC Korean Extended")                                                         }
+ ,{ 20838,   _T("IBM-Thai"),            _T("IBM EBCDIC Thai")                                                                         }
+ ,{ 20866,   _T("koi8-r"),              _T("Russian (KOI8-R); Cyrillic (KOI8-R)")                                                     }
+ ,{ 20871,   _T("IBM871"),              _T("IBM EBCDIC Icelandic")                                                                    }
+ ,{ 20880,   _T("IBM880"),              _T("IBM EBCDIC Cyrillic Russian")                                                             }
+ ,{ 20905,   _T("IMB905"),              _T("IBM EBCDIC Turkish")                                                                      }
+ ,{ 20924,   _T("IBM00924"),            _T("IBM EBCDIC Latin 1/Open System (1047 + Euro symbol)")                                     }
+ ,{ 20932,   _T("EUC-JP"),              _T("Japanese (JIS 0208-1990 and 0121-1990)")                                                  }
+ ,{ 20936,   _T("x-cp20936"),           _T("Simplified Chinese (GB2312); Chinese Simplified (GB2312-80)")                             }
+ ,{ 20949,   _T("x-cp20949"),           _T("Korean Wansung")                                                                          }
+ ,{ 21025,   _T("cp1025"),              _T("IBM EBCDIC Cyrillic Serbian-Bulgarian")                                                   }
+ ,{ 21866,   _T("koi8-u"),              _T("Ukrainian (KOI8-U); Cyrillic (KOI8-U)")                                                   }
+ ,{ 28591,   _T("iso-8859-1"),          _T("ISO 8859-1 Latin 1; Western European (ISO)")                                              }
+ ,{ 28592,   _T("iso-8859-2"),          _T("ISO 8859-2 Central European; Central European (ISO)")                                     }
+ ,{ 28593,   _T("iso-8859-3"),          _T("ISO 8859-3 Latin 3 ")                                                                     }
+ ,{ 28594,   _T("iso-8859-4"),          _T("ISO 8859-4 Baltic")                                                                       }
+ ,{ 28595,   _T("iso-8859-5"),          _T("ISO 8859-5 Cyrillic")                                                                     }
+ ,{ 28596,   _T("iso-8859-6"),          _T("ISO 8859-6 Arabic")                                                                       }
+ ,{ 28597,   _T("iso-8859-7"),          _T("ISO 8859-7 Greek")                                                                        }
+ ,{ 28598,   _T("iso-8859-8"),          _T("ISO 8859-8 Hebrew; Hebrew (ISO-Visual)")                                                  }
+ ,{ 28599,   _T("iso-8859-9"),          _T("ISO 8859-9 Turkish")                                                                      }
+ ,{ 28603,   _T("iso-8859-13"),         _T("ISO 8859-13 Estonian")                                                                    }
+ ,{ 28605,   _T("iso-8859-15"),         _T("ISO 8859-15 Latin 9")                                                                     }
+ ,{ 29001,   _T("x-Europa"),            _T("Europa 3")                                                                                }
+ ,{ 38598,   _T("iso-8859-8-i"),        _T("ISO 8859-8 Hebrew; Hebrew (ISO-Logical)")                                                 }
+ ,{ 50220,   _T("iso-2022"),            _T("ISO 2022 Japanese with no halfwidth Katakana; Japanese (JIS)")                            }
+ ,{ 50221,   _T("csISO20220JP"),        _T("ISO 2022 Japanese with halfwidth Katakana; Japanese (JIS-Allow 1 byte Kana)")             }
+ ,{ 50222,   _T("iso-2022-jp"),         _T("ISO 2022 Japanese JIS X 0201-1989; Japanese (JIS-Allow 1 byte Kana - SO/SI)")             }
+ ,{ 50225,   _T("iso-2022-kr"),         _T("ISO 2022 Korean")                                                                         }
+ ,{ 50227,   _T("x-cp50227"),           _T("ISO 2022 Simplified Chinese; Chinese Simplified (ISO 2022)")                              }
+ ,{ 50229,   _T(""),                    _T("ISO 2022 Traditional Chinese")                                                            }
+ ,{ 50930,   _T(""),                    _T("EBCDIC Japanese (Katakana) Extended")                                                     }
+ ,{ 50931,   _T(""),                    _T("EBCDIC US-Canada and Japanese")                                                           }
+ ,{ 50933,   _T(""),                    _T("EBCDIC Korean Extended and Korean")                                                       }
+ ,{ 50935,   _T(""),                    _T("EBCDIC Simplified Chinese Extended and Simplified Chinese")                               }
+ ,{ 50936,   _T(""),                    _T("EBCDIC Simplified Chinese")                                                               }
+ ,{ 50937,   _T(""),                    _T("EBCDIC US-Canada and Traditional Chinese")                                                }
+ ,{ 50939,   _T(""),                    _T("EBCDIC Japanese (Latin) Extended and Japanese")                                           }
+ ,{ 51932,   _T("euc-jp"),              _T("EUC Japanese")                                                                            }
+ ,{ 51936,   _T("EUC-CN"),              _T("EUC Simplified Chinese; Chinese Simplified (EUC)")                                        }
+ ,{ 51949,   _T("euc-kr"),              _T("EUC Korean")                                                                              }
+ ,{ 51950,   _T(""),                    _T("EUC Traditional Chinese")                                                                 }
+ ,{ 52936,   _T("hz-gb-2312"),          _T("HZ-GB2312 Simplified Chinese; Chinese Simplified (HZ)")                                   }
+ ,{ 54936,   _T("GB18030"),             _T("GB18030 Simplified Chinese (4 byte); Chinese Simplified (GB18030)")                       }
+ ,{ 57002,   _T("x-iscii-de"),          _T("ISCII Devanagari")                                                                        }
+ ,{ 57003,   _T("x-iscii-be"),          _T("ISCII Bengali")                                                                           }
+ ,{ 57004,   _T("x-iscii-ta"),          _T("ISCII Tamil")                                                                             }
+ ,{ 57005,   _T("x-iscii-te"),          _T("ISCII Telugu")                                                                            }
+ ,{ 57006,   _T("x-iscii-as"),          _T("ISCII Assamese")                                                                          }
+ ,{ 57007,   _T("x-iscii-or"),          _T("ISCII Oriya")                                                                             }
+ ,{ 57008,   _T("x-iscii-ka"),          _T("ISCII Kannada")                                                                           }
+ ,{ 57009,   _T("x-iscii-ma"),          _T("ISCII Malayalam")                                                                         }
+ ,{ 57010,   _T("x-iscii-gu"),          _T("ISCII Gujarati")                                                                          }
+ ,{ 57011,   _T("x-iscii-pa"),          _T("ISCII Punjabi")                                                                           }
+ ,{ 65000,   _T("utf-7"),               _T("Unicode (UTF-7)")                                                                         }
+ ,{ 65001,   _T("utf-8"),               _T("Unicode (UTF-8)")                                                                         }
+ ,{    -1,   _T(""),                    _T("")                                                                                        }
 };
 
 using CPIDNameMap = std::map<int,XString>;
@@ -220,7 +221,7 @@ InitCodePageNames()
     while(pointer->m_codepage_ID >= 0)
     {
       // Fill in both mappings
-      if(strlen(pointer->m_codepage_Name))
+      if(_tcslen(pointer->m_codepage_Name))
       {
         XString lowerName(pointer->m_codepage_Name);
         lowerName.MakeLower();
@@ -254,7 +255,7 @@ CharsetToCodePageInfo(XString p_charset)
       return in->second;
     }
   }
-  return "";
+  return _T("");
 }
 
 // Getting the codepage number from the charset
@@ -310,8 +311,8 @@ FindFieldInHTTPHeader(XString p_headervalue,XString p_field)
   XString head(p_headervalue);
   head.MakeLower();
   p_field.MakeLower();
-  head.Replace(" =","=");
-  p_field += "=";
+  head.Replace(_T(" ="),_T("="));
+  p_field += _T("=");
 
   int pos = head.Find(p_field);
   if(pos > 0)
@@ -359,12 +360,12 @@ SetFieldInHTTPHeader(XString p_headervalue,XString p_field,XString p_value)
   if(existing.IsEmpty())
   {
     bool spaces = p_value.Find(' ') >= 0;
-    p_headervalue += "; ";
+    p_headervalue += _T("; ");
     p_headervalue += p_field;
-    p_headervalue += "=";
-    if(spaces) p_headervalue += "\"";
+    p_headervalue += _T("=");
+    if(spaces) p_headervalue += _T("\"");
     p_headervalue += p_value;
-    if(spaces) p_headervalue += "\"";
+    if(spaces) p_headervalue += _T("\"");
     return p_headervalue;
   }
 
@@ -373,8 +374,8 @@ SetFieldInHTTPHeader(XString p_headervalue,XString p_field,XString p_value)
   XString head(p_headervalue);
   head.MakeLower();
   p_field.MakeLower();
-  head.Replace(" =", "=");
-  p_field += "=";
+  head.Replace(_T(" ="),_T("="));
+  p_field += _T("=");
 
   int pos = head.Find(p_field);
   if(pos > 0)
@@ -411,7 +412,7 @@ SetFieldInHTTPHeader(XString p_headervalue,XString p_field,XString p_value)
 XString
 FindCharsetInContentType(XString p_contentType)
 {
-  return FindFieldInHTTPHeader(p_contentType,"charset");
+  return FindFieldInHTTPHeader(p_contentType,_T("charset"));
 }
 
 // Find the mime-type in the content-type header
@@ -438,56 +439,344 @@ FindMimeTypeInContentType(XString p_contentType)
 }
 
 // Construct an UTF-8 Byte-Order-Mark
-XString ConstructBOM()
+XString ConstructBOMUTF8()
 {
-  XString bom;
+  _TUCHAR bom[4];
 
   // 3 BYTE UTF-8 Byte-order-Mark "\0xEF\0xBB\0xBF"
   // Strange construction, but the only way to do it
   // because a XString is a signed char field
-  bom.GetBufferSetLength(4);
-  bom.SetAt(0,(unsigned char)0xEF);
-  bom.SetAt(1,(unsigned char)0xBB);
-  bom.SetAt(2,(unsigned char)0xBF);
-  bom.SetAt(3,0);
-  bom.ReleaseBuffer(3);
+#ifdef UNICODE
+  bom[0] = 0xBBEF;
+  bom[1] = 0xBF00;
+  bom[2] = 0;
+  bom[3] = 0;
+#else
+  bom[0] = (_TUCHAR) 0xEF;
+  bom[1] = (_TUCHAR) 0xBB;
+  bom[2] = (_TUCHAR) 0xBF;
+  bom[3] = 0;
+#endif
 
-  return bom;
+  return XString(bom);
+}
+
+#ifdef UNICODE
+// Convert a narrow string (utf-8, MBCS, win1252) to UTF-16
+bool
+TryConvertNarrowString(const BYTE* p_buffer
+                      ,int         p_length
+                      ,XString     p_charset
+                      ,XString&    p_string
+                      ,bool&       p_foundBOM)
+{
+  UINT   codePage = GetACP(); // Default is to use the current codepage
+  int    iLength  = -1;       // I think it will be null terminated
+  bool   result   = false;
+  TCHAR* extraBuffer = nullptr;
+
+  // Early dropout
+  if(p_buffer == nullptr || p_length == 0)
+  {
+    return true;
+  }
+  // Reset result
+  p_string.Empty();
+  p_foundBOM = false;
+
+  // Fill the code page names the first time
+  InitCodePageNames();
+
+  // Check if we know the codepage from the character set
+  if(p_charset.IsEmpty())
+  {
+    p_charset = _T("utf-8");
+  }
+
+  // Check for a bom
+  Encoding bom = Encoding::Default;
+  unsigned skipBytes = 0;
+  BOMOpenResult bomfound = WinFile::DefuseBOM(p_buffer,bom,skipBytes);
+  if(bomfound == BOMOpenResult::BOM)
+  {
+    p_foundBOM = true;
+    switch(bom)
+    {
+      case Encoding::UTF8:     p_charset = _T("utf-8");       break;
+      case Encoding::BE_UTF16: p_charset = _T("unicodeFFFE"); break;
+      case Encoding::BE_UTF32: p_charset = _T("utf-32BE");    break;
+      case Encoding::LE_UTF32: p_charset = _T("utf-32");      break;
+      case Encoding::LE_UTF16:
+      {
+        // NO Conversion needed! This is what we are!
+        p_string = reinterpret_cast<LPCTSTR>(p_buffer);
+        return true;
+      }
+    }
+  }
+
+  // Now find our codepage
+  NameCPIDMap::iterator it = cp_name_map.find(p_charset);
+  if(it != cp_name_map.end())
+  {
+    codePage = it->second;
+  }
+
+  // Getting the length of the buffer, by specifying no output
+  iLength = MultiByteToWideChar(codePage
+                               ,0
+                               ,(LPCCH)p_buffer
+                               ,-1 // p_string.GetLength()
+                               ,NULL
+                               ,0);
+  if(iLength)
+  {
+    // Getting a UTF-16 wide-character buffer
+    // +2 chars for a BOM, +2 chars for the closing zeros
+    extraBuffer = new TCHAR[(size_t) iLength + 4];
+
+    // Doing the 'real' conversion
+    iLength = MultiByteToWideChar(codePage
+                                 ,0
+                                 ,(LPCCH)p_buffer
+                                 ,-1 // p_string.GetLength()
+                                 ,reinterpret_cast<LPWSTR>(extraBuffer)
+                                 ,iLength);
+    if(iLength > 0)
+    {
+      // UTF-16 closing zero
+      extraBuffer[iLength] = 0;
+      p_string = extraBuffer;
+      result   = true;
+    }
+    delete[] extraBuffer;
+  }
+  return result;
+}
+
+// Convert an UTF-16 string to a narrow string (utf-8)
+// Allocates a buffer, caller is responsible for the destruction!
+bool
+TryCreateNarrowString(const XString& p_string
+                     ,const XString  p_charset
+                     ,const bool     p_doBom
+                     ,      BYTE**   p_buffer
+                     ,      int&     p_length)
+{
+  UINT codePage = GetACP(); // Default is to use the current codepage
+  int  iLength  = -1;       // I think it will be null terminated
+  int  extra    = 0;        // Extra space for a BOM
+  bool result   = false;
+
+  // Fill the code page names the first time
+  InitCodePageNames();
+
+  // Check if we know the codepage from the charset
+  XString charset = p_charset.IsEmpty() ? _T("utf-8") : p_charset;
+  NameCPIDMap::iterator it = cp_name_map.find(charset);
+  if(it != cp_name_map.end())
+  {
+    codePage = it->second;
+  }
+
+  // Getting the length of the translation buffer first
+  iLength = ::WideCharToMultiByte(codePage,
+                                  0,
+                                  p_string.GetString(),
+                                  -1, // p_length, 
+                                  NULL,
+                                  0,
+                                  NULL,
+                                  NULL);
+  // Convert the string if we find something
+  if(iLength > 0)
+  {
+    iLength *= 2; // Funny but needed in most cases with 3-byte composite chars
+    *p_buffer = new BYTE[iLength];
+    memset(*p_buffer,0,iLength * sizeof(char));
+
+    // Construct an UTF-8 BOM
+    if(p_doBom && codePage == 65001)
+    {
+      extra = 3;
+      *p_buffer[0] = (BYTE) 0xEF;
+      *p_buffer[1] = (BYTE) 0xBB;
+      *p_buffer[2] = (BYTE) 0xBF;
+    }
+
+    DWORD dwFlag = 0; // WC_COMPOSITECHECK | WC_DISCARDNS;
+    iLength = ::WideCharToMultiByte(codePage,
+                                    dwFlag,
+                                    p_string.GetString(),
+                                    -1, // p_length, 
+                                    reinterpret_cast<LPSTR>(*p_buffer + extra),
+                                    iLength,
+                                    NULL,
+                                    NULL);
+    // Result!
+    p_length = iLength > 0 ? iLength - 1: 0;
+    result   = true;
+  }
+  return result;
+}
+
+// Implode an UTF-16 string to a BYTE buffer (for UTF-8 purposes)
+// BEWARE: Cannot contain Multi-Lingual-Plane characters 
+void 
+ImplodeString(XString p_string,BYTE* p_buffer,unsigned p_length)
+{
+  for(int index = 0;index < p_string.GetLength(); ++index)
+  {
+    p_buffer[index] = (BYTE) p_string.GetAt(index);
+  }
+  p_buffer[p_length] = 0;
+}
+
+XString 
+ExplodeString(BYTE* p_buffer,unsigned p_length)
+{
+  XString string;
+  PWSTR buf = string.GetBufferSetLength(p_length + 1);
+  for(unsigned index = 0;index < p_length; ++index)
+  {
+    *buf++ = (TCHAR)*p_buffer++;
+  }
+  *buf = (TCHAR) 0;
+  string.ReleaseBufferSetLength(p_length);
+
+  return string;
+}
+
+// in UNICODE settings these two functions are placeholders!
+std::wstring
+StringToWString(XString p_string)
+{
+  return std::wstring(p_string.GetString());
+}
+
+XString
+WStringToString(std::wstring p_string)
+{
+  return XString(p_string.c_str());
+}
+
+// in UNICODE settings these two functions are placeholders!
+// The real conversion is done by the server on reading / writing to the internet
+XString
+DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/)
+{
+  int   length = p_string.GetLength();
+  BYTE* buffer = new BYTE[length + 1];
+  for(int ind = 0;ind < length; ++ind)
+  {
+    buffer[ind] = (uchar) p_string.GetAt(ind);
+  }
+  buffer[length] = 0;
+  bool foundBom = false;
+  XString result;
+  if(!TryConvertNarrowString(buffer,length,p_charset,result,foundBom))
+  {
+    result = p_string;
+  }
+  delete[] buffer;
+  return result;
+}
+
+XString
+EncodeStringForTheWire(XString p_string,XString p_charset /*="utf-8"*/)
+{
+  BYTE* buffer = nullptr;
+  int length = 0;
+  if(TryCreateNarrowString(p_string,p_charset,false,&buffer,length))
+  {
+    XString result;
+    for(int ind = 0;ind < length; ++ind)
+    {
+      result += (TCHAR) buffer[ind];
+    }
+    delete[] buffer;
+    return result;
+  }
+  return p_string;
 }
 
 // Construct a UTF-16 Byte-Order-Mark
-std::wstring ConstructBOMUTF16()
+XString ConstructBOMUTF16()
 {
-  std::wstring bom;
-
   // 2 BYTE UTF-16 Byte-order-Mark "\0xFE\0xFF"
-  bom += (unsigned char)0xFE;
-  bom += (unsigned char)0xFF;
+  _TUCHAR bom[4];
 
-  return bom;
+  bom[0] = 0xFFFE;
+  bom[1] = 0;
+  return XString(bom);
 }
 
-// Construct a BOM
-XString ConstructBOM(StringEncoding p_encoding)
+// Convert directly from LPCSTR (No 'T' !!) to XString
+// UNICODE   -> char* to wchar_t*
+// ANSI/MBCS -> char* to char*
+// Optionally convert to UTF8
+XString
+LPCSTRToString(LPCSTR p_string,bool p_utf8 /*= false*/)
 {
-  XString bom;
+  XString result;           // Nothing yet
+  int    length = -1;       // I think it will be null terminated
+  UINT codePage = p_utf8 ? 65001 : GetACP();
+  DWORD   flags = p_utf8 ? 0     : MB_PRECOMPOSED;
 
-  switch (p_encoding)
+  // Getting the length of the buffer, by specifying no output
+  length = MultiByteToWideChar(codePage
+                              ,flags
+                              ,p_string
+                              ,-1        // Null-terminated-string
+                              ,NULL
+                              ,0);
+  if(length)
   {
-    case StringEncoding::ENC_UTF8:    bom = ConstructBOM();      break;
-    case StringEncoding::ENC_ISO88591:// Fall through
-    case StringEncoding::ENC_Plain:   // Fall through
-    default:                          break;
+    // Getting a UTF-16 wide-character buffer
+    // +2 chars for a BOM, +2 chars for the closing zeros
+    BYTE* buffer = new BYTE[2 * (size_t) length + 4];
+
+    // Doing the 'real' conversion
+    length = MultiByteToWideChar(codePage
+                                ,flags
+                                ,p_string
+                                ,-1        // Null-terminated-string
+                                ,reinterpret_cast<LPWSTR>(buffer)
+                                ,length);
+    if(length > 0)
+    {
+      // Buffer length is twice the number of logical characters
+      length *= 2;
+      // UTF-16 has two closing zeros
+      buffer[length] = 0;
+      buffer[length + 1] = 0;
+
+      result = reinterpret_cast<LPWSTR>(buffer);
+    }
+    delete[] buffer;
   }
-  return bom;
+  return result;
 }
 
+// Convert a XString (here ANSI/MBCS) to a PCSTR buffer
+// Allocates a buffer. Caller is responsible for destruction!
+int
+StringToLPCSTR(XString p_string,LPCSTR* p_buffer,int& p_size,bool p_utf8 /*= false*/)
+{
+  XString charset = p_utf8 ? _T("utf-8") : _T("");
+  TryCreateNarrowString(p_string,charset,false,(BYTE**)p_buffer,p_size);
+  return p_size;
+}
+
+#else
+
+// Convert incoming buffer via UTF-16 to our MBCS format
 bool
-TryConvertWideString(const uchar* p_buffer
-                    ,int          p_length
-                    ,XString      p_charset
-                    ,XString&     p_string
-                    ,bool&        p_foundBOM)
+TryConvertWideString(const BYTE* p_buffer
+                    ,int         p_length
+                    ,XString     p_charset
+                    ,XString&    p_string
+                    ,bool&       p_foundBOM)
 {
   UINT codePage = GetACP(); // Default is to use the current codepage
   int   iLength = -1;       // I think it will be null terminated
@@ -587,13 +876,12 @@ bool
 TryCreateWideString(const XString& p_string
                    ,const XString  p_charset
                    ,const bool     p_doBom
-                   ,      uchar**  p_buffer
+                   ,      BYTE**   p_buffer
                    ,      int&     p_length)
 {
   bool   result = false;    // No yet
   UINT codePage = GetACP(); // Default the current codepage
   int   iLength = -1;       // I think it will be null terminated
-  DWORD dwFlags = MB_ERR_INVALID_CHARS;
 
   // Reset result
   *p_buffer = NULL;
@@ -614,17 +902,17 @@ TryCreateWideString(const XString& p_string
 
   // Getting the length of the buffer, by specifying no output
   iLength = MultiByteToWideChar(codePage
-                               ,dwFlags
+                               ,0
                                ,p_string.GetString()
-                               ,-1 // p_string.GetLength()
+                               ,-1  // Convert including closing 0
                                ,NULL
                                ,0);
   if(iLength)
   {
     // Getting a UTF-16 wide-character buffer
-    // +2 chars for a BOM, +2 chars for the closing zeros
-    *p_buffer = new uchar[2*(size_t)iLength + 4];
-    unsigned char* buffer = (unsigned char*) *p_buffer;
+    // +2 chars for a BOM
+    *p_buffer = new BYTE[2*(size_t)iLength + 2];
+    BYTE* buffer = (BYTE*) *p_buffer;
 
     // Construct an UTF-16 Byte-Order-Mark
     // In little endian order. OS/X calls this UTF-16LE
@@ -636,20 +924,17 @@ TryCreateWideString(const XString& p_string
 
     // Doing the 'real' conversion
     iLength = MultiByteToWideChar(codePage
-                                  ,dwFlags
-                                  ,p_string.GetString()
-                                  ,-1 // p_string.GetLength()
-                                  ,reinterpret_cast<LPWSTR>(buffer)
-                                  ,iLength);
+                                 ,0
+                                 ,p_string.GetString()
+                                 ,-1 // Including closing zero
+                                 ,reinterpret_cast<LPWSTR>(buffer)
+                                 ,iLength);
     if(iLength > 0)
     {
       // Buffer length is twice the number of logical characters
       iLength *= 2;
-      // UTF-16 has two closing zeros
-      buffer[iLength    ] = 0;
-      buffer[iLength + 1] = 0;
-      // Result is OK, but 2 longer if we constructed a BOM
-      p_length = iLength + (p_doBom ? 2 : 0);
+      // Result is OK, but 2 longer if we constructed a BOM or 2 shorter for zero's
+      p_length = iLength - (p_doBom ? 0 : 2);
       result   = true;
     }
     else
@@ -670,35 +955,34 @@ StringToWString(XString p_string)
   std::wstring result;      // Nothing yet
   UINT codePage = GetACP(); // Default the current codepage
   int    length = -1;       // I think it will be null terminated
-  DWORD   flags = MB_ERR_INVALID_CHARS;
 
   // Getting the length of the buffer, by specifying no output
   length = MultiByteToWideChar(codePage
-                               ,flags
-                               ,p_string.GetString()
-                               ,-1 // p_string.GetLength()
-                               ,NULL
-                               ,0);
+                              ,MB_PRECOMPOSED
+                              ,p_string.GetString()
+                              ,-1 // p_string.GetLength()
+                              ,NULL
+                              ,0);
   if(length)
   {
     // Getting a UTF-16 wide-character buffer
     // +2 chars for a BOM, +2 chars for the closing zeros
-    unsigned char* buffer = new uchar[2*(size_t)length + 4];
+    BYTE* buffer = new BYTE[2*(size_t)length + 4];
 
     // Doing the 'real' conversion
     length = MultiByteToWideChar(codePage
-                                 ,flags
-                                 ,p_string.GetString()
-                                 ,-1 // p_string.GetLength()
-                                 ,reinterpret_cast<LPWSTR>(buffer)
-                                 ,length);
+                                ,MB_PRECOMPOSED
+                                ,p_string.GetString()
+                                ,-1 // p_string.GetLength()
+                                ,reinterpret_cast<LPWSTR>(buffer)
+                                ,length);
     if(length > 0)
     {
       // Buffer length is twice the number of logical characters
       length *= 2;
       // UTF-16 has two closing zeros
-      buffer[length    ] = 0;
-      buffer[length + 1] = 0;
+//       buffer[length    ] = 0;
+//       buffer[length + 1] = 0;
 
       result = reinterpret_cast<LPWSTR>(buffer);
     }
@@ -758,11 +1042,11 @@ DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/)
   // Check for empty character set
   if(p_charset.IsEmpty())
   {
-    p_charset = "utf-8";
+    p_charset = _T("utf-8");
   }
 
   // Now decode the UTF-8 in the encoded string, to decoded MBCS
-  uchar* buffer = nullptr;
+  BYTE*  buffer = nullptr;
   int    length = 0;
   if (TryCreateWideString(p_string,p_charset,false,&buffer,length))
   {
@@ -785,12 +1069,12 @@ EncodeStringForTheWire(XString p_string,XString p_charset /*="utf-8"*/)
   // Check for empty charset
   if(p_charset.IsEmpty())
   {
-    p_charset = "utf-8";
+    p_charset = _T("utf-8");
   }
 
   // Now encode MBCS to UTF-8 without a BOM
-  uchar*  buffer = nullptr;
-  int     length = 0;
+  BYTE*  buffer = nullptr;
+  int    length = 0;
   if(TryCreateWideString(p_string,"",false,&buffer,length))
   {
     XString encoded;
@@ -805,11 +1089,90 @@ EncodeStringForTheWire(XString p_string,XString p_charset /*="utf-8"*/)
   return p_string;
 }
 
+// Implode an UTF-16 string to a MBCS XString
+XString ImplodeString(BYTE* p_buffer,unsigned p_length)
+{
+  XString result;
+
+  wchar_t* buf = (wchar_t*) p_buffer;
+  unsigned tcharlen = p_length / 2;
+  for(unsigned ind = 0;ind < tcharlen; ++ind)
+  {
+    result += (uchar) buf[ind];
+  }
+  return result;
+}
+
+// Convert an UTF-16 buffer to a XString in ANSI/MBCS mode
+void ExplodeString(XString p_string,BYTE* p_buffer,unsigned p_length)
+{
+  if((unsigned)(p_string.GetLength() * 2 + 2) <= p_length)
+  {
+    for(int ind = 0;ind < p_string.GetLength(); ++ind)
+    {
+      *p_buffer++ = (BYTE) p_string.GetAt(ind);
+      *p_buffer++ = 0;
+    }
+    *p_buffer++ = 0;
+    *p_buffer++ = 0;
+  }
+}
+
+// Construct a UTF-16 Byte-Order-Mark
+std::wstring ConstructBOMUTF16()
+{
+  // 2 BYTE UTF-16 Byte-order-Mark "\0xFE\0xFF"
+  BYTE bom[4];
+
+  bom[0] = (BYTE) 0xFE;
+  bom[1] = (BYTE) 0xFF;
+  bom[2] = 0;
+  bom[3] = 0;
+  return std::wstring((LPCWSTR) bom);
+}
+
+// Convert directly from LPCSTR (No 'T' !!) to XString
+// UNICODE   -> char* to wchar_t*
+// ANSI/MBCS -> char* to char*
+// Optionally convert to UTF8
+XString
+LPCSTRToString(LPCSTR p_string,bool p_utf8 /*= false*/)
+{
+  if(p_utf8)
+  {
+    return DecodeStringFromTheWire(p_string);
+  }
+  else
+  {
+    // No conversions
+    return XString(p_string);
+  }
+}
+
+// Convert a XString (here ANSI/MBCS) to a PCSTR buffer
+int
+StringToLPCSTR(XString p_string,LPCSTR* p_buffer,int& p_size,bool p_utf8 /*= false*/)
+{
+  XString string = p_utf8 ? EncodeStringForTheWire(p_string) : p_string;
+  p_size   = string.GetLength();
+  *p_buffer = new char[p_size + 1];
+  strncpy_s((char*)*p_buffer,p_size + 1,string.GetString(),p_size + 1);
+  return p_size;
+}
+
+#endif // UNICODE
+
 // Scan for UTF-8 chars in a string
 bool
 DetectUTF8(XString& p_string)
 {
-  const unsigned char* bytes = reinterpret_cast<const unsigned char*>(p_string.GetString());
+  const BYTE* bytes = reinterpret_cast<const BYTE*>(p_string.GetString());
+  return DetectUTF8(bytes);
+}
+
+bool
+DetectUTF8(const BYTE* bytes)
+{
   bool detectedUTF8 = false;
   unsigned int cp = 0;
   int num = 0;

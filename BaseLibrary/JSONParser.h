@@ -28,9 +28,7 @@
 #pragma once
 #include "JSONMessage.h"
 #include "SOAPMessage.h"
-
-// Pointer type for processing
-using uchar = unsigned char;
+#include "Encoding.h"
 
 enum class JsonError
 {
@@ -45,6 +43,7 @@ enum class JsonError
  ,JE_ObjectElement
  ,JE_IncompatibleEncoding
  ,JE_Unicode4Chars
+ ,JE_StreamingLimit
 };
 
 // Parsing a string to a JSON message
@@ -56,16 +55,16 @@ public:
  ~JSONParser();
 
   // Parse a complete JSON message string
-  void    ParseMessage(XString& p_message,bool& p_whitespace,StringEncoding p_encoding = StringEncoding::ENC_UTF8);
+  void    ParseMessage(XString& p_message,bool& p_whitespace,Encoding p_encoding = Encoding::Default);
 private:
-  void    SetError(JsonError p_error,const char* p_text,bool p_throw = true);
+  void    SetError(JsonError p_error,LPCTSTR p_text,bool p_throw = true);
   void    SkipWhitespace();
   XString GetString();
   // Get a character from message including '& translation'
-  uchar   ValueChar();
-  uchar   XDigitToValue(int ch);
-  unsigned char UnicodeChar();
-  unsigned char UTF8Char();
+  _TUCHAR ValueChar();
+  _TUCHAR XDigitToValue(int ch);
+  _TUCHAR UnicodeChar();
+  _TUCHAR UTF8Char();
 
   void    ParseLevel();
   bool    ParseConstant();
@@ -76,12 +75,12 @@ private:
 
 protected:
   JSONMessage* m_message    { nullptr };  // Receiving the errors for the parse
-  uchar*       m_pointer    { nullptr };  // Pointer in string to parse
+  _TUCHAR*     m_pointer    { nullptr };  // Pointer in string to parse
   JSONvalue*   m_valPointer { nullptr };  // Currently parsing value
   unsigned     m_lines      { 0 };        // Lines parsed
   unsigned     m_objects    { 0 };        // Objects/arrays parsed
   bool         m_utf8       { false   };  // Scan UTF-8 text
-  uchar*       m_scanString { nullptr };  // Temporary buffer to scan one string
+  _TUCHAR*     m_scanString { nullptr };  // Temporary buffer to scan one string
   int          m_scanLength { 0 };        // Max length of a string to scan
 };
 

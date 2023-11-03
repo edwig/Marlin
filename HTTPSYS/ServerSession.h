@@ -18,7 +18,7 @@
 #define SESSION_MAX_CONNECTIONS   2000000
 
 class UrlGroup;
-class Logfile;
+class LogAnalysis;
 
 using UrlGroups = std::vector<UrlGroup*>;
 using std::wstring;
@@ -47,7 +47,7 @@ public:
  LPCSTR     GetServerVersion();
  ULONGLONG  GetIdent()                  { return m_ident;                   };
  int        GetSocketLogging()          { return m_socketLogging;           };
- Logfile*   GetLogfile()                { return m_logfile;                 };
+ LogAnalysis* GetLogfile()              { return m_logfile;                 };
  HTTP_ENABLED_STATE GetEnabledState()   { return m_state;                   };
  USHORT     GetTimeoutEntityBody()      { return m_timeoutEntityBody;       };
  USHORT     GetTimeoutDrainEntityBody() { return m_timeoutDrainEntityBody;  };
@@ -65,10 +65,10 @@ private:
   void    ReadRegistrySettings();
 
   ULONGLONG           m_ident         { HTTP_SERVER_IDENT };
-  Logfile*            m_logfile       { nullptr };
+  LogAnalysis*        m_logfile       { nullptr };
   int                 m_socketLogging { SOCK_LOGGING_OFF };
   HTTP_ENABLED_STATE  m_state         { HttpEnabledStateActive };
-  CString             m_server;       // Server name and version
+  char                m_server[50] =  { 0 };       // Server name and version
   UrlGroups           m_groups;
   // Timeouts
   USHORT              m_timeoutEntityBody        { URL_TIMEOUT_ENTITY_BODY     };

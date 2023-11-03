@@ -84,17 +84,17 @@ WebConfigDlg::OnInitDialog()
   ReadWebConfig();
 
   // Setting the type of editor
-  XString base("Marlin.Config");
+  XString base(_T("Marlin.Config"));
   if(m_siteConfigFile.IsEmpty())
   {
-    m_title = base + " Editor for: Marlin.config";
+    m_title = base + _T(" Editor for: Marlin.config");
   }
   else
   {
-    XString subject = m_url.IsEmpty() ? XString("server") : m_url;
-    m_title = base + " Editor for: " + subject;
+    XString subject = m_url.IsEmpty() ? XString(_T("server")) : m_url;
+    m_title = base + _T(" Editor for: ") + subject;
   }
-  SetWindowText("Marlin.Config");
+  SetWindowText(_T("Marlin.Config"));
 
   UpdateData(FALSE);
   return TRUE;
@@ -110,14 +110,14 @@ WebConfigDlg::InitTabs()
   m_page5.Create(IDD_WC_LOGGING,       this);
 
   // Set titles
-  m_tab.InsertItem(0, "Server");
-  m_tab.InsertItem(1, "Client");
-  m_tab.InsertItem(2, "Authentication");
-  m_tab.InsertItem(3, "Web Services");
-  m_tab.InsertItem(4, "Logging");
+  m_tab.InsertItem(0, _T("Server"));
+  m_tab.InsertItem(1, _T("Client"));
+  m_tab.InsertItem(2, _T("Authentication"));
+  m_tab.InsertItem(3, _T("Web Services"));
+  m_tab.InsertItem(4, _T("Logging"));
 
   // Position relative to the parent window 
-  // Including the tab titlebar
+  // Including the tab title bar
   CRect rect;
   CRect itemRect;
   m_tab.GetWindowRect(&rect);
@@ -161,7 +161,7 @@ WebConfigDlg::ReadWebConfig()
   {
     if(m_siteConfigFile.IsEmpty())
     {
-      m_siteConfigFile = "Marlin.config";
+      m_siteConfigFile = _T("Marlin.config");
     }
     else
     {
@@ -183,7 +183,7 @@ WebConfigDlg::WriteWebConfig()
   {
     if(m_siteConfigFile.IsEmpty())
     {
-      m_siteConfigFile = "Marlin.config";
+      m_siteConfigFile = _T("Marlin.config");
     }
     m_webconfig = new MarlinConfig(m_siteConfigFile);
   }
@@ -197,17 +197,17 @@ WebConfigDlg::WriteWebConfig()
   // WRITE THE WEB.CONFIG
   if(m_webconfig->WriteConfig() == false)
   {
-    XString message("Cannot write the file. Check the rights of this file: ");
+    XString message(_T("Cannot write the file. Check the rights of this file: "));
     if(m_siteConfigFile.IsEmpty())
     {
-      message += "Marlin.config";
+      message += _T("Marlin.config");
     }
     else
     {
-      message += "\nFile: ";
+      message += _T("\nFile: ");
       message += m_siteConfigFile;
     }
-    MessageBox(message,"Marlin.Config Editor",MB_OK | MB_ICONERROR);
+    MessageBox(message,_T("Marlin.Config Editor"),MB_OK | MB_ICONERROR);
     return false;
   }
   return true;

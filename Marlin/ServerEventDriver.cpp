@@ -39,11 +39,11 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Logging via the server
-#define DETAILLOG1(text)        m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text)
-#define DETAILLOGS(text,extra)  m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra)
-#define DETAILLOGV(text,...)    m_server->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__)
-#define WARNINGLOG(text,...)    m_server->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__)
-#define ERRORLOG(code,text)     m_server->ErrorLog  (__FUNCTION__,code,text)
+#define DETAILLOG1(text)        m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text)
+#define DETAILLOGS(text,extra)  m_server->DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra)
+#define DETAILLOGV(text,...)    m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__)
+#define WARNINGLOG(text,...)    m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__)
+#define ERRORLOG(code,text)     m_server->ErrorLog  (_T(__FUNCTION__),code,text)
 
 // A new WebSocket stream is incoming. A client has decided to use this method!
 // So go deal with it: Destroy SSE stream.
@@ -97,15 +97,15 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
   HTTPServer* server = m_site->GetHTTPServer();
   XString baseURL = m_site->GetSite();
   int  portNumber = m_site->GetPort();
-  bool siteSecure = m_site->GetPrefixURL()[4] == 's';
+  bool siteSecure = m_site->GetPrefixURL()[4] == _T('s');
 
   // Start socket site
-  XString socketSiteURL = baseURL + "Sockets/";
+  XString socketSiteURL = baseURL + _T("Sockets/");
   HTTPSite*  socketSite = server->CreateSite(PrefixType::URLPRE_Strong,siteSecure,portNumber,socketSiteURL,true);
   if(socketSite)
   {
     XString urlPrefix = socketSite->GetPrefixURL();
-    server->DetailLog(__FUNCTION__,LogType::LOG_INFO,"Registered WebSocket EventDriver for: " + urlPrefix);
+    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,_T("Registered WebSocket EventDriver for: ") + urlPrefix);
 
     SiteHandler* handler = new SiteHandlerEventSocket(this);
     socketSite->SetHandler(HTTPCommand::http_get,handler);
@@ -115,12 +115,12 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
   }
 
   // Start SSE site
-  XString eventsSiteURL = baseURL + "Events/";
+  XString eventsSiteURL = baseURL + _T("Events/");
   HTTPSite*  eventsSite = server->CreateSite(PrefixType::URLPRE_Strong,siteSecure,portNumber,eventsSiteURL,true);
   if(eventsSite)
   {
     XString urlPrefix = eventsSite->GetPrefixURL();
-    server->DetailLog(__FUNCTION__,LogType::LOG_INFO,"Registered SSSE EventDriver for: " + urlPrefix);
+    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,_T("Registered SSSE EventDriver for: ") + urlPrefix);
 
     SiteHandler* handler = new SiteHandlerEventStream(this);
     eventsSite->SetHandler(HTTPCommand::http_get,handler);
@@ -128,7 +128,7 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
 
     // Tell site we handle SSE streams
     eventsSite->SetIsEventStream(true);
-    eventsSite->AddContentType("txt","text/event-stream");
+    eventsSite->AddContentType(_T("txt"),_T("text/event-stream"));
 
     // Server must now do keep-alive jobs for SSE streams
     server->SetEventKeepAlive(5000);
@@ -138,17 +138,17 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
   }
 
   // Start Polling site
-  XString pollingSiteURL = baseURL + "Polling/";
+  XString pollingSiteURL = baseURL + _T("Polling/");
   HTTPSite*  pollingSite = server->CreateSite(PrefixType::URLPRE_Strong,siteSecure,portNumber,pollingSiteURL,true);
   if(pollingSite)
   {
     XString urlPrefix = eventsSite->GetPrefixURL();
-    server->DetailLog(__FUNCTION__,LogType::LOG_INFO,"Registered Long-Polling for: " + urlPrefix);
+    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,_T("Registered Long-Polling for: ") + urlPrefix);
 
     SiteHandler* handler = new SiteHandlerPolling(this);
     pollingSite->SetHandler(HTTPCommand::http_post,handler);
     pollingSite->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
-    pollingSite->AddContentType("xml","application/soap+xml");
+    pollingSite->AddContentType(_T("xml"),_T("application/soap+xml"));
 
     // And start the site
     if(pollingSite->StartSite()) ++started;
@@ -157,7 +157,7 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
   // Error handling
   if(started < 3)
   {
-    ERRORLOG(ERROR_SERVICE_NOT_ACTIVE,"Not all three subsites (Sockets/Events/Polling) have been started for the ServerEventDriver!");
+    ERRORLOG(ERROR_SERVICE_NOT_ACTIVE,_T("Not all three subsites (Sockets/Events/Polling) have been started for the ServerEventDriver!"));
     return false;
   }
   return true;
@@ -182,7 +182,7 @@ ServerEventDriver::RegisterChannel(XString p_sessionName
   m_channels.insert(std::make_pair(m_nextSession,channel));
 
   // Extra lookups for incoming streams
-  XString cookie = p_cookie + ":" + p_token;
+  XString cookie = p_cookie + _T(":") + p_token;
   m_names  .insert(std::make_pair(p_sessionName,channel));
   m_cookies.insert(std::make_pair(cookie,channel));
 
@@ -341,7 +341,7 @@ ServerEventDriver::StopEventDriver()
     return true;
   }
 
-  DETAILLOG1("Stopping ServerEventDriver");
+  DETAILLOG1(_T("Stopping ServerEventDriver"));
 
   // No more new postings from now on
   m_active = false;
@@ -357,7 +357,7 @@ ServerEventDriver::StopEventDriver()
     }
     Sleep(MONITOR_END_WAITMS);
   }
-  DETAILLOG1((m_thread == NULL) ? "EventDriver stopped" : "EventDriver still running!!");
+  DETAILLOG1((m_thread == NULL) ? _T("EventDriver stopped") : _T("EventDriver still running!!"));
   return (m_thread == NULL);
 }
 
@@ -369,7 +369,7 @@ ServerEventDriver::IncomingNewSocket(HTTPMessage* p_message,WebSocket* p_socket)
   {
     if(!RegisterSocketByRouting(p_message,p_socket))
     {
-      ERRORLOG(ERROR_NOT_FOUND,"No registered session found for incoming socket on: " + p_socket->GetURI());
+      ERRORLOG(ERROR_NOT_FOUND,_T("No registered session found for incoming socket on: ") + p_socket->GetURI());
       p_message->Reset();
       p_message->SetStatus(HTTP_STATUS_FORBIDDEN);
       m_server->SendResponse(p_message);
@@ -387,7 +387,7 @@ ServerEventDriver::IncomingNewStream(HTTPMessage* p_message,EventStream* p_strea
   {
     if(!RegisterStreamByRouting(p_message,p_stream))
     {
-      ERRORLOG(ERROR_NOT_FOUND,"No registered session found for incoming stream on: " + p_stream->m_absPath);
+      ERRORLOG(ERROR_NOT_FOUND,_T("No registered session found for incoming stream on: ") + p_stream->m_absPath);
       p_message->Reset();
       p_message->SetStatus(HTTP_STATUS_FORBIDDEN);
       m_server->SendResponse(p_message);
@@ -407,7 +407,7 @@ ServerEventDriver::IncomingLongPoll(SOAPMessage* p_message)
     if(!HandlePollingByRouting(p_message))
     {
       XString errortext;
-      errortext.Format("No registered session found for long-polling message [%s]",p_message->GetAbsolutePath().GetString());
+      errortext.Format(_T("No registered session found for long-polling message [%s]"),p_message->GetAbsolutePath().GetString());
       ERRORLOG(ERROR_NOT_FOUND,errortext);
       return false;
     }
@@ -536,7 +536,7 @@ ServerEventChannel*
 ServerEventDriver::FindSession(XString p_cookie,XString p_token)
 {
   AutoCritSec lock(&m_lock);
-  XString cookieToken = p_cookie + ":" + p_token;
+  XString cookieToken = p_cookie + _T(":") + p_token;
 
   for(auto& session : m_channels)
   {
@@ -576,7 +576,7 @@ ServerEventDriver::RegisterSocketByCookie(HTTPMessage* p_message,WebSocket* p_so
   Cookies& cookies = p_message->GetCookies();
   for(auto& cookie : cookies.GetCookies())
   {
-    session = cookie.GetName() + ":" + cookie.GetValue(m_metadata);
+    session = cookie.GetName() + _T(":") + cookie.GetValue(m_metadata);
     ChanNameMap::iterator it = m_cookies.find(session);
     if(it != m_cookies.end())
     {
@@ -595,7 +595,7 @@ ServerEventDriver::RegisterStreamByCookie(HTTPMessage* p_message,EventStream* p_
   Cookies& cookies = p_message->GetCookies();
   for(auto& cookie : cookies.GetCookies())
   {
-    session = cookie.GetName() + ":" + cookie.GetValue(m_metadata);
+    session = cookie.GetName() + _T(":") + cookie.GetValue(m_metadata);
     ChanNameMap::iterator it = m_cookies.find(session);
     if(it != m_cookies.end())
     {
@@ -614,7 +614,7 @@ ServerEventDriver::HandlePollingByCookie(SOAPMessage* p_message)
   Cookies& cookies = const_cast<Cookies&>(p_message->GetCookies());
   for(auto& cookie : cookies.GetCookies())
   {
-    session = cookie.GetName() + ":" + cookie.GetValue(m_metadata);
+    session = cookie.GetName() + _T(":") + cookie.GetValue(m_metadata);
     ChanNameMap::iterator it = m_cookies.find(session);
     if(it != m_cookies.end())
     {
@@ -630,7 +630,7 @@ ServerEventDriver::RegisterSocketByRouting(HTTPMessage* p_message,WebSocket* p_s
   AutoCritSec lock(&m_lock);
 
   // Finding the session name from the routing
-  XString channel = FindChannel(p_message->GetRouting(),"Sockets");
+  XString channel = FindChannel(p_message->GetRouting(),_T("Sockets"));
 
   // Find channel by session name
   ChanNameMap::iterator it = m_names.find(channel);
@@ -648,7 +648,7 @@ ServerEventDriver::RegisterStreamByRouting(HTTPMessage* p_message,EventStream* p
   AutoCritSec lock(&m_lock);
 
   // Finding the session name from the routing
-  XString channel = FindChannel(p_message->GetRouting(),"Events");
+  XString channel = FindChannel(p_message->GetRouting(),_T("Events"));
 
   // Find channel by session name
   ChanNameMap::iterator it = m_names.find(channel);
@@ -666,7 +666,7 @@ ServerEventDriver::HandlePollingByRouting(SOAPMessage* p_message)
   AutoCritSec lock(&m_lock);
 
   // Finding the channel name from the routing
-  XString channel = FindChannel(p_message->GetRouting(),"Polling");
+  XString channel = FindChannel(p_message->GetRouting(),_T("Polling"));
 
   // Find channel by session name
   ChanNameMap::iterator it = m_names.find(channel);
@@ -695,7 +695,7 @@ ServerEventDriver::FindChannel(const Routing& p_routing,XString p_base)
     {
       if(!session.IsEmpty())
       {
-        session += '/';
+        session += _T('/');
       }
       session += route;
     }
@@ -717,7 +717,7 @@ ServerEventDriver::CheckBruteForceAttack(XString p_sender)
     // Cannot make a connection again.
     if ((clock() - (clock_t)it->second) < m_interval)
     {
-      m_server->DetailLogV(__FUNCTION__,LogType::LOG_ERROR,"BRUTE FORCE ATTACK FROM: %s",p_sender.GetString());
+      m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_ERROR,_T("BRUTE FORCE ATTACK FROM: %s"),p_sender.GetString());
       return true;
     }
     // Longer than <interval> seconds ago. Reset sender.
@@ -763,11 +763,11 @@ ServerEventDriver::StartEventThread()
     {
       m_thread = NULL;
       threadID = 0;
-      ERRORLOG(ERROR_SERVICE_NOT_ACTIVE,"Cannot start a thread for an ServerEventDriver.");
+      ERRORLOG(ERROR_SERVICE_NOT_ACTIVE,_T("Cannot start a thread for an ServerEventDriver."));
     }
     else
     {
-      DETAILLOGV("Thread started with threadID [%d] for ServerEventDriver.",threadID);
+      DETAILLOGV(_T("Thread started with threadID [%d] for ServerEventDriver."),threadID);
       return true;
     }
   }
@@ -785,7 +785,7 @@ ServerEventDriver::EventThreadRunning()
   m_active   = true;
   m_interval = MONITOR_INTERVAL_MIN;
 
-  DETAILLOG1("ServerEventDriver monitor started.");
+  DETAILLOG1(_T("ServerEventDriver monitor started."));
   do
   {
     DWORD waited = WaitForSingleObjectEx(m_event,m_interval,true);
@@ -825,14 +825,14 @@ ServerEventDriver::RecalculateInterval(int p_sent)
       m_interval = MONITOR_INTERVAL_MAX;
     }
   }
-  DETAILLOGV("ServerEventDriver monitor going to sleep. Back in [%d] milliseconds",m_interval);
+  DETAILLOGV(_T("ServerEventDriver monitor going to sleep. Back in [%d] milliseconds"),m_interval);
 }
 
 
 void
 ServerEventDriver::SendChannels()
 {
-  DETAILLOG1("ServerEventDriver monitor waking up. Sending/Receiving client channels.");
+  DETAILLOG1(_T("ServerEventDriver monitor waking up. Sending/Receiving client channels."));
   int sent = 0;
 
   try
@@ -865,7 +865,7 @@ ServerEventDriver::SendChannels()
   }
   catch(StdException& ex)
   {
-    ERRORLOG(ERROR_UNHANDLED_EXCEPTION,"ServerEventDriver error: " + ex.GetErrorMessage());
+    ERRORLOG(ERROR_UNHANDLED_EXCEPTION,_T("ServerEventDriver error: ") + ex.GetErrorMessage());
   }
   RecalculateInterval(sent);
 }

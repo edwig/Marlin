@@ -43,18 +43,18 @@ static char THIS_FILE[] = __FILE__;
 
 class XAppender
 {
-  char* m_dst;
+  PTCHAR m_dst;
 
 public:
 
-  explicit XAppender(char* dst): m_dst(dst)
+  explicit XAppender(PTCHAR dst): m_dst(dst)
   {
   }
 
   void operator () (XString const& src)
   {
     int len = src.GetLength();
-    strncpy_s(m_dst,len + 1,src,len);
+    _tcsncpy_s(m_dst,len + 1,src,len);
     m_dst += len;
   }
 };
@@ -176,12 +176,12 @@ XStringBuilder&
 XStringBuilder::operator += (int rhs)
 {
   XString number;
-  number.Format("%d",rhs);
+  number.Format(_T("%d"),rhs);
   return Append(number);
 }
 
 int
-XStringBuilder::Compare(char const* psz) const
+XStringBuilder::Compare(PCTSTR psz) const
 {
   return ToString().Compare(psz);
 }
@@ -191,7 +191,7 @@ XStringBuilder::operator XString const& () const
   return ToString();
 }
 
-XStringBuilder::operator char const* () const
+XStringBuilder::operator PCTSTR () const
 {
   return ToString();
 }
@@ -219,7 +219,7 @@ XStringBuilder::ToString() const
   int firstlen = m_segments.begin()->GetLength();
 
   // Resize first segment to make space for segments 1...n
-  char* ptr = m_segments.begin()->GetBufferSetLength(m_length);
+  PTCHAR ptr = m_segments.begin()->GetBufferSetLength(m_length);
 
   // Offset pointer by length of first segment
   ptr += firstlen;

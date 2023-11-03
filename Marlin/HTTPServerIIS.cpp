@@ -40,7 +40,6 @@
 #include "HTTPError.h"
 #include "HTTPTime.h"
 #include "GetLastErrorAsString.h"
-#include "EnsureFile.h"
 #include "WebSocketServerIIS.h"
 #include "ConvertWideString.h"
 #pragma warning (disable:4091)
@@ -55,19 +54,19 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Logging macro's
-#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
-#define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
-#define HTTPERROR(code,text)      HTTPError(__FUNCTION__,code,text)
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
+#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__); }
+#define ERRORLOG(code,text)       ErrorLog (_T(__FUNCTION__),code,text)
+#define HTTPERROR(code,text)      HTTPError(_T(__FUNCTION__),code,text)
 
 HTTPServerIIS::HTTPServerIIS(XString p_name)
               :HTTPServer(p_name)
 {
   m_counter.Start();
 
-  m_marlinConfig = new MarlinConfig("Marlin.config");
+  m_marlinConfig = new MarlinConfig(_T("Marlin.config"));
 }
 
 HTTPServerIIS::~HTTPServerIIS()
@@ -79,7 +78,7 @@ HTTPServerIIS::~HTTPServerIIS()
 XString
 HTTPServerIIS::GetVersion()
 {
-  return XString(MARLIN_SERVER_VERSION " on Microsoft IIS");
+  return XString(_T(MARLIN_SERVER_VERSION) _T(" on Microsoft IIS"));
 }
 
 // Initialise a HTTP server
@@ -175,13 +174,13 @@ HTTPServerIIS::InitHeaders()
   XString headertype;
   switch(m_sendHeader)
   {
-    case SendHeader::HTTP_SH_MICROSOFT:   headertype = "Microsoft defined server header"; break;
-    case SendHeader::HTTP_SH_MARLIN:      headertype = "Standard Marlin server header";   break;
-    case SendHeader::HTTP_SH_APPLICATION: headertype = "Application's server name";       break;
-    case SendHeader::HTTP_SH_WEBCONFIG:   headertype = "Configured header type name";     break;
-    case SendHeader::HTTP_SH_HIDESERVER:  headertype = "Hide server response header";     break;
+    case SendHeader::HTTP_SH_MICROSOFT:   headertype = _T("Microsoft defined server header"); break;
+    case SendHeader::HTTP_SH_MARLIN:      headertype = _T("Standard Marlin server header");   break;
+    case SendHeader::HTTP_SH_APPLICATION: headertype = _T("Application's server name");       break;
+    case SendHeader::HTTP_SH_WEBCONFIG:   headertype = _T("Configured header type name");     break;
+    case SendHeader::HTTP_SH_HIDESERVER:  headertype = _T("Hide server response header");     break;
   }
-  DETAILLOGV("Header type: %s",headertype.GetString());
+  DETAILLOGV(_T("Header type: %s"),headertype.GetString());
 }
 
 // Running the server 
@@ -193,10 +192,10 @@ HTTPServerIIS::Run()
   // See if we are in a state to receive requests
   if(GetLastError() || !m_initialized)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"RunHTTPServer called too early");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("RunHTTPServer called too early"));
     return;
   }
-  DETAILLOG1("HTTPServer initialised and ready to go!");
+  DETAILLOG1(_T("HTTPServer initialised and ready to go!"));
 
   // Check if all sites were properly started
   // Catches programmers who forget to call HTTPSite::StartSite()
@@ -204,7 +203,7 @@ HTTPServerIIS::Run()
 
   // START OUR MAIN LOOP
   m_running = true;
-  DETAILLOG1("HTTPServerIIS started");
+  DETAILLOG1(_T("HTTPServerIIS started"));
 }
 
 // Stop the server
@@ -212,7 +211,7 @@ void
 HTTPServerIIS::StopServer()
 {
   AutoCritSec lock(&m_eventLock);
-  DETAILLOG1("Received a StopServer request");
+  DETAILLOG1(_T("Received a StopServer request"));
 
   // See if we are running at all
   if(m_running == false)
@@ -234,7 +233,7 @@ HTTPServerIIS::StopServer()
   for(auto& it : m_eventStreams)
   {
     // SEND OnClose event
-    ServerEvent* event = new ServerEvent("close");
+    ServerEvent* event = new ServerEvent(_T("close"));
     SendEvent(it.second->m_port,it.second->m_baseURL,event);
   }
   // Try to remove all event streams
@@ -249,11 +248,11 @@ HTTPServerIIS::StopServer()
   {
     // Explicitly pulse the event heartbeat monitor
     // this abandons the monitor in one go!
-    DETAILLOG1("Abandon the server-push-events heartbeat monitor");
+    DETAILLOG1(_T("Abandon the server-push-events heartbeat monitor"));
     SetEvent(m_eventEvent);
   }
 
-  // mainloop will stop on next iteration
+  // main loop will stop on next iteration
   m_running = false;
 
   // Wait for a maximum of 30 seconds for the queue to stop
@@ -286,7 +285,7 @@ HTTPServerIIS::CreateSite(PrefixType    p_type
   if(p_type != PrefixType::URLPRE_Strong || p_secure ||
      p_port != INTERNET_DEFAULT_HTTP_PORT)
   {
-    DETAILLOG1("In IIS the prefix type, https and port number are controlled by IIS Admin, and cannot be set!");
+    DETAILLOG1(_T("In IIS the prefix type, https and port number are controlled by IIS Admin, and cannot be set!"));
   }
   // Create our URL prefix
   XString prefix = CreateURLPrefix(p_type,p_secure,p_port,p_baseURL);
@@ -303,7 +302,7 @@ HTTPServerIIS::CreateSite(PrefixType    p_type
       {
         // No luck: No main site to register against
         XString message;
-        message.Format("Tried to register a sub-site, without a main-site: %s",p_baseURL.GetString());
+        message.Format(_T("Tried to register a sub-site, without a main-site: %s"),p_baseURL.GetString());
         ERRORLOG(ERROR_NOT_FOUND,message);
         return nullptr;
       }
@@ -340,19 +339,19 @@ HTTPServerIIS::DeleteSite(int p_port,XString p_baseURL,bool p_force /*=false*/)
     // See if other sites are dependent on this one
     if(p_force == false && site->GetIsSubsite() == false)
     {
-      // Walk all sites, to see if subsites still dependent on this main site
+      // Walk all sites, to see if sub-sites still dependent on this main site
       for(SiteMap::iterator fit = m_allsites.begin(); fit != m_allsites.end(); ++fit)
       {
         if(fit->second->GetMainSite() == site)
         {
           // Cannot delete this site, other sites are dependent on this one
-          ERRORLOG(ERROR_ACCESS_DENIED,"Cannot remove site. Sub-sites still dependent on: " + p_baseURL);
+          ERRORLOG(ERROR_ACCESS_DENIED,_T("Cannot remove site. Sub-sites still dependent on: ") + p_baseURL);
           return false;
         }
       }
     }
     // And remove from the site map
-    DETAILLOGS("Removed site: ",site->GetPrefixURL());
+    DETAILLOGS(_T("Removed site: "),site->GetPrefixURL());
     delete site;
     m_allsites.erase(it);
     result = true;
@@ -388,12 +387,12 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
                                        ,PHTTP_REQUEST p_request)
 {
   // Grab the senders accepted types
-  XString acceptTypes = p_request->Headers.KnownHeaders[HttpHeaderAccept].pRawValue;
+  XString acceptTypes = LPCSTRToString(p_request->Headers.KnownHeaders[HttpHeaderAccept].pRawValue);
   acceptTypes.Trim();
 
   // Receiving the initiation of an event stream for the server ?
   if((p_request->Verb == HttpVerbGET) &&
-     (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
+     (p_site->GetIsEventStream() || acceptTypes.Left(17).CompareNoCase(_T("text/event-stream")) == 0))
   {
     // Grab the rest of the needed content out of the request
     PSOCKADDR_IN6 sender   = (PSOCKADDR_IN6)p_request->Address.pRemoteAddress;
@@ -404,7 +403,7 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
       return -1;
     }
 
-    // Grab the raw URL and the dsektop for the stream
+    // Grab the raw URL and the desktop for the stream
     XString   rawUrl       = WStringToString(p_request->CookedUrl.pFullUrl);
     int       remDesktop   = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
                                               ,p_request->Headers.pUnknownHeaders);
@@ -429,7 +428,7 @@ HTTPServerIIS::GetHTTPStreamFromRequest(IHttpContext* p_context
       HTTPMessage* message = GetHTTPMessageFromRequest(p_context,p_site,p_request);
 
       // To do for this stream, not for a message
-      DETAILLOGV("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s", stream->m_user.GetString(), rawUrl.GetString());
+      DETAILLOGV(_T("Accepted an event-stream for SSE (Server-Sent-Events) from %s/%s"), stream->m_user.GetString(), rawUrl.GetString());
       if(p_site->HandleEventStream(message,stream))
       {
         // Return the fact that the request turned into a stream
@@ -453,28 +452,32 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                                         ,PHTTP_REQUEST p_request)
 {
   // Grab the senders content
-  XString   contentType    = p_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
-  XString   contentLength  = p_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
-  XString   acceptEncoding = p_request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
-  XString   cookie         = p_request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
-  XString   authorize      = p_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
-  XString   modified       = p_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
-  XString   referrer       = p_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
+  XString   contentType    = LPCSTRToString(p_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue);
+  XString   contentLength  = LPCSTRToString(p_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue);
+  XString   acceptEncoding = LPCSTRToString(p_request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue);
+  XString   cookie         = LPCSTRToString(p_request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue);
+  XString   authorize      = LPCSTRToString(p_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue);
+  XString   modified       = LPCSTRToString(p_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue);
+  XString   referrer       = LPCSTRToString(p_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue);
   XString   rawUrl         = WStringToString(p_request->CookedUrl.pFullUrl);
   PSOCKADDR sender         = p_request->Address.pRemoteAddress;
   int       remDesktop     = FindRemoteDesktop(p_request->Headers.UnknownHeaderCount
                                               ,p_request->Headers.pUnknownHeaders);
 
   // Log earliest as possible
-  DETAILLOGV("Received HTTP call from [%s] with length: %s"
+  DETAILLOGV(_T("Received HTTP call from [%s] with length: %s")
              ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
              ,contentLength.GetString());
 
   // Log incoming request
-  DETAILLOGS("Got a request for: ",rawUrl);
+  DETAILLOGS(_T("Got a request for: "),rawUrl);
+
+  // Find our charset
+  XString charset = FindCharsetInContentType(contentType);
+  bool utf16 = charset.CompareNoCase(_T("utf-16")) == 0;
 
   // Trace the request in full
-  LogTraceRequest(p_request,nullptr);
+  LogTraceRequest(p_request,nullptr,utf16);
 
   // See if we must substitute for a sub-site
   if(m_hasSubsites)
@@ -518,11 +521,11 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                             type = GetUnknownVerb(p_request->pUnknownVerb);
                             if(type == HTTPCommand::http_no_command)
                             {
-                              ERRORLOG(ERROR_INVALID_PARAMETER,"Unknown HTTP Verb");
+                              ERRORLOG(ERROR_INVALID_PARAMETER,_T("Unknown HTTP Verb"));
                               HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
                               msg.SetRequestHandle((HTTP_OPAQUE_ID) p_context);
                               msg.SetHTTPSite(p_site);
-                              RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,"Not implemented");
+                              RespondWithServerError(&msg,HTTP_STATUS_NOT_SUPPORTED,_T("Not implemented"));
                               return nullptr;
                             }
                             break;
@@ -540,9 +543,10 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   message->SetAcceptEncoding(acceptEncoding);
   message->SetRequestHandle((HTTP_OPAQUE_ID)p_context);
   message->SetContentType(contentType);
-  message->SetContentLength((size_t)atoll(contentLength));
+  message->SetContentLength((size_t)_ttoll(contentLength));
   message->SetAllHeaders(&p_request->Headers);
   message->SetUnknownHeaders(&p_request->Headers);
+  message->SetSendUnicode(utf16);
 
   // Finding the impersonation access token (if any)
   FindingAccessToken(p_context,message);
@@ -567,7 +571,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   {
     if(message->FindVerbTunneling())
     {
-      DETAILLOGV("Request VERB changed to: %s",message->GetVerb().GetString());
+      DETAILLOGV(_T("Request VERB changed to: %s"),message->GetVerb().GetString());
     }
   }
 
@@ -576,7 +580,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   {
     // Remember the fact that we should read the rest of the message, and how much
     // We offload this to the HTTPSite handler for local servers and IIS alike
-    message->SetReadBuffer(true,atoi(contentLength));
+    message->SetReadBuffer(true,_ttoi(contentLength));
   }
   else
   {
@@ -584,7 +588,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
     // No more are coming, we already have everything for a HTTPMessage
     if(p_request->EntityChunkCount)
     {
-      ReadEntityChunks(message,p_request);
+      ReadEntityChunks(message,p_request,utf16);
     }
   }
   // This is the result
@@ -593,7 +597,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
 
 // Reading the first chunks directly from the request handle from IIS
 void
-HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
+HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request,bool p_utf16)
 {
   unsigned count = p_request->EntityChunkCount;
   FileBuffer* buffer = p_message->GetFileBuffer();
@@ -611,18 +615,18 @@ HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request)
       case HttpDataChunkFromFileHandle:        // Should not happen upon receive
                                                [[fallthrough]];
       case HttpDataChunkFromFragmentCache:     [[fallthrough]];
-      case HttpDataChunkFromFragmentCacheEx:   ERRORLOG(ERROR_INVALID_PARAMETER,"Unhandled HTTP chunk type from IIS");
+      case HttpDataChunkFromFragmentCacheEx:   ERRORLOG(ERROR_INVALID_PARAMETER,_T("Unhandled HTTP chunk type from IIS"));
                                                break;
     }
   }
   // Log & Trace the chunks that we just read 
-  LogTraceRequestBody(buffer);
+  LogTraceRequestBody(buffer,p_utf16);
 }
 
 // Receive incoming HTTP request (p_request->Flags > 0)
 // But only reading extra buffer parts into an already partially filled buffer
 bool
-HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
+HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16)
 {
   UNREFERENCED_PARAMETER(p_message);
   IHttpContext* context     = reinterpret_cast<IHttpContext*>(p_message->GetRequestHandle());
@@ -645,10 +649,10 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
     }
     if(!SUCCEEDED(hr) && HRESULT_CODE(hr) != ERROR_MORE_DATA)
     {
-      ERRORLOG(HRESULT_FROM_WIN32(hr),"Cannot read incoming HTTP buffer");
+      ERRORLOG(HRESULT_FROM_WIN32(hr),_T("Cannot read incoming HTTP buffer"));
       return false;
     }
-    // Add to filebuffer
+    // Add to file buffer
     if(received > 0)
     {
       fbuffer->AddBuffer(bytebuffer,received);
@@ -660,11 +664,11 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message)
   // This includes all blocks from initial chunk and extra reads
   if(fbuffer->GetLength() < contentLength)
   {
-      ERRORLOG(ERROR_INVALID_DATA,"Total received message shorter dan 'ContentLength' header.");
+      ERRORLOG(ERROR_INVALID_DATA,_T("Total received message shorter dan 'ContentLength' header."));
   }
 
   // Now also trace the request body of the message
-  LogTraceRequestBody(fbuffer);
+  LogTraceRequestBody(fbuffer,p_utf16);
 
   // Now everything has been read for this message
   p_message->SetReadBuffer(false,0);
@@ -714,7 +718,7 @@ HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request,XString /*p_prefix*/)
   HRESULT hr = response->Flush(FALSE,TRUE,&bytesSent,&completion);
   if(hr != S_OK)
   {
-    ERRORLOG(HRESULT_FROM_WIN32(hr),"Flushing WebSocket failed!");
+    ERRORLOG(HRESULT_FROM_WIN32(hr),_T("Flushing WebSocket failed!"));
     CancelRequestStream(p_request);
     return false;
   }
@@ -757,21 +761,22 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
   IHttpCachePolicy* policy = response->GetCachePolicy();
 
   // First comment to push to the stream (not an event!)
-  XString init = m_eventBOM ? ConstructBOM() : XString();
-  init += ":init event-stream\r\n\r\n";
+  // Always UTF-8 compatible, so simple ANSI string
+  char* init = ":init event-stream\r\n\r\n";
+  int length = (int) strlen(init);
 
   response->SetStatus(HTTP_STATUS_OK,"OK");
 
   // Add event/stream header
-  SetResponseHeader(response,HttpHeaderContentType,"text/event-stream",true);
+  SetResponseHeader(response,HttpHeaderContentType,_T("text/event-stream"),true);
 
   HTTP_DATA_CHUNK dataChunk;
   DWORD bytesSent = 0;
 
   // Only if a buffer present
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer      = reinterpret_cast<void*>(const_cast<char*>(init.GetString()));
-  dataChunk.FromMemory.BufferLength = static_cast<ULONG>(init.GetLength());
+  dataChunk.FromMemory.pBuffer      = reinterpret_cast<void*>(init);
+  dataChunk.FromMemory.BufferLength = static_cast<ULONG>(length);
 
   // Buffering should be turned off, so chunks get written right away
   response->DisableBuffering();    // Disable buffering
@@ -781,16 +786,16 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,true,&bytesSent);
   if(hr != S_OK)
   {
-    ERRORLOG(HRESULT_FROM_WIN32(hr),"HttpSendResponseEntityBody failed initialisation of an event stream");
+    ERRORLOG(HRESULT_FROM_WIN32(hr),_T("HttpSendResponseEntityBody failed initialisation of an event stream"));
   }
   else
   {
     // Increment chunk count
     ++p_stream.m_chunks;
 
-    DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",bytesSent);
+    DETAILLOGV(_T("WriteEntityChunks for event stream sent [%d] bytes"),bytesSent);
     // Possibly log and trace what we just sent
-    LogTraceResponse(response->GetRawHttpResponse(),reinterpret_cast<uchar*>(const_cast<char*>(init.GetString())),init.GetLength());
+    LogTraceResponse(response->GetRawHttpResponse(),reinterpret_cast<uchar*>(init),length,false);
 
     hr = response->Flush(false,true,&bytesSent);
   }
@@ -800,11 +805,17 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
 void
 HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,XString p_name,XString p_value,bool p_replace)
 {
+#ifdef UNICODE
+  AutoCSTR name(p_name);
+  AutoCSTR value(p_value);
+  HRESULT hr = p_response->SetHeader(name.cstr(),value.cstr(),(USHORT)value.size(),p_replace);
+#else
   HRESULT hr = p_response->SetHeader(p_name,p_value,(USHORT)p_value.GetLength(),p_replace);
+#endif
   if(hr != S_OK)
   {
     XString bark;
-    bark.Format("Cannot set HTTP response header [%s] to value [%s] : %s",p_name.GetString(),p_value.GetString());
+    bark.Format(_T("Cannot set HTTP response header [%s] to value [%s]"),p_name.GetString(),p_value.GetString());
     ERRORLOG(HRESULT_FROM_WIN32(hr),bark);
   }
 }
@@ -812,11 +823,16 @@ HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,XString p_name,XStrin
 void 
 HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,XString p_value,bool p_replace)
 {
+#ifdef UNICODE
+  AutoCSTR value(p_value);
+  HRESULT hr = p_response->SetHeader(p_id,value.cstr(),(USHORT)value.size(),p_replace);
+#else
   HRESULT hr = p_response->SetHeader(p_id,p_value,(USHORT)p_value.GetLength(),p_replace);
+#endif
   if(hr != S_OK)
   {
     XString bark;
-    bark.Format("Cannot set HTTP response header [%d] to value [%s] : %s",p_id,p_value.GetString());
+    bark.Format(_T("Cannot set HTTP response header [%d] to value [%s]"),p_id,p_value.GetString());
     ERRORLOG(HRESULT_FROM_WIN32(hr),bark);
   }
 }
@@ -829,12 +845,9 @@ HTTPServerIIS::AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers)
   {
     return;
   }
-  for(UKHeaders::iterator it = p_headers.begin();it != p_headers.end(); ++it)
+  for(auto& header : p_headers)
   {
-    XString name  = it->first;
-    XString value = it->second;
-
-    SetResponseHeader(p_response,name,value,false);
+    SetResponseHeader(p_response,header.m_name,header.m_value,false);
   }
 }
 
@@ -842,8 +855,13 @@ HTTPServerIIS::AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers)
 void
 HTTPServerIIS::SetResponseStatus(IHttpResponse* p_response,USHORT p_status,XString p_statusMessage)
 {
-  DETAILLOGV("HTTP Response: %u %s",p_status,p_statusMessage.GetString());
+  DETAILLOGV(_T("HTTP Response: %u %s"),p_status,p_statusMessage.GetString());
+#ifdef UNICODE
+  AutoCSTR message(p_statusMessage);
+  p_response->SetStatus(p_status,message.cstr());
+#else
   p_response->SetStatus(p_status,p_statusMessage);
+#endif
 }
 
 // Sending a response as a chunk
@@ -854,17 +872,17 @@ HTTPServerIIS::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
   FileBuffer* buffer = p_message->GetFileBuffer();
   if(!buffer->GetFileName().IsEmpty() )
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Send as chunk cannot send a file!");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("Send as chunk cannot send a file!"));
     return;
   }
   // Chunk encode the file buffer
   if(!buffer->ChunkedEncoding(p_final))
   {
-    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Cannot chunk-encode the message for transfer-encoding!");
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Cannot chunk-encode the message for transfer-encoding!"));
   }
 
   // If we want to send a (g)zipped buffer, that should have been done already by now
-  p_message->SetAcceptEncoding("");
+  p_message->SetAcceptEncoding(_T(""));
 
   // Get the chunk number (first->next)
   unsigned chunk = p_message->GetChunkNumber();
@@ -884,7 +902,7 @@ HTTPServerIIS::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
       // Send the response
       SendResponseBuffer(response,buffer,buffer->GetLength(),!p_final);
       // Possibly log and trace what we just sent
-      LogTraceResponse(response->GetRawHttpResponse(),buffer);
+      LogTraceResponse(response->GetRawHttpResponse(),buffer,p_message->GetSendUnicode());
     }
   }
   if(p_final)
@@ -901,13 +919,13 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   IHttpContext*   context     = reinterpret_cast<IHttpContext*>(p_message->GetRequestHandle());
   IHttpResponse*  response    = context ? context->GetResponse() : nullptr;
   FileBuffer*     buffer      = p_message->GetFileBuffer();
-  XString         contentType("application/octet-stream"); 
+  XString         contentType(_T("application/octet-stream")); 
   bool            moredata    = false;
 
   // See if there is something to send
   if(context == nullptr || response == nullptr)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Nothing found to send");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("Nothing found to send"));
     return;
   }
 
@@ -930,7 +948,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     if(!p_message->GetXMLHttpRequest())
     {
       // See if the message already has an authentication scheme header
-      XString challenge = p_message->GetHeader("AuthenticationScheme");
+      XString challenge = p_message->GetHeader(_T("AuthenticationScheme"));
       if(challenge.IsEmpty())
       {
         // Add authentication scheme
@@ -948,7 +966,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   if(status == HTTP_STATUS_CONTINUE)
   {
     // Log that we do not do this message, but we pass it on to IIS
-    DETAILLOGV("We do **NOT** handle this url: ",p_message->GetCrackedURL().SafeURL().GetString());
+    DETAILLOGV(_T("We do **NOT** handle this url: "),p_message->GetCrackedURL().SafeURL().GetString());
 
     // Do **NOT** send an answer twice
     p_message->SetHasBeenAnswered();
@@ -963,13 +981,13 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   }
   else
   {
-    XString cttype = p_message->GetHeader("Content-type");
+    XString cttype = p_message->GetHeader(_T("Content-type"));
     if(!cttype.IsEmpty())
     {
       contentType = cttype;
     }
   }
-  p_message->DelHeader("Content-Type");
+  p_message->DelHeader(_T("Content-Type"));
 
   // AddKnownHeader(response,HttpHeaderContentType,contentType);
   SetResponseHeader(response,HttpHeaderContentType,contentType,true);
@@ -979,17 +997,17 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   {
     case SendHeader::HTTP_SH_MICROSOFT:   // Do nothing, Microsoft will add the server header
                                           break;
-    case SendHeader::HTTP_SH_MARLIN:      SetResponseHeader(response,HttpHeaderServer,MARLIN_SERVER_VERSION,true);
+    case SendHeader::HTTP_SH_MARLIN:      SetResponseHeader(response,HttpHeaderServer,_T(MARLIN_SERVER_VERSION),true);
                                           break;
     case SendHeader::HTTP_SH_APPLICATION: SetResponseHeader(response,HttpHeaderServer,m_name,true);
                                           break;
     case SendHeader::HTTP_SH_WEBCONFIG:   SetResponseHeader(response,HttpHeaderServer,m_configServerName,true);
                                           break;
     case SendHeader::HTTP_SH_HIDESERVER:  // Fill header with empty string will suppress it
-                                          SetResponseHeader(response,HttpHeaderServer,"",true);
+                                          SetResponseHeader(response,HttpHeaderServer,_T(""),true);
                                           break;
   }
-  p_message->DelHeader("Server");
+  p_message->DelHeader(_T("Server"));
 
   // Cookie settings
   bool cookiesHasSecure(false);
@@ -1036,7 +1054,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   Cookies& cookies = p_message->GetCookies();
   if(cookies.GetCookies().empty())
   {
-    XString cookie = p_message->GetHeader("Set-Cookie");
+    XString cookie = p_message->GetHeader(_T("Set-Cookie"));
     if(!cookie.IsEmpty())
     {
       SetResponseHeader(response,HttpHeaderSetCookie,cookie,false);
@@ -1061,19 +1079,19 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
         cookie.SetExpires(&current);
       }
 
-      ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
+      ukheaders.push_back(UKHeader(_T("Set-Cookie"),cookie.GetSetCookieText()));
     }
   }
-  p_message->DelHeader("Set-Cookie");
+  p_message->DelHeader(_T("Set-Cookie"));
 
 
   // Add extra headers from the message, except for content-length
-  p_message->DelHeader("Content-Length");
+  p_message->DelHeader(_T("Content-Length"));
 
   HeaderMap* map = p_message->GetHeaderMap();
   for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
   {
-    ukheaders.insert(std::make_pair(it->first,it->second));
+    ukheaders.push_back(UKHeader(it->first,it->second));
   }
 
   // Add other optional security headers like CORS etc.
@@ -1086,12 +1104,12 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   if(p_message->GetHTTPSite()->GetHTTPCompression() && buffer)
   {
     // But only if the client side requested it
-    if(p_message->GetAcceptEncoding().Find("gzip") >= 0)
+    if(p_message->GetAcceptEncoding().Find(_T("gzip")) >= 0)
     {
       if(buffer->ZipBuffer())
       {
-        DETAILLOGV("GZIP the buffer to size: %lu",buffer->GetLength());
-        ukheaders.insert(std::make_pair("Content-Encoding","gzip"));
+        DETAILLOGV(_T("GZIP the buffer to size: %lu"),buffer->GetLength());
+        ukheaders.push_back(UKHeader(_T("Content-Encoding"),_T("gzip")));
       }
     }
   }
@@ -1104,15 +1122,15 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   if(p_message->GetChunkNumber())
   {
     moredata = true;
-    SetResponseHeader(response,HttpHeaderTransferEncoding,"chunked",true);
+    SetResponseHeader(response,HttpHeaderTransferEncoding,_T("chunked"),true);
   }
   else
   {
     XString contentLength;
 #ifdef _WIN64
-    contentLength.Format("%I64u", totalLength);
+    contentLength.Format(_T("%I64u"), totalLength);
 #else
-    contentLength.Format("%lu", totalLength);
+    contentLength.Format(_T("%lu"), totalLength);
 #endif
     SetResponseHeader(response,HttpHeaderContentLength,contentLength,true);
   }
@@ -1135,18 +1153,17 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   {
     DWORD sent = 0;
     response->Flush(FALSE,moredata,&sent);
-  }
 
-  if(::GetLastError())
-  {
-    // Error handler
-    XString message = GetLastErrorAsString();
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,true,"HTTP Answer [%d:%s]",::GetLastError(),message.GetString());
-    SetLastError(NO_ERROR);
+    if(::GetLastError())
+    {
+      // Error handler
+      XString message = GetLastErrorAsString();
+      m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,true,_T("HTTP OS error [%d:%s]"),::GetLastError(),message.GetString());
+      SetLastError(NO_ERROR);
+    }
   }
-
   // Possibly log and trace what we just sent
-  LogTraceResponse(response->GetRawHttpResponse(),buffer);
+  LogTraceResponse(response->GetRawHttpResponse(),buffer,p_message->GetSendUnicode());
 
   if(!p_message->GetChunkNumber())
   {
@@ -1155,7 +1172,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   }
 }
 
-// Subfunctions for SendResponse
+// Sub-functions for SendResponse
 bool
 HTTPServerIIS::SendResponseBuffer(IHttpResponse*  p_response
                                  ,FileBuffer*     p_buffer
@@ -1186,12 +1203,12 @@ HTTPServerIIS::SendResponseBuffer(IHttpResponse*  p_response
     HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,p_more,&sent,&completion);
     if(SUCCEEDED(hr))
     {
-      DETAILLOGV("ResponseBuffer [%ul] bytes sent",entityLength);
+      DETAILLOGV(_T("ResponseBuffer [%u] bytes sent"),entityLength);
     }
     else
     {
       result = HRESULT_FROM_WIN32(hr);
-      ERRORLOG(result,"ResponseBuffer");
+      ERRORLOG(result,_T("ResponseBuffer"));
     }
   }
   return (result == NO_ERROR);
@@ -1232,12 +1249,12 @@ HTTPServerIIS::SendResponseBufferParts(IHttpResponse* p_response
 
     if(SUCCEEDED(hr))
     {
-      DETAILLOGV("HTTP ResponseBufferPart [%d] bytes sent",bytesSent);
+      DETAILLOGV(_T("HTTP ResponseBufferPart [%d] bytes sent"),bytesSent);
     }
     else
     {
       DWORD result = HRESULT_FROM_WIN32(hr);
-      ERRORLOG(result,"HTTP ResponseBufferPart error");
+      ERRORLOG(result,_T("HTTP ResponseBufferPart error"));
       break;
     }
     // Next buffer part
@@ -1256,14 +1273,14 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
   // Check input
   if(!p_response || !p_buffer)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"FATAL Error sending FILE handle!");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("FATAL Error sending FILE handle!"));
     return;
   }
 
   // File to transmit
   if(p_buffer->OpenFile() == false)
   {
-    ERRORLOG(::GetLastError(),"OpenFile for SendHttpResponse");
+    ERRORLOG(::GetLastError(),_T("OpenFile for SendHttpResponse"));
     return;
   }
   // Get the file handle from buffer
@@ -1275,9 +1292,9 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
   if(high)
   {
     // 413: Request entity too large
-    SendResponseError(p_response,m_clientErrorPage,413,"Request entity too large");
+    SendResponseError(p_response,m_clientErrorPage,413,_T("Request entity too large"));
     // Error state
-    ERRORLOG(ERROR_INVALID_PARAMETER,"File to send is too big (>4G)");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("File to send is too big (>4G)"));
     // Close the file handle
     p_buffer->CloseFile();
     return;
@@ -1296,12 +1313,12 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
   HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,p_more,&sent,&completion);
   if(SUCCEEDED(hr))
   {
-    DETAILLOGV("SendResponseEntityBody for file. Bytes: %ul",fileSize);
+    DETAILLOGV(_T("SendResponseEntityBody for file. Bytes: %ul"),fileSize);
   }
   else
   {
     DWORD result = HRESULT_FROM_WIN32(hr);
-    ERRORLOG(result,"SendResponseEntityBody for file");
+    ERRORLOG(result,_T("SendResponseEntityBody for file"));
   }
   // Now close our file handle
   p_buffer->CloseFile();
@@ -1311,7 +1328,7 @@ void
 HTTPServerIIS::SendResponseError(IHttpResponse* p_response
                                 ,XString&       p_page
                                 ,int            p_error
-                                ,const char*    p_reason)
+                                ,LPCTSTR        p_reason)
 {
   XString sending;
   HTTP_DATA_CHUNK dataChunk;
@@ -1322,7 +1339,7 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
 
   // Add an entity chunk.
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer      = reinterpret_cast<void*>(const_cast<char*>(sending.GetString()));
+  dataChunk.FromMemory.pBuffer      = reinterpret_cast<void*>(const_cast<TCHAR*>(sending.GetString()));
   dataChunk.FromMemory.BufferLength = sending.GetLength();
 
   DWORD sent = 0L;
@@ -1332,18 +1349,18 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
   HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,false,&sent,&completion);
   if(SUCCEEDED(hr))
   {
-    DETAILLOGV("SendResponseError. Bytes sent: %d",sent);
+    DETAILLOGV(_T("SendResponseError. Bytes sent: %d"),sent);
     if(completion == false)
     {
-      ERRORLOG(ERROR_INVALID_FUNCTION,"ResponseFileHandle: But IIS does not expect to deliver the contents!!");
+      ERRORLOG(ERROR_INVALID_FUNCTION,_T("ResponseFileHandle: But IIS does not expect to deliver the contents!!"));
     }
     // Possibly log and trace what we just sent
-    LogTraceResponse(p_response->GetRawHttpResponse(),reinterpret_cast<uchar*>(const_cast<char*>(sending.GetString())),sending.GetLength());
+    LogTraceResponse(p_response->GetRawHttpResponse(),reinterpret_cast<uchar*>(const_cast<TCHAR*>(sending.GetString())),sending.GetLength(),false);
   }
   else
   {
     DWORD result = HRESULT_FROM_WIN32(hr);
-    ERRORLOG(result,"SendResponseEntityBody for file");
+    ERRORLOG(result,_T("SendResponseEntityBody for file"));
   }
 }
 
@@ -1351,7 +1368,7 @@ HTTPServerIIS::SendResponseError(IHttpResponse* p_response
 bool 
 HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
                                       ,CRITICAL_SECTION*  p_lock
-                                      ,const char*        p_buffer
+                                      ,BYTE**             p_buffer
                                       ,size_t             p_length
                                       ,bool               p_continue /*= true*/)
 {
@@ -1377,26 +1394,26 @@ HTTPServerIIS::SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
 
   // Only if a buffer present
   dataChunk.DataChunkType           = HttpDataChunkFromMemory;
-  dataChunk.FromMemory.pBuffer      = reinterpret_cast<void*>(const_cast<char*>(p_buffer));
+  dataChunk.FromMemory.pBuffer      = (void*)*p_buffer;
   dataChunk.FromMemory.BufferLength = (ULONG)p_length;
 
   HRESULT hr = response->WriteEntityChunks(&dataChunk,1,FALSE,p_continue,&bytesSent);
   if(hr != S_OK)
   {
-    ERRORLOG(HRESULT_FROM_WIN32(hr),"WriteEntityChunks failed for SendEvent");
+    ERRORLOG(HRESULT_FROM_WIN32(hr),_T("WriteEntityChunks failed for SendEvent"));
   }
   else
   {
-    DETAILLOGV("WriteEntityChunks for event stream sent [%d] bytes",p_length);
+    DETAILLOGV(_T("WriteEntityChunks for event stream sent [%d] bytes"),p_length);
     hr = response->Flush(false,p_continue,&bytesSent);
     if(hr != S_OK && p_continue)
     {
-      ERRORLOG(HRESULT_FROM_WIN32(hr),"Flushing event stream failed!");
+      ERRORLOG(HRESULT_FROM_WIN32(hr),_T("Flushing event stream failed!"));
     }
     else
     {
       // Possibly log and trace what we just sent
-      LogTraceResponse(nullptr,reinterpret_cast<uchar*>(const_cast<char*>(p_buffer)),static_cast<unsigned>(p_length));
+      LogTraceResponse(nullptr,*p_buffer,(unsigned)p_length,false);
     }
   }
   // Final closing of the connection
@@ -1428,12 +1445,12 @@ HTTPServerIIS::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_doReset /*=f
     // Now ready with the IIS context. Original request is finished
     context->IndicateCompletion(RQ_NOTIFICATION_FINISH_REQUEST);
 
-    DETAILLOG1("Event/Socket connection closed");
+    DETAILLOG1(_T("Event/Socket connection closed"));
   }
   catch(StdException& er)
   {
     ReThrowSafeException(er);
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Cannot close Event/WebSocket stream! " + er.GetErrorMessage());
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("Cannot close Event/WebSocket stream! ") + er.GetErrorMessage());
   }
 }
 

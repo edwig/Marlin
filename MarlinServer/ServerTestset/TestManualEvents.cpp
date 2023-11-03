@@ -49,15 +49,15 @@ public:
 void
 SiteHandlerManualStream::HandleStream(EventStream* p_stream)
 {
-  qprintf("STREAM OPENED FOR:");
-  qprintf("Stream URL   : %s",p_stream->m_baseURL.GetString());
-  qprintf("URL port     : %d",p_stream->m_port);
-  qprintf("Absolute Path: %s",p_stream->m_absPath.GetString());
-  qprintf("Site found   : %s",p_stream->m_site ? "yes" : "no");
-  qprintf("Response     : %X",p_stream->m_response);
-  qprintf("Request ID   : %X",p_stream->m_requestID);
-  qprintf("Last event ID: %d",p_stream->m_lastID);
-  qprintf("User         : %s",p_stream->m_user.GetString());
+  qprintf(_T("STREAM OPENED FOR:"));
+  qprintf(_T("Stream URL   : %s"),p_stream->m_baseURL.GetString());
+  qprintf(_T("URL port     : %d"),p_stream->m_port);
+  qprintf(_T("Absolute Path: %s"),p_stream->m_absPath.GetString());
+  qprintf(_T("Site found   : %s"),p_stream->m_site ? _T("yes") : _T("no"));
+  qprintf(_T("Response     : %X"),p_stream->m_response);
+  qprintf(_T("Request ID   : %X"),p_stream->m_requestID);
+  qprintf(_T("Last event ID: %d"),p_stream->m_lastID);
+  qprintf(_T("User         : %s"),p_stream->m_user.GetString());
 }
 
 // Manually test event streams from a web page
@@ -66,22 +66,22 @@ TestStreams(HTTPServer* p_server)
 {
   int error = 0;
 
-  xprintf("TESTING SSE (Server-Sent-Events) CHANNEL FUNCTIONS FROM A WEB PAGE\n");
-  xprintf("==================================================================\n");
-  CString url("/MarlinTest/Streams/");
+  xprintf(_T("TESTING SSE (Server-Sent-Events) CHANNEL FUNCTIONS FROM A WEB PAGE\n"));
+  xprintf(_T("==================================================================\n"));
+  CString url(_T("/MarlinTest/Streams/"));
   // Create URL site to listen to events "http://+:port/MarlinTest/Streams/"
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
   if(site)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("Site for manual streams    : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("Site for manual streams    : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("Cannot create a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("Cannot create a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -89,19 +89,19 @@ TestStreams(HTTPServer* p_server)
 
   // HERE IS THE MAGIC. MAKE IT INTO AN EVENT STREAM HANDLER!!!
   // Modify standard settings for this site
-  site->AddContentType("txt","text/event-stream");
+  site->AddContentType(_T("txt"),_T("text/event-stream"));
   site->SetIsEventStream(true);
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly\n");
+    xprintf(_T("Site started correctly\n"));
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -123,21 +123,21 @@ private:
 int
 FormsHandler::HandleData(HTTPMessage* p_message,MultiPart* p_part)
 {
-  SITE_DETAILLOGS("Handling form-data data-part: ",p_part->GetName());
+  SITE_DETAILLOGS(_T("Handling form-data data-part: "),p_part->GetName());
 
   int errors = 0;
   CString data = p_part->GetData();
   CString name = p_part->GetName();
-  xprintf("MANUAL FORMS DATA = Name : %s\n",name.GetString());
-  xprintf("MANUAL FORMS Content-type: %s\n",p_part->GetContentType().GetString());
-  xprintf("MANUAL FORMS \n%s\n",data.GetString());
+  xprintf(_T("MANUAL FORMS DATA = Name : %s\n"),name.GetString());
+  xprintf(_T("MANUAL FORMS Content-type: %s\n"),p_part->GetContentType().GetString());
+  xprintf(_T("MANUAL FORMS \n%s\n"),data.GetString());
 
   JSONMessage json(data);
   JSONvalue val = json.GetValue();
 
-  CString site("/MarlinTest/Streams/42");
+  CString site(_T("/MarlinTest/Streams/42"));
   ServerEvent event;
-  event.m_data = "server message for programmer 42";
+  event.m_data = _T("server message for programmer 42");
   event.m_id   = ++m_id;
   
   // Try to sent the event
@@ -158,10 +158,10 @@ int TestForms(HTTPServer* p_server)
   // If errors, change detail level
   // doDetails = false;
 
-  CString url("/MarlinTest/Forms/");
+  CString url(_T("/MarlinTest/Forms/"));
 
-  xprintf("TESTING FORM-DATA FOR STREAMS MANUALLY\n");
-  xprintf("======================================\n");
+  xprintf(_T("TESTING FORM-DATA FOR STREAMS MANUALLY\n"));
+  xprintf(_T("======================================\n"));
 
   // Create HTTP site to listen to "http://+:port/MarlinTest/Forms/"
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
@@ -169,13 +169,13 @@ int TestForms(HTTPServer* p_server)
   {
     // SUMMARY OF THE TEST
     //  --- "--------------------------- - ------\n"
-    qprintf("HTTPSite Form-data forms    : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite Form-data forms    : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -183,18 +183,18 @@ int TestForms(HTTPServer* p_server)
   site->SetHandler(HTTPCommand::http_post,new FormsHandler());
 
   // Modify the standard settings for this site
-  site->AddContentType("","multipart/form-data;");
+  site->AddContentType(_T(""),_T("multipart/form-data;"));
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }

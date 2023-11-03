@@ -65,7 +65,7 @@ public:
   wstring             GetAuthenticationRealmWide()  { return m_realmWide;               };
 
 private:
-  int                 SegmentedCompare(const char* p_left,const char* p_right);
+  int                 SegmentedCompare(LPCTSTR p_left,LPCTSTR p_right);
   bool                UrlIsRegistered(CString p_prefix);
   bool                GetURLSettings(URL& p_url);
 

@@ -33,7 +33,6 @@
 #include "Base64.h"
 #include "Crypto.h"
 #include "HTTPTime.h"
-#include "ConvertWideString.h"
 #include "MultiPartBuffer.h"
 #include <xutility>
 #include <string>
@@ -44,46 +43,44 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-using std::wstring;
-
 // All headers. Must be in sequence with HTTPCommand
 // See HTTPCommand for sequencing
-const char* headers[] = 
+LPCTSTR headers[] = 
 {
-   "HTTP"             // HTTP Response header
-  ,"POST"             // Posting a resource
-  ,"GET"              // Getting a resource
-  ,"PUT"              // Putting a resource
-  ,"DELETE"           // Deleting a resource
-  ,"HEAD"             // Header for forwarding calls
-  ,"TRACE"            // Tracing the server
-  ,"CONNECT"          // Connect tunneling and forwarding
-  ,"OPTIONS"          // Connection abilities of the server
+   _T("HTTP")             // HTTP Response header
+  ,_T("POST")             // Posting a resource
+  ,_T("GET")              // Getting a resource
+  ,_T("PUT")              // Putting a resource
+  ,_T("DELETE")           // Deleting a resource
+  ,_T("HEAD")             // Header for forwarding calls
+  ,_T("TRACE")            // Tracing the server
+  ,_T("CONNECT")          // Connect tunneling and forwarding
+  ,_T("OPTIONS")          // Connection abilities of the server
 
   // EXTENSION ON THE STANDARD HTTP PROTOCOL
 
-  ,"MOVE"             // Moving a resource
-  ,"COPY"             // Copying a resource
-  ,"PROPFIND"         // Finding a property of a resource
-  ,"PROPPATCH"        // Patching a property of a resource
-  ,"MKCOL"            // Make a resource collection
-  ,"LOCK"             // Locking a resource
-  ,"UNLOCK"           // Unlocking a resource
-  ,"SEARCH"           // Searching for a resource
-  ,"MERGE"            // Merge resources
-  ,"PATCH"            // Patching a resource
-  ,"VERSION-CONTROL"  // VERSION-CONTROL of a resource
-  ,"REPORT"           // REPORT-ing of a resource
-  ,"CHECKOUT"         // CHECKOUT of a resource
-  ,"CHECKIN"          // CHECKIN of a resource
-  ,"UNCHECKOUT"       // UNDO a CHECKOUT of a resource
-  ,"MKWORKSPACE"      // Making a WORKSPACE for resources
-  ,"UDPATE"           // UPDATE of a resource
-  ,"LABEL"            // LABELing of a resource
-  ,"BASELINE-CONTROL" // BASLINES of resources
-  ,"MKACTIVITY"       // ACTIVITY creation for a resource
-  ,"ORDERPATCH"       // PATCHING of orders
-  ,"ACL"              // Account Controll List
+  ,_T("MOVE")             // Moving a resource
+  ,_T("COPY")             // Copying a resource
+  ,_T("PROPFIND")         // Finding a property of a resource
+  ,_T("PROPPATCH")        // Patching a property of a resource
+  ,_T("MKCOL")            // Make a resource collection
+  ,_T("LOCK")             // Locking a resource
+  ,_T("UNLOCK")           // Unlocking a resource
+  ,_T("SEARCH")           // Searching for a resource
+  ,_T("MERGE")            // Merge resources
+  ,_T("PATCH")            // Patching a resource
+  ,_T("VERSION-CONTROL")  // VERSION-CONTROL of a resource
+  ,_T("REPORT")           // REPORT-ing of a resource
+  ,_T("CHECKOUT")         // CHECKOUT of a resource
+  ,_T("CHECKIN")          // CHECKIN of a resource
+  ,_T("UNCHECKOUT")       // UNDO a CHECKOUT of a resource
+  ,_T("MKWORKSPACE")      // Making a WORKSPACE for resources
+  ,_T("UDPATE")           // UPDATE of a resource
+  ,_T("LABEL")            // LABELing of a resource
+  ,_T("BASELINE-CONTROL") // BASLINES of resources
+  ,_T("MKACTIVITY")       // ACTIVITY creation for a resource
+  ,_T("ORDERPATCH")       // PATCHING of orders
+  ,_T("ACL")              // Account Control List
 };
 
 // General XTOR
@@ -144,6 +141,7 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
             ,m_referrer      (p_msg->m_referrer)
             ,m_user          (p_msg->m_user)
             ,m_password      (p_msg->m_password)
+            ,m_sendUnicode   (p_msg->m_sendUnicode)
 {
   // Taking a duplicate token
   if(DuplicateTokenEx(p_msg->m_token
@@ -197,6 +195,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,const SOAPMessage* p_msg)
             ,m_headers       (*p_msg->GetHeaderMap())
             ,m_url           (p_msg->GetURL())
             ,m_cracked       (p_msg->GetCrackedURL())
+            ,m_sendUnicode   (p_msg->GetSendUnicode())
 {
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
@@ -218,52 +217,31 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,const SOAPMessage* p_msg)
   m_routing = p_msg->GetRouting();
 
   // Take care of character encoding
-  StringEncoding encoding = p_msg->GetEncoding();
+  Encoding encoding = p_msg->GetEncoding();
   XString charset = FindCharsetInContentType(m_contentType);
 
-  if(charset.Left(6).CompareNoCase("utf-16") == 0 || p_msg->GetSendUnicode())
+  if(charset.Left(6).CompareNoCase(_T("utf-16")) == 0 || p_msg->GetSendUnicode())
   {
-    encoding = StringEncoding::ENC_UTF16;
+    encoding = Encoding::LE_UTF16;
   }
 
   int acp = -1;
   switch(encoding)
   {
-    case StringEncoding::ENC_Plain:   acp =    -1; break; // Find Active Code Page
-    case StringEncoding::ENC_UTF8:    acp = 65001; break; // See ConvertWideString.cpp
-    case StringEncoding::ENC_UTF16:   acp =  1200; break; // See ConvertWideString.cpp
-    case StringEncoding::ENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
-    default:          break;
+    case Encoding::Default:   acp =    -1; break; // Find Active Code Page
+    case Encoding::UTF8:     acp = 65001; break; // See ConvertWideString.cpp
+    case Encoding::LE_UTF16: acp =  1200; break; // See ConvertWideString.cpp
+//  case Encoding::ISO88591: acp = 28591; break; // See ConvertWideString.cpp
+    default:                              break;
   }
 
   // Reconstruct the content type header
   m_contentType = FindMimeTypeInContentType(m_contentType);
-  m_contentType.AppendFormat("; charset=%s", CodepageToCharset(acp).GetString());
+  m_contentType.AppendFormat(_T("; charset=%s"),charset.GetString());
 
-  // Set body and contentLength
-  if(acp == 1200)
-  {
-    XString  soap = const_cast<SOAPMessage*>(p_msg)->GetSoapMessage();
-    uchar* buffer = nullptr;
-    int    length = 0;
-    if(TryCreateWideString(soap,"",p_msg->GetSendBOM(),&buffer,length))
-    {
-      SetBody(buffer,length + 2);
-      delete [] buffer;
-    }
-    else
-    {
-      // We are now officially in error state
-      // So produce a status 400 (incoming = client error)
-      // or produce a status 500 (outgoing = server error)
-      m_status = (m_command == HTTPCommand::http_response) ? HTTP_STATUS_SERVER_ERROR : HTTP_STATUS_BAD_REQUEST;
-    }
-  }
-  else
-  {
-    // Simply record as our body
-    SetBody(const_cast<SOAPMessage*>(p_msg)->GetSoapMessageWithBOM());
-  }
+  // Set body 
+  ConstructBodyFromString(const_cast<SOAPMessage*>(p_msg)->GetSoapMessage(),charset,p_msg->GetSendBOM());
+
   // Make sure we have a server name for host headers
   CheckServer();
 }
@@ -289,6 +267,7 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
   m_status         = p_msg.GetStatus();
   m_user           = p_msg.GetUser();
   m_password       = p_msg.GetPassword();
+  m_sendUnicode    = p_msg.GetSendUnicode();
   m_headers        =*p_msg.GetHeaderMap();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
@@ -318,37 +297,78 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
 
   // Take care of character encoding
   XString charset = FindCharsetInContentType(m_contentType);
-  StringEncoding encoding = p_msg.GetEncoding();
+  Encoding encoding = p_msg.GetEncoding();
 
-  if(charset.Left(6).CompareNoCase("utf-16") == 0 || p_msg.GetSendUnicode())
+  if(charset.Left(6).CompareNoCase(_T("utf-16")) == 0 || p_msg.GetSendUnicode())
   {
-    encoding = StringEncoding::ENC_UTF16;
+    encoding = Encoding::LE_UTF16;
   }
 
   int acp = -1;
   switch(encoding)
   {
-    case StringEncoding::ENC_Plain:   acp =    -1; break; // Find Active Code Page
-    case StringEncoding::ENC_UTF8:    acp = 65001; break; // See ConvertWideString.cpp
-    case StringEncoding::ENC_UTF16:   acp =  1200; break; // See ConvertWideString.cpp
-    case StringEncoding::ENC_ISO88591:acp = 28591; break; // See ConvertWideString.cpp
-    default:                                       break;
+    case Encoding::Default:    acp =    -1; break; // Find Active Code Page
+    case Encoding::UTF8:      acp = 65001; break; // See ConvertWideString.cpp
+    case Encoding::LE_UTF16:  acp =  1200; break; // See ConvertWideString.cpp
+//  case Encoding::ISO88591:  acp = 28591; break; // See ConvertWideString.cpp
+    default:                               break;
   }
 
   // Reconstruct the content type header
-  m_contentType = FindMimeTypeInContentType(m_contentType);
-  m_contentType.AppendFormat("; charset=%s", CodepageToCharset(acp).GetString());
+  m_contentType   = FindMimeTypeInContentType(m_contentType);
+  m_contentType.AppendFormat(_T("; charset=%s"),charset.GetString());
 
-  // Set body and contentLength
-  if(acp == 1200)
+  // Set body 
+  ConstructBodyFromString(p_msg.GetJsonMessage(Encoding::Default),charset,p_msg.GetSendBOM());
+
+  // Make sure we have a server name for host headers
+  CheckServer();
+
+  return *this;
+}
+
+// PRIVATE: TO BE CALLED FROM THE XTOR!!
+void
+HTTPMessage::ConstructBodyFromString(XString p_string,XString p_charset,bool p_withBom)
+{
+#ifdef UNICODE
+  // Set body 
+  if(p_charset.CompareNoCase(_T("utf-16")) == 0)
   {
-    XString soap = p_msg.GetJsonMessage(StringEncoding::ENC_Plain);
+    // Simply record as our body
+    if(p_withBom)
+    {
+      p_string = ConstructBOMUTF16() + p_string;
+    }
+    SetBody(p_string);
+  }
+  else
+  {
+    uchar* buffer = nullptr;
+    int length = 0;
+    if(TryCreateNarrowString(p_string,p_charset,p_withBom,&buffer,length))
+    {
+      SetBody(buffer,length);
+    }
+    else
+    {
+      // We are now officially in error state
+      // So produce a status 400 (incoming = client error)
+      // or produce a status 500 (outgoing = server error)
+      m_status = (m_command == HTTPCommand::http_response) ? HTTP_STATUS_SERVER_ERROR : HTTP_STATUS_BAD_REQUEST;
+    }
+    delete[] buffer;
+  }
+#else
+  // Set body 
+  if(p_charset.CompareNoCase(_T("utf-16")) == 0)
+  {
     uchar* buffer = nullptr;
     int    length = 0;
-    if(TryCreateWideString(soap,"",p_msg.GetSendBOM(),&buffer,length))
+    if(TryCreateWideString(p_string,_T(""),p_withBom,&buffer,length))
     {
-      SetBody(buffer,length + 2);
-      delete [] buffer;
+      SetBody(buffer,length);
+      delete[] buffer;
     }
     else
     {
@@ -361,12 +381,9 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
   else
   {
     // Simply record as our body
-    SetBody(p_msg.GetJsonMessageWithBOM(encoding));
+    SetBody(p_string);
   }
-  // Make sure we have a server name for host headers
-  CheckServer();
-
-  return *this;
+#endif
 }
 
 // General DTOR
@@ -422,7 +439,7 @@ bool
 HTTPMessage::SetVerb(XString p_verb)
 {
   p_verb.MakeUpper();
-  for(unsigned ind = 0; ind < sizeof(headers) / sizeof(char*); ++ind)
+  for(unsigned ind = 0; ind < sizeof(headers) / sizeof(PTCHAR); ++ind)
   {
     if(p_verb.Compare(headers[ind]) == 0)
     {
@@ -442,36 +459,49 @@ HTTPMessage::GetVerb()
   {
     return headers[static_cast<unsigned>(m_command)];
   }
-  return "";
+  return _T("");
 }
 
 // Getting the whole body as one string of chars
-// No embedded '0' are possible!!
 XString
 HTTPMessage::GetBody()
 {
   XString answer;
-  uchar*  buffer = NULL;
+  BYTE*   buffer = NULL;
   size_t  length = 0;
+  bool  foundBom = false;
 
-  if(m_buffer.GetHasBufferParts())
+  if(m_buffer.GetBufferCopy(buffer,length))
   {
-    int part = 0;
-    while(m_buffer.GetBufferPart(part++,buffer,length))
+    XString contenttype = m_contentType.IsEmpty() ? GetHeader(_T("Content-Type")) : m_contentType;
+    XString charset = FindCharsetInContentType(contenttype);
+
+#ifdef UNICODE
+    if(m_sendUnicode || charset.IsEmpty() || charset.CompareNoCase(_T("utf-16")) == 0)
     {
-      if(buffer)
-      {
-        answer.Append(reinterpret_cast<const char*>(buffer),(int)length);
-      }
+      // Direct buffer copy
+      answer = (LPCTSTR) buffer;
     }
-  }
-  else
-  {
-    m_buffer.GetBuffer(buffer,length);
-    if(buffer)
+    else // Charset is filled
     {
-      answer.Append(reinterpret_cast<const char*>(buffer),(int)length);
+      TryConvertNarrowString(buffer,(int)length,charset,answer,foundBom);
     }
+#else
+    if(m_sendUnicode || charset.CompareNoCase(_T("utf-16")) == 0)
+    {
+      TryConvertWideString(buffer,(int)length,_T("utf-16"),answer,foundBom);
+    }
+    else if(!charset.IsEmpty())
+    {
+      XString buff(buffer);
+      answer = DecodeStringFromTheWire(buff,charset);
+    }
+    else
+    {
+      answer = (LPCTSTR) buffer;
+    }
+#endif
+    delete[] buffer;
   }
   return answer;
 }
@@ -526,20 +556,45 @@ HTTPMessage::SetURL(const XString& p_url)
 }
 
 void
-HTTPMessage::SetBody(XString p_body,XString p_encoding /*=""*/)
+HTTPMessage::SetBody(XString p_body,XString p_charset /*=""*/)
 {
-  if(!p_encoding.IsEmpty())
+#ifdef UNICODE
+  if(m_sendUnicode || p_charset.CompareNoCase(_T("utf-16")) == 0)
   {
-    p_body = EncodeStringForTheWire(p_body.GetString(),p_encoding);
+    m_buffer.SetBuffer((uchar*) p_body.GetString(),p_body.GetLength() * sizeof(TCHAR));
   }
-  m_buffer.SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(p_body.GetString())),p_body.GetLength());
+  else
+  {
+    BYTE* buffer = nullptr;
+    int length = 0;
+    if(TryCreateNarrowString(p_body,p_charset,false,&buffer,length))
+    {
+      m_buffer.SetBuffer(buffer,length);
+    }
+    delete[] buffer;
+  }
+#else
+  if(m_sendUnicode || p_charset.CompareNoCase(_T("utf-16")) == 0)
+  {
+    BYTE* buffer = nullptr;
+    int   length = 0;
+    TryCreateWideString(p_body,_T(""),false,&buffer,length);
+    m_buffer.SetBuffer(buffer,length);
+    delete[] buffer;
+  }
+  else
+  {
+    p_body = EncodeStringForTheWire(p_body.GetString(),p_charset);
+    m_buffer.SetBuffer((uchar*) p_body.GetString(),p_body.GetLength());
+}
+#endif
 }
 
 void
-HTTPMessage::SetBody(const char* p_body,XString p_encoding /*=""*/)
+HTTPMessage::SetBody(LPCTSTR  p_body,XString p_charset /*=""*/)
 {
   XString body(p_body);
-  SetBody(body,p_encoding);
+  SetBody(body,p_charset);
 }
 
 void 
@@ -562,7 +617,7 @@ HTTPMessage::GetCookieValue(unsigned p_ind /*=0*/,XString p_metadata /*=""*/)
   {
     return cookie->GetValue(p_metadata);
   }
-  return "";
+  return _T("");
 }
 
 XString
@@ -573,7 +628,7 @@ HTTPMessage::GetCookieValue(XString p_name /*=""*/,XString p_metadata /*=""*/)
   {
     return cookie->GetValue(p_metadata);
   }
-  return "";
+  return _T("");
 }
 
 void
@@ -609,7 +664,7 @@ HTTPMessage::GetRoute(int p_index)
   {
     return m_routing[p_index];
   }
-  return "";
+  return _T("");
 }
 
 void 
@@ -726,15 +781,11 @@ HTTPMessage::CheckServer()
 void
 HTTPMessage::SetAuthorization(XString& p_authorization)
 {
-  if(p_authorization.Left(6).CompareNoCase("basic ") == 0)
+  if(p_authorization.Left(6).CompareNoCase(_T("basic ")) == 0)
   {
     p_authorization.Delete(0, 6);
     Base64 base;
-    XString decrypted;
-    decrypted.GetBufferSetLength((int)base.Ascii_length(p_authorization.GetLength()) + 1);
-    base.Decrypt(reinterpret_cast<const unsigned char*>(p_authorization.GetString())
-                ,p_authorization.GetLength()
-                ,reinterpret_cast<unsigned char*>(const_cast<char*>(decrypted.GetString())));
+    XString decrypted = base.Decrypt(p_authorization.GetString());
     int from = decrypted.Find(':');
     if(from > 0)
     {
@@ -749,63 +800,63 @@ HTTPMessage::SetAuthorization(XString& p_authorization)
 // DO NOT CHANGE THE ORDER, because the array/header information will be
 // delivered in this order from the MS-Windows kernel
 //
-const char* header_fields[HttpHeaderMaximum] =
+LPCTSTR header_fields[HttpHeaderMaximum] =
 {
-  /*  0 */   "cache-control"
-  /*  1 */  ,"connection"
-  /*  2 */  ,"date"
-  /*  3 */  ,"keep-alive"
-  /*  4 */  ,"trailer"
-  /*  5 */  ,"pragma"
-  /*  6 */  ,"transfer-encoding"
-  /*  7 */  ,"upgrade"
-  /*  8 */  ,"via" 
-  /*  9 */  ,"warning"
-  /* 10 */  ,"allow"
-  /* 11 */  ,"content-length"
-  /* 12 */  ,"content-type"
-  /* 13 */  ,"content-encoding"
-  /* 14 */  ,"content-language"
-  /* 15 */  ,"content-location"
-  /* 16 */  ,"content-md5"
-  /* 17 */  ,"content-range"
-  /* 18 */  ,"expires"
-  /* 19 */  ,"last-modified"
-  /* 20 */  ,"accept"
-  /* 21 */  ,"accept-charset"
-  /* 22 */  ,"accept-encoding"
-  /* 23 */  ,"accept-language"
-  /* 24 */  ,"authorization"
-  /* 25 */  ,"cookie"
-  /* 26 */  ,"expect"
-  /* 27 */  ,"from"
-  /* 28 */  ,"host"
-  /* 29 */  ,"if-match"
-  /* 30 */  ,"if-modified-since"
-  /* 31 */  ,"if-none-match"
-  /* 32 */  ,"if-range"
-  /* 33 */  ,"if-unmodified-since"
-  /* 34 */  ,"max-forwards"
-  /* 35 */  ,"proxy-authorization"
-  /* 36 */  ,"referer"
-  /* 37 */  ,"range"
-  /* 38 */  ,"te"
-  /* 39 */  ,"translate"
-  /* 40 */  ,"user-agent"
+  /*  0 */   _T("cache-control")
+  /*  1 */  ,_T("connection")
+  /*  2 */  ,_T("date")
+  /*  3 */  ,_T("keep-alive")
+  /*  4 */  ,_T("trailer")
+  /*  5 */  ,_T("pragma")
+  /*  6 */  ,_T("transfer-encoding")
+  /*  7 */  ,_T("upgrade")
+  /*  8 */  ,_T("via")
+  /*  9 */  ,_T("warning")
+  /* 10 */  ,_T("allow")
+  /* 11 */  ,_T("content-length")
+  /* 12 */  ,_T("content-type")
+  /* 13 */  ,_T("content-encoding")
+  /* 14 */  ,_T("content-language")
+  /* 15 */  ,_T("content-location")
+  /* 16 */  ,_T("content-md5")
+  /* 17 */  ,_T("content-range")
+  /* 18 */  ,_T("expires")
+  /* 19 */  ,_T("last-modified")
+  /* 20 */  ,_T("accept")
+  /* 21 */  ,_T("accept-charset")
+  /* 22 */  ,_T("accept-encoding")
+  /* 23 */  ,_T("accept-language")
+  /* 24 */  ,_T("authorization")
+  /* 25 */  ,_T("cookie")
+  /* 26 */  ,_T("expect")
+  /* 27 */  ,_T("from")
+  /* 28 */  ,_T("host")
+  /* 29 */  ,_T("if-match")
+  /* 30 */  ,_T("if-modified-since")
+  /* 31 */  ,_T("if-none-match")
+  /* 32 */  ,_T("if-range")
+  /* 33 */  ,_T("if-unmodified-since")
+  /* 34 */  ,_T("max-forwards")
+  /* 35 */  ,_T("proxy-authorization")
+  /* 36 */  ,_T("referer")
+  /* 37 */  ,_T("range")
+  /* 38 */  ,_T("te")
+  /* 39 */  ,_T("translate")
+  /* 40 */  ,_T("user-agent")
 };
 
-const char* header_response[10]
+LPCTSTR header_response[10]
 {
-  /* 20 */   "accept-ranges"
-  /* 21 */  ,"age"
-  /* 22 */  ,"etag"
-  /* 23 */  ,"location"
-  /* 24 */  ,"proxy-authenticate"
-  /* 25 */  ,"retry-after"
-  /* 26 */  ,"server"
-  /* 27 */  ,"set-cookie"
-  /* 28 */  ,"vary"
-  /* 29 */  ,"www-authenticate"
+  /* 20 */   _T("accept-ranges")
+  /* 21 */  ,_T("age")
+  /* 22 */  ,_T("etag")
+  /* 23 */  ,_T("location")
+  /* 24 */  ,_T("proxy-authenticate")
+  /* 25 */  ,_T("retry-after")
+  /* 26 */  ,_T("server")
+  /* 27 */  ,_T("set-cookie")
+  /* 28 */  ,_T("vary")
+  /* 29 */  ,_T("www-authenticate")
 };
 
 void 
@@ -873,7 +924,7 @@ HTTPMessage::AddHeader(XString p_name,XString p_value)
     {
       return;
     }
-    if(p_name.CompareNoCase("Set-Cookie") == 0)
+    if(p_name.CompareNoCase(_T("Set-Cookie")) == 0)
     {
       // Insert as a new header
       m_headers.insert(std::make_pair(p_name,p_value));
@@ -898,7 +949,7 @@ HTTPMessage::GetHeader(XString p_name)
   {
     return it->second;
   }
-  return "";
+  return _T("");
 }
 
 // Delete a header by name (case (in)sensitive)
@@ -955,9 +1006,9 @@ bool
 HTTPMessage::FindVerbTunneling()
 {
   HTTPCommand oldCommand = m_command;
-  XString method1 = GetHeader("X-HTTP-Method");           // The 'Microsoft/IIS' way
-  XString method2 = GetHeader("X-HTTP-Method-Override");  // The 'Google/GData' way
-  XString method3 = GetHeader("X-METHOD-OVERRIDE");       // The 'IBM/Domino' way
+  XString method1 = GetHeader(_T("X-HTTP-Method"));           // The 'Microsoft/IIS' way
+  XString method2 = GetHeader(_T("X-HTTP-Method-Override"));  // The 'Google/GData' way
+  XString method3 = GetHeader(_T("X-METHOD-OVERRIDE"));       // The 'IBM/Domino' way
   if(method1.IsEmpty() && method2.IsEmpty() && method3.IsEmpty())
   {
     return false;
@@ -991,7 +1042,7 @@ HTTPMessage::UseVerbTunneling()
     {
       // Change of identity!
       XString method = headers[static_cast<unsigned>(m_command)];
-      AddHeader("X-HTTP-Method-Override",method);
+      AddHeader(_T("X-HTTP-Method-Override"),method);
       m_command = HTTPCommand::http_post;
       return true;
     }
@@ -1011,7 +1062,7 @@ HTTPMessage::SetMultiPartFormData(MultiPartBuffer* p_buffer)
 
   // Create accept header
   XString accept = p_buffer->CalculateAcceptHeader();
-  AddHeader("Accept",accept);
+  AddHeader(_T("Accept"),accept);
 
   // Get type of FormData buffer
   FormDataType type = p_buffer->GetFormDataType();
@@ -1072,7 +1123,7 @@ HTTPMessage::SetMultiPartURLPost(MultiPartBuffer* p_buffer)
   // Set parameters together as the body
   XString parameters = url.AbsolutePath();
   parameters.TrimLeft('?');
-  SetBody(parameters);
+  SetBody(parameters,_T("utf-8"));
 
   return true;
 }
@@ -1089,7 +1140,7 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
     boundary = p_buffer->CalculateBoundary();
   } 
   XString contentType(p_buffer->GetContentType());
-  contentType += "; boundary=";
+  contentType += _T("; boundary=");
   contentType += boundary;
   SetContentType(contentType);
 
@@ -1098,12 +1149,11 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
   do
   {
     XString header = part->CreateHeader(boundary,p_buffer->GetFileExtensions());
-    m_buffer.AddBuffer(reinterpret_cast<uchar*>(const_cast<char*>(header.GetString())),(size_t)header.GetLength());
+    m_buffer.AddStringToBuffer(header,_T("utf-8"),false);
     if(part->GetShortFileName().IsEmpty())
     {
       // Add data
-      m_buffer.AddBufferCRLF(reinterpret_cast<uchar*>(const_cast<char*>(part->GetData().GetString()))
-                            ,(size_t)part->GetData().GetLength());
+      m_buffer.AddStringToBuffer(part->GetData(),part->GetCharset(),true);
     }
     else
     {
@@ -1114,7 +1164,7 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
       partBuffer->GetBuffer(buf,size);
       if(buf && size)
       {
-        m_buffer.AddBufferCRLF(buf, size);
+        m_buffer.AddBufferCRLF(buf,size);
       }
     }
     // At least one part added
@@ -1126,13 +1176,11 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
 
   // The ending boundary after the last part
   // Beware. Does NOT end with CR-LF but two hyphens!
-  XString lastBoundary = "--" + boundary + "--";
-  m_buffer.AddBuffer(reinterpret_cast<uchar*>(const_cast<char*>(lastBoundary.GetString()))
-                    ,(size_t)lastBoundary.GetLength());
+  XString lastBoundary = _T("--") + boundary + _T("--");
+  m_buffer.AddStringToBuffer(lastBoundary,_T("utf-8"),false);
 
   return result;
 }
-
 
 // HTTPMessages can be stored elsewhere. Use the reference mechanism to add/drop references
 // With the drop of the last reference, the object WILL destroy itself
@@ -1151,4 +1199,3 @@ HTTPMessage::DropReference()
     delete this;
   }
 }
-

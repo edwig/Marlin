@@ -10,8 +10,9 @@
 #include "SecureServerSocket.h"
 #include "SSLUtilities.h"
 #include "SSLTracer.h"
-#include "Logging.h"
 #include "PlainSocket.h"
+#include "Logging.h"
+#include <LogAnalysis.h>
 #include <schannel.h>
 
 #ifdef _DEBUG
@@ -100,14 +101,14 @@ SecureServerSocket::InitializeSSL(const void* p_buffer, const int p_length)
   // Perform SSL handshake
 	if(!SSPINegotiateLoop())
 	{
-		LogError("Couldn't negotiate SSL/TLS");
+		LogError(_T("Couldn't negotiate SSL/TLS"));
     if(IsUserAdmin())
     {
-      LogError("SSL handshake failed");
+      LogError(_T("SSL handshake failed"));
     }
     else
     {
-      LogError("SSL handshake failed, perhaps because you are not running as administrator.");
+      LogError(_T("SSL handshake failed, perhaps because you are not running as administrator."));
     }
     m_secureMode = false;
     int le = GetLastError();
@@ -121,7 +122,7 @@ SecureServerSocket::InitializeSSL(const void* p_buffer, const int p_length)
 	if(scRet != SEC_E_OK)
 	{
     m_secureMode = false;
-		LogError("Couldn't get crypt container sizes");
+		LogError(_T("Couldn't get crypt container sizes"));
 		return LogSSLInitError(E_FAIL);
 	}
 
@@ -158,17 +159,17 @@ SecureServerSocket::LogSSLInitError(HRESULT hr)
 		int err = GetLastError();
     switch(hr)
     {
-      case CRYPT_E_NOT_FOUND:         LogError("A usable SSL certificate could not be found");
+      case CRYPT_E_NOT_FOUND:         LogError(_T("A usable SSL certificate could not be found"));
                                       break;
-      case SEC_E_CERT_UNKNOWN:        LogError("The returned client certificate was unacceptable");
+      case SEC_E_CERT_UNKNOWN:        LogError(_T("The returned client certificate was unacceptable"));
                                       break;
-      case SEC_E_INVALID_TOKEN:       LogError("SSL token invalid, perhaps the client rejected our certificate");
+      case SEC_E_INVALID_TOKEN:       LogError(_T("SSL token invalid, perhaps the client rejected our certificate"));
                                       break;
-      case SEC_E_UNKNOWN_CREDENTIALS: LogError("Credentials unknown, is this program running with administrative privileges?");
+      case SEC_E_UNKNOWN_CREDENTIALS: LogError(_T("Credentials unknown, is this program running with administrative privileges?"));
                                       break;
-      case E_ACCESSDENIED:            LogError("Could not access certificate store, is this program running with administrative privileges?");
+      case E_ACCESSDENIED:            LogError(_T("Could not access certificate store, is this program running with administrative privileges?"));
                                       break;
-	    default:                        LogError("SSL could not be used, hr=0x%lx, lasterror=0x%lx", hr, err);
+	    default:                        LogError(_T("SSL could not be used, hr=0x%lx, lasterror=0x%lx"), hr, err);
                                       break;
 		}
 	}
@@ -234,8 +235,8 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 	else
 	{	
     // There is already data in the buffer, so process it first
-		DebugMsg(" ");
-		DebugMsg("Using the saved %d bytes from client", m_readBufferBytes);
+		DebugMsg(_T(" "));
+		DebugMsg(_T("Using the saved %d bytes from client"), m_readBufferBytes);
 		PrintHexDump(m_readBufferBytes, m_readPointer);
 		Buffers[0].pvBuffer = m_readPointer;
 		Buffers[0].cbBuffer = m_readBufferBytes;
@@ -245,27 +246,27 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 
 	while (scRet == SEC_E_INCOMPLETE_MESSAGE)
 	{
-		err = PlainSocket::RecvPartial((CHAR*)m_readPointer + m_readBufferBytes,(int)( sizeof(m_readBuffer) - m_readBufferBytes - ((CHAR*)m_readPointer - &m_readBuffer[0])));
+		err = PlainSocket::RecvPartial((char*)m_readPointer + m_readBufferBytes,(int)( sizeof(m_readBuffer) - m_readBufferBytes - ((char*)m_readPointer - &m_readBuffer[0])));
     m_lastError = 0; // Means use the one from m_SocketStream
 		if ((err == SOCKET_ERROR) || (err == 0))
 		{
       if(WSA_IO_PENDING == GetLastError())
       {
-        LogError("Receive timed out");
+        LogError(_T("Receive timed out"));
       }
       else if(WSAECONNRESET == GetLastError())
       {
-        LogError("Receive failed, the socket was closed by the other side");
+        LogError(_T("Receive failed, the socket was closed by the other side"));
       }
       else
       {
-        LogError("Receive failed: %ld",GetLastError());
+        LogError(_T("Receive failed: %ld"),GetLastError());
       }
 			return SOCKET_ERROR;
 		}
-		DebugMsg(" ");
-		DebugMsg("Received %d (request) bytes from client", err);
-		PrintHexDump(err, (CHAR*)m_readPointer + m_readBufferBytes);
+		DebugMsg(_T(" "));
+		DebugMsg(_T("Received %d (request) bytes from client"), err);
+		PrintHexDump(err, (TCHAR*)m_readPointer + m_readBufferBytes);
 		m_readBufferBytes += err;
 
 		Buffers[0].pvBuffer   = m_readPointer;
@@ -282,11 +283,11 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 
   if(scRet == SEC_E_OK)
   {
-    DebugMsg("Decrypted message from client.");
+    DebugMsg(_T("Decrypted message from client."));
   }
 	else
 	{
-		LogError("Couldn't decrypt, error %lx", scRet);
+		LogError(_T("Couldn't decrypt, error %lx"), scRet);
 		m_lastError = scRet;
 		return SOCKET_ERROR;
 	}
@@ -306,12 +307,12 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 
 	if(!pDataBuffer)
 	{
-		LogError("No data returned");
+		LogError(_T("No data returned"));
 		m_lastError = WSASYSCALLFAILURE;
 		return SOCKET_ERROR;
 	}
-	DebugMsg(" ");
-	DebugMsg("Decrypted message has %d bytes", pDataBuffer->cbBuffer);
+	DebugMsg(_T(" "));
+	DebugMsg(_T("Decrypted message has %d bytes"), pDataBuffer->cbBuffer);
 	PrintHexDump(pDataBuffer->cbBuffer, pDataBuffer->pvBuffer);
 
 	// Move the data to the output stream
@@ -343,15 +344,15 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 	if(pExtraDataBuffer)
 	{	
     // More data was read than is needed, this happens sometimes with TCP
-		DebugMsg(" ");
-		DebugMsg("Some extra cipher text was read (%d bytes)", pExtraDataBuffer->cbBuffer);
+		DebugMsg(_T(" "));
+		DebugMsg(_T("Some extra cipher text was read (%d bytes)"), pExtraDataBuffer->cbBuffer);
 		// Remember where the data is for next time
 		m_readBufferBytes = pExtraDataBuffer->cbBuffer;
 		m_readPointer     = pExtraDataBuffer->pvBuffer;
 	}
 	else
 	{
-		DebugMsg("No extra cipher text was read");
+		DebugMsg(_T("No extra cipher text was read"));
 		m_readBufferBytes = 0;
 		m_readPointer     = m_readBuffer;
 	}
@@ -416,13 +417,13 @@ int SecureServerSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
 
 	scRet = g_pSSPI->EncryptMessage(&m_context, 0, &Message, 0);
 
-	DebugMsg(" ");
-	DebugMsg("Plaintext message has %d bytes", p_length);
+	DebugMsg(_T(" "));
+	DebugMsg(_T("Plaintext message has %d bytes"), p_length);
 	PrintHexDump(p_length, p_buffer);
 
 	if (FAILED(scRet))
 	{
-		LogError("EncryptMessage failed with %#x", scRet );
+		LogError(_T("EncryptMessage failed with %#x"), scRet );
 		m_lastError = scRet;
 		return SOCKET_ERROR;
 	}
@@ -430,11 +431,11 @@ int SecureServerSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
 	err = PlainSocket::SendPartial(m_writeBuffer, Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer);
 	m_lastError = 0;
 
-	DebugMsg("Send %d encrypted bytes to client", Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer);
+	DebugMsg(_T("Send %d encrypted bytes to client"), Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer);
 	PrintHexDump(Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer, m_writeBuffer);
 	if (err == SOCKET_ERROR)
 	{
-		LogError("Send failed: %ld",GetLastError());
+		LogError(_T("Send failed: %ld"),GetLastError());
 		return SOCKET_ERROR;
 	}
 	return p_length;
@@ -463,12 +464,12 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 
    if (m_clientCertAcceptable) // If the caller wants a client certificate, request one
    {
-      DebugMsg("Client-certificate will be required.");
+      DebugMsg(_T("Client-certificate will be required."));
       dwSSPIFlags |= ASC_REQ_MUTUAL_AUTH;
    }
    else
    {
-     DebugMsg("NO Client-certificate will be requested.");
+     DebugMsg(_T("NO Client-certificate will be requested."));
    }
 
 	//
@@ -479,7 +480,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 	OutBuffer.pBuffers = OutBuffers;
 	OutBuffer.ulVersion = SECBUFFER_VERSION;
 
-	DebugMsg("Started SSPINegotiateLoop with %d bytes already received from client.", m_readBufferBytes);
+	DebugMsg(_T("Started SSPINegotiateLoop with %d bytes already received from client."), m_readBufferBytes);
 
 	scRet = SEC_E_INCOMPLETE_MESSAGE;
 
@@ -495,29 +496,29 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 			{
         if(WSA_IO_PENDING == GetLastError())
         {
-          LogError("Recv timed out");
+          LogError(_T("Recv timed out"));
         }
         else if(WSAECONNRESET == GetLastError())
         {
-          LogError("Recv failed, the socket was closed by the other host");
+          LogError(_T("Recv failed, the socket was closed by the other host"));
         }
         else
         {
-          LogError("Recv failed: %d",GetLastError());
+          LogError(_T("Recv failed: %d"),GetLastError());
         }
 				return false;
 			}
 			else
 			{
 				m_readBufferBytes += err;
-				DebugMsg(" ");
+				DebugMsg(_T(" "));
         if(err == m_readBufferBytes)
         {
-          DebugMsg("Received %d handshake bytes from client",err);
+          DebugMsg(_T("Received %d handshake bytes from client"),err);
         }
         else
         {
-          DebugMsg("Received %d handshake bytes from client, total is now %d ",err,m_readBufferBytes);
+          DebugMsg(_T("Received %d handshake bytes from client, total is now %d "),err,m_readBufferBytes);
         }
         SSLTracer tracer((const byte*)m_readBuffer, m_readBufferBytes);
         tracer.TraceHandshake();
@@ -551,7 +552,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 
             if(FAILED(status) || pCertContext == nullptr)
             {
-              LogError("SelectServerCert returned an error = 0x%08x", status);
+              LogError(_T("SelectServerCert returned an error = 0x%08x"), status);
               scRet = SEC_E_INTERNAL_ERROR;
               break;
             }
@@ -563,7 +564,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
             }
             if (FAILED(status))
             {
-              LogError("Failed handling server initialization, error = 0x%08x", status);
+              LogError(_T("Failed handling server initialization, error = 0x%08x"), status);
               scRet = SEC_E_INTERNAL_ERROR;
               break;
             }
@@ -628,14 +629,14 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
         m_lastError = 0;
 				if (err == SOCKET_ERROR || err == 0)
 				{
-					LogError("Send handshake to client failed: %d",GetLastError() );
+					LogError(_T("Send handshake to client failed: %d"),GetLastError() );
 					g_pSSPI->FreeContextBuffer(OutBuffers[0].pvBuffer);
 					return false;
 				}
 				else
 				{
-					DebugMsg(" ");
-					DebugMsg("Send %d handshake bytes to client", OutBuffers[0].cbBuffer);
+					DebugMsg(_T(" "));
+					DebugMsg(_T("Send %d handshake bytes to client"), OutBuffers[0].cbBuffer);
 					PrintHexDump(OutBuffers[0].cbBuffer, OutBuffers[0].pvBuffer);
 				}
 				g_pSSPI->FreeContextBuffer(OutBuffers[0].pvBuffer);
@@ -658,14 +659,14 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 
         if(FAILED(hr))
         {
-          LogError("Couldn't get client certificate, hr=%#x",hr);
+          LogError(_T("Couldn't get client certificate, hr=%#x"),hr);
         }
         else
         {
-          DebugMsg("Client Certificate returned");
+          DebugMsg(_T("Client Certificate returned"));
           if(g_session->GetSocketLogging() >= SOCK_LOGGING_TRACE && pCertContext)
           {
-            ShowCertInfo(pCertContext,"Server Received Client Certificate");
+            ShowCertInfo(pCertContext,_T("Server Received Client Certificate"));
           }
           // All looking good, now see if there's a client certificate, and if it is valid
           bool acceptable = m_clientCertAcceptable(pCertContext, S_OK == CertTrusted(pCertContext));
@@ -677,11 +678,11 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
           CertFreeCertificateContext(pCertContext);
           if(acceptable)
           {
-            DebugMsg("Client certificate was acceptable");
+            DebugMsg(_T("Client certificate was acceptable"));
           }
           else
           {
-            LogError("Client certificate was unacceptable");
+            LogError(_T("Client certificate was unacceptable"));
             return false;
           }
         }
@@ -692,13 +693,13 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 			{
 				m_readPointer = m_readBuffer + (m_readBufferBytes - InBuffers[1].cbBuffer);
 				m_readBufferBytes = InBuffers[1].cbBuffer;
-				DebugMsg("Handshake worked, but received %d extra bytes", m_readBufferBytes);
+				DebugMsg(_T("Handshake worked, but received %d extra bytes"), m_readBufferBytes);
 			}
 			else
 			{
 				m_readBufferBytes = 0;
 				m_readPointer = m_readBuffer;
-				DebugMsg("Handshake worked, no extra bytes received");
+				DebugMsg(_T("Handshake worked, no extra bytes received"));
 			}
 			m_lastError = 0;
       // The normal exit
@@ -706,21 +707,21 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 		}
 		else if (scRet == SEC_E_INCOMPLETE_MESSAGE)
 		{
-			DebugMsg("AcceptSecurityContext got a partial message and is requesting more be read");
+			DebugMsg(_T("AcceptSecurityContext got a partial message and is requesting more be read"));
 		}
 		else if (scRet == SEC_E_INCOMPLETE_CREDENTIALS)
 		{
-			DebugMsg("AcceptSecurityContext got SEC_E_INCOMPLETE_CREDENTIALS, it shouldn't but we'll treat it like a partial message");
+			DebugMsg(_T("AcceptSecurityContext got SEC_E_INCOMPLETE_CREDENTIALS, it shouldn't but we'll treat it like a partial message"));
 		}
 		else if (FAILED(scRet))
 		{
       if(scRet == SEC_E_INVALID_TOKEN)
       {
-        LogError("AcceptSecurityContext detected an invalid token, maybe the client rejected our certificate");
+        LogError(_T("AcceptSecurityContext detected an invalid token, maybe the client rejected our certificate"));
       }
       else
       {
-        LogError("AcceptSecurityContext Failed with error code %lx",scRet);
+        LogError(_T("AcceptSecurityContext Failed with error code %lx"),scRet);
       }
 			m_lastError = scRet;
 			return false;
@@ -732,7 +733,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 			{
 				m_readPointer = m_readBuffer + (m_readBufferBytes - InBuffers[1].cbBuffer);
 				m_readBufferBytes = InBuffers[1].cbBuffer;
-				DebugMsg("Handshake working so far but received %d extra bytes we can't handle", m_readBufferBytes);
+				DebugMsg(_T("Handshake working so far but received %d extra bytes we can't handle"), m_readBufferBytes);
 				m_lastError = WSASYSCALLFAILURE;
 				return false;
 			}
@@ -740,13 +741,13 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
 			{
 				m_readPointer = m_readBuffer;
 				m_readBufferBytes = 0; // prepare for next receive
-				DebugMsg("Handshake working so far, more packets required");
+				DebugMsg(_T("Handshake working so far, more packets required"));
 			}
 		}
 	} // while loop
 
 	// Something is wrong, we exited the loop abnormally
-	LogError("Unexpected security return value: %lx", scRet);
+	LogError(_T("Unexpected security return value: %lx"), scRet);
 	m_lastError = scRet;
 	return false;
 }
@@ -799,7 +800,7 @@ SecureServerSocket::Disconnect(int p_how /*=SD_BOTH*/)
 
 	if(FAILED(Status)) 
 	{
-		LogError("**** Error 0x%x returned by ApplyControlToken", Status);
+		LogError(_T("**** Error 0x%x returned by ApplyControlToken"), Status);
 		return Status;
 	}
 
@@ -835,7 +836,7 @@ SecureServerSocket::Disconnect(int p_how /*=SD_BOTH*/)
 
 	if(FAILED(Status)) 
 	{
-		LogError("**** Error 0x%x returned by AcceptSecurityContext", Status);
+		LogError(_T("**** Error 0x%x returned by AcceptSecurityContext"), Status);
 		return Status;
 	}
 
@@ -852,12 +853,12 @@ SecureServerSocket::Disconnect(int p_how /*=SD_BOTH*/)
 		if(cbData == SOCKET_ERROR || cbData == 0)
 		{
 			Status = GetLastError();
-			LogError("**** Error %d sending close notify", Status);
+			LogError(_T("**** Error %d sending close notify"), Status);
 			return HRESULT_FROM_WIN32(Status);
 		}
 
-		DebugMsg(" ");
-		DebugMsg("%d bytes of data sent to notify SCHANNEL_SHUTDOWN", cbData);
+		DebugMsg(_T(" "));
+		DebugMsg(_T("%d bytes of data sent to notify SCHANNEL_SHUTDOWN"), cbData);
 		PrintHexDump(cbData, pbMessage);
 	}
 	PlainSocket::Disconnect();
@@ -881,7 +882,7 @@ SecureServerSocket::CreateCredentialsFromCertificate(PCredHandle phCreds, PCCERT
    TimeStamp       tsExpiry;
    // Get a handle to the SSPI credential
    Status = g_pSSPI->AcquireCredentialsHandle(NULL,                   // Name of principal
-                                              (SEC_CHAR*)UNISP_NAME,  // Name of package
+                                              (LPTSTR)UNISP_NAME,     // Name of package
                                               SECPKG_CRED_INBOUND,    // Flags indicating use
                                               NULL,                   // Pointer to logon ID
                                               &SchannelCred,          // Package specific data
@@ -895,11 +896,11 @@ SecureServerSocket::CreateCredentialsFromCertificate(PCredHandle phCreds, PCCERT
       DWORD dw = GetLastError();
       if(Status == SEC_E_UNKNOWN_CREDENTIALS)
       {
-        LogError("**** Error: 'Unknown Credentials' returned by AcquireCredentialsHandle. Be sure app has administrator rights. LastError=%d",dw);
+        LogError(_T("**** Error: 'Unknown Credentials' returned by AcquireCredentialsHandle. Be sure app has administrator rights. LastError=%d"),dw);
       }
       else
       {
-        LogError("**** Error 0x%x returned by AcquireCredentialsHandle. LastError=%d.",Status,dw);
+        LogError(_T("**** Error 0x%x returned by AcquireCredentialsHandle. LastError=%d."),Status,dw);
       }
       return Status;
    }
@@ -922,7 +923,7 @@ SecureServerSocket::SendMsg(LPCVOID p_buffer,const ULONG p_length)
 
   while(total_bytes_sent < p_length)
   {
-    bytes_sent = SecureServerSocket::SendPartial((char*)p_buffer + total_bytes_sent,p_length - total_bytes_sent);
+    bytes_sent = SecureServerSocket::SendPartial((TCHAR*)p_buffer + total_bytes_sent,p_length - total_bytes_sent);
     if((bytes_sent == SOCKET_ERROR))
     {
       return SOCKET_ERROR;
@@ -956,7 +957,7 @@ SecureServerSocket::RecvMsg(LPVOID p_buffer,const ULONG p_length)
 
   while(total_bytes_received < p_length)
   {
-    bytes_received = SecureServerSocket::RecvPartial((char*)p_buffer + total_bytes_received,p_length - total_bytes_received);
+    bytes_received = SecureServerSocket::RecvPartial((TCHAR*)p_buffer + total_bytes_received,p_length - total_bytes_received);
     if(bytes_received == SOCKET_ERROR)
     {
       return SOCKET_ERROR;

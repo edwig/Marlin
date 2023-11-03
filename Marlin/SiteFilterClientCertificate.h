@@ -39,7 +39,7 @@ public:
   virtual void SetSite(HTTPSite* p_site) override;
 
   // MANDATORY: Set Client certificate name and/or thumbprint to expect
-  void    SetClientCertificate(const char* p_name,const char* p_thumbprint);
+  void    SetClientCertificate(LPCTSTR p_name,LPCTSTR p_thumbprint);
   // OPTIONAL: Set Request client certificate: used to deactivate temporarily
   void    SetRequestCertificate(bool p_request);
 

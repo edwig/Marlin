@@ -124,7 +124,7 @@ SOAPSecurity::SetSecurity(SOAPMessage* p_message)
 bool 
 SOAPSecurity::CheckSecurity(SOAPMessage* p_message)
 {
-  XMLElement* security = p_message->GetHeaderParameterNode("Security");
+  XMLElement* security = p_message->GetHeaderParameterNode(_T("Security"));
 
   if(security)
   {
@@ -133,10 +133,10 @@ SOAPSecurity::CheckSecurity(SOAPMessage* p_message)
     m_timestamp.SetSystemTimestamp();
 
     // Get relevant security header fields, if any at all
-    XString username = FindHeaderField(p_message,security,"Username");
-    XString password = FindHeaderField(p_message,security,"Password");
-    XString nonce    = FindHeaderField(p_message,security,"Nonce");
-    XString created  = FindHeaderField(p_message,security,"Created");
+    XString username = FindHeaderField(p_message,security,_T("Username"));
+    XString password = FindHeaderField(p_message,security,_T("Password"));
+    XString nonce    = FindHeaderField(p_message,security,_T("Nonce"));
+    XString created  = FindHeaderField(p_message,security,_T("Created"));
 
     // Find what the password should be
     XString shouldbePassword;
@@ -205,7 +205,7 @@ SOAPSecurity::AddSecurityNamespace(SOAPMessage* p_message)
   }
 
   // Find the envelope and check the namespaces
-  XMLElement* envelope = p_message->FindElement("Envelope");
+  XMLElement* envelope = p_message->FindElement(_T("Envelope"));
   if(envelope)
   {
     XmlAttribMap& map = envelope->GetAttributes();
@@ -217,7 +217,7 @@ SOAPSecurity::AddSecurityNamespace(SOAPMessage* p_message)
         return true;
       }
     }
-    p_message->SetAttribute(envelope,"xmlns:wsse",NAMESPACE_SECEXT);
+    p_message->SetAttribute(envelope,_T("xmlns:wsse"),NAMESPACE_SECEXT);
     return true;
   }
   return false;
@@ -234,17 +234,17 @@ SOAPSecurity::SetAddSecurityHeader(SOAPMessage* p_message)
   }
 
   // Find the SOAP Header
-  XMLElement* header = p_message->FindElement("Header");
+  XMLElement* header = p_message->FindElement(_T("Header"));
   if(header)
   {
     // <wsse:Security> **MUST** be a first child of the header node
-    XMLElement* security = p_message->FindElement(header,"Security",false);
+    XMLElement* security = p_message->FindElement(header,_T("Security"),false);
     if(security)
     {
       return security;
     }
     // Add the security node to the SOAP header
-    return p_message->AddElement(header,"wsse:Security",XDT_String,"");
+    return p_message->AddElement(header,_T("wsse:Security"),XDT_String,_T(""));
   }
   return nullptr;
 }
@@ -254,13 +254,13 @@ SOAPSecurity::SetUsernameInMessage(SOAPMessage* p_message,XMLElement* p_secure)
 {
   if(p_message && p_secure)
   {
-    XMLElement* username = p_message->FindElement(p_secure,"Username",false);
+    XMLElement* username = p_message->FindElement(p_secure,_T("Username"),false);
     if(username)
     {
       username->SetValue(m_username);
       return true;
     }
-    else if(p_message->AddElement(p_secure,"wsse:Username",XDT_String,m_username))
+    else if(p_message->AddElement(p_secure,_T("wsse:Username"),XDT_String,m_username))
     {
       return true;
     }
@@ -273,18 +273,18 @@ SOAPSecurity::SetPasswordInMessage(SOAPMessage* p_message,XMLElement* p_secure,X
 {
   if(p_message && p_secure)
   {
-    XMLElement* password = p_message->FindElement(p_secure,"Password",false);
+    XMLElement* password = p_message->FindElement(p_secure,_T("Password"),false);
     if(password)
     {
       password->SetValue(p_password);
     }
     else
     {
-      password = p_message->AddElement(p_secure,"wsse:Password",XDT_String,p_password);
+      password = p_message->AddElement(p_secure,_T("wsse:Password"),XDT_String,p_password);
     }
     if(password)
     {
-      p_message->SetAttribute(password,"Type",m_digest ? "wsse:PasswordDigest" : "wsse:PasswordText");
+      p_message->SetAttribute(password,_T("Type"),m_digest ? _T("wsse:PasswordDigest") : _T("wsse:PasswordText"));
       return true;
     }
   }
@@ -297,13 +297,13 @@ SOAPSecurity::SetNonceInMessage(SOAPMessage* p_message,XMLElement* p_secure)
 {
   if(p_message && p_secure)
   {
-    XMLElement* nonce = p_message->FindElement(p_secure,"Nonce",false);
+    XMLElement* nonce = p_message->FindElement(p_secure,_T("Nonce"),false);
     if(nonce)
     {
       nonce->SetValue(m_nonce);
       return true;
     }
-    else if(p_message->AddElement(p_secure,"wsse:Nonce",XDT_String,m_nonce))
+    else if(p_message->AddElement(p_secure,_T("wsse:Nonce"),XDT_String,m_nonce))
     {
       return true;
     }
@@ -317,17 +317,17 @@ SOAPSecurity::SetCreatedInMessage(SOAPMessage* p_message,XMLElement* p_secure)
   if(p_message && p_secure)
   {
     // Timestamp in timezone 'Z' (Zebra) for UTC
-    XString timestamp = m_timestamp.AsString() + "Z";
-    XMLElement* stamp = p_message->FindElement(p_secure,"Created",false);
+    XString timestamp = m_timestamp.AsString() + _T("Z");
+    XMLElement* stamp = p_message->FindElement(p_secure,_T("Created"),false);
     if(stamp)
     {
       stamp->SetValue(timestamp);
       return true;
     }
-    stamp = p_message->AddElement(p_secure,"wsu:Created",XDT_String,timestamp);
+    stamp = p_message->AddElement(p_secure,_T("wsu:Created"),XDT_String,timestamp);
     if(stamp)
     {
-      p_message->SetAttribute(stamp,"xmlns:wsu","http://schemas.xmlsoap.org/ws/2002/07/utility");
+      p_message->SetAttribute(stamp,_T("xmlns:wsu"),_T("http://schemas.xmlsoap.org/ws/2002/07/utility"));
       return true;
     }
   }
@@ -339,11 +339,11 @@ XString
 SOAPSecurity::DigestPassword()
 {
   XString nonce = GenerateGUID();
-  nonce.Replace("-","");
+  nonce.Remove('-');
   GenerateNonce(nonce);
 
   // According to the standard. This is how we scramble the password
-  XString encrypted = nonce + m_timestamp.AsString() + "Z" + m_password;
+  XString encrypted = nonce + m_timestamp.AsString() + _T("Z") + m_password;
 
   Crypto crypt;
   return crypt.Digest(encrypted,encrypted.GetLength(),CALG_SHA1);
@@ -352,13 +352,8 @@ SOAPSecurity::DigestPassword()
 void
 SOAPSecurity::GenerateNonce(XString p_nonce)
 {
-  XString nonce;
-  Base64  base;
-  int    len = (int) base.B64_length(p_nonce.GetLength());
-  char* dest = m_nonce.GetBufferSetLength(len + 1);
-
-  base.Encrypt((const unsigned char*)p_nonce.GetString(),p_nonce.GetLength(),(unsigned char*)dest);
-  m_nonce.ReleaseBuffer();
+  Base64 base;
+  m_nonce = base.Encrypt(p_nonce);
 }
 
 // Incoming control field
@@ -382,11 +377,5 @@ XString
 SOAPSecurity::DeBase64(XString p_field)
 {
   Base64  base;
-  XString string;
-  int len = (int)base.Ascii_length(p_field.GetLength());
-  char* dest = string.GetBufferSetLength(len + 1);
-  base.Decrypt((const unsigned char*) p_field.GetString(),p_field.GetLength(),(unsigned char*)dest);
-  string.ReleaseBuffer();
-
-  return string;
+  return base.Decrypt(p_field);
 }

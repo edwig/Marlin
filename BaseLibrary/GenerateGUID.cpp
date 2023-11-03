@@ -43,9 +43,13 @@ _Check_return_ WINOLEAPI CoCreateGuid(_Out_ GUID* pguid);
 
 XString GenerateGUID()
 {
-  _TUCHAR *guidStr = 0x00;
-  GUID    *pguid   = 0x00;
-  XString result;
+#ifdef UNICODE
+  RPC_WSTR guidStr = nullptr;
+#else
+  RPC_CSTR guidStr = nullptr;
+#endif
+  GUID*    pguid   = nullptr;
+  XString  result;
   
   pguid = new GUID; 
   // COM+ Initialize is already done
@@ -54,7 +58,7 @@ XString GenerateGUID()
     // Convert the GUID to a string
     if(UuidToString(pguid,&guidStr) == RPC_S_OK)
     {
-      result = guidStr;
+      result = reinterpret_cast<TCHAR*>(guidStr);
     }
   }
   delete pguid;

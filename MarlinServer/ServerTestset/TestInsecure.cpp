@@ -51,17 +51,17 @@ bool
 SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
 {
   // Display incoming message
-  xprintf("Incoming message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
+  xprintf(_T("Incoming message in XML:\n%s\n"),p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
-  XString paramOne = p_message->GetParameter("One");
-  XString paramTwo = p_message->GetParameter("Two");
-  bool    doFault  = p_message->GetParameterBoolean("TestFault");
-  xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
-  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
+  XString paramOne = p_message->GetParameter(_T("One"));
+  XString paramTwo = p_message->GetParameter(_T("Two"));
+  bool    doFault  = p_message->GetParameterBoolean(_T("TestFault"));
+  xprintf(_T("Incoming parameter: %s = %s\n"),_T("One"),paramOne.GetString());
+  xprintf(_T("Incoming parameter: %s = %s\n"),_T("Two"),paramTwo.GetString());
 
   // Test Speed-queue
-  int speed = atoi(p_message->GetParameter("TestNumber"));
+  int speed = _ttoi(p_message->GetParameter(_T("TestNumber")));
   if(speed == 1 && (highSpeed == 0 || highSpeed == 20))
   {
     highSpeed = 1;
@@ -74,42 +74,42 @@ SiteHandlerSoapInsecure::Handle(SOAPMessage* p_message)
   // TestSecurity(&msg);
 
   // reuse message for response
-  XString response = "TestMessageResponse";
+  XString response = _T("TestMessageResponse");
 
   p_message->Reset();
   p_message->SetSoapAction(response);
 
   // Do our work
   bool result = false;
-  if(paramOne == "ABC" && paramTwo == "1-2-3")
+  if(paramOne == _T("ABC") && paramTwo == _T("1-2-3"))
   {
-    paramOne  = "DEF";
-    paramTwo = "123";
+    paramOne  = _T("DEF");
+    paramTwo = _T("123");
     result    = true;
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  qprintf("Standard SOAP message on insecure site         : %s\n", result ? "OK" : "ERROR");
+  qprintf(_T("Standard SOAP message on insecure site         : %s\n"), result ? _T("OK") : _T("ERROR"));
   if(!result) xerror();
 
   if(highSpeed == 20)
   {
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
-    qprintf("High speed queue has received all messages     : OK\n");
+    qprintf(_T("High speed queue has received all messages     : OK\n"));
   }
 
   if(doFault)
   {
-    p_message->SetFault("FX1","Server","Testing SOAP Fault","See if the SOAP Fault does work!");
-    xprintf("Outgoing parameter is a soap fault: FX1\n");
+    p_message->SetFault(_T("FX1"),_T("Server"),_T("Testing SOAP Fault"),_T("See if the SOAP Fault does work!"));
+    xprintf(_T("Outgoing parameter is a soap fault: FX1\n"));
   }
   else
   {
-    p_message->SetParameter("Three",paramOne);
-    p_message->SetParameter("Four",paramTwo);
-    xprintf("Outgoing parameter: %s = %s\n","Three",paramOne.GetString());
-    xprintf("Outgoing parameter: %s = %s\n","Four",paramTwo.GetString());
+    p_message->SetParameter(_T("Three"),paramOne);
+    p_message->SetParameter(_T("Four"),paramTwo);
+    xprintf(_T("Outgoing parameter: %s = %s\n"),_T("Three"),paramOne.GetString());
+    xprintf(_T("Outgoing parameter: %s = %s\n"),_T("Four"),paramTwo.GetString());
   }
   --totalChecks;
   // Ready with the message.
@@ -124,10 +124,10 @@ TestMarlinServer::TestInsecure()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/MarlinTest/Insecure/");
+  XString url(_T("/MarlinTest/Insecure/"));
 
-  xprintf("TESTING STANDARD SOAP RECEIVER FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("===========================================================\n");
+  xprintf(_T("TESTING STANDARD SOAP RECEIVER FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("===========================================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Insecure/"
   // Callback function is no longer required!
@@ -136,13 +136,13 @@ TestMarlinServer::TestInsecure()
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for insecure SOAP  : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for insecure SOAP  : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -152,19 +152,19 @@ TestMarlinServer::TestInsecure()
   site->SetHandler(HTTPCommand::http_get, handler,false);
 
   // Modify the standard settings for this site
-  site->AddContentType("","text/xml");
-  site->AddContentType("xml","application/soap+xml");
+  site->AddContentType(_T(""),_T("text/xml"));
+  site->AddContentType(_T("xml"),_T("application/soap+xml"));
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -174,7 +174,7 @@ TestMarlinServer::AfterTestInsecure()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("SOAP messages to insecure site                 : %s\n",totalChecks > 0 ? "ERROR" : "OK");
-  qprintf("All highspeed queue messages received          : %s\n",(highSpeed % 20) == 0 ? "OK" : "ERROR");
+  qprintf(_T("SOAP messages to insecure site                 : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
+  qprintf(_T("All highspeed queue messages received          : %s\n"),(highSpeed % 20) == 0 ? _T("OK") : _T("ERROR"));
   return totalChecks > 0;
 }

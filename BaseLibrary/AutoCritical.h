@@ -70,6 +70,8 @@ public:
   {
     LeaveCriticalSection(m_section);
   }
+  void Unlock() { LeaveCriticalSection(m_section); };
+  void Relock() { EnterCriticalSection(m_section); };
 private:
   CRITICAL_SECTION* m_section;
 };

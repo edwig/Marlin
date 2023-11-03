@@ -40,14 +40,14 @@ public:
  ~HTTPClientTracing();
 
   // Trace of all the settings of the session and the request handle
-  void Trace(char* p_when,HINTERNET p_session,HINTERNET p_request);
+  void Trace(LPCTSTR p_when,HINTERNET p_session,HINTERNET p_request);
 
 private:
-  bool    QueryBool  (HINTERNET p_handle,DWORD p_option,BOOL*  p_bool,   const char* p_optionName);
-  bool    QueryWord  (HINTERNET p_handle,DWORD p_option,DWORD* p_word,   const char* p_optionName);
-  bool    QueryVoid  (HINTERNET p_handle,DWORD p_option,void** p_pointer,const char* p_optionName);
-  bool    QueryObject(HINTERNET p_handle,DWORD p_option,void*  p_pointer,DWORD p_size,const char* p_optionName);
-  XString QueryString(HINTERNET p_handle,DWORD p_option,const char*  p_optionName);
+  bool    QueryBool  (HINTERNET p_handle,DWORD p_option,BOOL*  p_bool,   LPCTSTR p_optionName);
+  bool    QueryWord  (HINTERNET p_handle,DWORD p_option,DWORD* p_word,   LPCTSTR p_optionName);
+  bool    QueryVoid  (HINTERNET p_handle,DWORD p_option,void** p_pointer,LPCTSTR p_optionName);
+  bool    QueryObject(HINTERNET p_handle,DWORD p_option,void*  p_pointer,DWORD p_size,LPCTSTR p_optionName);
+  XString QueryString(HINTERNET p_handle,DWORD p_option,LPCTSTR p_optionName);
 
   // Works for this client
   HTTPClient*   m_client;

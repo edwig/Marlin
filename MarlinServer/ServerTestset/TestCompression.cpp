@@ -48,13 +48,13 @@ bool
 SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
 {
   bool result = false;
-  XString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v1.txt");
+  XString filename(_T("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v1.txt"));
 
   // NOT Much here. Always returns the release message file
   p_message->Reset();
   p_message->GetFileBuffer()->SetFileName(filename);
 
-  if(_access(filename,0) == 0)
+  if(_taccess(filename,0) == 0)
   {
     result = true;
     --totalChecks;
@@ -62,7 +62,7 @@ SiteHandlerGetCompress::Handle(HTTPMessage* p_message)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("GZIP of a file at a HTTP GET operation         : %s\n", result ? "OK" : "ERROR");
+  qprintf(_T("GZIP of a file at a HTTP GET operation         : %s\n"), result ? _T("OK") : _T("ERROR"));
 
   return true;
 }
@@ -74,24 +74,24 @@ TestMarlinServer::TestCompression()
   // If errors, change detail level
   m_doDetails = false;
 
-  xprintf("TESTING HTTP GZIP COMPRESSION OF THE HTTP SERVER\n");
-  xprintf("================================================\n");
+  xprintf(_T("TESTING HTTP GZIP COMPRESSION OF THE HTTP SERVER\n"));
+  xprintf(_T("================================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Compression/"
   // Callback function is no longer required!
-  XString webaddress = "/MarlinTest/Compression/";
+  XString webaddress = _T("/MarlinTest/Compression/");
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
   if(site)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite GZIP compression   : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite GZIP compression   : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a website for : %s\n",webaddress.GetString());
+    qprintf(_T("ERROR: Cannot register a website for : %s\n"),webaddress.GetString());
     return error;
   }
 
@@ -104,13 +104,13 @@ TestMarlinServer::TestCompression()
   // new: Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly\n");
+    xprintf(_T("Site started correctly\n"));
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",webaddress.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),webaddress.GetString());
   }
   return error;
 }
@@ -120,6 +120,6 @@ TestMarlinServer::AfterTestCompression()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("File compression with GZIP tested              : %s\n", totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("File compression with GZIP tested              : %s\n"), totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

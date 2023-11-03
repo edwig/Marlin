@@ -14,6 +14,11 @@ that can be shared with other library modules like SQLComponents and CXHibernate
 2)  Extra checks on the initial handling of an incoming SSE event channel. If the channel cannnot
     be authenticated, the server must bail-out correctly and destroy the new stream.
 
+CHANGES IN VERSION 8.3.0 of 03-11-2023
+--------------------------------------
+1)  Fully Unicode Aware. Can build in ANSI/MBCS mode or in Unicode UTF-16 mode
+2)  Fully tested in IIS for Unicode
+
 CHANGES IN VERSION 8.2.0 of 23-07-2032
 --------------------------------------
 1)  Fully checked with CPPCheck 2.11

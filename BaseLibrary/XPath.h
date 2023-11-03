@@ -94,7 +94,7 @@ private:
   bool    ParseLevel(XString& p_parsing);
   XString GetToken  (XString& p_parsing);
   bool    GetNumber (XString& p_parsing,XString& p_token);
-  void    NeedToken (XString& p_parsing,char p_token);
+  void    NeedToken (XString& p_parsing,TCHAR p_token);
   bool    FindRecursivly(XMLElement* p_elem,XString token);
   bool    FindRecursivlyAttribute(XMLElement* p_elem,XString token,bool p_recursivly);
 

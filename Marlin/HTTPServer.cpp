@@ -43,13 +43,13 @@
 #include "WebSocket.h"
 #include "ThreadPool.h"
 #include "ConvertWideString.h"
-#include "EnsureFile.h"
 #include "GetLastErrorAsString.h"
 #include "LogAnalysis.h"
 #include "AutoCritical.h"
 #include "PrintToken.h"
 #include "Cookie.h"
 #include "Crypto.h"
+#include <WinFile.h>
 #include <ServiceReporting.h>
 #include <algorithm>
 #include <io.h>
@@ -67,29 +67,29 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
-constexpr const char* global_server_error = 
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n"
-  "<html>\n"
-  "<head>\n"
-  "<title>Webserver error</title>\n"
-  "</head>\n"
-  "<body bgcolor=\"#00FFFF\" text=\"#FF0000\">\n"
-  "<p><font size=\"5\" face=\"Arial\"><strong>Server error: %d</strong></font></p>\n"
-  "<p><font size=\"5\" face=\"Arial\"><strong>%s</strong></font></p>\n"
-  "</body>\n"
-  "</html>\n";
+constexpr const TCHAR* global_server_error = 
+  _T("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n")
+  _T("<html>\n")
+  _T("<head>\n")
+  _T("<title>Webserver error</title>\n")
+  _T("</head>\n")
+  _T("<body bgcolor=\"#00FFFF\" text=\"#FF0000\">\n")
+  _T("<p><font size=\"5\" face=\"Arial\"><strong>Server error: %d</strong></font></p>\n")
+  _T("<p><font size=\"5\" face=\"Arial\"><strong>%s</strong></font></p>\n")
+  _T("</body>\n")
+  _T("</html>\n");
 
-constexpr const char* global_client_error =
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n"
-  "<html>\n"
-  "<head>\n"
-  "<title>Client error</title>\n"
-  "</head>\n"
-  "<body bgcolor=\"#00FFFF\" text=\"#FF0000\">\n"
-  "<p><font size=\"5\" face=\"Arial\"><strong>Client error: %d</strong></font></p>\n"
-  "<p><font size=\"5\" face=\"Arial\"><strong>%s</strong></font></p>\n"
-  "</body>\n"
-  "</html>\n";
+constexpr const TCHAR* global_client_error =
+  _T("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n")
+  _T("<html>\n")
+  _T("<head>\n")
+  _T("<title>Client error</title>\n")
+  _T("</head>\n")
+  _T("<body bgcolor=\"#00FFFF\" text=\"#FF0000\">\n")
+  _T("<p><font size=\"5\" face=\"Arial\"><strong>Client error: %d</strong></font></p>\n")
+  _T("<p><font size=\"5\" face=\"Arial\"><strong>%s</strong></font></p>\n")
+  _T("</body>\n")
+  _T("</html>\n");
 
 // Error state is retained in TLS (Thread-Local-Storage) on a per-call basis for the server
 __declspec(thread) ULONG tls_lastError = 0;
@@ -100,12 +100,12 @@ __declspec(thread) ULONG tls_lastError = 0;
 // unsigned long g_compress_limit  = COMPRESS_LIMIT;
 
 // Logging macro's
-#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
-#define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
-#define HTTPERROR(code,text)      HTTPError(__FUNCTION__,code,text)
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
+#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__); }
+#define ERRORLOG(code,text)       ErrorLog (_T(__FUNCTION__),code,text)
+#define HTTPERROR(code,text)      HTTPError(_T(__FUNCTION__),code,text)
 
 // Media types are here
 MediaTypes* g_media = nullptr;
@@ -192,13 +192,13 @@ HTTPServer::InitLogging()
   int  keepfiles  = m_log->GetKeepfiles();
 
   // Get parameters from Marlin.config
-  file      = m_marlinConfig->GetParameterString ("Logging","Logfile",  file);
-  doLogging = m_marlinConfig->GetParameterBoolean("Logging","DoLogging",doLogging);
-  logging   = m_marlinConfig->GetParameterInteger("Logging","LogLevel", logging);
-  timing    = m_marlinConfig->GetParameterBoolean("Logging","DoTiming", timing);
-  events    = m_marlinConfig->GetParameterBoolean("Logging","DoEvents", events);
-  cache     = m_marlinConfig->GetParameterInteger("Logging","Cache",    cache);
-  keepfiles = m_marlinConfig->GetParameterInteger("Logging","Keep",     keepfiles);
+  file      = m_marlinConfig->GetParameterString (_T("Logging"),_T("Logfile"),  file);
+  doLogging = m_marlinConfig->GetParameterBoolean(_T("Logging"),_T("DoLogging"),doLogging);
+  logging   = m_marlinConfig->GetParameterInteger(_T("Logging"),_T("LogLevel"), logging);
+  timing    = m_marlinConfig->GetParameterBoolean(_T("Logging"),_T("DoTiming"), timing);
+  events    = m_marlinConfig->GetParameterBoolean(_T("Logging"),_T("DoEvents"), events);
+  cache     = m_marlinConfig->GetParameterInteger(_T("Logging"),_T("Cache"),    cache);
+  keepfiles = m_marlinConfig->GetParameterInteger(_T("Logging"),_T("Keep"),     keepfiles);
 
   // Use if overridden in Marlin.config
   if(!file.IsEmpty())
@@ -216,9 +216,9 @@ HTTPServer::InitLogging()
 void
 HTTPServer::InitThreadPool()
 {
-  int minThreads = m_marlinConfig->GetParameterInteger("Server","MinThreads",NUM_THREADS_MINIMUM);
-  int maxThreads = m_marlinConfig->GetParameterInteger("Server","MaxThreads",NUM_THREADS_MAXIMUM);
-  int stackSize  = m_marlinConfig->GetParameterInteger("Server","StackSize", THREAD_STACKSIZE);
+  int minThreads = m_marlinConfig->GetParameterInteger(_T("Server"),_T("MinThreads"),NUM_THREADS_MINIMUM);
+  int maxThreads = m_marlinConfig->GetParameterInteger(_T("Server"),_T("MaxThreads"),NUM_THREADS_MAXIMUM);
+  int stackSize  = m_marlinConfig->GetParameterInteger(_T("Server"),_T("StackSize"), THREAD_STACKSIZE);
 
   m_pool.TrySetMinimum(minThreads);
   m_pool.TrySetMaximum(maxThreads);
@@ -229,8 +229,8 @@ HTTPServer::InitThreadPool()
 void
 HTTPServer::InitHardLimits()
 {
-  g_streaming_limit = m_marlinConfig->GetParameterInteger("Server","StreamingLimit",g_streaming_limit);
-  g_compress_limit = m_marlinConfig->GetParameterInteger("Server","CompressLimit",g_compress_limit);
+  g_streaming_limit = m_marlinConfig->GetParameterInteger(_T("Server"),_T("StreamingLimit"),g_streaming_limit);
+  g_compress_limit  = m_marlinConfig->GetParameterInteger(_T("Server"),_T("CompressLimit"),g_compress_limit);
 
   // Cannot be bigger than 2 GB, otherwise use indirect file access!
   if(g_streaming_limit > (0x7FFFFFFF))
@@ -252,24 +252,24 @@ HTTPServer::InitHardLimits()
     g_compress_limit = (4 * 1024);
   }
 
-  DETAILLOGV("Server hard-limit file-size streaming limit: %d",g_streaming_limit);
-  DETAILLOGV("Server hard-limit compression threshold: %d",    g_compress_limit);
+  DETAILLOGV(_T("Server hard-limit file-size streaming limit: %d"),g_streaming_limit);
+  DETAILLOGV(_T("Server hard-limit compression threshold: %d"),    g_compress_limit);
 }
 
 // Initialise the even stream parameters
 void
 HTTPServer::InitEventstreamKeepalive()
 {
-  m_eventKeepAlive = m_marlinConfig->GetParameterInteger("Server","EventKeepAlive",DEFAULT_EVENT_KEEPALIVE);
-  m_eventRetryTime = m_marlinConfig->GetParameterInteger("Server","EventRetryTime",DEFAULT_EVENT_RETRYTIME);
+  m_eventKeepAlive = m_marlinConfig->GetParameterInteger(_T("Server"),_T("EventKeepAlive"),DEFAULT_EVENT_KEEPALIVE);
+  m_eventRetryTime = m_marlinConfig->GetParameterInteger(_T("Server"),_T("EventRetryTime"),DEFAULT_EVENT_RETRYTIME);
 
   if(m_eventKeepAlive < EVENT_KEEPALIVE_MIN) m_eventKeepAlive = EVENT_KEEPALIVE_MIN;
   if(m_eventKeepAlive > EVENT_KEEPALIVE_MAX) m_eventKeepAlive = EVENT_KEEPALIVE_MAX;
   if(m_eventRetryTime < EVENT_RETRYTIME_MIN) m_eventRetryTime = EVENT_RETRYTIME_MIN;
   if(m_eventRetryTime > EVENT_RETRYTIME_MAX) m_eventRetryTime = EVENT_RETRYTIME_MAX;
 
-  DETAILLOGV("Server SSE keepalive interval: %d ms", m_eventKeepAlive);
-  DETAILLOGV("Server SSE client retry time : %d ms", m_eventRetryTime);
+  DETAILLOGV(_T("Server SSE keepalive interval: %d ms"), m_eventKeepAlive);
+  DETAILLOGV(_T("Server SSE client retry time : %d ms"), m_eventRetryTime);
 }
 
 void
@@ -318,19 +318,19 @@ HTTPServer::SetLogLevel(int p_logLevel)
 void
 HTTPServer::SetDetailedLogging(bool p_detail)
 {
-  TRACE("WARNING: Use SetLogLevel()\n");
+  TRACE(_T("WARNING: Use SetLogLevel()\n"));
   m_logLevel = p_detail ? HLL_LOGGING : HLL_NOLOG;
 }
 
 bool
 HTTPServer::GetDetailedLogging()
 {
-  TRACE("WARNING: Use GetLogLevel()\n");
+  TRACE(_T("WARNING: Use GetLogLevel()\n"));
   return (m_logLevel>=HLL_LOGGING);
 }
 
 void
-HTTPServer::DetailLog(const char* p_function,LogType p_type,const char* p_text)
+HTTPServer::DetailLog(const TCHAR* p_function,LogType p_type,const TCHAR* p_text)
 {
   if(m_log && MUSTLOG(HLL_LOGGING))
   {
@@ -339,7 +339,7 @@ HTTPServer::DetailLog(const char* p_function,LogType p_type,const char* p_text)
 }
 
 void
-HTTPServer::DetailLogS(const char* p_function,LogType p_type,const char* p_text,const char* p_extra)
+HTTPServer::DetailLogS(const TCHAR* p_function,LogType p_type,const TCHAR* p_text,const TCHAR* p_extra)
 {
   if(m_log && MUSTLOG(HLL_LOGGING))
   {
@@ -351,7 +351,7 @@ HTTPServer::DetailLogS(const char* p_function,LogType p_type,const char* p_text,
 }
 
 void
-HTTPServer::DetailLogV(const char* p_function,LogType p_type,const char* p_text,...)
+HTTPServer::DetailLogV(const TCHAR* p_function,LogType p_type,const TCHAR* p_text,...)
 {
   if(m_log && MUSTLOG(HLL_LOGGING))
   {
@@ -367,7 +367,7 @@ HTTPServer::DetailLogV(const char* p_function,LogType p_type,const char* p_text,
 
 // Error logging to the log file
 void
-HTTPServer::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
+HTTPServer::ErrorLog(const TCHAR* p_function,DWORD p_code,XString p_text)
 {
   bool result = false;
 
@@ -376,7 +376,7 @@ HTTPServer::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
 
   if(m_log)
   {
-    p_text.AppendFormat(" Error [%08lX] %s",p_code,GetLastErrorAsString(p_code).GetString());
+    p_text.AppendFormat(_T(" Error [%08lX] %s"),p_code,GetLastErrorAsString(p_code).GetString());
     result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
   }
 
@@ -384,18 +384,18 @@ HTTPServer::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
   if(!result)
   {
     // What can we do? As a last result: print to the MS-Windows event log
-    SvcReportErrorEvent(0,true,__FUNCTION__,"Marlin " MARLIN_SERVER_VERSION " Error [%08lX] %s\n",p_code,p_text.GetString());
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Marlin ") MARLIN_SERVER_VERSION _T(" Error [%08lX] %s\n"),p_code,p_text.GetString());
   }
 }
 
 void
-HTTPServer::HTTPError(const char* p_function,int p_status,XString p_text)
+HTTPServer::HTTPError(const TCHAR* p_function,int p_status,XString p_text)
 {
   bool result = false;
 
   if(m_log)
   {
-    p_text.AppendFormat(" HTTP Status [%d] %s",p_status,GetHTTPStatusText(p_status));
+    p_text.AppendFormat(_T(" HTTP Status [%d] %s"),p_status,GetHTTPStatusText(p_status));
     result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
   }
 
@@ -403,7 +403,7 @@ HTTPServer::HTTPError(const char* p_function,int p_status,XString p_text)
   if(!result)
   {
     // What can we do? As a last result: print to the MS-Windows event log
-    SvcReportErrorEvent(0,true,__FUNCTION__,"Marlin " MARLIN_SERVER_VERSION " Status [%d] %s\n",p_status,p_text.GetString());
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Marlin ") MARLIN_SERVER_VERSION _T(" Status [%d] %s\n"),p_status,p_text.GetString());
   }
 }
 
@@ -414,23 +414,23 @@ HTTPServer::GeneralChecks()
   // Check the error report object
   if(m_errorReport == nullptr)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"Connect an ErrorReport object for handling safe-exceptions");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("Connect an ErrorReport object for handling safe-exceptions"));
     return false;
   }
-  DETAILLOG1("ErrorReporting checks out OK");
+  DETAILLOG1(_T("ErrorReporting checks out OK"));
 
   // Make sure we have the webroot directory
-  EnsureFile ensDir(m_webroot);
-  ensDir.CheckCreateDirectory();
+  WinFile ensDir(m_webroot);
+  ensDir.CreateDirectory();
 
   // Check the webroot directory for read/write access
-  int retCode = _access(m_webroot,06);
+  int retCode = _taccess(m_webroot,06);
   if(retCode != 0)
   {
-    ERRORLOG(retCode,"No access to the webroot directory: " + m_webroot);
+    ERRORLOG(retCode,_T("No access to the webroot directory: ") + m_webroot);
     return false;
   }
-  DETAILLOGS("Access to webroot directory ok: ",m_webroot);
+  DETAILLOGS(_T("Access to webroot directory ok: "),m_webroot);
 
   return true;
 }
@@ -451,14 +451,13 @@ void
 HTTPServer::SetWebroot(XString p_webroot)
 {
   // Check WebRoot against your config
-  m_webroot = m_marlinConfig->GetParameterString("Server","WebRoot",p_webroot);
+  m_webroot = m_marlinConfig->GetParameterString(_T("Server"),_T("WebRoot"),p_webroot);
 
   // Directly set WebRoot
-  EnsureFile ensure(p_webroot);
-  int er = ensure.CheckCreateDirectory();
-  if(er)
+  WinFile ensure(m_webroot);
+  if(!ensure.CreateDirectory())
   {
-    ERRORLOG(er,"Cannot reach server root directory: " + p_webroot);
+    ERRORLOG(ensure.GetLastError(),_T("Cannot reach server root directory: ") + p_webroot);
   }
   m_webroot = p_webroot;
 }
@@ -485,7 +484,7 @@ HTTPServer::MakeSiteRegistrationName(int p_port,XString p_url)
     p_url = p_url.Left(posanchr);
   }
   p_url.TrimRight('/');
-  registration.Format("%d:%s",p_port,p_url.GetString());
+  registration.Format(_T("%d:%s"),p_port,p_url.GetString());
 
   return registration;
 }
@@ -501,12 +500,12 @@ HTTPServer::RegisterSite(const HTTPSite* p_site,const XString& p_urlPrefix)
 
   if(GetLastError())
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"RegisterSite called too early");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("RegisterSite called too early"));
     return false;
   }
   if(p_site == nullptr)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"RegisterSite: no site to register");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("RegisterSite: no site to register"));
     return false;
   }
 
@@ -529,7 +528,7 @@ HTTPServer::RegisterSite(const HTTPSite* p_site,const XString& p_urlPrefix)
     if(p_urlPrefix.CompareNoCase(it->second->GetPrefixURL()) == 0)
     {
       // Duplicate site found: Not necessarily an error
-      WARNINGLOG("Site was already registered: %s",base.GetString());
+      WARNINGLOG(_T("Site was already registered: %s"),base.GetString());
       return false;
     }
   }
@@ -568,7 +567,7 @@ HTTPServer::SetCachePolicy(HTTP_CACHE_POLICY_TYPE p_type,ULONG p_seconds)
 // Returns the extra verbs known by HTTPMessage
 // Needed because they are NOT in <winhttp.h>!!
 HTTPCommand
-HTTPServer::GetUnknownVerb(PCSTR p_verb)
+HTTPServer::GetUnknownVerb(LPCSTR p_verb)
 {
   if(_stricmp(p_verb,"MERGE") == 0) return HTTPCommand::http_merge;
   if(_stricmp(p_verb,"PATCH") == 0) return HTTPCommand::http_patch;
@@ -626,7 +625,7 @@ HTTPServer::FindHTTPSite(int p_port,const XString& p_url)
     // Find next length to match
     while(--pos > 0)
     {
-      if(search.GetAt(pos) == '/' ||
+      if(search.GetAt(pos) == _T('/') ||
          search.GetAt(pos) == '\\')
       {
         break;
@@ -676,7 +675,7 @@ HTTPServer::FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers)
   // Take care: it could be Unicode!
   for(int ind = 0;ind < p_count; ++ind)
   {
-    XString name = p_headers[ind].pName;
+    XString name = LPCSTRToString(p_headers[ind].pName);
     if(name.GetLength() != p_headers[ind].NameLength)
     {
       // Different length: suppose it's Unicode
@@ -689,7 +688,7 @@ HTTPServer::FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers)
     }
     else
     {
-      if(name.Compare("RemoteDesktop") == 0)
+      if(name.Compare(_T("RemoteDesktop")) == 0)
       {
         remDesktop = atoi(p_headers[ind].pRawValue);
         break;
@@ -723,47 +722,47 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
         if(auth->AuthStatus == HttpAuthStatusNotAuthenticated)
         {
           // Not (yet) authenticated. Back to the client for authentication
-          DETAILLOGS("Not yet authenticated for: ",p_rawUrl);
+          DETAILLOGS(_T("Not yet authenticated for: "),p_rawUrl);
           HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
           msg.SetHTTPSite(p_site);
           msg.SetRequestHandle(p_id);
-          RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
+          RespondWithClientError(&msg,HTTP_STATUS_DENIED,_T("Not authenticated"));
         }
         else if(auth->AuthStatus == HttpAuthStatusFailure)
         {
           if(p_authorize.IsEmpty())
           {
             // Second round. Still not authenticated. Drop the connection, better next time
-            DETAILLOGS("Authentication failed for: ",p_rawUrl);
-            DETAILLOGS("Authentication failed because of: ",AuthenticationStatus(auth->SecStatus));
+            DETAILLOGS(_T("Authentication failed for: "),p_rawUrl);
+            DETAILLOGS(_T("Authentication failed because of: "),AuthenticationStatus(auth->SecStatus));
             HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_DENIED);
             msg.SetHTTPSite(p_site);
             msg.SetRequestHandle(p_id);
-            RespondWithClientError(&msg,HTTP_STATUS_DENIED,"Not authenticated");
+            RespondWithClientError(&msg,HTTP_STATUS_DENIED,_T("Not authenticated"));
           }
           else
           {
             // Site must do the authorization
-            DETAILLOGS("Authentication by HTTPSite: ",p_authorize);
+            DETAILLOGS(_T("Authentication by HTTPSite: "),p_authorize);
             doReceive = true;
           }
         }
         else if(auth->AuthStatus == HttpAuthStatusSuccess)
         {
           // Authentication accepted: all is well
-          DETAILLOGS("Authentication done for: ",p_rawUrl);
+          DETAILLOGS(_T("Authentication done for: "),p_rawUrl);
           p_token = auth->AccessToken;
           doReceive = true;
         }
         else
         {
           XString authError;
-          authError.Format("Authentication mechanism failure. Unknown status: %d",auth->AuthStatus);
+          authError.Format(_T("Authentication mechanism failure. Unknown status: %d"),auth->AuthStatus);
           ERRORLOG(ERROR_NOT_AUTHENTICATED,authError);
           HTTPMessage msg(HTTPCommand::http_response,HTTP_STATUS_FORBIDDEN);
           msg.SetHTTPSite(p_site);
           msg.SetRequestHandle(p_id);
-          RespondWithClientError(&msg,HTTP_STATUS_FORBIDDEN,"Forbidden");
+          RespondWithClientError(&msg,HTTP_STATUS_FORBIDDEN,_T("Forbidden"));
         }
       }
       else if (p_request->pRequestInfo[ind].InfoType == HttpRequestInfoTypeSslProtocol)
@@ -786,31 +785,31 @@ HTTPServer::BuildAuthenticationChallenge(XString p_authScheme,XString p_realm)
 {
   XString challenge;
 
-  if(p_authScheme.CompareNoCase("Basic") == 0)
+  if(p_authScheme.CompareNoCase(_T("Basic")) == 0)
   {
     // Basic authentication
     // the real realm comes from the URL properties!
-    challenge = "Basic realm=\"BasicRealm\"";
+    challenge = _T("Basic realm=\"BasicRealm\"");
   }
-  else if(p_authScheme.CompareNoCase("NTLM") == 0)
+  else if(p_authScheme.CompareNoCase(_T("NTLM")) == 0)
   {
     // Standard MS-Windows authentication
-    challenge = "NTLM";
+    challenge = _T("NTLM");
   }
-  else if(p_authScheme.CompareNoCase("Negotiate") == 0)
+  else if(p_authScheme.CompareNoCase(_T("Negotiate")) == 0)
   {
     // Will fall back to NTLM on MS-Windows systems
-    challenge = "Negotiate";
+    challenge = _T("Negotiate");
   }
-  else if(p_authScheme.CompareNoCase("Digest") == 0)
+  else if(p_authScheme.CompareNoCase(_T("Digest")) == 0)
   {
     // Will use Digest authentication
     // the real realm and domain comes from the URL properties!
-    challenge.Format("Digest realm=\"%s\"",p_realm.GetString());
+    challenge.Format(_T("Digest realm=\"%s\""),p_realm.GetString());
   }
-  else if(p_authScheme.CompareNoCase("Kerberos") == 0)
+  else if(p_authScheme.CompareNoCase(_T("Kerberos")) == 0)
   {
-    challenge = "Kerberos";
+    challenge = _T("Kerberos");
   }
   return challenge;
 }
@@ -822,7 +821,7 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
   // This message already sent, or not able to send: no request is known
   if(p_message->GetHasBeenAnswered())
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"SendResponse: nothing to send");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("SendResponse: nothing to send"));
     return;
   }
 
@@ -838,7 +837,7 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
       p_message->SetSecurityLevel   (site->GetEncryptionLevel());
       p_message->SetSecurityPassword(site->GetEncryptionPassword());
     }
-    DETAILLOG1("Send SOAP response");
+    DETAILLOG1(_T("Send SOAP response"));
   }
 
   // Convert to a HTTP response
@@ -850,28 +849,28 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
     switch(p_message->GetSoapVersion())
     {
       case SoapVersion::SOAP_10: // Fall Through
-      case SoapVersion::SOAP_11: answer->SetContentType("text/xml");             break;
-      case SoapVersion::SOAP_12: answer->SetContentType("application/soap+xml"); break;
+      case SoapVersion::SOAP_11: answer->SetContentType(_T("text/xml"));             break;
+      case SoapVersion::SOAP_12: answer->SetContentType(_T("application/soap+xml")); break;
     }
   }
 
   // Check if we have a SOAPAction header for SOAP 1.1 situations
   if(p_message->GetSoapVersion() == SoapVersion::SOAP_11 &&
     !p_message->GetSoapAction().IsEmpty() &&
-     answer->GetHeader("SOAPAction").IsEmpty())
+     answer->GetHeader(_T("SOAPAction")).IsEmpty())
   {
-    XString action = "\"" + p_message->GetNamespace();
-    if(action.Right(1) != "/") action += "/";
-    action += p_message->GetSoapAction() + "\"";
+    XString action = _T("\"") + p_message->GetNamespace();
+    if(action.Right(1) != _T("/")) action += _T("/");
+    action += p_message->GetSoapAction() + _T("\"");
 
-    answer->AddHeader("SOAPAction", action);
+    answer->AddHeader(_T("SOAPAction"), action);
   }
 
   // Set status in case of an error
   if(p_message->GetErrorState())
   {
     answer->SetStatus(HTTP_STATUS_BAD_REQUEST);
-    DETAILLOG1("Send SOAP FAULT response");
+    DETAILLOG1(_T("Send SOAP FAULT response"));
   }
 
   // Send the HTTP Message as response
@@ -889,14 +888,14 @@ HTTPServer::SendResponse(JSONMessage* p_message)
   // This message already sent, or not able to send: no request is known
   if(p_message->GetHasBeenAnswered())
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,"SendResponse: nothing to send");
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("SendResponse: nothing to send"));
     return;
   }
 
   // Check if we must restore the encryption
   if(p_message->GetErrorState())
   {
-    DETAILLOGS("Send JSON FAULT response:\n",p_message->GetJsonMessage());
+    DETAILLOGS(_T("Send JSON FAULT response:\n"),p_message->GetJsonMessage());
     // Convert to a HTTP response
     HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
     answer->SetStatus(HTTP_STATUS_BAD_REQUEST);
@@ -906,12 +905,12 @@ HTTPServer::SendResponse(JSONMessage* p_message)
   }
   else
   {
-    DETAILLOG1("Send JSON response");
+    DETAILLOG1(_T("Send JSON response"));
     // Convert to a HTTP response
     HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
-    if(answer->GetContentType().Find("json") < 0)
+    if(answer->GetContentType().Find(_T("json")) < 0)
     {
-      answer->SetContentType("application/json");
+      answer->SetContentType(_T("application/json"));
     }
     // Send the HTTP Message as response
     SendResponse(answer);
@@ -927,15 +926,15 @@ HTTPServer::RespondWithServerError(HTTPMessage* p_message
                                   ,int          p_error
                                   ,XString      p_reason)
 {
-  HTTPERROR(p_error,"Respond with server error");
+  HTTPERROR(p_error,_T("Respond with server error"));
   XString page;
   page.Format(m_serverErrorPage,p_error,p_reason.GetString());
 
   p_message->Reset();
   p_message->GetFileBuffer()->Reset();
-  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(page.GetString())),page.GetLength());
+  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<TCHAR*>(page.GetString())),page.GetLength());
   p_message->SetStatus(p_error);
-  p_message->SetContentType("text/html");
+  p_message->SetContentType(_T("text/html"));
 
   SendResponse(p_message);
 }
@@ -944,7 +943,7 @@ void
 HTTPServer::RespondWithServerError(HTTPMessage*    p_message
                                   ,int             p_error)
 {
-  RespondWithServerError(p_message,p_error,"General server error");
+  RespondWithServerError(p_message,p_error,_T("General server error"));
 }
 
 // Response in the client error range (400-417)
@@ -955,20 +954,20 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
                                   ,XString      p_authScheme
                                   ,XString      p_realm)
 {
-  HTTPERROR(p_error,"Respond with client error");
+  HTTPERROR(p_error,_T("Respond with client error"));
   XString page;
   page.Format(m_clientErrorPage,p_error,p_reason.GetString());
 
   p_message->Reset();
   p_message->GetFileBuffer()->Reset();
-  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(page.GetString())),page.GetLength());
+  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<TCHAR*>(page.GetString())),page.GetLength());
   p_message->SetStatus(p_error);
-  p_message->SetContentType("text/html");
+  p_message->SetContentType(_T("text/html"));
 
   XString challenge = BuildAuthenticationChallenge(p_authScheme,p_realm);
   if(!challenge.IsEmpty())
   {
-    p_message->AddHeader("AuthenticationScheme",challenge);
+    p_message->AddHeader(_T("AuthenticationScheme"),challenge);
   }
 
   SendResponse(p_message);
@@ -979,8 +978,8 @@ HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,XString p_body)
 {
   p_message->Reset();
   p_message->GetFileBuffer()->Reset();
-  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(p_body.GetString())),p_body.GetLength());
-  p_message->SetContentType("application/json");
+  p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<TCHAR*>(p_body.GetString())),p_body.GetLength());
+  p_message->SetContentType(_T("application/json"));
   p_message->SetStatus(HTTP_STATUS_OK);
   SendResponse(p_message);
 }
@@ -993,38 +992,38 @@ HTTPServer::AuthenticationStatus(SECURITY_STATUS p_secStatus)
 
   switch(p_secStatus)
   {
-    case SEC_E_INCOMPLETE_MESSAGE:      answer = "Incomplete authentication message answer or channel-broken";
+    case SEC_E_INCOMPLETE_MESSAGE:      answer = _T("Incomplete authentication message answer or channel-broken");
                                         break;
-    case SEC_E_INSUFFICIENT_MEMORY:     answer = "Security sub-system out of memory";
+    case SEC_E_INSUFFICIENT_MEMORY:     answer = _T("Security sub-system out of memory");
                                         break;
-    case SEC_E_INTERNAL_ERROR:          answer = "Security sub-system internal error";
+    case SEC_E_INTERNAL_ERROR:          answer = _T("Security sub-system internal error");
                                         break;
-    case SEC_E_INVALID_HANDLE:          answer = "Security sub-system invalid handle";
+    case SEC_E_INVALID_HANDLE:          answer = _T("Security sub-system invalid handle");
                                         break;
-    case SEC_E_INVALID_TOKEN:           answer = "Security token is not (no longer) valid";
+    case SEC_E_INVALID_TOKEN:           answer = _T("Security token is not (no longer) valid");
                                         break;
-    case SEC_E_LOGON_DENIED:            answer = "Logon denied";
+    case SEC_E_LOGON_DENIED:            answer = _T("Logon denied");
                                         break;
     case SEC_E_NO_AUTHENTICATING_AUTHORITY: 
-                                        answer = "Authentication authority (domain/realm) not contacted, incorrect or unavailable";
+                                        answer = _T("Authentication authority (domain/realm) not contacted, incorrect or unavailable");
                                         break;
-    case SEC_E_NO_CREDENTIALS:          answer = "No credentials presented";
+    case SEC_E_NO_CREDENTIALS:          answer = _T("No credentials presented");
                                         break;
-    case SEC_E_OK:                      answer = "Security OK, token generated";
+    case SEC_E_OK:                      answer = _T("Security OK, token generated");
                                         break;
-    case SEC_E_SECURITY_QOS_FAILED:     answer = "Quality of Security failed due to Digest authentication";
+    case SEC_E_SECURITY_QOS_FAILED:     answer = _T("Quality of Security failed due to Digest authentication");
                                         break;
-    case SEC_E_UNSUPPORTED_FUNCTION:    answer = "Security attribute / unsupported function error";
+    case SEC_E_UNSUPPORTED_FUNCTION:    answer = _T("Security attribute / unsupported function error");
                                         break;
-    case SEC_I_COMPLETE_AND_CONTINUE:   answer = "Complete and continue, pass token to client";
+    case SEC_I_COMPLETE_AND_CONTINUE:   answer = _T("Complete and continue, pass token to client");
                                         break;
-    case SEC_I_COMPLETE_NEEDED:         answer = "Send completion message to client";
+    case SEC_I_COMPLETE_NEEDED:         answer = _T("Send completion message to client");
                                         break;
-    case SEC_I_CONTINUE_NEEDED:         answer = "Send token to client and wait for return";
+    case SEC_I_CONTINUE_NEEDED:         answer = _T("Send token to client and wait for return");
                                         break;
-    case STATUS_LOGON_FAILURE:          answer = "Logon tried but failed";
+    case STATUS_LOGON_FAILURE:          answer = _T("Logon tried but failed");
                                         break;
-    default:                            answer = "Authentication failed for unknown reason";
+    default:                            answer = _T("Authentication failed for unknown reason");
                                         break;
   }
   return answer;
@@ -1045,7 +1044,7 @@ HTTPServer::LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo)
   hash.MakeUpper();
 
   // Now log the cryptographic elements of the connection
-  DETAILLOGV("Secure SSL Connection. Protocol [%s] Cipher [%s:%d] Hash [%s:%d] Key Exchange [%s:%d]"
+  DETAILLOGV(_T("Secure SSL Connection. Protocol [%s] Cipher [%s:%d] Hash [%s:%d] Key Exchange [%s:%d]")
             ,protocol.GetString()
             ,cipher.GetString(),  p_sslInfo->CipherStrength
             ,hash.GetString(),    p_sslInfo->HashStrength
@@ -1056,6 +1055,9 @@ HTTPServer::LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo)
 void
 HTTPServer::HandleTextContent(HTTPMessage* p_message)
 {
+#ifdef UNICODE
+  UNREFERENCED_PARAMETER(p_message);
+#else
   uchar* body   = nullptr;
   size_t length = 0;
   
@@ -1070,23 +1072,24 @@ HTTPServer::HandleTextContent(HTTPMessage* p_message)
 
     // Find specific code page and try to convert
     XString charset = FindCharsetInContentType(p_message->GetContentType());
-    DETAILLOGS("Try convert charset in pre-handle fase: ",charset);
-    bool convert = TryConvertWideString(body,static_cast<int>(length),"",output,doBOM);
+    DETAILLOGS(_T("Try convert charset in pre-handle fase: "),charset);
+    bool convert = TryConvertWideString(body,static_cast<int>(length),_T(""),output,doBOM);
 
     // Output to message->body
     if(convert)
     {
       // Copy back the converted string (does a copy!!)
-      p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<char*>(output.GetString())),output.GetLength());
+      p_message->GetFileBuffer()->SetBuffer(reinterpret_cast<uchar*>(const_cast<TCHAR*>(output.GetString())),output.GetLength());
       p_message->SetSendBOM(doBOM);
     }
     else
     {
-      ERRORLOG(ERROR_NO_UNICODE_TRANSLATION,"Incoming text body: no translation");
+      ERRORLOG(ERROR_NO_UNICODE_TRANSLATION,_T("Incoming text body: no translation"));
     }
   }
   // Free raw buffer
   delete [] body;
+#endif
 }
 
 void
@@ -1100,7 +1103,7 @@ HTTPServer::CheckSitesStarted()
     if(site.second->GetIsStarted() == false)
     {
       XString message;
-      message.Format("Forgotten to call 'StartSite' for: %s",site.second->GetPrefixURL().GetString());
+      message.Format(_T("Forgotten to call 'StartSite' for: %s"),site.second->GetPrefixURL().GetString());
       ERRORLOG(ERROR_CALL_NOT_IMPLEMENTED,message);
     }
   }
@@ -1128,7 +1131,7 @@ HTTPServer::DoIsModifiedSince(HTTPMessage* p_msg)
   }
   
   // Normalize pathname to MS-Windows
-  fileName.Replace('/','\\');
+  fileName.Replace(_T('/'),'\\');
 
   // Check for a name
   if(fileName.IsEmpty())
@@ -1137,7 +1140,7 @@ HTTPServer::DoIsModifiedSince(HTTPMessage* p_msg)
   }
 
   // See if the file is there (existence)
-  if(_access(fileName,00) == 0)
+  if(_taccess(fileName,00) == 0)
   {
     // Get extended file attributes to get to the last-written-to filetime
     if(GetFileAttributesEx(fileName,GetFileExInfoStandard,&data))
@@ -1159,7 +1162,7 @@ HTTPServer::DoIsModifiedSince(HTTPMessage* p_msg)
         }
       }
       // Not modified = 304
-      DETAILLOG1("Sending response: Not modified");
+      DETAILLOG1(_T("Sending response: Not modified"));
       p_msg->Reset();
       p_msg->GetFileBuffer()->Reset();
       p_msg->SetStatus(HTTP_STATUS_NOT_MODIFIED);
@@ -1236,7 +1239,7 @@ HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
   }
   else
   {
-    ERRORLOG(ERROR_ACCESS_DENIED,"Could not initialize event stream. Dropping stream.");
+    ERRORLOG(ERROR_ACCESS_DENIED,_T("Could not initialize event stream. Dropping stream."));
     delete stream;
     stream = nullptr;
   }
@@ -1253,8 +1256,10 @@ HTTPServer::SendEvent(int p_port,XString p_site,ServerEvent* p_event,XString p_u
   p_site.MakeLower();
   p_site.TrimRight('/');
 
-  // Get the stream-string of the event
-  XString sendString = EventToString(p_event);
+//   // Get the stream-string of the event
+//   BYTE* buffer = nullptr;
+//   int   length = 0;
+//   EventToStringBuffer(p_event,&buffer,length);
 
   // Find the context of the URL (if any)
   HTTPSite* context = FindHTTPSite(p_port,p_site);
@@ -1306,7 +1311,7 @@ HTTPServer::SendEvent(EventStream* p_stream
   // Check for input parameters
   if(p_stream == nullptr || p_event == nullptr)
   {
-    ERRORLOG(ERROR_FILE_NOT_FOUND,"SendEvent missing a stream or an event");
+    ERRORLOG(ERROR_FILE_NOT_FOUND,_T("SendEvent missing a stream or an event"));
     return false;
   }
 
@@ -1335,16 +1340,18 @@ HTTPServer::SendEvent(EventStream* p_stream
   if (MUSTLOG(HLL_LOGGING) && m_log && p_stream->m_alive)
   {
     XString text;
-    text.Format("Sent event id: %d to client(s) on URL: ", p_event->m_id);
+    text.Format(_T("Sent event id: %d to client(s) on URL: "), p_event->m_id);
     text += p_stream->m_baseURL;
     DETAILLOG1(text);
   }
 
-  // Produce the event string
-  XString sendString = EventToString(p_event);
+  // Produce the event string in UTF-8 format
+  BYTE* buffer = nullptr;
+  int   length = 0;
+  EventToStringBuffer(p_event,&buffer,length);
 
   // Send the event to the client. This can take an I/O wait time
-  bool alive = SendResponseEventBuffer(p_stream->m_requestID,&p_stream->m_lock,sendString.GetString(),sendString.GetLength(),p_continue);
+  bool alive = SendResponseEventBuffer(p_stream->m_requestID,&p_stream->m_lock,&buffer,length,p_continue);
 
   // Lock server as short as possible to register the return status
   // But we must now make sure the event stream still does exist
@@ -1366,6 +1373,7 @@ HTTPServer::SendEvent(EventStream* p_stream
   ++p_stream->m_chunks;
 
   // Ready with the event
+  delete[] buffer;
   delete p_event;
 
   // Stream not alive, or stopping
@@ -1375,7 +1383,7 @@ HTTPServer::SendEvent(EventStream* p_stream
     return false;
   }
 
-  // Delivered our event, but out of more datachunks for next requests
+  // Delivered our event, but out of more data chunks for next requests
   if(p_stream->m_chunks > MAX_DATACHUNKS)
   {
     // Abort stream, so client will reopen a new stream
@@ -1387,26 +1395,28 @@ HTTPServer::SendEvent(EventStream* p_stream
   return p_stream->m_alive;
 }
 
-// Form event to a stream string
-XString
-HTTPServer::EventToString(ServerEvent* p_event)
+// Form event to a stream string buffer 
+// Guaranteed to be in UTF-8 format
+// Caller must delete the buffer
+void
+HTTPServer::EventToStringBuffer(ServerEvent* p_event,BYTE** p_buffer,int& p_length)
 {
   XString stream;
 
   // Append client retry time to the first event
   if(p_event->m_id == 1)
   {
-    stream.Format("retry: %u\n",p_event->m_id);
+    stream.Format(_T("retry: %u\n"),p_event->m_id);
   }
-  // Event naam if not standard 'message'
-  if(!p_event->m_event.IsEmpty() && p_event->m_event.CompareNoCase("message"))
+  // Event name if not standard 'message'
+  if(!p_event->m_event.IsEmpty() && p_event->m_event.CompareNoCase(_T("message")))
   {
-    stream.AppendFormat("event:%s\n",p_event->m_event.GetString());
+    stream.AppendFormat(_T("event:%s\n"),p_event->m_event.GetString());
   }
   // Event ID if not zero
   if(p_event->m_id > 0)
   {
-    stream.AppendFormat("id:%u\n",p_event->m_id);
+    stream.AppendFormat(_T("id:%u\n"),p_event->m_id);
   }
   if(!p_event->m_data.IsEmpty())
   {
@@ -1414,32 +1424,42 @@ HTTPServer::EventToString(ServerEvent* p_event)
     // Optimize our carriage returns
     if(buffer.Find('\r') >= 0)
     {
-      buffer.Replace("\r\n","\n");
-      buffer.Replace("\r","\n");
+      buffer.Replace(_T("\r\n"),_T("\n"));
+      buffer.Replace(_T("\r"),_T("\n"));
     }
     while(!buffer.IsEmpty())
     {
       int pos = buffer.Find('\n');
       if(pos < 0)
       {
-        stream += "data:" + buffer + "\n";
+        stream += _T("data:") + buffer + _T("\n");
         buffer.Empty();
       }
       else
       {
         ++pos;
-        stream += "data:" + buffer.Left(pos);
+        stream += _T("data:") + buffer.Left(pos);
         buffer = buffer.Mid(pos);
       }
     }
     // Catch the last line without a newline
-    if(stream.Right(1) != "\n")
+    if(stream.Right(1) != _T("\n"))
     {
-      stream += "\n";
+      stream += _T("\n");
     }
   }
-  stream += "\n";
-  return stream;
+  stream += _T("\n");
+
+  // SSE Stream is always in UTF-8 format.
+#ifdef UNICODE
+  TryCreateNarrowString(stream,_T("utf-8"),false,p_buffer,p_length);
+#else
+  XString utf8stream = EncodeStringForTheWire(stream,_T("utf-8"));
+  p_length  = utf8stream.GetLength();
+  *p_buffer = new BYTE[p_length + 1];
+  memcpy_s(*p_buffer,p_length + 1,utf8stream.GetString(),p_length);
+  (*p_buffer)[p_length] = 0;
+#endif
 }
 
 // Running our event monitor heartbeat thread
@@ -1470,7 +1490,7 @@ HTTPServer::EventMonitor()
   bool  startNew = false;
   _set_se_translator(SeTranslator);
 
-  DETAILLOG1("Event heartbeat monitor started");
+  DETAILLOG1(_T("Event heartbeat monitor started"));
   do
   {
     DWORD waited = WaitForSingleObjectEx(m_eventEvent,m_eventKeepAlive,true);
@@ -1497,7 +1517,7 @@ HTTPServer::EventMonitor()
   CloseHandle(m_eventEvent);
   m_eventEvent   = nullptr;
   m_eventMonitor = nullptr;
-  DETAILLOG1("Event heartbeat monitor stopped");
+  DETAILLOG1(_T("Event heartbeat monitor stopped"));
 
   if(startNew)
   {
@@ -1519,10 +1539,11 @@ HTTPServer::CheckEventStreams()
 
   AutoCritSec lock(&m_eventLock);
   UINT number = 0;
-  // Create keep alive buffer
-  XString keepAlive = ":keepalive\r\n\r\n";
+  // Create keep alive buffer (always UTF-8 format compatible)
+  char* keepAlive = ":keepalive\r\n\r\n";
+  int size = (int) strlen(keepAlive);
 
-  DETAILLOG1("Starting event heartbeat");
+  DETAILLOG1(_T("Starting event heartbeat"));
 
   // Pulse event stream with a comment
   EventMap::iterator it = m_eventStreams.begin();
@@ -1536,7 +1557,7 @@ HTTPServer::CheckEventStreams()
       // we send a ":keepalive" comment to the clients
       if((pulse - stream->m_lastPulse) > (m_eventKeepAlive - 500))
       {
-        stream->m_alive = SendResponseEventBuffer(stream->m_requestID,&stream->m_lock,keepAlive.GetString(),keepAlive.GetLength());
+        stream->m_alive = SendResponseEventBuffer(stream->m_requestID,&stream->m_lock,(BYTE**)&keepAlive,size);
         stream->m_lastPulse = pulse;
         ++stream->m_chunks;
         ++number;
@@ -1545,21 +1566,21 @@ HTTPServer::CheckEventStreams()
     }
     catch(StdException& ex)
     {
-      ERRORLOG(ERROR_NOT_FOUND,"Cannot handle event stream: " + ex.GetErrorMessage());
+      ERRORLOG(ERROR_NOT_FOUND,_T("Cannot handle event stream: ") + ex.GetErrorMessage());
       try
       {
         delete it->second;
       }
       catch(StdException&)
       {
-        ERRORLOG(ERROR_NOT_FOUND,"Event stream already gone!");
+        ERRORLOG(ERROR_NOT_FOUND,_T("Event stream already gone!"));
       }
       it = m_eventStreams.erase(it);
     }
   }
 
   // What we just did
-  DETAILLOGV("Sent heartbeat to %d push-event clients.",number);
+  DETAILLOGV(_T("Sent heartbeat to %d push-event clients."),number);
 
   // Clean up dead event streams
   it = m_eventStreams.begin();
@@ -1570,10 +1591,10 @@ HTTPServer::CheckEventStreams()
       EventStream* stream = it->second;
           if(stream->m_chunks > MAX_DATACHUNKS)
       {
-        DETAILLOGS("Push-event stream out of data chunks: ",stream->m_baseURL);
+        DETAILLOGS(_T("Push-event stream out of data chunks: "),stream->m_baseURL);
 
         // Send a close-stream event
-        ServerEvent* event = new ServerEvent("close");
+        ServerEvent* event = new ServerEvent(_T("close"));
         SendEvent(stream,event);
         // Remove request from the request queue, closing the connection
         CancelRequestStream(stream->m_requestID);
@@ -1583,7 +1604,7 @@ HTTPServer::CheckEventStreams()
       }
       else if(stream->m_alive == false)
       {
-        DETAILLOGS("Abandoned push-event client from: ",stream->m_baseURL);
+        DETAILLOGS(_T("Abandoned push-event client from: "),stream->m_baseURL);
 
         // Remove request from the request queue, closing the connection
         CancelRequestStream(stream->m_requestID);
@@ -1598,14 +1619,14 @@ HTTPServer::CheckEventStreams()
     }
     catch(StdException& ex)
     {
-      ERRORLOG(ERROR_NOT_FOUND,"Cannot clean up event stream: " + ex.GetErrorMessage());
+      ERRORLOG(ERROR_NOT_FOUND,_T("Cannot clean up event stream: ") + ex.GetErrorMessage());
       try
       {
         delete it->second;
       }
       catch(StdException&)
       {
-        ERRORLOG(ERROR_NOT_FOUND,"Event stream already gone!");
+        ERRORLOG(ERROR_NOT_FOUND,_T("Event stream already gone!"));
       }
       it = m_eventStreams.erase(it);
     }
@@ -1669,12 +1690,12 @@ HTTPServer::CloseEventStream(const EventStream* p_stream)
     if(stream.second == p_stream)
     {
       // Show in the log
-      DETAILLOGV("Closing event stream (user: %s) for URL: %s",p_stream->m_user.GetString(),p_stream->m_baseURL.GetString());
+      DETAILLOGV(_T("Closing event stream (user: %s) for URL: %s"),p_stream->m_user.GetString(),p_stream->m_baseURL.GetString());
       if(stream.second->m_alive)
       {
         // Send a close-stream event
         // And close the stream by sending a close flag
-        ServerEvent* event = new ServerEvent("close");
+        ServerEvent* event = new ServerEvent(_T("close"));
         SendEvent(stream.second,event,false);
       }
       else
@@ -1843,7 +1864,7 @@ bool
 HTTPServer::RegisterSocket(WebSocket* p_socket)
 {
   XString key(p_socket->GetIdentityKey());
-  DETAILLOGV("Register websocket [%s] at the server",key.GetString());
+  DETAILLOGV(_T("Register websocket [%s] at the server"),key.GetString());
   key.MakeLower();
 
   AutoCritSec lock(&m_socketLock);
@@ -1862,7 +1883,7 @@ bool
 HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
 {
   XString key = p_socket->GetIdentityKey();
-  DETAILLOGV("Unregistering websocket [%s] from the server",key.GetString());
+  DETAILLOGV(_T("Unregistering websocket [%s] from the server"),key.GetString());
   key.MakeLower();
 
   AutoCritSec lock(&m_socketLock);
@@ -1874,7 +1895,7 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
     return true;
   }
   // We don't have it
-  ERRORLOG(ERROR_FILE_NOT_FOUND,"Websocket to unregister NOT FOUND! : " + key);
+  ERRORLOG(ERROR_FILE_NOT_FOUND,_T("Websocket to unregister NOT FOUND! : ") + key);
   return false;
 }
 
@@ -1931,70 +1952,83 @@ HTTPServer::UnRegisterHTTPRequest(const HTTPRequest* p_request)
 //////////////////////////////////////////////////////////////////////////
 
 void
-HTTPServer::TraceKnownRequestHeader(unsigned p_number,const char* p_value)
+HTTPServer::TraceKnownRequestHeader(unsigned p_number,LPCTSTR p_value)
 {
   // See if known header is 'given'
-  if (!p_value||*p_value==0)
+  if (!p_value || *p_value == 0)
   {
     return;
   }
 
   // Header fields are defined in HTTPMessage.cpp!!
   XString line = header_fields[p_number];
-  line += ": ";
+  line += _T(": ");
   line += p_value;
-  m_log->BareStringLog(line.GetString(),line.GetLength());
+  m_log->BareStringLog(line);
 }
 
 void
 HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
 {
   // Print HTTPSite context first before anything else of the call
-  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,true,"Incoming call for site context: %lX",p_request->UrlContext);
+  m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_TRACE,true,_T("Incoming call for site context: %lX"),p_request->UrlContext);
 
   XString httpVersion;
-  httpVersion.Format("HTTP/%d.%d",p_request->Version.MajorVersion,p_request->Version.MinorVersion);
+  httpVersion.Format(_T("HTTP/%d.%d"),p_request->Version.MajorVersion,p_request->Version.MinorVersion);
 
   // The request verb.
   XString verb;
   if(p_request->Verb == HttpVerbUnknown && p_request->UnknownVerbLength)
   {
+#ifdef UNICODE
+    bool foundBom(false);
+    TryConvertNarrowString((BYTE*)p_request->pUnknownVerb,(int)strlen(p_request->pUnknownVerb),_T(""),verb,foundBom);
+#else
     verb = p_request->pUnknownVerb;
+#endif
   }
   else
   {
     switch (p_request->Verb)
     {
-      case HttpVerbOPTIONS:   verb = "OPTIONS";   break;
-      case HttpVerbGET:       verb = "GET";       break;
-      case HttpVerbHEAD:      verb = "HEAD";      break;
-      case HttpVerbPOST:      verb = "POST";      break;
-      case HttpVerbPUT:       verb = "PUT";       break;
-      case HttpVerbDELETE:    verb = "DELETE";    break;
-      case HttpVerbTRACE:     verb = "TRACE";     break;
-      case HttpVerbCONNECT:   verb = "CONNECT";   break;
-      case HttpVerbTRACK:     verb = "TRACK";     break;
-      case HttpVerbMOVE:      verb = "MOVE";      break;
-      case HttpVerbCOPY:      verb = "COPY";      break;
-      case HttpVerbPROPFIND:  verb = "PROPFIND";  break;
-      case HttpVerbPROPPATCH: verb = "PROPPATCH"; break;
-      case HttpVerbMKCOL:     verb = "MKCOL";     break;
-      case HttpVerbLOCK:      verb = "LOCK";      break;
-      case HttpVerbUNLOCK:    verb = "UNLOCK";    break;
-      case HttpVerbSEARCH:    verb = "SEARCH";    break;
-      default:                verb = "UNKNOWN";   break;
+      case HttpVerbOPTIONS:   verb = _T("OPTIONS");   break;
+      case HttpVerbGET:       verb = _T("GET");       break;
+      case HttpVerbHEAD:      verb = _T("HEAD");      break;
+      case HttpVerbPOST:      verb = _T("POST");      break;
+      case HttpVerbPUT:       verb = _T("PUT");       break;
+      case HttpVerbDELETE:    verb = _T("DELETE");    break;
+      case HttpVerbTRACE:     verb = _T("TRACE");     break;
+      case HttpVerbCONNECT:   verb = _T("CONNECT");   break;
+      case HttpVerbTRACK:     verb = _T("TRACK");     break;
+      case HttpVerbMOVE:      verb = _T("MOVE");      break;
+      case HttpVerbCOPY:      verb = _T("COPY");      break;
+      case HttpVerbPROPFIND:  verb = _T("PROPFIND");  break;
+      case HttpVerbPROPPATCH: verb = _T("PROPPATCH"); break;
+      case HttpVerbMKCOL:     verb = _T("MKCOL");     break;
+      case HttpVerbLOCK:      verb = _T("LOCK");      break;
+      case HttpVerbUNLOCK:    verb = _T("UNLOCK");    break;
+      case HttpVerbSEARCH:    verb = _T("SEARCH");    break;
+      default:                verb = _T("UNKNOWN");   break;
     }
   }
 
   // THE PRINCIPAL HTTP PROTOCOL CALL LINE
   XString httpLine;
-  httpLine.Format("%s %s %s",verb.GetString(),p_request->pRawUrl,httpVersion.GetString());
-  m_log->BareStringLog(httpLine.GetString(),httpLine.GetLength());
+
+#ifdef UNICODE
+  XString rawUrl;
+  bool foundBom(false);
+  TryConvertNarrowString((BYTE*)p_request->pRawUrl,(int)strlen(p_request->pRawUrl),_T(""),rawUrl,foundBom);
+#else
+  XString rawUrl = p_request->pRawUrl;
+#endif
+  httpLine.Format(_T("%s %s %s"),verb.GetString(),rawUrl.GetString(),httpVersion.GetString());
+  m_log->BareStringLog(httpLine);
 
   // Print all 'known' HTTP headers
   for (unsigned ind = 0; ind < HttpHeaderMaximum; ++ind)
   {
-    TraceKnownRequestHeader(ind,p_request->Headers.KnownHeaders[ind].pRawValue);
+    TraceKnownRequestHeader(ind,LPCSTRToString(p_request->Headers.KnownHeaders[ind].pRawValue));
   }
 
   // Print all 'unknown' headers
@@ -2002,13 +2036,13 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
   {
     XString uheader;
     uheader  = p_request->Headers.pUnknownHeaders[ind].pName;
-    uheader += ": ";
+    uheader += _T(": ");
     uheader += p_request->Headers.pUnknownHeaders[ind].pRawValue;
-    m_log->BareStringLog(uheader.GetString(),uheader.GetLength());
+    m_log->BareStringLog(uheader);
   }
 
   // Print empty line between header and body (!!)
-  m_log->BareStringLog("",0);
+  m_log->BareStringLog(XString(_T("")));
 
   // The following members are NOT used here
 
@@ -2020,7 +2054,7 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
 }
 
 void
-HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer)
+HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer,bool p_utf16 /*=false*/)
 {
   // Only if we have an attached logfile
   if(!m_log)
@@ -2041,13 +2075,13 @@ HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer)
   {
     if(p_buffer && p_buffer->GetLength())
     {
-      LogTraceRequestBody(p_buffer);
+      LogTraceRequestBody(p_buffer,p_utf16);
     }
   }
 }
 
 void
-HTTPServer::LogTraceRequestBody(FileBuffer* p_buffer)
+HTTPServer::LogTraceRequestBody(FileBuffer* p_buffer,bool p_utf16 /*=false*/)
 {
   // Only if we have work to do
   if(!p_buffer || !m_log)
@@ -2062,10 +2096,26 @@ HTTPServer::LogTraceRequestBody(FileBuffer* p_buffer)
     size_t length = 0;
     p_buffer->GetBufferCopy(buffer,length);
 
-    m_log->BareStringLog(reinterpret_cast<const char*>(buffer),static_cast<int>(length));
+    if(p_utf16)
+    {
+#ifdef UNICODE
+      XString string = (LPCTSTR)buffer;
+      AutoCSTR body(string);
+      m_log->BareBufferLog((void*)body.cstr(),body.size());
+#else
+      XString string;
+      bool foundBom(false);
+      TryConvertWideString(buffer,(int)length,_T(""),string,foundBom);
+      m_log->BareBufferLog((void*) string.GetString(),string.GetLength() * sizeof(TCHAR));
+#endif
+    }
+    else
+    {
+      m_log->BareBufferLog(buffer,static_cast<unsigned>(length));
+    }
     if(MUSTLOG(HLL_TRACEDUMP))
     {
-      m_log->AnalysisHex(__FUNCTION__,"Incoming",buffer,static_cast<unsigned>(length));
+      m_log->AnalysisHex(_T(__FUNCTION__),_T("Incoming"),buffer,static_cast<unsigned>(length));
     }
 
     // Delete buffer copy
@@ -2080,7 +2130,7 @@ HTTPServer::LogTraceRequestBody(FileBuffer* p_buffer)
 //////////////////////////////////////////////////////////////////////////
 
 void
-HTTPServer::TraceKnownResponseHeader(unsigned p_number,const char* p_value)
+HTTPServer::TraceKnownResponseHeader(unsigned p_number,LPCTSTR p_value)
 {
   // See if known header is 'given'
   if(!p_value || *p_value == 0)
@@ -2090,9 +2140,9 @@ HTTPServer::TraceKnownResponseHeader(unsigned p_number,const char* p_value)
 
   // Header fields are defined in HTTPMessage.cpp!!
   XString line = p_number < HttpHeaderAcceptRanges ? header_fields[p_number] : header_response[p_number - HttpHeaderAcceptRanges];
-  line += ": ";
+  line += _T(": ");
   line += p_value;
-  m_log->BareStringLog(line.GetString(),line.GetLength());
+  m_log->BareStringLog(line);
 }
 
 void
@@ -2106,18 +2156,19 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
 
   // Print the principal first protocol line
   XString line;
-  line.Format("HTTP/%d.%d %d %s"
+  XString reason = LPCSTRToString(p_response->pReason);
+  line.Format(_T("HTTP/%d.%d %d %s")
              ,p_response->Version.MajorVersion
              ,p_response->Version.MinorVersion
              ,p_response->StatusCode
-             ,p_response->pReason);
-  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_TRACE,false,"Full HTTP protocol");
-  m_log->BareStringLog(line.GetString(),line.GetLength());
+             ,reason.GetString());
+  m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_TRACE,false,_T("Full HTTP protocol"));
+  m_log->BareStringLog(line);
 
   // Print all 'known' HTTP headers
   for (unsigned ind = 0; ind < HttpHeaderResponseMaximum; ++ind)
   {
-    TraceKnownResponseHeader(ind,p_response->Headers.KnownHeaders[ind].pRawValue);
+    TraceKnownResponseHeader(ind,LPCSTRToString(p_response->Headers.KnownHeaders[ind].pRawValue));
   }
 
   // Print all 'unknown' headers
@@ -2127,16 +2178,16 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
     {
       XString uheader;
       uheader = p_response->Headers.pUnknownHeaders[ind].pName;
-      uheader += ": ";
+      uheader += _T(": ");
       uheader += p_response->Headers.pUnknownHeaders[ind].pRawValue;
-      m_log->BareStringLog(uheader.GetString(),uheader.GetLength());
+      m_log->BareStringLog(uheader);
     }
   }
-  m_log->BareStringLog("",0);
+  m_log->BareStringLog(XString(_T("")));
 }
 
 void
-HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer)
+HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer,bool p_utf16)
 {
   // Only if we have a logfile
   if(!m_log)
@@ -2161,24 +2212,41 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer)
         size_t length = 0;
         p_buffer->GetBufferCopy(buffer,length);
 
-        m_log->BareStringLog(reinterpret_cast<const char*>(buffer),static_cast<int>(length));
+        if(p_utf16)
+        {
+#ifdef UNICODE
+          XString string = (LPCTSTR) buffer;
+          AutoCSTR str(string);
+          m_log->BareBufferLog((void*)str.cstr(),str.size());
+#else
+          XString string;
+          bool foundBom(false);
+          TryConvertWideString(buffer,(int) length,_T(""),string,foundBom);
+          m_log->BareBufferLog((void*) string.GetString(),string.GetLength());
+#endif
+        }
+        else
+        {
+          m_log->BareBufferLog(buffer,static_cast<unsigned>(length));
+        }
+
         if(MUSTLOG(HLL_TRACEDUMP))
         {
-          m_log->AnalysisHex(__FUNCTION__,"Outgoing",buffer,static_cast<unsigned>(length));
+          m_log->AnalysisHex(_T(__FUNCTION__),_T("Outgoing"),buffer,static_cast<unsigned>(length));
         }
         // Delete buffer copy
         delete[] buffer;
       }
       else
       {
-        m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Uploading FILE: %s",p_buffer->GetFileName().GetString());
+        m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,_T("Uploading FILE: %s"),p_buffer->GetFileName().GetString());
       }
     }
   }
 }
 
 void
-HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length)
+HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length,bool p_utf16)
 {
   // Only if we have a logfile
   if(!m_log)
@@ -2195,10 +2263,24 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,u
   // Log&Trace the body
   if(MUSTLOG(HLL_LOGBODY) && p_buffer)
   {
-    m_log->BareStringLog(reinterpret_cast<const char*>(p_buffer),p_length);
+    if(p_utf16)
+    {
+      XString string;
+      bool foundBom(false);
+#ifdef UNICODE
+      TryConvertNarrowString(p_buffer,(int) p_length,_T(""),string,foundBom);
+#else
+      TryConvertWideString(p_buffer,(int) p_length,_T(""),string,foundBom);
+#endif
+      m_log->BareBufferLog((void*) string.GetString(),string.GetLength());
+    }
+    else
+    {
+      m_log->BareBufferLog(p_buffer,static_cast<unsigned>(p_length));
+    }
     if(MUSTLOG(HLL_TRACEDUMP))
     {
-      m_log->AnalysisHex(__FUNCTION__,"Outgoing",p_buffer,p_length);
+      m_log->AnalysisHex(_T(__FUNCTION__),_T("Outgoing"),p_buffer,p_length);
     }
   }
 }
@@ -2209,8 +2291,8 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,u
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Applications may call this registration after serveral failed 
-// login attempts of serveral failed SSE stream registration events
+// Applications may call this registration after several failed 
+// login attempts of several failed SSE stream registration events
 void
 HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
 {
@@ -2227,7 +2309,7 @@ HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
 
     // REGISTER THE ATTACK
     XString sender = SocketToServer(p_sender);
-    ERRORLOG(ERROR_TOO_MANY_SESS,"DDOS ATTACK REGISTERED FOR: " + sender + " : " + p_path);
+    ERRORLOG(ERROR_TOO_MANY_SESS,_T("DDOS ATTACK REGISTERED FOR: ") + sender + _T(" : ") + p_path);
 
     // If we have a logfile where administrators may look
     // register the attack there for all to see!
@@ -2237,13 +2319,13 @@ HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
       int pos = filename.ReverseFind('\\');
       if(pos)
       {
-        filename = filename.Left(pos) + "ALARM_DDOS_ATTACK.txt";
-        FILE* file = nullptr;
-        fopen_s(&file,filename,"a");
-        if(file)
+        filename = filename.Left(pos) + _T("ALARM_DDOS_ATTACK.txt");
+        WinFile file(filename);
+
+        if(file.Open(winfile_write,FAttributes::attrib_none,Encoding::UTF8))
         {
-          fprintf(file,"%s: %s\n",sender.GetString(),p_path.GetString());
-          fclose(file);
+          file.Format(_T("%s: %s\n"),sender.GetString(),p_path.GetString());
+          file.Close();
         }
       }
     }

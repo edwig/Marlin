@@ -49,7 +49,7 @@ static char THIS_FILE[] = __FILE__;
 // The buffers are static, so that they will work, even if the stack is overstressed
 //
 static IMAGEHLP_MODULE  g_module;
-static char             g_symbuf[sizeof(IMAGEHLP_SYMBOL) + 256];
+static TCHAR            g_symbuf[sizeof(IMAGEHLP_SYMBOL) + 256];
 static IMAGEHLP_LINE    g_line;
 
 // Dynamic loading wrapper around dbghelp.dll
@@ -72,9 +72,9 @@ namespace
       // Load the dbg help library
       XString debugHelper = GetExePath();
 #ifdef _WIN64
-      debugHelper += "dbghelp64.dll";
+      debugHelper += _T("dbghelp64.dll");
 #else
-      debugHelper += "dbghelp32.dll";
+      debugHelper += _T("dbghelp32.dll");
 #endif
       m_module = LoadLibrary(debugHelper);
       if(m_module)
@@ -195,7 +195,7 @@ StackTrace::Process(CONTEXT *context, unsigned int overslaan)
   }
 
   // Initialize symbol handling
-  dbgHelp.fnSymInitialize(process, const_cast<LPSTR>(static_cast<LPCSTR>(GetExePath())), TRUE);
+  dbgHelp.fnSymInitialize(process,CT2CA(GetExePath().GetString()), TRUE);
 
   // Initialize first stack frame
 #ifdef _WIN64
@@ -309,40 +309,40 @@ StackTrace::AsString(bool p_path /* = true */) const
 {
   // Build a string representation
   XString tmp;
-  XString result = "Address         Module                Function\n"
-                   "--------------- --------------------- ------------------------\n";
+  XString result = _T("Address         Module                Function\n"
+                      "--------------- --------------------- ------------------------\n");
 
   for(Trace::const_iterator iter = m_trace.begin(),end = m_trace.end();iter != end;++iter)
   {
     const Frame& frame = *iter;
     // Add address and function
 #ifdef _WIN64
-    tmp.Format("0x%012I64X  %-20.20s", frame.m_address, frame.m_module.GetString());
+    tmp.Format(_T("0x%012I64X  %-20.20s"), frame.m_address, frame.m_module.GetString());
 #else
-    tmp.Format("0x%lX  %-20.20s",frame.m_address,frame.m_module.GetString());
+    tmp.Format(_T("0x%lX  %-20.20s"),frame.m_address,frame.m_module.GetString());
 #endif
     result += tmp;
     if (frame.m_function.IsEmpty())
     {
-      result += "\n";
+      result += _T("\n");
       continue;
     }
 
     // Add function and offset
 #ifdef _WIN64
-    tmp.Format("  %s + 0x%I64X",frame.m_function.GetString(),frame.m_offset);
+    tmp.Format(_T("  %s + 0x%I64X"),frame.m_function.GetString(),frame.m_offset);
 #else
-    tmp.Format("  %s + 0x%08X", frame.m_function.GetString(),frame.m_offset);
+    tmp.Format(_T("  %s + 0x%08X"), frame.m_function.GetString(),frame.m_offset);
 #endif
     result += tmp;
     if (!p_path || frame.m_fileName.IsEmpty())
     {
-      result += "\n";
+      result += _T("\n");
       continue;
     }
 
     // Add file and line number
-    tmp.Format("  [%s:%d]\n", frame.m_fileName.GetString(), frame.m_line);
+    tmp.Format(_T("  [%s:%d]\n"), frame.m_fileName.GetString(), frame.m_line);
     result += tmp;
   }
 
@@ -353,7 +353,7 @@ XString
 StackTrace::AsXMLString() const
 {
   // Build a string representation
-  XString result = "<stack>\n", tmp;
+  XString result = _T("<stack>\n"), tmp;
   for (Trace::const_iterator iter = m_trace.begin(), end = m_trace.end();
        iter != end;
        ++iter)
@@ -362,16 +362,16 @@ StackTrace::AsXMLString() const
 
     // Add address
 #ifdef _WIN64
-    tmp.Format("\t<frame pc=\"0x%I64X\">",frame.m_address);
+    tmp.Format(_T("\t<frame pc=\"0x%I64X\">"),frame.m_address);
 #else
-    tmp.Format("\t<frame pc=\"0x%08X\">", frame.m_address);
+    tmp.Format(_T("\t<frame pc=\"0x%08X\">"), frame.m_address);
 #endif
     result += tmp;
 
     // Add module
     if (!frame.m_module.IsEmpty())
     {
-      tmp.Format("<module>%s</module>",XMLParser::PrintXmlString(frame.m_module).GetString());
+      tmp.Format(_T("<module>%s</module>"),XMLParser::PrintXmlString(frame.m_module).GetString());
       result += tmp;
     }
 
@@ -379,11 +379,11 @@ StackTrace::AsXMLString() const
     if (!frame.m_function.IsEmpty())
     {
 #ifdef _WIN64
-      tmp.Format("<symbool naam=\"%s\" offset=\"%I64d\" />",
+      tmp.Format(_T("<symbool naam=\"%s\" offset=\"%I64d\" />"),
                  XMLParser::PrintXmlString(frame.m_function).GetString(),
                  frame.m_offset);
 #else
-      tmp.Format("<symbool naam=\"%s\" offset=\"%d\" />",
+      tmp.Format(_T("<symbool naam=\"%s\" offset=\"%d\" />"),
                  XMLParser::PrintXmlString(frame.m_function).GetString(),
                  frame.m_offset);
 #endif
@@ -393,16 +393,16 @@ StackTrace::AsXMLString() const
     // Add file and line number
     if (!frame.m_fileName.IsEmpty())
     {
-      tmp.Format("<regel bestand=\"%s\" nummer=\"%d\" />",
+      tmp.Format(_T("<regel bestand=\"%s\" nummer=\"%d\" />"),
                  XMLParser::PrintXmlString(frame.m_fileName).GetString(),
                  frame.m_line);
       result += tmp;
     }
 
-    result += "</frame>\n";
+    result += _T("</frame>\n");
   }
 
-  return result + "</stack>\n";
+  return result + _T("</stack>\n");
 }
 
 // Convert first to string
@@ -413,9 +413,9 @@ StackTrace::FirstAsString() const
   if(m_trace.empty())
   {
 #ifdef _WIN64
-    return "No stack trace: missing dbghelp64.dll?";
+    return _T("No stack trace: missing dbghelp64.dll?");
 #else
-    return "No stack trace: missing dbghelp32.dll?";
+    return _T("No stack trace: missing dbghelp32.dll?");
 #endif
   }
   const Frame &frame = m_trace.front();
@@ -425,17 +425,17 @@ StackTrace::FirstAsString() const
   if (!frame.m_function.IsEmpty())
   {
 #ifdef _WIN64
-    result.Format("%s + 0x%I64X",frame.m_function.GetString(),frame.m_offset);
+    result.Format(_T("%s + 0x%I64X"),frame.m_function.GetString(),frame.m_offset);
 #else
-    result.Format("%s + 0x%08X", frame.m_function.GetString(),frame.m_offset);
+    result.Format(_T("%s + 0x%08X"), frame.m_function.GetString(),frame.m_offset);
 #endif
   }
   else
   {
 #ifdef _WIN64
-    result.Format("0x%I64X",frame.m_address);
+    result.Format(_T("0x%I64X"),frame.m_address);
 #else
-    result.Format("0x%08X", frame.m_address);
+    result.Format(_T("0x%08X"), frame.m_address);
 #endif
   }
 

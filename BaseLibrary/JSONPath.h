@@ -142,12 +142,12 @@ private:
   JSONMessage*      m_message   { nullptr };
   int               m_origin    { 0       };
   JPStatus          m_status    { JPStatus::JP_None };
-  char              m_delimiter { '/'};
+  TCHAR             m_delimiter { '/'};
   JSONvalue*        m_searching { nullptr };
   bool              m_recursive { false   };
   XString           m_errorInfo;
   XString           m_rootWord  { "" };
-  std::stack<char>  m_bracketStack;
+  std::stack<TCHAR> m_bracketStack;
 
   // RESULT Pointers
   JPResults         m_results;

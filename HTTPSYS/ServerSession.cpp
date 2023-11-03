@@ -11,9 +11,9 @@
 #include "http_private.h"
 #include "ServerSession.h"
 #include "UrlGroup.h"
-#include "Logfile.h"
 #include "Logging.h"
 #include "HTTPReadRegister.h"
+#include <LogAnalysis.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -60,8 +60,11 @@ ServerSession::~ServerSession()
 LPCSTR
 ServerSession::GetServerVersion()
 {
-  m_server.Format("Marlin HTTPAPI/%s Version: %s",VERSION_HTTPAPI,VERSION_HTTPSYS);
-  return m_server.GetString();
+  if(!m_server[0])
+  {
+    sprintf_s(m_server,50,"Marlin HTTPAPI/%s Version: %s",VERSION_HTTPAPI,VERSION_HTTPSYS);
+  }
+  return m_server;
 }
 
 
@@ -206,8 +209,8 @@ ServerSession::SetAuthentication(ULONG p_scheme,CString p_domain,CString p_realm
 static void PrintHexDumpActual(DWORD p_length,const void* p_buffer)
 {
   DWORD count = 0;
-	CHAR  digits[] = "0123456789abcdef";
-	CHAR  line[100];
+	TCHAR digits[] = _T("0123456789abcdef");
+	TCHAR line[100];
 	int   pos = 0;
 	const byte* buffer = static_cast<const byte *>(p_buffer);
 
@@ -223,7 +226,7 @@ static void PrintHexDumpActual(DWORD p_length,const void* p_buffer)
     DWORD i = 0;
 		count = (p_length > 16) ? 16:p_length;
 
-		sprintf_s(line, sizeof(line), "%4.4x  ", index);
+		_stprintf_s(line, sizeof(line),_T("%4.4x  "), index);
 		pos = 6;
 
 		for(i = 0; i < count;i++) 
@@ -281,14 +284,14 @@ void PrintHexDump(DWORD p_length, const void* p_buffer)
 void
 ServerSession::CreateLogfile()
 {
-  CString name = ("HTTP_Server");
-  m_logfile = new Logfile(name);
+  CString name(_T("HTTP_Server"));
+  m_logfile = new LogAnalysis(name);
   m_logfile->SetLogRotation(true);
   m_logfile->SetLogLevel(m_socketLogging = SOCK_LOGGING_FULLTRACE);
 
   CString filename;
-  filename.GetEnvironmentVariable("WINDIR");
-  filename += "\\TEMP\\HTTP_Server.txt";
+  filename.GetEnvironmentVariable(_T("WINDIR"));
+  filename += _T("\\TEMP\\HTTP_Server.txt");
 
   m_logfile->SetLogFilename(filename);
 }
@@ -303,7 +306,7 @@ ServerSession::ReadRegistrySettings()
   TCHAR   value3[BUFF_LEN];
   DWORD   size3 = BUFF_LEN;
 
-  if(HTTPReadRegister(sectie,"DisableServerHeader",REG_DWORD,value1,&value2,value3,&size3))
+  if(HTTPReadRegister(sectie,_T("DisableServerHeader"),REG_DWORD,value1,&value2,value3,&size3))
   {
     if(value2 >= 0 && value2 <= 2)
     {
@@ -311,7 +314,7 @@ ServerSession::ReadRegistrySettings()
     }
   }
 
-  if(HTTPReadRegister(sectie,"MaxConnections",REG_DWORD,value1,&value2,value3,&size3))
+  if(HTTPReadRegister(sectie,_T("MaxConnections"),REG_DWORD,value1,&value2,value3,&size3))
   {
     if(value2 >= SESSION_MIN_CONNECTIONS && value2 <= SESSION_MAX_CONNECTIONS)
     {

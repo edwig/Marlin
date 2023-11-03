@@ -38,32 +38,32 @@ static char THIS_FILE[] = __FILE__;
 bool 
 SettingTheBaseLanguage(WebServiceClient& p_client,XString p_contract)
 {
-  XString command("MarlinFirst");
-  XString language("Dutch");
+  XString command(_T("MarlinFirst"));
+  XString language(_T("Dutch"));
   SOAPMessage msg1(p_contract,command);
-  msg1.SetParameter("Language",language);
-  msg1.SetParameter("Version",1);
+  msg1.SetParameter(_T("Language"),language);
+  msg1.SetParameter(_T("Version"),1);
 
   if(p_client.Send(&msg1))
   {
-    if(msg1.GetParameterBoolean("Accepted") == true)
+    if(msg1.GetParameterBoolean(_T("Accepted")) == true)
     {
       // --- "---------------------------------------------- - ------
-      printf("Service contract: accepting base language      : OK\n");
-      xprintf("Base language is: %s\n",language.GetString());
+      _tprintf(_T("Service contract: accepting base language      : OK\n"));
+      xprintf(_T("Base language is: %s\n"),language.GetString());
       return true;
     }
     else
     {
       // --- "---------------------------------------------- - ------
-      printf("Service contract: accepted language wrong state: ERROR\n");
+      _tprintf(_T("Service contract: accepted language wrong state: ERROR\n"));
       xprintf(msg1.GetFault());
     }
   }
   else
   {
     // --- "---------------------------------------------- - ------
-    printf("Service contract: Language message not sent!   : ERROR\n");
+    _tprintf(_T("Service contract: Language message not sent!   : ERROR\n"));
     xprintf(p_client.GetErrorText());
   }
   return false;
@@ -72,31 +72,31 @@ SettingTheBaseLanguage(WebServiceClient& p_client,XString p_contract)
 bool
 SettingTheTranslateLanguage(WebServiceClient& p_client,XString p_contract)
 {
-  XString command("MarlinSecond");
-  XString translate("Français");
+  XString command(_T("MarlinSecond"));
+  XString translate(_T("Français"));
   SOAPMessage msg2(p_contract,command);
-  msg2.SetParameter("Translation",translate);
+  msg2.SetParameter(_T("Translation"),translate);
 
   if(p_client.Send(&msg2))
   {
-    if(msg2.GetParameterBoolean("CanDo") == true)
+    if(msg2.GetParameterBoolean(_T("CanDo")) == true)
     {
       // --- "---------------------------------------------- - ------
-      printf("Service contract: set 'translate to' language  : OK\n");
-      xprintf("%s\n",translate.GetString());
+      _tprintf(_T("Service contract: set 'translate to' language  : OK\n"));
+      xprintf(_T("%s\n"),translate.GetString());
       return true;
     }
     else
     {
       // --- "---------------------------------------------- - ------
-      printf("Service contract: cannot translate words!      : ERROR\n");
+      _tprintf(_T("Service contract: cannot translate words!      : ERROR\n"));
     }
   }
   else
   {
     // --- "---------------------------------------------- - ------
-    printf("Serivce contract: 'translate to' not sent!     : ERROR\n");
-    printf(p_client.GetErrorText());
+    _tprintf(_T("Serivce contract: 'translate to' not sent!     : ERROR\n"));
+    _tprintf(p_client.GetErrorText());
   }
   return false;
 }
@@ -107,34 +107,34 @@ Translate(WebServiceClient& p_client
          ,XString p_word
          ,XString p_expected)
 {
-  XString command("MarlinThird");
+  XString command(_T("MarlinThird"));
   SOAPMessage msg3(p_contract,command);
-  msg3.SetParameter("WordToTranslate",p_word);
+  msg3.SetParameter(_T("WordToTranslate"),p_word);
 
   if(p_client.Send(&msg3))
   {
-    XString todayString = msg3.GetParameter("TranslatedWord");
+    XString todayString = msg3.GetParameter(_T("TranslatedWord"));
     
     // --- "---------------------------------------------- - ------
-    xprintf("TRANSLATED [%s] to [%s]\n",p_word.GetString(),p_expected.GetString());
+    xprintf(_T("TRANSLATED [%s] to [%s]\n"),p_word.GetString(),p_expected.GetString());
 
     if(todayString == p_expected)
     {
       // --- "---------------------------------------------- - ------
-      printf("Service contract: correct translation          : OK\n");
+      _tprintf(_T("Service contract: correct translation          : OK\n"));
       return true;
     }
     else
     {
       // --- "---------------------------------------------- - ------
-      printf("Service contract: translation is wrong!        : ERROR\n");
+      _tprintf(_T("Service contract: translation is wrong!        : ERROR\n"));
     }
   }
   else
   {
     // --- "---------------------------------------------- - ------
-    printf("Service contract: translation not sent!        : ERROR\n");
-    printf(p_client.GetErrorText());
+    _tprintf(_T("Service contract: translation not sent!        : ERROR\n"));
+    _tprintf(p_client.GetErrorText());
   }
   return false;
 }
@@ -142,27 +142,27 @@ Translate(WebServiceClient& p_client
 bool
 TestWSDLDatatype(WebServiceClient& p_client,XString p_contract)
 {
-  XString command("MarlinFirst");
-  XString language("Dutch");
+  XString command(_T("MarlinFirst"));
+  XString language(_T("Dutch"));
   SOAPMessage msg1(p_contract,command);
-  msg1.SetParameter("Language",language);
-  msg1.SetParameter("Version","MyVersion");
+  msg1.SetParameter(_T("Language"),language);
+  msg1.SetParameter(_T("Version"),_T("MyVersion"));
   bool error = true;
 
   if(p_client.Send(&msg1))
   {
-    if(msg1.GetParameterBoolean("Accepted") == true)
+    if(msg1.GetParameterBoolean(_T("Accepted")) == true)
     {
       // --- "---------------------------------------------- - ------
-      xprintf("Should not be accepted, because the parameter 'Version' contains an error!\n");
+      xprintf(_T("Should not be accepted, because the parameter 'Version' contains an error!\n"));
     }
     else
     {
       xprintf(msg1.GetFault());
-      if(msg1.GetFaultCode()   == "Datatype"    &&
-         msg1.GetFaultActor()  == "Client"      &&
-         msg1.GetFaultString() == "Restriction" &&
-         msg1.GetFaultDetail() == "Datatype check failed! Field: Version Value: MyVersion Result: Not an integer, but: MyVersion")
+      if(msg1.GetFaultCode()   == _T("Datatype")    &&
+         msg1.GetFaultActor()  == _T("Client")      &&
+         msg1.GetFaultString() == _T("Restriction") &&
+         msg1.GetFaultDetail() == _T("Datatype check failed! Field: Version Value: MyVersion Result: Not an integer, but: MyVersion"))
       {
         error = false;
       }
@@ -170,75 +170,75 @@ TestWSDLDatatype(WebServiceClient& p_client,XString p_contract)
   }
   else
   {
-    printf(p_client.GetErrorText());
+    _tprintf(p_client.GetErrorText());
   }
   // --- "---------------------------------------------- - ------
-  printf("Service contract: Testing WSDL datatypes       : %s\n", error ? "ERROR" : "OK");
+  _tprintf(_T("Service contract: Testing WSDL datatypes       : %s\n"), error ? _T("ERROR") : _T("OK"));
   return error;
 }
 
 bool
 TestWSDLFloating(WebServiceClient& p_client,XString p_contract)
 {
-  XString command("MarlinFifth");
-  XString pi = "3.141592653589793";
+  XString command(_T("MarlinFifth"));
+  XString pi = _T("3.141592653589793");
   SOAPMessage msg(p_contract,command);
-  XMLElement* param = msg.SetParameter("Parameters","");
-  msg.AddElement(param,"Dialect", XDT_String,"Math");
-  msg.AddElement(param,"Region",  XDT_String,"Europe");
-  msg.AddElement(param,"PiApprox",XDT_Double,pi);
-  XMLElement* data = msg.AddElement(param,"DataTypes",XDT_Complex,"");
-  msg.AddElement(data,"MinLength",  XDT_Integer, "4");
-  msg.AddElement(data,"MaxLength",  XDT_Integer,"20");
-  msg.AddElement(data,"MaxDecimals",XDT_Integer,"16");
+  XMLElement* param = msg.SetParameter(_T("Parameters"),_T(""));
+  msg.AddElement(param,_T("Dialect"), XDT_String,_T("Math"));
+  msg.AddElement(param,_T("Region"),  XDT_String,_T("Europe"));
+  msg.AddElement(param,_T("PiApprox"),XDT_Double,pi);
+  XMLElement* data = msg.AddElement(param,_T("DataTypes"),XDT_Complex,_T(""));
+  msg.AddElement(data,_T("MinLength"),  XDT_Integer, _T("4"));
+  msg.AddElement(data,_T("MaxLength"),  XDT_Integer,_T("20"));
+  msg.AddElement(data,_T("MaxDecimals"),XDT_Integer,_T("16"));
 
-  XMLElement* dword = msg.SetParameter("DoubleWord","");
-  msg.AddElement(dword,"Word",XDT_String,"PI");
+  XMLElement* dword = msg.SetParameter(_T("DoubleWord"),_T(""));
+  msg.AddElement(dword,_T("Word"),XDT_String,_T("PI"));
 
   bool error = true;
 
   if(p_client.Send(&msg))
   {
-    if(msg.GetParameter("TranslatedWord") == "pi")
+    if(msg.GetParameter(_T("TranslatedWord")) == _T("pi"))
     {
       error = false;
     }
   }
   // --- "---------------------------------------------- - ------
-  printf("Service contract: Testing WSDL floating point 1: %s\n",error ? "ERROR" : "OK");
+  _tprintf(_T("Service contract: Testing WSDL floating point 1: %s\n"),error ? _T("ERROR") : _T("OK"));
   return error;
 }
 
 bool
 TestWSDLFloatingWrong(WebServiceClient& p_client,XString p_contract)
 {
-  XString command("MarlinFifth");
-  XString pi = "3,141592653589793"; // THIS IS THE WRONG NUMBER !!
+  XString command(_T("MarlinFifth"));
+  XString pi = _T("3,141592653589793"); // THIS IS THE WRONG NUMBER !!
   SOAPMessage msg(p_contract,command);
-  XMLElement* param = msg.SetParameter("Parameters","");
-  msg.AddElement(param,"Dialect", XDT_String,"Math");
-  msg.AddElement(param,"Region",  XDT_String,"Europe");
-  msg.AddElement(param,"PiApprox",XDT_Double,pi);
-  XMLElement* data = msg.AddElement(param,"DataTypes",XDT_Complex,"");
-  msg.AddElement(data,"MinLength",  XDT_Integer,"4");
-  msg.AddElement(data,"MaxLength",  XDT_Integer,"20");
-  msg.AddElement(data,"MaxDecimals",XDT_Integer,"16");
+  XMLElement* param = msg.SetParameter(_T("Parameters"),_T(""));
+  msg.AddElement(param,_T("Dialect"), XDT_String,_T("Math"));
+  msg.AddElement(param,_T("Region"),  XDT_String,_T("Europe"));
+  msg.AddElement(param,_T("PiApprox"),XDT_Double,pi);
+  XMLElement* data = msg.AddElement(param,_T("DataTypes"),XDT_Complex,_T(""));
+  msg.AddElement(data,_T("MinLength"),  XDT_Integer,_T("4"));
+  msg.AddElement(data,_T("MaxLength"),  XDT_Integer,_T("20"));
+  msg.AddElement(data,_T("MaxDecimals"),XDT_Integer,_T("16"));
 
-  XMLElement* dword = msg.SetParameter("DoubleWord","");
-  msg.AddElement(dword,"Word",XDT_String,"PI");
+  XMLElement* dword = msg.SetParameter(_T("DoubleWord"),_T(""));
+  msg.AddElement(dword,_T("Word"),XDT_String,_T("PI"));
 
   bool error = true;
 
   if(p_client.Send(&msg))
   {
     // MUST GET A SOAP FAULT with this detailed information
-    if(msg.GetFaultDetail().Find("Datatype check failed! Field: PiApprox") >= 0)
+    if(msg.GetFaultDetail().Find(_T("Datatype check failed! Field: PiApprox")) >= 0)
     {
       error = false;
     }
   }
   // --- "---------------------------------------------- - ------
-  printf("Service contract: Testing WSDL floating point 2: %s\n",error ? "ERROR" : "OK");
+  _tprintf(_T("Service contract: Testing WSDL floating point 2: %s\n"),error ? _T("ERROR") : _T("OK"));
   return error;
 }
 
@@ -247,35 +247,35 @@ TestWSDLFloatingWrong(WebServiceClient& p_client,XString p_contract)
 int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
 {
   int errors = 6;
-  XString logfileName = MarlinConfig::GetExePath() + "ClientLog.txt";
+  XString logfileName = MarlinConfig::GetExePath() + _T("ClientLog.txt");
 
   XString url;
   XString wsdl;
-  XString contract("http://interface.marlin.org/testing/");
+  XString contract(_T("http://interface.marlin.org/testing/"));
 
 //  url .Format("http://%s:%d/MarlinTest/TestInterface/",              MARLIN_HOST,TESTING_HTTP_PORT);
 //  wsdl.Format("http://%s:%d/MarlinTest/TestInterface/MarlinWeb.wsdl",MARLIN_HOST,TESTING_HTTP_PORT);
-  url .Format("http://%s:%d/MarlinTest/",                 MARLIN_HOST,TESTING_HTTP_PORT);
-  wsdl.Format("http://%s:%d/MarlinTest/MarlinServer.wsdl",MARLIN_HOST,TESTING_HTTP_PORT);
+  url .Format(_T("http://%s:%d/MarlinTest/"),                 MARLIN_HOST,TESTING_HTTP_PORT);
+  wsdl.Format(_T("http://%s:%d/MarlinTest/MarlinServer.wsdl"),MARLIN_HOST,TESTING_HTTP_PORT);
   // JSON is simultaneous on different site
   if(p_json)
   {
-    url += "Extra/";
+    url += _T("Extra/");
   }
 
-  xprintf("TESTING THE WebServiceClient ON THE FOLLOWING CONTRACT:\n");
-  xprintf("Contract: %s\n",contract.GetString());
-  xprintf("URL     : %s\n",url.GetString());
-  xprintf("WSDL    : %s\n",wsdl.GetString());
-  xprintf("---------------------------------------------------------\n");
+  xprintf(_T("TESTING THE WebServiceClient ON THE FOLLOWING CONTRACT:\n"));
+  xprintf(_T("Contract: %s\n"),contract.GetString());
+  xprintf(_T("URL     : %s\n"),url.GetString());
+  xprintf(_T("WSDL    : %s\n"),wsdl.GetString());
+  xprintf(_T("---------------------------------------------------------\n"));
 
 
   WebServiceClient client(contract,url,wsdl);
 
   if(p_tokenProfile)
   {
-    client.SetUser("marlin");
-    client.SetPassword("M@rl!nS3cr3t");
+    client.SetUser(_T("marlin"));
+    client.SetPassword(_T("M@rl!nS3cr3t"));
     client.SetTokenProfile(true);
   }
 
@@ -292,7 +292,7 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
     // Need a logfile before the call to "Open()"
 
     // Create log file and turn logging 'on'
-    LogAnalysis log("TestHTTPClient");
+    LogAnalysis log(_T("TestHTTPClient"));
     log.SetLogFilename(logfileName,true);
     log.SetLogLevel(HLL_LOGGING);
     log.SetDoTiming(true);
@@ -321,9 +321,9 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
         if(SettingTheTranslateLanguage(client,contract))
         {
           // Now translate Dutch -> French
-          if(Translate(client,contract,"altijd", "toujours")) --errors;
-          if(Translate(client,contract,"maandag","lundi"   )) --errors;
-          if(Translate(client,contract,"dinsdag",""        )) --errors;
+          if(Translate(client,contract,_T("altijd"), _T("toujours"))) --errors;
+          if(Translate(client,contract,_T("maandag"),_T("lundi")   )) --errors;
+          if(Translate(client,contract,_T("dinsdag"),_T("")        )) --errors;
         }
       }
 
@@ -351,16 +351,16 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
   {
     ++errors;
     // --- "---------------------------------------------- - ------
-    printf("Service contract: errors received              : ERROR\n");
-    xprintf("%s\n",er.GetErrorMessage().GetString());
-    xprintf("ERROR from WS Client: %s\n",client.GetErrorText().GetString());
+    _tprintf(_T("Service contract: errors received              : ERROR\n"));
+    xprintf(_T("%s\n"),er.GetErrorMessage().GetString());
+    xprintf(_T("ERROR from WS Client: %s\n"),client.GetErrorText().GetString());
   }
 
   if(errors == 0)
   {
     // --- "---------------------------------------------- - ------
-    printf("Service contract: works fine!                  : OK\n");
-    printf("tested UTF-8 for the West-European languages!  : OK\n");
+    _tprintf(_T("Service contract: works fine!                  : OK\n"));
+    _tprintf(_T("tested UTF-8 for the West-European languages!  : OK\n"));
   }
   return errors;
 }

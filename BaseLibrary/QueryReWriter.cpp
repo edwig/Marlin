@@ -37,44 +37,44 @@ static char THIS_FILE[] = __FILE__;
 
 // All tokens that must be recognized
 // for the logic to work correctly
-static const char* all_tokens[] =
+static const PTCHAR all_tokens[] =
 {
-   ""
-  ,""
-  ,""
-  ,"'"
-  ,"\""
-  ,"."
-  ,","
-  ,"-"
-  ,"/"
-  ,"--"
-  ,"/*"
-  ,"//"
-  ,"("
-  ,")"
-  ,"(+)"
-  ,"+"
-  ,"||"
-  ," "
-  ,"\t"
-  ,"\r"
-  ,"\n"
+   _T("")
+  ,_T("")
+  ,_T("")
+  ,_T("'")
+  ,_T("\"")
+  ,_T(".")
+  ,_T(",")
+  ,_T("-")
+  ,_T("/")
+  ,_T("--")
+  ,_T("/*")
+  ,_T("//")
+  ,_T("(")
+  ,_T(")")
+  ,_T("(+)")
+  ,_T("+")
+  ,_T("||")
+  ,_T(" ")
+  ,_T("\t")
+  ,_T("\r")
+  ,_T("\n")
   // Complete SQL words
-  ,"SELECT"
-  ,"INSERT"
-  ,"UPDATE"
-  ,"DELETE"
-  ,"FROM"
-  ,"JOIN"
-  ,"WHERE"
-  ,"GROUP"
-  ,"ORDER"
-  ,"HAVING"
-  ,"INTO"
-  ,"UNION"
-  ,"STATISTICS"
-  ,"FOR"
+  ,_T("SELECT")
+  ,_T("INSERT")
+  ,_T("UPDATE")
+  ,_T("DELETE")
+  ,_T("FROM")
+  ,_T("JOIN")
+  ,_T("WHERE")
+  ,_T("GROUP")
+  ,_T("ORDER")
+  ,_T("HAVING")
+  ,_T("INTO")
+  ,_T("UNION")
+  ,_T("STATISTICS")
+  ,_T("FOR")
 };
 
 // All registered SQL words including tokens and special registrations
@@ -103,7 +103,7 @@ QueryReWriter::Parse(XString p_input)
 
   if(m_level != 0)
   {
-    throw StdException("Odd number of '(' and ')' tokens in the statement");
+    throw StdException(_T("Odd number of '(' and ')' tokens in the statement"));
   }
   return m_output;
 }
@@ -191,7 +191,7 @@ QueryReWriter::AddSQLWordsFromFile(XString p_filename)
     XString line;
     while(file.Read(line))
     {
-      line = line.TrimRight("\n");
+      line = line.TrimRight(_T("\n"));
       if(!line.GetLength() || line[0] == '#')
       {
         // Empty line or comment line
@@ -212,15 +212,15 @@ QueryReWriter::AddSQLWordsFromFile(XString p_filename)
         XString odbc       = line.Mid(pos3 + 1).Trim();
         if(!odbc.IsEmpty())
         {
-          if(odbc.CompareNoCase("function")  == 0) word.m_odbcEscape = OdbcEsc::Function;
-          if(odbc.CompareNoCase("procedure") == 0) word.m_odbcEscape = OdbcEsc::Procedure;
-          if(odbc.CompareNoCase("date")      == 0) word.m_odbcEscape = OdbcEsc::Date;
-          if(odbc.CompareNoCase("time")      == 0) word.m_odbcEscape = OdbcEsc::Time;
-          if(odbc.CompareNoCase("timestamp") == 0) word.m_odbcEscape = OdbcEsc::Timestamp;
-          if(odbc.CompareNoCase("guid")      == 0) word.m_odbcEscape = OdbcEsc::Guid;
-          if(odbc.CompareNoCase("like")      == 0) word.m_odbcEscape = OdbcEsc::LikeEsc;
-          if(odbc.CompareNoCase("interval")  == 0) word.m_odbcEscape = OdbcEsc::Interval;
-          if(odbc.CompareNoCase("outerjoin") == 0) word.m_odbcEscape = OdbcEsc::OuterJoin;
+          if(odbc.CompareNoCase(_T("function"))  == 0) word.m_odbcEscape = OdbcEsc::Function;
+          if(odbc.CompareNoCase(_T("procedure")) == 0) word.m_odbcEscape = OdbcEsc::Procedure;
+          if(odbc.CompareNoCase(_T("date"))      == 0) word.m_odbcEscape = OdbcEsc::Date;
+          if(odbc.CompareNoCase(_T("time"))      == 0) word.m_odbcEscape = OdbcEsc::Time;
+          if(odbc.CompareNoCase(_T("timestamp")) == 0) word.m_odbcEscape = OdbcEsc::Timestamp;
+          if(odbc.CompareNoCase(_T("guid"))      == 0) word.m_odbcEscape = OdbcEsc::Guid;
+          if(odbc.CompareNoCase(_T("like"))      == 0) word.m_odbcEscape = OdbcEsc::LikeEsc;
+          if(odbc.CompareNoCase(_T("interval"))  == 0) word.m_odbcEscape = OdbcEsc::Interval;
+          if(odbc.CompareNoCase(_T("outerjoin")) == 0) word.m_odbcEscape = OdbcEsc::OuterJoin;
         }
         // Remember this word
         if(!AddSQLWord(word))
@@ -276,7 +276,7 @@ QueryReWriter::Initialization()
   }
 
   // At a minimum, we need all tokens
-  for(int ind = 0; ind < sizeof(all_tokens) / sizeof(const char*); ++ind)
+  for(int ind = 0; ind < sizeof(all_tokens) / sizeof(const TCHAR*); ++ind)
   {
     SQLWord word;
     word.m_word = all_tokens[ind];
@@ -436,17 +436,17 @@ QueryReWriter::PrintToken()
                               m_output += m_tokenString;
                               m_output += '\n';
                               break;
-    case Token::TK_COMM_C:    m_output += "/*";
+    case Token::TK_COMM_C:    m_output += _T("/*");
                               m_output += m_tokenString;
-                              m_output += "/";
+                              m_output += _T("/");
                               break;
-    case Token::TK_COMM_CPP:  m_output += "//";
+    case Token::TK_COMM_CPP:  m_output += _T("//");
                               m_output += m_tokenString;
                               m_output += '\n';
                               break;
-    case Token::TK_PAR_ADD:   m_output += (m_options & (int)SROption::SRO_ADD_TO_CONCAT) ? "||" : "+";
+    case Token::TK_PAR_ADD:   m_output += (m_options & (int)SROption::SRO_ADD_TO_CONCAT) ? _T("||") : _T("+");
                               break;
-    case Token::TK_PAR_CONCAT:m_output += (m_options & (int)SROption::SRO_CONCAT_TO_ADD) ? "+" : "||";
+    case Token::TK_PAR_CONCAT:m_output += (m_options & (int)SROption::SRO_CONCAT_TO_ADD) ? _T("+") : _T("||");
                               break;
     case Token::TK_PAR_OUTER: PrintOuterJoin();
                               break;
@@ -476,7 +476,7 @@ QueryReWriter::PrintToken()
     case Token::TK_UNION:     m_output += all_tokens[(int)m_token];
                               break;
     case Token::TK_EOS:       break;
-    default:                  m_output += "\nINTERNAL ERROR: Unknown SQL token!\n";
+    default:                  m_output += _T("\nINTERNAL ERROR: Unknown SQL token!\n");
                               break;
   }
 }
@@ -487,9 +487,9 @@ QueryReWriter::PrintOuterJoin()
   m_output += all_tokens[(int) Token::TK_PAR_OUTER];
   if(m_options & (int) SROption::SRO_WARN_OUTER)
   {
-    m_output += "\n";
-    m_output += "-- BEWARE: Oracle old style (+). Rewrite the SQL query with LEFT OUTER JOIN syntaxis!";
-    m_output += "\n";
+    m_output += _T("\n");
+    m_output += _T("-- BEWARE: Oracle old style (+). Rewrite the SQL query with LEFT OUTER JOIN syntaxis!");
+    m_output += _T("\n");
   }
 }
 
@@ -582,16 +582,16 @@ QueryReWriter::GetToken()
     }
     if(isdigit(ch))
     {
-      m_tokenString = XString((char)ch,1);
+      m_tokenString = XString((TCHAR)ch,1);
       return Token::TK_PLAIN;
     }
     if(isalpha(ch))
     {
-      m_tokenString = XString((char) ch,1);
+      m_tokenString = XString((TCHAR) ch,1);
       ch = GetChar();
       while(isalnum(ch) || ch == '_')
       {
-        m_tokenString += (char) ch;
+        m_tokenString += (TCHAR) ch;
         ch = GetChar();
       }
       if(ch)
@@ -600,7 +600,7 @@ QueryReWriter::GetToken()
       }
       return FindToken();
     }
-    m_tokenString = XString((char) ch,1);
+    m_tokenString = XString((TCHAR) ch,1);
     return Token::TK_PLAIN;
   }
   return Token::TK_EOS;
@@ -621,23 +621,23 @@ QueryReWriter::FindToken()
   {
     switch(tok->second.m_odbcEscape)
     {
-      case OdbcEsc::Function:   m_tokenString = "{fn " + tok->second.m_replacement;
+      case OdbcEsc::Function:   m_tokenString = _T("{fn ") + tok->second.m_replacement;
                                 break;
-      case OdbcEsc::Procedure:  m_tokenString = "{[?=]call " + tok->second.m_replacement;
+      case OdbcEsc::Procedure:  m_tokenString = _T("{[?=]call ") + tok->second.m_replacement;
                                 break;
-      case OdbcEsc::Date:       m_tokenString = "{d ";
+      case OdbcEsc::Date:       m_tokenString = _T("{d ");
                                 break;
-      case OdbcEsc::Time:       m_tokenString = "{t "; 
+      case OdbcEsc::Time:       m_tokenString = _T("{t "); 
                                 break;
-      case OdbcEsc::Timestamp:  m_tokenString = "{ts ";
+      case OdbcEsc::Timestamp:  m_tokenString = _T("{ts ");
                                 break;
-      case OdbcEsc::Guid:       m_tokenString = "{guid ";
+      case OdbcEsc::Guid:       m_tokenString = _T("{guid ");
                                 break;
-      case OdbcEsc::LikeEsc:    m_tokenString = "{";
+      case OdbcEsc::LikeEsc:    m_tokenString = _T("{");
                                 break;
-      case OdbcEsc::Interval:   m_tokenString = "{INTERVAL ";
+      case OdbcEsc::Interval:   m_tokenString = _T("{INTERVAL ");
                                 break;
-      case OdbcEsc::OuterJoin:  m_tokenString = "{oj ";
+      case OdbcEsc::OuterJoin:  m_tokenString = _T("{oj ");
                                 break;
     }
     // TK_PLAIN_ODBC will provide for the closing '}' escape sequence!
@@ -652,7 +652,7 @@ QueryReWriter::FindToken()
     }
     if(!tok->second.m_schema.IsEmpty())
     {
-      m_tokenString = tok->second.m_schema + "." + m_tokenString;
+      m_tokenString = tok->second.m_schema + _T(".") + m_tokenString;
     }
   }
 
@@ -678,7 +678,7 @@ QueryReWriter::CommentSQL()
       {
         break;
       }
-      m_tokenString += (char) ch;
+      m_tokenString += (TCHAR) ch;
     }
     return Token::TK_COMM_SQL;
   }
@@ -700,7 +700,7 @@ QueryReWriter::CommentCPP()
       {
         break;
       }
-      m_tokenString += (char) ch;
+      m_tokenString += (TCHAR) ch;
     }
     return Token::TK_COMM_CPP;
   }
@@ -714,7 +714,7 @@ QueryReWriter::CommentCPP()
       {
         break;
       }
-      m_tokenString += (char) ch;
+      m_tokenString += (TCHAR) ch;
       lastchar = ch;
     }
     return Token::TK_COMM_C;
@@ -768,7 +768,7 @@ QueryReWriter::QuoteString(int p_ending)
     {
       return;
     }
-    m_tokenString += (char) ch;
+    m_tokenString += (TCHAR) ch;
   } 
 }
 

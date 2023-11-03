@@ -55,7 +55,7 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
   {
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
-    qprintf("Cookie test: no cookie received                : ERROR\n");
+    qprintf(_T("Cookie test: no cookie received                : ERROR\n"));
     xerror();
   }
   else
@@ -63,9 +63,9 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     XString value = cookie->GetValue();
     XString name  = cookie->GetName();
 
-    if(name == "GUID" && value == "1-2-3-4-5-6-7-0-7-6-5-4-3-2-1")
+    if(name == _T("GUID") && value == _T("1-2-3-4-5-6-7-0-7-6-5-4-3-2-1"))
     {
-      testname = "Cookie test simple";
+      testname = _T("Cookie test simple");
       result = true;
       --totalChecks;
     }
@@ -76,7 +76,7 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
 
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
-    qprintf("Cookie received: %-27s   : %s\n",testname.GetString(),result ? "OK" : "ERROR");
+    qprintf(_T("Cookie received: %-27s   : %s\n"),testname.GetString(),result ? _T("OK") : _T("ERROR"));
   }
 
   // Test for the second cookie
@@ -86,9 +86,9 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     XString value = cookie->GetValue();
     XString name  = cookie->GetName();
 
-    if(name == "BEAST" && value == "Monkey")
+    if(name == _T("BEAST") && value == _T("Monkey"))
     {
-      testname = "Multiple cookie test";
+      testname = _T("Multiple cookie test");
       result = true;
       --totalChecks;
     }
@@ -98,28 +98,28 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
     }
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
-    qprintf("Cookie received: %-27s   : %s\n",testname.GetString(),result ? "OK" : "ERROR");
+    qprintf(_T("Cookie received: %-27s   : %s\n"),testname.GetString(),result ? _T("OK") : _T("ERROR"));
   }
   else
   {
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
-    qprintf("No multiple cookie received                    : ERROR\n");
+    qprintf(_T("No multiple cookie received                    : ERROR\n"));
     xerror();
   }
 
-  XString day = p_msg->GetHeader("EdosHeader");
+  XString day = p_msg->GetHeader(_T("EdosHeader"));
 
   p_msg->Reset();
   p_msg->ResetCookies();
-  p_msg->SetCookie("session","456");
-  p_msg->SetCookie("SECRET","THIS IS THE BIG SECRET OF THE FAMILY HUISMAN","BLOKZIJL",true,true);
-  p_msg->SetBody("Testing");
+  p_msg->SetCookie(_T("session"),_T("456"));
+  p_msg->SetCookie(_T("SECRET"),_T("THIS IS THE BIG SECRET OF THE FAMILY HUISMAN"),_T("BLOKZIJL"),true,true);
+  p_msg->SetBody(_T("Testing"));
 
-  if(day == "15-10-1959")
+  if(day == _T("15-10-1959"))
   {
     // Answer for the test client
-    p_msg->AddHeader("EdosHeader","Thursday");
+    p_msg->AddHeader(_T("EdosHeader"),_T("Thursday"));
   }
   return true;
 }
@@ -131,24 +131,24 @@ TestMarlinServer::TestCookies()
   // If errors, change detail level
   m_doDetails = false;
 
-  xprintf("TESTING HTTP RECEIVER COOKIE FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("=========================================================\n");
+  xprintf(_T("TESTING HTTP RECEIVER COOKIE FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("=========================================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/CookieTest/"
   // Callback function is no longer required!
-  XString webaddress = "/MarlinTest/CookieTest/";
+  XString webaddress = _T("/MarlinTest/CookieTest/");
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
   if(site)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite for cookie tests   : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for cookie tests   : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a website for : %s\n",webaddress.GetString());
+    qprintf(_T("ERROR: Cannot register a website for : %s\n"),webaddress.GetString());
     return error;
   }
 
@@ -156,11 +156,11 @@ TestMarlinServer::TestCookies()
   site->SetHandler(HTTPCommand::http_put,new SiteHandlerPutCookies());
 
   // Modify the standard settings for this site
-  site->AddContentType("","text/xml");
-  site->AddContentType("xml","application/soap+xml");
+  site->AddContentType(_T(""),_T("text/xml"));
+  site->AddContentType(_T("xml"),_T("application/soap+xml"));
 
   // set automatic headers on this site
-  site->SetXFrameOptions(XFrameOption::XFO_DENY,"");
+  site->SetXFrameOptions(XFrameOption::XFO_DENY,_T(""));
   site->SetStrictTransportSecurity(16070400,true);
   site->SetXContentTypeOptions(true);
   site->SetXSSProtection(true,true);
@@ -169,13 +169,13 @@ TestMarlinServer::TestCookies()
   // new: Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly\n");
+    xprintf(_T("Site started correctly\n"));
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",webaddress.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),webaddress.GetString());
   }
   return error;
 }
@@ -185,6 +185,6 @@ TestMarlinServer::AfterTestCookies()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Cookies & multiple-cookies test                : %s\n", totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("Cookies & multiple-cookies test                : %s\n"), totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

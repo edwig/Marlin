@@ -49,7 +49,7 @@ BrowseForFilename::BrowseForFilename(bool    p_open        // true = open, false
 {
   if(p_filter.IsEmpty())
   {
-    p_filter = "Text files (*.txt)|*.txt|";
+    p_filter = _T("Text files (*.txt)|*.txt|");
   }
   // Register original CWD (Current Working Directory)
   GetCurrentDirectory(MAX_PATH, m_original);
@@ -58,10 +58,10 @@ BrowseForFilename::BrowseForFilename(bool    p_open        // true = open, false
     // Change to starting directory // VISTA
     SetCurrentDirectory(p_direct.GetString());
   }
-  strncpy_s(m_filter,  1024,    p_filter,  1024);
-  strncpy_s(m_filename,MAX_PATH,p_filename,MAX_PATH);
-  strncpy_s(m_defext,  100,     p_defext,  100);
-  strncpy_s(m_title,   100,     p_title,   100);
+  _tcsncpy_s(m_filter,  1024,    p_filter,  1024);
+  _tcsncpy_s(m_filename,MAX_PATH,p_filename,MAX_PATH);
+  _tcsncpy_s(m_defext,  100,     p_defext,  100);
+  _tcsncpy_s(m_title,   100,     p_title,   100);
   FilterString(m_filter);
 
   // Fill in the filename structure
@@ -71,10 +71,10 @@ BrowseForFilename::BrowseForFilename(bool    p_open        // true = open, false
   m_ofn.lStructSize       = sizeof(OPENFILENAME);
   m_ofn.hwndOwner         = AfxGetApp()->GetMainWnd()->GetSafeHwnd();
   m_ofn.hInstance         = (HINSTANCE) GetWindowLongPtr(m_ofn.hwndOwner,GWLP_HINSTANCE);
-  m_ofn.lpstrFile         = (LPSTR) m_filename;
-  m_ofn.lpstrDefExt       = (LPSTR) m_defext;
-  m_ofn.lpstrTitle        = (LPSTR) m_title;
-  m_ofn.lpstrFilter       = (LPSTR) m_filter;
+  m_ofn.lpstrFile         = (LPTSTR) m_filename;
+  m_ofn.lpstrDefExt       = (LPTSTR) m_defext;
+  m_ofn.lpstrTitle        = (LPTSTR) m_title;
+  m_ofn.lpstrFilter       = (LPTSTR) m_filter;
   m_ofn.Flags             = p_flags;
   m_ofn.nFilterIndex      = 1;    // Use lpstrFilter
   m_ofn.nMaxFile          = MAX_PATH;
@@ -82,7 +82,7 @@ BrowseForFilename::BrowseForFilename(bool    p_open        // true = open, false
   m_ofn.nMaxCustFilter    = 0;
   m_ofn.lpstrFileTitle    = NULL;
   m_ofn.nMaxFileTitle     = 0;
-  m_ofn.lpstrInitialDir   = (LPCSTR) m_initalDir;
+  m_ofn.lpstrInitialDir   = (LPCTSTR) m_initalDir;
   m_ofn.nFileOffset       = 0;
   m_ofn.lCustData         = NULL;
   m_ofn.lpfnHook          = NULL;
@@ -113,7 +113,7 @@ BrowseForFilename::DoModal()
   }
   catch(CException& er)
   {
-    ::MessageBox(NULL,"Cannot make a filename browsing dialog","ERROR",MB_OK|MB_ICONERROR);
+    ::MessageBox(NULL,_T("Cannot make a filename browsing dialog"),_T("ERROR"),MB_OK|MB_ICONERROR);
     UNREFERENCED_PARAMETER(er);
   }
   return res;
@@ -126,12 +126,12 @@ BrowseForFilename::GetChosenFile()
 }
 
 void
-BrowseForFilename::FilterString(char *filter)
+BrowseForFilename::FilterString(LPTSTR p_filter)
 {
-  char *pnt = filter;
+  LPTSTR pnt = p_filter;
   while(*pnt)
   {
-    if(*pnt == '|')
+    if(*pnt == _T('|'))
     {
       *pnt = 0;
     }

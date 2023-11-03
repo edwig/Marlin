@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: DefuseBOM.h
+// SourceFile: Encoding.h
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
@@ -30,33 +30,33 @@
 // Result of the defusion process
 enum class BOMOpenResult
 {
-  BOR_NoString
- ,BOR_NoBom
- ,BOR_Bom
- ,BOR_OpenedIncompatible
+  NoString      // Empty input
+ ,NoEncoding    // No encoding Byte-order-mark found
+ ,BOM           // Byte-Order-Mark
+ ,Incompatible  // Incompatible (not supported) encoding
 };
 
 // Type of BOM found to defuse
 // As found on: https://en.wikipedia.org/wiki/Byte_order_mark
-enum class BOMType
+enum class Encoding
 {
-  BT_NO_BOM
- ,BT_BE_UTF1
- ,BT_BE_UTF7
- ,BT_BE_UTF8
- ,BT_BE_UTF16
- ,BT_BE_UTF32
- ,BT_BE_CSCU
- ,BT_LE_UTF8
- ,BT_LE_UTF16
- ,BT_LE_UTF32
- ,BT_UTF_EBCDIC
- ,BT_BOCU_1
- ,BT_GB_18030
+  Default      // No BOM found
+ ,UTF8         // UTF 8 bits (General WEB standard)
+ ,LE_UTF16     // Little-Endian UTF 16 bits (Intel & MS-Windows!)
+ ,LE_UTF32     // Little-Endian UTF 32 bits
+ ,BE_UTF16     // Big-Endian UTF 16 bits (Motorola & Apple MacIntosh)
+ ,BE_UTF32     // Big-Endian UTF 32 bits
+ ,UTF7         // UTF 7 bits (Obsolete variable length encoding)
+ ,UTF1         // UTF-1 (Variable width encoding, not searchable!)
+ ,UTF_EBCDIC   // IBM EBCDIC Unicode
+ ,SCSU         // Standard Compression Code for Unicode
+ ,BOCU_1       // Binary Ordered Compressed Unicode
+ ,GB_18030     // Chinese government: Guojia Biazhun coding standard 18030
 };
 
-// Check for a Byte-Order-Mark (BOM)
-BOMOpenResult CheckForBOM(const unsigned char* p_pointer
-                         ,BOMType&             p_type
-                         ,unsigned int&        p_skip);
-
+// Default encoding (opening files etc)
+#ifdef UNICODE
+#define EncodingDefault Encoding::LE_UTF16
+#else
+#define EncodingDefault Encoding::Default
+#endif

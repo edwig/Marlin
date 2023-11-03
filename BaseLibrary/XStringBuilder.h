@@ -82,13 +82,13 @@ public:
   XStringBuilder& operator += (int rhs);
 
   // Compare to other string
-  int Compare(char const* psz) const;
+  int Compare(PCTSTR  psz) const;
 
   // Implicit conversion to string
   operator XString const& () const;
 
   // Implicit conversion to char pointer
-  operator char const* () const;
+  operator PCTSTR () const;
 
 private:
 
@@ -137,25 +137,25 @@ operator != (XString const& lhs,XStringBuilder const& rhs)
 }
 
 inline bool
-operator == (XStringBuilder const& lhs,char const* rhs)
+operator == (XStringBuilder const& lhs,PCTSTR rhs)
 {
   return lhs.Compare(rhs) == 0;
 }
 
 inline bool
-operator != (XStringBuilder const& lhs,char const* rhs)
+operator != (XStringBuilder const& lhs,PCTSTR rhs)
 {
   return lhs.Compare(rhs) != 0;
 }
 
 inline bool
-operator == (char const* lhs,XStringBuilder const& rhs)
+operator == (PCTSTR lhs,XStringBuilder const& rhs)
 {
   return rhs.Compare(lhs) == 0;
 }
 
 inline bool
-operator != (char const* lhs,XStringBuilder const& rhs)
+operator != (PCTSTR lhs,XStringBuilder const& rhs)
 {
   return rhs.Compare(lhs) != 0;
 }

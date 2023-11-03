@@ -41,14 +41,14 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const char* PROGRAM_NAME = nullptr;  // The current program
+LPCTSTR PROGRAM_NAME = nullptr;  // The current program
 
 // Default values
 void LoadConstants()
 {
-  PROGRAM_NAME = "ServerApplet";     // The current program
-  PRODUCT_NAME = "MarlinServer";     // Our server executable / DLL
-  PRODUCT_SITE = "/MarlinTest/";     // Our default base-URL
+  PROGRAM_NAME = _T("ServerApplet");     // The current program
+  PRODUCT_NAME = _T("MarlinServer");     // Our server executable / DLL
+  PRODUCT_SITE = _T("/MarlinTest/");     // Our default base-URL
 }
 
 // ServerAppletApp
@@ -86,7 +86,7 @@ BOOL ServerAppletApp::InitInstance()
   // of your final executable, you should remove from the following
   // the specific initialization routines you do not need
   // Change the registry key under which our settings are stored
-  SetRegistryKey("Marlin\\ServerApplet");
+  SetRegistryKey(_T("Marlin\\ServerApplet"));
 
   int res = ParseCommandLine();
 
@@ -128,7 +128,7 @@ ServerAppletApp::StartProgram(XString& p_program
   int exitCode = ExecuteProcess(p_program,p_arguments,p_currentdir,p_errormessage,SW_HIDE,true);
   if(exitCode < 0)
   {
-    MessageBox(m_pMainWnd->GetSafeHwnd(),p_errormessage,"ERROR",MB_OK|MB_ICONERROR);
+    MessageBox(m_pMainWnd->GetSafeHwnd(),p_errormessage,_T("ERROR"),MB_OK|MB_ICONERROR);
   }
   return exitCode;
 }
@@ -143,20 +143,20 @@ ServerAppletApp::ParseCommandLine()
 
   for (int i=1; i < __argc; i++)
   {
-    LPCSTR lpszParam = __argv[i];
+    LPCTSTR lpszParam = __targv[i];
 
     if (lpszParam[0] == '-' || lpszParam[0] == '/')
     {
       if(tolower(lpszParam[1]) =='h' || lpszParam[1] == '?')
       {
         MessageBox(NULL
-                  ,"(De-)Installing can be done with the options /INSTALL of /UNINSTALL"
-                  ,"ServerApplet"
+                  ,_T("(De-)Installing can be done with the options /INSTALL of /UNINSTALL")
+                  ,_T("ServerApplet")
                   ,MB_OK|MB_ICONINFORMATION);
         return 0;
       }
-      if(_strnicmp(&lpszParam[1],"install",  7) == 0) result = 1;
-      if(_strnicmp(&lpszParam[1],"uninstall",9) == 0) result = 2;
+      if(_tcsnicmp(&lpszParam[1],_T("install"),  7) == 0) result = 1;
+      if(_tcsnicmp(&lpszParam[1],_T("uninstall"),9) == 0) result = 2;
     }
   }
   return result;

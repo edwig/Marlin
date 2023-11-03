@@ -79,7 +79,7 @@ class WebServiceClient
 public:
   explicit WebServiceClient(XString p_contract
                            ,XString p_url
-                           ,XString p_wsdlFile = ""
+                           ,XString p_wsdlFile = _T("")
                            ,bool    p_reliable = false);
  ~WebServiceClient();
 

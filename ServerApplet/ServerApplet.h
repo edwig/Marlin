@@ -29,9 +29,9 @@
 
 #include "resource.h"       // main symbols
 
-extern const char* PROGRAM_NAME;     // The current program
-extern const char* PRODUCT_NAME;     // Our server executable / DLL
-extern const char* PRODUCT_SITE;     // our default product site
+extern LPCTSTR PROGRAM_NAME;     // The current program
+extern LPCTSTR PRODUCT_NAME;     // Our server executable / DLL
+extern LPCTSTR PRODUCT_SITE;     // our default product site
 
 class ServerAppletApp : public CWinApp
 {

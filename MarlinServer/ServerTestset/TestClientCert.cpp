@@ -58,7 +58,7 @@ SiteHandlerGetClientCert::PostHandle(HTTPMessage* p_message)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Client certificate at a HTTP GET operation     : %s\n",result ? "OK" : "ERROR");
+  qprintf(_T("Client certificate at a HTTP GET operation     : %s\n"),result ? _T("OK") : _T("ERROR"));
   if(result) 
   {
     --totalChecks;
@@ -77,10 +77,10 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/SecureClientCert/");
+  XString url(_T("/SecureClientCert/"));
 
-  xprintf("TESTING CLIENT CERTIFICATE FUNCTION OF THE HTTP SERVER\n");
-  xprintf("======================================================\n");
+  xprintf(_T("TESTING CLIENT CERTIFICATE FUNCTION OF THE HTTP SERVER\n"));
+  xprintf(_T("======================================================\n"));
 
   // Create HTTP site to listen to "https://+:1202/SecureClientCert/"
   // 
@@ -90,13 +90,13 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
   {
     // SUMMARY OF THE TEST
     //- --- "--------------------------- - ------\n"
-    qprintf("HTTPSite client certificate : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite client certificate : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -106,32 +106,32 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
   // Standalone servers must filter on Client certificates
   if(p_standalone)
   {
-    XString certName   = "MarlinClient";
-    XString thumbprint = "8e02b7fe7d0e6a356d996664a542897fbae4d27e";
+    XString certName   = _T("MarlinClient");
+    XString thumbprint = _T("8e02b7fe7d0e6a356d996664a542897fbae4d27e");
 
     // Add a site filter for the client certificate
-    SiteFilterClientCertificate* filter = new SiteFilterClientCertificate(10,"ClientCert");
+    SiteFilterClientCertificate* filter = new SiteFilterClientCertificate(10,_T("ClientCert"));
     filter->SetClientCertificate(certName,thumbprint); // Here comes the name/thumbprint
     if(site->SetFilter(10,filter))
     {
-      xprintf("Site filter for Client-Certificates set correctly. Thumbprint: %s\n",thumbprint.GetString());
+      xprintf(_T("Site filter for Client-Certificates set correctly. Thumbprint: %s\n"),thumbprint.GetString());
     }
     else
     {
-      qprintf("ERROR SETTING SITE FILTER FOR ClientCertificates\n");
+      qprintf(_T("ERROR SETTING SITE FILTER FOR ClientCertificates\n"));
     }
   }
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -141,6 +141,6 @@ TestMarlinServer::AfterTestClientCert()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Client certificate at file GET was tested      : %s", totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("Client certificate at file GET was tested      : %s"), totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

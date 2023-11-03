@@ -27,6 +27,7 @@
 //
 #include "pch.h"
 #include "FileBuffer.h"
+#include "ConvertWideString.h"
 #include "gzip.h"
 
 #ifdef _DEBUG
@@ -77,9 +78,10 @@ FileBuffer::FileBuffer(FileBuffer& p_orig)
   // If it had a buffer, duplicate it
   if(m_binaryLength)
   {
-    m_buffer = new uchar[m_binaryLength + 1];
+    m_buffer = new uchar[m_binaryLength + 2];
     memcpy(m_buffer,p_orig.m_buffer,m_binaryLength);
-    m_buffer[m_binaryLength] = 0;
+    m_buffer[m_binaryLength    ] = 0;
+    m_buffer[m_binaryLength + 1] = 0;
   }
 
   // If it had buffer parts, duplicate them
@@ -87,9 +89,10 @@ FileBuffer::FileBuffer(FileBuffer& p_orig)
   {
     BufPart dupli;
     dupli.m_length = part.m_length;
-    dupli.m_buffer = new uchar[dupli.m_length + 1];
+    dupli.m_buffer = new uchar[dupli.m_length + 2];
     memcpy(dupli.m_buffer,part.m_buffer,dupli.m_length);
-    dupli.m_buffer[part.m_length] = 0;
+    dupli.m_buffer[part.m_length    ] = 0;
+    dupli.m_buffer[part.m_length + 1] = 0;
     m_parts.push_back(dupli);
   }
 }
@@ -171,9 +174,10 @@ FileBuffer::SetBuffer(uchar* p_buffer,size_t p_length)
   if(p_buffer)
   {
     m_binaryLength = p_length;
-    m_buffer = new uchar[p_length + 1];
+    m_buffer = new uchar[p_length + 2];
     memcpy(m_buffer,p_buffer,p_length);
-    m_buffer[p_length] = 0;
+    m_buffer[p_length    ] = 0;
+    m_buffer[p_length + 1] = 0;
   }
 }
 
@@ -183,11 +187,12 @@ void
 FileBuffer::AddBuffer(uchar* p_buffer,size_t p_length)
 {
   BufPart part;
-  part.m_buffer = new uchar[p_length + 1];
+  part.m_buffer = new uchar[p_length + 2];
   part.m_length = p_length;
 
   memcpy(part.m_buffer,p_buffer,p_length);
-  part.m_buffer[p_length] = 0;
+  part.m_buffer[p_length    ] = 0;
+  part.m_buffer[p_length + 1] = 0;
   // Keep the buffer part
   m_parts.push_back(part);
 }
@@ -199,7 +204,7 @@ FileBuffer::AddBufferCRLF(uchar* p_buffer,size_t p_length)
 {
   BufPart part;
   part.m_buffer = new uchar[p_length + 3];
-  part.m_length = p_length + 2;
+  part.m_length = p_length;
 
   if(part.m_buffer)
   {
@@ -208,11 +213,35 @@ FileBuffer::AddBufferCRLF(uchar* p_buffer,size_t p_length)
     {
       *(part.m_buffer + p_length++) = '\r';
       *(part.m_buffer + p_length++) = '\n';
+      part.m_length = p_length;
     }
     *(part.m_buffer + p_length) = 0;
   }
   // Keep the buffer part
   m_parts.push_back(part);
+}
+
+// Specialized add a string (FormData protocol)
+void
+FileBuffer::AddStringToBuffer(XString p_string,XString p_charset,bool p_crlf/*=true*/)
+{
+  // Possibly add a CRLF to the string
+  if(p_crlf)
+  {
+    p_string += _T("\r\n");
+  }
+#ifdef UNICODE
+  BYTE* buffer = nullptr;
+  int   length = 0;
+  if(TryCreateNarrowString(p_string,p_charset,false,&buffer,length))
+  {
+    AddBuffer(buffer,length);
+  }
+  delete[] buffer;
+#else
+  XString string = EncodeStringForTheWire(p_string,p_charset);
+  AddBuffer((uchar*)string.GetString(),string.GetLength());
+#endif
 }
 
 // Allocate a one-buffer block
@@ -272,7 +301,7 @@ FileBuffer::GetBufferCopy(uchar*& p_buffer,size_t& p_length)
 {
   // Calculate length and getting a buffer
   p_length = GetLength();
-  p_buffer = new uchar[p_length + 1];
+  p_buffer = new uchar[p_length + 2];
 
   // Optimize in one go
   if(m_parts.empty())
@@ -283,7 +312,7 @@ FileBuffer::GetBufferCopy(uchar*& p_buffer,size_t& p_length)
       p_buffer = nullptr;
       return false;
     }
-    memcpy(p_buffer,m_buffer,p_length + 1);
+    memcpy(p_buffer,m_buffer,p_length + 2);
   }
   else 
   {
@@ -295,8 +324,9 @@ FileBuffer::GetBufferCopy(uchar*& p_buffer,size_t& p_length)
       dest += part.m_length;
     }
   }
-  // Zero delimiter of the buffer
-  p_buffer[p_length] = 0;
+  // Zero delimiter of the buffer (UTF-16)
+  p_buffer[p_length    ] = 0;
+  p_buffer[p_length + 1] = 0;
 
   return true;
 }
@@ -384,7 +414,7 @@ FileBuffer::ReadFile()
   {
     delete [] m_buffer;
   }
-  m_buffer = new uchar[m_binaryLength + 1];
+  m_buffer = new uchar[m_binaryLength + 2];
 
   // Read file from disk in one (1) go
   if(::ReadFile(m_file,m_buffer,(DWORD)m_binaryLength,&readBytes,NULL))
@@ -397,7 +427,8 @@ FileBuffer::ReadFile()
     m_buffer[m_binaryLength] = 0;
     if(readBytes < (DWORD)m_binaryLength)
     {
-      m_buffer[readBytes] = 0;
+      m_buffer[readBytes    ] = 0;
+      m_buffer[readBytes + 1] = 0;
     }
   }
 cleanup:
@@ -498,18 +529,20 @@ FileBuffer::operator=(FileBuffer& p_orig)
   // If it had a buffer, duplicate it
   if(m_binaryLength)
   {
-    m_buffer = new uchar[m_binaryLength + 1];
+    m_buffer = new uchar[m_binaryLength + 2];
     memcpy(m_buffer,p_orig.m_buffer,m_binaryLength);
-    m_buffer[m_binaryLength] = 0;
+    m_buffer[m_binaryLength    ] = 0;
+    m_buffer[m_binaryLength + 1] = 0;
   }
   // If it had buffer parts, duplicate them
   for(const auto& part : p_orig.m_parts)
   {
     BufPart  dupli;
     dupli.m_length = part.m_length;
-    dupli.m_buffer = new uchar[dupli.m_length + 1];
+    dupli.m_buffer = new uchar[dupli.m_length + 2];
     memcpy(dupli.m_buffer,part.m_buffer,dupli.m_length);
-    dupli.m_buffer[part.m_length] = 0;
+    dupli.m_buffer[part.m_length    ] = 0;
+    dupli.m_buffer[part.m_length + 1] = 0;
     m_parts.push_back(dupli);
   }
 
@@ -562,12 +595,13 @@ FileBuffer::ZipBuffer()
     m_binaryLength = out_data.size();
   
     delete [] m_buffer;
-    m_buffer = new uchar[m_binaryLength + 1];
+    m_buffer = new uchar[m_binaryLength + 2];
     for(size_t ind = 0;ind < m_binaryLength; ++ind)
     {
       (reinterpret_cast<uint8_t *>(m_buffer))[ind] = out_data[ind];
     }
-    m_buffer[m_binaryLength] = 0;
+    m_buffer[m_binaryLength    ] = 0;
+    m_buffer[m_binaryLength + 1] = 0;
     return true;
   }
   return false;
@@ -582,7 +616,7 @@ FileBuffer::UnZipBuffer()
   if(GetHasBufferParts())
   {
     uchar* buffer = nullptr;
-    size_t size = 0L;
+    size_t   size = 0L;
     if(GetBufferCopy(buffer,size))
     {
       Reset();
@@ -601,12 +635,13 @@ FileBuffer::UnZipBuffer()
     m_binaryLength = out_data.size();
 
     delete [] m_buffer;
-    m_buffer = new uchar[m_binaryLength + 1];
+    m_buffer = new uchar[m_binaryLength + 2];
     for(size_t ind = 0; ind < m_binaryLength; ++ind)
     {
       (reinterpret_cast<uint8_t *>(m_buffer))[ind] = out_data[ind];
     }
-    m_buffer[m_binaryLength] = 0;
+    m_buffer[m_binaryLength    ] = 0;
+    m_buffer[m_binaryLength + 1] = 0;
     return true;
   }
   return false;
@@ -620,7 +655,7 @@ FileBuffer::Defragment()
   if(GetHasBufferParts())
   {
     uchar* buffer = nullptr;
-    size_t size   = 0L;
+    size_t   size   = 0L;
     if(GetBufferCopy(buffer,size))
     {
       Reset();

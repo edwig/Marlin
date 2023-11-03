@@ -72,9 +72,9 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
   if(m_site->GetUseCORS())
   {
     // Read the message
-    XString comesFrom = p_message->GetHeader("Origin");
-    XString reqMethod = p_message->GetHeader("Access-Control-Request-Method");
-    XString reqHeader = p_message->GetHeader("Access-Control-Request-Headers");
+    XString comesFrom = p_message->GetHeader(_T("Origin"));
+    XString reqMethod = p_message->GetHeader(_T("Access-Control-Request-Method"));
+    XString reqHeader = p_message->GetHeader(_T("Access-Control-Request-Headers"));
     p_message->Reset();
 
     if(CheckCrossOriginSettings(p_message,comesFrom,reqMethod,reqHeader) == false)
@@ -97,7 +97,7 @@ SiteHandlerOptions::Handle(HTTPMessage* p_message)
   // Set the allow header for this site
   if(server)
   {
-    p_message->AddHeader("Allow",m_site->GetAllowHandlers());
+    p_message->AddHeader(_T("Allow"),m_site->GetAllowHandlers());
   }
 
   // Ready with the options, continue processing
@@ -111,7 +111,7 @@ SiteHandlerOptions::PostHandle(HTTPMessage* p_message)
   {
     p_message->SetCommand(HTTPCommand::http_response);
     m_site->SendResponse(p_message);
-    SITE_DETAILLOGS("Answered a OPTIONS message from: ",SocketToServer(p_message->GetSender()));
+    SITE_DETAILLOGS(_T("Answered a OPTIONS message from: "),SocketToServer(p_message->GetSender()));
   }
 }
 
@@ -138,13 +138,13 @@ SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
   if(m_site->GetCORSMaxAge() > 0)
   {
     XString maxAge;
-    maxAge.Format("%d",m_site->GetCORSMaxAge());
-    p_message->AddHeader("Access-Control-Max-Age",maxAge);
+    maxAge.Format(_T("%d"),m_site->GetCORSMaxAge());
+    p_message->AddHeader(_T("Access-Control-Max-Age"),maxAge);
   }
 
   if(m_site->GetCORSAllowCredentials())
   {
-    p_message->AddHeader("Access-Control-Allow-Credentials","true");
+    p_message->AddHeader(_T("Access-Control-Allow-Credentials"),_T("true"));
   }
   return true;
 }
@@ -158,7 +158,7 @@ SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,XString p_origin)
   origin.MakeLower();
 
   // If all sites are allowed, just reflect the requested origin
-  if(origin == "*")
+  if(origin == _T("*"))
   {
     return true;
   }
@@ -169,7 +169,7 @@ SiteHandlerOptions::CheckCORSOrigin(HTTPMessage* p_message,XString p_origin)
   // This call is NOT allowed
   p_message->SetStatus(HTTP_STATUS_DENIED);
   XString error;
-  error.Format("Call refused: Not same CORS origin. Site allows [%s] but call was from: %s",origin.GetString(),p_origin.GetString());
+  error.Format(_T("Call refused: Not same CORS origin. Site allows [%s] but call was from: %s"),origin.GetString(),p_origin.GetString());
   SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
   return false;
 }
@@ -186,13 +186,13 @@ SiteHandlerOptions::CheckCORSMethod(HTTPMessage* p_message,XString p_method)
       // This method is NOT allowed
       p_message->SetStatus(HTTP_STATUS_DENIED);
       XString error;
-      error.Format("Call refused: CORS method [%s] not implemented by the server.",p_method.GetString());
+      error.Format(_T("Call refused: CORS method [%s] not implemented by the server."),p_method.GetString());
       SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
       return false;
     }
   }
   // These are the allowed methods for this site
-  p_message->AddHeader("Access-Control-Allow-Methods",handlers);
+  p_message->AddHeader(_T("Access-Control-Allow-Methods"),handlers);
   return true;
 }
 
@@ -222,13 +222,13 @@ SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,XString p_headers)
     {
       p_message->SetStatus(HTTP_STATUS_DENIED);
       XString error;
-      error.Format("Call refused: header [%s] not allowed by the server",p_headers.GetString());
+      error.Format(_T("Call refused: header [%s] not allowed by the server"),p_headers.GetString());
       SITE_ERRORLOG(ERROR_ACCESS_DENIED,error);
       return false;
     }
   }
   // These are the allowed methods for this site
-  p_message->AddHeader("Access-Control-Allow-Headers",m_site->GetCORSHeaders());
+  p_message->AddHeader(_T("Access-Control-Allow-Headers"),m_site->GetCORSHeaders());
   return true;
 }
 

@@ -91,9 +91,9 @@ SecurityDlg::OnInitDialog()
 {
   CDialogEx::OnInitDialog();
 
-  m_text = "Changes the configuration of the WHOLE MS-Windows machine!!\r\n"
-           "You are strongly advised **NOT** to enable SSL 2.0 any more.\r\n"
-           "TLS 1.1 and TLS 1.2 are not supported by all OS'es and browsers.";
+  m_text = _T("Changes the configuration of the WHOLE MS-Windows machine!!\r\n")
+           _T("You are strongly advised **NOT** to enable SSL 2.0 any more.\r\n")
+           _T("TLS 1.1 and TLS 1.2 are not supported by all OS'es and browsers.");
   UpdateData(FALSE);
 
   ReadServerOptions();
@@ -105,18 +105,18 @@ SecurityDlg::OnInitDialog()
 void
 SecurityDlg::ReadServerOptions()
 {
-  int serverSSL20 = ReadRegistry("SSL 2.0","Server","Enabled",1);
-  int serverSSL30 = ReadRegistry("SSL 3.0","Server","Enabled",1);
-  int serverTLS10 = ReadRegistry("TLS 1.0","Server","Enabled",1);
-  int serverTLS11 = ReadRegistry("TLS 1.1","Server","Enabled",1);
-  int serverTLS12 = ReadRegistry("TLS 1.2","Server","Enabled",1);
+  int serverSSL20 = ReadRegistry(_T("SSL 2.0"),_T("Server"),_T("Enabled"),1);
+  int serverSSL30 = ReadRegistry(_T("SSL 3.0"),_T("Server"),_T("Enabled"),1);
+  int serverTLS10 = ReadRegistry(_T("TLS 1.0"),_T("Server"),_T("Enabled"),1);
+  int serverTLS11 = ReadRegistry(_T("TLS 1.1"),_T("Server"),_T("Enabled"),1);
+  int serverTLS12 = ReadRegistry(_T("TLS 1.2"),_T("Server"),_T("Enabled"),1);
 
-  if(ReadRegistry("SSL 2.0","Server","DisabledByDefault",0) == 1)
+  if(ReadRegistry(_T("SSL 2.0"),_T("Server"),_T("DisabledByDefault"),0) == 1)
   {
     serverSSL20 = 0;
     m_buttonServerSSL20.EnableWindow(false);
   }
-  if(ReadRegistry("SSL 3.0","Server","DisabledByDefault",0) == 1)
+  if(ReadRegistry(_T("SSL 3.0"),_T("Server"),_T("DisabledByDefault"),0) == 1)
   {
     serverSSL30 = 0;
     m_buttonServerSSL30.EnableWindow(false);
@@ -132,18 +132,18 @@ SecurityDlg::ReadServerOptions()
 void
 SecurityDlg::ReadClientOptions()
 {
-  int clientSSL20 = ReadRegistry("SSL 2.0","Client","Enabled",1);
-  int clientSSL30 = ReadRegistry("SSL 3.0","Client","Enabled",1);
-  int clientTLS10 = ReadRegistry("TLS 1.0","Client","Enabled",1);
-  int clientTLS11 = ReadRegistry("TLS 1.1","Client","Enabled",1);
-  int clientTLS12 = ReadRegistry("TLS 1.2","Client","Enabled",1);
+  int clientSSL20 = ReadRegistry(_T("SSL 2.0"),_T("Client"),_T("Enabled"),1);
+  int clientSSL30 = ReadRegistry(_T("SSL 3.0"),_T("Client"),_T("Enabled"),1);
+  int clientTLS10 = ReadRegistry(_T("TLS 1.0"),_T("Client"),_T("Enabled"),1);
+  int clientTLS11 = ReadRegistry(_T("TLS 1.1"),_T("Client"),_T("Enabled"),1);
+  int clientTLS12 = ReadRegistry(_T("TLS 1.2"),_T("Client"),_T("Enabled"),1);
 
-  if(ReadRegistry("SSL 2.0","Client","DisabledByDefault",0) == 1)
+  if(ReadRegistry(_T("SSL 2.0"),_T("Client"),_T("DisabledByDefault"),0) == 1)
   {
     clientSSL20 = 0;
     m_buttonClientSSL20.EnableWindow(false);
   }
-  if(ReadRegistry("SSL 3.0","Client","DisabledByDefault",0) == 1)
+  if(ReadRegistry(_T("SSL 3.0"),_T("Client"),_T("DisabledByDefault"),0) == 1)
   {
     clientSSL30 = 0;
     m_buttonClientSSL30.EnableWindow(false);
@@ -164,32 +164,32 @@ SecurityDlg::Save()
     return true;
   }
   if(::MessageBox(GetSafeHwnd()
-                 ,"Are you very sure that you want to change the HTTP configuration of this machine?\n"
-                  "\n"
-                  "Continue ?"
-                 ,"HTTPManager security"
+                 ,_T("Are you very sure that you want to change the HTTP configuration of this machine?\n")
+                  _T("\n")
+                  _T("Continue ?")
+                 ,_T("HTTPManager security")
                  ,MB_YESNO|MB_DEFBUTTON2|MB_ICONEXCLAMATION) == IDNO)
   {
     return false;
   }
  
-  WriteRegistry("SSL 2.0","Server","Enabled",m_buttonServerSSL20.GetCheck() > 0);
-  WriteRegistry("SSL 3.0","Server","Enabled",m_buttonServerSSL30.GetCheck() > 0);
-  WriteRegistry("TLS 1.0","Server","Enabled",m_buttonServerTLS10.GetCheck() > 0);
-  WriteRegistry("TLS 1.1","Server","Enabled",m_buttonServerTLS11.GetCheck() > 0);
-  WriteRegistry("TLS 1.2","Server","Enabled",m_buttonServerTLS12.GetCheck() > 0);
+  WriteRegistry(_T("SSL 2.0"),_T("Server"),_T("Enabled"),m_buttonServerSSL20.GetCheck() > 0);
+  WriteRegistry(_T("SSL 3.0"),_T("Server"),_T("Enabled"),m_buttonServerSSL30.GetCheck() > 0);
+  WriteRegistry(_T("TLS 1.0"),_T("Server"),_T("Enabled"),m_buttonServerTLS10.GetCheck() > 0);
+  WriteRegistry(_T("TLS 1.1"),_T("Server"),_T("Enabled"),m_buttonServerTLS11.GetCheck() > 0);
+  WriteRegistry(_T("TLS 1.2"),_T("Server"),_T("Enabled"),m_buttonServerTLS12.GetCheck() > 0);
 
-  WriteRegistry("SSL 2.0","Client","Enabled",m_buttonClientSSL20.GetCheck() > 0);
-  WriteRegistry("SSL 3.0","Client","Enabled",m_buttonClientSSL30.GetCheck() > 0);
-  WriteRegistry("TLS 1.0","Client","Enabled",m_buttonClientTLS10.GetCheck() > 0);
-  WriteRegistry("TLS 1.1","Client","Enabled",m_buttonClientTLS11.GetCheck() > 0);
-  WriteRegistry("TLS 1.2","Client","Enabled",m_buttonClientTLS12.GetCheck() > 0);
+  WriteRegistry(_T("SSL 2.0"),_T("Client"),_T("Enabled"),m_buttonClientSSL20.GetCheck() > 0);
+  WriteRegistry(_T("SSL 3.0"),_T("Client"),_T("Enabled"),m_buttonClientSSL30.GetCheck() > 0);
+  WriteRegistry(_T("TLS 1.0"),_T("Client"),_T("Enabled"),m_buttonClientTLS10.GetCheck() > 0);
+  WriteRegistry(_T("TLS 1.1"),_T("Client"),_T("Enabled"),m_buttonClientTLS11.GetCheck() > 0);
+  WriteRegistry(_T("TLS 1.2"),_T("Client"),_T("Enabled"),m_buttonClientTLS12.GetCheck() > 0);
 
   m_changed = false;
   ::MessageBox(GetSafeHwnd()
-             ,"Your changes have made it necessary to reboot the operating system.\r\n"
-              "Only after rebooting will these changes be activated!"
-             ,"Warning!"
+             ,_T("Your changes have made it necessary to reboot the operating system.\r\n")
+              _T("Only after rebooting will these changes be activated!")
+             ,_T("Warning!")
              ,MB_OK|MB_ICONASTERISK);
   return true;
 }
@@ -201,8 +201,8 @@ SecurityDlg::ReadRegistry(XString p_protocol,XString p_serverClient,XString p_va
 {
   int waarde = p_default;
   HKEY hkUserURL;
-  XString sleutel = "SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\" + 
-                    p_protocol + "\\" + p_serverClient;
+  XString sleutel = _T("SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\") + 
+                    p_protocol + _T("\\") + p_serverClient;
 
   DWORD dwErr = RegOpenKeyEx(HKEY_LOCAL_MACHINE
                             ,sleutel.GetString()
@@ -251,8 +251,8 @@ SecurityDlg::WriteRegistry(XString p_protocol,XString p_serverClient,XString p_v
   DWORD   disposition = 0;
   DWORD   value = p_set ? 1 : 0;
   DWORD   dwErr = 0;
-  XString key   = "SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\" + 
-                    p_protocol + "\\" + p_serverClient;
+  XString key   = _T("SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\") + 
+                  p_protocol + _T("\\") + p_serverClient;
 
   dwErr = RegCreateKeyEx(HKEY_LOCAL_MACHINE
                         ,key.GetString()
@@ -275,8 +275,8 @@ SecurityDlg::WriteRegistry(XString p_protocol,XString p_serverClient,XString p_v
   if(dwErr != ERROR_SUCCESS)
   {
     XString message;
-    message.Format("Cannot write registry key [%s] with value [%d]",key.GetString(),value);
-    ::MessageBox(GetSafeHwnd(),message,"ERROR",MB_OK|MB_ICONERROR);
+    message.Format(_T("Cannot write registry key [%s] with value [%d]"),key.GetString(),value);
+    ::MessageBox(GetSafeHwnd(),message,_T("ERROR"),MB_OK|MB_ICONERROR);
   }
   RegCloseKey(hUserKey);
 }

@@ -1,15 +1,1 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<RootNode xmlns:a="http://een.twee.com/aap" xmlns:i="http://ander.com/inter">
-  <a:Node1 atr1="12">testing</a:Node1>
-  <Node2>twee</Node2>
-  <Node3 i:nil="true"/>
-  <a:Eenheid>
-    <Nummer>12</Nummer>
-    <Adres>ÁÀÄÂÉÈËÊÍÌÏÎÓÒÖÔÚÙÜÛÝ_ÇÑÕÃ</Adres>
-  </a:Eenheid>
-  <a:Eenheid>
-    <Nummer>14</Nummer>
-    <Adres>áàäâéèëêíìïîóòöôúùüûýÿçñõã</Adres>
-  </a:Eenheid>
-  <Extra><![CDATA[Dit is een extra stukje tekst]]></Extra>
-</RootNode>
+Sôn bôn de magnà el véder, el me fa minga mal.

@@ -90,7 +90,7 @@ public:
   void GetApplicInfo();			//	Application information
   void GetModuleInfo();			//	Loaded modules
 
-  void WriteToFile(XString const& Filename) const;
+  void WriteToFile(XString const& p_filename) const;
 
   using ModuleList = std::vector<Module*>;
 
@@ -117,10 +117,10 @@ public:
   ModuleList  m_modules;
 private:
   static
-  XString             ReadLangString(LPVOID      pVI
-                                    ,char const* pszFormatString
-                                    ,DWORD       dwLang
-                                    ,char const* pszStringName);
+  XString             ReadLangString(LPVOID  pVI
+                                    ,PTCHAR  pszFormatString
+                                    ,DWORD   dwLang
+                                    ,PTCHAR  pszStringName);
   bool                IsWin10AnniversaryOrHigher();
   RTL_OSVERSIONINFOW  getRealOSVersion();
   bool				        m_use_psapi;

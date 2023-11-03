@@ -37,11 +37,11 @@
 class RunRedirect;
 
 // All global 'CallProgram' variants
-int  CallProgram           (LPCSTR p_program,LPCSTR p_commandLine,bool p_show = false);
-int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,XString& p_result,bool p_show = false);
-int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,XString& p_result,int p_waittime,bool p_show = false);
-int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,LPCSTR p_stdInput,XString& p_result,int p_waittime,bool p_show = false);
-int  CallProgram_For_String(LPCSTR p_program,LPCSTR p_commandLine,LPCSTR p_stdInput,XString& p_result,XString& p_errors,int p_waittime,bool p_show = false);
+int  CallProgram           (LPCTSTR p_program,LPCTSTR p_commandLine,bool p_show = false);
+int  CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,XString& p_result,bool p_show = false);
+int  CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,XString& p_result,int p_waittime,bool p_show = false);
+int  CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPCTSTR p_stdInput,XString& p_result,int p_waittime,bool p_show = false);
+int  CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPCTSTR p_stdInput,XString& p_result,XString& p_errors,int p_waittime,bool p_show = false);
 
 int  PosixCallProgram(XString  p_directory
                      ,XString  p_programma
@@ -61,14 +61,14 @@ public:
   explicit RunRedirect(ULONG p_maxTime = INFINITE);
  ~RunRedirect();
 
-  void RunCommand(LPCSTR p_commandLine,bool p_show);
-  void RunCommand(LPCSTR p_commandLine,LPCSTR p_stdInput,bool p_show);
-  void RunCommand(LPCSTR p_commandLine,HWND p_console,UINT p_showWindow,BOOL p_waitForInputIdle);
+  void RunCommand(LPTSTR p_commandLine,bool p_show);
+  void RunCommand(LPTSTR p_commandLine,LPTSTR p_stdInput,bool p_show);
+  void RunCommand(LPTSTR p_commandLine,HWND p_console,UINT p_showWindow,BOOL p_waitForInputIdle);
 
   // Virtual interface. Derived class must implement this!!
-  virtual void OnChildStarted    (LPCSTR lpszCmdLine) override;
-  virtual void OnChildStdOutWrite(LPCSTR lpszOutput)  override; 
-  virtual void OnChildStdErrWrite(LPCSTR lpszOutput)  override;
+  virtual void OnChildStarted    (PTCHAR lpszCmdLine) override;
+  virtual void OnChildStdOutWrite(PTCHAR lpszOutput)  override; 
+  virtual void OnChildStdErrWrite(PTCHAR lpszOutput)  override;
   virtual void OnChildTerminate() override;
   bool IsReady();
   bool IsEOF();
@@ -77,7 +77,7 @@ public:
 
   HWND    m_console { NULL };
   bool    m_ready;
-  LPCTSTR m_input;
+  LPTSTR  m_input;
   XString m_output;
   XString m_error;
 private:

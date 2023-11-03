@@ -100,8 +100,8 @@ void ConfigDlg::DoDataExchange(CDataExchange* pDX)
 			bool client = false;
 			bool server = false;
 
-			if (m_role.Find("Client") >= 0) client = true;
-			if (m_role.Find("Server") >= 0) server = true;
+			if (m_role.Find(_T("Client")) >= 0) client = true;
+			if (m_role.Find(_T("Server")) >= 0) server = true;
 
 			// Server parts
 			SetItemActive(IDC_NAAM,         server);
@@ -145,13 +145,13 @@ ConfigDlg::OnInitDialog()
 {
   CDialog::OnInitDialog();
 
-  m_comboRole.AddString("Client");
-  m_comboRole.AddString("Server");
-  m_comboRole.AddString("Client & Server");
+  m_comboRole.AddString(_T("Client"));
+  m_comboRole.AddString(_T("Server"));
+  m_comboRole.AddString(_T("Client & Server"));
 
-  m_comboRunAs.AddString("Start as a stand-alone program");
-  m_comboRunAs.AddString("Integrate as a MS-Windows service");
-  m_comboRunAs.AddString("Run on Internet Information Services (IIS)");
+  m_comboRunAs.AddString(_T("Start as a stand-alone program"));
+  m_comboRunAs.AddString(_T("Integrate as a MS-Windows service"));
+  m_comboRunAs.AddString(_T("Run on Internet Information Services (IIS)"));
 
   InitLogging(m_comboServerLogging);
 
@@ -172,12 +172,12 @@ void
 ConfigDlg::InitLogging(CComboBox& p_combo)
 {
   // See Marlin "HTTPLoglevel.h"
-  p_combo.AddString("No logging");                                          // HLL_NOLOG      0       // No logging is ever done
-  p_combo.AddString("Error logging only");                                  // HLL_ERRORS     1       // Only errors are logged
-  p_combo.AddString("Logging of HTTP actions");                             // HLL_LOGGING    2       // 1 + Logging of actions
-  p_combo.AddString("HTTP actions and SOAP bodies");                        // HLL_LOGBODY    3       // 2 + Logging of actions and soap bodies
-  p_combo.AddString("HTTP actions, SOAP bodies and tracing");               // HLL_TRACE      4       // 3 + Tracing of settings
-  p_combo.AddString("HTTP actions, SOAP bodies, tracing and HEX dumping");  // HLL_TRACEDUMP  5       // 4 + Tracing and HEX dumping of objects
+  p_combo.AddString(_T("No logging"));                                          // HLL_NOLOG      0       // No logging is ever done
+  p_combo.AddString(_T("Error logging only"));                                  // HLL_ERRORS     1       // Only errors are logged
+  p_combo.AddString(_T("Logging of HTTP actions"));                             // HLL_LOGGING    2       // 1 + Logging of actions
+  p_combo.AddString(_T("HTTP actions and SOAP bodies"));                        // HLL_LOGBODY    3       // 2 + Logging of actions and soap bodies
+  p_combo.AddString(_T("HTTP actions, SOAP bodies and tracing"));               // HLL_TRACE      4       // 3 + Tracing of settings
+  p_combo.AddString(_T("HTTP actions, SOAP bodies, tracing and HEX dumping"));  // HLL_TRACEDUMP  5       // 4 + Tracing and HEX dumping of objects
 }
 
 void
@@ -259,9 +259,9 @@ ConfigDlg::ReadConfig()
 //   m_buttonSecureServer.SetCheck(m_secureServer);
   
   // Set role of this machine
-  if(m_role == "Client")       m_comboRole.SetCurSel(0);
-  if(m_role == "Server")       m_comboRole.SetCurSel(1);
-  if(m_role == "ClientServer") m_comboRole.SetCurSel(2);
+  if(m_role == _T("Client"))       m_comboRole.SetCurSel(0);
+  if(m_role == _T("Server"))       m_comboRole.SetCurSel(1);
+  if(m_role == _T("ClientServer")) m_comboRole.SetCurSel(2);
 
   // Construct the compound server address
   ConstructServerAddress();
@@ -274,18 +274,18 @@ ConfigDlg::ConstructServerAddress()
   // Construct server address
   if(m_serverPort == INTERNET_DEFAULT_HTTP_PORT)
   {
-    m_serverAddress.Format("http://%s%s",m_server.GetString(),m_baseURL.GetString());
+    m_serverAddress.Format(_T("http://%s%s"),m_server.GetString(),m_baseURL.GetString());
     m_secureServer = false;
   }
   else if(m_serverPort == INTERNET_DEFAULT_HTTPS_PORT)
   {
-    m_serverAddress.Format("https://%s%s",m_server.GetString(),m_baseURL.GetString());
+    m_serverAddress.Format(_T("https://%s%s"),m_server.GetString(),m_baseURL.GetString());
     m_secureServer = true;
   }
   else
   {
-    m_serverAddress.Format("http%s://%s:%d%s"
-                           ,m_secureServer ? "s" : ""
+    m_serverAddress.Format(_T("http%s://%s:%d%s")
+                           ,m_secureServer ? _T("s") : _T("")
                            ,m_server.GetString()
                            ,m_serverPort
                            ,m_baseURL.GetString());
@@ -306,18 +306,18 @@ bool
 ConfigDlg::CheckConfig()
 {
   // Check for correct values
-  if(!(m_role == "Client" || m_role == "Server" || m_role == "ClientServer"))
+  if(!(m_role == _T("Client") || m_role == _T("Server") || m_role == _T("ClientServer")))
   {
-    MessageBox("Choose the correct role for the current machine (Client / Server / Client & Server)"
-              ,"ERROR"
+    MessageBox(_T("Choose the correct role for the current machine (Client / Server / Client & Server)")
+              ,_T("ERROR")
               ,MB_OK|MB_ICONERROR);
     return false;
   }
 
   if(m_instance < 1 || m_instance > MAXIMUM_INSTANCE)
   {
-    MessageBox("The instance number of the server must be between 1 and 100 (inclusive)"
-              ,"ERROR"
+    MessageBox(_T("The instance number of the server must be between 1 and 100 (inclusive)")
+              ,_T("ERROR")
               ,MB_OK|MB_ICONERROR);
     return false;
   }
@@ -326,8 +326,8 @@ ConfigDlg::CheckConfig()
   {
     if(m_serverPort < 1025 || m_serverPort > 65535)
     {
-      MessageBox("The server port must be 80, 443 or between 1025 and 65535 (inclusive)"
-                ,"ERROR"
+      MessageBox(_T("The server port must be 80, 443 or between 1025 and 65535 (inclusive)")
+                ,_T("ERROR")
                 ,MB_OK|MB_ICONERROR);
       return false;
     }
@@ -335,19 +335,19 @@ ConfigDlg::CheckConfig()
 
   if (m_foutRapportVestuur)
   {
-    if (!(   CheckFRVeldIngevuld(m_mailServer,           "mail server")
-          && CheckFRVeldIngevuld(m_foutRapportAfzender,  "sender"   )
-          && CheckFRVeldIngevuld(m_foutRapportOntvanger, "receiver"  )))
+    if (!(   CheckFRVeldIngevuld(m_mailServer,           _T("mail server"))
+          && CheckFRVeldIngevuld(m_foutRapportAfzender,  _T("sender")   )
+          && CheckFRVeldIngevuld(m_foutRapportOntvanger, _T("receiver")  )))
     {
       return false;
     }
   }
 
   // Minimum base URL is one (1) char site "/x/"
-  if(m_baseURL.IsEmpty() || m_baseURL.GetLength() < 3 || m_baseURL == "/" || m_baseURL.Left(1) != "/" || m_baseURL.Right(1) != "/")
+  if(m_baseURL.IsEmpty() || m_baseURL.GetLength() < 3 || m_baseURL == _T("/") || m_baseURL.Left(1) != _T("/") || m_baseURL.Right(1) != _T("/"))
   {
-    MessageBox(XString("The base URL of ") + PRODUCT_NAME + " cannot be empty or just the root reference!"
-              ,"ERROR",MB_OK|MB_ICONERROR);
+    MessageBox(XString(_T("The base URL of ")) + PRODUCT_NAME + _T(" cannot be empty or just the root reference!")
+              ,_T("ERROR"),MB_OK|MB_ICONERROR);
     return false;
   }
 
@@ -389,8 +389,8 @@ ConfigDlg::WriteConfig()
   if(config.WriteConfig() == false)
   {
     ::MessageBox(GetSafeHwnd()
-                ,XString("Cannot write the configuration file '") + PRODUCT_NAME + ".config' to disk.\n"
-                 "Check the rights on the file and the rights on the directory it is in!"
+                ,XString(_T("Cannot write the configuration file '")) + PRODUCT_NAME + _T(".config' to disk.\n")
+                 _T("Check the rights on the file and the rights on the directory it is in!")
                 ,PROGRAM_NAME
                 ,MB_OK | MB_ICONERROR);
     return false;
@@ -414,9 +414,9 @@ ConfigDlg::WarningWriteRights()
   if(!m_configWriteable)
   {
     ::MessageBox(GetSafeHwnd()
-                ,"You do not have the right to write to the config file.\n"
-                 "So the file cannot be saved to disk!"
-                ,"Warning"
+                ,_T("You do not have the right to write to the config file.\n")
+                 _T("So the file cannot be saved to disk!")
+                ,_T("Warning")
                 ,MB_OK | MB_ICONEXCLAMATION);
     return true;
   }
@@ -429,9 +429,9 @@ ConfigDlg::CheckFRVeldIngevuld(const XString& frVeld, const XString& description
   if (frVeld.IsEmpty())
   {
     XString error;
-    error.Format("If sending error reports is 'on', the %s field needs to be filled in.",description.GetString());
+    error.Format(_T("If sending error reports is 'on', the %s field needs to be filled in."),description.GetString());
 
-    MessageBox(error,"ERROR",MB_OK|MB_ICONERROR);
+    MessageBox(error,_T("ERROR"),MB_OK|MB_ICONERROR);
     return false;
   }
   return true;
@@ -452,14 +452,14 @@ ConfigDlg::ObviousChecks()
 {
   if(!m_baseURL.IsEmpty())
   {
-    if(m_baseURL.Left(1) != "/")
+    if(m_baseURL.Left(1) != _T("/"))
     {
-      m_baseURL = "/" + m_baseURL;
+      m_baseURL = _T("/") + m_baseURL;
       UpdateData(FALSE);
     }
-    if(m_baseURL.Right(1) != "/")
+    if(m_baseURL.Right(1) != _T("/"))
     {
-      m_baseURL += "/";
+      m_baseURL += _T("/");
       UpdateData(FALSE);
     }
   }
@@ -475,9 +475,9 @@ ConfigDlg::OnCbnRole()
   {
     switch(ind)
     {
-      case 0: m_role = "Client";        break;
-      case 1: m_role = "Server";        break;
-      case 2: m_role = "ClientServer";  break;
+      case 0: m_role = _T("Client");        break;
+      case 1: m_role = _T("Server");        break;
+      case 2: m_role = _T("ClientServer");  break;
     }
     UpdateData(FALSE);
   }
@@ -510,7 +510,7 @@ ConfigDlg::OnEnChangeBriefserverURL()
   }
   else
   {
-    ::MessageBox(GetSafeHwnd(),"Not a valid server URL",PROGRAM_NAME,MB_OK|MB_ICONERROR);
+    ::MessageBox(GetSafeHwnd(),_T("Not a valid server URL"),PROGRAM_NAME,MB_OK|MB_ICONERROR);
     m_server.Empty();
     m_baseURL.Empty();
     m_serverPort = 80;
@@ -525,7 +525,7 @@ ConfigDlg::OnEnChangeServer()
   UpdateData();
 
   // Guard against using 'localhost'
-  if(m_server.CompareNoCase("localhost") == 0)
+  if(m_server.CompareNoCase(_T("localhost")) == 0)
   {
     m_server = GetHostName(HOSTNAME_FULL);
   }
@@ -570,7 +570,7 @@ ConfigDlg::OnBnClickedSearchroot()
   XString rootdir;
   BrowseForDirectory map;
   if(map.Browse(GetSafeHwnd()
-                ,"Get path to the WEBROOT directory"
+                ,_T("Get path to the WEBROOT directory")
                 ,m_webroot
                 ,rootdir
                 ,false    // files
@@ -605,13 +605,13 @@ void
 ConfigDlg::OnBnClickedSearchserverlog()
 {
   BrowseForFilename file(true
-                        ,"Getting the path to the server logfile"
-                        ,"txt"
+                        ,_T("Getting the path to the server logfile")
+                        ,_T("txt")
                         ,m_serverLogfile
                         ,0
-                        ,"Textfiles (*.txt)|*.txt|"
-                         "All files (*.*)|*.*|"
-                        ,"");
+                        ,_T("Textfiles (*.txt)|*.txt|")
+                         _T("All files (*.*)|*.*|")
+                        ,_T(""));
   if(file.DoModal() == IDOK)
   {
     XString path = file.GetChosenFile();
@@ -640,21 +640,21 @@ ConfigDlg::OnCbnRunAs()
     // Get the correct warning
     switch(m_runAsService)
     {
-      case RUNAS_STANDALONE:  message = "If you turn off the integration with MS-Windows NT-Services, you are limited to the following:\n"
-                                        "- Automatic starting and stopping of the service at the stopping and starting of the system\n"
-                                        "- Automatic restarting of the service in case of a calamity or a program bug\n"
-                                        "- Working in an isolated MS-Windows service account and system session";
+      case RUNAS_STANDALONE:  message = _T("If you turn off the integration with MS-Windows NT-Services, you are limited to the following:\n")
+                                        _T("- Automatic starting and stopping of the service at the stopping and starting of the system\n")
+                                        _T("- Automatic restarting of the service in case of a calamity or a program bug\n")
+                                        _T("- Working in an isolated MS-Windows service account and system session");
                               break;
-      case RUNAS_NTSERVICE:   message = "If you are working integrated with the service manager, you should be aware of the following:\n"
-                                        "- Configure the service (and account) through the main menu 'Installation...'\n"
-                                        "- Use a system account that has authorization on UNC paths";
+      case RUNAS_NTSERVICE:   message = _T("If you are working integrated with the service manager, you should be aware of the following:\n")
+                                        _T("- Configure the service (and account) through the main menu 'Installation...'\n")
+                                        _T("- Use a system account that has authorization on UNC paths");
                               break;
-      case RUNAS_IISAPPPOOL:  message = "If you are working integrated with Microsoft Internet-Information-Services (IIS), you should be aware of the following:\n"
-                                        "- The name of the server must be the same as the application pool in IIS\n"
-                                        "- The base-URL must be the same as in the configured site in IIS\n"
-                                        "- The server port number must conform to the site bindings in IIS";
+      case RUNAS_IISAPPPOOL:  message = _T("If you are working integrated with Microsoft Internet-Information-Services (IIS), you should be aware of the following:\n")
+                                        _T("- The name of the server must be the same as the application pool in IIS\n")
+                                        _T("- The base-URL must be the same as in the configured site in IIS\n")
+                                        _T("- The server port number must conform to the site bindings in IIS");
                               break;
-      default:                message = "ALARM: No runmode configured!";
+      default:                message = _T("ALARM: No runmode configured!");
                               buttons = MB_OK | MB_ICONERROR;
     }
     ::MessageBox(GetSafeHwnd(),message,PROGRAM_NAME,buttons);

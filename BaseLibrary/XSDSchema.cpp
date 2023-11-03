@@ -148,8 +148,8 @@ XSDSchema::WriteXSDSchema(XString p_fileName)
 
   // Save as human readable file
   doc.SetCondensed(false);
-  doc.SetEncoding(StringEncoding::ENC_UTF8);
-  return doc.SaveFile(p_fileName,true);
+  doc.SetEncoding(Encoding::UTF8);
+  return doc.SaveFile(p_fileName);
 }
 
 // Validate an XML document, with optional starting point
@@ -169,7 +169,7 @@ XSDSchema::ValidateXML(XMLMessage& p_document
   if(m_elements.empty())
   {
     result  = XsdError::XSDE_Schema_has_no_starting_element;
-    p_error = "XSDSchema has no starting element";
+    p_error = _T("XSDSchema has no starting element");
   }
   else
   {
@@ -186,14 +186,14 @@ XSDSchema::ValidateXML(XMLMessage& p_document
       if(starting == nullptr && index < (int)m_elements.size() - 1)
       {
         XsdError::XSDE_Missing_elements_in_xml_at_level_0;
-        p_error.AppendFormat("Missing elements after index: %d",index + 1);
+        p_error.AppendFormat(_T("Missing elements after index: %d"),index + 1);
         break;
       }
     }
     if(starting)
     {
       XsdError::XSDE_Extra_elements_in_xml_at_level_0;
-      p_error = "More elements in XMLMessage than in XSDSchema.";
+      p_error = _T("More elements in XMLMessage than in XSDSchema.");
     }
   }
   return result;
@@ -215,12 +215,12 @@ XsdError
 XSDSchema::ReadXSDSchemaRoot(XMLMessage& p_doc)
 {
   XMLElement* root = p_doc.GetRoot();
-  if(root->GetName().Compare("schema"))
+  if(root->GetName().Compare(_T("schema")))
   {
     return XsdError::XSDE_schema_missing;
   }
   m_xs = root->GetNamespace();
-  XMLAttribute* xmlns = p_doc.FindAttribute(root,"xmlns");
+  XMLAttribute* xmlns = p_doc.FindAttribute(root,_T("xmlns"));
   if(xmlns)
   {
     m_namespace = xmlns->m_value;
@@ -231,18 +231,18 @@ XSDSchema::ReadXSDSchemaRoot(XMLMessage& p_doc)
   }
   else return XsdError::XSDE_primary_namespace_missing;
 
-  XMLAttribute* xs = p_doc.FindAttribute(root,"xs");
+  XMLAttribute* xs = p_doc.FindAttribute(root,_T("xs"));
   if(xs)
   {
-    m_xs = "xs";
-    if(xs->m_namespace.Compare("xmlns"))
+    m_xs = _T("xs");
+    if(xs->m_namespace.Compare(_T("xmlns")))
     {
       return XsdError::XSDE_xml_schema_must_be_xml_namespace;
     }
   }
   else return XsdError::XSDE_xml_schema_missing;
 
-  XMLAttribute* target = p_doc.FindAttribute(root,"targetNamespace");
+  XMLAttribute* target = p_doc.FindAttribute(root,_T("targetNamespace"));
   if(target)
   {
     m_targetNamespace = target->m_value;
@@ -253,10 +253,10 @@ XSDSchema::ReadXSDSchemaRoot(XMLMessage& p_doc)
   }
   else return XsdError::XSDE_missing_targetnamespace;
 
-  XMLAttribute* formdef = p_doc.FindAttribute(root,"elementFormDefault");
+  XMLAttribute* formdef = p_doc.FindAttribute(root,_T("elementFormDefault"));
   if(formdef)
   {
-    if(formdef->m_value.Compare("qualified") == 0)
+    if(formdef->m_value.Compare(_T("qualified")) == 0)
     {
       m_qualified = true;
     }
@@ -270,13 +270,13 @@ XSDSchema::ReadXSDSchemaRoot(XMLMessage& p_doc)
 XsdError 
 XSDSchema::ReadXSDComplexTypes(XMLMessage& p_doc)
 {
-  XMLElement* complex = p_doc.FindElement("complexType",false);
+  XMLElement* complex = p_doc.FindElement(_T("complexType"),false);
   while(complex)
   {
     // Skip past elements
-    if(complex->GetName().CompareNoCase("complexType") == 0)
+    if(complex->GetName().CompareNoCase(_T("complexType")) == 0)
     {
-      XString name = p_doc.GetAttribute(complex,"name");
+      XString name = p_doc.GetAttribute(complex,_T("name"));
       if(name.IsEmpty())
       {
         return XsdError::XSDE_complex_type_without_a_name;
@@ -304,15 +304,15 @@ XSDSchema::ReadXSDComplexType(XMLMessage&     p_doc
 {
   XsdError result = XsdError::XSDE_NoError;
   XMLElement* selector = p_doc.GetElementFirstChild(p_elem);
-  if(selector->GetName().Compare("sequence") == 0)
+  if(selector->GetName().Compare(_T("sequence")) == 0)
   {
     p_type->m_order = WsdlOrder::WS_Sequence;
   }
-  if(selector->GetName().Compare("all") == 0)
+  if(selector->GetName().Compare(_T("all")) == 0)
   {
     p_type->m_order = WsdlOrder::WS_All;
   }
-  if(selector->GetName().Compare("choice") == 0)
+  if(selector->GetName().Compare(_T("choice")) == 0)
   {
     p_type->m_order = WsdlOrder::WS_Choice;
   }
@@ -340,11 +340,11 @@ XSDSchema::ReadXSDElements(XMLMessage& p_doc)
 {
   XsdError result = XsdError::XSDE_NoError;
 
-  XMLElement* elem = p_doc.FindElement("element",false);
+  XMLElement* elem = p_doc.FindElement(_T("element"),false);
   while(elem)
   {
     // Skip past complex types
-    if(elem->GetName().Compare("element") == 0)
+    if(elem->GetName().Compare(_T("element")) == 0)
     {
       XMLElement* next = nullptr;
       result = ReadElementDefinition(p_doc,elem,&next);
@@ -368,10 +368,10 @@ XSDSchema::ReadElementDefinition(XMLMessage&  p_doc
                                 ,XMLElement** p_next)
 {
   XsdError result   = XsdError::XSDE_NoError;
-  XString name      = p_doc.GetAttribute(p_elem,"name");
-  XString type      = p_doc.GetAttribute(p_elem,"type");
-  XString minoccurs = p_doc.GetAttribute(p_elem,"minOccurs");
-  XString maxoccurs = p_doc.GetAttribute(p_elem,"maxOccurs");
+  XString name      = p_doc.GetAttribute(p_elem,_T("name"));
+  XString type      = p_doc.GetAttribute(p_elem,_T("type"));
+  XString minoccurs = p_doc.GetAttribute(p_elem,_T("minOccurs"));
+  XString maxoccurs = p_doc.GetAttribute(p_elem,_T("maxOccurs"));
 
   XmlDataType xmlType = 0;
   XMLRestriction* restrict = new XMLRestriction(type);
@@ -395,12 +395,12 @@ XSDSchema::ReadElementDefinition(XMLMessage&  p_doc
   {
     // Simple type
     XMLElement* simple = p_doc.GetElementFirstChild(p_elem);
-    if(simple && simple->GetName().Compare("simpleType") == 0)
+    if(simple && simple->GetName().Compare(_T("simpleType")) == 0)
     {
       XMLElement* rest = p_doc.GetElementFirstChild(simple);
-      if(rest && rest->GetName().Compare("restriction") == 0)
+      if(rest && rest->GetName().Compare(_T("restriction")) == 0)
       {
-        XString base = p_doc.GetAttribute(rest,"base");
+        XString base = p_doc.GetAttribute(rest,_T("base"));
         StripSchemaNS(base);
         restrict->AddBaseType(base);
 
@@ -409,23 +409,23 @@ XSDSchema::ReadElementDefinition(XMLMessage&  p_doc
         while(part)
         {
           XString rname = part->GetName();
-          XString value = p_doc.GetAttribute(part,"value");
+          XString value = p_doc.GetAttribute(part,_T("value"));
 
-               if(rname.Compare("length")         == 0)  restrict->AddLength(atoi(value));
-          else if(rname.Compare("minLength")      == 0)  restrict->AddMinLength(atoi(value));
-          else if(rname.Compare("maxLength")      == 0)  restrict->AddMaxLength(atoi(value));
-          else if(rname.Compare("totalDigits")    == 0)  restrict->AddTotalDigits(atoi(value));
-          else if(rname.Compare("fractionDigits") == 0)  restrict->AddFractionDigits(atoi(value));
-          else if(rname.Compare("minExclusive")   == 0)  restrict->AddMinExclusive(value);
-          else if(rname.Compare("maxExclusive")   == 0)  restrict->AddMaxExclusive(value);
-          else if(rname.Compare("minInclusive")   == 0)  restrict->AddMinInclusive(value);
-          else if(rname.Compare("maxInclusive")   == 0)  restrict->AddMaxInclusive(value);
-          else if(rname.Compare("pattern")        == 0)  restrict->AddPattern(value);
-          else if(rname.Compare("enumeration")    == 0)
+               if(rname.Compare(_T("length"))         == 0)  restrict->AddLength(_ttoi(value));
+          else if(rname.Compare(_T("minLength"))      == 0)  restrict->AddMinLength(_ttoi(value));
+          else if(rname.Compare(_T("maxLength"))      == 0)  restrict->AddMaxLength(_ttoi(value));
+          else if(rname.Compare(_T("totalDigits"))    == 0)  restrict->AddTotalDigits(_ttoi(value));
+          else if(rname.Compare(_T("fractionDigits")) == 0)  restrict->AddFractionDigits(_ttoi(value));
+          else if(rname.Compare(_T("minExclusive"))   == 0)  restrict->AddMinExclusive(value);
+          else if(rname.Compare(_T("maxExclusive"))   == 0)  restrict->AddMaxExclusive(value);
+          else if(rname.Compare(_T("minInclusive"))   == 0)  restrict->AddMinInclusive(value);
+          else if(rname.Compare(_T("maxInclusive"))   == 0)  restrict->AddMaxInclusive(value);
+          else if(rname.Compare(_T("pattern"))        == 0)  restrict->AddPattern(value);
+          else if(rname.Compare(_T("enumeration"))    == 0)
           {
             XString documentation;
             XMLElement* anno = p_doc.GetElementFirstChild(part);
-            if(anno && anno->GetName().Compare("annotation") == 0)
+            if(anno && anno->GetName().Compare(_T("annotation")) == 0)
             {
               XMLElement* doc = p_doc.GetElementFirstChild(anno);
               if(doc)
@@ -435,12 +435,12 @@ XSDSchema::ReadElementDefinition(XMLMessage&  p_doc
             }
             restrict->AddEnumeration(value,documentation);
           }
-          else if(rname.Compare("whitespace") == 0)
+          else if(rname.Compare(_T("whitespace")) == 0)
           {
             int ws = 0;
-                 if(value.Compare("preserve") == 0) ws = 1;
-            else if(value.Compare("replace")  == 0) ws = 2;
-            else if(value.Compare("collapse") == 0) ws = 3;
+                 if(value.Compare(_T("preserve")) == 0) ws = 1;
+            else if(value.Compare(_T("replace"))  == 0) ws = 2;
+            else if(value.Compare(_T("collapse")) == 0) ws = 3;
             else
             {
               result = XsdError::XSDE_unknown_simple_type_restriction;
@@ -483,12 +483,12 @@ void
 XSDSchema::WriteXSDSchemaRoot(XMLMessage& p_doc)
 {
   XMLElement* root = p_doc.GetRoot();
-  root->SetName("schema");
-  root->SetNamespace("ns");
-  p_doc.SetAttribute(root,"xmlns",m_namespace);
-  p_doc.SetAttribute(root,"xmlns:xs",XSDSCHEMA);
-  p_doc.SetAttribute(root,"targetNamespace",m_targetNamespace);
-  p_doc.SetAttribute(root,"elementFormDefault",m_qualified ? "qualified" : "unqualified");
+  root->SetName(_T("schema"));
+  root->SetNamespace(_T("ns"));
+  p_doc.SetAttribute(root,_T("xmlns"),m_namespace);
+  p_doc.SetAttribute(root,_T("xmlns:xs"),XSDSCHEMA);
+  p_doc.SetAttribute(root,_T("targetNamespace"),m_targetNamespace);
+  p_doc.SetAttribute(root,_T("elementFormDefault"),m_qualified ? _T("qualified") : _T("unqualified"));
 }
 
 // Write all elements
@@ -497,26 +497,26 @@ XSDSchema::WriteXSDElements(XMLMessage& p_doc,XMLElement* p_base,ElementMap& p_e
 {
   for(int index = 0;index < (int) p_elements.size();++index)
   {
-    XMLElement* elem = p_doc.AddElement(p_base,"xs:element",XDT_String,"");
-    p_doc.SetAttribute(elem,"name",p_elements[index]->GetName());
+    XMLElement* elem = p_doc.AddElement(p_base,_T("xs:element"),XDT_String,_T(""));
+    p_doc.SetAttribute(elem,_T("name"),p_elements[index]->GetName());
     XMLRestriction* restrict = p_elements[index]->GetRestriction();
     if(restrict)
     {
-      p_doc.SetAttribute(elem,"type",restrict->GetName());
+      p_doc.SetAttribute(elem,_T("type"),restrict->GetName());
     }
     if(restrict->HasMinOccurs() != 1)
     {
-      p_doc.SetAttribute(elem,"minOccurs",(int)restrict->HasMinOccurs());
+      p_doc.SetAttribute(elem,_T("minOccurs"),(int)restrict->HasMinOccurs());
     }
     if(restrict->HasMaxOccurs() != 1)
     {
       if(restrict->HasMaxOccurs() == UINT_MAX)
       {
-        p_doc.SetAttribute(elem,"maxOccurs","unbounded");
+        p_doc.SetAttribute(elem,_T("maxOccurs"),_T("unbounded"));
       }
       else
       {
-        p_doc.SetAttribute(elem,"maxOccurs",(int) restrict->HasMaxOccurs());
+        p_doc.SetAttribute(elem,_T("maxOccurs"),(int) restrict->HasMaxOccurs());
       }
     }
     if(FindComplexType(restrict->GetName()) == nullptr)
@@ -524,9 +524,9 @@ XSDSchema::WriteXSDElements(XMLMessage& p_doc,XMLElement* p_base,ElementMap& p_e
       if(XMLRestrictionMoreThanBase(restrict))
       {
         // Must be a simple type
-        XMLElement* simple = p_doc.AddElement(elem,  "xs:simpleType", XDT_String,"");
-        XMLElement* restrt = p_doc.AddElement(simple,"xs:restriction",XDT_String,"");
-        p_doc.SetAttribute(restrt,"base","xs:" + restrict->HasBaseType());
+        XMLElement* simple = p_doc.AddElement(elem,  _T("xs:simpleType"), XDT_String,_T(""));
+        XMLElement* restrt = p_doc.AddElement(simple,_T("xs:restriction"),XDT_String,_T(""));
+        p_doc.SetAttribute(restrt,_T("base"),_T("xs:") + restrict->HasBaseType());
 
         WriteXSDRestrictions(p_doc,restrt,restrict);
       }
@@ -541,15 +541,15 @@ XSDSchema::WriteXSDComplexTypes(XMLMessage& p_doc)
   for(const auto& comp : m_types)
   {
     XSDComplexType* complex = comp.second;
-    XMLElement* type = p_doc.AddElement(nullptr,"xs:complexType",XDT_String,"");
-    p_doc.SetAttribute(type,"name",complex->m_name);
+    XMLElement* type = p_doc.AddElement(nullptr,_T("xs:complexType"),XDT_String,_T(""));
+    p_doc.SetAttribute(type,_T("name"),complex->m_name);
     
     XMLElement* order(nullptr);
     switch(complex->m_order)
     {
-      case WsdlOrder::WS_All:      order = p_doc.AddElement(type,"xs:all",     XDT_String,""); break;
-      case WsdlOrder::WS_Choice:   order = p_doc.AddElement(type,"xs:choice",  XDT_String,""); break;
-      case WsdlOrder::WS_Sequence: order = p_doc.AddElement(type,"xs:sequence",XDT_String,""); break;
+      case WsdlOrder::WS_All:      order = p_doc.AddElement(type,_T("xs:all"),     XDT_String,_T("")); break;
+      case WsdlOrder::WS_Choice:   order = p_doc.AddElement(type,_T("xs:choice"),  XDT_String,_T("")); break;
+      case WsdlOrder::WS_Sequence: order = p_doc.AddElement(type,_T("xs:sequence"),XDT_String,_T("")); break;
       default:                     return;
     }
     // Write all parts of the complex type
@@ -582,66 +582,67 @@ void
 XSDSchema::WriteXSDRestrictions(XMLMessage& p_doc,XMLElement* p_elem,XMLRestriction* p_restrict)
 {
   XMLElement* extra(nullptr);
+  XString empty;
 
   if(p_restrict->HasLength() > 0)
   {
-    extra = p_doc.AddElement(p_elem,"xs:length",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasLength());
+    extra = p_doc.AddElement(p_elem,_T("xs:length"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasLength());
   }
   if(p_restrict->HasMaxLength() > 0)
   {
-    extra = p_doc.AddElement(p_elem,"xs:maxLength",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasMaxLength());
+    extra = p_doc.AddElement(p_elem,_T("xs:maxLength"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMaxLength());
   }
   if(p_restrict->HasMinLength() > 0)
   {
-    extra = p_doc.AddElement(p_elem,"xs:minLength",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasMinLength());
+    extra = p_doc.AddElement(p_elem,_T("xs:minLength"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMinLength());
   }
   if(p_restrict->HasTotalDigits())
   {
-    extra = p_doc.AddElement(p_elem,"xs:totalDigits",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasTotalDigits());
+    extra = p_doc.AddElement(p_elem,_T("xs:totalDigits"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasTotalDigits());
   }
   if(p_restrict->HasFractionDigits())
   {
-    extra = p_doc.AddElement(p_elem,"xs:fractionDigits",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasFractionDigits());
+    extra = p_doc.AddElement(p_elem,_T("xs:fractionDigits"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasFractionDigits());
   }
   if(!p_restrict->HasMaxExclusive().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,"xs:maxExclusive",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasMaxExclusive());
+    extra = p_doc.AddElement(p_elem,_T("xs:maxExclusive"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMaxExclusive());
   }
   if(!p_restrict->HasMaxInclusive().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,"xs:maxInclusive",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasMaxInclusive());
+    extra = p_doc.AddElement(p_elem,_T("xs:maxInclusive"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMaxInclusive());
   }
   if(!p_restrict->HasMinExclusive().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,"xs:minExclusive",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasMinExclusive());
+    extra = p_doc.AddElement(p_elem,_T("xs:minExclusive"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMinExclusive());
   }
   if(!p_restrict->HasMinInclusive().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,"xs:minInclusive",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasMinInclusive());
+    extra = p_doc.AddElement(p_elem,_T("xs:minInclusive"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMinInclusive());
   }
   if(!p_restrict->HasPattern().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,"xs:pattern",XDT_String,"");
-    p_doc.SetAttribute(extra,"value",p_restrict->HasPattern());
+    extra = p_doc.AddElement(p_elem,_T("xs:pattern"),XDT_String,empty);
+    p_doc.SetAttribute(extra,_T("value"),p_restrict->HasPattern());
   }
   if(p_restrict->HasWhitespace())
   {
-    extra = p_doc.AddElement(p_elem,"xs:whiteSpace",XDT_String,"");
+    extra = p_doc.AddElement(p_elem,_T("xs:whiteSpace"),XDT_String,empty);
     // 1=preserve, 2=replace, 3=collapse
     switch(p_restrict->HasWhitespace())
     {
-      case 1: p_doc.SetAttribute(extra,"value","preserve"); break;
-      case 2: p_doc.SetAttribute(extra,"value","replace");  break;
-      case 3: p_doc.SetAttribute(extra,"value","collapse"); break;
+      case 1: p_doc.SetAttribute(extra,_T("value"),_T("preserve")); break;
+      case 2: p_doc.SetAttribute(extra,_T("value"),_T("replace"));  break;
+      case 3: p_doc.SetAttribute(extra,_T("value"),_T("collapse")); break;
     }
   }
   XmlEnums& enums = p_restrict->GetEnumerations();
@@ -649,12 +650,12 @@ XSDSchema::WriteXSDRestrictions(XMLMessage& p_doc,XMLElement* p_elem,XMLRestrict
   {
     for(auto& num : enums)
     {
-      extra = p_doc.AddElement(p_elem,"xs:enumeration",XDT_String,"");
-      p_doc.SetAttribute(extra,"value",num.first);
+      extra = p_doc.AddElement(p_elem,_T("xs:enumeration"),XDT_String,empty);
+      p_doc.SetAttribute(extra,_T("value"),num.first);
       if(!num.second.IsEmpty())
       {
-        XMLElement* anno = p_doc.AddElement(extra,"annotation",XDT_String,"");
-        p_doc.AddElement(anno,"documentation",XDT_String,num.second);
+        XMLElement* anno = p_doc.AddElement(extra,_T("annotation"),XDT_String,empty);
+        p_doc.AddElement(anno,_T("documentation"),XDT_String,num.second);
       }
     }
   }
@@ -769,7 +770,7 @@ XSDSchema::ValidateElement(XMLMessage& p_doc
     if(valAgainst == nullptr)
     {
       XsdError::XSDE_Element_not_in_xsd;
-      p_error.AppendFormat("Unknown element [%s] in: %s",child->GetName().GetString(),complex->m_name.GetString());
+      p_error.AppendFormat(_T("Unknown element [%s] in: %s"),child->GetName().GetString(),complex->m_name.GetString());
       break;
     }
     result = ValidateElement(p_doc,child,valAgainst,p_error);
@@ -800,7 +801,7 @@ XSDSchema::ValidateOrder(XMLMessage&      p_doc
     case WsdlOrder::WS_All:       result = ValidateOrderAll     (p_doc,p_compare,p_complex->m_elements,p_error);
                                   break;
     default:                      XsdError::XSDE_Unknown_ComplexType_ordering;
-                                  p_error += "Unknown ComplexType ordering found (NOT sequence,choice,all)";
+                                  p_error += _T("Unknown ComplexType ordering found (NOT sequence,choice,all)");
                                   break;
   }
   return result;
@@ -809,43 +810,71 @@ XSDSchema::ValidateOrder(XMLMessage&      p_doc
 XsdError 
 XSDSchema::ValidateOrderSequence(XMLMessage& p_doc,XMLElement* p_compare,ElementMap& p_elements,XString& p_error)
 {
-  XsdError result = XsdError::XSDE_NoError;
-
   // Elements must occur in the same order, or must have "minOccur = 0"
-  int findpos = 0;
+  size_t   posXSD = 0;
+  unsigned occurs = 0;
 
-  XMLElement* tocheck = p_doc.GetElementFirstChild(p_compare);
-  while(tocheck)
+  XMLElement* elementXML = p_doc.GetElementFirstChild(p_compare);
+  while(elementXML)
   {
-    if(findpos >= (int)p_elements.size())
+    if(posXSD >= p_elements.size())
     {
-      // error: Element not found in definition
-      break;
+      // Element not found in definition
+      p_error = _T("Element not found in XSD type definition: ") + elementXML->GetName();
+      return XsdError::XSDE_Element_not_in_xsd;
     }
-    XMLElement* defelem = p_elements[findpos];
-    if(tocheck->GetName().Compare(defelem->GetName()) != 0)
+    XMLElement* elementXSD = p_elements[posXSD];
+    XMLRestriction* restrict = elementXSD->GetRestriction();
+
+    if(elementXML->GetName().Compare(elementXSD->GetName()) == 0)
     {
-      // Not found: see if it has 'minOccur'
-      XMLRestriction* restrict = defelem->GetRestriction();
-      if(!restrict || restrict->HasMinOccurs() > 0)
+      // Found: check maxOccurs
+      if(++occurs > (restrict ? restrict->HasMaxOccurs() : 1))
       {
-        p_error = "Missing element in message: " + defelem->GetName();
-        return XsdError::XSDE_Missing_element_in_xml;
+        p_error = _T("Extra element in message: ") + elementXSD->GetName();
+        return XsdError::XSDE_Extra_elements_in_xml;
       }
     }
     else
     {
-      // Next element to check
-      tocheck = p_doc.GetElementSibling(tocheck);
+      // Not found: check for unknown element
+      if(occurs == 0 && (!restrict || restrict->HasMinOccurs() > 0))
+      {
+        // Element not found in definition
+        p_error = _T("Element not found in XSD type definition: ") + elementXML->GetName();
+        return XsdError::XSDE_Element_not_in_xsd;
+      }
+
+      // Not found: check minOccurs
+      if(occurs < (restrict ? restrict->HasMinOccurs() : 1))
+      {
+        p_error = _T("Missing element in message: ") + elementXSD->GetName();
+        return XsdError::XSDE_Missing_element_in_xml;
+      }
+
+      // Next XSD
+      ++posXSD;
+      occurs = 0;
+      continue;
     }
-    ++findpos;
+    // Next element to check
+    elementXML = p_doc.GetElementSibling(elementXML);
   }
-  if(tocheck)
+
+  // Check uncompleted XSD elements
+  for(; posXSD < p_elements.size(); ++posXSD,occurs = 0)
   {
-    p_error = "Element not found in XSD type definition: " + tocheck->GetName();
-    result  = XsdError::XSDE_Element_not_in_xsd;
+    XMLElement* elementXSD = p_elements[posXSD];
+    XMLRestriction* restrict = elementXSD->GetRestriction();
+
+    if(occurs < (restrict ? restrict->HasMinOccurs() : 1))
+    {
+      // Element not found in xml
+      p_error = _T("Element not found in xml: ") + elementXSD->GetName();
+      return XsdError::XSDE_Missing_element_in_xml;
+    }
   }
-  return result;
+  return XsdError::XSDE_NoError;
 }
 
 XsdError 
@@ -861,12 +890,12 @@ XSDSchema::ValidateOrderChoice(XMLMessage& p_doc,XMLElement* p_compare,ElementMa
   }
   if(found == nullptr)
   {
-    p_error = "Element by <choice> not defined in complex type: " + p_compare->GetName();
+    p_error = _T("Element by <choice> not defined in complex type: ") + p_compare->GetName();
     result  = XsdError::XSDE_Missing_element_in_xml;
   }
   else if(p_doc.GetElementSibling(p_compare))
   {
-    p_error = "<choice> selection can have only ONE (1) element";
+    p_error = _T("<choice> selection can have only ONE (1) element");
     result  = XsdError::XSDE_only_one_choice_element;
   }
   return result;
@@ -883,7 +912,7 @@ XSDSchema::ValidateOrderAll(XMLMessage& p_doc,XMLElement* p_compare,ElementMap& 
     const XMLElement* found = FindElement(p_elements,elem->GetName());
     if(found == nullptr)
     {
-      p_error = "Element not found in type definition: " + elem->GetName();
+      p_error = _T("Element not found in type definition: ") + elem->GetName();
       result  = XsdError::XSDE_Missing_element_in_xml;
       break;
     }
@@ -915,8 +944,8 @@ XSDSchema::ValidateValue(XMLRestriction*  p_restrict
   if(!errors.IsEmpty())
   {
     result   = XsdError::XSDE_base_datatype_violation;
-    p_error += "Field: " + p_compare->GetName();
-    p_error += " : " + errors;
+    p_error += _T("Field: ") + p_compare->GetName();
+    p_error += _T(" : ") + errors;
   }
 
   // Check extra restrictions on datatype value
@@ -924,8 +953,8 @@ XSDSchema::ValidateValue(XMLRestriction*  p_restrict
   if(!errors.IsEmpty())
   {
     result   = XsdError::XSDE_datatype_restriction_violation;
-    p_error += "Field: " + p_compare->GetName();
-    p_error += " : " + errors;
+    p_error += _T("Field: ") + p_compare->GetName();
+    p_error += _T(" : ") + errors;
   }
 
   return result;

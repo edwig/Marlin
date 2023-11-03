@@ -111,7 +111,7 @@ void WebConfigAuthentication::DoDataExchange(CDataExchange* pDX)
 
     m_comboScheme        .EnableWindow(m_useScheme);
     m_buttonNtlmCache    .EnableWindow(m_useNTLMCache);
-    m_buttonUseNTLMCache .EnableWindow(m_scheme.Compare("NTLM") == 0);
+    m_buttonUseNTLMCache .EnableWindow(m_scheme.Compare(_T("NTLM")) == 0);
     m_buttonSso          .EnableWindow(m_useSSO);
     m_buttonRequestCert  .EnableWindow(m_useRequestCert);
  }
@@ -173,39 +173,39 @@ void
 WebConfigAuthentication::InitComboboxes()
 {
   // Authentication scheme's
-  m_comboScheme.AddString("Anonymous");
-  m_comboScheme.AddString("Basic");
-  m_comboScheme.AddString("NTLM");
-  m_comboScheme.AddString("Negotiate");
-  m_comboScheme.AddString("Digest");
-  m_comboScheme.AddString("Kerberos");
+  m_comboScheme.AddString(_T("Anonymous"));
+  m_comboScheme.AddString(_T("Basic"));
+  m_comboScheme.AddString(_T("NTLM"));
+  m_comboScheme.AddString(_T("Negotiate"));
+  m_comboScheme.AddString(_T("Digest"));
+  m_comboScheme.AddString(_T("Kerberos"));
 }
 
 void
 WebConfigAuthentication::ReadWebConfig(MarlinConfig& config)
 {
   // AUTHENTICATION OVERRIDES
-  m_useScheme         = config.HasParameter("Authentication","Scheme");
-  m_useRealm          = config.HasParameter("Authentication","Realm");
-  m_useDomain         = config.HasParameter("Authentication","Domain");
-  m_useNTLMCache      = config.HasParameter("Authentication","NTLMCache");
-  m_useUsername       = config.HasParameter("Authentication","User");
-  m_usePassword       = config.HasParameter("Authentication","Password");
-  m_useSSO            = config.HasParameter("Authentication","SSO");
-  m_useRequestCert    = config.HasParameter("Authentication","ClientCertificate");
-  m_useCertName       = config.HasParameter("Authentication","CertificateName");
-  m_useCertThumbprint = config.HasParameter("Authentication","CertificateThumbprint");
+  m_useScheme         = config.HasParameter(_T("Authentication"),_T("Scheme"));
+  m_useRealm          = config.HasParameter(_T("Authentication"),_T("Realm"));
+  m_useDomain         = config.HasParameter(_T("Authentication"),_T("Domain"));
+  m_useNTLMCache      = config.HasParameter(_T("Authentication"),_T("NTLMCache"));
+  m_useUsername       = config.HasParameter(_T("Authentication"),_T("User"));
+  m_usePassword       = config.HasParameter(_T("Authentication"),_T("Password"));
+  m_useSSO            = config.HasParameter(_T("Authentication"),_T("SSO"));
+  m_useRequestCert    = config.HasParameter(_T("Authentication"),_T("ClientCertificate"));
+  m_useCertName       = config.HasParameter(_T("Authentication"),_T("CertificateName"));
+  m_useCertThumbprint = config.HasParameter(_T("Authentication"),_T("CertificateThumbprint"));
 
-  m_scheme            = config.GetParameterString ("Authentication","Scheme",               "");
-  m_ntlmCache         = config.GetParameterBoolean("Authentication","NTLMCache",          true);
-  m_realm             = config.GetParameterString ("Authentication","Realm",                "");
-  m_domain            = config.GetParameterString ("Authentication","Domain",               "");
-  m_user              = config.GetParameterString ("Authentication","User",                 "");
-  m_password          = config.GetEncryptedString ("Authentication","Password",             "");
-  m_sso               = config.GetParameterBoolean("Authentication","SSO",               false);
-  m_requestCert       = config.GetParameterBoolean("Authentication","ClientCertificate", false);
-  m_certName          = config.GetParameterString ("Authentication","CertificateName",      "");
-  m_certThumbprint    = config.GetParameterString ("Authentication","CertificateThumbprint","");
+  m_scheme            = config.GetParameterString (_T("Authentication"),_T("Scheme"),               _T(""));
+  m_ntlmCache         = config.GetParameterBoolean(_T("Authentication"),_T("NTLMCache"),              true);
+  m_realm             = config.GetParameterString (_T("Authentication"),_T("Realm"),                _T(""));
+  m_domain            = config.GetParameterString (_T("Authentication"),_T("Domain"),               _T(""));
+  m_user              = config.GetParameterString (_T("Authentication"),_T("User"),                 _T(""));
+  m_password          = config.GetEncryptedString (_T("Authentication"),_T("Password"),             _T(""));
+  m_sso               = config.GetParameterBoolean(_T("Authentication"),_T("SSO"),                   false);
+  m_requestCert       = config.GetParameterBoolean(_T("Authentication"),_T("ClientCertificate"),     false);
+  m_certName          = config.GetParameterString (_T("Authentication"),_T("CertificateName"),      _T(""));
+  m_certThumbprint    = config.GetParameterString (_T("Authentication"),_T("CertificateThumbprint"),_T(""));
 
   SetFields();
 }
@@ -215,12 +215,12 @@ WebConfigAuthentication::SetFields()
 {
   // INIT THE COMBO BOXES
   // authentication scheme's
-       if(m_scheme.CompareNoCase("anonymous") == 0) m_comboScheme.SetCurSel(0);
-  else if(m_scheme.CompareNoCase("basic")     == 0) m_comboScheme.SetCurSel(1);
-  else if(m_scheme.CompareNoCase("ntlm")      == 0) m_comboScheme.SetCurSel(2);
-  else if(m_scheme.CompareNoCase("negotiate") == 0) m_comboScheme.SetCurSel(3);
-  else if(m_scheme.CompareNoCase("digest")    == 0) m_comboScheme.SetCurSel(4);
-  else if(m_scheme.CompareNoCase("kerberos")  == 0) m_comboScheme.SetCurSel(5);
+       if(m_scheme.CompareNoCase(_T("anonymous")) == 0) m_comboScheme.SetCurSel(0);
+  else if(m_scheme.CompareNoCase(_T("basic"))     == 0) m_comboScheme.SetCurSel(1);
+  else if(m_scheme.CompareNoCase(_T("ntlm"))      == 0) m_comboScheme.SetCurSel(2);
+  else if(m_scheme.CompareNoCase(_T("negotiate")) == 0) m_comboScheme.SetCurSel(3);
+  else if(m_scheme.CompareNoCase(_T("digest"))    == 0) m_comboScheme.SetCurSel(4);
+  else if(m_scheme.CompareNoCase(_T("kerberos"))  == 0) m_comboScheme.SetCurSel(5);
 
   // INIT THE CHECKBOXES
   m_buttonNtlmCache  .SetCheck(m_ntlmCache);
@@ -247,28 +247,28 @@ WebConfigAuthentication::WriteWebConfig(MarlinConfig& config)
 {
   // WRITE THE CONFIG PARAMETERS
 
-  config.SetSection("Authentication");
+  config.SetSection(_T("Authentication"));
 
-  if(m_useScheme)         config.SetParameter   ("Authentication","Scheme",   m_scheme);
-  else                    config.RemoveParameter("Authentication","Scheme");
-  if(m_useRealm)          config.SetParameter   ("Authentication","Realm",    m_realm);
-  else                    config.RemoveParameter("Authentication","Realm");
-  if(m_useDomain)         config.SetParameter   ("Authentication","Domain",   m_domain);
-  else                    config.RemoveParameter("Authentication","Domain");
-  if(m_useNTLMCache)      config.SetParameter   ("Authentication","NTLMCache",m_ntlmCache);
-  else                    config.RemoveParameter("Authentication","NTLMCache");
-  if(m_useUsername)       config.SetParameter   ("Authentication","User",     m_user);
-  else                    config.RemoveParameter("Authentication","User");
-  if(m_usePassword)       config.SetEncrypted   ("Authentication","Password", m_password);
-  else                    config.RemoveParameter("Authentication","Password");
-  if(m_useSSO)            config.SetParameter   ("Authentication","SSO",      m_sso);
-  else                    config.RemoveParameter("Authentication","SSO");
-  if(m_useRequestCert)    config.SetParameter   ("Authentication","ClientCertificate",m_requestCert);
-  else                    config.RemoveParameter("Authentication","ClientCertificate");
-  if(m_useCertName)       config.SetParameter   ("Authentication","CertificateName"  ,m_certName);
-  else                    config.RemoveParameter("Authentication","CertificateName");
-  if(m_useCertThumbprint) config.SetParameter   ("Authentication","CertificateThumbprint",m_certThumbprint);
-  else                    config.RemoveParameter("Authentication","CertificateThumbprint");
+  if(m_useScheme)         config.SetParameter   (_T("Authentication"),_T("Scheme"),   m_scheme);
+  else                    config.RemoveParameter(_T("Authentication"),_T("Scheme"));
+  if(m_useRealm)          config.SetParameter   (_T("Authentication"),_T("Realm"),    m_realm);
+  else                    config.RemoveParameter(_T("Authentication"),_T("Realm"));
+  if(m_useDomain)         config.SetParameter   (_T("Authentication"),_T("Domain"),   m_domain);
+  else                    config.RemoveParameter(_T("Authentication"),_T("Domain"));
+  if(m_useNTLMCache)      config.SetParameter   (_T("Authentication"),_T("NTLMCache"),m_ntlmCache);
+  else                    config.RemoveParameter(_T("Authentication"),_T("NTLMCache"));
+  if(m_useUsername)       config.SetParameter   (_T("Authentication"),_T("User"),     m_user);
+  else                    config.RemoveParameter(_T("Authentication"),_T("User"));
+  if(m_usePassword)       config.SetEncrypted   (_T("Authentication"),_T("Password"), m_password);
+  else                    config.RemoveParameter(_T("Authentication"),_T("Password"));
+  if(m_useSSO)            config.SetParameter   (_T("Authentication"),_T("SSO"),      m_sso);
+  else                    config.RemoveParameter(_T("Authentication"),_T("SSO"));
+  if(m_useRequestCert)    config.SetParameter   (_T("Authentication"),_T("ClientCertificate"),m_requestCert);
+  else                    config.RemoveParameter(_T("Authentication"),_T("ClientCertificate"));
+  if(m_useCertName)       config.SetParameter   (_T("Authentication"),_T("CertificateName")  ,m_certName);
+  else                    config.RemoveParameter(_T("Authentication"),_T("CertificateName"));
+  if(m_useCertThumbprint) config.SetParameter   (_T("Authentication"),_T("CertificateThumbprint"),m_certThumbprint);
+  else                    config.RemoveParameter(_T("Authentication"),_T("CertificateThumbprint"));
 }
 
 // WebConfigDlg message handlers
@@ -290,7 +290,7 @@ void WebConfigAuthentication::OnCbnSelchangeAutScheme()
   {
     m_scheme.Empty();
   }
-  if(m_scheme.Compare("NTLM"))
+  if(m_scheme.Compare(_T("NTLM")))
   {
     m_useNTLMCache = false;
     m_ntlmCache    = false;
@@ -362,7 +362,7 @@ WebConfigAuthentication::OnBnClickedUseScheme()
   {
     m_user.Empty();
     m_password.Empty();
-    m_scheme        = "Anonymous";
+    m_scheme        = _T("Anonymous");
     m_useNTLMCache  = false;
     m_ntlmCache     = false;
     m_useSSO        = false;
@@ -391,7 +391,7 @@ void
 WebConfigAuthentication::OnBnClickedUseNtlmCache()
 {
   m_useNTLMCache = m_buttonUseNTLMCache.GetCheck() > 0;
-  if(!(m_scheme.Compare("NTLM") == 0 && m_useNTLMCache == true))
+  if(!(m_scheme.Compare(_T("NTLM")) == 0 && m_useNTLMCache == true))
   {
     m_useNTLMCache = false;
     m_buttonUseNTLMCache.SetCheck(false);

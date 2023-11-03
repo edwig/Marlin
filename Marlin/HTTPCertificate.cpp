@@ -99,8 +99,8 @@ HTTPCertificate::GetSubject()
         // Copy subject name from certificate blob
         m_subject = reinterpret_cast<char*>(ptr);
 
-        char* str = m_subject.GetBufferSetLength(len + 1);
-        strncpy_s(str,(size_t)len + 1,reinterpret_cast<char*>(ptr),len);
+        LPTSTR str = m_subject.GetBufferSetLength((len + 1) * sizeof(TCHAR));
+        _tcsncpy_s(str,(size_t)len + 1,CA2CT(reinterpret_cast<LPSTR>(ptr)),len);
         str[len] = 0;
         m_subject.ReleaseBuffer(len);
         m_subject = CleanupCertificateString(m_subject);
@@ -130,8 +130,8 @@ HTTPCertificate::GetIssuer()
         BYTE* ptr = m_context->pCertInfo->Issuer.pbData;
 
         // Copy subject name from certificate blob
-        char* str = m_issuer.GetBufferSetLength(len + 1);
-        strncpy_s(str,(size_t)len + 1,reinterpret_cast<char*>(ptr),len);
+        LPTSTR str = m_issuer.GetBufferSetLength((len + 1) * sizeof(TCHAR));
+        _tcsncpy_s(str,(size_t)len + 1,CA2CT(reinterpret_cast<LPSTR>(ptr)),len);
         str[len] = 0;
         m_issuer.ReleaseBuffer(len);
         m_issuer = CleanupCertificateString(m_issuer);
@@ -147,7 +147,7 @@ HTTPCertificate::VerifyThumbprint(XString p_thumbprint)
 {
   bool result = false;
 
-  // Buffers on the stack for the thumbprints
+  // Buffers on the stack for the thumb prints
   BYTE buffer1[THUMBPRINT_RAW_SIZE] = { 0 };
   BYTE buffer2[THUMBPRINT_RAW_SIZE] = { 0 };
   CRYPT_HASH_BLOB blob1;
@@ -199,7 +199,7 @@ HTTPCertificate::EncodeThumbprint(const XString& p_thumbprint,PCRYPT_HASH_BLOB p
 {
   // Removing
   XString thumbprint(p_thumbprint);
-  thumbprint.Replace(" ","");
+  thumbprint.Replace(_T(" "),_T(""));
 
   BYTE* bpointer = p_blob->pbData;
 

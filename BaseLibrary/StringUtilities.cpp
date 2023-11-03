@@ -31,8 +31,8 @@
 XString AsString(int p_number,int p_radix /*=10*/)
 {
   XString string;
-  char* buffer = string.GetBufferSetLength(12);
-  _itoa_s(p_number,buffer,12,p_radix);
+  PTCHAR buffer = string.GetBufferSetLength(12);
+  _itot_s(p_number,buffer,12,p_radix);
   string.ReleaseBuffer();
   
   return string;
@@ -41,27 +41,27 @@ XString AsString(int p_number,int p_radix /*=10*/)
 XString AsString(double p_number)
 {
   XString string;
-  string.Format("%f",p_number);
+  string.Format(_T("%f"),p_number);
   return string;
 }
 
 int AsInteger(XString p_string)
 {
-  return atoi(p_string.GetBuffer());
+  return _ttoi(p_string.GetBuffer());
 }
 
 double  AsDouble(XString p_string)
 {
-  return atof(p_string.GetBuffer());
+  return _ttof(p_string.GetBuffer());
 }
 
 bcd AsBcd(XString p_string)
 {
-  bcd num(p_string);
+  bcd num(p_string.GetString());
   return num;
 }
 
-int SplitString(XString p_string,std::vector<XString>& p_vector,char p_separator /*= ','*/,bool p_trim /*=false*/)
+int SplitString(XString p_string,std::vector<XString>& p_vector,TCHAR p_separator /*= ','*/,bool p_trim /*=false*/)
 {
   p_vector.clear();
   int pos = p_string.Find(p_separator);
@@ -90,10 +90,14 @@ int SplitString(XString p_string,std::vector<XString>& p_vector,char p_separator
 
 void NormalizeLineEndings(XString& p_string)
 {
-#define RETURNSTR "\r"
-#define LINEFEEDSTR "\n"
+#define RETURNSTR   _T("\r")
+#define LINEFEEDSTR _T("\n")
 
+#ifdef UNICODE
+  std::wstring tempStr(p_string.GetString());
+#else
   std::string tempStr(p_string.GetString());
+#endif
 
   int lfpos = -1;
   while(true)
@@ -129,9 +133,9 @@ void NormalizeLineEndings(XString& p_string)
 //
 int FindMatchingBracket(const CString& p_string,int p_bracketPos)
 {
-  char bracket = p_string[p_bracketPos];
-  char match = char(0);
-  bool reverse = false;
+  TCHAR bracket = p_string[p_bracketPos];
+  TCHAR   match = 0;
+  bool  reverse = false;
 
   switch(bracket)
   {
@@ -159,7 +163,7 @@ int FindMatchingBracket(const CString& p_string,int p_bracketPos)
   {
     for(int pos = p_bracketPos - 1,nest = 1; pos >= 0; --pos)
     {
-      char c = p_string[pos];
+      TCHAR c = p_string[pos];
       if(c == bracket)
       {
         ++nest;
@@ -177,7 +181,7 @@ int FindMatchingBracket(const CString& p_string,int p_bracketPos)
   {
     for(int pos = p_bracketPos + 1,nest = 1,len = p_string.GetLength(); pos < len; ++pos)
     {
-      char c = p_string[pos];
+      TCHAR c = p_string[pos];
       if(c == bracket)
       {
         ++nest;
@@ -196,7 +200,7 @@ int FindMatchingBracket(const CString& p_string,int p_bracketPos)
 
 // Split arguments with p_splitter not within brackets
 // p_pos must be 0 initially
-bool SplitArgument(int& p_pos,const CString& p_data,char p_splitter,CString& p_argument)
+bool SplitArgument(int& p_pos,const CString& p_data,TCHAR p_splitter,CString& p_argument)
 {
   int len = p_data.GetLength();
   if(p_pos >= len)
@@ -205,7 +209,7 @@ bool SplitArgument(int& p_pos,const CString& p_data,char p_splitter,CString& p_a
   }
   for(int pos = p_pos,nest = 0; pos < len; ++pos)
   {
-    switch(char c = p_data[pos])
+    switch(TCHAR c = p_data[pos])
     {
       case '(': ++nest;
                 break;
@@ -225,4 +229,70 @@ bool SplitArgument(int& p_pos,const CString& p_data,char p_splitter,CString& p_a
   p_argument = p_data.Mid(p_pos).Trim();
   p_pos = len;
   return true;
+}
+
+XString GetStringFromClipboard(HWND p_wnd /*=NULL*/)
+{
+#ifdef UNICODE
+  UINT format = CF_UNICODETEXT;
+#else
+  UINT format = CF_TEXT;
+#endif
+
+  XString string;
+  if(OpenClipboard(p_wnd))
+  {
+    HANDLE glob = GetClipboardData(format);
+    if(glob)
+    {
+      LPCTSTR text = (LPCTSTR) GlobalLock(glob);
+      string = text;
+      GlobalUnlock(glob);
+
+    }
+    CloseClipboard();
+  }
+  return string;
+}
+
+bool PutStringToClipboard(XString p_string,HWND p_wnd /*=NULL*/,bool p_append /*=false*/)
+{
+  bool result = false;
+#ifdef UNICODE
+  UINT format = CF_UNICODETEXT;
+#else
+  UINT format = CF_TEXT;
+#endif
+
+  if(OpenClipboard(p_wnd))
+  {
+    // Put the text in a global GMEM_MOVABLE memory handle
+    size_t size = ((size_t) p_string.GetLength() + 1) * sizeof(TCHAR);
+    HGLOBAL memory = GlobalAlloc(GHND,size);
+    if(memory)
+    {
+      void* data = GlobalLock(memory);
+      if(data)
+      {
+        _tcsncpy_s((LPTSTR) data,size,(LPCTSTR) p_string.GetString(),size);
+      }
+      else
+      {
+        GlobalFree(memory);
+        return false;
+      }
+
+      // Set the text on the clipboard
+      // and transfer ownership of the memory segment
+      if(!p_append)
+      {
+        EmptyClipboard();
+      }
+      SetClipboardData(format,memory);
+      GlobalUnlock(memory);
+      result = true;
+    }
+    CloseClipboard();
+  }
+  return result;
 }

@@ -47,9 +47,9 @@ class StdException
 public:
   // Application type constructors
   explicit StdException(int p_errorCode);
-  explicit StdException(const char* p_fault);
+  explicit StdException(const PTCHAR p_fault);
   explicit StdException(const XString& p_fault);
-  explicit StdException(int p_errorCode,const char* p_fault);
+  explicit StdException(int p_errorCode,LPCTSTR p_fault);
   // Construct from a SafeExceptionHandler (SEH)
 	StdException(unsigned p_safe,_EXCEPTION_POINTERS* p_exceptionPointers);
 	StdException(const StdException& p_other);
@@ -60,7 +60,7 @@ public:
   int                  GetApplicationCode();
   XString              GetApplicationFault();
   XString              GetErrorMessage();
-  bool                 GetErrorMessage(char* p_error,unsigned p_maxSize,unsigned* p_helpContext = NULL);
+  bool                 GetErrorMessage(PTCHAR p_error,unsigned p_maxSize,unsigned* p_helpContext = NULL);
 
 private:
   unsigned             m_safeExceptionCode { 0 };

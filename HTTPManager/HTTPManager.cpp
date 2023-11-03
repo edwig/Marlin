@@ -101,7 +101,7 @@ BOOL HTTPManagerApp::InitInstance()
   int mode = ParseCommandLine();
   if(mode == MODE_NONE)
   {
-    if (::MessageBox(NULL, "Start the HTTPManager in the Microsoft-IIS mode?", "Start mode", MB_YESNO | MB_ICONINFORMATION) == IDYES)
+    if (::MessageBox(NULL,_T("Start the HTTPManager in the Microsoft-IIS mode?"),_T("Start mode"), MB_YESNO | MB_ICONINFORMATION) == IDYES)
     {
       mode = MODE_IIS;
     }
@@ -120,7 +120,7 @@ BOOL HTTPManagerApp::InitInstance()
 	}
 	else if (nResponse == -1)
 	{
-		TRACE(traceAppMsg, 0, "Warning: dialog creation failed, so application is terminating unexpectedly.\n");
+		TRACE(traceAppMsg,0,"Warning: dialog creation failed, so application is terminating unexpectedly.\n");
 	}
 
 	// Delete the shell manager created above.
@@ -144,15 +144,15 @@ HTTPManagerApp::ParseCommandLine()
 
   for (int i = 1; i < __argc; i++)
   {
-    LPCSTR lpszParam = __argv[i];
+    LPCTSTR lpszParam = __targv[i];
 
     if (lpszParam[0] == '-' || lpszParam[0] == '/')
     {
-      if (_strnicmp(&lpszParam[1], "IIS", 3) == 0)
+      if (_tcsnicmp(&lpszParam[1], _T("IIS"), 3) == 0)
       {
         result = MODE_IIS;
       }
-      else if (_strnicmp(&lpszParam[1], "STANDALONE", 10) == 0)
+      else if (_tcsnicmp(&lpszParam[1],_T("STANDALONE"), 10) == 0)
       {
         result = MODE_STANDALONE;
       }

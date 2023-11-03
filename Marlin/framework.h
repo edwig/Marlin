@@ -8,8 +8,6 @@
 
 #define WIN32_LEAN_AND_MEAN                     // Exclude rarely-used stuff from Windows headers
 
-// remove support for MFC controls in dialogs
-#define _AFX_NO_MFC_CONTROLS_IN_DIALOGS         
 // turns off MFC's hiding of some common and often safely ignored warning messages
 #define _AFX_ALL_WARNINGS
 

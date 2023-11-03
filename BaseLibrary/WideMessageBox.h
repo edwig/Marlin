@@ -32,6 +32,7 @@
 
 #ifdef _WIN32
 #include <pshpack1.h>
+#include <commctrl.h>
 #endif
 
 typedef HRESULT (CALLBACK *PFTASKDIALOGCALLBACK)(__in HWND hwnd, __in UINT msg, __in WPARAM wParam, __in LPARAM lParam, __in LONG_PTR lpRefData);
@@ -186,8 +187,8 @@ WINCOMMCTRLAPI HRESULT WINAPI TaskDialog(__in_opt HWND hwndParent, __in_opt HINS
 // MessageBox replacement for MS-Vista
 // Supports width auto-sizing on base of the message
 int 
-WideMessageBox(HWND        p_hwnd
-              ,const char* p_message
-              ,const char* p_title
-              ,int         p_buttons = MB_OK);
+WideMessageBox(HWND    p_hwnd
+              ,LPCTSTR p_message
+              ,LPCTSTR p_title
+              ,int     p_buttons = MB_OK);
 

@@ -91,7 +91,7 @@ public:
   template <class T>
   void GetProcAddress(XString const& name, T& funcptr)
   {
-    funcptr = (T) ::GetProcAddress(m_hDll, name);
+    funcptr = (T) ::GetProcAddress(m_hDll,CT2CA(name.GetString()));
   }
 
 private:
@@ -103,11 +103,11 @@ private:
 XString 
 StToString(SYSTEMTIME const& st)
 {
-  char buff[25];
-  sprintf_s(buff,25,"%02d-%02d-%02d %04d:%02d:%02d", 
+  TCHAR buff[25];
+  _stprintf_s(buff,25,_T("%02d-%02d-%02d %04d:%02d:%02d"), 
             st.wDay, st.wMonth, st.wYear,
             st.wHour,st.wMinute,st.wSecond);
-  return buff;
+  return XString(buff);
 }
 
 XString 
@@ -124,7 +124,7 @@ MakeWidth(XString const& input, int length)
   XString result = input;
   while(result.GetLength() < length)
   {
-    result += " ";
+    result += _T(" ");
   }
   return result;
 }
@@ -133,7 +133,7 @@ XString
 AttribToString(DWORD dwAttrib)
 {
   XString result;
-  #define ATTRIB_CASE(arg) if((dwAttrib & arg) == arg) result += #arg " "
+  #define ATTRIB_CASE(arg) if((dwAttrib & arg) == arg) result += #arg _T(" ")
   ATTRIB_CASE(FILE_ATTRIBUTE_ARCHIVE);
   ATTRIB_CASE(FILE_ATTRIBUTE_COMPRESSED);
   ATTRIB_CASE(FILE_ATTRIBUTE_DIRECTORY);
@@ -172,9 +172,9 @@ ProcInfo::ProcInfo()
 
 ProcInfo::~ProcInfo()
 {
-  for(auto& module : m_modules)
+  for(auto& loadModule : m_modules)
   {
-    delete module;
+    delete loadModule;
   }
 }
 
@@ -189,9 +189,10 @@ ProcInfo::IsWin10AnniversaryOrHigher()
 RTL_OSVERSIONINFOW 
 ProcInfo::getRealOSVersion()
 {
-  HMODULE hMod = ::GetModuleHandleW(L"ntdll.dll");
+  HMODULE hMod = ::GetModuleHandle(_T("ntdll.dll"));
   if(hMod)
   {
+    // BEWARE: GetProcAddress is always in MBCS encoding
     RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)::GetProcAddress(hMod,"RtlGetVersion");
     if(fxPtr != nullptr)
     {
@@ -215,65 +216,65 @@ ProcInfo::GetSystemType()
 
   if(IsWindows10OrGreater())
   {
-    m_platform = "Windows 10 or greater.";
+    m_platform = _T("Windows 10 or greater.");
   }
   else if(IsWin10AnniversaryOrHigher())
   {
-    m_platform = "Windows 10 Anniversary or greater.";
+    m_platform = _T("Windows 10 Anniversary or greater.");
   }
   else if(IsWindows8Point1OrGreater())
   {
-    m_platform = "Windows 8.1 or greater.";
+    m_platform = _T("Windows 8.1 or greater.");
   }
   else if(IsWindows8OrGreater())
   {
-    m_platform = "Windows 8.0 or greater.";
+    m_platform = _T("Windows 8.0 or greater.");
   }
   else if(IsWindows7SP1OrGreater())
   {
-    m_platform = "Windows 7 SP1 or greater.";
+    m_platform = _T("Windows 7 SP1 or greater.");
   }
   else if(IsWindows7OrGreater())
   {
-    m_platform = "Windows 7 or greater.";
+    m_platform = _T("Windows 7 or greater.");
   }
   else if(IsWindowsVistaSP2OrGreater())
   {
-    m_platform = "Windows Vista SP2 or greater.";
+    m_platform = _T("Windows Vista SP2 or greater.");
   }
   else if(IsWindowsVistaSP1OrGreater())
   {
-    m_platform = "Windows Vista SP1 or greater.";
+    m_platform = _T("Windows Vista SP1 or greater.");
   }
   else if(IsWindowsVistaOrGreater())
   {
-    m_platform = "Windows Vista or greater.";
+    m_platform = _T("Windows Vista or greater.");
   }
   else if(IsWindowsXPSP3OrGreater())
   {
-    m_platform = "Windows XP SP3 or greater";
+    m_platform = _T("Windows XP SP3 or greater)");
   }
   else if(IsWindowsXPSP2OrGreater())
   {
-    m_platform = "Windows XP SP2 or greater";
+    m_platform = _T("Windows XP SP2 or greater");
   }
   else if(IsWindowsXPSP1OrGreater())
   {
-    m_platform = "Windows XP SP1 or greater";
+    m_platform = _T("Windows XP SP1 or greater");
   }
   else if(IsWindowsXPOrGreater())
   {
-    m_platform = "Windows XP or greater";
+    m_platform = _T("Windows XP or greater");
   }
 
   // Check for Terminal Server versions
   if(IsWindowsServer())
   {
-    m_platform += " Server.";
+    m_platform += _T(" Server.");
   }
   if(IsActiveSessionCountLimited())
   {
-    m_platform += " (Limited sessions)";
+    m_platform += _T(" (Limited sessions)");
   }
 }
 
@@ -282,7 +283,7 @@ ProcInfo::GetSystemType()
 void 
 ProcInfo::GetSystemInfo()
 {
-  char* buffer = new char[MAX_ENVSPACE];
+  PTCHAR buffer = new TCHAR[MAX_ENVSPACE];
   DWORD dwLength;
 
   //	Determine computer name
@@ -312,7 +313,7 @@ ProcInfo::GetSystemInfo()
   }
 
   //	Determine path (buffersize - 2 trailing '0')!!
-  if(ExpandEnvironmentStrings("%PATH%",buffer,MAX_ENVSPACE - 2))
+  if(ExpandEnvironmentStrings(_T("%PATH%"),buffer,MAX_ENVSPACE - 2))
   {
     m_pathspec = buffer;
   }
@@ -326,7 +327,7 @@ ProcInfo::GetSystemInfo()
 void 
 ProcInfo::GetLocaleInfo()
 {
-  char szBuffer[50];
+  TCHAR szBuffer[50];
 
   //	Define date/time
   SYSTEMTIME st;
@@ -346,7 +347,7 @@ ProcInfo::GetLocaleInfo()
   m_system_date = szBuffer;
   GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, &st, 0, szBuffer, 50);
   m_system_time = szBuffer;
-  GetNumberFormat(LOCALE_SYSTEM_DEFAULT, 0, "-1234.56", 0, szBuffer, 15);
+  GetNumberFormat(LOCALE_SYSTEM_DEFAULT, 0, _T("-1234.56"), 0, szBuffer, 15);
   m_system_number = szBuffer;
 
   //	Get user locale info
@@ -354,7 +355,7 @@ ProcInfo::GetLocaleInfo()
   m_user_date = szBuffer;
   GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, 0, szBuffer, 50);
   m_user_time = szBuffer;
-  GetNumberFormat(LOCALE_USER_DEFAULT, 0, "-1234.56", 0, szBuffer, 15);
+  GetNumberFormat(LOCALE_USER_DEFAULT, 0, _T("-1234.56"), 0, szBuffer, 15);
   m_user_number = szBuffer;
 }
 
@@ -363,7 +364,7 @@ ProcInfo::GetLocaleInfo()
 void 
 ProcInfo::GetApplicInfo()
 {
-  char szBuffer[4096];
+  TCHAR szBuffer[4096];
 
   //	Get application path
   GetModuleFileName(GetModuleHandle(0), szBuffer, MAX_PATH);
@@ -381,11 +382,11 @@ ProcInfo::GetModuleInfo()
   if(m_use_psapi)			//	Windows NT 4.0 enumerator code
   {
     //  Load the required dll
-    CDllLoader psapi("psapi.dll");
+    CDllLoader psapi(_T("psapi.dll"));
   
     //  Get address of enum process
     EnumProcessModulesProc EnumProcessModules;
-    psapi.GetProcAddress("EnumProcessModules", EnumProcessModules);
+    psapi.GetProcAddress(_T("EnumProcessModules"), EnumProcessModules);
 
     //  Enumerate modules
     HMODULE hModules[500];
@@ -402,15 +403,15 @@ ProcInfo::GetModuleInfo()
   else	//	Windows 9x/2000/XP/2003 enumerator code
   { 
     //	Load the required dll
-    CDllLoader toolhelp("kernel32.dll");
+    CDllLoader toolhelp(_T("kernel32.dll"));
 
     //	Get function addresses
     CreateToolhelp32SnapshotProc	ctsp;
     Module32FirstProc							m32f;
     Module32NextProc							m32n;
-    toolhelp.GetProcAddress("CreateToolhelp32Snapshot", ctsp);
-    toolhelp.GetProcAddress("Module32First", m32f);
-    toolhelp.GetProcAddress("Module32Next",  m32n);
+    toolhelp.GetProcAddress(_T("CreateToolhelp32Snapshot"), ctsp);
+    toolhelp.GetProcAddress(_T("Module32First"), m32f);
+    toolhelp.GetProcAddress(_T("Module32Next"),  m32n);
 
     //	Create the snapshot
     HANDLE hSnap = ctsp(TH32CS_SNAPMODULE, 0);
@@ -435,179 +436,177 @@ ProcInfo::GetModuleInfo()
 //=============================================================================
 
 XString
-ProcInfo::ReadLangString(LPVOID      pVI
-                        ,char const* pszFormatString
-                        ,DWORD       dwLang
-                        ,char const* pszStringName)
+ProcInfo::ReadLangString(LPVOID pVI
+                        ,PTCHAR pszFormatString
+                        ,DWORD  dwLang
+                        ,PTCHAR pszStringName)
 {
-  char szLangString[MAX_PATH];
-  char const* pszString;
+  TCHAR  szLangString[MAX_PATH];
+  PTCHAR pszString;
   UINT len;
 
-  sprintf_s(szLangString,MAX_PATH,pszFormatString,dwLang,pszStringName);
+  _stprintf_s(szLangString,MAX_PATH,pszFormatString,dwLang,pszStringName);
   if(VerQueryValue(pVI,szLangString,(LPVOID*)&pszString,&len))
   {
     return pszString;
   }
-  return "";
+  return _T("");
 }
 
 ProcModule* 
 ProcInfo::LoadModule(HMODULE hModule)
 {
-  Module* module = new Module();
+  Module* loadModule = new Module();
 
   //	Format hModule, which is the load address 
-  char buff[40];
+  TCHAR buff[40];
 
 #if defined _M_IX86
-  sprintf_s(buff,20, "0x%08X", (unsigned int)hModule);
+  _stprintf_s(buff,20,_T("0x%08X"),(unsigned int)hModule);
 #endif
 #if defined _M_X64
-sprintf_s(buff,40, "0x%08I64X", (__int64)hModule);
+  _stprintf_s(buff,40,_T("0x%08I64X"),(__int64)hModule);
 #endif
   
-  module->m_load_address = buff;
+  loadModule->m_load_address = buff;
 
   //  Get absolute file name
-  char filename[MAX_PATH + 1];
-  if(!GetModuleFileName(hModule, filename, MAX_PATH))
+  TCHAR filename[MAX_PATH + 1];
+  if(!GetModuleFileName(hModule,filename,MAX_PATH))
   {
-    return module;
+    return loadModule;
   }
-  module->m_full_path = filename;
+  loadModule->m_full_path = filename;
 
   //  Get file information
-  HANDLE hFind = FindFirstFile(filename, &module->m_file_info);
+  HANDLE hFind = FindFirstFile(filename, &loadModule->m_file_info);
   if(hFind != INVALID_HANDLE_VALUE) 
   {
     FindClose(hFind);   
   }
-  module->m_file_name = module->m_file_info.cFileName;
-  module->m_full_path = filename;
-  module->m_file_path = module->m_full_path.Left(
-                        module->m_full_path.GetLength() - 
-                        module->m_file_name.GetLength() - 1);
+  loadModule->m_file_name = loadModule->m_file_info.cFileName;
+  loadModule->m_full_path = filename;
+  loadModule->m_file_path = loadModule->m_full_path.Left(
+                            loadModule->m_full_path.GetLength() - 
+                            loadModule->m_file_name.GetLength() - 1);
 
   //  Get version information size
   DWORD dwUselessParam;
-  DWORD dwVersionSize = GetFileVersionInfoSize((char*) (char const*) module->m_full_path, &dwUselessParam);
+  DWORD dwVersionSize = GetFileVersionInfoSize((PTCHAR) loadModule->m_full_path.GetString(), &dwUselessParam);
 
   //  Load version info
   if(dwVersionSize > 0)
   {
     //  Allocate and retrieve block
     LPVOID pVI = new BYTE[dwVersionSize];
-    if(GetFileVersionInfo((char*) (char const*) module->m_full_path, 0, dwVersionSize, pVI))
+    if(GetFileVersionInfo((PTCHAR)loadModule->m_full_path.GetString(),0,dwVersionSize, pVI))
     {
       UINT len;
 
       //  Copy fixed info block
       VS_FIXEDFILEINFO* pffi;
-      if(VerQueryValue(pVI, "\\", (LPVOID*) &pffi, &len))
+      if(VerQueryValue(pVI, _T("\\"), (LPVOID*) &pffi, &len))
       {
-        memcpy(&module->m_version_info, pffi, sizeof(module->m_version_info));
+        memcpy(&loadModule->m_version_info, pffi, sizeof(loadModule->m_version_info));
       }
 
       //  Read version strings
       LPBYTE lpvi;
-      if(VerQueryValue(pVI, "\\VarFileInfo\\Translation", (LPVOID*) &lpvi, &len))
+      if(VerQueryValue(pVI,_T("\\VarFileInfo\\Translation"), (LPVOID*) &lpvi, &len))
       {
         //  Determine language-specific key
         DWORD dwLCP = lpvi[2] + (lpvi[3] << 8) + (lpvi[0] << 16) + (lpvi[1] << 24);
-        const char szLangFormat[] = "\\StringFileInfo\\%08X\\%s";
+        TCHAR szLangFormat[] = _T("\\StringFileInfo\\%08X\\%s");
 
         //  Read strings
-        module->m_company_name       = ReadLangString(pVI, szLangFormat, dwLCP, "CompanyName");
-        module->m_file_description   = ReadLangString(pVI, szLangFormat, dwLCP, "FileDescription");
-        module->m_fileversion        = ReadLangString(pVI, szLangFormat, dwLCP, "FileVersion");
-        module->m_internal_name      = ReadLangString(pVI, szLangFormat, dwLCP, "InternalName");
-        module->m_legal_copyright    = ReadLangString(pVI, szLangFormat, dwLCP, "LegalCopyright");
-        module->m_original_filename  = ReadLangString(pVI, szLangFormat, dwLCP, "OriginalFileName");
-        module->m_product_name       = ReadLangString(pVI, szLangFormat, dwLCP, "ProductName");
-        module->m_product_version    = ReadLangString(pVI, szLangFormat, dwLCP, "ProductVersion");
-        module->m_trademarks         = ReadLangString(pVI, szLangFormat, dwLCP, "LegalTrademarks");
-        module->m_private_build      = ReadLangString(pVI, szLangFormat, dwLCP, "PrivateBuild");
-        module->m_special_build      = ReadLangString(pVI, szLangFormat, dwLCP, "SpecialBuild");
-        module->m_comments           = ReadLangString(pVI, szLangFormat, dwLCP, "Comments");
+        loadModule->m_company_name       = ReadLangString(pVI, szLangFormat, dwLCP, _T("CompanyName"));
+        loadModule->m_file_description   = ReadLangString(pVI, szLangFormat, dwLCP, _T("FileDescription"));
+        loadModule->m_fileversion        = ReadLangString(pVI, szLangFormat, dwLCP, _T("FileVersion"));
+        loadModule->m_internal_name      = ReadLangString(pVI, szLangFormat, dwLCP, _T("InternalName"));
+        loadModule->m_legal_copyright    = ReadLangString(pVI, szLangFormat, dwLCP, _T("LegalCopyright"));
+        loadModule->m_original_filename  = ReadLangString(pVI, szLangFormat, dwLCP, _T("OriginalFileName"));
+        loadModule->m_product_name       = ReadLangString(pVI, szLangFormat, dwLCP, _T("ProductName"));
+        loadModule->m_product_version    = ReadLangString(pVI, szLangFormat, dwLCP, _T("ProductVersion"));
+        loadModule->m_trademarks         = ReadLangString(pVI, szLangFormat, dwLCP, _T("LegalTrademarks"));
+        loadModule->m_private_build      = ReadLangString(pVI, szLangFormat, dwLCP, _T("PrivateBuild"));
+        loadModule->m_special_build      = ReadLangString(pVI, szLangFormat, dwLCP, _T("SpecialBuild"));
+        loadModule->m_comments           = ReadLangString(pVI, szLangFormat, dwLCP, _T("Comments"));
       }
     }
     //  Cleanup
     delete [] (BYTE*) pVI;
   }
   
-  return module;
+  return loadModule;
 }
 
 
 //=============================================================================
 
-void ProcInfo::WriteToFile(XString const& Filename) const
+void ProcInfo::WriteToFile(XString const& p_filename) const
 {
-  FILE* fl = nullptr;
-  fopen_s(&fl,Filename.GetString(),"w");
-  if(fl == nullptr)
+  WinFile file(p_filename);
+  if(!file.Open(winfile_write | open_trans_text))
   {
     return;
   }
-
-  XString line("=================================================================\n");
+  XString line(_T("=================================================================\n"));
 
   //	Write info header
-  fprintf(fl,line);
-  fprintf(fl,"= Application information\n");
-  fprintf(fl,line);
-  fprintf(fl,"Application      : %s\n",m_application.GetString());
-  fprintf(fl,"Current date/time: %s\n",m_datetime.GetString());
-  fprintf(fl,"Command line     : %s\n",m_commandline.GetString());
-  fprintf(fl,"\n");
+  file.Write(line);
+  file.Write(_T("= Application information\n"));
+  file.Write(line);
+  file.Format(_T("Application      : %s\n"),m_application.GetString());
+  file.Format(_T("Current date/time: %s\n"),m_datetime.GetString());
+  file.Format(_T("Command line     : %s\n"),m_commandline.GetString());
+  file.Write (_T("\n"));
 
   //	Write platform info
-  fprintf(fl,line);
-  fprintf(fl,"= Platform information\n");
-  fprintf(fl,line);
-  fprintf(fl,"Computer name    : %s\n",m_computer.GetString());
-  fprintf(fl,"Current user     : %s\n",m_username.GetString());
-  fprintf(fl,"Windows version  : %s\n",m_platform.GetString());
-  fprintf(fl,"Windows directory: %s\n",m_windows_path.GetString());
-  fprintf(fl,"Current directory: %s\n",m_current_path.GetString());
-  fprintf(fl,"%%PATH%%           : %s\n",m_pathspec.GetString());
-  fprintf(fl,"\n");
+  file.Write(line);
+  file.Write (_T("= Platform information\n"));
+  file.Write(line);
+  file.Format(_T("Computer name    : %s\n"),m_computer.GetString());
+  file.Format(_T("Current user     : %s\n"),m_username.GetString());
+  file.Format(_T("Windows version  : %s\n"),m_platform.GetString());
+  file.Format(_T("Windows directory: %s\n"),m_windows_path.GetString());
+  file.Format(_T("Current directory: %s\n"),m_current_path.GetString());
+  file.Format(_T("%%PATH%%           : %s\n"),m_pathspec.GetString());
+  file.Write (_T("\n"));
 
   //	Write locale info
-  fprintf(fl,line);
-  fprintf(fl,"= Locale information\n");
-  fprintf(fl,line);
-  fprintf(fl,"Value type         System locale        User locale\n");
-  fprintf(fl,"------------------ -------------------- --------------------------\n");
-  fprintf(fl,"Number             %-20s %-20s\n",m_system_number.GetString(),m_user_number.GetString());
-  fprintf(fl,"Date               %-20s %-20s\n",m_system_date.GetString(),  m_user_date.GetString());
-  fprintf(fl,"Time               %-20s %-20s\n",m_system_time.GetString(),  m_user_time.GetString());
-  fprintf(fl,"\n");
+  file.Write(line);
+  file.Write (_T("= Locale information\n"));
+  file.Write(line);
+  file.Write (_T("Value type         System locale        User locale\n"));
+  file.Write (_T("------------------ -------------------- --------------------------\n"));
+  file.Format(_T("Number             %-20s %-20s\n"),m_system_number.GetString(),m_user_number.GetString());
+  file.Format(_T("Date               %-20s %-20s\n"),m_system_date.GetString(),  m_user_date.GetString());
+  file.Format(_T("Time               %-20s %-20s\n"),m_system_time.GetString(),  m_user_time.GetString());
+  file.Format(_T("\n"));
 
   //	Write modules
   for(auto& mod : m_modules)
   {
-    fprintf(fl,line);
-    fprintf(fl,"= Module information for: %s\n",mod->m_file_name.GetString());
-    fprintf(fl,line);
-    fprintf(fl,"File name        : %s\n",mod->m_file_name.GetString());
-    fprintf(fl,"File path        : %s\n",mod->m_full_path.GetString());
-    fprintf(fl,"File size        : %lu\n",mod->m_file_info.nFileSizeLow);
-    fprintf(fl,"File created     : %s\n",FtToString(mod->m_file_info.ftCreationTime).GetString());
-    fprintf(fl,"File modified    : %s\n",FtToString(mod->m_file_info.ftLastWriteTime).GetString());
-    fprintf(fl,"File attributes  : %s\n",AttribToString(mod->m_file_info.dwFileAttributes).GetString());
-    fprintf(fl,"Load address     : %s\n",mod->m_load_address.GetString());
-    fprintf(fl,"Company name     : %s\n",mod->m_company_name.GetString());
-    fprintf(fl,"File description : %s\n",mod->m_file_description.GetString());
-    fprintf(fl,"File version     : %s\n",mod->m_fileversion.GetString());
-    fprintf(fl,"Internal name    : %s\n",mod->m_internal_name.GetString());
-    fprintf(fl,"Legal copyright  : %s\n",mod->m_legal_copyright.GetString());
-    fprintf(fl,"Original filename: %s\n",mod->m_original_filename.GetString());
-    fprintf(fl,"Product name     : %s\n",mod->m_product_name.GetString());
-    fprintf(fl,"Product version  : %s\n",mod->m_product_version.GetString());
-    fprintf(fl,"\n");
+    file.Write(line);
+    file.Format(_T("= Module information for: %s\n"),mod->m_file_name.GetString());
+    file.Write(line);
+    file.Format(_T("File name        : %s\n"),mod->m_file_name.GetString());
+    file.Format(_T("File path        : %s\n"),mod->m_full_path.GetString());
+    file.Format(_T("File size        : %lu\n"),mod->m_file_info.nFileSizeLow);
+    file.Format(_T("File created     : %s\n"),FtToString(mod->m_file_info.ftCreationTime).GetString());
+    file.Format(_T("File modified    : %s\n"),FtToString(mod->m_file_info.ftLastWriteTime).GetString());
+    file.Format(_T("File attributes  : %s\n"),AttribToString(mod->m_file_info.dwFileAttributes).GetString());
+    file.Format(_T("Load address     : %s\n"),mod->m_load_address.GetString());
+    file.Format(_T("Company name     : %s\n"),mod->m_company_name.GetString());
+    file.Format(_T("File description : %s\n"),mod->m_file_description.GetString());
+    file.Format(_T("File version     : %s\n"),mod->m_fileversion.GetString());
+    file.Format(_T("Internal name    : %s\n"),mod->m_internal_name.GetString());
+    file.Format(_T("Legal copyright  : %s\n"),mod->m_legal_copyright.GetString());
+    file.Format(_T("Original filename: %s\n"),mod->m_original_filename.GetString());
+    file.Format(_T("Product name     : %s\n"),mod->m_product_name.GetString());
+    file.Format(_T("Product version  : %s\n"),mod->m_product_version.GetString());
+    file.Format(_T("\n"));
   }
-  fclose(fl);
+  file.Close();
 }
 

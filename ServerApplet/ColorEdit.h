@@ -69,7 +69,7 @@ public:
   void SetPasswordEyeColor(COLORREF p_colorPasswordEye);
   void SetFontName(XString  p_fontName,BYTE language = ENGLISH);
   void SetPassword(bool p_password);
-  void SetEmpty(bool p_empty,XString p_text = "");
+  void SetEmpty(bool p_empty,XString p_text = _T(""));
   void SetDoPixelShift(bool p_shift);
 
   void SetBorderColor        (COLORREF p_inner,COLORREF p_outer);

@@ -161,40 +161,40 @@ InstallDlg::OnBnClickedInstall()
 {
   if(m_username.IsEmpty() || m_password.IsEmpty())
   {
-    ::MessageBox(GetSafeHwnd(),"U need to fill in the USER and the PASSWORD fields","ERROR",MB_OK);
+    ::MessageBox(GetSafeHwnd(),_T("U need to fill in the USER and the PASSWORD fields"),_T("ERROR"),MB_OK);
     return;
   }
 
   if(m_password.Compare(m_confirm))
   {
-    ::MessageBox(GetSafeHwnd(),"The two password fields do not match!","ERROR",MB_OK);
+    ::MessageBox(GetSafeHwnd(),_T("The two password fields do not match!"),_T("ERROR"),MB_OK);
     return;
   }
 
   if(::MessageBox(GetSafeHwnd()
-                 ,"Are you certain that you wish to install the NT service?"
-                 ,"Be Sure!"
+                 ,_T("Are you certain that you wish to install the NT service?")
+                 ,_T("Be Sure!")
                  ,MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDYES) 
   {
     XString result;
     XString arguments;
-    XString program(XString(PRODUCT_NAME) + ".exe");
-    XString error("Cannot start the server application for a NT-Service installation");
+    XString program(XString(PRODUCT_NAME) + _T(".exe"));
+    XString error(_T("Cannot start the server application for a NT-Service installation"));
 
     // Format the command
     XString user(m_username);
     if(!m_domain.IsEmpty())
     {
-      user = m_domain + "\\" + m_username;
+      user = m_domain + _T("\\") + m_username;
     }
-    arguments.Format("install %s %s",user.GetString(),m_password.GetString());
+    arguments.Format(_T("install %s %s"),user.GetString(),m_password.GetString());
     int res = CallProgram_For_String(program,arguments,result);
     if(res)
     {
       XString melding;
-      melding.Format("Installing the NT-Service failed. Error code: %d\n\n",res);
+      melding.Format(_T("Installing the NT-Service failed. Error code: %d\n\n"),res);
       melding += result;
-      ::MessageBox(GetSafeHwnd(),melding,"ERROR",MB_OK|MB_ICONERROR);
+      ::MessageBox(GetSafeHwnd(),melding,_T("ERROR"),MB_OK|MB_ICONERROR);
     }
     else
     {
@@ -207,8 +207,8 @@ void
 InstallDlg::OnBnClickedRemove()
 {
   if(::MessageBox(GetSafeHwnd()
-                ,"Are you sure you want to remove the NT-Service definition?"
-                ,"Be Sure?"
+                ,_T("Are you sure you want to remove the NT-Service definition?")
+                ,_T("Be Sure?")
                 ,MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDYES) 
   {
     RemoveService(true);
@@ -219,9 +219,9 @@ void
 InstallDlg::RemoveService(bool p_tonen)
 {
   XString result;
-  XString error("Cannot stop the NT-service");
-  XString arguments("stop");
-  XString program(XString(PRODUCT_NAME) + ".exe");
+  XString error(_T("Cannot stop the NT-service"));
+  XString arguments(_T("stop"));
+  XString program(XString(PRODUCT_NAME) + _T(".exe"));
 
   // First: stop the service
   int res = CallProgram_For_String(program,arguments,result);
@@ -230,24 +230,24 @@ InstallDlg::RemoveService(bool p_tonen)
     if(res)
     {
       XString melding;
-      melding.Format("Stopping the NT-Service has failed. Error code: %d\n\n",res);
+      melding.Format(_T("Stopping the NT-Service has failed. Error code: %d\n\n"),res);
       melding += result;
-      ::MessageBox(GetSafeHwnd(),melding,"ERROR",MB_OK | MB_ICONERROR);
+      ::MessageBox(GetSafeHwnd(),melding,_T("ERROR"),MB_OK | MB_ICONERROR);
     }
   }
 
   // Now de-install
-  arguments = "uninstall";
-  error = "Cannot stop the server before de-installation";
+  arguments = _T("uninstall");
+  error = _T("Cannot stop the server before de-installation");
   res = CallProgram_For_String(program,arguments,result);
   if(p_tonen)
   {
     if(res)
     {
       XString message;
-      message.Format("Removing the NT-Service definition has failed. Error code: %d\n\n",res);
+      message.Format(_T("Removing the NT-Service definition has failed. Error code: %d\n\n"),res);
       message += result;
-      ::MessageBox(GetSafeHwnd(),message,"ERROR",MB_OK|MB_ICONERROR);
+      ::MessageBox(GetSafeHwnd(),message,_T("ERROR"),MB_OK|MB_ICONERROR);
     }
     else
     {

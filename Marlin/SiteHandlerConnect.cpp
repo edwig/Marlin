@@ -75,6 +75,6 @@ SiteHandlerConnect::PostHandle(HTTPMessage* p_message)
   {
     p_message->SetCommand(HTTPCommand::http_response);
     m_site->SendResponse(p_message);
-    SITE_DETAILLOGS("Answered a CONNECT message from: ", SocketToServer(p_message->GetSender()));
+    SITE_DETAILLOGS(_T("Answered a CONNECT message from: "), SocketToServer(p_message->GetSender()));
   }
 }

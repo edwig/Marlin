@@ -49,7 +49,7 @@ public:
   // Initialise a HTTP server and server-session
   virtual bool Initialise() override;
   // Receive (the rest of the) incoming HTTP request
-  virtual bool ReceiveIncomingRequest(HTTPMessage* p_message) override;
+  virtual bool ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16) override;
   // Sending response for an incoming message
   virtual void SendResponse(HTTPMessage* p_message) override;
   // Sending a response as a chunk
@@ -72,20 +72,20 @@ protected:
 
 private:
   // Preparing a response
-  void      InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status,PSTR p_reason);
-  void      AddKnownHeader        (HTTP_RESPONSE& p_response,HTTP_HEADER_ID p_header,const char* p_value);
+  void      InitializeHttpResponse(HTTP_RESPONSE* p_response,USHORT p_status,LPCSTR p_reason);
+  void      AddKnownHeader        (HTTP_RESPONSE& p_response,HTTP_HEADER_ID p_header,LPCSTR p_value);
   PHTTP_UNKNOWN_HEADER AddUnknownHeaders(UKHeaders& p_headers);
   // Sub-functions for SendResponse
   bool      SendResponseBuffer     (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,size_t p_totalLength,bool p_moreData = false);
   void      SendResponseBufferParts(PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,size_t p_totalLength);
   void      SendResponseChunk      (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer,bool p_last);
   void      SendResponseFileHandle (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,FileBuffer* p_buffer);
-  void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,XString& p_page,int p_error,const char* p_reason);
+  void      SendResponseError      (PHTTP_RESPONSE p_response,HTTP_OPAQUE_ID p_request,XString& p_page,int p_error,LPCTSTR p_reason);
 
   // For the handling of the event streams: Sending a chunk to an event stream
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_request
                                       ,CRITICAL_SECTION*  p_lock
-                                      ,const char*        p_buffer
+                                      ,BYTE**             p_buffer
                                       ,size_t             p_totalLength
                                       ,bool               p_continue = true) override;
 

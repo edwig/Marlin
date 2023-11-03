@@ -49,17 +49,17 @@ public:
  ~Redirect();
 
   // Actual interface. Use these.
-  BOOL StartChildProcess(LPCSTR lpszCmdLine,UINT uShowChildWindow = SW_HIDE,BOOL bWaitForInputIdle = FALSE);
+  BOOL StartChildProcess(LPTSTR lpszCmdLine,UINT uShowChildWindow = SW_HIDE,BOOL bWaitForInputIdle = FALSE);
   BOOL IsChildRunning() const;
   void TerminateChildProcess();
-  int  WriteChildStdIn(LPCSTR lpszInput);
+  int  WriteChildStdIn(PTCHAR lpszInput);
   void SetTimeoutIdle(ULONG p_timeout);
   void CloseChildStdIn();
 
   // Virtual interface. Derived class must implement this!!
-  virtual void OnChildStarted    (LPCSTR lpszCmdLine) = 0;
-  virtual void OnChildStdOutWrite(LPCSTR lpszOutput)  = 0;
-  virtual void OnChildStdErrWrite(LPCSTR lpszOutput)  = 0;
+  virtual void OnChildStarted    (PTCHAR lpszCmdLine) = 0;
+  virtual void OnChildStdOutWrite(PTCHAR lpszOutput)  = 0;
+  virtual void OnChildStdErrWrite(PTCHAR lpszOutput)  = 0;
   virtual void OnChildTerminate  ()                   = 0;
 
   mutable int m_exitCode;
@@ -83,7 +83,7 @@ protected:
   // Max wait time for InputIdle status of the child process
   ULONG  m_timeoutIdle;
 
-  HANDLE PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
+  HANDLE PrepAndLaunchRedirectedChild(PTCHAR lpszCmdLine
                                      ,HANDLE hStdOut
                                      ,HANDLE hStdIn
                                      ,HANDLE hStdErr

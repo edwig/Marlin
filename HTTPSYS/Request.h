@@ -96,9 +96,9 @@ private:
   // Header lines
   void              ReceiveHeaders();
   void              ReadInitialMessage();
-  CString           ReadTextLine();
-  void              ReceiveHTTPLine(CString p_line);
-  void              ProcessHeader(CString p_line);
+  LPSTR             ReadTextLine();
+  void              ReceiveHTTPLine(LPSTR p_line);
+  void              ProcessHeader(LPSTR p_line);
   void              FindContentLength();
   void              CorrectFullURL();
   int               CopyInitialBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes);
@@ -106,11 +106,11 @@ private:
 
 
   // Cooking the URL
-  void              FindVerb(char* p_verb);
-  void              FindURL (char* p_url);
-  void              FindProtocol(char* p_protocol);
+  void              FindVerb(LPSTR p_verb);
+  void              FindURL (LPSTR p_url);
+  void              FindProtocol(LPSTR p_protocol);
   // Finding the known header names
-  int               FindKnownHeader(CString p_header);
+  int               FindKnownHeader(LPSTR p_header);
   void              FindKeepAlive();
   // Authentication of the request
   bool              CheckAuthentication();
@@ -162,7 +162,7 @@ private:
   clock_t           m_timestamp;      // Time of the authentication
   HANDLE            m_token;          // Primary authentication token
   // Initial buffer (Header and optional first body part) are cached here
-  char*             m_initialBuffer { nullptr };
+  BYTE*             m_initialBuffer { 0 };
   ULONG             m_initialLength { 0 };
   ULONG             m_bufferPosition{ 0 };
 };

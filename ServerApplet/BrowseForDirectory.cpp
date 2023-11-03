@@ -47,23 +47,26 @@ LPITEMIDLIST PathToPidl(XString const& path)
 {
   LPITEMIDLIST  pidl = NULL;
   LPSHELLFOLDER pDesktopFolder;
-  OLECHAR       olePath[MAX_PATH];
+  wchar_t       olePath[MAX_PATH + 1];
   ULONG         chEaten      = 0;
   ULONG         dwAttributes = 0;
 
   if (SUCCEEDED(SHGetDesktopFolder(&pDesktopFolder)))
   {
+#ifdef UNICODE
+    wcsncpy_s(olePath,path.GetString(),MAX_PATH);
+#else
     MultiByteToWideChar(CP_ACP
                        ,MB_PRECOMPOSED
                        ,path
                        ,-1
-                       ,olePath
+                       ,(LPWSTR)olePath
                        ,MAX_PATH);
-
+#endif
     HRESULT hr;
     hr = pDesktopFolder->ParseDisplayName(NULL
                                          ,NULL
-                                         ,olePath
+                                         ,(LPWSTR)olePath
                                          ,&chEaten
                                          ,&pidl
                                          ,&dwAttributes);
@@ -76,14 +79,13 @@ LPITEMIDLIST PathToPidl(XString const& path)
   return pidl;
 }
 
-
 //=============================================================================
 
 XString PidlToPath(LPITEMIDLIST pidl, bool deletePidl = false)
 {
   //  Convert the pidl to a path
-  char szPath[MAX_PATH] = "";
-  BOOL cvtResult = SHGetPathFromIDList(pidl, szPath);
+ TCHAR szPath[MAX_PATH] = _T("");
+  BOOL cvtResult = SHGetPathFromIDList(pidl,szPath);
   if(!cvtResult) 
   {
     //throw some error?
@@ -150,7 +152,7 @@ bool BrowseForDirectory::Browse(HWND            hwndParent,
   //   bi.lParam = (LONG)this;
 
   //  Buffer in which the display name is returned
-  char szDisplayName[MAX_PATH];
+  TCHAR szDisplayName[MAX_PATH];
   bi.pszDisplayName = szDisplayName;
 
   //  Title
@@ -185,7 +187,7 @@ void BrowseForDirectory::EnableOk(bool bEnable)
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == NULL || IsWindow(m_hwnd) == false)
   {
-    MessageBox(NULL,"Call from invalid context","Map dialoog",MB_OK|MB_ICONERROR);
+    MessageBox(NULL,_T("Call from invalid context"),_T("Map dialoog"),MB_OK|MB_ICONERROR);
     return;
   }
   //  Set the ok button state
@@ -198,11 +200,11 @@ void BrowseForDirectory::SetSelection(XString const& path)
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == NULL || IsWindow(m_hwnd) == false)
   {
-    MessageBox(NULL,"Call from invalid context","Directory browse dialog",MB_OK|MB_ICONERROR);
+    MessageBox(NULL,_T("Call from invalid context"),_T("Directory browse dialog"),MB_OK|MB_ICONERROR);
     return;
   }
   //  Set the current path in the tree
-  ::SendMessage(m_hwnd, BFFM_SETSELECTION, TRUE, (long)(char const*)path );  
+  ::SendMessage(m_hwnd, BFFM_SETSELECTION, TRUE, (long)(LPCTSTR)path );  
 }
 
 //=============================================================================
@@ -212,11 +214,11 @@ BrowseForDirectory::SetStatusText(XString const& text)
   //  Should only be called when called from within OnSelChange
   if(m_hwnd == 0 || IsWindow(m_hwnd) == false)
   {
-    MessageBox(NULL,"Call from invalid context","Directory browse dialog",MB_OK|MB_ICONERROR);
+    MessageBox(NULL,_T("Call from invalid context"),_T("Directory browse dialog"),MB_OK|MB_ICONERROR);
     return;
   }
   //  Set the current path in the tree
-  ::SendMessage(m_hwnd,BFFM_SETSTATUSTEXT,0,(long)(char const*)text);  
+  ::SendMessage(m_hwnd,BFFM_SETSTATUSTEXT,0,(long)(LPCTSTR)text);  
 }
 
 //=============================================================================
@@ -245,7 +247,7 @@ int BrowseForDirectory::CallbackProc(HWND hwnd,UINT uMsg,LPARAM lParam)
                                 break;
       case BFFM_SELCHANGED:     OnSelChange(PidlToPath((LPITEMIDLIST)lParam));
                                 break;
-      case BFFM_VALIDATEFAILED: MessageBox(NULL,"Directory path name is invalid. Correct to an existing directory.","Directory browse dialog",MB_OK|MB_ICONERROR);
+      case BFFM_VALIDATEFAILED: MessageBox(NULL,_T("Directory path name is invalid. Correct to an existing directory."),_T("Directory browse dialog"),MB_OK|MB_ICONERROR);
                                 break;
     }
     m_hwnd = 0;

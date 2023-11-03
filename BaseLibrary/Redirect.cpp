@@ -92,7 +92,7 @@ Redirect::SetTimeoutIdle(ULONG p_timeout)
 
 // Create standard handles, try to start child from command line.
 BOOL 
-Redirect::StartChildProcess(LPCSTR lpszCmdLine,UINT uShowChildWindow /*=SW_HIDE*/,BOOL bWaitForInputIdle /*=FALSE*/)
+Redirect::StartChildProcess(LPTSTR lpszCmdLine,UINT uShowChildWindow /*=SW_HIDE*/,BOOL bWaitForInputIdle /*=FALSE*/)
 {
   HANDLE hProcess = ::GetCurrentProcess();
 
@@ -146,7 +146,7 @@ Redirect::StartChildProcess(LPCSTR lpszCmdLine,UINT uShowChildWindow /*=SW_HIDE*
   {
     // If we cannot start a child process: write to the standard error ourselves
     TCHAR lpszBuffer[BUFFER_SIZE];
-    sprintf_s(lpszBuffer, BUFFER_SIZE, "Unable to start: %s\n", lpszCmdLine);
+    _stprintf_s(lpszBuffer, BUFFER_SIZE,_T("Unable to start: %s\n"),lpszCmdLine);
     OnChildStdErrWrite(lpszBuffer);
 
     // close all handles and return FALSE
@@ -328,7 +328,7 @@ Redirect::TerminateChildProcess()
 
 // Launch the process that you want to redirect.
 HANDLE 
-Redirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
+Redirect::PrepAndLaunchRedirectedChild(PTCHAR lpszCmdLine
                                       ,HANDLE hStdOut
                                       ,HANDLE hStdIn
                                       ,HANDLE hStdErr
@@ -373,9 +373,13 @@ Redirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
   lpSA->lpSecurityDescriptor = lpSD;
   lpSA->bInheritHandle = TRUE;
 
+  // Create process may alter the command line buffer !!!!
+  TCHAR commandLineBuffer[BUFFER_SIZE + 1];
+  _tcsncpy_s(commandLineBuffer,lpszCmdLine,BUFFER_SIZE);
+
   // Try to spawn the process.
   BOOL bResult = ::CreateProcess(NULL
-                                ,(char*)lpszCmdLine
+                                ,commandLineBuffer
                                 ,lpSA
                                 ,NULL
                                 ,TRUE
@@ -417,10 +421,10 @@ Redirect::PrepAndLaunchRedirectedChild(LPCSTR lpszCmdLine
 int 
 Redirect::StdOutThread(HANDLE hStdOutRead)
 {
-  DWORD nBytesRead;
-  CHAR  lpszBuffer[10];
-  CHAR  lineBuffer[BUFFER_SIZE + 10] = {0} ;
-  char* linePointer = lineBuffer;
+  DWORD  nBytesRead;
+  TCHAR  lpszBuffer[10];
+  TCHAR  lineBuffer[BUFFER_SIZE + 10] = {0} ;
+  PTCHAR linePointer = lineBuffer;
   //    FOR DEBUGGING: See below
   //    int   i = 0;
 
@@ -468,10 +472,10 @@ Redirect::StdOutThread(HANDLE hStdOutRead)
 int 
 Redirect::StdErrThread(HANDLE hStdErrRead)
 {
-  DWORD nBytesRead;
-  CHAR  lpszBuffer[10];
-  CHAR  lineBuffer[BUFFER_SIZE + 10] = { 0 };
-  char* linePointer = lineBuffer;
+  DWORD  nBytesRead;
+  TCHAR  lpszBuffer[10];
+  TCHAR  lineBuffer[BUFFER_SIZE + 10] = { 0 };
+  PTCHAR linePointer = lineBuffer;
   //    FOR DEBUGGING: See below
   //    int   i = 0;
 
@@ -568,10 +572,10 @@ Redirect::ProcessThread()
 // Function that writes to the child stdin.
 
 int
-Redirect::WriteChildStdIn(LPCSTR lpszInput)
+Redirect::WriteChildStdIn(PTCHAR lpszInput)
 {
   DWORD nBytesWrote;
-  DWORD Length = (DWORD) strlen(lpszInput);
+  DWORD Length = (DWORD) _tcslen(lpszInput);
   if (m_hStdInWrite != NULL && Length > 0)
   {
     if(!::WriteFile(m_hStdInWrite, lpszInput, Length, &nBytesWrote, NULL))

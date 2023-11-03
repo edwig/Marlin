@@ -30,7 +30,7 @@
 #include <map>
 #include <list>
 
-#define MARLINCONFIG_WACHTWOORD "W!e@b#.$C%o^n&f*i(g"
+#define MARLINCONFIG_WACHTWOORD _T("W!e@b#.$C%o^n&f*i(g")
 
 class MarlinConfig : public XMLMessage
 {

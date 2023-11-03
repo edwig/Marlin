@@ -47,11 +47,11 @@ XMLParserImport::XMLParserImport(XMLMessage* p_message)
 void
 XMLParserImport::ParseAfterElement()
 {
-  if(m_lastElement->GetName().CompareNoCase("import") == 0)
+  if(m_lastElement->GetName().CompareNoCase(_T("import")) == 0)
   {
     // Getting the attributes
-    XString namesp   = m_message->GetAttribute(m_lastElement,"namespace");
-    XString location = m_message->GetAttribute(m_lastElement,"schemaLocation");
+    XString namesp   = m_message->GetAttribute(m_lastElement,_T("namespace"));
+    XString location = m_message->GetAttribute(m_lastElement,_T("schemaLocation"));
 
     // Remove original <import> element
     m_message->DeleteElement(m_element,m_lastElement);
@@ -60,7 +60,7 @@ XMLParserImport::ParseAfterElement()
     {
       // Save current parser state on the stack
       XMLElement* element = m_element;
-      uchar*      pointer = m_pointer;
+      _TUCHAR*    pointer = m_pointer;
       // replace this element by the import from the schema location
       ParseSchemaImport(location);
       // Return to this point in the parsing state
@@ -80,7 +80,7 @@ XMLParserImport::ParseSchemaImport(const XString& p_location)
   XString protocol2 = filename.Left(7);
   protocol1.MakeLower();
   protocol2.MakeLower();
-  if(protocol1 == "https://" || protocol2 == "http://")
+  if(protocol1 == _T("https://") || protocol2 == _T("http://"))
   {
     result = ReadXSDFileFromURL(filename);
   }
@@ -148,7 +148,7 @@ XMLParserImport::ReadXSD(const XString& p_message)
   {
     return false;
   }
-  XMLElement* schema = xsd.FindElement("schema");
+  XMLElement* schema = xsd.FindElement(_T("schema"));
   if(schema == nullptr)
   {
     return false;
@@ -162,7 +162,7 @@ XMLParserImport::ReadXSD(const XString& p_message)
 
   // Restart parsing from here
   // Adding this part of the XSD to the original XML document
-  m_pointer = reinterpret_cast<uchar*>(const_cast<char*>(toParse.GetString()));
+  m_pointer = reinterpret_cast<_TUCHAR*>(const_cast<TCHAR*>(toParse.GetString()));
 
   // MAIN PARSING LOOP
   try
@@ -173,7 +173,7 @@ XMLParserImport::ReadXSD(const XString& p_message)
     // Checks after parsing
     if(*m_pointer)
     {
-      SetError(XmlError::XE_ExtraText,m_pointer);
+      SetError(XmlError::XE_ExtraText,(LPCTSTR)m_pointer);
     }
   }
   catch(const XmlError& error)

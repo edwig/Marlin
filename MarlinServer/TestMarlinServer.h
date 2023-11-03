@@ -50,8 +50,8 @@ public:
   // Registering an extra error while running: so we can report total errors
   void  Server_xerror();
   // Printing to the log for our test set only
-  void  Server_xprintf(const char* p_format, ...);
-  void  Server_qprintf(const char* p_format, ...);
+  void  Server_xprintf(LPCTSTR p_format, ...);
+  void  Server_qprintf(LPCTSTR p_format, ...);
 
   XString m_socket;
 

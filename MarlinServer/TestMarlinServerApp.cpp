@@ -51,8 +51,8 @@ WebConfigIIS* g_config = nullptr;
 //////////////////////////////////////////////////////////////////////////
 
 TestMarlinServerAppPool::TestMarlinServerAppPool(IHttpServer*   p_iis
-                                        ,const char*    p_webroot
-                                        ,const char*    p_appName)
+                                                ,LPCTSTR    p_webroot
+                                                ,LPCTSTR    p_appName)
                     :ServerApp(p_iis,p_webroot,p_appName)
 {
 }
@@ -121,7 +121,7 @@ TestMarlinServerAppPool::ExitInstance()
   if(m_running)
   {
     // Testing the error log function
-    m_httpServer->ErrorLog(__FUNCTION__,0,"Not a real error message, but a test to see if the error logging works :-)");
+    m_httpServer->ErrorLog(_T(__FUNCTION__),0,_T("Not a real error message, but a test to see if the error logging works :-)"));
 
     // Stopped running
     m_running = false;
@@ -140,7 +140,7 @@ TestMarlinServerAppPool::CorrectlyStarted()
 {
   if(ServerApp::CorrectlyStarted() == false)
   {
-    m_logfile->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,"ServerApp incorrectly started. Review your program logic");
+    m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,_T("ServerApp incorrectly started. Review your program logic"));
     return false;
   }
   return true;
@@ -154,9 +154,9 @@ TestMarlinServerAppPool::MinMarlinVersion(int p_version)
 
   if(p_version < minVersion || maxVersion <= p_version)
   {
-    SvcReportErrorEvent(0,true,__FUNCTION__
-                       ,"MarlinModule version is out of range: %d.%d.%d\n"
-                       ,"This application was compiled for: %d.%d.%d"
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__)
+                       ,_T("MarlinModule version is out of range: %d.%d.%d\n")
+                        _T("This application was compiled for: %d.%d.%d")
                        ,p_version / 10000,(p_version % 10000)/100,p_version % 100
                        ,MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP);
     return 0;

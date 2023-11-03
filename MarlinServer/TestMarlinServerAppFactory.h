@@ -31,7 +31,7 @@
 class TestMarlinServerAppFactory : public ServerAppFactory
 {
 public:
-  virtual ServerApp* CreateServerApp(IHttpServer*   p_iis
-                                    ,const char*    p_webroot
-                                    ,const char*    p_appName);
+  virtual ServerApp* CreateServerApp(IHttpServer* p_iis
+                                    ,LPCTSTR      p_webroot
+                                    ,LPCTSTR      p_appName);
 };

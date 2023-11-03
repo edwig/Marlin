@@ -35,38 +35,39 @@
 #include "HTTPServerMarlin.h"
 #include "ErrorReport.h"
 #include "HTTPLoglevel.h"
-#include "EnsureFile.h"
 #include "AutoCritical.h"
 #include "Alert.h"
 #include "Version.h"
-
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
+#include <WinFile.h>
 
 // Load product and application constants
-void LoadConstants(char* /*p_app_name*/)
+void LoadConstants(LPTSTR /*p_app_name*/)
 {
   // These constants reside in the "ServerMain"
-  APPLICATION_NAME      = "MarlinServer.exe";                     // Name of the application EXE file!!
-  PRODUCT_NAME          = MARLIN_PRODUCT_NAME;                    // Short name of the product (one word only)
-  PRODUCT_DISPLAY_NAME  = "Service for MarlinServer tester";      // "Service for PRODUCT_NAME: <description of the service>"
-  PRODUCT_COPYRIGHT     = "Copyright (c) 2022 ir. W.E. Huisman";  // Copyright line of the product (c) <year> etc.
-  PRODUCT_VERSION       = MARLIN_VERSION_NUMBER;                  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
-  PRODUCT_MESSAGES_DLL  = "MarlinServerMessages.dll";             // Filename of the WMI Messages dll.
-  PRODUCT_SITE          = "/MarlinTest/";                         // Standard base URL absolute path e.g. "/MarlinServer/"
+  APPLICATION_NAME      = _T("MarlinServer.exe");                     // Name of the application EXE file!!
+  PRODUCT_NAME          = _T(MARLIN_PRODUCT_NAME);                    // Short name of the product (one word only)
+  PRODUCT_DISPLAY_NAME  = _T("Service for MarlinServer tester");      // "Service for PRODUCT_NAME: <description of the service>"
+  PRODUCT_COPYRIGHT     = _T("Copyright (c) 2023 ir. W.E. Huisman");  // Copyright line of the product (c) <year> etc.
+  PRODUCT_VERSION       = _T(MARLIN_VERSION_NUMBER);                  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
+  PRODUCT_MESSAGES_DLL  = _T("MarlinServerMessages.dll");             // Filename of the WMI Messages dll.
+  PRODUCT_SITE          = _T("/MarlinTest/");                         // Standard base URL absolute path e.g. "/MarlinServer/"
 }
 
 // In case we do **NOT** use IIS and the application factory, This is the one and only server
 // This macro is defined in the project files. **NOT** in the *.h files
 #ifndef MARLIN_IIS
 TestMarlinServer theServer;
+#include "..\Marlin\ServerMain.cpp"
+#else
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 TestMarlinServer::TestMarlinServer()
-                 :WebServiceServer(MARLIN_PRODUCT_NAME,"","",PrefixType::URLPRE_Strong,"",8)
+                 :WebServiceServer(_T(MARLIN_PRODUCT_NAME),_T(""),_T(""),PrefixType::URLPRE_Strong,_T(""),8)
                  ,MarlinServer()
 {
   InitializeCriticalSection(&m_std_stream);
@@ -116,7 +117,7 @@ TestMarlinServer::Startup()
     StartServerLog();
 
     // Log is running: We are starting
-    SvcReportInfoEvent(false,__FUNCTION__,(XString("Starting ") + XString(PRODUCT_NAME)).GetString());
+    SvcReportInfoEvent(false,_T(__FUNCTION__),(XString(_T("Starting ")) + XString(PRODUCT_NAME)).GetString());
 
     // Starting the WSDL caching
     StartWsdl();
@@ -128,7 +129,7 @@ TestMarlinServer::Startup()
     RegisterSiteHandlers();
 
     // Ok, server is running, so log that
-    SvcReportInfoEvent(false, __FUNCTION__,"Server status: Running & OK");
+    SvcReportInfoEvent(false,_T(__FUNCTION__),_T("Server status: Running & OK"));
 
     // Back to ServerMain to wait for the ending event
     result = true;
@@ -136,11 +137,11 @@ TestMarlinServer::Startup()
   catch(CException& er)
   {
     XString error = MessageFromException(er);
-    SvcReportErrorEvent(0,true, __FUNCTION__, "Server initialization failed: %s",error.GetString());
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Server initialization failed: %s"),error.GetString());
   }
   catch(StdException& er)
   {
-    SvcReportErrorEvent(0,true,__FUNCTION__,"Server initialization failed: %s",er.GetErrorMessage().GetString());
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Server initialization failed: %s"),er.GetErrorMessage().GetString());
   }
   // Stop theClock
   m_counter.Stop();
@@ -195,7 +196,7 @@ TestMarlinServer::Server_xerror()
 
 // eXtended printf: print only if doDetails is true
 void 
-TestMarlinServer::Server_xprintf(const char* p_format, ...)
+TestMarlinServer::Server_xprintf(LPCTSTR p_format, ...)
 {
   if(m_doDetails)
   {
@@ -207,13 +208,13 @@ TestMarlinServer::Server_xprintf(const char* p_format, ...)
     info.FormatV(p_format, vl);
     va_end(vl);
 
-    info.TrimRight("\n");
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,info.GetString());
+    info.TrimRight(_T("\n"));
+    m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,false,info.GetString());
   }
 }
 
 void 
-TestMarlinServer::Server_qprintf(const char* p_format, ...)
+TestMarlinServer::Server_qprintf(LPCTSTR p_format, ...)
 {
   XString string;
   static XString stringRegister;
@@ -225,14 +226,14 @@ TestMarlinServer::Server_qprintf(const char* p_format, ...)
 
 
   // See if we must just register the string
-  if (string.Right(3) == "<+>")
+  if (string.Right(3) == _T("<+>"))
   {
     stringRegister += string.Left(string.GetLength() - 3);
     return;
   }
   else
   {
-    string.TrimRight("\n");
+    string.TrimRight(_T("\n"));
   }
 
   // Print the result to the logfile as INFO
@@ -240,7 +241,7 @@ TestMarlinServer::Server_qprintf(const char* p_format, ...)
   stringRegister.Empty();
 
   AutoCritSec lock(&m_std_stream);
-  m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,false,string.GetString());
+  m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,false,string.GetString());
 }
 
 void
@@ -278,7 +279,7 @@ TestMarlinServer::ReadConfig()
     if(m_instance > 100) m_instance = 100;
   }
   // Registered name for the WMI logging
-  sprintf_s(g_svcname,SERVICE_NAME_LENGTH,"%s_%d_v%s",PRODUCT_NAME,m_instance,PRODUCT_VERSION);
+  _stprintf_s(g_svcname,SERVICE_NAME_LENGTH,_T("%s_%d_v%s"),PRODUCT_NAME,m_instance,PRODUCT_VERSION);
 
   // Port numbers cannot be under the IANA border value of 1024
   // unless... they are the default 80/443 ports
@@ -287,24 +288,24 @@ TestMarlinServer::ReadConfig()
      (m_inPortNumber  < 1025))
   {
     XString error;
-    error.Format("%s Server port [%d] does not conform to IANA rules (80,443 or greater than 1024)",PRODUCT_NAME,m_inPortNumber);
-    SvcReportErrorEvent(0,false,__FUNCTION__,error);
+    error.Format(_T("%s Server port [%d] does not conform to IANA rules (80,443 or greater than 1024)"),PRODUCT_NAME,m_inPortNumber);
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),error);
     throw StdException(error);
   }
 
   // Checking the Base-URL. Minimum base URL is a one (1) char site "/x/"
-  if(m_baseURL.IsEmpty() || m_baseURL.GetLength() < 3 || m_baseURL == "/" || m_baseURL.Left(1) != "/" || m_baseURL.Right(1) != "/")
+  if(m_baseURL.IsEmpty() || m_baseURL.GetLength() < 3 || m_baseURL == _T("/") || m_baseURL.Left(1) != _T("/") || m_baseURL.Right(1) != _T("/"))
   {
     XString error(PRODUCT_NAME);
-    error += " Cannot start on an empty or illegal Base-URL";
-    SvcReportErrorEvent(0,false,__FUNCTION__,error);
+    error += _T(" Cannot start on an empty or illegal Base-URL");
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),error);
     throw StdException(error);
   }
 
   // If not ok: Write to the WMI log. Our own logfile is not yet airborne
   if(readOK == false)
   {
-    SvcReportErrorEvent(0,true,__FUNCTION__,"Error reading '%s.config' file. Falling back to defaults",PRODUCT_NAME);
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Error reading '%s.config' file. Falling back to defaults"),PRODUCT_NAME);
   }
 }
 
@@ -312,27 +313,26 @@ TestMarlinServer::ReadConfig()
 void  
 TestMarlinServer::StartAlerts()
 {
-  EnsureFile ensure;
-  XString path = ensure.DirectoryPart(m_serverLogfile);
+  XString path = m_serverLogfile;
   int pos = path.ReverseFind('\\');
   if(pos > 0)
   {
     path = path.Left(pos + 1);
     path += "Alerts\\";
-    ensure.SetFilename(path);
-    if(ensure.CheckCreateDirectory() == 0)
+    WinFile ensure(path);
+    if(ensure.CreateDirectory())
     {
       // Server registers the first module
       // Should return the 'module = 0' value
       m_alertModule = ConfigureApplicationAlerts(path);
       if(m_alertModule >= 0)
       {
-        SvcReportInfoEvent(true,"Configured the 'Alerts' directory [%d] for the product [%s] in [%s]",m_alertModule,PRODUCT_NAME,path.GetString());
+        SvcReportInfoEvent(true,_T("Configured the 'Alerts' directory [%d] for the product [%s] in [%s]"),m_alertModule,PRODUCT_NAME,path.GetString());
         return;
       }
     }
   }
-  SvcReportErrorEvent(0,true,__FUNCTION__,"Cannot configure the 'Alerts' directory for the product [%s] in [%s]",PRODUCT_NAME,path.GetString());
+  SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Cannot configure the 'Alerts' directory for the product [%s] in [%s]"),PRODUCT_NAME,path.GetString());
 }
 
 // Translate the configuration to the server + create URL
@@ -342,8 +342,8 @@ TestMarlinServer::ConfigToServer()
   XString hostname = GetHostName(HOSTNAME_FULL);
 
   // CONFIGURE URL / CHANNEL / NAMESPACE
-  m_url.Format("http%s://%s:%u%s"
-               ,m_serverSecure ? "s" : ""
+  m_url.Format(_T("http%s://%s:%u%s")
+               ,m_serverSecure ? _T("s") : _T("")
                ,hostname.GetString()
                ,m_inPortNumber
                ,m_baseURL.GetString());
@@ -399,7 +399,7 @@ TestMarlinServer::StartServerLog()
       m_log->SetLogFilename(m_serverLogfile);
     }
     // Only open it, if not yet opened by another session
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO, false, "*** MarlinServer logfile ****");
+    m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO, false,_T("*** MarlinServer logfile ****"));
     m_httpServer->SetLogging(m_log);
     m_log->ForceFlush();
   }
@@ -434,17 +434,17 @@ TestMarlinServer::StartWebServices()
   // Try running the service
   if(RunService())
   {
-    qprintf("WebServiceServer [%s] is now running OK\n", m_serverName.GetString());
-    qprintf("Running contract      : %s\n", DEFAULT_NAMESPACE);
-    qprintf("For WSDL download use : %s%s.wsdl\n",m_baseURL.GetString(),m_serverName.GetString());
-    qprintf("For interface page use: %s%s%s\n",   m_baseURL.GetString(),m_serverName.GetString(),GetServicePostfix().GetString());
-    qprintf("\n");
+    qprintf(_T("WebServiceServer [%s] is now running OK\n"), m_serverName.GetString());
+    qprintf(_T("Running contract      : %s\n"), DEFAULT_NAMESPACE);
+    qprintf(_T("For WSDL download use : %s%s.wsdl\n"),m_baseURL.GetString(),m_serverName.GetString());
+    qprintf(_T("For interface page use: %s%s%s\n"),   m_baseURL.GetString(),m_serverName.GetString(),GetServicePostfix().GetString());
+    qprintf(_T("\n"));
   }
   else
   {
     xerror();
-    qprintf("ERROR Starting WebServiceServer for: %s\n",m_serverName.GetString());
-    qprintf("ERROR Reported by the server: %s\n",GetErrorMessage().GetString());
+    qprintf(_T("ERROR Starting WebServiceServer for: %s\n"),m_serverName.GetString());
+    qprintf(_T("ERROR Reported by the server: %s\n"),GetErrorMessage().GetString());
   }
 }
 

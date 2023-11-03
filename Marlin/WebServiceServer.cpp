@@ -95,7 +95,7 @@ WebServiceServer::WebServiceServer(XString    p_name
                  ,m_targetNamespace(p_targetNamespace)
                  ,m_maxThreads(p_maxThreads)
                  // Default settings for: ActiveServerPages (ASP) C++ = CXX
-                 ,m_servicePostfix(".acx")
+                 ,m_servicePostfix(_T(".acx"))
 {
 }
 
@@ -130,8 +130,8 @@ WebServiceServer::Reset()
     {
       // If not removed by server, signal that and do it ourselves
       // Otherwise would result in a memory leak!
-      m_errorMessage.Format("Service site [%s] not removed by server.",m_name.GetString());
-      m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
+      m_errorMessage.Format(_T("Service site [%s] not removed by server."),m_name.GetString());
+      m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,m_errorMessage);
       delete m_site;
     }
   }
@@ -386,7 +386,7 @@ void
 WebServiceServer::ReadingWebconfig()
 {
   // Read the general settings first
-  ReadingWebconfig("Marlin.config");
+  ReadingWebconfig(_T("Marlin.config"));
 
   XString siteConfigFile = MarlinConfig::GetSiteConfig(m_site->GetPrefixURL());
   ReadingWebconfig(siteConfigFile);
@@ -403,25 +403,26 @@ WebServiceServer::ReadingWebconfig(XString p_webconfig)
     return;
   }
 
-  m_reliable         = config.GetParameterBoolean("WebServices","Reliable",          m_reliable);
-  m_reliableLogin    = config.GetParameterBoolean("WebServices","ReliableLogin",     m_reliableLogin);
-  m_checkIncoming    = config.GetParameterBoolean("WebServices","CheckWSDLIncoming", m_checkIncoming);
-  m_checkOutgoing    = config.GetParameterBoolean("WebServices","CheckWSDLOutgoing", m_checkOutgoing);
-  m_checkFieldvalues = config.GetParameterBoolean("WebServices","CheckFieldValues",  m_checkFieldvalues);
+  m_reliable         = config.GetParameterBoolean(_T("WebServices"),_T("Reliable"),          m_reliable);
+  m_reliableLogin    = config.GetParameterBoolean(_T("WebServices"),_T("ReliableLogin"),     m_reliableLogin);
+  m_checkIncoming    = config.GetParameterBoolean(_T("WebServices"),_T("CheckWSDLIncoming"), m_checkIncoming);
+  m_checkOutgoing    = config.GetParameterBoolean(_T("WebServices"),_T("CheckWSDLOutgoing"), m_checkOutgoing);
+  m_checkFieldvalues = config.GetParameterBoolean(_T("WebServices"),_T("CheckFieldValues"),  m_checkFieldvalues);
 
   // Log it
   if(m_log)
   {
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Webservices in WS-Reliable mode only: %s",      m_reliable      ? "YES" : "NO");
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Checking incoming webservices against WSDL: %s",m_checkIncoming ? "YES" : "NO");
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Checking outgoing webservices against WSDL: %s",m_checkOutgoing ? "YES" : "NO");
+    TCHAR* function = _T(__FUNCTION__);
+    m_log->AnalysisLog(function, LogType::LOG_INFO,true,_T("Webservices in WS-Reliable mode only: %s"),      m_reliable      ? _T("YES") : _T("NO"));
+    m_log->AnalysisLog(function, LogType::LOG_INFO,true,_T("Checking incoming webservices against WSDL: %s"),m_checkIncoming ? _T("YES") : _T("NO"));
+    m_log->AnalysisLog(function, LogType::LOG_INFO,true,_T("Checking outgoing webservices against WSDL: %s"),m_checkOutgoing ? _T("YES") : _T("NO"));
     if(m_checkIncoming || m_checkOutgoing)
     {
-      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Field values checked  : %s",m_checkFieldvalues ? "YES" : "NO");
-      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"Webconfig file checked: %s",p_webconfig.GetString());
-      m_log->AnalysisLog(__FUNCTION__, LogType::LOG_INFO,true,"WSDL to check against : %s",m_wsdl->GetWSDLFilename().GetString());
+      m_log->AnalysisLog(function, LogType::LOG_INFO,true,_T("Field values checked  : %s"),m_checkFieldvalues ? _T("YES") : _T("NO"));
+      m_log->AnalysisLog(function, LogType::LOG_INFO,true,_T("Webconfig file checked: %s"),p_webconfig.GetString());
+      m_log->AnalysisLog(function, LogType::LOG_INFO,true,_T("WSDL to check against : %s"),m_wsdl->GetWSDLFilename().GetString());
     }
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_INFO,true,"Support GET-SOAP-JSON roundtrip translation: %s",m_jsonTranslation ? "YES" : "NO");
+    m_log->AnalysisLog(function,LogType::LOG_INFO,true,_T("Support GET-SOAP-JSON roundtrip translation: %s"),m_jsonTranslation ? _T("YES") : _T("NO"));
   }
 }
 // Running the service
@@ -444,7 +445,7 @@ WebServiceServer::RunService()
   if(m_log == nullptr)
   {
     m_logOwner = true;
-    m_log = new LogAnalysis("Webservice: " + m_name);
+    m_log = new LogAnalysis(_T("Webservice: ") + m_name);
     if(!m_logFilename.IsEmpty())
     {
       m_log->SetLogFilename(m_logFilename);
@@ -489,9 +490,9 @@ WebServiceServer::RunService()
     m_generateWsdl = false;
     if(m_wsdl->ReadWSDLFile(m_externalWsdl) == false)
     {
-      m_errorMessage.Format("ERROR reading WSDL file: %s\n",m_externalWsdl.GetString());
+      m_errorMessage.Format(_T("ERROR reading WSDL file: %s\n"),m_externalWsdl.GetString());
       m_errorMessage += m_wsdl->GetErrorMessage();
-      m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
+      m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,m_errorMessage);
       return false;
     }
   }
@@ -506,8 +507,8 @@ WebServiceServer::RunService()
   // Try to generate the WSDL
   if(m_generateWsdl && m_wsdl->GenerateWSDL() == false)
   {
-    m_errorMessage.Format("Cannot start the service. No legal WSDL generated for: %s",m_url.GetString());
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
+    m_errorMessage.Format(_T("Cannot start the service. No legal WSDL generated for: %s"),m_url.GetString());
+    m_log->AnalysisLog(_T(__FUNCTION__), LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
 
@@ -515,15 +516,15 @@ WebServiceServer::RunService()
   CrackedURL cracked(m_url);
   if(cracked.Valid() == false)
   {
-    m_errorMessage.Format("WebServiceServer has no legal URL to run on: %s",m_url.GetString());
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
+    m_errorMessage.Format(_T("WebServiceServer has no legal URL to run on: %s"),m_url.GetString());
+    m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
   // Keep the absolute path in separate form
   m_absPath = cracked.m_path;
-  if(m_absPath.Right(1) != "/")
+  if(m_absPath.Right(1) != _T("/"))
   {
-    m_absPath += "/";
+    m_absPath += _T("/");
   }
 
   // Creating a HTTP site
@@ -534,8 +535,8 @@ WebServiceServer::RunService()
                                     ,m_subsite);
   if(m_site == nullptr)
   {
-    m_errorMessage.Format("Cannot register an HTTP channel on this machine for URL: %s",m_url.GetString());
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
+    m_errorMessage.Format(_T("Cannot register an HTTP channel on this machine for URL: %s"),m_url.GetString());
+    m_log->AnalysisLog(_T(__FUNCTION__), LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
   // Setting the service as the payload!!
@@ -546,8 +547,8 @@ WebServiceServer::RunService()
   ReadingWebconfig();
 
   // Standard text content types
-  m_site->AddContentType("",   "text/xml");              // SOAP 1.0 / 1.1
-  m_site->AddContentType("xml","application/soap+xml");  // SOAP 1.2
+  m_site->AddContentType(_T(""),   _T("text/xml"));              // SOAP 1.0 / 1.1
+  m_site->AddContentType(_T("xml"),_T("application/soap+xml"));  // SOAP 1.2
   m_site->SetEncryptionLevel(m_securityLevel);
   m_site->SetEncryptionPassword(m_enc_password);
   m_site->SetAsync(m_asyncMode);
@@ -607,8 +608,8 @@ WebServiceServer::RunService()
   // New: Explicit starting the site for HTTP API Version 2.0
   if(m_site->StartSite() == false)
   {
-    m_errorMessage.Format("Cannot start HTTPSite for webservice server on: %s",m_url.GetString());
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
+    m_errorMessage.Format(_T("Cannot start HTTPSite for webservice server on: %s"),m_url.GetString());
+    m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
 
@@ -624,10 +625,10 @@ WebServiceServer::RunService()
   }
   else
   {
-    m_errorMessage.Format("Cannot start HTTPServer. Server in error state. Error %lu: %s"
+    m_errorMessage.Format(_T("Cannot start HTTPServer. Server in error state. Error %lu: %s")
                           ,::GetLastError()
                           ,GetLastErrorAsString().GetString());
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
+    m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,m_errorMessage);
     return false;
   }
   // Now legally running
@@ -672,8 +673,8 @@ void
 WebServiceServer::OnProcessPost(int p_code,SOAPMessage* p_message)
 {
   XString fault;
-  fault.Format("Programming error for interface [%d] %s",p_code,p_message->GetSoapAction().GetString());
-  p_message->SetFault("Critical","Server",fault,"Derive your own handler class from WebServiceServer!");
+  fault.Format(_T("Programming error for interface [%d] %s"),p_code,p_message->GetSoapAction().GetString());
+  p_message->SetFault(_T("Critical"),_T("Server"),fault,_T("Derive your own handler class from WebServiceServer!"));
 }
 
 bool  
@@ -698,10 +699,10 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
 
   if(code == 0)
   {
-    m_errorMessage.Format("Message to process NOT FOUND: %s",action.GetString());
-    m_log->AnalysisLog(__FUNCTION__,LogType::LOG_ERROR,false,m_errorMessage);
+    m_errorMessage.Format(_T("Message to process NOT FOUND: %s"),action.GetString());
+    m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,m_errorMessage);
     p_message->Reset();
-    p_message->SetFault("Critical","Server","Failed to process the message.",m_errorMessage);
+    p_message->SetFault(_T("Critical"),_T("Server"),_T("Failed to process the message."),m_errorMessage);
     return false;
 
   }
@@ -733,10 +734,10 @@ WebServiceServer::ProcessPost(SOAPMessage* p_message)
   catch(StdException& ex)
   {
     ReThrowSafeException(ex);
-    m_errorMessage.Format("Error in processing the message: %s : %s",action.GetString(),ex.GetErrorMessage().GetString());
-    m_log->AnalysisLog(__FUNCTION__, LogType::LOG_ERROR,false,m_errorMessage);
+    m_errorMessage.Format(_T("Error in processing the message: %s : %s"),action.GetString(),ex.GetErrorMessage().GetString());
+    m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,m_errorMessage);
     p_message->Reset();
-    p_message->SetFault("Critical","Server","Failed to process the message.",m_errorMessage);
+    p_message->SetFault(_T("Critical"),_T("Server"),_T("Failed to process the message."),m_errorMessage);
     return false;
   }
   // Try next handler
@@ -749,16 +750,16 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
 {
         XString absPath   = p_message->GetAbsolutePath();
   const CrackedURL& crack = p_message->GetCrackedURL();
-  const bool hasWsdlParam = crack.HasParameter("wsdl");
+  const bool hasWsdlParam = crack.HasParameter(_T("wsdl"));
 
   // The following situations are processed as requesting the WSDL
   // 1: URL/servicename.wsdl
   // 2: URL/servicename<postfix>?wsdl
   // 3: URL/servicename?wsdl
   XString wsdlBase = m_absPath + m_name;
-  XString wsdlPath = wsdlBase  + ".wsdl";
+  XString wsdlPath = wsdlBase  + _T(".wsdl");
   XString basePage = m_absPath + m_name + m_servicePostfix;
-  XString baseWsdl = basePage  + "?wsdl";
+  XString baseWsdl = basePage  + _T("?wsdl");
 
   if((wsdlPath.CompareNoCase(absPath) == 0) ||
      (wsdlBase.CompareNoCase(absPath) == 0 && hasWsdlParam) ||
@@ -768,7 +769,7 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
     p_message->Reset();
     XString wsdlFileInWebroot = m_wsdl->GetWSDLFilename();
     p_message->GetFileBuffer()->SetFileName(wsdlFileInWebroot);
-    p_message->SetContentType("text/xml");
+    p_message->SetContentType(_T("text/xml"));
     m_httpServer->SendResponse(p_message);
     return true;
   }
@@ -779,13 +780,13 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
   {
     p_message->Reset();
     XString pagina = m_wsdl->GetServicePage();
-    p_message->AddBody(reinterpret_cast<void*>(const_cast<char*>(pagina.GetString())),pagina.GetLength());
-    p_message->SetContentType("text/html");
+    p_message->AddBody(reinterpret_cast<void*>(const_cast<TCHAR*>(pagina.GetString())),pagina.GetLength());
+    p_message->SetContentType(_T("text/html"));
     m_httpServer->SendResponse(p_message);
     return true;
   }
   // 6: URL/servicename.<operation>.html
-  if(absPath.Right(5).CompareNoCase(".html") == 0)
+  if(absPath.Right(5).CompareNoCase(_T(".html")) == 0)
   {
     // Knock of the ".html"
     absPath = absPath.Left(absPath.GetLength() - 5);
@@ -809,8 +810,8 @@ WebServiceServer::ProcessGet(HTTPMessage* p_message)
           XString pagina = m_wsdl->GetOperationPage(absPath,m_httpServer->GetHostname());
           if(!pagina.IsEmpty())
           {
-            p_message->AddBody(reinterpret_cast<void*>(const_cast<char*>(pagina.GetString())),pagina.GetLength());
-            p_message->SetContentType("text/html");
+            p_message->AddBody(reinterpret_cast<void*>(const_cast<TCHAR*>(pagina.GetString())),pagina.GetLength());
+            p_message->SetContentType(_T("text/html"));
             m_httpServer->SendResponse(p_message);
             return true;
           }

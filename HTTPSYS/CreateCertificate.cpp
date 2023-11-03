@@ -7,8 +7,9 @@
 // Create a self-signed certificate and store it in the machine personal store
 // 
 #include "stdafx.h"
-#include "Logging.h"
 #include "CreateCertificate.h"
+#include "Logging.h"
+#include <LogAnalysis.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -26,75 +27,75 @@ TestCryptKeyContainter(WCHAR* p_keyContainerName,DWORD p_keyFlags)
 	try
 	{
 		// Acquire key container
-		DebugMsg(("CryptAcquireContext of existing key container... "));
+		DebugMsg(_T("CryptAcquireContext of existing key container... "));
 		if (!CryptAcquireContextW(&hCryptProv, p_keyContainerName, nullptr, PROV_RSA_FULL, p_keyFlags))
 		{
 			int err = GetLastError();
       if(err == NTE_BAD_KEYSET)
       {
-        LogError("**** CryptAcquireContext failed with 'bad keyset'");
+        LogError(_T("**** CryptAcquireContext failed with 'bad keyset'"));
       }
       else
       {
-        LogError("**** Error 0x%x returned by CryptAcquireContext",err);
+        LogError(_T("**** Error 0x%x returned by CryptAcquireContext"),err);
       }
 			// Try to create a new key container
-			DebugMsg(("CryptAcquireContext create new container... "));
+			DebugMsg(_T("CryptAcquireContext create new container... "));
 			if (!CryptAcquireContextW(&hCryptProv, p_keyContainerName, nullptr, PROV_RSA_FULL, p_keyFlags | CRYPT_NEWKEYSET))
 			{
 				err = GetLastError();
         if(err == NTE_EXISTS)
         {
-          LogError("**** CryptAcquireContext failed with 'already exists', are you running as administrator");
+          LogError(_T("**** CryptAcquireContext failed with 'already exists', are you running as administrator"));
         }
         else
         {
-          LogError("**** Error 0x%x returned by CryptAcquireContext",err);
+          LogError(_T("**** Error 0x%x returned by CryptAcquireContext"),err);
         }
 				// Error
-				LogError("Error 0x%x", GetLastError());
+				LogError(_T("Error 0x%x"), GetLastError());
         throw err;
 			}
 			else
 			{
-				DebugMsg("Success - new container created");
+				DebugMsg(_T("Success - new container created"));
 			}
 		}
 		else
 		{
-			DebugMsg("Success - container found");
+			DebugMsg(_T("Success - container found"));
 		}
 
 
 		// Generate new key pair
     // Use RSA2048BIT_KEY without any extra flags
-		DebugMsg(("CryptGenKey... "));
+		DebugMsg(_T("CryptGenKey... "));
 		if (!CryptGenKey(hCryptProv, AT_SIGNATURE, 0x08000000 /*RSA2048BIT_KEY*/, &hKey))
 		{
 			// Error
-			LogError("Error testing crypt container: 0x%x", GetLastError());
+			LogError(_T("Error testing crypt container: 0x%x"), GetLastError());
 		}
 		else
 		{
-			DebugMsg("Success testing crypt container");
+			DebugMsg(_T("Success testing crypt container"));
       result = true;
 		}
 	}
   catch (...) 
   {
-    LogError("Cannot acquire crypt key container");
+    LogError(_T("Cannot acquire crypt key container"));
   }
 
 	// Clean up  
 
 	if (hKey)
 	{
-		DebugMsg("CryptDestroyKey... ");
+		DebugMsg(_T("CryptDestroyKey... "));
 		CryptDestroyKey(hKey);
 	}
 	if (hCryptProv)
 	{
-		DebugMsg("CryptReleaseContext... ");
+		DebugMsg(_T("CryptReleaseContext... "));
 		CryptReleaseContext(hCryptProv, 0);
 	}
   return result;
@@ -103,10 +104,10 @@ TestCryptKeyContainter(WCHAR* p_keyContainerName,DWORD p_keyFlags)
 // Create a certificate, returning the certificate context
 
 PCCERT_CONTEXT 
-CreateCertificate(bool   p_machineCert
-                 ,LPCSTR p_subject
-                 ,LPCSTR p_friendlyName
-                 ,LPCSTR p_description)
+CreateCertificate(bool    p_machineCert
+                 ,LPCTSTR p_subject
+                 ,LPCTSTR p_friendlyName
+                 ,LPCTSTR p_description)
 {
 	WCHAR*     keyContainerName = (WCHAR*) L"SSLTestKeyContainer";
   DWORD      keyFlags = p_machineCert ? CRYPT_MACHINE_KEYSET : 0;
@@ -136,45 +137,45 @@ CreateCertificate(bool   p_machineCert
     }
     else
     {
-      X500 += "localuser";
+      X500 += _T("localuser");
     }
 
     DWORD cbEncoded = 0;
 		// Find out how many bytes are needed to encode the certificate
-		DebugMsg(("CertStrToName... "));
+		DebugMsg(_T("CertStrToName... "));
 		if (!CertStrToName(X509_ASN_ENCODING, X500, CERT_X500_NAME_STR, nullptr, pbEncoded, &cbEncoded, nullptr))
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"), GetLastError());
 			return nullptr;
 		}
 		else
 		{
-			DebugMsg("Success");
+			DebugMsg(_T("Success"));
 		}
 		// Allocate the required space
-		DebugMsg(("malloc... "));
+		DebugMsg(_T("malloc... "));
 		if (!(pbEncoded = (BYTE *)malloc(cbEncoded)))
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"), GetLastError());
 			return nullptr;
 		}
 		else
 		{
-			DebugMsg("Success");
+			DebugMsg(_T("Success"));
 		}
 		// Encode the certificate
-		DebugMsg(("CertStrToName... "));
+		DebugMsg(_T("CertStrToName... "));
 		if (!CertStrToName(X509_ASN_ENCODING, X500, CERT_X500_NAME_STR, NULL, pbEncoded, &cbEncoded, NULL))
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"), GetLastError());
 			return nullptr;
 		}
 		else
 		{
-			DebugMsg("Success");
+			DebugMsg(_T("Success"));
 		}
 
 		// Prepare certificate Subject for self-signed certificate
@@ -205,30 +206,30 @@ CreateCertificate(bool   p_machineCert
 		EndTime.wYear += 5;
 
 		// Create certificate
-		DebugMsg(("CertCreateSelfSignCertificate... "));
+		DebugMsg(_T("CertCreateSelfSignCertificate... "));
 		certContext = CertCreateSelfSignCertificate(NULL, &SubjectIssuerBlob, 0, &KeyProvInfo, &SignatureAlgorithm, nullptr, &EndTime, nullptr);
 		if (!certContext)
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"),GetLastError());
 			return nullptr;
 		}
 		else
 		{
-			DebugMsg("Success");
+			DebugMsg(_T("Success"));
 		}
 
     // Specify the allowed usage of the certificate (client or server authentication)
-		DebugMsg(("CertAddEnhancedKeyUsageIdentifier"));
+		DebugMsg(_T("CertAddEnhancedKeyUsageIdentifier"));
     LPCSTR szOID = p_machineCert ? szOID_PKIX_KP_SERVER_AUTH : szOID_PKIX_KP_CLIENT_AUTH;
     if(CertAddEnhancedKeyUsageIdentifier(certContext, szOID))
 		{
-			DebugMsg("Success");
+			DebugMsg(_T("Success"));
 		}
 		else
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"), GetLastError());
 			return nullptr;
 		}
 
@@ -245,15 +246,15 @@ CreateCertificate(bool   p_machineCert
       cdblob.pbData = (BYTE*)L"SSLStream";
     }
     cdblob.cbData = (DWORD) (wcslen((LPWSTR) cdblob.pbData) + 1) * sizeof(WCHAR);
-		DebugMsg(("CertSetCertificateContextProperty CERT_FRIENDLY_NAME_PROP_ID"));
+		DebugMsg(_T("CertSetCertificateContextProperty CERT_FRIENDLY_NAME_PROP_ID"));
     if(CertSetCertificateContextProperty(certContext, CERT_FRIENDLY_NAME_PROP_ID, 0, &cdblob))
 		{
-			DebugMsg("Success");
+			DebugMsg(_T("Success"));
 		}
 		else
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"), GetLastError());
 			return nullptr;
 		}
 
@@ -271,20 +272,20 @@ CreateCertificate(bool   p_machineCert
       cdblob.pbData = (BYTE*)L"SSLStream Client Test";
     }
     cdblob.cbData = (DWORD)(wcslen((LPWSTR) cdblob.pbData) + 1) * sizeof(WCHAR);
-		DebugMsg(("CertSetCertificateContextProperty CERT_DESCRIPTION_PROP_ID"));
+		DebugMsg(_T("CertSetCertificateContextProperty CERT_DESCRIPTION_PROP_ID"));
     if (CertSetCertificateContextProperty(certContext, CERT_DESCRIPTION_PROP_ID, 0, &cdblob))
 		{
-			DebugMsg("Success");
+			DebugMsg(_T("Success"));
 		}
 		else
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"), GetLastError());
 			return nullptr;
 		}
 
 		// Open Personal cert store in machine or user profile
-		DebugMsg(("Trying CertOpenStore to open root store... "));
+		DebugMsg(_T("Trying CertOpenStore to open root store... "));
 		hStore = CertOpenStore(CERT_STORE_PROV_SYSTEM
                           ,0
                           ,0
@@ -296,44 +297,44 @@ CreateCertificate(bool   p_machineCert
 			int err = GetLastError();
       if(err == ERROR_ACCESS_DENIED)
       {
-        LogError("**** CertOpenStore failed with 'access denied'. Are  you running as administrator?");
+        LogError(_T("**** CertOpenStore failed with 'access denied'. Are  you running as administrator?"));
       }
       else
       {
-        LogError("**** Error 0x%x returned by CertOpenStore",err);
+        LogError(_T("**** Error 0x%x returned by CertOpenStore"),err);
       }
 			return nullptr;
 		}
 		else
 		{
-			DebugMsg("Success opening certificate store");
+			DebugMsg(_T("Success opening certificate store"));
 		}
 
 		// Add the cert to the store
-		DebugMsg(("CertAddCertificateContextToStore... "));
+		DebugMsg(_T("CertAddCertificateContextToStore... "));
 		if (!CertAddCertificateContextToStore(hStore, certContext, CERT_STORE_ADD_REPLACE_EXISTING, nullptr))
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"),GetLastError());
 			return nullptr;
 		}
 		else
 		{
-			DebugMsg("Success");
+			DebugMsg(_T("Success"));
 		}
 
 		// Just for testing, verify that we can access cert's private key
 		DWORD dwKeySpec;
-		DebugMsg(("CryptAcquireCertificatePrivateKey... "));
+		DebugMsg(_T("CryptAcquireCertificatePrivateKey... "));
 		if (!CryptAcquireCertificatePrivateKey(certContext, 0, nullptr, &hCryptProvOrNCryptKey, &dwKeySpec, &fCallerFreeProvOrNCryptKey))
 		{
 			// Error
-			LogError("Error 0x%x", GetLastError());
+			LogError(_T("Error 0x%x"),GetLastError());
 			return nullptr;
 		}
 		else
 		{
-			DebugMsg("Success, private key acquired");
+			DebugMsg(_T("Success, private key acquired"));
 		}
 	}
   catch (...)
@@ -344,23 +345,23 @@ CreateCertificate(bool   p_machineCert
 
 	if (pbEncoded != nullptr) 
   {
-		DebugMsg(("free... "));
+		DebugMsg(_T("free... "));
 		free(pbEncoded);
-		DebugMsg("Success");
+		DebugMsg(_T("Success"));
 	}
 
 	if (hCryptProvOrNCryptKey)
 	{
-		DebugMsg("CryptReleaseContext... ");
+		DebugMsg(_T("CryptReleaseContext... "));
 		CryptReleaseContext(hCryptProvOrNCryptKey, 0);
-		DebugMsg("Success");
+		DebugMsg(_T("Success"));
 	}
 
 	if (hStore)
 	{
-		DebugMsg("CertCloseStore... ");
+		DebugMsg(_T("CertCloseStore... "));
 		CertCloseStore(hStore, 0);
-		DebugMsg("Success");
+		DebugMsg(_T("Success"));
 	}
 	return certContext;
 }

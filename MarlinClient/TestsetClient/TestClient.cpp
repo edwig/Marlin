@@ -44,13 +44,13 @@ using namespace std;
 bool doDetails = false;
 int  MARLIN_SERVER_PORT = 80;
 
-void xprintf(const char* p_format,...)
+void xprintf(LPCTSTR p_format,...)
 {
   if(doDetails)
   {
     va_list vl;
     va_start(vl,p_format);
-    vprintf(p_format,vl);
+    _vtprintf(p_format,vl);
     va_end(vl);
   }
 }
@@ -60,21 +60,21 @@ WaitForKey()
 {
   // Wait for key to occur
   // so the messages can be send and debugged :-)
-  char buffer[256];
+  TCHAR buffer[256];
   buffer[0] = 0;
-  gets_s(buffer,255);
+  _getts_s(buffer,255);
 }
 
-XString hostname("localhost");
+XString hostname(_T("localhost"));
 static LogAnalysis* g_log = nullptr;
 
 HTTPClient*
 StartClient(int p_loglevel)
 {
-  XString logfileName = MarlinConfig::GetExePath() + "ClientLog.txt";
+  XString logfileName = MarlinConfig::GetExePath() + _T("ClientLog.txt");
 
   // Create log file and turn logging 'on'
-  g_log = new LogAnalysis("TestHTTPClient");
+  g_log = new LogAnalysis(_T("TestHTTPClient"));
   g_log->SetLogFilename(logfileName,true);
   g_log->SetLogLevel(p_loglevel);
   g_log->SetDoTiming(true);
@@ -102,7 +102,7 @@ StopClient(HTTPClient* p_client)
   g_log = nullptr;
 }
 
-int main(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
+int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
 {
   int nRetCode = 0;
   int errors   = 0;
@@ -111,7 +111,7 @@ int main(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
   HMODULE hModule = ::GetModuleHandle(NULL);
   if(hModule == NULL)
   {
-    printf("Fatal Error: GetModuleHandle failed\n");
+    _tprintf(_T("Fatal Error: GetModuleHandle failed\n"));
     nRetCode = 1;
     return nRetCode;
   }
@@ -120,18 +120,18 @@ int main(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
   // initialize MFC and print an error on failure
   if (!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
   {
-    printf("Fatal Error: MFC initialization failed\n");
+    _tprintf(_T("Fatal Error: MFC initialization failed\n"));
     nRetCode = 1;
   }
   else
   {
-    printf("TESTING THE MARLIN CLIENT %s\n",CLIENT_CONFIG);
-    printf("====================================\n");
-    printf("\n");
+    _tprintf(_T("TESTING THE MARLIN CLIENT %s\n"),_T(CLIENT_CONFIG));
+    _tprintf(_T("====================================\n"));
+    _tprintf(_T("\n"));
 
     HTTPClient* client = StartClient(loglevel);
 
-    if(argc >= 2 && _stricmp(argv[1],"/ws") == 0)
+    if(argc >= 2 && _tcsicmp(argv[1],_T("/ws")) == 0)
     {
       // Testing WebServiceClient standalone
       errors += TestContract(nullptr,false,false);
@@ -139,31 +139,25 @@ int main(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
     else
     {
       // Do Unit testing of the client without connecting to the internet
-      errors += TestUnicode();
-      errors += TestURLChars();
-      errors += TestCrackURL();
-      errors += TestXML();
-      errors += TestCryptography();
-      errors += TestReader();
-      errors += TestConvert();
-      errors += TestNamespaces();
-      errors += TestHeaders();
-      errors += TestJSON();
+//    errors += TestUnicode();            Moved to baseLibrary
+//    errors += TestURLChars();           Moved to baseLibrary
+//    errors += TestCrackURL();           Moved to baseLibrary
+//    errors += TestXML();                Moved to baseLibrary
+//    errors += TestCryptography();       Moved to baseLibrary
+//    errors += TestReader();             Moved to baseLibrary
+//    errors += TestNamespaces();         Moved to baseLibrary
+//    errors += TestHeaders();            Moved to baseLibrary
+//    errors += TestJSON();               Moved to baseLibrary
+//    errors += TestCookiesOverwrite();   Moved to baseLibrary
+//    errors += TestDecryptCookie();      Moved to baseLibrary
+//    errors += TestMSGraph(client);      Moved to baseLibrary
+
+      // Unit testing of the client to a web server
       errors += TestFindClientCertificate();
-      errors += TestCookiesOverwrite();
-      errors += TestDecryptCookie();
-//    errors += TestMSGraph(client);
       errors += TestBaseSite(client);
       errors += TestSecureSite(client);
       errors += TestClientCertificate(client);
       errors += TestChunkedTransfer(client);
-#ifdef TEST_WEBSOCKETS
-      errors += TestWebSocketAccept();
-      errors += TestWebSocket(g_log);
-      errors += TestCloseWebSocket();
-#endif
-      errors += TestEvents(client);
-      errors += TestEventDriver(g_log);
       errors += TestCookies(*client);
       errors += TestFormData(client);
       errors += TestJsonData(client);
@@ -172,22 +166,30 @@ int main(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
       errors += TestContract(client,false,true);   // WS   WS-Secure token-profile
       errors += TestPatching(client);
       errors += TestCompression(client);
+      errors += TestEvents(client);
+      errors += TestWebSocketAccept();
+
+#ifdef TEST_WEBSOCKETS
+      errors += TestWebSocket(g_log);
+      errors += TestCloseWebSocket();
+#endif
+      errors += TestEventDriver(g_log);
       errors += TestWebservices(*client);
     }
 
-    printf("\n");
-    printf("SUMMARY OF ALL CLIENT TESTS\n");
-    printf("===========================\n");
+    _tprintf(_T("\n"));
+    _tprintf(_T("SUMMARY OF ALL CLIENT TESTS\n"));
+    _tprintf(_T("===========================\n"));
     if(errors)
     {
-      printf("ERRORS: %d\n",nRetCode = errors);
+      _tprintf(_T("ERRORS: %d\n"),nRetCode = errors);
     }
     else
     {
-      printf("ALL OK !!!! YIPEEEE!!!!\n");
+      _tprintf(_T("ALL OK !!!! YIPEEEE!!!!\n"));
     }
 
-    printf("\nRead everything? ");
+    _tprintf(_T("\nRead everything? "));
     WaitForKey();
 
     // And stop the client

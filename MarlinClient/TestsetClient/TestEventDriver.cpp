@@ -53,8 +53,8 @@ void CEDCallback(void* p_object, LTEvent* p_event)
 
   XString text;
   XString type = LTEvent::EventTypeToString(p_event->m_type);
-  text.Format("Server Event: [%d:%s] %s",p_event->m_number,type.GetString(),p_event->m_payload.GetString());
-  xprintf("%s\n",text.GetString());
+  text.Format(_T("Server Event: [%d:%s] %s"),p_event->m_number,type.GetString(),p_event->m_payload.GetString());
+  xprintf(_T("%s\n"),text.GetString());
 
   // Count the number of messages for completion of the test
   switch(p_event->m_type)
@@ -77,11 +77,11 @@ TestEventDriver(LogAnalysis* p_log)
   doDetails = false;
 
   // This is what we are going to test
-  xprintf("TESTING ClientEventDriver INTERFACE FOR APPLICATIONS\n");
-  xprintf("====================================================\n");
+  xprintf(_T("TESTING ClientEventDriver INTERFACE FOR APPLICATIONS\n"));
+  xprintf(_T("====================================================\n"));
 
   XString url;
-  url.Format("http://%s:%d/MarlinTest/Driver/",MARLIN_HOST,TESTING_HTTP_PORT);
+  url.Format(_T("http://%s:%d/MarlinTest/Driver/"),MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Run the threadpool
   g_pool.TrySetMinimum(4);
@@ -100,14 +100,14 @@ TestEventDriver(LogAnalysis* p_log)
   g_driver->SetChannelPolicy(EVChannelPolicy::DP_HighSecurity); // TESTING SSE
 
   // Starting the driver
-  XString session("secondsession_456");
-  XString cookie("GUID");
-  XString token("456-456-456-456");
+  XString session(_T("secondsession_456"));
+  XString cookie(_T("GUID"));
+  XString token(_T("456-456-456-456"));
 
   bool result = g_driver->StartEventsForSession(session,cookie,token);
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Starting the ClientEventDriver + session 2     : %s\n", result ? "OK" : "ERROR");
+  _tprintf(_T("Starting the ClientEventDriver + session 2     : %s\n"), result ? _T("OK") : _T("ERROR"));
   errors += !result;
 
   // Wait for first 20 messages
@@ -118,7 +118,7 @@ TestEventDriver(LogAnalysis* p_log)
     if(--waiting <= 0) break;
   }
   // --- "---------------------------------------------- - ------
-  printf("All SSE events are received                    : %s\n", g_msgSeen == 20 ? "OK" : "ERROR");
+  _tprintf(_T("All SSE events are received                    : %s\n"), g_msgSeen == 20 ? _T("OK") : _T("ERROR"));
   errors += g_msgSeen != 20;
   g_msgSeen = 0;
 
@@ -127,12 +127,12 @@ TestEventDriver(LogAnalysis* p_log)
   g_driver->StopEventsForSession();
 
   // Next session is for WebSockets
-  session = "firstsession_123";
-  token   = "123-123-123-123";
+  session = _T("firstsession_123");
+  token   = _T("123-123-123-123");
   result  = g_driver->StartEventsForSession(session,cookie,token);
   
   // --- "---------------------------------------------- - ------
-  printf("Starting the ClientEventDriver + session 1     : %s\n", result ? "OK" : "ERROR");
+  _tprintf(_T("Starting the ClientEventDriver + session 1     : %s\n"), result ? _T("OK") : _T("ERROR"));
 
   // Wait for second set of 20 messages
   waiting = 100; // 
@@ -142,7 +142,7 @@ TestEventDriver(LogAnalysis* p_log)
     if(--waiting <= 0) break;
   }
   // --- "---------------------------------------------- - ------
-  printf("All WebSocket events are received              : %s\n", g_msgSeen == 20 ? "OK" : "ERROR");
+  _tprintf(_T("All WebSocket events are received              : %s\n"), g_msgSeen == 20 ? _T("OK") : _T("ERROR"));
   errors += g_msgSeen != 20;
   g_msgSeen = 0;
 
@@ -150,11 +150,11 @@ TestEventDriver(LogAnalysis* p_log)
   g_driver->StopEventsForSession();
 
   // Next session is for Polling
-  session = "thirdsession_789";
-  token   = "789-789-789-789";
+  session = _T("thirdsession_789");
+  token   = _T("789-789-789-789");
   result  = g_driver->StartEventsForSession(session,cookie,token);
   // --- "---------------------------------------------- - ------
-  printf("Starting the ClientEventDriver + session 3     : %s\n", result ? "OK" : "ERROR");
+  _tprintf(_T("Starting the ClientEventDriver + session 3     : %s\n"), result ? _T("OK") : _T("ERROR"));
 
   // Wait for third set of 20 messages
   waiting = 100; // 
@@ -164,15 +164,15 @@ TestEventDriver(LogAnalysis* p_log)
     if (--waiting <= 0) break;
   }
   // --- "---------------------------------------------- - ------
-  printf("All LongPolling events are received            : %s\n", g_msgSeen == 20 ? "OK" : "ERROR");
+  _tprintf(_T("All LongPolling events are received            : %s\n"), g_msgSeen == 20 ? _T("OK") : _T("ERROR"));
   errors += (g_msgSeen != 20);
   g_msgSeen = 0;
 
-  printf("All channel 'open' events are received         : %s\n", g_openSeen == 3 ? "OK" : "ERROR");
+  _tprintf(_T("All channel 'open' events are received         : %s\n"), g_openSeen == 3 ? _T("OK") : _T("ERROR"));
   errors += (g_openSeen != 3);
   g_openSeen = 0;
 
-  printf("All channel 'close' events are received        : %s\n", g_closeSeen >= 3 ? "OK" : "ERROR");
+  _tprintf(_T("All channel 'close' events are received        : %s\n"), g_closeSeen >= 3 ? _T("OK") : _T("ERROR"));
   errors += (g_closeSeen < 3);
   g_openSeen = 0;
 

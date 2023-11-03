@@ -45,11 +45,11 @@
 int TestFindClientCertificate()
 {
   HTTPClient client;
-  bool result = client.SetClientCertificateThumbprint("MY","8e 02 b7 fe 7d 0e 6a 35 6d 99 66 64 a5 42 89 7f ba e4 d2 7e");
+  bool result = client.SetClientCertificateThumbprint(_T("MY"),_T("8e 02 b7 fe 7d 0e 6a 35 6d 99 66 64 a5 42 89 7f ba e4 d2 7e"));
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Can find the Marlin client certificate in store: %s\n",result ? "OK" : "ERROR");
+  _tprintf(_T("Can find the Marlin client certificate in store: %s\n"),result ? _T("OK") : _T("ERROR"));
 
   return result ? 0 : 1;
 }
@@ -58,43 +58,43 @@ int TestClientCertificate(HTTPClient* p_client)
 {
   bool result = false;
   XString url;
-  url.Format("https://%s:%d/SecureClientCert/codes.html",MARLIN_HOST,TESTING_CLCERT_PORT);
+  url.Format(_T("https://%s:%d/SecureClientCert/codes.html"),MARLIN_HOST,TESTING_CLCERT_PORT);
 
   HTTPMessage msg(HTTPCommand::http_get,url);
-  XString filename("..\\Documentation\\codes.html");
-  msg.SetContentType("text/html");
+  XString filename(_T("..\\Documentation\\codes.html"));
+  msg.SetContentType(_T("text/html"));
 
-  xprintf("TESTING CLIENT CERTIFICATE FUNCTION TO /SecureClientCert/\n");
-  xprintf("=========================================================\n");
+  xprintf(_T("TESTING CLIENT CERTIFICATE FUNCTION TO /SecureClientCert/\n"));
+  xprintf(_T("=========================================================\n"));
 
   // Set the detailed request tracing here
   p_client->SetTraceRequest(true);
 
-  // Setting to true:  No roundtrips, certificate always sent upfront
-  // Setting to false: Certificate will be requested by a roundtrip
+  // Setting to true:  No round trips, certificate always sent upfront
+  // Setting to false: Certificate will be requested by a round trip
   p_client->SetClientCertificatePreset(false);
 
   // The client certificate comes from MY:MarlinClient
-  p_client->SetClientCertificateStore("MY");
-  p_client->SetClientCertificateName("MarlinClient");
+  p_client->SetClientCertificateStore(_T("MY"));
+  p_client->SetClientCertificateName(_T("MarlinClient"));
 
   // Set both store and certificate and test if it exists!
-  result = p_client->SetClientCertificateThumbprint("MY","8e02b7fe7d0e6a356d996664a542897fbae4d27e");
+  result = p_client->SetClientCertificateThumbprint(_T("MY"),_T("8e02b7fe7d0e6a356d996664a542897fbae4d27e"));
   if(result)
   {
-    xprintf("Client certificate correctly set\n");
+    xprintf(_T("Client certificate correctly set\n"));
   }
   else
   {
-    xprintf("ERROR Client certificate not found in the store!\n");
+    xprintf(_T("ERROR Client certificate not found in the store!\n"));
   }
 
   // Remove the file !!
-  if(_access(filename,6) == 0)
+  if(_taccess(filename,6) == 0)
   {
     if(DeleteFile(filename) == false)
     {
-      printf("Filename [%s] not removed\n",filename.GetString());
+      _tprintf(_T("Filename [%s] not removed\n"),filename.GetString());
     }
   }
 
@@ -108,25 +108,25 @@ int TestClientCertificate(HTTPClient* p_client)
     msg.GetFileBuffer()->WriteFile();
 
     // If OK and file does exists now!
-    if((_access(filename,0) == 0) && (msg.GetFileBuffer()->GetLength() > 0))
+    if((_taccess(filename,0) == 0) && (msg.GetFileBuffer()->GetLength() > 0))
     {
       result = true;
     }
   }
   else
   {
-    xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-    xprintf("ERROR %s\n",p_client->GetStatusText().GetString());
+    xprintf(_T("ERROR Client received status: %d\n"),p_client->GetStatus());
+    xprintf(_T("ERROR %s\n"),p_client->GetStatusText().GetString());
   }
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Get file through client certificate check      : %s\n",result ? "OK" : "ERROR");
+  _tprintf(_T("Get file through client certificate check      : %s\n"),result ? _T("OK") : _T("ERROR"));
 
   // Empty the certificate details
   p_client->SetClientCertificatePreset(false);
-  p_client->SetClientCertificateStore("");
-  p_client->SetClientCertificateName("");
+  p_client->SetClientCertificateStore(_T(""));
+  p_client->SetClientCertificateName(_T(""));
 
   return result ? 0 : 1;
 }

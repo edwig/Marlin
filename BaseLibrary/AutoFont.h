@@ -49,7 +49,7 @@ public:
 	BYTE      SetQuality(BYTE qual);
 	BYTE      SetPitchAndFamily(BYTE paf);
 	XString   SetFaceName(XString facename);
-	LPCTSTR   SetFaceName(LPCTSTR facename);
+	LPCTSTR   SetFaceName(const TCHAR* facename);
 	BOOL      SetBold(BOOL B);
 	BOOL      SetItalic(BOOL i);
 	BOOL      SetUnderline(BOOL u);
@@ -91,10 +91,14 @@ public:
 
 private:
   // Used in Expand function
-  XString   GetToken(XString& str,LPCTSTR c);
+  XString   GetToken(XString& str,const TCHAR* c);
 
   HFONT     m_font { NULL };
-	LOGFONT   m_lf;                   // Stores this fonts LogFont for quick retrieval
+#ifdef UNICODE
+  LOGFONTW  m_lf;
+#else
+	LOGFONTA  m_lf;                   // Stores this fonts LogFont for quick retrieval
+#endif
 	COLORREF  m_fontColor;
 	HDC       m_hDC;
 };

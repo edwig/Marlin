@@ -42,9 +42,6 @@
     <ClInclude Include="HTTPLoglevel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Logfile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GetUserAccount.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -55,9 +52,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SSLUtilities.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Logging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CreateCertificate.h">
@@ -105,9 +99,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Request.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Logfile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GetUserAccount.cpp">

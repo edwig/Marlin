@@ -34,22 +34,22 @@
 #include "MultiPartBuffer.h"
 
 // Beware Debugging starting directory MUST be "$(OutDir)"
-XString file = "..\\Documentation\\HTML5-eventsource.js";
+XString file = _T("..\\Documentation\\HTML5-eventsource.js");
 
 XString GetJsonString()
 {
   // TEST ROUNDTRIP SOAP -> JSON
-  XString namesp("http://test.marlin.org/interface");
-  XString action("FirstAction");
+  XString namesp(_T("http://test.marlin.org/interface"));
+  XString action(_T("FirstAction"));
   SOAPMessage msg(namesp,action);
-  msg.SetParameter("First", 101);
-  msg.SetParameter("Second",102);
-  XMLElement* elem = msg.AddElement(NULL,"Third",(XmlDataType)XDT_String,"");
+  msg.SetParameter(_T("First"), 101);
+  msg.SetParameter(_T("Second"),102);
+  XMLElement* elem = msg.AddElement(NULL,_T("Third"),(XmlDataType)XDT_String,_T(""));
   if(elem)
   {
-    msg.AddElement(elem,"Fortune",XDT_Integer,"1000000");
-    msg.AddElement(elem,"Glory",  XDT_String, "Indiana Jones");
-    msg.AddElement(elem,"Diacrit",XDT_String, "éáíóúëäïöüèàìòùêâîôû");
+    msg.AddElement(elem,_T("Fortune"),XDT_Integer,_T("1000000"));
+    msg.AddElement(elem,_T("Glory"),  XDT_String, _T("Indiana Jones"));
+    msg.AddElement(elem,_T("Diacrit"),XDT_String, _T("éáíóúëäïöüèàìòùêâîôû"));
   }
   JSONMessage json(&msg);
   json.SetWhitespace(true);
@@ -64,15 +64,15 @@ TestFormDataMP(HTTPClient* p_client)
   XString data = GetJsonString();
 
   MultiPartBuffer buffer(FormDataType::FD_MULTIPART);
-  const MultiPart* part1 = buffer.AddPart("json", "application/json",data);
-  const MultiPart* part2 = buffer.AddPart("empty","text/html",       ""); 
-  const MultiPart* part3 = buffer.AddFile("eventsource","application/js",file);
+  const MultiPart* part1 = buffer.AddPart(_T("json"), _T("application/json"),data);
+  const MultiPart* part2 = buffer.AddPart(_T("empty"),_T("text/html"),       _T("")); 
+  const MultiPart* part3 = buffer.AddFile(_T("eventsource"),_T("application/js"),file);
 
   // Test if we created all parts
   if(part1 == nullptr || part2 == nullptr || part3 == nullptr)
   {
     // --- "---------------------------------------------- - ------
-    printf("MultiPartBuffer creation data+file check       : ERROR\n");
+    _tprintf(_T("MultiPartBuffer creation data+file check       : ERROR\n"));
     return 1;
   }
   // Try to transport the filetimes to the server
@@ -81,17 +81,17 @@ TestFormDataMP(HTTPClient* p_client)
   buffer.SetFileExtensions(true);
 
   XString url;
-  url.Format("http://%s:%d/MarlinTest/FormData",MARLIN_HOST,TESTING_HTTP_PORT);
+  url.Format(_T("http://%s:%d/MarlinTest/FormData"),MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_post,url);
   msg.SetMultiPartFormData(&buffer);
 
-  xprintf("TESTING FORM-DATA MULTPART BUFFER FUNCTION TO /MarlinTest/FormData\n");
-  xprintf("==================================================================\n");
+  xprintf(_T("TESTING FORM-DATA MULTPART BUFFER FUNCTION TO /MarlinTest/FormData\n"));
+  xprintf(_T("==================================================================\n"));
   bool result = p_client->Send(&msg);
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Send: Multi-part form-data message             : %s\n",result ? "OK" : "ERROR");
+  _tprintf(_T("Send: Multi-part form-data message             : %s\n"),result ? _T("OK") : _T("ERROR"));
 
   if(result == false)
   {
@@ -99,8 +99,8 @@ TestFormDataMP(HTTPClient* p_client)
     p_client->GetError(&error);
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    printf("HTTP ERROR                  : %s\n",p_client->GetStatusText().GetString());
-    printf("HTTP CLIENT Message         : %s\n",error.GetString());
+    _tprintf(_T("HTTP ERROR                  : %s\n"),p_client->GetStatusText().GetString());
+    _tprintf(_T("HTTP CLIENT Message         : %s\n"),error.GetString());
   }
   return result ? 0 : 1;
 }
@@ -109,22 +109,22 @@ int
 TestFormDataUE(HTTPClient* p_client)
 {
   MultiPartBuffer buffer(FormDataType::FD_URLENCODED);
-  buffer.AddPart("one","text/html","Monkey-Nut-Tree");
-  buffer.AddPart("two","text/html","Tree-Leaf-Root");
-  buffer.AddPart("three","text/rtf","normal{\\b bold} and {\\i italic}");
+  buffer.AddPart(_T("one"),_T("text/html"),_T("Monkey-Nut-Tree"));
+  buffer.AddPart(_T("two"),_T("text/html"),_T("Tree-Leaf-Root"));
+  buffer.AddPart(_T("three"),_T("text/rtf"),_T("normal{\\b bold} and {\\i italic}"));
 
   XString url;
-  url.Format("http://%s:%d/MarlinTest/FormData",MARLIN_HOST,TESTING_HTTP_PORT);
+  url.Format(_T("http://%s:%d/MarlinTest/FormData"),MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_post,url);
   msg.SetMultiPartFormData(&buffer);
 
-  xprintf("TESTING FORM-DATA URLENCODED BUFFER FUNCTION TO /MarlinTest/FormData\n");
-  xprintf("====================================================================\n");
+  xprintf(_T("TESTING FORM-DATA URLENCODED BUFFER FUNCTION TO /MarlinTest/FormData\n"));
+  xprintf(_T("====================================================================\n"));
   bool result = p_client->Send(&msg);
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Send: Multipart urlencoded message             : %s\n",result ? "OK" : "ERROR");
+  _tprintf(_T("Send: Multipart urlencoded message             : %s\n"),result ? _T("OK") : _T("ERROR"));
 
   if(result == false)
   {
@@ -132,42 +132,16 @@ TestFormDataUE(HTTPClient* p_client)
     p_client->GetError(&error);
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    printf("HTTP ERROR                  : %s\n",p_client->GetStatusText().GetString());
-    printf("HTTP CLIENT Message         : %s\n",error.GetString());
+    _tprintf(_T("HTTP ERROR                  : %s\n"),p_client->GetStatusText().GetString());
+    _tprintf(_T("HTTP CLIENT Message         : %s\n"),error.GetString());
   }
   return result ? 0 : 1;
-}
-
-int TestFD()
-{
-  XString filename("C:\\TEMP\\mpbuffer.txt");
-  FILE* fp = nullptr;
-  XString contenttype("multipart/form-data boundary=\"------WebKitFormBoundaryBFCjeYoxVSC92Luo\"");
-
-  fopen_s(&fp, filename, "rb");
-  if (fp)
-  {
-    char buffer[4004];
-
-    fread(buffer, 1, 4000, fp);
-    buffer[2063] = 0;
-    FileBuffer fb;
-    // fb.AddBuffer((uchar*)buffer, 2063);
-    fb.SetBuffer(reinterpret_cast<uchar*>(buffer),2063);
-
-    MultiPartBuffer mpb(FormDataType::FD_UNKNOWN);
-    mpb.ParseBuffer(contenttype, &fb);
-
-    printf("Number of parts: %d\n",(int) mpb.GetParts());
-  }
-  return 0;
 }
 
 int TestFormData(HTTPClient* p_client)
 {
   int errors = 0;
 
-  errors += TestFD();
   errors += TestFormDataMP(p_client);
   errors += TestFormDataUE(p_client);
 

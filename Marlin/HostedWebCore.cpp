@@ -86,9 +86,9 @@ PFN_SETMETADATA  g_SetMetaData  = nullptr;
 void 
 PrintHeader()
 {
-  printf("HOSTED WEB CORE development IIS replacement.\n");
-  printf("============================================\n");
-  printf("\n");
+  _tprintf(_T("HOSTED WEB CORE development IIS replacement.\n"));
+  _tprintf(_T("============================================\n"));
+  _tprintf(_T("\n"));
 }
 
 
@@ -106,12 +106,12 @@ FindIISRunning()
   SC_HANDLE manager = OpenSCManager(NULL,NULL,SC_MANAGER_ALL_ACCESS);
   if(manager == NULL)
   {
-    printf("Making connection with the service manager has failed\n");
-    printf("Cannot find the status of the IIS service!\n");
+    _tprintf(_T("Making connection with the service manager has failed\n"));
+    _tprintf(_T("Cannot find the status of the IIS service!\n"));
     return false;
   }
   // Get a handle to the service. IIS is actually called W3SVC
-  SC_HANDLE service = OpenService(manager,"W3SVC",SERVICE_QUERY_STATUS);
+  SC_HANDLE service = OpenService(manager,_T("W3SVC"),SERVICE_QUERY_STATUS);
   if(service)
   {
     DWORD bytesNeeded;
@@ -132,7 +132,7 @@ FindIISRunning()
   }
   else
   {
-    printf("Cannot find the IIS service! Have you installed it as a MS-Windows feature?\n");
+    _tprintf(_T("Cannot find the IIS service! Have you installed it as a MS-Windows feature?\n"));
   }
   CloseServiceHandle(manager);
   return result;
@@ -147,7 +147,7 @@ FindIISRunning()
 bool 
 LoadWebCore()
 {
-  g_webcore = ::LoadLibrary("inetsrv\\hwebcore.dll");
+  g_webcore = ::LoadLibrary(_T("inetsrv\\hwebcore.dll"));
   if(g_webcore)
   {
     // Load all functions
@@ -157,10 +157,10 @@ LoadWebCore()
 
     if(HWC_Activate && HWC_SetMetadata && HWC_Shutdown)
     {
-      printf("IIS Hosted Web Core is loaded.\n");
+      _tprintf(_T("IIS Hosted Web Core is loaded.\n"));
       return true;
     }
-    printf("ERROR: IIS Hosted Web Core cannot be located. Aborting!\n");
+    _tprintf(_T("ERROR: IIS Hosted Web Core cannot be located. Aborting!\n"));
   }
   return false;
 }
@@ -172,7 +172,7 @@ UnloadWebCore()
   {
     ::FreeLibrary(g_webcore);
     g_webcore = NULL;
-    printf("IIS Hosted Web Core unloaded.\n");
+    _tprintf(_T("IIS Hosted Web Core unloaded.\n"));
   }
 }
 
@@ -194,7 +194,7 @@ ActivateWebCore()
     // Check for valid application host file in readable mode (4)
     if(_waccess(apphost.c_str(),4) != 0)
     {
-      printf("ERROR: Cannot access the ApplicationHost.config file!\n");
+      _tprintf(_T("ERROR: Cannot access the ApplicationHost.config file!\n"));
       return result;
     }
 
@@ -203,7 +203,7 @@ ActivateWebCore()
     {
       if(_waccess(webconfig.c_str(),4) != 0)
       {
-        printf("ERROR: Cannot access the web.config file!\n");
+        _tprintf(_T("ERROR: Cannot access the web.config file!\n"));
         return result;
       }
     }
@@ -215,22 +215,22 @@ ActivateWebCore()
     // Handle result of the startup
     switch(HRESULT_CODE(hres))
     {
-      case S_OK:                          printf("IIS Hosted Web Core is started.\n");
+      case S_OK:                          _tprintf(_T("IIS Hosted Web Core is started.\n"));
                                           result = true; 
                                           break;
-      case ERROR_SERVICE_ALREADY_RUNNING: printf("ERROR: Hosted Web Core already running!\n");
+      case ERROR_SERVICE_ALREADY_RUNNING: _tprintf(_T("ERROR: Hosted Web Core already running!\n"));
                                           break;
-      case ERROR_INVALID_DATA:            printf("ERROR: Invalid data in Hosted Web Core config file(s)!\n");
+      case ERROR_INVALID_DATA:            _tprintf(_T("ERROR: Invalid data in Hosted Web Core config file(s)!\n"));
                                           break;
-      case ERROR_ALREADY_EXISTS:          printf("ERROR: The application pool is already running in IIS!\n");
+      case ERROR_ALREADY_EXISTS:          _tprintf(_T("ERROR: The application pool is already running in IIS!\n"));
                                           break;
-      case ERROR_PROC_NOT_FOUND:          printf("ERROR: The 'RegisterModule' procedure could not be found!\n");
+      case ERROR_PROC_NOT_FOUND:          _tprintf(_T("ERROR: The 'RegisterModule' procedure could not be found!\n"));
                                           break;
-      case ERROR_ACCESS_DENIED:           printf("ERROR: Access denied. Are you running as local administrator?\n");
+      case ERROR_ACCESS_DENIED:           _tprintf(_T("ERROR: Access denied. Are you running as local administrator?\n"));
                                           break;
-      case ERROR_MOD_NOT_FOUND:           printf("ERROR: The specified module in the config files could not be found!\n");
+      case ERROR_MOD_NOT_FOUND:           _tprintf(_T("ERROR: The specified module in the config files could not be found!\n"));
                                           break;
-      default:                            printf("ERROR: Cannot start the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
+      default:                            _tprintf(_T("ERROR: Cannot start the Hosted Web Core. Error number: %X\n"),HRESULT_CODE(hres));
                                           break;
     }
   }
@@ -249,7 +249,7 @@ ShutdownWebCore()
     }
 
     // Tell that we will shutdown
-    printf("Initiating Web Core shutdown...\n");
+    _tprintf(_T("Initiating Web Core shutdown...\n"));
 
     // Try to shutdown the Hosted Web Core
     HRESULT hres = (*HWC_Shutdown)(g_hwcShutdownMode);
@@ -257,16 +257,16 @@ ShutdownWebCore()
     // Show any errors or warnings
     switch(HRESULT_CODE(hres))
     {
-      case S_OK:                          printf("IIS Hosted Web Core shutdown.\n");
+      case S_OK:                          _tprintf(_T("IIS Hosted Web Core shutdown.\n"));
                                           break;
-      case ERROR_SERVICE_NOT_ACTIVE:      printf("ERROR: Hosted Web Core was not running!\n");
+      case ERROR_SERVICE_NOT_ACTIVE:      _tprintf(_T("ERROR: Hosted Web Core was not running!\n"));
                                           break;
-      case ERROR_INVALID_SERVICE_CONTROL: printf("ERROR: Hosted Web Core shutdown already in progress!\n");
+      case ERROR_INVALID_SERVICE_CONTROL: _tprintf(_T("ERROR: Hosted Web Core shutdown already in progress!\n"));
                                           break;
-      case ERROR_SERVICE_REQUEST_TIMEOUT: printf("ERROR: Hosted Web Core graceful shutdown not possible!\n"
-                                                 "See IIS Admin for further shutdown actions and options!\n");
+      case ERROR_SERVICE_REQUEST_TIMEOUT: _tprintf(_T("ERROR: Hosted Web Core graceful shutdown not possible!\n")
+                                                   _T("See IIS Admin for further shutdown actions and options!\n"));
                                           break;
-      default:                            printf("ERROR: Cannot shutdown the Hosted Web Core. Error number: %X\n",HRESULT_CODE(hres));
+      default:                            _tprintf(_T("ERROR: Cannot shutdown the Hosted Web Core. Error number: %X\n"),HRESULT_CODE(hres));
                                           break;
     }
   }
@@ -287,14 +287,14 @@ SetMetaData(XString p_datatype,XString p_value)
     // Show result from setting
     switch(HRESULT_CODE(hres))
     {
-      case S_OK:                printf("METADATA [%s:%s] is set.\n",p_datatype.GetString(),p_value.GetString());
+      case S_OK:                _tprintf(_T("METADATA [%s:%s] is set.\n"),p_datatype.GetString(),p_value.GetString());
                                 result = true;
                                 break;
-      case ERROR_NOT_SUPPORTED: printf("ERROR: Metadata not supported by Hosted Web Core [%s:%s]\n",p_datatype.GetString(),p_value.GetString());
+      case ERROR_NOT_SUPPORTED: _tprintf(_T("ERROR: Metadata not supported by Hosted Web Core [%s:%s]\n"),p_datatype.GetString(),p_value.GetString());
                                 break;
-      case ERROR_INVALID_DATA:  printf("ERROR: Metadata for Hosted Web Core [%s:%s] contains invalid data!\n",p_datatype.GetString(),p_value.GetString());
+      case ERROR_INVALID_DATA:  _tprintf(_T("ERROR: Metadata for Hosted Web Core [%s:%s] contains invalid data!\n"),p_datatype.GetString(),p_value.GetString());
                                 break;
-      default:                  printf("ERROR: Metadata NOT set. Error number: %X\n",HRESULT_CODE(hres));
+      default:                  _tprintf(_T("ERROR: Metadata NOT set. Error number: %X\n"),HRESULT_CODE(hres));
                                 break;
     }
   }
@@ -308,12 +308,12 @@ SetMetaData(XString p_datatype,XString p_value)
 //
 //////////////////////////////////////////////////////////////////////////
 
-static char g_staticAddress;
+static TCHAR  g_staticAddress;
 
 XString 
 GetExeName()
 {
-  char buffer[_MAX_PATH + 1];
+  TCHAR buffer[_MAX_PATH + 1];
 
   // Getting the module handle, if any
   // If it fails, the process names will be retrieved
@@ -322,8 +322,8 @@ GetExeName()
   HMODULE module = NULL;
   GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
                     GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT
-                    ,static_cast<LPCTSTR>(&g_staticAddress)
-                    ,&module);
+                   ,static_cast<LPCTSTR>(&g_staticAddress)
+                   ,&module);
 
   // Retrieve the path
   GetModuleFileName(module,buffer,_MAX_PATH);
@@ -332,7 +332,7 @@ GetExeName()
   int position = application.ReverseFind('\\');
   if(position == 0)
   {
-    return "";
+    return _T("");
   }
   return application.Mid(position + 1);
 }
@@ -357,31 +357,31 @@ ParseCommandLine(int argc,const char* argv[])
   // through the external declarations of these global parameters
   if(g_applicationhost.IsEmpty() || g_poolName.IsEmpty())
   {
-    printf("USAGE: <application> <ApplictionHost.config> <web.config> <applicationpool>\n");
+    _tprintf(_T("USAGE: <application> <ApplictionHost.config> <web.config> <applicationpool>\n"));
   }
 }
 
 void 
 TrySetMetadata()
 {
-  char buffer[80];
+  TCHAR buffer[80];
   XString variable,value;
 
   // Trying to get metadata to set
-  printf("ENTER METADATA\n");
-  printf("Variable: ");
-  if(gets_s(buffer,80) == NULL)
+  _tprintf(_T("ENTER METADATA\n"));
+  _tprintf(_T("Variable: "));
+  if(_getts_s(buffer,80) == NULL)
   {
-    printf("Cannot read variable!\n");
+    _tprintf(_T("Cannot read variable!\n"));
     return;
   }
   variable = buffer;
 
   // Getting the value
-  printf("Value   : ");
-  if(gets_s(buffer,80) == NULL)
+  _tprintf(_T("Value   : "));
+  if(_getts_s(buffer,80) == NULL)
   {
-    printf("Cannot read value!\n");
+    _tprintf(_T("Cannot read value!\n"));
     return;
   }
   value = buffer;
@@ -397,19 +397,19 @@ PrintMenu()
   XString line;
   for(int ind = 0; ind < 51; ++ind) line += "-";
 
-  printf("+%s+\n",line.GetString());
-  printf("| %-50s|\n","MENU HOSTED WEBCORE");
-  printf("+%s+\n",line.GetString());
-  printf("| %-50s|\n","");
-  printf("| %-50s|\n","A) Server status");
-  printf("| %-50s|\n","B) Server set metadata");
-  printf("| %-50s|\n","C) Flush serverlog");
-  printf("| %-50s|\n","D) Enter Metadata directly");
-  printf("| %-50s|\n","");
-  printf("| %-50s|\n","S) Stop");
-  printf("| %-50s|\n","");
-  printf("+%s+\n",line.GetString());
-  printf("\n");
+  _tprintf(_T("+%s+\n"),line.GetString());
+  _tprintf(_T("| %-50s|\n"),_T("MENU HOSTED WEBCORE"));
+  _tprintf(_T("+%s+\n"),line.GetString());
+  _tprintf(_T("| %-50s|\n"),_T(""));
+  _tprintf(_T("| %-50s|\n"),_T("A) Server status"));
+  _tprintf(_T("| %-50s|\n"),_T("B) Server set metadata"));
+  _tprintf(_T("| %-50s|\n"),_T("C) Flush serverlog"));
+  _tprintf(_T("| %-50s|\n"),_T("D) Enter Metadata directly"));
+  _tprintf(_T("| %-50s|\n"),_T(""));
+  _tprintf(_T("| %-50s|\n"),_T("S) Stop"));
+  _tprintf(_T("| %-50s|\n"),_T(""));
+  _tprintf(_T("+%s+\n"),line.GetString());
+  _tprintf(_T("\n"));
 }
 
 // Running the console menu for the hosted webcore
@@ -422,7 +422,7 @@ RunHostedMenu()
   {
     PrintMenu();
     ch = toupper(_getch());
-    printf("Choice made: %c\n",ch);
+    _tprintf(_T("Choice made: %c\n"),ch);
 
     switch(ch)
     {
@@ -439,7 +439,7 @@ RunHostedMenu()
       case 'C': if(g_analysisLog)
                 {
                   g_analysisLog->ForceFlush();
-                  printf("Serverlog flushed!\n");
+                  _tprintf(_T("Serverlog flushed!\n"));
                 }
                 break;
       case 'D': TrySetMetadata();
@@ -463,7 +463,7 @@ HWC_main(int argc,const char *argv[])
   PrintHeader();
   if(FindIISRunning())
   {
-    printf("Cannot use the Hosted Web Core: IIS still running!\n");
+    _tprintf(_T("Cannot use the Hosted Web Core: IIS still running!\n"));
   }
   else
   {
@@ -480,7 +480,7 @@ HWC_main(int argc,const char *argv[])
       UnloadWebCore();
     }
   }
-  printf("Press enter: ");
+  _tprintf(_T("Press enter: "));
   int ch = _getch();
   _putch(ch);
   return retval;

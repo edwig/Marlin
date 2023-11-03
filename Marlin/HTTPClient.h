@@ -196,7 +196,7 @@ public:
   
   // SETTERS
   bool SetURL(XString p_url);
-  void SetBody(XString& p_body);
+  bool SetBody(const XString& p_body,const XString p_charset = _T("utf-8"));
   void SetBody(const void* p_body,unsigned p_length);
   void SetLogging(LogAnalysis* p_log,bool p_transferOwnership = false);
   void SetSecure(bool p_secure)                         { m_secure            = p_secure;   }; // URL Part secure
@@ -252,7 +252,7 @@ public:
   XString       GetPassword()               { return m_password;          }; // URL Part password
   XString       GetServer()                 { return m_server;            }; // URL Part server
   int           GetPort()                   { return m_port;              }; // URL Part port
-  void*         GetBody()                   { return m_body;              };
+  BYTE*         GetBody()                   { return m_requestBody;       };
   bool          GetSendUnicode()            { return m_sendUnicode;       };
   XString       GetAgent()                  { return m_agent;             };
   ProxyType     GetUseProxy()               { return m_useProxy;          };
@@ -326,8 +326,9 @@ private:
   friend   EventSource;
 
   // Error handling for logging
-  int      ErrorLog(const char* p_function,const char* p_logText);
+  int      ErrorLog(LPCTSTR p_function,LPCTSTR p_logText);
   // Initializing the client 
+  void     ResetBody();
   void     InitializeSingleSignOn();
   void     CleanQueue();
   void     TestReconnect();
@@ -432,8 +433,8 @@ private:
   XString       m_certStore       { "MY"    };                    // Certificate store of the current user
   XString       m_certName;                                       // Client certificate name to search for
   // The content to send/receive
-  void*         m_body            { nullptr };                    // Body to send
-  ULONG         m_bodyLength      { 0       };                    // Length of body to send
+  BYTE*         m_requestBody     { nullptr };                    // Body to send
+  unsigned      m_bodyLength      { 0       };                    // Length of body to send
   FileBuffer*   m_buffer          { nullptr };                    // File buffer to send
   XString       m_contentType;                                    // Content MIME type to send
   XString       m_soapAction;                                     // Soap action if a SOAPMessage WebService

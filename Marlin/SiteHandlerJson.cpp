@@ -89,7 +89,7 @@ SiteHandlerJson::Handle(JSONMessage* p_message)
   {
     p_message->Reset();
     p_message->SetErrorstate(true);
-    p_message->SetLastError("INTERNAL: Unhandled JSON request caught by base HTTPSite::SIteHandlerJson::Handle");
+    p_message->SetLastError(_T("INTERNAL: Unhandled JSON request caught by base HTTPSite::SIteHandlerJson::Handle"));
   }
   return true;
 }

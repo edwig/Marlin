@@ -112,8 +112,8 @@ private:
   // Non file part
   XString m_data;
   // File part
-  FileBuffer m_file;        // File contents
-  size_t     m_size { 0 };  // Indicative!!
+  FileBuffer m_file;                // File contents
+  size_t     m_size   { 0      };   // Indicative!!
   // Additional headers
   HeaderMap  m_headers;
 };
@@ -136,7 +136,7 @@ public:
   void         Reset();
   bool         SetFormDataType(FormDataType p_type);
   // Creating a MultiPartBuffer
-  MultiPart*   AddPart(XString p_name,XString p_contentType,XString p_data,XString p_charset = "",bool p_conversion = false);
+  MultiPart*   AddPart(XString p_name,XString p_contentType,XString p_data,XString p_charset = _T(""),bool p_conversion = false);
   MultiPart*   AddFile(XString p_name,XString p_contentType,XString p_filename);
   // Delete a designated part
   bool         DeletePart(XString p_name);
@@ -150,11 +150,14 @@ public:
   XString      GetBoundary();
 
   // Functions for HTTPMessage
-  XString      CalculateBoundary(XString p_special = "#");
+  XString      CalculateBoundary(XString p_special = _T("#"));
   XString      CalculateAcceptHeader();
   bool         SetBoundary(XString p_boundary);
   // Re-create from an existing (incoming!) buffer
-  bool         ParseBuffer(XString p_contentType,FileBuffer* p_buffer,bool p_conversion = false);
+  bool         ParseBuffer(XString     p_contentType          // Content type including the 'boundary'
+                          ,FileBuffer* p_buffer               // Incoming buffer with body data
+                          ,bool        p_conversion = false   // Perform UTF-8 to internal character conversion
+                          ,bool        p_utf16      = false); // Incoming buffer is in UTF-16 format (rare!)
 
   // File times & size extensions used in the Content-Disposition header
   // BEWARE: Some servers do not respect the file-times attributes
@@ -176,11 +179,12 @@ private:
   bool         ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,bool p_conversion);
   bool         ParseBufferUrlEncoded(FileBuffer* p_buffer);
   // Finding a new partial message
-  void*        FindPartBuffer(uchar*& p_vinding,size_t& p_remaining,XString& p_boundary);
+  void*        FindPartBuffer(uchar*& p_vinding,size_t& p_remaining,BYTE* p_boundary,unsigned p_boundaryLength);
   XString      GetLineFromBuffer(uchar*& p_begin,const uchar* p_end);
   bool         GetHeaderFromLine   (const XString& p_line,XString& p_header,XString& p_value);
   XString      GetAttributeFromLine(const XString& p_line,XString p_name);
-  // Adding a part from a raw buffer
+  void         CalculateBinaryBoundary(XString p_boundary,BYTE*& p_binary,unsigned& p_length);
+    // Adding a part from a raw buffer
   void         AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEnd,bool p_conversion);
   // Check that name is in the ASCII range for a data part
   bool         CheckName(XString p_name);
@@ -191,6 +195,7 @@ private:
   MultiPartMap m_parts;                 // All parts
   bool         m_extensions { false };  // Show file times & size in the header
   bool         m_useCharset { false };  // Use 'charset' in the 'Content-Type' header
+  int          m_charSize   { 1     };  // BEWARE: UTF-8/ANSI/MBCS = 1, UTF-16 = 2
 };
 
 inline size_t

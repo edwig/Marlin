@@ -386,8 +386,8 @@ XMem::trace(const char* p_format,...)
 
   va_list argptr;
   va_start(argptr, p_format);
-  StringCchVPrintf(buffer,1024,p_format, argptr);
+  StringCchVPrintfA(buffer,1024,p_format, argptr);
   va_end(argptr);
 
-  OutputDebugString(buffer);
+  OutputDebugStringA(buffer);
 }

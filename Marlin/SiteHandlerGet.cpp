@@ -29,7 +29,7 @@
 #include "SiteHandlerGet.h"
 #include "HTTPMessage.h"
 #include "HTTPSite.h"
-#include "EnsureFile.h"
+#include <WinFile.h>
 #include <winhttp.h>
 #include <io.h>
 
@@ -64,7 +64,7 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
   p_message->SetCommand(HTTPCommand::http_response);
 
   // Getting the path of the file
-  EnsureFile ensure;
+  WinFile ensure;
   XString resource = p_message->GetAbsoluteResource();
   // See to transformations of derived handler
   FileNameTransformations(resource);
@@ -76,14 +76,14 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
   p_message->SetContentType(content);
 
   // Check existence
-  if(_access(pathname,0) == 0)
+  if(_taccess(pathname,0) == 0)
   {
     // Check for read access
-    if(_access(pathname,4) == 0 || FileNameRestrictions(pathname))
+    if(_taccess(pathname,4) == 0 || FileNameRestrictions(pathname))
     {
       p_message->GetFileBuffer()->SetFileName(pathname);
       p_message->SetStatus(HTTP_STATUS_OK);
-      SITE_DETAILLOGS("HTTP GET: ",pathname);
+      SITE_DETAILLOGS(_T("HTTP GET: "),pathname);
     }
     else 
     {
@@ -95,7 +95,7 @@ SiteHandlerGet::Handle(HTTPMessage* p_message)
     // File does not exist, or no read access
     p_message->SetStatus(HTTP_STATUS_NOT_FOUND);
     XString text;
-    text.Format("HTTP GET: File not found: %s",pathname.GetString());
+    text.Format(_T("HTTP GET: File not found: %s"),pathname.GetString());
     SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,text);
   }
   // Ready with the get

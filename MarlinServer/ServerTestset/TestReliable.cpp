@@ -51,40 +51,40 @@ bool
 SiteHandlerSoapReliable::Handle(SOAPMessage* p_message)
 {
   // Display incoming message
-  xprintf("Incoming message in XML:\n%s\n",p_message->GetSoapMessage().GetString());
+  xprintf(_T("Incoming message in XML:\n%s\n"),p_message->GetSoapMessage().GetString());
 
   // Get parameters from soap
-  XString paramOne = p_message->GetParameter("One");
-  XString paramTwo = p_message->GetParameter("Two");
-  xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
-  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
+  XString paramOne = p_message->GetParameter(_T("One"));
+  XString paramTwo = p_message->GetParameter(_T("Two"));
+  xprintf(_T("Incoming parameter: %s = %s\n"),_T("One"),paramOne.GetString());
+  xprintf(_T("Incoming parameter: %s = %s\n"),_T("Two"),paramTwo.GetString());
 
   // TestSecurity(&msg);
 
   // reuse message for response
-  XString response = "TestMessageResponse";
+  XString response = _T("TestMessageResponse");
 
   p_message->Reset();
   p_message->SetSoapAction(response);
 
   // Do our work
   bool result = false;
-  if(paramOne == "ABC" && paramTwo == "1-2-3")
+  if(paramOne == _T("ABC") && paramTwo == _T("1-2-3"))
   {
-    paramOne  = "DEF";
-    paramTwo = "123";
+    paramOne  = _T("DEF");
+    paramTwo = _T("123");
     result    = true;
     --totalChecks;
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  qprintf("SOAP message in WS-ReliableMessaging channel   : %s\n", result ? "OK" : "ERROR");
+  qprintf(_T("SOAP message in WS-ReliableMessaging channel   : %s\n"), result ? _T("OK") : _T("ERROR"));
   if(!result) xerror();
 
-  p_message->SetParameter("Three",paramOne);
-  p_message->SetParameter("Four", paramTwo);
-  xprintf("Outgoing parameter: %s = %s\n","Three",paramOne.GetString());
-  xprintf("Outgoing parameter: %s = %s\n","Four", paramTwo.GetString());
+  p_message->SetParameter(_T("Three"),paramOne);
+  p_message->SetParameter(_T("Four"), paramTwo);
+  xprintf(_T("Outgoing parameter: %s = %s\n"),_T("Three"),paramOne.GetString());
+  xprintf(_T("Outgoing parameter: %s = %s\n"),_T("Four"), paramTwo.GetString());
 
   return true;
 }
@@ -97,44 +97,44 @@ TestMarlinServer::TestReliable()
   // If errors, change detail level
   m_doDetails = false;
 
-  xprintf("TESTING RELIABLE MESSAGING FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("=======================================================\n");
+  xprintf(_T("TESTING RELIABLE MESSAGING FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("=======================================================\n"));
   
   // Create URL channel to listen to "http://+:port/MarlinTest/Reliable/"
   // But WebConfig can override all values except for the callback function address
-  XString url("/MarlinTest/Reliable/");
+  XString url(_T("/MarlinTest/Reliable/"));
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if (site)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite reliable messaging : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite reliable messaging : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot register a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
   site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapReliable());
 
   // Modify the standard settings for this site
-  site->AddContentType("","text/xml");
-  site->AddContentType("xml","application/soap+xml");
+  site->AddContentType(_T(""),_T("text/xml"));
+  site->AddContentType(_T("xml"),_T("application/soap+xml"));
   site->SetReliable(true);
 
   // new: Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly\n");
+    xprintf(_T("Site started correctly\n"));
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -147,24 +147,24 @@ TestMarlinServer::TestReliableBA()
   // If errors, change detail level
   m_doDetails = false;
 
-  xprintf("TESTING RELIABLE MESSAGING FUNCTIONS OF THE HTTP SERVER with BASIC AUTHENTICATION\n");
-  xprintf("=================================================================================\n");
+  xprintf(_T("TESTING RELIABLE MESSAGING FUNCTIONS OF THE HTTP SERVER with BASIC AUTHENTICATION\n"));
+  xprintf(_T("=================================================================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/ReliableBA/"
   // But WebConfig can override all values except for the callback function address
-  XString url("/MarlinTest/ReliableBA/");
+  XString url(_T("/MarlinTest/ReliableBA/"));
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
   if(site)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite reliable messaging : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite reliable messaging : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot register a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -174,26 +174,26 @@ TestMarlinServer::TestReliableBA()
   handler->SetTokenProfile(true);
   // Getting the resulting soap-security object
   SOAPSecurity* secure = handler->GetSOAPSecurity();
-  secure->SetUser("marlin");
-  secure->SetPassword("M@rl!nS3cr3t");
+  secure->SetUser(_T("marlin"));
+  secure->SetPassword(_T("M@rl!nS3cr3t"));
 
   site->SetHandler(HTTPCommand::http_post,handler);
 
   // Modify the standard settings for this site
-  site->AddContentType("","text/xml");
-  site->AddContentType("xml","application/soap+xml");
+  site->AddContentType(_T(""),_T("text/xml"));
+  site->AddContentType(_T("xml"),_T("application/soap+xml"));
   site->SetReliable(true);
 
   // new: Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly\n");
+    xprintf(_T("Site started correctly\n"));
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -203,6 +203,6 @@ TestMarlinServer::AfterTestReliable()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("WS-ReliableMessaging testing                   : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("WS-ReliableMessaging testing                   : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

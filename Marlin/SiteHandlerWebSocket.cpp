@@ -98,28 +98,28 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
             opened = true;
             // Register the socket at the server, so we can find it
             server->RegisterSocket(socket);
-            SITE_DETAILLOGV("Opened a WebSocket [%s] on [%s]",socket->GetIdentityKey().GetString(),uri.GetString());
+            SITE_DETAILLOGV(_T("Opened a WebSocket [%s] on [%s]"),socket->GetIdentityKey().GetString(),uri.GetString());
           }
           else
           {
-            SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,"Socket listener not started");
+            SITE_ERRORLOG(ERROR_FILE_NOT_FOUND,_T("Socket listener not started"));
           }
         }
         p_message->SetHasBeenAnswered();
       }
       else
       {
-        SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp should NOT handle the response message!");
+        SITE_ERRORLOG(ERROR_INVALID_FUNCTION,_T("ServerApp should NOT handle the response message!"));
       }
     }
     else
     {
-      SITE_ERRORLOG(ERROR_INVALID_FUNCTION,"ServerApp could not register the WebSocket!");
+      SITE_ERRORLOG(ERROR_INVALID_FUNCTION,_T("ServerApp could not register the WebSocket!"));
     }
   }
   else
   {
-    SITE_ERRORLOG(ERROR_PROTOCOL_UNREACHABLE,"Site could not accept the WebSocket handshake of the client!");
+    SITE_ERRORLOG(ERROR_PROTOCOL_UNREACHABLE,_T("Site could not accept the WebSocket handshake of the client!"));
   }
 
   // If we did not open our WebSocket, remove it from memory
@@ -139,7 +139,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
 bool
 SiteHandlerWebSocket::Handle(HTTPMessage* p_message,WebSocket* /*p_socket*/)
 {
-  SITE_ERRORLOG(ERROR_INVALID_PARAMETER,"INTERNAL: Unhandled request caught by base HTTPSite::SiteHandlerWebSocket::Handle");
+  SITE_ERRORLOG(ERROR_INVALID_PARAMETER,_T("INTERNAL: Unhandled request caught by base HTTPSite::SiteHandlerWebSocket::Handle"));
   p_message->Reset();
   p_message->SetStatus(HTTP_STATUS_SERVER_ERROR);
   return false;

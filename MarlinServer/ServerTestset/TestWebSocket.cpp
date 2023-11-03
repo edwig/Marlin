@@ -51,10 +51,10 @@ GenerateLargePushMessage()
   {
     for (int y = 0; y < 20; ++y)
     {
-      extra.Format("X%d-", (x * 100) + y);
+      extra.Format(_T("X%d-"), (x * 100) + y);
       large += extra;
     }
-    large += "\n";
+    large += _T("\n");
   }
   return large;
 }
@@ -68,19 +68,19 @@ GenerateLargePushMessage()
 
 void OnOpen(WebSocket* p_socket,const WSFrame* /*p_frame*/)
 {
-  qprintf("TEST handler: Opened a websocket for: %s",p_socket->GetIdentityKey().GetString());
+  qprintf(_T("TEST handler: Opened a websocket for: %s"),p_socket->GetIdentityKey().GetString());
   --totalChecks;
 }
 
 void OnMessage(WebSocket* p_socket,const WSFrame* p_frame)
 {
-  XString message(reinterpret_cast<char*>(p_frame->m_data));
-  qprintf("TEST handler: Incoming WebSocket [%s] message: %s",p_socket->GetIdentityKey().GetString(),message.GetString());
+  XString message(reinterpret_cast<TCHAR*>(p_frame->m_data));
+  qprintf(_T("TEST handler: Incoming WebSocket [%s] message: %s"),p_socket->GetIdentityKey().GetString(),message.GetString());
   --totalChecks;
 
-  if(message.CompareNoCase("RequestClose") == 0)
+  if(message.CompareNoCase(_T("RequestClose")) == 0)
   {
-    p_socket->SendCloseSocket(WS_CLOSE_NORMAL,"Marlin TestServer closing socket");
+    p_socket->SendCloseSocket(WS_CLOSE_NORMAL,_T("Marlin TestServer closing socket"));
     // Simply close will NOT work!!
     // p_socket->CloseSocket();
   }
@@ -88,18 +88,18 @@ void OnMessage(WebSocket* p_socket,const WSFrame* p_frame)
   {
     // XString msg = GenerateLargePushMessage();
     // p_socket->WriteString(msg);
-    p_socket->WriteString("We are the server!");
+    p_socket->WriteString(_T("We are the server!"));
   }
 }
 
 void OnClose(WebSocket* p_socket,const WSFrame* p_frame)
 {
-  XString message(reinterpret_cast<char*>(p_frame->m_data));
+  XString message(reinterpret_cast<TCHAR*>(p_frame->m_data));
   if(!message.IsEmpty())
   {
-    qprintf("TEST handler: Closing WebSocket message: %s",message.GetString());
+    qprintf(_T("TEST handler: Closing WebSocket message: %s"),message.GetString());
   }
-  qprintf("TEST handler: Closed the WebSocket for: %s",p_socket->GetIdentityKey().GetString());
+  qprintf(_T("TEST handler: Closed the WebSocket for: %s"),p_socket->GetIdentityKey().GetString());
   --totalChecks;
 }
 
@@ -144,23 +144,23 @@ TestMarlinServer::TestWebSocket()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/MarlinTest/Sockets/");
+  XString url(_T("/MarlinTest/Sockets/"));
 
-  xprintf("TESTING WEBSOCKET FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("==============================================\n");
+  xprintf(_T("TESTING WEBSOCKET FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("==============================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Sockets/"
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber,url);
   if(site)
   {
     // --- "---------------------------- - ------
-    qprintf("HTTPSite for WebSockets     : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for WebSockets     : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -171,13 +171,13 @@ TestMarlinServer::TestWebSocket()
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -202,6 +202,6 @@ TestMarlinServer::AfterTestWebSocket()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Serverside WebSocket tests                     : %s\n",totalChecks > 0 ? "INCOMPLETE" : "OK");
+  qprintf(_T("Serverside WebSocket tests                     : %s\n"),totalChecks > 0 ? _T("INCOMPLETE") : _T("OK"));
   return totalChecks > 0;
 }

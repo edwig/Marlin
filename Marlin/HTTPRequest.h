@@ -67,7 +67,8 @@ void HandleAsynchroneousIO(OVERLAPPED* p_overlapped);
 
 // Strings for headers must be tied to the request, otherwise they do not
 // survive for the asynchronous I/O commands
-using RequestStrings = std::vector<XString>;
+// They must always be in ANSI/MBCS format!
+using RequestStrings = std::vector<LPCSTR>;
 
 // Our outstanding request in the server
 class HTTPRequest
@@ -87,9 +88,9 @@ public:
   // Start a response stream
   void StartEventStreamResponse();
   // Send as a stream part to an existing stream
-  void SendResponseStream(const char* p_buffer
-                         ,size_t      p_length
-                         ,bool        p_continue = true);
+  void SendResponseStream(BYTE*   p_buffer
+                         ,size_t  p_length
+                         ,bool    p_continue = true);
 
 
   // GETTERS
@@ -125,7 +126,7 @@ private:
   // We have read the whole body of a message
   void PostReceive();
   // Add a well known HTTP header to the response structure
-  void AddKnownHeader(HTTP_HEADER_ID p_header,const char* p_value);
+  void AddKnownHeader(HTTP_HEADER_ID p_header,LPCTSTR p_value);
   // Add previously unknown HTTP headers
   void AddUnknownHeaders(UKHeaders& p_headers);
   // Fill response structure out of the HTTPMessage
@@ -134,7 +135,7 @@ private:
   // Reset outstanding OVERLAPPED
   void ResetOutstanding(OutstandingIO& p_outstanding);
   // Add a request string for a header
-  void AddRequestString(XString p_string,const char*& p_buffer,USHORT& p_size);
+  void AddRequestString(XString p_string,LPCSTR& p_buffer,USHORT& p_size);
   // Change response & unknown headers in one protocol string
   XString ResponseToString();
 

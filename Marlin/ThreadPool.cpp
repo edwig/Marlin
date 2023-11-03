@@ -72,10 +72,10 @@ THREADNAME_INFO;
 void SetThreadName(char* threadName, DWORD dwThreadID)
 {
   THREADNAME_INFO info;
-  info.dwType = 0x1000;
-  info.szName = threadName;
+  info.dwType     = 0x1000;
+  info.szName     = threadName;
   info.dwThreadID = dwThreadID;
-  info.dwFlags = 0;
+  info.dwFlags    = 0;
 
   __try
   {
@@ -698,9 +698,9 @@ ThreadPool::SafeCallHeartbeat(LPFN_CALLBACK p_function,void* p_payload)
   catch(StdException& ex)
   {
     XString temporary;
-    if(temporary.GetEnvironmentVariable("TMP"))
+    if(temporary.GetEnvironmentVariable(_T("TMP")))
     {
-      XString sceneOfTheCrime("Threadpool");
+      XString sceneOfTheCrime(_T("Threadpool"));
 
       if(ex.GetSafeExceptionCode())
       {

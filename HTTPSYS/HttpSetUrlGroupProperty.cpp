@@ -132,7 +132,7 @@ SetUrlGroupAuthentication(UrlGroup* p_group,PHTTP_SERVER_AUTHENTICATION_INFO p_i
   {
     // Reset the authentication of the URL group
     wstring empty;
-    p_group->SetAuthentication(0,"","",false);
+    p_group->SetAuthentication(0,_T(""),_T(""),false);
     p_group->SetAuthenticationWide(empty, empty);
   }
   return NO_ERROR;

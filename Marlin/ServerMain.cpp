@@ -71,10 +71,10 @@ SC_HANDLE g_schSCManager = NULL;
 SC_HANDLE g_schService   = NULL;
 
 // Stand alone program mutex names for start/stop handling
-char  g_eventNameRunning     [SERVICE_NAME_LENGTH];
-char  g_mutexNamePendingStart[SERVICE_NAME_LENGTH];
-char  g_mutexNameRunning     [SERVICE_NAME_LENGTH];
-char  g_mutexNamePendingStop [SERVICE_NAME_LENGTH];
+TCHAR  g_eventNameRunning     [SERVICE_NAME_LENGTH];
+TCHAR  g_mutexNamePendingStart[SERVICE_NAME_LENGTH];
+TCHAR  g_mutexNameRunning     [SERVICE_NAME_LENGTH];
+TCHAR  g_mutexNamePendingStop [SERVICE_NAME_LENGTH];
 
 HANDLE g_mtxStarting = NULL;
 HANDLE g_mtxRunning  = NULL;
@@ -83,21 +83,21 @@ HANDLE g_eventSource = NULL;
 
 // THE MAIN PROGRAM
 
-int main(int argc,char* argv[],char* /*envp[]*/)
+int _tmain(int argc,TCHAR* argv[],TCHAR* /*envp[]*/)
 {
   HMODULE hModule = ::GetModuleHandle(NULL);
   bool standAloneStart = false;
 
   if(hModule == NULL)
   {
-    printf("Fatal error: Windows-OS GetModuleHandle failed\n");
+    _tprintf(_T("Fatal error: Windows-OS GetModuleHandle failed\n"));
     return 1;
   }
 
   // initialize MFC and print and error on failure
   if(!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
   {
-    printf("MFC Initialisation has failed\n");
+    _tprintf(_T("MFC Initialisation has failed\n"));
     return 1;
   }
 
@@ -112,13 +112,13 @@ int main(int argc,char* argv[],char* /*envp[]*/)
   // Otherwise, the service is probably being started by the SCM.
   if(argc >= 2)
   {
-    if(lstrcmp(argv[1],"/?") == 0 || lstrcmpi(argv[1],"help") == 0)
+    if(lstrcmp(argv[1],_T("/?")) == 0 || lstrcmpi(argv[1],_T("help")) == 0)
     {
       PrintCopyright();
       PrintHelp();
       return 5;
     }
-    else if(lstrcmpi(argv[1],"install") == 0)
+    else if(lstrcmpi(argv[1],_T("install")) == 0)
     {
       if(argc != 4)
       {
@@ -130,10 +130,10 @@ int main(int argc,char* argv[],char* /*envp[]*/)
       {
         return SvcInstall(argv[2],argv[3]);
       }
-      printf("Can only 'install' for an NT-Service configuration!\n");
+      _tprintf(_T("Can only 'install' for an NT-Service configuration!\n"));
       return -1;
     }
-    else if(lstrcmpi(argv[1],"uninstall") == 0)
+    else if(lstrcmpi(argv[1],_T("uninstall")) == 0)
     {
        PrintCopyright();
       if(g_runAsService == RUNAS_NTSERVICE)
@@ -141,11 +141,11 @@ int main(int argc,char* argv[],char* /*envp[]*/)
         return SvcDelete();
       }
       DeleteEventLogRegistration();
-      printf("Can only 'uninstall' for an NT-Service configuration!\n");
-      printf("But un-installed the WMI event-log registration.\n");
+      _tprintf(_T("Can only 'uninstall' for an NT-Service configuration!\n"));
+      _tprintf(_T("But un-installed the WMI event-log registration.\n"));
       return -1;
    }
-    else if(lstrcmpi(argv[1],"start") == 0)
+    else if(lstrcmpi(argv[1],_T("start")) == 0)
     {
       PrintCopyright();
       switch(g_runAsService)
@@ -155,7 +155,7 @@ int main(int argc,char* argv[],char* /*envp[]*/)
         case RUNAS_IISAPPPOOL: return StartIISApp();
       }
     }
-    else if(lstrcmpi(argv[1],"stop") == 0)
+    else if(lstrcmpi(argv[1],_T("stop")) == 0)
     {
       PrintCopyright();
       switch(g_runAsService)
@@ -165,7 +165,7 @@ int main(int argc,char* argv[],char* /*envp[]*/)
         case RUNAS_IISAPPPOOL: return StopIISApp();
       }
     }
-    else if(lstrcmpi(argv[1],"query") == 0)
+    else if(lstrcmpi(argv[1],_T("query")) == 0)
     {
       PrintCopyright();
       // SERVICE_STOPPED           0x00000001
@@ -182,7 +182,7 @@ int main(int argc,char* argv[],char* /*envp[]*/)
         case RUNAS_IISAPPPOOL: return QueryIISApp();
       }
     }
-    else if(lstrcmpi(argv[1],"restart") == 0)
+    else if(lstrcmpi(argv[1],_T("restart")) == 0)
     {
       PrintCopyright();
       switch(g_runAsService)
@@ -211,7 +211,7 @@ int main(int argc,char* argv[],char* /*envp[]*/)
       // Used for stand-alone service start
       standAloneStart = true;
     }
-    else if (lstrcmpi(argv[1], "debug") == 0)
+    else if (lstrcmpi(argv[1], _T("debug")) == 0)
     {
       standAloneStart = true;
       g_runAsService  = RUNAS_STANDALONE;
@@ -256,32 +256,32 @@ int main(int argc,char* argv[],char* /*envp[]*/)
   if(started == FALSE)
   { 
     XString reason;
-    XString error = XString("The start of the  ") + XString(PRODUCT_NAME) +  " service has failed.";
+    XString error = XString(_T("The start of the  ")) + XString(PRODUCT_NAME) +  _T(" service has failed.");
     int errorCode = GetLastError();
     switch(errorCode)
     {
       case ERROR_INVALID_DATA: 
-           reason = "Intern: function SvcMain not found"; 
+           reason = _T("Intern: function SvcMain not found"); 
            break;
       case ERROR_SERVICE_ALREADY_RUNNING:
-           reason = "De service was already started";
+           reason = _T("De service was already started");
            break;
       case ERROR_FAILED_SERVICE_CONTROLLER_CONNECT:
-           reason = "No connection with the service-control-manager";
+           reason = _T("No connection with the service-control-manager");
            break;
       case ERROR_INVALID_PARAMETER:
-           reason = "No (known) service name given at the start of the server";
+           reason = _T("No (known) service name given at the start of the server");
            break;
       default:
-           reason = "Unknown error";
+           reason = _T("Unknown error");
            break;
     }
     // Tell it to the WMI log
-    SvcReportErrorEvent(0,false,"main",error); 
+    SvcReportErrorEvent(0,false,_T("main"),error); 
     // Tell it to the user
-    printf("%s\n%s\n\n",PRODUCT_DISPLAY_NAME,PRODUCT_COPYRIGHT);
-    printf("ERROR : %s\n"
-           "REASON: %s.\n"
+    _tprintf(_T("%s\n%s\n\n"),PRODUCT_DISPLAY_NAME,PRODUCT_COPYRIGHT);
+    _tprintf(_T("ERROR : %s\n")
+           _T("REASON: %s.\n")
           ,error.GetString()
           ,reason.GetString());
   }
@@ -290,11 +290,11 @@ int main(int argc,char* argv[],char* /*envp[]*/)
 
 void ReadConfig()
 {
-  AppConfig config("");
+  AppConfig config(_T(""));
   config.ReadConfig();
 
   int instance = config.GetInstance();
-  sprintf_s(g_svcname,SERVICE_NAME_LENGTH,"%s_%d_v%s",PRODUCT_NAME,instance,PRODUCT_VERSION);
+  _stprintf_s(g_svcname,SERVICE_NAME_LENGTH,_T("%s_%d_v%s"),PRODUCT_NAME,instance,PRODUCT_VERSION);
 
   // Run as a service or as a stand-alone program?
   g_runAsService = config.GetRunAsService();
@@ -307,36 +307,36 @@ void ReadConfig()
   if(g_runAsService == RUNAS_STANDALONE)
   {
     // Controlling event of the service
-    strncpy_s(g_eventNameRunning,g_svcname,     SERVICE_NAME_LENGTH);
+    _tcsncpy_s(g_eventNameRunning,g_svcname,     SERVICE_NAME_LENGTH);
     // Status mutexes
-    strncpy_s(g_mutexNameRunning,g_svcname,     SERVICE_NAME_LENGTH);
-    strcat_s (g_mutexNameRunning,               SERVICE_NAME_LENGTH,"_Running");
-    strncpy_s(g_mutexNamePendingStart,g_svcname,SERVICE_NAME_LENGTH);
-    strcat_s (g_mutexNamePendingStart,          SERVICE_NAME_LENGTH,"_PendingStart");
-    strncpy_s(g_mutexNamePendingStop, g_svcname,SERVICE_NAME_LENGTH);
-    strcat_s (g_mutexNamePendingStop,           SERVICE_NAME_LENGTH,"_PendingStop");
+    _tcsncpy_s(g_mutexNameRunning,g_svcname,     SERVICE_NAME_LENGTH);
+    _tcscat_s (g_mutexNameRunning,               SERVICE_NAME_LENGTH,_T("_Running"));
+    _tcsncpy_s(g_mutexNamePendingStart,g_svcname,SERVICE_NAME_LENGTH);
+    _tcscat_s (g_mutexNamePendingStart,          SERVICE_NAME_LENGTH,_T("_PendingStart"));
+    _tcsncpy_s(g_mutexNamePendingStop, g_svcname,SERVICE_NAME_LENGTH);
+    _tcscat_s (g_mutexNamePendingStop,           SERVICE_NAME_LENGTH,_T("_PendingStop"));
   }
 }
 
 void PrintCopyright()
 {
-  printf("%s\n%s\n\n",PRODUCT_DISPLAY_NAME,PRODUCT_COPYRIGHT);
+  _tprintf(_T("%s\n%s\n\n"),PRODUCT_DISPLAY_NAME,PRODUCT_COPYRIGHT);
   fflush(stdout);
   CheckPlatform();
 }
 
 void PrintHelp()
 {
-  printf("%s [command [[username password]]\n",PRODUCT_NAME);
-  printf("Without a command the server will start in the SCM\n");
-  printf("Commands are:\n");
-  printf("- help or /?    This help page\n");
-  printf("- install       Install the %s Service (needs username password)\n",PRODUCT_NAME);
-  printf("- uninstall     Remove  the %s Service from the system\n",PRODUCT_NAME);
-  printf("- query         Query   the %s Service status\n",PRODUCT_NAME);
-  printf("- start         Start   the %s Service\n",PRODUCT_NAME);
-  printf("- stop          Stop    the %s Service\n",PRODUCT_NAME);
-  printf("- restart       Bounce  the %s Service\n",PRODUCT_NAME);
+  _tprintf(_T("%s [command [[username password]]\n"),PRODUCT_NAME);
+  _tprintf(_T("Without a command the server will start in the SCM\n"));
+  _tprintf(_T("Commands are:\n"));
+  _tprintf(_T("- help or /?    This help page\n"));
+  _tprintf(_T("- install       Install the %s Service (needs username password)\n"),PRODUCT_NAME);
+  _tprintf(_T("- uninstall     Remove  the %s Service from the system\n"),PRODUCT_NAME);
+  _tprintf(_T("- query         Query   the %s Service status\n"),PRODUCT_NAME);
+  _tprintf(_T("- start         Start   the %s Service\n"),PRODUCT_NAME);
+  _tprintf(_T("- stop          Stop    the %s Service\n"),PRODUCT_NAME);
+  _tprintf(_T("- restart       Bounce  the %s Service\n"),PRODUCT_NAME);
 }
 
 #pragma warning (disable: 4996)
@@ -353,10 +353,10 @@ CheckPlatform()
     // Windows NT 4 (dwMajorVersion == 4)
     // Windows 2000 (dwMajorVersion == 5 && dwMinorVersion == 0) // DisconnectEx voor sockets !!!!
     XString msg;
-    msg.Format("You are running a version of the MS-Windows operating system with a non-supported TCP/IP queuing mechanism.\n"
-                "%s only works on the Windows-7, 8, 8.1 & 10 and on the Windows 2008, 2012, 2016 Server platforms.\n"
-                "Sorry for the inconvenience. Please contact ir. W.E. Huisman.\n",PRODUCT_NAME);
-    printf(msg);
+    msg.Format(_T("You are running a version of the MS-Windows operating system with a non-supported TCP/IP queuing mechanism.\n")
+               _T("%s only works on the Windows-7, 8, 8.1 & 10 and on the Windows 2008, 2012, 2016 Server platforms.\n")
+               _T("Sorry for the inconvenience. Please contact ir. W.E. Huisman.\n"),PRODUCT_NAME);
+    _tprintf(msg);
     MessageBox(NULL,msg,PRODUCT_NAME,MB_OK|MB_ICONERROR);
     _exit(-3);
   }
@@ -375,7 +375,7 @@ VOID WINAPI SvcMain(DWORD dwArgc,LPTSTR *lpszArgv)
   g_svcStatusHandle = RegisterServiceCtrlHandler(g_svcname,SvcCtrlHandler);
   if(!g_svcStatusHandle)
   {
-    SvcReportErrorEvent(0,false,__FUNCTION__,"Cannot register a service handler for this service"); 
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot register a service handler for this service")); 
     return; 
   } 
 
@@ -384,7 +384,7 @@ VOID WINAPI SvcMain(DWORD dwArgc,LPTSTR *lpszArgv)
   g_svcStatus.dwServiceSpecificExitCode = 0;    
 
   // Tell it before we start
-  SvcReportSuccessEvent(XString(PRODUCT_NAME) + " Server starting...");
+  SvcReportSuccessEvent(XString(PRODUCT_NAME) + _T(" Server starting..."));
   // Report initial status to the SCM
   ReportSvcStatus(SERVICE_START_PENDING,NO_ERROR,SVC_DEFAULT_SERVICE_START_PENDING);
 
@@ -408,7 +408,7 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
   //   ReportSvcStatus with SERVICE_STOPPED.
 
   // Register event source for the WMI
-  XString eventlog = XString(PRODUCT_NAME) + "\\" + g_svcname;
+  XString eventlog = XString(PRODUCT_NAME) + _T("\\") + g_svcname;
 
   g_eventSource = RegisterEventSource(NULL,eventlog);
   DeregisterEventSource(g_eventSource);
@@ -432,7 +432,7 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
   if(s_theServer->Startup())
   {
     // Tell we have started
-    SvcReportSuccessEvent(XString(PRODUCT_NAME) + " server started.");
+    SvcReportSuccessEvent(XString(PRODUCT_NAME) + _T(" server started."));
     // Report running status when initialization is complete.
     ReportSvcStatus(SERVICE_RUNNING,NO_ERROR,0);
 
@@ -441,14 +441,14 @@ VOID SvcInit(DWORD /*dwArgc*/,LPTSTR* /*lpszArgv*/)
       // Check whether to stop the service.
       WaitForSingleObject(g_svcStopEvent, INFINITE);
 
-      SvcReportSuccessEvent(XString(PRODUCT_NAME) + " server about to stop.");
+      SvcReportSuccessEvent(XString(PRODUCT_NAME) + _T(" server about to stop."));
       ReportSvcStatus(SERVICE_STOP_PENDING,NO_ERROR,0);
 
       // Stop the server
       // STOP THE SERVICE THREADS
       s_theServer->ShutDown();
 
-      SvcReportSuccessEvent(XString(PRODUCT_NAME) + " server is stopped.");
+      SvcReportSuccessEvent(XString(PRODUCT_NAME) + _T(" server is stopped."));
       ReportSvcStatus(SERVICE_STOPPED,NO_ERROR,0);
       return;
     }
@@ -529,18 +529,18 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 // Parameters:   None
 // Return value: 0 = OK, 3 = Error
 //
-int SvcInstall(char* username,char* password)
+int SvcInstall(LPCTSTR username,LPCTSTR password)
 {
   SC_HANDLE schSCManager;
   SC_HANDLE schService;
   TCHAR     szPath[MAX_PATH];
 
   // Tell who we are
-  printf("Installing the [%s] service.\n",g_svcname);
+  _tprintf(_T("Installing the [%s] service.\n"),g_svcname);
 
   if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
   {
-    printf("Cannot install service. %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("Cannot install service. %s\n"),GetLastErrorAsString().GetString());
     return 3;
   }
 
@@ -551,8 +551,8 @@ int SvcInstall(char* username,char* password)
 
   if(schSCManager == NULL) 
   {
-    printf("Making connection with the service manager has failed\n");
-    printf("Function OpenSCManager failed. %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("Making connection with the service manager has failed\n"));
+    _tprintf(_T("Function OpenSCManager failed. %s\n"),GetLastErrorAsString().GetString());
     return 3;
   }
 
@@ -572,28 +572,28 @@ int SvcInstall(char* username,char* password)
                              password);                 // password 
   if(schService == NULL) 
   {
-    printf("Creating the service has failed\n");
-    printf("Function CreateService failed. %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("Creating the service has failed\n"));
+    _tprintf(_T("Function CreateService failed. %s\n"),GetLastErrorAsString().GetString());
     CloseServiceHandle(schSCManager);
     return 3;
   }
   else 
   {
-    printf("Service installed successfully!\n"); 
+    _tprintf(_T("Service installed successfully!\n")); 
   }
   XString installed;
-  installed.Format("%s successfully installed!",g_svcname);
+  installed.Format(_T("%s successfully installed!"),g_svcname);
   SvcReportSuccessEvent(installed);
 
 
   // Set the service description
   SERVICE_DESCRIPTION desc;
-  desc.lpDescription = const_cast<char*>(PRODUCT_DISPLAY_NAME);
+  desc.lpDescription = const_cast<TCHAR*>(PRODUCT_DISPLAY_NAME);
 
   if(!ChangeServiceConfig2(schService,SERVICE_CONFIG_DESCRIPTION,reinterpret_cast<void*>(&desc)))
   {
-    printf("WARNING: Service description NOT set.\n");
-    printf("ChangeServiceConfig2 failed: %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("WARNING: Service description NOT set.\n"));
+    _tprintf(_T("ChangeServiceConfig2 failed: %s\n"),GetLastErrorAsString().GetString());
   }
 
   // Set actions after failure
@@ -607,15 +607,15 @@ int SvcInstall(char* username,char* password)
    ,{ SC_ACTION_NONE,       0 }
   };
   actions.dwResetPeriod = 600;  // reset count after 10 minutes
-  actions.lpRebootMsg   = const_cast<char*>(PRODUCT_NAME);
-  actions.lpCommand     = "";
+  actions.lpRebootMsg   = const_cast<TCHAR*>(PRODUCT_NAME);
+  actions.lpCommand     = _T("");
   actions.cActions      = 5;
   actions.lpsaActions   = restart;
 
   if(!ChangeServiceConfig2(schService,SERVICE_CONFIG_FAILURE_ACTIONS,reinterpret_cast<void*>(&actions)))
   {
-    printf("WARNING: Service failure actions NOT set.\n");
-    printf("ChangeServiceConfig2 failed: %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("WARNING: Service failure actions NOT set.\n"));
+    _tprintf(_T("ChangeServiceConfig2 failed: %s\n"),GetLastErrorAsString().GetString());
   }
 
   // And register the message dll in the registry
@@ -637,7 +637,7 @@ InstallMessageDLL()
   int result = RegisterMessagesDllForService(g_svcname,PRODUCT_MESSAGES_DLL,error);
   if(!result)
   {
-    printf("%s\n",error.GetString());
+    _tprintf(_T("%s\n"),error.GetString());
   }
   return result;
 }
@@ -653,8 +653,8 @@ OpenMarlinService(DWORD p_access)
                                  SC_MANAGER_ALL_ACCESS);  // full access rights 
   if(g_schSCManager == NULL) 
   {
-    printf("Making connection with the service manager has failed\n");
-    printf("OpenSCManager failed: %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("Making connection with the service manager has failed\n"));
+    _tprintf(_T("OpenSCManager failed: %s\n"),GetLastErrorAsString().GetString());
     return false;
   }
   // Get a handle to the service.
@@ -667,13 +667,13 @@ OpenMarlinService(DWORD p_access)
     int error = GetLastError();
     switch(error)
     {
-      case ERROR_ACCESS_DENIED:           reason = "No access to this service";break;
-      case ERROR_INVALID_NAME:            reason = "Misspelled service name";   break;
-      case ERROR_SERVICE_DOES_NOT_EXIST:  reason = "Service does not exist";   break;
-      default:                            reason = "Unknown error code";       break;
+      case ERROR_ACCESS_DENIED:           reason = _T("No access to this service");break;
+      case ERROR_INVALID_NAME:            reason = _T("Misspelled service name");   break;
+      case ERROR_SERVICE_DOES_NOT_EXIST:  reason = _T("Service does not exist");   break;
+      default:                            reason = _T("Unknown error code");       break;
     }
-    printf("Could not open the service with name [%s]\n",g_svcname);
-    printf("OpenService failed: [%d] %s\n",error,reason.GetString());
+    _tprintf(_T("Could not open the service with name [%s]\n"),g_svcname);
+    _tprintf(_T("OpenService failed: [%d] %s\n"),error,reason.GetString());
     CloseServiceHandle(g_schSCManager);
     g_schSCManager = NULL;
     return false;
@@ -707,15 +707,15 @@ GetMarlinServiceStatus(bool p_close = true)
     int error = GetLastError();
     switch(error)
     {
-      case ERROR_ACCESS_DENIED:       reason = "Access denied";        break;
-      case ERROR_INSUFFICIENT_BUFFER: reason = "Insufficient buffer";  break;
-      case ERROR_INVALID_PARAMETER:   reason = "Invalid parameter";    break;
-      case ERROR_INVALID_LEVEL:       reason = "Invalid info level";   break;
-      case ERROR_SHUTDOWN_IN_PROGRESS:reason = "Shutdown in progress"; break;
-      default:                        reason = "Unknown error";        break;
+      case ERROR_ACCESS_DENIED:       reason = _T("Access denied");        break;
+      case ERROR_INSUFFICIENT_BUFFER: reason = _T("Insufficient buffer");  break;
+      case ERROR_INVALID_PARAMETER:   reason = _T("Invalid parameter");    break;
+      case ERROR_INVALID_LEVEL:       reason = _T("Invalid info level");   break;
+      case ERROR_SHUTDOWN_IN_PROGRESS:reason = _T("Shutdown in progress"); break;
+      default:                        reason = _T("Unknown error");        break;
     }
-    printf("The service status could not be determined\n");
-    printf("QueryServiceStatusEx failed [%d] %s\n",error,reason.GetString());
+    _tprintf(_T("The service status could not be determined\n"));
+    _tprintf(_T("QueryServiceStatusEx failed [%d] %s\n"),error,reason.GetString());
     if(p_close)
     {
       CloseMarlinService();
@@ -737,20 +737,20 @@ int SvcDelete()
   // Delete the service.
   if(!DeleteService(g_schService)) 
   {
-    printf("The service cannot be removed\n");
-    printf("DeleteService failed: %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("The service cannot be removed\n"));
+    _tprintf(_T("DeleteService failed: %s\n"),GetLastErrorAsString().GetString());
     if(GetLastError() == ERROR_SERVICE_MARKED_FOR_DELETE)
     {
-      printf("The service has been marked for delete, but not yet removed\n");
-      printf("Wait until the service is fully removed.\n");
+      _tprintf(_T("The service has been marked for delete, but not yet removed\n"));
+      _tprintf(_T("Wait until the service is fully removed.\n"));
     }
     retval = 4;
   }
   else 
   {
-    printf("Service deleted successfully\n"); 
+    _tprintf(_T("Service deleted successfully\n")); 
     XString success;
-    success.Format("%s successfully removed from the system!",g_svcname);
+    success.Format(_T("%s successfully removed from the system!"),g_svcname);
     SvcReportSuccessEvent(success);
   }
   CloseMarlinService();
@@ -767,7 +767,7 @@ DeleteEventLogRegistration()
   XString error;
   if(!UnRegisterMessagesDllForService(g_svcname, error))
   {
-    printf(error);
+    _tprintf(error);
   }
 }
 
@@ -793,7 +793,7 @@ int SvcStart()
   // to stop the service here, but for simplicity this example just returns. 
   if(g_sspStatus.dwCurrentState != SERVICE_STOPPED && g_sspStatus.dwCurrentState != SERVICE_STOP_PENDING)
   {
-    printf("Cannot start the service because it is already running\n");
+    _tprintf(_T("Cannot start the service because it is already running\n"));
     CloseMarlinService();
     return 1; 
   }
@@ -833,7 +833,7 @@ int SvcStart()
     {
       if((GetTickCount64() - dwStartTickCount) > g_sspStatus.dwWaitHint)
       {
-        printf("Timeout waiting for service to stop\n");
+        _tprintf(_T("Timeout waiting for service to stop\n"));
         CloseMarlinService();
         return 1; 
       }
@@ -845,11 +845,11 @@ int SvcStart()
                     0,             // number of arguments 
                     NULL) )        // no arguments 
   {
-    printf("StartService failed: %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("StartService failed: %s\n"),GetLastErrorAsString().GetString());
     CloseMarlinService();
     return 1;  
   }
-  else printf("Service start pending...\n"); 
+  else _tprintf(_T("Service start pending...\n")); 
 
   // Check the status until the service is no longer start pending. 
   if(!GetMarlinServiceStatus())
@@ -906,16 +906,16 @@ int SvcStart()
   int retval = 1;
   if (g_sspStatus.dwCurrentState == SERVICE_RUNNING) 
   {
-    printf("Service started successfully.\n"); 
+    _tprintf(_T("Service started successfully.\n")); 
     retval = 0;
   }
   else 
   { 
-    printf("Service not started. \n");
-    printf("  Current State : %d\n", g_sspStatus.dwCurrentState); 
-    printf("  Exit Code     : %d\n", g_sspStatus.dwWin32ExitCode); 
-    printf("  Check Point   : %d\n", g_sspStatus.dwCheckPoint); 
-    printf("  Wait Hint     : %d\n", g_sspStatus.dwWaitHint); 
+    _tprintf(_T("Service not started. \n"));
+    _tprintf(_T("  Current State : %d\n"), g_sspStatus.dwCurrentState); 
+    _tprintf(_T("  Exit Code     : %d\n"), g_sspStatus.dwWin32ExitCode); 
+    _tprintf(_T("  Check Point   : %d\n"), g_sspStatus.dwCheckPoint); 
+    _tprintf(_T("  Wait Hint     : %d\n"), g_sspStatus.dwWaitHint); 
   } 
   CloseMarlinService();
   return retval;
@@ -941,14 +941,14 @@ int SvcStop()
   }
   if(g_sspStatus.dwCurrentState == SERVICE_STOPPED)
   {
-    printf("Service is already stopped.\n");
+    _tprintf(_T("Service is already stopped.\n"));
     goto stop_cleanup;
   }
 
   // If a stop is pending, wait for it.
   while ( g_sspStatus.dwCurrentState == SERVICE_STOP_PENDING ) 
   {
-    printf("Service stop pending...\n");
+    _tprintf(_T("Service stop pending...\n"));
     Sleep( g_sspStatus.dwWaitHint );
     if(!GetMarlinServiceStatus())
     {
@@ -956,18 +956,18 @@ int SvcStop()
     }
     if( g_sspStatus.dwCurrentState == SERVICE_STOPPED )
     {
-      printf("Service stopped successfully.\n");
+      _tprintf(_T("Service stopped successfully.\n"));
       goto stop_cleanup;
     }
 
     if ((GetTickCount64() - dwStartTime) > dwTimeout )
     {
-      printf("Service stop timed out.\n");
+      _tprintf(_T("Service stop timed out.\n"));
       goto stop_cleanup;
     }
   }
 
-  printf("Service stop pending...\n");
+  _tprintf(_T("Service stop pending...\n"));
 
   // If the service is running, dependencies must be stopped first.
   StopDependentServices();
@@ -975,7 +975,7 @@ int SvcStop()
   // Send a stop code to the service.
   if(!ControlService(g_schService,SERVICE_CONTROL_STOP,(LPSERVICE_STATUS) &g_sspStatus))
   {
-    printf( "ControlService failed: %s\n",GetLastErrorAsString().GetString());
+    _tprintf( _T("ControlService failed: %s\n"),GetLastErrorAsString().GetString());
     goto stop_cleanup;
   }
 
@@ -993,11 +993,11 @@ int SvcStop()
     }
     if((GetTickCount64() - dwStartTime) > dwTimeout )
     {
-      printf( "Wait timed out\n" );
+      _tprintf( _T("Wait timed out\n") );
       goto stop_cleanup;
     }
   }
-  printf("Service stopped successfully\n");
+  _tprintf(_T("Service stopped successfully\n"));
 
 stop_cleanup:
   CloseMarlinService();
@@ -1130,18 +1130,18 @@ int QueryService()
     result = g_sspStatus.dwCurrentState;
     switch(result)
     {
-      case SERVICE_STOPPED:           printf("Service is stopped\n");             break;
-      case SERVICE_START_PENDING:     printf("Service has a pending start\n");    break;
-      case SERVICE_STOP_PENDING:      printf("Service has a pending stop\n");     break;
-      case SERVICE_RUNNING:           printf("Service is running\n");             break;
-      case SERVICE_CONTINUE_PENDING:  printf("Service has a pending continue\n"); break;
-      case SERVICE_PAUSE_PENDING:     printf("Service has a pending pause\n");    break;
-      case SERVICE_PAUSED:            printf("Service is paused\n");              break;
+      case SERVICE_STOPPED:           _tprintf(_T("Service is stopped\n"));             break;
+      case SERVICE_START_PENDING:     _tprintf(_T("Service has a pending start\n"));    break;
+      case SERVICE_STOP_PENDING:      _tprintf(_T("Service has a pending stop\n"));     break;
+      case SERVICE_RUNNING:           _tprintf(_T("Service is running\n"));             break;
+      case SERVICE_CONTINUE_PENDING:  _tprintf(_T("Service has a pending continue\n")); break;
+      case SERVICE_PAUSE_PENDING:     _tprintf(_T("Service has a pending pause\n"));    break;
+      case SERVICE_PAUSED:            _tprintf(_T("Service is paused\n"));              break;
     }
   }
   else
   {
-    printf("Cannot get the current service state!\n");
+    _tprintf(_T("Cannot get the current service state!\n"));
   }
   CloseMarlinService();
 
@@ -1186,7 +1186,7 @@ int StandAloneStart()
   // to stop the service here, but for simplicity this example just returns. 
   if(status != SERVICE_STOPPED && status != SERVICE_STOP_PENDING)
   {
-    printf("Cannot start the service because it is already running\n");
+    _tprintf(_T("Cannot start the service because it is already running\n"));
     goto end_of_startalone;
   }
 
@@ -1204,7 +1204,7 @@ int StandAloneStart()
 
     if(dwWaited > SVC_MAXIMUM_WAIT_HINT)
     {
-      printf("Timeout waiting for service to stop\n");
+      _tprintf(_T("Timeout waiting for service to stop\n"));
       goto end_of_startalone;
     }
   }
@@ -1213,12 +1213,12 @@ int StandAloneStart()
   startResult = ExecuteProcess(program,arguments,true,emptyString,SW_HIDE);
   if(startResult)
   {
-    printf("StartService failed: %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("StartService failed: %s\n"),GetLastErrorAsString().GetString());
     goto end_of_startalone;
   }
   else 
   {
-    printf("Service start pending...\n"); 
+    _tprintf(_T("Service start pending...\n")); 
   }
 
   // Wait at least 1 time, otherwise we never get a status back
@@ -1257,23 +1257,23 @@ int StandAloneStart()
   // Determine whether the service is running.
   if (status  == SERVICE_RUNNING) 
   {
-    printf("Service started successfully.\n");
+    _tprintf(_T("Service started successfully.\n"));
     retval = 0;
   }
   else 
   { 
-    printf("Service not started. \n");
-    printf("  Current State : %d\n", status); 
-    printf("  Exit Code     : %d\n", startResult); 
-    printf("  Wait Hint     : %d\n", 10); 
+    _tprintf(_T("Service not started. \n"));
+    _tprintf(_T("  Current State : %d\n"), status); 
+    _tprintf(_T("  Exit Code     : %d\n"), startResult); 
+    _tprintf(_T("  Wait Hint     : %d\n"), 10); 
   } 
 
 end_of_startalone:
   // EOT = End of transmission. 
   // Looks very strange, and it IS!
   // But it's the only way to work with a background stream
-  fprintf(stdout,"\004");
-  fprintf(stderr,"\004");
+  _ftprintf(stdout,_T("\004"));
+  _ftprintf(stderr,_T("\004"));
   return retval;
 }
 
@@ -1295,14 +1295,14 @@ BOOL SvcInitStandAlone()
 
   if(g_svcStopEvent == NULL)
   {
-    SvcReportErrorEvent(0,false,__FUNCTION__,"Server cannot start: cannot make a service event.");
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Server cannot start: cannot make a service event."));
     ReportSvcStatusStandAlone(SERVICE_STOPPED);
     // Remove mutexes
     return FALSE;
   }
 
   // Tell that we are about to start
-  SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server about to start.");
+  SvcReportSuccessEvent(XString(PRODUCT_NAME) + _T("Server about to start."));
   ReportSvcStatusStandAlone(SERVICE_START_PENDING);
 
   // And register the message dll in the registry
@@ -1312,7 +1312,7 @@ BOOL SvcInitStandAlone()
   if(s_theServer->Startup())
   {
     // Tell we have started
-    SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server started.");
+    SvcReportSuccessEvent(XString(PRODUCT_NAME) + _T("Server started."));
     // Report running status when initialization is complete.
     ReportSvcStatusStandAlone(SERVICE_RUNNING);
     // create running mutex
@@ -1326,13 +1326,13 @@ BOOL SvcInitStandAlone()
       CloseHandle(g_svcStopEvent);
       g_svcStopEvent = NULL;
 
-      SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server about to stop.");
+      SvcReportSuccessEvent(XString(PRODUCT_NAME) + _T("Server about to stop."));
       ReportSvcStatusStandAlone(SERVICE_STOP_PENDING);
 
       // Stop the server
       s_theServer->ShutDown();
 
-      SvcReportSuccessEvent(XString(PRODUCT_NAME) + "Server stopped.");
+      SvcReportSuccessEvent(XString(PRODUCT_NAME) + _T("Server stopped."));
       ReportSvcStatusStandAlone(SERVICE_STOPPED);
       break;
     }
@@ -1413,13 +1413,13 @@ ReportSvcStatusStandAlone(int p_status)
 int
 GetMarlinServiceStatusStandAlone(int& p_status)
 {
-  DWORD access = READ_CONTROL | SYNCHRONIZE;
+  DWORD _taccess = READ_CONTROL | SYNCHRONIZE;
 
   // Initially there is no service
   p_status = SERVICE_STOPPED;
 
   // Pending Start
-  HANDLE starting = OpenMutex(access,FALSE,g_mutexNamePendingStart);
+  HANDLE starting = OpenMutex(_taccess,FALSE,g_mutexNamePendingStart);
   if(starting)
   {
     p_status = SERVICE_START_PENDING;
@@ -1428,7 +1428,7 @@ GetMarlinServiceStatusStandAlone(int& p_status)
   else
   {
     // Running
-    HANDLE running = OpenMutex(access,FALSE,g_mutexNameRunning);
+    HANDLE running = OpenMutex(_taccess,FALSE,g_mutexNameRunning);
     if(running)
     {
       p_status = SERVICE_RUNNING;
@@ -1437,7 +1437,7 @@ GetMarlinServiceStatusStandAlone(int& p_status)
     else
     {
       // Pending stop
-      HANDLE stopping = OpenMutex(access,FALSE,g_mutexNamePendingStop);
+      HANDLE stopping = OpenMutex(_taccess,FALSE,g_mutexNamePendingStop);
       if(stopping)
       {
         p_status = SERVICE_STOP_PENDING;
@@ -1474,14 +1474,14 @@ StandAloneStop()
   if(status == SERVICE_STOPPED)
   {
     retval = 0;
-    printf("Service is already stopped.\n");
+    _tprintf(_T("Service is already stopped.\n"));
     goto end_of_stop_standalone;
   }
 
   // If a stop is pending, wait for it.
   while(status == SERVICE_STOP_PENDING ) 
   {
-    printf("Service stop pending...\n");
+    _tprintf(_T("Service stop pending...\n"));
     Sleep(dwWaitTime);
     dwWaited += dwWaitTime;
 
@@ -1492,33 +1492,33 @@ StandAloneStop()
     if(status == SERVICE_STOPPED )
     {
       retval = 0;
-      printf("Service stopped successfully.\n");
+      _tprintf(_T("Service stopped successfully.\n"));
       goto end_of_stop_standalone;
     }
 
     if((GetTickCount64() - dwStartTime) > dwTimeout)
     {
       retval = 0;
-      printf("Service stop timed out.\n");
+      _tprintf(_T("Service stop timed out.\n"));
       goto end_of_stop_standalone;
     }
   }
 
-  printf("Service stop pending...\n");
+  _tprintf(_T("Service stop pending...\n"));
 
   g_svcStopEvent = OpenEvent(READ_CONTROL|SYNCHRONIZE|EVENT_MODIFY_STATE
                             ,FALSE,g_eventNameRunning);
   if(g_svcStopEvent == NULL)
   {
     retval = 0;
-    printf("Cannot find a running server: %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("Cannot find a running server: %s\n"),GetLastErrorAsString().GetString());
     goto end_of_stop_standalone;
   }
   // Send a stop code to the service.
   if(!SetEvent(g_svcStopEvent))
   {
     retval = 0;
-    printf("Sending stop event failed: %s\n",GetLastErrorAsString().GetString());
+    _tprintf(_T("Sending stop event failed: %s\n"),GetLastErrorAsString().GetString());
     goto end_of_stop_standalone;
   }
 
@@ -1546,21 +1546,21 @@ StandAloneStop()
     if((GetTickCount64() - dwStartTime) > dwTimeout)
     {
       retval = 0;
-      printf( "Wait timed out\n" );
+      _tprintf( _T("Wait timed out\n") );
       goto end_of_stop_standalone;
     }
   }
 
   // Success
   retval = 0;
-  printf("Service stopped successfully\n");
+  _tprintf(_T("Service stopped successfully\n"));
 
 end_of_stop_standalone:
   // EOT = End of transmission. 
   // Looks very strange, and it IS!!
   // But it's the only way to work with a stream
-  fprintf(stdout,"\004");
-  fprintf(stderr,"\004");
+  _ftprintf(stdout,_T("\004"));
+  _ftprintf(stderr,_T("\004"));
   return retval;
 }
 
@@ -1573,10 +1573,10 @@ int QueryServiceStandAlone()
   {
     switch(result)
     {
-      case SERVICE_STOPPED:           printf("Service is stopped\n");             break;
-      case SERVICE_START_PENDING:     printf("Service has a pending start\n");    break;
-      case SERVICE_STOP_PENDING:      printf("Service has a pending stop\n");     break;
-      case SERVICE_RUNNING:           printf("Service is running\n");             break;
+      case SERVICE_STOPPED:           _tprintf(_T("Service is stopped\n"));             break;
+      case SERVICE_START_PENDING:     _tprintf(_T("Service has a pending start\n"));    break;
+      case SERVICE_STOP_PENDING:      _tprintf(_T("Service has a pending stop\n"));     break;
+      case SERVICE_RUNNING:           _tprintf(_T("Service is running\n"));             break;
 //    case SERVICE_CONTINUE_PENDING:  printf("Service has a pending continue\n"); break;
 //    case SERVICE_PAUSE_PENDING:     printf("Service has a pending pause\n");    break;
 //    case SERVICE_PAUSED:            printf("Service is paused\n");              break;
@@ -1584,13 +1584,13 @@ int QueryServiceStandAlone()
   }
   else
   {
-    printf("Cannot get the current service state!\n");
+    _tprintf(_T("Cannot get the current service state!\n"));
   }
   // EOT = End of transmission. 
   // Looks very strange, and it IS!!
   // But it's the only way to work with a stream
-  fprintf(stdout,"\004");
-  fprintf(stderr,"\004");
+  _ftprintf(stdout,_T("\004"));
+  _ftprintf(stderr,_T("\004"));
   return result;
 }
 
@@ -1612,14 +1612,14 @@ FindApplicationCommand()
   }
 
   XString pathname;
-  if(pathname.GetEnvironmentVariable("windir"))
+  if(pathname.GetEnvironmentVariable(_T("windir")))
   {
-    pathname += "\\system32\\inetsrv";
+    pathname += _T("\\system32\\inetsrv");
 
     DWORD attrib = GetFileAttributes(pathname);
     if(attrib & FILE_ATTRIBUTE_DIRECTORY)
     {
-      pathname += "\\appcmd.exe";
+      pathname += _T("\\appcmd.exe");
       attrib = GetFileAttributes(pathname);
       if(attrib != INVALID_FILE_ATTRIBUTES)
       {
@@ -1628,7 +1628,7 @@ FindApplicationCommand()
       }
     }
   }
-  printf("MS-Windows directory for IIS not found: is the IIS system installed?\n");
+  _tprintf(_T("MS-Windows directory for IIS not found: is the IIS system installed?\n"));
   return false;
 }
 
@@ -1642,11 +1642,11 @@ int StartIISApp()
 
   if(FindApplicationCommand())
   {
-    XString fout("Cannot run program " + applicationCommand);
+    XString fout(_T("Cannot run program ") + applicationCommand);
  
     // STARTING THE APPLICATION POOL
     // APPCMD.EXE start APPPOOL <name>
-    XString parameter("start APPPOOL ");
+    XString parameter(_T("start APPPOOL "));
     parameter += g_serverName;
     result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
 
@@ -1655,7 +1655,7 @@ int StartIISApp()
       // STARTING THE SITE
       XString site(g_baseURL);
       site.Remove('/');
-      parameter = "start SITE " + site;
+      parameter = _T("start SITE ") + site;
       result = ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
     }
   }
@@ -1670,11 +1670,11 @@ int StopIISApp()
 
   if(FindApplicationCommand())
   {
-    XString fout("Cannot run program " + applicationCommand);
+    XString fout(_T("Cannot run program ") + applicationCommand);
 
     // STOP THE SITE
     // APPCMD.EXE start SITE <name>
-    XString parameter("stop SITE ");
+    XString parameter(_T("stop SITE "));
     XString site(g_baseURL);
     site.Remove('/');
     parameter += site;
@@ -1682,7 +1682,7 @@ int StopIISApp()
 
     // STOP THE APPLICATION POOL
     // APPCMD.EXE start APPPOOL <name>
-    parameter = "stop APPPOOL ";
+    parameter = _T("stop APPPOOL ");
     parameter += g_serverName;
     result    += ExecuteProcess(applicationCommand,parameter,false,fout,SW_HIDE,true);
   }
@@ -1697,19 +1697,19 @@ int QueryIISApp()
   if(FindApplicationCommand())
   {
     // APPCMD.EXE list APPPOOL <name>
-    XString parameter("list APPPOOL ");
+    XString parameter(_T("list APPPOOL "));
     parameter += g_serverName;
     XString output;
     int res = CallProgram_For_String(applicationCommand,parameter,output);
-    if(res == 0 && (output.Find("state:Started") >= 0))
+    if(res == 0 && (output.Find(_T("state:Started")) >= 0))
     {
       // APPCMD.EXE list SITE <baseurl>
-      parameter = "list SITE ";
+      parameter = _T("list SITE ");
       XString site(g_baseURL);
       site.Remove('/');
       parameter += site;
       res = CallProgram_For_String(applicationCommand,parameter,output);
-      if(res == 0 && (output.Find("state:Started") >= 0))
+      if(res == 0 && (output.Find(_T("state:Started")) >= 0))
       {
         result = SERVICE_RUNNING;
       }
@@ -1718,8 +1718,8 @@ int QueryIISApp()
 
   switch(result)
   {
-    case SERVICE_STOPPED: printf("Service is stopped\n"); break;
-    case SERVICE_RUNNING: printf("Service is running\n"); break;
+    case SERVICE_STOPPED: _tprintf(_T("Service is stopped\n")); break;
+    case SERVICE_RUNNING: _tprintf(_T("Service is running\n")); break;
   }
   return result;
 }

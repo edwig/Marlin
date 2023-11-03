@@ -36,14 +36,14 @@
 // 2) Encode in UTF-8 if your language is not already that!
 // 3) Reverse the complete string
 // 4) Apply Ceasar Cipher by inverting in between ' ' and '~'
-// 5) Add five random characters at the beginnen and the end
+// 5) Add five random characters at the begining and the end
 // 6) Do Base64 encrypting
 //
 XString CreateAuthentication(XString p_user,XString p_password)
 {
   XString authenticate;
-  // STEP 1) Put together with a less used seperator
-  authenticate = p_user + "^" + p_password;
+  // STEP 1) Put together with a less used separator
+  authenticate = p_user + _T("^") + p_password;
 
   // STEP 2) Make it an UTF-8 string
   //         Don't do this in other languages that are already in UTF-8
@@ -52,26 +52,27 @@ XString CreateAuthentication(XString p_user,XString p_password)
   // STEP 3) Reverse our string
   authenticate.MakeReverse();
 
-  // STEP 4) Apply a ceasar cipher revert(ascii 126 ~->ascii 32 (space))
+  // STEP 4) Apply a Caesar cipher revert(ascii 126 ~->ascii 32 (space))
   //         with the formula ('~' - char + ' ')
   for(int index = 0;index < authenticate.GetLength(); ++index)
   {
-    char ch = authenticate.GetAt(index);
-    if(ch >= ' ' && ch <= '~')
+    uchar ch = (uchar) authenticate.GetAt(index);
+    if(ch >= _T(' ') && ch <= _T('~'))
     {
-      ch = '~' - ch + ' ';
+      ch = _T('~') - ch + _T(' ');
       authenticate.SetAt(index,ch);
     }
   }
 
   // STEP 5) Five random characters in front and as a trailer
+  // '~' (ASCII 127) - ' ' (ASCII 32) = 95. Equi-distance of printable chars
   time_t now;
   XString before,after;
   srand((unsigned int)time(&now));
   for(int index = 0;index < 5;++index)
   {
-    before += (char)(' ' + (char)rand() % ('~' - ' '));
-    after  += (char)(' ' + (char)rand() % ('~' - ' '));
+    before += (TCHAR)(_T(' ') + (TCHAR)(rand() % 95) - _T(' '));
+    after  += (TCHAR)(_T(' ') + (TCHAR)(rand() % 95) - _T(' '));
   }
   authenticate = before + authenticate + after;
     
@@ -85,10 +86,10 @@ XString CreateAuthentication(XString p_user,XString p_password)
 // 1) Empty the result
 // 2) Base64 decode the string
 // 3) If long enough, remove first and last five random characters
-// 4) Apply Ceasar Cipher by inverting in between ' ' and '~'
-// 5) Search for the LAST seperator in the string
+// 4) Apply Caesar Cipher by inverting in between ' ' and '~'
+// 5) Search for the LAST separator in the string
 // 6) Split the strings and reverse the order
-// 7) Do the UTF-8 decoding (if neccesary for your language)
+// 7) Do the UTF-8 decoding (if necessary for your language)
 
 bool DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password)
 {
@@ -118,25 +119,25 @@ bool DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password
     return false;
   }
 
-  // STEP 4) Invert the ceasar cipher
+  // STEP 4) Invert the Caesar cipher
   for(int index = 0;index < authenticate.GetLength(); ++index)
   {
-    char ch = authenticate.GetAt(index);
-    if(ch >= ' ' && ch <= '~')
+    uchar ch = (uchar) authenticate.GetAt(index);
+    if(ch >= _T(' ') && ch <= _T('~'))
     {
-      ch = '~' - ch + ' ';
+      ch = _T('~') - ch + _T(' ');
       authenticate.SetAt(index,ch);
     }
   }
 
-  // STEP 5: Search the seperator
-  int pos1 = authenticate.Find("^");
+  // STEP 5: Search the separator
+  int pos1 = authenticate.Find(_T("^"));
   if(pos1 > 0)
   {
     // Just in case someone uses it in a password
     // Can be used multiple times and on the last position!
     int pos2(0);
-    while((pos2 = authenticate.Find("^",pos1 + 1)) >= 0)
+    while((pos2 = authenticate.Find(_T("^"),pos1 + 1)) >= 0)
     {
       pos1 = pos2;
     }
@@ -156,6 +157,6 @@ bool DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password
 
     return true;
   }
-  // No seperator!!
+  // No separator!!
   return false;
 }

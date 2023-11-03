@@ -39,23 +39,23 @@ int
 TestWebSocketAccept(void)
 {
   bool result = false;
-  XString clientkey = "dGhlIHNhbXBsZSBub25jZQ==";
+  XString clientkey = _T("dGhlIHNhbXBsZSBub25jZQ==");
 
-  WebSocketServer socket("ws://localhost/testing");
+  WebSocketServer socket(_T("ws://localhost/testing"));
   XString serverkey = socket.ServerAcceptKey(clientkey);
 
-  xprintf("Client Key: %s\n",clientkey.GetString());
-  xprintf("Server Key: %s\n",serverkey.GetString());
+  xprintf(_T("Client Key: %s\n"),clientkey.GetString());
+  xprintf(_T("Server Key: %s\n"),serverkey.GetString());
 
   // See the example in RFC 6455 on page 24 of the IETF
-  if(serverkey.Compare("s3pPLMBiTxaQ9kYGzzhZRbK+xOo=") == 0)
+  if(serverkey.Compare(_T("s3pPLMBiTxaQ9kYGzzhZRbK+xOo=")) == 0)
   {
     result = true;
   }
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Testing the WebSocket Accept cookie RFC6455    : %s\n",result ? "OK" : "ERROR");
+  _tprintf(_T("Testing the WebSocket Accept cookie RFC6455    : %s\n"),result ? _T("OK") : _T("ERROR"));
 
   return result ? 0 : 1;
 }
@@ -73,7 +73,7 @@ OnOpenWebsocket(WebSocket* /*p_socket*/,const WSFrame* /*p_frame*/)
 {
   // WebSocket has been opened
   // --- "---------------------------------------------- - ------
-  printf("WebSocket gotten the 'OnOpen' event            : OK\n");
+  _tprintf(_T("WebSocket gotten the 'OnOpen' event            : OK\n"));
 }
 
 void
@@ -83,7 +83,7 @@ OnMessageWebsocket(WebSocket* p_socket,const WSFrame* p_frame)
   
   if(p_frame)
   {
-    message = reinterpret_cast<char*>(p_frame->m_data);
+    message = reinterpret_cast<TCHAR*>(p_frame->m_data);
   }
   if(!message.IsEmpty())
   {
@@ -91,7 +91,7 @@ OnMessageWebsocket(WebSocket* p_socket,const WSFrame* p_frame)
     {
       // Incoming Message from the server
       // --- "---------------------------------------------- - ------
-      printf("%-46s : OK\n",message.GetString());
+      _tprintf(_T("%-46s : OK\n"),message.GetString());
     }
     else
     {
@@ -100,14 +100,14 @@ OnMessageWebsocket(WebSocket* p_socket,const WSFrame* p_frame)
 //       printf("END\n");
       // WebSocket without a message string
       // --- "---------------------------------------------- - ------
-      printf("%-28s Length: %9d : OK\n",p_socket->GetIdentityKey().GetString(),message.GetLength());
+      _tprintf(_T("%-28s Length: %9d : OK\n"),p_socket->GetIdentityKey().GetString(),message.GetLength());
     }
   }
   else
   {
     // WebSocket without a message string
     // --- "---------------------------------------------- - ------
-    printf("WebSocket cannot get the UTF-8 message string  : ERROR\n");
+    _tprintf(_T("WebSocket cannot get the UTF-8 message string  : ERROR\n"));
   }
 }
 
@@ -115,14 +115,14 @@ void
 OnErrorWebSocket(WebSocket* p_socket,const WSFrame* p_frame)
 {
   XString message;
-  message.Format("ERROR from WebSocket at URI: %s\n",p_socket->GetIdentityKey().GetString());
+  message.Format(_T("ERROR from WebSocket at URI: %s\n"),p_socket->GetIdentityKey().GetString());
   if(p_frame)
   {
-    message += reinterpret_cast<char*>(p_frame->m_data);
+    message += reinterpret_cast<TCHAR*>(p_frame->m_data);
   }
-  message += "\n";
+  message += _T("\n");
 
-  printf(message);
+  _tprintf(message);
 }
 
 void
@@ -130,10 +130,10 @@ OnCloseWebsocket(WebSocket* /*p_socket*/,const WSFrame* p_frame)
 {
   if (p_frame)
   {
-    XString message(reinterpret_cast<char*>(p_frame->m_data));
+    XString message(reinterpret_cast<TCHAR*>(p_frame->m_data));
     if (!message.IsEmpty())
     {
-      printf("CLOSING message: %s\n", message.GetString());
+      _tprintf(_T("CLOSING message: %s\n"), message.GetString());
     }
   }
 
@@ -142,7 +142,7 @@ OnCloseWebsocket(WebSocket* /*p_socket*/,const WSFrame* p_frame)
 
   // WebSocket has been closed
   // --- "---------------------------------------------- - ------
-  printf("WebSocket gotten the 'OnClose' event           : OK\n");
+  _tprintf(_T("WebSocket gotten the 'OnClose' event           : OK\n"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -156,11 +156,11 @@ CreateLargeMessage()
   {
     for(unsigned num = 0; num < 20; ++num)
     {
-      large.AppendFormat("#%d$",(ind * 20) + num);
+      large.AppendFormat(_T("#%d$"),(ind * 20) + num);
     }
-    large += "=\n";
+    large += _T("=\n");
   }
-  large += "*** end ***\n";
+  large += _T("*** end ***\n");
 
   return large;
 }
@@ -176,7 +176,7 @@ TestWebSocket(LogAnalysis* p_log)
 {
   int errors = 0;
   XString uri;
-  uri.Format("ws://%s:%d/MarlinTest/Sockets/socket_123",MARLIN_HOST,TESTING_HTTP_PORT);
+  uri.Format(_T("ws://%s:%d/MarlinTest/Sockets/socket_123"),MARLIN_HOST,TESTING_HTTP_PORT);
 
   // Independent 3th party test website, to check whether our WebSocket works correct
   // Comment out to test against our own Marlin server sockets
@@ -205,13 +205,13 @@ TestWebSocket(LogAnalysis* p_log)
   }
   else
   {
-    if(!socket->WriteString("Hello server, this is the client. This is a one-liner message. Take one!"))
+    if(!socket->WriteString(_T("Hello server, this is the client. This is a one-liner message. Take one!")))
     {
       ++errors;
     }
     else
     {
-      if (!socket->WriteString("Hello server, this is the client. This is also a one-liner message. Take two!"))
+      if (!socket->WriteString(_T("Hello server, this is the client. This is also a one-liner message. Take two!")))
       {
         ++errors;
       }
@@ -227,20 +227,20 @@ TestWebSocket(LogAnalysis* p_log)
         }
       }
     }
-    socket->WriteString("RequestClose");
+    socket->WriteString(_T("RequestClose"));
   }
 
   // Waiting for server write to drain
   int seconds = 2;
   // --- "---------------------------------------------- - ------
-  printf("WebSocket waiting for the server %d seconds     : OK\n", seconds);
+  _tprintf(_T("WebSocket waiting for the server %d seconds     : OK\n"), seconds);
   Sleep(seconds * CLOCKS_PER_SEC);
 
   XString key = socket->GetIdentityKey();
 
   if(!g_closed)
   {
-    if(!socket->SendCloseSocket(WS_CLOSE_NORMAL, "TestWebSocket did close the socket"))
+    if(!socket->SendCloseSocket(WS_CLOSE_NORMAL, _T("TestWebSocket did close the socket")))
     {
       ++errors;
     }
@@ -248,7 +248,7 @@ TestWebSocket(LogAnalysis* p_log)
 
   // WebSocket has been opened
   // --- "---------------------------------------------- - ------
-  printf("WebSocket %-28s tests   : %s\n",key.GetString(),errors ? "ERROR" : "OK");
+  _tprintf(_T("WebSocket %-28s tests   : %s\n"),key.GetString(),errors ? _T("ERROR") : _T("OK"));
 
   return errors;
 }

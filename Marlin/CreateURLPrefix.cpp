@@ -49,7 +49,7 @@ static char g_hostName[NI_MAXHOST] = "";
 //
 XString GetHostName(int p_type)
 {
-  char  buffer[MAX_PATH + 1];
+  TCHAR buffer[MAX_PATH + 1];
   DWORD size = MAX_PATH;
   COMPUTER_NAME_FORMAT format = p_type == HOSTNAME_FULL ? ComputerNameDnsFullyQualified : ComputerNameDnsDomain;
 
@@ -57,7 +57,7 @@ XString GetHostName(int p_type)
   {
     return XString(buffer);
   }
-  return "";
+  return _T("");
 }
 
 XString
@@ -79,7 +79,7 @@ SocketToServer(PSOCKADDR_IN6 p_address)
     WORD    wVersionRequested = MAKEWORD(2,2);
     if(WSAStartup(wVersionRequested,&wsaData))
     {
-      return "";
+      return _T("");
     }
 
     // Try again
@@ -97,7 +97,7 @@ SocketToServer(PSOCKADDR_IN6 p_address)
     if(p_address && p_address->sin6_family == AF_INET6)
     {
       XString hostname;
-      hostname.Format("[%x:%x:%x:%x:%x:%x:%x:%x]"
+      hostname.Format(_T("[%x:%x:%x:%x:%x:%x:%x:%x]")
                      ,ntohs(p_address->sin6_addr.u.Word[0])
                      ,ntohs(p_address->sin6_addr.u.Word[1])
                      ,ntohs(p_address->sin6_addr.u.Word[2])
@@ -108,9 +108,10 @@ SocketToServer(PSOCKADDR_IN6 p_address)
                      ,ntohs(p_address->sin6_addr.u.Word[7]));
       return hostname;
     }
-    return XString(host);
+    // getnameinfo is a posix call (always ANSI)
+    return XString(CA2CT(host));
   }
-  return "";
+  return _T("");
 }
 
 XString 
@@ -121,13 +122,13 @@ CreateURLPrefix(PrefixType p_type
 {
   XString prefix;
   // Empty result and set protocol
-  prefix = p_secure ? "https://" : "http://";
+  prefix = p_secure ? _T("https://") : _T("http://");
 
   switch(p_type)
   {
-    case PrefixType::URLPRE_Strong: prefix += "+";
+    case PrefixType::URLPRE_Strong: prefix += _T("+");
                                     break;
-    case PrefixType::URLPRE_Weak:   prefix += "*";
+    case PrefixType::URLPRE_Weak:   prefix += _T("*");
                                     break;
     case PrefixType::URLPRE_Named:  prefix += GetHostName(HOSTNAME_SHORT);
                                     break;
@@ -141,17 +142,17 @@ CreateURLPrefix(PrefixType p_type
   }
   // Add port 
   XString portNum;
-  portNum.Format(":%d",p_port);
+  portNum.Format(_T(":%d"),p_port);
   prefix += portNum;
 
   // Check path naming and append
-  if(!p_path.IsEmpty() && p_path.Left(1) != "/")
+  if(!p_path.IsEmpty() && p_path.Left(1) != _T("/"))
   {
-    p_path = "/" + p_path;
+    p_path = _T("/") + p_path;
   }
-  if(!p_path.IsEmpty() && p_path.Right(1) != "/")
+  if(!p_path.IsEmpty() && p_path.Right(1) != _T("/"))
   {
-    p_path += "/";
+    p_path += _T("/");
   }
   prefix += p_path;
 

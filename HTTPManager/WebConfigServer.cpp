@@ -240,26 +240,26 @@ void
 WebConfigServer::InitComboboxes()
 {
   // HTTP/HTTPS protocol
-  m_comboProtocol.AddString("http");
-  m_comboProtocol.AddString("https");
+  m_comboProtocol.AddString(_T("http"));
+  m_comboProtocol.AddString(_T("https"));
 
   // Port binding: strong, named, address, full, weak
-  m_comboBinding.AddString("");
-  m_comboBinding.AddString("Strong (+)");
-  m_comboBinding.AddString("Short name");
-  m_comboBinding.AddString("IP Address");
-  m_comboBinding.AddString("Full DNS Name");
-  m_comboBinding.AddString("Weak (*)");
+  m_comboBinding.AddString(_T(""));
+  m_comboBinding.AddString(_T("Strong (+)"));
+  m_comboBinding.AddString(_T("Short name"));
+  m_comboBinding.AddString(_T("IP Address"));
+  m_comboBinding.AddString(_T("Full DNS Name"));
+  m_comboBinding.AddString(_T("Weak (*)"));
 
   // Stacksize
-  m_comboStack.AddString("1048576");
-  m_comboStack.AddString("2097152");
-  m_comboStack.AddString("3145728");
-  m_comboStack.AddString("4194304");
-  m_comboStack.AddString("5242880");
-  m_comboStack.AddString("6291456");
-  m_comboStack.AddString("7340032");
-  m_comboStack.AddString("8388608");
+  m_comboStack.AddString(_T("1048576"));
+  m_comboStack.AddString(_T("2097152"));
+  m_comboStack.AddString(_T("3145728"));
+  m_comboStack.AddString(_T("4194304"));
+  m_comboStack.AddString(_T("5242880"));
+  m_comboStack.AddString(_T("6291456"));
+  m_comboStack.AddString(_T("7340032"));
+  m_comboStack.AddString(_T("8388608"));
 }
 
 void
@@ -282,93 +282,93 @@ void
 WebConfigServer::ReadWebConfig(MarlinConfig& config)
 {
   // READ THE SERVER OVERRIDES
-  m_useWebroot        = config.HasParameter("Server","WebRoot");
-  m_useBaseURL        = config.HasParameter("Server","BaseURL");
-  m_useProtocol       = config.HasParameter("Server","Secure");
-  m_useBinding        = config.HasParameter("Server","ChannelType");
-  m_usePort           = config.HasParameter("Server","Port");
-  m_useBacklog        = config.HasParameter("Server","QueueLength");
-  m_useTunneling      = config.HasParameter("Server","VerbTunneling");
-  m_useMinThreads     = config.HasParameter("Server","MinThreads");
-  m_useMaxThreads     = config.HasParameter("Server","MaxThreads");
-  m_useStacksize      = config.HasParameter("Server","StackSize");
-  m_useServerUnicode  = config.HasParameter("Server","RespondUnicode");
-  m_useGzip           = config.HasParameter("Server","HTTPCompression");
-  m_useStreamingLimit = config.HasParameter("Server","StreamingLimit");
-  m_useCompressLimit  = config.HasParameter("Server","CompressLimit");
-  m_useThrotteling    = config.HasParameter("Server","HTTPThrotteling");
-  m_useKeepalive      = config.HasParameter("Server","EventKeepAlive");
-  m_useRetrytime      = config.HasParameter("Server","EventRetryTime");
+  m_useWebroot        = config.HasParameter(_T("Server"),_T("WebRoot"));
+  m_useBaseURL        = config.HasParameter(_T("Server"),_T("BaseURL"));
+  m_useProtocol       = config.HasParameter(_T("Server"),_T("Secure"));
+  m_useBinding        = config.HasParameter(_T("Server"),_T("ChannelType"));
+  m_usePort           = config.HasParameter(_T("Server"),_T("Port"));
+  m_useBacklog        = config.HasParameter(_T("Server"),_T("QueueLength"));
+  m_useTunneling      = config.HasParameter(_T("Server"),_T("VerbTunneling"));
+  m_useMinThreads     = config.HasParameter(_T("Server"),_T("MinThreads"));
+  m_useMaxThreads     = config.HasParameter(_T("Server"),_T("MaxThreads"));
+  m_useStacksize      = config.HasParameter(_T("Server"),_T("StackSize"));
+  m_useServerUnicode  = config.HasParameter(_T("Server"),_T("RespondUnicode"));
+  m_useGzip           = config.HasParameter(_T("Server"),_T("HTTPCompression"));
+  m_useStreamingLimit = config.HasParameter(_T("Server"),_T("StreamingLimit"));
+  m_useCompressLimit  = config.HasParameter(_T("Server"),_T("CompressLimit"));
+  m_useThrotteling    = config.HasParameter(_T("Server"),_T("HTTPThrotteling"));
+  m_useKeepalive      = config.HasParameter(_T("Server"),_T("EventKeepAlive"));
+  m_useRetrytime      = config.HasParameter(_T("Server"),_T("EventRetryTime"));
 
-  m_webroot           = config.GetParameterString ("Server","WebRoot",           "");
-  m_baseURL           = config.GetParameterString ("Server","BaseURL",           "");
-  m_secureProtocol    = config.GetParameterBoolean("Server","Secure",         false);
-  m_port              = config.GetParameterInteger("Server","Port",              80);
-  m_binding           = config.GetParameterString ("Server","ChannelType",       "");
-  m_backlogQueue      = config.GetParameterInteger("Server","QueueLength",       64);
-  m_tunneling         = config.GetParameterBoolean("Server","VerbTunneling",  false);
-  m_minThreads        = config.GetParameterInteger("Server","MinThreads",         4);
-  m_maxThreads        = config.GetParameterInteger("Server","MaxThreads",       100);
-  m_stackSize         = config.GetParameterInteger("Server","StackSize",    1048576);
-  m_serverUnicode     = config.GetParameterBoolean("Server","RespondUnicode", false);
-  m_gzip              = config.GetParameterBoolean("Server","HTTPCompression",false);
-  m_streamingLimit    = config.GetParameterInteger("Server","StreamingLimit",STREAMING_LIMIT);
-  m_compressLimit     = config.GetParameterInteger("Server","CompressLimit", COMPRESS_LIMIT);
-  m_throtteling       = config.GetParameterBoolean("Server","HTTPThrotteling",false);
-  m_keepalive         = config.GetParameterInteger("Server","EventKeepAlive", DEFAULT_EVENT_KEEPALIVE);
-  m_retrytime         = config.GetParameterInteger("Server","EventRetryTime", DEFAULT_EVENT_RETRYTIME);
+  m_webroot           = config.GetParameterString (_T("Server"),_T("WebRoot"),           _T(""));
+  m_baseURL           = config.GetParameterString (_T("Server"),_T("BaseURL"),           _T(""));
+  m_secureProtocol    = config.GetParameterBoolean(_T("Server"),_T("Secure"),         false);
+  m_port              = config.GetParameterInteger(_T("Server"),_T("Port"),              80);
+  m_binding           = config.GetParameterString (_T("Server"),_T("ChannelType"),       _T(""));
+  m_backlogQueue      = config.GetParameterInteger(_T("Server"),_T("QueueLength"),       64);
+  m_tunneling         = config.GetParameterBoolean(_T("Server"),_T("VerbTunneling"),  false);
+  m_minThreads        = config.GetParameterInteger(_T("Server"),_T("MinThreads"),         4);
+  m_maxThreads        = config.GetParameterInteger(_T("Server"),_T("MaxThreads"),       100);
+  m_stackSize         = config.GetParameterInteger(_T("Server"),_T("StackSize"),    1048576);
+  m_serverUnicode     = config.GetParameterBoolean(_T("Server"),_T("RespondUnicode"), false);
+  m_gzip              = config.GetParameterBoolean(_T("Server"),_T("HTTPCompression"),false);
+  m_streamingLimit    = config.GetParameterInteger(_T("Server"),_T("StreamingLimit"),STREAMING_LIMIT);
+  m_compressLimit     = config.GetParameterInteger(_T("Server"),_T("CompressLimit"), COMPRESS_LIMIT);
+  m_throtteling       = config.GetParameterBoolean(_T("Server"),_T("HTTPThrotteling"),false);
+  m_keepalive         = config.GetParameterInteger(_T("Server"),_T("EventKeepAlive"), DEFAULT_EVENT_KEEPALIVE);
+  m_retrytime         = config.GetParameterInteger(_T("Server"),_T("EventRetryTime"), DEFAULT_EVENT_RETRYTIME);
 
   // READ THE SECURITY OVERRIDES
-  m_useXFrameOpt      = config.HasParameter("Security","XFrameOption");
-  m_useXFrameAllow    = config.HasParameter("Security","XFrameAllowed");
-  m_useHstsMaxAge     = config.HasParameter("Security","HSTSMaxAge");
-  m_useHstsDomain     = config.HasParameter("Security","HSTSSubDomains");
-  m_useNoSniff        = config.HasParameter("Security","ContentNoSniff");
-  m_useXssProtect     = config.HasParameter("Security","XSSProtection");
-  m_useXssBlock       = config.HasParameter("Security","XSSBlockMode");
-  m_useNoCache        = config.HasParameter("Security","NoCacheControl");
-  m_useCORS           = config.HasParameter("Security","CORS");
+  m_useXFrameOpt      = config.HasParameter(_T("Security"),_T("XFrameOption"));
+  m_useXFrameAllow    = config.HasParameter(_T("Security"),_T("XFrameAllowed"));
+  m_useHstsMaxAge     = config.HasParameter(_T("Security"),_T("HSTSMaxAge"));
+  m_useHstsDomain     = config.HasParameter(_T("Security"),_T("HSTSSubDomains"));
+  m_useNoSniff        = config.HasParameter(_T("Security"),_T("ContentNoSniff"));
+  m_useXssProtect     = config.HasParameter(_T("Security"),_T("XSSProtection"));
+  m_useXssBlock       = config.HasParameter(_T("Security"),_T("XSSBlockMode"));
+  m_useNoCache        = config.HasParameter(_T("Security"),_T("NoCacheControl"));
+  m_useCORS           = config.HasParameter(_T("Security"),_T("CORS"));
 
-  m_xFrameOption      = config.GetParameterString ("Security","XFrameOption",     "");
-  m_xFrameAllowed     = config.GetParameterString ("Security","XFrameAllowed",    "");
-  m_hstsMaxAge        = config.GetParameterInteger("Security","HSTSMaxAge",        0);
-  m_hstsSubDomain     = config.GetParameterBoolean("Security","HSTSSubDomains",false);
-  m_xNoSniff          = config.GetParameterBoolean("Security","ContentNoSniff",false);
-  m_XSSProtection     = config.GetParameterBoolean("Security","XSSProtection", false);
-  m_XSSBlockMode      = config.GetParameterBoolean("Security","XSSBlockMode",  false);
-  m_noCacheControl    = config.GetParameterBoolean("Security","NoCacheControl",false);
-  m_cors              = config.GetParameterBoolean("Security","CORS",          false);
-  m_allowOrigin       = config.GetParameterString ("Security","CORS_AllowOrigin", "");
-  m_allowHeaders      = config.GetParameterString ("Security","CORS_AllowHeaders","");
-  m_allowMaxAge       = config.GetParameterInteger("Security","CORS_MaxAge",   86400);
-  m_corsCredentials   = config.GetParameterBoolean("Security","CORS_AllowCredentials",false);
+  m_xFrameOption      = config.GetParameterString (_T("Security"),_T("XFrameOption"),     _T(""));
+  m_xFrameAllowed     = config.GetParameterString (_T("Security"),_T("XFrameAllowed"),    _T(""));
+  m_hstsMaxAge        = config.GetParameterInteger(_T("Security"),_T("HSTSMaxAge"),        0);
+  m_hstsSubDomain     = config.GetParameterBoolean(_T("Security"),_T("HSTSSubDomains"),false);
+  m_xNoSniff          = config.GetParameterBoolean(_T("Security"),_T("ContentNoSniff"),false);
+  m_XSSProtection     = config.GetParameterBoolean(_T("Security"),_T("XSSProtection"), false);
+  m_XSSBlockMode      = config.GetParameterBoolean(_T("Security"),_T("XSSBlockMode"),  false);
+  m_noCacheControl    = config.GetParameterBoolean(_T("Security"),_T("NoCacheControl"),false);
+  m_cors              = config.GetParameterBoolean(_T("Security"),_T("CORS"),          false);
+  m_allowOrigin       = config.GetParameterString (_T("Security"),_T("CORS_AllowOrigin"), _T(""));
+  m_allowHeaders      = config.GetParameterString (_T("Security"),_T("CORS_AllowHeaders"),_T(""));
+  m_allowMaxAge       = config.GetParameterInteger(_T("Security"),_T("CORS_MaxAge"),   86400);
+  m_corsCredentials   = config.GetParameterBoolean(_T("Security"),_T("CORS_AllowCredentials"),false);
 
   // READ THE COOKIE OVERRIDES
-  m_useCookieSecure   = config.HasParameter("Cookies","Secure");
-  m_useCookieHttpOnly = config.HasParameter("Cookies","HttpOnly");
-  m_useCookieSameSite = config.HasParameter("Cookies","SameSite");
-  m_useCookiePath     = config.HasParameter("Cookies","Path");
-  m_useCookieDomain   = config.HasParameter("Cookies","Domain");
-  m_useCookieExpires  = config.HasParameter("Cookies","Expires");
-  m_useCookieMaxAge   = config.HasParameter("Cookies","MaxAge");
+  m_useCookieSecure   = config.HasParameter(_T("Cookies"),_T("Secure"));
+  m_useCookieHttpOnly = config.HasParameter(_T("Cookies"),_T("HttpOnly"));
+  m_useCookieSameSite = config.HasParameter(_T("Cookies"),_T("SameSite"));
+  m_useCookiePath     = config.HasParameter(_T("Cookies"),_T("Path"));
+  m_useCookieDomain   = config.HasParameter(_T("Cookies"),_T("Domain"));
+  m_useCookieExpires  = config.HasParameter(_T("Cookies"),_T("Expires"));
+  m_useCookieMaxAge   = config.HasParameter(_T("Cookies"),_T("MaxAge"));
   
-  m_cookieSecure      = config.GetParameterBoolean("Cookies","Secure",  false);
-  m_cookieHttpOnly    = config.GetParameterBoolean("Cookies","HttpOnly",false);
-  m_cookieSameSite    = config.GetParameterString ("Cookies","SameSite","");
-  m_cookiePath        = config.GetParameterString ("Cookies","Path",    "");
-  m_cookieDomain      = config.GetParameterString ("Cookies","Domain",  "");
-  m_cookieExpires     = config.GetParameterInteger("Cookies","Expires", 0);
-  m_cookieMaxAge      = config.GetParameterInteger("Cookies","MaxAge",  0);
+  m_cookieSecure      = config.GetParameterBoolean(_T("Cookies"),_T("Secure"),  false);
+  m_cookieHttpOnly    = config.GetParameterBoolean(_T("Cookies"),_T("HttpOnly"),false);
+  m_cookieSameSite    = config.GetParameterString (_T("Cookies"),_T("SameSite"),_T(""));
+  m_cookiePath        = config.GetParameterString (_T("Cookies"),_T("Path"),    _T(""));
+  m_cookieDomain      = config.GetParameterString (_T("Cookies"),_T("Domain"),  _T(""));
+  m_cookieExpires     = config.GetParameterInteger(_T("Cookies"),_T("Expires"), 0);
+  m_cookieMaxAge      = config.GetParameterInteger(_T("Cookies"),_T("MaxAge"),  0);
 
   // INIT THE COMBO BOXES
   m_comboProtocol.SetCurSel(m_secureProtocol ? 1 : 0);
 
   // Protocol
-  if(m_binding.CompareNoCase("strong")  == 0) m_comboBinding.SetCurSel(1);
-  if(m_binding.CompareNoCase("named")   == 0) m_comboBinding.SetCurSel(2);
-  if(m_binding.CompareNoCase("address") == 0) m_comboBinding.SetCurSel(3);
-  if(m_binding.CompareNoCase("full")    == 0) m_comboBinding.SetCurSel(4);
-  if(m_binding.CompareNoCase("weak")    == 0) m_comboBinding.SetCurSel(5);
+  if(m_binding.CompareNoCase(_T("strong"))  == 0) m_comboBinding.SetCurSel(1);
+  if(m_binding.CompareNoCase(_T("named"))   == 0) m_comboBinding.SetCurSel(2);
+  if(m_binding.CompareNoCase(_T("address")) == 0) m_comboBinding.SetCurSel(3);
+  if(m_binding.CompareNoCase(_T("full"))    == 0) m_comboBinding.SetCurSel(4);
+  if(m_binding.CompareNoCase(_T("weak"))    == 0) m_comboBinding.SetCurSel(5);
 
 
   // INIT THE CHECKBOXES
@@ -403,98 +403,98 @@ void
 WebConfigServer::WriteWebConfig(MarlinConfig& config)
 {
   // GET STRINGS
-  XString port;       port      .Format("%d",m_port);
-  XString minThreads; minThreads.Format("%d",m_minThreads);
-  XString maxThreads; maxThreads.Format("%d",m_maxThreads);
-  XString stackSize;  stackSize .Format("%d",m_stackSize);
+  XString port;       port      .Format(_T("%d"),m_port);
+  XString minThreads; minThreads.Format(_T("%d"),m_minThreads);
+  XString maxThreads; maxThreads.Format(_T("%d"),m_maxThreads);
+  XString stackSize;  stackSize .Format(_T("%d"),m_stackSize);
 
   // WRITE THE CONFIG PARAMETERS
-  config.SetSection("Server");
+  config.SetSection(_T("Server"));
 
   // STANDALONE SERVER
-  if(m_useWebroot)        config.SetParameter   ("Server","WebRoot",      m_webroot);
-  else                    config.RemoveParameter("Server","WebRoot");
-  if(m_useBaseURL)        config.SetParameter   ("Server","BaseURL",      m_baseURL);
-  else                    config.RemoveParameter("Server","BaseURL");
-  if(m_useProtocol)       config.SetParameter   ("Server","Secure",       m_secureProtocol);
-  else                    config.RemoveParameter("Server","Secure");
-  if(m_usePort)           config.SetParameter   ("Server","Port",         port);
-  else                    config.RemoveParameter("Server","Port");
-  if(m_useBinding)        config.SetParameter   ("Server","ChannelType",  m_binding);
-  else                    config.RemoveParameter("Server","ChannelType");
-  if(m_useBacklog)        config.SetParameter   ("Server","QueueLength",  m_backlogQueue);
-  else                    config.RemoveParameter("Server","QueueLength");
-  if(m_useMinThreads)     config.SetParameter   ("Server","MinThreads",   minThreads);
-  else                    config.RemoveParameter("Server","MinThreads");
-  if(m_useMaxThreads)     config.SetParameter   ("Server","MaxThreads",   maxThreads);
-  else                    config.RemoveParameter("Server","MaxThreads");
-  if(m_useStacksize)      config.SetParameter   ("Server","StackSize",    stackSize);
-  else                    config.RemoveParameter("Server","StackSize");
+  if(m_useWebroot)        config.SetParameter   (_T("Server"),_T("WebRoot"),      m_webroot);
+  else                    config.RemoveParameter(_T("Server"),_T("WebRoot"));
+  if(m_useBaseURL)        config.SetParameter   (_T("Server"),_T("BaseURL"),      m_baseURL);
+  else                    config.RemoveParameter(_T("Server"),_T("BaseURL"));
+  if(m_useProtocol)       config.SetParameter   (_T("Server"),_T("Secure"),       m_secureProtocol);
+  else                    config.RemoveParameter(_T("Server"),_T("Secure"));
+  if(m_usePort)           config.SetParameter   (_T("Server"),_T("Port"),         port);
+  else                    config.RemoveParameter(_T("Server"),_T("Port"));
+  if(m_useBinding)        config.SetParameter   (_T("Server"),_T("ChannelType"),  m_binding);
+  else                    config.RemoveParameter(_T("Server"),_T("ChannelType"));
+  if(m_useBacklog)        config.SetParameter   (_T("Server"),_T("QueueLength"),  m_backlogQueue);
+  else                    config.RemoveParameter(_T("Server"),_T("QueueLength"));
+  if(m_useMinThreads)     config.SetParameter   (_T("Server"),_T("MinThreads"),   minThreads);
+  else                    config.RemoveParameter(_T("Server"),_T("MinThreads"));
+  if(m_useMaxThreads)     config.SetParameter   (_T("Server"),_T("MaxThreads"),   maxThreads);
+  else                    config.RemoveParameter(_T("Server"),_T("MaxThreads"));
+  if(m_useStacksize)      config.SetParameter   (_T("Server"),_T("StackSize"),    stackSize);
+  else                    config.RemoveParameter(_T("Server"),_T("StackSize"));
   // STANDALONE + IIS
-  if(m_useServerUnicode)  config.SetParameter   ("Server","RespondUnicode", m_serverUnicode);
-  else                    config.RemoveParameter("Server","RespondUnicode");
-  if(m_useGzip)           config.SetParameter   ("Server","HTTPCompression",m_gzip);
-  else                    config.RemoveParameter("Server","HTTPCompression");
-  if(m_useStreamingLimit) config.SetParameter   ("Server","StreamingLimit", (int)m_streamingLimit);
-  else                    config.RemoveParameter("Server","StreamingLimit");
-  if(m_useCompressLimit)  config.SetParameter   ("Server","CompressLimit",  (int)m_compressLimit);
-  else                    config.RemoveParameter("Server","CompressLimit");
-  if(m_useThrotteling)    config.SetParameter   ("Server","HTTPThrotteling",m_throtteling);
-  else                    config.RemoveParameter("Server","HTTPThrotteling");
-  if(m_useTunneling)      config.SetParameter   ("Server","VerbTunneling",  m_tunneling);
-  else                    config.RemoveParameter("Server","VerbTunneling");
-  if(m_useKeepalive)      config.SetParameter   ("Server","EventKeepAlive", m_keepalive);
-  else                    config.RemoveParameter("Server","EventKeepAlive");
-  if(m_useRetrytime)      config.SetParameter   ("Server","EventRetryTime", m_retrytime);
-  else                    config.RemoveParameter("Server","EventRetryTime");
+  if(m_useServerUnicode)  config.SetParameter   (_T("Server"),_T("RespondUnicode"), m_serverUnicode);
+  else                    config.RemoveParameter(_T("Server"),_T("RespondUnicode"));
+  if(m_useGzip)           config.SetParameter   (_T("Server"),_T("HTTPCompression"),m_gzip);
+  else                    config.RemoveParameter(_T("Server"),_T("HTTPCompression"));
+  if(m_useStreamingLimit) config.SetParameter   (_T("Server"),_T("StreamingLimit"), (int)m_streamingLimit);
+  else                    config.RemoveParameter(_T("Server"),_T("StreamingLimit"));
+  if(m_useCompressLimit)  config.SetParameter   (_T("Server"),_T("CompressLimit"),  (int)m_compressLimit);
+  else                    config.RemoveParameter(_T("Server"),_T("CompressLimit"));
+  if(m_useThrotteling)    config.SetParameter   (_T("Server"),_T("HTTPThrotteling"),m_throtteling);
+  else                    config.RemoveParameter(_T("Server"),_T("HTTPThrotteling"));
+  if(m_useTunneling)      config.SetParameter   (_T("Server"),_T("VerbTunneling"),  m_tunneling);
+  else                    config.RemoveParameter(_T("Server"),_T("VerbTunneling"));
+  if(m_useKeepalive)      config.SetParameter   (_T("Server"),_T("EventKeepAlive"), m_keepalive);
+  else                    config.RemoveParameter(_T("Server"),_T("EventKeepAlive"));
+  if(m_useRetrytime)      config.SetParameter   (_T("Server"),_T("EventRetryTime"), m_retrytime);
+  else                    config.RemoveParameter(_T("Server"),_T("EventRetryTime"));
 
   // SECURITY HEADERS
-  config.SetSection("Security");
+  config.SetSection(_T("Security"));
 
-  if(m_useXFrameOpt)    config.SetParameter   ("Security","XFrameOption",   m_xFrameOption);
-  else                  config.RemoveParameter("Security","XFrameOption");
-  if(m_useXFrameAllow)  config.SetParameter   ("Security","XFrameAllowed",  m_xFrameAllowed);
-  else                  config.RemoveParameter("Security","XFrameAllowed");
-  if(m_useHstsMaxAge)   config.SetParameter   ("Security","HSTSMaxAge",     (int)m_hstsMaxAge);
-  else                  config.RemoveParameter("Security","HSTSMaxAge");
-  if(m_useHstsDomain)   config.SetParameter   ("Security","HSTSSubDomains", m_hstsSubDomain);
-  else                  config.RemoveParameter("Security","HSTSSubDomains");
-  if(m_useNoSniff)      config.SetParameter   ("Security","ContentNoSniff", m_xNoSniff);
-  else                  config.RemoveParameter("Security","ContentNoSniff");
-  if(m_useXssProtect)   config.SetParameter   ("Security","XSSProtection",  m_XSSProtection);
-  else                  config.RemoveParameter("Security","XSSProtection");
-  if(m_useXssBlock)     config.SetParameter   ("Security","XSSBlockMode",   m_XSSBlockMode);
-  else                  config.RemoveParameter("Security","XSSBlockMode");
-  if(m_useNoCache)      config.SetParameter   ("Security","NoCacheControl", m_noCacheControl);
-  else                  config.RemoveParameter("Security","NoCacheControl");
-  if(m_useCORS)         config.SetParameter   ("Security","CORS",           m_cors);
-  else                  config.RemoveParameter("Security","CORS");
-  if(m_useCORS)         config.SetParameter   ("Security","CORS_AllowOrigin",m_allowOrigin);
-  else                  config.RemoveParameter("Security","CORS_AllowOrigin");
-  if(m_useCORS)         config.SetParameter   ("Security","CORS_AllowHeaders",m_allowHeaders);
-  else                  config.RemoveParameter("Security","CORS_AllowHeaders");
-  if(m_useCORS)         config.SetParameter   ("Security","CORS_MaxAge",      m_allowMaxAge);
-  else                  config.RemoveParameter("Security","CORS_MaxAge");
-  if(m_useCORS)         config.SetParameter   ("Security","CORS_AllowCredentials",m_corsCredentials);
-  else                  config.RemoveParameter("Security","CORS_AllowCredentials");
+  if(m_useXFrameOpt)    config.SetParameter   (_T("Security"),_T("XFrameOption"),   m_xFrameOption);
+  else                  config.RemoveParameter(_T("Security"),_T("XFrameOption"));
+  if(m_useXFrameAllow)  config.SetParameter   (_T("Security"),_T("XFrameAllowed"),  m_xFrameAllowed);
+  else                  config.RemoveParameter(_T("Security"),_T("XFrameAllowed"));
+  if(m_useHstsMaxAge)   config.SetParameter   (_T("Security"),_T("HSTSMaxAge"),     (int)m_hstsMaxAge);
+  else                  config.RemoveParameter(_T("Security"),_T("HSTSMaxAge"));
+  if(m_useHstsDomain)   config.SetParameter   (_T("Security"),_T("HSTSSubDomains"), m_hstsSubDomain);
+  else                  config.RemoveParameter(_T("Security"),_T("HSTSSubDomains"));
+  if(m_useNoSniff)      config.SetParameter   (_T("Security"),_T("ContentNoSniff"), m_xNoSniff);
+  else                  config.RemoveParameter(_T("Security"),_T("ContentNoSniff"));
+  if(m_useXssProtect)   config.SetParameter   (_T("Security"),_T("XSSProtection"),  m_XSSProtection);
+  else                  config.RemoveParameter(_T("Security"),_T("XSSProtection"));
+  if(m_useXssBlock)     config.SetParameter   (_T("Security"),_T("XSSBlockMode"),   m_XSSBlockMode);
+  else                  config.RemoveParameter(_T("Security"),_T("XSSBlockMode"));
+  if(m_useNoCache)      config.SetParameter   (_T("Security"),_T("NoCacheControl"), m_noCacheControl);
+  else                  config.RemoveParameter(_T("Security"),_T("NoCacheControl"));
+  if(m_useCORS)         config.SetParameter   (_T("Security"),_T("CORS"),           m_cors);
+  else                  config.RemoveParameter(_T("Security"),_T("CORS"));
+  if(m_useCORS)         config.SetParameter   (_T("Security"),_T("CORS_AllowOrigin"),m_allowOrigin);
+  else                  config.RemoveParameter(_T("Security"),_T("CORS_AllowOrigin"));
+  if(m_useCORS)         config.SetParameter   (_T("Security"),_T("CORS_AllowHeaders"),m_allowHeaders);
+  else                  config.RemoveParameter(_T("Security"),_T("CORS_AllowHeaders"));
+  if(m_useCORS)         config.SetParameter   (_T("Security"),_T("CORS_MaxAge"),      m_allowMaxAge);
+  else                  config.RemoveParameter(_T("Security"),_T("CORS_MaxAge"));
+  if(m_useCORS)         config.SetParameter   (_T("Security"),_T("CORS_AllowCredentials"),m_corsCredentials);
+  else                  config.RemoveParameter(_T("Security"),_T("CORS_AllowCredentials"));
 
   // COOKIE HEADERS
-  config.SetSection("Cookies");
+  config.SetSection(_T("Cookies"));
 
-  if(m_useCookieSecure)   config.SetParameter   ("Cookies","Secure",  m_cookieSecure);
-  else                    config.RemoveParameter("Cookies","Secure");
-  if(m_useCookieHttpOnly) config.SetParameter   ("Cookies","HttpOnly",m_cookieHttpOnly);
-  else                    config.RemoveParameter("Cookies","HttpOnly");
-  if(m_useCookieSameSite) config.SetParameter   ("Cookies","SameSite",m_cookieSameSite);
-  else                    config.RemoveParameter("Cookies","SameSite");
-  if(m_useCookiePath)     config.SetParameter   ("Cookies","Path",    m_cookiePath);
-  else                    config.RemoveParameter("Cookies","Path");
-  if(m_useCookieDomain)   config.SetParameter   ("Cookies","Domain",  m_cookieDomain);
-  else                    config.RemoveParameter("Cookies","Domain");
-  if(m_useCookieExpires)  config.SetParameter   ("Cookies","Expires", m_cookieExpires);
-  else                    config.RemoveParameter("Cookies","Expires");
-  if(m_useCookieMaxAge)   config.SetParameter   ("Cookies","MaxAge",  m_cookieMaxAge);
-  else                    config.RemoveParameter("Cookies","MaxAge");
+  if(m_useCookieSecure)   config.SetParameter   (_T("Cookies"),_T("Secure"),  m_cookieSecure);
+  else                    config.RemoveParameter(_T("Cookies"),_T("Secure"));
+  if(m_useCookieHttpOnly) config.SetParameter   (_T("Cookies"),_T("HttpOnly"),m_cookieHttpOnly);
+  else                    config.RemoveParameter(_T("Cookies"),_T("HttpOnly"));
+  if(m_useCookieSameSite) config.SetParameter   (_T("Cookies"),_T("SameSite"),m_cookieSameSite);
+  else                    config.RemoveParameter(_T("Cookies"),_T("SameSite"));
+  if(m_useCookiePath)     config.SetParameter   (_T("Cookies"),_T("Path"),    m_cookiePath);
+  else                    config.RemoveParameter(_T("Cookies"),_T("Path"));
+  if(m_useCookieDomain)   config.SetParameter   (_T("Cookies"),_T("Domain"),  m_cookieDomain);
+  else                    config.RemoveParameter(_T("Cookies"),_T("Domain"));
+  if(m_useCookieExpires)  config.SetParameter   (_T("Cookies"),_T("Expires"), m_cookieExpires);
+  else                    config.RemoveParameter(_T("Cookies"),_T("Expires"));
+  if(m_useCookieMaxAge)   config.SetParameter   (_T("Cookies"),_T("MaxAge"),  m_cookieMaxAge);
+  else                    config.RemoveParameter(_T("Cookies"),_T("MaxAge"));
 }
 
 // WebConfigDlg message handlers
@@ -517,7 +517,7 @@ WebConfigServer::OnBnClickedButtWebroot()
   XString rootdir;
   MapDialog map;
   if(map.Browse(GetSafeHwnd()
-               ,"Get the path to the webroot directory"
+               ,_T("Get the path to the webroot directory")
                ,m_webroot
                ,rootdir
                ,false    // files
@@ -559,15 +559,15 @@ WebConfigServer::OnCbnSelchangeBinding()
       default:[[fallthrough]];
       case 0: m_binding.Empty();
               break;
-      case 1: m_binding = "strong";
+      case 1: m_binding = _T("strong");
               break;
-      case 2: m_binding = "named";
+      case 2: m_binding = _T("named");
               break;
-      case 3: m_binding = "address";
+      case 3: m_binding = _T("address");
               break;
-      case 4: m_binding = "full";
+      case 4: m_binding = _T("full");
               break;
-      case 5: m_binding = "weak";
+      case 5: m_binding = _T("weak");
               break;
     }
   }
@@ -611,7 +611,7 @@ WebConfigServer::OnCbnSelchangeStacksize()
   {
     XString size;
     m_comboStack.GetLBText(sel,size);
-    m_stackSize = atoi(size);
+    m_stackSize = _ttoi(size);
   }
 }
 

@@ -84,7 +84,7 @@ private:
   // Activate keep-alive and keep-alive times
   bool  ActivateKeepalive();
   // Find connection type (AF_INET (IPv4) or AF_INET6 (IPv6))
-  int   FindConnectType(LPCTSTR p_host,char* p_portname);
+  int   FindConnectType(LPCTSTR p_host,LPCTSTR p_portname);
 
   bool            m_initDone            { false   };  // Initialize called (or not)
   bool            m_active              { true    };  // Active = true means clientside socket, passive is serverside

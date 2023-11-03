@@ -66,7 +66,7 @@ XMLParserJSON::ParseMainSOAP(XMLElement* p_element,JSONvalue& p_value)
   JSONvalue& value = pair.m_value;
 
   // Detect the SOAP Envelope
-  if(pair.m_name == "Envelope")
+  if(pair.m_name == _T("Envelope"))
   {
     if(value.GetDataType() != JsonType::JDT_object)
     {
@@ -78,7 +78,7 @@ XMLParserJSON::ParseMainSOAP(XMLElement* p_element,JSONvalue& p_value)
   }
 
   // Detect the SOAP Body
-  if(pair.m_name == "Body")
+  if(pair.m_name == _T("Body"))
   {
     if(value.GetDataType() != JsonType::JDT_object)
     {
@@ -124,7 +124,7 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,XString p_arr
                                       {
                                         if(m_soap || m_rootFound)
                                         {
-                                          element = m_soap->AddElement(p_element,pair.m_name,XDT_String,"");
+                                          element = m_soap->AddElement(p_element,pair.m_name,XDT_String,_T(""));
                                         }
                                         else
                                         {
@@ -145,7 +145,7 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,XString p_arr
                                     break;
     case JsonType::JDT_string:      p_element->SetValue(p_value.GetString());
                                     break;
-    case JsonType::JDT_number_int:  value.Format("%d",p_value.GetNumberInt());
+    case JsonType::JDT_number_int:  value.Format(_T("%d"),p_value.GetNumberInt());
                                     p_element->SetValue(value);
                                     break;
     case JsonType::JDT_number_bcd:  value = p_value.GetNumberBcd().AsString(bcd::Format::Bookkeeping,false,0);
@@ -154,9 +154,9 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,XString p_arr
     case JsonType::JDT_const:       switch(p_value.GetConstant())
                                     {
                                       case JsonConst::JSON_NONE:  break; // Do nothing: empty string!!
-                                      case JsonConst::JSON_NULL:  p_element->SetValue("");      break;
-                                      case JsonConst::JSON_FALSE: p_element->SetValue("false"); break;
-                                      case JsonConst::JSON_TRUE:  p_element->SetValue("true");  break;
+                                      case JsonConst::JSON_NULL:  p_element->SetValue(_T(""));      break;
+                                      case JsonConst::JSON_FALSE: p_element->SetValue(_T("false")); break;
+                                      case JsonConst::JSON_TRUE:  p_element->SetValue(_T("true"));  break;
                                     }
                                     break;
   }

@@ -25,7 +25,7 @@
 //
 #include "pch.h"
 #include "XMLParser.h"
-#include "DefuseBOM.h"
+#include "WinFile.h"
 #include "ConvertWideString.h"
 #include "Namespace.h"
 
@@ -38,11 +38,11 @@ static char THIS_FILE[] = __FILE__;
 // Special entities, so we do not mess with the XML structures
 Entity g_entity[NUM_ENTITY] =
 {
-  { "&amp;", 5, '&' },
-  { "&lt;",  4, '<' },
-  { "&gt;",  4, '>' },
-  { "&quot;",6, '\"'},
-  { "&apos;",6, '\''},
+  { _T("&amp;"), 5, '&' },
+  { _T("&lt;"),  4, '<' },
+  { _T("&gt;"),  4, '>' },
+  { _T("&quot;"),6, '\"'},
+  { _T("&apos;"),6, '\''},
 };
 
 // Static function to be called from the outside
@@ -56,20 +56,20 @@ XMLParser::PrintXmlString(const XString& p_string,bool p_utf8 /*=false*/)
   if(p_utf8)
   {
     // Now encode MBCS to UTF-8 without a BOM
-    uncoded = EncodeStringForTheWire(uncoded,"utf-8");
+    uncoded = EncodeStringForTheWire(uncoded,_T("utf-8"));
   }
 
-  unsigned char* pointer = (unsigned char*)uncoded.GetString();
+  _TUCHAR* pointer = (_TUCHAR*)uncoded.GetString();
   while(*pointer)
   {
     switch(*pointer)
     {
       // Chars with special XML meaning (entities)
-      case '&': result += "&amp;";  break;
-      case '<': result += "&lt;";   break;
-      case '>': result += "&gt;";   break;
-      case '\'':result += "&apos;"; break;
-      case '\"':result += "&quot;"; break;
+      case '&': result += _T("&amp;");  break;
+      case '<': result += _T("&lt;");   break;
+      case '>': result += _T("&gt;");   break;
+      case '\'':result += _T("&apos;"); break;
+      case '\"':result += _T("&quot;"); break;
       // Performance optimization
       case ' ' :[[fallthrough]];
       case '\t':[[fallthrough]];
@@ -82,7 +82,7 @@ XMLParser::PrintXmlString(const XString& p_string,bool p_utf8 /*=false*/)
                   // are restricted chars in the XML-standard
                   // And should be printed as entities
                   XString temp;
-                  temp.Format("&#%02d;",(int)*pointer);
+                  temp.Format(_T("&#%02d;"),(int)*pointer);
                   result += temp;
                 }
                 else
@@ -98,16 +98,16 @@ XMLParser::PrintXmlString(const XString& p_string,bool p_utf8 /*=false*/)
 }
 
 XString
-XMLParser::PrintJsonString(const XString& p_string,StringEncoding p_encoding)
+XMLParser::PrintJsonString(const XString& p_string,Encoding p_encoding)
 {
-  unsigned char* buffer  = new unsigned char[2 * (size_t)p_string.GetLength() + 4];
-  unsigned char* pointer = buffer;
+  _TUCHAR* buffer  = new _TUCHAR[2 * (size_t)p_string.GetLength() + 4];
+  _TUCHAR* pointer = buffer;
 
   *pointer++ = '\"';
 
   for(int ind = 0; ind < p_string.GetLength(); ++ind)
   {
-    char ch = p_string.GetAt(ind);
+    TCHAR ch = p_string.GetAt(ind);
 
     if(ch < 0x80)
     {
@@ -153,11 +153,11 @@ XMLParser::PrintJsonString(const XString& p_string,StringEncoding p_encoding)
   delete [] buffer;
   switch(p_encoding)
   {
-    case StringEncoding::ENC_UTF8:     result = EncodeStringForTheWire(result,"utf-8");    break;
-    case StringEncoding::ENC_UTF16:    result = EncodeStringForTheWire(result,"utf-16");   break;
-    case StringEncoding::ENC_ISO88591: result = EncodeStringForTheWire(result,"iso88591"); break;
-    case StringEncoding::ENC_Plain:    // Fall through
-    default:                          break;
+    case Encoding::UTF8:     result = EncodeStringForTheWire(result,_T("utf-8"));    break;
+    case Encoding::LE_UTF16: result = EncodeStringForTheWire(result,_T("utf-16"));   break;
+//  case Encoding::ISO88591: result = EncodeStringForTheWire(result,_T("iso88591")); break;
+    case Encoding::Default:   // Fall through
+    default:                 break;
   }
   return result;
 }
@@ -182,30 +182,25 @@ XMLParser::ParseMessage(XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_W
   // Check if we have something to do
   if(m_message == nullptr || p_message.IsEmpty())
   {
-    SetError(XmlError::XE_EmptyXML,(uchar*)"Empty message",false);
+    SetError(XmlError::XE_EmptyXML,_T("Empty message"),false);
     return;
   }
   // Initialize the parsing pointer
-  m_pointer = (uchar*) p_message.GetString();
+  m_pointer = (_TUCHAR*) p_message.GetString();
 
   // Check for Byte-Order-Mark first
-  BOMType bomType = BOMType::BT_NO_BOM;
+  Encoding charset = Encoding::Default;
   unsigned int skip = 0;
-  BOMOpenResult bomResult = CheckForBOM(m_pointer,bomType,skip);
+  BOMOpenResult bomResult = WinFile::DefuseBOM(reinterpret_cast<const unsigned char*>(m_pointer),charset,skip);
 
-  if(bomResult != BOMOpenResult::BOR_NoBom)
+  if(bomResult != BOMOpenResult::NoEncoding)
   {
-    if(bomType != BOMType::BT_BE_UTF8)
-    {
-      // cannot process these strings
-      SetError(XmlError::XE_IncompatibleEncoding,(uchar*)"Incompatible Byte-Order-Mark encoding",false);
-      return;
-    }
-    m_message->m_encoding = StringEncoding::ENC_UTF8;
+    m_message->m_encoding = charset;
     m_message->m_sendBOM  = true;
-    m_utf8 = true;
     // Skip past BOM
     m_pointer += skip;
+    // UTF-8 NOT detected earlier by WinFile: Do it ourselves!!
+    m_utf8 = (charset == Encoding::UTF8);
   }
 
   // MAIN PARSING LOOP
@@ -218,11 +213,11 @@ XMLParser::ParseMessage(XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_W
     if(m_message->m_root->GetName().IsEmpty())
     {
       // Minimum requirement of an XML message
-      SetError(XmlError::XE_NoRootElement,(uchar*)"Missing root element of XML message");
+      SetError(XmlError::XE_NoRootElement,_T("Missing root element of XML message"));
     }
     if(*m_pointer)
     {
-      SetError(XmlError::XE_ExtraText,m_pointer);
+      SetError(XmlError::XE_ExtraText,(LPCTSTR)m_pointer);
     }
   }
   catch(XmlError& error)
@@ -268,33 +263,33 @@ XMLParser::ParseLevel()
     // STEP 3: Check for a node
     if(*m_pointer != '<')
     {
-      SetError(XmlError::XE_NotAnXMLMessage,m_pointer);
+      SetError(XmlError::XE_NotAnXMLMessage,(LPCTSTR)m_pointer);
       return;
     }
     // STEP 4: One of five node types
-    if(strncmp((const char*)m_pointer,"<?xml",5) == 0)
+    if(_tcsncmp((LPCTSTR)m_pointer,_T("<?xml"),5) == 0)
     {
       ParseDeclaration();
     }
-    else if(strncmp((const char*)m_pointer,"<?xml-stylesheet",16) == 0)
+    else if(_tcsncmp((LPCTSTR)m_pointer,_T("<?xml-stylesheet"),16) == 0)
     {
       ParseStylesheet();
     }
-    else if(strncmp((const char*)m_pointer,"<!--",4) == 0)
+    else if(_tcsncmp((LPCTSTR)m_pointer,_T("<!--"),4) == 0)
     {
       ParseComment();
     }
-    else if(strncmp((const char*)m_pointer,"<![CDATA[",9) == 0)
+    else if(_tcsncmp((LPCTSTR)m_pointer,_T("<![CDATA["),9) == 0)
     {
       ParseCDATA();
       // Scan for recursively restartable CDATA sections
-      while(strncmp((const char*)m_pointer,"<![CDATA[",9) == 0)
+      while(_tcsncmp((LPCTSTR)m_pointer,_T("<![CDATA["),9) == 0)
       {
         ParseCDATA(true);
       }
       return;
     }
-    else if(strncmp((const char*)m_pointer,"<!",2) == 0)
+    else if(_tcsncmp((LPCTSTR)m_pointer,_T("<!"),2) == 0)
     {
       ParseDTD();
     }
@@ -308,19 +303,19 @@ XMLParser::ParseLevel()
 
 // Set the internal error
 void
-XMLParser::SetError(XmlError p_error,const uchar* p_text,bool p_throw /*=true*/)
+XMLParser::SetError(XmlError p_error,LPCTSTR p_text,bool p_throw /*=true*/)
 {
   if(m_message == nullptr)
   {
     return;
   }
-  XString errorString("ERROR parsing XML: ");
+  XString errorString(_T("ERROR parsing XML: "));
   if(m_element)
   {
-    errorString.AppendFormat(" Element [%s] : ",m_element->GetName().GetString());
+    errorString.AppendFormat(_T(" Element [%s] : "),m_element->GetName().GetString());
   }
   // Setting the error
-  errorString += (const char*) p_text;
+  errorString += p_text;
   m_message->m_internalErrorString = errorString;
   // Passing it on
   if(p_throw)
@@ -381,49 +376,49 @@ XMLParser::ParseDeclaration()
     // Remove possibly "xml" namespace
     XString namesp = SplitNamespace(attributeName);
 
-    if(attributeName.Compare("version") == 0)
+    if(attributeName.Compare(_T("version")) == 0)
     {
-      if(value.Compare("1.0") == 0)
+      if(value.Compare(_T("1.0")) == 0)
       {
         m_message->m_version = value;
       }
     }
-    else if(attributeName.Compare("encoding") == 0)
+    else if(attributeName.Compare(_T("encoding")) == 0)
     {
-      m_message->m_encoding = StringEncoding::ENC_Plain;
-      if(value.CompareNoCase("utf-8") == 0)
+      m_message->m_encoding = Encoding::Default;
+      if(value.CompareNoCase(_T("utf-8")) == 0)
       {
-        m_utf8 = true; 
-        m_message->m_encoding = StringEncoding::ENC_UTF8;
+        if(m_message->GetEncoding() != Encoding::Default)
+        {
+          // UTF-8 Not detected earlier by WinFile or by Byte-Order-Mark
+          // So we choose to believe the header and scan for UTF-8 anyhow
+          m_utf8 = true;
+          m_message->m_encoding = Encoding::UTF8;
+        }
       }
-      else if(value.Left(6).CompareNoCase("utf-16") == 0)
+      else if(value.Left(6).CompareNoCase(_T("utf-16")) == 0)
       {
-        // Works for "UTF-16", "UTF-16LE" and "UTF-16BE" as of RFC 2781
-        // Although one should only specify "utf-16" without the endianess
-        m_message->m_encoding = StringEncoding::ENC_UTF16;
-      }
-      else if(value.CompareNoCase("iso-8859-1") == 0)
-      {
-        m_message->m_encoding = StringEncoding::ENC_ISO88591;
+        m_message->SetSendUnicode(true);
       }
       else
       {
         // If it was send in the current codepage, use that
+        // Most commonly 'windows-1252' here in western-Europe 
         if(GetACP() == (UINT) CharsetToCodepage(value))
         {
-          m_message->m_encoding = StringEncoding::ENC_Plain;
+          m_message->m_encoding = Encoding::Default;
         }
         else
         {
           XString message;
-          message.Format("Unknown XML character encoding: %s",value.GetString());
-          SetError(XmlError::XE_UnknownEncoding,(uchar*)message.GetString());
+          message.Format(_T("Unknown XML character encoding: %s"),value.GetString());
+          SetError(XmlError::XE_UnknownEncoding,message.GetString());
         }
       }
     }
-    else if(attributeName.Compare("standalone") == 0)
+    else if(attributeName.Compare(_T("standalone")) == 0)
     {
-      if(value.CompareNoCase("yes") == 0 || value.CompareNoCase("no") == 0)
+      if(value.CompareNoCase(_T("yes")) == 0 || value.CompareNoCase(_T("no")) == 0)
       {
         m_message->m_standalone = value;
       }
@@ -431,14 +426,14 @@ XMLParser::ParseDeclaration()
     else
     {
       XString message;
-      message.Format("Unknown header attributes [%s=%s]",attributeName.GetString(),value.GetString());
-      SetError(XmlError::XE_HeaderAttribs,(uchar*)message.GetString());
+      message.Format(_T("Unknown header attributes [%s=%s]"),attributeName.GetString(),value.GetString());
+      SetError(XmlError::XE_HeaderAttribs,message.GetString());
     }
-    if(!namesp.IsEmpty() && namesp.Compare("xml"))
+    if(!namesp.IsEmpty() && namesp.Compare(_T("xml")))
     {
       XString message;
-      message.Format("Unknown root namespace [%s] for attribute [%s]",namesp.GetString(),attributeName.GetString());
-      SetError(XmlError::XE_HeaderAttribs,(uchar*)message.GetString());
+      message.Format(_T("Unknown root namespace [%s] for attribute [%s]"),namesp.GetString(),attributeName.GetString());
+      SetError(XmlError::XE_HeaderAttribs,message.GetString());
     }
   }
   // Skip over end of declaration
@@ -467,19 +462,19 @@ XMLParser::ParseStylesheet()
     XString value = GetQuotedString();
     SkipWhiteSpace();
 
-    if(attributeName.Compare("type") == 0)
+    if(attributeName.Compare(_T("type")) == 0)
     {
       m_message->m_stylesheetType = value;
     }
-    else if(attributeName.Compare("href") == 0)
+    else if(attributeName.Compare(_T("href")) == 0)
     {
       m_message->m_stylesheet = value;
     }
     else
     {
       XString message;
-      message.Format("Unknown stylesheet attributes [%s=%s]",attributeName.GetString(),value.GetString());
-      SetError(XmlError::XE_HeaderAttribs,(uchar*)message.GetString());
+      message.Format(_T("Unknown stylesheet attributes [%s=%s]"),attributeName.GetString(),value.GetString());
+      SetError(XmlError::XE_HeaderAttribs,message.GetString());
     }
   }
   // Skip over end of the declaration
@@ -492,9 +487,9 @@ void
 XMLParser::ParseComment()
 {
   // We throw comment's away real quick
-  while(*m_pointer && strncmp((const char*)m_pointer,"-->",3))
+  while(*m_pointer && _tcsncmp((LPCTSTR)m_pointer,_T("-->"),3))
   {
-    m_pointer++;
+    ++m_pointer;
   }
   // Skip end of comment
   NeedToken('-');
@@ -513,7 +508,7 @@ XMLParser::ParseCDATA(bool p_append /*= false*/)
 
   // Read everything until we find "]]>"
   // XML says a ']]' can occur in a CDATA section
-  while(*m_pointer && strncmp((const char*)m_pointer,"]]>",3))
+  while(*m_pointer && _tcsncmp((LPCTSTR)m_pointer,_T("]]>"),3))
   {
     value += *m_pointer++;
   }
@@ -543,11 +538,14 @@ XMLParser::ParseText()
 
   while(*m_pointer && *m_pointer != '<')
   {
-    unsigned char ch = ValueChar();
+    _TUCHAR ch = ValueChar();
     if(m_whiteSpace == WhiteSpace::COLLAPSE_WHITESPACE && isspace(ch))
     {
       value += ' '; // Add exactly one whitespace char
-      while(*m_pointer && isspace(*m_pointer)) ++m_pointer;
+      while(*m_pointer && isspace(*m_pointer))
+      {
+        ++m_pointer;
+      }
     }
     else
     {
@@ -575,12 +573,12 @@ void
 XMLParser::ParseDTD()
 {
   // Setting the error, but we do not throw from here.
-  SetError(XmlError::XE_DTDNotSupported,(uchar*)"DTD's are unsupported",false);
+  SetError(XmlError::XE_DTDNotSupported,_T("DTD's are unsupported"),false);
 
   // Skip past a DTD part
   while(*m_pointer && *m_pointer != '>')
   {
-    m_pointer++;
+    ++m_pointer;
   }
   NeedToken('>');
   SkipWhiteSpace();
@@ -618,14 +616,14 @@ XMLParser::ParseElement()
         m_message->SetAttribute(m_lastElement,attributeName,value);
 
         // In special case "[xml:]space", we must change whitespace preserving
-        if(attributeName.Compare("space") == 0)
+        if(attributeName.Compare(_T("space")) == 0)
         {
-          elemspace = value.Compare("preserve") == 0 ? WhiteSpace::PRESERVE_WHITESPACE 
-                                                     : WhiteSpace::COLLAPSE_WHITESPACE;
+          elemspace = value.Compare(_T("preserve")) == 0 ? WhiteSpace::PRESERVE_WHITESPACE 
+                                                         : WhiteSpace::COLLAPSE_WHITESPACE;
         }
       }
     }
-    if(*m_pointer && strncmp((const char*)m_pointer,"/>",2) == 0)
+    if(*m_pointer && _tcsncmp((LPCTSTR)m_pointer,_T("/>"),2) == 0)
     {
       m_pointer += 2;
       return false;
@@ -665,23 +663,23 @@ XMLParser::ParseElement()
         if(namesp.Compare(closingNS))
         {
           XString error;
-          error.Format("Element [%s] has closing tag with different namespace.",elementName.GetString());
-          SetError(XmlError::XE_MissingEndTag,(uchar*)error.GetString());
+          error.Format(_T("Element [%s] has closing tag with different namespace."),elementName.GetString());
+          SetError(XmlError::XE_MissingEndTag,error.GetString());
         }
         NeedToken('>');
         SkipOuterWhiteSpace();
         // Parsing level complete
-        return strncmp((const char*)m_pointer,"</",2) == 0;
+        return _tcsncmp((LPCTSTR)m_pointer,_T("</"),2) == 0;
       }
       XString error;
-      error.Format("Element [%s] has incorrect closing tag [%s]",elementName.GetString(),closing.GetString());
-      SetError(XmlError::XE_MissingEndTag,(uchar*)error.GetString());
+      error.Format(_T("Element [%s] has incorrect closing tag [%s]"),elementName.GetString(),closing.GetString());
+      SetError(XmlError::XE_MissingEndTag,error.GetString());
     }
     else
     {
       XString error;
-      error.Format("Missing end tag for element: %s",elementName.GetString());
-      SetError(XmlError::XE_MissingEndTag,(uchar*)error.GetString());
+      error.Format(_T("Missing end tag for element: %s"),elementName.GetString());
+      SetError(XmlError::XE_MissingEndTag,error.GetString());
     }
   }
   // End of a list of elements
@@ -691,8 +689,8 @@ XMLParser::ParseElement()
     return true;
   }
   XString error;
-  error.Format("Missing ending of XML element: %s",elementName.GetString());
-  SetError(XmlError::XE_MissingElement,(uchar*)error.GetString());
+  error.Format(_T("Missing ending of XML element: %s"),elementName.GetString());
+  SetError(XmlError::XE_MissingElement,error.GetString());
   return false;
 }
 
@@ -700,7 +698,7 @@ XMLParser::ParseElement()
 void
 XMLParser::ParseAfterElement()
 {
-  // Not used in the base clase
+  // Not used in the base class
 }
 
 // Getting an identifier
@@ -712,7 +710,7 @@ XMLParser::GetIdentifier(XString& p_identifier)
   p_identifier.Empty();
 
   // Identifiers starting with alpha, underscore or colon (no numbers!)
-  char ch = *m_pointer;
+  TCHAR ch = *m_pointer;
   if(IsAlpha(ch) || ch == '_' || ch == ':')
   {
     result = true;
@@ -744,7 +742,7 @@ XMLParser::GetQuotedString()
   if(*m_pointer && (*m_pointer == '\"' || *m_pointer == '\''))
   {
     // Save the delimiter
-    char delim = *m_pointer;
+    _TUCHAR delim = *m_pointer;
 
     m_pointer++;
     while(*m_pointer && *m_pointer != delim)  
@@ -781,7 +779,7 @@ XMLParser::XDigitToValue(int ch)
 }
 
 // Get a character from message including '& translation'
-unsigned char
+_TUCHAR
 XMLParser::ValueChar()
 {
   if(*m_pointer == '&')
@@ -809,12 +807,12 @@ XMLParser::ValueChar()
       // Skip closing ';'
       NeedToken(';');
       // Result
-      return (unsigned char)(number);
+      return (_TUCHAR)(number);
     }
     // Search for known entities such as '&amp;' or '&quot;'
     for(unsigned ind = 0;ind < NUM_ENTITY; ++ind)
     {
-      if(strncmp((const char*)m_pointer,g_entity[ind].m_entity,g_entity[ind].m_length) == 0)
+      if(_tcsncmp((LPCTSTR)m_pointer,g_entity[ind].m_entity,g_entity[ind].m_length) == 0)
       {
         m_pointer += g_entity[ind].m_length;
         return g_entity[ind].m_char;
@@ -828,7 +826,7 @@ XMLParser::ValueChar()
 
 // Is an alphanumeric char
 int
-XMLParser::IsAlpha(unsigned char p_char)
+XMLParser::IsAlpha(_TUCHAR p_char)
 {
   if(p_char < 128)
   {
@@ -840,7 +838,7 @@ XMLParser::IsAlpha(unsigned char p_char)
 }
 
 int
-XMLParser::IsAlphaNummeric(unsigned char p_char)
+XMLParser::IsAlphaNummeric(_TUCHAR p_char)
 {
   if(p_char < 128)
   {
@@ -853,7 +851,7 @@ XMLParser::IsAlphaNummeric(unsigned char p_char)
 
 // Need special token
 void 
-XMLParser::NeedToken(char p_token)
+XMLParser::NeedToken(_TUCHAR p_token)
 {
   if(*m_pointer && *m_pointer == p_token)
   {
@@ -861,8 +859,8 @@ XMLParser::NeedToken(char p_token)
     return;
   }
   XString error;
-  error.Format("Missing token [%c:%02X]",p_token,(unsigned char)p_token);
-  SetError(XmlError::XE_MissingToken,(uchar*)error.GetString());
+  error.Format(_T("Missing token [%c:%02X]"),p_token,(unsigned char)p_token);
+  SetError(XmlError::XE_MissingToken,error.GetString());
 }
 
 // Make an element
@@ -882,10 +880,10 @@ XMLParser::MakeElement(XString& p_namespace,XString& p_name)
     return;
   }
   // Adding to an existing element
-  m_lastElement = m_message->AddElement(m_element,p_name,XDT_String,"");
+  m_lastElement = m_message->AddElement(m_element,p_name,XDT_String,_T(""));
   if(m_lastElement == nullptr)
   {
-    SetError(XmlError::XE_OutOfMemory,(uchar*)"OUT OF MEMORY");
+    SetError(XmlError::XE_OutOfMemory,_T("OUT OF MEMORY"));
   }
   m_lastElement->SetNamespace(p_namespace);
 }

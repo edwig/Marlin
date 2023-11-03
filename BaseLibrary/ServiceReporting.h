@@ -40,7 +40,7 @@
 // in the *.MC file of your server application
 
 // Products service name is in this global variable
-extern char  g_svcname[];
+extern TCHAR g_svcname[];
 
 void  SvcReportSuccessEvent(LPCTSTR p_message);
 void  SvcReportInfoEvent (bool p_doFormat,LPCTSTR p_message,...);

@@ -27,8 +27,9 @@
 //
 #pragma once
 #include "HTTPMessage.h"
+#include "WinFile.h"
 
-#define HTTP_FILE_VERSION 0x0101  // Effectivly version 1.1
+#define HTTP_FILE_VERSION 0x0101  // Effectively version 1.1
 
 // Field Type in the binary file
 enum class MSGFieldType
@@ -38,13 +39,13 @@ enum class MSGFieldType
  ,FT_HTTPCOMMAND      // Field is a HTTPCommand.           size 1 byte
  ,FT_URL              // Field is the designated URL,      string (2 bytes + x)
  ,FT_HTTPSTATUS       // Field is the HTTP status.         size 2 bytes
- ,FT_CONTENTTYPE      // Field is contenttype header,      string (2 bytes + x)
- ,FT_CONTENTLENGTH    // Field is contentlength,           size 8 bytes
- ,FT_ACCEPTENCODING   // Field is accentenconding header,  string (2 bytes + x)
- ,FT_VERBTUNNEL       // Field is verbtunnel status,       size 1 byte
- ,FT_SENDBOM          // Field is sendbom status,          size 1 byte
+ ,FT_CONTENTTYPE      // Field is content-type header,     string (2 bytes + x)
+ ,FT_CONTENTLENGTH    // Field is content-length,          size 8 bytes
+ ,FT_ACCEPTENCODING   // Field is accept encoding header,  string (2 bytes + x)
+ ,FT_VERBTUNNEL       // Field is verb-tunnel status,      size 1 byte
+ ,FT_SENDBOM          // Field is send-BOM status,         size 1 byte
  ,FT_COOKIES          // Field is cookies map,             size 2 byte mapsize, 2 * (2 bytes + x)
- ,FT_REFERRER         // Field is the refferer header,     string (2 bytes + x)
+ ,FT_REFERRER         // Field is the referrer header,     string (2 bytes + x)
  ,FT_DESKTOP          // Field is the desktop number,      size 2 bytes
  ,FT_HEADERS          // Field is the headers map,         size 2 byte mapsize, 2 * (2 bytes + x)
  ,FT_ROUTING          // Field is the routing map,         size 2 byte mapsize, 2 * (2 bytes + x)
@@ -155,6 +156,6 @@ private:
   void    WriteEndMarker();
 
   XString m_filename;
-  FILE*   m_file  { nullptr };
-  errno_t m_error { 0       };
+  WinFile m_file;
+  errno_t m_error { 0 };
 };

@@ -79,9 +79,9 @@ protected:
                        ,XString   p_prefix
                        ,XString&  p_command
                        ,XString&  p_parameters
-                       ,XString   p_prefix2 = ""
-                       ,XString   p_prefix3 = ""
-                       ,XString   p_prefix4 = "");
+                       ,XString   p_prefix2 = _T("")
+                       ,XString   p_prefix3 = _T("")
+                       ,XString   p_prefix4 = _T(""));
     
   // Runmode: true for Microsoft-IIS, false for Marlin stand-alone
   bool        m_iis;

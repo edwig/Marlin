@@ -47,7 +47,7 @@ DocFileDialog::DocFileDialog(HWND    p_owner
 {
   if(p_filter.IsEmpty())
   {
-    p_filter = "Text files (*.txt)|*.txt|";
+    p_filter = _T("Text files (*.txt)|*.txt|");
   }
   // Register original CWD (Current Working Directory)
   GetCurrentDirectory(MAX_PATH, m_original);
@@ -56,10 +56,10 @@ DocFileDialog::DocFileDialog(HWND    p_owner
     // Change to starting directory
     SetCurrentDirectory(p_direct.GetString());
   }
-  strncpy_s(m_filter,  1024,   p_filter,  1024);
-  strncpy_s(m_filename,MAX_PATH,p_filename,MAX_PATH);
-  strncpy_s(m_defext,  100,    p_defext,  100);
-  strncpy_s(m_title,   100,    p_title,   100);
+  _tcsncpy_s(m_filter,  1024,   p_filter,  1024);
+  _tcsncpy_s(m_filename,MAX_PATH,p_filename,MAX_PATH);
+  _tcsncpy_s(m_defext,  100,    p_defext,  100);
+  _tcsncpy_s(m_title,   100,    p_title,   100);
   FilterString(m_filter);
 
   // Fill in the filename structure
@@ -69,10 +69,10 @@ DocFileDialog::DocFileDialog(HWND    p_owner
   m_ofn.lStructSize       = sizeof(OPENFILENAME);
   m_ofn.hwndOwner         = p_owner;
   m_ofn.hInstance         = (HINSTANCE) GetWindowLong(m_ofn.hwndOwner,GWLP_HINSTANCE);
-  m_ofn.lpstrFile         = (LPSTR) m_filename;
-  m_ofn.lpstrDefExt       = (LPSTR) m_defext;
-  m_ofn.lpstrTitle        = (LPSTR) m_title;
-  m_ofn.lpstrFilter       = (LPSTR) m_filter;
+  m_ofn.lpstrFile         = (LPTSTR) m_filename;
+  m_ofn.lpstrDefExt       = (LPTSTR) m_defext;
+  m_ofn.lpstrTitle        = (LPTSTR) m_title;
+  m_ofn.lpstrFilter       = (LPTSTR) m_filter;
   m_ofn.Flags             = p_flags;
   m_ofn.nFilterIndex      = 1;    // Use lpstrFilter
   m_ofn.nMaxFile          = MAX_PATH;
@@ -111,7 +111,7 @@ DocFileDialog::DoModal()
   }
   catch(...)
   {
-    ::MessageBox(NULL,"Cannot create a file dialog","ERROR",MB_OK|MB_ICONHAND);
+    ::MessageBox(NULL,_T("Cannot create a file dialog"),_T("ERROR"),MB_OK|MB_ICONHAND);
   }
   return res;
 }
@@ -123,9 +123,9 @@ DocFileDialog::GetChosenFile()
 }
 
 void
-DocFileDialog::FilterString(char *filter)
+DocFileDialog::FilterString(PTCHAR filter)
 {
-  char *pnt = filter;
+  PTCHAR pnt = filter;
   while(*pnt)
   {
     if(*pnt == '|')

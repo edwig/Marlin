@@ -27,9 +27,6 @@
     <ClCompile Include="CreateURLPrefix.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="EnsureFile.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="ErrorReport.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
@@ -225,9 +222,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Configuration</Filter>
     </ClCompile>
-    <ClCompile Include="ServiceQuality.cpp">
-      <Filter>MarlinServer</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SiteFilter.h">
@@ -318,9 +312,6 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="CreateURLPrefix.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="EnsureFile.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ErrorReport.h">
@@ -458,9 +449,6 @@
     </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>Configuration</Filter>
-    </ClInclude>
-    <ClInclude Include="ServiceQuality.h">
-      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

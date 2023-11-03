@@ -50,7 +50,7 @@ AutoFont::AutoFont()
 	m_lf.lfClipPrecision  = CLIP_DEFAULT_PRECIS;
 	m_lf.lfQuality        = PROOF_QUALITY;
 	m_lf.lfPitchAndFamily = VARIABLE_PITCH | FF_ROMAN;
-	strcpy_s(m_lf.lfFaceName,LF_FACESIZE,"Times New Roman");
+	_tcscpy_s(m_lf.lfFaceName,LF_FACESIZE,_T("Times New Roman"));
 
 	CreateFontIndirect(&m_lf);
 
@@ -73,7 +73,7 @@ AutoFont::AutoFont(XString facename)
 	m_lf.lfClipPrecision  = CLIP_DEFAULT_PRECIS;
 	m_lf.lfQuality        = PROOF_QUALITY;
 	m_lf.lfPitchAndFamily = VARIABLE_PITCH | FF_ROMAN;
-	strcpy_s(m_lf.lfFaceName,LF_FACESIZE,reinterpret_cast<LPCTSTR>(facename.GetString()));
+	_tcscpy_s(m_lf.lfFaceName,LF_FACESIZE,reinterpret_cast<LPCTSTR>(facename.GetString()));
 
 	CreateFontIndirect(&m_lf);
 
@@ -233,7 +233,7 @@ XString AutoFont::SetFaceName(XString facename)
 	XString str = m_lf.lfFaceName;
 
 	DeleteObject(m_font);
-	strcpy_s(m_lf.lfFaceName,LF_FACESIZE, facename.GetString());
+	_tcscpy_s(m_lf.lfFaceName,LF_FACESIZE,facename.GetString());
 	m_font = CreateFontIndirect(&m_lf);
 
 	return str;
@@ -241,13 +241,13 @@ XString AutoFont::SetFaceName(XString facename)
 
 // BEWARE: Not thread safe!
 LPCTSTR 
-AutoFont::SetFaceName(LPCTSTR facename)
+AutoFont::SetFaceName(const TCHAR* facename)
 {
-  static char buffer[LF_FACESIZE + 1];
-  strcpy_s(buffer,LF_FACESIZE,m_lf.lfFaceName);
+  static TCHAR buffer[LF_FACESIZE + 1];
+  _tcscpy_s(buffer,LF_FACESIZE,m_lf.lfFaceName);
 
 	DeleteObject(m_font);
-	strcpy_s(m_lf.lfFaceName,LF_FACESIZE,facename);
+	_tcscpy_s(m_lf.lfFaceName,LF_FACESIZE,facename);
 	m_font = CreateFontIndirect(&m_lf);
 
   return (LPCTSTR) &buffer;
@@ -387,7 +387,7 @@ XString AutoFont::ContractFont()
 {
 	XString str, color;
 
-  str.Format("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%s",
+  str.Format(_T("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%s"),
             m_lf.lfHeight,
             m_lf.lfWidth,
             m_lf.lfEscapement,
@@ -402,7 +402,7 @@ XString AutoFont::ContractFont()
             m_lf.lfQuality,
             m_lf.lfPitchAndFamily,
             m_lf.lfFaceName);
-  color.Format("%ul",m_fontColor);
+  color.Format(_T("%ul"),m_fontColor);
   str += ",";
   str += color;
 
@@ -411,28 +411,28 @@ XString AutoFont::ContractFont()
 
 void AutoFont::ExtractFont(XString& str)
 {
-	m_lf.lfHeight         =        atol(GetToken(str, ","));
-	m_lf.lfWidth          =        atol(GetToken(str, ","));
-	m_lf.lfEscapement     =        atol(GetToken(str, ","));
-	m_lf.lfOrientation    =        atol(GetToken(str, ","));
-	m_lf.lfWeight         =        atol(GetToken(str, ","));
-	m_lf.lfItalic         = (BYTE) atoi(GetToken(str, ","));
-	m_lf.lfUnderline      = (BYTE) atoi(GetToken(str, ","));
-	m_lf.lfStrikeOut      = (BYTE) atoi(GetToken(str, ","));
-	m_lf.lfCharSet        = (BYTE) atoi(GetToken(str, ","));
-	m_lf.lfOutPrecision   = (BYTE) atoi(GetToken(str, ","));
-	m_lf.lfClipPrecision  = (BYTE) atoi(GetToken(str, ","));
-	m_lf.lfQuality        = (BYTE) atoi(GetToken(str, ","));
-	m_lf.lfPitchAndFamily = (BYTE) atoi(GetToken(str, ","));
-	strcpy_s(m_lf.lfFaceName,LF_FACESIZE,GetToken(str, ","));
+	m_lf.lfHeight         =        _ttol(GetToken(str, _T(",")));
+	m_lf.lfWidth          =        _ttol(GetToken(str, _T(",")));
+	m_lf.lfEscapement     =        _ttol(GetToken(str, _T(",")));
+	m_lf.lfOrientation    =        _ttol(GetToken(str, _T(",")));
+	m_lf.lfWeight         =        _ttol(GetToken(str, _T(",")));
+	m_lf.lfItalic         = (BYTE) _ttoi(GetToken(str, _T(",")));
+	m_lf.lfUnderline      = (BYTE) _ttoi(GetToken(str, _T(",")));
+	m_lf.lfStrikeOut      = (BYTE) _ttoi(GetToken(str, _T(",")));
+	m_lf.lfCharSet        = (BYTE) _ttoi(GetToken(str, _T(",")));
+	m_lf.lfOutPrecision   = (BYTE) _ttoi(GetToken(str, _T(",")));
+	m_lf.lfClipPrecision  = (BYTE) _ttoi(GetToken(str, _T(",")));
+	m_lf.lfQuality        = (BYTE) _ttoi(GetToken(str, _T(",")));
+	m_lf.lfPitchAndFamily = (BYTE) _ttoi(GetToken(str, _T(",")));
+	_tcscpy_s(m_lf.lfFaceName,LF_FACESIZE,GetToken(str, _T(",")));
 
 	DeleteObject(m_font);
 	m_font = CreateFontIndirect(&m_lf);
 
-	m_fontColor = atol(str);
+	m_fontColor = _ttol(str);
 }
 
-XString AutoFont::GetToken(XString& str, LPCTSTR c)
+XString AutoFont::GetToken(XString& str, const TCHAR* c)
 {
 	int pos;
 	XString token;

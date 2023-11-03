@@ -37,14 +37,14 @@ int CompareNamespaces(XString p_namespace1, XString p_namespace2)
   // Make all separators equal
   p_namespace1.Replace('\\','/');
   p_namespace2.Replace('\\','/');
-  // Remove last closing seperator
+  // Remove last closing separator
   p_namespace1.TrimRight('/');
   p_namespace2.TrimRight('/');
   // Removes different protocols
-  if(p_namespace1.Left(5).Compare("http:")  == 0) p_namespace1 = p_namespace1.Mid(5);
-  if(p_namespace2.Left(5).Compare("http:")  == 0) p_namespace2 = p_namespace2.Mid(5);
-  if(p_namespace1.Left(6).Compare("https:") == 0) p_namespace1 = p_namespace1.Mid(6);
-  if(p_namespace2.Left(6).Compare("https:") == 0) p_namespace2 = p_namespace2.Mid(6);
+  if(p_namespace1.Left(5).Compare(_T("http:"))  == 0) p_namespace1 = p_namespace1.Mid(5);
+  if(p_namespace2.Left(5).Compare(_T("http:"))  == 0) p_namespace2 = p_namespace2.Mid(5);
+  if(p_namespace1.Left(6).Compare(_T("https:")) == 0) p_namespace1 = p_namespace1.Mid(6);
+  if(p_namespace2.Left(6).Compare(_T("https:")) == 0) p_namespace2 = p_namespace2.Mid(6);
   
   // Return comparison
   return p_namespace1.Compare(p_namespace2);
@@ -117,9 +117,9 @@ XString CreateSoapAction(XString p_namespace, XString p_action)
   // Sanitize namespace
   XString soapAction(p_namespace);
   soapAction.Replace('\\','/');
-  if(soapAction.Right(1) != "/")
+  if(soapAction.Right(1) != _T("/"))
   {
-    soapAction += "/";
+    soapAction += _T("/");
   }
   soapAction += p_action;
 

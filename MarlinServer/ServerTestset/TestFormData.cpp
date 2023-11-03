@@ -67,13 +67,13 @@ FormDataHandler::PreHandleBuffer(HTTPMessage* /*p_message*/,MultiPartBuffer* p_b
 int 
 FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
-  SITE_DETAILLOGS("Handling form-data data-part: ",p_part->GetName());
+  SITE_DETAILLOGS(_T("Handling form-data data-part: "),p_part->GetName());
 
   XString data = p_part->GetData();
   XString name = p_part->GetName();
-  xprintf("MULTI-PART DATA = Name : %s\n",p_part->GetName().GetString());
-  xprintf("MULTI-PART Content-type: %s\n",p_part->GetContentType().GetString());
-  xprintf("MULTI-PART\n%s\n",             p_part->GetData().GetString());
+  xprintf(_T("MULTI-PART DATA = Name : %s\n"),p_part->GetName().GetString());
+  xprintf(_T("MULTI-PART Content-type: %s\n"),p_part->GetContentType().GetString());
+  xprintf(_T("MULTI-PART\n%s\n"),             p_part->GetData().GetString());
 
   // Remember the fact that we where called
   bool result = !data.IsEmpty() || !name.IsEmpty();
@@ -87,22 +87,22 @@ FormDataHandler::HandleData(HTTPMessage* /*p_message*/,MultiPart* p_part)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Multi-part form-data - data part               : %s\n",result ? "OK" : "ERROR");
+  qprintf(_T("Multi-part form-data - data part               : %s\n"),result ? _T("OK") : _T("ERROR"));
   return result ? 0 : 1;
 }
 
 int 
 FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
 {
-  SITE_DETAILLOGV("Handling form-data file-part: [%s] %s",p_part->GetName().GetString(),p_part->GetShortFileName().GetString());
+  SITE_DETAILLOGV(_T("Handling form-data file-part: [%s] %s"),p_part->GetName().GetString(),p_part->GetShortFileName().GetString());
 
-  xprintf("MULTI-PART FILE = Name : %s\n",p_part->GetName().GetString());
-  xprintf("MULTI-PART Content-type: %s\n",p_part->GetContentType().GetString());
-  xprintf("MULTI-PART Filename    : %s\n",p_part->GetShortFileName().GetString());
-  xprintf("File date creation     : %s\n",p_part->GetDateCreation().GetString());
-  xprintf("File date modification : %s\n",p_part->GetDateModification().GetString());
-  xprintf("File date last-read    : %s\n",p_part->GetDateRead().GetString());
-  xprintf("File indicated size    : %d\n",static_cast<int>(p_part->GetSize()));
+  xprintf(_T("MULTI-PART FILE = Name : %s\n"),p_part->GetName().GetString());
+  xprintf(_T("MULTI-PART Content-type: %s\n"),p_part->GetContentType().GetString());
+  xprintf(_T("MULTI-PART Filename    : %s\n"),p_part->GetShortFileName().GetString());
+  xprintf(_T("File date creation     : %s\n"),p_part->GetDateCreation().GetString());
+  xprintf(_T("File date modification : %s\n"),p_part->GetDateModification().GetString());
+  xprintf(_T("File date last-read    : %s\n"),p_part->GetDateRead().GetString());
+  xprintf(_T("File indicated size    : %d\n"),static_cast<int>(p_part->GetSize()));
 
   // Keep debugging things together, by resetting the filename
   XString filename = MarlinConfig::GetExePath() + p_part->GetShortFileName();
@@ -120,7 +120,7 @@ FormDataHandler::HandleFile(HTTPMessage* /*p_message*/,MultiPart* p_part)
   }
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Multi-part form-data - file part               : %s\n",result ? "OK" : "ERROR");
+  qprintf(_T("Multi-part form-data - file part               : %s\n"),result ? _T("OK") : _T("ERROR"));
   return result ? 0 : 1;
 }
 
@@ -138,13 +138,13 @@ FormDataHandler::PostHandleBuffer(HTTPMessage* p_message,MultiPartBuffer* p_buff
   }
 
   XString resultString;
-  resultString.Format("RESULT=%s\n",result ? "OK" : "ERROR");
+  resultString.Format(_T("RESULT=%s\n"),result ? _T("OK") : _T("ERROR"));
+  p_message->SetContentType(_T("text/plain; charset=utf-8"));
   p_message->AddBody(resultString);
-  p_message->SetContentType("text/html");
 
   // SUMMARY OF THE TEST
   //  --- "---------------------------------------------- - ------
-  qprintf("Multi-part form-data - total test              : %s\n",result ? "OK" : "ERROR");
+  qprintf(_T("Multi-part form-data - total test              : %s\n"),result ? _T("OK") : _T("ERROR"));
   return 0;  
 }
 
@@ -162,10 +162,10 @@ TestMarlinServer::TestFormData()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/MarlinTest/FormData/");
+  XString url(_T("/MarlinTest/FormData/"));
 
-  xprintf("TESTING FORM-DATA MULTI-PART-BUFFER FUNCTION OF THE HTTP SERVER\n");
-  xprintf("===============================================================\n");
+  xprintf(_T("TESTING FORM-DATA MULTI-PART-BUFFER FUNCTION OF THE HTTP SERVER\n"));
+  xprintf(_T("===============================================================\n"));
 
   // Create HTTP site to listen to "http://+:port/MarlinTest/FormData/"
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
@@ -173,13 +173,13 @@ TestMarlinServer::TestFormData()
   {
     // SUMMARY OF THE TEST
     //  --- "--------------------------- - ------\n"
-    qprintf("HTTPSite Form-data          : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite Form-data          : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -187,18 +187,18 @@ TestMarlinServer::TestFormData()
   site->SetHandler(HTTPCommand::http_post,new FormDataHandler());
 
   // Modify the standard settings for this site
-  site->AddContentType("","multipart/form-data;");
+  site->AddContentType(_T(""),_T("multipart/form-data;"));
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -208,6 +208,6 @@ TestMarlinServer::AfterTestFormData()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Form-data multi-buffer test complete           : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("Form-data multi-buffer test complete           : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

@@ -136,36 +136,36 @@ void
 WebConfigWServices::InitComboboxes()
 {
   // Encryption levels
-  m_comboEncryption.AddString("Signing");
-  m_comboEncryption.AddString("Body encrypted");
-  m_comboEncryption.AddString("Message encrypted");
+  m_comboEncryption.AddString(_T("Signing"));
+  m_comboEncryption.AddString(_T("Body encrypted"));
+  m_comboEncryption.AddString(_T("Message encrypted"));
 }
 
 void
 WebConfigWServices::ReadWebConfig(MarlinConfig& config)
 {
   // WEBSERVICE OVERRIDES
-  m_useEncLevel       = config.HasParameter("Encryption", "Level");
-  m_useEncPassword    = config.HasParameter("Encryption", "Password");
-  m_useReliable       = config.HasParameter("WebServices","Reliable");
-  m_useReliableLogin  = config.HasParameter("WebServices","ReliableLogin");
-  m_useCheckWSDLIn    = config.HasParameter("WebServices","CheckWSDLIncoming");
-  m_useCheckWSDLOut   = config.HasParameter("WebServices","CheckWSDLOutgoing");
-  m_useFieldCheck     = config.HasParameter("WebServices","CheckFieldValues");
+  m_useEncLevel       = config.HasParameter(_T("Encryption"), _T("Level"));
+  m_useEncPassword    = config.HasParameter(_T("Encryption"), _T("Password"));
+  m_useReliable       = config.HasParameter(_T("WebServices"),_T("Reliable"));
+  m_useReliableLogin  = config.HasParameter(_T("WebServices"),_T("ReliableLogin"));
+  m_useCheckWSDLIn    = config.HasParameter(_T("WebServices"),_T("CheckWSDLIncoming"));
+  m_useCheckWSDLOut   = config.HasParameter(_T("WebServices"),_T("CheckWSDLOutgoing"));
+  m_useFieldCheck     = config.HasParameter(_T("WebServices"),_T("CheckFieldValues"));
 
-  m_encLevel          = config.GetParameterString ("Encryption", "Level",   "");
-  m_encPassword       = config.GetEncryptedString ("Encryption", "Password","");
-  m_reliable          = config.GetParameterBoolean("WebServices","Reliable",         false);
-  m_reliableLogin     = config.GetParameterBoolean("WebServices","ReliableLogin",    true);
-  m_checkWSDLin       = config.GetParameterBoolean("WebServices","CheckWSDLIncoming",false);
-  m_checkWSDLout      = config.GetParameterBoolean("WebServices","CheckWSDLOutgoing",false);
-  m_fieldCheck        = config.GetParameterBoolean("WebServices","CheckFieldValues", false);
+  m_encLevel          = config.GetParameterString (_T("Encryption"), _T("Level"),   _T(""));
+  m_encPassword       = config.GetEncryptedString (_T("Encryption"), _T("Password"),_T(""));
+  m_reliable          = config.GetParameterBoolean(_T("WebServices"),_T("Reliable"),         false);
+  m_reliableLogin     = config.GetParameterBoolean(_T("WebServices"),_T("ReliableLogin"),    true);
+  m_checkWSDLin       = config.GetParameterBoolean(_T("WebServices"),_T("CheckWSDLIncoming"),false);
+  m_checkWSDLout      = config.GetParameterBoolean(_T("WebServices"),_T("CheckWSDLOutgoing"),false);
+  m_fieldCheck        = config.GetParameterBoolean(_T("WebServices"),_T("CheckFieldValues"), false);
 
 
   // Encryption levels
-  if(m_encLevel.CompareNoCase("sign")    == 0) m_comboEncryption.SetCurSel(0);
-  if(m_encLevel.CompareNoCase("body")    == 0) m_comboEncryption.SetCurSel(1);
-  if(m_encLevel.CompareNoCase("message") == 0) m_comboEncryption.SetCurSel(2);
+  if(m_encLevel.CompareNoCase(_T("sign"))    == 0) m_comboEncryption.SetCurSel(0);
+  if(m_encLevel.CompareNoCase(_T("body"))    == 0) m_comboEncryption.SetCurSel(1);
+  if(m_encLevel.CompareNoCase(_T("message")) == 0) m_comboEncryption.SetCurSel(2);
 
   // INIT THE CHECKBOXES
   m_buttonCheckWSDLin  .SetCheck(m_checkWSDLin);
@@ -192,25 +192,25 @@ WebConfigWServices::WriteWebConfig(MarlinConfig& config)
 
   // WRITE THE CONFIG PARAMETERS
 
-  config.SetSection("Encryption");
+  config.SetSection(_T("Encryption"));
 
-  if(m_useEncLevel)     config.SetParameter   ("Encryption","Level",   m_encLevel);
-  else                  config.RemoveParameter("Encryption","Level");
-  if(m_useEncPassword)  config.SetEncrypted   ("Encryption","Password",m_encPassword);
-  else                  config.RemoveParameter("Encryption","Password");
+  if(m_useEncLevel)     config.SetParameter   (_T("Encryption"),_T("Level"),   m_encLevel);
+  else                  config.RemoveParameter(_T("Encryption"),_T("Level"));
+  if(m_useEncPassword)  config.SetEncrypted   (_T("Encryption"),_T("Password"),m_encPassword);
+  else                  config.RemoveParameter(_T("Encryption"),_T("Password"));
 
-  config.SetSection("WebServices");
+  config.SetSection(_T("WebServices"));
 
-  if(m_useCheckWSDLIn)  config.SetParameter   ("WebServices","CheckWSDLIncoming", m_checkWSDLin);
-  else                  config.RemoveParameter("WebServices","CheckWSDLIncoming");
-  if(m_useCheckWSDLOut) config.SetParameter   ("WebServices","CheckWSDLOutgoing", m_checkWSDLout);
-  else                  config.RemoveParameter("WebServices","CheckWSDLOutgoing");
-  if(m_useFieldCheck)   config.SetParameter   ("WebServices","CheckFieldValues",  m_fieldCheck);
-  else                  config.RemoveParameter("WebServices","CheckFieldValues");
-  if(m_useReliable)     config.SetParameter   ("WebServices","Reliable",          m_reliable);
-  else                  config.RemoveParameter("WebServices","Reliable");
-  if(m_useReliableLogin)config.SetParameter   ("WebServices","ReliableLogin",     m_reliableLogin);
-  else                  config.RemoveParameter("WebServices","ReliableLogin");
+  if(m_useCheckWSDLIn)  config.SetParameter   (_T("WebServices"),_T("CheckWSDLIncoming"), m_checkWSDLin);
+  else                  config.RemoveParameter(_T("WebServices"),_T("CheckWSDLIncoming"));
+  if(m_useCheckWSDLOut) config.SetParameter   (_T("WebServices"),_T("CheckWSDLOutgoing"), m_checkWSDLout);
+  else                  config.RemoveParameter(_T("WebServices"),_T("CheckWSDLOutgoing"));
+  if(m_useFieldCheck)   config.SetParameter   (_T("WebServices"),_T("CheckFieldValues"),  m_fieldCheck);
+  else                  config.RemoveParameter(_T("WebServices"),_T("CheckFieldValues"));
+  if(m_useReliable)     config.SetParameter   (_T("WebServices"),_T("Reliable"),          m_reliable);
+  else                  config.RemoveParameter(_T("WebServices"),_T("Reliable"));
+  if(m_useReliableLogin)config.SetParameter   (_T("WebServices"),_T("ReliableLogin"),     m_reliableLogin);
+  else                  config.RemoveParameter(_T("WebServices"),_T("ReliableLogin"));
 }
 
 // WebConfigDlg message handlers
@@ -234,9 +234,9 @@ void WebConfigWServices::OnCbnSelchangeWsEncrypt()
   {
     switch(sel)
     {
-      case 0: m_encLevel = "sign";    break;
-      case 1: m_encLevel = "body";    break;
-      case 2: m_encLevel = "message"; break;
+      case 0: m_encLevel = _T("sign");    break;
+      case 1: m_encLevel = _T("body");    break;
+      case 2: m_encLevel = _T("message"); break;
       default:m_encLevel.Empty();     break;
     }
   }

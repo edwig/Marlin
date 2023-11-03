@@ -36,56 +36,56 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const char* xml_datatypes[] =
+LPCTSTR xml_datatypes[] =
 {
-  ""                          // 0
- ,"string"                    // 1  XDT_String            SQL_C_CHAR
- ,"integer"                   // 2  XDT_Integer           SQL_C_LONG / SQL_C_SLONG
- ,"boolean"                   // 3  XDT_Boolean           SQL_C_BIT
- ,"double"                    // 4  XDT_Double            SQL_C_DOUBLE
- ,"base64Binary"              // 5  XDT_Base64Binary
- ,"dateTime"                  // 6  XDT_DateTime          SQL_C_TIMESTAMP
- ,"anyURI"                    // 7  XDT_AnyURI
- ,"date"                      // 8  XDT_Date              SQL_C_DATE
- ,"dateTimeStamp"             // 9  XDT_DateTimeStamp     SQL_C_TIMESTAMP + timezone
- ,"decimal"                   // 10 XDT_Decimal           SQL_C_NUMERIC
- ,"long"                      // 11 XDT_Long              SQL_C_LONG  / SQL_C_SLONG
- ,"int"                       // 12 XDT_Int               SQL_C_SLONG
- ,"short"                     // 13 XDT_Short             SQL_C_SHORT / SQL_C_SSHORT
- ,"byte"                      // 14 XDT_Byte              SQL_C_TINYINT / SQL_C_STINYINT
- ,"nonNegativeInteger"        // 15 XDT_NonNegativeInteger
- ,"positiveInteger"           // 16 XDT_PositiveInteger
- ,"unsignedLong"              // 17 XDT_UnsignedLong      SQL_C_ULONG
- ,"unsignedInt"               // 18 XDT_UnsignedInt       SQL_C_ULONG
- ,"unsignedShort"             // 19 XDT_UnsignedShort     SQL_C_USHORT
- ,"unsignedByte"              // 20 XDT_UnsignedByte      SQL_C_UTINYINT
- ,"nonPositiveInteger"        // 21 XDT_NonPositiveInteger
- ,"negativeInteger"           // 22 XDT_NegativeInteger
- ,"duration"                  // 23 XDT_Duration          SQL_C_INTERVAL_*
- ,"dayTimeDuration"           // 24 XDT_DayTimeDuration   SQL_C_INTERVAL_DAY_SECOND
- ,"yearMonthDuration"         // 25 XDT_YearMonthDuration SQL_C_INTERVAL_YEAR_MONTH
- ,"float"                     // 26 XDT_Float             SQL_C_FLOAT / SQL_C_REAL
- ,"gDay"                      // 27 XDT_GregDay
- ,"gMonth"                    // 28 XDT_GregMonth
- ,"gMonthDay"                 // 29 XDT_GregMonthDay
- ,"gYear"                     // 30 XDT_GregYear
- ,"gYearMonth"                // 31 XDT_GregYearMonth
- ,"hexBinary"                 // 32 XDT_HeXBinary
- ,"NOTATION"                  // 33 XDT_NOTATION
- ,"QName"                     // 34 XDT_QName
- ,"normalizedString"          // 35 XDT_NormalizedString
- ,"token"                     // 36 XDT_Token
- ,"language"                  // 37 XDT_Language
- ,"Name"                      // 38 XDT_Name
- ,"NCName"                    // 39 XDT_NCName
- ,"ENTITY"                    // 40 XDT_ENTITY
- ,"ID"                        // 41 XDT_ID
- ,"IDREF"                     // 42 XDT_IDREF
- ,"NMTOKEN"                   // 43 XDT_NMTOKEN
- ,"time"                      // 44 XDT_Time
- ,"ENTITIES"                  // 45 XDT_ENTITIES
- ,"IDREFS"                    // 46 XDT_IDREFS
- ,"NMTOKENS"                  // 47 XDT_NMTOKENS
+  _T("")                          // 0
+ ,_T("string")                    // 1  XDT_String            SQL_C_CHAR
+ ,_T("integer")                   // 2  XDT_Integer           SQL_C_LONG / SQL_C_SLONG
+ ,_T("boolean")                   // 3  XDT_Boolean           SQL_C_BIT
+ ,_T("double")                    // 4  XDT_Double            SQL_C_DOUBLE
+ ,_T("base64Binary")              // 5  XDT_Base64Binary
+ ,_T("dateTime")                  // 6  XDT_DateTime          SQL_C_TIMESTAMP
+ ,_T("anyURI")                    // 7  XDT_AnyURI
+ ,_T("date")                      // 8  XDT_Date              SQL_C_DATE
+ ,_T("dateTimeStamp")             // 9  XDT_DateTimeStamp     SQL_C_TIMESTAMP + timezone
+ ,_T("decimal")                   // 10 XDT_Decimal           SQL_C_NUMERIC
+ ,_T("long")                      // 11 XDT_Long              SQL_C_LONG  / SQL_C_SLONG
+ ,_T("int")                       // 12 XDT_Int               SQL_C_SLONG
+ ,_T("short")                     // 13 XDT_Short             SQL_C_SHORT / SQL_C_SSHORT
+ ,_T("byte")                      // 14 XDT_Byte              SQL_C_TINYINT / SQL_C_STINYINT
+ ,_T("nonNegativeInteger")        // 15 XDT_NonNegativeInteger
+ ,_T("positiveInteger")           // 16 XDT_PositiveInteger
+ ,_T("unsignedLong")              // 17 XDT_UnsignedLong      SQL_C_ULONG
+ ,_T("unsignedInt")               // 18 XDT_UnsignedInt       SQL_C_ULONG
+ ,_T("unsignedShort")             // 19 XDT_UnsignedShort     SQL_C_USHORT
+ ,_T("unsignedByte")              // 20 XDT_UnsignedByte      SQL_C_UTINYINT
+ ,_T("nonPositiveInteger")        // 21 XDT_NonPositiveInteger
+ ,_T("negativeInteger")           // 22 XDT_NegativeInteger
+ ,_T("duration")                  // 23 XDT_Duration          SQL_C_INTERVAL_*
+ ,_T("dayTimeDuration")           // 24 XDT_DayTimeDuration   SQL_C_INTERVAL_DAY_SECOND
+ ,_T("yearMonthDuration")         // 25 XDT_YearMonthDuration SQL_C_INTERVAL_YEAR_MONTH
+ ,_T("float")                     // 26 XDT_Float             SQL_C_FLOAT / SQL_C_REAL
+ ,_T("gDay")                      // 27 XDT_GregDay
+ ,_T("gMonth")                    // 28 XDT_GregMonth
+ ,_T("gMonthDay")                 // 29 XDT_GregMonthDay
+ ,_T("gYear")                     // 30 XDT_GregYear
+ ,_T("gYearMonth")                // 31 XDT_GregYearMonth
+ ,_T("hexBinary")                 // 32 XDT_HeXBinary
+ ,_T("NOTATION")                  // 33 XDT_NOTATION
+ ,_T("QName")                     // 34 XDT_QName
+ ,_T("normalizedString")          // 35 XDT_NormalizedString
+ ,_T("token")                     // 36 XDT_Token
+ ,_T("language")                  // 37 XDT_Language
+ ,_T("Name")                      // 38 XDT_Name
+ ,_T("NCName")                    // 39 XDT_NCName
+ ,_T("ENTITY")                    // 40 XDT_ENTITY
+ ,_T("ID")                        // 41 XDT_ID
+ ,_T("IDREF")                     // 42 XDT_IDREF
+ ,_T("NMTOKEN")                   // 43 XDT_NMTOKEN
+ ,_T("time")                      // 44 XDT_Time
+ ,_T("ENTITIES")                  // 45 XDT_ENTITIES
+ ,_T("IDREFS")                    // 46 XDT_IDREFS
+ ,_T("NMTOKENS")                  // 47 XDT_NMTOKENS
 };
 
 XString
@@ -94,7 +94,7 @@ XmlDataTypeToString(XmlDataType p_type)
   // See if XmlDataType is withing valid range
   if(p_type < XDT_String || p_type > XDT_NMTOKENS)
   {
-    return "";
+    return _T("");
   }
   return XString(xml_datatypes[p_type]);
 }
@@ -102,9 +102,9 @@ XmlDataTypeToString(XmlDataType p_type)
 XmlDataType
 StringToXmlDataType(XString p_name)
 {
-  const char** datatypes = xml_datatypes;
+  const TCHAR** datatypes = xml_datatypes;
 
-  for(int ind = 1;ind < sizeof(xml_datatypes) / sizeof(char*); ++ind)
+  for(int ind = 1;ind < sizeof(xml_datatypes) / sizeof(TCHAR*); ++ind)
   {
     if(p_name.Compare(datatypes[ind]) == 0)
     {

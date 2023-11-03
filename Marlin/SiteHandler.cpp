@@ -105,7 +105,7 @@ SiteHandler::PreHandle(HTTPMessage* /*p_message*/)
 bool     
 SiteHandler::Handle(HTTPMessage* p_message)
 {
-  SITE_ERRORLOG(ERROR_INVALID_PARAMETER,"INTERNAL: Unhandled request caught by base HTTPSite::SiteHandler::Handle");
+  SITE_ERRORLOG(ERROR_INVALID_PARAMETER,_T("INTERNAL: Unhandled request caught by base HTTPSite::SiteHandler::Handle"));
   p_message->Reset();
   p_message->SetStatus(HTTP_STATUS_BAD_REQUEST);
   return true;

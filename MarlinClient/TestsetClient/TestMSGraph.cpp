@@ -53,9 +53,9 @@ static char THIS_FILE[] = __FILE__;
 int TestMSGraph(HTTPClient* p_client)
 {
   int errors = 0;
-  XString tenant("<MY AZURE TENANT GUID>");
-  XString applicationID("<MY-APPLICATION-ID>");
-  XString applicationKey("<NOT-CHECKED-IN> :-)");
+  XString tenant(_T("<MY AZURE TENANT GUID>"));
+  XString applicationID(_T("<MY-APPLICATION-ID>"));
+  XString applicationKey(_T("<NOT-CHECKED-IN> :-)"));
 
   OAuth2Cache cache;
   cache.SetAnalysisLog(p_client->GetLogging());
@@ -64,7 +64,7 @@ int TestMSGraph(HTTPClient* p_client)
   int session = cache.CreateClientCredentialsGrant(url,applicationID,applicationKey,scope_ms_graph);
   if(!session)
   {
-    printf("Unexpected: Cannot create an OAuth2 credentials session!\n");
+    _tprintf(_T("Unexpected: Cannot create an OAuth2 credentials session!\n"));
     return 1;
   }
 
@@ -73,15 +73,15 @@ int TestMSGraph(HTTPClient* p_client)
   p_client->SetOAuth2Session(session);
 
   // Build our MS-Graph query URL
-  url  = "https://graph.microsoft.com/v1.0/users/";
-  url += CrackedURL::EncodeURLChars("<MY-EMAIL-ADDRESS>",true);
-  url += "/calendar/events";
-  url += "?startdatetime=2021-06-04T13:41:56.174Z";
-  url += "&enddatetime=2021-06-11T13:41:56.174Z";
+  url  = _T("https://graph.microsoft.com/v1.0/users/");
+  url += CrackedURL::EncodeURLChars(_T("<MY-EMAIL-ADDRESS>"),true);
+  url += _T("/calendar/events");
+  url += _T("?startdatetime=2021-06-04T13:41:56.174Z");
+  url += _T("&enddatetime=2021-06-11T13:41:56.174Z");
 
   // Get my calendar events of the next week.
   HTTPMessage msg(HTTPCommand::http_get,url);
-  msg.AddHeader("Prefer","outlook.timezone=\"Europe/Amsterdam\"");
+  msg.AddHeader(_T("Prefer"),_T("outlook.timezone=\"Europe/Amsterdam\""));
 
   // SEND
   if(p_client->Send(&msg))
@@ -90,23 +90,23 @@ int TestMSGraph(HTTPClient* p_client)
     JSONMessage json(&msg);
     json.SetWhitespace(true);
     XString result = json.GetJsonMessage();
-    printf("All my calendar events of the next week:\n");
-    std::cout << result.GetString();
+    _tprintf(_T("All my calendar events of the next week:\n"));
+    _tprintf(result.GetString());
   }
   else
   {
     // ERRORS: Print the error
     ++errors;
 
-    printf("HTTP Error: %d\n", p_client->GetStatus());
+    _tprintf(_T("HTTP Error: %d\n"), p_client->GetStatus());
     BYTE* response = nullptr;
     unsigned length = 0;
     p_client->GetResponse(response,length);
 
-    JSONMessage json(reinterpret_cast<char*>(response));
+    JSONMessage json(reinterpret_cast<TCHAR*>(response));
     json.SetWhitespace(true);
     XString jsonmsg = json.GetJsonMessage();
-    std::cout << jsonmsg.GetString();
+    _tprintf(jsonmsg.GetString());
   }
 
   // Reset the OAuth2
@@ -117,7 +117,7 @@ int TestMSGraph(HTTPClient* p_client)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("MS-Graph test with OAuth2 authorization        : %s\n", errors ? "ERROR" : "OK");
+  _tprintf(_T("MS-Graph test with OAuth2 authorization        : %s\n"), errors ? _T("ERROR") : _T("OK"));
   return errors;
 }
 

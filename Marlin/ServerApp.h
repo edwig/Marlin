@@ -44,7 +44,7 @@ using IISModules = std::set<XString>;
 class ServerApp;
 
 // Exported functions that can be called from the MarlinModule
-typedef ServerApp*    (CALLBACK* CreateServerAppFunc)(IHttpServer*,const char*,const char*);
+typedef ServerApp*    (CALLBACK* CreateServerAppFunc)(IHttpServer*,LPCTSTR,LPCTSTR);
 typedef HTTPSite*     (CALLBACK* FindHTTPSiteFunc)   (ServerApp*,int port,PCWSTR p_url);
 typedef int           (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
 typedef HTTPMessage*  (CALLBACK* GetHTTPMessageFunc) (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
@@ -64,9 +64,9 @@ extern ErrorReport*  g_report;
 class ServerApp
 {
 public:
-  ServerApp(IHttpServer*  p_iis
-           ,const char*   p_webroot
-           ,const char*   p_appName);
+  ServerApp(IHttpServer* p_iis
+           ,LPCTSTR      p_webroot
+           ,LPCTSTR      p_appName);
   virtual ~ServerApp();
 
   // BEWARE: MarlinModule uses VTABLE in this order
@@ -153,9 +153,9 @@ class ServerAppFactory
 public:
   ServerAppFactory();
 
-  virtual ServerApp* CreateServerApp(IHttpServer*  p_iis
-                                    ,const char*   p_webroot
-                                    ,const char*   p_appName);
+  virtual ServerApp* CreateServerApp(IHttpServer* p_iis
+                                    ,LPCTSTR      p_webroot
+                                    ,LPCTSTR      p_appName);
 };
 
 extern ServerAppFactory* appFactory;

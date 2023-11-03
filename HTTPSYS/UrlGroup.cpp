@@ -249,7 +249,7 @@ UrlGroup::SetAuthenticationWide(wstring p_domain, wstring p_realm)
 // Compare two absolute URL paths by determining the '/segment/' parts
 // Optimizes for string searches where sizes of segments differ.
 int
-UrlGroup::SegmentedCompare(const char* p_left,const char* p_right)
+UrlGroup::SegmentedCompare(LPCTSTR p_left,LPCTSTR p_right)
 {
   // Both parameters must be given
   if(p_left == nullptr || p_right == nullptr)
@@ -267,8 +267,8 @@ UrlGroup::SegmentedCompare(const char* p_left,const char* p_right)
   while(true)
   {
     // Find next '/' for the end of the segment
-    const char* posleft  = strchr(&p_left [index],'/');
-    const char* posright = strchr(&p_right[index],'/');
+    LPCTSTR posleft  = _tcschr(&p_left [index],'/');
+    LPCTSTR posright = _tcschr(&p_right[index],'/');
 
     // one of the two or both ends here
     if(posleft == nullptr || posright == nullptr)
@@ -286,7 +286,7 @@ UrlGroup::SegmentedCompare(const char* p_left,const char* p_right)
     }
     // Compare next segment in the absolute URL paths up to the matching segment length
     // Does the smallest possible string compare by just comparing one segment
-    if(_strnicmp(&p_left[longest],&p_right[longest],lenleft - longest))
+    if(_tcsnicmp(&p_left[longest],&p_right[longest],lenleft - longest))
     {
       // NON ZERO result -> Not equal: stop here!
       break;
@@ -319,7 +319,7 @@ UrlGroup::UrlIsRegistered(CString pFullyQualifiedUrl)
     TCHAR   value3[BUFF_LEN];
     DWORD   size3 = BUFF_LEN;
 
-    if(HTTPReadRegister("UrlAclInfo",url,REG_BINARY,value1,&value2,value3,&size3))
+    if(HTTPReadRegister(_T("UrlAclInfo"),url,REG_BINARY,value1,&value2,value3,&size3))
     {
       // Allowed
       result = true;
@@ -353,22 +353,22 @@ UrlGroup::GetURLSettings(URL& p_url)
 
   // Construct the sectie
   CString sectie;
-  sectie.Format("SslBindingInfo\\0.0.0.0:%u",p_url.m_port);
+  sectie.Format(_T("SslBindingInfo\\0.0.0.0:%u"),p_url.m_port);
 
-  if(HTTPReadRegister(sectie,"SslCertHash",REG_BINARY,value1,&value2,value3,&size3))
+  if(HTTPReadRegister(sectie,_T("SslCertHash"),REG_BINARY,value1,&value2,value3,&size3))
   {
     memcpy_s(p_url.m_thumbprint,CERT_THUMBPRINT_SIZE,value3,CERT_THUMBPRINT_SIZE);
     p_url.m_thumbprint[CERT_THUMBPRINT_SIZE] = 0;
   }
   else return false;
 
-  if(HTTPReadRegister(sectie,"SslCertStoreName",REG_SZ,value1,&value2,value3,&size3))
+  if(HTTPReadRegister(sectie,_T("SslCertStoreName"),REG_SZ,value1,&value2,value3,&size3))
   {
     p_url.m_certStoreName = value1;
   }
   else return false;
 
-  if(HTTPReadRegister(sectie,"DefaultFlags",REG_DWORD,value1,&value2,value3,&size3))
+  if(HTTPReadRegister(sectie,_T("DefaultFlags"),REG_DWORD,value1,&value2,value3,&size3))
   {
     if (value2 == 0x02)
     {

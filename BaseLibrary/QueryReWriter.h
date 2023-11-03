@@ -121,7 +121,7 @@ public:
 
   // Settings 
   bool    SetOption(SROption p_option);
-  bool    AddSQLWord(XString p_word,XString p_replacement,XString p_schema = "",Token p_token = Token::TK_EOS,OdbcEsc p_odbc = OdbcEsc::None);
+  bool    AddSQLWord(XString p_word,XString p_replacement,XString p_schema = _T(""),Token p_token = Token::TK_EOS,OdbcEsc p_odbc = OdbcEsc::None);
   bool    AddSQLWord(SQLWord& p_word);
   bool    AddSQLWords(SQLWords& p_words);
   bool    AddSQLWordsFromFile(XString p_filename);

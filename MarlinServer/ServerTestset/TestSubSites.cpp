@@ -48,34 +48,34 @@ bool
 SiteHandlerSoapSubsite::Handle(SOAPMessage* p_message)
 {
   // Get parameters from soap
-  XString paramOne = p_message->GetParameter("One");
-  XString paramTwo = p_message->GetParameter("Two");
-  xprintf("Incoming parameter: %s = %s\n","One",paramOne.GetString());
-  xprintf("Incoming parameter: %s = %s\n","Two",paramTwo.GetString());
+  XString paramOne = p_message->GetParameter(_T("One"));
+  XString paramTwo = p_message->GetParameter(_T("Two"));
+  xprintf(_T("Incoming parameter: %s = %s\n"),_T("One"),paramOne.GetString());
+  xprintf(_T("Incoming parameter: %s = %s\n"),_T("Two"),paramTwo.GetString());
 
   // Forget
   p_message->Reset();
 
   // Do our work
   bool result = false;
-  if(paramOne == "ABC" && paramTwo == "1-2-3")
+  if(paramOne == _T("ABC") && paramTwo == _T("1-2-3"))
   {
-    paramOne = "DEF";
-    paramTwo = "123";
+    paramOne = _T("DEF");
+    paramTwo = _T("123");
     result = true;
     --totalChecks;
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  qprintf("Subsite SOAP handler on main site              : %s\n",result ? "OK" : "ERROR");
-  xprintf("Site of this message was    : %s\n",p_message->GetHTTPSite()->GetSite().GetString());
+  qprintf(_T("Subsite SOAP handler on main site              : %s\n"),result ? _T("OK") : _T("ERROR"));
+  xprintf(_T("Site of this message was    : %s\n"),p_message->GetHTTPSite()->GetSite().GetString());
   if(!result) xerror();
 
   // Set the result
-  p_message->SetParameter("Three",paramOne);
-  p_message->SetParameter("Four", paramTwo);
-  xprintf("Outgoing parameter: %s = %s\n","Three",paramOne.GetString());
-  xprintf("Outgoing parameter: %s = %s\n","Four", paramTwo.GetString());
+  p_message->SetParameter(_T("Three"),paramOne);
+  p_message->SetParameter(_T("Four"), paramTwo);
+  xprintf(_T("Outgoing parameter: %s = %s\n"),_T("Three"),paramOne.GetString());
+  xprintf(_T("Outgoing parameter: %s = %s\n"),_T("Four"), paramTwo.GetString());
 
   // Ready with the message.
   return true;
@@ -89,11 +89,11 @@ TestMarlinServer::TestSubSites()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url1("/MarlinTest/TestToken/One");
-  XString url2("/MarlinTest/TestToken/Two");
+  XString url1(_T("/MarlinTest/TestToken/One"));
+  XString url2(_T("/MarlinTest/TestToken/Two"));
 
-  xprintf("TESTING SUB-SITE FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("=============================================\n");
+  xprintf(_T("TESTING SUB-SITE FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("=============================================\n"));
 
   // Create HTTP site to listen to "http://+:port/MarlinTest/TestToken/one or two"
   // This is a subsite of another one, so 5th parameter is set to true
@@ -102,13 +102,13 @@ TestMarlinServer::TestSubSites()
   {
     // SUMMARY OF THE TEST
     // ---- "--------------------------- - ------\n"
-    qprintf("HTTP subsite TestToken/One  : OK : %s\n",site1->GetPrefixURL().GetString());
+    qprintf(_T("HTTP subsite TestToken/One  : OK : %s\n"),site1->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url1.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url1.GetString());
     return error;
   }
   HTTPSite* site2 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url2,true);
@@ -116,13 +116,13 @@ TestMarlinServer::TestSubSites()
   {
     // SUMMARY OF THE TEST
     // ---- "--------------------------- - ------\n"
-    qprintf("HTTP subsite TestToken/Two  : OK : %s\n",site2->GetPrefixURL().GetString());
+    qprintf(_T("HTTP subsite TestToken/Two  : OK : %s\n"),site2->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url2.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url2.GetString());
     return error;
   }
 
@@ -149,32 +149,32 @@ TestMarlinServer::TestSubSites()
   site2->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapSubsite());
 
   // Modify the standard settings for this site
-  site1->AddContentType("","text/xml");
-  site2->AddContentType("","text/xml");
-  site1->AddContentType("xml","application/soap+xml");
-  site2->AddContentType("xml","application/soap+xml");
+  site1->AddContentType(_T(""),_T("text/xml"));
+  site2->AddContentType(_T(""),_T("text/xml"));
+  site1->AddContentType(_T("xml"),_T("application/soap+xml"));
+  site2->AddContentType(_T("xml"),_T("application/soap+xml"));
 
   // Start the sites explicitly
   if(site1->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url1.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url1.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url1.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url1.GetString());
   }
 
   if(site2->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url2.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url2.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url2.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url2.GetString());
   }
 
   return error;
@@ -186,15 +186,15 @@ TestMarlinServer::StopSubsites()
 {
   int error = 0;
 
-  XString url1("/MarlinTest/TestToken");
-  XString url2("/MarlinTest/TestToken/One");
-  XString url3("/MarlinTest/TestToken/Two");
+  XString url1(_T("/MarlinTest/TestToken"));
+  XString url2(_T("/MarlinTest/TestToken/One"));
+  XString url3(_T("/MarlinTest/TestToken/Two"));
 
   // Testing the main site. Should not be removed!!
   if(m_httpServer->DeleteSite(m_inPortNumber,url1))
   {
-    qprintf("ERROR Incorrectly removed a main site: %s\n",url1.GetString());
-    qprintf("ERROR Other sites are dependent on it\n");
+    qprintf(_T("ERROR Incorrectly removed a main site: %s\n"),url1.GetString());
+    qprintf(_T("ERROR Other sites are dependent on it\n"));
     xerror();
     ++error;
   }
@@ -202,13 +202,13 @@ TestMarlinServer::StopSubsites()
   // Removing sub-sites. Should work
   if(m_httpServer->DeleteSite(m_inPortNumber,url2) == false)
   {
-    qprintf("ERROR Deleting site : %s\n",url2.GetString());
+    qprintf(_T("ERROR Deleting site : %s\n"),url2.GetString());
     xerror();
     ++error;
   }
   if(m_httpServer->DeleteSite(m_inPortNumber,url3) == false)
   {
-    qprintf("ERROR Deleting site : %s\n",url3.GetString());
+    qprintf(_T("ERROR Deleting site : %s\n"),url3.GetString());
     xerror();
     ++error;
   }
@@ -216,7 +216,7 @@ TestMarlinServer::StopSubsites()
   // Now removing main site
   if(m_httpServer->DeleteSite(m_inPortNumber,url1) == false)
   {
-    qprintf("ERROR Deleting site : %s\n",url1.GetString());
+    qprintf(_T("ERROR Deleting site : %s\n"),url1.GetString());
     xerror();
     ++error;
   }
@@ -228,7 +228,7 @@ TestMarlinServer::AfterTestSubSites()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("All subsite tests received and tested          : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("All subsite tests received and tested          : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }
 

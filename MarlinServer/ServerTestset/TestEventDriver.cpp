@@ -59,20 +59,20 @@ TestMarlinServer::IncomingEvent(LTEvent* p_event)
   XString type;
   switch (p_event->m_type)
   {
-    case EvtType::EV_Message: type = "Message"; 
+    case EvtType::EV_Message: type = _T("Message"); 
                               break;
-    case EvtType::EV_Binary:  type = "Binary";
+    case EvtType::EV_Binary:  type = _T("Binary");
                               break;
-    case EvtType::EV_Error:   type = "Error";
+    case EvtType::EV_Error:   type = _T("Error");
                               break;
-    case EvtType::EV_Open:    type = "Open";    
+    case EvtType::EV_Open:    type = _T("Open");    
                               m_openSeen++;
                               break;
-    case EvtType::EV_Close:   type = "Close";
+    case EvtType::EV_Close:   type = _T("Close");
                               m_closeSeen++;
                               break;
   }
-  text.Format("Incoming event [%s] Number [%d] ",type.GetString(),p_event->m_number);
+  text.Format(_T("Incoming event [%s] Number [%d] "),type.GetString(),p_event->m_number);
   text += p_event->m_payload;
   qprintf(text);
 
@@ -91,7 +91,7 @@ TestMarlinServer::PostEventsToDrivers()
     {
       for(int ind = 0; ind < NUM_TEST; ++ind)
       {
-        payload.Format("Testing event number [%d] to channel [%d]",ind,channel);
+        payload.Format(_T("Testing event number [%d] to channel [%d]"),ind,channel);
         switch (channel)
         {
           case 1: m_driver.PostEvent(m_channel1, payload); break;
@@ -108,10 +108,10 @@ int
 TestMarlinServer::TestEventDriver()
 {
   int error = 0;
-  XString url("/MarlinTest/Driver/");
+  XString url(_T("/MarlinTest/Driver/"));
 
-  xprintf("TESTING SERVER-EVENT-DRIVER FUNCTIONS\n");
-  xprintf("=====================================\n");
+  xprintf(_T("TESTING SERVER-EVENT-DRIVER FUNCTIONS\n"));
+  xprintf(_T("=====================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Driver/"
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong, false, m_inPortNumber, url);
@@ -119,13 +119,13 @@ TestMarlinServer::TestEventDriver()
   {
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
-    qprintf("HTTPSite for ServerEventDriver                : OK : %s\n", site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for ServerEventDriver                : OK : %s\n"), site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -134,9 +134,9 @@ TestMarlinServer::TestEventDriver()
 
   // In real life we would generate the session names and the cookie values!!
   // these values make the debugging easier in the test application
-  m_channel1 = m_driver.RegisterChannel("firstsession_123", "GUID","123-123-123-123");
-  m_channel2 = m_driver.RegisterChannel("secondsession_456","GUID","456-456-456-456");
-  m_channel3 = m_driver.RegisterChannel("thirdsession_789", "GUID","789-789-789-789");
+  m_channel1 = m_driver.RegisterChannel(_T("firstsession_123"), _T("GUID"),_T("123-123-123-123"));
+  m_channel2 = m_driver.RegisterChannel(_T("secondsession_456"),_T("GUID"),_T("456-456-456-456"));
+  m_channel3 = m_driver.RegisterChannel(_T("thirdsession_789"), _T("GUID"),_T("789-789-789-789"));
 
   // Connect the channel to an application object
   // Here we connect it to the server with the 'this' pointer.
@@ -160,7 +160,7 @@ TestMarlinServer::TestEventDriver()
 
   // SUMMARY OF THE START
   // --- "---------------------------------------------- - ------
-  qprintf("ServerEventDriver registered channels         : %s\n", error ? "ERROR" : "OK");
+  qprintf(_T("ServerEventDriver registered channels         : %s\n"), error ? _T("ERROR") : _T("OK"));
 
   return error;
 }
@@ -185,9 +185,9 @@ TestMarlinServer::AfterTestEventDriver()
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("ServerEventDriver all messages delivered [%d]   : %s\n",errors,errors > 0 ? "ERROR" : "OK");
-  qprintf("ServerEventDriver all open messages delivered  : %s\n", m_openSeen    < 3 ? "ERROR" : "OK");
-  qprintf("ServerEventDriver all close messages delivered : %s\n", m_closeSeen   < 3 ? "ERROR" : "OK");
+  qprintf(_T("ServerEventDriver all messages delivered [%d]   : %s\n"),errors,errors > 0 ? _T("ERROR") : _T("OK"));
+  qprintf(_T("ServerEventDriver all open messages delivered  : %s\n"), m_openSeen    < 3 ? _T("ERROR") : _T("OK"));
+  qprintf(_T("ServerEventDriver all close messages delivered : %s\n"), m_closeSeen   < 3 ? _T("ERROR") : _T("OK"));
 
   return errors;
 }

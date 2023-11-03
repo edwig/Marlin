@@ -38,10 +38,10 @@ enum class OAuthFlow
 };
 
 // Well known token servers
-constexpr const char* token_server_ms("https://login.microsoftonline.com/%s/oauth2/v2.0/token");
+constexpr LPCTSTR token_server_ms(_T("https://login.microsoftonline.com/%s/oauth2/v2.0/token"));
 
 // Well known scopes
-constexpr const char* scope_ms_graph("https://graph.microsoft.com/.default");
+constexpr LPCTSTR scope_ms_graph(_T("https://graph.microsoft.com/.default"));
 
 // Bearer tokens will be re-gotten after % of the expiration time
 const int token_validity_time = 90;  // Refresh after 90 percent of time has expired

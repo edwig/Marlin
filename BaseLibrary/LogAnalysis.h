@@ -58,6 +58,9 @@
 
 #define MUSTLOG(x)  (m_logLevel >= (x))
 
+// Line that depicts the position of a binary log buffer
+#define BUFFER_MARKER  "@^@"
+
 constexpr auto ANALYSIS_FUNCTION_SIZE = 48;                            // Size of prefix printing in logfile
 constexpr auto LOGWRITE_INTERVAL      = (CLOCKS_PER_SEC * 30);         // Median  is once per 30 seconds
 constexpr auto LOGWRITE_INTERVAL_MIN  = (CLOCKS_PER_SEC * 10);         // Minimum is once per 10 seconds
@@ -81,8 +84,16 @@ enum class LogType
  ,LOG_WARN    = 3
 };
 
+struct LogBuff
+{
+  BYTE*    m_buffer;
+  unsigned m_length;
+};
+
 // Caching list for log-lines
 using LogList = std::deque<XString>;
+// Caching list for binary buffers
+using BufList = std::deque<LogBuff>;
 
 class LogAnalysis
 {
@@ -93,15 +104,18 @@ public:
   // Log this line
   // Intended to be called as:
   // AnalysisLog(__FUNCTION__,LOG_INFO,true,"My info for the logfile: %s %d",StringParam,IntParam);
-  bool    AnalysisLog(const char* p_function,LogType p_type,bool p_doFormat,const char* p_format,...);
+  bool    AnalysisLog(LPCTSTR p_function,LogType p_type,bool p_doFormat,LPCTSTR p_format,...);
+
+  // Logging of a string without headers or formatting
+  void    BareStringLog(XString p_string);
 
   // Hexadecimal view of an object
   // Intended to be called as:
   // AnalysisHex(__FUNCTION__,"MyMessage",buffer,len);
-  bool    AnalysisHex(const char* p_function,XString p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength = 16);
+  bool    AnalysisHex(LPCTSTR p_function,XString p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength = 16);
 
-  // Use sparringly!
-  void    BareStringLog(const char* p_buffer,int p_length);
+  // Use sparingly!
+  void    BareBufferLog(void* p_buffer,unsigned p_length);
 
   // Flushing the log file
   void    ForceFlush();
@@ -153,6 +167,7 @@ private:
 
   // Settings
   XString m_name;                               // For WMI Event viewer
+  WinFile m_file;                               // Writing to this file
   int     m_logLevel    { HLL_NOLOG };          // Active logging level
   bool    m_doTiming    { true  };              // Prepend date-and-time to log-lines
   bool    m_doEvents    { false };              // Also write to WMI event log
@@ -166,10 +181,10 @@ private:
   bool    m_initialised { false };              // Logging is initialized and ready
   HANDLE  m_logThread   { NULL };               // Async writing threads ID
   HANDLE  m_event       { NULL };               // Event for waking writing thread
-  HANDLE  m_file        { NULL };               // File handle to write log to
   HANDLE  m_eventLog    { NULL };               // WMI handle to write event-log to
   XString m_logFileName { "Logfile.txt" };      // Name of the logging file
   LogList m_list;                               // Cached list of logging lines
+  BufList m_buffers;                            // Cached list of binary buffer parts
 
   // Multi-threading issues
   CRITICAL_SECTION m_lock;

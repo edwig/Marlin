@@ -97,7 +97,7 @@ XPath::Evaluate() noexcept
   if (m_message == nullptr || m_path.IsEmpty())
   {
     m_status = XPStatus::XP_Invalid;
-    m_errorInfo = "Message and path must both be filled in.";
+    m_errorInfo = _T("Message and path must both be filled in.");
     return false;
   }
 
@@ -115,7 +115,7 @@ XPath::Evaluate() noexcept
   if (!m_element)
   {
     m_status = XPStatus::XP_Invalid;
-    m_errorInfo = "Empty XML document: no root element!";
+    m_errorInfo = _T("Empty XML document: no root element!");
     return false;
   }
 
@@ -140,7 +140,7 @@ XPath::Evaluate() noexcept
     m_status = XPStatus::XP_Invalid;
     if(m_errorInfo.IsEmpty())
     {
-      m_errorInfo = "Path not found in the XML document!";
+      m_errorInfo = _T("Path not found in the XML document!");
     }
     return false;
   }
@@ -259,7 +259,7 @@ XPath::GetToken(XString& p_parsing)
   // NOT an identifier
   if(ch != '_' && !isalpha(ch))
   {
-    token = XString((char)ch,1);
+    token = XString((TCHAR)ch,1);
     p_parsing = p_parsing.Mid(1);
     return token;
   }
@@ -277,7 +277,7 @@ XPath::GetToken(XString& p_parsing)
 }
 
 void
-XPath::NeedToken(XString& p_parsing, char p_token)
+XPath::NeedToken(XString& p_parsing,TCHAR p_token)
 {
   XString token = GetToken(p_parsing);
   if(token.GetLength() != 1 || token.GetAt(0) != p_token)
@@ -286,7 +286,7 @@ XPath::NeedToken(XString& p_parsing, char p_token)
     m_results.clear();
     if(m_errorInfo.IsEmpty())
     {
-      m_errorInfo.Format("Expected a [%c] token!", p_token);
+      m_errorInfo.Format(_T("Expected a [%c] token!"), p_token);
     }
   }
 }
@@ -305,7 +305,7 @@ XPath::GetNumber(XString& p_parsing,XString& p_token)
     p_parsing = p_parsing.Mid(1);
     if(ch == '-')
     {
-      p_token = XString((char)ch,1);
+      p_token = XString((TCHAR)ch,1);
     }
   }
 
@@ -411,7 +411,7 @@ XPath::ParseLevel(XString& p_parsing)
     XString attribute;
 
     // Do an index
-    if(token == "[")
+    if(token == _T("["))
     {
       token = GetToken(p_parsing);
       if(isdigit(token.GetAt(0)))
@@ -438,7 +438,7 @@ XPath::ParseLevel(XString& p_parsing)
 
       }
       token = GetToken(p_parsing);
-      if(token == "]")
+      if(token == _T("]"))
       {
         return result;
       }
@@ -478,7 +478,7 @@ XPath::ParseLevel(XString& p_parsing)
 bool
 XPath::ParseLevelFindIndex(XString p_token)
 {
-  int index = atoi(p_token) - XPATH_ONE_BASED;
+  int index = _ttoi(p_token) - XPATH_ONE_BASED;
   XMLElement* parent = m_element->GetParent();
 
   if (index >= 0 && index < (int)parent->GetChildren().size())
@@ -486,7 +486,7 @@ XPath::ParseLevelFindIndex(XString p_token)
     m_element = parent->GetChildren()[index];
     return true;
   }
-  m_errorInfo = "Index out of bounds!";
+  m_errorInfo = _T("Index out of bounds!");
   m_element = nullptr;
   m_results.clear();
   m_status = XPStatus::XP_Invalid;
@@ -510,7 +510,7 @@ XPath::ParseLevelFindAttrib(XString p_token,bool p_recurse)
     m_element = nullptr;
     m_results.clear();
     m_status = XPStatus::XP_Invalid;
-    m_errorInfo.Format("No elements with attribute [%s] found!",p_token.GetString());
+    m_errorInfo.Format(_T("No elements with attribute [%s] found!"),p_token.GetString());
   }
   return found;
 }
@@ -528,7 +528,7 @@ XPath::ParseLevelFindNodes(XString p_token,bool p_recurse)
     {
       m_element = nullptr;
       m_results.clear();
-      m_errorInfo = "Unsuccessful recursive find of: " + p_token;
+      m_errorInfo = _T("Unsuccessful recursive find of: ") + p_token;
       m_status = XPStatus::XP_Invalid;
     }
   }
@@ -594,9 +594,9 @@ bool
 XPath::IsFunction(XString p_token)
 {
   return
-  p_token.Compare("last")           == 0 ||
-  p_token.Compare("contains")       == 0 ||
-  p_token.Compare("starts-with")    == 0 ;
+  p_token.Compare(_T("last"))           == 0 ||
+  p_token.Compare(_T("contains"))       == 0 ||
+  p_token.Compare(_T("starts-with"))    == 0 ;
 }
 
 bool
@@ -604,7 +604,7 @@ XPath::ParseLevelFunction(XString& p_parsing,XString p_function)
 {
   XMLElement* parent = m_element->GetParent();
 
-  if(p_function.Compare("last") == 0)
+  if(p_function.Compare(_T("last")) == 0)
   {
     NeedToken(p_parsing,'(');
     NeedToken(p_parsing,')');
@@ -627,14 +627,14 @@ XPath::ParseLevelFunction(XString& p_parsing,XString p_function)
       if(compare)
       {
         XString value = compare->GetValue();
-        if(p_function.Compare("contains") == 0)
+        if(p_function.Compare(_T("contains")) == 0)
         {
           if(value.Find(text) >= 0)
           {
             m_results.push_back(elem);
           }
         }
-        else if(p_function.Compare("starts-with") == 0)
+        else if(p_function.Compare(_T("starts-with")) == 0)
         {
           if(value.Find(text) == 0)
           {

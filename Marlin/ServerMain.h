@@ -38,7 +38,7 @@ void WINAPI SvcCtrlHandler(DWORD);
 
 // Prototypes of all other functions
 void        ReadConfig();
-int         SvcInstall(char* username,char* password);
+int         SvcInstall(LPCTSTR username,LPCTSTR password);
 int         SvcDelete();
 void        SvcInit(DWORD,LPTSTR *); 
 void        ReportSvcStatus(DWORD,DWORD,DWORD);

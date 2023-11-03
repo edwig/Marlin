@@ -11,8 +11,8 @@
 #pragma comment(lib, "crypt32.lib")
 
 // defined in another source file (CreateCertificate.cpp)
-PCCERT_CONTEXT CreateCertificate(bool   p_machineCert  = false
-                                ,LPCSTR p_subject      = nullptr
-                                ,LPCSTR p_friendlyName = nullptr
-                                ,LPCSTR p_description  = nullptr);
+PCCERT_CONTEXT CreateCertificate(bool    p_machineCert  = false
+                                ,LPCTSTR p_subject      = nullptr
+                                ,LPCTSTR p_friendlyName = nullptr
+                                ,LPCTSTR p_description  = nullptr);
 

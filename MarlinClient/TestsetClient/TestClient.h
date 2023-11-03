@@ -37,7 +37,7 @@ class   LogAnalysis;
 // In TestClient.cpp
 extern bool doDetails;
 
-void xprintf(const char* p_format,...);
+void xprintf(LPCTSTR p_format,...);
 void WaitForKey();
 
 // Define your other host here!
@@ -45,21 +45,14 @@ void WaitForKey();
 // #define MARLIN_HOST "my-other-machine"  
 
 // In the various testing files
-extern int TestJSON(void);
-extern int TestUnicode(void);
 extern int TestURLChars(void);
 extern int TestCrackURL(void);
 extern int TestCryptography(void);
-extern int TestReader(void);
 extern int TestConvert(void);
-extern int TestNamespaces(void);
-extern int TestCookiesOverwrite(void);
-extern int TestDecryptCookie(void);
 extern int TestFindClientCertificate(void);
 extern int TestWebSocketAccept(void);
 extern int TestWebSocket(LogAnalysis* p_log);
 extern int TestCloseWebSocket(void);
-extern int TestHeaders(void);
 extern int TestEvents(HTTPClient* p_client);
 extern int TestCookies(HTTPClient& p_client);
 extern int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile);

@@ -54,7 +54,7 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
   }
 
   USES_CONVERSION;
-  CString name = W2A(Name);
+  CString name = (LPCTSTR) CW2T(Name);
   if(name.IsEmpty())
   {
     name = "HTTPServer";

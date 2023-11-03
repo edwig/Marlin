@@ -13,6 +13,7 @@
         <dir name="MarlinClient"/>
         <dir name="MarlinServer"/>
         <dir name="HTTPManager"/>
+        <dir name="ServerApplet"/>
     </paths>
     <exclude>
         <path name="C:/Develop/Marlin/Marlin/ThreadPoolED.cpp"/>

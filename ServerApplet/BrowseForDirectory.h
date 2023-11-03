@@ -36,8 +36,8 @@ public:
 
   bool Browse(HWND            hwndParent, 
               XString const&  title, 
-              XString const&  initdir    = "",
-              XString const&  rootdir    = "",
+              XString const&  initdir    = _T(""),
+              XString const&  rootdir    = _T(""),
               bool            showFiles  = false,
               bool            showStatus = false);
 

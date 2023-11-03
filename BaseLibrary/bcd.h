@@ -60,7 +60,6 @@ const int bcdPrecision = bcdDigits * bcdLength;
 // - Some generals:   DebugPrint ("%08d")
 
 // Handy typedefs of used basic datatypes
-using uchar  = unsigned char;
 using ushort = unsigned short;
 using ulong  = unsigned long;
 
@@ -102,13 +101,13 @@ bcd atan2(const bcd& p_y,const bcd& p_x);
 void InitValutaString();
 
 // string format number and money format functions
-extern bool g_locale_valutaInit;
-extern char g_locale_decimalSep[];
-extern char g_locale_thousandSep[];
-extern char g_locale_strCurrency[];
-extern int  g_locale_decimalSepLen;
-extern int  g_locale_thousandSepLen;
-extern int  g_locale_strCurrencyLen;
+extern bool  g_locale_valutaInit;
+extern TCHAR g_locale_decimalSep[];
+extern TCHAR g_locale_thousandSep[];
+extern TCHAR g_locale_strCurrency[];
+extern int   g_locale_decimalSepLen;
+extern int   g_locale_thousandSepLen;
+extern int   g_locale_strCurrencyLen;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -128,11 +127,12 @@ public:
   bcd(const bcd& icd);
 
   // BCD from a char value
-  explicit bcd(const char p_value);
+  explicit bcd(const TCHAR p_value);
 
+#ifndef UNICODE
   // BCD from an unsigned char value
-  explicit bcd(const unsigned char p_value);
-
+  explicit bcd(const _TUCHAR p_value);
+#endif
   // BCD from a short value
   explicit bcd(const short p_value);
 
@@ -164,7 +164,7 @@ public:
   explicit bcd(const double p_value);
 
   // BCD From a character string
-  explicit bcd(const char* p_string,bool p_fromDB = false);
+  explicit bcd(PCTSTR p_string,bool p_fromDB = false);
 
   // BCD from a SQL_NUMERIC_STRUCT
   explicit bcd(const SQL_NUMERIC_STRUCT* p_numeric);
@@ -231,11 +231,11 @@ public:
   const bcd  operator/(const double p_value) const;
   const bcd  operator%(const double p_value) const;
 
-  const bcd  operator+(const char*  p_value) const;
-  const bcd  operator-(const char*  p_value) const;
-  const bcd  operator*(const char*  p_value) const;
-  const bcd  operator/(const char*  p_value) const;
-  const bcd  operator%(const char*  p_value) const;
+  const bcd  operator+(LPCTSTR p_value) const;
+  const bcd  operator-(LPCTSTR p_value) const;
+  const bcd  operator*(LPCTSTR p_value) const;
+  const bcd  operator/(LPCTSTR p_value) const;
+  const bcd  operator%(LPCTSTR p_value) const;
 
   // Standard math/assignment operators
   bcd& operator+=(const bcd& p_value);
@@ -256,11 +256,11 @@ public:
   bcd& operator/=(const double p_value);
   bcd& operator%=(const double p_value);
 
-  bcd& operator+=(const char*  p_value);
-  bcd& operator-=(const char*  p_value);
-  bcd& operator*=(const char*  p_value);
-  bcd& operator/=(const char*  p_value);
-  bcd& operator%=(const char*  p_value);
+  bcd& operator+=(LPCTSTR p_value);
+  bcd& operator-=(LPCTSTR p_value);
+  bcd& operator*=(LPCTSTR p_value);
+  bcd& operator/=(LPCTSTR p_value);
+  bcd& operator%=(LPCTSTR p_value);
 
   // Prefix unary minus (negation)
   bcd  operator-() const;
@@ -275,7 +275,7 @@ public:
   bcd& operator=(const bcd&    p_value);
   bcd& operator=(const int     p_value);
   bcd& operator=(const double  p_value);
-  bcd& operator=(const char*   p_value);
+  bcd& operator=(const PCTSTR  p_value);
   bcd& operator=(const __int64 p_value);
 
   // comparison operators
@@ -300,12 +300,12 @@ public:
   bool operator<=(const double p_value) const;
   bool operator>=(const double p_value) const;
 
-  bool operator==(const char*  p_value) const;
-  bool operator!=(const char*  p_value) const;
-  bool operator< (const char*  p_value) const;
-  bool operator> (const char*  p_value) const;
-  bool operator<=(const char*  p_value) const;
-  bool operator>=(const char*  p_value) const;
+  bool operator==(LPCTSTR p_value) const;
+  bool operator!=(LPCTSTR p_value) const;
+  bool operator< (LPCTSTR p_value) const;
+  bool operator> (LPCTSTR p_value) const;
+  bool operator<=(LPCTSTR p_value) const;
+  bool operator>=(LPCTSTR p_value) const;
 
   // MAKING AN EXACT NUMERIC value
   
@@ -424,7 +424,7 @@ public:
 
 #ifdef _DEBUG
   // Debug print of the mantissa
-  XString DebugPrint(char* p_name);
+  XString DebugPrint(PTCHAR p_name);
 #endif
 
 private:
@@ -432,7 +432,7 @@ private:
   // INTERNALS
 
   // Set infinity for overflows
-  bcd     SetInfinity(XString p_reason = "") const;
+  bcd     SetInfinity(XString p_reason = _T("")) const;
   // Sets one integer in this bcd number
   void    SetValueInt(const int p_value);
   // Sets one or two longs in this bcd number
@@ -443,7 +443,7 @@ private:
   // Sets the value from a double
   void    SetValueDouble(const double p_value);
   // Sets the value from a string
-  void    SetValueString(const char* p_string,bool p_fromDB = false);
+  void    SetValueString(LPCTSTR p_string,bool p_fromDB = false);
   // Sets the value from a SQL NUMERIC
   void    SetValueNumeric(const SQL_NUMERIC_STRUCT* p_numeric);
   // Take the absolute value of a long
@@ -459,7 +459,7 @@ private:
   // Shift mantissa 1 position left
   void    ShiftLeft();
   // Convert a string to a single long value
-  long    StringToLong(const char* p_string) const;
+  long    StringToLong(LPCTSTR p_string) const;
   // Convert a long to a string
   XString LongToString(long p_value) const;
   // Split the mantissa for floor/ceiling operations

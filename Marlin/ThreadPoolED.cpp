@@ -705,7 +705,7 @@ ThreadPoolED::SubmitWork(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heart
   float load = 0.0;
   if(m_useCPULoad)
   {
-    GetCPULoad();
+    GetCPULoad(&m_critical);
     TP_TRACE1("CPU Load: %f\n",load);
   }
 
@@ -817,7 +817,7 @@ ThreadPoolED::WakeUpThread(DWORD_PTR p_unique,void* p_result /*=nullptr*/)
       {
         reg->m_callback = (LPFN_CALLBACK)p_result;
       }
-      // Wakup thread from WaitForSingleObjectEx
+      // Wakeup thread from WaitForSingleObjectEx
       SetEvent(reg->m_event);
       return true;
     }

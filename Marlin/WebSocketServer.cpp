@@ -40,10 +40,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
+#define ERRORLOG(code,text)       ErrorLog (_T(__FUNCTION__),code,text)
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -81,7 +81,7 @@ WebSocketServer::OpenSocket()
 {
   if(m_server)
   {
-    DETAILLOGS("Opening WebSocket: ",m_uri);
+    DETAILLOGS(_T("Opening WebSocket: "),m_uri);
     SocketListener();
 
     // Change state to opened
@@ -121,7 +121,7 @@ WebSocketServer::SocketReader(HRESULT p_error
   if(p_error != S_OK)
   {
     DWORD error = (p_error & 0x0F);
-    ERRORLOG(error,"Websocket failed to read fragment");
+    ERRORLOG(error,_T("Websocket failed to read fragment"));
     CloseSocket();
     return;
   }
@@ -140,9 +140,11 @@ WebSocketServer::SocketReader(HRESULT p_error
   if(p_close)
   {
     ReceiveCloseSocket();
+    AutoCSTR closing(m_closing);
+
     m_reading->m_utf8   = true;
     m_reading->m_final  = true;
-    m_reading->m_data   = reinterpret_cast<BYTE*>(_strdup(m_closing.GetString()));
+    m_reading->m_data   = (BYTE*)closing.grab();
     m_reading->m_length = m_closing.GetLength();
 
     // Store frame without UTF-8 conversion
@@ -175,7 +177,7 @@ WebSocketServer::SocketReader(HRESULT p_error
     if(m_openWriting)
     {
       XString reason;
-      reason.Format("WebSocket [%s] closed.",m_uri.GetString());
+      reason.Format(_T("WebSocket [%s] closed."),m_uri.GetString());
       SendCloseSocket(WS_CLOSE_NORMAL,reason);
     }
     OnClose();
@@ -208,7 +210,7 @@ WebSocketServer::SocketListener()
 
   if(!m_reading->m_data)
   {
-    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Reading websocket data.");
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Reading websocket data."));
     CloseSocket();
     return;
   }
@@ -225,7 +227,7 @@ WebSocketServer::SocketListener()
   if(FAILED(hr))
   {
     DWORD error = hr & 0x0F;
-    ERRORLOG(error,"Websocket failed to register read command for a fragment");
+    ERRORLOG(error,_T("Websocket failed to register read command for a fragment"));
     CloseSocket();
     return;
   }
@@ -253,13 +255,17 @@ WebSocketServer::ReceiveCloseSocket()
   HRESULT hr = m_context->GetCloseStatus(&m_closingError,&pointer,&length);
   if(SUCCEEDED(hr))
   {
+#ifdef UNICODE
+    m_closing = pointer;
+#else
     XString encoded;
     bool foundBom = false;
     if(TryConvertWideString(reinterpret_cast<const uchar*>(pointer),length,"",encoded,foundBom))
     {
       m_closing = encoded;
     }
-    DETAILLOGV("Received closing message [%d:%s] on WebSocket: %s",m_closingError,m_closing.GetString(),m_uri.GetString());
+#endif
+    DETAILLOGV(_T("Received closing message [%d:%s] on WebSocket: %s"),m_closingError,m_closing.GetString(),m_uri.GetString());
     return true;
   }
   return false;
@@ -308,11 +314,11 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
   m_logfile  = m_server->GetLogfile();
   m_logLevel = m_server->GetLogLevel();
 
-  XString wsVersion("Sec-WebSocket-Version");
-  XString wsClientKey("Sec-WebSocket-Key");
-  XString wsConnection("Connection");
-  XString wsUpgrade("Upgrade");
-  XString wsHost("Host");
+  XString wsVersion   (_T("Sec-WebSocket-Version"));
+  XString wsClientKey (_T("Sec-WebSocket-Key"));
+  XString wsConnection(_T("Connection"));
+  XString wsUpgrade   (_T("Upgrade"));
+  XString wsHost      (_T("Host"));
 
   XString version    = p_message->GetHeader(wsVersion);
   XString clientKey  = p_message->GetHeader(wsClientKey);
@@ -321,70 +327,83 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
   XString host       = p_message->GetHeader(wsHost);
 
   // Get optional extensions
-  m_protocols  = p_message->GetHeader("Sec-WebSocket-Protocol");
-  m_extensions = p_message->GetHeader("Sec-WebSocket-Extensions");
+  m_protocols  = p_message->GetHeader(_T("Sec-WebSocket-Protocol"));
+  m_extensions = p_message->GetHeader(_T("Sec-WebSocket-Extensions"));
 
   // Remove general headers
-  p_message->DelHeader("Sec-WebSocket-Key");
-  p_message->DelHeader("Sec-WebSocket-Version");
-  p_message->DelHeader("Sec-WebSocket-Protocol");
-  p_message->DelHeader("Sec-WebSocket-Extensions");
-  p_message->DelHeader("cache-control");
-  p_message->DelHeader("trailer");
-  p_message->DelHeader("user-agent");
-  p_message->DelHeader("host");
-  p_message->DelHeader("content-length");
+  p_message->DelHeader(_T("Sec-WebSocket-Key"));
+  p_message->DelHeader(_T("Sec-WebSocket-Version"));
+  p_message->DelHeader(_T("Sec-WebSocket-Protocol"));
+  p_message->DelHeader(_T("Sec-WebSocket-Extensions"));
+  p_message->DelHeader(_T("cache-control"));
+  p_message->DelHeader(_T("trailer"));
+  p_message->DelHeader(_T("user-agent"));
+  p_message->DelHeader(_T("host"));
+  p_message->DelHeader(_T("content-length"));
 
   // By default we accept all protocols and extensions
   // All versions of 13 (RFC 6455) and above
-  if(atoi(version) < 13 || clientKey.IsEmpty())
+  if(_ttoi(version) < 13 || clientKey.IsEmpty())
   {
     return false;
   }
 
   // Construct the WEBSOCKET protocol headers from the client
   WEB_SOCKET_HTTP_HEADER clientHeaders[5];
+  AutoCSTR ckNamed(wsClientKey);
+  AutoCSTR ckValue(clientKey);
+  AutoCSTR coNamed(wsConnection);
+  AutoCSTR coValue(connection);
+  AutoCSTR upNamed(wsUpgrade);
+  AutoCSTR upValue(upgrade);
+  AutoCSTR vsNamed(wsVersion);
+  AutoCSTR vsValue(version);
+  AutoCSTR hoNamed(wsHost);
+  AutoCSTR hoValue(host);
 
-  clientHeaders[0].pcName        = const_cast<PCHAR>(wsClientKey.GetString());
-  clientHeaders[0].ulNameLength  =                   wsClientKey.GetLength();
-  clientHeaders[0].pcValue       = const_cast<PCHAR>(clientKey.GetString());
-  clientHeaders[0].ulValueLength =                   clientKey.GetLength();
+  clientHeaders[0].pcName        = (PCHAR) ckNamed.cstr();
+  clientHeaders[0].ulNameLength  = (ULONG) ckNamed.size();
+  clientHeaders[0].pcValue       = (PCHAR) ckValue.cstr();
+  clientHeaders[0].ulValueLength = (ULONG) ckValue.size();
 
-  clientHeaders[1].pcName        = const_cast<PCHAR>(wsConnection.GetString());
-  clientHeaders[1].ulNameLength  =                   wsConnection.GetLength();
-  clientHeaders[1].pcValue       = const_cast<PCHAR>(connection.GetString());
-  clientHeaders[1].ulValueLength =                   connection.GetLength();
+  clientHeaders[1].pcName        = (PCHAR) coNamed.cstr();
+  clientHeaders[1].ulNameLength  = (ULONG) coNamed.size();
+  clientHeaders[1].pcValue       = (PCHAR) coValue.cstr();
+  clientHeaders[1].ulValueLength = (ULONG) coValue.size();
   
-  clientHeaders[2].pcName        = const_cast<PCHAR>(wsUpgrade.GetString());
-  clientHeaders[2].ulNameLength  =                   wsUpgrade.GetLength();
-  clientHeaders[2].pcValue       = const_cast<PCHAR>(upgrade.GetString());
-  clientHeaders[2].ulValueLength =                   upgrade.GetLength();
+  clientHeaders[2].pcName        = (PCHAR) upNamed.cstr();
+  clientHeaders[2].ulNameLength  = (ULONG) upNamed.size();
+  clientHeaders[2].pcValue       = (PCHAR) upValue.cstr();
+  clientHeaders[2].ulValueLength = (ULONG) upValue.size();
   
-  clientHeaders[3].pcName        = const_cast<PCHAR>(wsVersion.GetString());
-  clientHeaders[3].ulNameLength  =                   wsVersion.GetLength();
-  clientHeaders[3].pcValue       = const_cast<PCHAR>(version.GetString());
-  clientHeaders[3].ulValueLength =                   version.GetLength();
+  clientHeaders[3].pcName        = (PCHAR) vsNamed.cstr();
+  clientHeaders[3].ulNameLength  = (ULONG) vsNamed.size();
+  clientHeaders[3].pcValue       = (PCHAR) vsValue.cstr();
+  clientHeaders[3].ulValueLength = (ULONG) vsValue.size();
 
-  clientHeaders[4].pcName        = const_cast<PCHAR>(wsHost.GetString());
-  clientHeaders[4].ulNameLength  =                   wsHost.GetLength();
-  clientHeaders[4].pcValue       = const_cast<PCHAR>(host.GetString());
-  clientHeaders[4].ulValueLength =                   host.GetLength();
+  clientHeaders[4].pcName        = (PCHAR) hoNamed.cstr();
+  clientHeaders[4].ulNameLength  = (ULONG) hoNamed.size();
+  clientHeaders[4].pcValue       = (PCHAR) hoValue.cstr();
+  clientHeaders[4].ulValueLength = (ULONG) hoValue.size();
 
   WEB_SOCKET_HTTP_HEADER* serverheaders = nullptr;
   ULONG serverheadersCount = 0L;
-  bool result = m_context->PerformHandshake(clientHeaders,5,&serverheaders,&serverheadersCount,m_protocols);
+  AutoCSTR protocols(m_protocols);
+
+  bool result = m_context->PerformHandshake(clientHeaders,5,&serverheaders,&serverheadersCount,protocols.cstr());
   if(result)
   {
     // Record the handshake in our HTTPMessage
-    DETAILLOG1("WebSocketHandshake succeeded");
+    DETAILLOG1(_T("WebSocketHandshake succeeded"));
     for (unsigned header = 0; header < serverheadersCount; ++header)
     {
-      p_message->AddHeader(serverheaders[header].pcName, serverheaders[header].pcValue);
+      p_message->AddHeader(LPCSTRToString(serverheaders[header].pcName)
+                          ,LPCSTRToString(serverheaders[header].pcValue));
     }
   }
   else
   {
-    ERRORLOG(ERROR_PROCESS_ABORTED,"WebSocketHandshake failed");
+    ERRORLOG(ERROR_PROCESS_ABORTED,_T("WebSocketHandshake failed"));
   }
   return result;
 }
@@ -409,7 +428,7 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
 
   if(m_context->CompleteHandshake())
   {
-    DETAILLOG1("WebSocket handshake completed.");
+    DETAILLOG1(_T("WebSocket handshake completed."));
   }
 
   return true;

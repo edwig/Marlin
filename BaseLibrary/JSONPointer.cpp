@@ -36,7 +36,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Global value to reference non-existing array or object members
-static char g_invalid_jp_value[] = "-";
+static TCHAR g_invalid_jp_value[] = _T("-");
 
 JSONPointer::JSONPointer(bool p_originOne /*= false*/)
 {
@@ -208,7 +208,7 @@ JSONPointer::GetResultForceToString(bool p_whitespace /*=false*/)
   }
   if(value)
   {
-    result = value->GetAsJsonString(p_whitespace,StringEncoding::ENC_Plain,0);
+    result = value->GetAsJsonString(p_whitespace,Encoding::Default,0);
   }
   return result;
 }
@@ -331,7 +331,7 @@ void
 JSONPointer::UnescapeType(XString& p_pointer)
 {
   // Find first char in the sequence
-  char first = 0;
+  TCHAR first = 0;
 
   if(!p_pointer.IsEmpty())
   {
@@ -359,13 +359,13 @@ JSONPointer::UnescapeType(XString& p_pointer)
 void
 JSONPointer::UnescapeJSON(XString& p_token)
 {
-  char delim[2];
+  TCHAR delim[2];
   delim[0] = m_delimiter;
   delim[1] = 0;
 
   // UN-Escape the JSONPointer escape characters for the delimiter
-  p_token.Replace("~1", delim);
-  p_token.Replace("~0", "~");
+  p_token.Replace(_T("~1"), delim);
+  p_token.Replace(_T("~0"), _T("~"));
 }
 
 // Parse one extra level
@@ -408,7 +408,7 @@ JSONPointer::ParseLevel(XString& p_parsing)
   // Check for value == array and token is number
   if(m_value->GetDataType() == JsonType::JDT_array && !token.IsEmpty() && isdigit(token.GetAt(0)))
   {
-    unsigned index = atoi(token) - m_origin;
+    unsigned index = _ttoi(token) - m_origin;
     if(index < (int)m_value->GetArray().size())
     {
       m_value = &(m_value->GetArray()[index]);

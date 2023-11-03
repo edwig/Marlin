@@ -28,7 +28,6 @@
 #include "pch.h"
 #include "JSONParser.h"
 #include "XMLParser.h"
-#include "DefuseBOM.h"
 #include "ConvertWideString.h"
 
 #ifdef _DEBUG
@@ -51,12 +50,12 @@ JSONParser::~JSONParser()
 }
 
 void
-JSONParser::SetError(JsonError p_error,const char* p_text,bool p_throw /*= true*/)
+JSONParser::SetError(JsonError p_error,LPCTSTR p_text,bool p_throw /*= true*/)
 {
   if(m_message)
   {
     m_message->m_errorstate = true;
-    m_message->m_lastError.Format("ERROR [%d] on line [%u] ",p_error,m_lines);
+    m_message->m_lastError.Format(_T("ERROR [%d] on line [%u] "),p_error,m_lines);
     m_message->m_lastError += p_text;
   }
   if(p_throw)
@@ -66,46 +65,56 @@ JSONParser::SetError(JsonError p_error,const char* p_text,bool p_throw /*= true*
 }
 
 void
-JSONParser::ParseMessage(XString& p_message,bool& p_whitespace,StringEncoding p_encoding /*=StringEncoding::ENC_UTF8*/)
+JSONParser::ParseMessage(XString& p_message,bool& p_whitespace,Encoding p_encoding /*=Encoding::Default*/)
 {
   // Check if we have something to do
   if(m_message == nullptr)
   {
-    SetError(JsonError::JE_Empty,"Empty message");
+    SetError(JsonError::JE_Empty,_T("Empty message"));
     return;
   }
 
   // Initializing the parser
-  m_pointer    = reinterpret_cast<uchar*>(const_cast<char*>(p_message.GetString()));
+  m_pointer    = reinterpret_cast<_TUCHAR*>(const_cast<PTCHAR>(p_message.GetString()));
   m_valPointer = m_message->m_value;
   m_lines      = 1;
   m_objects    = 0;
-  m_utf8       = p_encoding == StringEncoding::ENC_UTF8;
 
   // Check for Byte-Order-Mark first
-  BOMType bomType = BOMType::BT_NO_BOM;
+  Encoding charset = Encoding::Default;
   unsigned int skip = 0;
-  BOMOpenResult bomResult = CheckForBOM(m_pointer,bomType,skip);
-
-  if(bomResult != BOMOpenResult::BOR_NoBom)
+  BOMOpenResult bomResult = WinFile::DefuseBOM((const unsigned char*)m_pointer,charset,skip);
+  if(bomResult == BOMOpenResult::NoString)
   {
-    if(bomType != BOMType::BT_BE_UTF8)
+    return;
+  }
+  if(bomResult != BOMOpenResult::NoEncoding)
+  {
+    if(charset != Encoding::UTF8)
     {
       // cannot process these strings
-      SetError(JsonError::JE_IncompatibleEncoding,"Incompatible Byte-Order-Mark encoding");
+      SetError(JsonError::JE_IncompatibleEncoding,_T("Incompatible Byte-Order-Mark encoding"));
       return;
     }
-    m_message->m_encoding = StringEncoding::ENC_UTF8;
+    m_message->m_encoding = Encoding::UTF8;
     m_message->m_sendBOM  = true;
-    m_utf8 = true;
     // Skip past BOM
     m_pointer += skip;
+    // Must we do additional conversions?
+    if((m_message->GetEncoding() != Encoding::UTF8) || p_encoding == Encoding::UTF8)
+    {
+      m_utf8 = (charset == Encoding::UTF8);
+    }
+    else if(p_encoding == Encoding::UTF8)
+    {
+      m_utf8 = true;
+    }
   }
 
   // Allocate scanning buffer
   // Individual string cannot be larger than this
   m_scanLength = p_message.GetLength();
-  m_scanString = new uchar[(size_t)m_scanLength + 1];
+  m_scanString = new _TUCHAR[(size_t)m_scanLength + 1];
 
   // See if we have an empty message string
   SkipWhitespace();
@@ -124,7 +133,7 @@ JSONParser::ParseMessage(XString& p_message,bool& p_whitespace,StringEncoding p_
 
     if(m_pointer && *m_pointer)
     {
-      SetError(JsonError::JE_ExtraText,reinterpret_cast<const char*>(m_pointer));
+      SetError(JsonError::JE_ExtraText,reinterpret_cast<const PTCHAR>(m_pointer));
     }
   }
   catch(JsonError& /*error*/)
@@ -167,7 +176,7 @@ JSONParser::ParseLevel()
           {
             if(m_pointer && *m_pointer)
             {
-              SetError(JsonError::JE_UnknownString,"Non conforming JSON message text");
+              SetError(JsonError::JE_UnknownString,_T("Non conforming JSON message text"));
             }
           }
         }
@@ -181,17 +190,17 @@ JSONParser::ParseLevel()
 bool
 JSONParser::ParseConstant()
 {
-  if(_strnicmp(reinterpret_cast<const char*>(m_pointer),"null",4) == 0)
+  if(_tcsnicmp(reinterpret_cast<const PTCHAR>(m_pointer),_T("null"),4) == 0)
   {
     m_valPointer->SetValue(JsonConst::JSON_NULL);
     m_pointer += 4;
   }
-  else if(_strnicmp(reinterpret_cast<const char*>(m_pointer),"true",4) == 0)
+  else if(_tcsnicmp(reinterpret_cast<const PTCHAR>(m_pointer),_T("true"),4) == 0)
   {
     m_valPointer->SetValue(JsonConst::JSON_TRUE);
     m_pointer += 4;
   }
-  else if(_strnicmp(reinterpret_cast<const char*>(m_pointer),"false",5) == 0)
+  else if(_tcsnicmp(reinterpret_cast<const PTCHAR>(m_pointer),_T("false"),5) == 0)
   {
     m_valPointer->SetValue(JsonConst::JSON_FALSE);
     m_pointer += 5;
@@ -207,12 +216,12 @@ JSONParser::ParseConstant()
 XString
 JSONParser::GetString()
 {
-  uchar* buffer = m_scanString;
+  _TUCHAR* buffer = m_scanString;
 
   // Check that we have a string now
   if(*m_pointer != '\"')
   {
-    SetError(JsonError::JE_NoString,"String expected but not found!");
+    SetError(JsonError::JE_NoString,_T("String expected but not found!"));
   }
   ++m_pointer;
 
@@ -222,7 +231,7 @@ JSONParser::GetString()
     if(*m_pointer == '\\')
     {
       ++m_pointer;
-      uchar ch = *m_pointer++;
+      _TUCHAR ch = *m_pointer++;
       switch(ch)
       {
         case '\"': *buffer++ = '\"'; break;
@@ -235,7 +244,7 @@ JSONParser::GetString()
         case 't':  *buffer++ = '\t'; break;
         case 'u':  *buffer++ = UnicodeChar(); 
                    break;
-        default:   SetError(JsonError::JE_IllString,"Ill formed string. Illegal escape sequence.");
+        default:   SetError(JsonError::JE_IllString,_T("Ill formed string. Illegal escape sequence."));
                    *buffer++ = ch;
                    break;
       }
@@ -252,7 +261,7 @@ JSONParser::GetString()
   }
   else
   {
-    SetError(JsonError::JE_StringEnding,"String found without an ending quote!");
+    SetError(JsonError::JE_StringEnding,_T("String found without an ending quote!"));
   }
 
   // Getting the string
@@ -261,29 +270,29 @@ JSONParser::GetString()
 }
 
 // Conversion of xdigit to a numeric value
-uchar
+_TUCHAR
 JSONParser::XDigitToValue(int ch)
 {
   if(ch >= '0' && ch <= '9')
   {
-    return (uchar) (ch - '0');
+    return (_TUCHAR) (ch - '0');
   }
   if(ch >= 'A' && ch <= 'F')
   {
-    return (uchar) (ch - 'A' + 10);
+    return (_TUCHAR) (ch - 'A' + 10);
   }
   if(ch >= 'a' && ch <= 'f')
   {
-    return (uchar) (ch - 'a' + 10);
+    return (_TUCHAR) (ch - 'a' + 10);
   }
   return 0;
 }
 
 // Get a character from message
-uchar
+_TUCHAR
 JSONParser::ValueChar()
 {
-  if (*m_pointer == '\n')
+  if(*m_pointer == '\n')
   {
     ++m_lines;
   }
@@ -291,7 +300,7 @@ JSONParser::ValueChar()
 }
 
 // Get an UTF-16 \uXXXX escape char
-unsigned char
+_TUCHAR
 JSONParser::UnicodeChar()
 {
   int  ind = 4;
@@ -306,8 +315,12 @@ JSONParser::UnicodeChar()
   }
   if(ind)
   {
-    SetError(JsonError::JE_Unicode4Chars, "Unicode escape consists of 4 hex characters");
+    SetError(JsonError::JE_Unicode4Chars, _T("Unicode escape consists of 4 hex characters"));
   }
+
+#ifdef UNICODE
+  return ch;
+#else
   unsigned short buffer[2];
   buffer[0] = ch;
   buffer[1] = 0;
@@ -319,18 +332,23 @@ JSONParser::UnicodeChar()
     return result.GetAt(0);
   }
   return '?';
+#endif
 }
 
 // Get a character from message including UTF-8 translation
-unsigned char
+_TUCHAR
 JSONParser::UTF8Char()
 {
   if(*m_pointer == '\n')
   {
     ++m_lines;
   }
+  _TUCHAR  bytes = *m_pointer++;
+  if(m_utf8 == false)
+  {
+    return bytes;
+  }
   unsigned extra = 0;
-  unsigned char bytes = *m_pointer++;
 
   if((bytes & 0x80) == 0x00)
   {
@@ -446,7 +464,7 @@ JSONParser::ParseArray()
     // Must now find ',' for next array value
     if(*m_pointer != ',')
     {
-      SetError(JsonError::JE_ArrayElement,"Array element separator ',' expected!");
+      SetError(JsonError::JE_ArrayElement,_T("Array element separator ',' expected!"));
     }
     // Skip past array separator
     ++m_pointer;
@@ -492,7 +510,7 @@ JSONParser::ParseObject()
     SkipWhitespace();
     if(*m_pointer != ':')
     {
-      SetError(JsonError::JE_ObjNameSep,"Object's name-value separator ':' is missing!");
+      SetError(JsonError::JE_ObjNameSep,_T("Object's name-value separator ':' is missing!"));
     }
     ++m_pointer;
     SkipWhitespace();
@@ -512,7 +530,7 @@ JSONParser::ParseObject()
     // Must now find ',' for next object value
     if(*m_pointer != ',')
     {
-      SetError(JsonError::JE_ObjectElement,"Object element separator ',' expected!");
+      SetError(JsonError::JE_ObjectElement,_T("Object element separator ',' expected!"));
     }
     // Skip past object separator
     ++m_pointer;
@@ -632,7 +650,7 @@ JSONParser::ParseNumber()
 //
 //////////////////////////////////////////////////////////////////////////
 
-#define WHITESPACE "\r\n\t\f "
+#define WHITESPACE _T("\r\n\t\f ")
 
 JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message)
                :JSONParser(p_message)
@@ -853,7 +871,7 @@ JSONParserSOAP::CreateArray(JSONvalue& p_valPointer,XMLElement& p_element,XStrin
       if(!text.IsEmpty())
       {
         JSONpair textPair;
-        textPair.m_name = "text";
+        textPair.m_name = _T("text");
         textPair.m_value.SetValue(text);
         objVal.push_back(textPair);
       }
@@ -972,7 +990,7 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
       if(!value.IsEmpty())
       {
         JSONpair textPair;
-        textPair.m_name = "text";
+        textPair.m_name = _T("text");
         textPair.m_value.SetValue(value);
         objPtr->push_back(textPair);
       }
@@ -1041,8 +1059,8 @@ JSONParserSOAP::Trim(XString& p_value)
   while(p_value.GetLength())
   {
     int index = p_value.GetLength() - 1;
-    int ch = p_value.GetAt(index);
-    if(strchr(WHITESPACE,ch))
+    TCHAR ch  = p_value.GetAt(index);
+    if(_tcschr(WHITESPACE,ch))
     {
       p_value = p_value.Left(index);
     }
@@ -1054,11 +1072,10 @@ JSONParserSOAP::Trim(XString& p_value)
 
   while(p_value.GetLength())
   {
-    if(strchr(WHITESPACE,p_value.GetAt(0)))
+    if(_tcschr(WHITESPACE,p_value.GetAt(0)))
     {
       p_value = p_value.Mid(1);
     }
     else break;
   }
 }
-

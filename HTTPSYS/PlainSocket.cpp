@@ -13,6 +13,7 @@
 #include <MSTcpIP.h>
 #include "PlainSocket.h"
 #include "Logging.h"
+#include <LogAnalysis.h>
 #include <mswsock.h>
 
 #ifdef _DEBUG
@@ -86,7 +87,7 @@ PlainSocket::Initialize()
 	
   if(m_read_event == WSA_INVALID_EVENT || m_write_event == WSA_INVALID_EVENT)
   {
-    throw "WSACreateEvent failed";
+    throw _T("WSACreateEvent failed");
   }
 
   // Set socket options for TCP/IP
@@ -98,10 +99,15 @@ PlainSocket::Initialize()
 
 // Find connection type (AF_INET (IPv4) or AF_INET6 (IPv6))
 int
-PlainSocket::FindConnectType(LPCTSTR p_host,char* p_portname)
+PlainSocket::FindConnectType(LPCTSTR p_host,LPCTSTR p_portname)
 {
-  ADDRINFO  hints;
-  ADDRINFO* result;
+#ifdef UNICODE
+  ADDRINFOW  hints;
+  ADDRINFOW* result;
+#else
+  ADDRINFOA  hints;
+  ADDRINFOA* result;
+#endif
   memset(&hints,0,sizeof(ADDRINFO));
   int type = AF_INET;
 
@@ -110,7 +116,7 @@ PlainSocket::FindConnectType(LPCTSTR p_host,char* p_portname)
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = IPPROTO_TCP;
 
-  DWORD retval = getaddrinfo(p_host,p_portname,&hints,&result);
+  DWORD retval = GetAddrInfo(p_host,p_portname,&hints,&result);
   if(retval == 0)
   {
     if((result->ai_family == AF_INET6) ||
@@ -118,12 +124,12 @@ PlainSocket::FindConnectType(LPCTSTR p_host,char* p_portname)
     {
       type = result->ai_family;
     }
-    freeaddrinfo(result);
+    FreeAddrInfo(result);
   }
   else
   {
     // MESS_INETTYPE 
-    LogError("Cannot determine if internet is of type IP4 or IP6");
+    LogError(_T("Cannot determine if internet is of type IP4 or IP6"));
   }
   // Assume it's IP4 as a default
   return type;
@@ -137,7 +143,7 @@ PlainSocket::Connect(LPCTSTR p_hostName, USHORT p_portNumber)
 	SOCKADDR_STORAGE remoteAddr = {0};
 	DWORD sizeLocalAddr  = sizeof(localAddr);
 	DWORD sizeRemoteAddr = sizeof(remoteAddr);
-	char  portName[10]   = {0};
+	TCHAR portName[10]   = {0};
   BOOL    bSuccess     = FALSE;
 	timeval timeout      = {0};
   int     result       = 0;
@@ -148,14 +154,14 @@ PlainSocket::Connect(LPCTSTR p_hostName, USHORT p_portNumber)
   }
 
   // Convert port number and find IPv4 or IPv6
-  _itoa_s(p_portNumber, portName, _countof(portName), 10);
+  _itot_s(p_portNumber, portName, _countof(portName), 10);
   int type = FindConnectType(p_hostName,portName);
 
   // Create the actual physical socket
 	m_actualSocket = socket(type, SOCK_STREAM, 0);
 	if (m_actualSocket == INVALID_SOCKET)
   {
-		LogError("Socket failed with error: %d\n", WSAGetLastError());
+		LogError(_T("Socket failed with error: %d\n"), WSAGetLastError());
 		return false;
 	}
 
@@ -164,14 +170,14 @@ PlainSocket::Connect(LPCTSTR p_hostName, USHORT p_portNumber)
 	CTime Now = CTime::GetCurrentTime();
 
   USES_CONVERSION;
-  std::wstring hostname = A2CW(p_hostName);
-  std::wstring portname = A2CW(portName);
+  std::wstring hostname = T2CW(p_hostName);
+  std::wstring portname = T2CW(portName);
 
 	// Note that WSAConnectByName requires Vista or Server 2008
   // Note that WSAConnectByNameA is deprecated, so we convert to the Unicode counterpart.
 	bSuccess = WSAConnectByNameW(m_actualSocket
-                              ,(LPWSTR) hostname.c_str()
-                              ,(LPWSTR) portname.c_str()
+                              ,(LPWSTR)hostname.c_str()
+                              ,(LPWSTR)portname.c_str()
                               ,&sizeLocalAddr
                               ,(SOCKADDR*)&localAddr
                               ,&sizeRemoteAddr
@@ -183,7 +189,7 @@ PlainSocket::Connect(LPCTSTR p_hostName, USHORT p_portNumber)
 	if (!bSuccess)
   {
 		m_lastError = WSAGetLastError();
-		LogError("**** WSAConnectByName Error %d connecting to \"%s\" (%s)", 
+		LogError(_T("**** WSAConnectByName Error %d connecting to \"%s\" (%s)"),
 				     m_lastError,
 				     p_hostName, 
 				     portName);
@@ -191,14 +197,14 @@ PlainSocket::Connect(LPCTSTR p_hostName, USHORT p_portNumber)
 		return false;       
 	}
 
-  DebugMsg("Connection made in %ld second(s)",HowLong.GetTotalSeconds());
+  DebugMsg(_T("Connection made in %ld second(s)"),HowLong.GetTotalSeconds());
 
   // Activate previously set options
 	result = setsockopt(m_actualSocket, SOL_SOCKET,SO_UPDATE_CONNECT_CONTEXT, NULL, 0);
 	if (result == SOCKET_ERROR)
   {
 		m_lastError = WSAGetLastError();
-		LogError("setsockopt for SO_UPDATE_CONNECT_CONTEXT failed with error: %d", m_lastError);
+		LogError(_T("setsockopt for SO_UPDATE_CONNECT_CONTEXT failed with error: %d"), m_lastError);
 		closesocket(m_actualSocket);
 		return false;       
 	}
@@ -228,7 +234,7 @@ bool PlainSocket::ActivateKeepalive()
 	if (iResult == SOCKET_ERROR)
   {
 		m_lastError = WSAGetLastError();
-		LogError("Setsockopt for SO_KEEPALIVE failed with error: %d\n",m_lastError);
+		LogError(_T("Setsockopt for SO_KEEPALIVE failed with error: %d\n"),m_lastError);
 		closesocket(m_actualSocket);
     m_actualSocket = NULL;
 		return false;       
@@ -254,7 +260,7 @@ bool PlainSocket::ActivateKeepalive()
                 ,nullptr) != 0)   // Completion routine
     {
       m_lastError = WSAGetLastError() ;
-      LogError("WSAIoctl to set keep-alive failed with error: %d\n", m_lastError);
+      LogError(_T("WSAIoctl to set keep-alive failed with error: %d\n"), m_lastError);
       closesocket(m_actualSocket);
       m_actualSocket = NULL;
       return false;       
@@ -493,8 +499,8 @@ PlainSocket::RecvPartial(LPVOID p_buffer, const ULONG p_length)
 		{
       if(!InSecureMode())
       {
-        DebugMsg(" ");
-        DebugMsg("Received message has %d bytes",bytes_read);
+        DebugMsg(_T(" "));
+        DebugMsg(_T("Received message has %d bytes"),bytes_read);
         PrintHexDump(bytes_read,p_buffer);
       }
 
@@ -563,8 +569,8 @@ int PlainSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
 
   if(!InSecureMode())
   {
-    DebugMsg(" ");
-    DebugMsg("Send message has %d bytes",p_length);
+    DebugMsg(_T(" "));
+    DebugMsg(_T("Send message has %d bytes"),p_length);
     PrintHexDump(p_length,p_buffer);
   }
 

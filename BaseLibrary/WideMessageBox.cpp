@@ -122,7 +122,7 @@ LoadCommonControls()
   // Check version of your operating system
   if(::IsWindowsVistaOrGreater())
   {
-    common = ::LoadLibrary("comctl32.dll");
+    common = ::LoadLibrary(_T("comctl32.dll"));
     if(common)
     {
       atexit(UnloadCommonControls);
@@ -158,10 +158,10 @@ WideMessageBoxCallback(HWND hwnd, UINT msg, WPARAM /*wParam*/, LPARAM /*lParam*/
 // WideMessageBox: The replacement of ::MessageBox on MS-Vista
 // Does auto-sizing in width on basis of the p_message text
 int 
-WideMessageBox(HWND        p_hwnd
-              ,const char* p_message
-              ,const char* p_title
-              ,int         p_buttons /* = MB_OK */)
+WideMessageBox(HWND    p_hwnd
+              ,LPCTSTR p_message
+              ,LPCTSTR p_title
+              ,int     p_buttons /* = MB_OK */)
 {
   if(LoadCommonControls() == false)
   {
@@ -226,7 +226,7 @@ WideMessageBox(HWND        p_hwnd
   ncm.cbSize = sizeof(NONCLIENTMETRICS);
   ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
 
-  if(_tcscmp(ncm.lfMenuFont.lfFaceName,"Segoe UI") == 0)
+  if(_tcscmp(ncm.lfMenuFont.lfFaceName,_T("Segoe UI")) == 0)
   {
     ncm.lfMenuFont.lfQuality = 5;
   }
@@ -238,9 +238,9 @@ WideMessageBox(HWND        p_hwnd
   XString text(p_message);
 
   // Support and correct all kind of mistakes from programmers
-  text.Replace("\n\r","\n");
-  text.Replace("\r\n","\n");
-  text.Replace("\n","\r\n");
+  text.Replace(_T("\n\r"),_T("\n"));
+  text.Replace(_T("\r\n"),_T("\n"));
+  text.Replace(_T("\n"), _T("\r\n"));
 
   // Calculate size of the text
   CSize sizeText(4000,2000);
@@ -265,7 +265,7 @@ WideMessageBox(HWND        p_hwnd
   }
   else
   {
-    TRACE("WideMessageBox: Cannot get an off-screen measure of the text: %s",text.GetString());
+    TRACE(_T("WideMessageBox: Cannot get an off-screen measure of the text: %s"),text.GetString());
     return ::MessageBox(p_hwnd,p_message,p_title,p_buttons);
   }
   std::wstring mess = StringToWString(text);
@@ -286,16 +286,16 @@ WideMessageBox(HWND        p_hwnd
   switch(result)
   {
     case S_OK:           break;
-    case E_OUTOFMEMORY:  ::MessageBox(p_hwnd,"Out of memory","Error",MB_OK|MB_ICONERROR);
+    case E_OUTOFMEMORY:  ::MessageBox(p_hwnd,_T("Out of memory"),_T("Error"),MB_OK|MB_ICONERROR);
                          pressed = 0;
                          break;
-    case E_INVALIDARG:   ::MessageBox(p_hwnd,"Wrong argument to TaskDialog","Error",MB_OK|MB_ICONERROR);
+    case E_INVALIDARG:   ::MessageBox(p_hwnd,_T("Wrong argument to TaskDialog"),_T("Error"),MB_OK|MB_ICONERROR);
                          pressed = 0;
                          break;
-    case E_FAIL:         ::MessageBox(p_hwnd,"Failure in TaskDialog","Error",MB_OK|MB_ICONERROR);
+    case E_FAIL:         ::MessageBox(p_hwnd,_T("Failure in TaskDialog"),_T("Error"),MB_OK|MB_ICONERROR);
                          pressed = 0;
                          break;
-    default:             ::MessageBox(p_hwnd,"Unknown error in TaskDialog","Error",MB_OK|MB_ICONERROR);
+    default:             ::MessageBox(p_hwnd,_T("Unknown error in TaskDialog"),_T("Error"),MB_OK|MB_ICONERROR);
                          pressed = 0;
                          break;
   }

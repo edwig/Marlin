@@ -34,21 +34,43 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const char* weekday_short[7] =
+const TCHAR* weekday_short[7] =
 {
-  "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
+  _T("Sun")
+ ,_T("Mon")
+ ,_T("Tue")
+ ,_T("Wed")
+ ,_T("Thu")
+ ,_T("Fri")
+ ,_T("Sat")
 };
 
-const char* weekday_long[7] =
+const TCHAR* weekday_long[7] =
 {
-  "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+    _T("Sunday")
+  ,_T("Monday")
+  ,_T("Tuesday")
+  ,_T("Wednesday")
+  ,_T("Thursday")
+  ,_T("Friday")
+  ,_T("Saturday")
 };
 
-const char* month[12] =
+const TCHAR* month[12] =
 {
-  "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
+  _T("Jan")
+ ,_T("Feb")
+ ,_T("Mar")
+ ,_T("Apr")
+ ,_T("May")
+ ,_T("Jun")
+ ,_T("Jul")
+ ,_T("Aug")
+ ,_T("Sep")
+ ,_T("Oct")
+ ,_T("Nov")
+ ,_T("Dec")
 };
-
 
 // Print HTTP time in RFC 1123 format (Preferred standard)
 // as in "Tue, 8 Dec 2015 21:26:32 GMT"
@@ -62,7 +84,7 @@ HTTPTimeFromSystemTime(const SYSTEMTIME* p_systemtime,XString& p_time)
     return false;
   }
 
-  p_time.Format("%s, %02d %s %04d %2.2d:%2.2d:%2.2d GMT"
+  p_time.Format(_T("%s, %02d %s %04d %2.2d:%2.2d:%2.2d GMT")
                 ,weekday_short[p_systemtime->wDayOfWeek]
                 ,p_systemtime->wDay
                 ,month[p_systemtime->wMonth - 1]
@@ -116,7 +138,6 @@ CheckYearImplementation(SYSTEMTIME* p_systemtime)
 bool
 HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
 {
-  // const char *pointer = p_time.GetString();
   unsigned index  = 0;
   unsigned length = p_time.GetLength();
   bool     ansic  = false;
@@ -151,7 +172,7 @@ HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
   for(int ind = 0; ind < 7; ++ind)
   {
     if((p_time.Mid(index,3).CompareNoCase(weekday_short[ind]) == 0) ||
-       (p_time.Mid(index,(int)strlen(weekday_long[ind])).CompareNoCase(weekday_long[ind]) == 0))
+       (p_time.Mid(index,(int)_tcslen(weekday_long[ind])).CompareNoCase(weekday_long[ind]) == 0))
     {
       p_systemtime->wDayOfWeek = (WORD) ind;
       while(index < length && isalpha(p_time.GetAt(index))) ++index;
@@ -198,7 +219,7 @@ HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
   }
   
   // Scan day-of-the-month
-  p_systemtime->wDay = (WORD) atoi(&p_time.GetString()[index]);
+  p_systemtime->wDay = (WORD) _ttoi(&p_time.GetString()[index]);
   while(index < length && isdigit(p_time.GetAt(index))) ++index;
 
   // Skip spaces and separators
@@ -239,7 +260,7 @@ HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
       memset(p_systemtime,0,sizeof(SYSTEMTIME));
       return false;
     }
-    p_systemtime->wYear = (WORD) atoi(&p_time.GetString()[index]);
+    p_systemtime->wYear = (WORD) _ttoi(&p_time.GetString()[index]);
     while(index < length && isdigit(p_time.GetAt(index))) ++index;
   }
 
@@ -254,7 +275,7 @@ HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
     CheckYearImplementation(p_systemtime);
     return true;
   }
-  p_systemtime->wHour = (WORD) atoi(&p_time.GetString()[index]);
+  p_systemtime->wHour = (WORD) _ttoi(&p_time.GetString()[index]);
   while(index < length && isdigit(p_time.GetAt(index))) ++index;
 
   // Minutes
@@ -264,7 +285,7 @@ HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
     CheckYearImplementation(p_systemtime);
     return true;
   }
-  p_systemtime->wMinute = (WORD) atoi(&p_time.GetString()[index]);
+  p_systemtime->wMinute = (WORD) _ttoi(&p_time.GetString()[index]);
   while(index < length && isdigit(p_time.GetAt(index))) ++index;
 
   // Seconds
@@ -274,7 +295,7 @@ HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
     CheckYearImplementation(p_systemtime);
     return true;
   }
-  p_systemtime->wSecond = (WORD) atoi(&p_time.GetString()[index]);
+  p_systemtime->wSecond = (WORD) _ttoi(&p_time.GetString()[index]);
   while(index < length && isdigit(p_time.GetAt(index))) ++index;
 
   // Still ANSI C Year to do?
@@ -287,7 +308,7 @@ HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
       memset(p_systemtime,0,sizeof(SYSTEMTIME));
       return false;
     }
-    p_systemtime->wYear = (WORD) atoi(&p_time.GetString()[index]);
+    p_systemtime->wYear = (WORD) _ttoi(&p_time.GetString()[index]);
   }
   CheckYearImplementation(p_systemtime);
   return true;
@@ -302,7 +323,7 @@ HTTPGetSystemTime()
   SYSTEMTIME systemtime;
   GetSystemTime(&systemtime);
 
-  time.Format("%s, %02d %s %04d %2.2d:%2.2d:%2.2d GMT"
+  time.Format(_T("%s, %02d %s %04d %2.2d:%2.2d:%2.2d GMT")
              ,weekday_short[systemtime.wDayOfWeek]
              ,systemtime.wDay
              ,month[systemtime.wMonth - 1]

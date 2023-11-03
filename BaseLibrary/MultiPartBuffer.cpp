@@ -69,7 +69,7 @@ MultiPart::SetFile(XString p_filename)
   m_modificationDate.Empty();
   m_readDate.Empty();
 
-  // Open file to read the filetimes from the filesystem
+  // Open file to read the file times from the filesystem
   HANDLE fileHandle = CreateFile(p_filename
                                 ,GENERIC_READ
                                 ,FILE_SHARE_READ
@@ -79,7 +79,7 @@ MultiPart::SetFile(XString p_filename)
                                 ,NULL);
   if(fileHandle)
   {
-    // New filetimes
+    // New file times
     FILETIME creation     { 0, 0 };
     FILETIME modification { 0, 0 };
     FILETIME readtime     { 0, 0 };
@@ -118,7 +118,7 @@ bool
 MultiPart::CheckBoundaryExists(XString p_boundary)
 {
   // If data message, search in the form-data message
-  if(!m_data.IsEmpty())
+  if(m_data.GetLength())
   {
     if(m_data.Find(p_boundary) >= 0)
     {
@@ -134,10 +134,9 @@ MultiPart::CheckBoundaryExists(XString p_boundary)
     m_file.GetBuffer(buffer,length);
     if(buffer && length > (size_t)p_boundary.GetLength())
     {
-      int bdlen = p_boundary.GetLength();
-      for(char* buf = (char*)buffer; buf < (char*)((char*)buffer + length - bdlen); ++buf)
+      for(char* buf = (char*)buffer; buf < (char*)((char*)buffer + length - p_boundary.GetLength()); ++buf)
       {
-        if(memcmp(buf,p_boundary,bdlen) == 0)
+        if(memcmp(buf,p_boundary,p_boundary.GetLength()) == 0)
         {
           return true;
         }
@@ -152,53 +151,53 @@ MultiPart::CheckBoundaryExists(XString p_boundary)
 XString
 MultiPart::CreateHeader(XString p_boundary,bool p_extensions /*=false*/)
 {
-  XString header("--");
+  XString header(_T("--"));
   header += p_boundary;
-  header += "\r\nContent-Disposition: form-data; ";
-  header.AppendFormat("name=\"%s\"",m_name.GetString());
+  header += _T("\r\nContent-Disposition: form-data; ");
+  header.AppendFormat(_T("name=\"%s\""),m_name.GetString());
 
   // Filename attributes
   if(!m_shortFilename.IsEmpty())
   {
-    header.AppendFormat("; filename=\"%s\"",m_shortFilename.GetString());
+    header.AppendFormat(_T("; filename=\"%s\""),m_shortFilename.GetString());
 
     // Eventually do the extensions for filetimes and size
     if(p_extensions)
     {
       if(!m_creationDate.IsEmpty())
       {
-        header.AppendFormat("; creation-date=\"%s\"",m_creationDate.GetString());
+        header.AppendFormat(_T("; creation-date=\"%s\""),m_creationDate.GetString());
       }
       if(!m_modificationDate.IsEmpty())
       {
-        header.AppendFormat("; modification-date=\"%s\"",m_modificationDate.GetString());
+        header.AppendFormat(_T("; modification-date=\"%s\""),m_modificationDate.GetString());
       }
       if(!m_readDate.IsEmpty())
       {
-        header.AppendFormat("; read-date=\"%s\"",m_readDate.GetString());
+        header.AppendFormat(_T("; read-date=\"%s\""),m_readDate.GetString());
       }
       size_t size = m_file.GetLength();
       if(size)
       {
-        header.AppendFormat("; size=\"%u\"",(unsigned)m_size);
+        header.AppendFormat(_T("; size=\"%u\""),(unsigned)m_size);
       }
     }
   }
   // Add content type
-  header += "\r\nContent-type: ";
+  header += _T("\r\nContent-type: ");
   header += FindMimeTypeInContentType(m_contentType);
   if(!m_boundary.IsEmpty())
   {
-    header += "; boundary=";
+    header += _T("; boundary=");
     header += m_boundary;
   }
   if(!m_charset.IsEmpty())
   {
-    header += "; charset=\"";
+    header += _T("; charset=\"");
     header += m_charset;
-    header += "\"";
+    header += _T("\"");
   }
-  header += "\r\n";
+  header += _T("\r\n");
   // Add variable headers
   for(const auto& head : m_headers)
   {
@@ -208,7 +207,7 @@ MultiPart::CreateHeader(XString p_boundary,bool p_extensions /*=false*/)
     header += "\r\n";
   }
   // Empty line for the body
-  header += "\r\n";
+  header += _T("\r\n");
   return header;
 }
 
@@ -235,7 +234,7 @@ MultiPart::TrySettingFiletimes()
   {
     return;
   }
-  // Filetime dates, and pointers to it.
+  // File time dates, and pointers to it.
   FILETIME  creation;
   FILETIME  modifcation;
   FILETIME  readTime;
@@ -323,7 +322,7 @@ MultiPart::GetHeader(XString p_header)
   {
     return it->second;
   }
-  return "";
+  return _T("");
 }
 
 void
@@ -366,6 +365,7 @@ MultiPartBuffer::Reset()
   m_incomingCharset.Empty();
   m_extensions = false;
   m_useCharset = false;
+  m_charSize   = 1;
   // Leave m_type alone: otherwise create another MultiPartBuffer
 }
 
@@ -375,9 +375,9 @@ MultiPartBuffer::GetContentType()
   XString type;
   switch(m_type)
   {
-    case FormDataType::FD_URLENCODED: type = "application/x-www-form-urlencoded"; break;
-    case FormDataType::FD_MULTIPART:  type = "multipart/form-data";               break;
-    case FormDataType::FD_MIXED:      type = "multipart/mixed";                   break;
+    case FormDataType::FD_URLENCODED: type = _T("application/x-www-form-urlencoded"); break;
+    case FormDataType::FD_MULTIPART:  type = _T("multipart/form-data");               break;
+    case FormDataType::FD_MIXED:      type = _T("multipart/mixed");                   break;
     case FormDataType::FD_UNKNOWN:    break;
   }
   return type;
@@ -391,7 +391,7 @@ MultiPartBuffer::GetBoundary()
   {
     return m_boundary;
   }
-  return "";
+  return _T("");
 }
 
 bool
@@ -438,7 +438,7 @@ MultiPartBuffer::AddPart(XString p_name
 
   // See to data conversion
   const XString charset = p_charset;
-  if(p_charset.CompareNoCase("windows-1252") && p_conversion)
+  if(p_charset.CompareNoCase(_T("windows-1252")) && p_conversion)
   {
     p_data = EncodeStringForTheWire(p_data,charset);
   }
@@ -449,7 +449,7 @@ MultiPartBuffer::AddPart(XString p_name
   // Loose string parts are UTF-8 by default
   // Revert from version 6.01
   // REASON: Microsoft .NET stacks cannot handle the charset attribute and WILL crash!
-  if(!charset.IsEmpty() && charset.CompareNoCase("utf-8") && m_useCharset)
+  if(!charset.IsEmpty() && charset.CompareNoCase(_T("utf-8")) && m_useCharset)
   {
     part->SetCharset(charset);
   }
@@ -550,8 +550,8 @@ MultiPartBuffer::CalculateBoundary(XString p_special /*= "#" */)
   {
     // Create boundary by using a globally unique identifier
     m_boundary = GenerateGUID();
-    m_boundary.Replace("-","");
-    m_boundary = p_special + XString("BOUNDARY") + p_special + m_boundary + p_special;
+    m_boundary.Replace(_T("-"),_T(""));
+    m_boundary = p_special + XString(_T("BOUNDARY")) + p_special + m_boundary + p_special;
 
     // Search all parts for the existence of the boundary
     exists = !SetBoundary(m_boundary);
@@ -561,6 +561,8 @@ MultiPartBuffer::CalculateBoundary(XString p_special /*= "#" */)
   return m_boundary;
 }
 
+// Check that the newly found boundary does *NOT* exist
+// within any of the parts of this MultiPartBuffer
 bool
 MultiPartBuffer::SetBoundary(XString p_boundary)
 {
@@ -581,7 +583,7 @@ MultiPartBuffer::CalculateAcceptHeader()
 {
   if(m_type == FormDataType::FD_URLENCODED)
   {
-    return "text/html, application/xhtml+xml";
+    return _T("text/html, application/xhtml+xml");
   }
   else if(m_type == FormDataType::FD_MULTIPART || m_type == FormDataType::FD_MIXED)
   {
@@ -597,14 +599,14 @@ MultiPartBuffer::CalculateAcceptHeader()
     {
       if(!accept.IsEmpty())
       {
-        accept += ",";
+        accept += _T(",");
       }
       accept += type.first;
     }
     return accept;
   }
   // Default unknown FormData type 
-  return "text/html, application/xhtml+xml, */*";
+  return _T("text/html, application/xhtml+xml, */*");
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -616,10 +618,16 @@ MultiPartBuffer::CalculateAcceptHeader()
 
 // Re-create from an existing (incoming!) buffer
 bool         
-MultiPartBuffer::ParseBuffer(XString p_contentType,FileBuffer* p_buffer,bool p_conversion /*=false*/)
+MultiPartBuffer::ParseBuffer(XString      p_contentType
+                            ,FileBuffer*  p_buffer
+                            ,bool         p_conversion /*=false*/
+                            ,bool         p_utf16      /*=false*/)
 {
   // Start anew
   Reset();
+
+  // Incoming buffer encoding
+  m_charSize = p_utf16 ? 2 : 1;
 
   // Check that we have a buffer
   if(p_buffer == nullptr)
@@ -645,9 +653,12 @@ MultiPartBuffer::ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,
   bool   result = false;
   uchar* buffer = nullptr;
   size_t length = 0;
+  // Binary boundary
+  BYTE*    boundaryBinary = nullptr;
+  unsigned boundaryLength = 0;
 
   // Find the boundary between the parts
-  m_boundary = FindFieldInHTTPHeader(p_contentType,"boundary");
+  m_boundary = FindFieldInHTTPHeader(p_contentType,_T("boundary"));
   if(m_boundary.IsEmpty())
   {
     return false;
@@ -659,12 +670,15 @@ MultiPartBuffer::ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,
     return false;
   }
 
+  // Getting a binary boundary in MBCS/UTF-16 configuration
+  CalculateBinaryBoundary(m_boundary,boundaryBinary,boundaryLength);
+
   // Cycle through the raw buffer from the HTTP message
-  uchar* finding = static_cast<uchar*>(buffer);
-  size_t remain  = length;
+  uchar* finding = buffer;
+  size_t  remain = length;
   while(true)
   {
-    void* partBuffer = FindPartBuffer(finding,remain,m_boundary);
+    void* partBuffer = FindPartBuffer(finding,remain,boundaryBinary,boundaryLength);
     if(partBuffer == nullptr)
     {
       break;
@@ -672,8 +686,9 @@ MultiPartBuffer::ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,
     AddRawBufferPart(reinterpret_cast<uchar*>(partBuffer),finding,p_conversion);
     result = true;
   }
-  // Release the buffer copy 
+  // Release the buffer copy and the boundary
   delete[] buffer;
+  delete[] boundaryBinary;
   return result;
 }
 
@@ -689,8 +704,8 @@ MultiPartBuffer::ParseBufferUrlEncoded(FileBuffer* p_buffer)
     return false;
   }
   XString parameters;
-  char* pnt = parameters.GetBufferSetLength((int)length + 1);
-  strcpy_s(pnt,length + 1,reinterpret_cast<const char*>(buffer));
+  TCHAR* pnt = parameters.GetBufferSetLength((int)length + 1);
+  _tcscpy_s(pnt,length + 1,reinterpret_cast<const TCHAR*>(buffer));
   pnt[length] = 0;
   parameters.ReleaseBuffer();
   delete[] buffer;
@@ -724,48 +739,88 @@ MultiPartBuffer::ParseBufferUrlEncoded(FileBuffer* p_buffer)
       // No value. Use as key only
       name = CrackedURL::DecodeURLChars(part);
     }
-    // Save as bufferpart
-    AddPart(name,"text",value);
+    // Save as buffer part
+    AddPart(name,_T("text"),value);
   }
   return true;
 }
 
-// Finding a new partial message
-// Finding a new partial message
+// Create a boundary representation in a new allocated BYTE buffer
+// So we can scan for UTF-16 or ANSI/MBCS in either configuration
+void
+MultiPartBuffer::CalculateBinaryBoundary(XString p_boundary,BYTE*& p_binary,unsigned& p_length)
+{
+  // Message buffer must end in "<BOUNDARY>--", so no need to seek to the exact end of the buffer
+  // Beware of WebKit (Chrome) that will send "<BOUNDARY>--\r\n" at the end of the buffer
+  int length = p_boundary.GetLength();
+  p_binary = nullptr;
+#ifdef UNICODE
+  if(m_charSize == 2)
+  {
+    length *= 2;
+    p_binary = new BYTE[length + 2];
+    memcpy(p_binary,p_boundary.GetString(),length + 2);
+  }
+  else // m_charSize == 1
+  {
+    // Implode
+    p_binary = new BYTE[length + 2];
+    ImplodeString(p_boundary,p_binary,(unsigned) length);
+  }
+#else
+  if(m_charSize == 2)
+  {
+    // Explode
+    length *= 2;
+    p_binary = new BYTE[length + 2];
+    ExplodeString(p_boundary,p_binary,(unsigned) (length + 2));
+  }
+  else // m_charSize == 1
+  {
+    p_binary = new BYTE[length + 2];
+    memcpy(p_binary,p_boundary.GetString(),length);
+  }
+#endif
+  // Zero terminate the string (to be sure) also for UTF-16
+  p_binary[length    ] = 0;
+  p_binary[length + 1] = 0;
+  // New length of the binary (could be doubled)
+  p_length = length;
+}
+
+// Finding a new partial message in the buffer
+// Looks for the NEXT occurrence of the boundary
 void*
-MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,XString& p_boundary)
+MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,BYTE* p_boundary,unsigned p_boundaryLength)
 {
   void* result = nullptr;
 
-  // Message buffer must end in "<BOUNDARY>--", so no need to seek to the exact end of the buffer
-  // Beware of WebKit (Chrome) that will send "<BOUNDARY>--\r\n" at the end of the buffer
-  size_t length = (size_t)p_boundary.GetLength();
-  while(p_remaining > (length + 4))
+  while(p_remaining > (p_boundaryLength + 4 * m_charSize))
   {
-    --p_remaining;
-    if(memcmp(p_finding,p_boundary.GetString(),length) == 0)
+    p_remaining -= m_charSize;
+    if(memcmp(p_finding,p_boundary,p_boundaryLength) == 0)
     {
       // Positioning of the boundary found
-      p_finding   += length + 2; // 2 is for CR/LF of the HTTP protocol 
-      p_remaining -= length + 2; // 2 is for CR/LF of the HTTP protocol 
+      p_finding   += p_boundaryLength + 2 * m_charSize; // 2 is for CR/LF of the HTTP protocol 
+      p_remaining -= p_boundaryLength + 2 * m_charSize; // 2 is for CR/LF of the HTTP protocol 
       result       = p_finding;
 
       while(p_remaining)
       {
-        if(memcmp(p_finding,p_boundary.GetString(),length) == 0)
+        if(memcmp(p_finding,p_boundary,p_boundaryLength) == 0)
         {
           // Two '-' signs before the boundary  
-          if((*(p_finding - 1)) == '-') --p_finding;
-          if((*(p_finding - 1)) == '-') --p_finding;
+          if((*(p_finding - m_charSize)) == '-') p_finding -= m_charSize;
+          if((*(p_finding - m_charSize)) == '-') p_finding -= m_charSize;
           // Ending of the part found
           break;
         }
-        ++p_finding;
-        --p_remaining;
+        p_finding   += m_charSize;
+        p_remaining -= m_charSize;
       }
       break;
     }
-    ++p_finding;
+    p_finding += m_charSize;
   }
   return result;
 }
@@ -802,10 +857,10 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEn
     GetHeaderFromLine(line,header,value);
 
     // Finding the result for the header lines of the buffer part
-    if(header.Left(12).CompareNoCase("Content-Type") == 0)
+    if(header.Left(12).CompareNoCase(_T("Content-Type")) == 0)
     {
-      charset  = FindFieldInHTTPHeader(value,"charset");
-      boundary = FindFieldInHTTPHeader(value,"boundary");
+      charset  = FindFieldInHTTPHeader(value,_T("charset"));
+      boundary = FindFieldInHTTPHeader(value,_T("boundary"));
       part->SetContentType(value);
       part->SetCharset(charset);
       part->SetBoundary(boundary);
@@ -817,15 +872,15 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEn
         charset = m_incomingCharset;
       }
     }
-    else if(header.CompareNoCase("Content-Disposition") == 0)
+    else if(header.CompareNoCase(_T("Content-Disposition")) == 0)
     {
       // Getting the attributes
-      part->SetName            (GetAttributeFromLine(line,"name"));
-      part->SetFileName        (GetAttributeFromLine(line,"filename"));
-      part->SetSize       (atoi(GetAttributeFromLine(line,"size")));
-      part->SetDateCreation    (GetAttributeFromLine(line,"creation-date"));
-      part->SetDateModification(GetAttributeFromLine(line,"modification-date"));
-      part->SetDateRead        (GetAttributeFromLine(line,"read-date"));
+      part->SetName            (GetAttributeFromLine(line,_T("name")));
+      part->SetFileName        (GetAttributeFromLine(line,_T("filename")));
+      part->SetSize      (_ttoi(GetAttributeFromLine(line,_T("size"))));
+      part->SetDateCreation    (GetAttributeFromLine(line,_T("creation-date")));
+      part->SetDateModification(GetAttributeFromLine(line,_T("modification-date")));
+      part->SetDateRead        (GetAttributeFromLine(line,_T("read-date")));
     }
     else
     {
@@ -837,7 +892,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEn
   // RFC 7578: No charset = conversion to UTF-8
   // UTF-8 is the default conversion of the conversion routines
   // so an empty charset means: convert to UTF-8
-  if(charset.CompareNoCase("windows-1252") != 0)
+  if(charset.CompareNoCase(_T("windows-1252")) != 0)
   {
     p_conversion = true;
   }
@@ -847,13 +902,34 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEn
   {
     // PART
     // Buffer is the data component
-    XString data;
-    size_t length = p_partialEnd - p_partialBegin;
-    char*  buffer = data.GetBufferSetLength((int)length + 1);
-    strncpy_s(buffer,length + 1,reinterpret_cast<const char*>(p_partialBegin),length);
-    buffer[length] = 0;
-    data.ReleaseBuffer((int)length);
 
+    XString data;
+
+    if(m_charSize == 1)
+    {
+#ifdef UNICODE
+      size_t length = (p_partialEnd - p_partialBegin);
+      data = ExplodeString(p_partialBegin,(unsigned)length);
+#else
+      size_t length = (p_partialEnd - p_partialBegin);
+      char* pnt = data.GetBufferSetLength((int)length + 1);
+      strncpy_s(pnt,length + 1,(char*)p_partialBegin,length);
+      data.ReleaseBufferSetLength((int)length);
+#endif
+    }
+    else
+    {
+#ifdef UNICODE
+      size_t length = (p_partialEnd - p_partialBegin) / m_charSize;
+      PTCHAR buffer = data.GetBufferSetLength((int) length + 1);
+      _tcsncpy_s(buffer,length + 1,reinterpret_cast<const PTCHAR>(p_partialBegin),length);
+      buffer[length] = 0;
+      data.ReleaseBuffer((int) length);
+#else
+      size_t length = (p_partialEnd - p_partialBegin);
+      data = ImplodeString(p_partialBegin,(unsigned)length);
+#endif
+    }
     // Decoding the string, possible changing the length
     if(p_conversion)
     {
@@ -863,7 +939,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEn
     part->SetData(data);
 
     // Special charset convention on incoming messages
-    if(part->GetName().CompareNoCase("_charset_") == 0)
+    if(part->GetName().CompareNoCase(_T("_charset_")) == 0)
     {
       m_incomingCharset = data;
     }
@@ -886,21 +962,48 @@ XString
 MultiPartBuffer::GetLineFromBuffer(uchar*& p_begin,const uchar* p_end)
 {
   XString line;
+  const uchar* end = nullptr;
 
-  const char* end = strchr(reinterpret_cast<const char*>(p_begin),'\n');
-  if(end > reinterpret_cast<const char*>(p_end))
+  if(m_charSize == 1)
   {
-    return line;
+    end = (uchar*) strchr((const char*) p_begin,'\n');
+    if(!end || end > p_end)
+    {
+      return line;
+    }
+    size_t length = end - p_begin;
+
+#ifdef UNICODE
+    line = ExplodeString(p_begin,(unsigned)length);
+#else
+    char* buf = line.GetBufferSetLength((int) length + 1);
+    strncpy_s(buf,length + 1,reinterpret_cast<const char*>(p_begin),length);
+    buf[length] = 0;
+    line.ReleaseBuffer(static_cast<int>(length));
+#endif
   }
-  size_t length = end - reinterpret_cast<const char*>(p_begin);
-  char* buf = line.GetBufferSetLength((int)length + 1);
-  strncpy_s(buf,length+1,reinterpret_cast<const char*>(p_begin),length);
-  buf[length] = 0;
-  line.ReleaseBuffer(static_cast<int>(length));
-  line.TrimRight('\r');
+  else // UTF-16
+  {
+    end = (uchar*) wcschr((const wchar_t*) p_begin,_T('\n'));
+    if(!end || end > p_end)
+    {
+      return line;
+    }
+#ifdef UNICODE
+    size_t length = (end - p_begin) / m_charSize;
+    PTCHAR buf = line.GetBufferSetLength((int) length + 1);
+    _tcsncpy_s(buf,length + 1,reinterpret_cast<const PTCHAR>(p_begin),length);
+    buf[length] = 0;
+    line.ReleaseBuffer(static_cast<int>(length));
+#else
+    size_t length = end - p_begin;
+    line = ImplodeString(p_begin,(unsigned)length);
+#endif
+  }
+  line.TrimRight(_T('\r'));
 
   // Position after the end
-  p_begin = (uchar*)end + 1;
+  p_begin = (uchar*)end + m_charSize;
   return line;
 }
 
@@ -957,7 +1060,7 @@ MultiPartBuffer::GetAttributeFromLine(const XString& p_line,XString p_name)
     {
       attribute = p_line.Mid(from);
     }
-    attribute.Trim("\"");
+    attribute.Trim(_T("\""));
   }
   return attribute;
 }
@@ -969,15 +1072,15 @@ MultiPartBuffer::GetAttributeFromLine(const XString& p_line,XString p_name)
 FormDataType
 MultiPartBuffer::FindBufferType(XString p_contentType)
 {
-  if(p_contentType.Find("urlencoded") > 0)
+  if(p_contentType.Find(_T("urlencoded")) > 0)
   {
     return FormDataType::FD_URLENCODED;
   }
-  if(p_contentType.Find("form-data") > 0)
+  if(p_contentType.Find(_T("form-data")) > 0)
   {
     return FormDataType::FD_MULTIPART;
   }
-  if(p_contentType.Find("mixed") > 0)
+  if(p_contentType.Find(_T("mixed")) > 0)
   {
     return FormDataType::FD_MIXED;
   }
@@ -992,7 +1095,7 @@ MultiPartBuffer::FindBoundaryInContentType(XString p_contentType)
   XString boundary;
   XString content(p_contentType);
   content.MakeLower();
-  int pos = content.Find("boundary");
+  int pos = content.Find(_T("boundary"));
   if(pos >= 0)
   {
     pos += 8; // skip the word 'boundary"
@@ -1003,7 +1106,7 @@ MultiPartBuffer::FindBoundaryInContentType(XString p_contentType)
       ++pos;
       while(pos < length && isspace(content.GetAt(pos))) ++pos;
       boundary = p_contentType.Mid(pos);
-      boundary.Trim("\"");
+      boundary.Trim(_T("\""));
     }
   }
   return boundary;

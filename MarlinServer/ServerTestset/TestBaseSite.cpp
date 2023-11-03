@@ -31,12 +31,11 @@
 #include "SiteHandlerGet.h"
 #include "SiteHandlerPut.h"
 #include "SiteHandlerOptions.h"
-#include "EnsureFile.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+static char  THIS_FILE[] = __FILE__;
 #endif
 
 static int totalChecks = 2;
@@ -67,7 +66,7 @@ SiteHandlerGetBase::Handle(HTTPMessage* p_message)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("HTTP Base GET operation on the base site       : %s\n", ok ? "OK" : "ERROR");
+  qprintf(_T("HTTP Base GET operation on the base site       : %s\n"), ok ? _T("OK") : _T("ERROR"));
 
   return result;
 }
@@ -86,7 +85,7 @@ SiteHandlerPutBase::Handle(HTTPMessage* p_message)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("HTTP Base PUT operation on the base site       : %s\n",ok ? "OK" : "ERROR");
+  qprintf(_T("HTTP Base PUT operation on the base site       : %s\n"),ok ? _T("OK") : _T("ERROR"));
 
   return result;
 }
@@ -102,10 +101,10 @@ TestMarlinServer::TestBaseSite()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url("/MarlinTest/Site/");
+  XString url(_T("/MarlinTest/Site/"));
 
-  xprintf("TESTING STANDARD GET FUNCTIONS OF THE HTTP SERVER\n");
-  xprintf("=================================================\n");
+  xprintf(_T("TESTING STANDARD GET FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("=================================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Site/"
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
@@ -113,14 +112,14 @@ TestMarlinServer::TestBaseSite()
   {
     // SUMMARY OF THE TEST
     // --- "---------------------------------------------- - ------
-    qprintf("HTTPSite for base 'get' test: OK : %s\n",site->GetPrefixURL().GetString());
-    qprintf("HTTPSite for base 'put' test: OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for base 'get' test: OK : %s\n"),site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite for base 'put' test: OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot make a HTTP site for: %s\n",url.GetString());
+    qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
 
@@ -134,28 +133,28 @@ TestMarlinServer::TestBaseSite()
 
 #ifdef MARLIN_STANDALONE
   // Setting the virtual root directory
-  XString root = MarlinConfig::GetExePath() + "site";
+  XString root = MarlinConfig::GetExePath() + _T("site");
   EnsureFile ensure;
   root = ensure.ReduceDirectoryPath(root);
-  root = "virtual://" + root;
+  root = _T("virtual://") + root;
   site->SetWebroot(root);
 #endif
 
   // Site is using CORS for safety
   site->SetUseCORS(true);
-  site->SetCORSOrigin("http://localhost");    // this machine
+  site->SetCORSOrigin(_T("http://localhost"));    // this machine
   site->SetCORSMaxAge(43200);                 // Half a day
 
   // Start the site explicitly
   if(site->StartSite())
   {
-    xprintf("Site started correctly: %s\n",url.GetString());
+    xprintf(_T("Site started correctly: %s\n"),url.GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",url.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),url.GetString());
   }
   return error;
 }
@@ -165,6 +164,6 @@ TestMarlinServer::AfterTestBaseSite()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Base site file tests (GET / PUT)               : %s\n",totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("Base site file tests (GET / PUT)               : %s\n"),totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

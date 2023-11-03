@@ -41,9 +41,9 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Name of the event log category in the WMI
-static const char* eventLogCategory = "Application";
+static const  PTCHAR eventLogCategory = _T("Application");
 
-// Register our DLL. Return '1' if succesfull, otherwise '0'
+// Register our DLL. Return '1' if successful, otherwise '0'
 int
 RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString& p_error)
 {
@@ -54,7 +54,7 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
   {
     if(StringCchCopy(g_svcname,SERVICE_NAME_LENGTH,p_serviceName) != S_OK)
     {
-      p_error = "The service name cannot be registered: " + p_serviceName;
+      p_error = _T("The service name cannot be registered: ") + p_serviceName;
       return 0;
     }
   }
@@ -63,7 +63,7 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
   XString pathname = GetExePath();
   if(pathname.IsEmpty())
   {
-    p_error.Format("No working directory found. Cannot install service: [%s] Error: %s\n"
+    p_error.Format(_T("No working directory found. Cannot install service: [%s] Error: %s\n")
                    ,p_serviceName.GetString()
                    ,GetLastErrorAsString().GetString());
     return 0;
@@ -72,19 +72,19 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
   pathname += p_messageDLL;
 
   // Diagnose the file for reading rights
-  if(_access(pathname,4) != 0)
+  if(_taccess(pathname,4) != 0)
   {
-    p_error.Format("Cannot find the resource DLL [%s] or no reading rights on the filename\n",pathname.GetString());
-    p_error.AppendFormat("Possible cause: %s\n",GetLastErrorAsString().GetString()); 
+    p_error.Format(_T("Cannot find the resource DLL [%s] or no reading rights on the filename\n"),pathname.GetString());
+    p_error.AppendFormat(_T("Possible cause: %s\n"),GetLastErrorAsString().GetString()); 
   }
 
   HKEY   hk(nullptr);
   DWORD  dwDisp = 0;
-  TCHAR  szBuf[MAX_PATH + 1] = "";
+  TCHAR  szBuf[MAX_PATH + 1] = _T("");
   size_t cchSize = MAX_PATH;
 
   // Create the event source as a subkey of the log. 
-  StringCchPrintf(szBuf,cchSize,"SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s",eventLogCategory,p_serviceName.GetString()); 
+  StringCchPrintf(szBuf,cchSize,_T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s"),eventLogCategory,p_serviceName.GetString()); 
 
   if(RegCreateKeyEx(HKEY_LOCAL_MACHINE
                    ,szBuf
@@ -96,19 +96,19 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
                    ,&hk
                    ,&dwDisp)) 
   {
-    p_error.Format("Could not create the registry key for the %s.\n",p_messageDLL.GetString()); 
+    p_error.Format(_T("Could not create the registry key for the %s.\n"),p_messageDLL.GetString()); 
     return 0;
   }
 
   // Set the name of the message file. 
   if(RegSetValueEx(hk,                             // subkey handle 
-                  "EventMessageFile",              // value name 
+                  _T("EventMessageFile"),          // value name 
                    0,                              // must be zero 
                    REG_EXPAND_SZ,                  // value type 
                    (LPBYTE) pathname.GetString(),  // pointer to value data 
                    (DWORD)  pathname.GetLength())) // data size
   {
-    p_error = "Could not set the logging \"EventMessageFile\" value.\n"; 
+    p_error = _T("Could not set the logging \"EventMessageFile\" value.\n"); 
     RegCloseKey(hk); 
     return 0;
   }
@@ -117,14 +117,14 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
   DWORD dwData = EVENTLOG_SUCCESS          | EVENTLOG_ERROR_TYPE    | EVENTLOG_WARNING_TYPE | 
                  EVENTLOG_INFORMATION_TYPE | EVENTLOG_AUDIT_SUCCESS | EVENTLOG_AUDIT_FAILURE;
 
-  if(RegSetValueEx(hk,                // subkey handle 
-                  "TypesSupported",   // value name 
-                   0,                 // must be zero 
-                   REG_DWORD,         // value type 
-                   (LPBYTE)&dwData,   // pointer to value data 
-                   sizeof(DWORD)))    // length of value data 
+  if(RegSetValueEx(hk,                    // subkey handle 
+                  _T("TypesSupported"),   // value name 
+                   0,                     // must be zero 
+                   REG_DWORD,             // value type 
+                   (LPBYTE)&dwData,       // pointer to value data 
+                   sizeof(DWORD)))        // length of value data 
   {
-    p_error.Format("Could not set the supported types for the %s.\n",p_messageDLL.GetString()); 
+    p_error.Format(_T("Could not set the supported types for the %s.\n"),p_messageDLL.GetString()); 
     RegCloseKey(hk); 
     return 0;
   }
@@ -142,12 +142,12 @@ UnRegisterMessagesDllForService(XString p_serviceName,XString& p_error)
   p_error.Empty();
 
   // Create the event source as a subkey of the log. 
-  StringCchPrintf(szBuf,cchSize,"SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s",eventLogCategory,p_serviceName.GetString());
+  StringCchPrintf(szBuf,cchSize,_T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s"),eventLogCategory,p_serviceName.GetString());
 
   // Windows Vista and higher: RegDeleteTree
   if(SHDeleteKey(HKEY_LOCAL_MACHINE,szBuf))
   {
-    p_error.Format("Could not delete the registry keys for the %s.\n",p_serviceName.GetString());
+    p_error.Format(_T("Could not delete the registry keys for the %s.\n"),p_serviceName.GetString());
     return false;
   }
   return true;

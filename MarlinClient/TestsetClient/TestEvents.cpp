@@ -55,7 +55,7 @@ void OnOpen(ServerEvent* p_event,void* p_data)
 {
   UNREFERENCED_PARAMETER(p_data);
 
-  xprintf("ONE TIME OCCURENCE: Open event listener channel\n");
+  xprintf(_T("ONE TIME OCCURENCE: Open event listener channel\n"));
   fflush(stdout);
 
   // Now dispose of the event!!
@@ -65,14 +65,14 @@ void OnOpen(ServerEvent* p_event,void* p_data)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("EVENT channel OnOpen received                  : OK\n");
+  _tprintf(_T("EVENT channel OnOpen received                  : OK\n"));
 }
 
 void OnClose(ServerEvent* p_event,void* p_data)
 {
   UNREFERENCED_PARAMETER(p_data);
 
-  xprintf("ONE TIME OCCURENCE: Closed event listener channel\n");
+  xprintf(_T("ONE TIME OCCURENCE: Closed event listener channel\n"));
   fflush(stdout);
 
   // Now dispose of the event!!
@@ -83,15 +83,15 @@ void OnClose(ServerEvent* p_event,void* p_data)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("EVENT channel OnClose received                 : OK\n");
+  _tprintf(_T("EVENT channel OnClose received                 : OK\n"));
 }
 
 void OnMessage(ServerEvent* p_event,void* p_data)
 {
   UNREFERENCED_PARAMETER(p_data);
 
-  xprintf("OnMessage delivered from server.\n"
-          "Message ID: %d\n%s\n"
+  xprintf(_T("OnMessage delivered from server.\n")
+          _T("Message ID: %d\n%s\n")
          ,p_event->m_id
          ,p_event->m_data.GetString());
   fflush(stdout);
@@ -101,12 +101,12 @@ void OnMessage(ServerEvent* p_event,void* p_data)
   {
     maxID = p_event->m_id;
   }
-  xprintf("MaxID is now: %u\n",maxID);
+  xprintf(_T("MaxID is now: %u\n"),maxID);
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("EVENT channel OnMessage received               : OK\n");
-  xprintf("%d %s\n",p_event->m_id,p_event->m_data.GetString());
+  _tprintf(_T("EVENT channel OnMessage received               : OK\n"));
+  xprintf(_T("%d %s\n"),p_event->m_id,p_event->m_data.GetString());
 
   // Now dispose of the event!!
   delete p_event;
@@ -116,8 +116,8 @@ void OnOther(ServerEvent* p_event,void* p_data)
 {
   UNREFERENCED_PARAMETER(p_data);
 
-  xprintf("OTHER event delivered from server.\n"
-          "Message ID: %d\n%s\n"
+  xprintf(_T("OTHER event delivered from server.\n")
+          _T("Message ID: %d\n%s\n")
           ,p_event->m_id
           ,p_event->m_data.GetString());
   fflush(stdout);
@@ -126,8 +126,8 @@ void OnOther(ServerEvent* p_event,void* p_data)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("EVENT channel OnOther received                 : OK\n");
-  xprintf("%d %s\n",p_event->m_id,p_event->m_data.GetString());
+  _tprintf(_T("EVENT channel OnOther received                 : OK\n"));
+  xprintf(_T("%d %s\n"),p_event->m_id,p_event->m_data.GetString());
 
   // Now dispose of the event!!
   delete p_event;
@@ -137,8 +137,8 @@ void OnError(ServerEvent* p_event,void* p_data)
 {
   UNREFERENCED_PARAMETER(p_data);
 
-  xprintf("WHOAAA. ERROR received from server\n"
-          "Message ID: %d\n%s\n"
+  xprintf(_T("WHOAAA. ERROR received from server\n")
+          _T("Message ID: %d\n%s\n")
           ,p_event->m_id
           ,p_event->m_data.GetString());
   fflush(stdout);
@@ -147,8 +147,8 @@ void OnError(ServerEvent* p_event,void* p_data)
 
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("EVENT channel OnError received                 : OK\n");
-  xprintf("%d %s\n", p_event->m_id,p_event->m_data.GetString());
+  _tprintf(_T("EVENT channel OnError received                 : OK\n"));
+  xprintf(_T("%d %s\n"), p_event->m_id,p_event->m_data.GetString());
 
   // Now dispose of the event!!
   delete p_event;
@@ -161,11 +161,11 @@ TestEvents(HTTPClient* p_client)
   doDetails = false;
 
   // This is what we are going to test
-  xprintf("TESTING EVENTSOURCE SIDE OF SSE (SERVER-SENT-EVENTS) PUSH INTERFACE\n");
-  xprintf("===================================================================\n");
+  xprintf(_T("TESTING EVENTSOURCE SIDE OF SSE (SERVER-SENT-EVENTS) PUSH INTERFACE\n"));
+  xprintf(_T("===================================================================\n"));
 
   XString url;
-  url.Format("http://%s:%d/MarlinTest/Events/",MARLIN_HOST,TESTING_HTTP_PORT);
+  url.Format(_T("http://%s:%d/MarlinTest/Events/"),MARLIN_HOST,TESTING_HTTP_PORT);
 
   HTTPClient client;
   client.SetLogging(p_client->GetLogging());
@@ -176,18 +176,18 @@ TestEvents(HTTPClient* p_client)
   source->m_onmessage = OnMessage;
   source->m_onerror   = OnError;
   source->m_onclose   = OnClose;
-  source->AddEventListener("Other", OnOther);
+  source->AddEventListener(_T("Other"), OnOther);
   source->SetReconnectionTime(1000);
 
   // Turning the client into a listener
-  // Should by convention be done by the eventsource, and not by the HTTP CLIENT!!
+  // Should by convention be done by the event source, and not by the HTTP CLIENT!!
   source->EventSourceInit(false);
 
   // Sleep in 1/5 second intervals, until all messages received and channel closed
-  int maxWait = 50; // With a maximum of 10 seconds
+  // int maxWait = 50; // With a maximum of 10 seconds
 
   // Longer wait time for testing of event streams
-  // int maxWait = 10 * 60 * 5;  // Wait for 10 minutes
+  int maxWait = 10 * 60 * 5;  // Wait for 10 minutes
 
   do 
   {
@@ -199,26 +199,26 @@ TestEvents(HTTPClient* p_client)
   // Stopping the client
   if(client.GetIsRunning())
   {
-    xprintf("Stopping the client\n");
+    xprintf(_T("Stopping the client\n"));
     client.StopClient();
   }
-  xprintf("The client is %s\n", client.GetIsRunning() ? "still running!\n" : "stopped.\n");
+  xprintf(_T("The client is %s\n"), client.GetIsRunning() ? _T("still running!\n") : _T("stopped.\n"));
 
   // Total condition for the test to succeed: 
   // All event types seen and a minimum of 3 OnMessage events
   bool result = (onOpenSeen && onMessageSeen && onOtherSeen && onErrorSeen && maxID == 3) ? true : false;
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Send: Testing the SSE event channel complete   : %s\n", result ? "OK" : "ERROR");
+  _tprintf(_T("Send: Testing the SSE event channel complete   : %s\n"), result ? _T("OK") : _T("ERROR"));
 
   if(!result)
   {
-    printf("ERROR STATE IN THE EVENT TEST:\n");
-    printf("- Open seen    : %d\n",onOpenSeen);
-    printf("- Message seen : %d\n",onMessageSeen);
-    printf("- Other   seen : %d\n",onOtherSeen);
-    printf("- Error   seen : %d\n",onErrorSeen);
-    printf("- Max ID  seen : %d\n",maxID);
+    _tprintf(_T("ERROR STATE IN THE EVENT TEST:\n"));
+    _tprintf(_T("- Open seen    : %d\n"),onOpenSeen);
+    _tprintf(_T("- Message seen : %d\n"),onMessageSeen);
+    _tprintf(_T("- Other   seen : %d\n"),onOtherSeen);
+    _tprintf(_T("- Error   seen : %d\n"),onErrorSeen);
+    _tprintf(_T("- Max ID  seen : %d\n"),maxID);
   }
 
   return result ? 0 : 1;

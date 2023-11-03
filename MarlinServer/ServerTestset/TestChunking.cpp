@@ -51,14 +51,14 @@ SiteHandlerGetChunking::Handle(HTTPMessage* p_message)
   Routing& routing = p_message->GetRouting();
   if(routing.size() > 0)
   {
-    if(routing.back().CompareNoCase("releasenotes.txt"))
+    if(routing.back().CompareNoCase(_T("releasenotes.txt")))
     {
       return false;
     }
   }
 
   bool result = false;
-  XString filename("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v7.txt");
+  XString filename(_T("C:\\Develop\\Marlin\\Documentation\\ReleaseNotes_v7.txt"));
   XString empty;
 
   // NOT Much here. Always returns the release message file
@@ -84,7 +84,7 @@ SiteHandlerGetChunking::Handle(HTTPMessage* p_message)
 
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("Chunked operation sending 2 chunks             : %s\n", result ? "OK" : "ERROR");
+  qprintf(_T("Chunked operation sending 2 chunks             : %s\n"), result ? _T("OK") : _T("ERROR"));
 
   return true;
 }
@@ -96,24 +96,24 @@ TestMarlinServer::TestChunking()
   // If errors, change detail level
   m_doDetails = false;
 
-  xprintf("TESTING HTTP CHUNKED TRANSFER-ENCODING\n");
-  xprintf("======================================\n");
+  xprintf(_T("TESTING HTTP CHUNKED TRANSFER-ENCODING\n"));
+  xprintf(_T("======================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Chunking/"
   // Callback function is no longer required!
-  XString webaddress = "/MarlinTest/Chunking/";
+  XString webaddress = _T("/MarlinTest/Chunking/");
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong, false, m_inPortNumber, webaddress);
   if (site)
   {
     // SUMMARY OF THE TEST
     // --- "--------------------------- - ------\n"
-    qprintf("HTTPSite Chunked transfer  : OK : %s\n",site->GetPrefixURL().GetString());
+    qprintf(_T("HTTPSite Chunked transfer  : OK : %s\n"),site->GetPrefixURL().GetString());
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR: Cannot register a website for : %s\n",webaddress.GetString());
+    qprintf(_T("ERROR: Cannot register a website for : %s\n"),webaddress.GetString());
     return error;
   }
 
@@ -123,13 +123,13 @@ TestMarlinServer::TestChunking()
   // new: Start the site explicitly
   if (site->StartSite())
   {
-    xprintf("Site started correctly\n");
+    xprintf(_T("Site started correctly\n"));
   }
   else
   {
     ++error;
     xerror();
-    qprintf("ERROR STARTING SITE: %s\n",webaddress.GetString());
+    qprintf(_T("ERROR STARTING SITE: %s\n"),webaddress.GetString());
   }
   return error;
 }
@@ -139,6 +139,6 @@ TestMarlinServer::AfterTestChunking()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf("File sending with Transfer-encoding: chunked   : %s\n", totalChecks > 0 ? "ERROR" : "OK");
+  qprintf(_T("File sending with Transfer-encoding: chunked   : %s\n"), totalChecks > 0 ? _T("ERROR") : _T("OK"));
   return totalChecks > 0;
 }

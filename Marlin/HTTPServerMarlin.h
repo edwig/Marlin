@@ -52,7 +52,7 @@ public:
   // Delete a site from the remembered set of sites
   virtual bool       DeleteSite(int p_port,XString p_baseURL,bool p_force = false) override;
   // Receive (the rest of the) incoming HTTP request
-  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message) override;
+  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16) override;
   // Create a new WebSocket in the subclass of our server
   virtual WebSocket* CreateWebSocket(XString p_uri) override;
   // Receive the WebSocket stream and pass on the the WebSocket
@@ -89,7 +89,7 @@ private:
   // For the handling of the event streams: Sending a chunk to an event stream
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_request
                                       ,CRITICAL_SECTION*  p_lock
-                                      ,const char*        p_buffer
+                                      ,BYTE**             p_buffer
                                       ,size_t             p_totalLength
                                       ,bool               p_continue = true) override;
 

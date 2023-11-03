@@ -95,7 +95,7 @@ private:
   XString       m_pointer;
   JSONMessage*  m_message     { nullptr };
   JPStatus      m_status      { JPStatus::JP_None };
-  char          m_delimiter   { '/'   };
+  TCHAR         m_delimiter   { '/'   };
   bool          m_canAppend   { false };
   int           m_origin      { 0     };
   XString       m_lastToken;

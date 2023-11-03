@@ -34,90 +34,26 @@
 static char THIS_FILE[] = __FILE__;
 
 #endif
-const unsigned char B64_offset[256] =
+
+Base64::Base64(int p_method /*= CRYPT_STRING_BASE64*/,int p_options /*= CRYPT_STRING_NOCRLF*/)
 {
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
-  52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64,
-  64,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
-  15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
-  64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-  41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
-};
-
-const char base64_map[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-unsigned char*
-Base64::Encrypt(const unsigned char* srcp,int len,unsigned char* dstp)
-{
-  int i = 0;
-  unsigned char *dst = dstp;
-
-  for (i = 0; i < len - 2; i += 3)
+  if(p_method >= 0 && p_method <= CRYPT_STRING_BASE64URI)
   {
-    *dstp++ = *(base64_map + ((*(srcp+i)   >> 2) & 0x3f));
-    *dstp++ = *(base64_map + ((*(srcp+i)   << 4) & 0x30 | (*(srcp+i+1) >> 4) & 0x0f));
-    *dstp++ = *(base64_map + ((*(srcp+i+1) << 2) & 0x3C | (*(srcp+i+2) >> 6) & 0x03));
-    *dstp++ = *(base64_map + (*(srcp+i+2) & 0x3f));
+    m_method = p_method;
   }
-  srcp += i;
-  len -= i;
-
-  if(len & 0x02 ) /* (i==2) 2 bytes left,pad one byte of '=' */
-  {      
-    *dstp++ = *(base64_map + ((*srcp >> 2)   & 0x3f));
-    *dstp++ = *(base64_map + ((*srcp << 4)   & 0x30 | (*(srcp+1)>>4) & 0x0f ));
-    *dstp++ = *(base64_map + ((*(srcp+1)<<2) & 0x3C) );
-    *dstp++ = '=';
+  else
+  {
+    m_method = CRYPT_STRING_BASE64;
   }
-  else if(len & 0x01 )  /* (i==1) 1 byte left,pad two bytes of '='  */
-  { 
-    *dstp++ = *(base64_map + ((*srcp>>2) & 0x3f));
-    *dstp++ = *(base64_map + ((*srcp<<4) & 0x30));
-    *dstp++ = '=';
-    *dstp++ = '=';
+  if(p_options & (CRYPT_STRING_PERCENTESCAPE | 
+                  CRYPT_STRING_HASHDATA      |
+                  CRYPT_STRING_STRICT        | 
+                  CRYPT_STRING_NOCRLF        |
+                  CRYPT_STRING_NOCR ))
+  {
+    m_options = p_options;
   }
-  *dstp = '\0';
-  return dst;
 }
-
-void*
-Base64::Decrypt(const unsigned char* srcp,int len,unsigned char* dstp)
-{
-  int i = 0;
-  void *dst = dstp;
-
-  while(i < len)
-  {
-    *dstp++ = (B64_offset[*(srcp+i)]   << 2 | B64_offset[*(srcp+i+1)] >> 4);
-    *dstp++ = (B64_offset[*(srcp+i+1)] << 4 | B64_offset[*(srcp+i+2)] >> 2);
-    *dstp++ = (B64_offset[*(srcp+i+2)] << 6 | B64_offset[*(srcp+i+3)]     );
-    i += 4;
-  }
-  srcp += i;
-
-  if(*(srcp-2) == '=')  /* remove 2 bytes of '='  padded while encoding */
-  {	 
-    *(dstp--) = '\0';
-    *(dstp--) = '\0';
-  }
-  else if(*(srcp-1) == '=') /* remove 1 byte of '='  padded while encoding */
-  {
-    *(dstp--) = '\0';
-  }
-  *dstp = '\0';
-
-  return dst;
-};
 
 size_t 
 Base64::B64_length(size_t len)
@@ -133,38 +69,108 @@ Base64::Ascii_length(size_t len)
   return  (len*6)/8;
 }
 
+// ANSI Version only
+XString
+Base64::Encrypt(BYTE* p_buffer,int p_length)
+{
+  if(p_length <= 0)
+  {
+    return XString();
+  }
+  DWORD tchars = 0;
+  CryptBinaryToString(p_buffer,p_length,m_method | m_options,(LPTSTR)NULL,  &tchars);
+  _TUCHAR* buffer = new _TUCHAR[tchars + 2];
+  CryptBinaryToString(p_buffer,p_length,m_method | m_options,(LPTSTR)buffer,&tchars);
+  buffer[tchars] = 0;
+  XString result(buffer);
+  delete[] buffer;
+  return result;
+}
+
+// ANSI/UNICODE aware version
 XString
 Base64::Encrypt(XString p_unencrypted)
 {
-  XString encrypt;
-  int length = (int) B64_length(p_unencrypted.GetLength());
-  char* buffer = encrypt.GetBufferSetLength(length);
-  Encrypt(reinterpret_cast<const unsigned char*>(p_unencrypted.GetString()),p_unencrypted.GetLength(),reinterpret_cast<unsigned char*>(buffer));
-  encrypt.ReleaseBufferSetLength(length);
-
-  return encrypt;
+  if(p_unencrypted.GetLength() == 0)
+  {
+    return XString();
+  }
+  DWORD tchars = 0;
+  CryptBinaryToString((const BYTE*)p_unencrypted.GetString(),p_unencrypted.GetLength() * sizeof(TCHAR),m_method | m_options,(LPTSTR) NULL,&tchars);
+  _TUCHAR* buffer = new _TUCHAR[tchars + 2];
+  CryptBinaryToString((const BYTE*)p_unencrypted.GetString(),p_unencrypted.GetLength() * sizeof(TCHAR),m_method | m_options,(LPTSTR) buffer,&tchars);
+  buffer[tchars] = 0;
+  XString result(buffer);
+  delete[] buffer;
+  return result;
 }
 
 XString
 Base64::Decrypt(XString p_encrypted)
 {
-  XString decrypt;
-  int length = (int) Ascii_length(p_encrypted.GetLength());
-  char* buffer = decrypt.GetBufferSetLength(length);
-  Decrypt(reinterpret_cast<const unsigned char*>(p_encrypted.GetString()),p_encrypted.GetLength(),reinterpret_cast<unsigned char*>(buffer));
-  decrypt.ReleaseBuffer();
+  if(p_encrypted.GetLength() == 0)
+  {
+    return XString();
+  }
+  DWORD length = 0;
+  DWORD type = CRYPT_STRING_BASE64_ANY;
+  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,NULL,&length,0,&type);
+  _TUCHAR* buffer = new _TUCHAR[length + 2];
+  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,(BYTE*) buffer,&length,0,&type);
+  buffer[length / sizeof(TCHAR)] = 0;
+  XString result(buffer);
+  delete[] buffer;
+  return result;
+}
 
-  return decrypt;
+bool
+Base64::Decrypt(XString p_encrypted,BYTE* p_buffer,int p_length)
+{
+  if(p_encrypted.GetLength() == 0 || p_length <= 0)
+  {
+    return XString();
+  }
+  DWORD length = 0;
+  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,NULL,&length,0,NULL);
+  if((DWORD)p_length >= length)
+  {
+    CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,p_buffer,&length,0,NULL);
+    p_buffer[length] = 0;
+    return true;
+  }
+  return false;
+}
+
+// ANSI ONLY implementation. E.G. for UTF-8 traffic or HTTP headers
+bool
+Base64::Decrypt(BYTE* p_buffer,int p_blen,BYTE* p_output,int p_olen)
+{
+  if(p_blen <= 0 || p_olen <= 0)
+  {
+    p_output[0] = 0;
+    return true;
+  }
+  DWORD length = 0;
+  CryptStringToBinaryA((LPCSTR)p_buffer,p_blen,m_method,NULL,&length,0,NULL);
+  if((DWORD) p_olen >= length)
+  {
+    CryptStringToBinaryA((LPCSTR)p_buffer,p_blen,m_method,p_output,&length,0,NULL);
+    p_output[length] = 0;
+    return true;
+  }
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
 //
-// CRC4
+// CRC4 Encryption/Decryption
 //
 //////////////////////////////////////////////////////////////////////////
 
-char*
-CRC4::Encrypt(char *pszText,const char *pszKey) 
+#define SWAP(a, b) ((a) ^= (b), (b) ^= (a), (a) ^= (b))
+
+BYTE*
+CRC4::Encrypt(BYTE* pszText,int plen,const BYTE* pszKey,int klen) 
 {
   unsigned char sbox[256];      /* Encryption array             */
   unsigned char key [256];      /* Numeric key values           */
@@ -176,12 +182,11 @@ CRC4::Encrypt(char *pszText,const char *pszKey)
   int j = 0;
   int n = 0;
   int m = 0;
-  int ilen = (int)strlen(pszKey);
 
   for (m = 0;  m < 256; m++)  /* Initialize the key sequence */
   {
-    *(key + m)= *(pszKey + (m % ilen));
-    *(sbox + m) = (unsigned char)m;
+    *(key + m)= *(pszKey + (m % plen));
+    *(sbox + m) = (BYTE) m;
   }
 
   for (m=0; m < 256; m++)
@@ -190,13 +195,13 @@ CRC4::Encrypt(char *pszText,const char *pszKey)
     SWAP(*(sbox + m),*(sbox + n));
   }
 
-  ilen = (int)strlen(pszText);
-  for (m = 0; m < ilen; m++)
+  // ilen = (int)_tcslen(pszText);
+  for (m = 0; m < klen; m++)
   {
     i = (i + 1) &0xff;
     j = (j + *(sbox + i)) &0xff;
     SWAP(*(sbox+i),*(sbox + j));  /* randomly Initialize the key sequence */
-    unsigned char k = *(sbox + ((*(sbox + i) + *(sbox + j)) &0xff ));
+    BYTE k = *(sbox + ((*(sbox + i) + *(sbox + j)) &0xff ));
     if(k == *(pszText + m))       /* avoid '\0' beween the decoded text; */
     {
       k = 0;
@@ -210,9 +215,28 @@ CRC4::Encrypt(char *pszText,const char *pszKey)
   return pszText;
 }
 
-char*
-CRC4::Decrypt(char *pszText,const char *pszKey)
+BYTE*
+CRC4::Decrypt(BYTE* pszText,int plen,const BYTE* pszKey,int klen)
 {
-  return Encrypt(pszText,pszKey) ;  /* using the same function as encoding */
+  // Using the same function as encoding
+  return Encrypt(pszText,plen,pszKey,klen);
+}
+
+XString
+CRC4::Encrypt(const XString p_unencrypted,const XString p_key)
+{
+  int plen = p_unencrypted.GetLength() * sizeof(TCHAR);
+  int klen = p_key.GetLength()         * sizeof(TCHAR);
+
+  XString result(p_unencrypted);
+  Encrypt((BYTE*)result.GetString(),plen,(BYTE*)p_key.GetString(),klen);
+  return result;
+}
+
+XString
+CRC4::Decrypt(XString const p_encrypted,XString const p_key)
+{
+  // Using the same function as encoding
+  return Encrypt(p_encrypted,p_key);
 }
 

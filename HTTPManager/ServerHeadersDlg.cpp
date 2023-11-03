@@ -126,15 +126,15 @@ ServerHeadersDlg::OnInitDialog()
   CDialog::OnInitDialog();
 
   // Warn the user
-  m_warning = "All specified headers in this scope will automatically be added to **ALL** server responses\r\n"
-              "This can seriously impact the server performance, so use with care!!\r\n"
-              "In general: these options should only be used for responsive applications.";
+  m_warning = _T("All specified headers in this scope will automatically be added to **ALL** server responses\r\n")
+              _T("This can seriously impact the server performance, so use with care!!\r\n")
+              _T("In general: these options should only be used for responsive applications.");
 
   // Build the combo box contents
-  m_comboXFrameOptions.AddString("");
-  m_comboXFrameOptions.AddString("DENY");
-  m_comboXFrameOptions.AddString("SAMEORIGIN");
-  m_comboXFrameOptions.AddString("ALLOW-FROM");
+  m_comboXFrameOptions.AddString(_T(""));
+  m_comboXFrameOptions.AddString(_T("DENY"));
+  m_comboXFrameOptions.AddString(_T("SAMEORIGIN"));
+  m_comboXFrameOptions.AddString(_T("ALLOW-FROM"));
   m_comboXFrameOptions.SetCurSel(0);
 
   // Init usage
@@ -171,19 +171,19 @@ ServerHeadersDlg::OnInitDialog()
 void
 ServerHeadersDlg::CorrectXFrameOption()
 {
-  if(m_config->m_xFrameOption.CompareNoCase("deny") == 0)
+  if(m_config->m_xFrameOption.CompareNoCase(_T("deny")) == 0)
   {
     m_comboXFrameOptions.SetCurSel(1);
     m_config->m_useXFrameAllow = false;
     m_config->m_xFrameAllowed.Empty();
   }
-  if(m_config->m_xFrameOption.CompareNoCase("sameorigin") == 0)
+  if(m_config->m_xFrameOption.CompareNoCase(_T("sameorigin")) == 0)
   {
     m_comboXFrameOptions.SetCurSel(2);
     m_config->m_useXFrameAllow = false;
     m_config->m_xFrameAllowed.Empty();
   }
-  if(m_config->m_xFrameOption.CompareNoCase("allow-from") == 0)
+  if(m_config->m_xFrameOption.CompareNoCase(_T("allow-from")) == 0)
   {
     m_comboXFrameOptions.SetCurSel(3);
     m_config->m_useXFrameAllow = true;
@@ -194,35 +194,35 @@ ServerHeadersDlg::CorrectXFrameOption()
 bool
 ServerHeadersDlg::CheckFields()
 {
-  if(m_config->m_xFrameOption.CompareNoCase("allow-from") == 0 &&
+  if(m_config->m_xFrameOption.CompareNoCase(_T("allow-from")) == 0 &&
      m_config->m_xFrameAllowed.IsEmpty())
   {
-    MessageBox("Specify an URL to allow IFRAMEd application from!","Server headers",MB_OK|MB_ICONERROR);
+    MessageBox(_T("Specify an URL to allow IFRAMEd application from!"),_T("Server headers"),MB_OK|MB_ICONERROR);
     return false;
   }
   if(m_config->m_XSSBlockMode && !m_config->m_XSSProtection)
   {
-    MessageBox("In order to use XSS blocking mode, you must turn on XSS protection!","Server headers",MB_OK|MB_ICONERROR);
+    MessageBox(_T("In order to use XSS blocking mode, you must turn on XSS protection!"),_T("Server headers"),MB_OK|MB_ICONERROR);
     return false;
   }
   if(m_config->m_hstsSubDomain && m_config->m_hstsMaxAge == 0)
   {
-    MessageBox("In order to allow HSTS sub-domains, specify a HSTS max-age (standard value = 16070400)","Server headers",MB_OK|MB_ICONERROR);
+    MessageBox(_T("In order to allow HSTS sub-domains, specify a HSTS max-age (standard value = 16070400)"),_T("Server headers"),MB_OK|MB_ICONERROR);
     return false;
   }
   if(m_config->m_cors && m_config->m_allowMaxAge <= 0)
   {
-    MessageBox("In order to allow CORS security, specifiy a CORS max-age (standard value = 86400 seconds)","Server headers",MB_OK | MB_ICONERROR);
+    MessageBox(_T("In order to allow CORS security, specifiy a CORS max-age (standard value = 86400 seconds)"),_T("Server headers"),MB_OK | MB_ICONERROR);
     return false;
   }
   if(m_config->m_cors && m_config->m_allowOrigin.IsEmpty())
   {
-    MessageBox("In order to allow CORS security, specify one (1) site as an allowed origin, or specifiy '*' (all sites)","Server headers",MB_OK | MB_ICONERROR);
+    MessageBox(_T("In order to allow CORS security, specify one (1) site as an allowed origin, or specify '*' (all sites)"),_T("Server headers"),MB_OK | MB_ICONERROR);
     return false;
   }
-  if(m_config->m_cors && m_config->m_corsCredentials && m_config->m_allowOrigin == "*")
+  if(m_config->m_cors && m_config->m_corsCredentials && m_config->m_allowOrigin == _T("*"))
   {
-    MessageBox("In order to let credentials through in CORS situations, an explicit origin must be set. '*' cannot be used!", "Server headers", MB_OK | MB_ICONERROR);
+    MessageBox(_T("In order to let credentials through in CORS situations, an explicit origin must be set. '*' cannot be used!"),_T("Server headers"), MB_OK | MB_ICONERROR);
     return false;
   }
   return true;

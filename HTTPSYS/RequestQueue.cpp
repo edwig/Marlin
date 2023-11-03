@@ -51,8 +51,8 @@ RequestQueue::CreateHandle()
     return NULL;
   }
   CString tempFilename;
-  tempFilename.GetEnvironmentVariable("WINDIR");
-  tempFilename += "\\TEMP\\RequestQueue_";
+  tempFilename.GetEnvironmentVariable(_T("WINDIR"));
+  tempFilename += _T("\\TEMP\\RequestQueue_");
   tempFilename += m_name;
 
   m_handle = CreateFile(tempFilename

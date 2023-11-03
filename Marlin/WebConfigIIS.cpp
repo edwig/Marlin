@@ -52,7 +52,7 @@ WebConfigIIS::ReadConfig()
 {
   // Reads the central IIS application host configuration file first
   // this file contains the defaults for IIS.
-  return ReadConfig("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config", nullptr);
+  return ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"), nullptr);
 }
 
 bool
@@ -60,7 +60,7 @@ WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/
 {
   // Reads the central IIS application host configuration file first
   // this file contains the defaults for IIS.
-  bool result = ReadConfig("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config",nullptr);
+  bool result = ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr);
   if(!p_application.IsEmpty())
   {
     SetApplication(p_application);
@@ -80,7 +80,7 @@ WebConfigIIS::SetApplication(XString p_application)
   if(site)
   {
     // Get virtual directory: can be outside "inetpub\wwwroot"
-    XString config = site->m_path + "\\web.config";
+    XString config = site->m_path + _T("\\web.config");
     // Read the web.config of the application site, if any requested
     if(ReadConfig(config,site))
     {
@@ -99,7 +99,7 @@ WebConfigIIS::GetSiteName(XString p_site)
   {
     return site->m_name;
   }
-  return "";
+  return _T("");
 }
 
 XString
@@ -333,7 +333,7 @@ WebConfigIIS::ReplaceEnvironVars(XString& p_string)
     {
       return replaced;
     }
-    int endPos = local.Find('%',beginPos+1);
+    int endPos = local.Find(_T('%'),beginPos+1);
     if(endPos <= beginPos)
     {
       break;
@@ -361,7 +361,7 @@ WebConfigIIS::ReadConfig(XString p_configFile,IISSite* p_site /*=nullptr*/)
 {
   // Find the file, see if we have read access at least
   ReplaceEnvironVars(p_configFile);
-  if(_access(p_configFile,4) != 0)
+  if(_taccess(p_configFile,4) != 0)
   {
     return false;
   }
@@ -400,20 +400,20 @@ WebConfigIIS::ReadConfig(XString p_configFile,IISSite* p_site /*=nullptr*/)
 void
 WebConfigIIS::ReadLogPath(XMLMessage& p_msg)
 {
-  XMLElement* log = p_msg.FindElement("log");
+  XMLElement* log = p_msg.FindElement(_T("log"));
   if(log)
   {
-    XMLElement* central = p_msg.FindElement(log,"centralW3CLogFile");
+    XMLElement* central = p_msg.FindElement(log,_T("centralW3CLogFile"));
     if(central)
     {
-      XString enabled   = p_msg.GetAttribute(central,"enabled");
-      XString directory = p_msg.GetAttribute(central,"directory");
+      XString enabled   = p_msg.GetAttribute(central,_T("enabled"));
+      XString directory = p_msg.GetAttribute(central,_T("directory"));
 
       // Process the directory
       ReplaceEnvironVars(directory);
 
       // Remember this
-      m_logging = enabled.CompareNoCase("true") == 0;
+      m_logging = enabled.CompareNoCase(_T("true")) == 0;
       m_logpath = directory;
     }
   }
@@ -422,26 +422,26 @@ WebConfigIIS::ReadLogPath(XMLMessage& p_msg)
 void
 WebConfigIIS::ReadAppPools(XMLMessage& p_msg)
 {
-  XMLElement* appPools = p_msg.FindElement("applicationPools");
+  XMLElement* appPools = p_msg.FindElement(_T("applicationPools"));
   if(!appPools) return;
 
   XString defaultStartmode; // empty or "AlwaysRunning"
   XString defaultRecycling; // time "days.hours:minutes:seconds"
 
   // Find defaults for all the pools
-  XMLElement* defs = p_msg.FindElement(appPools,"applicationPoolDefaults");
+  XMLElement* defs = p_msg.FindElement(appPools,_T("applicationPoolDefaults"));
   if(defs)
   {
-    defaultStartmode = p_msg.GetAttribute(defs,"startMode");
-    XMLElement* restart = p_msg.FindElement(defs,"periodicRestart");
+    defaultStartmode = p_msg.GetAttribute(defs,_T("startMode"));
+    XMLElement* restart = p_msg.FindElement(defs,_T("periodicRestart"));
     if(restart)
     {
-      defaultRecycling = p_msg.GetAttribute(restart,"time");
+      defaultRecycling = p_msg.GetAttribute(restart,_T("time"));
     }
   }
 
   // Find pools and specific settings for the pool
-  XMLElement* pools = p_msg.FindElement(appPools,"add");
+  XMLElement* pools = p_msg.FindElement(appPools,_T("add"));
   while(pools)
   {
     IISAppPool pool;
@@ -450,31 +450,31 @@ WebConfigIIS::ReadAppPools(XMLMessage& p_msg)
     pool.m_periodicRestart = defaultRecycling;
     
     // Getting pool name
-    XString name = p_msg.GetAttribute(pools,"name");
+    XString name = p_msg.GetAttribute(pools,_T("name"));
     pool.m_name = name;
 
     // Getting pool startmode
-    XString startMode = p_msg.GetAttribute(pools,"startMode");
+    XString startMode = p_msg.GetAttribute(pools,_T("startMode"));
     if(!startMode.IsEmpty())
     {
       pool.m_startMode = startMode;
     }
 
     // Getting pool autostart
-    XString autostart = p_msg.GetAttribute(pools,"autoStart");
-    if(autostart.CompareNoCase("true") == 0)
+    XString autostart = p_msg.GetAttribute(pools,_T("autoStart"));
+    if(autostart.CompareNoCase(_T("true")) == 0)
     {
       pool.m_autoStart = true;
     }
 
     // Getting the pipeline mode
-    pool.m_pipelineMode = p_msg.GetAttribute(pools,"managedPipelineMode");
+    pool.m_pipelineMode = p_msg.GetAttribute(pools,_T("managedPipelineMode"));
 
     // Getting idle timeout
-    XMLElement* process = p_msg.FindElement(pools,"processModel");
+    XMLElement* process = p_msg.FindElement(pools,_T("processModel"));
     if(process)
     {
-      pool.m_idleTimeout = p_msg.GetAttribute(process,"idleTimeout");
+      pool.m_idleTimeout = p_msg.GetAttribute(process,_T("idleTimeout"));
     }
 
     // Retain pool information
@@ -483,7 +483,7 @@ WebConfigIIS::ReadAppPools(XMLMessage& p_msg)
 
     // Getting the next pool
     pools = p_msg.GetElementSibling(pools);
-    if(pools && pools->GetName().Compare("add"))
+    if(pools && pools->GetName().Compare(_T("add")))
     {
       break;
     }
@@ -493,13 +493,13 @@ WebConfigIIS::ReadAppPools(XMLMessage& p_msg)
 void
 WebConfigIIS::ReadSites(XMLMessage& p_msg)
 {
-  XMLElement* sites = p_msg.FindElement("sites");
+  XMLElement* sites = p_msg.FindElement(_T("sites"));
   if(!sites) return;
 
-  XMLElement* site = p_msg.FindElement(sites,"site");
+  XMLElement* site = p_msg.FindElement(sites,_T("site"));
   while(site)
   {
-    if(site->GetName() == "site")
+    if(site->GetName() == _T("site"))
     {
       IISSite theSite;
       theSite.m_ntlmCache  = true;
@@ -507,38 +507,38 @@ WebConfigIIS::ReadSites(XMLMessage& p_msg)
       theSite.m_preload    = false;
       theSite.m_authScheme = 0;
       theSite.m_error      = IISER_NoError;
-      theSite.m_name       = p_msg.GetAttribute(site,"name");
+      theSite.m_name       = p_msg.GetAttribute(site,_T("name"));
 
       // Application
-      XMLElement* applic = p_msg.FindElement(site,"application");
+      XMLElement* applic = p_msg.FindElement(site,_T("application"));
       if(applic)
       {
-        theSite.m_appPool = p_msg.GetAttribute(applic,"applicationPool");
-        theSite.m_preload = p_msg.GetAttribute(applic,"preloadEnabled").CompareNoCase("true") == 0;
+        theSite.m_appPool = p_msg.GetAttribute(applic,_T("applicationPool"));
+        theSite.m_preload = p_msg.GetAttribute(applic,_T("preloadEnabled")).CompareNoCase(_T("true")) == 0;
       }
 
       // Virtual path
-      XMLElement* virtdir = p_msg.FindElement(site,"virtualDirectory");
+      XMLElement* virtdir = p_msg.FindElement(site,_T("virtualDirectory"));
       if(virtdir)
       {
-        theSite.m_path = p_msg.GetAttribute(virtdir,"physicalPath");
+        theSite.m_path = p_msg.GetAttribute(virtdir,_T("physicalPath"));
         ReplaceEnvironVars(theSite.m_path);
       }
 
       // First binding
-      XMLElement* binding = p_msg.FindElement(site,"binding");
+      XMLElement* binding = p_msg.FindElement(site,_T("binding"));
       if(binding)
       {
-        theSite.m_binding  = p_msg.GetAttribute(binding,"bindingInformation");
-        theSite.m_protocol = p_msg.GetAttribute(binding,"protocol");
-        theSite.m_secure   = p_msg.GetAttribute(binding,"sslFlags").GetLength() > 0;
+        theSite.m_binding  = p_msg.GetAttribute(binding,_T("bindingInformation"));
+        theSite.m_protocol = p_msg.GetAttribute(binding,_T("protocol"));
+        theSite.m_secure   = p_msg.GetAttribute(binding,_T("sslFlags")).GetLength() > 0;
       }
 
       // Port is part of URLACL binding "*:80" or "+:443" or something
-      theSite.m_port = atoi(theSite.m_binding.Mid(2));
+      theSite.m_port = _ttoi(theSite.m_binding.Mid(2));
 
       // Check for secure site
-      if(theSite.m_protocol.CompareNoCase("https") == 0)
+      if(theSite.m_protocol.CompareNoCase(_T("https")) == 0)
       {
         theSite.m_secure = true;
       }
@@ -559,14 +559,14 @@ WebConfigIIS::ReadSites(XMLMessage& p_msg)
 void
 WebConfigIIS::ReadSettings(XMLMessage& p_msg)
 {
-  XMLElement* settings = p_msg.FindElement("appSettings");
+  XMLElement* settings = p_msg.FindElement(_T("appSettings"));
   if(settings)
   {
-    XMLElement* add = p_msg.FindElement(settings,"add");
+    XMLElement* add = p_msg.FindElement(settings,_T("add"));
     while(add)
     {
-      XString key   = p_msg.GetAttribute(add,"key");
-      XString value = p_msg.GetAttribute(add,"value");
+      XString key   = p_msg.GetAttribute(add,_T("key"));
+      XString value = p_msg.GetAttribute(add,_T("value"));
 
       m_settings[key] = value;
 
@@ -579,20 +579,20 @@ WebConfigIIS::ReadSettings(XMLMessage& p_msg)
 void 
 WebConfigIIS::ReadWebConfigHandlers(XMLMessage& p_msg)
 {
-  XMLElement* handlers = p_msg.FindElement("handlers");
+  XMLElement* handlers = p_msg.FindElement(_T("handlers"));
   if(handlers)
   {
-    XMLElement* add = p_msg.FindElement(handlers,"add");
+    XMLElement* add = p_msg.FindElement(handlers,_T("add"));
     while(add)
     {
       IISHandler handler;
 
-      XString name           = p_msg.GetAttribute(add,"name");
-      handler.m_path         = p_msg.GetAttribute(add,"path");
-      handler.m_verb         = p_msg.GetAttribute(add,"verb");
-      handler.m_modules      = p_msg.GetAttribute(add,"modules");
-      handler.m_resourceType = p_msg.GetAttribute(add,"resourceType");
-      handler.m_precondition = p_msg.GetAttribute(add,"preCondition");
+      XString name           = p_msg.GetAttribute(add,_T("name"));
+      handler.m_path         = p_msg.GetAttribute(add,_T("path"));
+      handler.m_verb         = p_msg.GetAttribute(add,_T("verb"));
+      handler.m_modules      = p_msg.GetAttribute(add,_T("modules"));
+      handler.m_resourceType = p_msg.GetAttribute(add,_T("resourceType"));
+      handler.m_precondition = p_msg.GetAttribute(add,_T("preCondition"));
 
       m_webConfigHandlers.insert(std::make_pair(name,handler));
 
@@ -605,14 +605,14 @@ WebConfigIIS::ReadWebConfigHandlers(XMLMessage& p_msg)
 void 
 WebConfigIIS::ReadStreamingLimit(XMLMessage& p_msg,XMLElement* p_elem)
 {
-  XMLElement* webserv = p_msg.FindElement(p_elem,"system.webServer");
+  XMLElement* webserv = p_msg.FindElement(p_elem,_T("system.webServer"));
   if(webserv)
   {
-    XMLElement* limit = p_msg.FindElement(webserv,"requestLimits");
+    XMLElement* limit = p_msg.FindElement(webserv,_T("requestLimits"));
     if(limit)
     {
-      XString max = p_msg.GetAttribute(limit,"maxAllowedContentLength");
-      long theLimit = atol(max);
+      XString max = p_msg.GetAttribute(limit,_T("maxAllowedContentLength"));
+      long theLimit = _ttol(max);
       if(theLimit > 0)
       {
         m_streamingLimit = theLimit;
@@ -624,11 +624,11 @@ WebConfigIIS::ReadStreamingLimit(XMLMessage& p_msg,XMLElement* p_elem)
 void
 WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg)
 {
-  XMLElement* location = p_msg.FindElement("location");
+  XMLElement* location = p_msg.FindElement(_T("location"));
 
   while(location)
   {
-    XString path = p_msg.GetAttribute(location,"path");
+    XString path = p_msg.GetAttribute(location,_T("path"));
     if(path.CompareNoCase(p_site.m_name) == 0)
     {
        ReadAuthentication(p_site,p_msg,location);
@@ -644,15 +644,15 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
 {
   bool anonymousFound = false;
 
-  XMLElement* auth = p_msg.FindElement(p_elem,"authentication");
+  XMLElement* auth = p_msg.FindElement(p_elem,_T("authentication"));
   if(!auth) return;
 
   // Check anonymous authentication
-  XMLElement* anonymous = p_msg.FindElement(auth,"anonymousAuthentication");
+  XMLElement* anonymous = p_msg.FindElement(auth,_T("anonymousAuthentication"));
   if(anonymous)
   {
-    XString enable = p_msg.GetAttribute(anonymous,"enabled");
-    if(enable.CompareNoCase("true") == 0)
+    XString enable = p_msg.GetAttribute(anonymous,_T("enabled"));
+    if(enable.CompareNoCase(_T("true")) == 0)
     {
       // Anonymous authentication IS enabled
       // No other authentication will EVER BE DONE
@@ -663,20 +663,20 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
   }
 
   // Check basic authentication
-  XMLElement* basic = p_msg.FindElement(auth,"basicAuthentication");
+  XMLElement* basic = p_msg.FindElement(auth,_T("basicAuthentication"));
   if(basic)
   {
-    XString enable = p_msg.GetAttribute(basic,"enabled");
-    if(enable.CompareNoCase("true") == 0)
+    XString enable = p_msg.GetAttribute(basic,_T("enabled"));
+    if(enable.CompareNoCase(_T("true")) == 0)
     {
       p_site.m_authScheme |= HTTP_AUTH_ENABLE_BASIC;
 
-      XString realm = p_msg.GetAttribute(basic,"realm");
+      XString realm = p_msg.GetAttribute(basic,_T("realm"));
       if(!realm.IsEmpty())
       {
         p_site.m_realm = realm;
       }
-      XString domain = p_msg.GetAttribute(basic,"defaultLogonDomain");
+      XString domain = p_msg.GetAttribute(basic,_T("defaultLogonDomain"));
       if(!domain.IsEmpty())
       {
         p_site.m_domain = domain;
@@ -685,15 +685,15 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
   }
 
   // Check Digest authentication
-  XMLElement* digest = p_msg.FindElement(auth,"digestAuthentication");
+  XMLElement* digest = p_msg.FindElement(auth,_T("digestAuthentication"));
   if(digest)
   {
-    XString enable = p_msg.GetAttribute(digest,"enabled");
-    if(enable.CompareNoCase("true") == 0)
+    XString enable = p_msg.GetAttribute(digest,_T("enabled"));
+    if(enable.CompareNoCase(_T("true")) == 0)
     {
       p_site.m_authScheme |= HTTP_AUTH_ENABLE_DIGEST;
 
-      XString realm = p_msg.GetAttribute(digest,"realm");
+      XString realm = p_msg.GetAttribute(digest,_T("realm"));
       if(!realm.IsEmpty())
       {
         p_site.m_realm = realm;
@@ -702,36 +702,36 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
   }
 
   // Check Windows Authentication
-  XMLElement* windows = p_msg.FindElement(auth,"windowsAuthentication");
+  XMLElement* windows = p_msg.FindElement(auth,_T("windowsAuthentication"));
   if(windows)
   {
-    XString enable = p_msg.GetAttribute(windows,"enabled");
-    if(enable.CompareNoCase("true") == 0)
+    XString enable = p_msg.GetAttribute(windows,_T("enabled"));
+    if(enable.CompareNoCase(_T("true")) == 0)
     {
       // See if we must de-activate NTLM caching
-      XString persist = p_msg.GetAttribute(windows,"authPersistSingleRequest");
-      if(persist.CompareNoCase("true") == 0)
+      XString persist = p_msg.GetAttribute(windows,_T("authPersistSingleRequest"));
+      if(persist.CompareNoCase(_T("true")) == 0)
       {
         p_site.m_ntlmCache = false;
       }
 
       // Find providers
-      XMLElement* providers = p_msg.FindElement(windows,"providers");
+      XMLElement* providers = p_msg.FindElement(windows,_T("providers"));
       if(providers)
       {
-        XMLElement* add = p_msg.FindElement(providers,"add");
+        XMLElement* add = p_msg.FindElement(providers,_T("add"));
         while(add)
         {
-          XString value = p_msg.GetAttribute(add,"value");
-          if(value.CompareNoCase("NTLM") == 0)
+          XString value = p_msg.GetAttribute(add,_T("value"));
+          if(value.CompareNoCase(_T("NTLM")) == 0)
           {
             p_site.m_authScheme |= HTTP_AUTH_ENABLE_NTLM;
           }
-          if(value.CompareNoCase("Negotiate") == 0)
+          if(value.CompareNoCase(_T("Negotiate")) == 0)
           {
             p_site.m_authScheme |= HTTP_AUTH_ENABLE_NEGOTIATE;
           }
-          if(value.CompareNoCase("Negotiate:Kerberos") == 0)
+          if(value.CompareNoCase(_T("Negotiate:Kerberos")) == 0)
           {
             p_site.m_authScheme |= HTTP_AUTH_ENABLE_NEGOTIATE;
             p_site.m_authScheme |= HTTP_AUTH_ENABLE_KERBEROS;
@@ -754,11 +754,11 @@ WebConfigIIS::ReadAuthentication(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
 void
 WebConfigIIS::ReadHandlerMapping(IISSite& p_site, XMLMessage& p_msg)
 {
-  XMLElement* location = p_msg.FindElement("location");
+  XMLElement* location = p_msg.FindElement(_T("location"));
 
   while(location)
   {
-    XString path = p_msg.GetAttribute(location, "path");
+    XString path = p_msg.GetAttribute(location, _T("path"));
     if (path.CompareNoCase(p_site.m_name) == 0)
     {
       ReadHandlerMapping(p_site,p_msg,location);
@@ -775,21 +775,21 @@ WebConfigIIS::ReadHandlerMapping(IISSite& p_site, XMLMessage& p_msg)
 void
 WebConfigIIS::ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg,XMLElement* p_elem)
 {
-  XMLElement* sws = p_msg.FindElement(p_elem,"system.webServer");
+  XMLElement* sws = p_msg.FindElement(p_elem,_T("system.webServer"));
   if (!sws) return;
-  XMLElement* handlers = p_msg.FindElement(sws,"handlers");
+  XMLElement* handlers = p_msg.FindElement(sws,_T("handlers"));
   if (!handlers) return;
-  XMLElement* add = p_msg.FindElement(handlers,"add");
+  XMLElement* add = p_msg.FindElement(handlers,_T("add"));
   while (add)
   {
     IISHandler handler;
 
-    XString name           = p_msg.GetAttribute(add,"name");
-    handler.m_path         = p_msg.GetAttribute(add,"path");
-    handler.m_verb         = p_msg.GetAttribute(add,"verb");
-    handler.m_modules      = p_msg.GetAttribute(add,"modules");
-    handler.m_resourceType = p_msg.GetAttribute(add,"resourceType");
-    handler.m_precondition = p_msg.GetAttribute(add,"preCondition");
+    XString name           = p_msg.GetAttribute(add,_T("name"));
+    handler.m_path         = p_msg.GetAttribute(add,_T("path"));
+    handler.m_verb         = p_msg.GetAttribute(add,_T("verb"));
+    handler.m_modules      = p_msg.GetAttribute(add,_T("modules"));
+    handler.m_resourceType = p_msg.GetAttribute(add,_T("resourceType"));
+    handler.m_precondition = p_msg.GetAttribute(add,_T("preCondition"));
 
     p_site.m_handlers.insert(std::make_pair(name,handler));
 

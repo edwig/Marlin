@@ -28,9 +28,14 @@
 #include "stdafx.h"
 #include "TestMail.h"
 #include "ServerApplet.h"
+#include <WinFile.h>
 #include <version.h>
 
-static FILE* CreateTempFile(XString& p_filename,char* p_mode);
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 TestMail::TestMail(XString p_afzender,XString p_ontvanger,XString p_server)
          :m_sender(p_afzender)
@@ -43,35 +48,35 @@ bool
 TestMail::Send()
 {
   int cc = 0;
-  XString filename("testmail");
-  FILE* file = CreateTempFile(filename,(char*)"w");
-  if(file)
+  WinFile file;
+  file.CreateTempFileName(_T("testmail"),_T("txt"));
+  if(file.Open(winfile_write,FAttributes::attrib_none,Encoding::UTF8))
   {
-    fprintf(file,"HOST:%s\n",m_server);
-    fprintf(file,"FROM:%s\n",m_sender);
-    fprintf(file,"TO:%s\n",  m_receiver);
-    fprintf(file,"SUBJECT:TEST e-mail from the ServerApplet of the test program\n");
-    fprintf(file,"DIALOOG:nee\n");
-    fprintf(file,"WIJZIGONDERWERP:nee\n");
-    fprintf(file,"WIJZIGBERICHT:nee\n");
-    fprintf(file,"VOORTGANG:ja\n");
-    fprintf(file,"VERWIJDEREN:ja\n");
-    fprintf(file,"<BODY>\n");
-    fprintf(file,"Dear system maintainer,\n");
-    fprintf(file,"\n");
-    fprintf(file,"This is a test e-mail to see if you have configured everything well.\n");
-    fprintf(file,"If this e-mail reaches you, it is a proof that the Marlin modules can send crash rapports to you.\n");
-    fprintf(file,"\n");
-    fprintf(file,"With kindly regards,\n");
-    fprintf(file,"The Marlin team.\n");
+    file.Format(_T("HOST:%s\n"),m_server);
+    file.Format(_T("FROM:%s\n"),m_sender);
+    file.Format(_T("TO:%s\n"),  m_receiver);
+    file.Write(_T("SUBJECT:TEST e-mail from the ServerApplet of the test program\n"));
+    file.Write(_T("DIALOOG:nee\n"));
+    file.Write(_T("WIJZIGONDERWERP:nee\n"));
+    file.Write(_T("WIJZIGBERICHT:nee\n"));
+    file.Write(_T("VOORTGANG:ja\n"));
+    file.Write(_T("VERWIJDEREN:ja\n"));
+    file.Write(_T("<BODY>\n"));
+    file.Write(_T("Dear system maintainer,\n"));
+    file.Write(_T("\n"));
+    file.Write(_T("This is a test e-mail to see if you have configured everything well.\n"));
+    file.Write(_T("If this e-mail reaches you, it is a proof that the Marlin modules can send crash rapports to you.\n"));
+    file.Write(_T("\n"));
+    file.Write(_T("With kindly regards,\n"));
+    file.Write(_T("The Marlin team.\n"));
 
     // Close the parameter file
-    fclose(file);
+    file.Close();
 
     // Send via POSTMAIL
-    XString program("PostMail5.exe");
-    XString melding("Cannot find the e-mail program 'PostMail5' in the executable directory");
-    cc = theApp.StartProgram(program,filename,true,melding);
+    XString program(_T("PostMail5.exe"));
+    XString melding(_T("Cannot find the e-mail program 'PostMail5' in the executable directory"));
+    cc = theApp.StartProgram(program,file.GetFilename(),true,melding);
   }
   return (cc == 0);
 }
@@ -85,7 +90,7 @@ TestMail::Send()
 static XString
 ErrorString(int p_error)
 {
-  char buffer[1024];
+  TCHAR buffer[1024];
   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
                 FORMAT_MESSAGE_IGNORE_INSERTS,
                 NULL,
@@ -95,32 +100,4 @@ ErrorString(int p_error)
                 1024,
                 NULL);
   return XString(buffer);
-}
-
-// Create a temporary file from a template, returning:
-// 1) A file pointer to an open file, or NULL, and an error message
-// 2) The name of the temporary file
-static FILE* 
-CreateTempFile(XString& p_filename,char* p_mode)
-{
-  // Set up a file
-  char tempname[MAX_PATH + 1];
-  size_t size = 0;
-  getenv_s(&size,tempname,MAX_PATH,"TMP");
-  char* file = _tempnam(tempname,p_filename);
-
-  FILE* pointer = NULL;
-  int error = fopen_s(&pointer,file,p_mode);
-  if(pointer)
-  {
-    p_filename = file;
-  }
-  else
-  {
-    p_filename.Format("ERROR [%d] %s",error,ErrorString(error));
-  }
-  // Free temp space
-  free(file);
-  // Result of the fopen_s call
-  return pointer;
 }

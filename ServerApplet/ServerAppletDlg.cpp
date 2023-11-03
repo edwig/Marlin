@@ -70,8 +70,8 @@ protected:
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 {
-  m_versie    = XString(PROGRAM_NAME) +  " " + MARLIN_VERSION_NUMBER;
-  m_copyright = "Copyright (c) 2022 ir. W.E. Huisman";
+  m_versie    = XString(PROGRAM_NAME) +  _T(" ") + _T(MARLIN_VERSION_NUMBER);
+  m_copyright = _T("Copyright (c) 2022 ir. W.E. Huisman");
 }
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
@@ -90,12 +90,12 @@ ServerAppletDlg::ServerAppletDlg(CWnd* pParent /*=NULL*/)
 {
   m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
-  m_role         = "Machine unknown";
-  m_status       = "Server not running";
-  m_logline         = "<Logging message>";
+  m_role         = _T("Machine unknown");
+  m_status       = _T("Server not running");
+  m_logline      = _T("<Logging message>");
   m_loginStatus  = false;
   m_serverStatus = Server_stopped;
-  m_trafficLight    = NULL;
+  m_trafficLight = NULL;
   m_service      = RUNAS_NTSERVICE;
 }
 
@@ -152,7 +152,7 @@ void ServerAppletDlg::DoDataExchange(CDataExchange* pDX)
     // Start/stop buttons
     m_buttonStart.EnableWindow(false);
     m_buttonStop .EnableWindow(false);
-    if(m_role.Find("Server") >= 0)
+    if(m_role.Find(_T("Server")) >= 0)
     {
       m_buttonStart.EnableWindow(m_serverStatus != Server_running);
       m_buttonStop .EnableWindow(m_serverStatus != Server_stopped);
@@ -207,11 +207,11 @@ BOOL ServerAppletDlg::OnInitDialog()
   if (sysMenu != NULL)
   {
     sysMenu->AppendMenu(MF_SEPARATOR);
-    sysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX,  "&About...");
-    sysMenu->AppendMenu(MF_STRING, IDM_INSTALL,   "&Installation...");
-    sysMenu->AppendMenu(MF_STRING, IDM_IISRESTART,"IIS &Restart");
-    sysMenu->AppendMenu(MF_STRING, IDM_IISSTART,  "IIS &Start");
-    sysMenu->AppendMenu(MF_STRING, IDM_IISSTOP,   "IIS Stop");
+    sysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX,  _T("&About..."));
+    sysMenu->AppendMenu(MF_STRING, IDM_INSTALL,   _T("&Installation..."));
+    sysMenu->AppendMenu(MF_STRING, IDM_IISRESTART,_T("IIS &Restart"));
+    sysMenu->AppendMenu(MF_STRING, IDM_IISSTART,  _T("IIS &Start"));
+    sysMenu->AppendMenu(MF_STRING, IDM_IISSTOP,   _T("IIS Stop"));
   }
   // Set the icon for this dialog.  The framework does this automatically
   // when the application's main window is not a dialog
@@ -267,10 +267,10 @@ ServerAppletDlg::OnSysCommand(UINT nID, LPARAM lParam)
   {
     if(m_serverStatus != Server_stopped)
     {
-      MessageBox("The server is now running.\n"
-                 "You cannot alter the current configuration.\n"
-                 "Stop the server first, and install/de-install after that"
-                ,"Error",MB_OK|MB_ICONEXCLAMATION);
+      MessageBox(_T("The server is now running.\n")
+                 _T("You cannot alter the current configuration.\n")
+                 _T("Stop the server first, and install/de-install after that")
+                ,_T("Error"),MB_OK|MB_ICONEXCLAMATION);
       return;
 
     }
@@ -353,10 +353,10 @@ ServerAppletDlg::OnEnChangeStatus()
 bool
 ServerAppletDlg::AreYouSure(XString p_actie)
 {
-  XString melding("You are about to  ");
+  XString melding(_T("You are about to  "));
   melding += p_actie;
-  melding += " the server.\n\nAre you sure?";
-  if(::MessageBox(GetSafeHwnd(),melding,"ServerApplet",MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDYES)
+  melding += _T(" the server.\n\nAre you sure?");
+  if(::MessageBox(GetSafeHwnd(),melding,_T("ServerApplet"),MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDYES)
   {
     return true;
   }
@@ -371,7 +371,7 @@ ServerAppletDlg::OnBnClickedConfig()
   bool update = true;
 
   // Find the machine 'role'
-  if(m_role.Right(6) != "Client")
+  if(m_role.Right(6) != _T("Client"))
   {
     if(m_serverStatus != Server_stopped)
     {
@@ -417,7 +417,7 @@ ServerAppletDlg::OnBnClickedStart()
   if(m_serverStatus == Server_stopped)
   {
     m_serverStatus = Server_transit;
-    m_status = "Server is starting";
+    m_status = _T("Server is starting");
 
     UpdateData(FALSE);
     PumpMessage();
@@ -434,10 +434,10 @@ ServerAppletDlg::OnBnClickedStart()
 
     // Starting the server
     XString result;
-    XString program = MarlinConfig::GetExePath() +  PRODUCT_NAME + ".exe";
-    XString arguments = "start";
-    XString fout(XString("Cannot start the ") + PRODUCT_NAME);
-    XString actie = XString("START: ") + program + "\n\n";
+    XString program = MarlinConfig::GetExePath() +  PRODUCT_NAME + _T(".exe");
+    XString arguments = _T("start");
+    XString fout(XString(_T("Cannot start the ")) + PRODUCT_NAME);
+    XString actie = XString(_T("START: ")) + program + _T("\n\n");
     int stat = CallProgram_For_String(program,arguments,result,3000);
     m_serverStatus = stat == 0 ? Server_running : Server_stopped;
     UpdateData(FALSE);
@@ -456,10 +456,10 @@ ServerAppletDlg::OnBnClickedStop()
 {
   if(m_serverStatus == Server_running)
   {
-    if(AreYouSure("STOP"))
+    if(AreYouSure(_T("STOP")))
     {
       m_serverStatus = Server_transit;
-      m_status = "Server is stopping";
+      m_status = _T("Server is stopping");
 
       UpdateData(FALSE);
       PumpMessage();
@@ -468,10 +468,10 @@ ServerAppletDlg::OnBnClickedStop()
       CWaitCursor takeADeepSigh;
 
       XString result;
-      XString program = MarlinConfig::GetExePath() + PRODUCT_NAME + ".exe";
-      XString arguments = "stop";
-      XString fout(XString("Cannot stop the ") +  PRODUCT_NAME);
-      XString actie = XString("START: ") + program + "\n\n";
+      XString program = MarlinConfig::GetExePath() + PRODUCT_NAME + _T(".exe");
+      XString arguments = _T("stop");
+      XString fout(XString(_T("Cannot stop the ")) +  PRODUCT_NAME);
+      XString actie = XString(_T("START: ")) + program + _T("\n\n");
 
       int stat = CallProgram_For_String(program,arguments,result);
       m_serverStatus = stat == 0 ? Server_stopped : Server_running;
@@ -493,15 +493,15 @@ ServerAppletDlg::OnBnClickedBounce()
   if(!(m_serverStatus == Server_running || m_serverStatus == Server_stopped))
   {
     ::MessageBox(GetSafeHwnd()
-                ,"You can only bounce (stopping & starting) if the server is running or is stopped\n"
-                 "Currently the server is in an 'in-between' stadium. Use the CMD.EXE command line please."
+                ,_T("You can only bounce (stopping & starting) if the server is running or is stopped\n")
+                 _T("Currently the server is in an 'in-between' stadium. Use the CMD.EXE command line please.")
                 ,PROGRAM_NAME
                 ,MB_OK|MB_ICONINFORMATION);
     return;
   }
 
   // Are we sure?
-  if(AreYouSure("BOUNCE (stopping & starting)") == false)
+  if(AreYouSure(_T("BOUNCE (stopping & starting)")) == false)
   {
     return;
   }
@@ -509,14 +509,14 @@ ServerAppletDlg::OnBnClickedBounce()
   // Tell about the bouncing attempt and display wait cursor
   CWaitCursor takeADeepSigh;
   m_serverStatus = Server_transit;
-  m_status = "Server is bouncing";
+  m_status = _T("Server is bouncing");
 
   UpdateData(FALSE);
   PumpMessage();
 
-  XString program = XString(PRODUCT_NAME) + ".exe";
-  XString arguments = "restart";
-  XString fout("Cannot restart (bounce) the server");
+  XString program = XString(PRODUCT_NAME) + _T(".exe");
+  XString arguments = _T("restart");
+  XString fout(_T("Cannot restart (bounce) the server"));
   theApp.StartProgram(program,arguments,true,fout);
 
   // Try multiple times
@@ -528,7 +528,7 @@ ServerAppletDlg::OnBnClickedBounce()
     {
       // Let's assume the bouncing went well.
       // Clearing the status line
-      m_logline = "<Empty status line>";
+      m_logline = _T("<Empty status line>");
       m_password.Empty();
       m_loginURL.Empty();
       m_loginStatus = false;
@@ -546,43 +546,43 @@ ServerAppletDlg::OnEnChangeUser()
 
 void ServerAppletDlg::OnBnClickedFunction1()
 {
-  ::MessageBox(GetSafeHwnd(),"Still to implement function 1",PROGRAM_NAME,MB_OK);
+  ::MessageBox(GetSafeHwnd(),_T("Still to implement function 1"),PROGRAM_NAME,MB_OK);
 }
 
 void 
 ServerAppletDlg::OnBnClickedFunction2()
 {
-  ::MessageBox(GetSafeHwnd(),"Still to implement function 2",PROGRAM_NAME,MB_OK);
+  ::MessageBox(GetSafeHwnd(),_T("Still to implement function 2"),PROGRAM_NAME,MB_OK);
 }
 
 void 
 ServerAppletDlg::OnBnClickedFunction3()
 {
-  ::MessageBox(GetSafeHwnd(),"Still to implement function 3",PROGRAM_NAME,MB_OK);
+  ::MessageBox(GetSafeHwnd(),_T("Still to implement function 3"),PROGRAM_NAME,MB_OK);
 }
 
 void 
 ServerAppletDlg::OnBnClickedFunction4()
 {
-  ::MessageBox(GetSafeHwnd(),"Still to implement function 4",PROGRAM_NAME,MB_OK);
+  ::MessageBox(GetSafeHwnd(),_T("Still to implement function 4"),PROGRAM_NAME,MB_OK);
 }
 
 void
 ServerAppletDlg::OnBnClickedFunction5()
 {
-  ::MessageBox(GetSafeHwnd(),"Still to implement function 5",PROGRAM_NAME,MB_OK);
+  ::MessageBox(GetSafeHwnd(),_T("Still to implement function 5"),PROGRAM_NAME,MB_OK);
 }
 
 
 void ServerAppletDlg::OnBnClickedFunction6()
 {
-  ::MessageBox(GetSafeHwnd(),"Still to implement function 6",PROGRAM_NAME,MB_OK);
+  ::MessageBox(GetSafeHwnd(),_T("Still to implement function 6"),PROGRAM_NAME,MB_OK);
 }
 
 void 
 ServerAppletDlg::OnBnClickedFunction7()
 {
-  ::MessageBox(GetSafeHwnd(),"Still to implement function 7",PROGRAM_NAME,MB_OK);
+  ::MessageBox(GetSafeHwnd(),_T("Still to implement function 7"),PROGRAM_NAME,MB_OK);
 }
 
 void 
@@ -594,7 +594,7 @@ ServerAppletDlg::OnBnClickedOk()
 void
 ServerAppletDlg::GetServerStatus()
 {
-  if(m_role.Find("Server") >= 0)
+  if(m_role.Find(_T("Server")) >= 0)
   {
     GetServerStatusLocally();
   }
@@ -609,36 +609,36 @@ ServerAppletDlg::GetServerStatus()
 void
 ServerAppletDlg::GetServerStatusLocally()
 {
-  XString program   = XString(PRODUCT_NAME) + ".exe";
-  XString arguments = "query";
-  XString fout(XString("Cannot get the status of the ") + PRODUCT_NAME + " server");
+  XString program   = XString(PRODUCT_NAME) + _T(".exe");
+  XString arguments = _T("query");
+  XString fout(XString(_T("Cannot get the status of the ")) + PRODUCT_NAME + _T(" server"));
 
   int stat = theApp.StartProgram(program,arguments,true,fout);
 
   switch(stat)
   {
-    case SERVICE_STOPPED:           m_status = "Service is stopped";
+    case SERVICE_STOPPED:           m_status = _T("Service is stopped");
                                     m_serverStatus = Server_stopped;
                                     break;
-    case SERVICE_START_PENDING:     m_status = "Service has a pending start";
+    case SERVICE_START_PENDING:     m_status = _T("Service has a pending start");
                                     m_serverStatus = Server_transit;
                                     break;
-    case SERVICE_STOP_PENDING:      m_status = "Service has a pending stop";
+    case SERVICE_STOP_PENDING:      m_status = _T("Service has a pending stop");
                                     m_serverStatus = Server_transit;
                                     break;
-    case SERVICE_RUNNING:           m_status = "Service is running";
+    case SERVICE_RUNNING:           m_status = _T("Service is running");
                                     m_serverStatus = Server_running;
                                     break;
-    case SERVICE_CONTINUE_PENDING:  m_status = "Service has a pending continue";
+    case SERVICE_CONTINUE_PENDING:  m_status = _T("Service has a pending continue");
                                     m_serverStatus = Server_transit;
                                     break;
-    case SERVICE_PAUSE_PENDING:     m_status = "Service has a pending pause";    
+    case SERVICE_PAUSE_PENDING:     m_status = _T("Service has a pending pause");    
                                     m_serverStatus = Server_transit;
                                     break;
-    case SERVICE_PAUSED:            m_status = "Service is paused";
+    case SERVICE_PAUSED:            m_status = _T("Service is paused");
                                     m_serverStatus = Server_transit;
                                     break;
-    default:                        m_status = "No server status found";
+    default:                        m_status = _T("No server status found");
                                     m_serverStatus = Server_stopped;
                                     break;
   }
@@ -650,7 +650,7 @@ ServerAppletDlg::GetConfigVariables()
   AppConfig config(PRODUCT_NAME);
 
   config.ReadConfig();
-  m_role    = "Machine: " + config.GetRole();
+  m_role    = _T("Machine: ") + config.GetRole();
   m_service = config.GetRunAsService();
   m_url     = config.GetServerURL();
 }
@@ -661,14 +661,14 @@ ServerAppletDlg::IISRestart()
   CWaitCursor takeADeepSigh;
   XString program;
  
-  program.GetEnvironmentVariable("windir");
-  program += "\\system32\\iisreset.exe";
-  XString parameter("");
+  program.GetEnvironmentVariable(_T("windir"));
+  program += _T("\\system32\\iisreset.exe");
+  XString parameter(_T(""));
   XString result;
   CallProgram_For_String(program,parameter,result,10000);
   result.Remove('\r');
   result = result.Trim('\n');
-  ::MessageBox(GetSafeHwnd(),result,"Restart IIS",MB_OK | MB_ICONINFORMATION);
+  ::MessageBox(GetSafeHwnd(),result,_T("Restart IIS"),MB_OK | MB_ICONINFORMATION);
 }
 
 void
@@ -677,14 +677,14 @@ ServerAppletDlg::IISStart()
   CWaitCursor takeADeepSigh;
   XString program;
 
-  program.GetEnvironmentVariable("windir");
-  program += "\\system32\\iisreset.exe";
-  XString parameter("/start");
+  program.GetEnvironmentVariable(_T("windir"));
+  program += _T("\\system32\\iisreset.exe");
+  XString parameter(_T("/start"));
   XString result;
   CallProgram_For_String(program,parameter,result,10000);
   result.Remove('\r');
-  result = result.TrimLeft("\n");
-  ::MessageBox(GetSafeHwnd(),result,"Start IIS",MB_OK | MB_ICONINFORMATION);
+  result = result.TrimLeft(_T("\n"));
+  ::MessageBox(GetSafeHwnd(),result,_T("Start IIS"),MB_OK | MB_ICONINFORMATION);
 }
 
 void
@@ -693,14 +693,14 @@ ServerAppletDlg::IISStop()
   CWaitCursor takeADeepSigh;
   XString program;
 
-  program.GetEnvironmentVariable("windir");
-  program += "\\system32\\iisreset.exe";
-  XString parameter("/stop");
+  program.GetEnvironmentVariable(_T("windir"));
+  program += _T("\\system32\\iisreset.exe");
+  XString parameter(_T("/stop"));
   XString result;
   CallProgram_For_String(program,parameter,result,10000);
   result.Remove('\r');
-  result = result.TrimLeft("\n");
-  ::MessageBox(GetSafeHwnd(),result,"Stop IIS",MB_OK | MB_ICONINFORMATION);
+  result = result.TrimLeft(_T("\n"));
+  ::MessageBox(GetSafeHwnd(),result,_T("Stop IIS"),MB_OK | MB_ICONINFORMATION);
 }
 
 void

@@ -76,7 +76,7 @@ SiteHandlerHead::PostHandle(HTTPMessage* p_message)
     // send our answer straight away
     p_message->SetCommand(HTTPCommand::http_response);
     m_site->SendResponse(p_message);
-    SITE_DETAILLOGS("Answered a HEAD message from: ",SocketToServer(p_message->GetSender()));
+    SITE_DETAILLOGS(_T("Answered a HEAD message from: "),SocketToServer(p_message->GetSender()));
   }
 }
 

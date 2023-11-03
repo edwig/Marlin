@@ -42,10 +42,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define ERRORLOG(code,text)       ErrorLog (__FUNCTION__,code,text)
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
+#define ERRORLOG(code,text)       ErrorLog(_T(__FUNCTION__),code,text)
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -182,7 +182,7 @@ WebSocket::SetFragmentSize(ULONG p_fragment)
   }
   m_fragmentsize = p_fragment;
 
-  DETAILLOGV("WebSocket TCP/IP fragment size set to: %d",m_fragmentsize);
+  DETAILLOGV(_T("WebSocket TCP/IP fragment size set to: %d"),m_fragmentsize);
 }
 
 void
@@ -198,7 +198,7 @@ WebSocket::SetKeepalive(unsigned p_miliseconds)
   }
   m_keepalive = p_miliseconds;
   
-  DETAILLOGV("WebSocket keep-alive time set to: %d",m_keepalive);
+  DETAILLOGV(_T("WebSocket keep-alive time set to: %d"),m_keepalive);
 }
 
 void
@@ -214,7 +214,7 @@ WebSocket::SetClosingTimeout(unsigned p_timeout)
   }
   m_closingTimeout = p_timeout;
 
-  DETAILLOGV("WebSocket closing timeout set to: %d",m_closingTimeout);
+  DETAILLOGV(_T("WebSocket closing timeout set to: %d"),m_closingTimeout);
 }
 
 // Add a URI parameter
@@ -253,21 +253,21 @@ WebSocket::GetClosingErrorAsString()
   XString reason;
   switch(m_closingError)
   {
-    case 0:                   reason = "Unknown closing reason";                      break;
-    case WS_CLOSE_NORMAL:     reason = "Normal closing of the connection";            break;
-    case WS_CLOSE_GOINGAWAY:  reason = "Going away. Closing webpage/application";     break;
-    case WS_CLOSE_BYERROR:    reason = "Closing due to protocol error";               break;
-    case WS_CLOSE_TERMINATE:  reason = "Terminating (unacceptable data)";             break;
-    case WS_CLOSE_RESERVED:   reason = "Reserved for future use";                     break;
-    case WS_CLOSE_NOCLOSE:    reason = "Internal error (no closing frame received)";  break;
-    case WS_CLOSE_ABNORMAL:   reason = "No closing frame, TCP/IP error";              break;
-    case WS_CLOSE_DATA:       reason = "Abnormal data(no UTF-8 in UTF-8 frame";       break;
-    case WS_CLOSE_POLICY:     reason = "Policy error, or extension error";            break;
-    case WS_CLOSE_TOOBIG:     reason = "Message is too big to handle";                break;
-    case WS_CLOSE_NOEXTENSION:reason = "Not one of the expected extensions";          break;
-    case WS_CLOSE_CONDITION:  reason = "Internal server error";                       break;
-    case WS_CLOSE_SECURE:     reason = "TLS handshake error (do not send!)";          break;
-    default:                  reason = "Application defined closing number";          break;
+    case 0:                   reason = _T("Unknown closing reason");                      break;
+    case WS_CLOSE_NORMAL:     reason = _T("Normal closing of the connection");            break;
+    case WS_CLOSE_GOINGAWAY:  reason = _T("Going away. Closing webpage/application");     break;
+    case WS_CLOSE_BYERROR:    reason = _T("Closing due to protocol error");               break;
+    case WS_CLOSE_TERMINATE:  reason = _T("Terminating (unacceptable data)");             break;
+    case WS_CLOSE_RESERVED:   reason = _T("Reserved for future use");                     break;
+    case WS_CLOSE_NOCLOSE:    reason = _T("Internal error (no closing frame received)");  break;
+    case WS_CLOSE_ABNORMAL:   reason = _T("No closing frame, TCP/IP error");              break;
+    case WS_CLOSE_DATA:       reason = _T("Abnormal data(no UTF-8 in UTF-8 frame");       break;
+    case WS_CLOSE_POLICY:     reason = _T("Policy error, or extension error");            break;
+    case WS_CLOSE_TOOBIG:     reason = _T("Message is too big to handle");                break;
+    case WS_CLOSE_NOEXTENSION:reason = _T("Not one of the expected extensions");          break;
+    case WS_CLOSE_CONDITION:  reason = _T("Internal server error");                       break;
+    case WS_CLOSE_SECURE:     reason = _T("TLS handshake error (do not send!)");          break;
+    default:                  reason = _T("Application defined closing number");          break;
   }
   return reason;
 }
@@ -279,7 +279,7 @@ WebSocket::GetClosingErrorAsString()
 //////////////////////////////////////////////////////////////////////////
 
 void
-WebSocket::DetailLog(const char* p_function,LogType p_type,const char* p_text)
+WebSocket::DetailLog(LPCTSTR p_function,LogType p_type,LPCTSTR p_text)
 {
   if(MUSTLOG(HLL_LOGGING) && m_logfile)
   {
@@ -288,19 +288,19 @@ WebSocket::DetailLog(const char* p_function,LogType p_type,const char* p_text)
 }
 
 void
-WebSocket::DetailLogS(const char* p_function,LogType p_type,const char* p_text,const char* p_extra)
+WebSocket::DetailLogS(LPCTSTR p_function,LogType p_type,LPCTSTR p_text,LPCTSTR p_extra)
 {
   if(MUSTLOG(HLL_LOGGING) && m_logfile)
   {
     XString text(p_text);
     text += p_extra;
 
-    m_logfile->AnalysisLog(p_function,p_type,false,text);
+    m_logfile->AnalysisLog(p_function,p_type,false,text.GetString());
   }
 }
 
 void
-WebSocket::DetailLogV(const char* p_function,LogType p_type,const char* p_text,...)
+WebSocket::DetailLogV(LPCTSTR p_function,LogType p_type,LPCTSTR p_text,...)
 {
   if(MUSTLOG(HLL_LOGGING) && m_logfile)
   {
@@ -316,19 +316,19 @@ WebSocket::DetailLogV(const char* p_function,LogType p_type,const char* p_text,.
 
 // Error logging to the log file
 void
-WebSocket::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
+WebSocket::ErrorLog(LPCTSTR p_function,DWORD p_code,XString p_text)
 {
   bool result = false;
 
   if(m_logfile)
   {
-    p_text.AppendFormat(" Error [%d] %s",p_code,GetLastErrorAsString(p_code).GetString());
+    p_text.AppendFormat(_T(" Error [%d] %s"),p_code,GetLastErrorAsString(p_code).GetString());
     result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,p_text);
 
     WSFrame* frame  = new WSFrame();
-    frame->m_data   = reinterpret_cast<BYTE*>(_strdup(p_text.GetString()));
+    frame->m_data   = reinterpret_cast<BYTE*>(_tcsdup(p_text.GetString()));
     frame->m_length = p_text.GetLength();
-    frame->m_utf8   = true;
+    frame->m_utf8   = false;  // Internal CString copy
     frame->m_final  = true;
     
     // Store frame and call onError handler
@@ -340,7 +340,7 @@ WebSocket::ErrorLog(const char* p_function,DWORD p_code,XString p_text)
   if(!result)
   {
     // What can we do? As a last result: print debug pane
-    SvcReportErrorEvent(0,true,__FUNCTION__,"%s Error [%d] %s\n",MARLIN_SERVER_VERSION,p_code,p_text.GetString());
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("%s Error [%d] %s\n"),_T(MARLIN_SERVER_VERSION),p_code,p_text.GetString());
   }
 }
 
@@ -357,7 +357,7 @@ WebSocket::OnOpen()
   WSFrame frame;
   if(m_onopen)
   {
-    DETAILLOGV("WebSocket OnOpen called for [%s] on [%s]",m_key.GetString(),m_uri.GetString());
+    DETAILLOGV(_T("WebSocket OnOpen called for [%s] on [%s]"),m_key.GetString(),m_uri.GetString());
     try
     {
       (*m_onopen)(this,&frame);
@@ -389,7 +389,7 @@ WebSocket::OnMessage()
     }
     else
     {
-      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost WSFrame message data");
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame message data"));
     }
     delete frame;
   }
@@ -415,7 +415,7 @@ WebSocket::OnBinary()
     }
     else
     {
-      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost WSFrame binary data");
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame binary data"));
     }
     delete frame;
   }
@@ -470,7 +470,7 @@ WebSocket::OnClose()
     if(m_onclose && (m_openReading || m_openWriting))
     {
       WSFrame empty;
-      DETAILLOGV("WebSocket OnClose called for [%s] on [%s] ", m_key.GetString(), m_uri.GetString());
+      DETAILLOGV(_T("WebSocket OnClose called for [%s] on [%s] "), m_key.GetString(), m_uri.GetString());
       try
       {
         (*m_onclose)(this,&empty);
@@ -496,60 +496,57 @@ WebSocket::OnClose()
 bool 
 WebSocket::WriteString(XString p_string)
 {
-  XString encoded;
-  // Now encode MBCS to UTF-8
-  uchar* buffer = nullptr;
-  int    length = 0;
-  bool   result = false;
+  // Now encode MBCS/Unicode to UTF-8
+  bool result = false;
 
-  DETAILLOGV("Outgoing message on WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
+  DETAILLOGV(_T("Outgoing message on WebSocket [%s] on [%s]"),m_key.GetString(),m_uri.GetString());
   if(MUSTLOG(HLL_LOGBODY))
   {
     DETAILLOG1(p_string);
   }
 
-  if(TryCreateWideString(p_string,"",false,&buffer,length))
+#ifdef UNICODE
+  AutoCSTR string(p_string);
+  BYTE* pointer = (BYTE*) string.cstr();
+  DWORD toSend  = string.size();
+#else
+  XString encoded = EncodeStringForTheWire(p_string);
+  DWORD toSend    = encoded.GetLength();
+  BYTE* pointer   = (BYTE*) encoded.GetString();
+#endif
+
+  if(MUSTLOG(HLL_TRACEDUMP))
   {
-    bool foundBom = false;
-    if(TryConvertWideString(buffer,length,"utf-8",encoded,foundBom))
+    m_logfile->AnalysisHex(_T(__FUNCTION__),m_key,(void*)pointer,toSend);
+  }
+
+  // Go send it in fragments
+  DWORD total = 0;
+  do
+  {
+    // Calculate the length of the next fragment
+    bool last = true;
+    DWORD toWrite = toSend - total;
+    if(toWrite >= m_fragmentsize)
     {
-      DWORD toSend  = encoded.GetLength();
-      DWORD total   = 0;
-      BYTE* pointer = reinterpret_cast<BYTE*>(const_cast<char*>(encoded.GetString()));
-
-      if(MUSTLOG(HLL_TRACEDUMP))
-      {
-        m_logfile->AnalysisHex(__FUNCTION__,m_key,reinterpret_cast<void*>(pointer),toSend);
-      }
-  
-      do
-      {
-        // Calculate the length of the next fragment
-        bool last = true;
-        DWORD toWrite = toSend - total;
-        if(toWrite >= m_fragmentsize)
-        {
-          toWrite = m_fragmentsize;
-          last    = false;
-        }
-
-        // Sent out the next fragment
-        if(!WriteFragment(&pointer[total],toWrite,Opcode::SO_UTF8,last))
-        {
-          break;
-        }
-        // Bookkeeping of the total amount of sent bytes
-        total += toWrite;
-      }
-      while(total < toSend);
-
-      // Check that we send ALL
-      if(total >= toSend)
-      {
-        result = true;
-      }
+      toWrite = m_fragmentsize;
+      last    = false;
     }
-    delete [] buffer;
+
+    // Sent out the next fragment
+    if(!WriteFragment(&pointer[total],toWrite,Opcode::SO_UTF8,last))
+    {
+      break;
+    }
+    // Bookkeeping of the total amount of sent bytes
+    total += toWrite;
+  }
+  while(total < toSend);
+
+  // Check that we send ALL
+  if(total >= toSend)
+  {
+    result = true;
   }
   return result;
 }
@@ -634,44 +631,41 @@ WebSocket::StoreWSFrame(WSFrame*& p_frame)
 void
 WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
 {
-  // Convert UTF-8 back to MBCS
-  uchar*  buffer_utf8 = nullptr;
-  int     length_utf8 = 0;
-  XString input(p_frame->m_data);
-
-  DETAILLOGV("Incoming message on WebSocket [%s] on [%s]",m_key.GetString(),m_uri.GetString());
+  DETAILLOGV(_T("Incoming message on WebSocket [%s] on [%s]"),m_key.GetString(),m_uri.GetString());
   if(MUSTLOG(HLL_TRACEDUMP))
   {
     // This is what we get from 'the wire'
-    m_logfile->AnalysisHex(__FUNCTION__,m_uri,p_frame->m_data,p_frame->m_length);
+    m_logfile->AnalysisHex(_T(__FUNCTION__),m_uri,p_frame->m_data,p_frame->m_length);
   }
 
-  if(TryCreateWideString(input,"utf-8",false,&buffer_utf8,length_utf8))
+  // Convert UTF-8 back to MBCS/Unicode
+#ifdef UNICODE
+  XString encoded;
+  bool foundBom(false);
+  TryConvertNarrowString(p_frame->m_data,p_frame->m_length,_T("utf-8"),encoded,foundBom);
+#else
+  XString input(p_frame->m_data);
+  XString encoded = DecodeStringFromTheWire(input);
+#endif
+  size_t len = encoded.GetLength();
+  BYTE* data = reinterpret_cast<BYTE*>(realloc(p_frame->m_data,(len + 2) * sizeof(TCHAR)));
+  if(data)
   {
-    XString encoded;
-    bool foundBom = false;
-    if(TryConvertWideString(buffer_utf8,length_utf8,"",encoded,foundBom))
-    {
-      int len = encoded.GetLength() + 1;
-      BYTE* data = reinterpret_cast<BYTE*>(realloc(p_frame->m_data,len));
-      if(data)
-      {
-        p_frame->m_data = data;
-        strcpy_s(reinterpret_cast<char*>(p_frame->m_data),len,encoded.GetString());
-      }
-      else
-      {
-        // Out of memory
-        ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"While receiving UTF-8 block");
-      }
-    }
+    p_frame->m_data = data;
+    _tcsncpy_s((LPTSTR)p_frame->m_data,len + 2,(LPCTSTR)encoded.GetString(),len);
+    p_frame->m_data[len * sizeof(TCHAR)    ] = 0;
+    p_frame->m_data[len * sizeof(TCHAR) + 1] = 0;
   }
-  delete [] buffer_utf8;
+  else
+  {
+    // Out of memory
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("While receiving UTF-8 block"));
+  }
 
   // This is the data, as we interpret it in MBCS
   if(MUSTLOG(HLL_LOGBODY))
   {
-    DETAILLOG1(reinterpret_cast<char*>(p_frame->m_data));
+    DETAILLOG1(reinterpret_cast<TCHAR*>(p_frame->m_data));
   }
 }
 
@@ -696,10 +690,21 @@ WebSocket::ServerHandshake(HTTPMessage* /*p_message*/)
 XString
 WebSocket::ServerAcceptKey(XString p_clientKey)
 {
-  // Step 1: Append WebSocket GUID. See RFC 6455. It's hard coded!!
-  XString key = p_clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-
-  // Step 2: Take the SHA1 hash of the resulting string
   Crypto crypt;
+  crypt.SetDigestBase64(true);
+
+  // Step 1: Append WebSocket GUID. See RFC 6455. It's hard coded!!
+  XString key = p_clientKey + _T("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+
+#ifdef UNICODE
+  BYTE* buffer = nullptr;
+  int   length = 0;
+  TryCreateNarrowString(key,_T(""),false,&buffer,length);
+  XString result = crypt.Digest(buffer,length,CALG_SHA1);
+  delete[] buffer;
+  return result;
+#else
+  // Step 2: Take the SHA1 hash of the resulting string
   return crypt.Digest(key.GetString(),(size_t) key.GetLength(),CALG_SHA1);
+#endif
 }

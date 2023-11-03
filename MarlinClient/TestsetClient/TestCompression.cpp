@@ -40,19 +40,19 @@ int TestChunkedTransfer(HTTPClient* p_client)
   int errors = 0;
 
   XString url;
-  // url = "http://anglesharp.azurewebsites.net/Chunked";
-  // url = "https://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.1693287678408546";
-  // url = "https://jigsaw.w3.org/HTTP/ChunkedScript";
-  url.Format("http://%s:%d/MarlinTest/Chunking/Releasenotes.txt",MARLIN_HOST,TESTING_HTTP_PORT);
+  // url = _T("http://anglesharp.azurewebsites.net/Chunked");
+  // url = _T("https://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.1693287678408546");
+  // url = _T("https://jigsaw.w3.org/HTTP/ChunkedScript");
+  url.Format(_T("http://%s:%d/MarlinTest/Chunking/Releasenotes.txt"),MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_get,url);
 
   bool result = p_client->Send(&msg);
 
   if(result)
   {
-    xprintf("Chunked result OK");
+    xprintf(_T("Chunked result OK"));
     // Saving a double copy of our latest releasenotes as a test.
-    XString filename("C:\\TMP\\CHRelNotes.txt");
+    XString filename(_T("C:\\TMP\\CHRelNotes.txt"));
     msg.GetFileBuffer()->SetFileName(filename);
     msg.GetFileBuffer()->WriteFile();
   }
@@ -62,7 +62,7 @@ int TestChunkedTransfer(HTTPClient* p_client)
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Testing to receive chunked input in HTTPClient : %s\n", errors ? "ERROR" : "OK");
+  _tprintf(_T("Testing to receive chunked input in HTTPClient : %s\n"), errors ? _T("ERROR") : _T("OK"));
 
   return errors;
 }
@@ -70,12 +70,12 @@ int TestChunkedTransfer(HTTPClient* p_client)
 int TestCompression(HTTPClient* p_client)
 {
   XString url;
-  url.Format("http://%s:%d/MarlinTest/Compression/Releasenotes_v1.txt",MARLIN_HOST,TESTING_HTTP_PORT);
+  url.Format(_T("http://%s:%d/MarlinTest/Compression/Releasenotes_v1.txt"),MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_get,url);
-  msg.SetContentType("text/plain");
+  msg.SetContentType(_T("text/plain"));
 
-  xprintf("TESTING HTTP COMPRESSION GZIP FUNCTION TO /MarlinTest/Compression/\n");
-  xprintf("==================================================================\n");
+  xprintf(_T("TESTING HTTP COMPRESSION GZIP FUNCTION TO /MarlinTest/Compression/\n"));
+  xprintf(_T("==================================================================\n"));
 
   // Set the compression mode
   p_client->SetHTTPCompression(true);
@@ -86,18 +86,18 @@ int TestCompression(HTTPClient* p_client)
   if(!result)
   {
     // --- "---------------------------------------------- - ------
-    xprintf("ERROR Client received status: %d\n",p_client->GetStatus());
-    xprintf("ERROR %s\n",p_client->GetStatusText().GetString());
+    xprintf(_T("ERROR Client received status: %d\n"),p_client->GetStatus());
+    xprintf(_T("ERROR %s\n"),p_client->GetStatusText().GetString());
   }
   else
   {
-    XString filename("CanBeDeleted.txt");
+    XString filename(_T("CanBeDeleted.txt"));
     msg.GetFileBuffer()->SetFileName(filename);
     msg.GetFileBuffer()->WriteFile();
   }
   // SUMMARY OF THE TEST
   // --- "---------------------------------------------- - ------
-  printf("Send: File gotten with gzip compression        : %s\n",result ? "OK" : "ERROR");
+  _tprintf(_T("Send: File gotten with gzip compression        : %s\n"),result ? _T("OK") : _T("ERROR"));
 
   // Reset the compression mode
   p_client->SetHTTPCompression(false);

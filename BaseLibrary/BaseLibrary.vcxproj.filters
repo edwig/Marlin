@@ -78,7 +78,7 @@
     <ClInclude Include="CrackURL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DefuseBOM.h">
+    <ClInclude Include="Encoding.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Namespace.h">
@@ -282,6 +282,9 @@
     <ClInclude Include="Environment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ServiceQuality.h">
+      <Filter>Header Files\HTTP_JSON</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bcd.cpp">
@@ -321,9 +324,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CrackURL.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DefuseBOM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Namespace.cpp">
@@ -496,6 +496,9 @@
     </ClCompile>
     <ClCompile Include="Environment.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceQuality.cpp">
+      <Filter>Source Files\HTTP_JSON</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

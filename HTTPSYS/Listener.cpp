@@ -17,6 +17,7 @@
 #include "UrlGroup.h"
 #include "SSLUtilities.h"
 #include "Logging.h"
+#include <LogAnalysis.h>
 
 #include <process.h>
 #include <strsafe.h>
@@ -86,7 +87,7 @@ UINT __cdecl Listener::Worker(void* p_argument)
 	Request*  request = reinterpret_cast<Request*>(p_argument);
   Listener* listener = request->GetListener();
 
-	SetThreadName("Request worker");
+	SetThreadName(_T("Request worker"));
 
   // Doing our work
   InterlockedIncrement(&listener->m_workerThreadCount);
@@ -102,7 +103,7 @@ UINT __cdecl Listener::ListenerWorker(LPVOID p_param)
   // See _beginthread call for parameter definition
 	Listener* listener = reinterpret_cast<Listener *>(p_param); 
 
-	SetThreadName("HTTPListener");
+	SetThreadName(_T("HTTPListener"));
 
   listener->Listen();
 	return 0;
@@ -113,7 +114,7 @@ ErrorType
 Listener::Initialize(int p_tcpListenPort)
 {
 	CString portText;
-	portText.Format("%i",p_tcpListenPort);
+	portText.Format(_T("%i"),p_tcpListenPort);
 
 	// Get list of addresses to listen on
 	ADDRINFOT Hints, *AddrInfo, *AI;
@@ -123,7 +124,7 @@ Listener::Initialize(int p_tcpListenPort)
 	Hints.ai_flags    = AI_NUMERICHOST | AI_PASSIVE;
 	if (GetAddrInfo(nullptr,portText,&Hints,&AddrInfo) != 0)
 	{
-    LogError("Error getaddressinfo: %d",GetLastError());
+    LogError(_T("Error getaddressinfo: %d"),GetLastError());
 		return UnknownError;
 	}
 
@@ -215,7 +216,7 @@ void Listener::Listen(void)
 
   m_workerThreadCount = 0;
 
-	DebugMsg("Start Listener::Listen method");
+	DebugMsg(_T("Start Listener::Listen method"));
 
 	events[0] = m_stopEvent;
 
@@ -231,7 +232,7 @@ void Listener::Listen(void)
 		wait = WaitForMultipleObjects(m_numListenSockets+1,events,false,INFINITE);
 		if(wait == WAIT_OBJECT_0)
 		{
-			DebugMsg("Listener::Listen received a stop event");
+			DebugMsg(_T("Listener::Listen received a stop event"));
 			break;
 		}
 		int iMyIndex = wait-1;
@@ -240,14 +241,14 @@ void Listener::Listen(void)
 		readSocket = accept(m_listenSockets[iMyIndex], 0, 0);
 		if (readSocket == INVALID_SOCKET)
 		{
-			LogError("Accept: readSocket == INVALID_SOCKET");
+			LogError(_T("Accept: readSocket == INVALID_SOCKET"));
 			break;
 		}
 
 		// A request to open a socket has been received, begin a thread to handle that connection.
     // Secure connections can take long to establish because of the handshaking, 
     // so we offload it to an extra thread to do the job.
-		DebugMsg("Starting request worker");
+		DebugMsg(_T("Starting request worker"));
     Request* request = new Request(m_queue,this,readSocket,events[0]);
     AfxBeginThread(Worker,request);
   }
@@ -258,7 +259,7 @@ void Listener::Listen(void)
 	{
 		m_workerThreadLock.Unlock();
 		Sleep(100);
-		DebugMsg("Waiting for all workers to terminate: worker thread count = %i", m_workerThreadCount);
+		DebugMsg(_T("Waiting for all workers to terminate: worker thread count = %i"), m_workerThreadCount);
 		m_workerThreadLock.Lock();
 	};
 
@@ -266,5 +267,5 @@ void Listener::Listen(void)
   {
     closesocket(readSocket);
   }
-	DebugMsg("End Listen method");
+	DebugMsg(_T("End Listen method"));
 }

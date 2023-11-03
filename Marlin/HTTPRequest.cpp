@@ -44,11 +44,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLog (__FUNCTION__,LogType::LOG_INFO,text); }
-#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogS(__FUNCTION__,LogType::LOG_INFO,text,extra); }
-#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_INFO,text,__VA_ARGS__); }
-#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(__FUNCTION__,LogType::LOG_WARN,text,__VA_ARGS__); }
-#define ERRORLOG(code,text)       if(MUSTLOG(HLL_ERRORS)  && m_server) { m_server->ErrorLog  (__FUNCTION__,(code),(text)); }
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
+#define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
+#define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
+#define WARNINGLOG(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__); }
+#define ERRORLOG(code,text)       if(MUSTLOG(HLL_ERRORS)  && m_server) { m_server->ErrorLog  (_T(__FUNCTION__),(code),(text)); }
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -125,13 +125,17 @@ HTTPRequest::ClearMemory()
   }
   if(m_sendBuffer)
   {
-    free(m_sendBuffer);
+    delete[] m_sendBuffer;
     m_sendBuffer = nullptr;
   }
   if(m_unknown)
   {
     free(m_unknown);
     m_unknown = nullptr;
+  }
+  for(auto& str : m_strings)
+  {
+    delete[] str;
   }
   m_strings.clear();
 }
@@ -166,7 +170,7 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
     case IO_StartStream:StartedStream();    break;
     case IO_WriteStream:SendStreamPart();   break;
     case IO_Cancel:     Finalize();         break;
-    default:            ERRORLOG(ERROR_INVALID_PARAMETER,"Unexpected outstanding async I/O");
+    default:            ERRORLOG(ERROR_INVALID_PARAMETER,_T("Unexpected outstanding async I/O"));
   }
 }
 
@@ -187,7 +191,7 @@ HTTPRequest::StartRequest()
   if(!m_request)
   {
     // Error to the server log
-    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Starting new HTTP Request");
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Starting new HTTP Request"));
     Finalize();
     return;
   }
@@ -210,7 +214,7 @@ HTTPRequest::StartRequest()
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
     // Error to the server log
-    ERRORLOG(result,"Starting new HTTP Request");
+    ERRORLOG(result,_T("Starting new HTTP Request"));
     Finalize();
   }
   else
@@ -249,7 +253,7 @@ HTTPRequest::ReceivedRequest()
   // Check server pointer
   if(m_server == nullptr)
   {
-    SvcReportErrorEvent(0,false,__FUNCTION__,"FATAL ERROR: No server when receiving HTTP request!");
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("FATAL ERROR: No server when receiving HTTP request!"));
     return;
   }
   HANDLE accessToken = nullptr;
@@ -262,14 +266,14 @@ HTTPRequest::ReceivedRequest()
      (!m_server->GetIsRunning()))
   {
     // Server stopped by closing server handles
-    DETAILLOG1("HTTP Server stopped in mainloop");
+    DETAILLOG1(_T("HTTP Server stopped in mainloop"));
     Finalize();
     return;
   }
   // Catch ABNORMAL abortion status
   if(result != 0)
   {
-    ERRORLOG(result,"Error receiving a HTTP request in mainloop");
+    ERRORLOG(result,_T("Error receiving a HTTP request in mainloop"));
     Finalize();
     return;
   }
@@ -278,41 +282,49 @@ HTTPRequest::ReceivedRequest()
   m_requestID = m_request->RequestId;
 
   // Grab the senders content
-  XString   acceptTypes     = m_request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue;
-  XString   contentType     = m_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue;
-  XString   contentLength   = m_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue;
-  XString   acceptEncoding  = m_request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue;
-  XString   cookie          = m_request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue;
-  XString   authorize       = m_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue;
-  XString   modified        = m_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue;
-  XString   referrer        = m_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue;
+  XString   acceptTypes     = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue);
+  XString   contentType     = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue);
+  XString   contentLength   = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderContentLength  ].pRawValue);
+  XString   acceptEncoding  = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderAcceptEncoding ].pRawValue);
+  XString   cookie          = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderCookie         ].pRawValue);
+  XString   authorize       = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderAuthorization  ].pRawValue);
+  XString   modified        = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderIfModifiedSince].pRawValue);
+  XString   referrer        = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderReferer        ].pRawValue);
   XString   rawUrl          = WStringToString(m_request->CookedUrl.pFullUrl);
   PSOCKADDR sender          = m_request->Address.pRemoteAddress;
   PSOCKADDR receiver        = m_request->Address.pLocalAddress;
   int       remDesktop      = m_server->FindRemoteDesktop(m_request->Headers.UnknownHeaderCount
                                                          ,m_request->Headers.pUnknownHeaders);
-  size_t    contentLen      = (size_t)atoll(contentLength);
+  size_t    contentLen      = (size_t)_ttoll(contentLength);
+
+  // Our charset
+  XString charset;
+  bool utf16(false);
 
   // If positive request ID received
   if(m_requestID)
   {
     // Log earliest as possible
-    DETAILLOGV("Received HTTP call from [%s] with length: %I64u"
+    DETAILLOGV(_T("Received HTTP call from [%s] with length: %I64u")
                ,SocketToServer((PSOCKADDR_IN6) sender).GetString()
                ,m_request->BytesReceived);
 
     // Log incoming request
-    DETAILLOGS("Got a request for: ",rawUrl);
+    DETAILLOGS(_T("Got a request for: "),rawUrl);
+
+    // Find our charset
+    charset = FindCharsetInContentType(contentType);
+    utf16   = charset.CompareNoCase(_T("utf-16")) == 0;
 
     // Trace the request in full
     if(m_server)
     {
-      m_server->LogTraceRequest(m_request,nullptr);
+      m_server->LogTraceRequest(m_request,nullptr,utf16);
     }
   }
 
   // Recording expected content length
-  m_expect = atol(contentLength);
+  m_expect = _ttol(contentLength);
 
   // FInding the site
   bool eventStream = false;
@@ -389,7 +401,7 @@ HTTPRequest::ReceivedRequest()
   // Receiving the initiation of an event stream for the server
   acceptTypes.Trim();
   EventStream* stream = nullptr;
-  if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase("text/event-stream") == 0))
+  if((type == HTTPCommand::http_get) && (eventStream || acceptTypes.Left(17).CompareNoCase(_T("text/event-stream")) == 0))
   {
     XString absolutePath = WStringToString(m_request->CookedUrl.pAbsPath);
     if(m_server->CheckUnderDDOSAttack((PSOCKADDR_IN6)sender,absolutePath))
@@ -445,7 +457,7 @@ HTTPRequest::ReceivedRequest()
   {
     if(m_message->FindVerbTunneling())
     {
-      DETAILLOGV("Request VERB changed to: %s",m_message->GetVerb().GetString());
+      DETAILLOGV(_T("Request VERB changed to: %s"),m_message->GetVerb().GetString());
     }
   }
 
@@ -509,7 +521,7 @@ HTTPRequest::StartReceiveRequest()
   }
   else if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
-    ERRORLOG(result,"Error receiving HTTP request body");
+    ERRORLOG(result,_T("Error receiving HTTP request body"));
     Finalize();
   }
 }
@@ -544,8 +556,8 @@ HTTPRequest::ReceivedBodyPart()
   }
   else
   {
-    ERRORLOG(result,"Error receiving bodypart");
-    m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,"Server error");
+    ERRORLOG(result,_T("Error receiving bodypart"));
+    m_server->RespondWithServerError(m_message,HTTP_STATUS_SERVER_ERROR,_T("Server error"));
     Finalize();
     return;
   }
@@ -560,17 +572,17 @@ HTTPRequest::PostReceive()
   TRACE0("Post Receive\n");
 
   // Now also trace the request body of the message
-  m_server->LogTraceRequestBody(m_message->GetFileBuffer());
+  m_server->LogTraceRequestBody(m_message->GetFileBuffer(),m_message->GetSendUnicode());
 
   // In case of a POST, try to convert character set before submitting to site
   if(m_message->GetCommand() == HTTPCommand::http_post)
   {
-    if(m_message->GetContentType().Find("multipart") <= 0)
+    if(m_message->GetContentType().Find(_T("multipart")) <= 0)
     {
       m_server->HandleTextContent(m_message);
     }
   }
-  DETAILLOGV("Received %s message from: %s Size: %lu"
+  DETAILLOGV(_T("Received %s message from: %s Size: %lu")
              ,headers[(unsigned)m_message->GetCommand()]
              ,SocketToServer(m_message->GetSender()).GetString()
              ,m_message->GetBodyLength());
@@ -615,7 +627,7 @@ HTTPRequest::StartSendResponse()
 
   // Trace the principal response, before sending
   // Sometimes the async is so quick, we cannot trace it after the sending
-  m_server->LogTraceResponse(m_response,nullptr);
+  m_server->LogTraceResponse(m_response,nullptr,m_message->GetSendUnicode());
 
   // Send the response
   ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
@@ -634,12 +646,12 @@ HTTPRequest::StartSendResponse()
   // Check for error
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
-    ERRORLOG(result,"Sending HTTP Response");
+    ERRORLOG(result,_T("Sending HTTP Response"));
     Finalize();
   }
   else if(m_response->StatusCode == HTTP_STATUS_SWITCH_PROTOCOLS)
   {
-    DETAILLOG1("Upgrading WebSocket. Ready with HTTP protocol.");
+    DETAILLOG1(_T("Upgrading WebSocket. Ready with HTTP protocol."));
   }
 }
 
@@ -651,7 +663,7 @@ HTTPRequest::SendResponseBody()
   DWORD error = m_writing.Internal & 0x0FFFF;
   if(error)
   {
-    ERRORLOG(error,"Error sending HTTP headers");
+    ERRORLOG(error,_T("Error sending HTTP headers"));
     Finalize();
     return;
   }
@@ -731,7 +743,7 @@ HTTPRequest::SendResponseBody()
   // Check for error
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
-    ERRORLOG(result,"Sending response body part");
+    ERRORLOG(result,_T("Sending response body part"));
     m_responding = false;
     Finalize();
     return;
@@ -752,7 +764,7 @@ HTTPRequest::SendBodyPart()
   DWORD error = m_writing.Internal & 0x0FFFF;
   if(error)
   {
-    ERRORLOG(error,"While sending HTTP response part");
+    ERRORLOG(error,_T("While sending HTTP response part"));
   }
   else
   {
@@ -777,7 +789,7 @@ HTTPRequest::SendBodyPart()
       }
     }
     // Possibly log and trace what we just sent
-    m_server->LogTraceResponse(nullptr,filebuf);
+    m_server->LogTraceResponse(nullptr,filebuf,m_message->GetSendUnicode());
   }
 
   // Message is done. Break the connection with the HTTPRequest
@@ -803,28 +815,29 @@ HTTPRequest::StartEventStreamResponse()
   TRACE0("Start EventStream Response\n");
 
   // First comment to push to the stream (not an event!)
-  XString init = m_server->GetEventBOM() ? ConstructBOM() : XString();
-  init += ":init event-stream\n";
+  // Always UTF-8 compatible, so simple ANSI string
+  char* init = ":init event-stream\r\n\r\n";
+  int length = (int) strlen(init);
 
   // Initialize the HTTP response structure.
   FillResponse(HTTP_STATUS_OK,true);
 
   // Add a known header.
-  AddKnownHeader(HttpHeaderContentType,"text/event-stream");
+  AddKnownHeader(HttpHeaderContentType,_T("text/event-stream"));
 
   // Set init in the send buffer
   if(m_sendBuffer)
   {
-    free(m_sendBuffer);
+    delete[] m_sendBuffer;
   }
-  m_sendBuffer = reinterpret_cast<BYTE*>(malloc((size_t)init.GetLength() + 1));
-  memcpy_s(m_sendBuffer,(size_t)init.GetLength() + 1,init.GetString(),(size_t)init.GetLength() + 1);
+  m_sendBuffer = new BYTE[length + 1];
+  memcpy_s(m_sendBuffer,(size_t)(length  + 1),init,(size_t)length + 1);
 
   // Setup as a data-chunk info structure
   memset(&m_sendChunk,0,sizeof(HTTP_DATA_CHUNK));
   m_sendChunk.DataChunkType           = HttpDataChunkFromMemory;
   m_sendChunk.FromMemory.pBuffer      = m_sendBuffer;
-  m_sendChunk.FromMemory.BufferLength = (ULONG)init.GetLength();
+  m_sendChunk.FromMemory.BufferLength = (ULONG)length;
 
   // Prepare send buffer
   m_response->EntityChunkCount = 1;
@@ -852,17 +865,17 @@ HTTPRequest::StartEventStreamResponse()
                                       &m_writing,        // LPOVERLAPPED(OPTIONAL)
                                       nullptr);          // pReserved4  (must be NULL)
 
-  DETAILLOGV("HTTP Response %d %s",m_response->StatusCode,m_response->pReason);
+  DETAILLOGV(_T("HTTP Response %d %s"),m_response->StatusCode,m_response->pReason);
 
   // Check for error
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
-    ERRORLOG(result,"Sending HTTP Response for event stream");
+    ERRORLOG(result,_T("Sending HTTP Response for event stream"));
     Finalize();
   }
 
   // Log&Trace what we just send
-  m_server->LogTraceResponse(m_response,m_sendBuffer,init.GetLength());
+  m_server->LogTraceResponse(m_response,m_sendBuffer,length,false);
 }
 
 void
@@ -874,7 +887,7 @@ HTTPRequest::StartedStream()
   DWORD error = m_writing.Internal & 0x0FFFF;
   if(error)
   {
-    ERRORLOG(error,"While starting HTTP stream");
+    ERRORLOG(error,_T("While starting HTTP stream"));
     CancelRequest();
   }
   else
@@ -886,16 +899,16 @@ HTTPRequest::StartedStream()
 
 // Send a response stream buffer.
 void
-HTTPRequest::SendResponseStream(const char* p_buffer
-                               ,size_t      p_length
-                               ,bool        p_continue /*=true*/)
+HTTPRequest::SendResponseStream(BYTE*    p_buffer
+                               ,size_t   p_length
+                               ,bool     p_continue /*=true*/)
 {
   TRACE0("Send Response stream\n");
 
   // Check server pointer
   if(m_server == nullptr)
   {
-    SvcReportErrorEvent(0,false,__FUNCTION__,"FATAL ERROR: No server when sending HTTP response stream!");
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("FATAL ERROR: No server when sending HTTP response stream!"));
     return;
   }
 
@@ -910,31 +923,25 @@ HTTPRequest::SendResponseStream(const char* p_buffer
   // Default is that we continue sending
   ULONG flags = p_continue ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
 
-  // Set the send buffer
+  // Set the send buffer in UTF-8 format
   if(m_sendBuffer)
   {
-    free(m_sendBuffer);
+    delete[] m_sendBuffer;
   }
-  m_sendBuffer = reinterpret_cast<BYTE*>(malloc(p_length + 1));
-  if(!m_sendBuffer)
-  {
-    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,"Sending a HTTP answer");
-    m_responding = false;
-    return;
-  }
+  m_sendBuffer = new BYTE[p_length + 1];
   memcpy_s(m_sendBuffer,p_length + 1,p_buffer,p_length);
   m_sendBuffer[p_length] = 0;
 
   // Setup as a data-chunk info structure
   m_sendChunk.DataChunkType           = HttpDataChunkFromMemory;
   m_sendChunk.FromMemory.pBuffer      = m_sendBuffer;
-  m_sendChunk.FromMemory.BufferLength = (ULONG)p_length;
+  m_sendChunk.FromMemory.BufferLength = (ULONG) p_length;
 
-  DETAILLOGV("Stream part [%d] bytes to send",p_length);
+  DETAILLOGV(_T("Stream part [%d] bytes to send"),p_length);
   if(m_server)
   {
     USHORT chunkcount = 1;
-    m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length);
+    m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length,false);
     ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
                                               m_requestID,    // Our request
                                               flags,          // More/Last data
@@ -949,7 +956,7 @@ HTTPRequest::SendResponseStream(const char* p_buffer
     // Check for error
     if(result != ERROR_IO_PENDING && result != NO_ERROR)
     {
-      ERRORLOG(result,"Sending stream part");
+      ERRORLOG(result,_T("Sending stream part"));
       m_responding = false;
       CancelRequest();
       return;
@@ -959,7 +966,7 @@ HTTPRequest::SendResponseStream(const char* p_buffer
       // Final closing of the connection
       if(p_continue == false)
       {
-        DETAILLOG1("Stream connection closed");
+        DETAILLOG1(_T("Stream connection closed"));
       }
     }
   }
@@ -976,7 +983,7 @@ HTTPRequest::SendStreamPart()
   DWORD error = m_writing.Internal & 0x0FFFF;
   if(error)
   {
-    ERRORLOG(error,"While sending HTTP stream part");
+    ERRORLOG(error,_T("While sending HTTP stream part"));
     CancelRequest();
   }
   else
@@ -984,7 +991,7 @@ HTTPRequest::SendStreamPart()
     // Free the last send buffer and continue to send
     if(m_sendBuffer)
     {
-      free(m_sendBuffer);
+      delete[] m_sendBuffer;
       m_sendBuffer = nullptr;
     }
   }
@@ -1036,7 +1043,7 @@ HTTPRequest::Finalize()
   // free the send buffer
   if(m_sendBuffer)
   {
-    free(m_sendBuffer);
+    delete[] m_sendBuffer;
     m_sendBuffer = nullptr;
   }
 
@@ -1058,6 +1065,10 @@ HTTPRequest::Finalize()
   }
 
   // Remove header strings
+  for(auto& str : m_strings)
+  {
+    delete[] str;
+  }
   m_strings.clear();
 
   // Reset parameters
@@ -1072,24 +1083,23 @@ HTTPRequest::Finalize()
 
 // Add a request string for a header
 void 
-HTTPRequest::AddRequestString(XString p_string,const char*& p_buffer,USHORT& p_size)
+HTTPRequest::AddRequestString(XString p_string,LPCSTR& p_buffer,USHORT& p_size)
 {
-  m_strings.push_back(p_string);
-  XString& string = m_strings.back();
-  p_buffer = string.GetString();
-  p_size   = (USHORT) string.GetLength();
+  p_size   = (USHORT) p_string.GetLength();
+  p_buffer = new char[p_size + 1];
+  m_strings.push_back(p_buffer);
 }
 
 // Add a well known HTTP header to the response structure
 void
-HTTPRequest::AddKnownHeader(HTTP_HEADER_ID p_header,const char* p_value)
+HTTPRequest::AddKnownHeader(HTTP_HEADER_ID p_header,LPCTSTR p_value)
 {
-  const char* str = nullptr;
+  LPCSTR str  = nullptr;
   USHORT size = 0;
 
   AddRequestString(p_value,str,size);
   m_response->Headers.KnownHeaders[p_header].pRawValue      = str;
-  m_response->Headers.KnownHeaders[p_header].RawValueLength = (USHORT)size;
+  m_response->Headers.KnownHeaders[p_header].RawValueLength = size;
 }
 
 void
@@ -1104,24 +1114,22 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
   }
   // Allocate some space
   m_unknown = (PHTTP_UNKNOWN_HEADER) malloc((1 + p_headers.size()) * sizeof(HTTP_UNKNOWN_HEADER));
-
-#pragma warning(disable: 6386)
-
-  unsigned ind = 0;
-  for(const auto& unknown : p_headers)
+  if(!m_unknown)
   {
-    const char* string = nullptr;
-    USHORT size = 0;
+    return;
+  }
+  unsigned ind = 0;
+  for(auto& header : p_headers)
+  {
+    AutoCSTR name(header.m_name);
+    header.m_nameStr = name.grab();
+    m_unknown[ind].NameLength = (USHORT) name.size();
+    m_unknown[ind].pName      = header.m_nameStr;
 
-    XString name = unknown.first;
-    AddRequestString(name,string,size);
-    m_unknown[ind].NameLength = size;
-    m_unknown[ind].pName      = string;
-
-    XString value = unknown.second;
-    AddRequestString(value,string,size);
-    m_unknown[ind].RawValueLength = size;
-    m_unknown[ind].pRawValue      = string;
+    AutoCSTR value(header.m_value);
+    header.m_valueStr = value.grab();
+    m_unknown[ind].RawValueLength = (USHORT) value.size();
+    m_unknown[ind].pRawValue      = header.m_valueStr;
 
     // next header
     ++ind;
@@ -1136,7 +1144,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // Check site pointer
   if(m_site == nullptr)
   {
-    SvcReportErrorEvent(0,false,__FUNCTION__,"FATAL ERROR: No site when filling in HTTP response!");
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("FATAL ERROR: No site when filling in HTTP response!"));
     return;
   }
 
@@ -1146,13 +1154,17 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     m_response = new HTTP_RESPONSE();
   }
   RtlZeroMemory(m_response,sizeof(HTTP_RESPONSE));
-  const char* text = GetHTTPStatusText(p_status);
+  XString text = GetHTTPStatusText(p_status);
+
+  PCSTR stext = nullptr;
+  USHORT size = 0;
+  AddRequestString(text,stext,size);
 
   m_response->Version.MajorVersion = 1;
   m_response->Version.MinorVersion = 1;
   m_response->StatusCode   = (USHORT)p_status;
-  m_response->pReason      = text;
-  m_response->ReasonLength = (USHORT)strlen(text);
+  m_response->pReason      = stext;
+  m_response->ReasonLength = size;
 
   // See if we are done (for event and socket streams)
   if(p_responseOnly)
@@ -1163,20 +1175,20 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // Add content type as a known header. (octet-stream or the message content type)
   if(p_status != HTTP_STATUS_SWITCH_PROTOCOLS)
   {
-    XString contentType("application/octet-stream");
+    XString contentType(_T("application/octet-stream"));
     if(!m_message->GetContentType().IsEmpty())
     {
       contentType = m_message->GetContentType();
     }
     else
     {
-      XString cttype = m_message->GetHeader("Content-type");
+      XString cttype = m_message->GetHeader(_T("Content-type"));
       if(!cttype.IsEmpty())
       {
         contentType = cttype;
       }
     }
-    m_message->DelHeader("Content-Type");
+    m_message->DelHeader(_T("Content-Type"));
     AddKnownHeader(HttpHeaderContentType, contentType);
   }
 
@@ -1186,7 +1198,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     if(!m_message->GetXMLHttpRequest())
     {
       // See if the message already has an authentication scheme header
-      XString challenge = m_message->GetHeader("AuthenticationScheme");
+      XString challenge = m_message->GetHeader(_T("AuthenticationScheme"));
       if(challenge.IsEmpty())
       {
         // Add authentication scheme
@@ -1205,17 +1217,17 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   {
     case SendHeader::HTTP_SH_MICROSOFT:   // Do nothing, Microsoft will add the server header
                                           break;
-    case SendHeader::HTTP_SH_MARLIN:      AddKnownHeader(HttpHeaderServer,MARLIN_SERVER_VERSION);
+    case SendHeader::HTTP_SH_MARLIN:      AddKnownHeader(HttpHeaderServer,_T(MARLIN_SERVER_VERSION));
                                           break;
     case SendHeader::HTTP_SH_APPLICATION: AddKnownHeader(HttpHeaderServer,m_server->GetName());
                                           break;
     case SendHeader::HTTP_SH_WEBCONFIG:   AddKnownHeader(HttpHeaderServer,m_server->GetConfiguredName());
                                           break;
     case SendHeader::HTTP_SH_HIDESERVER:  // Fill header with empty string will suppress it
-                                          AddKnownHeader(HttpHeaderServer,"");
+                                          AddKnownHeader(HttpHeaderServer,_T(""));
                                           break;
   }
-  m_message->DelHeader("Server");
+  m_message->DelHeader(_T("Server"));
 
   // Cookie settings
   bool cookiesHasSecure(false);
@@ -1258,7 +1270,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   Cookies& cookies = m_message->GetCookies();
   if(cookies.GetCookies().empty())
   {
-    XString cookie = m_message->GetHeader("Set-Cookie");
+    XString cookie = m_message->GetHeader(_T("Set-Cookie"));
     if(!cookie.IsEmpty())
     {
       AddKnownHeader(HttpHeaderSetCookie,cookie);
@@ -1283,13 +1295,13 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
         cookie.SetExpires(&current);
       }
 
-      ukheaders.insert(std::make_pair("Set-Cookie",cookie.GetSetCookieText()));
+      ukheaders.push_back(UKHeader(_T("Set-Cookie"),cookie.GetSetCookieText()));
     }
   }
-  m_message->DelHeader("Set-Cookie");
+  m_message->DelHeader(_T("Set-Cookie"));
 
   // Add extra headers from the message, except for content-length
-  m_message->DelHeader("Content-Length");
+  m_message->DelHeader(_T("Content-Length"));
 
   if(p_status == HTTP_STATUS_SWITCH_PROTOCOLS)
   {
@@ -1299,7 +1311,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   {
     for(auto& header : *m_message->GetHeaderMap())
     {
-      ukheaders.insert(std::make_pair(header.first, header.second));
+      ukheaders.push_back(UKHeader(header.first, header.second));
     }
   }
 
@@ -1311,12 +1323,12 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   if(m_site->GetHTTPCompression() && buffer)
   {
     // But only if the client side requested it
-    if(m_message->GetAcceptEncoding().Find("gzip") >= 0)
+    if(m_message->GetAcceptEncoding().Find(_T("gzip")) >= 0)
     {
       if(buffer->ZipBuffer())
       {
-        DETAILLOGV("GZIP the buffer to size: %lu",buffer->GetLength());
-        ukheaders.insert(std::make_pair("Content-Encoding","gzip"));
+        DETAILLOGV(_T("GZIP the buffer to size: %lu"),buffer->GetLength());
+        ukheaders.push_back(UKHeader(_T("Content-Encoding"),_T("gzip")));
       }
     }
   }
@@ -1345,7 +1357,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     }
     else
     {
-      ERRORLOG(GetLastError(),"OpenFile for sending a HTTP 'GET' response");
+      ERRORLOG(GetLastError(),_T("OpenFile for sending a HTTP 'GET' response"));
       m_response->StatusCode   = HTTP_STATUS_NOT_FOUND;
       m_response->pReason      = "File not found";
       m_response->ReasonLength = (USHORT) strlen(m_response->pReason);
@@ -1363,9 +1375,9 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
     // add the total content length in the form of the content-length header
     XString contentLength;
 #ifdef _WIN64
-    contentLength.Format("%I64u",totalLength);
+    contentLength.Format(_T("%I64u"),totalLength);
 #else
-    contentLength.Format("%lu",totalLength);
+    contentLength.Format(_T("%lu"),totalLength);
 #endif
     AddKnownHeader(HttpHeaderContentLength,contentLength);
   }
@@ -1374,18 +1386,24 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
 void
 HTTPRequest::FillResponseWebSocketHeaders(UKHeaders& p_headers)
 {
-  m_response->Headers.KnownHeaders[HttpHeaderConnection].pRawValue      =         m_message->GetHeader("Connection").GetString();
-  m_response->Headers.KnownHeaders[HttpHeaderConnection].RawValueLength = (USHORT)m_message->GetHeader("Connection").GetLength();
+  USHORT size = 0;
+  PCSTR text = nullptr;
 
-  m_response->Headers.KnownHeaders[HttpHeaderUpgrade].pRawValue         =         m_message->GetHeader("Upgrade").GetString();
-  m_response->Headers.KnownHeaders[HttpHeaderUpgrade].RawValueLength    = (USHORT)m_message->GetHeader("Upgrade").GetLength();
+  XString orgstring = m_message->GetHeader(_T("Connection"));
+  AddRequestString(orgstring,text,size);
+  m_response->Headers.KnownHeaders[HttpHeaderConnection].pRawValue      = text;
+  m_response->Headers.KnownHeaders[HttpHeaderConnection].RawValueLength = size;
 
+  orgstring = m_message->GetHeader(_T("Upgrade"));
+  AddRequestString(orgstring,text,size);
+  m_response->Headers.KnownHeaders[HttpHeaderUpgrade].pRawValue         = text;
+  m_response->Headers.KnownHeaders[HttpHeaderUpgrade].RawValueLength    = size;
 
   for(auto& header : *m_message->GetHeaderMap())
   {
-    if(header.first.CompareNoCase("Sec-WebSocket-Accept") == 0)
+    if(header.first.CompareNoCase(_T("Sec-WebSocket-Accept")) == 0)
     {
-      p_headers.insert(std::make_pair(header.first, header.second));
+      p_headers.push_back(UKHeader(header.first, header.second));
     }
   }
 }
@@ -1416,12 +1434,12 @@ HTTPRequest::CancelRequest()
     ULONG result = HttpCancelHttpRequest(m_server->GetRequestQueue(),m_requestID,&m_incoming);
     if(result == NO_ERROR)
     {
-      DETAILLOG1("Event stream connection closed");
+      DETAILLOG1(_T("Event stream connection closed"));
     }
     else if(result != ERROR_IO_PENDING && 
             result != ERROR_CONNECTION_INVALID)
     {
-      ERRORLOG(result,"Event stream incorrectly canceled");
+      ERRORLOG(result,_T("Event stream incorrectly canceled"));
     }
   }
   else

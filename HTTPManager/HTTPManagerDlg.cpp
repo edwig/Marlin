@@ -71,8 +71,8 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
   CWnd* w = GetDlgItem(IDC_VERSION);
   if(w)
   {
-    w->SetWindowText(MARLIN_SERVER_VERSION "\r\n"
-                     "Date: " MARLIN_VERSION_DATE );
+    w->SetWindowText(_T(MARLIN_SERVER_VERSION) _T("\r\n")
+                     _T("Date: ") _T(MARLIN_VERSION_DATE) );
   }
 }
 
@@ -140,7 +140,7 @@ void HTTPManagerDlg::DoDataExchange(CDataExchange* pDX)
     m_buttonDisconnect.EnableWindow(m_secure && !m_iis);
     m_buttonSecurity  .EnableWindow(m_secure);
 
-    XString prefix = "URL Prefix: " + CreateURLPrefix(m_binding,m_secure,m_port,m_absPath);
+    XString prefix = _T("URL Prefix: ") + CreateURLPrefix(m_binding,m_secure,m_port,m_absPath);
     m_editStatus.SetWindowText(prefix);
 
     m_editPortUpto.EnableWindow(m_doRange);
@@ -221,43 +221,43 @@ HTTPManagerDlg::OnInitDialog()
   SetVersion();
 
   // Protocol types
-  m_comboProtocol.AddString("http://");
-  m_comboProtocol.AddString("https://");
+  m_comboProtocol.AddString(_T("http://"));
+  m_comboProtocol.AddString(_T("https://"));
   m_comboProtocol.SetCurSel(0); 
   m_secure = false;
 
-  m_comboBinding.AddString("Strong (+)");
-  m_comboBinding.AddString("Short name");
-  m_comboBinding.AddString("Full DNS name");
-  m_comboBinding.AddString("IP address");
-  m_comboBinding.AddString("Weak (*)");
+  m_comboBinding.AddString(_T("Strong (+)"));
+  m_comboBinding.AddString(_T("Short name"));
+  m_comboBinding.AddString(_T("Full DNS name"));
+  m_comboBinding.AddString(_T("IP address"));
+  m_comboBinding.AddString(_T("Weak (*)"));
   m_comboBinding.SetCurSel(0);
   m_binding = PrefixType::URLPRE_Strong;
 
-  m_comboStore.AddString("TrustedPublisher");
-  m_comboStore.AddString("MY");
-  m_comboStore.AddString("AuthRoot");
-  m_comboStore.AddString("TrustedPeople");
-  m_comboStore.AddString("Root");
+  m_comboStore.AddString(_T("TrustedPublisher"));
+  m_comboStore.AddString(_T("MY"));
+  m_comboStore.AddString(_T("AuthRoot"));
+  m_comboStore.AddString(_T("TrustedPeople"));
+  m_comboStore.AddString(_T("Root"));
   m_comboStore.SetCurSel(0);
 
   m_buttonClientCert.SetCheck(FALSE);
 
   XString text;
-  text.Format("%d",m_port);
+  text.Format(_T("%d"),m_port);
   m_editPort.SetWindowText(text);
-  text.Format("%d",m_portUpto);
+  text.Format(_T("%d"),m_portUpto);
   m_editPortUpto.SetWindowText(text);
 
   // Do the IIS thing
   if(m_iis)
   {
     ConfigureForIIS();
-    SetWindowText("HTTP Manager (Mode: IIS)");
+    SetWindowText(_T("HTTP Manager (Mode: IIS)"));
   }
   else
   {
-    SetWindowText("HTTP Manager (Mode: Standalone)");
+    SetWindowText(_T("HTTP Manager (Mode: Standalone)"));
   }
 
   // Setting the values on screen
@@ -279,9 +279,9 @@ HTTPManagerDlg::SetVersion()
   {
     m_version = OSVERSIE_SERVER2003;
     ::MessageBox(GetSafeHwnd()
-               ,"HTTPManager is configured for 'Windows Server 2003' and will use HTTPCFG.EXE"
-                "BEWARE: You need to install httpcfg.exe on your system by hand!"
-               ,"Warning"
+               ,_T("HTTPManager is configured for 'Windows Server 2003' and will use HTTPCFG.EXE")
+                _T("BEWARE: You need to install httpcfg.exe on your system by hand!")
+               ,_T("Warning")
                ,MB_OK|MB_ICONWARNING);
   }
   else
@@ -302,9 +302,9 @@ HTTPManagerDlg::ConfigureForIIS()
   // Create URLACL reservation
   m_buttonCreate.EnableWindow(FALSE);
   // Server WEB.CONFIG
-  m_buttonWebConfig.SetWindowText("Server Marlin.Config");
+  m_buttonWebConfig.SetWindowText(_T("Server Marlin.Config"));
   // Site Web.Config
-  m_buttonSiteConfig.SetWindowText("Site Marlin.Config");
+  m_buttonSiteConfig.SetWindowText(_T("Site Marlin.Config"));
 }
 
 void 
@@ -360,18 +360,18 @@ HTTPManagerDlg::CheckPortRange()
     {
       m_portUpto = m_port;
       XString text;
-      text.Format("%d",m_portUpto);
+      text.Format(_T("%d"),m_portUpto);
       m_editPortUpto.SetWindowText(text);
       UpdateData(FALSE);
     }
 
     if(m_portUpto > (m_port + 200))
     {
-      if(::MessageBox(GetSafeHwnd(),"You have selected more than 200 client ports!\nAre you sure?","HTTP Manager",MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDNO)
+      if(::MessageBox(GetSafeHwnd(),_T("You have selected more than 200 client ports!\nAre you sure?"),_T("HTTP Manager"),MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDNO)
       {
         m_portUpto = m_port + 200;
         XString text;
-        text.Format("%d",m_portUpto);
+        text.Format(_T("%d"),m_portUpto);
         m_editPortUpto.SetWindowText(text);
         UpdateData(FALSE);
       }
@@ -385,8 +385,8 @@ HTTPManagerDlg::CheckPathname(bool p_allow)
   // Check the absolute path
   if(m_absPath.IsEmpty())
   {
-    ::MessageBox(GetSafeHwnd(),"An empty URL is not allowed","ERROR",MB_OK | MB_ICONERROR);
-    m_absPath = "/";
+    ::MessageBox(GetSafeHwnd(),_T("An empty URL is not allowed"),_T("ERROR"),MB_OK | MB_ICONERROR);
+    m_absPath = _T("/");
     UpdateData(FALSE);
   }
 }
@@ -403,21 +403,21 @@ HTTPManagerDlg::MakeFirewallRuleName(XString& p_ports)
   if(!m_doRange)
   {
     m_portUpto = m_port;
-    ports.Format("%d",m_port);
+    ports.Format(_T("%d"),m_port);
   }
   else
   {
     CheckPortRange();
-    ports.Format("%d-%d",m_port,m_portUpto);
+    ports.Format(_T("%d-%d"),m_port,m_portUpto);
   }
 
   // Create a nice name from the URL and the port number
-  if(naam.Left(1)  == "/") naam = naam.Mid(1);
-  if(naam.Right(1) == "/") naam = naam.Left(naam.GetLength() - 1);
-  naam += "_";
+  if(naam.Left(1)  == _T("/")) naam = naam.Mid(1);
+  if(naam.Right(1) == _T("/")) naam = naam.Left(naam.GetLength() - 1);
+  naam += _T("_");
   naam += ports;
-  naam.Replace("/","_");
-  naam.Replace("-","_");
+  naam.Replace(_T("/"),_T("_"));
+  naam.Replace(_T("-"),_T("_"));
 
   // results
   p_ports = ports;
@@ -439,26 +439,26 @@ HTTPManagerDlg::DoCommand(ConfigCmd p_config
   // Get the command
   if(m_version == OSVERSIE_SERVER2003)
   {
-    p_command = "httpcfg.exe";
+    p_command = _T("httpcfg.exe");
     switch(p_config)
     {
-      case CONFIG_ASKURL: p_parameters.Format("query urlacl -u %s",p_prefix);
+      case CONFIG_ASKURL: p_parameters.Format(_T("query urlacl -u %s"),p_prefix);
                           break;
-      case CONFIG_ADDURL: p_parameters.Format("set urlacl -u %s -a D:(A;;GX;;;WD)",p_prefix);
+      case CONFIG_ADDURL: p_parameters.Format(_T("set urlacl -u %s -a D:(A;;GX;;;WD)"),p_prefix);
                           break;
-      case CONFIG_DELURL: p_parameters.Format("delete urlacl -u %s",p_prefix);
+      case CONFIG_DELURL: p_parameters.Format(_T("delete urlacl -u %s"),p_prefix);
                           break;
-      case CONFIG_ASKSSL: p_parameters.Format("query ssl -i 0.0.0.0:%s",p_prefix);
+      case CONFIG_ASKSSL: p_parameters.Format(_T("query ssl -i 0.0.0.0:%s"),p_prefix);
                           break;
-      case CONFIG_ADDSSL: p_parameters.Format("set ssl -i 0.0.0.0:%s -h \"%s\" "
-                                              "-g {00112233-4455-6677-8899-AABBCCDDEEFF} -c %s"
+      case CONFIG_ADDSSL: p_parameters.Format(_T("set ssl -i 0.0.0.0:%s -h \"%s\" ")
+                                              _T("-g {00112233-4455-6677-8899-AABBCCDDEEFF} -c %s")
                                              ,p_prefix,p_prefix2,p_prefix3);
                           break;
-      case CONFIG_DELSSL: p_parameters.Format("delete ssl -i 0.0.0.0:%s",p_prefix);
+      case CONFIG_DELSSL: p_parameters.Format(_T("delete ssl -i 0.0.0.0:%s"),p_prefix);
                           break;
-      case CONFIG_ASKLIST:p_parameters = "query iplisten";
+      case CONFIG_ASKLIST:p_parameters = _T("query iplisten");
                           break;
-      case CONFIG_ADDLIST:p_parameters = "set iplisten -i 0.0.0.0";
+      case CONFIG_ADDLIST:p_parameters = _T("set iplisten -i 0.0.0.0");
                           break;
       default:            result = false;
                           break;
@@ -466,27 +466,27 @@ HTTPManagerDlg::DoCommand(ConfigCmd p_config
   }
   else if(m_version == OSVERSIE_VISTA_UP)
   {
-    p_command = "netsh.exe";
+    p_command = _T("netsh.exe");
     switch(p_config)
     {
-      case CONFIG_ASKURL: p_parameters.Format("http show urlacl url=%s",p_prefix);
+      case CONFIG_ASKURL: p_parameters.Format(_T("http show urlacl url=%s"),p_prefix);
                           break;
-      case CONFIG_ADDURL: p_parameters.Format("http add urlacl url=%s sddl=D:(A;;GX;;;WD)",p_prefix);
+      case CONFIG_ADDURL: p_parameters.Format(_T("http add urlacl url=%s sddl=D:(A;;GX;;;WD)"),p_prefix);
                           break;
-      case CONFIG_DELURL: p_parameters.Format("http delete urlacl url=%s",p_prefix);
+      case CONFIG_DELURL: p_parameters.Format(_T("http delete urlacl url=%s"),p_prefix);
                           break;
-      case CONFIG_ASKSSL: p_parameters.Format("http show sslcert ipport=0.0.0.0:%s",p_prefix);
+      case CONFIG_ASKSSL: p_parameters.Format(_T("http show sslcert ipport=0.0.0.0:%s"),p_prefix);
                           break;
-      case CONFIG_ADDSSL: p_parameters.Format("http add sslcert ipport=0.0.0.0:%s certhash=%s "
-                                              "appid={00112233-4455-6677-8899-AABBCCDDEEFF} certstorename=%s "
-                                              "clientcertnegotiation=%s"
+      case CONFIG_ADDSSL: p_parameters.Format(_T("http add sslcert ipport=0.0.0.0:%s certhash=%s ")
+                                              _T("appid={00112233-4455-6677-8899-AABBCCDDEEFF} certstorename=%s ")
+                                              _T("clientcertnegotiation=%s")
                                               ,p_prefix,p_prefix2,p_prefix3,p_prefix4);
                           break;
-      case CONFIG_DELSSL: p_parameters.Format("http delete sslcert ipport=0.0.0.0:%s",p_prefix);
+      case CONFIG_DELSSL: p_parameters.Format(_T("http delete sslcert ipport=0.0.0.0:%s"),p_prefix);
                           break;
-      case CONFIG_ASKLIST:p_parameters = "http show iplisten";
+      case CONFIG_ASKLIST:p_parameters = _T("http show iplisten");
                           break;
-      case CONFIG_ADDLIST:p_parameters = "http add iplisten ipaddress=0.0.0.0";
+      case CONFIG_ADDLIST:p_parameters = _T("http add iplisten ipaddress=0.0.0.0");
                           break;
       default:            result = false;
                           break;
@@ -499,7 +499,7 @@ HTTPManagerDlg::DoCommand(ConfigCmd p_config
   // Check for an error
   if(!result)
   {
-    ::MessageBox(GetSafeHwnd(),"INTERNAL ERROR: Incorrect configuration command","ERROR",MB_OK);
+    ::MessageBox(GetSafeHwnd(),_T("INTERNAL ERROR: Incorrect configuration command"),_T("ERROR"),MB_OK);
   }
   return result;
 }
@@ -537,7 +537,7 @@ HTTPManagerDlg::OnEnChangePort()
 {
   XString text;
   m_editPort.GetWindowText(text);
-  m_port = atoi(text);
+  m_port = _ttoi(text);
   UpdateData(FALSE);
   CheckPortRange();
 }
@@ -547,7 +547,7 @@ HTTPManagerDlg::OnEnChangePortUpto()
 {
   XString text;
   m_editPortUpto.GetWindowText(text);
-  m_portUpto = atoi(text);
+  m_portUpto = _ttoi(text);
   UpdateData(FALSE);
   CheckPortRange();
 }
@@ -592,13 +592,13 @@ HTTPManagerDlg::OnBnClickedAskurl()
   for(int port = m_port;port <= m_portUpto;++port)
   {
     XString prefix = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
-    m_editStatus.SetWindowText("Inquiring for URL reservation: " + prefix);
+    m_editStatus.SetWindowText(_T("Inquiring for URL reservation: ") + prefix);
     MessagePump();
 
     if(DoCommand(CONFIG_ASKURL,prefix,command,parameters))
     {
       CallProgram_For_String(command,parameters,result);
-      show   += XString(">") + command + " " + parameters + "\r\n" + result;
+      show   += XString(_T(">")) + command + _T(" ") + parameters + _T("\r\n") + result;
     }
     else return;
   }
@@ -637,20 +637,20 @@ HTTPManagerDlg::OnBnClickedAddurl()
   for(int port = m_port;port <= m_portUpto;++port)
   {
     XString prefix  = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
-    m_editStatus.SetWindowText("Adding URL reservation: " + prefix);
+    m_editStatus.SetWindowText(_T("Adding URL reservation: ") + prefix);
     MessagePump();
 
     if(DoCommand(CONFIG_ADDURL,prefix,command,parameters))
     {
       CallProgram_For_String(command,parameters,result);
-      show   += ">" + command + " " + parameters + "\r\n" + result + "\r\n";
+      show   += _T(">") + command + _T(" ") + parameters + _T("\r\n") + result + _T("\r\n");
     }
     else return;
 
     if(DoCommand(CONFIG_ASKURL,prefix,command,parameters))
     {
       CallProgram_For_String(command,parameters,result);
-      show   += ">" + command + " " + parameters + "\r\n" + result;
+      show   += _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
     }
     else return;
   }
@@ -688,13 +688,13 @@ HTTPManagerDlg::OnBnClickedDelurl()
   for(int port = m_port;port <= m_portUpto;++port)
   {
     XString prefix  = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
-    m_editStatus.SetWindowText("Deleting URL reservation: " + prefix);
+    m_editStatus.SetWindowText(_T("Deleting URL reservation: ") + prefix);
     MessagePump();
 
     if(DoCommand(CONFIG_DELURL,prefix,command,parameters))
     {
       CallProgram_For_String(command,parameters,result);
-      show   += ">" + command + " " + parameters + "\r\n" + result;
+      show   += _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
     }
     else return;
   }
@@ -712,21 +712,21 @@ HTTPManagerDlg::OnBnClickedAskFW()
 {
   XString show;
   XString result;
-  XString command("netsh");
+  XString command(_T("netsh"));
   XString parameters;
   XString ports;
   CWaitCursor diepe_zucht;
 
   XString naam = MakeFirewallRuleName(ports);
-  parameters.Format("advfirewall firewall show rule name=\"%s\" verbose", naam);
+  parameters.Format(_T("advfirewall firewall show rule name=\"%s\" verbose"), naam);
 
-  m_editStatus.SetWindowText("Inquiring for Firewall rules for: " + naam);
+  m_editStatus.SetWindowText(_T("Inquiring for Firewall rules for: ") + naam);
   MessagePump();
 
   CallProgram_For_String(command,parameters,result);
-  show += XString(">") + command + " " + parameters + "\r\n" + result;
+  show += XString(_T(">")) + command + _T(" ") + parameters + _T("\r\n") + result;
 
-  if(m_rulesResult == "TEST")
+  if(m_rulesResult == _T("TEST"))
   {
     m_rulesResult = result;
     return;
@@ -746,39 +746,39 @@ HTTPManagerDlg::OnBnClickedAddFW()
   XString ports;
   XString show;
   XString result;
-  XString command("netsh");
+  XString command(_T("netsh"));
   XString parameters1;
   XString parameters2;
   CWaitCursor diepe_zucht;
 
   // See if we must make a firewall rule
-  m_rulesResult = "TEST";
+  m_rulesResult = _T("TEST");
   OnBnClickedAskFW();
-  if((m_rulesResult.Left(10) != "\r\nNo rules") &&
-     (m_rulesResult.Left(21) != "\r\nEr zijn geen regels")) // DUTCH OS
+  if((m_rulesResult.Left(10) != _T("\r\nNo rules")) &&
+     (m_rulesResult.Left(21) != _T("\r\nEr zijn geen regels"))) // DUTCH OS
   {
-    ::MessageBox(GetSafeHwnd(),"There already exists a Firewall-Rule for this combination of URL/Port","ERROR",MB_OK|MB_ICONERROR);
+    ::MessageBox(GetSafeHwnd(),_T("There already exists a Firewall-Rule for this combination of URL/Port"),_T("ERROR"),MB_OK|MB_ICONERROR);
     m_rulesResult.Empty();
     return;
   }
   m_rulesResult.Empty();
 
   XString naam = MakeFirewallRuleName(ports);
-  parameters1.Format("advfirewall firewall add rule name=\"%s\" "
-                     "dir=in protocol=TCP localport=%s edge=yes action=allow profile=any"
+  parameters1.Format(_T("advfirewall firewall add rule name=\"%s\" ")
+                     _T("dir=in protocol=TCP localport=%s edge=yes action=allow profile=any")
                     ,naam,ports);
-  parameters2.Format("advfirewall firewall add rule name=\"%s\" "
-                     "dir=out protocol=TCP localport=%s action=allow profile=any"
+  parameters2.Format(_T("advfirewall firewall add rule name=\"%s\" ")
+                     _T("dir=out protocol=TCP localport=%s action=allow profile=any")
                      ,naam,ports);
 
-  m_editStatus.SetWindowText("Creating Firewall rules for: " + naam);
+  m_editStatus.SetWindowText(_T("Creating Firewall rules for: ") + naam);
   MessagePump();
 
   CallProgram_For_String(command,parameters1,result);
-  show += XString(">") + command + " " + parameters1 + "\r\n" + result;
+  show += XString(_T(">")) + command + _T(" ") + parameters1 + _T("\r\n") + result;
 
   CallProgram_For_String(command,parameters2,result);
-  show += XString(">") + command + " " + parameters2 + "\r\n" + result;
+  show += XString(_T(">")) + command + _T(" ") + parameters2 + _T("\r\n") + result;
 
   // Show result
   ResultDlg dlg(this,show);
@@ -793,19 +793,19 @@ HTTPManagerDlg::OnBnClickedDelFW()
 {
   XString show;
   XString result;
-  XString command("netsh");
+  XString command(_T("netsh"));
   XString parameters;
   XString ports;
   CWaitCursor diepe_zucht;
 
   XString naam = MakeFirewallRuleName(ports);
-  parameters.Format("advfirewall firewall delete rule name=\"%s\"",naam);
+  parameters.Format(_T("advfirewall firewall delete rule name=\"%s\""),naam);
 
-  m_editStatus.SetWindowText("Removing Firewall rules for: " + naam);
+  m_editStatus.SetWindowText(_T("Removing Firewall rules for: ") + naam);
   MessagePump();
 
   CallProgram_For_String(command,parameters,result);
-  show += XString(">") + command + " " + parameters + "\r\n" + result;
+  show += XString(_T(">")) + command + _T(" ") + parameters + _T("\r\n") + result;
 
   // Show result
   ResultDlg dlg(this,show);
@@ -844,15 +844,15 @@ HTTPManagerDlg::OnBnClickedAskcert()
   for(int port = m_port;port <= m_portUpto;++port)
   {
     // See if it has been added
-    result.Format("Checking certificates for port: %d",port);
+    result.Format(_T("Checking certificates for port: %d"),port);
     m_editStatus.SetWindowText(result);
     MessagePump();
 
-    prefix.Format("%d",port);
+    prefix.Format(_T("%d"),port);
     if(DoCommand(CONFIG_ASKSSL,prefix,command,parameters))
     {
       CallProgram_For_String(command,parameters,result);
-      show   += XString(">") + command + " " + parameters + "\r\n" + result;
+      show   += XString(_T(">")) + command + _T(" ") + parameters + _T("\r\n") + result;
     }
     else return;
   }
@@ -872,17 +872,17 @@ HTTPManagerDlg::OnBnClickedAddcert()
   XString parameters;
   XString command;
   XString certificate;
-  XString storename("TrustedPublisher");
+  XString storename(_T("TrustedPublisher"));
   XString clientCert;
   m_editCertificate.GetWindowText(certificate);
-  certificate.Replace(" ","");
-  certificate = certificate.TrimLeft("?");
+  certificate.Replace(_T(" "),_T(""));
+  certificate = certificate.TrimLeft(_T("?"));
   CWaitCursor diepe_zucht;
 
   // Getting the storename
   m_comboStore.GetLBText(m_comboStore.GetCurSel(),storename);
   // Getting the client certification
-  clientCert = m_buttonClientCert.GetCheck() ? "enable" : "disable";
+  clientCert = m_buttonClientCert.GetCheck() ? _T("enable") : _T("disable");
 
   // Make sure the range is 1 long
   if(!m_doRange)
@@ -897,23 +897,23 @@ HTTPManagerDlg::OnBnClickedAddcert()
   for(int port = m_port;port <= m_portUpto;++port)
   {
     // See if it was added
-    prefix.Format("%d",port);
-    result.Format("Adding certificate for port: %d",port);
+    prefix.Format(_T("%d"),port);
+    result.Format(_T("Adding certificate for port: %d"),port);
     m_editStatus.SetWindowText(result);
     MessagePump();
 
     if(DoCommand(CONFIG_ADDSSL,prefix,command,parameters,certificate,storename,clientCert))
     {
       CallProgram_For_String(command,parameters,result);
-      showme += ">" + command + " " + parameters + "\r\n" + result;
+      showme += _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
     }
     else return;
 
-    // Kijken of het toegevoegd is
+    // Check if it was added correctly
     if(DoCommand(CONFIG_ASKSSL,prefix,command,parameters))
     {
       CallProgram_For_String(command,parameters,result);
-      showme += ">" + command + " " + parameters + "\r\n" + result;
+      showme += _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
     }
     else return;
   }
@@ -944,16 +944,16 @@ HTTPManagerDlg::OnBnClickedDelcert()
 
   for(int port = m_port;port <= m_portUpto;++port)
   {
-    prefix.Format("%d",port);
+    prefix.Format(_T("%d"),port);
     // See if it was added
-    result.Format("Delete certificate for port: %d",port);
+    result.Format(_T("Delete certificate for port: %d"),port);
     m_editStatus.SetWindowText(result);
     MessagePump();
 
     if(DoCommand(CONFIG_DELSSL,prefix,command,parameters))
     {
       CallProgram_For_String(command,parameters,result);
-      showme += ">" + command + " " + parameters + "\r\n" + result;
+      showme += _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
     }
     else return;
 
@@ -961,7 +961,7 @@ HTTPManagerDlg::OnBnClickedDelcert()
     if(DoCommand(CONFIG_ASKSSL,prefix,command,parameters))
     {
       CallProgram_For_String(command,parameters,result);
-      showme  += ">" + command + " " + parameters + "\r\n" + result;
+      showme  += _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
     }
     else return;
   }
@@ -976,15 +976,15 @@ HTTPManagerDlg::OnBnClickedListner()
 {
   XString result;
   XString parameters;
-  XString command = "netsh";
+  XString command = _T("netsh");
   CWaitCursor deep_sigh;
   XString showme;
 
   // See if it was added
-  if(DoCommand(CONFIG_ASKLIST,"",command,parameters))
+  if(DoCommand(CONFIG_ASKLIST,_T(""),command,parameters))
   {
     CallProgram_For_String(command,parameters,result);
-    showme  = ">" + command + " " + parameters + "\r\n" + result;
+    showme  = _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
   }
   // Show result
   ResultDlg dlg(this,showme);
@@ -997,14 +997,14 @@ HTTPManagerDlg::OnBnClickedListen()
   XString showme;
   XString result;
   XString parameters;
-  XString command = "netsh";
+  XString command = _T("netsh");
   CWaitCursor deep_sigh;
 
   // See if it was added
-  if(DoCommand(CONFIG_ADDLIST,"",command,parameters))
+  if(DoCommand(CONFIG_ADDLIST,_T(""),command,parameters))
   {
     CallProgram_For_String(command,parameters,result);
-    showme  = ">" + command + " " + parameters + "\r\n" + result;
+    showme  = _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
   }
   // Show result
   ResultDlg dlg(this,showme);
@@ -1016,13 +1016,13 @@ HTTPManagerDlg::OnBnClickedNetstat()
 {
   XString result;
   XString parameters;
-  XString command = "netstat";
+  XString command = _T("netstat");
   CWaitCursor deep_sigh;
 
   // See if it was added
-  parameters = "-a -p TCP";
+  parameters = _T("-a -p TCP");
   CallProgram_For_String(command,parameters,result);
-  XString tonen = ">" + command + " " + parameters + "\r\n" + result;
+  XString tonen = _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
 
   // Show result
   ResultDlg dlg(this,tonen);
@@ -1042,7 +1042,7 @@ HTTPManagerDlg::MessagePump()
   // Do handle the paint messages for long processes where the
   // application must show parts of the interface.
   // Because we can have an endless loop (theoretically)
-  // add a timelimit to this process
+  // add a time limit to this process
   MSG msg;
   UINT ticks = GetTickCount();
   while(GetTickCount() - ticks < 500 && (
@@ -1067,23 +1067,23 @@ HTTPManagerDlg::GetSiteConfig(XString p_prefix)
   XString pathName = MarlinConfig::GetExePath();
 
   XString name(p_prefix);
-  int pos = name.Find("//");
+  int pos = name.Find(_T("//"));
   if (pos)
   {
-    name = "Site" + name.Mid(pos + 2);
-    name.Replace(':', '-');
-    name.Replace('+', '-');
-    name.Replace('*', '-');
-    name.Replace('.', '_');
-    name.Replace('/', '-');
-    name.Replace('\\', '-');
-    name.Replace("--", "-");
+    name = _T("Site") + name.Mid(pos + 2);
+    name.Replace(_T(':'), '-');
+    name.Replace(_T('+'), '-');
+    name.Replace(_T('*'), '-');
+    name.Replace(_T('.'), '_');
+    name.Replace(_T('/'), '-');
+    name.Replace(_T('\\'), '-');
+    name.Replace(_T("--"), _T("-"));
     name.TrimRight('-');
-    name += ".config";
+    name += _T(".config");
 
     return pathName + name;
   }
-  return "";
+  return _T("");
 }
 
 void 
@@ -1098,7 +1098,7 @@ HTTPManagerDlg::OnBnClickedSiteWebConfig()
 {
   if (m_absPath.IsEmpty())
   {
-    AfxMessageBox("Select a site URL first, before editing a site's own config", MB_OK | MB_ICONERROR);
+    AfxMessageBox(_T("Select a site URL first, before editing a site's own config"), MB_OK | MB_ICONERROR);
     return;
   }
 

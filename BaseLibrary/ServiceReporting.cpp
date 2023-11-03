@@ -42,9 +42,9 @@ static char THIS_FILE[] = __FILE__;
 // See MSDN: ReportEvent function (31.839 characters)
 #define EVENTBUFFER  (31 * 1024)
 
-char*            g_eventBuffer = nullptr;
+PTCHAR           g_eventBuffer = nullptr;
 CRITICAL_SECTION g_eventBufferLock;
-char             g_svcname[SERVICE_NAME_LENGTH];
+TCHAR            g_svcname[SERVICE_NAME_LENGTH];
 
 static void
 SvcFreeEventBuffer()
@@ -66,7 +66,7 @@ SvcStartEventBuffer()
   {
     return;
   }
-  g_eventBuffer = new char[EVENTBUFFER];
+  g_eventBuffer = new TCHAR[EVENTBUFFER];
 
   // Initialize the logging lock
   InitializeCriticalSection(&g_eventBufferLock);
@@ -85,12 +85,12 @@ SvcReportInfoEvent(bool p_doFormat,LPCTSTR p_message,...)
   {
     va_list vl;
     va_start(vl,p_message);
-    _vsnprintf_s(g_eventBuffer,EVENTBUFFER,_TRUNCATE,p_message,vl);
+    _vsntprintf_s(g_eventBuffer,EVENTBUFFER,_TRUNCATE,p_message,vl);
     va_end(vl);
   }
   else
   {
-    strcpy_s(g_eventBuffer,EVENTBUFFER,p_message);
+    _tcscpy_s(g_eventBuffer,EVENTBUFFER,p_message);
   }
 
   HANDLE hEventSource = OpenEventLog(nullptr,g_svcname);
@@ -161,15 +161,15 @@ SvcReportErrorEvent(int p_module,bool p_doFormat,LPCTSTR szFunction,LPCTSTR p_me
   {
     va_list vl;
     va_start(vl,p_message);
-    _vsnprintf_s(g_eventBuffer,EVENTBUFFER,_TRUNCATE,p_message,vl);
+    _vsntprintf_s(g_eventBuffer,EVENTBUFFER,_TRUNCATE,p_message,vl);
     va_end(vl);
   }
   else
   {
-    strcpy_s(g_eventBuffer,EVENTBUFFER,p_message);
+    _tcscpy_s(g_eventBuffer,EVENTBUFFER,p_message);
   }
-  sprintf_s(buffer1, 256, "Function %s", szFunction);
-  sprintf_s(buffer2, 256, "Last OS error: [%d] %s", lastError, GetLastErrorAsString(lastError).GetString());
+  _stprintf_s(buffer1, 256, _T("Function %s"), szFunction);
+  _stprintf_s(buffer2, 256, _T("Last OS error: [%d] %s"),lastError,GetLastErrorAsString(lastError).GetString());
 
   HANDLE hEventSource = OpenEventLog(nullptr,g_svcname);
 

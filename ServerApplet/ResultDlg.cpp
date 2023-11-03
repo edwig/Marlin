@@ -70,7 +70,7 @@ ResultDlg::OnInitDialog()
   lgFont.lfCharSet        = DEFAULT_CHARSET;
   lgFont.lfClipPrecision  = 0;
   lgFont.lfEscapement     = 0;
-  strcpy_s(lgFont.lfFaceName,32,"Courier new");
+  _tcscpy_s(lgFont.lfFaceName,32,_T("Courier new"));
   lgFont.lfHeight         = 100;
   lgFont.lfItalic         = 0;
   lgFont.lfOrientation    = 0;
@@ -92,7 +92,7 @@ ResultDlg::OnInitDialog()
   edit->SetFont(&m_font);
 
   // Setting the result
-  m_result.Replace("\n","\r\n");
+  m_result.Replace(_T("\n"),_T("\r\n"));
   UpdateData(FALSE);
 
   return TRUE;

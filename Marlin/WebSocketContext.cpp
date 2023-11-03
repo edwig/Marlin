@@ -211,7 +211,7 @@ WebSocketContext::ReadFragment(_Out_   VOID*  pData,
           if(!ReadFile(m_handle,buffers[0].Data.pbBuffer,buffers[0].Data.ulBufferLength,&bytesTransferred,nullptr))
           {
             int result = GetLastError();
-            SvcReportErrorEvent(0,true,__FUNCTION__,"Socket error: %d",result);
+            SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Socket error: %d"),result);
             return -result;
           }
 

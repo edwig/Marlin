@@ -24,7 +24,14 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "DefuseBOM.h"
+#include <windows.h>
+#include <atlstr.h>
+#include <string>
+#include "Encoding.h"
+#include "AutoCritical.h"
+
+// MS-Windows codepage numbers for translation of text files
+#define CODEPAGE_UTF8   65001
 
 typedef unsigned char uchar;
 
@@ -46,7 +53,7 @@ typedef enum _fflag
  ,open_shared_write   = 0x00080   // Open in write mode, shared with other shared writers
   // Transformations
  ,open_trans_text     = 0x00100   // "\n" to "CR-LF" translations
- ,open_trans_binary   = 0x00200   // Binary access only, no XString access
+ ,open_trans_binary   = 0x00200   // Binary access only, no string access
   // Special modes
  ,open_random_access  = 0x01000   // both read-and-write random access and file-repositioning
  ,open_sequential     = 0x02000   // sequential access in read or in write mode, but not both
@@ -136,15 +143,15 @@ class WinFile
 public:
   // CTOR 
   WinFile();
-  // CTOR from another file pointer
-  WinFile(const WinFile& p_other);
   // CTOR from a filename
-  explicit WinFile(XString p_filename);
+  WinFile(CString p_filename);
+  // CTOR from another file pointer
+  WinFile(WinFile& p_other);
   // DTOR
   ~WinFile();
 
   // OPERATIONS ON THE FILE SYSTEM
-  bool      Open(DWORD p_flags = winfile_read,FAttributes p_attribs = FAttributes::attrib_none);
+  bool      Open(DWORD p_flags = winfile_read,FAttributes p_attribs = FAttributes::attrib_none,Encoding p_encoding = EncodingDefault);
   bool      Close(bool p_flush = false);
   bool      Create(FAttributes p_attribs = FAttributes::attrib_normal);
   bool      CreateDirectory();
@@ -153,20 +160,20 @@ public:
   bool      DeleteFile();
   unsigned  DeleteDirectory(bool p_recursive = false);
   bool      DeleteToTrashcan(bool p_show = false, bool p_confirm = false);
-  bool      CopyFile(XString p_destination,FCopy p_how = winfile_copy);
-  bool      MoveFile(XString p_destination,FMove p_how = winfile_move);
-  bool      CreateTempFileName(XString p_pattern, XString p_extension = "");
+  bool      CopyFile(CString p_destination,FCopy p_how = winfile_copy);
+  bool      MoveFile(CString p_destination,FMove p_how = winfile_move);
+  bool      CreateTempFileName(CString p_pattern,CString p_extension = _T(""));
   bool      GrantFullAccess();
   void      ForgetFile(); // BEWARE!
 
   // OPERATIONS TO READ AND WRITE CONTENT
-  bool      Read(XString& p_string);
+  bool      Read(XString& p_string,uchar p_delim = '\n');
   bool      Read(void* p_buffer,size_t p_bufsize,int& p_read);
-  bool      Write(const XString& p_string);
+  bool      Write(const CString& p_string);
   bool      Write(void* p_buffer,size_t p_bufsize);
-  bool      Format(LPCSTR p_format, ...);
-  bool      FormatV(LPCSTR p_format, va_list p_list);
-  size_t    Position();
+  bool      Format(LPCTSTR p_format,...);
+  bool      FormatV(LPCTSTR p_format,va_list p_list);
+  size_t    Position() const;
   size_t    Position(FSeek p_how,LONGLONG p_position = 0);
   bool      Flush(bool p_all = false);
   bool      Lock  (size_t p_begin,size_t p_length);
@@ -175,13 +182,14 @@ public:
   // Classic STDIO.H like functions
   bool      Gets(uchar* p_buffer,size_t p_size);
   bool      Puts(uchar* p_buffer);
-  int       Getch();
+  uchar     Getch();
   bool      Putch(uchar p_char);
   bool      Ungetch(uchar p_ch);  // only works in conjunction with "Getch()"
 
   // SETTERS
-  bool      SetFilename(XString p_filename);
-  bool      SetFilenameInFolder(int p_folder,XString p_filename);  // Use CSIDL_* names !
+  bool      SetFilename(CString p_filename);
+  bool      SetFilenameInFolder(int p_folder,CString p_filename);  // Use CSIDL_* names !
+  bool      SetFilenameFromResource(CString p_resource);
   bool      SetFileHandle(HANDLE p_handle);
   bool      SetFileAttribute(FAttributes p_attribute,bool p_set);
   bool      SetHidden(bool p_hidden);
@@ -195,21 +203,24 @@ public:
   bool      SetFileTimeCreated (SYSTEMTIME& p_created);
   bool      SetFileTimeModified(SYSTEMTIME& p_modified);
   bool      SetFileTimeAccessed(SYSTEMTIME& p_accessed);
+  void      SetEncoding(Encoding p_encoding);
 
   // GETTERS
-  XString   GetFilename();
+  bool      GetIsOpen() const;
+  CString   GetFilename();
   HANDLE    GetFileHandle();
   DWORD     GetOpenFlags();
   int       GetLastError();
-  XString   GetLastErrorString();
-  size_t    GetFileSize();
+  CString   GetLastErrorString();
+  size_t    GetFileSize() const;
+  bool      GetIsAtEnd() const;
   size_t    GetSharedMemorySize();
-  XString   GetNamePercentEncoded();
-  XString   GetFilenamePartDirectory();
-  XString   GetFilenamePartFilename();
-  XString   GetFilenamePartBasename();
-  XString   GetFilenamePartExtension();
-  XString   GetFilenamePartDrive();
+  CString   GetNamePercentEncoded();
+  CString   GetFilenamePartDirectory();
+  CString   GetFilenamePartFilename();
+  CString   GetFilenamePartBasename();
+  CString   GetFilenamePartExtension();
+  CString   GetFilenamePartDrive();
   FILETIME  GetFileTimeCreated();
   FILETIME  GetFileTimeModified();
   FILETIME  GetFileTimeAccessed();
@@ -225,38 +236,70 @@ public:
   bool      GetIsNormal();
   bool      GetIsReadOnly();
   bool      GetIsDirectory();
+  Encoding  GetEncoding();
 
   // FUNCTIONS
 
   // Check for a Byte-Order-Mark (BOM)
-  BOMOpenResult  DefuseBOM(const uchar*  p_pointer            // First gotten XString in the file
-                          ,BOMType&      p_type               // Return: type of BOM (if any)
-                          ,unsigned int& p_skip);             // Return: number of chars to skip
+  static BOMOpenResult  DefuseBOM(const uchar*  p_pointer     // First gotten string in the file
+                                 ,Encoding&      p_type       // Return: type of BOM (if any)
+                                 ,unsigned int& p_skip);      // Return: number of chars to skip
   // Check for Unicode UTF-16 in the buffer
-  bool      IsTextUnicodeUTF16(const uchar* p_pointer,size_t p_length);
+  static bool IsTextUnicodeUTF16(const uchar* p_pointer,size_t p_length);
   // Check for Unicode UTF-8 in the buffer
-  bool      IsTextUnicodeUTF8 (const uchar* p_pointer,size_t p_length);
+  static bool IsTextUnicodeUTF8 (const uchar* p_pointer,size_t p_length);
   // Getting the filename from a dialog
   bool      SetFilenameByDialog(HWND     p_parent             // Parent HWND (if any)
                                ,bool     p_open               // true = Open/New, false = SaveAs
-                               ,XString  p_title              // Title of the dialog
-                               ,XString  p_defext   = ""      // Default extension
-                               ,XString  p_filename = ""      // Default first file
+                               ,CString  p_title              // Title of the dialog
+                               ,CString  p_defext   = _T("")  // Default extension
+                               ,CString  p_filename = _T("")  // Default first file
                                ,int      p_flags    = 0       // Default flags
-                               ,XString  p_filter   = ""      // Filter for extensions
-                               ,XString  p_direct   = "");    // Directory to start in
+                               ,CString  p_filter   = _T("")  // Filter for extensions
+                               ,CString  p_direct   = _T(""));// Directory to start in
   // Open file as a shared memory segment
-  void*     OpenAsSharedMemory(XString  p_name               // Name of the shared memory segment to open
-                              ,bool     p_local     = true   // Standard on your local session, otherwise global
-                              ,bool     p_trycreate = false  // Create with m_filename if not exists
-                              ,size_t   p_size      = 0);    // Size of memory if we create it
-  XString    LegalDirectoryName(XString p_name,bool p_extensionAllowed = true);
+  void*     OpenAsSharedMemory(CString  p_name                // Name of the shared memory segment to open
+                              ,bool     p_local     = true    // Standard on your local session, otherwise global
+                              ,bool     p_trycreate = false   // Create with m_filename if not exists
+                              ,size_t   p_size      = 0);     // Size of memory if we create it
+  CString   LegalDirectoryName(CString  p_name,bool p_extensionAllowed = true);
+  // Create a file name from an HTTP resource name
+  CString   FileNameFromResourceName(CString p_resource);
+  // Reduce file path name for RE-BASE of directories, removing \..\ parts
+  XString  ReduceDirectoryPath(XString& path);
+  // Makes a relative pathname from an absolute one
+  bool     MakeRelativePathname(const XString& p_base,const XString& p_absolute,XString& p_relative);
 
   // OPERATORS
 
   bool     operator==(const WinFile& p_other);
   bool     operator!=(const WinFile& p_other);
   WinFile& operator= (const WinFile& p_other);
+
+  // STREAMING OPERATORS
+
+  WinFile& operator<<(const TCHAR    p_char);
+  WinFile& operator<<(const short    p_num);
+  WinFile& operator<<(const int      p_num);
+  WinFile& operator<<(const unsigned p_num);
+  WinFile& operator<<(const INT64    p_num);
+  WinFile& operator<<(const float    p_num);
+  WinFile& operator<<(const double   p_num);
+  WinFile& operator<<(const LPCTSTR  p_string);
+  WinFile& operator<<(const CString& p_string);
+
+  WinFile& operator>>(TCHAR&    p_char);
+  WinFile& operator>>(short&    p_num);
+  WinFile& operator>>(int&      p_num);
+  WinFile& operator>>(unsigned& p_num);
+  WinFile& operator>>(INT64&    p_num);
+  WinFile& operator>>(float&    p_num);
+  WinFile& operator>>(double&   p_num);
+  WinFile& operator>>(CString&  p_string);
+
+  // Handy for streaming an end-of-line as output
+  // Does *NOT* do a flush as std::endl does!!
+  static const TCHAR endl { '\n' };
 
   // Not thread safe: Must be set for the total process!
   // And can only be set in multiples of 4K up to 1024K
@@ -265,38 +308,53 @@ public:
   static time_t   ConvertFileTimeToTimet(FILETIME p_time);
   // Convert a time_t value to a FILETIME
   static FILETIME ConvertTimetToFileTime(time_t p_time);
+  // Translating UTF-8 / UTF-16-LE and UTF-16-BE in reading and writing
+  CString         TranslateInputBuffer(std::string& p_string);
+  std::string     TranslateOutputBuffer(const CString& p_string);
 
 private:
   // PRIVATE OPERATIONS
-  void      FilenameParts(XString p_fullpath,XString& p_drive,XString& p_directory,XString& p_filename,XString& p_extension);
-  XString   StripFileProtocol  (XString  p_fileref);
-  int       ResolveSpecialChars(XString& p_value);
-  XString   GetBaseDirectory   (XString& p_path);
+  void      FilenameParts(CString p_fullpath,CString& p_drive,CString& p_directory,CString& p_filename,CString& p_extension);
+  CString   StripFileProtocol  (CString  p_fileref);
+  int       ResolveSpecialChars(CString& p_value);
+  int       EncodeSpecialChars(XString& p_value);
+  CString   GetBaseDirectory   (CString& p_path);
   // Page buffer cache functions
   uchar*    PageBuffer();
   void      PageBufferFree();
-  int       PageBufferRead();
-  bool      PageBufferReadForeward();
-  bool      PageBufferWrite(int ch);
+  uchar     PageBufferRead();
+  bool      PageBufferReadForeward(bool p_scanBom);
+  bool      PageBufferWrite(uchar ch);
   bool      PageBufferFlush();
-  bool      PageBufferAdjust(bool p_beginning = false);
-
+  bool      PageBufferAdjust(bool p_beginning = false) const;
+  // Resolving UTF-8 and UTF-16 text files
+  void      ScanBomInFirstPageBuffer();
+  bool      WriteEncodingBOM();
+  // Convert Big-Endian (Blefuscu) to Little-Endian (Lilliput)
+  void        BlefuscuToLilliput(std::string& p_gulliver);
+#ifdef UNICODE
+  CString     ExplodeString(const std::string& p_string,unsigned p_codepage);
+  std::string ImplodeString(const     CString& p_string,unsigned p_codepage);
+#endif
   // PRIVATE DATA
 
   // The file and open actions
-  XString     m_filename;                        // Name of the file (if any)
-  HANDLE      m_file         { nullptr };        // Handle to the OS file
-  DWORD       m_openMode     { FFlag::no_mode }; // How the file was opened
+  CString     m_filename;                           // Name of the file (if any)
+  HANDLE      m_file         { nullptr };           // Handle to the OS file
+  DWORD       m_openMode     { FFlag::no_mode };    // How the file was opened
+  Encoding    m_encoding     { Encoding::Default};  // Encoding found by BOM
   // Page buffer cache
-  uchar*      m_pageBuffer   { nullptr };        // PB: Text mode page buffer
-  uchar*      m_pagePointer  { nullptr };        // PP: Pointer in the page buffer
-  uchar*      m_pageTop      { nullptr };        // PT: Pointer to the last position in the buffer
+  uchar*      m_pageBuffer   { nullptr };           // PB: Text mode page buffer
+  uchar*      m_pagePointer  { nullptr };           // PP: Pointer in the page buffer
+  uchar*      m_pageTop      { nullptr };           // PT: Pointer to the last position in the buffer
   // Current information
-  int         m_error        { 0 };              // Last encountered error (if any)
-  int         m_ungetch      { 0 };              // Last get character with "Getch"
+  mutable int m_error        { 0 };                 // Last encountered error (if any)
+  uchar       m_ungetch      { 0 };                 // Last get character with "Getch"
   // Shared Memory
-  void*       m_sharedMemory { nullptr };        // Pointer in memory (if any)
-  size_t      m_sharedSize   { 0 };              // Size of shared memory segment
+  void*       m_sharedMemory { nullptr };           // Pointer in memory (if any)
+  size_t      m_sharedSize   { 0 };                 // Size of shared memory segment
+  // One thread at the time!
+  mutable CRITICAL_SECTION m_fileaccess;
 };
 
 //////////////////////////////////////////////////////////////////////////

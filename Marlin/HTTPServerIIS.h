@@ -56,7 +56,7 @@ public:
   // Delete a site from the remembered set of sites
   virtual bool       DeleteSite(int p_port,XString p_baseURL,bool p_force = false) override;
   // Receive (the rest of the) incoming HTTP request
-  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message) override;
+  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16) override;
   // Create a new WebSocket in the subclass of our server
   virtual WebSocket* CreateWebSocket(XString p_uri) override;
   // Receive the WebSocket stream and pass on the the WebSocket
@@ -99,7 +99,7 @@ private:
   void FindingAccessToken(IHttpContext* p_context,HTTPMessage* p_message);
 
   // Reading the first chunks directly from the request handle from IIS
-  void ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request);
+  void ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request,bool p_utf16);
 
   // Add unknown headers to the response
   void AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers);
@@ -109,16 +109,16 @@ private:
   void SetResponseHeader(IHttpResponse* p_response,XString p_name,     XString p_value,bool p_replace);
   void SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,XString p_value,bool p_replace);
 
-  // Subfunctions for SendResponse
+  // Sub-functions for SendResponse
   bool SendResponseBuffer     (IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
   void SendResponseBufferParts(IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
   void SendResponseFileHandle (IHttpResponse* p_response,FileBuffer* p_buffer,bool p_more = false);
-  void SendResponseError      (IHttpResponse* p_response,XString& p_page,int p_error,const char* p_reason);
+  void SendResponseError      (IHttpResponse* p_response,XString& p_page,int p_error,LPCTSTR p_reason);
 
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
                                       ,CRITICAL_SECTION*  p_lock
-                                      ,const char*        p_buffer
+                                      ,BYTE**             p_buffer
                                       ,size_t             p_totalLength
                                       ,bool               p_continue = true) override;
 

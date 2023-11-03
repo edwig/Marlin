@@ -26,23 +26,33 @@
 // THE SOFTWARE.
 //
 #pragma once
-
-#define SWAP(a, b) ((a) ^= (b), (b) ^= (a), (a) ^= (b))
+#include <WinCrypt.h>
 
 class Base64
 {
 public:
-  static XString         Encrypt(XString p_unencrypted);
-  static XString         Decrypt(XString p_encrypted);
-  static unsigned char*  Encrypt(const unsigned char* srcp,int len,unsigned char * dstp);
-  static void*           Decrypt(const unsigned char* srcp,int len,unsigned char * dstp);
-  static size_t          B64_length  (size_t len);
-  static size_t          Ascii_length(size_t len);
+  Base64(int p_method = CRYPT_STRING_BASE64,int p_options = CRYPT_STRING_NOCRLF);
+
+  // XString variants
+  XString  Encrypt(XString p_unencrypted);
+  XString  Decrypt(XString p_encrypted);
+  // Buffer to string and vice-versa
+  XString  Encrypt(BYTE* p_buffer,int p_length);
+  bool     Decrypt(XString p_encrypted,BYTE* p_buffer,int p_length);
+  bool     Decrypt(BYTE* p_buffer,int p_blen,BYTE* p_output,int p_olen);
+  // Helper methods
+  size_t   B64_length  (size_t len);
+  size_t   Ascii_length(size_t len);
+private:
+  int m_method;
+  int m_options;
 };
 
 class CRC4 
 {
 public:
-  char *Encrypt(char *pszText,const char *pszKey);
-  char *Decrypt(char *pszText,const char *pszKey);
+  BYTE*   Encrypt(BYTE* pszText,int plen,const BYTE* pszKey,int klen);
+  BYTE*   Decrypt(BYTE* pszText,int plen,const BYTE* pszKey,int klen);
+  XString Encrypt(const XString p_unencrypted,const XString p_key);
+  XString Decrypt(const XString p_encrypted,  const XString p_key);
 };

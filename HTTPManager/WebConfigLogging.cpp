@@ -139,12 +139,12 @@ WebConfigLogging::OnInitDialog()
 {
   CDialogEx::OnInitDialog();
 
-  m_comboLogLevel.AddString("No logging");
-  m_comboLogLevel.AddString("Errors and warnings");
-  m_comboLogLevel.AddString("Info logging");
-  m_comboLogLevel.AddString("Info & bodies");
-  m_comboLogLevel.AddString("Tracing");
-  m_comboLogLevel.AddString("Tracing & HEX-Dumping");
+  m_comboLogLevel.AddString(_T("No logging"));
+  m_comboLogLevel.AddString(_T("Errors and warnings"));
+  m_comboLogLevel.AddString(_T("Info logging"));
+  m_comboLogLevel.AddString(_T("Info & bodies"));
+  m_comboLogLevel.AddString(_T("Tracing"));
+  m_comboLogLevel.AddString(_T("Tracing & HEX-Dumping"));
 
   UpdateData(FALSE);
   return TRUE;
@@ -154,23 +154,23 @@ void
 WebConfigLogging::ReadWebConfig(MarlinConfig& config)
 {
   // LOGFILE OVERRIDES
-  m_useLogfile    = config.HasParameter("Logging","Logfile");
-  m_useLogCaching = config.HasParameter("Logging","Cache");
-  m_useLogging    = config.HasParameter("Logging","DoLogging");
-  m_useLogTiming  = config.HasParameter("Logging","DoTiming");
-  m_useLogEvents  = config.HasParameter("Logging","DoEvents");
-  m_useLogLevel   = config.HasParameter("Logging","LogLevel");
-  m_useRotate     = config.HasParameter("Logging","Rotate");
-  m_usePerUser    = config.HasParameter("Logging","PerUser");
+  m_useLogfile    = config.HasParameter(_T("Logging"),_T("Logfile"));
+  m_useLogCaching = config.HasParameter(_T("Logging"),_T("Cache"));
+  m_useLogging    = config.HasParameter(_T("Logging"),_T("DoLogging"));
+  m_useLogTiming  = config.HasParameter(_T("Logging"),_T("DoTiming"));
+  m_useLogEvents  = config.HasParameter(_T("Logging"),_T("DoEvents"));
+  m_useLogLevel   = config.HasParameter(_T("Logging"),_T("LogLevel"));
+  m_useRotate     = config.HasParameter(_T("Logging"),_T("Rotate"));
+  m_usePerUser    = config.HasParameter(_T("Logging"),_T("PerUser"));
 
-  m_logfile       = config.GetParameterString ("Logging","Logfile",         "");
-  m_logCache      = config.GetParameterInteger("Logging","Cache",            0);
-  m_doLogging     = config.GetParameterBoolean("Logging","DoLogging",    false);
-  m_doTiming      = config.GetParameterBoolean("Logging","DoTiming",     false);
-  m_doEvents      = config.GetParameterBoolean("Logging","DoEvents",     false);
-  m_logLevel      = config.GetParameterInteger("Logging","LogLevel",         0);
-  m_doRotate      = config.GetParameterBoolean("Logging","Rotate",       false);
-  m_doPerUser     = config.GetParameterBoolean("Logging","PerUser",      false);
+  m_logfile       = config.GetParameterString (_T("Logging"),_T("Logfile"),         _T(""));
+  m_logCache      = config.GetParameterInteger(_T("Logging"),_T("Cache"),            0);
+  m_doLogging     = config.GetParameterBoolean(_T("Logging"),_T("DoLogging"),    false);
+  m_doTiming      = config.GetParameterBoolean(_T("Logging"),_T("DoTiming"),     false);
+  m_doEvents      = config.GetParameterBoolean(_T("Logging"),_T("DoEvents"),     false);
+  m_logLevel      = config.GetParameterInteger(_T("Logging"),_T("LogLevel"),         0);
+  m_doRotate      = config.GetParameterBoolean(_T("Logging"),_T("Rotate"),       false);
+  m_doPerUser     = config.GetParameterBoolean(_T("Logging"),_T("PerUser"),      false);
 
   // INIT THE CHECKBOXES
   m_buttonLogging .SetCheck(m_doLogging);
@@ -196,24 +196,24 @@ WebConfigLogging::ReadWebConfig(MarlinConfig& config)
 void
 WebConfigLogging::WriteWebConfig(MarlinConfig& config)
 {
-  config.SetSection("Logging");
+  config.SetSection(_T("Logging"));
 
-  if(m_useLogfile)    config.SetParameter   ("Logging","Logfile",  m_logfile);
-  else                config.RemoveParameter("Logging","Logfile");
-  if(m_useLogCaching) config.SetParameter   ("Logging","Cache",    m_logCache);
-  else                config.RemoveParameter("Logging","Cache");
-  if(m_useLogging)    config.SetParameter   ("Logging","DoLogging",m_doLogging);
-  else                config.RemoveParameter("Logging","DoLogging");
-  if(m_useLogTiming)  config.SetParameter   ("Logging","DoTiming", m_doTiming);
-  else                config.RemoveParameter("Logging","DoTiming");
-  if(m_useLogEvents)  config.SetParameter   ("Logging","DoEvents", m_doEvents);
-  else                config.RemoveParameter("Logging","DoEvents");
-  if(m_useLogLevel)   config.SetParameter   ("Logging","LogLevel", m_logLevel);
-  else                config.RemoveParameter("Logging","LogLevel");
-  if(m_useRotate)     config.SetParameter   ("Logging","Rotate",   m_doRotate);
-  else                config.RemoveParameter("Logging","Rotate");
-  if(m_usePerUser)    config.SetParameter   ("Logging","PerUser",  m_doPerUser);
-  else                config.RemoveParameter("Logging","PerUsër");
+  if(m_useLogfile)    config.SetParameter   (_T("Logging"),_T("Logfile"),  m_logfile);
+  else                config.RemoveParameter(_T("Logging"),_T("Logfile"));
+  if(m_useLogCaching) config.SetParameter   (_T("Logging"),_T("Cache"),    m_logCache);
+  else                config.RemoveParameter(_T("Logging"),_T("Cache"));
+  if(m_useLogging)    config.SetParameter   (_T("Logging"),_T("DoLogging"),m_doLogging);
+  else                config.RemoveParameter(_T("Logging"),_T("DoLogging"));
+  if(m_useLogTiming)  config.SetParameter   (_T("Logging"),_T("DoTiming"), m_doTiming);
+  else                config.RemoveParameter(_T("Logging"),_T("DoTiming"));
+  if(m_useLogEvents)  config.SetParameter   (_T("Logging"),_T("DoEvents"), m_doEvents);
+  else                config.RemoveParameter(_T("Logging"),_T("DoEvents"));
+  if(m_useLogLevel)   config.SetParameter   (_T("Logging"),_T("LogLevel"), m_logLevel);
+  else                config.RemoveParameter(_T("Logging"),_T("LogLevel"));
+  if(m_useRotate)     config.SetParameter   (_T("Logging"),_T("Rotate"),   m_doRotate);
+  else                config.RemoveParameter(_T("Logging"),_T("Rotate"));
+  if(m_usePerUser)    config.SetParameter   (_T("Logging"),_T("PerUser"),  m_doPerUser);
+  else                config.RemoveParameter(_T("Logging"),_T("PerUsër"));
 }
 
 // WebConfigDlg message handlers
@@ -233,13 +233,13 @@ void WebConfigLogging::OnBnClickedButtLogfile()
 {
   DocFileDialog file(GetSafeHwnd()
                     ,true
-                    ,"Enter the path to the logfile"
-                    ,"txt"
+                    ,_T("Enter the path to the logfile")
+                    ,_T("txt")
                     ,m_logfile
                     ,0
-                    ,"Text log files (*.txt)|*.txt|"
-                    "All file types (*.*)|*.*|"
-                    ,"");
+                    ,_T("Text log files (*.txt)|*.txt|")
+                    _T("All file types (*.*)|*.*|")
+                    ,_T(""));
   if(file.DoModal() == IDOK)
   {
     XString pad = file.GetChosenFile();

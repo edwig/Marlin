@@ -63,31 +63,11 @@ class URL;
 extern ServerSession* g_session;
 
 // Global error pages for the server
-extern const char* http_server_error;
-extern const char* http_client_error;
+extern LPCTSTR http_server_error;
+extern LPCTSTR http_client_error;
 
 // GENERAL SERVICE FUNCTIONS
 
 // Splits a URL-Prefix string into an URL object (no context yet)
 ULONG SplitURLPrefix(CString p_fullprefix,URL* p_url);
 
-// Helper classes
-//
-class AutoCritSec
-{
-public:
-  AutoCritSec(CRITICAL_SECTION* section) : m_section(section)
-  {
-    EnterCriticalSection(m_section);
-  }
-  ~AutoCritSec()
-  {
-    LeaveCriticalSection(m_section);
-  }
-
-  void Unlock() { LeaveCriticalSection(m_section); };
-  void Relock() { EnterCriticalSection(m_section); };
-
-private:
-  CRITICAL_SECTION* m_section;
-};

@@ -133,7 +133,7 @@ static int FormatAddress(SOCKADDR* sa,int salen,char* addrbuf,int addrbuflen,cha
 
   if(sa->sa_family == AF_INET)
   {
-    if(FAILED(hRet = StringCchPrintf(addrbuf,addrbuflen,"%s:%s",host,serv)))
+    if(FAILED(hRet = StringCchPrintfA(addrbuf,addrbuflen,"%s:%s",host,serv)))
     {
       sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"%s StringCchPrintf failed: 0x%x\n",__FILE__,hRet);
       return (int)hRet;
@@ -141,7 +141,7 @@ static int FormatAddress(SOCKADDR* sa,int salen,char* addrbuf,int addrbuflen,cha
   }
   else if(sa->sa_family == AF_INET6)
   {
-    if(FAILED(hRet = StringCchPrintf(addrbuf,addrbuflen,"[%s]:%s",host,serv)))
+    if(FAILED(hRet = StringCchPrintfA(addrbuf,addrbuflen,"[%s]:%s",host,serv)))
     {
       sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"%s StringCchPrintf failed: 0x%x\n",__FILE__,hRet);
       return (int)hRet;
@@ -202,7 +202,7 @@ static int ReverseLookup(SOCKADDR* sa,int salen,char* buf,int buflen,char* p_err
   }
 
   buf[0] = '\0';
-  if(FAILED(hRet = StringCchCopy(buf,buflen,host)))
+  if(FAILED(hRet = StringCchCopyA(buf,buflen,host)))
   {
     sprintf_s(p_errorbuffer,ERROR_BUFFER_SIZE,"StringCchCopy failed: 0x%x\n",hRet);
     return (int)hRet;

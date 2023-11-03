@@ -29,6 +29,7 @@
 #include "Alert.h"
 #include "GetExePath.h"
 #include "AutoCritical.h"
+#include "WinFile.h"
 #include <strsafe.h>
 #include <sys/timeb.h>
 #include <time.h>
@@ -109,7 +110,7 @@ XString GetAlertlogPath(int p_module)
       return it->second;
     }
   }
-  return "";
+  return _T("");
 }
 
 // Clean up all alert paths and modules
@@ -173,7 +174,7 @@ __int64 CreateAlert(LPCTSTR p_function,LPCTSTR p_oserror,LPCTSTR p_eventdata,int
     _localtime64_s(&today,&now.time);
 
     // Creating a filename for the alert
-    fileName.Format("%sAlert_%4.4d_%2.2d_%2.2d_%2.2d_%2.2d_%2.2d_%3.3d_%I64u.log"
+    fileName.Format(_T("%sAlert_%4.4d_%2.2d_%2.2d_%2.2d_%2.2d_%2.2d_%3.3d_%I64u.log")
                     ,path.GetString()
                     ,today.tm_year + 1900
                     ,today.tm_mon + 1
@@ -189,11 +190,11 @@ __int64 CreateAlert(LPCTSTR p_function,LPCTSTR p_oserror,LPCTSTR p_eventdata,int
     if(file.Open(winfile_write))
     {
       // Directly print our information to the alert file
-      file.Write("APPLICATION ALERT FILE\n");
-      file.Write("======================\n");
-      file.Write("\n");
-      file.Format("Server module: %s\n",GetExeFile().GetString());
-      file.Format("Alert moment : %4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d.%3.3d\n"
+      file.Write(_T("APPLICATION ALERT FILE\n"));
+      file.Write(_T("======================\n"));
+      file.Write(_T("\n"));
+      file.Format(_T("Server module: %s\n"),GetExeFile().GetString());
+      file.Format(_T("Alert moment : %4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d.%3.3d\n")
                   ,today.tm_year + 1900
                   ,today.tm_mon  + 1
                   ,today.tm_mday
@@ -201,12 +202,12 @@ __int64 CreateAlert(LPCTSTR p_function,LPCTSTR p_oserror,LPCTSTR p_eventdata,int
                   ,today.tm_min
                   ,today.tm_sec
                   ,now.millitm);
-      file.Format("Alert number : %I64d\n",alert);
-      file.Format("App function : %s\n",p_function);
-      file.Format("Last os error: %s\n",p_oserror);
-      file.Format("Event text   : %s\n",p_eventdata);
-      file.Write("\n");
-      file.Write("*** End of alert ***\n");
+      file.Format(_T("Alert number : %I64d\n"),alert);
+      file.Format(_T("App function : %s\n"),p_function);
+      file.Format(_T("Last os error: %s\n"),p_oserror);
+      file.Format(_T("Event text   : %s\n"),p_eventdata);
+      file.Write(_T("\n"));
+      file.Write(_T("*** End of alert ***\n"));
 
       // Ignore return value: Nothing can be done if file cannot be flushed
       file.Close();

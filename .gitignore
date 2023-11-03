@@ -13,6 +13,11 @@ binDebug_x64/
 binDebug_win32/
 binRelease_x64/
 binRelease_win32/
+binDebugUnicode_win32/
+BinDebugUnicode_x64/
+BinReleaseUnicode_win32/
+BinReleaseUnicode_x64/
+Win32/
 Marlin-cppcheck-build-dir/
  
 # User-specific files (MonoDevelop/Xamarin Studio) 
@@ -20,8 +25,10 @@ Marlin-cppcheck-build-dir/
  
 # Build results 
 [Dd]ebug/
+[Dd]ebugUnicode/
 [Dd]ebugPublic/
 [Rr]elease/
+[Rr]eleaseUnicode/
 [Rr]eleases/
 x64/
 x86/

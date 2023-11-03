@@ -42,13 +42,13 @@ TestMarlinServerAppFactory factory;
 // Generally this will only create ONE object
 //
 ServerApp* 
-TestMarlinServerAppFactory::CreateServerApp(IHttpServer*  p_iis
-                                           ,const char*   p_webroot
-                                           ,const char*   p_appName)
+TestMarlinServerAppFactory::CreateServerApp(IHttpServer* p_iis
+                                           ,LPCTSTR      p_webroot
+                                           ,LPCTSTR      p_appName)
 {
   static TestMarlinServerAppPool* theOne = nullptr;
 
-  LoadConstants((char*)"MarlinServer");
+  LoadConstants(_T("MarlinServer"));
 
   // Generally we want only ONE app. Here we have one app and three sites
   if(theOne == nullptr)
