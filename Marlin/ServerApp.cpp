@@ -272,9 +272,24 @@ ServerApp::ExitInstance()
   // Stopping our logfile
   if(m_logfile)
   {
+    bool writer = m_logfile->GetBackgroundWriter();
     m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,_T("%s closed"),m_applicationName.GetString());
+    m_logfile->Reset();
 
-    delete m_logfile;
+    // The server is about to stop. So we wait for the background writer to stop also
+    // otherwise the last thread might be prematurely stopped.
+    if(writer)
+    {
+      for(int ind = 0;ind < 100; ++ind)
+      {
+        if(m_logfile->GetBackgroundWriter() == false)
+        {
+          break;
+        }
+        Sleep(100);
+      }
+    }
+    LogAnalysis::DeleteLogfile(m_logfile);
     m_logfile = nullptr;
   }
 
@@ -331,7 +346,7 @@ ServerApp::StartLogging()
     ensure.CreateDirectory();
 
     // Create the logfile
-    m_logfile = new LogAnalysis(m_applicationName);
+    m_logfile = LogAnalysis::CreateLogfile(m_applicationName);
     m_logfile->SetLogFilename(logfile);
     m_logfile->SetLogRotation(true);
     m_logfile->SetLogLevel(m_config.GetDoLogging() ? HLL_LOGGING : HLL_NOLOG);

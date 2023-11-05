@@ -121,6 +121,7 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
     XString action = FindFieldInHTTPHeader(m_contentType,_T("Action"));
     SetSoapActionFromHTTTP(action);
   }
+  delete[] buffer;
 }
 
 // XTOR from a JSON message

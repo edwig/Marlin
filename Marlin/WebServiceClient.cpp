@@ -100,7 +100,7 @@ WebServiceClient::SetLogAnalysis(LogAnalysis* p_log)
 {
   if(m_logfile && m_logOwner)
   {
-    delete m_logfile;
+    LogAnalysis::DeleteLogfile(m_logfile);
     m_logfile = nullptr;
   }
   m_logfile  = p_log;
@@ -182,7 +182,7 @@ WebServiceClient::Open()
   {
     DETAILLOG1(_T("Creating new logfile"));
     m_logOwner = true;
-    m_logfile = new LogAnalysis(_T("WebServiceClient"));
+    m_logfile = LogAnalysis::CreateLogfile(_T("WebServiceClient"));
     m_logfile->SetLogFilename(m_logFilename);
     m_logfile->SetLogLevel(m_logLevel);
     m_logfile->SetDoTiming(true);
@@ -287,7 +287,7 @@ WebServiceClient::Close()
   // All logging done. destruct logfile
   if(m_logfile && m_logOwner)
   {
-    delete m_logfile;
+    LogAnalysis::DeleteLogfile(m_logfile);
     m_logfile = nullptr;
     m_logOwner = false;
   }

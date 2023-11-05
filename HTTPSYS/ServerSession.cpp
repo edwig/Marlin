@@ -50,7 +50,7 @@ ServerSession::~ServerSession()
   // Remove the logfile
   if(m_logfile)
   {
-    delete m_logfile;
+    LogAnalysis::DeleteLogfile(m_logfile);
     m_logfile = nullptr;
   }
 
@@ -285,7 +285,7 @@ void
 ServerSession::CreateLogfile()
 {
   CString name(_T("HTTP_Server"));
-  m_logfile = new LogAnalysis(name);
+  m_logfile = LogAnalysis::CreateLogfile(name);
   m_logfile->SetLogRotation(true);
   m_logfile->SetLogLevel(m_socketLogging = SOCK_LOGGING_FULLTRACE);
 

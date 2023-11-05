@@ -181,7 +181,7 @@ WebServiceServer::Reset()
   // Remove Logfile
   if(m_log && m_logOwner)
   {
-    delete m_log;
+    LogAnalysis::DeleteLogfile(m_log);
     m_log = nullptr;
     m_logOwner = false;
   }
@@ -253,7 +253,7 @@ WebServiceServer::SetLogAnalysis(LogAnalysis* p_log)
   // Remove our own logfile
   if(m_log && m_logOwner)
   {
-    delete m_log;
+    LogAnalysis::DeleteLogfile(m_log);
     m_log = nullptr;
     m_logOwner = false;
   }
@@ -445,7 +445,7 @@ WebServiceServer::RunService()
   if(m_log == nullptr)
   {
     m_logOwner = true;
-    m_log = new LogAnalysis(_T("Webservice: ") + m_name);
+    m_log = LogAnalysis::CreateLogfile(_T("Webservice: ") + m_name);
     if(!m_logFilename.IsEmpty())
     {
       m_log->SetLogFilename(m_logFilename);

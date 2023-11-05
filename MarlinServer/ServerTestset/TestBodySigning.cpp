@@ -64,7 +64,7 @@ SiteHandlerSoapBodySign::Handle(SOAPMessage* p_message)
     // BEWARE: Value is dependent on the message from Client:TestInsecure
     //         AND the body singing password in that file and this one!!
     XString sigValue = signature->GetValue();
-    if(sigValue == _T("cr4Eci/L8w+riKG+hK/v2kuIJGo="))
+    if(sigValue == _T("d37d76e087e7d8cd79deae39cc1e39b481bac420"))
     {
       bodyResult = true;
       --totalChecks;

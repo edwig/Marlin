@@ -271,6 +271,7 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
 
 
   WebServiceClient client(contract,url,wsdl);
+  LogAnalysis* log = nullptr;
 
   if(p_tokenProfile)
   {
@@ -292,14 +293,14 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
     // Need a logfile before the call to "Open()"
 
     // Create log file and turn logging 'on'
-    LogAnalysis log(_T("TestHTTPClient"));
-    log.SetLogFilename(logfileName,true);
-    log.SetLogLevel(HLL_LOGGING);
-    log.SetDoTiming(true);
-    log.SetDoEvents(false);
-    log.SetCache(1000);
+    log = LogAnalysis::CreateLogfile(_T("TestHTTPClient"));
+    log->SetLogFilename(logfileName,true);
+    log->SetLogLevel(HLL_LOGGING);
+    log->SetDoTiming(true);
+    log->SetDoEvents(false);
+    log->SetCache(1000);
 
-    client.SetLogAnalysis(&log);
+    client.SetLogAnalysis(log);
     client.SetLogLevel(HLL_LOGGING);
   }
 
@@ -361,6 +362,10 @@ int TestContract(HTTPClient* p_client,bool p_json,bool p_tokenProfile)
     // --- "---------------------------------------------- - ------
     _tprintf(_T("Service contract: works fine!                  : OK\n"));
     _tprintf(_T("tested UTF-8 for the West-European languages!  : OK\n"));
+  }
+  if(log)
+  {
+    LogAnalysis::DeleteLogfile(log);
   }
   return errors;
 }

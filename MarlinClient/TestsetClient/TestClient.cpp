@@ -74,7 +74,7 @@ StartClient(int p_loglevel)
   XString logfileName = MarlinConfig::GetExePath() + _T("ClientLog.txt");
 
   // Create log file and turn logging 'on'
-  g_log = new LogAnalysis(_T("TestHTTPClient"));
+  g_log = LogAnalysis::CreateLogfile(_T("TestHTTPClient"));
   g_log->SetLogFilename(logfileName,true);
   g_log->SetLogLevel(p_loglevel);
   g_log->SetDoTiming(true);
@@ -98,7 +98,7 @@ StopClient(HTTPClient* p_client)
 
   // Stop the logfile
   g_log->Reset();
-  delete g_log;
+  LogAnalysis::DeleteLogfile(g_log);
   g_log = nullptr;
 }
 
@@ -192,6 +192,15 @@ int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
     _tprintf(_T("\nRead everything? "));
     WaitForKey();
 
+    // Wait until the queue is drained
+    for(int ind = 0;ind < 20;++ind)
+    {
+      Sleep(1000);
+      if(client->GetQueueSize() == 0)
+      {
+        break;
+      }
+    }
     // And stop the client
     StopClient(client);
   }

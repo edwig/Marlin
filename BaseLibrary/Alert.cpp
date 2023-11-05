@@ -147,8 +147,8 @@ void CleanupAlerts()
 // Create the alert. Returns the alert number (natural ordinal number)
 __int64 CreateAlert(LPCTSTR p_function,LPCTSTR p_oserror,LPCTSTR p_eventdata,int p_module /*=0*/)
 {
-  // See if we are configured
-  if(g_alertPath == nullptr)
+  // See if we are configured and have something to do
+  if(g_alertPath == nullptr || _tcslen(p_eventdata) == 0)
   {
     return 0;
   }

@@ -190,7 +190,7 @@ HTTPClient::Reset()
   // Reset the logging
   if(m_log && m_logOwner)
   {
-    delete m_log;
+    LogAnalysis::DeleteLogfile(m_log);
     m_log      = NULL;
     m_logOwner = false;
   }
@@ -465,7 +465,7 @@ HTTPClient::InitLogging()
   if(m_log == NULL && !file.IsEmpty() && logging)
   {
     // Create a new one
-    m_log = new LogAnalysis(m_agent);
+    m_log = LogAnalysis::CreateLogfile(m_agent);
     m_logOwner = true;
   }
 
@@ -510,7 +510,7 @@ HTTPClient::SetLogging(LogAnalysis* p_log,bool p_transferOwnership /*= false*/)
 {
   if(m_log && m_logOwner)
   {
-    delete m_log;
+    LogAnalysis::DeleteLogfile(m_log);
     m_log = nullptr;
     m_logOwner = false;
   }

@@ -161,7 +161,7 @@ HTTPServerIIS::Cleanup()
   // Closing the logging file
   if(m_log && m_logOwner)
   {
-    delete m_log;
+    LogAnalysis::DeleteLogfile(m_log);
     m_log = NULL;
   }
 }

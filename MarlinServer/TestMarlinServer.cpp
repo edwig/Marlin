@@ -360,7 +360,7 @@ TestMarlinServer::ConfigToServer()
     m_poolOwner   = true;  // Do DTOR ourselves!!
 
     // Create a logfile
-    m_log         = new LogAnalysis(PRODUCT_NAME);
+    m_log         = LogAnalysis::CreateLogfile(PRODUCT_NAME);
     m_logOwner    = true;  // Do DTOR later!
 
     // Create a sync server or a a-synchronous server

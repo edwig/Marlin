@@ -97,9 +97,13 @@ using BufList = std::deque<LogBuff>;
 
 class LogAnalysis
 {
-public:
-  explicit LogAnalysis(XString p_name);
+private:
+  // Use Create/Delete-Logfile methods instead!!
+  LogAnalysis(XString p_name);
  ~LogAnalysis();
+public:
+  static LogAnalysis* CreateLogfile(XString p_name);
+  static bool         DeleteLogfile(LogAnalysis* p_log);
 
   // Log this line
   // Intended to be called as:
@@ -155,6 +159,10 @@ public:
   static  void WriteEvent(HANDLE p_eventLog,LogType p_type,XString& p_buffer);
 
 private:
+  // Refcounting for CTOR/DTOR
+  long    Acquire();
+  long    Release();
+  // Mehods
   void    Initialisation();
   void    ReadConfig();
   void    AppendDateTimeToFilename();
@@ -168,6 +176,7 @@ private:
   // Settings
   XString m_name;                               // For WMI Event viewer
   WinFile m_file;                               // Writing to this file
+  long    m_refcounter  { 0 };                  // Reference counter
   int     m_logLevel    { HLL_NOLOG };          // Active logging level
   bool    m_doTiming    { true  };              // Prepend date-and-time to log-lines
   bool    m_doEvents    { false };              // Also write to WMI event log
