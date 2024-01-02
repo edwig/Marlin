@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2022 ir. W.E. Huisman
+// Copyright (c) 2014-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -156,6 +156,7 @@ public:
 
   // Set the alternative namespace
   void            SetNamespace(XString p_namespace);
+  void            SetForceNamespace(bool p_force);
   // Set Command name
   void            SetSoapAction(const XString& p_name);
   void            SetHasInitialAction(bool p_initial);
@@ -233,6 +234,7 @@ public:
 
   // Get the service level namespace
   XString         GetNamespace() const;
+  bool            GetForceNamespace() const;
   // Get name of the soap action command (e.g. for messages and debug)
   XString         GetSoapAction() const;
   bool            GetMustUnderstandAction() const;
@@ -437,6 +439,7 @@ protected:
   bool            m_incoming      { false };              // Incoming SOAP message
   bool            m_addAttribute  { true  };              // Add "mustUnderstand" attribute to <Envelope>/<Action>
   bool            m_understand    { true  };              // Set "mustUnderstand" to true or false
+  bool            m_forceNamespace{ true  };              // Force message namespace in first body node
   // DESTINATION
   unsigned        m_status        { HTTP_STATUS_OK };     // HTTP status return code
   HTTP_OPAQUE_ID  m_request       { NULL  };              // Request it must answer
@@ -996,6 +999,18 @@ inline void
 SOAPMessage::SetStatus(unsigned p_status)
 {
   m_status = p_status;
+}
+
+inline bool
+SOAPMessage::GetForceNamespace() const
+{
+  return m_forceNamespace;
+}
+
+inline void
+SOAPMessage::SetForceNamespace(bool p_force)
+{
+  m_forceNamespace = p_force;
 }
 
 //////////////////////////////////////////////////////////////////////////

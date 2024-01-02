@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2022 ir. W.E. Huisman
+// Copyright (c) 2014-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -246,7 +246,7 @@ public:
   // Add a routing part
   void    AddRoute(XString p_route);
   // Convert system time to HTTP time string
-  XString HTTPTimeFormat(PSYSTEMTIME p_systime = NULL);
+  XString HTTPTimeFormat(PSYSTEMTIME p_systime = nullptr);
   // Convert HTTP time string to system time
   bool    SetHTTPTime(XString p_timestring);
   // Change POST method to PUT/MERGE/PATCH/DELETE (Incoming!)

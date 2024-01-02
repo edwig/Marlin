@@ -4,7 +4,7 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2014-2022 ir. W.E. Huisman
+// Copyright (c) 2014-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -47,7 +47,7 @@ void LoadConstants(LPTSTR /*p_app_name*/)
   APPLICATION_NAME      = _T("MarlinServer.exe");                     // Name of the application EXE file!!
   PRODUCT_NAME          = _T(MARLIN_PRODUCT_NAME);                    // Short name of the product (one word only)
   PRODUCT_DISPLAY_NAME  = _T("Service for MarlinServer tester");      // "Service for PRODUCT_NAME: <description of the service>"
-  PRODUCT_COPYRIGHT     = _T("Copyright (c) 2023 ir. W.E. Huisman");  // Copyright line of the product (c) <year> etc.
+  PRODUCT_COPYRIGHT     = _T("Copyright (c) 2024 ir. W.E. Huisman");  // Copyright line of the product (c) <year> etc.
   PRODUCT_VERSION       = _T(MARLIN_VERSION_NUMBER);                  // Short version string (e.g.: "3.2.0") Release.major.minor ONLY!
   PRODUCT_MESSAGES_DLL  = _T("MarlinServerMessages.dll");             // Filename of the WMI Messages dll.
   PRODUCT_SITE          = _T("/MarlinTest/");                         // Standard base URL absolute path e.g. "/MarlinServer/"

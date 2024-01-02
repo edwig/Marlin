@@ -5,7 +5,7 @@
 // Std Mfc eXtension String is a string derived from std::string
 // But does just about everything that MFC XString also does
 // 
-// Copyright (c) 2014-2022 ir. W.E. Huisman MSC
+// Copyright (c) 2014-2024 ir. W.E. Huisman MSC
 //
 // Permission is hereby granted, free of charge, to any person obtaining a 
 // copy of this software and associated documentation files(the "Software"), 

@@ -3612,7 +3612,6 @@ WinFile::PageBufferRead()
 
       DWORD write = 0;
       DWORD size = (DWORD)((size_t)m_pagePointer - (size_t)m_pageBuffer);
-
       if (::WriteFile(m_file, m_pageBuffer, size, &write, nullptr) == 0)
       {
         m_error = ::GetLastError();

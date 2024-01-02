@@ -2,7 +2,7 @@
 //
 // SourceFile: Environment.cpp
 //
-// Copyright (c) 2015 ir. W.E. Huisman
+// Copyright (c) 2015-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy

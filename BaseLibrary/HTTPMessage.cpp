@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2022 ir. W.E. Huisman
+// Copyright (c) 2014-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -967,17 +967,21 @@ HTTPMessage::DelHeader(XString p_name)
 // Convert system time to HTTP time string
 // leaves the m_systemtime member untouched!!
 XString
-HTTPMessage::HTTPTimeFormat(PSYSTEMTIME p_systime /*=NULL*/)
+HTTPMessage::HTTPTimeFormat(PSYSTEMTIME p_systime /*=nullptr*/)
 {
   XString    result;
-  SYSTEMTIME sTime;
+  SYSTEMTIME systime;
 
   // Getting the current time if not given
   // WINDOWS API does also this if p_systime is empty
-  if(p_systime == nullptr)
+  if(p_systime == nullptr || (p_systime->wYear   == 0 &&
+                              p_systime->wMonth  == 0 && 
+                              p_systime->wDay    == 0 &&
+                              p_systime->wHour   == 0 && 
+                              p_systime->wMinute == 0))
   {
-    p_systime = &sTime;
-    ::GetSystemTime(&sTime);
+    p_systime = &systime;
+    ::GetSystemTime(&systime);
   }
   // Convert the current time to HTTP format.
   if(!HTTPTimeFromSystemTime(p_systime,result))

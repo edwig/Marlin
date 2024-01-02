@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2022 ir. W.E. Huisman
+// Copyright (c) 2014-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -47,7 +47,7 @@ const TCHAR* weekday_short[7] =
 
 const TCHAR* weekday_long[7] =
 {
-    _T("Sunday")
+   _T("Sunday")
   ,_T("Monday")
   ,_T("Tuesday")
   ,_T("Wednesday")
@@ -78,7 +78,11 @@ bool
 HTTPTimeFromSystemTime(const SYSTEMTIME* p_systemtime,XString& p_time)
 {
   // Check that we have a system time
-  if(!p_systemtime)
+  if(!p_systemtime ||
+      p_systemtime->wDayOfWeek < 0 ||
+      p_systemtime->wDayOfWeek > 6 ||
+      p_systemtime->wMonth     < 1 ||
+      p_systemtime->wMonth     > 12 )
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return false;
@@ -159,7 +163,7 @@ HTTPTimeToSystemTime(const XString p_time,SYSTEMTIME* p_systemtime)
     ++index;
   }
   // If empty string, use default system time
-  // Various implementations e.g. MS-Windows do this strange behaviour
+  // Various implementations e.g. MS-Windows do this strange behavior
   // by getting the current system time
   if(index >= length)
   {

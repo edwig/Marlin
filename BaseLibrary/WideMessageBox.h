@@ -2,7 +2,7 @@
 //
 // SourceFile: WideMessageBox.h
 //
-// Copyright (c) 2006-2017 ir. W.E. Huisman
+// Copyright (c) 2006-2024 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
