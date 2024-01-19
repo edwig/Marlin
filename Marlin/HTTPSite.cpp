@@ -588,7 +588,7 @@ HTTPSite::RemoveSiteFromGroup()
 XString
 HTTPSite::GetAuthenticationScheme() 
 { 
-  if(m_scheme.IsEmpty() && m_mainSite)
+  if(m_mainSite && (m_scheme.IsEmpty() || m_scheme.CompareNoCase("Anonymous") == 0))
   {
     return m_mainSite->GetAuthenticationScheme();
   }
