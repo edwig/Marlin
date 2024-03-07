@@ -20,6 +20,17 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     in real life production scenario's. The 'tls_lastErrror' variable has been removed from the 
     HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
 
+CHANGES IN VERSION 8.x.0 of xx-xx-2024
+--------------------------------------
+1)  HTTPClient now has a new method "SetResolveChunked(bool)" for removing the response header
+    'Transfer-encoding: chunked' on incoming received messages. So any framework can pass on the
+    received header as a normal message with a content length.
+    Use this method before sending a HTTP/SOAP/JSON Message
+2)  Upon conversion of a SOAP/JSON message back to a HTTPMessage, the content length will be 
+    restored to the now changed content.
+3)  Marlin project is synched with the last version of the BaseLibrary
+
+
 CHANGES IN VERSION 8.3.0 of 03-11-2023
 --------------------------------------
 1)  Fully Unicode Aware. Can build in ANSI/MBCS mode or in Unicode UTF-16 mode

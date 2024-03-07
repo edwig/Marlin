@@ -1836,7 +1836,7 @@ HTTPClient::ReceiveResponseDataBuffer()
 
 // Process a chunked response to the 'normal' form
 // Normally WinHTTP already decodes the chunking
-// but cases exist where chunked input still comes in the input buffers
+// But some frameworks will need to have the header transformed
 void
 HTTPClient::ProcessChunkedEncoding()
 {
@@ -1847,63 +1847,19 @@ HTTPClient::ProcessChunkedEncoding()
   {
     return;
   }
-
-  unsigned totalSize = 0;
-  unsigned chunkSize = 0;
-  uchar* writing = m_response;
-  uchar* reading = m_response;
-
-  reading = GetChunkSize(reading,chunkSize);
-  while(chunkSize)
+  if(m_resolveChunked)
   {
-    totalSize += chunkSize;
-    // Check that we do not process past the end of the buffer
-    if(totalSize > m_responseLength)
-    {
-      break;
-    }
+    // Caller opts-in for removing the transfer-encoding
+    XString length;
+    length.Format(_T("%u"),m_responseLength);
 
-    // Getting the chunk
-    while(chunkSize--)
+    HeaderMap::iterator it = m_responseHeaders.find(_T("Transfer-Encoding"));
+    if(it != m_responseHeaders.end())
     {
-      *writing++ = *reading++;
+      m_responseHeaders.erase(it);
     }
-    *writing = 0;
-    if (*reading == '\r') ++reading;
-    if (*reading == '\n') ++reading;
-
-    reading = GetChunkSize(reading,chunkSize);
+    m_responseHeaders.insert(std::make_pair(_T("Content-Length"),length));
   }
-
-  if(totalSize)
-  {
-    m_responseLength = totalSize;
-  }
-}
-
-// Determine next chunk size in chunked response
-uchar*
-HTTPClient::GetChunkSize(uchar* p_reading,unsigned& p_size)
-{
-  p_size = 0;
-  while(_istxdigit(*p_reading))
-  {
-    p_size *= 16;
-    int ch = _totupper(*p_reading);
-    if(ch >= 'A')
-    {
-      p_size += (10 + ch - 'A');
-    }
-    else
-    {
-      p_size += (ch - '0');
-    }
-    ++p_reading;
-  }
-  if(*p_reading == '\r') ++p_reading;
-  if(*p_reading == '\n') ++p_reading;
-
-  return p_reading;
 }
 
 void

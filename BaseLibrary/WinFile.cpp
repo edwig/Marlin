@@ -353,17 +353,17 @@ WinFile::Exists()
   return _taccess(m_filename.GetString(),0) != -1;
 }
 
-// Check for access to the file
+// Check for access to the file or directory
 bool
 WinFile::CanAccess(bool p_write /*= false*/)
 {
-  // In case we already had an opened file: use the file modes
+  // In case we already had an opened file: use the file mode
   if(m_file)
   {
     // See if file was opened in write-mode
     if(p_write)
     {
-      return (m_openMode & FFlag::open_read);
+      return (m_openMode & FFlag::open_write) > 0;
     }
     // Existence and read-access both granted
     return true;
@@ -372,21 +372,26 @@ WinFile::CanAccess(bool p_write /*= false*/)
   // Go take a look on the filesystem
 
   // Default check for read access
-  int mode = 4;
-
+  DWORD mode = GENERIC_READ;
   // Also check for write access
   if(p_write)
   {
-    mode |= 2;
+    mode |= GENERIC_WRITE;
   }
-  // Use low-level POSIX access function.
-  // Other MS-Windows functions call this one, so use it directly
-  if(_taccess(m_filename.GetString(),mode) != -1)
+  HANDLE handle = CreateFile(m_filename,
+                             mode,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE,  // share for reading and writing
+                             NULL,                                // no security
+                             OPEN_EXISTING,                       // existing file only, testing only
+                             FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
+                             NULL);
+  if(handle == INVALID_HANDLE_VALUE)
   {
+    return false;
+  }
+  CloseHandle(handle);
     return true;
   }
-  return false;
-}
 
 // Remove the file from the filesystem
 bool
@@ -794,7 +799,7 @@ WinFile::Read(XString& p_string,uchar p_delim /*= '\n'*/)
 {
   std::string result;
   bool unicodeSkip(false);
-  uchar last(0);
+  int  last(0);
 
   // Reset the error
   m_error = 0;
@@ -817,14 +822,14 @@ WinFile::Read(XString& p_string,uchar p_delim /*= '\n'*/)
 
   while(true)
   {
-    uchar ch(PageBufferRead());
-    if(ch == (uchar)EOF)
+    int ch(PageBufferRead());
+    if(ch == EOF)
     {
       m_error = ::GetLastError();
       p_string = TranslateInputBuffer(result);
       return p_string.GetLength() ? true : false;
     }
-    result += ch;
+    result += (uchar)ch;
 
     // Do the CR/LF to "\n" translation
     if(m_openMode & FFlag::open_trans_text)
@@ -836,12 +841,12 @@ WinFile::Read(XString& p_string,uchar p_delim /*= '\n'*/)
       }
       if(ch == '\r')
       {
-        uchar ext;
+        int ext;
         crstate = true;
         switch(m_encoding)
         {
           case Encoding::LE_UTF16:  ext = PageBufferRead();
-                                    result += ext;
+                                    result += (uchar) ext;
                                     if(ext)
                                     {
                                       crstate = false;
@@ -863,7 +868,7 @@ WinFile::Read(XString& p_string,uchar p_delim /*= '\n'*/)
     if(ch == p_delim && m_encoding == Encoding::LE_UTF16)
     {
       // Read in trailing zero for a newline in this encoding
-      result += (last = PageBufferRead());
+      result += (uchar)(last = PageBufferRead());
     }
     if(crstate && ch == p_delim && !last)
     {
@@ -874,7 +879,7 @@ WinFile::Read(XString& p_string,uchar p_delim /*= '\n'*/)
       }
       else
       {
-        result[result.size() - 2] = ch;
+        result[result.size() - 2] = (uchar)ch;
       }
       result.erase(result.size() - 1 - (unicodeSkip ? 1 : 0));
       crstate = false;
@@ -1391,7 +1396,7 @@ WinFile::Gets(uchar* p_buffer,size_t p_size)
   --p_size;
 
   // Make sure we have a read buffer
-  *p_buffer++ = Getch();
+  *p_buffer++ = (uchar) Getch();
 
   // Scan forward in the pagebuffer for a newline
   char* ending = strchr((char*)m_pagePointer,'\n');
@@ -1419,8 +1424,8 @@ WinFile::Gets(uchar* p_buffer,size_t p_size)
   // Allowing to read in a next buffer from the filesystem
   for(size_t index = 0; index < p_size; ++index)
   {
-    uchar ch = Getch();
-    if (ch == (uchar)EOF)
+    int ch = Getch();
+    if (ch == EOF)
     {
       if(index > 0)
       {
@@ -1490,7 +1495,8 @@ WinFile::Putch(uchar p_char)
 }
 
 // Get the next character/byte from the file stream
-uchar
+// or returns EOF at the end of the file
+int
 WinFile::Getch()
 {
   // Reset the error state
@@ -1510,7 +1516,7 @@ WinFile::Getch()
      m_ungetch = 0;
      return ch;
   }
-  uchar ch = PageBufferRead();
+  int ch = PageBufferRead();
   if(ch == '\r')
   {
     if(m_openMode & FFlag::open_trans_text)
@@ -3585,7 +3591,7 @@ WinFile::PageBufferFree()
 
 // Reading one (1) character from the file buffer
 // Prerequisite: the file must be opened
-uchar
+int
 WinFile::PageBufferRead()
 {
   bool scanBom = false;
@@ -3615,14 +3621,14 @@ WinFile::PageBufferRead()
       if (::WriteFile(m_file, m_pageBuffer, size, &write, nullptr) == 0)
       {
         m_error = ::GetLastError();
-        return false;
+        return EOF;
       }
       m_pagePointer = m_pageBuffer;
 
       // if read-and-write: read in first page and reset FPOS
       if (PageBufferReadForeward(scanBom) == false)
       {
-        return false;
+        return EOF;
       }
     }
     else
@@ -3636,12 +3642,12 @@ WinFile::PageBufferRead()
       if(::ReadFile(m_file,m_pageBuffer,(DWORD)PAGESIZE,&size,nullptr) == 0)
       {
         m_error = ::GetLastError();
-        return (uchar)EOF;
+        return EOF;
       }
       // Read-nothing: legal end-of-file
       if(size == 0)
       {
-        return (uchar)EOF;
+        return EOF;
       }
       m_pagePointer = m_pageBuffer;
       m_pageTop     = (uchar*) ((size_t)m_pageBuffer + (size_t)size);
@@ -3653,7 +3659,7 @@ WinFile::PageBufferRead()
       }
     }
   }
-  return *m_pagePointer++;
+  return (int) *m_pagePointer++;
 }
 
 // Scan for a valid BYTE-ORDER-MARK: UTF-8 or UTF-16 Big Endian

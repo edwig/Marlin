@@ -46,6 +46,7 @@ int  CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPCTSTR p_st
 int  PosixCallProgram(XString  p_directory
                      ,XString  p_programma
                      ,XString  p_commandLine
+                     ,XString  p_charset
                      ,XString  p_stdin
                      ,XString& p_stdout
                      ,XString& p_stderror

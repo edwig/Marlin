@@ -124,7 +124,7 @@ public:
  ~HTTPMessage();
 
   // Recycle the object for usage in a return message
-  void Reset();
+  void Reset(bool p_resetURL = false);
 
   // SETTERS
   void SetBody(XString p_body,XString p_charset = _T(""));

@@ -28,6 +28,7 @@
 #include "pch.h"
 #include "Redirect.h"
 #include "AutoCritical.h"
+#include "ConvertWideString.h"
 #include <process.h>
 #include <assert.h>
 #include <time.h>
@@ -74,6 +75,11 @@ Redirect::Redirect()
   m_timeoutIdle     = MAXWAIT_FOR_INPUT_IDLE;
   m_terminated      = false;
 
+  // Init the default charset of the desktop
+  m_streamCharset    = CodepageToCharset(GetACP());
+  m_charsetIsCurrent = true;
+  m_charsetIs16Bit   = false;
+
   InitializeCriticalSection((LPCRITICAL_SECTION)&m_critical);
 }
 
@@ -88,6 +94,38 @@ void
 Redirect::SetTimeoutIdle(ULONG p_timeout)
 {
   m_timeoutIdle = p_timeout;
+}
+
+// Try to set a new streaming charset for the POSIX program
+// E.g. "UTF-8" for Unix like programs
+// or: "UTF-16" for PowerShell like programs
+// BEWARE: Does **NOT** support 32 bits codepages (e.g. UTF-32)
+bool
+Redirect::SetStreamCharset(XString p_charset)
+{
+  XString current = CodepageToCharset(GetACP());
+  if(p_charset.CompareNoCase(current) == 0)
+  {
+    m_streamCharset    = p_charset;
+    m_charsetIsCurrent = true;
+    m_charsetIs16Bit   = false;
+    return true;
+  }
+  else if(p_charset.CompareNoCase(_T("UTF-16")) == 0)
+  {
+    m_streamCharset    = p_charset;
+    m_charsetIsCurrent = false;
+    m_charsetIs16Bit   = true;
+    return true;
+  }
+  else if(p_charset.CompareNoCase(_T("UTF-8")) == 0) 
+  {
+    m_streamCharset    = p_charset;
+    m_charsetIsCurrent = false;
+    m_charsetIs16Bit   = false;
+    return true;
+  }
+  return false;
 }
 
 // Create standard handles, try to start child from command line.
@@ -421,14 +459,30 @@ Redirect::PrepAndLaunchRedirectedChild(PTCHAR lpszCmdLine
 int 
 Redirect::StdOutThread(HANDLE hStdOutRead)
 {
+  if(m_charsetIs16Bit)
+  {
+    return StdOutThreadUnicode(hStdOutRead);
+  }
+  else
+  {
+    return StdOutThread8Bits(hStdOutRead);
+  }
+}
+
+// Text is coming in on 'stdout' of the process
+// in 8 bits format (current codepage or UTF-8)
+int
+Redirect::StdOutThread8Bits(HANDLE hStdOutRead)
+{
   DWORD  nBytesRead;
-  TCHAR  lpszBuffer[10];
-  TCHAR  lineBuffer[BUFFER_SIZE + 10] = {0} ;
-  PTCHAR linePointer = lineBuffer;
+  BYTE   lpszBuffer[10];
+  BYTE   lineBuffer[BUFFER_SIZE + 10] = {0} ;
+  BYTE*  linePointer = lineBuffer;
+  bool   writeResidu = false;
   //    FOR DEBUGGING: See below
   //    int   i = 0;
 
-  while(true)
+  while(!m_eof_input)
   {
     nBytesRead = 0;
     if(!::ReadFile(hStdOutRead, lpszBuffer, 1, &nBytesRead, NULL) || !nBytesRead || lpszBuffer[0] == EOT)
@@ -438,7 +492,7 @@ Redirect::StdOutThread(HANDLE hStdOutRead)
       if(linePointer != lineBuffer)
       {
         *linePointer = 0;
-        OnChildStdOutWrite(lineBuffer);
+        writeResidu  = true;
       }
       m_eof_input = 1;
       break;
@@ -447,19 +501,39 @@ Redirect::StdOutThread(HANDLE hStdOutRead)
     *linePointer++ = lpszBuffer[0];
 
     // Add end-of-line or line overflow, write to listener
-    if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
+    if(writeResidu || lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
     {
       // USED FOR DEBUGGING PURPOSES ONLY!!
       // So we can detect the draining of the standard output from the process
 //       if(i++ % 20 == 0)
 //       {
-//         Sleep(1);
+//         Sleep(500);
 //       }
       
       // Virtual function to notify derived class that
       // characters are written to stdout.
       *linePointer = 0;
-      OnChildStdOutWrite(lineBuffer);
+#ifdef _UNICODE
+      XString input;
+      bool foundBom(false);
+      int length = (int)((int64)linePointer - (int64)lineBuffer);
+      TryConvertNarrowString(lineBuffer,length,m_streamCharset,input,foundBom);
+      OnChildStdOutWrite((PTCHAR)input.GetString());
+#else
+      if(m_charsetIsCurrent)
+      {
+        // Just pass it on
+        OnChildStdOutWrite((PTCHAR)lineBuffer);
+      }
+      else
+      {
+        // Convert UTF-8 to MBCS codepage
+        XString buffer(lineBuffer);
+        XString input = DecodeStringFromTheWire(buffer,m_streamCharset);
+        OnChildStdOutWrite((PTCHAR)input.GetString());
+      }
+#endif
+      // Reset linePointer
       linePointer = lineBuffer;
     }
   }
@@ -467,20 +541,101 @@ Redirect::StdOutThread(HANDLE hStdOutRead)
   return 0;
 }
 
+// Text is coming in on 'stdout' of the process
+// in 16 bits format UTF-16 (Assume Little-Endian)
+int
+Redirect::StdOutThreadUnicode(HANDLE hStdOutRead)
+{
+  DWORD    nBytesRead;
+  wchar_t  lpszBuffer[10];
+  wchar_t  lineBuffer[BUFFER_SIZE + 10] = {0};
+  wchar_t* linePointer = lineBuffer;
+  bool     writeResidu = false;
+  //     FOR DEBUGGING: See below
+  //     int   i = 0;
+
+  while(!m_eof_input)
+  {
+    nBytesRead = 0;
+    if(!::ReadFile(hStdOutRead,lpszBuffer,sizeof(wchar_t),&nBytesRead,NULL) || !nBytesRead || lpszBuffer[0] == EOT)
+    {
+      // pipe done - normal exit path.
+      // Partial input line left hanging?
+      if(linePointer != lineBuffer)
+      {
+        *linePointer = 0;
+        writeResidu  = true;
+      }
+      m_eof_input = 1;
+      break;
+    }
+    // Add to line
+    *linePointer++ = lpszBuffer[0];
+
+    // Add end-of-line or line overflow, write to listener
+    if(writeResidu || lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
+    {
+      // USED FOR DEBUGGING PURPOSES ONLY!!
+      // So we can detect the draining of the standard output from the process
+//       if(i++ % 20 == 0)
+//       {
+//         Sleep(500);
+//       }
+      
+      // Virtual function to notify derived class that
+      // characters are written to stdout.
+      *linePointer = 0;
+#ifdef _UNICODE
+      // Just pass it on, we are already 16 bits Unicode
+      OnChildStdOutWrite(lineBuffer);
+#else
+      // Convert to current codepage (Can never be UTF-8)
+      XString input;
+      bool foundBom(false);
+      int length = (int)((int64)linePointer - (int64)lineBuffer);
+      TryConvertWideString((BYTE*)lineBuffer,length,"",input,foundBom);
+      OnChildStdOutWrite((PTCHAR)input.GetString());
+#endif
+      // Reset linePointer
+      linePointer = lineBuffer;
+    }
+  }
+  m_hStdOutThread = NULL;
+  return 0;
+}
+
+
 // Thread to read the child stderr.
 
 int 
 Redirect::StdErrThread(HANDLE hStdErrRead)
 {
+  if(m_charsetIs16Bit)
+  {
+    return StdErrThreadUnicode(hStdErrRead);
+  }
+  else
+  {
+    return StdErrThread8Bits(hStdErrRead);
+  }
+}
+
+// Text is coming in on 'stderr' of the process
+// in 8 bits format (current codepage or UTF-8)
+int
+Redirect::StdErrThread8Bits(HANDLE hStdErrRead)
+{
   DWORD  nBytesRead;
-  TCHAR  lpszBuffer[10];
-  TCHAR  lineBuffer[BUFFER_SIZE + 10] = { 0 };
-  PTCHAR linePointer = lineBuffer;
+  BYTE   lpszBuffer[10];
+  BYTE   lineBuffer[BUFFER_SIZE + 10] = {0};
+  BYTE*  linePointer = lineBuffer;
+  bool   writeResidu = false;
   //    FOR DEBUGGING: See below
   //    int   i = 0;
 
-  while(m_bRunThread)
+  while(!m_eof_error)
   {
+    nBytesRead = 0;
     if(!::ReadFile(hStdErrRead,lpszBuffer,1,&nBytesRead,NULL) || !nBytesRead || lpszBuffer[0] == EOT)
     {
       // pipe done - normal exit path.
@@ -488,33 +643,224 @@ Redirect::StdErrThread(HANDLE hStdErrRead)
       if(linePointer != lineBuffer)
       {
         *linePointer = 0;
-        OnChildStdErrWrite(lineBuffer);
+        writeResidu = true;
       }
       m_eof_error = 1;
       break;
     }
-    // Add to line: caller sees stdout AND stderr alike
+    // Add to line
     *linePointer++ = lpszBuffer[0];
 
     // Add end-of-line or line overflow, write to listener
-    if(lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
+    if(writeResidu || lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
     {
       // USED FOR DEBUGGING PURPOSES ONLY!!
       // So we can detect the draining of the standard output from the process
 //       if(i++ % 20 == 0)
 //       {
-//         Sleep(1);
+//         Sleep(500);
 //       }
 
       // Virtual function to notify derived class that
       // characters are written to stdout.
       *linePointer = 0;
-      OnChildStdErrWrite(lineBuffer);
+#ifdef _UNICODE
+      XString input;
+      bool foundBom(false);
+      int length = (int)((int64)linePointer - (int64)lineBuffer);
+      TryConvertNarrowString(lineBuffer,length,m_streamCharset,input,foundBom);
+      OnChildStdErrWrite((PTCHAR)input.GetString());
+#else
+      if(m_charsetIsCurrent)
+      {
+        // Just pass it on
+        OnChildStdErrWrite((PTCHAR)lineBuffer);
+      }
+      else
+      {
+        // Convert UTF-8 to MBCS codepage
+        XString buffer(lineBuffer);
+        XString input = DecodeStringFromTheWire(buffer,m_streamCharset);
+        OnChildStdErrWrite((PTCHAR)input.GetString());
+      }
+#endif
+      // Reset linePointer
       linePointer = lineBuffer;
     }
   }
   m_hStdErrThread = NULL;
   return 0;
+}
+
+// Text is coming in on 'stderr' of the process
+// in 16 bits format UTF-16 (Assume Little-Endian)
+int
+Redirect::StdErrThreadUnicode(HANDLE hStdErrRead)
+{
+  DWORD    nBytesRead;
+  wchar_t  lpszBuffer[10];
+  wchar_t  lineBuffer[BUFFER_SIZE + 10] = {0};
+  wchar_t* linePointer = lineBuffer;
+  bool     writeResidu = false;
+  //     FOR DEBUGGING: See below
+  //     int   i = 0;
+
+  while(!m_eof_error)
+  {
+    nBytesRead = 0;
+    if(!::ReadFile(hStdErrRead,lpszBuffer,sizeof(wchar_t),&nBytesRead,NULL) || !nBytesRead || lpszBuffer[0] == EOT)
+    {
+      // pipe done - normal exit path.
+      // Partial input line left hanging?
+      if(linePointer != lineBuffer)
+      {
+        *linePointer = 0;
+        writeResidu = true;
+      }
+      m_eof_error = 1;
+      break;
+    }
+    // Add to line
+    *linePointer++ = lpszBuffer[0];
+
+    // Add end-of-line or line overflow, write to listener
+    if(writeResidu || lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
+    {
+      // USED FOR DEBUGGING PURPOSES ONLY!!
+      // So we can detect the draining of the standard output from the process
+//       if(i++ % 20 == 0)
+//       {
+//         Sleep(500);
+//       }
+
+      // Virtual function to notify derived class that
+      // characters are written to stdout.
+      *linePointer = 0;
+#ifdef _UNICODE
+      // Just pass it on, we are already 16 bits Unicode
+      OnChildStdErrWrite(lineBuffer);
+#else
+      // Convert to current codepage (Can never be UTF-8)
+      XString input;
+      bool foundBom(false);
+      int length = (int)((int64)linePointer - (int64)lineBuffer);
+      TryConvertWideString((BYTE*)lineBuffer,length,"",input,foundBom);
+      OnChildStdErrWrite((PTCHAR)input.GetString());
+#endif
+      // Reset linePointer
+      linePointer = lineBuffer;
+    }
+  }
+  m_hStdErrThread = NULL;
+  return 0;
+}
+
+// Function that writes to the child stdin.
+
+int
+Redirect::WriteChildStdIn(PTCHAR lpszInput)
+{
+  if(m_charsetIs16Bit)
+  {
+    return WriteChildStdInputUnicode(lpszInput);
+  }
+  else
+  {
+    return WriteChildStdInput8Bits(lpszInput);
+  }
+}
+
+// Write to the 'stdin' stream of the process
+// Assume 8 bits current codepage or UTF-8
+int
+Redirect::WriteChildStdInput8Bits(PTCHAR lpszInput)
+{
+  DWORD nBytesWrote;
+  DWORD inLength = (DWORD) _tcslen(lpszInput) * sizeof(TCHAR);
+  int   retval   = 0;
+  bool  didsend  = false;
+#ifdef _UNICODE
+  BYTE* buffer   = nullptr;
+#endif
+
+  if(m_hStdInWrite != NULL && inLength > 0)
+  {
+#ifdef _UNICODE
+    // UTF-8 or current ACP (e.g. windows-1252)
+    int length = 0;
+    XString input(lpszInput);
+    TryCreateNarrowString(input,m_streamCharset,false,&buffer,length);
+    didsend = ::WriteFile(m_hStdInWrite,buffer,length,&nBytesWrote,NULL);
+#else
+    if(m_charsetIsCurrent)
+    {
+      // Just pass it on
+      didsend = ::WriteFile(m_hStdInWrite,lpszInput,inLength,&nBytesWrote,NULL);
+    }
+    else
+    {
+      XString output(lpszInput);
+      XString string = EncodeStringForTheWire(output,m_streamCharset);
+      didsend = ::WriteFile(m_hStdInWrite,string.GetString(),string.GetLength(),&nBytesWrote,NULL);
+    }
+#endif
+    if(!didsend)
+    {
+      if(::GetLastError() == ERROR_NO_DATA)
+      {
+        // Pipe was closed (do nothing).
+        retval = 0;
+      }
+      else
+      {
+        // Call GetLastError() to get the error
+        retval = -1;
+      }
+    }
+#ifdef _UNICODE
+    delete[] buffer;
+#endif
+  }
+  return retval;
+}
+
+// Write to the 'stdin' stream of the process
+// Assume 16 bits Unicode (Assume UTF-16 LE)
+int
+Redirect::WriteChildStdInputUnicode(PTCHAR lpszInput)
+{
+  DWORD nBytesWrote;
+  DWORD Length = (DWORD)_tcslen(lpszInput) * sizeof(TCHAR);
+  int   retval = 0;
+  bool  didsend = false;
+
+  if(m_hStdInWrite != NULL && Length > 0)
+  {
+#ifdef _UNICODE
+    // Just pass it on
+    didsend = ::WriteFile(m_hStdInWrite,lpszInput,Length,&nBytesWrote,NULL);
+#else
+    // Convert to charset
+    XString output;
+    bool foundBom(false);
+    TryConvertWideString((BYTE*)lpszInput,Length,m_streamCharset,output,foundBom);
+    didsend = ::WriteFile(m_hStdInWrite,output,output.GetLength(),&nBytesWrote,NULL);
+#endif
+    if(!didsend)
+    {
+      if(::GetLastError() == ERROR_NO_DATA)
+      {
+        // Pipe was closed (do nothing).
+        retval = 0;
+      }
+      else
+      {
+        // Call GetLastError() to get the error
+        retval = -1;
+      }
+    }
+  }
+  return retval;
 }
 
 // Thread to monitoring the child process.
@@ -567,32 +913,6 @@ Redirect::ProcessThread()
   // We are ready running
   m_bRunThread = NULL;
   return returnValue;
-}
-
-// Function that writes to the child stdin.
-
-int
-Redirect::WriteChildStdIn(PTCHAR lpszInput)
-{
-  DWORD nBytesWrote;
-  DWORD Length = (DWORD) _tcslen(lpszInput);
-  if (m_hStdInWrite != NULL && Length > 0)
-  {
-    if(!::WriteFile(m_hStdInWrite, lpszInput, Length, &nBytesWrote, NULL))
-    {
-      if(::GetLastError() == ERROR_NO_DATA)
-      {
-        // Pipe was closed (do nothing).
-        return 0;
-      }
-      else
-      {
-        // Call GetLastError() to get the error
-        return -1;
-      }
-    }
-  }
-  return 0;
 }
 
 void

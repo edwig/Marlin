@@ -214,6 +214,7 @@ public:
   void SetSendUnicode(bool p_unicode)                   { m_sendUnicode       = p_unicode;  };
   void SetVerb(XString p_verb)                          { m_verb              = p_verb;     };
   void SetContentType(const XString& p_type)            { m_contentType       = p_type;     };
+  void SetResolveChunked(const bool p_resolve)          { m_resolveChunked    = p_resolve;  };
   void SetHTTPCompression(bool p_compress)              { m_httpCompression   = p_compress; };
   void SetSoapAction(const XString& p_action)           { m_soapAction        = p_action;   };
   void SetTimeoutResolve(int p_timeout)                 { m_timeoutResolve    = p_timeout;  };
@@ -262,6 +263,7 @@ public:
   XString       GetProxyPassword()          { return m_proxyPassword;     };
   XString       GetVerb()                   { return m_verb;              };
   XString       GetContentType()            { return m_contentType;       };
+  bool          GetResolveChunked()         { return m_resolveChunked;    };
   XString       GetSoapAction()             { return m_soapAction;        };
   int           GetTimeoutResolve()         { return m_timeoutResolve;    };
   int           GetTimeoutConnect()         { return m_timeoutConnect;    };
@@ -372,7 +374,6 @@ private:
   void     ResetOAuth2Session();
   bool     DoRedirectionAfterSend();
   void     ProcessChunkedEncoding();
-  uchar*   GetChunkSize(uchar* p_reading,unsigned& p_size);
   void     ReCreateAsSOAPFault(SOAPMessage* p_msg,SoapVersion p_version,XString p_response);
   // Methods for WS-Security
   void     CheckAnswerSecurity (SOAPMessage* p_msg,XString p_answer,XMLEncryption p_security,XString p_password);
@@ -447,6 +448,7 @@ private:
   Cookies       m_resultCookies;                                  // Resulting cookies optimized here
   BYTE*         m_response        { nullptr };                    // Result body
   unsigned      m_responseLength  { 0       };                    // Length of result body
+  bool          m_resolveChunked  { false   };                    // Remove transfer-encoding:chunked
   // Connection handles
   HINTERNET     m_session         { nullptr };                    // HTTP session
   HINTERNET     m_connect         { nullptr };                    // Current connection to URL

@@ -390,7 +390,8 @@ SOAPMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
 // Reset parameters, transforming it in an answer
 void 
 SOAPMessage::Reset(ResponseType p_responseType  /* = ResponseType::RESP_ACTION_NAME */
-                  ,XString      p_namespace     /* = "" */)
+                  ,XString      p_namespace     /* = ""    */
+                  ,bool         p_resetURL      /* = false */)
 {
   XMLMessage::Reset();
 
@@ -409,9 +410,12 @@ SOAPMessage::Reset(ResponseType p_responseType  /* = ResponseType::RESP_ACTION_N
   // Reset the HTTP headers
   m_headers.clear();
 
-  // Reset the URL
+  // Only reset the URL if we specifically request it
+  if(p_resetURL)
+  {
   m_url.Empty();
   m_cracked.Reset();
+  }
 
   // If, given: use the our namespace for an answer
   if(!p_namespace.IsEmpty())

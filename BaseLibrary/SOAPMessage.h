@@ -135,7 +135,9 @@ public:
   virtual ~SOAPMessage();
 
   // Reset parameters, transforming it in an answer, preferable in our namespace
-  virtual void    Reset(ResponseType p_responseType = ResponseType::RESP_ACTION_NAME,XString p_namespace = _T(""));
+  virtual void    Reset(ResponseType p_responseType = ResponseType::RESP_ACTION_NAME
+                       ,XString      p_namespace    = _T("")
+                       ,bool         p_resetURL     = false);
   // Parse incoming message to members
   virtual void    ParseMessage(XString& p_message);
   // Parse incoming soap as new body of the message

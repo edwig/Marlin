@@ -856,7 +856,7 @@ JSONMessage::~JSONMessage()
 }
 
 void
-JSONMessage::Reset(bool p_resetURL /*= true*/)
+JSONMessage::Reset(bool p_resetURL /*= false*/)
 {
   // Let go of the value
   m_value->DropReference();

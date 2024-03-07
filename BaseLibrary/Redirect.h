@@ -55,6 +55,7 @@ public:
   int  WriteChildStdIn(PTCHAR lpszInput);
   void SetTimeoutIdle(ULONG p_timeout);
   void CloseChildStdIn();
+  bool SetStreamCharset(XString p_charset);
 
   // Virtual interface. Derived class must implement this!!
   virtual void OnChildStarted    (PTCHAR lpszCmdLine) = 0;
@@ -111,5 +112,16 @@ protected:
   int ProcessThread();
 
 protected:
+  // Unicode / 8-bits variants
+  int StdOutThreadUnicode(HANDLE hStdOutRead);
+  int StdErrThreadUnicode(HANDLE hStdErrRead);
+  int StdOutThread8Bits  (HANDLE hStdOutRead);
+  int StdErrThread8Bits  (HANDLE hStdErrRead);
+  int WriteChildStdInputUnicode(PTCHAR lpszInput);
+  int WriteChildStdInput8Bits  (PTCHAR lpszInput);
+  //  Data
+  XString          m_streamCharset;
+  bool             m_charsetIsCurrent;
+  bool             m_charsetIs16Bit;
   CRITICAL_SECTION m_critical;
 };

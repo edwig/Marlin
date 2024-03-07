@@ -397,7 +397,7 @@ XMLMessage::PrintHeader()
   int acp = -1;
   switch(m_encoding)
   {
-    case Encoding::Default:     acp =    -1; break; // Find Active Code Page
+    case Encoding::Default:    acp =    -1; break; // Find Active Code Page
     case Encoding::UTF8:       acp = 65001; break; // See ConvertWideString.cpp
     case Encoding::LE_UTF16:   acp =  1200; break; // See ConvertWideString.cpp
     case Encoding::BE_UTF16:   acp =  1201; break; // See ConvertWideString.cpp

@@ -182,7 +182,7 @@ public:
   // Classic STDIO.H like functions
   bool      Gets(uchar* p_buffer,size_t p_size);
   bool      Puts(uchar* p_buffer);
-  uchar     Getch();
+  int       Getch();
   bool      Putch(uchar p_char);
   bool      Ungetch(uchar p_ch);  // only works in conjunction with "Getch()"
 
@@ -322,7 +322,7 @@ private:
   // Page buffer cache functions
   uchar*    PageBuffer();
   void      PageBufferFree();
-  uchar     PageBufferRead();
+  int       PageBufferRead();
   bool      PageBufferReadForeward(bool p_scanBom);
   bool      PageBufferWrite(uchar ch);
   bool      PageBufferFlush();

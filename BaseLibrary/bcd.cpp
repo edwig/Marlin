@@ -1562,7 +1562,6 @@ bcd::Log() const
     number *= z2;
     between = number / bcd(stap);
     // Tolerance criterion
-
     if(between.AbsoluteValue() < epsilon)
     {
       break;

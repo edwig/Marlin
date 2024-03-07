@@ -327,6 +327,7 @@ int
 PosixCallProgram(XString  p_directory
                 ,XString  p_programma
                 ,XString  p_parameters
+                ,XString  p_charset
                 ,XString  p_stdin
                 ,XString& p_stdout
                 ,XString& p_stderr
@@ -344,7 +345,10 @@ PosixCallProgram(XString  p_directory
   {
     *p_run = &run;
   }
-
+  if(!p_charset.IsEmpty())
+  {
+    run.SetStreamCharset(p_charset);
+  }
   // Result is initially empty
   p_stdout.Empty();
   p_stderr.Empty();

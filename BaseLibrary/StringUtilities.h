@@ -52,3 +52,6 @@ bool    SplitArgument(int& p_pos,const CString& p_data,TCHAR p_splitter,CString&
 // Unicode aware Clipboard handling
 XString GetStringFromClipboard(HWND p_wnd = NULL);
 bool    PutStringToClipboard(XString p_string,HWND p_wnd = NULL,bool p_append = false);
+
+// Count the number of instances of a character in a string
+int     CountOfChars(XString p_string,TCHAR p_char);

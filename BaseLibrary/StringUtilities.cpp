@@ -296,3 +296,19 @@ bool PutStringToClipboard(XString p_string,HWND p_wnd /*=NULL*/,bool p_append /*
   }
   return result;
 }
+
+
+// Count the number of characters in a string
+int
+CountOfChars(XString p_string,TCHAR p_char)
+{
+  int count = 0;
+  for(int index = 0;index < p_string.GetLength();++index)
+  {
+    if(p_string.GetAt(index) == p_char)
+    {
+      ++count;
+    }
+  }
+  return count;
+}

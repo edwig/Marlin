@@ -53,8 +53,7 @@
 // So we do not need to worry about which library to use in the linker settings
 // As long as we use the $(SolutionDir)Lib\ as the library location of all our projects
 
-#ifdef UNICODE
-
+#ifdef _UNICODE
 #if defined _M_IX86
 #define BASELIBRARY_PLATFORM "Ux86"
 #else

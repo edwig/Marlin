@@ -46,6 +46,7 @@ int TestChunkedTransfer(HTTPClient* p_client)
   url.Format(_T("http://%s:%d/MarlinTest/Chunking/Releasenotes.txt"),MARLIN_HOST,TESTING_HTTP_PORT);
   HTTPMessage msg(HTTPCommand::http_get,url);
 
+  p_client->SetResolveChunked(true);
   bool result = p_client->Send(&msg);
 
   if(result)
