@@ -29,6 +29,7 @@
 #include "WebConfigIIS.h"
 #include "XMLMessage.h"
 #include "FileBuffer.h"
+#include <ServiceReporting.h>
 #include <http.h>
 #include <io.h>
 
@@ -52,7 +53,12 @@ WebConfigIIS::ReadConfig()
 {
   // Reads the central IIS application host configuration file first
   // this file contains the defaults for IIS.
-  return ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"), nullptr);
+  if(ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr) == false)
+  {
+    SvcReportErrorEvent(0,false,__FUNCTION__,_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
+    return false;
+  }
+  return true;
 }
 
 bool
@@ -60,16 +66,24 @@ WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/
 {
   // Reads the central IIS application host configuration file first
   // this file contains the defaults for IIS.
-  bool result = ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr);
+  if(ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr) == false)
+  {
+    SvcReportErrorEvent(0,false,__FUNCTION__,_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
+    return false;
+  }
   if(!p_application.IsEmpty())
   {
     SetApplication(p_application);
   }
   else if(!p_extraWebConfig.IsEmpty())
   {
-    ReadConfig(p_extraWebConfig,nullptr);
+    if(ReadConfig(p_extraWebConfig,nullptr) == false)
+    {
+      SvcReportErrorEvent(0,false,__FUNCTION__,_T("Cannot read the extra Web.Config file: ") + p_extraWebConfig);
+      return false;
+    }
   }
-  return result;
+  return true;
 }
 
 void
@@ -85,6 +99,10 @@ WebConfigIIS::SetApplication(XString p_application)
     if(ReadConfig(config,site))
     {
       m_webconfig = config;
+    }
+    else
+    {
+      SvcReportErrorEvent(0,false,__FUNCTION__,_T("Cannot read the standard Web.Config file!"));
     }
   }
   // Store the application
@@ -832,7 +850,7 @@ WebConfigIIS::GetWebConfigHandlers()
 
 // Finding a site registration
 // Site/Subsite -> Finds "site"
-// Site         -> FInds "site"
+// Site         -> Finds "site"
 IISSite*
 WebConfigIIS::GetSite(XString p_site)
 {
