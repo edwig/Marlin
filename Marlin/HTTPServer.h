@@ -226,6 +226,8 @@ public:
   void       SetWebroot(XString p_webroot);
   // MANDATORY: Set the ErrorReport object
   void       SetErrorReport(ErrorReport* p_report);
+  // MANDATORY: Set the server to process incoming requests
+  void       SetIsProcessing(bool p_processing);
   // OPTIONAL: Set the client error page (range 400-417)
   void       SetClientErrorPage(const XString& p_errorPage);
   // OPTIONAL: Set the server error page (range 500-505)
@@ -262,6 +264,8 @@ public:
   XString     GetHostname();
   // Is the server still running
   bool        GetIsRunning();
+  // Can the server process requests
+  bool        GetIsProcessing();
   // Get High Performance counter
   HPFCounter* GetCounter();
   // Get map with URL info
@@ -460,6 +464,7 @@ protected:
   XString                 m_hostName;               // How i am registered with the DNS
   bool                    m_initialized { false };  // Server initialized or not
   bool                    m_running     { false };  // In our main loop
+  bool                    m_processing  { false };  // Server can now process incoming calls
   XString                 m_webroot;                // Webroot of the server
   // HTTP-API V 2.0 session 
   HTTP_SERVER_SESSION_ID  m_session     { NULL  };  // Server session within Windows OS
@@ -549,7 +554,19 @@ HTTPServer::GetIsRunning()
   return m_running;
 }
 
-inline HPFCounter* 
+inline void
+HTTPServer::SetIsProcessing(bool p_processing)
+{
+  m_processing = p_processing;
+}
+
+inline bool
+HTTPServer::GetIsProcessing()
+{
+  return m_processing;
+}
+
+inline HPFCounter*
 HTTPServer::GetCounter()
 {
   return &m_counter;

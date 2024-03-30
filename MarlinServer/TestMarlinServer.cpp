@@ -128,6 +128,9 @@ TestMarlinServer::Startup()
     // Register all site handlers (besides SOAP handlers)
     RegisterSiteHandlers();
 
+    // From this point on we can now process incoming calls
+    GetHTTPServer()->SetIsProcessing(true);
+
     // Ok, server is running, so log that
     SvcReportInfoEvent(false,_T(__FUNCTION__),_T("Server status: Running & OK"));
 

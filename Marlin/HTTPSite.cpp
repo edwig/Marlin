@@ -588,7 +588,7 @@ HTTPSite::RemoveSiteFromGroup()
 XString
 HTTPSite::GetAuthenticationScheme() 
 { 
-  if(m_mainSite && (m_scheme.IsEmpty() || m_scheme.CompareNoCase("Anonymous") == 0))
+  if(m_mainSite && (m_scheme.IsEmpty() || m_scheme.CompareNoCase(_T("Anonymous")) == 0))
   {
     return m_mainSite->GetAuthenticationScheme();
   }
@@ -656,6 +656,20 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       p_message->Reset();
       p_message->SetStatus(HTTP_STATUS_GONE);
       SendResponse(p_message);
+      p_message->DropReference();
+      return;
+    }
+
+    // See if the total server is already up-and-running and we can go about
+    // processing the 'normal' requests.
+    // Blocks processing before all sites and functions are started
+    if(m_server->GetIsProcessing() == false)
+    {
+      p_message->Reset();
+      p_message->SetStatus(HTTP_STATUS_SERVICE_UNAVAIL);
+      SendResponse(p_message);
+      p_message->DropReference();
+      return;
     }
 
     // If site in asynchronous SOAP/XML mode
@@ -723,7 +737,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
     }
     else
     {
-      // 'Normale' C++ exception: Maar we hebben hem vergeten af te vangen
+      // 'Normal' C++ exception: But it was forgotten elsewhere to catch it
       ErrorReport::Report(ex.GetErrorMessage(),0,m_webroot,m_site);
     }
     didError = true;
