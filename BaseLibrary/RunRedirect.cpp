@@ -74,7 +74,7 @@ RunRedirect::RunCommand(LPTSTR p_commandLine,HWND p_console,UINT p_showWindow,BO
   m_ready   = StartChildProcess(p_commandLine,p_showWindow,p_waitForInputIdle) == FALSE;
 }
 
-void RunRedirect::OnChildStarted(PTCHAR /*lpszCmdLine*/) 
+void RunRedirect::OnChildStarted(LPCTSTR /*lpszCmdLine*/) 
 {
   AutoCritSec lock(&m_critical);
   m_output.Empty();
@@ -83,7 +83,7 @@ void RunRedirect::OnChildStarted(PTCHAR /*lpszCmdLine*/)
   FlushStdIn();
 }
 
-void RunRedirect::OnChildStdOutWrite(PTCHAR lpszOutput) 
+void RunRedirect::OnChildStdOutWrite(LPCTSTR lpszOutput) 
 {
   AutoCritSec lock(&m_critical);
   m_output += lpszOutput;
@@ -94,7 +94,7 @@ void RunRedirect::OnChildStdOutWrite(PTCHAR lpszOutput)
 }
 
 void 
-RunRedirect::OnChildStdErrWrite(PTCHAR lpszOutput)
+RunRedirect::OnChildStdErrWrite(LPCTSTR lpszOutput)
 {
   AutoCritSec lock(&m_critical);
   m_error += lpszOutput;
@@ -114,12 +114,12 @@ void RunRedirect::OnChildTerminate()
   if(m_hStdOut != NULL)
   {
     TCHAR buf[1] =  { EOT };
-    ::WriteFile(m_hStdOut,&buf,1,NULL,NULL);
+    ::WriteFile(m_hStdOut,&buf,sizeof(TCHAR),NULL,NULL);
   }
   if(m_hStdErr != NULL)
   {
     TCHAR buf[1] = { EOT };
-    ::WriteFile(m_hStdErr,&buf,1,NULL,NULL);
+    ::WriteFile(m_hStdErr,&buf,sizeof(TCHAR),NULL,NULL);
   }
 }
 
@@ -185,7 +185,7 @@ CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,XString& p_result
   // Create a new command line
   commandLine.Format(_T("\"%s\" %s"),p_program,p_commandLine);
 
-  run.RunCommand(const_cast<PTCHAR>(commandLine.GetString()),p_show);
+  run.RunCommand(const_cast<LPTSTR>(commandLine.GetString()),p_show);
   while(!run.IsReadyAndEOF())
   {
     Sleep(WAITTIME_STATUS);

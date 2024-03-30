@@ -820,7 +820,7 @@ StoreMessage::ReadBody(HTTPMessage* p_msg)
   {
     int read = 0;
     unsigned char* buffer = new unsigned char[length];
-    if(!m_file.Read(&buffer,length,read))
+    if(!m_file.Read(buffer,length,read))
     {
       delete[] buffer;
       throw StdException(ERROR_FT_BODY);

@@ -184,7 +184,7 @@ Redirect::StartChildProcess(LPTSTR lpszCmdLine,UINT uShowChildWindow /*=SW_HIDE*
   {
     // If we cannot start a child process: write to the standard error ourselves
     TCHAR lpszBuffer[BUFFER_SIZE];
-    _stprintf_s(lpszBuffer, BUFFER_SIZE,_T("Unable to start: %s\n"),lpszCmdLine);
+    _stprintf_s(lpszBuffer,BUFFER_SIZE,_T("Unable to start: %s\n"),lpszCmdLine);
     OnChildStdErrWrite(lpszBuffer);
 
     // close all handles and return FALSE
@@ -479,13 +479,13 @@ Redirect::StdOutThread8Bits(HANDLE hStdOutRead)
   BYTE   lineBuffer[BUFFER_SIZE + 10] = {0} ;
   BYTE*  linePointer = lineBuffer;
   bool   writeResidu = false;
-  //    FOR DEBUGGING: See below
-  //    int   i = 0;
+  //     FOR DEBUGGING: See below
+  //     int   i = 0;
 
   while(!m_eof_input)
   {
     nBytesRead = 0;
-    if(!::ReadFile(hStdOutRead, lpszBuffer, 1, &nBytesRead, NULL) || !nBytesRead || lpszBuffer[0] == EOT)
+    if(!::ReadFile(hStdOutRead,lpszBuffer,1,&nBytesRead,NULL) || !nBytesRead || lpszBuffer[0] == EOT)
     {
       // pipe done - normal exit path.
       // Partial input line left hanging?
@@ -495,11 +495,12 @@ Redirect::StdOutThread8Bits(HANDLE hStdOutRead)
         writeResidu  = true;
       }
       m_eof_input = 1;
-      break;
     }
     // Add to line
-    *linePointer++ = lpszBuffer[0];
-
+    if(lpszBuffer[0] != EOT)
+    {
+      *linePointer++ = lpszBuffer[0];
+    }
     // Add end-of-line or line overflow, write to listener
     if(writeResidu || lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
     {
@@ -567,11 +568,12 @@ Redirect::StdOutThreadUnicode(HANDLE hStdOutRead)
         writeResidu  = true;
       }
       m_eof_input = 1;
-      break;
     }
     // Add to line
-    *linePointer++ = lpszBuffer[0];
-
+    if(lpszBuffer[0] != EOT)
+    {
+      *linePointer++ = lpszBuffer[0];
+    }
     // Add end-of-line or line overflow, write to listener
     if(writeResidu || lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
     {
@@ -581,7 +583,7 @@ Redirect::StdOutThreadUnicode(HANDLE hStdOutRead)
 //       {
 //         Sleep(500);
 //       }
-      
+
       // Virtual function to notify derived class that
       // characters are written to stdout.
       *linePointer = 0;
@@ -630,8 +632,8 @@ Redirect::StdErrThread8Bits(HANDLE hStdErrRead)
   BYTE   lineBuffer[BUFFER_SIZE + 10] = {0};
   BYTE*  linePointer = lineBuffer;
   bool   writeResidu = false;
-  //    FOR DEBUGGING: See below
-  //    int   i = 0;
+  //     FOR DEBUGGING: See below
+  //     int   i = 0;
 
   while(!m_eof_error)
   {
@@ -646,11 +648,12 @@ Redirect::StdErrThread8Bits(HANDLE hStdErrRead)
         writeResidu = true;
       }
       m_eof_error = 1;
-      break;
     }
     // Add to line
-    *linePointer++ = lpszBuffer[0];
-
+    if(lpszBuffer[0] != EOT)
+    {
+      *linePointer++ = lpszBuffer[0];
+    }
     // Add end-of-line or line overflow, write to listener
     if(writeResidu || lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
     {
@@ -718,11 +721,12 @@ Redirect::StdErrThreadUnicode(HANDLE hStdErrRead)
         writeResidu = true;
       }
       m_eof_error = 1;
-      break;
     }
     // Add to line
-    *linePointer++ = lpszBuffer[0];
-
+    if(lpszBuffer[0] != EOT)
+    {
+      *linePointer++ = lpszBuffer[0];
+    }
     // Add end-of-line or line overflow, write to listener
     if(writeResidu || lpszBuffer[0] == '\n' || ((linePointer - lineBuffer) > BUFFER_SIZE))
     {
@@ -910,6 +914,12 @@ Redirect::ProcessThread()
   // Application must call TerminateChildProcess() but not direcly from this thread!
   OnChildTerminate();
   
+  // Wait till the output has drained
+  while(m_hStdOutThread || m_hStdErrThread)
+  {
+    Sleep(DRAIN_STDOUT_INTERVAL);
+  }
+
   // We are ready running
   m_bRunThread = NULL;
   return returnValue;

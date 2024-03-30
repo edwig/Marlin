@@ -104,6 +104,9 @@ public:
   JSONobject& GetObject()          { return m_object;   }
   XString     GetAsJsonString(bool p_white,Encoding p_encoding,unsigned p_level = 0);
 
+  // FUNCTIONS
+  void        JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive = true);
+
   // Specials for the empty/null state
   void        Empty();
   bool        IsEmpty();
@@ -132,6 +135,9 @@ public:
   void        DropReference();
 
 private:
+  void        JsonReplaceObject(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive);
+  void        JsonReplaceArray (XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive);
+
   // JSONPointer may have access to the objects
   friend     JSONPointer;
 
@@ -237,6 +243,7 @@ public:
   bcd             GetValueNumber  (XString p_name);
   JsonConst       GetValueConstant(XString p_name);
   bool            AddNamedObject(XString p_name,const JSONobject& p_object,bool p_forceArray = false);
+  int             JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,bool p_caseSensitive = true);
 
   // GETTERS
   XString         GetJsonMessage       (Encoding p_encoding = Encoding::Default) const;

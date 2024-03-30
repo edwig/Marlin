@@ -413,8 +413,8 @@ SOAPMessage::Reset(ResponseType p_responseType  /* = ResponseType::RESP_ACTION_N
   // Only reset the URL if we specifically request it
   if(p_resetURL)
   {
-  m_url.Empty();
-  m_cracked.Reset();
+    m_url.Empty();
+    m_cracked.Reset();
   }
 
   // If, given: use the our namespace for an answer
@@ -2507,7 +2507,13 @@ SOAPMessage::SetTokenProfile(XString p_user,XString p_password,XString p_created
     Crypto crypt;
     // Password text = Base64(SHA1(nonce + created + password))
     XString combined = p_nonce + p_created + p_password;
+
+#ifdef _UNICODE
+    std::string basic = WinFile().TranslateOutputBuffer(combined);
+    XString password = crypt.Digest(basic.c_str(), basic.length(), CALG_SHA1);
+#else
     XString password = crypt.Digest(combined.GetString(),combined.GetLength(),CALG_SHA1);
+#endif
     passwd->SetValue(password);
     SetAttribute(passwd,_T("Type"),namesp + _T("#PasswordDigest"));
 
@@ -2517,7 +2523,13 @@ SOAPMessage::SetTokenProfile(XString p_user,XString p_password,XString p_created
       nonce = AddElement(token,_T("wsse:Nonce"),XDT_String,"");
     }
     Base64 base;
+
+#ifdef _UNICODE
+    basic = WinFile().TranslateOutputBuffer(p_nonce);
+    nonce->SetValue(base.Encrypt((BYTE*)basic.c_str(), (int)basic.length()));
+#else
     nonce->SetValue(base.Encrypt(p_nonce));
+#endif
     SetAttribute(nonce,_T("EncodingType"),secure + _T("#Base64Binary"));
   }
   else

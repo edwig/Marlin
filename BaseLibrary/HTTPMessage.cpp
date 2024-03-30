@@ -388,10 +388,10 @@ HTTPMessage::ConstructBodyFromString(XString p_string,XString p_charset,bool p_w
 #endif
   // Set the correct content length after constructing the body
   XString cl;
-  cl.Format("%d",length);
+  cl.Format(_T("%d"),length);
 
-  DelHeader("Content-Length");
-  AddHeader("Content-Length",cl);
+  DelHeader(_T("Content-Length"));
+  AddHeader(_T("Content-Length"),cl);
 }
 
 // General DTOR
@@ -417,7 +417,7 @@ HTTPMessage::Reset(bool p_resetURL /*=false*/)
   if(p_resetURL)
   {
     m_url.Empty();
-  m_cracked.Reset();
+    m_cracked.Reset();
   }
 
   // Resetting members
@@ -489,7 +489,7 @@ HTTPMessage::GetBody()
     XString charset = FindCharsetInContentType(contenttype);
 
 #ifdef UNICODE
-    if(m_sendUnicode || charset.IsEmpty() || charset.CompareNoCase(_T("utf-16")) == 0)
+    if(m_sendUnicode || charset.CompareNoCase(_T("utf-16")) == 0)
     {
       // Direct buffer copy
       answer = (LPCTSTR) buffer;

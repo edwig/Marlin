@@ -412,7 +412,7 @@ XMLParser::ParseDeclaration()
         {
           XString message;
           message.Format(_T("Unknown XML character encoding: %s"),value.GetString());
-          SetError(XmlError::XE_UnknownEncoding,message.GetString());
+          SetError(XmlError::XE_NoError,message.GetString(),false);
         }
       }
     }

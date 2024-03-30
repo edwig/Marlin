@@ -29,7 +29,7 @@
 #include "AutoCritical.h"
 
 // Command line length in NT technology
-#define BUFFER_SIZE 8192
+#define BUFFER_SIZE             8192
 // Maximum wait 1 minute for input idle
 #define MAXWAIT_FOR_INPUT_IDLE 60000
 // After the process we must wait for the stdout to be completely read
@@ -58,10 +58,10 @@ public:
   bool SetStreamCharset(XString p_charset);
 
   // Virtual interface. Derived class must implement this!!
-  virtual void OnChildStarted    (PTCHAR lpszCmdLine) = 0;
-  virtual void OnChildStdOutWrite(PTCHAR lpszOutput)  = 0;
-  virtual void OnChildStdErrWrite(PTCHAR lpszOutput)  = 0;
-  virtual void OnChildTerminate  ()                   = 0;
+  virtual void OnChildStarted    (LPCTSTR lpszCmdLine) = 0;
+  virtual void OnChildStdOutWrite(LPCTSTR lpszOutput)  = 0;
+  virtual void OnChildStdErrWrite(LPCTSTR lpszOutput)  = 0;
+  virtual void OnChildTerminate  ()                    = 0;
 
   mutable int m_exitCode;
   mutable int m_eof_input;

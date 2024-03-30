@@ -67,9 +67,9 @@ public:
   void RunCommand(LPTSTR p_commandLine,HWND p_console,UINT p_showWindow,BOOL p_waitForInputIdle);
 
   // Virtual interface. Derived class must implement this!!
-  virtual void OnChildStarted    (PTCHAR lpszCmdLine) override;
-  virtual void OnChildStdOutWrite(PTCHAR lpszOutput)  override; 
-  virtual void OnChildStdErrWrite(PTCHAR lpszOutput)  override;
+  virtual void OnChildStarted    (LPCTSTR lpszCmdLine) override;
+  virtual void OnChildStdOutWrite(LPCTSTR lpszOutput)  override; 
+  virtual void OnChildStdErrWrite(LPCTSTR lpszOutput)  override;
   virtual void OnChildTerminate() override;
   bool IsReady();
   bool IsEOF();
