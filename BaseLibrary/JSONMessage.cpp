@@ -350,7 +350,7 @@ JSONvalue::Add(JSONpair& p_value)
 }
 
 XString
-JSONvalue::GetAsJsonString(bool p_white,Encoding p_encoding,unsigned p_level /*=0*/)
+JSONvalue::GetAsJsonString(bool p_white,Encoding p_encoding /*=Encoding::Default*/, unsigned p_level /*=0*/)
 {
   XString result;
   XString separ,less;
@@ -639,7 +639,7 @@ JSONMessage::JSONMessage(XString p_message)
 }
 
 // XTOR: From an internal string with explicit space and encoding
-JSONMessage::JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding)
+JSONMessage::JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding /*=Encoding::Default*/)
 {
   AddReference();
 

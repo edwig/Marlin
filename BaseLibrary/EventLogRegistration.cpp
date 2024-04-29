@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: EventlogRegistration.h
+// SourceFile: EventlogRegistration.cpp
 //
 // BaseLibrary: Indispensable general objects and functions
 // 

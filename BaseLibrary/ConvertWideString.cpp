@@ -204,8 +204,17 @@ static CodePageName cpNames[] =
  ,{    -1,   _T(""),                    _T("")                                                                                        }
 };
 
+// Name mapping of code-page names is case insensitive
+struct CPCompare
+{
+  bool operator()(const XString& p_left,const XString& p_right) const
+  {
+    return (p_left.CompareNoCase(p_right) < 0);
+  }
+};
+
 using CPIDNameMap = std::map<int,XString>;
-using NameCPIDMap = std::map<XString,int>;
+using NameCPIDMap = std::map<XString,int,CPCompare>;
 // 
 static CPIDNameMap cp_cpid_map;
 static NameCPIDMap cp_name_map;

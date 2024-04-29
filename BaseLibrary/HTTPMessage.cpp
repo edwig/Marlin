@@ -225,14 +225,15 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,const SOAPMessage* p_msg)
     encoding = Encoding::LE_UTF16;
   }
 
-  int acp = -1;
   switch(encoding)
   {
-    case Encoding::Default:   acp =    -1; break; // Find Active Code Page
-    case Encoding::UTF8:     acp = 65001; break; // See ConvertWideString.cpp
-    case Encoding::LE_UTF16: acp =  1200; break; // See ConvertWideString.cpp
-//  case Encoding::ISO88591: acp = 28591; break; // See ConvertWideString.cpp
-    default:                              break;
+    case Encoding::Default:  charset = CodepageToCharset(-1);
+                             break;
+    case Encoding::LE_UTF16: charset = "utf-16";
+                             break;
+    default:                 [[fallthrough]];
+    case Encoding::UTF8:     charset = "utf-8";
+                             break;
   }
 
   // Reconstruct the content type header
@@ -292,9 +293,6 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
   // Copy all routing
   m_routing = p_msg.GetRouting();
 
-  // Setting the payload of the message
-  SetBody(p_msg.GetJsonMessage());
-
   // Take care of character encoding
   XString charset = FindCharsetInContentType(m_contentType);
   Encoding encoding = p_msg.GetEncoding();
@@ -304,14 +302,15 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
     encoding = Encoding::LE_UTF16;
   }
 
-  int acp = -1;
   switch(encoding)
   {
-    case Encoding::Default:    acp =    -1; break; // Find Active Code Page
-    case Encoding::UTF8:      acp = 65001; break; // See ConvertWideString.cpp
-    case Encoding::LE_UTF16:  acp =  1200; break; // See ConvertWideString.cpp
-//  case Encoding::ISO88591:  acp = 28591; break; // See ConvertWideString.cpp
-    default:                               break;
+    case Encoding::Default:   charset = CodepageToCharset(-1);
+                              break;
+    case Encoding::LE_UTF16:  charset = "utf-16"; 
+                              break;
+    default:                  [[fallthrough]];
+    case Encoding::UTF8:      charset = "utf-8";  
+                              break;
   }
 
   // Reconstruct the content type header
@@ -319,7 +318,7 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
   m_contentType.AppendFormat(_T("; charset=%s"),charset.GetString());
 
   // Set body 
-  ConstructBodyFromString(p_msg.GetJsonMessage(Encoding::Default),charset,p_msg.GetSendBOM());
+  ConstructBodyFromString(p_msg.GetJsonMessage(),charset,p_msg.GetSendBOM());
 
   // Make sure we have a server name for host headers
   CheckServer();
@@ -342,7 +341,7 @@ HTTPMessage::ConstructBodyFromString(XString p_string,XString p_charset,bool p_w
     {
       p_string = ConstructBOMUTF16() + p_string;
     }
-    SetBody(p_string);
+    SetBody(p_string,p_charset);
     length = p_string.GetLength() * sizeof(TCHAR);
   }
   else
@@ -382,7 +381,7 @@ HTTPMessage::ConstructBodyFromString(XString p_string,XString p_charset,bool p_w
   else
   {
     // Simply record as our body
-    SetBody(p_string);
+    SetBody(p_string,p_charset);
     length = p_string.GetLength();
   }
 #endif

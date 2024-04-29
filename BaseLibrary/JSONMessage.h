@@ -102,7 +102,7 @@ public:
   bool        GetMark()      const { return m_mark;     }
   JSONarray&  GetArray()           { return m_array;    }
   JSONobject& GetObject()          { return m_object;   }
-  XString     GetAsJsonString(bool p_white,Encoding p_encoding,unsigned p_level = 0);
+  XString     GetAsJsonString(bool p_white,Encoding p_encoding = Encoding::Default,unsigned p_level = 0);
 
   // FUNCTIONS
   void        JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive = true);
@@ -212,7 +212,7 @@ public:
   // XTOR: For incoming UTF-8 String
   explicit JSONMessage(XString p_message);
   // XTOR: Internal construction from MBCS string
-  explicit JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding);
+  explicit JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding = Encoding::Default);
   // XTOR: Outgoing to a URL
   explicit JSONMessage(XString p_message,XString p_url);
   // XTOR: From another XXXmessage
