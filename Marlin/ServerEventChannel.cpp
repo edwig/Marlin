@@ -635,12 +635,21 @@ ServerEventChannel::SendQueueToStream()
         {
           OnOpen(_T(""));
         }
-        if(!m_server->SendEvent(it->m_stream,event))
+        try
         {
-          allok = false;
-          CloseStream(it->m_stream);
+          if(!m_server->SendEvent(it->m_stream,event))
+          {
+            allok = false;
+            CloseStream(it->m_stream);
+            it = m_streams.erase(it);
+            OnClose(_T(""));
+            continue;
+          }
+        }
+        catch(StdException& ex)
+        {
+          ERRORLOG(ERROR_INVALID_HANDLE,_T("Error sending event to SSE stream: " + ex.GetErrorMessage()));
           it = m_streams.erase(it);
-          OnClose(_T(""));
           continue;
         }
       }
@@ -747,18 +756,35 @@ ServerEventChannel::CloseChannel()
 void 
 ServerEventChannel::CloseSocket(WebSocket* p_socket)
 {
-  DETAILLOGV(_T("Closing WebSocket for event channel [%s] Queue size: %d"),m_name.GetString(),(int)m_outQueue.size());
-  p_socket->SendCloseSocket(WS_CLOSE_NORMAL,_T("ServerEventDriver is closing channel"));
-  Sleep(200); // Wait for close to be sent before deleting the socket
-  p_socket->CloseSocket();
+  try
+  {
+    DETAILLOGV(_T("Closing WebSocket for event channel [%s] Queue size: %d"), m_name.GetString(),(int)m_outQueue.size());
+    p_socket->SendCloseSocket(WS_CLOSE_NORMAL,_T("ServerEventDriver is closing channel"));
+    Sleep(200); // Wait for close to be sent before deleting the socket
+    p_socket->CloseSocket();
+  }
+  catch(StdException& ex)
+  {
+    XString error;
+    error.Format(_T("Server event driver cannot close socket [%s] Error: %s"),m_name.GetString(),ex.GetErrorMessage().GetString());
+    ERRORLOG(ERROR_INVALID_HANDLE,error);
+  }
   m_server->UnRegisterWebSocket(p_socket);
 }
 
 void 
 ServerEventChannel::CloseStream(const EventStream* p_stream)
 {
-  DETAILLOGV(_T("Closing EventStream for event channel [%s] Queue size: %d"),m_name.GetString(),(int)m_outQueue.size());
-  m_server->CloseEventStream(p_stream);
+  try
+  {
+    DETAILLOGV(_T("Closing EventStream for event channel [%s] Queue size: %d"),m_name.GetString(),(int)m_outQueue.size());
+    m_server->CloseEventStream(p_stream);
+  }
+  catch(StdException& ex)
+  {
+    ERRORLOG(ERROR_INVALID_HANDLE,"Server event driver cannot close EventStream: " + ex.GetErrorMessage());
+  }
+  m_server->AbortEventStream(const_cast<EventStream*>(p_stream));
 }
 
 bool 
@@ -924,14 +950,24 @@ ServerEventChannel::CheckChannel()
   AllSockets::iterator it = m_sockets.begin();
   while(it != m_sockets.end())
   {
-    // See if it was closed by the client side
-    if(it->m_open == false || !it->m_socket->IsOpenForWriting())
+    try
     {
-      CloseSocket(it->m_socket);
+      // See if it was closed by the client side
+      if(it->m_open == false || !it->m_socket->IsOpenForWriting())
+      {
+        CloseSocket(it->m_socket);
 
-      AutoCritSec lock(&m_lock);
+        AutoCritSec lock(&m_lock);
+        it = m_sockets.erase(it);
+        // Push "OnClose" for web application to handle
+        OnClose(_T(""));
+        continue;
+      }
+    }
+    catch(StdException& ex)
+    {
+      ERRORLOG(ERROR_INVALID_HANDLE,_T("Invalid WebSocket memory registration: " + ex.GetErrorMessage()));
       it = m_sockets.erase(it);
-      OnClose(_T(""));
       continue;
     }
     // Next socket

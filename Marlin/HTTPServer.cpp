@@ -1863,12 +1863,19 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
   key.MakeLower();
 
   AutoCritSec lock(&m_socketLock);
-  SocketMap::iterator it = m_sockets.find(key);
-  if(it != m_sockets.end())
+  try
   {
-    delete it->second;
-    m_sockets.erase(it);
-    return true;
+    SocketMap::iterator it = m_sockets.find(key);
+    if(it != m_sockets.end())
+    {
+      delete it->second;
+      m_sockets.erase(it);
+      return true;
+    }
+  }
+  catch(StdException& ex)
+  {
+    ERRORLOG(ERROR_INVALID_ACCESS,_T("WebSocket memory NOT FOUND! : " + ex.GetErrorMessage()));
   }
   // We don't have it
   ERRORLOG(ERROR_FILE_NOT_FOUND,_T("Websocket to unregister NOT FOUND! : ") + key);

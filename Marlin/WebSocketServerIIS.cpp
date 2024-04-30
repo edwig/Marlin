@@ -216,25 +216,38 @@ WebSocketServerIIS::SocketDispatch()
     frame = m_writing.front();
   }
 
+  if(IsBadReadPtr(m_iis_socket,sizeof(IWebSocketContext)))
+  {
+    ERRORLOG(ERROR_INVALID_HANDLE,_T("Websocket IIS context unreachable"));
+    return;
+  }
+
   // Issue a asynchronous write command for this buffer
   BOOL expected = FALSE;
-  HRESULT hr = m_iis_socket->WriteFragment(frame->m_data
-                                          ,&frame->m_length
-                                          ,TRUE
-                                          ,(BOOL)frame->m_utf8
-                                          ,(BOOL)frame->m_final
-                                          ,ServerWriteCompletion
-                                          ,this
-                                          ,&expected);
-  if(FAILED(hr))
+  try
   {
-    DWORD error = hr & 0x0F;
-    ERRORLOG(error,_T("Websocket failed to register write command for a fragment"));
+    HRESULT hr = m_iis_socket->WriteFragment(frame->m_data
+                                            ,&frame->m_length
+                                            ,TRUE
+                                            ,(BOOL)frame->m_utf8
+                                            ,(BOOL)frame->m_final
+                                            ,ServerWriteCompletion
+                                            ,this
+                                            ,&expected);
+    if(FAILED(hr))
+    {
+      DWORD error = hr & 0x0F;
+      ERRORLOG(error,_T("Websocket failed to register write command for a fragment"));
+    }
+    if(!expected)
+    {
+      // Finished synchronized after all, perform after-writing actions
+      SocketWriter(hr,frame->m_length,frame->m_utf8,frame->m_final,false);
+    }
   }
-  if(!expected)
+  catch(StdException& ex)
   {
-    // Finished synchronized after all, perform after-writing actions
-    SocketWriter(hr,frame->m_length,frame->m_utf8,frame->m_final,false);
+    ERRORLOG(ERROR_INVALID_HANDLE,_T("Error writing fragment to IIS WebSocket: " + ex.GetErrorMessage()));
   }
 }
 
@@ -260,8 +273,8 @@ ServerReadCompletionIIS(HRESULT p_error,
     {
       if(!IsBadReadPtr(socket,sizeof(WebSocketServerIIS)))
       {
-      socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
-    }
+        socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+      }
     }
     catch(StdException& ex)
     {

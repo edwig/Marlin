@@ -835,28 +835,43 @@ ServerEventDriver::SendChannels()
   DETAILLOG1(_T("ServerEventDriver monitor waking up. Sending/Receiving client channels."));
   int sent = 0;
 
+  ChannelMap channels;
+  // Create copy of the channels to be sending to.
+  // This makes it possible to halfway through let channels be added or removed.
+  // Added channels will be processed next time through
+  {
+    AutoCritSec lock(&m_lock);
+    channels = m_channels;
+  }
+
   try
   {
-    ChannelMap channels;
-    // Create copy of the channels to be sending to.
-    // This makes it possible to halfway through let channels be added or removed.
-    {
-      AutoCritSec lock(&m_lock);
-      channels = m_channels;
-    }
-
     // Check all channels 
     for(auto& channel : channels)
     {
       channel.second->CheckChannel();
     }
+  }
+  catch(StdException& ex)
+  {
+    ERRORLOG(ERROR_UNHANDLED_EXCEPTION, _T("ServerEventDriver error while checking channels: ") + ex.GetErrorMessage());
+  }
 
+  try
+  {
     // All outbound traffic
     for(auto& channel : channels)
     {
       sent += channel.second->SendChannel();
     }
+  }
+  catch(StdException& ex)
+  {
+    ERRORLOG(ERROR_UNHANDLED_EXCEPTION, _T("ServerEventDriver error while sending to channels: ") + ex.GetErrorMessage());
+  }
 
+  try
+  {
     // All inbound traffic
     for(auto& channel : channels)
     {
@@ -865,7 +880,9 @@ ServerEventDriver::SendChannels()
   }
   catch(StdException& ex)
   {
-    ERRORLOG(ERROR_UNHANDLED_EXCEPTION,_T("ServerEventDriver error: ") + ex.GetErrorMessage());
+    ERRORLOG(ERROR_UNHANDLED_EXCEPTION, _T("ServerEventDriver error while receiving from channels: ") + ex.GetErrorMessage());
   }
+
+  // When will we be back?
   RecalculateInterval(sent);
 }

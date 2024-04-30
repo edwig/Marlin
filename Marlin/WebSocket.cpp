@@ -497,7 +497,9 @@ bool
 WebSocket::WriteString(XString p_string)
 {
   // Now encode MBCS/Unicode to UTF-8
-  bool result = false;
+  bool result  = false;
+  DWORD total  = 0;
+  DWORD toSend = 0;
 
   DETAILLOGV(_T("Outgoing message on WebSocket [%s] on [%s]"),m_key.GetString(),m_uri.GetString());
   if(MUSTLOG(HLL_LOGBODY))
@@ -505,44 +507,48 @@ WebSocket::WriteString(XString p_string)
     DETAILLOG1(p_string);
   }
 
+  try
+  {
 #ifdef UNICODE
-  AutoCSTR string(p_string);
-  BYTE* pointer = (BYTE*) string.cstr();
-  DWORD toSend  = string.size();
+    AutoCSTR string(p_string);
+    BYTE* pointer = (BYTE*) string.cstr();
+    toSend = string.size();
 #else
-  XString encoded = EncodeStringForTheWire(p_string);
-  DWORD toSend    = encoded.GetLength();
-  BYTE* pointer   = (BYTE*) encoded.GetString();
+    XString encoded = EncodeStringForTheWire(p_string);
+    BYTE* pointer   = (BYTE*) encoded.GetString();
+    toSend = encoded.GetLength();
 #endif
-
-  if(MUSTLOG(HLL_TRACEDUMP))
-  {
-    m_logfile->AnalysisHex(_T(__FUNCTION__),m_key,(void*)pointer,toSend);
-  }
-
-  // Go send it in fragments
-  DWORD total = 0;
-  do
-  {
-    // Calculate the length of the next fragment
-    bool last = true;
-    DWORD toWrite = toSend - total;
-    if(toWrite >= m_fragmentsize)
+    if(MUSTLOG(HLL_TRACEDUMP))
     {
-      toWrite = m_fragmentsize;
-      last    = false;
+      m_logfile->AnalysisHex(_T(__FUNCTION__),m_key,(void*)pointer,toSend);
     }
 
-    // Sent out the next fragment
-    if(!WriteFragment(&pointer[total],toWrite,Opcode::SO_UTF8,last))
+    // Go send it in fragments
+    do
     {
-      break;
-    }
-    // Bookkeeping of the total amount of sent bytes
-    total += toWrite;
-  }
-  while(total < toSend);
+      // Calculate the length of the next fragment
+      bool last = true;
+      DWORD toWrite = toSend - total;
+      if(toWrite >= m_fragmentsize)
+      {
+        toWrite = m_fragmentsize;
+        last    = false;
+      }
 
+      // Sent out the next fragment
+      if(!WriteFragment(&pointer[total],toWrite,Opcode::SO_UTF8,last))
+      {
+        break;
+      }
+      // Bookkeeping of the total amount of sent bytes
+      total += toWrite;
+    }
+    while(total < toSend);
+  }
+  catch(StdException& ex)
+  {
+    ERRORLOG(ERROR_INVALID_ACCESS,_T("String not written to websocket. Error: " + ex.GetErrorMessage()));
+  }
   // Check that we send ALL
   if(total >= toSend)
   {
