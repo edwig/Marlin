@@ -544,34 +544,44 @@ ServerEventChannel::SendQueueToSocket()
     AllSockets::iterator it = m_sockets.begin();
     while(it != m_sockets.end())
     {
-      if(it->m_open == true && (ltevent->m_sent == 0 || ltevent->m_sent == it->m_sender))
+      try
       {
-        // See if it was closed by the client side
-        if(!it->m_socket->IsOpenForWriting())
+        if(it->m_open == true && (ltevent->m_sent == 0 || ltevent->m_sent == it->m_sender))
         {
-          CloseSocket(it->m_socket);
+          // See if it was closed by the client side
+          if(!it->m_socket->IsOpenForWriting())
+          {
+            CloseSocket(it->m_socket);
 
-          AutoCritSec lock(&m_lock);
-          it = m_sockets.erase(it);
-          OnClose(_T(""));
-          continue;
-        }
+            AutoCritSec lock(&m_lock);
+            it = m_sockets.erase(it);
+            continue;
+          }
+          // Make sure channel is now open on the server side and 'in-use'
+          if(!m_openSeen)
+          {
+            OnOpen(_T(""));
+          }
+          if(!it->m_socket->WriteString(ltevent->m_payload))
+          {
+            allok = false;
+            CloseSocket(it->m_socket);
 
-        // Make sure channel is now open on the server side and 'in-use'
-        if(!m_openSeen)
-        {
-          OnOpen(_T(""));
+            AutoCritSec lock(&m_lock);
+            it = m_sockets.erase(it);
+            continue;
+          }
         }
-        if(!it->m_socket->WriteString(ltevent->m_payload))
-        {
-          allok = false;
-          CloseSocket(it->m_socket);
-
-          AutoCritSec lock(&m_lock);
-          it = m_sockets.erase(it);
-          OnClose(_T(""));
-          continue;
-        }
+      }
+      catch(StdException& ex)
+      {
+        XString error;
+        error.Format(_T("Error while sending event queue to WebSocket [%s] : %s"),m_name.GetString(),ex.GetErrorMessage().GetString());
+        ERRORLOG(ERROR_INVALID_HANDLE,error);
+        m_server->UnRegisterWebSocket(it->m_socket);
+        AutoCritSec lock(&m_lock);
+        it = m_sockets.erase(it);
+        continue;
       }
       ++it;
     }
@@ -581,6 +591,12 @@ ServerEventChannel::SendQueueToSocket()
       ltevent->m_sent++;
       lastSent = ltevent->m_number;
       ++sent;
+    }
+    // No more sockets connected. Stop the queue
+    if(m_sockets.empty())
+    {
+      OnClose(_T(""));
+      break;
     }
   }
   if(lastSent)

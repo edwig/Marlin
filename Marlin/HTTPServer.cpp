@@ -1858,13 +1858,14 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
 bool
 HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
 {
-  XString key = p_socket->GetIdentityKey();
-  DETAILLOGV(_T("Unregistering websocket [%s] from the server"),key.GetString());
-  key.MakeLower();
-
+  XString key;
   AutoCritSec lock(&m_socketLock);
   try
   {
+    key = p_socket->GetIdentityKey();
+    DETAILLOGV(_T("Unregistering websocket [%s] from the server"),key.GetString());
+    key.MakeLower();
+
     SocketMap::iterator it = m_sockets.find(key);
     if(it != m_sockets.end())
     {

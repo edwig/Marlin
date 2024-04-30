@@ -828,7 +828,6 @@ ServerEventDriver::RecalculateInterval(int p_sent)
   DETAILLOGV(_T("ServerEventDriver monitor going to sleep. Back in [%d] milliseconds"),m_interval);
 }
 
-
 void
 ServerEventDriver::SendChannels()
 {

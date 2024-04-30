@@ -817,7 +817,7 @@ HTTPRequest::StartEventStreamResponse()
   // First comment to push to the stream (not an event!)
   // Always UTF-8 compatible, so simple ANSI string
   char* init = ":init event-stream\r\n\r\n";
-  int length = (int) strlen(init);
+  int length = (int)strlen(init);
 
   // Initialize the HTTP response structure.
   FillResponse(HTTP_STATUS_OK,true);
