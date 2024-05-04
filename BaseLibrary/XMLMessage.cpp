@@ -364,12 +364,11 @@ XMLMessage::ParseForNode(XMLElement* p_node,XString& p_message,WhiteSpace p_whit
 XString
 XMLMessage::Print()
 {
-  bool utf8 = (m_encoding == Encoding::UTF8);
-
   XString message = PrintHeader();
 
   message += PrintStylesheet();
-  message += PrintElements(m_root,utf8);
+  message += PrintElements(m_root,false,0);
+
   if(m_condensed)
   {
     message += "\n";
@@ -394,16 +393,18 @@ XMLMessage::PrintHeader()
     header.AppendFormat(_T(" version=\"%s\""),m_version.GetString());
   }
   // Take care of character encoding
-  int acp = -1;
+  XString charset;
   switch(m_encoding)
   {
-    case Encoding::Default:     acp =    -1; break; // Find Active Code Page
-    case Encoding::UTF8:       acp = 65001; break; // See ConvertWideString.cpp
-    case Encoding::LE_UTF16:   acp =  1200; break; // See ConvertWideString.cpp
-    case Encoding::BE_UTF16:   acp =  1201; break; // See ConvertWideString.cpp
-    default:                                break;
+    default:                   [[fallthrough]];
+    case Encoding::UTF8:       charset = "utf-8";
+                               break;
+    case Encoding::LE_UTF16:   charset = "utf-16";
+                               break;
+    case Encoding::Default:    charset = CodepageToCharset(GetACP());
+                               break;
   }
-  header.AppendFormat(_T(" encoding=\"%s\""),CodepageToCharset(acp).GetString());
+  header.AppendFormat(_T(" encoding=\"%s\""),charset.GetString());
 
   // Add standalone?
   if(!m_standalone.IsEmpty())

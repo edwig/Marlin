@@ -2315,25 +2315,25 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
   else
   {
-    Encoding encoding = p_msg->SetEncoding(Encoding::Default);
+    Encoding encoding = p_msg->GetEncoding();
     soap = p_msg->GetSoapMessage();
-    p_msg->SetEncoding(encoding);
-    m_contentType = p_msg->GetContentType();
 
+    // Getting the content type
+    m_contentType = p_msg->GetContentType();
     XString charset = FindCharsetInContentType(m_contentType);
     if(charset.IsEmpty())
     {
       // Take care of character encoding
-      int acp = -1;
       switch(encoding)
       {
-        case Encoding::Default:   acp = 0;     break; // Find Active Code Page
-        case Encoding::UTF8:      acp = 65001; break; // See ConvertWideString.cpp
-        case Encoding::LE_UTF16:  acp = 1200;  break; // See ConvertWideString.cpp
-        case Encoding::BE_UTF16:  acp = 1201;  break; // See ConvertWideString.cpp
-        default:                               break;
+        case Encoding::Default:   charset = CodepageToCharset(GetACP());
+                                  break;
+        case Encoding::LE_UTF16:  charset = "utf-16";
+                                  break;
+        default:                  [[fallthrough]];
+        case Encoding::UTF8:      charset = "utf-8";
+                                  break;
       }
-      charset = CodepageToCharset(acp);
       m_contentType = SetFieldInHTTPHeader(m_contentType,_T("charset"),charset);
     }
     SetBody(soap,charset);
@@ -2389,6 +2389,8 @@ HTTPClient::Send(SOAPMessage* p_msg)
   p_msg->SetStatus(m_status);
 
   XString answer;
+  bool decoded(false);
+
   if(charset.Left(6).CompareNoCase(_T("utf-16")) == 0)
   {
 #ifdef UNICODE
@@ -2410,6 +2412,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
       answer.Empty();
     }
 #endif
+    decoded = true;
   }
   else if(nosniff.CompareNoCase(_T("nosniff")))
   {
@@ -2431,31 +2434,34 @@ HTTPClient::Send(SOAPMessage* p_msg)
         answer.Empty();
         result = false;
       }
-#endif
-    }
-    else
-    {
-#ifdef UNICODE
-      if(charset.CompareNoCase(_T("utf-16")) == 0)
-      {
-        answer = (LPCTSTR) m_response;
-      }
-      else
-      {
-        bool foundBom = false;
-        TryConvertNarrowString(m_response,m_responseLength,charset,answer,foundBom);
-      }
-#else
-      // Otherwise assume MBCS plain text in current codepage or UTF-8
-      answer = reinterpret_cast<const char*>(m_response);
+      decoded = true;
 #endif
     }
   }
-  else
+  if(!decoded)
   {
     // Sender forces to not sniffing
-    // So assume the standard codepages are used (ACP=1252, UTF-8 or ISO-8859-1)
-    answer = reinterpret_cast<const TCHAR*>(m_response);
+#ifdef _UNICODE
+    if(charset.CompareNoCase(_T("utf-16")) == 0)
+    {
+      answer = (LPCTSTR)m_response;
+    }
+    else
+    {
+      bool foundBom = false;
+      TryConvertNarrowString(m_response,m_responseLength,charset,answer,foundBom);
+    }
+#else
+    if(charset.CompareNoCase(CodepageToCharset(GetACP())) == 0)
+    {
+      answer = reinterpret_cast<const TCHAR*>(m_response);
+    }
+    else
+    {
+      XString response(reinterpret_cast<const char*>(m_response));
+      answer = DecodeStringFromTheWire(response, charset);
+    }
+#endif
   }
 
   // Keep response as new body. Might contain an error!!

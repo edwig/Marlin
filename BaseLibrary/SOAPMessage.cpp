@@ -373,10 +373,16 @@ SOAPMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
   }
   else if(!p_charset.IsEmpty())
   {
+    if(p_charset.CompareNoCase("utf-8") == 0)
+    {
+      m_encoding = Encoding::UTF8;
+    }
     message = DecodeStringFromTheWire(XString(p_buffer),p_charset);
   }
   else
   {
+    // Charset is empty: assume UTF8
+    m_encoding = Encoding::UTF8;
     message = p_buffer;
   }
 #endif
@@ -2508,12 +2514,12 @@ SOAPMessage::SetTokenProfile(XString p_user,XString p_password,XString p_created
     // Password text = Base64(SHA1(nonce + created + password))
     XString combined = p_nonce + p_created + p_password;
 
-#ifdef _UNICODE
+    #ifdef _UNICODE
     std::string basic = WinFile().TranslateOutputBuffer(combined);
     XString password = crypt.Digest(basic.c_str(), basic.length(), CALG_SHA1);
-#else
+    #else
     XString password = crypt.Digest(combined.GetString(),combined.GetLength(),CALG_SHA1);
-#endif
+    #endif
     passwd->SetValue(password);
     SetAttribute(passwd,_T("Type"),namesp + _T("#PasswordDigest"));
 
@@ -2524,12 +2530,12 @@ SOAPMessage::SetTokenProfile(XString p_user,XString p_password,XString p_created
     }
     Base64 base;
 
-#ifdef _UNICODE
+    #ifdef _UNICODE
     basic = WinFile().TranslateOutputBuffer(p_nonce);
     nonce->SetValue(base.Encrypt((BYTE*)basic.c_str(), (int)basic.length()));
-#else
+    #else
     nonce->SetValue(base.Encrypt(p_nonce));
-#endif
+    #endif
     SetAttribute(nonce,_T("EncodingType"),secure + _T("#Base64Binary"));
   }
   else
