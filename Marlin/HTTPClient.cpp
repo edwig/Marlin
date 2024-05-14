@@ -2205,6 +2205,7 @@ HTTPClient::Send(HTTPMessage* p_msg)
   p_msg->Reset();
 
   // Keep response as new body. Might contain an error!!
+  p_msg->SetContentType(m_contentType);
   p_msg->SetBody(m_response,m_responseLength);
   p_msg->SetCookies(m_resultCookies);
   // Getting all headers from the answer
@@ -3677,8 +3678,8 @@ HTTPClient::ReadAllResponseHeaders()
           int namepos = header.Find(':');
           if(namepos > 0)
           {
-            XString hname   = header.Left(namepos).Trim();
-            XString hvalue  = header.Mid(namepos + 1).Trim();
+            XString hname  = header.Left(namepos).Trim();
+            XString hvalue = header.Mid(namepos + 1).Trim();
             m_responseHeaders.insert(std::make_pair(hname,hvalue));
           }
           // Find next
