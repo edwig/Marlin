@@ -216,6 +216,12 @@ XMLMessage::SetRoot(XMLElement* p_root)
   m_root->AddReference();
 }
 
+void
+XMLMessage::SetStandalone(bool p_alone)
+{
+  m_standalone = p_alone ? _T("yes") : _T("no");
+}
+
 #pragma endregion XMLMessage_XTOR
 
 #pragma region File_Load_Save
@@ -1156,11 +1162,20 @@ XMLMessage::GetAttribute(XMLElement* p_elem,XString p_attribName)
 {
   if(p_elem)
   {
+    XString namesp = SplitNamespace(p_attribName);
+
     for(auto& attrib : p_elem->GetAttributes())
     {
       if(attrib.m_name.Compare(p_attribName) == 0)
       {
-        return attrib.m_value;
+        if(namesp.IsEmpty())
+        {
+          return attrib.m_value;
+        }
+        if(attrib.m_namespace.Compare(namesp) == 0)
+        {
+          return attrib.m_value;
+        }
       }
     }
   }

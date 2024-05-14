@@ -202,6 +202,8 @@ public:
   // Stylesheet info
   void            SetStylesheetType(XString p_type);
   void            SetStylesheet(XString p_sheet);
+  // Standalone XML
+  void            SetStandalone(bool p_alone);
   // Setting an element
   XMLElement*     SetElement(XString p_name, const XString& p_value);
   XMLElement*     SetElement(XString p_name, LPCTSTR        p_value);

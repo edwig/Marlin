@@ -371,19 +371,17 @@ SOAPMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
       message = p_buffer;
     }
   }
-  else if(!p_charset.IsEmpty())
+  else 
   {
+    if(p_charset.IsEmpty())
+    {
+      p_charset = "utf-8";
+    }
     if(p_charset.CompareNoCase("utf-8") == 0)
     {
       m_encoding = Encoding::UTF8;
     }
     message = DecodeStringFromTheWire(XString(p_buffer),p_charset);
-  }
-  else
-  {
-    // Charset is empty: assume UTF8
-    m_encoding = Encoding::UTF8;
-    message = p_buffer;
   }
 #endif
   return message;
@@ -2474,6 +2472,7 @@ SOAPMessage::SetTokenProfile(XString p_user,XString p_password,XString p_created
 {
   XString namesp(NAMESPACE_SECEXT);
   XString secure(NAMESPACE_SECURITY);
+  XString unametoken(NAMESPACE_UNAMETOKEN);
   XString empty;
 
   XMLElement* header = FindElement(_T("Header"), false);
@@ -2521,7 +2520,7 @@ SOAPMessage::SetTokenProfile(XString p_user,XString p_password,XString p_created
     XString password = crypt.Digest(combined.GetString(),combined.GetLength(),CALG_SHA1);
     #endif
     passwd->SetValue(password);
-    SetAttribute(passwd,_T("Type"),namesp + _T("#PasswordDigest"));
+    SetAttribute(passwd,_T("Type"),unametoken + _T("#PasswordDigest"));
 
     XMLElement* nonce = FindElement(token,_T("Nonce"),false);
     if(!nonce)

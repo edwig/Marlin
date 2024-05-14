@@ -41,7 +41,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Name of the event log category in the WMI
-static const  PTCHAR eventLogCategory = _T("Application");
+LPTSTR g_eventLogCategory = _T("Application");
 
 // Register our DLL. Return '1' if successful, otherwise '0'
 int
@@ -83,8 +83,8 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
   TCHAR  szBuf[MAX_PATH + 1] = _T("");
   size_t cchSize = MAX_PATH;
 
-  // Create the event source as a subkey of the log. 
-  StringCchPrintf(szBuf,cchSize,_T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s"),eventLogCategory,p_serviceName.GetString()); 
+  // Create the event source root folder
+  StringCchPrintf(szBuf,cchSize,_T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s"),g_eventLogCategory); 
 
   if(RegCreateKeyEx(HKEY_LOCAL_MACHINE
                    ,szBuf
@@ -96,8 +96,37 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
                    ,&hk
                    ,&dwDisp)) 
   {
-    p_error.Format(_T("Could not create the registry key for the %s.\n"),p_messageDLL.GetString()); 
-    return 0;
+    // Check if the key already existed
+    if(dwDisp != 2)
+    {
+      p_error.Format(_T("Could not create the registry key for the %s.\n"),p_messageDLL.GetString()); 
+      return 0;
+    }
+  }
+  RegCloseKey(hk);
+
+  // Create the event source as a subkey of the log. 
+  StringCchCat(szBuf,cchSize,_T("\\"));
+  StringCchCat(szBuf,cchSize,p_serviceName.GetString()); 
+
+  if(RegCreateKeyEx(HKEY_LOCAL_MACHINE
+                   ,szBuf
+                   ,0
+                   ,NULL
+                   ,REG_OPTION_NON_VOLATILE
+                   ,KEY_WRITE
+                   ,NULL
+                   ,&hk
+                   ,&dwDisp)) 
+  {
+    // Check if the key already existed
+    if(dwDisp != 2)
+    {
+      p_error.Format(_T("Could not create the registry key for the %s.\n"),p_messageDLL.GetString()); 
+      return 0;
+    }
+    // Already installed
+    return 1;
   }
 
   // Set the name of the message file. 
@@ -142,7 +171,7 @@ UnRegisterMessagesDllForService(XString p_serviceName,XString& p_error)
   p_error.Empty();
 
   // Create the event source as a subkey of the log. 
-  StringCchPrintf(szBuf,cchSize,_T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s"),eventLogCategory,p_serviceName.GetString());
+  StringCchPrintf(szBuf,cchSize,_T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s\\%s"),g_eventLogCategory,p_serviceName.GetString());
 
   // Windows Vista and higher: RegDeleteTree
   if(SHDeleteKey(HKEY_LOCAL_MACHINE,szBuf))
@@ -151,4 +180,44 @@ UnRegisterMessagesDllForService(XString p_serviceName,XString& p_error)
     return false;
   }
   return true;
+}
+
+bool
+IsMessageDLLRegistered(XString p_serviceName)
+{
+  HKEY   hk(nullptr);
+  TCHAR  szBuf[MAX_PATH + 1] = _T("");
+  size_t cchSize = MAX_PATH;
+  bool   result  = false;
+
+  // Find the event source root folder
+  StringCchPrintf(szBuf,cchSize,_T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s"),g_eventLogCategory); 
+
+  if(RegOpenKey(HKEY_LOCAL_MACHINE,szBuf,&hk)) 
+  {
+    // Key could not be opened
+    return false;
+  }
+  RegCloseKey(hk);
+
+  // The event source is a subkey of the root folder
+  StringCchCat(szBuf,cchSize,_T("\\"));
+  StringCchCat(szBuf,cchSize,p_serviceName.GetString()); 
+
+  hk = NULL;
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,szBuf,0,KEY_QUERY_VALUE,&hk))
+  {
+    // Key could not be opened
+    return false;
+  }
+
+  DWORD size = MAX_PATH;
+  DWORD type = REG_EXPAND_SZ;
+  memset(szBuf,0,MAX_PATH);
+  if(RegQueryValueEx(hk,_T("EventMessageFile"),NULL,&type,(LPBYTE)szBuf,(LPDWORD)&size) == ERROR_SUCCESS)
+  {
+    result = true;
+  }
+  RegCloseKey(hk);
+  return result;
 }

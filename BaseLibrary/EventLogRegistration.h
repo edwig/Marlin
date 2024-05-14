@@ -27,5 +27,10 @@
 //
 #pragma once
 
+// Standaard root folder for the event log folder we create
+// Defaulting to "Applications"
+extern LPTSTR g_eventLogCategory;
+
 int    RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString& p_error);
 bool UnRegisterMessagesDllForService(XString p_serviceName,XString& p_error);
+bool IsMessageDLLRegistered(XString p_serviceName);

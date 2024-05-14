@@ -27,6 +27,7 @@
 //
 #include "pch.h"
 #include "ServiceReporting.h"
+#include "EventLogRegistration.h"
 #include "AutoCritical.h"
 #include "GetLastErrorAsString.h"
 #include "Alert.h"

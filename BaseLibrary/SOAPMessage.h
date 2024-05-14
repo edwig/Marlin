@@ -62,6 +62,7 @@ constexpr auto NAMESPACE_ENCODING   = _T("http://www.w3.org/2001/04/xmlenc#");
 constexpr auto NAMESPACE_SECEXT     = _T("http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd");
 constexpr auto NAMESPACE_SECUTILITY = _T("http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd");
 constexpr auto NAMESPACE_SECURITY   = _T("http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0");
+constexpr auto NAMESPACE_UNAMETOKEN = _T("http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0");
 
 // Must have a default namespace
 #ifndef DEFAULT_NAMESPACE 
