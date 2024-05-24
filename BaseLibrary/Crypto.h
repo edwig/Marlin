@@ -26,6 +26,7 @@
 // THE SOFTWARE.
 //
 #pragma once
+#include <wincrypt.h>
 
 // Standard signing hashing 
 // 
@@ -83,8 +84,8 @@ public:
 private:
   XString  m_error;
   XString	 m_digest;
-  unsigned m_hashMethod;
-  bool     m_base64;
+  unsigned m_hashMethod { CALG_SHA1 };  // Digests are mostly in SHA1
+  bool     m_base64     { true      };  // Default as a base64 string instead of binary
 
   static   CRITICAL_SECTION m_lock;
 };

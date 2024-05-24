@@ -109,9 +109,9 @@ private:
 //
 //////////////////////////////////////////////////////////////////////////
 
-using ChannelMap  = std::map<int,    ServerEventChannel*>;
-using ChanNameMap = std::map<XString,ServerEventChannel*>;
-using SenderMap   = std::map<XString,long>;
+using ChannelMap  = std::map<int,     ServerEventChannel*>;
+using ChanNameMap = std::map<XString, ServerEventChannel*>;
+using SenderMap   = std::map<unsigned,clock_t>;
 
 class ServerEventDriver
 {
@@ -165,7 +165,7 @@ public:
   // Main loop of the event runner. DO NOT CALL!
   void  EventThreadRunning();
   // Brute force attack detection. Called by the ServerEventChannel
-  bool  CheckBruteForceAttack(XString p_sender);
+  bool  CheckBruteForceAttack(unsigned p_sender);
   // Incoming event. Called by the ServerEventChannel
   void  IncomingEvent();
 

@@ -54,17 +54,17 @@ public:
 	StdException(unsigned p_safe,_EXCEPTION_POINTERS* p_exceptionPointers);
 	StdException(const StdException& p_other);
 
-  unsigned             GetSafeExceptionCode();
-	_EXCEPTION_POINTERS* GetExceptionPointers();
-	void*                GetExceptionAddress();
-  int                  GetApplicationCode();
-  XString              GetApplicationFault();
-  XString              GetErrorMessage();
-  bool                 GetErrorMessage(PTCHAR p_error,unsigned p_maxSize,unsigned* p_helpContext = NULL);
+  unsigned             GetSafeExceptionCode() const;
+	_EXCEPTION_POINTERS* GetExceptionPointers() const;
+	void*                GetExceptionAddress() const;
+  int                  GetApplicationCode() const;
+  XString              GetApplicationFault() const;
+  XString              GetErrorMessage() const;
+  bool                 GetErrorMessage(PTCHAR p_error,unsigned p_maxSize,unsigned* p_helpContext = NULL) const;
 
 private:
   unsigned             m_safeExceptionCode { 0 };
-	_EXCEPTION_POINTERS* m_exceptionPointers { nullptr };
+  _EXCEPTION_POINTERS* m_exceptionPointers { nullptr };
   unsigned             m_applicationCode   { 0 };
   XString              m_applicationFault;
 };

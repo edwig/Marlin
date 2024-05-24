@@ -39,19 +39,20 @@ class EventStream;
 class ServerEventDriver;
 
 // Types of channel connections
-enum class EventDriverType
+// Each channel can have multiple types
+typedef enum _eventDriverType
 {
-  EDT_NotConnected = 0
- ,EDT_Sockets      = 1
- ,EDT_ServerEvents = 2
- ,EDT_LongPolling  = 3
-};
+  EDT_NotConnected = 0x00
+ ,EDT_Sockets      = 0x01
+ ,EDT_ServerEvents = 0x02
+ ,EDT_LongPolling  = 0x04
+}
+EventDriverType;
 
 typedef struct _regSocket
 {
   WebSocket* m_socket { nullptr };
-  XString    m_url;
-  UINT64     m_sender { 0       };
+  unsigned   m_sender { 0       };
   bool       m_open   { false   };
 }
 EventWebSocket;
@@ -59,8 +60,7 @@ EventWebSocket;
 typedef struct _regStream
 {
   EventStream* m_stream { nullptr };
-  XString      m_url;
-  UINT64       m_sender { 0 };
+  unsigned     m_sender { 0 };
 }
 EventSSEStream;
 
@@ -123,11 +123,14 @@ public:
 private:
   void CloseSocket(WebSocket* p_socket);
   void CloseStream(const EventStream* p_stream);
-  int  SendQueueToSocket();
-  int  SendQueueToStream();
-  int  LogLongPolling();
-  int  LogNotConnected();
+  int  SendEventToSockets(LTEvent* p_event);
+  int  SendEventToStreams(LTEvent* p_event);
+  void LogLongPolling();
+  void LogNotConnected();
+  void PlaceInLongPollingQueue(LTEvent* p_event);
   bool RemoveEvents(int p_number);
+  bool GetNextOutgoingEvent(LTEvent*& p_event);
+  bool GetNextIncomingEvent(LTEvent*& p_event);
 
   // DATA
   XString             m_name;
@@ -144,9 +147,9 @@ private:
   UINT64              m_appData     { 0L      };
   // All events to be sent
   EventQueue          m_outQueue;
+  EventQueue          m_polQueue;
   int                 m_maxNumber   { 0 };
   int                 m_minNumber   { 0 };
-  INT64               m_lastSending { 0 };
   // All incoming events from the client
   EventQueue          m_inQueue;
   bool                m_openSeen    { false };

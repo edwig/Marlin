@@ -96,35 +96,35 @@ StdException::StdException(int p_errorCode,LPCTSTR p_fault)
 
 // Return the Safe-Exception code
 unsigned
-StdException::GetSafeExceptionCode()
+StdException::GetSafeExceptionCode() const
 {
 	return m_safeExceptionCode;
 }
 
 // Return the application error code
 int
-StdException::GetApplicationCode()
+StdException::GetApplicationCode() const
 {
   return m_applicationCode;
 }
 
 // Return the application error text
 XString
-StdException::GetApplicationFault()
+StdException::GetApplicationFault() const
 {
   return m_applicationFault;
 }
 
 // Return the exception pointers (build stack traces etcetera)
 _EXCEPTION_POINTERS* 
-StdException::GetExceptionPointers()
+StdException::GetExceptionPointers() const
 {
 	return m_exceptionPointers;
 }
 
 // Address where the exception did occur
 void* 
-StdException::GetExceptionAddress()
+StdException::GetExceptionAddress() const
 {
   if(m_exceptionPointers)
   {
@@ -138,7 +138,7 @@ StdException::GetExceptionAddress()
 
 // Getting the resulting error as a string
 XString
-StdException::GetErrorMessage()
+StdException::GetErrorMessage() const
 {
   XString errorstring;
 
@@ -181,7 +181,7 @@ StdException::GetErrorMessage()
 // The CException way of getting an error message
 // By copying it out of the object through a string pointer
 bool
-StdException::GetErrorMessage(PTCHAR p_error, unsigned p_maxSize, unsigned* p_helpContext /*= NULL*/)
+StdException::GetErrorMessage(PTCHAR p_error, unsigned p_maxSize, unsigned* p_helpContext /*= NULL*/) const
 {
   // Reset help context
   if (p_helpContext)
@@ -204,4 +204,3 @@ MessageFromException(CException& p_exception)
   return XString(buffer);
 }
 #endif
-

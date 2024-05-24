@@ -29,6 +29,9 @@ CHANGES IN VERSION 8.x.0 of xx-xx-2024
 2)  Upon conversion of a SOAP/JSON message back to a HTTPMessage, the content length will be 
     restored to the now changed content.
 3)  Marlin project is synched with the last version of the BaseLibrary
+4)  The ServerEventDriver has been rewritten as to lower the lock-level of outgoing events.
+    Alsoo the number of channels is reduced by only trying the channels with outgoing events.
+    Long-Polling events are copied to their own queue, where one (1) client can retrieve them.
 
 
 CHANGES IN VERSION 8.3.0 of 03-11-2023

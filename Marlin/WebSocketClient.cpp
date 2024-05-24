@@ -144,6 +144,9 @@ WebSocketClient::OpenSocket()
   client.SetVerb(_T("GET"));
   client.SetURL(m_uri);
 
+  // Also send the desktop number
+  client.SetTerminalServices(true);
+
   // Add extra protocol headers
   if(!m_protocols.IsEmpty())
   {

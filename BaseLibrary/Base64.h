@@ -39,7 +39,7 @@ public:
   // Buffer to string and vice-versa
   XString  Encrypt(BYTE* p_buffer,int p_length);
   bool     Decrypt(XString p_encrypted,BYTE* p_buffer,int p_length);
-  bool     Decrypt(BYTE* p_buffer,int p_blen,BYTE* p_output,int p_olen);
+  int      Decrypt(BYTE* p_buffer,int p_blen,BYTE* p_output,int p_olen);
   // Helper methods
   size_t   B64_length  (size_t len);
   size_t   Ascii_length(size_t len);

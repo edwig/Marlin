@@ -57,8 +57,6 @@ static bool m_crypt_init = false;
 CRITICAL_SECTION Crypto::m_lock;
 
 Crypto::Crypto()
-       :m_hashMethod(CALG_SHA1)
-       ,m_base64(false)
 {
   if(!m_crypt_init)
   {

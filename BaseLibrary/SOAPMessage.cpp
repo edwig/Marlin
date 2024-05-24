@@ -1627,8 +1627,12 @@ SOAPMessage::Url2SoapParameters(const CrackedURL& p_url)
   CreateParametersObject();
 
   WinFile part(p_url.m_path);
-  XString action = part.GetFilenamePartFilename();
-
+  XString action = part.GetFilenamePartBasename();
+  XString extens = part.GetFilenamePartExtension();
+  if(!extens.IsEmpty() && !isalpha(extens.GetAt(0)))
+  {
+    action = "Doc_" + action;
+  }
   SetSoapAction(action);
   SetParameterObject(action);
 

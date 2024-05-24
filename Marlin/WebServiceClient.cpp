@@ -197,6 +197,9 @@ WebServiceClient::Open()
   m_httpClient->SetURL(m_url);
   DETAILLOG(_T("WebServiceClient for URL: %s"),m_url.GetString());
 
+  // Also send the desktop number
+  m_httpClient->SetTerminalServices(true);
+
   // Perform general check
   MinimumCheck();
 
