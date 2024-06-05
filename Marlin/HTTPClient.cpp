@@ -2658,14 +2658,13 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   {
 #ifdef UNICODE
     answer   = (LPCTSTR) m_response;
-    p_result = true;
 #else
-    // Works for "UTF-16", "UTF-16LE" and "UTF-16BE" as of RFC 2781
+    // Works for "UTF-16" and "UTF-16LE" as of RFC 2781
     bool doBom = false;
     if(TryConvertWideString(m_response,m_responseLength,_T(""),answer,doBom))
     {
-      p_result = true;
       p_msg->SetSendBOM(doBom);
+      p_msg->SetSendUnicode(true);
     }
     else
     {
@@ -2688,7 +2687,17 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
     if(TryConvertNarrowString(m_response,m_responseLength,charset,answer,doBom))
     {
       p_msg->SetSendBOM(doBom);
-      p_result = true;
+      p_msg->SetSendUnicode(false);
+    }
+    else
+    {
+      // SET ERROR STATE
+      XString message;
+      message.Format(_T("Cannot convert UTF-16 message"));
+      p_msg->SetLastError(message);
+      p_msg->SetErrorstate(true);
+      p_result = false;
+      answer.Empty();
     }
 #else
     // Answer is the raw response
@@ -2697,7 +2706,6 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
     {
       answer = DecodeStringFromTheWire(answer,charset);
     }
-    p_result = true;
 #endif
   }
 
