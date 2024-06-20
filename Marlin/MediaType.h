@@ -31,27 +31,30 @@
 class MediaType
 {
 public:
-  MediaType(XString p_extension,XString p_contentType);
+  MediaType(bool p_logging,XString p_extension,XString p_contentType);
  ~MediaType();
 
   // Getters
-  XString GetExtension()   { return m_extension;   };
-  XString GetContentType() { return m_contentType; };
+  bool    GetDoLogging()   { return m_logging;     }
+  XString GetExtension()   { return m_extension;   }
+  XString GetContentType() { return m_contentType; }
   XString GetContent();
 
   // Setters
-  void    SetExtension(XString p_extension) { m_extension   = p_extension; };
-  void    SetContentType(XString p_type)    { m_contentType = p_type;      };
+  void    SetDoLogging(bool p_logging)      { m_logging     = p_logging;   }
+  void    SetExtension(XString p_extension) { m_extension   = p_extension; }
+  void    SetContentType(XString p_type)    { m_contentType = p_type;      }
 
   bool    IsVendorSpecific();
   XString BaseType();
   XString ExtendedType();
 private:
+  bool    m_logging;
   XString m_extension;
   XString m_contentType;
 };
 
-using MediaTypeMap = std::map<XString,MediaType>;
+using MediaTypeMap = std::multimap<XString,MediaType>;
 
 class MediaTypes
 {
@@ -61,14 +64,16 @@ public:
   // Check for a valid object
   static void       CheckValid();
   // Registering your own content types
-         void       AddContentType(XString p_extension,XString p_contentType);
+         void       AddContentType(bool p_logging,XString p_extension,XString p_contentType);
   // Finding the content types
   static XString    FindContentTypeByExtension  (XString p_extension);
   static XString    FindContentTypeByResouceName(XString p_resource);
   static MediaType* FindMediaTypeByExtension    (XString p_extension);
+  static MediaType* FindMediaTypeByContentType  (XString p_contentType);
   static XString    FindExtensionByContentType  (XString p_contentType);
 
 private:
   void Init();
   MediaTypeMap m_types;
+  MediaTypeMap m_content;
 };

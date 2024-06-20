@@ -27,8 +27,9 @@
 //
 #include "pch.h"
 #include "BaseLibrary.h"
-#include <winhttp.h>
+#include "HTTPMessage.h"
 #include "HTTPError.h"
+#include <winhttp.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -117,7 +118,7 @@ XString GetHTTPErrorText(int p_error)
 
 
 // Get text from HTTP_STATUS code
-PCTSTR
+LPCTSTR
 GetHTTPStatusText(int p_status)
 {
   switch(p_status)
@@ -229,3 +230,64 @@ GetHTTPStatusText(int p_status)
     default:                             return _T("Unknown HTTP Status");
   }
 }
+
+
+// Used by HttpSys.dll
+LPCTSTR http_verbs[]
+{
+  _T("UNPARSED"),
+  _T("UNKNOWN"),
+  _T("INVALID"),
+  _T("OPTIONS"),
+  _T("GET"),
+  _T("HEAD"),
+  _T("POST"),
+  _T("PUT"),
+  _T("DELETE"),
+  _T("TRACE"),
+  _T("CONNECT"),
+  _T("TRACK"),
+  _T("MOVE"),
+  _T("COPY"),
+  _T("PROPFIND"),
+  _T("PROPPATCH"),
+  _T("MKCOL"),
+  _T("LOCK"),
+  _T("UNLOCK"),
+  _T("SEARCH")
+};
+
+XString
+GetHTTPVerb(HTTP_VERB p_verb, const char* p_unknown /*=nullptr*/)
+{
+  if(p_verb >= HTTP_VERB::HttpVerbUnparsed &&
+     p_verb <= HTTP_VERB::HttpVerbMaximum)
+  {
+    if(p_verb != HTTP_VERB::HttpVerbUnknown)
+    {
+      return XString(http_verbs[(int)p_verb]);
+    }
+  }
+  if(p_unknown && *p_unknown)
+  {
+    return LPCSTRToString(p_unknown);
+  }
+  return XString(http_verbs[HTTP_VERB::HttpVerbUnknown]);
+}
+
+// Get the formalized VERB for a command
+XString
+GetHTTPVerb(HTTPCommand p_verb,const char* p_unknown /*=nullptr*/)
+{
+  if(p_verb >= HTTPCommand::http_post &&
+     p_verb <= HTTPCommand::http_last_command)
+  {
+    return XString(headers[(int)p_verb]);
+  }
+  if(p_unknown && *p_unknown)
+  {
+    return XString(LPCSTRToString(p_unknown));
+  }
+  return "";
+}
+

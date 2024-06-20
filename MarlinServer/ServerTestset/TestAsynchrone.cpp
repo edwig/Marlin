@@ -130,8 +130,8 @@ TestMarlinServer::TestAsynchrone()
   site->SetHandler(HTTPCommand::http_post,handler);
 
   // Modify the standard settings for this site
-  site->AddContentType(_T(""),_T("text/xml"));
-  site->AddContentType(_T("xml"),_T("application/soap+xml"));
+  site->AddContentType(true,_T("pos"),_T("text/xml"));
+  site->AddContentType(true,_T("xml"),_T("application/soap+xml"));
 
   // This is a asynchronous test site
   site->SetAsync(true);

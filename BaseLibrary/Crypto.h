@@ -82,6 +82,11 @@ public:
   XString  GetError();
 
 private:
+  // ENCRYPT a buffer in AES-256
+  XString  ImplementEncryption(const BYTE* p_input,int p_lengthINP,const BYTE* p_password,int p_lengthPWD);
+  // DECRYPT a buffer in AES-256
+  CStringA ImplementDecryption(const BYTE* p_input,int p_lengthINP,const BYTE* p_password,int p_lengthPWD);
+
   XString  m_error;
   XString	 m_digest;
   unsigned m_hashMethod { CALG_SHA1 };  // Digests are mostly in SHA1

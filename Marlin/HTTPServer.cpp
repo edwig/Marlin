@@ -1961,40 +1961,7 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
   httpVersion.Format(_T("HTTP/%d.%d"),p_request->Version.MajorVersion,p_request->Version.MinorVersion);
 
   // The request verb.
-  XString verb;
-  if(p_request->Verb == HttpVerbUnknown && p_request->UnknownVerbLength)
-  {
-#ifdef UNICODE
-    bool foundBom(false);
-    TryConvertNarrowString((BYTE*)p_request->pUnknownVerb,(int)strlen(p_request->pUnknownVerb),_T(""),verb,foundBom);
-#else
-    verb = p_request->pUnknownVerb;
-#endif
-  }
-  else
-  {
-    switch (p_request->Verb)
-    {
-      case HttpVerbOPTIONS:   verb = _T("OPTIONS");   break;
-      case HttpVerbGET:       verb = _T("GET");       break;
-      case HttpVerbHEAD:      verb = _T("HEAD");      break;
-      case HttpVerbPOST:      verb = _T("POST");      break;
-      case HttpVerbPUT:       verb = _T("PUT");       break;
-      case HttpVerbDELETE:    verb = _T("DELETE");    break;
-      case HttpVerbTRACE:     verb = _T("TRACE");     break;
-      case HttpVerbCONNECT:   verb = _T("CONNECT");   break;
-      case HttpVerbTRACK:     verb = _T("TRACK");     break;
-      case HttpVerbMOVE:      verb = _T("MOVE");      break;
-      case HttpVerbCOPY:      verb = _T("COPY");      break;
-      case HttpVerbPROPFIND:  verb = _T("PROPFIND");  break;
-      case HttpVerbPROPPATCH: verb = _T("PROPPATCH"); break;
-      case HttpVerbMKCOL:     verb = _T("MKCOL");     break;
-      case HttpVerbLOCK:      verb = _T("LOCK");      break;
-      case HttpVerbUNLOCK:    verb = _T("UNLOCK");    break;
-      case HttpVerbSEARCH:    verb = _T("SEARCH");    break;
-      default:                verb = _T("UNKNOWN");   break;
-    }
-  }
+  XString verb = GetHTTPVerb(p_request->Verb,p_request->pUnknownVerb);
 
   // THE PRINCIPAL HTTP PROTOCOL CALL LINE
   XString httpLine;
@@ -2038,47 +2005,77 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
 }
 
 void
-HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer,bool p_utf16 /*=false*/)
+HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,HTTPMessage* p_message,bool p_utf16 /*=false*/)
 {
   // Only if we have an attached logfile
-  if(!m_log)
+  if(!m_log || !p_request)
   {
     return;
   }
 
-  // Dump request + headers
-  if(MUSTLOG(HLL_TRACEDUMP))
+  // Dump request + headers (even if no message yet)
+  if(MUSTLOG(HLL_TRACE))
   {
-    if(p_request)
-    {
-      TraceRequest(p_request);
-    }
+    TraceRequest(p_request);
   }
+
   // Dump the body
-  if(MUSTLOG(HLL_LOGBODY))
+  if(p_message && MUSTLOG(HLL_LOGBODY))
   {
-    if(p_buffer && p_buffer->GetLength())
+    if(p_message)
     {
-      LogTraceRequestBody(p_buffer,p_utf16);
+      LogTraceRequestBody(p_message,p_utf16);
     }
   }
 }
 
+/* Logs the request body of an HTTP message if logging is enabled and the media type is loggable.
+ * This method checks if the message has a file buffer and if detailed logging (HLL_LOGBODY) is enabled.
+ * It then determines the media type of the message based on its content type or file extension.
+ * If the media type is found and logging for it is enabled, it logs the body of the message.
+ * 
+ * @param p_message Pointer to the HTTPMessage object containing the request to be logged.
+ * @param p_utf16   Optional parameter indicating whether to log the body as UTF-16. Defaults to false.
+ */
 void
-HTTPServer::LogTraceRequestBody(FileBuffer* p_buffer,bool p_utf16 /*=false*/)
+HTTPServer::LogTraceRequestBody(HTTPMessage* p_message,bool p_utf16 /*=false*/)
 {
   // Only if we have work to do
-  if(!p_buffer || !m_log)
+  if (!p_message || !p_message->GetFileBuffer() || !m_log)
   {
     return;
   }
+  FileBuffer* filebuffer = p_message->GetFileBuffer();
 
-  if(MUSTLOG(HLL_LOGBODY) && p_buffer->GetLength())
+
+  if(MUSTLOG(HLL_LOGBODY) && filebuffer->GetLength())
   {
+    if(g_media == nullptr)
+    {
+      g_media = new MediaTypes();
+    }
+
+    // Find our media type
+    XString ctype = FindMimeTypeInContentType(p_message->GetHeader("Content-Type"));
+    MediaType* media = g_media->FindMediaTypeByContentType(ctype);
+    if(!media)
+    {
+      media = g_media->FindMediaTypeByExtension(p_message->GetExtension());
+    }
+    if(!media)
+    {
+      return;
+    }
+    // Can we log it?
+    if (media->GetDoLogging() == false)
+    {
+      return;
+    }
+
     // Get copy of the body and dump in the logfile
     uchar* buffer = nullptr;
     size_t length = 0;
-    p_buffer->GetBufferCopy(buffer,length);
+    filebuffer->GetBufferCopy(buffer,length);
 
     if(p_utf16)
     {
@@ -2171,7 +2168,7 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
 }
 
 void
-HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer,bool p_utf16)
+HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,bool p_utf16)
 {
   // Only if we have a logfile
   if(!m_log)
@@ -2179,22 +2176,45 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer,bool
     return;
   }
 
-  // Trace the protocol and headers
-  if(MUSTLOG(HLL_TRACEDUMP))
-  {
-    TraceResponse(p_response);
-  }
-
   // Log&Trace the body
   if(MUSTLOG(HLL_LOGBODY))
   {
-    if(p_buffer && p_buffer->GetLength())
+    // Trace the protocol and headers
+    if (MUSTLOG(HLL_TRACE))
     {
-      if(p_buffer->GetFileName().IsEmpty())
+      TraceResponse(p_response);
+    }
+
+    FileBuffer* filebuffer = p_message->GetFileBuffer();
+    if (filebuffer && filebuffer->GetLength())
+    {
+      // Find our media type
+      XString ctype = p_message->GetContentType();
+      if(ctype.IsEmpty())
+      {
+        ctype = p_message->GetHeader("Content-Type");
+      }
+      ctype = FindMimeTypeInContentType(ctype);
+      MediaType* media = g_media->FindMediaTypeByContentType(ctype);
+      if(!media)
+      {
+        media = g_media->FindMediaTypeByExtension(p_message->GetExtension());
+      }
+      if(!media)
+      {
+        return;
+      }
+      // Can we log it?
+      if(media->GetDoLogging() == false)
+      {
+        return;
+      }
+
+      if(filebuffer->GetFileName().IsEmpty())
       {
         uchar* buffer = nullptr;
         size_t length = 0;
-        p_buffer->GetBufferCopy(buffer,length);
+        filebuffer->GetBufferCopy(buffer,length);
 
         if(p_utf16)
         {
@@ -2223,12 +2243,14 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer,bool
       }
       else
       {
-        m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,_T("Uploading FILE: %s"),p_buffer->GetFileName().GetString());
+        m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,_T("Uploading FILE: %s"),filebuffer->GetFileName().GetString());
       }
     }
   }
 }
 
+// Tracing of a raw buffer (Socket, SSE-stream, buffer-chunk or otherwise partly data)
+// Cannot look at the content type for logging media
 void
 HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length,bool p_utf16)
 {
@@ -2239,7 +2261,7 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,u
   }
 
   // Trace the protocol and headers
-  if(MUSTLOG(HLL_TRACEDUMP))
+  if(MUSTLOG(HLL_TRACE))
   {
     TraceResponse(p_response);
   }

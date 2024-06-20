@@ -330,9 +330,9 @@ WebServiceServer::SetThreadPool(ThreadPool* p_pool)
 
 // OPTIONAL: Set extra text content type
 void
-WebServiceServer::SetContentType(XString p_extension,XString p_contentType)
+WebServiceServer::SetContentType(bool p_logging,XString p_extension,XString p_contentType)
 {
-  m_contentTypes.insert(std::make_pair(p_extension,MediaType(p_extension,p_contentType)));
+  m_contentTypes.insert(std::make_pair(p_extension,MediaType(p_logging,p_extension,p_contentType)));
 }
 
 // OPTIONAL:  Set a logfile name (if no LogAnalysis given)
@@ -547,8 +547,8 @@ WebServiceServer::RunService()
   ReadingWebconfig();
 
   // Standard text content types
-  m_site->AddContentType(_T(""),   _T("text/xml"));              // SOAP 1.0 / 1.1
-  m_site->AddContentType(_T("xml"),_T("application/soap+xml"));  // SOAP 1.2
+  m_site->AddContentType(true,_T("pos"),_T("text/xml"));              // SOAP 1.0 / 1.1
+  m_site->AddContentType(true,_T("xml"),_T("application/soap+xml"));  // SOAP 1.2
   m_site->SetEncryptionLevel(m_securityLevel);
   m_site->SetEncryptionPassword(m_enc_password);
   m_site->SetAsync(m_asyncMode);
@@ -602,7 +602,7 @@ WebServiceServer::RunService()
   // Adding the extra content types to the site
   for(auto& ctype : m_contentTypes)
   {
-    m_site->AddContentType(ctype.first,ctype.second.GetContentType());
+    m_site->AddContentType(ctype.second.GetDoLogging(),ctype.first,ctype.second.GetContentType());
   }
 
   // New: Explicit starting the site for HTTP API Version 2.0

@@ -436,12 +436,11 @@ HTTPServerSync::RunHTTPServer()
     if(request->RequestId)
     {
       // Log earliest as possible
-      DETAILLOGV(_T("Received HTTP call from [%s] with length: %I64u")
+      DETAILLOGV("Received HTTP %s call from [%s] with length: %I64u for: %s"
+                 ,GetHTTPVerb(request->Verb,request->pUnknownVerb).GetString()
                  ,SocketToServer((PSOCKADDR_IN6) sender).GetString()
-                 ,request->BytesReceived);
-
-       // Log incoming request
-      DETAILLOGS(_T("Got a request for: "),rawUrl);
+                 ,request->BytesReceived
+                 ,rawUrl.GetString());
 
       // Find our charset
       charset = FindCharsetInContentType(contentType);
@@ -894,7 +893,7 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16)
   p_message->SetReadBuffer(false);
 
   // Now also trace the request body of the message
-  LogTraceRequestBody(p_message->GetFileBuffer(),p_utf16);
+  LogTraceRequestBody(p_message,p_utf16);
 
   // Receiving succeeded?
   return retval;
@@ -1240,7 +1239,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   }
 
   // Possibly log and trace what we just sent
-  LogTraceResponse(&response,buffer,p_message->GetSendUnicode());
+  LogTraceResponse(&response,p_message,p_message->GetSendUnicode());
 
   // Remove unknown header information
   delete [] unknown;
@@ -1309,7 +1308,7 @@ HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE p_response
   }
   else
   {
-    DETAILLOGV(_T("SendHttpResponseBuffer [%d] bytes sent"),bytesSent);
+    DETAILLOGV(_T("SendHttpResponseBuffer [%u] bytes sent"),bytesSent);
   }
   return (result == NO_ERROR);
 }

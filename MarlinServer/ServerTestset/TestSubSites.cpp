@@ -149,10 +149,10 @@ TestMarlinServer::TestSubSites()
   site2->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapSubsite());
 
   // Modify the standard settings for this site
-  site1->AddContentType(_T(""),_T("text/xml"));
-  site2->AddContentType(_T(""),_T("text/xml"));
-  site1->AddContentType(_T("xml"),_T("application/soap+xml"));
-  site2->AddContentType(_T("xml"),_T("application/soap+xml"));
+  site1->AddContentType(true,_T("pos"),_T("text/xml"));
+  site2->AddContentType(true,_T("pos"),_T("text/xml"));
+  site1->AddContentType(true,_T("xml"),_T("application/soap+xml"));
+  site2->AddContentType(true,_T("xml"),_T("application/soap+xml"));
 
   // Start the sites explicitly
   if(site1->StartSite())

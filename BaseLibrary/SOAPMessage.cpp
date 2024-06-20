@@ -706,7 +706,16 @@ void
 SOAPMessage::SetURL(const XString& p_url)
 {
   m_url = p_url;
-  m_cracked.CrackURL(p_url);
+
+  CrackedURL url;
+  if(url.CrackURL(p_url))
+  {
+    m_cracked = url;
+  }
+  else
+  {
+    m_cracked.m_valid = false;
+  }
 }
 
 // URL without user/password

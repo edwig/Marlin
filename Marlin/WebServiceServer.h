@@ -145,7 +145,7 @@ public:
   // OPTIONAL:  Set service postfix other than ".aspcxx"
   void    SetServicePostfix(XString p_postfix)       { m_servicePostfix = p_postfix;       };
   // OPTIONAL:  Set extra content type
-  void    SetContentType(XString p_extension,XString p_contentType);
+  void    SetContentType(bool p_logging,XString p_extension,XString p_contentType);
   // OPTIONAL:  Set async mode for receiving of soap messages only
   void    SetAsynchroneous(bool p_async)             { m_asyncMode = p_async;              };
   // OPTIONAL:  Set authentication scheme (Basic, Digest, NTLM, Negotiate, All)

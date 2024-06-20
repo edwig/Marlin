@@ -465,12 +465,11 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                                               ,p_request->Headers.pUnknownHeaders);
 
   // Log earliest as possible
-  DETAILLOGV(_T("Received HTTP call from [%s] with length: %s")
+  DETAILLOGV("Received HTTP %s call from [%s] with length: %s for: %s"
+             ,GetHTTPVerb(p_request->Verb,p_request->pUnknownVerb).GetString()
              ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
-             ,contentLength.GetString());
-
-  // Log incoming request
-  DETAILLOGS(_T("Got a request for: "),rawUrl);
+             ,contentLength.GetString()
+             ,rawUrl.GetString());
 
   // Find our charset
   XString charset = FindCharsetInContentType(contentType);
@@ -620,7 +619,7 @@ HTTPServerIIS::ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request,b
     }
   }
   // Log & Trace the chunks that we just read 
-  LogTraceRequestBody(buffer,p_utf16);
+  LogTraceRequestBody(p_message,p_utf16);
 }
 
 // Receive incoming HTTP request (p_request->Flags > 0)
@@ -668,7 +667,7 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16)
   }
 
   // Now also trace the request body of the message
-  LogTraceRequestBody(fbuffer,p_utf16);
+  LogTraceRequestBody(p_message,p_utf16);
 
   // Now everything has been read for this message
   p_message->SetReadBuffer(false,0);
@@ -902,7 +901,7 @@ HTTPServerIIS::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
       // Send the response
       SendResponseBuffer(response,buffer,buffer->GetLength(),!p_final);
       // Possibly log and trace what we just sent
-      LogTraceResponse(response->GetRawHttpResponse(),buffer,p_message->GetSendUnicode());
+      LogTraceResponse(response->GetRawHttpResponse(),p_message,p_message->GetSendUnicode());
     }
   }
   if(p_final)
@@ -1163,7 +1162,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     }
   }
   // Possibly log and trace what we just sent
-  LogTraceResponse(response->GetRawHttpResponse(),buffer,p_message->GetSendUnicode());
+  LogTraceResponse(response->GetRawHttpResponse(),p_message,p_message->GetSendUnicode());
 
   if(!p_message->GetChunkNumber())
   {
@@ -1203,7 +1202,7 @@ HTTPServerIIS::SendResponseBuffer(IHttpResponse*  p_response
     HRESULT hr = p_response->WriteEntityChunks(&dataChunk,1,false,p_more,&sent,&completion);
     if(SUCCEEDED(hr))
     {
-      DETAILLOGV(_T("ResponseBuffer [%u] bytes sent"),entityLength);
+      DETAILLOGV(_T("ResponseBuffer [%u] bytes sent"),(ULONG)entityLength);
     }
     else
     {

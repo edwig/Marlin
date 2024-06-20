@@ -305,12 +305,11 @@ HTTPRequest::ReceivedRequest()
   if(m_requestID)
   {
     // Log earliest as possible
-    DETAILLOGV(_T("Received HTTP call from [%s] with length: %I64u")
-               ,SocketToServer((PSOCKADDR_IN6) sender).GetString()
-               ,m_request->BytesReceived);
-
-    // Log incoming request
-    DETAILLOGS(_T("Got a request for: "),rawUrl);
+    DETAILLOGV(_T("Received HTTP %s call from [%s] with length: %I64u for: %s")
+               ,GetHTTPVerb(m_request->Verb,m_request->pUnknownVerb).GetString()
+               ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
+               ,m_request->BytesReceived
+               ,rawUrl.GetString());
 
     // Find our charset
     charset = FindCharsetInContentType(contentType);
@@ -572,7 +571,7 @@ HTTPRequest::PostReceive()
   TRACE0("Post Receive\n");
 
   // Now also trace the request body of the message
-  m_server->LogTraceRequestBody(m_message->GetFileBuffer(),m_message->GetSendUnicode());
+  m_server->LogTraceRequestBody(m_message);
 
   // In case of a POST, try to convert character set before submitting to site
   if(m_message->GetCommand() == HTTPCommand::http_post)
@@ -789,7 +788,7 @@ HTTPRequest::SendBodyPart()
       }
     }
     // Possibly log and trace what we just sent
-    m_server->LogTraceResponse(nullptr,filebuf,m_message->GetSendUnicode());
+    m_server->LogTraceResponse(m_response,m_message);
   }
 
   // Message is done. Break the connection with the HTTPRequest

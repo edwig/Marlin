@@ -156,8 +156,8 @@ TestMarlinServer::TestCookies()
   site->SetHandler(HTTPCommand::http_put,new SiteHandlerPutCookies());
 
   // Modify the standard settings for this site
-  site->AddContentType(_T(""),_T("text/xml"));
-  site->AddContentType(_T("xml"),_T("application/soap+xml"));
+  site->AddContentType(true,_T("pos"),_T("text/xml"));
+  site->AddContentType(true,_T("xml"),_T("application/soap+xml"));
 
   // set automatic headers on this site
   site->SetXFrameOptions(XFrameOption::XFO_DENY,_T(""));

@@ -377,7 +377,8 @@ XMLRestriction::CheckRangeFloat(XString p_value)
 XString   
 XMLRestriction::CheckRangeDecimal(XString p_value)
 {
-  INT64 value = _ttoi64(p_value);
+  _set_errno(0);
+  INT64 value = _ttoi64(p_value.GetString());
   if(errno == ERANGE)
   {
     return _T("Numeric overflow");

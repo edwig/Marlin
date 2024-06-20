@@ -55,8 +55,8 @@ public:
 	StdException(const StdException& p_other);
 
   unsigned             GetSafeExceptionCode() const;
-	_EXCEPTION_POINTERS* GetExceptionPointers() const;
-	void*                GetExceptionAddress() const;
+  _EXCEPTION_POINTERS* GetExceptionPointers() const;
+  void*                GetExceptionAddress() const;
   int                  GetApplicationCode() const;
   XString              GetApplicationFault() const;
   XString              GetErrorMessage() const;

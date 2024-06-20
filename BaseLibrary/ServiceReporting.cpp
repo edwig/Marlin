@@ -45,7 +45,7 @@ static char THIS_FILE[] = __FILE__;
 
 PTCHAR           g_eventBuffer = nullptr;
 CRITICAL_SECTION g_eventBufferLock;
-TCHAR            g_svcname[SERVICE_NAME_LENGTH] = "";
+TCHAR            g_svcname[SERVICE_NAME_LENGTH] = _T("");
 
 static void
 SvcFreeEventBuffer()

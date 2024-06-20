@@ -26,6 +26,7 @@
 // THE SOFTWARE.
 //
 #pragma once
+#include <http.h>
 
 // Extra HTTP status numbers (not in <winhttp.h>)
 // Extra statuses found on: https://http.dev
@@ -104,7 +105,13 @@ typedef struct _httpError
 }
 HTTPError;
 
+enum class HTTPCommand;
+
 XString GetHTTPErrorText(int p_error);
 
 // Get text from HTTP_STATUS code
-PCTSTR GetHTTPStatusText(int p_status);
+LPCTSTR GetHTTPStatusText(int p_status);
+
+// Getting the VERB from the request structure
+XString GetHTTPVerb(HTTPCommand p_verb, const char* p_unknown = nullptr);
+XString GetHTTPVerb(HTTP_VERB   p_verb, const char* p_unknown = nullptr);

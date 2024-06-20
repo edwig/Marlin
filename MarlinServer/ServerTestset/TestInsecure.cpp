@@ -152,8 +152,8 @@ TestMarlinServer::TestInsecure()
   site->SetHandler(HTTPCommand::http_get, handler,false);
 
   // Modify the standard settings for this site
-  site->AddContentType(_T(""),_T("text/xml"));
-  site->AddContentType(_T("xml"),_T("application/soap+xml"));
+  site->AddContentType(true,_T("pos"),_T("text/xml"));
+  site->AddContentType(true,_T("xml"),_T("application/soap+xml"));
 
   // Start the site explicitly
   if(site->StartSite())

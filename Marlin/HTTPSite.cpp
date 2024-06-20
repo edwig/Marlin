@@ -138,7 +138,7 @@ HTTPSite::CleanupThrotteling()
 
 // OPTIONAL: Set one or more text-based content types
 void
-HTTPSite::AddContentType(XString p_extension,XString p_contentType)
+HTTPSite::AddContentType(bool p_logging,XString p_extension,XString p_contentType)
 {
   // Mapping is on lower case
   p_extension.MakeLower();
@@ -149,7 +149,7 @@ HTTPSite::AddContentType(XString p_extension,XString p_contentType)
   if(it == m_contentTypes.end())
   {
     // Insert a new one
-    m_contentTypes.insert(std::make_pair(p_extension, MediaType(p_extension,p_contentType)));
+    m_contentTypes.insert(std::make_pair(p_extension,MediaType(p_logging,p_extension,p_contentType)));
   }
   else
   {

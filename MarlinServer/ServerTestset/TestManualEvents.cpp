@@ -89,7 +89,7 @@ TestStreams(HTTPServer* p_server)
 
   // HERE IS THE MAGIC. MAKE IT INTO AN EVENT STREAM HANDLER!!!
   // Modify standard settings for this site
-  site->AddContentType(_T("txt"),_T("text/event-stream"));
+  site->AddContentType(true,_T("txt"),_T("text/event-stream"));
   site->SetIsEventStream(true);
 
   // Start the site explicitly
@@ -183,7 +183,7 @@ int TestForms(HTTPServer* p_server)
   site->SetHandler(HTTPCommand::http_post,new FormsHandler());
 
   // Modify the standard settings for this site
-  site->AddContentType(_T(""),_T("multipart/form-data;"));
+  site->AddContentType(false,_T(""),_T("multipart/form-data;"));
 
   // Start the site explicitly
   if(site->StartSite())

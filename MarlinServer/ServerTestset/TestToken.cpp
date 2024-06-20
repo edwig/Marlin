@@ -244,8 +244,8 @@ TestMarlinServer::TestToken()
   site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapToken());
 
   // Modify the standard settings for this site
-  site->AddContentType(_T(""),_T("text/xml"));
-  site->AddContentType(_T("xml"),_T("application/soap+xml"));
+  site->AddContentType(true,_T("pos"),_T("text/xml"));
+  site->AddContentType(true,_T("xml"),_T("application/soap+xml"));
 
   // Set site to use NTLM authentication for the "MerlinTest" user
   // So we can get a different token, then the current server token

@@ -187,7 +187,7 @@ TestMarlinServer::TestFormData()
   site->SetHandler(HTTPCommand::http_post,new FormDataHandler());
 
   // Modify the standard settings for this site
-  site->AddContentType(_T(""),_T("multipart/form-data;"));
+  site->AddContentType(false,_T("form"),_T("multipart/form-data;"));
 
   // Start the site explicitly
   if(site->StartSite())

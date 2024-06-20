@@ -152,7 +152,7 @@ public:
   // OPTIONAL: Set site's callback function
   void            SetCallback(LPFN_CALLBACK p_callback);
   // OPTIONAL: Set one or more text-based content types
-  void            AddContentType(XString p_extension,XString p_contentType);
+  void            AddContentType(bool p_logging,XString p_extension,XString p_contentType);
   // OPTIONAL: Set the encryption level (signing/body/message)
   void            SetEncryptionLevel(XMLEncryption p_level);
   // OPTIONAL: Set the encryption password

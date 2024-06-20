@@ -148,8 +148,41 @@ Crypto::Digest(const void* data,const size_t data_size,unsigned hashType /*=0*/)
 }
 
 // ENCRYPT a buffer
-XString 
+
+#ifdef _UNICODE
+XString
 Crypto::Encryption(XString p_input,XString p_password)
+{
+  XString encoded;
+  int   lengthINP = 0;
+  BYTE* bufferINP = nullptr;
+  int   lengthPWD = 0;
+  BYTE* bufferPWD = nullptr;
+
+  if(TryCreateNarrowString(p_input,   _T("utf-8"),false,&bufferINP,lengthINP) &&
+     TryCreateNarrowString(p_password,_T("utf-8"),false,&bufferPWD,lengthPWD))
+  {
+    encoded = ImplementEncryption(bufferINP,lengthINP,bufferPWD,lengthPWD);
+  }
+  delete [] bufferINP;
+  delete [] bufferPWD;
+  return encoded;
+}
+#else
+XString
+Crypto::Encryption(XString p_input,XString p_password)
+{
+  XString inputUTF8 = EncodeStringForTheWire(p_input);
+  XString passwUTF8 = EncodeStringForTheWire(p_password);
+
+  return ImplementEncryption((const BYTE*)inputUTF8.GetString(),inputUTF8.GetLength()
+                            ,(const BYTE*)passwUTF8.GetString(),passwUTF8.GetLength());
+}
+#endif
+
+// Implementation of the ENCRYPT of a buffer
+XString
+Crypto::ImplementEncryption(const BYTE* p_input,int p_lengthINP,const BYTE* p_password,int p_lengthPWD)
 {
   AutoCritSec lock(&m_lock);
 
@@ -169,7 +202,7 @@ Crypto::Encryption(XString p_input,XString p_password)
   Base64     base64;
 
   // Do we have input?
-  if(p_input.GetLength() == 0 || p_password.GetLength() == 0)
+  if(p_lengthINP == 0 || p_lengthPWD == 0)
   {
     return _T("");
   }
@@ -187,7 +220,7 @@ Crypto::Encryption(XString p_input,XString p_password)
     goto error_exit;
   }
 
-  if(!CryptHashData(hCryptHash,reinterpret_cast<const BYTE *>(p_password.GetString()),p_password.GetLength() * sizeof(TCHAR),0))
+  if(!CryptHashData(hCryptHash,p_password,p_lengthPWD,0))
   {
     m_error.Format(_T("Error hashing password for encryption: 0x%08x"),GetLastError());
     goto error_exit;
@@ -206,8 +239,8 @@ Crypto::Encryption(XString p_input,XString p_password)
   }
 
   // Build data buffer that's large enough
-  dwDataLen = p_input.GetLength() * sizeof(TCHAR);
-  crypting  = (BYTE*) p_input.GetString();
+  dwDataLen = (DWORD) strlen((const char*)p_input);
+  crypting  = (BYTE*) p_input;
   pbData    = (BYTE*) malloc(2 * blocklen);
   pbConvert = pbData;
   
@@ -301,8 +334,46 @@ error_exit:
 }
 
 // DECRYPT a buffer
-XString 
+
+#ifdef _UNICODE
+XString
 Crypto::Decryption(XString p_input,XString p_password)
+{
+  XString decoded;
+  int   lengthINP = 0;
+  BYTE* bufferINP = nullptr;
+  int   lengthPWD = 0;
+  BYTE* bufferPWD = nullptr;
+
+  if(TryCreateNarrowString(p_input,   _T("utf-8"),false,&bufferINP,lengthINP) &&
+     TryCreateNarrowString(p_password,_T("utf-8"),false,&bufferPWD,lengthPWD))
+  {
+    bool bom(false);
+    CStringA result = ImplementDecryption(bufferINP,lengthINP,bufferPWD,lengthPWD);
+    if(!TryConvertNarrowString((const BYTE*)result.GetString(),result.GetLength(),_T("utf-8"),decoded,bom))
+    {
+      decoded.Empty();
+    }
+  }
+  delete [] bufferPWD;
+  delete [] bufferINP;
+  return decoded;
+}
+#else
+XString
+Crypto::Decryption(XString p_input, XString p_password)
+{
+  XString inputUTF8 = EncodeStringForTheWire(p_input);
+  XString passwUTF8 = EncodeStringForTheWire(p_password);
+
+  return ImplementDecryption((const BYTE*)inputUTF8.GetString(),inputUTF8.GetLength(),
+                             (const BYTE*)passwUTF8.GetString(),passwUTF8.GetLength());
+}
+#endif
+
+// Implementation of the DECRYPT of a buffer
+CStringA
+Crypto::ImplementDecryption(const BYTE* p_input,int p_lengthINP,const BYTE* p_password,int p_lengthPWD)
 {
   AutoCritSec lock(&m_lock);
 
@@ -319,11 +390,10 @@ Crypto::Decryption(XString p_input,XString p_password)
   DWORD      dwFlags    = 0;
   DWORD      totallen   = 0;
   BYTE*      decrypting = nullptr;
-  XString    result;
-  XString    encoded;
+  CStringA   result;
   Base64     base64;
 
-  dwDataLen = p_input.GetLength();
+  dwDataLen = p_lengthINP;
 
   // Check if we have anything to do
   if(dwDataLen < 3)
@@ -343,7 +413,7 @@ Crypto::Decryption(XString p_input,XString p_password)
     goto error_exit;
   }
 
-  if(!CryptHashData(hCryptHash,reinterpret_cast<const BYTE *>(p_password.GetString()),p_password.GetLength() * sizeof(TCHAR),0))
+  if(!CryptHashData(hCryptHash,p_password,p_lengthPWD,0))
   {
     m_error.Format(_T("Error hashing password data for decryption: 0x%08x"),GetLastError());
     goto error_exit;
@@ -365,12 +435,12 @@ Crypto::Decryption(XString p_input,XString p_password)
   // You MUST take them of, otherwise decrypting will not work
   // as the block size of the algorithm is incorrect.
   dataLength = (DWORD) base64.Ascii_length(dwDataLen);
-  if(p_input.GetAt(p_input.GetLength() - 1) == '=') --dataLength;
-  if(p_input.GetAt(p_input.GetLength() - 2) == '=') --dataLength;
+  if(p_input[p_lengthINP - 1] == '=') --dataLength;
+  if(p_input[p_lengthINP - 2] == '=') --dataLength;
 
   // Create a data string of the base64 string
   pbEncrypt  = new BYTE[dataLength + 2];
-  base64.Decrypt(p_input,pbEncrypt,dataLength + 2);
+  base64.Decrypt(const_cast<BYTE*>(p_input),p_lengthINP,pbEncrypt,(int)(dataLength + 2));
   decrypting = pbEncrypt;
   // Buffer to do the conversion in
   pbData     = new BYTE[blocklen + 2];
@@ -417,7 +487,7 @@ Crypto::Decryption(XString p_input,XString p_password)
       // Keep the result
       pbData[processed    ] = 0;
       pbData[processed + 1] = 0;
-      result += (LPTSTR) pbData;
+      result += (char*) pbData;
 
 // #ifdef _DEBUG
 //       for(DWORD ind = 0; ind < dataLen;++ind)
@@ -463,7 +533,6 @@ error_exit:
   }
   return result;
 }
-
 
 XString
 Crypto::FastEncryption(XString p_input, XString password)

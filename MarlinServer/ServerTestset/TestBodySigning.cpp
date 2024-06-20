@@ -141,8 +141,8 @@ TestMarlinServer::TestBodySigning()
   site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapBodySign());
 
   // Modify the standard settings for this site
-  site->AddContentType(_T(""),_T("text/xml"));
-  site->AddContentType(_T("xml"),_T("application/soap+xml"));
+  site->AddContentType(true,_T("pos"),_T("text/xml"));
+  site->AddContentType(true,_T("xml"),_T("application/soap+xml"));
   site->SetEncryptionLevel(XMLEncryption::XENC_Signing);
   site->SetEncryptionPassword(_T("ForEverSweet16"));
 

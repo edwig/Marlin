@@ -184,7 +184,7 @@ TestMarlinServer::TestPushEvents()
 
   // HERE IS THE MAGIC. MAKE IT INTO AN EVENT STREAM HANDLER!!!
   // Modify standard settings for this site
-  site->AddContentType(_T("txt"),_T("text/event-stream"));
+  site->AddContentType(true,_T("txt"),_T("text/event-stream"));
   site->SetIsEventStream(true);
 
   // Start the site explicitly

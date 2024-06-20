@@ -501,12 +501,6 @@ WebSocket::WriteString(XString p_string)
   DWORD total  = 0;
   DWORD toSend = 0;
 
-  DETAILLOGV(_T("Outgoing message on WebSocket [%s] on [%s]"),m_key.GetString(),m_uri.GetString());
-  if(MUSTLOG(HLL_LOGBODY))
-  {
-    DETAILLOG1(p_string);
-  }
-
   try
   {
 #ifdef UNICODE
@@ -518,9 +512,17 @@ WebSocket::WriteString(XString p_string)
     BYTE* pointer   = (BYTE*) encoded.GetString();
     toSend = encoded.GetLength();
 #endif
-    if(MUSTLOG(HLL_TRACEDUMP))
+    if(MUSTLOG(HLL_LOGGING))
     {
-      m_logfile->AnalysisHex(_T(__FUNCTION__),m_key,(void*)pointer,toSend);
+      DETAILLOGV(_T("Outgoing message on WebSocket [%s] on [%s] Bytes sent [%u]"),m_key.GetString(),m_uri.GetString(),toSend);
+      if(MUSTLOG(HLL_LOGBODY))
+      {
+        DETAILLOG1(p_string);
+        if(MUSTLOG(HLL_TRACEDUMP))
+        {
+          m_logfile->AnalysisHex(_T(__FUNCTION__),m_key,(void*)pointer,toSend);
+        }
+      }
     }
 
     // Go send it in fragments

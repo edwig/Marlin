@@ -144,7 +144,7 @@ TestMarlinServer::TestJsonData()
   site->SetHandler(HTTPCommand::http_post,new SiteHandlerJsonData());
 
   // Modify the standard settings for this site
-  site->AddContentType(_T("json"),_T("application/json"));
+  site->AddContentType(true,_T("json"),_T("application/json"));
 
   // Start the site explicitly
   if(site->StartSite())

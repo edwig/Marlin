@@ -175,9 +175,15 @@ ServerEventChannel::PostEvent(XString p_payload
   }
 
   // Place in the queue (Shortest possible lock)
-  AutoCritSec lock(&m_lock);
-  m_outQueue.push_back(ltevent);
-
+  {
+    AutoCritSec lock(&m_lock);
+    m_outQueue.push_back(ltevent);
+  }
+  if(m_driver->GetActive() == false)
+  {
+    // Directly send all pending events for this channel
+    SendChannel();
+  }
   return m_maxNumber;
 }
 
@@ -548,6 +554,8 @@ ServerEventChannel::SendChannel()
     {
       if(m_current & EDT_Sockets)
       {
+        // See if websocket channel still sane
+        CheckChannel();
         sent += SendEventToSockets(ltevent);
       }
       if(m_current & EDT_ServerEvents)
@@ -599,6 +607,7 @@ ServerEventChannel::SendEventToSockets(LTEvent* p_event)
         // Check that we are addressed
         if(p_event->m_sent && (p_event->m_sent != it->m_sender))
         {
+          ++it; // Next socket
           continue;
         }
         // See if it was closed by the client side
@@ -672,6 +681,7 @@ ServerEventChannel::SendEventToStreams(LTEvent* p_event)
       // Check that we are addressed
       if(p_event->m_sent && (p_event->m_sent != it->m_sender))
       {
+        ++it; // Next stream
         continue;
       }
 
@@ -912,10 +922,18 @@ ServerEventChannel::OnOpen(XString p_message)
   ltevent->m_type    = EvtType::EV_Open;
   ltevent->m_number  = 0;
   ltevent->m_sent    = m_appData;
-
-  AutoCritSec lock(&m_lock);
-  m_inQueue.push_back(ltevent);
-  m_driver->IncomingEvent();
+  {
+    AutoCritSec lock(&m_lock);
+    m_inQueue.push_back(ltevent);
+  }
+  if(m_driver->GetActive())
+  {
+  	m_driver->IncomingEvent();
+  }
+  else
+  {
+  	Receiving();
+  }
 }
 
 // Called by socket handler and long-polling handler
@@ -927,10 +945,18 @@ ServerEventChannel::OnMessage(XString p_message)
   ltevent->m_type    = EvtType::EV_Message;
   ltevent->m_number  = 0;
   ltevent->m_sent    = m_appData;
-
-  AutoCritSec lock(&m_lock);
-  m_inQueue.push_back(ltevent);
-  m_driver->IncomingEvent();
+  {
+    AutoCritSec lock(&m_lock);
+    m_inQueue.push_back(ltevent);
+  }
+  if(m_driver->GetActive())
+  {
+  	m_driver->IncomingEvent();
+  }
+  else
+  {
+  	Receiving();
+  }
 }
 
 void
@@ -941,10 +967,18 @@ ServerEventChannel::OnError(XString p_message)
   ltevent->m_type    = EvtType::EV_Error;
   ltevent->m_number  = 0;
   ltevent->m_sent    = m_appData;
-
-  AutoCritSec lock(&m_lock);
-  m_inQueue.push_back(ltevent);
-  m_driver->IncomingEvent();
+  {
+    AutoCritSec lock(&m_lock);
+    m_inQueue.push_back(ltevent);
+  }
+  if(m_driver->GetActive())
+  {
+  	m_driver->IncomingEvent();
+  }
+  else
+  {
+  	Receiving();
+  }
 }
 
 void
@@ -955,10 +989,18 @@ ServerEventChannel::OnClose(XString p_message)
   ltevent->m_type    = EvtType::EV_Close;
   ltevent->m_number  = 0;
   ltevent->m_sent    = m_appData;
-
-  // AutoCritSec lock(&m_lock);
-  m_inQueue.push_back(ltevent);
-  m_driver->IncomingEvent();
+  {
+    AutoCritSec lock(&m_lock);
+    m_inQueue.push_back(ltevent);
+  }
+  if(m_driver->GetActive())
+  {
+  	m_driver->IncomingEvent();
+  }
+  else
+  {
+  	Receiving();
+  }
 }
 
 void
@@ -976,10 +1018,18 @@ ServerEventChannel::OnBinary(void* p_data,DWORD p_length)
   TCHAR* buffer = ltevent->m_payload.GetBufferSetLength(p_length);
   _tcscpy_s(buffer,p_length,reinterpret_cast<TCHAR*>(p_data));
   ltevent->m_payload.ReleaseBufferSetLength(p_length);
-
-  AutoCritSec lock(&m_lock);
-  m_inQueue.push_back(ltevent);
-  m_driver->IncomingEvent();
+  {
+    AutoCritSec lock(&m_lock);
+    m_inQueue.push_back(ltevent);
+  }
+  if(m_driver->GetActive())
+  {
+  	m_driver->IncomingEvent();
+  }
+  else
+  {
+  	Receiving();
+  }
 }
 
 // Process the receiving part of the queue

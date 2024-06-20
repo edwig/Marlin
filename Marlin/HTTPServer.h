@@ -320,11 +320,11 @@ public:
   HTTPSite*  FindHTTPSite(HTTPSite* p_default,const XString& p_url);
 
   // Logging and tracing: The response
-  void      LogTraceResponse(PHTTP_RESPONSE p_response,FileBuffer* p_buffer,bool p_utf16);
-  void      LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length,bool p_utf16);
+  void      LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,bool p_utf16 = false);
+  void      LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length,bool p_utf16 = false);
   // Logging and tracing: The request
-  void      LogTraceRequest(PHTTP_REQUEST p_request,FileBuffer* p_buffer,bool p_utf16);
-  void      LogTraceRequestBody(FileBuffer* p_buffer,bool p_utf16);
+  void      LogTraceRequest(PHTTP_REQUEST p_request,HTTPMessage* p_message,bool p_utf16 = false);
+  void      LogTraceRequestBody(HTTPMessage* p_message,bool p_utf16 = false);
 
   // Outstanding asynchronous I/O requests
   void         RegisterHTTPRequest(HTTPRequest* p_request);

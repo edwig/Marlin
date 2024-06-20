@@ -1071,6 +1071,10 @@ JSONMessage::SetURL(const XString& p_url)
   {
     m_cracked = url;
   }
+  else
+  {
+    m_cracked.m_valid = false;
+  }
 }
 
 void
