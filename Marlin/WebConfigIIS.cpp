@@ -55,7 +55,7 @@ WebConfigIIS::ReadConfig()
   // this file contains the defaults for IIS.
   if(ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr) == false)
   {
-    SvcReportErrorEvent(0,false,__FUNCTION__,_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
     return false;
   }
   return true;
@@ -68,7 +68,7 @@ WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/
   // this file contains the defaults for IIS.
   if(ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr) == false)
   {
-    SvcReportErrorEvent(0,false,__FUNCTION__,_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
     return false;
   }
   if(!p_application.IsEmpty())
@@ -79,7 +79,7 @@ WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/
   {
     if(ReadConfig(p_extraWebConfig,nullptr) == false)
     {
-      SvcReportErrorEvent(0,false,__FUNCTION__,_T("Cannot read the extra Web.Config file: ") + p_extraWebConfig);
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the extra Web.Config file: ") + p_extraWebConfig);
       return false;
     }
   }
@@ -102,7 +102,7 @@ WebConfigIIS::SetApplication(XString p_application)
     }
     else
     {
-      SvcReportErrorEvent(0,false,__FUNCTION__,_T("Cannot read the standard Web.Config file!"));
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the standard Web.Config file!"));
     }
   }
   // Store the application
