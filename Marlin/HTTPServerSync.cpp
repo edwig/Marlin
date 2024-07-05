@@ -436,7 +436,7 @@ HTTPServerSync::RunHTTPServer()
     if(request->RequestId)
     {
       // Log earliest as possible
-      DETAILLOGV("Received HTTP %s call from [%s] with length: %I64u for: %s"
+      DETAILLOGV(_T("Received HTTP %s call from [%s] with length: %I64u for: %s")
                  ,GetHTTPVerb(request->Verb,request->pUnknownVerb).GetString()
                  ,SocketToServer((PSOCKADDR_IN6) sender).GetString()
                  ,request->BytesReceived

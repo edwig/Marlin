@@ -465,7 +465,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
                                               ,p_request->Headers.pUnknownHeaders);
 
   // Log earliest as possible
-  DETAILLOGV("Received HTTP %s call from [%s] with length: %s for: %s"
+  DETAILLOGV(_T("Received HTTP %s call from [%s] with length: %s for: %s")
              ,GetHTTPVerb(p_request->Verb,p_request->pUnknownVerb).GetString()
              ,SocketToServer((PSOCKADDR_IN6)sender).GetString()
              ,contentLength.GetString()

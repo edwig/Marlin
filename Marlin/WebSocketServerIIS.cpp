@@ -273,6 +273,18 @@ ServerReadCompletionIIS(HRESULT p_error,
     {
       if(!IsBadReadPtr(socket,sizeof(WebSocketServerIIS)))
       {
+        if(p_error == S_OK && p_bytes == 0 && !p_final)
+        {
+          // Empty frame, but not final. Just ignore it
+          return;
+        }
+        if (p_error == S_OK && p_bytes == 0 && p_final && p_close)
+        {
+          // Empty frame, final closing frame. Just ignore it
+          // Chances are that the socket is alrady closed and gone.
+          return;
+        }
+        // Read this frame part into the socket
         socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
       }
     }
