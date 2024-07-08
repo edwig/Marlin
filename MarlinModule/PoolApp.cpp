@@ -185,9 +185,6 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
   // Try loading the sites from IIS in the application
   m_application->LoadSites(p_httpapp,p_physical);
 
-  // Ready, so stop the timer
-  m_application->StopCounter();
-
   // Check if everything went well
   if(m_application->CorrectlyStarted() == false)
   {
@@ -195,6 +192,9 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
     Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
     return false;
   }
+  // Ready, so stop the timer
+  m_application->StopCounter();
+
   return true;
 }
 

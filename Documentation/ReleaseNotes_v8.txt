@@ -20,7 +20,17 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     in real life production scenario's. The 'tls_lastErrror' variable has been removed from the 
     HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
 
-CHANGES IN VERSION 8.x.0 of xx-xx-2024
+CHANGES IN VERSION 8.3.2 of 08-07-2024
+--------------------------------------
+1)  Added checks that the "C:\Windows\system32\inetsrv\config\applicationHost.config" file can
+    be read. This file is used to register the sites in IIS.
+    Checks are made in the following order:
+    o   The file exists and can be read in MarlinModule
+    o   The logfile base path is not empty in ServerApp
+    o   The escape to the %TMP% directory did work correctly
+2)  A new installer for MarlinModule has been released.
+
+CHANGES IN VERSION 8.3.2 of 05-06-2024
 --------------------------------------
 1)  HTTPClient now has a new method "SetResolveChunked(bool)" for removing the response header
     'Transfer-encoding: chunked' on incoming received messages. So any framework can pass on the
@@ -32,7 +42,6 @@ CHANGES IN VERSION 8.x.0 of xx-xx-2024
 4)  The ServerEventDriver has been rewritten as to lower the lock-level of outgoing events.
     Alsoo the number of channels is reduced by only trying the channels with outgoing events.
     Long-Polling events are copied to their own queue, where one (1) client can retrieve them.
-
 
 CHANGES IN VERSION 8.3.0 of 03-11-2023
 --------------------------------------

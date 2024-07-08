@@ -26,12 +26,9 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "ServerApp.h"
+#include <ServerApp.h>
 
 // Forward reference
-class LogAnalysis;
-class HTTPServerIIS;
-class ErrorReport;
 class IHttpApplication;
 
 // Helper class with a web application
@@ -48,7 +45,6 @@ public:
   WebConfigIIS        m_config;
   XString             m_marlinDLL;
   ServerApp*          m_application     { nullptr };
-  LogAnalysis*        m_analysisLog     { nullptr };
   HMODULE             m_module          { NULL    };
   // DLL Loaded functions
   CreateServerAppFunc m_createServerApp { nullptr };
@@ -63,6 +59,5 @@ private:
   XString ConstructDLLLocation(XString p_rootpath, XString p_dllPath);
   bool    CheckApplicationPresent(XString& p_dllPath, XString& p_dllName);
   bool    AlreadyLoaded(XString p_path_to_dll);
-
 };
 

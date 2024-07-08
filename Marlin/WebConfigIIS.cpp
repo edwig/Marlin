@@ -394,8 +394,16 @@ WebConfigIIS::ReadConfig(XString p_configFile,IISSite* p_site /*=nullptr*/)
 
   // Parse the incoming file
   XMLMessage msg;
-  msg.LoadFile(p_configFile);
-
+  if(!msg.LoadFile(p_configFile))
+  {
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the application host file: ") + p_configFile);
+    return false;
+  }
+  if(msg.GetInternalError() != XmlError::XE_NoError)
+  {
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("XML Error in the application host file: ") + p_configFile);
+    return false;
+  }
   ReadLogPath(msg);
   ReadAppPools(msg);
   ReadSites(msg);

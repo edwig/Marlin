@@ -155,7 +155,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Bin$(Configuration)_$(Platform)\</OutDir>
-    <TargetName>$(ProjectName)700</TargetName>
+    <TargetName>$(ProjectName)832</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -165,7 +165,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Bin$(Configuration)_$(Platform)\</OutDir>
-    <TargetName>$(ProjectName)810</TargetName>
+    <TargetName>$(ProjectName)832</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|x64'">
     <LinkIncremental>false</LinkIncremental>

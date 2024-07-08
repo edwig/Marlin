@@ -91,7 +91,7 @@ RegisterModule(DWORD                        p_version
   _tcscpy_s(g_svcname,SERVICE_NAME_LENGTH,PRODUCT_NAME);
 
   // Declaration of the start log function
-  void ApplicationConfigStart(DWORD p_version);
+  bool ApplicationConfigStart(DWORD p_version);
 
   // What we want to have from IIS
   DWORD globalEvents = GL_APPLICATION_START |       // Starting application pool
@@ -108,7 +108,11 @@ RegisterModule(DWORD                        p_version
   // First moment IIS is calling us.
   // Read the ApplicationConfig file of IIS
   // Start/Restart the logging in the WMI
-  ApplicationConfigStart(p_version);
+  if(!ApplicationConfigStart(p_version))
+  {
+    SvcReportErrorEvent(0,false,__FUNCTION__,"MarlinModule cannot run without the ApplicationConfig.host");
+    return (HRESULT)ERROR_FILE_NOT_FOUND;
+  }
 
   // Preserving the server in a global pointer
   if(g_iisServer == nullptr)
@@ -168,7 +172,7 @@ RegisterModule(DWORD                        p_version
 //
 //////////////////////////////////////////////////////////////////////////
 
-void
+bool
 ApplicationConfigStart(DWORD p_version)
 {
   bool read = false;
@@ -200,6 +204,7 @@ ApplicationConfigStart(DWORD p_version)
                     ,p_version / 0x10000
                     ,p_version % 0x10000
                     ,read ? _T("OK") : _T("ERROR"));
+  return read;
 }
 
 // Stopping the ApplicationHost.Config

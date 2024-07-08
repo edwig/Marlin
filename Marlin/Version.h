@@ -29,13 +29,13 @@
 
 // Version number components
 #define MARLIN_PRODUCT_NAME     "MarlinServer"   // Our name
-#define MARLIN_VERSION_NUMBER   "8.3.1"          // The real version
+#define MARLIN_VERSION_NUMBER   "8.3.2"          // The real version
 #define MARLIN_VERSION_BUILD    ""               // Can carry strings like 'Alpha', 'Beta', 'RC'
-#define MARLIN_VERSION_DATE     "02-01-2024"     // Last production date
+#define MARLIN_VERSION_DATE     "08-07-2024"     // Last production date
 
 #define MARLIN_VERSION_MAJOR    8
 #define MARLIN_VERSION_MINOR    3
-#define MARLIN_VERSION_SP       1
+#define MARLIN_VERSION_SP       2
 #define MARLIN_VERSION_SUB      0
 
 // This is our version string

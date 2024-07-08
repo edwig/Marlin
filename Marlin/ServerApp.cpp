@@ -340,8 +340,15 @@ ServerApp::StartLogging()
 {
   if(m_logfile == nullptr)
   {
+    // Getting the base of the logfile path
+    XString logpath = m_config.GetLogfilePath();
+    if(logpath.IsEmpty())
+    {
+      logpath = m_webroot;
+    }
+
     // Create the directory for the logfile
-    XString logfile = m_config.GetLogfilePath() + _T("\\") + m_applicationName + _T("\\Logfile.txt");
+    XString logfile = logpath + _T("\\") + m_applicationName + _T("\\Logfile.txt");
     WinFile ensure(logfile);
     ensure.CreateDirectory();
 
