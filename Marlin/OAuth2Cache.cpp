@@ -70,6 +70,8 @@ OAuth2Cache::~OAuth2Cache()
 {
   if(m_client)
   {
+    // Disconnet any logging
+    m_client->SetLogging(nullptr);
     delete m_client;
     m_client = nullptr;
   }
@@ -280,6 +282,7 @@ OAuth2Cache::GetClient()
     if(m_logfile)
     {
       m_client->SetLogging(m_logfile);
+      m_client->SetLogLevel(m_logfile->GetLogLevel());
     }
     if(m_development)
     {

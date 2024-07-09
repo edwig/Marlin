@@ -3435,8 +3435,9 @@ HTTPClient::TraceTheSend()
     {
       DETAILLOG(_T("SENDING FILE: %s"),m_buffer->GetFileName().GetString());
     }
-    else
+    else if(m_buffer->GetHasBufferParts())
     {
+      // Show bufferparts without a copy from each part
       int    part   = 0;
       uchar* buffer = nullptr;
       size_t length = 0;
@@ -3451,6 +3452,21 @@ HTTPClient::TraceTheSend()
         while(m_buffer->GetBufferPart(part++,buffer,length))
         {
           m_log->AnalysisHex(_T("TraceHTTP"),_T("Outgoing"),buffer,static_cast<unsigned>(length));
+        }
+      }
+    }
+    else
+    {
+      // Show buffer (without a buffer copy)
+      uchar* buffer = nullptr;
+      size_t length = 0;
+      m_buffer->GetBuffer(buffer,length);
+      if(length)
+      {
+        m_log->BareBufferLog(buffer,(unsigned)length);
+        if(MUSTLOG(HLL_TRACEDUMP))
+        {
+          m_log->AnalysisHex(_T("TraceHTTP"),_T("Outgoing"),buffer,(unsigned)length);
         }
       }
     }

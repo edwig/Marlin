@@ -80,6 +80,11 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
     Unhealthy(_T("MarlinModule could **NOT** locate the 'Directory' in web.config: ") + baseWebConfig,ERROR_NOT_FOUND);
     return false;
   }
+  if(dllPath.Left(2).Compare(_T("..")) == 0)
+  {
+    Unhealthy(_T("MarlinModule could **NOT** use a relative path in the 'Directory' in web.config: ") + baseWebConfig,ERROR_NOT_FOUND);
+    return false;
+  } 
 
   // Find our default administrator email to send a Error report to
   XString adminEmail = m_config.GetSetting(MODULE_EMAIL);

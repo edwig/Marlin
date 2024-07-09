@@ -110,7 +110,7 @@ RegisterModule(DWORD                        p_version
   // Start/Restart the logging in the WMI
   if(!ApplicationConfigStart(p_version))
   {
-    SvcReportErrorEvent(0,false,__FUNCTION__,"MarlinModule cannot run without the ApplicationConfig.host");
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("MarlinModule cannot run without the ApplicationConfig.host"));
     return (HRESULT)ERROR_FILE_NOT_FOUND;
   }
 
