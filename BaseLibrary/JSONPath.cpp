@@ -387,16 +387,27 @@ JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex,bool&
 }
 
 void
-JSONPath::ProcessWildcard()
+JSONPath::ProcessWildcard(XString& p_parsing)
 {
+  XString parsing(p_parsing);
   if(m_searching->GetDataType() == JsonType::JDT_array)
   {
     // All array elements are matched
     for(auto& val : m_searching->GetArray())
     {
-      m_results.push_back(&val);
+      if(p_parsing.IsEmpty())
+      {
+        m_results.push_back(&val);
+        m_status = JPStatus::JP_Match_array;
+      }
+      else
+      {
+        m_searching = &val;
+        parsing = p_parsing;
+        while(ParseLevel(parsing));
+      }
     }
-    m_status = JPStatus::JP_Match_array;
+    p_parsing = parsing;
     return;
   }
   if(m_searching->GetDataType() == JsonType::JDT_object)
@@ -404,9 +415,19 @@ JSONPath::ProcessWildcard()
     // All object elements are matched (names are NOT included in the results!!)
     for(auto& pair : m_searching->GetObject())
     {
-      m_results.push_back(&pair.m_value);
+      if(p_parsing.IsEmpty())
+      {
+        m_results.push_back(&pair.m_value);
+        m_status = JPStatus::JP_Match_object;
+      }
+      else
+      {
+        m_searching = &pair.m_value;
+        parsing = p_parsing;
+        while(ParseLevel(parsing));
+      }
     }
-    m_status = JPStatus::JP_Match_object;
+    p_parsing = parsing;
     return;
   }
   // Ordinal values are matched
@@ -703,7 +724,7 @@ JSONPath::ParseLevel(XString& p_parsing)
     // Check for wildcard '*' (all)
     if(token == _T("*"))
     {
-      ProcessWildcard();
+      ProcessWildcard(p_parsing);
       return false;
     }
 

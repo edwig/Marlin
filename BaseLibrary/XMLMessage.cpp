@@ -246,7 +246,7 @@ XMLMessage::LoadFile(const XString& p_fileName)
     return false;
   }
 
-  if(file.Open(winfile_read | open_trans_text))
+  if(file.Open(winfile_read | open_trans_text | open_shared_read))
   {
     // Reading in the contents
     XString contents;

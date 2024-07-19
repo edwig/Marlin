@@ -267,9 +267,13 @@ HTTPClient::TestReconnect()
 int    
 HTTPClient::GetError(XString* p_message /*=NULL*/)
 {
-  if(p_message && m_lastError)
+  if(p_message)
   {
-    p_message->Format(_T("[%d] %s"),m_lastError,GetLastErrorAsString(m_lastError).GetString());
+    p_message->Format(_T("HTTP status [%u]"),m_status);
+    if(m_lastError)
+    {
+      p_message->AppendFormat(_T(" [%d] %s"),m_lastError,GetLastErrorAsString(m_lastError).GetString());
+    }
   }
   return m_lastError;
 }
@@ -2601,10 +2605,6 @@ HTTPClient::Send(JSONMessage* p_msg)
       default:                                break;
     }
     XString charset = CodepageToCharset(acp);
-    if(acp != (int)GetACP())
-    {
-      json = EncodeStringForTheWire(json,charset);
-    }
     m_contentType = SetFieldInHTTPHeader(m_contentType,_T("charset"),charset);
     SetBody(json);
   }
@@ -2628,6 +2628,9 @@ HTTPClient::Send(JSONMessage* p_msg)
   result = Send();
 
   ProcessJSONResult(p_msg,result);
+
+  // Keep the status
+  p_msg->SetStatus(m_status);
 
   // Free Unicode UTF-16 buffer
   if(buffer)

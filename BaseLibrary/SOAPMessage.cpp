@@ -1640,7 +1640,7 @@ SOAPMessage::Url2SoapParameters(const CrackedURL& p_url)
   XString extens = part.GetFilenamePartExtension();
   if(!extens.IsEmpty() && !isalpha(extens.GetAt(0)))
   {
-    action = "Doc_" + action;
+    action = _T("Doc_") + action;
   }
   SetSoapAction(action);
   SetParameterObject(action);

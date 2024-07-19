@@ -876,7 +876,7 @@ ServerEventChannel::CloseStream(const EventStream* p_stream)
   }
   catch(StdException& ex)
   {
-    ERRORLOG(ERROR_INVALID_HANDLE,"Server event driver cannot close EventStream: " + ex.GetErrorMessage());
+    ERRORLOG(ERROR_INVALID_HANDLE,_T("Server event driver cannot close EventStream: ") + ex.GetErrorMessage());
   }
   m_server->AbortEventStream(const_cast<EventStream*>(p_stream));
 }

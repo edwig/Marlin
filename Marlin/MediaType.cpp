@@ -277,6 +277,6 @@ MediaTypes::FindExtensionByContentType(XString p_contentType)
   {
     return it->first;
   }
-  return "";
+  return _T("");
 }
 

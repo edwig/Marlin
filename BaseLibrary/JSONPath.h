@@ -118,7 +118,7 @@ private:
   bool    ParseLevel(XString& p_parsing);
   bool    FindDelimiterType(const XString& p_parsing);
   bool    GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex,bool& p_isFilter);
-  void    ProcessWildcard();
+  void    ProcessWildcard(XString& p_parsing);
   void    ProcessSlice(XString p_token);
   void    ProcessUnion(XString p_token);
   void    ProcessFilter(XString p_token);

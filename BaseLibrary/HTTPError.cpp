@@ -288,6 +288,6 @@ GetHTTPVerb(HTTPCommand p_verb,const char* p_unknown /*=nullptr*/)
   {
     return XString(LPCSTRToString(p_unknown));
   }
-  return "";
+  return _T("");
 }
 

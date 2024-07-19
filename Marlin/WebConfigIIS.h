@@ -30,6 +30,8 @@
 #include "FileBuffer.h"
 #include <map>
 
+#define APPHOST_CONFIG_RETRIES  10
+
 typedef enum _iisConfigError
 {
   IISER_NoError = 0

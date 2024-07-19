@@ -45,6 +45,9 @@ DocFileDialog::DocFileDialog(HWND    p_owner
                             ,XString p_direct)     
               :m_open(p_open)
 {
+  // Init OPENFILENAME structure  
+  memset(&m_ofn,0,sizeof(OPENFILENAME));
+
   if(p_filter.IsEmpty())
   {
     p_filter = _T("Text files (*.txt)|*.txt|");

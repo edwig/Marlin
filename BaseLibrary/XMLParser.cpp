@@ -151,6 +151,9 @@ XMLParser::PrintJsonString(const XString& p_string,Encoding p_encoding)
 
   XString result(buffer);
   delete [] buffer;
+#ifdef UNICODE
+  (void)p_encoding;
+#else
   switch(p_encoding)
   {
     case Encoding::UTF8:     result = EncodeStringForTheWire(result,_T("utf-8"));    break;
@@ -159,6 +162,7 @@ XMLParser::PrintJsonString(const XString& p_string,Encoding p_encoding)
     case Encoding::Default:   // Fall through
     default:                 break;
   }
+#endif
   return result;
 }
 

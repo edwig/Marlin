@@ -53,22 +53,25 @@ WebConfigIIS::ReadConfig()
 {
   // Reads the central IIS application host configuration file first
   // this file contains the defaults for IIS.
-  if(ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr) == false)
+  // It can be locked for short periods of time by the WAS service or the IIS service
+  for(int tries = 0;tries < APPHOST_CONFIG_RETRIES;++tries)
   {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
-    return false;
+    if(ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr))
+    {
+      return true;
+    }
+    Sleep(100);
   }
-  return true;
+  SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
+  return false;
 }
 
 bool
 WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/)
 {
   // Reads the central IIS application host configuration file first
-  // this file contains the defaults for IIS.
-  if(ReadConfig(_T("%windir%\\system32\\inetsrv\\config\\ApplicationHost.Config"),nullptr) == false)
+  if(!ReadConfig())
   {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the standard IIS 'ApplicationHost.Config'!"));
     return false;
   }
   if(!p_application.IsEmpty())

@@ -2056,7 +2056,7 @@ HTTPServer::LogTraceRequestBody(HTTPMessage* p_message,bool p_utf16 /*=false*/)
     }
 
     // Find our media type
-    XString ctype = FindMimeTypeInContentType(p_message->GetHeader("Content-Type"));
+    XString ctype = FindMimeTypeInContentType(p_message->GetHeader(_T("Content-Type")));
     MediaType* media = g_media->FindMediaTypeByContentType(ctype);
     if(!media)
     {
@@ -2188,11 +2188,16 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,bo
     FileBuffer* filebuffer = p_message->GetFileBuffer();
     if (filebuffer && filebuffer->GetLength())
     {
+      // Make sure we have a media type cache
+      if(g_media == nullptr)
+      {
+        g_media = new MediaTypes();
+      }
       // Find our media type
       XString ctype = p_message->GetContentType();
       if(ctype.IsEmpty())
       {
-        ctype = p_message->GetHeader("Content-Type");
+        ctype = p_message->GetHeader(_T("Content-Type"));
       }
       ctype = FindMimeTypeInContentType(ctype);
       MediaType* media = g_media->FindMediaTypeByContentType(ctype);
