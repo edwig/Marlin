@@ -56,7 +56,7 @@ public:
   // Delete a site from the remembered set of sites
   virtual bool       DeleteSite(int p_port,XString p_baseURL,bool p_force = false) override;
   // Receive (the rest of the) incoming HTTP request
-  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16) override;
+  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encoding) override;
   // Create a new WebSocket in the subclass of our server
   virtual WebSocket* CreateWebSocket(XString p_uri) override;
   // Receive the WebSocket stream and pass on the the WebSocket
@@ -99,7 +99,7 @@ private:
   void FindingAccessToken(IHttpContext* p_context,HTTPMessage* p_message);
 
   // Reading the first chunks directly from the request handle from IIS
-  void ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request,bool p_utf16);
+  void ReadEntityChunks(HTTPMessage* p_message,PHTTP_REQUEST p_request,Encoding p_encoding);
 
   // Add unknown headers to the response
   void AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers);

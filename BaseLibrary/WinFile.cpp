@@ -26,6 +26,7 @@
 #include "pch.h"
 #include "WinFile.h"
 #include "CrackURL.h"
+#include "ConvertWideString.h"
 
 #include <atlconv.h>
 #include <fileapi.h>
@@ -103,7 +104,7 @@ WinFile::~WinFile()
 bool
 WinFile::Open(DWORD       p_flags    /*= winfile_read             */
              ,FAttributes p_attribs  /*= FAttributes::attrib_none */
-             ,Encoding    p_encoding /*= EncodingDefault          */)
+             ,Encoding    p_encoding /*= Encoding::UTF8           */)
 {
   bool result = false;
   bool append = false;
@@ -164,13 +165,10 @@ WinFile::Open(DWORD       p_flags    /*= winfile_read             */
   attrib |= p_attribs;
 
   // Getting the encoding in case of a text file
-  if((p_flags & open_write)      &&
-     (p_flags & open_trans_text) && 
-     (p_encoding != EncodingDefault))
+  if((p_flags & open_write) && (p_flags & open_trans_text))
   {
     m_encoding = p_encoding;
   }
-
   // Acquire a file access lock
   AutoCritSec lock(&m_fileaccess);
 
@@ -200,7 +198,7 @@ WinFile::Open(DWORD       p_flags    /*= winfile_read             */
         return result;
       }
     }
-    else if((p_flags & FFlag::open_write) && (m_encoding > Encoding::Default))
+    else if((p_flags & FFlag::open_write) && (p_flags & FFlag::open_trans_text))
     {
       WriteEncodingBOM();
     }
@@ -278,6 +276,7 @@ WinFile::Close(bool p_flush /*= false*/)
   // Reset the open mode
   m_openMode = FFlag::no_mode;
   m_ungetch  = 0;
+  m_encoding = Encoding::EN_ACP;
 
   PageBufferFree();
   return result;
@@ -906,7 +905,7 @@ WinFile::TranslateInputBuffer(std::string& p_string)
   {
     return _T("");
   }
-#ifdef UNICODE
+#ifdef _UNICODE
   if(m_encoding == Encoding::UTF8)
   {
     return ExplodeString(p_string,CODEPAGE_UTF8);
@@ -952,16 +951,13 @@ WinFile::TranslateInputBuffer(std::string& p_string)
     delete[] buffer;
     return result;
   }
-  if(m_encoding == Encoding::BE_UTF16)
+  else if(m_encoding == Encoding::LE_UTF16 ||
+          m_encoding == Encoding::BE_UTF16 )
   {
-    BlefuscuToLilliput(p_string);
-    // Be sure to end the string
-    p_string += (char) 0;
-    p_string += (char) 0;
-  }
-  if(m_encoding == Encoding::LE_UTF16 ||
-     m_encoding == Encoding::BE_UTF16 )
-  {
+    if(m_encoding == Encoding::BE_UTF16)
+    {
+      BlefuscuToLilliput(p_string);
+    }
     // Implode to MBCS
     CString result;
     int clength = 0;
@@ -983,8 +979,17 @@ WinFile::TranslateInputBuffer(std::string& p_string)
     delete[] buffer;
     return result;
   }
-  // Last resort, create CString (like we've always done before)
-  return CString(p_string.c_str());
+  else if(m_encoding == Encoding::EN_ACP || m_encoding == (Encoding)GetACP())
+  {
+    // Simply the string in the current encoding
+    return CString(p_string.c_str());
+  }
+  else
+  {
+    // We got some strange encoding which we try to convert to MBCS
+    CString string(p_string.c_str());
+    return DecodeStringFromTheWire(string,CodepageToCharset((int)m_encoding));
+  }
 #endif
 }
 
@@ -1106,26 +1111,23 @@ WinFile::TranslateOutputBuffer(const CString& p_string)
   }
   std::string result;
 
-#ifdef UNICODE
-  if(m_encoding == Encoding::UTF8)
-  {
-    result = ImplodeString(p_string,CODEPAGE_UTF8);
-  }
+#ifdef _UNICODE
   if(m_encoding == Encoding::LE_UTF16 ||
      m_encoding == Encoding::BE_UTF16)
   {
     // We are already UTF16
     result.append(p_string.GetLength() * sizeof(TCHAR),(uchar) ' ');
     memcpy((void*) result.c_str(),p_string.GetString(),p_string.GetLength() * sizeof(TCHAR));
+
+    if(m_encoding == Encoding::BE_UTF16)
+    {
+      BlefuscuToLilliput(result);
+    }
   }
-  if(m_encoding == Encoding::BE_UTF16)
-  {
-    BlefuscuToLilliput(result);
-  }
-  else if(m_encoding == Encoding::Default)
+  else
   {
     // Simply implode the string to MBCS
-    result = ImplodeString(p_string,GetACP());
+    result = ImplodeString(p_string,(int)m_encoding);
   }
 #else
   if(m_encoding == Encoding::UTF8)
@@ -1148,8 +1150,8 @@ WinFile::TranslateOutputBuffer(const CString& p_string)
     result.erase(clength - 1);
     delete[] buffer;
   }
-  if(m_encoding == Encoding::LE_UTF16 ||
-     m_encoding == Encoding::BE_UTF16)
+  else if(m_encoding == Encoding::LE_UTF16 ||
+          m_encoding == Encoding::BE_UTF16)
   {
     int length = 0;
     // Getting the needed length
@@ -1163,15 +1165,22 @@ WinFile::TranslateOutputBuffer(const CString& p_string)
     memcpy((void*)result.c_str(),buffer,length);
     result.erase(length - 2);
     delete[] buffer;
+
+    // Invert Big-Endian string
+    if(m_encoding == Encoding::BE_UTF16)
+    {
+      BlefuscuToLilliput(result);
+    }
   }
-  if(m_encoding == Encoding::BE_UTF16)
-  {
-    BlefuscuToLilliput(result);
-  }
-  if(m_encoding == Encoding::Default)
+  else if(m_encoding == Encoding::EN_ACP || m_encoding == (Encoding)GetACP())
   {
     // Simply the string
     result = p_string.GetString();
+  }
+  else
+  {
+    // We have some other string in an exotic encoding
+    result = DecodeStringFromTheWire(p_string,CodepageToCharset((int)m_encoding));
   }
 #endif
   return result;
@@ -1635,12 +1644,12 @@ WinFile::UnLockFile()
   return false;
 }
 
+// Writing a Byte-Order-Mark for the file
 bool
 WinFile::WriteEncodingBOM()
 {
   switch(m_encoding)
   {
-    case Encoding::Default:  break;
     case Encoding::UTF8:     Putch(0xEF);
                              Putch(0xBB);
                              Putch(0xBF);
@@ -1662,6 +1671,7 @@ WinFile::WriteEncodingBOM()
                              Putch(0);
                              break;
     // Incompatible encodings on MS-Windows
+    // Or code pages that does not define a BOM                                
     default:                 return false;
   }
   return true;
@@ -1670,13 +1680,17 @@ WinFile::WriteEncodingBOM()
 // Check for a Byte-Order-Mark (BOM)
 // Returns the found type of BOM
 // and the number of bytes to skip in your input
+//
+// Type of BOM found to defuse
+// As found on: https://en.wikipedia.org/wiki/Byte_order_mark
+//
 BOMOpenResult 
 WinFile::DefuseBOM(const uchar*  p_pointer
-                  ,Encoding&      p_type
+                  ,Encoding&     p_type
                   ,unsigned int& p_skip)
 {
   // Preset nothing
-  p_type = Encoding::Default;
+  p_type = (Encoding) -1;
   p_skip = 0;
 
   // Get first four characters in the message as integers
@@ -1737,39 +1751,35 @@ WinFile::DefuseBOM(const uchar*  p_pointer
       return BOMOpenResult::Incompatible;
     }
   }
+  // Check GB-18030
+  if(c1 == 0x84 && c2 == 0x31 && c3 == 0x95 && c4 == 0x33)
+  {
+    p_skip = 4;
+    p_type = Encoding::GB_18030;
+    return BOMOpenResult::Incompatible;
+  }
   // Check for UTF-1 special case
   if(c1 == 0xF7 && c2 == 0x64 && c3 == 0x4C)
   {
     p_skip = 3;
-    p_type = Encoding::UTF1;
     return BOMOpenResult::Incompatible;
   }
   // Check for UTF-EBCDIC IBM set
   if(c1 == 0xDD && c2 == 0x73 && c3 == 0x66 && c4 == 0x73)
   {
     p_skip = 4;
-    p_type = Encoding::UTF_EBCDIC;
     return BOMOpenResult::Incompatible;
   }
   // Check for CSCU 
   if(c1 == 0x0E && c2 == 0xFE && c3 == 0xFF)
   {
     p_skip = 3;
-    p_type = Encoding::SCSU;
     return BOMOpenResult::Incompatible;
   }
   // Check for BOCU-1
   if(c1 == 0xFB && c2 == 0xEE && c3 == 0x28)
   {
     p_skip = 3;
-    p_type = Encoding::BOCU_1;
-    return BOMOpenResult::Incompatible;
-  }
-  // Check GB-18030
-  if(c1 == 0x84 && c2 == 0x31 && c3 == 0x95 && c4 == 0x33)
-  {
-    p_skip = 4;
-    p_type = Encoding::GB_18030;
     return BOMOpenResult::Incompatible;
   }
   // NOT A BOM !!
@@ -2648,6 +2658,12 @@ WinFile::GetEncoding()
 }
 
 bool
+WinFile::GetFoundBOM()
+{
+  return m_foundBOM;
+}
+
+bool
 WinFile::SetFilenameByDialog(HWND    p_parent      // Parent window (if any)
                             ,bool    p_open        // true = Open/New, false = SaveAs
                             ,CString p_title       // Title of the dialog
@@ -3269,7 +3285,7 @@ WinFile::IsTextUnicodeUTF8(const uchar* p_pointer,size_t p_length)
   return true;
 }
 
-#ifdef UNICODE
+#ifdef _UNICODE
 CString
 WinFile::ExplodeString(const std::string& p_string,unsigned p_codepage)
 {
@@ -3668,6 +3684,7 @@ WinFile::ScanBomInFirstPageBuffer()
   unsigned skip = 0;
   if(DefuseBOM(m_pagePointer,type,skip) == BOMOpenResult::BOM)
   {
+    m_foundBOM     = true;
     m_encoding     = type;
     m_pagePointer += skip;
   }

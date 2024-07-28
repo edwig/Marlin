@@ -111,12 +111,14 @@ int TestJsonData(HTTPClient* p_client)
   p_client->SetTimeoutReceive(100000);
 
   JSONMessage msg3(_T("\"Test1\""),url);
-  msg3.SetSendUnicode(true);
+  msg3.SetEncoding(Encoding::LE_UTF16);
+  msg3.SetContentType("application/json; charset=\"utf-16\"");
   msg3.AddHeader(_T("GUID"),_T("888-777-666"));
   errors += DoSend(p_client,&msg3);
 
   JSONMessage msg4(_T("\"Test2\""),url);
-  msg4.SetSendUnicode(true);
+  msg4.SetEncoding(Encoding::LE_UTF16);
+  msg4.SetContentType("application/json; charset=\"utf-16\"");
   msg4.AddHeader(_T("GUID"),_T("888-777-666"));
   errors += DoSend(p_client,&msg4);
 

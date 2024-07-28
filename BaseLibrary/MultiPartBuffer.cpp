@@ -754,7 +754,7 @@ MultiPartBuffer::CalculateBinaryBoundary(XString p_boundary,BYTE*& p_binary,unsi
   // Beware of WebKit (Chrome) that will send "<BOUNDARY>--\r\n" at the end of the buffer
   int length = p_boundary.GetLength();
   p_binary = nullptr;
-#ifdef UNICODE
+#ifdef _UNICODE
   if(m_charSize == 2)
   {
     length *= 2;
@@ -907,7 +907,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEn
 
     if(m_charSize == 1)
     {
-#ifdef UNICODE
+#ifdef _UNICODE
       size_t length = (p_partialEnd - p_partialBegin);
       data = ExplodeString(p_partialBegin,(unsigned)length);
 #else
@@ -919,7 +919,7 @@ MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEn
     }
     else
     {
-#ifdef UNICODE
+#ifdef _UNICODE
       size_t length = (p_partialEnd - p_partialBegin) / m_charSize;
       PTCHAR buffer = data.GetBufferSetLength((int) length + 1);
       _tcsncpy_s(buffer,length + 1,reinterpret_cast<const PTCHAR>(p_partialBegin),length);
@@ -973,7 +973,7 @@ MultiPartBuffer::GetLineFromBuffer(uchar*& p_begin,const uchar* p_end)
     }
     size_t length = end - p_begin;
 
-#ifdef UNICODE
+#ifdef _UNICODE
     line = ExplodeString(p_begin,(unsigned)length);
 #else
     char* buf = line.GetBufferSetLength((int) length + 1);
@@ -989,7 +989,7 @@ MultiPartBuffer::GetLineFromBuffer(uchar*& p_begin,const uchar* p_end)
     {
       return line;
     }
-#ifdef UNICODE
+#ifdef _UNICODE
     size_t length = (end - p_begin) / m_charSize;
     PTCHAR buf = line.GetBufferSetLength((int) length + 1);
     _tcsncpy_s(buf,length + 1,reinterpret_cast<const PTCHAR>(p_begin),length);

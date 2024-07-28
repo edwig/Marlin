@@ -65,7 +65,7 @@ JSONParser::SetError(JsonError p_error,LPCTSTR p_text,bool p_throw /*= true*/)
 }
 
 void
-JSONParser::ParseMessage(XString& p_message,bool& p_whitespace,Encoding p_encoding /*=Encoding::Default*/)
+JSONParser::ParseMessage(XString& p_message,bool& p_whitespace)
 {
   // Check if we have something to do
   if(m_message == nullptr)
@@ -79,37 +79,6 @@ JSONParser::ParseMessage(XString& p_message,bool& p_whitespace,Encoding p_encodi
   m_valPointer = m_message->m_value;
   m_lines      = 1;
   m_objects    = 0;
-
-  // Check for Byte-Order-Mark first
-  Encoding charset = Encoding::Default;
-  unsigned int skip = 0;
-  BOMOpenResult bomResult = WinFile::DefuseBOM((const unsigned char*)m_pointer,charset,skip);
-  if(bomResult == BOMOpenResult::NoString)
-  {
-    return;
-  }
-  if(bomResult != BOMOpenResult::NoEncoding)
-  {
-    if(charset != Encoding::UTF8)
-    {
-      // cannot process these strings
-      SetError(JsonError::JE_IncompatibleEncoding,_T("Incompatible Byte-Order-Mark encoding"));
-      return;
-    }
-    m_message->m_encoding = Encoding::UTF8;
-    m_message->m_sendBOM  = true;
-    // Skip past BOM
-    m_pointer += skip;
-    // Must we do additional conversions?
-    if((m_message->GetEncoding() != Encoding::UTF8) || p_encoding == Encoding::UTF8)
-    {
-      m_utf8 = (charset == Encoding::UTF8);
-    }
-    else if(p_encoding == Encoding::UTF8)
-    {
-      m_utf8 = true;
-    }
-  }
 
   // Allocate scanning buffer
   // Individual string cannot be larger than this
@@ -251,7 +220,7 @@ JSONParser::GetString()
     }
     else
     {
-      *buffer++ = UTF8Char();
+      *buffer++ = ValueChar();
     }
   }
   // Skip past string's ending
@@ -318,7 +287,7 @@ JSONParser::UnicodeChar()
     SetError(JsonError::JE_Unicode4Chars, _T("Unicode escape consists of 4 hex characters"));
   }
 
-#ifdef UNICODE
+#ifdef _UNICODE
   return ch;
 #else
   unsigned short buffer[2];
@@ -333,74 +302,6 @@ JSONParser::UnicodeChar()
   }
   return '?';
 #endif
-}
-
-// Get a character from message including UTF-8 translation
-_TUCHAR
-JSONParser::UTF8Char()
-{
-  if(*m_pointer == '\n')
-  {
-    ++m_lines;
-  }
-  _TUCHAR  bytes = *m_pointer++;
-  if(m_utf8 == false)
-  {
-    return bytes;
-  }
-  unsigned extra = 0;
-
-  if((bytes & 0x80) == 0x00)
-  {
-    // U+0000 to U+007F (Standard 7bit ASCII)
-    return bytes;
-  }
-  else if((bytes >> 5) == 0x06)
-  {
-    // U+0080 to U+07FF (one extra char. cp = last 5 bits)
-    if((*m_pointer & 0xC0) != 0x80)
-    {
-      // Not a continuation byte: regular win-1252
-      return bytes;
-    }
-    extra = 1;
-  }
-  else if((bytes >> 4) == 0x0E)
-  {
-    // U+0800 to U+FFFF (two extra char. cp = last 4 bits)
-    if(((*m_pointer       & 0xC0) != 0x80) &&
-       ((*(m_pointer + 1) & 0xC0) != 0x80))
-    {
-      // Not two continuation bytes: regular win-1252
-      return bytes;
-    }
-    extra = 2;
-  }
-  else if((bytes >> 3) == 0x1E)
-  {
-    // U+10000 to U+10FFFF (three extra char. cp = last 3 bits)
-    if(((*m_pointer      & 0xC0) != 0x80) &&
-      ((*(m_pointer + 1) & 0xC0) != 0x80) &&
-      ((*(m_pointer + 2) & 0xC0) != 0x80))
-    {
-      // Not three continuation bytes: regular win-1252
-      return bytes;
-    }
-    extra = 3;
-  }
-  else
-  {
-    // Regular MBCS character outside of the UTF-8 range
-    return bytes;
-  }
-  XString buffer;
-  buffer += bytes;
-  for(unsigned i = 1; i <= extra; ++i)
-  {
-    buffer += *m_pointer++;
-  }
-  XString result = DecodeStringFromTheWire(buffer);
-  return result.GetAt(0);
 }
 
 bool
@@ -965,7 +866,7 @@ JSONParserSOAP::CreateObject(JSONvalue& p_valPointer,XMLElement& p_element)
       here = &(here->GetArray().back());
     }
 
-    // Preserve the innertext of the element
+    // Preserve the inner text of the element
     if(value.IsEmpty() && here)
     {
       value = here->GetString();

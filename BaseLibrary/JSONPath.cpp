@@ -217,7 +217,7 @@ JSONPath::GetFirstResultForceToString(bool p_whitespace /*=false*/) const
   }
   if(value)
   {
-    return value->GetAsJsonString(p_whitespace,Encoding::Default,0);
+    return value->GetAsJsonString(p_whitespace,0);
   }
   return XString();
 }

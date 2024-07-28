@@ -93,7 +93,7 @@ static CodePageName cpNames[] =
  ,{ 1149,    _T("IBM01149"),            _T("IBM EBCDIC Icelandic (20871 + Euro symbol); IBM EBCDIC (Icelandic-Euro)")                 }
  ,{ 1200,    _T("utf-16"),              _T("Unicode UTF-16, little endian byte order (BMP of ISO 10646);")                            }
  ,{ 1201,    _T("unicodeFFFE"),         _T("Unicode UTF-16, big endian byte order")                                                   }
- ,{ 1250,    _T("windows-1250"),        _T("ANSI Central European; Central European (Windows) ")                                      }
+ ,{ 1250,    _T("windows-1250"),        _T("ANSI Central European; Central European (Windows)")                                       }
  ,{ 1251,    _T("windows-1251"),        _T("ANSI Cyrillic; Cyrillic (Windows)")                                                       }
  ,{ 1252,    _T("windows-1252"),        _T("ANSI Latin 1; Western European (Windows)")                                                }
  ,{ 1253,    _T("windows-1253"),        _T("ANSI Greek; Greek (Windows)")                                                             }
@@ -121,7 +121,7 @@ static CodePageName cpNames[] =
  ,{ 10082,   _T("x-mac-croatian"),      _T("Croatian (Mac)")                                                                          }
  ,{ 12000,   _T("utf-32"),              _T("Unicode UTF-32, little endian byte order")                                                }
  ,{ 12001,   _T("utf-32BE"),            _T("Unicode UTF-32, big endian byte order")                                                   }
- ,{ 20000,   _T("x-Chinese_CNS"),       _T("CNS Taiwan; Chinese Traditional (CNS) ")                                                  }
+ ,{ 20000,   _T("x-Chinese_CNS"),       _T("CNS Taiwan; Chinese Traditional (CNS)")                                                   }
  ,{ 20001,   _T("x-cp20001"),           _T("TCA Taiwan")                                                                              }
  ,{ 20002,   _T("x_Chinese-Eten"),      _T("Eten Taiwan; Chinese Traditional (Eten)")                                                 }
  ,{ 20003,   _T("x-cp20003"),           _T("IBM5550 Taiwan")                                                                          }
@@ -159,7 +159,7 @@ static CodePageName cpNames[] =
  ,{ 21866,   _T("koi8-u"),              _T("Ukrainian (KOI8-U); Cyrillic (KOI8-U)")                                                   }
  ,{ 28591,   _T("iso-8859-1"),          _T("ISO 8859-1 Latin 1; Western European (ISO)")                                              }
  ,{ 28592,   _T("iso-8859-2"),          _T("ISO 8859-2 Central European; Central European (ISO)")                                     }
- ,{ 28593,   _T("iso-8859-3"),          _T("ISO 8859-3 Latin 3 ")                                                                     }
+ ,{ 28593,   _T("iso-8859-3"),          _T("ISO 8859-3 Latin 3")                                                                      }
  ,{ 28594,   _T("iso-8859-4"),          _T("ISO 8859-4 Baltic")                                                                       }
  ,{ 28595,   _T("iso-8859-5"),          _T("ISO 8859-5 Cyrillic")                                                                     }
  ,{ 28596,   _T("iso-8859-6"),          _T("ISO 8859-6 Arabic")                                                                       }
@@ -455,7 +455,7 @@ XString ConstructBOMUTF8()
   // 3 BYTE UTF-8 Byte-order-Mark "\0xEF\0xBB\0xBF"
   // Strange construction, but the only way to do it
   // because a XString is a signed char field
-#ifdef UNICODE
+#ifdef _UNICODE
   bom[0] = 0xBBEF;
   bom[1] = 0xBF00;
   bom[2] = 0;
@@ -470,7 +470,7 @@ XString ConstructBOMUTF8()
   return XString(bom);
 }
 
-#ifdef UNICODE
+#ifdef _UNICODE
 // Convert a narrow string (utf-8, MBCS, win1252) to UTF-16
 bool
 TryConvertNarrowString(const BYTE* p_buffer
@@ -503,7 +503,7 @@ TryConvertNarrowString(const BYTE* p_buffer
   }
 
   // Check for a bom
-  Encoding bom = Encoding::Default;
+  Encoding bom = Encoding::EN_ACP;
   unsigned skipBytes = 0;
   BOMOpenResult bomfound = WinFile::DefuseBOM(p_buffer,bom,skipBytes);
   if(bomfound == BOMOpenResult::BOM)
@@ -672,7 +672,7 @@ WStringToString(std::wstring p_string)
 // in UNICODE settings these two functions are placeholders!
 // The real conversion is done by the server on reading / writing to the internet
 XString
-DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/)
+DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/,bool* p_foundBom /*=nullptr*/)
 {
   int   length = p_string.GetLength();
   BYTE* buffer = new BYTE[length + 1];
@@ -683,9 +683,13 @@ DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/)
   buffer[length] = 0;
   bool foundBom = false;
   XString result;
-  if(!TryConvertNarrowString(buffer,length,p_charset,result,foundBom))
+  if(TryConvertNarrowString(buffer,length,p_charset,result,foundBom))
   {
     result = p_string;
+  }
+  if(p_foundBom && foundBom)
+  {
+    *p_foundBom = true;
   }
   delete[] buffer;
   return result;
@@ -1046,7 +1050,7 @@ WStringToString(std::wstring p_string)
 // Decoding incoming strings from the internet
 // Defaults to UTF-8 encoding
 XString
-DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/)
+DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/,bool* p_foundBom /*=nullptr*/)
 {
   // Check for empty character set
   if(p_charset.IsEmpty())
@@ -1062,9 +1066,13 @@ DecodeStringFromTheWire(XString p_string,XString p_charset /*="utf-8"*/)
     XString decoded;
     bool foundBom = false;
 
-    if (TryConvertWideString(buffer,length,"",decoded,foundBom))
+    if(TryConvertWideString(buffer,length,"",decoded,foundBom))
     {
       p_string = decoded;
+      if(foundBom && p_foundBom)
+      {
+        *p_foundBom = true;
+      }
     }
   }
   delete[] buffer;

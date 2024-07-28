@@ -94,7 +94,7 @@ private:
   XString   GetToken(XString& str,const TCHAR* c);
 
   HFONT     m_font { NULL };
-#ifdef UNICODE
+#ifdef _UNICODE
   LOGFONTW  m_lf;
 #else
 	LOGFONTA  m_lf;                   // Stores this fonts LogFont for quick retrieval

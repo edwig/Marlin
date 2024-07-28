@@ -503,7 +503,7 @@ WebSocket::WriteString(XString p_string)
 
   try
   {
-#ifdef UNICODE
+#ifdef _UNICODE
     AutoCSTR string(p_string);
     BYTE* pointer = (BYTE*) string.cstr();
     toSend = string.size();
@@ -647,7 +647,7 @@ WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
   }
 
   // Convert UTF-8 back to MBCS/Unicode
-#ifdef UNICODE
+#ifdef _UNICODE
   XString encoded;
   bool foundBom(false);
   TryConvertNarrowString(p_frame->m_data,p_frame->m_length,_T("utf-8"),encoded,foundBom);
@@ -704,7 +704,7 @@ WebSocket::ServerAcceptKey(XString p_clientKey)
   // Step 1: Append WebSocket GUID. See RFC 6455. It's hard coded!!
   XString key = p_clientKey + _T("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
 
-#ifdef UNICODE
+#ifdef _UNICODE
   BYTE* buffer = nullptr;
   int   length = 0;
   TryCreateNarrowString(key,_T(""),false,&buffer,length);

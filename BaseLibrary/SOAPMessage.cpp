@@ -72,7 +72,6 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
   m_incoming = p_msg->GetCommand() != HTTPCommand::http_response;
 
   // Overrides from class defaults
-  m_sendUnicode   = p_msg->GetSendUnicode();
   m_soapVersion   = SoapVersion::SOAP_10;
   m_initialAction = false;
 
@@ -98,15 +97,19 @@ SOAPMessage::SOAPMessage(HTTPMessage* p_msg)
   m_routing = p_msg->GetRouting();
 
   // Parse the body as a posted message
-  XString message;
   XString charset = FindCharsetInContentType(m_contentType);
+  if(charset.IsEmpty())
+  {
+    charset = _T("utf-8");
+  }
+  m_encoding = (Encoding)CharsetToCodepage(charset);
 
-  // Works for "UTF-16", "UTF-16LE" and "UTF-16BE" as of RFC 2781
+
+  // Parse buffer to string to XML structure
   uchar* buffer = nullptr;
   size_t length = 0;
   p_msg->GetRawBody(&buffer,length);
-
-  message = ConstructFromRawBuffer(buffer,(unsigned)length,charset);
+  XString message = ConstructFromRawBuffer(buffer,(unsigned)length,charset);
   ParseMessage(message);
 
   // If a SOAP version is not found during parsing
@@ -138,8 +141,7 @@ SOAPMessage::SOAPMessage(JSONMessage* p_msg)
             ,m_acceptEncoding(p_msg->GetAcceptEncoding())
             ,m_headers       (*p_msg->GetHeaderMap())
 {
-  m_sendBOM     = p_msg->GetSendBOM();
-  m_sendUnicode = p_msg->GetSendUnicode();
+  m_sendBOM = p_msg->GetSendBOM();
 
   // Duplicate all cookies
   m_cookies = p_msg->GetCookies();
@@ -166,7 +168,7 @@ SOAPMessage::SOAPMessage(JSONMessage* p_msg)
   CreateParametersObject();
 
   // The message itself
-  XMLParserJSON(this,p_msg);
+  XMLParserJSON parser(this,p_msg);
 
   CheckAfterParsing();
 }
@@ -249,10 +251,8 @@ SOAPMessage::SOAPMessage(SOAPMessage* p_orig)
             ,m_routing       (p_orig->m_routing)
 {
   // Copy all data members
-  m_encoding    = p_orig->m_encoding;
-  m_sendUnicode = p_orig->m_sendUnicode;
-  m_sendBOM     = p_orig->m_sendBOM;
-  m_sendUnicode = p_orig->m_sendUnicode;
+  m_encoding      = p_orig->m_encoding;
+  m_sendBOM       = p_orig->m_sendBOM;
   // WS-Reliability
   m_addressing    = p_orig->m_addressing;
   m_reliable      = p_orig->m_reliable;
@@ -329,12 +329,11 @@ SOAPMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
 {
   XString message;
 
-#ifdef UNICODE
+#ifdef _UNICODE
   if(p_charset.CompareNoCase(_T("utf-16")) == 0)
   {
     // It's just our way of Unicode
     message = reinterpret_cast<LPCTSTR>(p_buffer);
-    m_sendUnicode = true;
     m_encoding = Encoding::LE_UTF16;
   }
   else
@@ -353,12 +352,7 @@ SOAPMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
     int uni = IS_TEXT_UNICODE_UNICODE_MASK;  // Intel/AMD processors + BOM
     if(IsTextUnicode(p_buffer,(int)p_length,&uni))
     {
-      if(TryConvertWideString(p_buffer,(int) p_length,_T(""),message,m_sendBOM))
-      {
-        m_sendUnicode = true;
-        m_encoding = Encoding::LE_UTF16;
-      }
-      else
+      if(TryConvertWideString(p_buffer,(int) p_length,_T(""),message,m_sendBOM) == false)
       {
         // We are now officially in error state
         m_errorstate = true;
@@ -373,14 +367,6 @@ SOAPMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
   }
   else 
   {
-    if(p_charset.IsEmpty())
-    {
-      p_charset = "utf-8";
-    }
-    if(p_charset.CompareNoCase("utf-8") == 0)
-    {
-      m_encoding = Encoding::UTF8;
-    }
     message = DecodeStringFromTheWire(XString(p_buffer),p_charset);
   }
 #endif
@@ -562,7 +548,6 @@ SOAPMessage::operator=(JSONMessage& p_json)
   m_contentType   = p_json.GetContentType();
   m_sendBOM       = p_json.GetSendBOM();
   m_incoming      = p_json.GetIncoming();
-  m_sendUnicode   = p_json.GetSendUnicode();
   m_headers       =*p_json.GetHeaderMap();
 
   // Duplicate all cookies
@@ -587,7 +572,7 @@ SOAPMessage::operator=(JSONMessage& p_json)
   CreateParametersObject();
 
   // The message itself
-  XMLParserJSON(this,&p_json);
+  XMLParserJSON parser(this,&p_json);
   CheckAfterParsing();
 
   return this;
@@ -2150,7 +2135,7 @@ SOAPMessage::SetBodyToFault()
 
 // Get SOAP Fault as a total string
 XString 
-SOAPMessage::GetFault() 
+SOAPMessage::GetFault() const
 {
   XString soapFault;
   soapFault.Format(_T("Soap message '%s' contains an error:\n\n"
@@ -2428,7 +2413,7 @@ SOAPMessage::CheckMesgEncryption()
 
 // Get password as a custom token
 XString
-SOAPMessage::GetPasswordAsToken()
+SOAPMessage::GetPasswordAsToken() const
 {
   // Create password token
   XString revPassword(m_enc_password);

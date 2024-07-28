@@ -50,12 +50,10 @@ public:
   void          ParseMessage(XString& p_message,WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);
   // Parse from a beginning node
   void          ParseForNode(XMLElement* p_node,XString& p_message,WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);
-  // Setting message to UTF-8 encryption
-  void          SetUTF8();
 
   // Print string with entities and optionally as UTF8 again
   static XString PrintXmlString (const XString& p_string, bool p_utf8 = false);
-  static XString PrintJsonString(const XString& p_string, Encoding p_encoding = Encoding::Default);
+  static XString PrintJsonString(const XString& p_string);
 
 protected:
   // Set the internal error
@@ -92,18 +90,13 @@ protected:
 
   // Message being parsed
   XMLMessage*   m_message    { nullptr };
-  bool          m_utf8       { false   };
   unsigned      m_spaces     { 0 };
   unsigned      m_elements   { 0 };
   WhiteSpace    m_whiteSpace { WhiteSpace::PRESERVE_WHITESPACE };
+  XString       m_encoding;
   // Parsing was advanced to here
   _TUCHAR*      m_pointer    { nullptr };
   XMLElement*   m_element    { nullptr };
   XMLElement*   m_lastElement{ nullptr };
 };
 
-inline void 
-XMLParser::SetUTF8()
-{
-  m_utf8 = true;
-}

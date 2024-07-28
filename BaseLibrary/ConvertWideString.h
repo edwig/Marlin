@@ -61,7 +61,7 @@ XString FindCharsetInContentType(XString p_contentType);
 // Find the mimetype in the content-type header
 XString FindMimeTypeInContentType(XString p_contentType);
 
-#ifdef UNICODE
+#ifdef _UNICODE
 // Convert strings to/from Unicode-16
 bool    TryConvertNarrowString(const BYTE* p_buffer
                               ,int         p_length
@@ -103,7 +103,7 @@ std::wstring StringToWString(XString p_string);
 XString      WStringToString(std::wstring p_string);
 
 // Decoding incoming strings from the internet. Defaults to UTF-8 encoding
-XString DecodeStringFromTheWire(XString p_string,XString p_charset = _T("utf-8"));
+XString DecodeStringFromTheWire(XString p_string,XString p_charset = _T("utf-8"),bool* p_foundBom = nullptr);
 // Encode to string for internet. Defaults to UTF-8 encoding
 XString EncodeStringForTheWire (XString p_string,XString p_charset = _T("utf-8"));
 

@@ -463,7 +463,9 @@ int TestWebservices(HTTPClient& client)
   xprintf(_T("================================================\n"));
   url = CreateURL(_T("Insecure"));
   msg = CreateSoapMessage(namesp,command,url);
-  msg->SetSendUnicode(true);
+  msg->SetEncoding(Encoding::LE_UTF16);
+  msg->SetContentType("application/soap+xml; charset=\"utf-16\"");
+
   errors += DoSend(client,msg,_T("sending unicode"));
 
   // Test 11

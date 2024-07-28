@@ -57,7 +57,7 @@ void LoadConstants(LPTSTR p_app_name);
 // Selecting the right library to link with automatically
 // So we do not need to worry about which library to use in the linker settings
 
-#ifdef UNICODE
+#ifdef _UNICODE
 #if defined _M_IX86
 #define MARLIN_PLATFORM "Ux86"
 #else

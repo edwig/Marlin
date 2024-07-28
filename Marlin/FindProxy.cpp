@@ -146,7 +146,7 @@ FindProxy::SetInfo(XString p_proxy,XString p_bypass)
   m_proxy   = p_proxy;
   m_ignored = p_bypass;
 
-#ifdef UNICODE
+#ifdef _UNICODE
   m_wProxy   = p_proxy;
   m_wIgnored = m_ignored;
 #else

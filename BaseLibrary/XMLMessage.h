@@ -176,8 +176,7 @@ public:
   // Print the elements stack as a JSON string
   virtual XString PrintElementsJson(XMLElement*  p_element
                                    ,bool         p_attributes
-                                   ,Encoding     p_encoding = Encoding::UTF8
-                                   ,int          p_level    = 0);
+                                   ,int          p_level = 0);
 
   // FILE OPERATIONS
 
@@ -191,14 +190,12 @@ public:
   // SETTERS
   // Set the output encoding of the message
   Encoding        SetEncoding(Encoding p_encoding);
+  void            SetSendBOM(bool p_bom);
   // Set the name of the root-node
   void            SetRootNodeName(XString p_name);
   // Set condensed format (no spaces or newlines)
   void            SetCondensed(bool p_condens);
   void            SetPrintRestrictions(bool p_restrict);
-  // Set sending in Unicode
-  void            SetSendUnicode(bool p_unicode);
-  void            SetSendBOM(bool p_bom);
   // Stylesheet info
   void            SetStylesheetType(XString p_type);
   void            SetStylesheet(XString p_sheet);
@@ -240,7 +237,6 @@ public:
   Encoding        GetEncoding() const;
   bool            GetCondensed();
   bool            GetPrintRestrictions();
-  bool            GetSendUnicode() const;
   bool            GetSendBOM() const;
   XMLElement*     GetRoot();
   void            SetRoot(XMLElement* p_root);
@@ -306,7 +302,6 @@ protected:
   XString         m_standalone;                               // Stand alone from DTD or XSD's
   bool            m_condensed       { false };                // Condensed output format (no spaces/newlines)
   bool            m_whitespace      { false };                // Collapse whitespace
-  bool            m_sendUnicode     { false };                // Construct UTF-16 on sending out
   bool            m_sendBOM         { false };                // Prepend Byte-Order-Mark before message (UTF-8 / UTF-16)
   bool            m_printRestiction { false };                // Print restrictions as comment before node
   // Stylesheet info
@@ -367,12 +362,6 @@ inline bool
 XMLMessage::GetCondensed()
 {
   return m_condensed;
-}
-
-inline bool
-XMLMessage::GetSendUnicode() const
-{
-  return m_sendUnicode;
 }
 
 inline bool

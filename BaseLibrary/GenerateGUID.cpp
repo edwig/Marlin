@@ -43,7 +43,7 @@ _Check_return_ WINOLEAPI CoCreateGuid(_Out_ GUID* pguid);
 
 XString GenerateGUID()
 {
-#ifdef UNICODE
+#ifdef _UNICODE
   RPC_WSTR guidStr = nullptr;
 #else
   RPC_CSTR guidStr = nullptr;

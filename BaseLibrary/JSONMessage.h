@@ -102,7 +102,7 @@ public:
   bool        GetMark()      const { return m_mark;     }
   JSONarray&  GetArray()           { return m_array;    }
   JSONobject& GetObject()          { return m_object;   }
-  XString     GetAsJsonString(bool p_white,Encoding p_encoding = Encoding::Default,unsigned p_level = 0);
+  XString     GetAsJsonString(bool p_white,unsigned p_level = 0);
 
   // FUNCTIONS
   void        JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive = true);
@@ -212,7 +212,7 @@ public:
   // XTOR: For incoming UTF-8 String
   explicit JSONMessage(XString p_message);
   // XTOR: Internal construction from MBCS string
-  explicit JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding = Encoding::Default);
+  explicit JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding = Encoding::UTF8);
   // XTOR: Outgoing to a URL
   explicit JSONMessage(XString p_message,XString p_url);
   // XTOR: From another XXXmessage
@@ -225,7 +225,7 @@ public:
   // Resetting the message for answering
   void Reset(bool p_resetURL = true);
   // Create from message stream
-  bool ParseMessage(XString p_message,Encoding p_encoding = Encoding::Default);
+  bool ParseMessage(XString p_message);
   // Load from file
   bool LoadFile(const XString& p_fileName);
   // Save to file
@@ -246,8 +246,7 @@ public:
   int             JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,bool p_caseSensitive = true);
 
   // GETTERS
-  XString         GetJsonMessage       (Encoding p_encoding = Encoding::Default) const;
-  XString         GetJsonMessageWithBOM(Encoding p_encoding = Encoding::UTF8)   const;
+  XString         GetJsonMessage() const;
   JSONvalue&      GetValue() const         { return *m_value;                }
   XString         GetURL() const           { return m_url;                   }
   const CrackedURL& GetCrackedURL() const  { return m_cracked;               }
@@ -271,7 +270,6 @@ public:
   Encoding        GetEncoding() const      { return m_encoding;              }
   XString         GetAcceptEncoding() const{ return m_acceptEncoding;        }
   bool            GetSendBOM() const       { return m_sendBOM;               }
-  bool            GetSendUnicode() const   { return m_sendUnicode;           }
   bool            GetVerbTunneling() const { return m_verbTunnel;            }
   bool            GetIncoming() const      { return m_incoming;              }
   bool            GetHasBeenAnswered()const{ return m_request == NULL;       }
@@ -311,7 +309,6 @@ public:
   void            AddHeader(XString p_name,XString p_value);
   void            DelHeader(XString p_name);
   void            SetEncoding(Encoding p_encoding);
-  void            SetSendUnicode(bool p_unicode);
 
   // Use POST method for PUT/MERGE/PATCH/DELETE
   bool            UseVerbTunneling();
@@ -341,7 +338,6 @@ private:
   bool            m_errorstate  { false };                      // Internal for parsing errors
   XString         m_lastError;                                  // Error as text
   Encoding        m_encoding    { Encoding::UTF8 };             // Encoding details
-  bool            m_sendUnicode { false };                      // Send message in UTF-16 Unicode
   bool            m_sendBOM     { false };                      // Prepend message with UTF-8 or UTF-16 Byte-Order-Mark
   bool            m_verbTunnel  { false };                      // HTTP-VERB Tunneling used
   // DESTINATION

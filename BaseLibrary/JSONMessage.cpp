@@ -350,7 +350,7 @@ JSONvalue::Add(JSONpair& p_value)
 }
 
 XString
-JSONvalue::GetAsJsonString(bool p_white,Encoding p_encoding /*=Encoding::Default*/, unsigned p_level /*=0*/)
+JSONvalue::GetAsJsonString(bool p_white,unsigned p_level /*=0*/)
 {
   XString result;
   XString separ,less;
@@ -375,7 +375,7 @@ JSONvalue::GetAsJsonString(bool p_white,Encoding p_encoding /*=Encoding::Default
                                       case JsonConst::JSON_TRUE:  return _T("true");
                                     }
                                     break;
-    case JsonType::JDT_string:      return XMLParser::PrintJsonString(m_string,p_encoding);
+    case JsonType::JDT_string:      return XMLParser::PrintJsonString(m_string);
     case JsonType::JDT_number_int:  result.Format(_T("%d"),m_intNumber);
                                     break;
     case JsonType::JDT_number_bcd:  result = m_bcdNumber.AsString(bcd::Format::Bookkeeping,false,0);
@@ -384,7 +384,7 @@ JSONvalue::GetAsJsonString(bool p_white,Encoding p_encoding /*=Encoding::Default
                                     for(unsigned ind = 0;ind < m_array.size();++ind)
                                     {
                                       result += separ;
-                                      result += m_array[ind].GetAsJsonString(p_white,p_encoding,p_level+1);
+                                      result += m_array[ind].GetAsJsonString(p_white,p_level+1);
                                       if(ind < m_array.size() - 1)
                                       {
                                         result += _T(",");
@@ -406,9 +406,9 @@ JSONvalue::GetAsJsonString(bool p_white,Encoding p_encoding /*=Encoding::Default
                                       }
                                       result += separ;
                                       result += p_white ? _T("\t") : _T("");
-                                      result += XMLParser::PrintJsonString(m_object[ind].m_name,p_encoding);
+                                      result += XMLParser::PrintJsonString(m_object[ind].m_name);
                                       result += _T(":");
-                                      result += m_object[ind].m_value.GetAsJsonString(p_white,p_encoding,p_level+1).TrimLeft('\t');
+                                      result += m_object[ind].m_value.GetAsJsonString(p_white,p_level+1).TrimLeft('\t');
                                       if(ind < m_object.size() - 1)
                                       {
                                         result += _T(",");
@@ -639,7 +639,8 @@ JSONMessage::JSONMessage(XString p_message)
 }
 
 // XTOR: From an internal string with explicit space and encoding
-JSONMessage::JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding /*=Encoding::Default*/)
+JSONMessage::JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding /*=Encoding::UTF8*/)
+            :m_encoding(p_encoding)
 {
   AddReference();
 
@@ -653,7 +654,7 @@ JSONMessage::JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
 
   // Use the parameter
-  ParseMessage(p_message,p_encoding);
+  ParseMessage(p_message);
 }
 
 // XTOR: Outgoing message + url
@@ -671,7 +672,7 @@ JSONMessage::JSONMessage(XString p_message,XString p_url)
   SetURL(p_url);
 
   // Use the parameter
-  ParseMessage(p_message,Encoding::Default);
+  ParseMessage(p_message);
 }
 
 // XTOR: From another message
@@ -697,7 +698,6 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
   m_site        = p_other->m_site;
   m_desktop     = p_other->m_desktop;
   m_encoding    = p_other->m_encoding;
-  m_sendUnicode = p_other->m_sendUnicode;
   m_sendBOM     = p_other->m_sendBOM;
   m_verbTunnel  = p_other->m_verbTunnel;
   m_headers     = p_other->m_headers;
@@ -745,7 +745,6 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
   m_password       = p_message->GetPassword();
   m_headers        =*p_message->GetHeaderMap();
   m_verb           = p_message->GetVerb();
-  m_sendUnicode    = p_message->GetSendUnicode();
   m_incoming       = (p_message->GetCommand() != HTTPCommand::http_response);
 
   // Duplicate all cookies
@@ -769,41 +768,30 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
     m_token = NULL;
   }
 
-  // The message itself
-  Encoding encoding = Encoding::UTF8;
-  XString charset = FindCharsetInContentType(m_contentType);
+  // THE MESSAGE ITSELF
 
-  // Works for "UTF-16", "UTF-16LE" and "UTF-16BE" as of RFC 2781
+  // Parsing the charset
+  XString charset = FindCharsetInContentType(m_contentType);
+  if(charset.IsEmpty())
+  {
+    charset = _T("utf-8");
+  }
+  m_encoding = (Encoding)CharsetToCodepage(charset);
+
+  // Parse buffer to string, depending on the charset
   uchar* buffer = nullptr;
   size_t length = 0;
   p_message->GetRawBody(&buffer,length);
 
-  XString message = ConstructFromRawBuffer(buffer,(unsigned)length,charset);
-
-  if(message.IsEmpty() && !m_errorstate)
+  if(length > 0)
   {
-    // Probably already processed in HandleTextContext of the server
-    message = p_message->GetBody();
+    XString message = ConstructFromRawBuffer(buffer,(unsigned)length,charset);
+    // Parse the JSON tree
+    if(!m_errorstate)
+    {
+      ParseMessage(message);
+    }
   }
-
-  // Parsing the charset
-  if(charset.CompareNoCase(_T("utf-8")) == 0)
-  {
-    encoding = Encoding::UTF8;
-  }
-  else if(charset.Left(6).CompareNoCase(_T("utf-16")) == 0)
-  {
-    encoding = Encoding::LE_UTF16;
-  }
-  else if(charset.Left(12).CompareNoCase(_T("windows-1252")) == 0)
-  {
-    encoding = Encoding::Default;
-  }
-//   else if(charset.Left(10).CompareNoCase(_T("iso-8859-1")) == 0)
-//   {
-//     encoding = Encoding::ENC_ISO88591;
-//   }
-  ParseMessage(message,encoding);
 }
 
 JSONMessage::JSONMessage(SOAPMessage* p_message)
@@ -827,7 +815,6 @@ JSONMessage::JSONMessage(SOAPMessage* p_message)
   m_acceptEncoding  = p_message->GetAcceptEncoding();
   m_user            = p_message->GetUser();
   m_password        = p_message->GetPassword();
-  m_sendUnicode     = p_message->GetSendUnicode();
   m_headers         =*p_message->GetHeaderMap();
 
   // Duplicate all cookies
@@ -861,12 +848,12 @@ JSONMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
 {
   XString message;
 
-#ifdef UNICODE
+#ifdef _UNICODE
   if(p_charset.CompareNoCase(_T("utf-16")) == 0)
   {
     // It's just our way of Unicode
     message = reinterpret_cast<LPCTSTR>(p_buffer);
-    m_sendUnicode = true;
+    m_encoding = Encoding::LE_UTF16;
   }
   else
   {
@@ -886,18 +873,23 @@ JSONMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
     int uni = IS_TEXT_UNICODE_UNICODE_MASK;  // Intel/AMD processors + BOM
     if(IsTextUnicode(p_buffer,(int) p_length,&uni))
     {
-      if(TryConvertWideString(p_buffer,(int) p_length,_T(""),message,m_sendBOM))
-      {
-        // Will answer as 16 bits Unicode
-        m_sendUnicode = true;
-      }
-      else
+      if(TryConvertWideString(p_buffer,(int) p_length,_T(""),message,m_sendBOM) == false)
       {
         // We are now officially in error state
         m_errorstate = true;
-        m_lastError = "Cannot convert UTF-16 buffer";
+        m_lastError  = _T("Cannot convert UTF-16 buffer");
       }
     }
+    else
+    {
+      // Probably already processed in HandleTextContext of the server
+      message = p_buffer;
+    }
+  }
+  else
+  {
+    XString string(p_buffer);
+    message = DecodeStringFromTheWire(string,p_charset);
   }
 #endif
   return message;
@@ -1081,52 +1073,26 @@ void
 JSONMessage::SetEncoding(Encoding p_encoding)
 {
   m_encoding    = p_encoding;
-  m_sendUnicode = (p_encoding == Encoding::LE_UTF16);
-}
-
-void
-JSONMessage::SetSendUnicode(bool p_unicode)
-{
-  m_sendUnicode = p_unicode;
-  if(p_unicode)
-  {
-    m_encoding = Encoding::LE_UTF16;
-  }
-  else if(m_encoding == Encoding::LE_UTF16)
-  {
-    // Reset to UTF8, if not sending in Unicode16
-    m_encoding = Encoding::UTF8;
-  }
 }
 
 // Go from JSON string to this message
 // The p_encoding gives the encoding the incoming string is in!
 bool
-JSONMessage::ParseMessage(XString p_message,Encoding p_encoding /*=Encoding::UTF8*/)
+JSONMessage::ParseMessage(XString p_message)
 {
   JSONParser parser(this);
 
   // Starting the parser, preserving it's whitespace state
-  parser.ParseMessage(p_message,m_whitespace,p_encoding);
+  parser.ParseMessage(p_message,m_whitespace);
 
   return (m_errorstate == false);
 }
 
 // Reconstruct JSON string from this message
 XString 
-JSONMessage::GetJsonMessage(Encoding p_encoding /*=Encoding::UTF8*/) const
+JSONMessage::GetJsonMessage() const
 {
-  return m_value->GetAsJsonString(m_whitespace,p_encoding);
-}
-
-XString 
-JSONMessage::GetJsonMessageWithBOM(Encoding p_encoding /*=Encoding::UTF8*/) const
-{
-  if(m_sendBOM && p_encoding == Encoding::UTF8)
-  {
-    return ConstructBOMUTF8() + GetJsonMessage(p_encoding);
-  }
-  return GetJsonMessage(p_encoding);
+  return m_value->GetAsJsonString(m_whitespace);
 }
 
 // Use POST method for PUT/MERGE/PATCH/DELETE
@@ -1152,7 +1118,7 @@ bool
 JSONMessage::LoadFile(const XString& p_fileName)
 {
   WinFile file(p_fileName);
-  if(file.Open(winfile_read))
+  if(file.Open(winfile_read | open_trans_text | open_shared_read))
   {
     // Find the length of a file
     size_t length = file.GetFileSize();
@@ -1166,30 +1132,26 @@ JSONMessage::LoadFile(const XString& p_fileName)
       return false;
     }
 
+    // Read all the contents
     XString line;
     XString contents;
     while(file.Read(line))
     {
       contents += line;
     }
+
+    // Record the found encodings
+    m_encoding = file.GetEncoding();
+    m_sendBOM  = file.GetFoundBOM();
+
+    // Done with the file
     if(!file.Close())
     {
       return false;
     }
 
-    // Record the found encodings
-    m_encoding = file.GetEncoding();
-    if(m_encoding != Encoding::Default)
-    {
-      m_sendBOM = true;
-      if(m_encoding == Encoding::LE_UTF16 ||
-         m_encoding == Encoding::BE_UTF16)
-      {
-        m_sendUnicode = true;
-      }
-    }
     // And parse it
-    return ParseMessage(contents,m_encoding);
+    return ParseMessage(contents);
   }
   return false;
 }
@@ -1204,7 +1166,7 @@ JSONMessage::SaveFile(const XString& p_fileName)
   file.SetEncoding(m_encoding);
   if(file.Open(winfile_write))
   {
-    XString contents = GetJsonMessage(Encoding::Default);
+    XString contents = GetJsonMessage();
     if(file.Write(contents))
     {
       result = true;

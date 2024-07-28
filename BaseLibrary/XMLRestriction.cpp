@@ -1713,7 +1713,7 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,XString p_value)
   // Pattern matching, if any
   if(!m_pattern.IsEmpty())
   {
-#ifdef UNICODE
+#ifdef _UNICODE
     std::wstring str(p_value);
     std::wregex  reg(m_pattern);
 #else

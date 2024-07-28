@@ -144,9 +144,7 @@ HTTPClient::Reset()
   m_securityLevel   = XMLEncryption::XENC_NoInit;
   m_certPreset      = false;
   m_certStore       = _T("MY");
-  m_sendUnicode     = false;
   m_sniffCharset    = true;
-  m_sendBOM         = false;
   m_pushEvents      = false;
   m_onCloseSeen     = false;
   // Timeouts
@@ -558,8 +556,6 @@ HTTPClient::InitSettings()
   m_timeoutReceive =             m_marlinConfig.GetParameterInteger(_T("Client"),_T("TimeoutReceive"),   m_timeoutReceive);
   m_soapCompress   =             m_marlinConfig.GetParameterBoolean(_T("Client"),_T("SOAPCompress"),     m_soapCompress);
   m_httpCompression=             m_marlinConfig.GetParameterBoolean(_T("Client"),_T("HTTPCompression"),  m_httpCompression);
-  m_sendUnicode    =             m_marlinConfig.GetParameterBoolean(_T("Client"),_T("SendUnicode"),      m_sendUnicode);
-  m_sendBOM        =             m_marlinConfig.GetParameterBoolean(_T("Client"),_T("SendBOM"),          m_sendBOM);
   m_verbTunneling  =             m_marlinConfig.GetParameterBoolean(_T("Client"),_T("VerbTunneling"),    m_verbTunneling);
   m_certPreset     =             m_marlinConfig.GetParameterBoolean(_T("Client"),_T("CertificatePreset"),m_certPreset);
   m_certStore      =             m_marlinConfig.GetParameterString (_T("Client"),_T("CertificateStore"), m_certStore);
@@ -673,8 +669,6 @@ HTTPClient::InitSettings()
     }
   }
   DETAILLOG(_T("Client single-sign-on NT-LanManager  : %s"),m_sso           ? _T("yes") : _T("no"));
-  DETAILLOG(_T("Client forces sending in UTF-16      : %s"),m_sendUnicode   ? _T("yes") : _T("no"));
-  DETAILLOG(_T("Client forces sending of Unicode BOM : %s"),m_sendBOM       ? _T("yes") : _T("no"));
   DETAILLOG(_T("Client forces HTTP VERB Tunneling    : %s"),m_verbTunneling ? _T("yes") : _T("no"));
   DETAILLOG(_T("Client will use CORS origin header   : %s"),m_corsOrigin.GetString());
 }
@@ -832,7 +826,7 @@ HTTPClient::SetBody(const XString& p_body,const XString p_charset /*=_T("utf-8")
 {
   ResetBody();
 
-#ifdef UNICODE
+#ifdef _UNICODE
   if(p_charset.Compare(_T("utf-16")) == 0)
   {
     m_bodyLength = p_body.GetLength() * sizeof(TCHAR);
@@ -2285,64 +2279,26 @@ HTTPClient::Send(SOAPMessage* p_msg)
     p_msg->SetCondensed(true);
   }
 
-  // Test sending of a Unicode posting
-  // Place soap message on the stack and set it as a body
-  XString soap;
-  uchar* buffer = nullptr;
-
-  if(m_sendBOM)
+  // Getting the content type
+  m_contentType = p_msg->GetContentType();
+  if(m_contentType.IsEmpty())
   {
-    p_msg->SetSendBOM(true);
+    // Default content type for SOAP
+    m_contentType = _T("text/xml");
   }
 
-  if(m_sendUnicode || p_msg->GetSendUnicode())
-  {
-    p_msg->SetSendUnicode(true);
-    soap = p_msg->GetSoapMessage();
-
-    XString charset(_T("utf-16"));
-    m_contentType = SetFieldInHTTPHeader(p_msg->GetContentType(),_T("charset"),charset);
-
-#ifdef UNICODE
-    SetBody(soap,charset);
-#else
-    int length = 0;
-    if(TryCreateWideString(soap,_T(""),p_msg->GetSendBOM(),&buffer,length))
-    {
-      SetBody(buffer,length);
-    }
-    else
-    {
-      m_lastError = ERROR_INVALID_PARAMETER;
-      return false;
-    }
-#endif
-  }
-  else
+  // Getting the charset
+  XString charset = FindCharsetInContentType(m_contentType);
+  if(charset.IsEmpty())
   {
     Encoding encoding = p_msg->GetEncoding();
-    soap = p_msg->GetSoapMessage();
-
-    // Getting the content type
-    m_contentType = p_msg->GetContentType();
-    XString charset = FindCharsetInContentType(m_contentType);
-    if(charset.IsEmpty())
-    {
-      // Take care of character encoding
-      switch(encoding)
-      {
-        case Encoding::Default:   charset = CodepageToCharset(GetACP());
-                                  break;
-        case Encoding::LE_UTF16:  charset = "utf-16";
-                                  break;
-        default:                  [[fallthrough]];
-        case Encoding::UTF8:      charset = "utf-8";
-                                  break;
-      }
-      m_contentType = SetFieldInHTTPHeader(m_contentType,_T("charset"),charset);
-    }
-    SetBody(soap,charset);
+    charset = CodepageToCharset((int)encoding);
+    m_contentType = SetFieldInHTTPHeader(m_contentType,_T("charset"),charset);
   }
+
+  // Now setting the body to send in the correct charset
+  XString soap = p_msg->GetSoapMessage();
+  SetBody(soap,charset);
 
   // Transfer all headers to the client
   AddMessageHeaders(p_msg);
@@ -2378,101 +2334,34 @@ HTTPClient::Send(SOAPMessage* p_msg)
 
   // Set cookies
   m_cookies = p_msg->GetCookies();
-  
+
+  // Keep original SOAP version from the sent message
+  SoapVersion oldVersion = p_msg->GetSoapVersion();
+
   // Put in logfile
   DETAILLOG(_T("Outgoing SOAP message: %s"),p_msg->GetSoapAction().GetString());
 
+  // GO AND SEND
   // Now go send our XML (Never redirected)
   bool result = Send();
 
-  // Headers from the answer
-  XString nosniff     = FindHeader(_T("X-Content-Type-Options"));
-  XString charset     = FindCharsetInContentType(m_contentType);
+  // Getting the SOAP as a full string
+  bool doBom(false);
+  XString answer = GetStringFromResult(result,doBom);
+  if(result)
+  {
+    p_msg->ParseMessage(answer);
+  }
+  else
+  {
+    p_msg->SetFault(_T("Server"),_T("Charset"),answer,_T("Possibly unknown UNICODE charset, or non-standard machine charset"));
+  }
 
   // Process our answer
   p_msg->Reset();
   p_msg->SetStatus(m_status);
 
-  XString answer;
-  bool decoded(false);
-
-  if(charset.Left(6).CompareNoCase(_T("utf-16")) == 0)
-  {
-#ifdef UNICODE
-    answer = (LPCTSTR)m_response;
-#else
-    bool sendBom = false;
-    // Works for "UTF-16", "UTF-16LE" and "UTF-16BE" as of RFC 2781
-    if(TryConvertWideString(m_response,m_responseLength,_T(""),answer,sendBom))
-    {
-      p_msg->SetSendBOM(sendBom);
-    }
-    else
-    {
-      // SET SOAP FAULT
-      XString message;
-      message.Format(_T("Cannot convert UTF-16 message"));
-      p_msg->SetFault(_T("Server"),_T("Charset"),message,_T("Possibly unknown UNICODE charset, or non-standard machine charset"));
-      result = false;
-      answer.Empty();
-    }
-#endif
-    decoded = true;
-  }
-  else if(nosniff.CompareNoCase(_T("nosniff")))
-  {
-    int uni = IS_TEXT_UNICODE_UNICODE_MASK;
-    if(IsTextUnicode(m_response,m_responseLength,&uni))
-    {
-#ifdef UNICODE
-      answer = (LPCTSTR)m_response;
-      result = true;
-#else
-      bool sendBom = false;
-      // Find specific code page and try to convert
-      if(!TryConvertWideString(m_response,m_responseLength,_T(""),answer,sendBom))
-      {
-        // SET SOAP FAULT
-        XString message;
-        message.Format(_T("Unknown charset from server: %s"),charset.GetString());
-        p_msg->SetFault(_T("Server"),_T("Charset"),message,_T("Possibly unknown UNICODE charset, or non-standard machine charset"));
-        answer.Empty();
-        result = false;
-      }
-      decoded = true;
-#endif
-    }
-  }
-  if(!decoded)
-  {
-    // Sender forces to not sniffing
-#ifdef _UNICODE
-    if(charset.CompareNoCase(_T("utf-16")) == 0)
-    {
-      answer = (LPCTSTR)m_response;
-    }
-    else
-    {
-      bool foundBom = false;
-      TryConvertNarrowString(m_response,m_responseLength,charset,answer,foundBom);
-    }
-#else
-    if(charset.CompareNoCase(CodepageToCharset(GetACP())) == 0)
-    {
-      answer = reinterpret_cast<const TCHAR*>(m_response);
-    }
-    else
-    {
-      XString response(reinterpret_cast<const char*>(m_response));
-      answer = DecodeStringFromTheWire(response, charset);
-    }
-#endif
-  }
-
-  // Keep response as new body. Might contain an error!!
-  SoapVersion oldVersion = p_msg->GetSoapVersion();
-  p_msg->ParseMessage(answer);
-
+  // Process the SOAP action
   XString incomingAction = p_msg->GetSoapAction();
   if(!incomingAction.IsEmpty())
   {
@@ -2516,12 +2405,6 @@ HTTPClient::Send(SOAPMessage* p_msg)
     }
   }
 
-  // Freeing Unicode UTF-16 buffer
-  if(buffer)
-  {
-    delete [] buffer;
-  }
-
   return result;
 }
 
@@ -2557,57 +2440,25 @@ HTTPClient::Send(JSONMessage* p_msg)
 
   // Set the client properties before Send()
   // String and buffer must be on the stack until after the call
-  XString json;
-  uchar* buffer = nullptr;
-
-  if(m_sendBOM)
+  m_contentType = p_msg->GetContentType();
+  if(m_contentType.IsEmpty())
   {
-    p_msg->SetSendBOM(true);
+    // Default content type for JSON
+    m_contentType = _T("application/json");
   }
 
-  // Preparing the body of the transmission
-  if(m_sendUnicode || 
-     p_msg->GetSendUnicode() || 
-     p_msg->GetEncoding() == Encoding::LE_UTF16)
+  // Getting the charset
+  XString charset = FindCharsetInContentType(m_contentType);
+  if(charset.IsEmpty())
   {
-    // SEND AS 16 BITS UTF MESSAGE
-    p_msg->SetSendUnicode(true);
-    json = p_msg->GetJsonMessage(Encoding::Default);
-    m_contentType = SetFieldInHTTPHeader(p_msg->GetContentType(),_T("charset"),_T("utf-16"));
-#ifdef UNICODE
-    SetBody((const void*)json.GetString(),json.GetLength() * sizeof(TCHAR));
-#else
-    int length = 0;
-    if(TryCreateWideString(json,_T(""),p_msg->GetSendBOM(),&buffer,length))
-    {
-      SetBody(buffer,length);
-    }
-    else
-    {
-      m_lastError = ERROR_INVALID_PARAMETER;
-      return false;
-    }
-#endif
-  }
-  else
-  {
-    // SEND IN OTHER ENCODINGS
-    m_contentType = p_msg->GetContentType();
     Encoding encoding = p_msg->GetEncoding();
-    json = p_msg->GetJsonMessageWithBOM(encoding);
-
-    // Take care of character encoding
-    int acp = -1;
-    switch(encoding)
-    {
-      case Encoding::Default: acp = GetACP(); break; // Find Active Code Page
-      case Encoding::UTF8:    acp =    65001; break; // See ConvertWideString.cpp
-      default:                                break;
-    }
-    XString charset = CodepageToCharset(acp);
-    m_contentType = SetFieldInHTTPHeader(m_contentType,_T("charset"),charset);
-    SetBody(json);
+    charset = CodepageToCharset((int)encoding);
+    m_contentType = SetFieldInHTTPHeader(m_contentType, _T("charset"), charset);
   }
+
+  // Setting the message
+  XString json = p_msg->GetJsonMessage();
+  SetBody(json,charset);
 
   if(m_verbTunneling)
   {
@@ -2629,92 +2480,30 @@ HTTPClient::Send(JSONMessage* p_msg)
 
   ProcessJSONResult(p_msg,result);
 
-  // Keep the status
-  p_msg->SetStatus(m_status);
-
-  // Free Unicode UTF-16 buffer
-  if(buffer)
-  {
-    delete [] buffer;
-  }
   return result;
 }
 
 void
 HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
 {
-  // Headers from the answer
-  XString nosniff = FindHeader(_T("X-Content-Type-Options"));
-  XString charset = FindCharsetInContentType(m_contentType);
-
   // Process our answer, Forget what we did send
   p_msg->Reset();
 
-  // Prepare the answer
-  XString answer;
-  int uni = IS_TEXT_UNICODE_UNICODE_MASK;  // Intel/AMD processors
+  // Keep response as new body. Might contain an error!!
+  DETAILLOG(_T("Incoming JSON answer"));
 
-  // Do the following case
-  if((charset.Left(6).CompareNoCase(_T("utf-16")) == 0) ||
-     (nosniff.CompareNoCase(_T("nosniff")) &&
-     IsTextUnicode(m_response,m_responseLength,&uni)))
+  // Getting the JSON as a full string
+  bool doBom(false);
+  XString answer = GetStringFromResult(p_result,doBom);
+  if(p_result)
   {
-#ifdef UNICODE
-    answer   = (LPCTSTR) m_response;
-#else
-    // Works for "UTF-16" and "UTF-16LE" as of RFC 2781
-    bool doBom = false;
-    if(TryConvertWideString(m_response,m_responseLength,_T(""),answer,doBom))
-    {
-      p_msg->SetSendBOM(doBom);
-      p_msg->SetSendUnicode(true);
-    }
-    else
-    {
-      // SET ERROR STATE
-      XString message;
-      message.Format(_T("Cannot convert UTF-16 message"));
-      p_msg->SetLastError(message);
-      p_msg->SetErrorstate(true);
-      p_result = false;
-      answer.Empty();
-    }
-#endif
+    p_msg->ParseMessage(answer);
   }
   else
   {
-    // Sender forces to not sniffing or different charset or NO charset
-    // So assume the standard codepages are used (ACP=1252, UTF-8 or ISO-8859-1)
-#ifdef UNICODE
-    bool doBom = false;
-    if(TryConvertNarrowString(m_response,m_responseLength,charset,answer,doBom))
-    {
-      p_msg->SetSendBOM(doBom);
-      p_msg->SetSendUnicode(false);
-    }
-    else
-    {
-      // SET ERROR STATE
-      XString message;
-      message.Format(_T("Cannot convert UTF-16 message"));
-      p_msg->SetLastError(message);
-      p_msg->SetErrorstate(true);
-      p_result = false;
-      answer.Empty();
-    }
-#else
-    // Answer is the raw response
-    answer = reinterpret_cast<const char*>(m_response);
-    if(charset != CodepageToCharset(GetACP()))
-    {
-      answer = DecodeStringFromTheWire(answer,charset);
-    }
-#endif
+    p_msg->SetLastError(answer);
+    p_msg->SetErrorstate(true);
   }
-
-  // Keep response as new body. Might contain an error!!
-  DETAILLOG(_T("Incoming JSON answer"));
-  p_msg->ParseMessage(answer);
 
   // Keep cookies
   p_msg->SetCookies(m_resultCookies);
@@ -2726,6 +2515,62 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
   }
   // Reset our input buffer
   ResetBody();
+
+  // Keep the status
+  p_msg->SetStatus(m_status);
+}
+
+XString
+HTTPClient::GetStringFromResult(bool& p_result,bool& p_doBom)
+{
+  // Headers from the answer
+  XString nosniff = FindHeader(_T("X-Content-Type-Options"));
+  XString charset = FindCharsetInContentType(m_contentType);
+
+  // Prepare the answer
+  XString answer;
+  int uni = IS_TEXT_UNICODE_UNICODE_MASK;  // Intel/AMD processors
+
+  // Do the following case where we may 'sniff' the contents
+  if((charset.CompareNoCase(_T("utf-16")) == 0) ||
+     (nosniff.CompareNoCase(_T("nosniff")) &&
+     IsTextUnicode(m_response,m_responseLength,&uni)))
+  {
+#ifdef _UNICODE
+    Encoding bom = Encoding::EN_ACP;
+    unsigned int skipBytes = 0;
+    BOMOpenResult bomfound = WinFile::DefuseBOM(m_response,bom,skipBytes);
+    answer  = (LPCTSTR)(m_response + skipBytes);
+    p_doBom = (bomfound == BOMOpenResult::BOM);
+#else
+    // Works for "UTF-16" and "UTF-16LE" as of RFC 2781
+    if(TryConvertWideString(m_response,m_responseLength,_T(""),answer,p_doBom) == false)
+    {
+      // SET ERROR STATE
+      answer   = _T("Cannot convert UTF-16 message to an MBCS string");
+      p_result = false;
+    }
+#endif
+    return answer;
+  }
+  // Sender forces to not sniffing or different charset or NO charset
+  // So assume the standard codepages are used (ACP=1252, UTF-8 or ISO-8859-1)
+#ifdef _UNICODE
+  if(TryConvertNarrowString(m_response,m_responseLength,charset,answer,p_doBom) == false)
+  {
+    // SET ERROR STATE
+    answer   = _T("Cannot convert to a UTF-16 string");
+    p_result = false;
+  }
+#else
+  // Answer is the raw response
+  answer = reinterpret_cast<const char*>(m_response);
+  if(charset != CodepageToCharset(GetACP()))
+  {
+    answer = DecodeStringFromTheWire(answer,charset,&p_doBom);
+  }
+#endif
+  return answer;
 }
 
 // Translate SOAP to JSON, send/receive and translate back

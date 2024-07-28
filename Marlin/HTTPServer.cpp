@@ -1031,7 +1031,7 @@ HTTPServer::LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo)
 void
 HTTPServer::HandleTextContent(HTTPMessage* p_message)
 {
-#ifdef UNICODE
+#ifdef _UNICODE
   UNREFERENCED_PARAMETER(p_message);
 #else
   uchar* body   = nullptr;
@@ -1427,7 +1427,7 @@ HTTPServer::EventToStringBuffer(ServerEvent* p_event,BYTE** p_buffer,int& p_leng
   stream += _T("\n");
 
   // SSE Stream is always in UTF-8 format.
-#ifdef UNICODE
+#ifdef _UNICODE
   TryCreateNarrowString(stream,_T("utf-8"),false,p_buffer,p_length);
 #else
   XString utf8stream = EncodeStringForTheWire(stream,_T("utf-8"));
@@ -1966,7 +1966,7 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
   // THE PRINCIPAL HTTP PROTOCOL CALL LINE
   XString httpLine;
 
-#ifdef UNICODE
+#ifdef _UNICODE
   XString rawUrl;
   bool foundBom(false);
   TryConvertNarrowString((BYTE*)p_request->pRawUrl,(int)strlen(p_request->pRawUrl),_T(""),rawUrl,foundBom);
@@ -2005,7 +2005,7 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
 }
 
 void
-HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,HTTPMessage* p_message,bool p_utf16 /*=false*/)
+HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,HTTPMessage* p_message,Encoding p_encoding /*= Encoding::EN_ACP*/)
 {
   // Only if we have an attached logfile
   if(!m_log || !p_request)
@@ -2024,7 +2024,7 @@ HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,HTTPMessage* p_message,bool 
   {
     if(p_message)
     {
-      LogTraceRequestBody(p_message,p_utf16);
+      LogTraceRequestBody(p_message,p_encoding);
     }
   }
 }
@@ -2038,7 +2038,7 @@ HTTPServer::LogTraceRequest(PHTTP_REQUEST p_request,HTTPMessage* p_message,bool 
  * @param p_utf16   Optional parameter indicating whether to log the body as UTF-16. Defaults to false.
  */
 void
-HTTPServer::LogTraceRequestBody(HTTPMessage* p_message,bool p_utf16 /*=false*/)
+HTTPServer::LogTraceRequestBody(HTTPMessage* p_message,Encoding p_encoding /*Encoding::EN_ACP*/)
 {
   // Only if we have work to do
   if (!p_message || !p_message->GetFileBuffer() || !m_log)
@@ -2077,9 +2077,9 @@ HTTPServer::LogTraceRequestBody(HTTPMessage* p_message,bool p_utf16 /*=false*/)
     size_t length = 0;
     filebuffer->GetBufferCopy(buffer,length);
 
-    if(p_utf16)
+    if(p_encoding == Encoding::LE_UTF16)
     {
-#ifdef UNICODE
+#ifdef _UNICODE
       XString string = (LPCTSTR)buffer;
       AutoCSTR body(string);
       m_log->BareBufferLog((void*)body.cstr(),body.size());
@@ -2168,7 +2168,7 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
 }
 
 void
-HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,bool p_utf16)
+HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,Encoding p_encoding /*=Encoding::EN_ACP*/)
 {
   // Only if we have a logfile
   if(!m_log)
@@ -2221,9 +2221,9 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,bo
         size_t length = 0;
         filebuffer->GetBufferCopy(buffer,length);
 
-        if(p_utf16)
+        if(p_encoding == Encoding::LE_UTF16)
         {
-#ifdef UNICODE
+#ifdef _UNICODE
           XString string = (LPCTSTR) buffer;
           AutoCSTR str(string);
           m_log->BareBufferLog((void*)str.cstr(),str.size());
@@ -2257,7 +2257,7 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,bo
 // Tracing of a raw buffer (Socket, SSE-stream, buffer-chunk or otherwise partly data)
 // Cannot look at the content type for logging media
 void
-HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length,bool p_utf16)
+HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length,Encoding p_encoding /*=Encoding::EN_ACP*/)
 {
   // Only if we have a logfile
   if(!m_log)
@@ -2274,11 +2274,11 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,u
   // Log&Trace the body
   if(MUSTLOG(HLL_LOGBODY) && p_buffer)
   {
-    if(p_utf16)
+    if(p_encoding == Encoding::LE_UTF16)
     {
       XString string;
       bool foundBom(false);
-#ifdef UNICODE
+#ifdef _UNICODE
       TryConvertNarrowString(p_buffer,(int) p_length,_T(""),string,foundBom);
 #else
       TryConvertWideString(p_buffer,(int) p_length,_T(""),string,foundBom);

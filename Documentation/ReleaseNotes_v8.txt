@@ -21,13 +21,15 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
 
 
-CHANGES IN VERSION 8.3.3 of xx-xx-2024
+CHANGES IN VERSION 8.3.3 of 28-07-2024
 --------------------------------------
 1)  Update to the latest version of the BaseLibrary
 2)  Fix for the return HTTP status of a JSON message
 3)  Small Unicode fixes
 4)  Retry of the reading of the IIS "ApplicationHost.config" file, in order to defeat the IIS 
     WAS service from blocking us to read the config file.
+5)  Character encoding 'endlosung'. SendUnicode status now completely replaced by 'Encoding'
+    of the charset.
 
 CHANGES IN VERSION 8.3.2 of 08-07-2024
 --------------------------------------

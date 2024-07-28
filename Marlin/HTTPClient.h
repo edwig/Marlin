@@ -211,7 +211,6 @@ public:
   void SetProxyBypass(const XString& p_bypass)          { m_proxyBypass       = p_bypass;   };
   void SetProxyUser(const XString& p_user)              { m_proxyUser         = p_user;     };
   void SetProxyPassword(const XString& p_pass)          { m_proxyPassword     = p_pass;     };
-  void SetSendUnicode(bool p_unicode)                   { m_sendUnicode       = p_unicode;  };
   void SetVerb(XString p_verb)                          { m_verb              = p_verb;     };
   void SetContentType(const XString& p_type)            { m_contentType       = p_type;     };
   void SetResolveChunked(const bool p_resolve)          { m_resolveChunked    = p_resolve;  };
@@ -230,7 +229,6 @@ public:
   void SetSingleSignOn(bool p_sso)                      { m_sso               = p_sso;      };
   void SetSoapCompress(bool p_compress)                 { m_soapCompress      = p_compress; };
   void SetSslTlsSettings(unsigned p_ssltls)             { m_ssltls            = p_ssltls;   }; // WINHTTP_FLAG_SECURE_PROTOCOL_ALL
-  void SetSendBOM(bool p_bom)                           { m_sendBOM           = p_bom;      };
   void SetVerbTunneling(bool p_tunnel)                  { m_verbTunneling     = p_tunnel;   };
   void SetClientCertificatePreset(bool p_preset)        { m_certPreset        = p_preset;   };
   void SetClientCertificateName(const XString& p_name)  { m_certName          = p_name;     };
@@ -254,7 +252,6 @@ public:
   XString       GetServer()                 { return m_server;            }; // URL Part server
   int           GetPort()                   { return m_port;              }; // URL Part port
   BYTE*         GetBody()                   { return m_requestBody;       };
-  bool          GetSendUnicode()            { return m_sendUnicode;       };
   XString       GetAgent()                  { return m_agent;             };
   ProxyType     GetUseProxy()               { return m_useProxy;          };
   XString       GetProxy()                  { return m_proxy;             };
@@ -282,7 +279,6 @@ public:
   HPFCounter*   GetCounter()                { return &m_counter;          };
   LogAnalysis*  GetLogging()                { return m_log;               };
   unsigned      GetSslTlsSettings()         { return m_ssltls;            }; 
-  bool          GetSendBOM()                { return m_sendBOM;           };
   bool          GetVerbTunneling()          { return m_verbTunneling;     };
   bool          GetClientCertificatePreset(){ return m_certPreset;        };
   XString       GetClientCertificateName()  { return m_certName;          };
@@ -389,6 +385,7 @@ private:
   void     OnCloseSeen();
   // Processing after a send
   void     ProcessJSONResult(JSONMessage* p_msg,bool& p_result);
+  XString  GetStringFromResult(bool& p_result,bool& p_doBom);
   // Setting a client certificate on the request handle
   bool     SetClientCertificate(HINTERNET p_request);
   // Running the queue
@@ -439,9 +436,7 @@ private:
   FileBuffer*   m_buffer          { nullptr };                    // File buffer to send
   XString       m_contentType;                                    // Content MIME type to send
   XString       m_soapAction;                                     // Soap action if a SOAPMessage WebService
-  bool          m_sendUnicode     { false   };                    // Content is in Unicode-16
   bool          m_sniffCharset    { true    };                    // Sniff content charset on receive
-  bool          m_sendBOM         { false   };                    // Prepend BOM to all messages
   // Result of the call
   DWORD         m_lastError       { 0       };                    // Last error if any at all
   unsigned      m_status          { 0       };                    // Total status result of the call

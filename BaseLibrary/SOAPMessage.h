@@ -296,7 +296,7 @@ public:
   XString         GetFaultString() const;
   XString         GetFaultDetail() const;
   // Get SOAP Fault as a total string
-  XString         GetFault();
+  XString         GetFault() const;
   // WS-Reliability
   bool            GetAddressing() const;
   bool            GetReliability() const;
@@ -316,7 +316,7 @@ public:
   XString         GetBodyPart();
   XString         GetCanonicalForm(XMLElement* p_element);
   bool            GetHasInitialAction() const;
-  bool            GetHasBeenAnswered();
+  bool            GetHasBeenAnswered() const;
   const Routing&  GetRouting() const;
   XString         GetRoute(int p_index);
 
@@ -428,7 +428,7 @@ protected:
   // Get whole message encryption value
   XString         CheckMesgEncryption();
   // Get password as a custom token
-  XString         GetPasswordAsToken();
+  XString         GetPasswordAsToken() const;
 
   // DATA MEMBERS
 
@@ -969,7 +969,7 @@ SOAPMessage::GetXMLBodyPart() const
 }
 
 inline bool
-SOAPMessage::GetHasBeenAnswered()
+SOAPMessage::GetHasBeenAnswered() const
 {
   return m_request == NULL;
 }

@@ -49,7 +49,7 @@ public:
   // Initialise a HTTP server and server-session
   virtual bool Initialise() override;
   // Receive (the rest of the) incoming HTTP request
-  virtual bool ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16) override;
+  virtual bool ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encoding) override;
   // Sending response for an incoming message
   virtual void SendResponse(HTTPMessage* p_message) override;
   // Sending a response as a chunk

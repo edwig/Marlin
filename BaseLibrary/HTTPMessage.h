@@ -148,6 +148,7 @@ public:
   void SetContentType(XString p_type)           { m_contentType        = p_type;      }
   void SetContentLength(size_t p_length)        { m_contentLength      = p_length;    }
   void SetUseIfModified(bool p_ifmodified)      { m_ifmodified         = p_ifmodified;}
+  void SetEncoding(Encoding p_encoding)         { m_encoding           = p_encoding;  }
   void SetSendBOM(bool p_bom)                   { m_sendBOM            = p_bom;       }
   void SetVerbTunneling(bool p_tunnel)          { m_verbTunnel         = p_tunnel;    }
   void SetConnectionID(HTTP_CONNECTION_ID p_id) { m_connectID          = p_id;        }
@@ -155,7 +156,6 @@ public:
   void SetHasBeenAnswered()                     { m_request            = NULL;        }
   void SetChunkNumber(int p_chunk)              { m_chunkNumber        = p_chunk;     }
   void SetXMLHttpRequest(boolean p_value)       { m_XMLHttpRequest     = p_value;     }
-  void SetSendUnicode(bool p_unicode)           { m_sendUnicode        = p_unicode;   }
   void SetExtension(XString p_ext,bool p_reparse = true);
   void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
@@ -208,6 +208,7 @@ public:
   bool                GetUseIfModified()        { return m_ifmodified;                }
   PSYSTEMTIME         GetSystemTime()           { return &m_systemtime;               }
   HeaderMap*          GetHeaderMap()            { return &m_headers;                  }
+  Encoding            GetEncoding()             { return m_encoding;                  }
   bool                GetSendBOM()              { return m_sendBOM;                   }
   bool                GetVerbTunneling()        { return m_verbTunnel;                }
   HTTP_CONNECTION_ID  GetConnectionID()         { return m_connectID;                 }
@@ -216,7 +217,6 @@ public:
   Routing&            GetRouting()              { return m_routing;                   }
   unsigned            GetChunkNumber()          { return m_chunkNumber;               }
   boolean             GetXMLHttpRequest()       { return m_XMLHttpRequest;            }
-  bool                GetSendUnicode()          { return m_sendUnicode;               }
 
   XString             GetBody();
   size_t              GetBodyLength();
@@ -261,9 +261,11 @@ public:
 
   // Operators
   HTTPMessage& operator=(const JSONMessage& p_message);
+  HTTPMessage& operator=(const SOAPMessage& p_message);
 
 private:
   // TO BE CALLED FROM THE XTOR!!
+  XString DecodeCharsetAndEncoding(Encoding p_encoding,XString p_contentType,XString p_defaultContentType);
   void    ConstructBodyFromString(XString p_string,XString p_charset,bool p_withBom);
   // Parse raw URL to cracked URL data
   bool    ParseURL(XString p_url);
@@ -288,9 +290,9 @@ private:
   XString             m_user;                                         // Found user name for authentication
   XString             m_password;                                     // Found password for authentication
   bool                m_verbTunnel    { false   };                    // HTTP-VERB Tunneling used
+  Encoding            m_encoding      { Encoding::EN_ACP };           // Buffer encoding (if any known charset)
   bool                m_sendBOM       { false   };                    // BOM discovered in content block
   bool                m_readBuffer    { false   };                    // HTTP content still to be read
-  bool                m_sendUnicode   { false   };                    // Send in UTF-16 LE format
   size_t              m_contentLength { 0       };                    // Total content to read for the message
   unsigned            m_chunkNumber   { 0       };                    // Chunk number in case of transfer-encoding: chunked
   FileBuffer          m_buffer;                                       // Body or file buffer
@@ -325,7 +327,7 @@ HTTPMessage::GetBodyLength()
 inline void
 HTTPMessage::AddBody(XString p_buffer,XString p_charset /*=_T("utf-8")*/)
 {
-#ifdef UNICODE
+#ifdef _UNICODE
   if(p_charset.Compare(_T("utf-16")) == 0)
   {
     m_buffer.AddBuffer((uchar*)p_buffer.GetString(),p_buffer.GetLength() * sizeof(TCHAR));

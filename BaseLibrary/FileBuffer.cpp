@@ -230,7 +230,7 @@ FileBuffer::AddStringToBuffer(XString p_string,XString p_charset,bool p_crlf/*=t
   {
     p_string += _T("\r\n");
   }
-#ifdef UNICODE
+#ifdef _UNICODE
   BYTE* buffer = nullptr;
   int   length = 0;
   if(TryCreateNarrowString(p_string,p_charset,false,&buffer,length))

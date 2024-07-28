@@ -141,7 +141,6 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
             ,m_referrer      (p_msg->m_referrer)
             ,m_user          (p_msg->m_user)
             ,m_password      (p_msg->m_password)
-            ,m_sendUnicode   (p_msg->m_sendUnicode)
 {
   // Taking a duplicate token
   if(DuplicateTokenEx(p_msg->m_token
@@ -169,7 +168,6 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
   // Copy routing information
   m_routing = p_msg->GetRouting();
 
-
   // Copy the file buffer in case of a 'deep' copy
   // A shallow copy does not create a full buffer copy
   if(p_deep)
@@ -181,26 +179,31 @@ HTTPMessage::HTTPMessage(HTTPMessage* p_msg,bool p_deep /*=false*/)
 
 // XTOR from a SOAPServerMessage
 HTTPMessage::HTTPMessage(HTTPCommand p_command,const SOAPMessage* p_msg)
-            :m_command       (p_command)
-            ,m_request       (p_msg->GetRequestHandle())
-            ,m_cookies       (p_msg->GetCookies())
-            ,m_contentType   (p_msg->GetContentType())
-            ,m_desktop       (p_msg->GetRemoteDesktop())
-            ,m_site          (p_msg->GetHTTPSite())
-            ,m_sendBOM       (p_msg->GetSendBOM())
-            ,m_acceptEncoding(p_msg->GetAcceptEncoding())
-            ,m_status        (p_msg->GetStatus())
-            ,m_user          (p_msg->GetUser())
-            ,m_password      (p_msg->GetPassword())
-            ,m_headers       (*p_msg->GetHeaderMap())
-            ,m_url           (p_msg->GetURL())
-            ,m_cracked       (p_msg->GetCrackedURL())
-            ,m_sendUnicode   (p_msg->GetSendUnicode())
+            :m_command(p_command)
 {
+  *this = *p_msg;
+}
+
+HTTPMessage&
+HTTPMessage::operator=(const SOAPMessage& p_msg)
+{
+  m_request        = p_msg.GetRequestHandle();
+  m_cookies        = p_msg.GetCookies();
+  m_contentType    = p_msg.GetContentType();
+  m_desktop        = p_msg.GetRemoteDesktop();
+  m_site           = p_msg.GetHTTPSite();
+  m_sendBOM        = p_msg.GetSendBOM();
+  m_acceptEncoding = p_msg.GetAcceptEncoding();
+  m_status         = p_msg.GetStatus();
+  m_user           = p_msg.GetUser();
+  m_password       = p_msg.GetPassword();
+  m_headers        =*p_msg.GetHeaderMap();
+  m_url            = p_msg.GetURL();
+  m_cracked        = p_msg.GetCrackedURL();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
   // Relay ownership of the token
-  if(DuplicateTokenEx(p_msg->GetAccessToken()
+  if(DuplicateTokenEx(p_msg.GetAccessToken()
                      ,TOKEN_DUPLICATE|TOKEN_IMPERSONATE|TOKEN_ALL_ACCESS|TOKEN_READ|TOKEN_WRITE
                      ,NULL
                      ,SecurityImpersonation
@@ -211,40 +214,21 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,const SOAPMessage* p_msg)
   }
 
   // Get sender (if any) from the soap message
-  memcpy(&m_sender,const_cast<SOAPMessage*>(p_msg)->GetSender(),sizeof(SOCKADDR_IN6));
+  memcpy(&m_sender,const_cast<SOAPMessage&>(p_msg).GetSender(),sizeof(SOCKADDR_IN6));
 
   // Copy routing information
-  m_routing = p_msg->GetRouting();
+  m_routing = p_msg.GetRouting();
 
   // Take care of character encoding
-  Encoding encoding = p_msg->GetEncoding();
-  XString charset = FindCharsetInContentType(m_contentType);
-
-  if(charset.Left(6).CompareNoCase(_T("utf-16")) == 0 || p_msg->GetSendUnicode())
-  {
-    encoding = Encoding::LE_UTF16;
-  }
-
-  switch(encoding)
-  {
-    case Encoding::Default:  charset = CodepageToCharset(-1);
-                             break;
-    case Encoding::LE_UTF16: charset = "utf-16";
-                             break;
-    default:                 [[fallthrough]];
-    case Encoding::UTF8:     charset = "utf-8";
-                             break;
-  }
-
-  // Reconstruct the content type header
-  m_contentType = FindMimeTypeInContentType(m_contentType);
-  m_contentType.AppendFormat(_T("; charset=%s"),charset.GetString());
+  XString charset = DecodeCharsetAndEncoding(p_msg.GetEncoding(),m_contentType,_T("text/xml"));
 
   // Set body 
-  ConstructBodyFromString(const_cast<SOAPMessage*>(p_msg)->GetSoapMessage(),charset,p_msg->GetSendBOM());
+  ConstructBodyFromString(const_cast<SOAPMessage&>(p_msg).GetSoapMessage(),charset,p_msg.GetSendBOM());
 
   // Make sure we have a server name for host headers
   CheckServer();
+
+  return *this;
 }
 
 // XTOR from a JSONMessage
@@ -268,7 +252,6 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
   m_status         = p_msg.GetStatus();
   m_user           = p_msg.GetUser();
   m_password       = p_msg.GetPassword();
-  m_sendUnicode    = p_msg.GetSendUnicode();
   m_headers        =*p_msg.GetHeaderMap();
   memset(&m_systemtime,0,sizeof(SYSTEMTIME));
 
@@ -294,28 +277,7 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
   m_routing = p_msg.GetRouting();
 
   // Take care of character encoding
-  XString charset = FindCharsetInContentType(m_contentType);
-  Encoding encoding = p_msg.GetEncoding();
-
-  if(charset.Left(6).CompareNoCase(_T("utf-16")) == 0 || p_msg.GetSendUnicode())
-  {
-    encoding = Encoding::LE_UTF16;
-  }
-
-  switch(encoding)
-  {
-    case Encoding::Default:   charset = CodepageToCharset(-1);
-                              break;
-    case Encoding::LE_UTF16:  charset = "utf-16"; 
-                              break;
-    default:                  [[fallthrough]];
-    case Encoding::UTF8:      charset = "utf-8";  
-                              break;
-  }
-
-  // Reconstruct the content type header
-  m_contentType   = FindMimeTypeInContentType(m_contentType);
-  m_contentType.AppendFormat(_T("; charset=%s"),charset.GetString());
+  XString charset = DecodeCharsetAndEncoding(p_msg.GetEncoding(),m_contentType,_T("application/json"));
 
   // Set body 
   ConstructBodyFromString(p_msg.GetJsonMessage(),charset,p_msg.GetSendBOM());
@@ -327,12 +289,39 @@ HTTPMessage::operator=(const JSONMessage& p_msg)
 }
 
 // PRIVATE: TO BE CALLED FROM THE XTOR!!
+
+XString
+HTTPMessage::DecodeCharsetAndEncoding(Encoding p_encoding,XString p_contentType,XString p_defaultContentType)
+{
+  XString charset = FindCharsetInContentType(p_contentType);
+
+  if(charset.IsEmpty() && p_encoding == Encoding::EN_ACP)
+  {
+    charset = _T("utf-8");
+  }
+  if(charset.IsEmpty())
+  {
+    charset = CodepageToCharset((int)p_encoding);
+  }
+
+  // Reconstruct the content type header
+  m_contentType = FindMimeTypeInContentType(m_contentType);
+  if(m_contentType.IsEmpty())
+  {
+    m_contentType = p_defaultContentType;
+  }
+  m_contentType.AppendFormat(_T("; charset=%s"), charset.GetString());
+  AddHeader(HttpHeaderContentType,m_contentType);
+
+  return charset;
+}
+
 void
 HTTPMessage::ConstructBodyFromString(XString p_string,XString p_charset,bool p_withBom)
 {
   int length = 0;
 
-#ifdef UNICODE
+#ifdef _UNICODE
   // Set body 
   if(p_charset.CompareNoCase(_T("utf-16")) == 0)
   {
@@ -487,8 +476,8 @@ HTTPMessage::GetBody()
     XString contenttype = m_contentType.IsEmpty() ? GetHeader(_T("Content-Type")) : m_contentType;
     XString charset = FindCharsetInContentType(contenttype);
 
-#ifdef UNICODE
-    if(m_sendUnicode || charset.CompareNoCase(_T("utf-16")) == 0)
+#ifdef _UNICODE
+    if(charset.CompareNoCase(_T("utf-16")) == 0)
     {
       // Direct buffer copy
       answer = (LPCTSTR) buffer;
@@ -498,7 +487,7 @@ HTTPMessage::GetBody()
       TryConvertNarrowString(buffer,(int)length,charset,answer,foundBom);
     }
 #else
-    if(m_sendUnicode || charset.CompareNoCase(_T("utf-16")) == 0)
+    if(charset.CompareNoCase(_T("utf-16")) == 0)
     {
       TryConvertWideString(buffer,(int)length,_T("utf-16"),answer,foundBom);
     }
@@ -569,8 +558,8 @@ HTTPMessage::SetURL(const XString& p_url)
 void
 HTTPMessage::SetBody(XString p_body,XString p_charset /*=""*/)
 {
-#ifdef UNICODE
-  if(m_sendUnicode || p_charset.CompareNoCase(_T("utf-16")) == 0)
+#ifdef _UNICODE
+  if(p_charset.CompareNoCase(_T("utf-16")) == 0)
   {
     m_buffer.SetBuffer((uchar*) p_body.GetString(),p_body.GetLength() * sizeof(TCHAR));
   }
@@ -585,7 +574,7 @@ HTTPMessage::SetBody(XString p_body,XString p_charset /*=""*/)
     delete[] buffer;
   }
 #else
-  if(m_sendUnicode || p_charset.CompareNoCase(_T("utf-16")) == 0)
+  if(p_charset.CompareNoCase(_T("utf-16")) == 0)
   {
     BYTE* buffer = nullptr;
     int   length = 0;

@@ -299,7 +299,7 @@ HTTPRequest::ReceivedRequest()
 
   // Our charset
   XString charset;
-  bool utf16(false);
+  Encoding encoding = Encoding::EN_ACP;
 
   // If positive request ID received
   if(m_requestID)
@@ -313,12 +313,15 @@ HTTPRequest::ReceivedRequest()
 
     // Find our charset
     charset = FindCharsetInContentType(contentType);
-    utf16   = charset.CompareNoCase(_T("utf-16")) == 0;
+    if(!charset.IsEmpty())
+    {
+      encoding = (Encoding)CharsetToCodepage(charset);
+    }
 
     // Trace the request in full
     if(m_server)
     {
-      m_server->LogTraceRequest(m_request,nullptr,utf16);
+      m_server->LogTraceRequest(m_request,nullptr,encoding);
     }
   }
 
@@ -435,6 +438,7 @@ HTTPRequest::ReceivedRequest()
   m_message->SetAcceptEncoding(acceptEncoding);
   m_message->SetAllHeaders(&m_request->Headers);
   m_message->SetUnknownHeaders(&m_request->Headers);
+  m_message->SetEncoding(encoding);
 
   // Handle modified-since 
   // Rest of the request is then not needed any more
@@ -626,7 +630,7 @@ HTTPRequest::StartSendResponse()
 
   // Trace the principal response, before sending
   // Sometimes the async is so quick, we cannot trace it after the sending
-  m_server->LogTraceResponse(m_response,nullptr,m_message->GetSendUnicode());
+  m_server->LogTraceResponse(m_response,nullptr,m_message->GetEncoding());
 
   // Send the response
   ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
@@ -874,7 +878,7 @@ HTTPRequest::StartEventStreamResponse()
   }
 
   // Log&Trace what we just send
-  m_server->LogTraceResponse(m_response,m_sendBuffer,length,false);
+  m_server->LogTraceResponse(m_response,m_sendBuffer,length);
 }
 
 void
@@ -940,7 +944,7 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
   if(m_server)
   {
     USHORT chunkcount = 1;
-    m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length,false);
+    m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length);
     ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
                                               m_requestID,    // Our request
                                               flags,          // More/Last data

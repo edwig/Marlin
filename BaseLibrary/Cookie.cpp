@@ -153,7 +153,7 @@ Cookie::GetSetCookieText()
       error.Format(_T("Error %ul in WinHttpTimeFromSystemTime.\n"),GetLastError());
       throw StdException(error.GetString());
     }
-#ifdef UNICODE
+#ifdef _UNICODE
     cookie.AppendFormat(_T("; Expires=%s"),pwszTimeStr);
 #else
     XString time;

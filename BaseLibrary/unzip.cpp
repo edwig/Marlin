@@ -3846,7 +3846,7 @@ ZRESULT TUnzip::Get(int index,ZIPENTRY *ze)
   //
   ze->index=uf->num_file;
   TCHAR tfn[MAX_PATH];
-#ifdef UNICODE
+#ifdef _UNICODE
   MultiByteToWideChar(CP_UTF8,0,fn,-1,tfn,MAX_PATH);
 #else
   strcpy_s(tfn,MAX_PATH,fn);
@@ -3946,7 +3946,7 @@ ZRESULT TUnzip::Get(int index,ZIPENTRY *ze)
 
 ZRESULT TUnzip::Find(const TCHAR *tname,bool ic,int *index,ZIPENTRY *ze)
 { char name[MAX_PATH];
-#ifdef UNICODE
+#ifdef _UNICODE
   WideCharToMultiByte(CP_UTF8,0,tname,-1,name,MAX_PATH,0,0);
 #else
   strcpy_s(name,MAX_PATH,tname);

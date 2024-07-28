@@ -50,7 +50,7 @@ LPITEMIDLIST PathToPidl(XString const& path)
 
   if (SUCCEEDED(SHGetDesktopFolder(&pDesktopFolder)))
   {
-#ifdef UNICODE
+#ifdef _UNICODE
     _tcsncpy_s(olePath,path.GetString(),path.GetLength());
 #else
     MultiByteToWideChar(CP_ACP

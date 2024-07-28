@@ -732,7 +732,7 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* /*p_socket*/,HTTP_OPAQUE_ID /*p_re
 }
 
 bool       
-HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* /*p_message*/,bool /*p_utf16*/)
+HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* /*p_message*/,Encoding /*p_encoding*/)
 {
   ASSERT(false);
   ERRORLOG(ERROR_INVALID_PARAMETER,_T("ReceiveIncomingRequest in HTTPServerMarlin: Should never come to here!!"));

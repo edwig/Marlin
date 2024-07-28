@@ -101,7 +101,7 @@ PlainSocket::Initialize()
 int
 PlainSocket::FindConnectType(LPCTSTR p_host,LPCTSTR p_portname)
 {
-#ifdef UNICODE
+#ifdef _UNICODE
   ADDRINFOW  hints;
   ADDRINFOW* result;
 #else

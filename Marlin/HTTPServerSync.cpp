@@ -430,7 +430,7 @@ HTTPServerSync::RunHTTPServer()
                                                 ,request->Headers.pUnknownHeaders);
     // Our charset
     XString charset;
-    bool utf16(false);
+    Encoding encoding = Encoding::EN_ACP;
 
     // If positive request ID received
     if(request->RequestId)
@@ -444,10 +444,13 @@ HTTPServerSync::RunHTTPServer()
 
       // Find our charset
       charset = FindCharsetInContentType(contentType);
-      utf16   = charset.CompareNoCase(_T("utf-16")) == 0;
+      if(!charset.IsEmpty())
+      {
+        encoding = (Encoding)CharsetToCodepage(charset);
+      }
 
       // Trace the request in full
-      LogTraceRequest(request,nullptr,utf16);
+      LogTraceRequest(request,nullptr,encoding);
     }
 
     // Test if server already stopped, and we are here because of the stopping
@@ -575,6 +578,7 @@ HTTPServerSync::RunHTTPServer()
       message->SetContentLength((size_t)_ttoll(contentLength));
       message->SetAllHeaders(&request->Headers);
       message->SetUnknownHeaders(&request->Headers);
+      message->SetEncoding(encoding);
 
       // Handle modified-since 
       // Rest of the request is then not needed any more
@@ -809,7 +813,7 @@ HTTPServerSync::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/)
 
 // Receive incoming HTTP request
 bool
-HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16)
+HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encoding /*=Encoding::EN_ACP*/)
 {
   bool   retval    = true;
   bool   reading   = true;
@@ -893,7 +897,7 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16)
   p_message->SetReadBuffer(false);
 
   // Now also trace the request body of the message
-  LogTraceRequestBody(p_message,p_utf16);
+  LogTraceRequestBody(p_message,p_encoding);
 
   // Receiving succeeded?
   return retval;
@@ -1239,7 +1243,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   }
 
   // Possibly log and trace what we just sent
-  LogTraceResponse(&response,p_message,p_message->GetSendUnicode());
+  LogTraceResponse(&response,p_message,p_message->GetEncoding());
 
   // Remove unknown header information
   delete [] unknown;
@@ -1574,7 +1578,7 @@ HTTPServerSync::SendResponseError(PHTTP_RESPONSE p_response
   {
     DETAILLOGV(_T("SendHttpResponse (serverpage) Bytes sent: %d"),bytesSent);
     // Possibly log & trace what we just sent
-    LogTraceResponse(p_response,reinterpret_cast<uchar*>(const_cast<TCHAR*>(sending.GetString())),sending.GetLength(),false);
+    LogTraceResponse(p_response,reinterpret_cast<uchar*>(const_cast<TCHAR*>(sending.GetString())),sending.GetLength());
   }
 }
 
@@ -1647,7 +1651,7 @@ HTTPServerSync::InitEventStream(EventStream& p_stream)
   else
   {
     // Log & Trace what we just sent
-    LogTraceResponse(&p_stream.m_response,reinterpret_cast<uchar*>(init),length,false);
+    LogTraceResponse(&p_stream.m_response,reinterpret_cast<uchar*>(init),length);
   }
   return (result == NO_ERROR);
 }
@@ -1692,7 +1696,7 @@ HTTPServerSync::SendResponseEventBuffer(HTTP_OPAQUE_ID    p_requestID
   else
   {
     DETAILLOGV(_T("HttpSendResponseEntityBody [%d] bytes sent"),p_length);
-    LogTraceResponse(nullptr,reinterpret_cast<uchar*>(*p_buffer),static_cast<unsigned>(p_length),false);
+    LogTraceResponse(nullptr,reinterpret_cast<uchar*>(*p_buffer),static_cast<unsigned>(p_length));
 
     // Final closing of the connection
     if(p_continue == false)

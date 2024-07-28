@@ -206,7 +206,7 @@ public:
   // Delete a site from the remembered set of sites
   virtual bool       DeleteSite(int p_port,XString p_baseURL,bool p_force = false) = 0;
   // Receive (the rest of the) incoming HTTP request
-  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,bool p_utf16) = 0;
+  virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encoding) = 0;
   // Create a new WebSocket in the subclass of our server
   virtual WebSocket* CreateWebSocket(XString p_uri) = 0;
   // Receive the WebSocket stream and pass on the the WebSocket
@@ -320,11 +320,11 @@ public:
   HTTPSite*  FindHTTPSite(HTTPSite* p_default,const XString& p_url);
 
   // Logging and tracing: The response
-  void      LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,bool p_utf16 = false);
-  void      LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length,bool p_utf16 = false);
+  void      LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,Encoding p_encoding = Encoding::EN_ACP);
+  void      LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,unsigned p_length,Encoding p_encoding = Encoding::EN_ACP);
   // Logging and tracing: The request
-  void      LogTraceRequest(PHTTP_REQUEST p_request,HTTPMessage* p_message,bool p_utf16 = false);
-  void      LogTraceRequestBody(HTTPMessage* p_message,bool p_utf16 = false);
+  void      LogTraceRequest(PHTTP_REQUEST p_request,HTTPMessage* p_message,Encoding p_encoding = Encoding::EN_ACP);
+  void      LogTraceRequestBody(HTTPMessage* p_message,Encoding p_encoding = Encoding::EN_ACP);
 
   // Outstanding asynchronous I/O requests
   void         RegisterHTTPRequest(HTTPRequest* p_request);

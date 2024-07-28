@@ -255,7 +255,7 @@ WebSocketServer::ReceiveCloseSocket()
   HRESULT hr = m_context->GetCloseStatus(&m_closingError,&pointer,&length);
   if(SUCCEEDED(hr))
   {
-#ifdef UNICODE
+#ifdef _UNICODE
     m_closing = pointer;
 #else
     XString encoded;

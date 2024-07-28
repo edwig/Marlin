@@ -57,7 +57,6 @@
 //
 #include "pch.h"
 #include "CrackURL.h"
-#include "Encoding.h"
 #include "ConvertWideString.h"
 #include <winhttp.h>
 
@@ -301,7 +300,7 @@ CrackedURL::EncodeURLChars(XString p_text,bool p_queryValue /*=false*/)
   uchar*  buffer = nullptr;
   int     length = 0;
 
-#ifdef UNICODE
+#ifdef _UNICODE
   if(!TryCreateNarrowString(p_text,_T("utf-8"),false,&buffer,length))
   {
     return p_text;
@@ -370,7 +369,7 @@ CrackedURL::DecodeURLChars(XString p_text,bool p_queryValue /*=false*/)
       convertUTF = true;
     }
   }
-#ifdef UNICODE
+#ifdef _UNICODE
   if(convertUTF)
   {
     // Compress to real UTF-8

@@ -650,7 +650,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
     // Try to read the body / rest of the message
     // This is now done by the threadpool thread, so the central
     // server has more time to handle the incoming requests.
-    if(p_message->GetReadBuffer() && m_server->ReceiveIncomingRequest(p_message,p_message->GetSendUnicode()) == false)
+    if(p_message->GetReadBuffer() && m_server->ReceiveIncomingRequest(p_message,p_message->GetEncoding()) == false)
     {
       // Error already report to log, EOF or stream not read
       p_message->Reset();

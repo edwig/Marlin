@@ -98,7 +98,7 @@ XMLParser::PrintXmlString(const XString& p_string,bool p_utf8 /*=false*/)
 }
 
 XString
-XMLParser::PrintJsonString(const XString& p_string,Encoding p_encoding)
+XMLParser::PrintJsonString(const XString& p_string)
 {
   _TUCHAR* buffer  = new _TUCHAR[2 * (size_t)p_string.GetLength() + 4];
   _TUCHAR* pointer = buffer;
@@ -108,41 +108,31 @@ XMLParser::PrintJsonString(const XString& p_string,Encoding p_encoding)
   for(int ind = 0; ind < p_string.GetLength(); ++ind)
   {
     TCHAR ch = p_string.GetAt(ind);
-
-    if(ch < 0x80)
+    switch(ch)
     {
-      switch(ch = p_string.GetAt(ind))
-      {
-        case '\"': *pointer++ = '\\';
-                   *pointer++ = '\"';
-                   break;
-        case '\\': *pointer++ = '\\';
-                   *pointer++ = '\\';
-                   break;
-        case '\b': *pointer++ = '\\';
-                   *pointer++ = 'b';
-                   break;
-        case '\f': *pointer++ = '\\';
-                   *pointer++ = 'f';
-                   break;
-        case '\n': *pointer++ = '\\';
-                   *pointer++ = 'n';
-                   break;
-        case '\r': *pointer++ = '\\';
-                   *pointer++ = 'r';
-                   break;
-        case '\t': *pointer++ = '\\';
-                   *pointer++ = 't';
-                   break;
-        default:   *pointer++ = ch;
-                   break;
-      }
-    }
-    else
-    {
-      // Plainly add the character
-      // Windows-1252 encoding or UTF-8 encoding
-      *pointer++ = ch;
+      case '\"':  *pointer++ = '\\';
+                  *pointer++ = '\"';
+                  break;
+      case '\\':  *pointer++ = '\\';
+                  *pointer++ = '\\';
+                  break;
+      case '\b':  *pointer++ = '\\';
+                  *pointer++ = 'b';
+                  break;
+      case '\f':  *pointer++ = '\\';
+                  *pointer++ = 'f';
+                  break;
+      case '\n':  *pointer++ = '\\';
+                  *pointer++ = 'n';
+                  break;
+      case '\r':  *pointer++ = '\\';
+                  *pointer++ = 'r';
+                  break;
+      case '\t':  *pointer++ = '\\';
+                  *pointer++ = 't';
+                  break;
+      default:    *pointer++ = ch;
+                  break;
     }
   }
   // Closing
@@ -151,18 +141,6 @@ XMLParser::PrintJsonString(const XString& p_string,Encoding p_encoding)
 
   XString result(buffer);
   delete [] buffer;
-#ifdef UNICODE
-  (void)p_encoding;
-#else
-  switch(p_encoding)
-  {
-    case Encoding::UTF8:     result = EncodeStringForTheWire(result,_T("utf-8"));    break;
-    case Encoding::LE_UTF16: result = EncodeStringForTheWire(result,_T("utf-16"));   break;
-//  case Encoding::ISO88591: result = EncodeStringForTheWire(result,_T("iso88591")); break;
-    case Encoding::Default:   // Fall through
-    default:                 break;
-  }
-#endif
   return result;
 }
 
@@ -191,21 +169,6 @@ XMLParser::ParseMessage(XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_W
   }
   // Initialize the parsing pointer
   m_pointer = (_TUCHAR*) p_message.GetString();
-
-  // Check for Byte-Order-Mark first
-  Encoding charset = Encoding::Default;
-  unsigned int skip = 0;
-  BOMOpenResult bomResult = WinFile::DefuseBOM(reinterpret_cast<const unsigned char*>(m_pointer),charset,skip);
-
-  if(bomResult != BOMOpenResult::NoEncoding)
-  {
-    m_message->m_encoding = charset;
-    m_message->m_sendBOM  = true;
-    // Skip past BOM
-    m_pointer += skip;
-    // UTF-8 NOT detected earlier by WinFile: Do it ourselves!!
-    m_utf8 = (charset == Encoding::UTF8);
-  }
 
   // MAIN PARSING LOOP
   try
@@ -389,35 +352,13 @@ XMLParser::ParseDeclaration()
     }
     else if(attributeName.Compare(_T("encoding")) == 0)
     {
-      if(value.CompareNoCase(_T("utf-8")) == 0)
+      m_encoding = value;
+      // Most commonly 'UTF-8'
+      if(CharsetToCodepage(value) < 0)
       {
-        if(m_message->GetEncoding() != Encoding::UTF8)
-        {
-          // UTF-8 Not detected earlier by WinFile or by Byte-Order-Mark
-          // So we choose to believe the header and scan for UTF-8 anyhow
-          m_utf8 = true;
-          m_message->m_encoding = Encoding::UTF8;
-        }
-      }
-      else if(value.Left(6).CompareNoCase(_T("utf-16")) == 0)
-      {
-        m_message->SetSendUnicode(true);
-        m_message->m_encoding = Encoding::LE_UTF16;
-      }
-      else
-      {
-        // If it was send in the current codepage, use that
-        // Most commonly 'windows-1252' here in western-Europe 
-        if(GetACP() == (UINT) CharsetToCodepage(value))
-        {
-          m_message->m_encoding = Encoding::Default;
-        }
-        else
-        {
-          XString message;
-          message.Format(_T("Unknown XML character encoding: %s"),value.GetString());
-          SetError(XmlError::XE_NoError,message.GetString(),false);
-        }
+        XString message;
+        message.Format(_T("Unknown XML character encoding: %s"),value.GetString());
+        SetError(XmlError::XE_NoError,message.GetString(),false);
       }
     }
     else if(attributeName.Compare(_T("standalone")) == 0)
@@ -565,10 +506,6 @@ XMLParser::ParseText()
   // Add to current element
   if(m_lastElement)
   {
-    if(m_utf8)
-    {
-      value = DecodeStringFromTheWire(value);
-    }
     m_lastElement->SetValue(value);
   }
 }
@@ -728,10 +665,6 @@ XMLParser::GetIdentifier(XString& p_identifier)
       }
       else break;
     }
-    if(m_utf8)
-    {
-      p_identifier = DecodeStringFromTheWire(p_identifier);
-    }
   }
   return result;
 }
@@ -754,11 +687,6 @@ XMLParser::GetQuotedString()
       result += ValueChar();
     }
     NeedToken(delim);
-
-    if(m_utf8)
-    {
-      result = DecodeStringFromTheWire(result);
-    }
   }
   return result;
 }

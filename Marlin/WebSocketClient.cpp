@@ -333,7 +333,7 @@ WebSocketClient::ReceiveCloseSocket()
     else
     {
       reason[received] = 0;
-#ifdef UNICODE
+#ifdef _UNICODE
       bool foundBom(false);
       TryConvertNarrowString(reason,received,_T(""),m_closing,foundBom);
 #else

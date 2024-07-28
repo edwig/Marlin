@@ -151,7 +151,7 @@ public:
   ~WinFile();
 
   // OPERATIONS ON THE FILE SYSTEM
-  bool      Open(DWORD p_flags = winfile_read,FAttributes p_attribs = FAttributes::attrib_none,Encoding p_encoding = EncodingDefault);
+  bool      Open(DWORD p_flags = winfile_read,FAttributes p_attribs = FAttributes::attrib_none,Encoding p_encoding = Encoding::UTF8);
   bool      Close(bool p_flush = false);
   bool      Create(FAttributes p_attribs = FAttributes::attrib_normal);
   bool      CreateDirectory();
@@ -237,6 +237,7 @@ public:
   bool      GetIsReadOnly();
   bool      GetIsDirectory();
   Encoding  GetEncoding();
+  bool      GetFoundBOM();
 
   // FUNCTIONS
 
@@ -332,7 +333,7 @@ private:
   bool      WriteEncodingBOM();
   // Convert Big-Endian (Blefuscu) to Little-Endian (Lilliput)
   void        BlefuscuToLilliput(std::string& p_gulliver);
-#ifdef UNICODE
+#ifdef _UNICODE
   CString     ExplodeString(const std::string& p_string,unsigned p_codepage);
   std::string ImplodeString(const     CString& p_string,unsigned p_codepage);
 #endif
@@ -341,8 +342,9 @@ private:
   // The file and open actions
   CString     m_filename;                           // Name of the file (if any)
   HANDLE      m_file         { nullptr };           // Handle to the OS file
-  DWORD       m_openMode     { FFlag::no_mode };    // How the file was opened
-  Encoding    m_encoding     { Encoding::Default};  // Encoding found by BOM
+  DWORD       m_openMode     { FFlag::no_mode   };  // How the file was opened
+  Encoding    m_encoding     { Encoding::EN_ACP };  // Encoding found by BOM
+  bool        m_foundBOM     { false };             // Found a BOM when opening file
   // Page buffer cache
   uchar*      m_pageBuffer   { nullptr };           // PB: Text mode page buffer
   uchar*      m_pagePointer  { nullptr };           // PP: Pointer in the page buffer

@@ -451,7 +451,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,XString p_reason)
     return true;
   }
 
-#ifdef UNICODE
+#ifdef _UNICODE
   pointer = p_reason.GetString();
 #else
   if(TryCreateWideString(p_reason,_T(""),false,&buffer,length))
@@ -509,7 +509,7 @@ WebSocketServerIIS::ReceiveCloseSocket()
   if(SUCCEEDED(hr))
   {
     XString encoded;
-#ifdef UNICODE
+#ifdef _UNICODE
     encoded = pointer;
 #else
     bool foundBom = false;

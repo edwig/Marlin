@@ -208,7 +208,7 @@ JSONPointer::GetResultForceToString(bool p_whitespace /*=false*/)
   }
   if(value)
   {
-    result = value->GetAsJsonString(p_whitespace,Encoding::Default,0);
+    result = value->GetAsJsonString(p_whitespace,0);
   }
   return result;
 }
