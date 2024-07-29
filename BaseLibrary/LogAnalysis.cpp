@@ -383,14 +383,14 @@ LogAnalysis::Initialisation()
                   ,Encoding::UTF8);
       if(m_file.GetIsOpen())
       {
-        // Give up. Cannot create a logfile
-        m_logLevel = HLL_NOLOG;
-        return;
+        // Alternative file created
+        m_logFileName = file;
       }
       else
       {
-        // Alternative file created
-        m_logFileName = file;
+        // Give up. Cannot create a logfile
+        m_logLevel = HLL_NOLOG;
+        return;
       }
     }
   }
@@ -497,7 +497,7 @@ LogAnalysis::AnalysisLog(LPCTSTR p_function,LogType p_type,bool p_doFormat,LPCTS
       Flush(false);
     }
   }
-  else if(m_doEvents)
+  if(m_doEvents)
   {
     WriteEvent(m_eventLog,p_type,logBuffer);
     result = true;
@@ -524,7 +524,17 @@ LogAnalysis::WriteEvent(HANDLE p_eventLog,LogType p_type,XString& p_buffer)
   LPCTSTR lpszStrings[2];
   lpszStrings[0] = p_buffer.GetString();
   lpszStrings[1] = nullptr;
-  ReportEvent(p_eventLog,static_cast<WORD>(p_type),0,0,NULL,1,0,lpszStrings,0);
+
+  WORD type = EVENTLOG_INFORMATION_TYPE;
+  switch(p_type)
+  {
+    case LogType::LOG_TRACE:type = EVENTLOG_INFORMATION_TYPE; break;
+    case LogType::LOG_INFO: type = EVENTLOG_INFORMATION_TYPE; break;
+    case LogType::LOG_ERROR:type = EVENTLOG_ERROR_TYPE;       break;
+    case LogType::LOG_WARN: type = EVENTLOG_WARNING_TYPE;     break;
+  }
+
+  ReportEvent(p_eventLog,type,0,0,NULL,1,0,lpszStrings,0);
 }
 
 // Hexadecimal view of an object added to the logfile
@@ -862,6 +872,26 @@ LogAnalysis::RunLogAnalysis()
 void
 LogAnalysis::AppendDateTimeToFilename()
 {
+  XString file(m_logFileName);
+  XString extension;
+  XString pattern;
+
+  file.MakeLower();
+  int lastPoint = file.ReverseFind('.');
+  int lastSlash = file.ReverseFind('\\');
+  if(lastPoint > 0 && (lastPoint > lastSlash))
+  {
+    extension = file.Mid(lastPoint);
+    pattern   = _T("*") + extension;
+    file      = file.Left(lastPoint);
+  }
+  else
+  {
+    // No extension found in the logfile filename
+    return;
+  }
+
+  // Append timestamp to the filename (before extension)
   XString append;
   __timeb64 now;
   struct tm today;
@@ -877,24 +907,20 @@ LogAnalysis::AppendDateTimeToFilename()
                 ,today.tm_sec
                 ,now.millitm);
 
-  // Finding the .txt extension
-  XString file(m_logFileName);
-  file.MakeLower();
-  int pos = file.Find(_T(".txt"));
-  if(pos > 0)
-  {
-    m_logFileName = m_logFileName.Left(pos);
-    RemoveLastMonthsFiles(today);
-    RemoveLogfilesKeeping();
-    m_logFileName += append;
-  }
+  // Perform the rotation by deleting older logfiles
+  // Remove files from two months ago and with a maximum of m_keepfiles
+  RemoveLastMonthsFiles(file,pattern,today);
+  RemoveLogfilesKeeping(file,pattern);
+
+  // Constructing the final logfile filename
+  m_logFileName = file + append;
 }
 
 // Contrary to the name, it removes the files from TWO months ago
 // This leaves time on the verge of a new month not to delete yesterdays files
 // But it will eventually cleanup the servers log directories.
 void
-LogAnalysis::RemoveLastMonthsFiles(struct tm& p_today)
+LogAnalysis::RemoveLastMonthsFiles(XString p_filename,XString p_pattern,struct tm& p_today)
 {
   // Go two months back
   p_today.tm_mon -= 2;
@@ -910,7 +936,7 @@ LogAnalysis::RemoveLastMonthsFiles(struct tm& p_today)
                 ,p_today.tm_year + 1900
                 ,p_today.tm_mon  + 1);
 
-  XString pattern = m_logFileName + append + _T("*.txt");
+  XString pattern = p_filename + append + p_pattern;
   WinFile file(pattern);
   XString direct = file.GetFilenamePartDirectory();
 
@@ -936,12 +962,12 @@ LogAnalysis::RemoveLastMonthsFiles(struct tm& p_today)
 }
 
 void
-LogAnalysis::RemoveLogfilesKeeping()
+LogAnalysis::RemoveLogfilesKeeping(XString p_filename,XString p_pattern)
 {
   std::vector<XString> map;
 
   // Getting a pattern to read in a directory
-  XString pattern = m_logFileName + _T("*.txt");
+  XString pattern = p_filename + p_pattern;
   WinFile filename(pattern);
   XString direct = filename.GetFilenamePartDirectory();
 

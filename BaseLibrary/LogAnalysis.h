@@ -166,8 +166,8 @@ private:
   void    Initialisation();
   void    ReadConfig();
   void    AppendDateTimeToFilename();
-  void    RemoveLastMonthsFiles(struct tm& today);
-  void    RemoveLogfilesKeeping();
+  void    RemoveLastMonthsFiles(XString p_file,XString p_pattern,struct tm& today);
+  void    RemoveLogfilesKeeping(XString p_file,XString p_pattern);
   XString CreateUserLogfile(XString p_filename);
   // Writing out a log line
   void    Flush(bool p_all);

@@ -2304,10 +2304,10 @@ HTTPClient::Send(SOAPMessage* p_msg)
   AddMessageHeaders(p_msg);
 
   // Apply the SOAPAction header value to the appropriate HTTP header
+  XString soapAction(m_soapAction.IsEmpty() ? p_msg->GetSoapAction() : m_soapAction);
   if(p_msg->GetSoapVersion() < SoapVersion::SOAP_12)
   {
     // Create a version 1.1 SOAPAction header value
-    XString soapAction(m_soapAction);
     if(soapAction.IsEmpty())
     {
       soapAction += p_msg->GetSoapAction();
@@ -2329,7 +2329,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
   else // SOAP 1.2
   {
-    m_contentType = SetFieldInHTTPHeader(m_contentType,_T("action"),m_soapAction);
+    m_contentType = SetFieldInHTTPHeader(m_contentType,_T("action"),soapAction);
   }
 
   // Set cookies
