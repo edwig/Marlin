@@ -83,8 +83,10 @@ public:
   int  SendChannel();
   // Process the receiving part of the queue
   int  Receiving();
-  // Sanity check on channel
+  // Sanity check on channel (sockets only)
   void CheckChannel();
+  // Sanity check on channel
+  bool CheckChannelPolicy();
   // Post a new event, giving a new event numerator
   int  PostEvent(XString p_payload,XString p_sender,EvtType p_type = EvtType::EV_Message,XString p_typeName = _T(""));
   // Flushing a channel directly
@@ -150,6 +152,7 @@ private:
   EventQueue          m_polQueue;
   int                 m_maxNumber   { 0 };
   int                 m_minNumber   { 0 };
+  bool                m_usePolling  { false };
   // All incoming events from the client
   EventQueue          m_inQueue;
   bool                m_openSeen    { false };

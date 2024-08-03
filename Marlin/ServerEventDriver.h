@@ -134,6 +134,8 @@ public:
   bool  StartEventDriver();
   // Stopping the event driver
   bool  StopEventDriver();
+  // Check the event channel for proper working
+  bool  CheckChannelPolicy(int m_channel);
 
   // Flush messages as much as possible for a channel
   bool  FlushChannel(XString p_cookie,XString p_token);

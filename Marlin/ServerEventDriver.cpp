@@ -231,6 +231,20 @@ ServerEventDriver::SetChannelPolicy(int              p_channel
   return false;
 }
 
+// Check the event channel for proper working
+bool
+ServerEventDriver::CheckChannelPolicy(int m_channel)
+{
+  ChannelMap::iterator it = m_channels.find(m_channel);
+
+  if(it != m_channels.end())
+  {
+    return it->second->CheckChannelPolicy();
+  }
+  // No channel found -> Error
+  return false;
+}
+
 // Flush messages as much as possible for a channel
 bool
 ServerEventDriver::FlushChannel(XString p_cookie,XString p_token)

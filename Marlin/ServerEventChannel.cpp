@@ -197,6 +197,7 @@ ServerEventChannel::PlaceInLongPollingQueue(LTEvent* p_event)
   {
     m_minNumber = p_event->m_number;
   }
+  m_usePolling = true;
 }
 
 bool
@@ -302,6 +303,16 @@ ServerEventChannel::GetClientCount()
 bool 
 ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket,bool p_check /*=false*/)
 {
+  if(m_policy != EVChannelPolicy::DP_Binary         &&
+     m_policy != EVChannelPolicy::DP_Immediate_S2C  &&
+     m_policy != EVChannelPolicy::DP_TwoWayMessages &&
+     m_policy != EVChannelPolicy::DP_SureDelivery)
+  {
+    // Policy breach!
+    WARNINGLOG(_T("Tried to start WebSocket without proper policy on channel: %s"),m_name.GetString());
+    return false;
+  }
+
   // Getting the senders URL + Citrix desktop
   XString registration;
   XString address = SocketToServer(p_message->GetSender());
@@ -409,6 +420,16 @@ ServerEventChannel::RegisterNewStream(HTTPMessage* p_message,EventStream* p_stre
     }
   }
 
+  if(m_policy != EVChannelPolicy::DP_HighSecurity   &&
+     m_policy != EVChannelPolicy::DP_Immediate_S2C  &&
+     m_policy != EVChannelPolicy::DP_NoSockets      &&
+     m_policy != EVChannelPolicy::DP_SureDelivery)
+  {
+    // Policy breach!
+    WARNINGLOG(_T("Tried to start SSE stream without proper policy on channel: %s"),m_name.GetString());
+    return false;
+  }
+
   // Getting the senders URL + Citrix desktop
   XString registration;
   XString address = SocketToServer(p_message->GetSender());
@@ -459,6 +480,18 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
       return false;
     }
   }
+  if(m_policy != EVChannelPolicy::DP_Disconnected   &&
+     m_policy != EVChannelPolicy::DP_TwoWayMessages &&
+     m_policy != EVChannelPolicy::DP_NoSockets      &&
+     m_policy != EVChannelPolicy::DP_SureDelivery)
+  {
+    // Policy breach!
+    WARNINGLOG(_T("Tried to send a LongPolling SOAP message without proper policy on channel: %s"), m_name.GetString());
+    return false;
+  }
+  // Long polling now in use
+  m_usePolling = true;
+
   bool    close   = p_message->GetParameterBoolean(_T("CloseChannel"));
   int     acknl   = p_message->GetParameterInteger(_T("Acknowledged"));
   XString message = p_message->GetParameter(_T("Message"));
@@ -1071,7 +1104,7 @@ void
 ServerEventChannel::CheckChannel()
 {
   // Only check if we do sockets
-  if(((m_current & EDT_Sockets) == 0) || m_outQueue.empty())
+  if(((m_current & EDT_Sockets) == 0) || m_sockets.empty())
   {
     return;
   }
@@ -1103,4 +1136,26 @@ ServerEventChannel::CheckChannel()
     // Next socket
     ++it;
   }
+}
+
+// Sanity check on channel
+bool
+ServerEventChannel::CheckChannelPolicy()
+{
+  CheckChannel();
+
+  switch(m_policy)
+  {
+    case EVChannelPolicy::DP_NoPolicy:        return false;                 // Wrong! Must have a policy to work
+    case EVChannelPolicy::DP_Binary:          return !m_sockets.empty();    // Must have sockets to work
+    case EVChannelPolicy::DP_HighSecurity:    return !m_streams.empty();    // Must have streams to work
+    case EVChannelPolicy::DP_Disconnected:    return  m_sockets.empty() && m_streams.empty();   // Disconnected messages only (polling)
+    case EVChannelPolicy::DP_Immediate_S2C:   return !m_sockets.empty() || !m_streams.empty();  // Must have sockets or streams to work
+    case EVChannelPolicy::DP_TwoWayMessages:  return !m_sockets.empty() || m_usePolling;        // Must have socckets or polling to work
+    case EVChannelPolicy::DP_NoSockets:       return !m_streams.empty() || m_usePolling;        // Must have streams or polling to work
+    case EVChannelPolicy::DP_SureDelivery:    return !m_sockets.empty() ||                      // Must have sockets or streams or polling to work
+                                                     !m_streams.empty() ||
+                                                      m_usePolling;         
+  };
+  return false;
 }
