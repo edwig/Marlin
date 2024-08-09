@@ -367,6 +367,10 @@ ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket
 
   // We now do sockets
   m_current = (EventDriverType)(m_current | EDT_Sockets);
+
+  // Reset close seen
+  m_closeSeen = false;
+
   return true;
 }
 
@@ -389,9 +393,23 @@ ServerEventChannel::OnOpenSocket(const WebSocket* p_socket)
 void
 ServerEventChannel::OnCloseSocket(const WebSocket* p_socket)
 {
-  // NO LOCK HERE ON m_sockets
-  // Just register the new state
-  if(m_sockets.size() == 1 && p_socket == m_sockets.front().m_socket)
+  AutoCritSec lock(&m_lock);
+
+  for(AllSockets::iterator it = m_sockets.begin(); it != m_sockets.end(); ++it)
+  {
+    if(it->m_socket == p_socket)
+    {
+      // Close and remove the socket
+      CloseSocket(it->m_socket);
+      it = m_sockets.erase(it);
+
+      // Push "OnClose" for web application to handle
+      OnClose(_T(""));
+      break;
+    }
+  }
+  // Register the new state
+  if(m_sockets.empty())
   {
     m_closeSeen = true;
   }
@@ -455,6 +473,10 @@ ServerEventChannel::RegisterNewStream(HTTPMessage* p_message,EventStream* p_stre
 
   // SSE Channels have no client messages, so we generate one ourselves
   OnOpen(XString(_T("Started: ")) + p_message->GetURL().GetString());
+
+  // Reset close seen
+  m_closeSeen = false;
+
   return true;
 }
 
@@ -534,6 +556,11 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
       }
     }
     return true;
+  }
+  else
+  {
+    // Reset close seen
+    m_closeSeen = false;
   }
 
   // We are now doing long-polling
@@ -643,13 +670,20 @@ ServerEventChannel::SendEventToSockets(LTEvent* p_event)
           ++it; // Next socket
           continue;
         }
+        // Check if the socket was closed on the other side
+        USHORT  code = 0;
+        XString reason;
+        it->m_socket->GetCloseSocket(code,reason);
+
         // See if it was closed by the client side
-        if(!it->m_socket->IsOpenForWriting())
+        if(code > 0 || !it->m_socket->IsOpenForWriting())
         {
           CloseSocket(it->m_socket);
 
           AutoCritSec lock(&m_lock);
           it = m_sockets.erase(it);
+          // Push "OnClose" for web application to handle
+          OnClose(_T(""));
           continue;
         }
         // Make sure channel is now open on the server side and 'in-use'
@@ -715,6 +749,16 @@ ServerEventChannel::SendEventToStreams(LTEvent* p_event)
       if(p_event->m_sent && (p_event->m_sent != it->m_sender))
       {
         ++it; // Next stream
+        continue;
+      }
+
+      // Check if the stream is still open
+      // Could be closed by the server heartbeat
+      if (!m_server->HasEventStream(it->m_stream))
+      {
+        it = m_streams.erase(it);
+        // Push "OnClose" for web application to handle
+        OnClose(_T(""));
         continue;
       }
 
@@ -1099,15 +1143,11 @@ ServerEventChannel::Receiving()
   return received;
 }
 
-// Sanity check on websocket channel
+// Sanity check on the channel
 void 
 ServerEventChannel::CheckChannel()
 {
-  // Only check if we do sockets
-  if(((m_current & EDT_Sockets) == 0) || m_sockets.empty())
-  {
-    return;
-  }
+  AutoCritSec lock(&m_lock);
 
   // See if we must close sockets
   AllSockets::iterator it = m_sockets.begin();
@@ -1115,12 +1155,15 @@ ServerEventChannel::CheckChannel()
   {
     try
     {
+      USHORT code = 0;
+      XString reason;
+      it->m_socket->GetCloseSocket(code,reason);
+
       // See if it was closed by the client side
-      if(it->m_open == false || !it->m_socket->IsOpenForWriting())
+      if(it->m_open == false || code > 0 || !it->m_socket->IsOpenForWriting())
       {
         CloseSocket(it->m_socket);
 
-        AutoCritSec lock(&m_lock);
         it = m_sockets.erase(it);
         // Push "OnClose" for web application to handle
         OnClose(_T(""));
@@ -1136,12 +1179,41 @@ ServerEventChannel::CheckChannel()
     // Next socket
     ++it;
   }
+
+  // See if we must close streams
+  AllStreams::iterator st = m_streams.begin();
+  while(st != m_streams.end())
+  {
+    try
+    {
+      // Check if the stream is still open
+      // Could be closed by the server heartbeat
+      if(!m_server->HasEventStream(st->m_stream))
+      {
+        st = m_streams.erase(st);
+        // Push "OnClose" for web application to handle
+        OnClose(_T(""));
+        continue;
+      }
+    }
+    catch (StdException& ex)
+    {
+      ERRORLOG(ERROR_INVALID_HANDLE, _T("Invalid SSE stream registration: " + ex.GetErrorMessage()));
+      st = m_streams.erase(st);
+      continue;
+    }
+    // Next stream
+    ++st;
+  }
 }
 
 // Sanity check on channel
 bool
 ServerEventChannel::CheckChannelPolicy()
 {
+  AutoCritSec lock(&m_lock);
+
+  // Overdue closing of streams and sockets
   CheckChannel();
 
   switch(m_policy)

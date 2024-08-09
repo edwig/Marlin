@@ -56,6 +56,10 @@ public:
   virtual bool RegisterSocket(HTTPMessage* p_message) override;
   // Perform the server handshake
   virtual bool ServerHandshake(HTTPMessage* p_message) override;
+  // DETECT and decoded close connection (use in 'OnClose')
+  virtual bool GetCloseSocket(USHORT& p_code,XString& p_reason) override;
+  // Detected a closing status on read-completion
+  virtual void SetClosingStatus(USHORT p_code) override;
 
   // To be called for ASYNC I/O completion!
   void    SocketReader(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);
