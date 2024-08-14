@@ -858,7 +858,7 @@ HTTPClient::SetBody(const XString& p_body,const XString p_charset /*=_T("utf-8")
   {
     if(p_charset.Compare(_T("utf-16")) == 0)
     {
-      return TryCreateWideString(p_body,p_charset,false,&m_requestBody,(int&)m_bodyLength);
+      return TryCreateWideString(p_body,_T(""), false, &m_requestBody, (int&)m_bodyLength);
     }
     body = EncodeStringForTheWire(p_body.GetString(),p_charset);
   }
@@ -2345,6 +2345,10 @@ HTTPClient::Send(SOAPMessage* p_msg)
   // Now go send our XML (Never redirected)
   bool result = Send();
 
+  // Process our answer
+  p_msg->Reset();
+  p_msg->SetStatus(m_status);
+
   // Getting the SOAP as a full string
   bool doBom(false);
   XString answer = GetStringFromResult(result,doBom);
@@ -2356,10 +2360,6 @@ HTTPClient::Send(SOAPMessage* p_msg)
   {
     p_msg->SetFault(_T("Server"),_T("Charset"),answer,_T("Possibly unknown UNICODE charset, or non-standard machine charset"));
   }
-
-  // Process our answer
-  p_msg->Reset();
-  p_msg->SetStatus(m_status);
 
   // Process the SOAP action
   XString incomingAction = p_msg->GetSoapAction();
@@ -3675,6 +3675,7 @@ HTTPClient::SetClientCertificateThumbprint(const XString& p_store,const XString&
       if(!m_certName.IsEmpty())
       {
         result = true;
+        m_certPreset = true;
         DETAILLOG(_T("Client certificate set [%s:%s]"),m_certStore.GetString(),m_certName.GetString());
       }
       else

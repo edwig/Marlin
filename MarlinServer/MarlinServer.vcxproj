@@ -250,7 +250,7 @@ copy MarlinServer.config $(OutDir)</Command>
     </Link>
     <PostBuildEvent>
       <Command>echo copy MarlinServer.config $(OutDir)
-copy MarlinServer.config $(OutDir)
+copy MarlinServer.config.SYNC $(OutDir)MarlinServer.config
 echo copy Marlin.config $(OutDir)
 copy marlin.config $(OutDir)</Command>
     </PostBuildEvent>

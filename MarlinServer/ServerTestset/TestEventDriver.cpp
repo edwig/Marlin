@@ -76,32 +76,38 @@ TestMarlinServer::IncomingEvent(LTEvent* p_event)
   text += p_event->m_payload;
   qprintf(text);
 
-  PostEventsToDrivers();
+  if(p_event->m_type == EvtType::EV_Open)
+  {
+    PostEventsToDrivers(text);
+  }
 }
 
 void
-TestMarlinServer::PostEventsToDrivers()
+TestMarlinServer::PostEventsToDrivers(CString p_event)
 {
-  static bool mustsent = true;
-
-  if(mustsent)
+  CString channel;
+  int pos = p_event.ReverseFind('/');
+  if(pos)
   {
-    XString payload;
-    for(int channel = 1; channel <= 3; ++channel)
+    channel = p_event.Mid(pos + 1);
+  }
+
+  int chan = 0;
+  if(channel.CompareNoCase(_T("firstsession_123"))  == 0) chan = 1;
+  if(channel.CompareNoCase(_T("secondsession_456")) == 0) chan = 2;
+  if(channel.Find(_T("[Open]")) >= 0) chan = 3;
+
+  for(int ind = 0; ind < NUM_TEST; ++ind)
+  {
+    CString payload;
+    payload.Format(_T("Testing event number [%d] to channel [%d]"),ind,chan);
+    switch (chan)
     {
-      for(int ind = 0; ind < NUM_TEST; ++ind)
-      {
-        payload.Format(_T("Testing event number [%d] to channel [%d]"),ind,channel);
-        switch (channel)
-        {
-          case 1: m_driver.PostEvent(m_channel1, payload); break;
-          case 2: m_driver.PostEvent(m_channel2, payload); break;
-          case 3: m_driver.PostEvent(m_channel3, payload); break;
-        }
-      }
+      case 1: m_driver.PostEvent(m_channel1, payload); break;
+      case 2: m_driver.PostEvent(m_channel2, payload); break;
+      case 3: m_driver.PostEvent(m_channel3, payload); break;
     }
   }
-  mustsent = false;
 }
 
 int

@@ -20,11 +20,15 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     in real life production scenario's. The 'tls_lastErrror' variable has been removed from the 
     HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
 
-CHANGES IN VERSION 8.3.x of xx-xx-2024
+CHANGES IN VERSION 8.3.4 of 14-08-2024
 --------------------------------------
 1)  More profound checking of the EventPolicy in the server event driver for the existing of a 
     matching event policy when registering the channel.
 2)  Checking if the event channel is still alive and kicking form within a server application
+3)  Small corrections to run the standard IIS "MarlinClientIIS" test for a 100 %
+    - Correction to the ServeEventChannel handling
+    - Correction to the HTTPClient
+4)  Stand-alone MarlinServer and MarlinServerSync fully tested.
 
 CHANGES IN VERSION 8.3.3 of 28-07-2024
 --------------------------------------

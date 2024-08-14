@@ -2184,6 +2184,10 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,En
     {
       TraceResponse(p_response);
     }
+    if(!p_message)
+    {
+      return;
+    }
 
     FileBuffer* filebuffer = p_message->GetFileBuffer();
     if (filebuffer && filebuffer->GetLength())

@@ -1088,9 +1088,12 @@ HTTPRequest::Finalize()
 void 
 HTTPRequest::AddRequestString(XString p_string,LPCSTR& p_buffer,USHORT& p_size)
 {
-  p_size   = (USHORT) p_string.GetLength();
-  p_buffer = new char[p_size + 1];
+  AutoCSTR str(p_string);
+  int size = str.size();
+  p_buffer = new char[size + 1];
+  strncpy_s((LPTSTR)p_buffer,size + 1,str.cstr(),size);
   m_strings.push_back(p_buffer);
+  p_size = (USHORT) size;
 }
 
 // Add a well known HTTP header to the response structure
@@ -1124,15 +1127,16 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
   unsigned ind = 0;
   for(auto& header : p_headers)
   {
-    AutoCSTR name(header.m_name);
-    header.m_nameStr = name.grab();
-    m_unknown[ind].NameLength = (USHORT) name.size();
-    m_unknown[ind].pName      = header.m_nameStr;
+    LPCSTR buffer = nullptr;
+    USHORT size   = 0;
 
-    AutoCSTR value(header.m_value);
-    header.m_valueStr = value.grab();
-    m_unknown[ind].RawValueLength = (USHORT) value.size();
-    m_unknown[ind].pRawValue      = header.m_valueStr;
+    AddRequestString(header.m_name,buffer,size);
+    m_unknown[ind].NameLength = size;
+    m_unknown[ind].pName      = buffer;
+
+    AddRequestString(header.m_value,buffer,size);
+    m_unknown[ind].RawValueLength = size;
+    m_unknown[ind].pRawValue      = buffer;
 
     // next header
     ++ind;

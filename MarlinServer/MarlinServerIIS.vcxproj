@@ -202,6 +202,13 @@
       <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;bcrypt.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\;$(SolutionDir)Bin$(Configuration)_$(Platform)\</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>echo copy MarlinServer.config $(OutDir)
+copy MarlinServer.config.IIS $(OutDir)MarlinServer.config
+echo copy Marlin.config $(OutDir)
+copy marlin.config $(OutDir)</Command>
+      <Message>Copy marlin.config to the output dir in order to test SSL certificate connection</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

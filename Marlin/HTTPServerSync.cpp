@@ -923,16 +923,19 @@ HTTPServerSync::AddUnknownHeaders(UKHeaders& p_headers)
   PHTTP_UNKNOWN_HEADER unknown = new HTTP_UNKNOWN_HEADER[p_headers.size()];
 
   unsigned ind = 0;
+  unsigned len = 0;
   for(auto& header : p_headers)
   {
     AutoCSTR name(header.m_name);
+    len = name.size();
     header.m_nameStr = name.grab();
-    unknown[ind].NameLength = (USHORT)name.size();
+    unknown[ind].NameLength = (USHORT)len;
     unknown[ind].pName      = header.m_nameStr;
 
     AutoCSTR value(header.m_value);
+    len = value.size();
     header.m_valueStr = value.grab();
-    unknown[ind].RawValueLength = (USHORT)value.size();
+    unknown[ind].RawValueLength = (USHORT)len;
     unknown[ind].pRawValue      = header.m_valueStr;
 
     // next header
@@ -1193,13 +1196,20 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   // Sync server providing our own error page
   if(totalLength == 0 && status >= HTTP_STATUS_BAD_REQUEST)
   {
+    CString page;
+    CString reason = GetHTTPStatusText(status);
+
     if(status >= HTTP_STATUS_SERVER_ERROR)
     {
-      buffer->SetBuffer(reinterpret_cast<uchar*>(const_cast<TCHAR*>(m_serverErrorPage.GetString())),m_serverErrorPage.GetLength());
+      page.Format(m_serverErrorPage,status,reason.GetString());
+      AutoCSTR cpage(page);
+      buffer->SetBuffer((uchar*)cpage.cstr(),cpage.size());
     }
     else
     {
-      buffer->SetBuffer(reinterpret_cast<uchar*>(const_cast<TCHAR*>(m_clientErrorPage.GetString())),m_clientErrorPage.GetLength());
+      page.Format(m_clientErrorPage,status,reason.GetString());
+      AutoCSTR cpage(page);
+      buffer->SetBuffer((uchar*)cpage.cstr(), cpage.size());
     }
     totalLength = buffer->GetLength();
   }

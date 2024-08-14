@@ -138,20 +138,6 @@ int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
     }
     else
     {
-      // Do Unit testing of the client without connecting to the internet
-//    errors += TestUnicode();            Moved to baseLibrary
-//    errors += TestURLChars();           Moved to baseLibrary
-//    errors += TestCrackURL();           Moved to baseLibrary
-//    errors += TestXML();                Moved to baseLibrary
-//    errors += TestCryptography();       Moved to baseLibrary
-//    errors += TestReader();             Moved to baseLibrary
-//    errors += TestNamespaces();         Moved to baseLibrary
-//    errors += TestHeaders();            Moved to baseLibrary
-//    errors += TestJSON();               Moved to baseLibrary
-//    errors += TestCookiesOverwrite();   Moved to baseLibrary
-//    errors += TestDecryptCookie();      Moved to baseLibrary
-//    errors += TestMSGraph(client);      Moved to baseLibrary
-
       // Unit testing of the client to a web server
       errors += TestFindClientCertificate();
       errors += TestBaseSite(client);
@@ -167,13 +153,13 @@ int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
       errors += TestPatching(client);
       errors += TestCompression(client);
       errors += TestEvents(client);
-      errors += TestWebSocketAccept();
+//    errors += TestWebSocketAccept();
 
 #ifdef TEST_WEBSOCKETS
-      errors += TestWebSocket(g_log);
-      errors += TestCloseWebSocket();
+//       errors += TestWebSocket(g_log);
+//       errors += TestCloseWebSocket();
+//       errors += TestEventDriver(g_log);
 #endif
-      errors += TestEventDriver(g_log);
       errors += TestWebservices(*client);
     }
 

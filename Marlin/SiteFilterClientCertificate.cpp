@@ -131,30 +131,38 @@ SiteFilterClientCertificate::ReceiveClientCertificate(HTTPMessage* p_message)
   g_certificate = new HTTP_SSL_CLIENT_CERT_INFO[1];
   ZeroMemory(g_certificate,sizeof(HTTP_SSL_CLIENT_CERT_INFO));
 
-  // Find the needed size of the client certificate
-  answer = HttpReceiveClientCertificate(requestQueue
-                                       ,id
-                                       ,0   // or 1 for the SSL token
-                                       ,g_certificate
-                                       ,sizeof(HTTP_SSL_CLIENT_CERT_INFO)
-                                       ,&bytesReceived
-                                       ,NULL);
-  if(answer == ERROR_MORE_DATA)
+  try
   {
-    // A somewhat larger Client certificate has been found
-    // Allocate memory for the client certificate
-    DWORD size = sizeof(HTTP_SSL_CLIENT_CERT_INFO) + g_certificate->CertEncodedSize;
-    delete [] g_certificate;
-    g_certificate = (PHTTP_SSL_CLIENT_CERT_INFO) new uchar[size];
-    ZeroMemory(g_certificate,size);
-    // Requery the client certificate. Now for real!!
+    // Find the needed size of the client certificate
     answer = HttpReceiveClientCertificate(requestQueue
                                          ,id
                                          ,0   // or 1 for the SSL token
                                          ,g_certificate
-                                         ,size
+                                         ,sizeof(HTTP_SSL_CLIENT_CERT_INFO)
                                          ,&bytesReceived
                                          ,NULL);
+    if(answer == ERROR_MORE_DATA)
+    {
+      // A somewhat larger Client certificate has been found
+      // Allocate memory for the client certificate
+      DWORD size = sizeof(HTTP_SSL_CLIENT_CERT_INFO) + g_certificate->CertEncodedSize;
+      delete [] g_certificate;
+      g_certificate = (PHTTP_SSL_CLIENT_CERT_INFO) new uchar[size];
+      ZeroMemory(g_certificate,size);
+      // Requery the client certificate. Now for real!!
+      answer = HttpReceiveClientCertificate(requestQueue
+                                           ,id
+                                           ,0   // or 1 for the SSL token
+                                           ,g_certificate
+                                           ,size
+                                           ,&bytesReceived
+                                           ,NULL);
+    }
+  }
+  catch(StdException& ex)
+  {
+    answer = ERROR_NOT_FOUND;
+    SITE_ERRORLOG(answer,_T("Client certificate not received: ") + ex.GetErrorMessage());
   }
   return answer;
 }

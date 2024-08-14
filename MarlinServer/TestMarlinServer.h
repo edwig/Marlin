@@ -93,7 +93,7 @@ protected:
   void AddOperations(XString p_contract);
 
   // Testing ServerEventDriver
-  void PostEventsToDrivers();
+  void PostEventsToDrivers(CString p_event);
 
 private:
 

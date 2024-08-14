@@ -276,7 +276,7 @@ int
 ServerEventChannel::GetQueueCount()
 {
   AutoCritSec lock(&m_lock);
-  return (int) m_outQueue.size();
+  return (int) (m_outQueue.size() + m_inQueue.size());
 }
 
 // Count all 'opened' sockets and all SSE-streams
@@ -370,6 +370,9 @@ ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket
 
   // Reset close seen
   m_closeSeen = false;
+
+  // Make sure we have an opening event
+  OnOpen(XString(_T("Started: ")) + p_message->GetURL().GetString());
 
   return true;
 }
@@ -471,11 +474,11 @@ ServerEventChannel::RegisterNewStream(HTTPMessage* p_message,EventStream* p_stre
   // We now do streams
   m_current = (EventDriverType)(m_current | EDT_ServerEvents);
 
-  // SSE Channels have no client messages, so we generate one ourselves
-  OnOpen(XString(_T("Started: ")) + p_message->GetURL().GetString());
-
   // Reset close seen
   m_closeSeen = false;
+
+  // Make sure we have an opening event
+  OnOpen(XString(_T("Started: ")) + p_message->GetURL().GetString());
 
   return true;
 }
@@ -490,7 +493,7 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
     for(auto& cookie : cookies.GetCookies())
     {
       if(m_cookie.CompareNoCase(cookie.GetName()) == 0 &&
-        m_token.CompareNoCase(cookie.GetValue()) == 0)
+          m_token.CompareNoCase(cookie.GetValue()) == 0)
       {
         found = true;
       }
@@ -569,21 +572,38 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
   // Make sure channel is now open on the server side and 'in-use'
   if(!m_openSeen)
   {
-    OnOpen(_T(""));
+    // Make sure we have an opening event
+    OnOpen(XString(_T("Started: ")) + p_message->GetURL().GetString());
+    m_openSeen = true;
   }
 
   // Return 'empty' or the oldest event
   AutoCritSec lock(&m_lock);
+  EventQueue* queue = nullptr;
+  LTEvent*  ltevent = nullptr;
+
   if(m_polQueue.empty())
   {
-    p_message->SetParameter(_T("Empty"),true);
+    if(!GetNextOutgoingEvent(ltevent))
+    {
+      p_message->SetParameter(_T("Empty"),true);
+    }
   }
   else
   {
-    LTEvent* ltevent = m_polQueue.front();
+    queue = &m_polQueue;
+    ltevent = m_polQueue.front();
+  }
+  if(ltevent)
+  {
     p_message->SetParameter(_T("Number"), ltevent->m_number);
     p_message->SetParameter(_T("Message"),ltevent->m_payload);
     p_message->SetParameter(_T("Type"), LTEvent::EventTypeToString(ltevent->m_type));
+  } 
+  if(queue)
+  {
+    // Remove from the polling queue only
+    queue->pop_front();
   }
   return true;
 }
@@ -606,6 +626,7 @@ ServerEventChannel::SendChannel()
     if(m_current == EDT_NotConnected)
     {
       LogNotConnected();
+      return 0;
     }
 
     // Process the outgoing long-term event queue

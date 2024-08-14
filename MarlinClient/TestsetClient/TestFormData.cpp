@@ -64,8 +64,8 @@ TestFormDataMP(HTTPClient* p_client)
   XString data = GetJsonString();
 
   MultiPartBuffer buffer(FormDataType::FD_MULTIPART);
-  const MultiPart* part1 = buffer.AddPart(_T("json"), _T("application/json"),data);
-  const MultiPart* part2 = buffer.AddPart(_T("empty"),_T("text/html"),       _T("")); 
+  const MultiPart* part1 = buffer.AddPart(_T("json"),       _T("application/json"),data);
+  const MultiPart* part2 = buffer.AddPart(_T("empty"),      _T("text/html"), _T("")); 
   const MultiPart* part3 = buffer.AddFile(_T("eventsource"),_T("application/js"),file);
 
   // Test if we created all parts
