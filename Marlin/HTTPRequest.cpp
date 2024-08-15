@@ -1086,12 +1086,12 @@ HTTPRequest::Finalize()
 
 // Add a request string for a header
 void 
-HTTPRequest::AddRequestString(XString p_string,LPCSTR& p_buffer,USHORT& p_size)
+HTTPRequest::AddRequestString(XString p_string,LPSTR& p_buffer,USHORT& p_size)
 {
   AutoCSTR str(p_string);
   int size = str.size();
   p_buffer = new char[size + 1];
-  strncpy_s((LPTSTR)p_buffer,size + 1,str.cstr(),size);
+  strncpy_s(p_buffer,size+1,str.cstr(),size);
   m_strings.push_back(p_buffer);
   p_size = (USHORT) size;
 }
@@ -1100,7 +1100,7 @@ HTTPRequest::AddRequestString(XString p_string,LPCSTR& p_buffer,USHORT& p_size)
 void
 HTTPRequest::AddKnownHeader(HTTP_HEADER_ID p_header,LPCTSTR p_value)
 {
-  LPCSTR str  = nullptr;
+  LPSTR  str  = nullptr;
   USHORT size = 0;
 
   AddRequestString(p_value,str,size);
@@ -1127,7 +1127,7 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
   unsigned ind = 0;
   for(auto& header : p_headers)
   {
-    LPCSTR buffer = nullptr;
+    LPSTR  buffer = nullptr;
     USHORT size   = 0;
 
     AddRequestString(header.m_name,buffer,size);
@@ -1163,7 +1163,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   RtlZeroMemory(m_response,sizeof(HTTP_RESPONSE));
   XString text = GetHTTPStatusText(p_status);
 
-  PCSTR stext = nullptr;
+  PSTR  stext = nullptr;
   USHORT size = 0;
   AddRequestString(text,stext,size);
 
@@ -1394,7 +1394,7 @@ void
 HTTPRequest::FillResponseWebSocketHeaders(UKHeaders& p_headers)
 {
   USHORT size = 0;
-  PCSTR text = nullptr;
+  PSTR   text = nullptr;
 
   XString orgstring = m_message->GetHeader(_T("Connection"));
   AddRequestString(orgstring,text,size);

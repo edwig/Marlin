@@ -135,7 +135,7 @@ private:
   // Reset outstanding OVERLAPPED
   void ResetOutstanding(OutstandingIO& p_outstanding);
   // Add a request string for a header
-  void AddRequestString(XString p_string,LPCSTR& p_buffer,USHORT& p_size);
+  void AddRequestString(XString p_string,LPSTR& p_buffer,USHORT& p_size);
   // Change response & unknown headers in one protocol string
   XString ResponseToString();
 

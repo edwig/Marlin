@@ -3675,7 +3675,6 @@ HTTPClient::SetClientCertificateThumbprint(const XString& p_store,const XString&
       if(!m_certName.IsEmpty())
       {
         result = true;
-        m_certPreset = true;
         DETAILLOG(_T("Client certificate set [%s:%s]"),m_certStore.GetString(),m_certName.GetString());
       }
       else
