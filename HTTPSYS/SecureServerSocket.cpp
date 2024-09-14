@@ -535,7 +535,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
             }
             if(serverName.IsEmpty()) // There was no hostname supplied by SNI
             {
-              serverName = GetHostName(ComputerNameDnsHostname);
+              serverName = ::GetHostName(ComputerNameDnsHostname);
             }
             PCCERT_CONTEXT pCertContext = NULL;
             SECURITY_STATUS status = SEC_E_INTERNAL_ERROR;

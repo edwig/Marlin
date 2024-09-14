@@ -19,7 +19,7 @@
 #include "PlainSocket.h"
 #include "SecureServerSocket.h"
 #include "SSLUtilities.h"
-#include "CodeBase64.h"
+#include "Base64.h"
 #include <LogAnalysis.h>
 #include <wininet.h>
 #include <mswsock.h>
@@ -88,6 +88,7 @@ Request::ReceiveRequest()
   {
     UNREFERENCED_PARAMETER(error);
     ReplyClientError();
+    m_queue->RemoveRequest(this);
     return;
   }
 
@@ -241,7 +242,7 @@ Request::RestartConnection()
   m_status = RQ_CREATED;
 
   // Start new thread, like the listener would do
-  AfxBeginThread(m_listener->Worker,this);
+  _beginthreadex(nullptr,0,m_listener->Worker,this,0,nullptr);
   return true;
 }
 
@@ -262,7 +263,8 @@ Request::ReceiveBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes,bool p_all)
   // Receiving only takes place after reading the headers
   // and before we start answering with a response
   // Can occur with out-of-band HttpReceiveRequestEntityBody requests from the application
-  if(m_status != RQ_READING && m_status != RQ_OPAQUE)
+  // But also can occur when draining the request before sending an HTTP 40x error
+  if(m_status != RQ_CREATED && m_status != RQ_READING && m_status != RQ_OPAQUE)
   {
     return ERROR_CONNECTION_INVALID;
   }
@@ -296,6 +298,10 @@ Request::ReceiveBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes,bool p_all)
     // Try to get a new buffer
     ULONG bytes = 0;
     result = ReadBuffer(p_buffer,p_size,&bytes);
+    if(result == ERROR_IO_PENDING)
+    {
+      return result;
+    }
     if(result)
     {
       result = ERROR_HANDLE_EOF;
@@ -455,6 +461,17 @@ Request::GetResponseComplete()
     return true;
   }
   return false;
+}
+
+XString
+Request::GetHostName()
+{
+  if(m_socket)
+  {
+    PlainSocket* socket = dynamic_cast<PlainSocket*>(m_socket);
+    return socket->GetHostName();
+  }
+  return _T("");
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -978,29 +995,38 @@ void
 Request::CorrectFullURL()
 {
   LPCSTR host;
+  XString hostname;
   if(m_request.Headers.KnownHeaders[HttpHeaderHost].pRawValue)
   {
     host = m_request.Headers.KnownHeaders[HttpHeaderHost].pRawValue;
+  }
+  else
+  {
+    hostname = GetHostName();
+    host = hostname.GetString();
+  }
 
-    PCWSTR abspath(m_request.CookedUrl.pAbsPath);
-    if(wcschr(abspath,_T('/')) == nullptr)
+  PCWSTR abspath(m_request.CookedUrl.pAbsPath);
+  if((wcschr(abspath,_T('/')) == nullptr) || abspath[0] == _T('/'))
+  {
+    USES_CONVERSION;
+
+    CStringT<char,StrTraitMFC< char > > newpath;
+    CStringT<char,StrTraitMFC< char > > absolute = W2A(abspath);
+    newpath.Format(_T("http://%s%s"),host,absolute);
+
+    if(m_request.CookedUrl.pFullUrl)
     {
-      CStringT<char,StrTraitMFC< char > > newpath;
-      newpath.Format("http://%s%s",host,CW2A(abspath));
-
-      if(m_request.CookedUrl.pFullUrl)
-      {
-        free((PVOID)m_request.CookedUrl.pFullUrl);
-        m_request.CookedUrl.pFullUrl = nullptr;
-      }
-      if (m_request.pRawUrl)
-      {
-        free((PVOID)m_request.pRawUrl);
-        m_request.pRawUrl = nullptr;
-      }
-
-      FindURL((LPSTR)newpath.GetString());
+      free((PVOID)m_request.CookedUrl.pFullUrl);
+      m_request.CookedUrl.pFullUrl = nullptr;
     }
+    if (m_request.pRawUrl)
+    {
+      free((PVOID)m_request.pRawUrl);
+      m_request.pRawUrl = nullptr;
+    }
+
+    FindURL((LPSTR)newpath.GetString());
   }
 }
 
@@ -1390,6 +1416,11 @@ Request::CheckAuthentication()
 
   // This is our authorization (if any)
   CString authorization(m_request.Headers.KnownHeaders[HttpHeaderAuthorization].pRawValue);
+  if(authorization.IsEmpty())
+  {
+    // Authorization required but none is provided
+    return true;
+  }
 
   // Find method and payload of that method
   CString method;
@@ -1404,6 +1435,7 @@ Request::CheckAuthentication()
   else
   {
     // Leave it to the serviced application to return a HTTP_STATUS_DENIED
+    // E.g. a "Bearer" token for OAuth2
     return false; 
   }
 
@@ -1493,15 +1525,9 @@ bool
 Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload)
 {
   // Prepare decoding the base64 payload
-  CodeBase64 base;
-  int len = (int) base.Ascii_length(p_payload.GetLength());
-  CString decoded;
-  LPTSTR dest = decoded.GetBufferSetLength(len);
+  Base64  base;
+  CString decoded = base.Decrypt(p_payload);
 
-  // Decrypt into a string
-  base.Decrypt((const unsigned char*)p_payload.GetString(),p_payload.GetLength(),(unsigned char*)dest);
-  decoded.ReleaseBuffer();
-  
   // Split into user and password
   CString user;
   CString domain;
@@ -1538,13 +1564,12 @@ bool
 Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload,CString p_provider)
 {
   // Prepare decoding the base64 payload
-  CodeBase64 base;
+  Base64 base;
   int len = (int)base.Ascii_length(p_payload.GetLength());
+  BYTE* buffer = new BYTE[len + 10];
 
-  // Decode in a buffer
-  unsigned char* buffer = new unsigned char[len + 1];
   // Decrypt into a string
-  base.Decrypt((const unsigned char*)p_payload.GetString(),p_payload.GetLength(),buffer);
+  len = base.Decrypt((BYTE*)p_payload.GetString(),p_payload.GetLength(),buffer,(len + 10));
 
   bool       continuation = false;
   CredHandle credentials;
@@ -1606,14 +1631,11 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
 
         // Continuation of the conversation
         len = (int) base.B64_length(OutSecBuff.cbBuffer);
-        unsigned char* challenge = new unsigned char[len + 1];
-        base.Encrypt((unsigned char*)pOut,OutSecBuff.cbBuffer,challenge);
-        challenge[len] = 0;
+        XString challenge = base.Encrypt((BYTE*)pOut,OutSecBuff.cbBuffer);
 
         // Send 401 with the correct provider challenge
         m_challenge  = p_provider + _T(" ");
-        m_challenge += (LPCTSTR) A2T((char*)challenge);
-        delete [] challenge;
+        m_challenge += challenge;
         continuation = true;
       }
       else
@@ -1621,7 +1643,7 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
         // Possibly completion needed for the provider?
         if((SEC_I_COMPLETE_NEEDED == ss) || (SEC_I_COMPLETE_AND_CONTINUE == ss))
         {
-          ss = CompleteAuthToken(&m_context, &OutBuffDesc);
+          ss = CompleteAuthToken(&m_context,&OutBuffDesc);
         }
         // OK: We must be able to retrieve the impersonation token
         if(ss >= 0)

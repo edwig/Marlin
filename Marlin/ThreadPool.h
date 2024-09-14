@@ -144,16 +144,17 @@ public:
 
   // GETTERS
 
-  bool GetIsInitialized()       { return m_initialized;         };
-  bool GetIsOpenForWork()       { return m_openForWork;         };
-  long GetBusyThreads()         { return m_bsyThreads;          };   // NOT STABLE while running !!
-  int  GetMinThreads()          { return m_minThreads;          };
-  int  GetMaxThreads()          { return m_maxThreads;          };
-  int  GetStackSize()           { return m_stackSize;           };
-  int  GetProcessors()          { return m_processors;          };
-  int  GetWorkOverflow()        { return (int)m_work.size();    };
-  int  GetCleanupJobs()         { return (int)m_cleanup.size(); };
-  int  GetHeartBeatTime()       { return m_heartbeat;           };
+  bool   GetIsInitialized()       { return m_initialized;         }
+  bool   GetIsOpenForWork()       { return m_openForWork;         }
+  long   GetBusyThreads()         { return m_bsyThreads;          }   // NOT STABLE while running !!
+  int    GetMinThreads()          { return m_minThreads;          }
+  int    GetMaxThreads()          { return m_maxThreads;          }
+  int    GetStackSize()           { return m_stackSize;           }
+  int    GetProcessors()          { return m_processors;          }
+  int    GetWorkOverflow()        { return (int)m_work.size();    }
+  int    GetCleanupJobs()         { return (int)m_cleanup.size(); }
+  int    GetHeartBeatTime()       { return m_heartbeat;           }
+  HANDLE GetIOCompletionPort()    { return m_completion;          }
 
   // These running-a-thread methods are public, but really should only be called 
   // from within the static work functions of the ThreadPool itself, to get things working

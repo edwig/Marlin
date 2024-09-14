@@ -17,6 +17,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// Marlin extensions to HTTP_SERVER_PROPERTY enumeration
+#define HttpServerIOCPPort 32
+#define HttpServerIOCPKey  33
+
+
 ULONG WINAPI
 HttpSetRequestQueueProperty(_In_ HANDLE               RequestQueueHandle
                            ,_In_ HTTP_SERVER_PROPERTY Property
@@ -37,16 +42,16 @@ HttpSetRequestQueueProperty(_In_ HANDLE               RequestQueueHandle
     return ERROR_NOT_SUPPORTED;
   }
 
-  LONG value = 0;
+  LONGLONG value = 0;
   switch(PropertyInformationLength)
   {
-    case 1:   value = (LONG)(*((unsigned char *)  PropertyInformation));
+    case 1:   value = (LONGLONG)(*((unsigned char *)  PropertyInformation));
               break;
-    case 2:   value = (LONG)(*((short *)          PropertyInformation));
+    case 2:   value = (LONGLONG)(*((short *)          PropertyInformation));
               break;
-    case 4:   value = (LONG)(*((int *)            PropertyInformation));
+    case 4:   value = (LONGLONG)(*((int *)            PropertyInformation));
               break;
-    case 8:   value = (LONG)(*((__int64 *)        PropertyInformation));
+    case 8:   value = (LONGLONG)(*((__int64 *)        PropertyInformation));
               break;
     default:  return ERROR_INVALID_PARAMETER;
   }
@@ -60,7 +65,7 @@ HttpSetRequestQueueProperty(_In_ HANDLE               RequestQueueHandle
   }
   else if (Property == HttpServerQueueLengthProperty)
   {
-    if(!queue->SetQueueLength(value))
+    if(!queue->SetQueueLength((ULONG)value))
     {
       return ERROR_INVALID_PARAMETER;
     }
@@ -68,6 +73,20 @@ HttpSetRequestQueueProperty(_In_ HANDLE               RequestQueueHandle
   else if (Property == HttpServerStateProperty)
   {
     if(!queue->SetEnabledState((HTTP_ENABLED_STATE)value))
+    {
+      return ERROR_INVALID_PARAMETER;
+    }
+  }
+  else if (Property == HttpServerIOCPPort)
+  {
+    if(!queue->SetIOCompletionPort((HANDLE)value))
+    {
+      return ERROR_INVALID_PARAMETER;
+    }
+  }
+  else if (Property == HttpServerIOCPKey)
+  {
+    if(!queue->SetIOCompletionKey((ULONG_PTR)value))
     {
       return ERROR_INVALID_PARAMETER;
     }

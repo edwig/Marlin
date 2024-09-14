@@ -33,6 +33,12 @@ HttpReceiveClientCertificate(IN HANDLE              RequestQueueHandle
     return ERROR_IMPLEMENTATION_LIMIT;
   }
 
+  // Initialize to zero
+  if(BytesReceived)
+  {
+    *BytesReceived = 0;
+  }
+
   // Need pointers and bytes
   if(SslClientCertInfo == nullptr || SslClientCertInfoSize == 0 || BytesReceived == nullptr)
   {
@@ -64,7 +70,7 @@ HttpReceiveClientCertificate(IN HANDLE              RequestQueueHandle
   CertificateInfo* info = Flags ? socket->GetServerCertificate() : socket->GetClientCertificate();
   if(info == nullptr)
   {
-    return ERROR_INVALID_PARAMETER;
+    return ERROR_NOT_FOUND;
   }
 
   // Getting our blob or ERROR_MORE_DATA

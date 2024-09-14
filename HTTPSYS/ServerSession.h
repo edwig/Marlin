@@ -45,18 +45,18 @@ public:
 
  // GETTERS
  LPCSTR     GetServerVersion();
- ULONGLONG  GetIdent()                  { return m_ident;                   };
- int        GetSocketLogging()          { return m_socketLogging;           };
- LogAnalysis* GetLogfile()              { return m_logfile;                 };
- HTTP_ENABLED_STATE GetEnabledState()   { return m_state;                   };
- USHORT     GetTimeoutEntityBody()      { return m_timeoutEntityBody;       };
- USHORT     GetTimeoutDrainEntityBody() { return m_timeoutDrainEntityBody;  };
- USHORT     GetTimeoutRequestQueue()    { return m_timeoutRequestQueue;     };
- USHORT     GetTimeoutIdleConnection()  { return m_timeoutIdleConnection;   };
- USHORT     GetTimeoutHeaderWait()      { return m_timeoutHeaderWait;       };
- ULONG      GetTimeoutMinSendRate()     { return m_timeoutMinSendRate;      };
- int        GetDisableServerHeader()    { return m_disableServerHeader;     };
- unsigned   GetMaxConnections()         { return m_maxConnections;          };
+ ULONGLONG  GetIdent()                  { return m_ident;                   }
+ int        GetSocketLogging()          { return m_socketLogging;           }
+ LogAnalysis* GetLogfile()              { return m_logfile;                 }
+ HTTP_ENABLED_STATE GetEnabledState()   { return m_state;                   }
+ USHORT     GetTimeoutEntityBody()      { return m_timeoutEntityBody;       }
+ USHORT     GetTimeoutDrainEntityBody() { return m_timeoutDrainEntityBody;  }
+ USHORT     GetTimeoutRequestQueue()    { return m_timeoutRequestQueue;     }
+ USHORT     GetTimeoutIdleConnection()  { return m_timeoutIdleConnection;   }
+ USHORT     GetTimeoutHeaderWait()      { return m_timeoutHeaderWait;       }
+ ULONG      GetTimeoutMinSendRate()     { return m_timeoutMinSendRate;      }
+ int        GetDisableServerHeader()    { return m_disableServerHeader;     }
+ unsigned   GetMaxConnections()         { return m_maxConnections;          }
 
 private:
   // Create and start our logfile

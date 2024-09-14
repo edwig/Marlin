@@ -70,7 +70,7 @@ private:
   HANDLE            m_hSocketEvents[FD_SETSIZE];
   int               m_numListenSockets;
   CCriticalSection  m_workerThreadLock;
-  CWinThread*       m_listenerThread;
+  HANDLE            m_listenerThread { NULL };
   // Timeouts
   int               m_sendTimeoutSeconds { 30 };  // Send timeout in seconds
   int               m_recvTimeoutSeconds { 30 };  // Receive timeout in seconds

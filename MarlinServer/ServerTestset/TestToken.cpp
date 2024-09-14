@@ -247,7 +247,7 @@ TestMarlinServer::TestToken()
   site->AddContentType(true,_T("pos"),_T("text/xml"));
   site->AddContentType(true,_T("xml"),_T("application/soap+xml"));
 
-  // Set site to use NTLM authentication for the "MerlinTest" user
+  // Set site to use NTLM authentication for the "MarlinTest" user
   // So we can get a different token, then the current server token
   site->SetAuthenticationScheme(_T("NTLM"));
   site->SetAuthenticationNTLMCache(true);

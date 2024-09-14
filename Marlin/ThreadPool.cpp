@@ -169,15 +169,15 @@ ThreadPool::InitThreadPool()
   if(m_processors > 0)
   {
     // Adjust maximum of threads for the number of processors
-    if(m_minThreads < 2 * m_processors)
+    if(m_minThreads < m_processors)
     {
-      m_minThreads = 2 * m_processors;
+      m_minThreads = m_processors;
     }
 
     // Adjust maximum of threads for the number of processors
-    if(m_maxThreads > 4 * m_processors)
+    if(m_maxThreads > ((4 * m_processors)/6))
     {
-      m_maxThreads = 4 * m_processors;
+      m_maxThreads = ((4 * m_processors)/6);
     }
   }
   // Create IO Completion Port

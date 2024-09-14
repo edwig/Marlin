@@ -72,7 +72,7 @@ int TestClientCertificate(HTTPClient* p_client)
 
   // Setting to true:  No round trips, certificate always sent upfront
   // Setting to false: Certificate will be requested by a round trip
-  p_client->SetClientCertificatePreset(false);
+  p_client->SetClientCertificatePreset(true);
 
   // The client certificate comes from MY:MarlinClient
   p_client->SetClientCertificateStore(_T("MY"));

@@ -38,6 +38,7 @@ RequestQueue::~RequestQueue()
 {
   StopAllListeners();
   DeleteAllFragments();
+  DeleteAllWaiters();
   DeleteCriticalSection(&m_lock);
   CloseEvent();
   CloseQueueHandle();
@@ -95,6 +96,13 @@ RequestQueue::RemoveURLGroup(UrlGroup* p_group)
   }
 }
 
+UrlGroup* 
+RequestQueue::FirstURLGroup()
+{
+  AutoCritSec lock(&m_lock);
+  return m_groups.front();
+}
+
 // Enable the request queue (or disable it)
 bool
 RequestQueue::SetEnabledState(HTTP_ENABLED_STATE p_state)
@@ -128,6 +136,28 @@ RequestQueue::SetVerbosity(HTTP_503_RESPONSE_VERBOSITY p_verbosity)
      p_verbosity == Http503ResponseVerbosityFull)
   {
     m_verbosity = p_verbosity;
+    return true;
+  }
+  return false;
+}
+
+bool
+RequestQueue::SetIOCompletionPort(HANDLE p_iocp)
+{
+  if(m_iocPort == NULL)
+  {
+    m_iocPort = p_iocp;
+    return true;
+  }
+  return false;
+}
+
+bool
+RequestQueue::SetIOCompletionKey(ULONG_PTR p_key)
+{
+  if(m_iocKey == NULL)
+  {
+    m_iocKey = p_key;
     return true;
   }
   return false;
@@ -215,6 +245,17 @@ RequestQueue::AddIncomingRequest(Request* p_request)
   if(m_incoming.size() < m_queueLength)
   {
     m_incoming.push_back(p_request);
+
+    // In the case of a Overlapped I/O request, do that first
+    // Otherwise we will hang in synchronous mode
+    if(!m_waiting.empty())
+    {
+      PREGISTER_HTTP_RECEIVE_REQUEST reg = FirstWaitingRequest();
+      if(reg)
+      {
+        StartAsyncReceiveHttpRequest(reg);
+      }
+    }
     // Wake up waiters for the request queue
     SetEvent(m_event);
   }
@@ -649,3 +690,47 @@ RequestQueue::DeleteAllFragments()
   }
   m_fragments.clear();
 }
+
+//////////////////////////////////////////////////////////////////////////
+//
+// OVERLAPPED I/O
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Add a receiving request to the queue
+void
+RequestQueue::AddWaitingRequest(PREGISTER_HTTP_RECEIVE_REQUEST p_register)
+{
+  AutoCritSec lock(&m_lock);
+
+  m_waiting.push_back(p_register);
+}
+
+// Return the first request to signal from the queue
+// and remove it from the queue
+PREGISTER_HTTP_RECEIVE_REQUEST
+RequestQueue::FirstWaitingRequest()
+{
+  AutoCritSec lock(&m_lock);
+
+  PREGISTER_HTTP_RECEIVE_REQUEST req = nullptr;
+  if(!m_waiting.empty())
+  {
+    req = m_waiting.front();
+    m_waiting.pop_front();
+  }
+  return req;
+}
+
+// Part of the reset procedure: Clean out the waiting queue
+void
+RequestQueue::DeleteAllWaiters()
+{
+  while(!m_waiting.empty())
+  {
+    PREGISTER_HTTP_RECEIVE_REQUEST req = m_waiting.front();
+    delete req;
+    m_waiting.pop_front();
+  }
+}
+

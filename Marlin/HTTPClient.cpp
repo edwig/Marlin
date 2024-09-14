@@ -2358,7 +2358,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
   }
   else
   {
-    p_msg->SetFault(_T("Server"),_T("Charset"),answer,_T("Possibly unknown UNICODE charset, or non-standard machine charset"));
+    p_msg->SetFault(_T("Server"),_T("Response"),answer,_T("No valid SOAP response from server"));
   }
 
   // Process the SOAP action
@@ -2986,8 +2986,10 @@ HTTPClient::Send()
                                   // Get the content type header
                                   m_contentType = ReadHeaderField(WINHTTP_QUERY_CONTENT_TYPE);
                                   break;
-          case HTTP_STATUS_FORBIDDEN: [[fallthrough]];
-          case HTTP_STATUS_DENIED:if(lastStatus == m_status)
+          case HTTP_STATUS_FORBIDDEN:iRetryTimes = retries + 1;
+                                  break;
+          case HTTP_STATUS_DENIED:ntlm3Step = true;
+                                  if(lastStatus == m_status)
                                   {
                                     // Cannot do this twice!
                                     getReponseSucceed = true;
@@ -4345,30 +4347,16 @@ HTTPClient::StopClient()
     {
       OnCloseSeen();
     }
-    for (int i = 0; i < 10; ++i)
+    for(int i = 0; i < 10; ++i)
     {
       Sleep(100);
-      if(m_queueThread == 0)
-      {
-        break;
-      }
-    }
-    if(m_queueThread)
-    {
-      // Only way to cancel from NTDLL.DLL on the HTTP Stack
-      // Do not complain about "TermnateThread". It is the only way. We know!
-#pragma warning(disable:6258)
-      TerminateThread(m_queueThread,0);
-      m_queueThread = NULL;
-      m_running = false;
-      ERRORLOG(_T("Forced stopping of the event-source listner"));
     }
     delete m_eventSource;
     m_eventSource = nullptr;
     DETAILLOG(_T("Stopped the push-events EventSource"));
     stopping = true;
   }
-  if(m_queueThread && m_queueEvent)
+  if(m_queueThread || m_queueEvent)
   {
     // Stop the queue by resetting the thread
     DETAILLOG(_T("Stopping the send queue"));
@@ -4380,7 +4368,7 @@ HTTPClient::StopClient()
     for(int ind = 0; ind < CLOSING_INTERVALS; ++ind)
     {
       Sleep(CLOSING_WAITTIME);
-      // Wait until the mainloop ends
+      // Wait until the main loop ends
       if(m_queueThread == NULL)
       {
         break;

@@ -24,10 +24,24 @@
 
 class UrlGroup;
 
+// Made requests with an Overlapped I/O registration
+typedef struct _reg_http_request
+{
+  UINT              r_size;
+  RequestQueue*     r_queue;
+  HTTP_REQUEST_ID   r_id;
+  ULONG             r_flags;
+  PHTTP_REQUEST     r_requestBuffer;
+  ULONG             r_requestBufferLength;
+  LPOVERLAPPED      r_overlapped;
+}
+REGISTER_HTTP_RECEIVE_REQUEST,*PREGISTER_HTTP_RECEIVE_REQUEST;
+
 using UrlGroups = std::vector<UrlGroup*>;
 using Listeners = std::map<USHORT,Listener*>;
 using Requests  = std::deque<Request*>;
 using Fragments = std::map<CString,PHTTP_DATA_CHUNK>;
+using WaitingRequests = std::deque<PREGISTER_HTTP_RECEIVE_REQUEST>;
 
 typedef BOOL (* PointTransmitFile)(SOCKET hSocket,
                                    HANDLE hFile,
@@ -37,6 +51,15 @@ typedef BOOL (* PointTransmitFile)(SOCKET hSocket,
                                    LPTRANSMIT_FILE_BUFFERS lpFileBuffers,
                                    DWORD dwReserved);
 
+// Forward declaration to handle a request
+void StartAsyncReceiveHttpRequest(PREGISTER_HTTP_RECEIVE_REQUEST reg);
+
+//////////////////////////////////////////////////////////////////////////
+//
+// REQUEST QUEUE
+//
+//////////////////////////////////////////////////////////////////////////
+
 class RequestQueue
 {
 public:
@@ -44,21 +67,26 @@ public:
  ~RequestQueue();
 
   // GETTERS
-  ULONGLONG                   GetIdent()        { return m_ident;       };
-  HANDLE                      GetHandle()       { return m_handle;      };
-  CString                     GetName()         { return m_name;        };
-  HTTP_503_RESPONSE_VERBOSITY GetVerbosity()    { return m_verbosity;   };
-  ULONG                       GetQueueLength()  { return m_queueLength; };
-  HTTP_ENABLED_STATE          GetEnabledState() { return m_state;       };
+  ULONGLONG                   GetIdent()            { return m_ident;       }
+  HANDLE                      GetHandle()           { return m_handle;      }
+  CString                     GetName()             { return m_name;        }
+  HTTP_503_RESPONSE_VERBOSITY GetVerbosity()        { return m_verbosity;   }
+  ULONG                       GetQueueLength()      { return m_queueLength; }
+  HTTP_ENABLED_STATE          GetEnabledState()     { return m_state;       }
+  HANDLE                      GetIOCompletionPort() { return m_iocPort;     }
+  ULONG_PTR                   GetIOCompletionKey()  { return m_iocKey;      }
 
   // SETTERS
   bool      SetEnabledState(HTTP_ENABLED_STATE p_state);
   bool      SetQueueLength(ULONG p_length);
   bool      SetVerbosity(HTTP_503_RESPONSE_VERBOSITY p_verbosity);
+  bool      SetIOCompletionPort(HANDLE p_iocp);
+  bool      SetIOCompletionKey(ULONG_PTR p_key);
 
   // Functions
   void      AddURLGroup   (UrlGroup* p_group);
   void      RemoveURLGroup(UrlGroup* p_group);
+  UrlGroup* FirstURLGroup();
 
   ULONG     StartListener(USHORT p_port,URL* p_url,USHORT p_timeout);
   ULONG     StopListener (USHORT p_port);
@@ -75,6 +103,10 @@ public:
   ULONG     RegisterDemandStart();
   void      DemandStart();
 
+  // Waiting Overlapped I/O requests
+  void      AddWaitingRequest(PREGISTER_HTTP_RECEIVE_REQUEST p_register);
+  PREGISTER_HTTP_RECEIVE_REQUEST FirstWaitingRequest();
+
   // Our workhorse. Implementations call this to get the next HTTP request
   ULONG     GetNextRequest(HTTP_REQUEST_ID RequestId,ULONG Flags,PHTTP_REQUEST RequestBuffer,ULONG RequestBufferLength,PULONG Bytes);
 
@@ -89,6 +121,7 @@ private:
   void        StopAllListeners();
   ULONG       NumberOfPorts(USHORT p_port);
   void        DeleteAllFragments();
+  void        DeleteAllWaiters();
   void        CreateEvent();
   void        CloseEvent();
   void        CloseQueueHandle();
@@ -108,10 +141,15 @@ private:
   // All requests from HTTP. Our 'real' queues
   Requests                    m_incoming;       // Incoming (unserviced) requests
   Requests                    m_servicing;      // Currently serviced by server
+  // I/O Completion of the session registration
+  HANDLE                      m_iocPort { NULL };
+  ULONG_PTR                   m_iocKey  { NULL };
   // The fragment cache
   Fragments                   m_fragments;
 
   PointTransmitFile           m_transmitFile { nullptr };
+  // Waiting Overlapped I/O
+  WaitingRequests             m_waiting;
   // Synchronization
   HANDLE                      m_start { NULL }; // Demand start event
   CRITICAL_SECTION            m_lock;           // Queue synchronization

@@ -375,13 +375,13 @@ int TestWebservices(HTTPClient& client)
   extern XString logfileName;
   SOAPMessage* msg = nullptr;
 
-  // Testing cookie function
-  errors += TestCookies(client);
-
   // Standard values for messages
   XString namesp(_T("http://interface.marlin.org/services"));
   XString command(_T("TestMessage"));
   XString url(CreateURL(_T("Insecure")));
+
+  // Testing cookie function
+  errors += TestCookies(client);
 
   // Test 1
   xprintf(_T("TESTING STANDARD SOAP MESSAGE TO /MarlinTest/Insecure/\n"));
@@ -428,10 +428,11 @@ int TestWebservices(HTTPClient& client)
   url = CreateURL(_T("TestToken"));
   msg = CreateSoapMessage(namesp,command,url);
   client.SetSingleSignOn(true);
-  XString user(_T("CERT6\\Beheerder"));
+  XString user(_T("CERT7\\Beheerder"));
   XString password(_T("altijd"));
   client.SetUser(user);
   client.SetPassword(password);
+  // client.SetPreEmptiveAuthorization(WINHTTP_AUTH_SCHEME_NTLM);
   errors += DoSend(client,msg,_T("token testing"));
   client.SetSingleSignOn(false);
 

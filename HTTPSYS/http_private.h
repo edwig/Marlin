@@ -49,8 +49,11 @@
 #define SOCK_LOGGING_TRACE     2    // Hex dump tracing first line
 #define SOCK_LOGGING_FULLTRACE 3    // Full hex dump tracing
 
-// Size of a certificate thumbprint
+// Size of a certificate thumb-print
 #define CERT_THUMBPRINT_SIZE  20
+
+// Thread waiting time when too many threads in the system
+#define THREAD_RETRY_WAITING 100    // Milliseconds
 
 // The system is/was initialized by calling HttpInitialize
 extern bool g_httpsys_initialized;   // Default = false;

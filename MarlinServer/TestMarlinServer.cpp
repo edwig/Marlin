@@ -66,6 +66,9 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+#define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
+#define SERVERSTATUSOK            _T("Server status: Running & OK")
+
 TestMarlinServer::TestMarlinServer()
                  :WebServiceServer(_T(MARLIN_PRODUCT_NAME),_T(""),_T(""),PrefixType::URLPRE_Strong,_T(""),8)
                  ,MarlinServer()
@@ -132,7 +135,8 @@ TestMarlinServer::Startup()
     GetHTTPServer()->SetIsProcessing(true);
 
     // Ok, server is running, so log that
-    SvcReportInfoEvent(false,_T(__FUNCTION__),_T("Server status: Running & OK"));
+    SvcReportInfoEvent(false,_T(__FUNCTION__),SERVERSTATUSOK);
+    m_httpServer->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,_T("\n") SERVERSTATUSOK _T("\n"));
 
     // Back to ServerMain to wait for the ending event
     result = true;
@@ -368,8 +372,8 @@ TestMarlinServer::ConfigToServer()
 
     // Create a sync server or a a-synchronous server
     // Un-Comment the other if you want to test it.
-    // m_httpServer  = new HTTPServerSync(m_serverName);
-    m_httpServer  = new HTTPServerMarlin(m_serverName);
+    m_httpServer  = new HTTPServerSync(m_serverName);
+    // m_httpServer  = new HTTPServerMarlin(m_serverName);
     m_serverOwner = true; // Do DTOR later!
   }
 

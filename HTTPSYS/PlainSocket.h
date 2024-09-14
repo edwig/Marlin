@@ -64,13 +64,15 @@ public:
   bool    SetKeepaliveInterval (int  p_interval);
 
   // GETTERS
-  int     GetConnTimeoutSeconds()   { return m_connTimeoutSeconds;  };
-  int     GetRecvTimeoutSeconds()   { return m_recvTimeoutSeconds;  };
-  int     GetSendTimeoutSeconds()   { return m_sendTimeoutSeconds;  };
-  bool    GetUseKeepalive()         { return m_useKeepalive;        };
-  int     GetKeepaliveTime()        { return m_keepaliveTime;       };
-  int     GetKeepaliveInterval()    { return m_keepaliveInterval;   };
-  SOCKET  GetActualSocket()         { return m_actualSocket;        };
+  XString GetHostName()             { return m_hostName;            }
+  USHORT  GetPortNumber()           { return m_portNumber;          }
+  int     GetConnTimeoutSeconds()   { return m_connTimeoutSeconds;  }
+  int     GetRecvTimeoutSeconds()   { return m_recvTimeoutSeconds;  }
+  int     GetSendTimeoutSeconds()   { return m_sendTimeoutSeconds;  }
+  bool    GetUseKeepalive()         { return m_useKeepalive;        }
+  int     GetKeepaliveTime()        { return m_keepaliveTime;       }
+  int     GetKeepaliveInterval()    { return m_keepaliveInterval;   }
+  SOCKET  GetActualSocket()         { return m_actualSocket;        }
 
   // Waiting for this socket to disconnect
   ULONG   RegisterForDisconnect();

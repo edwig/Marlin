@@ -781,7 +781,13 @@ HTTPServerSync::StopServer()
 WebSocket*
 HTTPServerSync::CreateWebSocket(XString p_uri)
 {
-  return new WebSocketServerSync(p_uri);
+  WebSocketServer* socket = new WebSocketServerSync(p_uri);
+
+  // Connect the server logfile, and logging level
+  socket->SetLogfile(m_log);
+  socket->SetLogLevel(m_logLevel);
+
+  return socket;
 }
 
 void
@@ -1301,7 +1307,7 @@ HTTPServerSync::SendResponseBuffer(PHTTP_RESPONSE p_response
   policy.Policy        = m_policy;
   policy.SecondsToLive = m_secondsToLive;
 
-  ULONG flags = p_moreData ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : 0;
+  ULONG flags = p_moreData ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
 
   // Because the entity body is sent in one call, it is not
   // required to specify the Content-Length.
@@ -1353,7 +1359,7 @@ HTTPServerSync::SendResponseBufferParts(PHTTP_RESPONSE  p_response
       p_response->pEntityChunks         = &dataChunk;
     }
     // Flag to calculate the last sending part
-    ULONG flags = (totalSent + entityLength) < p_totalLength ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : 0;
+    ULONG flags = (totalSent + entityLength) < p_totalLength ? HTTP_SEND_RESPONSE_FLAG_MORE_DATA : HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
     DWORD  result = 0;
 
     if(transmitPart == 0)
@@ -1471,12 +1477,13 @@ HTTPServerSync::SendResponseFileHandle(PHTTP_RESPONSE p_response
   dataChunk.FromFileHandle.ByteRange.Length.QuadPart = fileSize; // HTTP_BYTE_RANGE_TO_EOF
   dataChunk.FromFileHandle.FileHandle = file;
 
+  ULONG bytes;
   result = HttpSendResponseEntityBody(m_requestQueue,
                                       p_request,
-                                      0,           // This is the last send.
-                                      1,           // Entity Chunk Count.
+                                      HTTP_SEND_RESPONSE_FLAG_DISCONNECT, // This is the last send.
+                                      1,                                  // Entity Chunk Count.
                                       &dataChunk,
-                                      NULL,
+                                      &bytes,
                                       NULL,
                                       0,
                                       NULL,
@@ -1571,7 +1578,7 @@ HTTPServerSync::SendResponseError(PHTTP_RESPONSE p_response
   // required to specify the Content-Length.
   result = HttpSendHttpResponse(m_requestQueue,      // ReqQueueHandle
                                 p_request,           // Request ID
-                                0,                   // Flags
+                                HTTP_SEND_RESPONSE_FLAG_DISCONNECT, // Flags
                                 p_response,          // HTTP response
                                 &policy,             // Cache policy
                                 &bytesSent,          // bytes sent  (OPTIONAL)

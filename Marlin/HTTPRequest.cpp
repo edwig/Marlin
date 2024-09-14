@@ -147,7 +147,7 @@ HandleAsynchroneousIO(OVERLAPPED* p_overlapped)
   TRACE0("Handle ASYNC I/O\n");
 
   OutstandingIO* outstanding = reinterpret_cast<OutstandingIO*>(p_overlapped);
-  HTTPRequest* request = outstanding->m_request;
+  HTTPRequest* request = dynamic_cast<HTTPRequest*>(outstanding->m_request);
   if(request)
   {
     request->HandleAsynchroneousIO(outstanding->m_action);
@@ -486,7 +486,6 @@ HTTPRequest::ReceivedRequest()
   {
     // Go straight on to the handling of the message
     PostReceive();
-    // m_site->HandleHTTPMessage(m_message);
   }
 }
 
@@ -633,12 +632,13 @@ HTTPRequest::StartSendResponse()
   m_server->LogTraceResponse(m_response,nullptr,m_message->GetEncoding());
 
   // Send the response
+  ULONG bytes  = 0;
   ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
                                       m_requestID,       // Request ID
                                       flags,             // Flags
                                       m_response,        // HTTP response
                                       &m_policy,         // Policy
-                                      nullptr,           // bytes sent  (OPTIONAL)
+                                      &bytes,            // bytes sent  (OPTIONAL)
                                       nullptr,           // pReserved2  (must be NULL)
                                       0,                 // Reserved3   (must be 0)
                                       overlapped,        // LPOVERLAPPED(OPTIONAL)
@@ -732,12 +732,13 @@ HTTPRequest::SendResponseBody()
     chunks = nullptr;
   }
 
+  ULONG bytes  = 0;
   ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
                                             m_requestID,    // Our request
                                             flags,          // More/Last data
                                             chunkcount,     // Entity Chunk Count.
                                             chunks,         // CHUNCK
-                                            nullptr,        // Bytes
+                                            &bytes,         // Bytes
                                             nullptr,        // Reserved1
                                             0,              // Reserved2
                                             &m_writing,     // OVERLAPPED
@@ -857,12 +858,13 @@ HTTPRequest::StartEventStreamResponse()
   ResetOutstanding(m_writing);
   m_writing.m_action = IO_StartStream;
 
+  ULONG bytes  = 0;
   ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
                                       m_requestID,       // Request ID
                                       flags,             // Flags
                                       m_response,        // HTTP response
                                       &m_policy,         // Policy
-                                      nullptr,           // bytes sent  (OPTIONAL)
+                                      &bytes,            // bytes sent  (OPTIONAL)
                                       nullptr,           // pReserved2  (must be NULL)
                                       0,                 // Reserved3   (must be 0)
                                       &m_writing,        // LPOVERLAPPED(OPTIONAL)
@@ -944,13 +946,14 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
   if(m_server)
   {
     USHORT chunkcount = 1;
+    ULONG  bytes = 0;
     m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length);
     ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
                                               m_requestID,    // Our request
                                               flags,          // More/Last data
                                               chunkcount,     // Entity Chunk Count.
                                               chunks,         // CHUNCK
-                                              nullptr,        // Bytes
+                                              &bytes,         // Bytes
                                               nullptr,        // Reserved1
                                               0,              // Reserved2
                                               &m_writing,     // OVERLAPPED

@@ -332,6 +332,7 @@
     <ClCompile Include="AppConfig.cpp" />
     <ClCompile Include="ClientEventDriver.cpp" />
     <ClCompile Include="CommandBus.cpp" />
+    <ClCompile Include="CPULoad.cpp" />
     <ClCompile Include="HostedWebCore.cpp" />
     <ClCompile Include="HTTPCertificate.cpp" />
     <ClCompile Include="CreateURLPrefix.cpp" />
@@ -391,16 +392,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ThreadPool.cpp" />
-    <ClCompile Include="ThreadPoolED.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="MarlinConfig.cpp" />
     <ClCompile Include="WebConfigIIS.cpp" />
     <ClCompile Include="WebServiceClient.cpp" />
@@ -480,7 +471,6 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ThreadPool.h" />
-    <ClInclude Include="ThreadPoolED.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="MarlinConfig.h" />
     <ClInclude Include="WebConfigIIS.h" />

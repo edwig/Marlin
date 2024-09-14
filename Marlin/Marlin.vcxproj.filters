@@ -171,9 +171,6 @@
     <ClCompile Include="HTTPServerSync.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
-    <ClCompile Include="ThreadPoolED.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="WebSocketClient.cpp">
       <Filter>MarlinClient</Filter>
     </ClCompile>
@@ -221,6 +218,9 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="CPULoad.cpp">
+      <Filter>MarlinGeneral</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -385,9 +385,6 @@
     </ClInclude>
     <ClInclude Include="HTTPServerSync.h">
       <Filter>MarlinServer\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ThreadPoolED.h">
-      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="HTTPLoglevel.h">
       <Filter>MarlinGeneral\Headers</Filter>

@@ -41,12 +41,7 @@ HttpCancelHttpRequest(IN HANDLE           RequestQueueHandle
   // Handle our request
   if(queue->RequestStillInService(request))
   {
-//     // Try restart on a keep-alive
-//     if(request->RestartConnection() == false)
-//     {
-      // If not: Remove request from servicing queue
-      queue->RemoveRequest(request);
-//    }
+    queue->RemoveRequest(request);
   }
   return NO_ERROR;
 }

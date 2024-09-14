@@ -52,6 +52,16 @@ static char THIS_FILE[] = __FILE__;
 #define ERRORLOG(code,text)       ErrorLog (_T(__FUNCTION__),code,text)
 #define HTTPERROR(code,text)      HTTPError(_T(__FUNCTION__),code,text)
 
+// Marlin extensions to HTTP_SERVER_PROPERTY enumeration
+#define HttpServerIOCPPort 32
+#define HttpServerIOCPKey  33
+
+//////////////////////////////////////////////////////////////////////////
+//
+// The Server
+//
+//////////////////////////////////////////////////////////////////////////
+
 HTTPServerMarlin::HTTPServerMarlin(XString p_name)
                  :HTTPServer(p_name)
 {
@@ -126,8 +136,9 @@ HTTPServerMarlin::Initialise()
   DETAILLOGV(_T("Request queue created: %p"),m_requestQueue);
 
   // STEP 6: SET UP FOR ASYNC I/O
-  // Register the request queue for async I/O
-  retCode = m_pool.AssociateIOHandle(m_requestQueue,(ULONG_PTR)HandleAsynchroneousIO);
+  // Register the request queue for asynchronous I/O
+  ULONG_PTR key = (ULONG_PTR)HandleAsynchroneousIO;
+  retCode = m_pool.AssociateIOHandle(m_requestQueue,key);
   if(retCode != NO_ERROR)
   {
     ERRORLOG(retCode,_T("Associate request queue with the I/O completion port of the threadpool."));
@@ -135,7 +146,13 @@ HTTPServerMarlin::Initialise()
   }
   DETAILLOGV(_T("Request queue registrated by the threadpool"));
 
-  // STEP 7: SET THE LENGTH OF THE BACKLOG QUEUE FOR INCOMING TRAFFIC
+  // STEP 7: Tell the I/O completion port and key to the HTTP Driver
+  // This is a Marlin extension and will be ignored by the standard drivers
+  HANDLE iocp = m_pool.GetIOCompletionPort();
+  HttpSetRequestQueueProperty(m_requestQueue,(HTTP_SERVER_PROPERTY) HttpServerIOCPPort,&iocp,sizeof(HANDLE),   0,NULL);
+  HttpSetRequestQueueProperty(m_requestQueue,(HTTP_SERVER_PROPERTY) HttpServerIOCPKey, &key, sizeof(ULONG_PTR),0,NULL);
+
+  // STEP 8: SET THE LENGTH OF THE BACKLOG QUEUE FOR INCOMING TRAFFIC
   // Overrides for the HTTP Site. Test min/max via SetQueueLength
   int queueLength = m_marlinConfig->GetParameterInteger(_T("Server"),_T("QueueLength"),m_queueLength);
   SetQueueLength(queueLength);
@@ -155,7 +172,7 @@ HTTPServerMarlin::Initialise()
     DETAILLOGV(_T("HTTP backlog queue set to length: %lu"),m_queueLength);
   }
 
-  // STEP 8: SET VERBOSITY OF THE 503 SERVER ERROR
+  // STEP 9: SET VERBOSITY OF THE 503 SERVER ERROR
   // Set the 503-Verbosity: using HttpSetRequestQueueProperty
   DWORD verbosity = Http503ResponseVerbosityFull;
   retCode = HttpSetRequestQueueProperty(m_requestQueue
@@ -173,16 +190,16 @@ HTTPServerMarlin::Initialise()
     DETAILLOGV(_T("HTTP 503-Error verbosity set to: %d"),verbosity);
   }
 
-  // STEP 9: Set the hard limits
+  // STEP 10: Set the hard limits
   InitHardLimits();
 
-  // STEP 10: Set the event stream parameters
+  // STEP 11: Set the event stream parameters
   InitEventstreamKeepalive();
 
-  // STEP 11: Init the response headers to send
+  // STEP 12: Init the response headers to send
   InitHeaders();
 
-  // STEP 12: Init the ThreadPool
+  // STEP 13: Init the ThreadPool
   InitThreadPool();
 
   // We are airborne!
@@ -718,7 +735,13 @@ HTTPServerMarlin::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/
 WebSocket*
 HTTPServerMarlin::CreateWebSocket(XString p_uri)
 {
-  return new WebSocketServer(p_uri);
+  WebSocketServer* socket = new WebSocketServer(p_uri);
+
+  // Connect the server logfile, and logging level
+  socket->SetLogfile(m_log);
+  socket->SetLogLevel(m_logLevel);
+
+  return socket;
 }
 
 // Receive the WebSocket stream and pass on the the WebSocket

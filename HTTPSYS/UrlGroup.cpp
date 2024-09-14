@@ -333,6 +333,10 @@ UrlGroup::UrlIsRegistered(CString pFullyQualifiedUrl)
     {
       url = url.Left(pos + 1);
     }
+    if(url.GetLength() < 7)
+    {
+      break;
+    }
   }
   return result;
 }

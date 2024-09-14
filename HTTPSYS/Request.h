@@ -63,6 +63,7 @@ public:
   Listener*         GetListener()       { return m_listener;            };
   HANDLE            GetAccessToken()    { return m_token;               };
   bool              GetResponseComplete();
+  XString           GetHostName();
 
   // FUNCTIONS
   void              ReceiveRequest();

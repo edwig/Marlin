@@ -184,6 +184,12 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy library definition</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|Win32'">
     <ClCompile>
@@ -202,6 +208,12 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy library definition</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -224,6 +236,12 @@
       <AdditionalDependencies>secur32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy library definition</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|x64'">
     <ClCompile>
@@ -246,6 +264,12 @@
       <AdditionalDependencies>secur32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy library definition</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -268,6 +292,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy library definition</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|Win32'">
     <ClCompile>
@@ -290,6 +320,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy library definition</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -313,6 +349,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy library definition</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|x64'">
     <ClCompile>
@@ -336,10 +378,15 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy library definition</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CertificateInfo.h" />
-    <ClInclude Include="CodeBase64.h" />
     <ClInclude Include="CreateCertificate.h" />
     <ClInclude Include="GetUserAccount.h" />
     <ClInclude Include="HTTPReadRegister.h" />
@@ -362,7 +409,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CertificateInfo.cpp" />
-    <ClCompile Include="CodeBase64.cpp" />
     <ClCompile Include="CreateCertificate.cpp" />
     <ClCompile Include="ErrorPages.cpp" />
     <ClCompile Include="GetUserAccount.cpp" />

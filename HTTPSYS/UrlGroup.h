@@ -70,10 +70,10 @@ private:
   bool                GetURLSettings(URL& p_url);
 
   // Primary identity
-  ULONGLONG          m_ident { HTTP_URLGROUP_IDENT };
-  ServerSession*     m_session;
-  RequestQueue*      m_queue { NULL };
-  HTTP_ENABLED_STATE m_state;
+  ULONGLONG          m_ident    { HTTP_URLGROUP_IDENT    };
+  ServerSession*     m_session  { nullptr };
+  RequestQueue*      m_queue    { NULL    };
+  HTTP_ENABLED_STATE m_state    { HttpEnabledStateActive };
   // Timeouts
   USHORT             m_timeoutEntityBody        { URL_TIMEOUT_ENTITY_BODY     };
   USHORT             m_timeoutDrainEntityBody   { URL_TIMEOUT_DRAIN_BODY      };

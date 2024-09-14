@@ -10,6 +10,21 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "RequestQueue.h"
+#include "UrlGroup.h"
+#include "ServerSession.h"
+#include <LogAnalysis.h>
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Actual call
+//
+//////////////////////////////////////////////////////////////////////////
 
 ULONG WINAPI
 HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
@@ -20,9 +35,16 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
                       ,_Out_opt_ PULONG   BytesReturned
                       ,IN LPOVERLAPPED    Overlapped OPTIONAL)
 {
+  // Preset to zero
+  if(BytesReturned)
+  {
+    *BytesReturned = 0;
+  }
+
   // VARIOUS CHECKS
-  // Both cannot be supplied (sync I/O or Async I/O must be performed)
-  if(BytesReturned && Overlapped)
+  // Both cannot be supplied (sync I/O or Asynchronous I/O must be performed)
+  if((BytesReturned == nullptr && Overlapped == nullptr) ||
+     (BytesReturned != nullptr && Overlapped != nullptr))
   {
     return ERROR_INVALID_PARAMETER;
   }
@@ -40,16 +62,9 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
   }
 
   // If we re-issue a read call, it must be for the same request
-  if(RequestId && RequestId != RequestBuffer->RequestId)
+  if(RequestId && RequestBuffer && (RequestId != RequestBuffer->RequestId))
   {
     return ERROR_INVALID_PARAMETER;
-  }
-
-  // SORRY: Currently not supported by this driver
-  // Must create overlapped I/O implementation on a later date
-  if(Overlapped)
-  {
-    return ERROR_IMPLEMENTATION_LIMIT;
   }
 
   // Find the request queue
@@ -59,6 +74,32 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
+  // Overlapped I/O needs an I/O Completion port from the server.
+  if(Overlapped && (queue->GetIOCompletionPort() == nullptr || queue->GetIOCompletionKey() == NULL))
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
+
+  // In case of overlapped I/O we will return by means of the completion routine
+  if(Overlapped)
+  {
+    // Register our parameters
+    PREGISTER_HTTP_RECEIVE_REQUEST req = new REGISTER_HTTP_RECEIVE_REQUEST();
+    req->r_size                = sizeof(REGISTER_HTTP_RECEIVE_REQUEST);
+    req->r_queue               = queue;
+    req->r_id                  = RequestId;
+    req->r_flags               = Flags;
+    req->r_requestBuffer       = RequestBuffer;
+    req->r_requestBufferLength = RequestBufferLength;
+    req->r_overlapped          = Overlapped;
+
+    queue->AddWaitingRequest(req);
+
+    // IO completion pending
+    return ERROR_IO_PENDING;
+  }
+
+  // Sync I/O: We will now get the next request or wait for it
   // Get the next request from the queue
   ULONG bytes  = 0;
   ULONG result = queue->GetNextRequest(RequestId,Flags,RequestBuffer,RequestBufferLength,&bytes);
@@ -70,4 +111,62 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
   }
 
   return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// ASYNC IO
+//
+//////////////////////////////////////////////////////////////////////////
+
+void StartAsyncReceiveHttpRequest(PREGISTER_HTTP_RECEIVE_REQUEST req)
+{
+  if(req == nullptr || req->r_size != sizeof(REGISTER_HTTP_RECEIVE_REQUEST))
+  {
+    return;
+  }
+  _set_se_translator(SeTranslator);
+  XString error;
+
+  try
+  {
+    // ASync I/O: We will now get the next request or wait for it
+    // Get the next request from the queue
+    ULONG bytes  = 0;
+    ULONG result = req->r_queue->GetNextRequest(req->r_id,req->r_flags,req->r_requestBuffer,req->r_requestBufferLength,&bytes);
+    if(result)
+    {
+      error.Format("Cannot receive next request. Error: %d ",result);
+    }
+
+    // Remember the results
+    req->r_overlapped->Internal     = (DWORD) result;
+    req->r_overlapped->InternalHigh = (DWORD) bytes;
+
+    // Post a completion to the applications completion port for the request queue
+    if(PostQueuedCompletionStatus(req->r_queue->GetIOCompletionPort(),bytes,req->r_queue->GetIOCompletionKey(),req->r_overlapped) == 0)
+    {
+      error += _T("Cannot post a completion status to the IOCP");
+    }
+  }
+  catch(StdException& ex)
+  {
+    error += ex.GetErrorMessage();
+  }
+  if(!error.IsEmpty())
+  {
+    // Not yet implemented in the Microsoft base HTTPSYS.DLL driver.
+    UrlGroup* group = req->r_queue->FirstURLGroup();
+    if (group)
+    {
+      ServerSession* session = group->GetServerSession();
+      if(session)
+      {
+        session->GetLogfile()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,false,error.GetString());
+      }
+    }
+  }
+
+  // Ready with the request
+  delete req;
 }
