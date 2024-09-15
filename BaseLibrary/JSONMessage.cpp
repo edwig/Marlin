@@ -792,6 +792,7 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
       ParseMessage(message);
     }
   }
+  delete [] buffer;
 }
 
 JSONMessage::JSONMessage(SOAPMessage* p_message)

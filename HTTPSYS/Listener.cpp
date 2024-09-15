@@ -17,13 +17,12 @@
 #include "UrlGroup.h"
 #include "SSLUtilities.h"
 #include "Logging.h"
-#include <LogAnalysis.h>
 
+#include <LogAnalysis.h>
 #include <process.h>
 #include <strsafe.h>
 #include <atlconv.h>
 #include <WS2tcpip.h>
-#include "Logging.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -103,8 +102,18 @@ UINT __cdecl Listener::ListenerWorker(LPVOID p_param)
   // See _beginthread call for parameter definition
   Listener* listener = reinterpret_cast<Listener *>(p_param); 
 
-  SetThreadName(_T("HTTPListener"));
+#ifdef _DEBUG
+  // Setting the thread name for the debugger
+  CString listenerName;
+  listenerName.Format(_T("HTTPListener on port: %d"),listener->GetPort());
+  if (listener->GetSecureMode())
+  {
+    listenerName += _T(" (secure)");
+  }
+  SetThreadName(listenerName.GetString(),GetCurrentThreadId());
+#endif
 
+  // Do the actual listening
   listener->Listen();
   return 0;
 }
@@ -177,7 +186,7 @@ Listener::Initialize(int p_tcpListenPort)
       return SocketUnusable;
     }
     // Accept the FD_ACCEPT-ing event of the socket
-    if(WSAEventSelect(m_listenSockets[i],m_hSocketEvents[i],FD_ACCEPT | FD_CLOSE))
+    if(WSAEventSelect(m_listenSockets[i],m_hSocketEvents[i],FD_ACCEPT))
     {
       return SocketUnusable;
     }
@@ -238,12 +247,16 @@ void Listener::Listen(void)
     int iMyIndex = wait-1;
 
     WSAResetEvent(m_hSocketEvents[iMyIndex]);
-    readSocket = accept(m_listenSockets[iMyIndex],0,0);
-    if (readSocket == INVALID_SOCKET)
+
+    readSocket = WSAAccept(m_listenSockets[iMyIndex],0,0,0,0);
+    if(readSocket == INVALID_SOCKET)
     {
-      LogError(_T("Accept: readSocket == INVALID_SOCKET"));
-      break;
+      int error = WSAGetLastError();
+      LogError(_T("Accept: readSocket == INVALID_SOCKET. Error: %d"), error);
+      continue;
     }
+
+    TRACE("Accepted socket for port: %d\n",m_port);
 
     // A request to open a socket has been received, begin a thread to handle that connection.
     // Secure connections can take long to establish because of the handshaking, 

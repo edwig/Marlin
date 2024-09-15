@@ -38,7 +38,9 @@ RequestQueue::~RequestQueue()
 {
   StopAllListeners();
   DeleteAllFragments();
+  ClearIncomingWaiters();
   DeleteAllWaiters();
+  DeleteAllServicing();
   DeleteCriticalSection(&m_lock);
   CloseEvent();
   CloseQueueHandle();
@@ -178,6 +180,7 @@ RequestQueue::StartListener(USHORT p_port,URL* p_url,USHORT p_timeout)
     if(listener->Initialize(p_port) == NoError)
     {
       listener->StartListener();
+      m_listening = true;
       return NO_ERROR;
     }
     else
@@ -211,6 +214,9 @@ RequestQueue::StopListener(USHORT p_port)
     delete it->second;
     m_listeners.erase(it);
   }
+
+  // No longer listening
+  m_listening = false;
   return NO_ERROR;
 }
 
@@ -304,10 +310,11 @@ RequestQueue::GetNextRequest(HTTP_REQUEST_ID  RequestId
       DWORD result = WaitForSingleObject(m_event,INFINITE);
       lock.Relock();
 
+      // Check if server is stopping
       // Still no request in the queue, or event interrupted
-      if(m_incoming.empty() || result == WAIT_ABANDONED || result == WAIT_FAILED)
+      if(!m_listening || m_incoming.empty() || result == WAIT_ABANDONED || result == WAIT_FAILED)
       {
-        return ERROR_HANDLE_EOF;
+        return ERROR_OPERATION_ABORTED;
       }
     }
 
@@ -452,16 +459,29 @@ RequestQueue::AddFragment(CString p_prefix, PHTTP_DATA_CHUNK p_chunk)
 {
   AutoCritSec lock(&m_lock);
 
+  if(p_chunk == nullptr || p_prefix.IsEmpty())
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
+
   p_prefix.MakeLower();
   Fragments::iterator it = m_fragments.find(p_prefix);
   if(it != m_fragments.end())
   {
     // Make a copy of the memory data chunk
     PHTTP_DATA_CHUNK chunk = (PHTTP_DATA_CHUNK) calloc(1,sizeof(HTTP_DATA_CHUNK));
+    if(chunk == nullptr)
+    {
+      return ERROR_OUTOFMEMORY;
+    }
     chunk->DataChunkType = HttpDataChunkFromMemory;
     ULONG length = p_chunk->FromMemory.BufferLength;
     chunk->FromMemory.BufferLength =   length;
     chunk->FromMemory.pBuffer = malloc(length + 1);
+    if (chunk->FromMemory.pBuffer == nullptr)
+    {
+      return ERROR_OUTOFMEMORY;
+    }
     memcpy (chunk->FromMemory.pBuffer,p_chunk->FromMemory.pBuffer,length);
     ((char*)chunk->FromMemory.pBuffer)[length] = 0;
 
@@ -590,6 +610,10 @@ RequestQueue::RegisterDemandStart()
     return ERROR_ALREADY_EXISTS;
   }
   m_start = ::CreateEvent(nullptr,FALSE,FALSE,nullptr);
+  if(m_start == NULL)
+  {
+    return ERROR_RESOURCE_FAILED;
+  }
   DWORD result = WaitForSingleObject(m_start,INFINITE);
 
   CloseHandle(m_start);
@@ -734,3 +758,14 @@ RequestQueue::DeleteAllWaiters()
   }
 }
 
+// Part of the reset procedure: Clean out the servicing requests queue
+void
+RequestQueue::DeleteAllServicing()
+{
+  while(!m_servicing.empty())
+  {
+    Request* request = m_servicing.front();
+    delete request;
+    m_servicing.pop_front();
+  }
+}

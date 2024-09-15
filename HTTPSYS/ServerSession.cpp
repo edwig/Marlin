@@ -287,7 +287,7 @@ ServerSession::CreateLogfile()
   CString name(_T("HTTP_Server"));
   m_logfile = LogAnalysis::CreateLogfile(name);
   m_logfile->SetLogRotation(true);
-  m_logfile->SetLogLevel(m_socketLogging = SOCK_LOGGING_FULLTRACE);
+  // m_logfile->SetLogLevel(m_socketLogging = SOCK_LOGGING_FULLTRACE);
 
   CString filename;
   filename.GetEnvironmentVariable(_T("WINDIR"));

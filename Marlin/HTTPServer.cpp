@@ -179,8 +179,8 @@ HTTPServer::InitLogging()
   }
 
   // Create a new one for ourselves
-    m_log = LogAnalysis::CreateLogfile(m_name);
-    m_logOwner = true;
+  m_log = LogAnalysis::CreateLogfile(m_name);
+  m_logOwner = true;
 
   XString file    = m_log->GetLogFileName();
   int  cache      = m_log->GetCacheSize();
@@ -1297,6 +1297,7 @@ HTTPServer::SendEvent(EventStream* p_stream
   // and has not been closed by the event monitor
   if(!HasEventStream(p_stream))
   {
+    delete p_event;
     return false;
   }
 

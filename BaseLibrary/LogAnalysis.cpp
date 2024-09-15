@@ -105,6 +105,16 @@ LogAnalysis::Release()
     // Flushing the cache and ending all writing activity
     // Writer will delete by releasing last reference counter
     SetEvent(m_event);
+
+    // Wait until the writer has stopped
+    for(int ind = 0; ind < LOGWRITE_WAITSTOP; ++ind)
+    {
+      if(m_logThread == NULL)
+      {
+        break;
+      }
+      Sleep(50);
+    }
   }
   return refs;
 }

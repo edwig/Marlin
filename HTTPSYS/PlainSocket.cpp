@@ -386,12 +386,11 @@ PlainSocket::Close(void)
   if(m_initDone)
   {
     // Shutdown both sides of the socket
-    if(Disconnect(SD_SEND) != 0)
+    if(shutdown(m_actualSocket,SD_BOTH) != 0)
     {
 		  m_lastError = ::WSAGetLastError();
-		  return false;
 	  }
-
+    // And then close it directly
     if(closesocket(m_actualSocket))
     {
       // Log the error

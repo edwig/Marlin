@@ -405,7 +405,7 @@ HTTPServerSync::RunHTTPServer()
                                           NULL);              // LPOVERLAPPED
     
     // See if server was aborted by the closing of the request queue
-    if(result == ERROR_OPERATION_ABORTED)
+    if(result == ERROR_OPERATION_ABORTED || result == ERROR_HANDLE_EOF)
     {
       DETAILLOG1(_T("Operation on the HTTP server aborted!"));
       m_running = false;
@@ -859,6 +859,11 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encodin
     switch(result)
     {
       case NO_ERROR:          // Regular incoming body part
+                              if(bytesRead == 0)
+                              {
+                                reading = false;
+                                break;
+                              }
                               entityBuffer[bytesRead] = 0;
                               p_message->AddBody(entityBuffer,bytesRead);
                               DETAILLOGV(_T("ReceiveRequestEntityBody [%d] bytes"),bytesRead);

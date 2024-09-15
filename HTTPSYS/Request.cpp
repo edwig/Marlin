@@ -100,7 +100,10 @@ Request::ReceiveRequest()
   {
     try
     {
+      TRACE("Reading HTTP request header line.. Port: %d\n",m_port);
       ReceiveHeaders();
+      TRACE("Reading HTTP request continuation. Port: %d\n",m_port);
+
       if(CheckAuthentication())
       {
         looping = true;
@@ -110,6 +113,7 @@ Request::ReceiveRequest()
       }
       else
       {
+        TRACE("Reading HTTP request accepted req. Port: %d\n", m_port);
         m_queue->AddIncomingRequest(this);
         looping = false;
       }
@@ -151,7 +155,7 @@ Request::CloseRequest()
     if(m_socket->Close() == false)
     {
       // Log the error
-      int error = WSAGetLastError();
+      int error = m_socket->GetLastError();
       LogError(_T("Error shutdown connection: %s Error: %d"),m_request.pRawUrl,error);
     }
     delete m_socket;
@@ -772,6 +776,7 @@ Request::ReceiveHeaders()
   // Getting the HTTP protocol line
   LPSTR line = ReadTextLine();
   ReceiveHTTPLine(line);
+  delete[] line;
 
   // Reading all request headers
   while (true)
@@ -780,10 +785,14 @@ Request::ReceiveHeaders()
     if(line[0])
     {
       ProcessHeader(line);
+      delete[] line;
     }
-    else break;
+    else 
+    {
+      delete[] line;
+      break;
+    }
   }
-  delete[] line;
 
   // Finding our site context
   FindUrlContext();

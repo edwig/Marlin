@@ -122,6 +122,7 @@ private:
   ULONG       NumberOfPorts(USHORT p_port);
   void        DeleteAllFragments();
   void        DeleteAllWaiters();
+  void        DeleteAllServicing();
   void        CreateEvent();
   void        CloseEvent();
   void        CloseQueueHandle();
@@ -138,6 +139,7 @@ private:
   UrlGroups                   m_groups;
   // All listeners
   Listeners                   m_listeners;
+  bool                        m_listening { false };
   // All requests from HTTP. Our 'real' queues
   Requests                    m_incoming;       // Incoming (unserviced) requests
   Requests                    m_servicing;      // Currently serviced by server
