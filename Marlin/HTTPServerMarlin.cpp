@@ -764,10 +764,66 @@ HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* /*p_message*/,Encoding /*p
 
 // Sending a response as a chunk
 void
-HTTPServerMarlin::SendAsChunk(HTTPMessage* p_message, bool /*p_final*/ /*= false*/)
+HTTPServerMarlin::SendAsChunk(HTTPMessage* p_message, bool p_final /*= false*/)
 {
-  ERRORLOG(ERROR_IMPLEMENTATION_LIMIT,_T("To be implemented"));
-  SendResponse(p_message);
+  // Check if multi-part buffer or file
+  FileBuffer* buffer = p_message->GetFileBuffer();
+  if(!buffer->GetFileName().IsEmpty())
+  {
+    ERRORLOG(ERROR_INVALID_PARAMETER, _T("Send as chunk cannot send a file!"));
+    return;
+  }
+  // Chunk encode the file buffer
+  if(!buffer->ChunkedEncoding(p_final))
+  {
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY, _T("Cannot chunk-encode the message for transfer-encoding!"));
+    return;
+  }
+
+  // If we want to send a (g)zipped buffer, that should have been done already by now
+  p_message->SetAcceptEncoding(_T(""));
+  // Add chunked indicator
+  p_message->AddHeader(HttpHeaderTransferEncoding,"chunked");
+
+  // Get the chunk number (first->next)
+  unsigned chunk = p_message->GetChunkNumber();
+  p_message->SetChunkNumber(++chunk);
+  DETAILLOGV(_T("Transfer-encoding [Chunked] Sending chunk [%d]"), chunk);
+
+  HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_message->GetRequestHandle());
+  if(!request)
+  {
+    ERRORLOG(ERROR_INVALID_PARAMETER,_T("Cannot chunk-encode the message for transfer-encoding! Message already handled!"));
+    return;
+  }
+
+  if(chunk == 1)
+  {
+    // Send the first chunk, and wait for it to be sent. (Blocking I/O)
+    HANDLE chunkEvent = ::CreateEvent(NULL,TRUE,FALSE,nullptr);
+    request->SetChunkEvent(chunkEvent);
+
+    // Send the response headers and first body part
+    SendResponse(p_message);
+
+    // Wait for response and first body to be sent
+    WaitForSingleObject(chunkEvent,INFINITE);
+    CloseHandle(chunkEvent);
+  }
+  else
+  {
+    // Send next chunks in blocking I/O mode directly
+    BYTE*  bytes  = nullptr;
+    size_t length = 0;
+    buffer->GetBuffer(bytes,length);
+    request->SendResponseStream(bytes,length,!p_final);
+
+    if(p_final)
+    {
+      // Do **NOT** send an another chunk
+      p_message->SetHasBeenAnswered();
+    }
+  }
 }
 
 // Sending response for an incoming message
@@ -779,8 +835,10 @@ HTTPServerMarlin::SendResponse(HTTPMessage* p_message)
   {
     // Reset the request handle here. The response will continue async from here
     // so the next handlers cannot find a request handle to answer to
-    p_message->SetHasBeenAnswered();
-
+    if(p_message->GetChunkNumber() == 0)
+    {
+      p_message->SetHasBeenAnswered();
+    }
     // Go send the response ASYNC
     request->StartResponse(p_message);
   }

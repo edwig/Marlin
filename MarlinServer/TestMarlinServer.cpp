@@ -374,8 +374,8 @@ TestMarlinServer::ConfigToServer()
     }
     // Create a sync server or a a-synchronous server
     // Un-Comment the other if you want to test it.
-    m_httpServer  = new HTTPServerSync(m_serverName);
-    // m_httpServer  = new HTTPServerMarlin(m_serverName);
+    // m_httpServer  = new HTTPServerSync(m_serverName);
+    m_httpServer  = new HTTPServerMarlin(m_serverName);
     m_serverOwner = true; // Do DTOR later!
   }
 

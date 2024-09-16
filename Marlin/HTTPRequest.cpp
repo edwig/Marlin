@@ -731,6 +731,12 @@ HTTPRequest::SendResponseBody()
     chunks = nullptr;
   }
 
+  // See if it is the first chunk for a 'chunked' transfer
+  if(m_message->GetChunkNumber())
+  {
+    flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+  }
+
   ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
                                             m_requestID,    // Our request
                                             flags,          // More/Last data
@@ -794,14 +800,22 @@ HTTPRequest::SendBodyPart()
     m_server->LogTraceResponse(m_response,m_message);
   }
 
-  // Message is done. Break the connection with the HTTPRequest
-  m_message->SetHasBeenAnswered();
-
   FlushFileBuffers(m_server->GetRequestQueue());
 
-  // End of the line for the whole request
-  // We did send everything as an answer
-  Finalize();
+  if(m_message->GetChunkNumber() == 0)
+  {
+    // Message is done. Break the connection with the HTTPRequest
+    m_message->SetHasBeenAnswered();
+
+    // End of the line for the whole request
+    // We did send everything as an answer
+    Finalize();
+  }
+  else if(m_chunkEvent)
+  {
+    ::SetEvent(m_chunkEvent);
+    m_chunkEvent = NULL;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -969,6 +983,7 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
       if(p_continue == false)
       {
         DETAILLOG1(_T("Stream connection closed"));
+        Finalize();
       }
     }
   }

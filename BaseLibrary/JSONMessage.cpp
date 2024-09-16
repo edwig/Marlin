@@ -1474,7 +1474,13 @@ JSONMessage::DropReference()
 {
   if(InterlockedDecrement(&m_references) <= 0)
   {
-    delete this;
+    try
+    {
+      delete this;
+    }
+    catch (StdException&)
+    {
+    }
   }
 }
 

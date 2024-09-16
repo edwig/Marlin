@@ -970,6 +970,7 @@ HTTPServerSync::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
   if(!buffer->ChunkedEncoding(p_final))
   {
     ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Cannot chunk-encode the message for transfer-encoding!"));
+    return;
   }
 
   // If we want to send a (g)zipped buffer, that should have been done already by now
@@ -998,7 +999,7 @@ HTTPServerSync::SendAsChunk(HTTPMessage* p_message,bool p_final /*= false*/)
   }
   if(p_final)
   {
-    // Do **NOT** send an answer twice
+    // Do **NOT** send an another chunk
     p_message->SetHasBeenAnswered();
   }
 }

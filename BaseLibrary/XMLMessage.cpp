@@ -695,7 +695,7 @@ XMLMessage::EncryptMessage(XString& /*p_message*/)
 
 // General add a parameter (always adds, so multiple parameters of same name can be added)
 XMLElement*
-XMLMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type,XString p_value,bool p_front /*=false*/)
+XMLMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type /*=XDT_String*/, XString p_value /*=""*/, bool p_front /*=false*/)
 {
   // Removing the namespace from the name
   XString namesp = SplitNamespace(p_name);
