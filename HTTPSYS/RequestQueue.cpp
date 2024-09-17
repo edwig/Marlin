@@ -434,6 +434,7 @@ RequestQueue::RemoveRequest(Request* p_request)
   Requests::iterator it = std::find(m_servicing.begin(),m_servicing.end(),p_request);
   if(it != m_servicing.end())
   {
+    TRACE("DELETE request from servicing queue\n");
     delete p_request;
     m_servicing.erase(it);
     return;
@@ -443,6 +444,7 @@ RequestQueue::RemoveRequest(Request* p_request)
   it = std::find(m_incoming.begin(),m_incoming.end(),p_request);
   if(it != m_incoming.end())
   {
+    TRACE("DELETE request from incoming queue\n");
     delete p_request;
     m_incoming.erase(it);
     return;
@@ -450,6 +452,7 @@ RequestQueue::RemoveRequest(Request* p_request)
 
   // Request was not found in any queue
   // Delete it all the while
+  TRACE("DELETE dangling request\n");
   delete p_request;
 }
 

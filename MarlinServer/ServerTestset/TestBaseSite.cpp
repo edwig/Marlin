@@ -143,7 +143,7 @@ TestMarlinServer::TestBaseSite()
   // Site is using CORS for safety
   site->SetUseCORS(true);
   site->SetCORSOrigin(_T("http://localhost"));    // this machine
-  site->SetCORSMaxAge(43200);                 // Half a day
+  site->SetCORSMaxAge(43200);                     // Half a day
 
   // Start the site explicitly
   if(site->StartSite())

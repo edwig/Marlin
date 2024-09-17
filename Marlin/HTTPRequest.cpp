@@ -359,6 +359,10 @@ HTTPRequest::ReceivedRequest()
   // Remember the context: easy in API 2.0
   if(callback == nullptr && m_site == nullptr)
   {
+    if(m_message)
+    {
+      m_message->DropReference();
+    }
     m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
     m_message->AddReference();
     m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
@@ -391,6 +395,10 @@ HTTPRequest::ReceivedRequest()
                             if(type == HTTPCommand::http_no_command)
                             {
                               // Non implemented like HttpVerbTRACK or other non-known verbs
+                              if(m_message)
+                              {
+                                m_message->DropReference();
+                              }
                               m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
                               m_message->AddReference();
                               m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
@@ -420,6 +428,10 @@ HTTPRequest::ReceivedRequest()
   }
 
   // For all types of requests: Create the HTTPMessage
+  if(m_message)
+  {
+    m_message->DropReference();
+  }
   m_message = new HTTPMessage(type,m_site);
   m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
   m_message->AddReference();
@@ -606,8 +618,17 @@ HTTPRequest::StartSendResponse()
   m_writing.m_action = IO_Response;
 
   // We promise to always call HttpSendResponseEntityBody
-  ULONG flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
-
+  ULONG flags = HTTP_SEND_RESPONSE_FLAG_DISCONNECT;
+  
+  if(m_message->GetFileBuffer()->GetLength() > 0 || 
+     m_message->GetChunkNumber())
+  {
+    flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+  }
+  else
+  {
+    m_writing.m_action = IO_Writing;
+  }
   // Place HTTPMessage in the response structure
   FillResponse(m_message->GetStatus());
 
@@ -619,7 +640,10 @@ HTTPRequest::StartSendResponse()
   OutstandingIO* overlapped = &m_writing;
   if (m_response->StatusCode == HTTP_STATUS_SWITCH_PROTOCOLS)
   {
-    flags |= HTTP_SEND_RESPONSE_FLAG_OPAQUE | HTTP_SEND_RESPONSE_FLAG_BUFFER_DATA;
+    // Keep the request/socket open
+    flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA |
+            HTTP_SEND_RESPONSE_FLAG_OPAQUE    |
+            HTTP_SEND_RESPONSE_FLAG_BUFFER_DATA;
     m_writing.m_action     = IO_Nothing;
     m_policy.Policy        = HttpCachePolicyNocache;
     m_policy.SecondsToLive = 0;
@@ -788,7 +812,7 @@ HTTPRequest::SendBodyPart()
 
     if(m_responding)
     {
-      // See if we need to send another chunk
+      // See if we need to send another chunk to send
       if(filebuf->GetHasBufferParts() &&
         (m_bufferpart < filebuf->GetNumberOfParts()))
       {
@@ -813,6 +837,7 @@ HTTPRequest::SendBodyPart()
   }
   else if(m_chunkEvent)
   {
+    // First chunk is sent, continue with "SendChunk"
     ::SetEvent(m_chunkEvent);
     m_chunkEvent = NULL;
   }
@@ -957,40 +982,60 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
   if(m_server)
   {
     USHORT chunkcount = 1;
+    ULONG bytes = 0;
     m_server->LogTraceResponse(nullptr,m_sendBuffer,(int) p_length);
     ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
                                               m_requestID,    // Our request
                                               flags,          // More/Last data
                                               chunkcount,     // Entity Chunk Count.
                                               chunks,         // CHUNCK
-                                              nullptr,        // Bytes
+                                              &bytes,         // Bytes
                                               nullptr,        // Reserved1
                                               0,              // Reserved2
-                                              &m_writing,     // OVERLAPPED
+                                              nullptr,        // OVERLAPPED. Was: &m_writing
                                               nullptr);       // LOGDATA
 
     // Check for error
-    if(result != ERROR_IO_PENDING && result != NO_ERROR)
+//     if(result != ERROR_IO_PENDING && result != NO_ERROR)
+//     {
+//       ERRORLOG(result,_T("Sending stream part"));
+//       m_responding = false;
+//       CancelRequest();
+//       return;
+//     }
+//     else
+//     {
+//       // Final closing of the connection
+//       if(p_continue == false)
+//       {
+//         DETAILLOG1(_T("Stream connection closed"));
+//       }
+//     }
+    if(result != NO_ERROR)
     {
-      ERRORLOG(result,_T("Sending stream part"));
-      m_responding = false;
+      ERRORLOG(result,_T("While sending HTTP stream part"));
       CancelRequest();
-      return;
     }
     else
     {
-      // Final closing of the connection
-      if(p_continue == false)
+      // Free the last send buffer and continue to send
+      if(m_sendBuffer)
       {
-        DETAILLOG1(_T("Stream connection closed"));
-        Finalize();
+        delete[] m_sendBuffer;
+        m_sendBuffer = nullptr;
       }
+    }
+    if(!p_continue)
+    {
+      Finalize();
     }
   }
   // Still responding or done?
   m_responding = p_continue;
 }
 
+// Only come her if OVERLAPPED parameter in "SendResponseStream" was used !!
+// Currently not used!
 void
 HTTPRequest::SendStreamPart()
 {
@@ -1011,6 +1056,10 @@ HTTPRequest::SendStreamPart()
       delete[] m_sendBuffer;
       m_sendBuffer = nullptr;
     }
+  }
+  if(!m_responding)
+  {
+    Finalize();
   }
 }
 

@@ -137,6 +137,7 @@ TestPut(HTTPClient* p_client)
 
   // RESET CORS checking for the client!
   p_client->SetCORSOrigin(_T(""));
+  p_client->Reset();
 
   return result ? 0 : 1;
 }
@@ -148,6 +149,7 @@ TestBaseSite(HTTPClient* p_client)
   if(TestGet(p_client) == 0)
   {
     // If the 'GET' succeeds, try the 'PUT'
+    // return 0;
     return TestPut(p_client);
   }
   return 1;

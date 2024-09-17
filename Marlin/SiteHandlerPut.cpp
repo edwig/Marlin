@@ -102,6 +102,7 @@ SiteHandlerPut::Handle(HTTPMessage* p_message)
   p_message->Reset();
   p_message->SetCommand(HTTPCommand::http_response);
   p_message->SetStatus(status);
+  p_message->SetContentLength(0);
   
   // Ready with the put
   return true;

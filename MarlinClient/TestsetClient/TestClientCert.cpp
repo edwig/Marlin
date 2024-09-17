@@ -127,6 +127,7 @@ int TestClientCertificate(HTTPClient* p_client)
   p_client->SetClientCertificatePreset(false);
   p_client->SetClientCertificateStore(_T(""));
   p_client->SetClientCertificateName(_T(""));
+  p_client->Reset();
 
   return result ? 0 : 1;
 }
