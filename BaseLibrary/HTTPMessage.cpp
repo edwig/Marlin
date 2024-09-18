@@ -1195,7 +1195,7 @@ HTTPMessage::AddReference()
   InterlockedIncrement(&m_references);
 }
 
-void
+bool
 HTTPMessage::DropReference()
 {
   if(InterlockedDecrement(&m_references) <= 0)
@@ -1203,9 +1203,11 @@ HTTPMessage::DropReference()
     try
     {
       delete this;
+      return true;
     }
     catch(StdException&)
     {
     }
   }
+  return false;
 }

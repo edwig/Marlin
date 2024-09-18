@@ -1086,7 +1086,8 @@ HTTPRequest::Finalize()
   }
 
   // Reset th request id 
-  HTTP_SET_NULL_ID(&m_requestID);
+  // Retain the request ID for cancellation purposes!!
+  // HTTP_SET_NULL_ID(&m_requestID);
 
   // Free the request memory
   if(m_request)
@@ -1126,8 +1127,10 @@ HTTPRequest::Finalize()
   // Free the message
   if(m_message)
   {
-    m_message->DropReference();
-    m_message = nullptr;
+    if(m_message->DropReference())
+    {
+      m_message = nullptr;
+    }
   }
 
   // Remove header strings

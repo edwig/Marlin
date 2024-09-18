@@ -257,7 +257,7 @@ public:
   bool    SetMultiPartFormData(MultiPartBuffer* p_buffer);
   // Reference system for storing the message elsewhere
   void    AddReference();
-  void    DropReference();
+  bool    DropReference();
 
   // Operators
   HTTPMessage& operator=(const JSONMessage& p_message);

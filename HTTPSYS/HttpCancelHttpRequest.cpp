@@ -24,12 +24,6 @@ HttpCancelHttpRequest(IN HANDLE           RequestQueueHandle
                      ,IN HTTP_REQUEST_ID  RequestId
                      ,IN LPOVERLAPPED     Overlapped OPTIONAL)
 {
-  // Currently overlapping I/O is unsupported
-  if(Overlapped)
-  {
-    return ERROR_INVALID_PARAMETER;
-  }
-
   // Finding the elementary object
   RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
   Request*    request = GetRequestFromHandle(RequestId);
@@ -42,6 +36,12 @@ HttpCancelHttpRequest(IN HANDLE           RequestQueueHandle
   if(queue->RequestStillInService(request))
   {
     queue->RemoveRequest(request);
+  }
+
+  if(Overlapped)
+  {
+    // Post a completion to the applications completion port for the request queue
+    PostQueuedCompletionStatus(queue->GetIOCompletionPort(),0,queue->GetIOCompletionKey(),Overlapped);
   }
   return NO_ERROR;
 }
