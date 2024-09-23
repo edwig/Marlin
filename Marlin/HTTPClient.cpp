@@ -107,7 +107,8 @@ HTTPClient::Reset()
   }
 
   // Stopping the queue
-  StopClient();
+  // And do not call 'Reset' again
+  StopClient(true);
 
   m_url.Empty();
   m_user.Empty();
@@ -2351,14 +2352,15 @@ HTTPClient::Send(SOAPMessage* p_msg)
 
   // Getting the SOAP as a full string
   bool doBom(false);
-  XString answer = GetStringFromResult(result,doBom);
-  if(result)
+  bool parsed(true);
+  XString answer = GetStringFromResult(parsed,doBom);
+  if(parsed)
   {
     p_msg->ParseMessage(answer);
   }
   else
   {
-    p_msg->SetFault(_T("Server"),_T("Response"),answer,_T("No valid SOAP response from server"));
+    p_msg->SetFault(_T("Server"),_T("Charset"),answer,_T("Possibly unknown UNICODE charset, or non-standard machine charset"));
   }
 
   // Process the SOAP action
@@ -2478,13 +2480,27 @@ HTTPClient::Send(JSONMessage* p_msg)
   // NOW GO SEND IT (Never redirected)
   result = Send();
 
-  ProcessJSONResult(p_msg,result);
+  ProcessJSONResult(p_msg);
+
+  // Keep cookies
+  p_msg->SetCookies(m_resultCookies);
+
+  // Getting all headers from the answer
+  for (HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
+  {
+    p_msg->AddHeader(it->first, it->second);
+  }
+  // Reset our input buffer
+  ResetBody();
+
+  // Keep the status
+  p_msg->SetStatus(m_status);
 
   return result;
 }
 
 void
-HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
+HTTPClient::ProcessJSONResult(JSONMessage* p_msg)
 {
   // Process our answer, Forget what we did send
   p_msg->Reset();
@@ -2494,30 +2510,17 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg,bool& p_result)
 
   // Getting the JSON as a full string
   bool doBom(false);
-  XString answer = GetStringFromResult(p_result,doBom);
-  if(p_result)
+  bool parsed(true);
+  XString answer = GetStringFromResult(parsed,doBom);
+  if(parsed)
   {
     p_msg->ParseMessage(answer);
   }
   else
   {
-    p_msg->SetLastError(answer);
+    p_msg->SetLastError("Possibly unknown UNICODE charset, or non-standard machine charset");
     p_msg->SetErrorstate(true);
   }
-
-  // Keep cookies
-  p_msg->SetCookies(m_resultCookies);
-  
-  // Getting all headers from the answer
-  for(HeaderMap::iterator it = m_responseHeaders.begin(); it != m_responseHeaders.end(); ++it)
-  {
-    p_msg->AddHeader(it->first,it->second);
-  }
-  // Reset our input buffer
-  ResetBody();
-
-  // Keep the status
-  p_msg->SetStatus(m_status);
 }
 
 XString
@@ -2626,7 +2629,7 @@ HTTPClient::SendAsJSON(SOAPMessage* p_msg)
   {
     // Translate our result back to JSON
     JSONMessage json;
-    ProcessJSONResult(&json,result);
+    ProcessJSONResult(&json);
 
     // Translate our JSON back to SOAP
     *p_msg = json;
@@ -4329,7 +4332,7 @@ HTTPClient::OnCloseSeen()
 
 // Stopping the client queue
 void
-HTTPClient::StopClient()
+HTTPClient::StopClient(bool p_fromReset /*=false*/)
 {
   // Only stop client if in initialized state
   if(!m_initialized)
@@ -4337,7 +4340,6 @@ HTTPClient::StopClient()
     return;
   }
   DETAILLOG(_T("Stopping the HTTPClient"));
-  bool stopping = false;
 
   // Cleaning out the event source
   if(m_eventSource)
@@ -4346,16 +4348,22 @@ HTTPClient::StopClient()
     if(m_request)
     {
       OnCloseSeen();
-    }
-    for(int i = 0; i < 10; ++i)
-    {
-      Sleep(100);
+      // Allow time for the EventSource to disconnect
+      for(int ind = 0; ind < 10; ++ind)
+      {
+        Sleep(100);
+        if(m_eventSource->GetReadyState() != OPEN)
+        {
+          break;
+        }
+      }
     }
     delete m_eventSource;
     m_eventSource = nullptr;
     DETAILLOG(_T("Stopped the push-events EventSource"));
-    stopping = true;
   }
+
+  // Cleaning out the asynchronous queue
   if(m_queueThread || m_queueEvent)
   {
     // Stop the queue by resetting the thread
@@ -4374,22 +4382,22 @@ HTTPClient::StopClient()
         break;
       }
     }
-    // IF not kill the queue thread
+    // IF not stopped, kill the queue thread
     // Do not complain about "TermnateThread". It is the only way. We know!
     if(m_queueThread)
     {
 #pragma warning(disable:6258)
       TerminateThread(m_queueThread,3);
       ErrorLog(_T(__FUNCTION__),_T("Killed the HTTPClient queue thread. Error [%d] %s"));
+      m_queueThread = NULL;
     }
     // Now free the event
     CloseHandle(m_queueEvent);
     m_queueEvent = NULL;
     DETAILLOG(_T("Closed the client HTTP queue"));
-    stopping = true;
   }
-  // We are now stopped. Reset also
-  if(stopping)
+  // We are now stopped. Reset also if not called from 'Reset()'
+  if(!p_fromReset)
   {
     Reset();
   }

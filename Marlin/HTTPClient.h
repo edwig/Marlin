@@ -172,7 +172,7 @@ public:
   // Add a JSON message to the async queue
   void AddToQueue(JSONMessage* p_message);
   // Stopping the client queue
-  void StopClient();
+  void StopClient(bool p_fromReset = false);
   // See if it is still running
   bool GetIsRunning();
 
@@ -384,7 +384,7 @@ private:
   bool     StartEventStreamingThread();
   void     OnCloseSeen();
   // Processing after a send
-  void     ProcessJSONResult(JSONMessage* p_msg,bool& p_result);
+  void     ProcessJSONResult(JSONMessage* p_msg);
   XString  GetStringFromResult(bool& p_result,bool& p_doBom);
   // Setting a client certificate on the request handle
   bool     SetClientCertificate(HINTERNET p_request);
