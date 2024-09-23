@@ -222,7 +222,7 @@ public:
   // General base setting of an element
   XMLElement*     SetElement(XMLElement* p_base, XString p_name, XmlDataType p_type, XString p_value, bool p_front = false);
   // General add an element (always adds, so multiple parameters of same name can be added)
-  XMLElement*     AddElement(XMLElement* p_base, XString p_name, XmlDataType p_type = XDT_String, XString p_value = "", bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base, XString p_name, XmlDataType p_type = XDT_String, XString p_value = _T(""), bool p_front = false);
   // Set attribute of an element
   XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, const XString& p_value);
   XMLAttribute*   SetAttribute(XMLElement* p_elem, XString p_name, LPCTSTR        p_value);

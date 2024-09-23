@@ -39,7 +39,7 @@ static char THIS_FILE[] = __FILE__;
 LPCTSTR xml_datatypes[] =
 {
   _T("")                          // 0
- ,_T("string")                    // 1  XDT_String            SQL_C_CHAR
+ ,_T("string")                    // 1  XDT_String            SQL_C_TCHAR
  ,_T("integer")                   // 2  XDT_Integer           SQL_C_LONG / SQL_C_SLONG
  ,_T("boolean")                   // 3  XDT_Boolean           SQL_C_BIT
  ,_T("double")                    // 4  XDT_Double            SQL_C_DOUBLE
@@ -127,7 +127,7 @@ struct _xmlodbc
 } 
 xmlodbc_types [] =
 {
-  { XDT_String,           SQL_C_CHAR      }
+  { XDT_String,           SQL_C_TCHAR     }
  ,{ XDT_Integer,          SQL_C_LONG      }
  ,{ XDT_Integer,          SQL_C_SLONG     }
  ,{ XDT_Boolean,          SQL_C_BIT       }

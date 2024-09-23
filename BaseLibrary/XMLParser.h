@@ -54,6 +54,8 @@ public:
   // Print string with entities and optionally as UTF8 again
   static XString PrintXmlString (const XString& p_string, bool p_utf8 = false);
   static XString PrintJsonString(const XString& p_string);
+  // Check special chars not supported in Windows-1252, not supported in ISO8859
+  static int     UnicodeISO8859Check(int p_number);
 
 protected:
   // Set the internal error

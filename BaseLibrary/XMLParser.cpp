@@ -38,11 +38,11 @@ static char THIS_FILE[] = __FILE__;
 // Special entities, so we do not mess with the XML structures
 Entity g_entity[NUM_ENTITY] =
 {
-  { _T("&amp;"), 5, '&' },
-  { _T("&lt;"),  4, '<' },
-  { _T("&gt;"),  4, '>' },
-  { _T("&quot;"),6, '\"'},
-  { _T("&apos;"),6, '\''},
+  { _T("&amp;"),  5, '&' },
+  { _T("&lt;"),   4, '<' },
+  { _T("&gt;"),   4, '>' },
+  { _T("&quot;"), 6, '\"'},
+  { _T("&apos;"), 6, '\''}
 };
 
 // Static function to be called from the outside
@@ -710,6 +710,48 @@ XMLParser::XDigitToValue(int ch)
   return 0;
 }
 
+// Check special chars not supported in Windows-1252, not supported in ISO8859
+int
+XMLParser::UnicodeISO8859Check(int p_number)
+{
+  int number = p_number;
+
+  // Catch special cases for quotes, not supported by ISO8859, but are in Windows-1252
+  // If we do not translate these, we cannot store them in SQL-Server and Oracle WEISO8859
+  // See: https://stackoverflow.com/questions/19109899/what-is-the-exact-difference-between-windows-1252-and-iso-8859-1
+  //
+  switch(number)
+  {
+    case  338: number = _T('O');  break;  // Scandinavian OE
+    case  339: number = _T('o');  break;  // Scandinavian oe
+    case  352: number = _T('S');  break;  // S-Hacek
+    case  353: number = _T('s');  break;  // s-Hacek
+    case  368: number = _T('Z');  break;  // Z-Hacek
+    case  369: number = _T('z');  break;  // z-Hacek
+    case  376: number = _T('Y');  break;  // Y-trema
+    case  402: number = _T('f');  break;  // Dutch Florin
+    case  710: number = _T('^');  break;  // Larger circonflex
+    case  732: number = _T('~');  break;  // Larger tilde
+    case 8211: number = _T('-');  break;  // Longer En-Dash (N)
+    case 8212: number = _T('-');  break;  // Longer Em-Dash (M)
+    case 8216: [[fallthrough]];
+    case 8217: [[fallthrough]];
+    case 8218: number = _T('\''); break;  // Forward/backward single quote
+    case 8220: [[fallthrough]];
+    case 8221: [[fallthrough]];
+    case 8222: number = _T('\"'); break;  // Forward/backward double quote
+    case 8224: number = _T('+');  break;  // Cross
+    case 8225: number = _T('+');  break;  // Double Cross
+    case 8226: number = _T('o');  break;  // Closed dot
+    case 8230: number = _T('.');  break;  // ... Diaeresis
+    case 8240: number = _T('%');  break;  // promille
+    case 8249: number = _T('<');  break;  // Larger <
+    case 8250: number = _T('>');  break;  // Larger >
+    case 8364: number = _T('€');  break;  // Euro sign
+  }
+  return number;
+}
+
 // Get a character from message including '& translation'
 _TUCHAR
 XMLParser::ValueChar()
@@ -739,7 +781,8 @@ XMLParser::ValueChar()
       // Skip closing ';'
       NeedToken(';');
       // Result
-      return (_TUCHAR)(number);
+
+      return (_TUCHAR) UnicodeISO8859Check(number);
     }
     // Search for known entities such as '&amp;' or '&quot;'
     for(unsigned ind = 0;ind < NUM_ENTITY; ++ind)

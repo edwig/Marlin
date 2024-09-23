@@ -62,7 +62,7 @@ public:
   XString              GetErrorMessage() const;
   bool                 GetErrorMessage(PTCHAR p_error,unsigned p_maxSize,unsigned* p_helpContext = NULL) const;
 
-private:
+protected:
   unsigned             m_safeExceptionCode { 0 };
   _EXCEPTION_POINTERS* m_exceptionPointers { nullptr };
   unsigned             m_applicationCode   { 0 };
