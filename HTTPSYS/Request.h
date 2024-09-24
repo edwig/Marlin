@@ -16,6 +16,10 @@
 
 // For header lines
 #define MESSAGE_BUFFER_LENGTH (16*1024)
+// For files, the buffer should be arbitrarily shorter than the maximum TCP/IP frame
+// To accommodate the header blocks of the TCP/IP stack ( a few hundred bytes)
+#define FILE_BUFFER_LENGTH    (16*1000)
+
 // Minimum timeout for HTTP body receiving in seconds
 #define HTTP_MINIMUM_TIMEOUT 10 
 // Default space for a SSPI authentication provider buffer
@@ -36,6 +40,7 @@ RQ_Status;
 class RequestQueue;
 class Listener;
 class SocketStream;
+class SYSWebSocket;
 
 class Request
 {
@@ -47,21 +52,22 @@ public:
  ~Request();
 
   // SETTERS
-  void              SetStatus(RQ_Status p_status)             { m_status = p_status; };
-  void              SetURLContext(HTTP_URL_CONTEXT p_context) { m_request.UrlContext    = p_context; };
-  void              SetBytesRead(ULONG p_bytes)               { m_request.BytesReceived = p_bytes;   };
+  void              SetStatus(RQ_Status p_status)             { m_status                = p_status;  }
+  void              SetURLContext(HTTP_URL_CONTEXT p_context) { m_request.UrlContext    = p_context; }
+  void              SetBytesRead(ULONG p_bytes)               { m_request.BytesReceived = p_bytes;   }
 
   // GETTERS
-  ULONGLONG         GetIdent()          { return m_ident;               };
-  RQ_Status         GetStatus()         { return m_status;              };
-  SocketStream*     GetSocket()         { return m_socket;              };
-  ULONG             GetBytes()          { return m_bytesRead;           };
-  PHTTP_REQUEST_V2  GetV2Request()      { return &m_request;            };
-  HTTP_URL_CONTEXT  GetURLContext()     { return m_request.UrlContext;  };
-  PCSTR             GetURL()            { return m_request.pRawUrl;     };
-  ULONGLONG         GetContentLength()  { return m_contentLength;       };
-  Listener*         GetListener()       { return m_listener;            };
-  HANDLE            GetAccessToken()    { return m_token;               };
+  ULONGLONG         GetIdent()          { return m_ident;               }
+  RQ_Status         GetStatus()         { return m_status;              }
+  SocketStream*     GetSocket()         { return m_socket;              }
+  ULONG             GetBytes()          { return m_bytesRead;           }
+  PHTTP_REQUEST_V2  GetV2Request()      { return &m_request;            }
+  HTTP_URL_CONTEXT  GetURLContext()     { return m_request.UrlContext;  }
+  PCSTR             GetURL()            { return m_request.pRawUrl;     }
+  ULONGLONG         GetContentLength()  { return m_contentLength;       }
+  Listener*         GetListener()       { return m_listener;            }
+  HANDLE            GetAccessToken()    { return m_token;               }
+  SYSWebSocket*     GetWebSocket()      { return m_websocket;           }
   bool              GetResponseComplete();
   XString           GetHostName();
 
@@ -105,11 +111,10 @@ private:
   int               CopyInitialBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes);
   void              FreeInitialBuffer();
 
-
   // Cooking the URL
   void              FindVerb(LPSTR p_verb);
   void              FindURL (LPSTR p_url);
-  void              FindProtocol(LPSTR p_protocol);
+  void              FindProtocol(LPCSTR p_protocol);
   // Finding the known header names
   int               FindKnownHeader(LPSTR p_header);
   void              FindKeepAlive();
@@ -140,6 +145,9 @@ private:
   int               ReadBuffer (PVOID p_buffer,ULONG p_size,PULONG p_bytes);
   int               WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes);
 
+  // WebSockets
+  void              CreateWebSocket();
+
   // Identification of the request 
   ULONGLONG         m_ident{ HTTP_REQUEST_IDENT };
   // Private data
@@ -166,6 +174,10 @@ private:
   BYTE*             m_initialBuffer { 0 };
   ULONG             m_initialLength { 0 };
   ULONG             m_bufferPosition{ 0 };
+  // WebSocket
+  bool              m_websocketPrepare;
+  CString           m_websocketKey;
+  SYSWebSocket*     m_websocket;
 };
 
 inline Request*

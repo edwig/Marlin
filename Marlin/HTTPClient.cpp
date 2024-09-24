@@ -2518,7 +2518,7 @@ HTTPClient::ProcessJSONResult(JSONMessage* p_msg)
   }
   else
   {
-    p_msg->SetLastError("Possibly unknown UNICODE charset, or non-standard machine charset");
+    p_msg->SetLastError(_T("Possibly unknown UNICODE charset, or non-standard machine charset"));
     p_msg->SetErrorstate(true);
   }
 }

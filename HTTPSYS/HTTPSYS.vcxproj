@@ -87,7 +87,7 @@
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -95,7 +95,7 @@
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -149,7 +149,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)Bin$(Configuration)_$(Platform)\</OutDir>
     <TargetExt>.dll</TargetExt>
-    <TargetName>$(ProjectName)U</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -233,7 +233,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>secur32.lib</AdditionalDependencies>
+      <AdditionalDependencies>secur32.lib;websocket.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -261,7 +261,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>secur32.lib</AdditionalDependencies>
+      <AdditionalDependencies>secur32.lib;websocket.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -342,12 +342,15 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>$(SolutionDir)BaseLibrary\</AdditionalIncludeDirectories>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)Lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>secur32.lib;websocket.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
@@ -371,12 +374,15 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>$(SolutionDir)BaseLibrary\</AdditionalIncludeDirectories>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)Lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>secur32.lib;websocket.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)$(ProjectName).lib $(SolutionDir)lib</Command>
@@ -390,6 +396,7 @@
     <ClInclude Include="CreateCertificate.h" />
     <ClInclude Include="GetUserAccount.h" />
     <ClInclude Include="HTTPReadRegister.h" />
+    <ClInclude Include="HTTPSYS_Websocket.h" />
     <ClInclude Include="Listener.h" />
     <ClInclude Include="HTTPLoglevel.h" />
     <ClInclude Include="PlainSocket.h" />
@@ -406,6 +413,7 @@
     <ClInclude Include="URL.h" />
     <ClInclude Include="UrlGroup.h" />
     <ClInclude Include="Version.h" />
+    <ClInclude Include="SYSWebSocket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CertificateInfo.cpp" />
@@ -424,6 +432,7 @@
     <ClCompile Include="HTTPReadRegister.cpp" />
     <ClCompile Include="HttpReceiveClientCertificate.cpp" />
     <ClCompile Include="HttpReceiveRequestEntityBody.cpp" />
+    <ClCompile Include="HttpReceiveWebSocket.cpp" />
     <ClCompile Include="HttpRemoveUrl.cpp" />
     <ClCompile Include="HttpRemoveUrlFromUrlGroup.cpp" />
     <ClCompile Include="HttpSendHttpResponse.cpp" />
@@ -465,6 +474,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="UrlGroup.cpp" />
+    <ClCompile Include="SYSWebSocket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

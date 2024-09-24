@@ -23,6 +23,7 @@
 #define HTTP_REQUEST_QUEUE_MAXIMUM  64000   // Seriously overloaded server?
 
 class UrlGroup;
+class SYSWebSocket;
 
 // Made requests with an Overlapped I/O registration
 typedef struct _reg_http_request
@@ -37,11 +38,12 @@ typedef struct _reg_http_request
 }
 REGISTER_HTTP_RECEIVE_REQUEST,*PREGISTER_HTTP_RECEIVE_REQUEST;
 
-using UrlGroups = std::vector<UrlGroup*>;
-using Listeners = std::map<USHORT,Listener*>;
-using Requests  = std::deque<Request*>;
-using Fragments = std::map<CString,PHTTP_DATA_CHUNK>;
+using UrlGroups       = std::vector<UrlGroup*>;
+using Listeners       = std::map<USHORT,Listener*>;
+using Requests        = std::deque<Request*>;
+using Fragments       = std::map<CString,PHTTP_DATA_CHUNK>;
 using WaitingRequests = std::deque<PREGISTER_HTTP_RECEIVE_REQUEST>;
+using WebSockets      = std::map<CString,SYSWebSocket*>;
 
 typedef BOOL (* PointTransmitFile)(SOCKET hSocket,
                                    HANDLE hFile,
@@ -115,7 +117,11 @@ public:
   ULONG             FlushFragment(CString p_prefix,ULONG Flags);
   PHTTP_DATA_CHUNK  FindFragment (CString p_prefix);
 
-  PointTransmitFile GetTransmitFile(SOCKET p_socket);
+  // WebSocket functionality
+  SYSWebSocket* FindWebSocket     (CString p_websocketKey);
+  bool          AddWebSocket      (CString p_websocketKey,SYSWebSocket* p_websocket);
+  bool          ReconnectWebsocket(CString p_websocketKey,SYSWebSocket* p_websocket);
+  bool          DeleteWebSocket   (CString p_websocketKey);
 
 private:
   void        StopAllListeners();
@@ -123,6 +129,7 @@ private:
   void        DeleteAllFragments();
   void        DeleteAllWaiters();
   void        DeleteAllServicing();
+  void        DeleteAllWebSockets();
   void        CreateEvent();
   void        CloseEvent();
   void        CloseQueueHandle();
@@ -143,12 +150,13 @@ private:
   // All requests from HTTP. Our 'real' queues
   Requests                    m_incoming;       // Incoming (unserviced) requests
   Requests                    m_servicing;      // Currently serviced by server
+  // All WebSockets
+  WebSockets                  m_websockets;
   // I/O Completion of the session registration
   HANDLE                      m_iocPort { NULL };
   ULONG_PTR                   m_iocKey  { NULL };
   // The fragment cache
   Fragments                   m_fragments;
-
   PointTransmitFile           m_transmitFile { nullptr };
   // Waiting Overlapped I/O
   WaitingRequests             m_waiting;

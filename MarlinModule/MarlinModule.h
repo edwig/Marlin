@@ -31,7 +31,6 @@
 #include <httpserv.h>
 #pragma warning (error:4091)
 
-#include "ServerApp.h"
 #include "PoolApp.h"
 #include <map>
 

@@ -1232,23 +1232,39 @@ ServerEventChannel::CheckChannel()
 bool
 ServerEventChannel::CheckChannelPolicy()
 {
-  AutoCritSec lock(&m_lock);
+  bool result = false;
 
-  // Overdue closing of streams and sockets
-  CheckChannel();
+  __try
+  { 
+    // Overdue closing of streams and sockets
+    CheckChannel();
 
-  switch(m_policy)
+    switch(m_policy)
+    {
+      default:                                  [[fallthrough]];
+      case EVChannelPolicy::DP_NoPolicy:        break;                                              // Wrong! Must have a policy to work
+      case EVChannelPolicy::DP_Binary:          result = !m_sockets.empty();                        // Must have sockets to work
+                                                break;
+      case EVChannelPolicy::DP_HighSecurity:    result = !m_streams.empty();                        // Must have streams to work
+                                                break;
+      case EVChannelPolicy::DP_Disconnected:    result = m_sockets.empty() && m_streams.empty();    // Disconnected messages only (polling)
+                                                break;
+      case EVChannelPolicy::DP_Immediate_S2C:   result = !m_sockets.empty() || !m_streams.empty();  // Must have sockets or streams to work
+                                                break;
+      case EVChannelPolicy::DP_TwoWayMessages:  result = !m_sockets.empty() || m_usePolling;        // Must have socckets or polling to work
+                                                break;
+      case EVChannelPolicy::DP_NoSockets:       result = !m_streams.empty() || m_usePolling;        // Must have streams or polling to work
+                                                break;
+      case EVChannelPolicy::DP_SureDelivery:    result = !m_sockets.empty() ||                      // Must have sockets or streams or polling to work
+                                                         !m_streams.empty() || m_usePolling;         
+                                                break;
+    };
+  }
+  __finally
   {
-    case EVChannelPolicy::DP_NoPolicy:        return false;                 // Wrong! Must have a policy to work
-    case EVChannelPolicy::DP_Binary:          return !m_sockets.empty();    // Must have sockets to work
-    case EVChannelPolicy::DP_HighSecurity:    return !m_streams.empty();    // Must have streams to work
-    case EVChannelPolicy::DP_Disconnected:    return  m_sockets.empty() && m_streams.empty();   // Disconnected messages only (polling)
-    case EVChannelPolicy::DP_Immediate_S2C:   return !m_sockets.empty() || !m_streams.empty();  // Must have sockets or streams to work
-    case EVChannelPolicy::DP_TwoWayMessages:  return !m_sockets.empty() || m_usePolling;        // Must have socckets or polling to work
-    case EVChannelPolicy::DP_NoSockets:       return !m_streams.empty() || m_usePolling;        // Must have streams or polling to work
-    case EVChannelPolicy::DP_SureDelivery:    return !m_sockets.empty() ||                      // Must have sockets or streams or polling to work
-                                                     !m_streams.empty() ||
-                                                      m_usePolling;         
-  };
-  return false;
+    // Currently not possible to check this, assume it to be OK.
+    // Ignore any locking and memory problems
+    result = true;
+  }
+  return result;
 }

@@ -27,8 +27,14 @@
 //
 #pragma once
 #include "WebSocket.h"
+#include <Websocket.h>
+#include "HTTPSYS_Websocket.h"
 
-class WebSocketContext;
+// Documented by Microsoft on:
+// https://docs.microsoft.com/en-us/windows/win32/api/websocket/ne-websocket-web_socket_property_type
+#define WEBSOCKET_BUFFER_OVERHEAD   256
+#define WEBSOCKET_BUFFER_MINIMUM    256
+#define WEBSOCKET_BUFFSIZE_DEFAULT 4096
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -58,6 +64,20 @@ public:
   // Perform the server handshake
   virtual bool ServerHandshake(HTTPMessage* p_message) override;
 
+  // SETTERS
+
+  void SetRecieveBufferSize(ULONG p_size);
+  void SetSendBufferSize(ULONG p_size);
+  void SetDisableClientMasking(BOOL p_disable);
+  void SetDisableUTF8Checking(BOOL p_disable);
+  
+  // GETTERS
+
+  ULONG GetReceiveBufferSize()    { return m_ws_recv_buffersize;      }
+  ULONG GetSendBufferSize()       { return m_ws_send_buffersize;      }
+  BOOL  GetDisableClientMasking() { return m_ws_disable_masking;      }
+  BOOL  GetDisableUTF8Checking()  { return m_ws_disable_utf8_verify;  }
+
   // To be called for ASYNC I/O completion!
   void      SocketReader(HRESULT p_error, DWORD p_bytes, BOOL p_utf8, BOOL p_final, BOOL p_close);
   void      SocketWriter(HRESULT p_error, DWORD p_bytes, BOOL p_utf8, BOOL p_final, BOOL p_close);
@@ -67,14 +87,27 @@ protected:
   void      SocketListener();
   // Decode the incoming close socket message
   bool      ReceiveCloseSocket();
-
+  // Create the buffer protocol handle
+  bool      CreateServerHandle();
+  // Complete the server handshake
+  bool      CompleteHandshake();
 
   // Private data for the server variant of the WebSocket
   HTTPServer*         m_server  { nullptr };
   HTTP_OPAQUE_ID      m_request { NULL    };
-  // Private data for the WebSocket variant
-  WebSocketContext*   m_context { nullptr };
+  XString             m_subProtocol;
   // Asynchronous write buffer
   WSFrameStack        m_writing;
+
+  // Buffer translation  protocol handle
+  WEB_SOCKET_HANDLE   m_handle    { NULL    };
+  HTTPSYS_WebSocket*  m_websocket { nullptr };
+
+  // Buffer parameters
+  ULONG m_ws_recv_buffersize      { WEBSOCKET_BUFFSIZE_DEFAULT };
+  ULONG m_ws_send_buffersize      { WEBSOCKET_BUFFSIZE_DEFAULT };
+  BOOL  m_ws_disable_masking      { FALSE   };
+  BOOL  m_ws_disable_utf8_verify  { TRUE    };
+  BYTE* m_ws_buffer               { nullptr };
 };
 

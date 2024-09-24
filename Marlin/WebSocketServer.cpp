@@ -27,7 +27,6 @@
 //
 #include "stdafx.h"
 #include "WebSocketServer.h"
-#include "WebSocketContext.h"
 #include "HTTPRequest.h"
 #include "HTTPMessage.h"
 #include "HTTPSite.h"
@@ -54,7 +53,6 @@ static char THIS_FILE[] = __FILE__;
 WebSocketServer::WebSocketServer(XString p_uri)
                 :WebSocket(p_uri)
 {
-  m_context = new WebSocketContext;
 }
 
 WebSocketServer::~WebSocketServer()
@@ -67,10 +65,17 @@ WebSocketServer::Reset()
 {
   WebSocket::Reset();
 
-  if(m_context)
+  if(m_ws_buffer)
   {
-    delete m_context;
-    m_context = nullptr;
+    delete [] m_ws_buffer;
+    m_ws_buffer = nullptr;
+  }
+
+  // Simply close the socket handle and ignore the errors
+  if(m_handle)
+  {
+    WebSocketDeleteHandle(m_handle);
+    m_handle = NULL;
   }
 }
 
@@ -94,6 +99,74 @@ WebSocketServer::OpenSocket()
   }
   return false;
 }
+
+void
+WebSocketServer::SetRecieveBufferSize(ULONG p_size)
+{
+  if(m_handle == NULL)
+  {
+    if(p_size < WEBSOCKET_BUFFER_MINIMUM)
+    {
+      p_size = WEBSOCKET_BUFFER_MINIMUM;
+    }
+    m_ws_recv_buffersize = p_size;
+  }
+}
+
+void
+WebSocketServer::SetSendBufferSize(ULONG p_size)
+{
+  if(m_handle == NULL)
+  {
+    if (p_size < WEBSOCKET_BUFFER_MINIMUM)
+    {
+      p_size = WEBSOCKET_BUFFER_MINIMUM;
+    }
+    m_ws_send_buffersize = p_size;
+  }
+}
+
+void
+WebSocketServer::SetDisableClientMasking(BOOL p_disable)
+{
+  if(m_handle == NULL)
+  {
+    m_ws_disable_masking = p_disable;
+  }
+}
+
+void
+WebSocketServer::SetDisableUTF8Checking(BOOL p_disable)
+{
+  if(m_handle == NULL)
+  {
+    m_ws_disable_utf8_verify = p_disable;
+  }
+}
+
+// Create the buffer protocol handle
+bool
+WebSocketServer::CreateServerHandle()
+{
+  // Make sure we have enough buffering space for the socket
+  if(!m_ws_buffer)
+  {
+    m_ws_buffer = new BYTE[(size_t)m_ws_recv_buffersize + (size_t)m_ws_send_buffersize + WEBSOCKET_BUFFER_OVERHEAD];
+  }
+
+  WEB_SOCKET_PROPERTY properties[4] =
+  {
+    { WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE,      &m_ws_recv_buffersize,     sizeof(ULONG) }
+   ,{ WEB_SOCKET_SEND_BUFFER_SIZE_PROPERTY_TYPE,         &m_ws_send_buffersize,     sizeof(ULONG) }
+   ,{ WEB_SOCKET_DISABLE_MASKING_PROPERTY_TYPE,          &m_ws_disable_masking,     sizeof(BOOL)  }
+   ,{ WEB_SOCKET_DISABLE_UTF8_VERIFICATION_PROPERTY_TYPE,&m_ws_disable_utf8_verify, sizeof(BOOL)  }
+  };
+
+  // Create our handle
+  HRESULT hr = WebSocketCreateServerHandle(properties,4,&m_handle);
+  return SUCCEEDED(hr);
+}
+
 
 void WINAPI
 ServerReadCompletion(HRESULT p_error,
@@ -215,15 +288,15 @@ WebSocketServer::SocketListener()
     return;
   }
 
-  HRESULT hr = m_context->ReadFragment(&m_reading->m_data[m_reading->m_length]
-                                      ,&m_reading->m_read
-                                      ,TRUE
-                                      ,&utf8
-                                      ,&last
-                                      ,&isclosing
-                                      ,ServerReadCompletion
-                                      ,this
-                                      ,&expected);
+  HRESULT hr = m_websocket->ReadFragment(&m_reading->m_data[m_reading->m_length]
+                                        ,&m_reading->m_read
+                                        ,TRUE
+                                        ,&utf8
+                                        ,&last
+                                        ,&isclosing
+                                        ,ServerReadCompletion
+                                        ,this
+                                        ,&expected);
   if(FAILED(hr))
   {
     DWORD error = hr & 0x0F;
@@ -252,7 +325,7 @@ WebSocketServer::ReceiveCloseSocket()
   m_closing.Empty();
 
   // Getting the closing status in UTF-16 format (instead of UTF-8 from RFC 6455)
-  HRESULT hr = m_context->GetCloseStatus(&m_closingError,&pointer,&length);
+  HRESULT hr = m_websocket->GetCloseStatus(&m_closingError,&pointer,&length);
   if(SUCCEEDED(hr))
   {
 #ifdef _UNICODE
@@ -388,10 +461,19 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
 
   WEB_SOCKET_HTTP_HEADER* serverheaders = nullptr;
   ULONG serverheadersCount = 0L;
-  AutoCSTR protocols(m_protocols);
 
-  bool result = m_context->PerformHandshake(clientHeaders,5,&serverheaders,&serverheadersCount,protocols.cstr());
-  if(result)
+  CreateServerHandle();
+
+  HRESULT hr = -1;
+  if(m_handle)
+  {
+    hr = WebSocketBeginServerHandshake(m_handle,
+                                       nullptr,
+                                       nullptr, 0,
+                                       clientHeaders, 5,
+                                       &serverheaders, &serverheadersCount);
+  }
+  if(!SUCCEEDED(hr))
   {
     // Record the handshake in our HTTPMessage
     DETAILLOG1(_T("WebSocketHandshake succeeded"));
@@ -400,23 +482,61 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
       p_message->AddHeader(LPCSTRToString(serverheaders[header].pcName)
                           ,LPCSTRToString(serverheaders[header].pcValue));
     }
+    return true;
   }
-  else
+  ERRORLOG(ERROR_PROCESS_ABORTED,_T("WebSocketHandshake failed"));
+  Reset();
+  return false;
+}
+
+bool
+WebSocketServer::CompleteHandshake()
+{
+  if(m_handle)
   {
-    ERRORLOG(ERROR_PROCESS_ABORTED,_T("WebSocketHandshake failed"));
+    HRESULT hr = WebSocketEndServerHandshake(m_handle);
+    return SUCCEEDED(hr);
   }
-  return result;
+  return false;
 }
 
 // Register the server request for sending info
+// BEWARE: HttpReceiveWebSocket is an EXPANSION of the standard "HTTP Server API" from Microsoft
+//         This method is **NOT** in the standard HTTP.SYS driver
+//         But lives in the Marlin "HTTPSYS.DLL" driver
 bool 
 WebSocketServer::RegisterSocket(HTTPMessage* p_message)
 {
   // Register our server/request
   HTTPRequest* req = reinterpret_cast<HTTPRequest*>(p_message->GetRequestHandle());
-  if(req)
+  if(req == nullptr)
   {
-    m_request = req->GetRequest();
+    ERRORLOG(ERROR_NOT_FOUND,_T("No request/websocket found in the HTTP call!"));
+    Reset();
+    return false;
+  }
+
+  // Our configuration for the socket
+  WEB_SOCKET_PROPERTY properties[4] =
+  {
+    { WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE,      &m_ws_recv_buffersize,     sizeof(ULONG) }
+   ,{ WEB_SOCKET_SEND_BUFFER_SIZE_PROPERTY_TYPE,         &m_ws_send_buffersize,     sizeof(ULONG) }
+   ,{ WEB_SOCKET_DISABLE_MASKING_PROPERTY_TYPE,          &m_ws_disable_masking,     sizeof(BOOL)  }
+   ,{ WEB_SOCKET_DISABLE_UTF8_VERIFICATION_PROPERTY_TYPE,&m_ws_disable_utf8_verify, sizeof(BOOL)  }
+  };
+
+  // Remember our request and retrieve our WebSocket from the driver
+  // THIS IS THE MISSING CALL IN THE STANDARD "HTTP Server API"
+  m_request   = req->GetRequest();
+  m_websocket = HttpReceiveWebSocket(m_server->GetRequestQueue()
+                                    ,p_message->GetRequestHandle()
+                                    ,m_handle
+                                    ,properties
+                                    ,4);
+  if(m_websocket == nullptr)
+  {
+    ERRORLOG(ERROR_NOT_FOUND,_T("Websocket not created by HTTPSYS"));
+    return false;
   }
 
   // We are now opened for business
@@ -426,12 +546,9 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
   // Reset request handle in the message
   p_message->SetHasBeenAnswered();
 
-  if(m_context->CompleteHandshake())
+  if(CompleteHandshake())
   {
     DETAILLOG1(_T("WebSocket handshake completed."));
   }
-
   return true;
 }
-
-

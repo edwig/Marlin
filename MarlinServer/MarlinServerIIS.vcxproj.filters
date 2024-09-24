@@ -88,6 +88,9 @@
     <ClCompile Include="ServerTestset\TestChunking.cpp">
       <Filter>Testset</Filter>
     </ClCompile>
+    <ClCompile Include="HttpReceiveWebSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestMarlinServerApp.h">

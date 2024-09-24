@@ -147,7 +147,7 @@ unsigned __stdcall StartAsyncReceiveHttpBody(void* p_param)
   {
     return ERROR_INVALID_PARAMETER;
   }
-  SetThreadName("HTTPReceiveBody");
+  SetThreadName(_T("HTTPReceiveBody"));
   _set_se_translator(SeTranslator);
   XString error;
 
@@ -157,7 +157,7 @@ unsigned __stdcall StartAsyncReceiveHttpBody(void* p_param)
     int result = req->r_request->ReceiveBuffer(req->r_entityBuffer,req->r_entityBufferLength,&bytes,false);
     if(result)
     {
-      error.Format("Cannot receive next request. Error: %d ",result);
+      error.Format(_T("Cannot receive next request. Error: %d "),result);
     }
 
     // Remember the results

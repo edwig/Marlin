@@ -341,6 +341,7 @@ copy marlin.config $(OutDir)</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="HttpReceiveWebSocket.cpp" />
     <ClCompile Include="ServerTestset\TestAsynchrone.cpp" />
     <ClCompile Include="ServerTestset\TestBaseSite.cpp" />
     <ClCompile Include="ServerTestset\TestBodyEncryption.cpp" />

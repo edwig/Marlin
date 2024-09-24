@@ -12,6 +12,7 @@
 #include "URL.h"
 #include "RequestQueue.h"
 #include "UrlGroup.h"
+#include "SYSWebSocket.h"
 #include <malloc.h>
 #include <algorithm>
 #include <winhttp.h>
@@ -41,6 +42,7 @@ RequestQueue::~RequestQueue()
   ClearIncomingWaiters();
   DeleteAllWaiters();
   DeleteAllServicing();
+  DeleteAllWebSockets();
   DeleteCriticalSection(&m_lock);
   CloseEvent();
   CloseQueueHandle();
@@ -558,33 +560,6 @@ RequestQueue::FlushFragment(CString p_prefix,ULONG Flags)
   return erased > 0 ? NO_ERROR : ERROR_NOT_FOUND;
 }
 
-// Return the 'TransmitFile' function for a socket
-// This function caches the result, so that it get's called
-// only one time (1) for the TCP/IP stack.
-PointTransmitFile 
-RequestQueue::GetTransmitFile(SOCKET p_socket)
-{
-  if(m_transmitFile == nullptr)
-  {
-    GUID  trans = WSAID_TRANSMITFILE;
-    DWORD bytes = 0;
-    int  result = WSAIoctl(p_socket
-                          ,SIO_GET_EXTENSION_FUNCTION_POINTER
-                          ,&trans
-                          ,sizeof(GUID)
-                          ,&m_transmitFile
-                          ,sizeof(m_transmitFile)
-                          ,&bytes
-                          ,NULL,NULL);
-    if(result != NO_ERROR)
-    {
-      result = WSAGetLastError();
-      m_transmitFile = nullptr;
-    }
-  }
-  return m_transmitFile;
-}
-
 // Signal all listeners to stop listening
 void
 RequestQueue::ClearIncomingWaiters()
@@ -771,4 +746,77 @@ RequestQueue::DeleteAllServicing()
     delete request;
     m_servicing.pop_front();
   }
+}
+
+// Close and remove all WebSockets
+void
+RequestQueue::DeleteAllWebSockets()
+{
+  AutoCritSec lock(&m_lock);
+
+  for(auto& sock : m_websockets)
+  {
+    sock.second->CloseTcpConnection();
+    delete sock.second;
+  }
+  m_websockets.clear();
+}
+
+// See if a WebSocket with this secure key already exists in the driver
+SYSWebSocket*
+RequestQueue::FindWebSocket(CString p_websocketKey)
+{
+  AutoCritSec lock(&m_lock);
+
+  WebSockets::iterator it = m_websockets.find(p_websocketKey);
+  if(it != m_websockets.end())
+  {
+    return it->second;
+  }
+  return nullptr;
+}
+
+// If the WebSocket with this secure key does not exist, add it to the mapping
+bool
+RequestQueue::AddWebSocket(CString p_websocketKey,SYSWebSocket* p_websocket)
+{
+  AutoCritSec lock(&m_lock);
+
+  if(FindWebSocket(p_websocketKey) == nullptr)
+  {
+    m_websockets[p_websocketKey] = p_websocket;
+    return true;
+  }
+  return false;
+}
+
+// If the WebSocket was already known by this key, replace it
+bool
+RequestQueue::ReconnectWebsocket(CString p_websocketKey,SYSWebSocket* p_websocket)
+{
+  AutoCritSec lock(&m_lock);
+
+  WebSockets::iterator it = m_websockets.find(p_websocketKey);
+  if(it != m_websockets.end())
+  {
+    it->second = p_websocket;
+    return true;
+  }
+  return false;
+}
+
+bool
+RequestQueue::DeleteWebSocket(CString p_websocketKey)
+{
+  AutoCritSec lock(&m_lock);
+
+  WebSockets::iterator it = m_websockets.find(p_websocketKey);
+  if(it != m_websockets.end())
+  {
+    it->second->CloseTcpConnection();
+    delete it->second;
+    m_websockets.erase(it);
+    return true;
+  }
+  return false;
 }

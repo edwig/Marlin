@@ -78,6 +78,12 @@
     <ClInclude Include="HTTPReadRegister.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HTTPSYS_Websocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SYSWebSocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -223,6 +229,12 @@
     </ClCompile>
     <ClCompile Include="HTTPReadRegister.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SYSWebSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpReceiveWebSocket.cpp">
+      <Filter>HTTP_API</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

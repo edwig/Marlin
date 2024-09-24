@@ -14,6 +14,9 @@
 #pragma once
 #include <winsock2.h>
 
+// Callback function (in the "Pointer" member)
+typedef VOID(WINAPI* PFN_SOCKET_COMPLETION)(LPOVERLAPPED p_overlapped);
+
 class SocketStream
 {
 public:
@@ -31,6 +34,10 @@ public:
 	virtual int     RecvPartial(LPVOID  p_buffer,const ULONG p_length) = 0;
   // Sends    up to   p_length bytes of data and returns the amount sent     - or SOCKET_ERROR if it times out
 	virtual int     SendPartial(LPCVOID p_buffer,const ULONG p_length) = 0;
+  // Receives up to   p_length bytes of data with an OVERLAPPED callback
+  virtual int     RecvPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped) = 0;
+  // Sends    up to   p_length bytes of data with an OVERLAPPED callback
+  virtual int     SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped) = 0;
 
   // Last error state of deepest derived class
 	virtual DWORD   GetLastError() = 0;

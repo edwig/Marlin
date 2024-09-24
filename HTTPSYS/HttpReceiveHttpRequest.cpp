@@ -136,7 +136,7 @@ void StartAsyncReceiveHttpRequest(PREGISTER_HTTP_RECEIVE_REQUEST req)
     ULONG result = req->r_queue->GetNextRequest(req->r_id,req->r_flags,req->r_requestBuffer,req->r_requestBufferLength,&bytes);
     if(result)
     {
-      error.Format("Cannot receive next request. Error: %d ",result);
+      error.Format(_T("Cannot receive next request. Error: %d "),result);
     }
 
     // Remember the results

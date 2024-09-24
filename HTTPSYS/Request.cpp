@@ -20,6 +20,8 @@
 #include "SecureServerSocket.h"
 #include "SSLUtilities.h"
 #include "Base64.h"
+#include "SYSWebSocket.h"
+#include <ConvertWideString.h>
 #include <LogAnalysis.h>
 #include <wininet.h>
 #include <mswsock.h>
@@ -40,6 +42,8 @@ Request::Request(RequestQueue* p_queue
         ,m_ident(HTTP_REQUEST_IDENT)
         ,m_secure(false)
         ,m_url(nullptr)
+        ,m_websocket(nullptr)
+        ,m_websocketPrepare(false)
 {
   // HTTP_REQUEST_V1 && V2
   ZeroMemory(&m_request,sizeof(HTTP_REQUEST_V2));
@@ -114,15 +118,17 @@ Request::ReceiveRequest()
       else
       {
         TRACE("Reading HTTP request accepted req. Port: %d\n", m_port);
+        CreateWebSocket();
         m_queue->AddIncomingRequest(this);
         looping = false;
       }
     }
     catch(int error)
     {
-      if(error == HTTP_STATUS_SERVICE_UNAVAIL)
+      if(error == HTTP_STATUS_SERVICE_UNAVAIL ||
+         error == ERROR_OUTOFMEMORY)
       {
-        ReplyServerError(error,_T("Service temporarily unavailable"));
+        ReplyServerError(HTTP_STATUS_SERVICE_UNAVAIL,_T("Service temporarily unavailable"));
         return;
       }
       else if(error == ERROR_HANDLE_EOF)
@@ -346,11 +352,14 @@ Request::ReceiveChunk(PVOID p_buffer,ULONG p_size)
   USHORT count = m_request.EntityChunkCount;
 
   m_request.pEntityChunks = (PHTTP_DATA_CHUNK) realloc(m_request.pEntityChunks,(count + 1) * sizeof(PHTTP_DATA_CHUNK));
-  m_request.pEntityChunks[count].DataChunkType           = HttpDataChunkFromMemory;
-  m_request.pEntityChunks[count].FromMemory.pBuffer      = (PHTTP_DATA_CHUNK) p_buffer;
-  m_request.pEntityChunks[count].FromMemory.BufferLength = p_size;
+  if(m_request.pEntityChunks)
+  {
+    m_request.pEntityChunks[count].DataChunkType           = HttpDataChunkFromMemory;
+    m_request.pEntityChunks[count].FromMemory.pBuffer      = (PHTTP_DATA_CHUNK) p_buffer;
+    m_request.pEntityChunks[count].FromMemory.BufferLength = p_size;
 
-  ++m_request.EntityChunkCount;
+    ++m_request.EntityChunkCount;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -817,7 +826,10 @@ Request::ReadInitialMessage()
 {
   FreeInitialBuffer();
   m_initialBuffer = (BYTE*) malloc(MESSAGE_BUFFER_LENGTH + 1);
-
+  if(!m_initialBuffer)
+  {
+    throw (INT)ERROR_OUTOFMEMORY;
+  }
   int length = m_socket->RecvPartial(m_initialBuffer,MESSAGE_BUFFER_LENGTH);
   if (length > 0)
   {
@@ -934,6 +946,13 @@ Request::ProcessHeader(LPSTR p_line)
       m_request.Headers.pUnknownHeaders[m_request.Headers.UnknownHeaderCount].RawValueLength = (USHORT)vlen;
 
       m_request.Headers.UnknownHeaderCount++;
+
+      // Check for incoming WebSocket
+      if(_stricmp(header,"Sec-WebSocket-Key") == 0)
+      {
+        m_websocketPrepare = true;
+        m_websocketKey     = value;
+      }
     }
     return;
   }
@@ -1003,8 +1022,9 @@ Request::FindContentLength()
 void
 Request::CorrectFullURL()
 {
-  LPCSTR host;
+  LPCSTR host = "";
   XString hostname;
+  bool ourserver(false);
   if(m_request.Headers.KnownHeaders[HttpHeaderHost].pRawValue)
   {
     host = m_request.Headers.KnownHeaders[HttpHeaderHost].pRawValue;
@@ -1012,7 +1032,13 @@ Request::CorrectFullURL()
   else
   {
     hostname = GetHostName();
-    host = hostname.GetString();
+    ourserver = true;
+  }
+
+  AutoCSTR hst(hostname);
+  if(ourserver)
+  {
+    host = hst.cstr();
   }
 
   PCWSTR abspath(m_request.CookedUrl.pAbsPath);
@@ -1022,7 +1048,7 @@ Request::CorrectFullURL()
 
     CStringT<char,StrTraitMFC< char > > newpath;
     CStringT<char,StrTraitMFC< char > > absolute = W2A(abspath);
-    newpath.Format(_T("http://%s%s"),host,absolute);
+    newpath.Format("http://%s%s",host,absolute.GetString());
 
     if(m_request.CookedUrl.pFullUrl)
     {
@@ -1165,12 +1191,12 @@ Request::FindURL(LPSTR p_url)
 // Finding the HTTP protocol and version numbers at the end of the
 // HTTP command line (Beginning with the HTTP verb)
 void
-Request::FindProtocol(LPSTR p_protocol)
+Request::FindProtocol(LPCSTR p_protocol)
 {
   // skip whitespace
   while(isspace(*p_protocol)) ++p_protocol;
 
-  if(_strnicmp(p_protocol,"http/", 5) == 0)
+  if(_strnicmp(p_protocol,"HTTP/", 5) == 0)
   {
     LPCSTR major = &p_protocol[5];
     LPCSTR minor = strchr(p_protocol,'.');
@@ -1228,7 +1254,7 @@ static LPCTSTR all_headers[] =
  ,_T("Referer")               //  HttpHeaderReferer               = 36,   // request-header [section 5.3]
  ,_T("Header-Range")          //  HttpHeaderRange                 = 37,   // request-header [section 5.3]
  ,_T("Te")                    //  HttpHeaderTe                    = 38,   // request-header [section 5.3]
- ,_T("Translate")             //  HttpHeaderTranslate             = 39,   // request-header [webDAV, not in rfc 2518]
+ ,_T("Translate")             //  HttpHeaderTranslate             = 39,   // request-header [webDAV, not in RFC 2518]
  ,_T("UserAgent")             //  HttpHeaderUserAgent             = 40,   // request-header [section 5.3]
 };
 
@@ -1246,7 +1272,7 @@ static LPCTSTR all_responses[] =
  ,_T("Proxy-Authenticate")    //  HttpHeaderProxyAuthenticate     = 24,   // response-header [section 6.2]
  ,_T("Retry-After")           //  HttpHeaderRetryAfter            = 25,   // response-header [section 6.2]
  ,_T("Server")                //  HttpHeaderServer                = 26,   // response-header [section 6.2]
- ,_T("Set-Cookie")            //  HttpHeaderSetCookie             = 27,   // response-header [not in rfc]
+ ,_T("Set-Cookie")            //  HttpHeaderSetCookie             = 27,   // response-header [not in any RFC]
  ,_T("Header-Vary")           //  HttpHeaderVary                  = 28,   // response-header [section 6.2]
  ,_T("WWW-Authenticate")      //  HttpHeaderWwwAuthenticate       = 29,   // response-header [section 6.2]
 };
@@ -1295,7 +1321,7 @@ Request::ReplyClientError(int p_error, CString p_errorText)
   bool retry = false;
 
   CString header;
-  header.Format(_T("HTTP/1.1 %d %s\r\n"),p_error,p_errorText);
+  header.Format(_T("HTTP/1.1 %d %s\r\n"),p_error,p_errorText.GetString());
   header += _T("Content-Type: text/html; charset=us-ascii\r\n");
 
   CString body;
@@ -1309,7 +1335,7 @@ Request::ReplyClientError(int p_error, CString p_errorText)
   }
 
   header.AppendFormat(_T("Content-Length: %d\r\n"),body.GetLength());
-  header.AppendFormat(_T("Date: %s\r\n"), HTTPSystemTime());
+  header.AppendFormat(_T("Date: %s\r\n"),HTTPSystemTime().GetString());
   header += "\r\n";
   header += body;
 
@@ -1342,14 +1368,14 @@ Request::ReplyServerError(int p_error,CString p_errorText)
 
   // The answer
   CString header;
-  header.Format(_T("HTTP/1.1 %d %s\r\n"), p_error, p_errorText);
+  header.Format(_T("HTTP/1.1 %d %s\r\n"), p_error, p_errorText.GetString());
   header += _T("Content-Type: text/html; charset=us-ascii\r\n");
 
   CString body;
   body.Format(http_server_error, p_error, p_errorText);
 
   header.AppendFormat(_T("Content-Length: %d\r\n"), body.GetLength());
-  header.AppendFormat(_T("Date: %s\r\n"),HTTPSystemTime());
+  header.AppendFormat(_T("Date: %s\r\n"),HTTPSystemTime().GetString());
   header += _T("\r\n");
   header += body;
 
@@ -1479,16 +1505,22 @@ Request::GetAuthenticationInfoRecord()
   // Create AUTH_INFO object with defaults
   int size = ++m_request.RequestInfoCount;
   m_request.pRequestInfo = (PHTTP_REQUEST_INFO)realloc(m_request.pRequestInfo, size * sizeof(HTTP_REQUEST_INFO));
+  if(m_request.pRequestInfo)
+  {
+    m_request.pRequestInfo[number].InfoType   = HttpRequestInfoTypeAuth;
+    m_request.pRequestInfo[number].InfoLength = sizeof(HTTP_REQUEST_AUTH_INFO);
+    m_request.pRequestInfo[number].pInfo      = (PHTTP_REQUEST_AUTH_INFO)calloc(1, sizeof(HTTP_REQUEST_AUTH_INFO));
 
-  m_request.pRequestInfo[number].InfoType = HttpRequestInfoTypeAuth;
-  m_request.pRequestInfo[number].InfoLength = sizeof(HTTP_REQUEST_AUTH_INFO);
-  m_request.pRequestInfo[number].pInfo = (PHTTP_REQUEST_AUTH_INFO)calloc(1, sizeof(HTTP_REQUEST_AUTH_INFO));
+    if(m_request.pRequestInfo[number].pInfo)
+    {
+      PHTTP_REQUEST_AUTH_INFO info = (PHTTP_REQUEST_AUTH_INFO)m_request.pRequestInfo[number].pInfo;
+      info->AuthStatus = HttpAuthStatusNotAuthenticated;
+      info->AuthType   = HttpRequestAuthTypeNone;
 
-  PHTTP_REQUEST_AUTH_INFO info = (PHTTP_REQUEST_AUTH_INFO)m_request.pRequestInfo[number].pInfo;
-  info->AuthStatus = HttpAuthStatusNotAuthenticated;
-  info->AuthType   = HttpRequestAuthTypeNone;
-
-  return info;
+      return info;
+    }
+  }
+  return nullptr;
 }
 
 // See if we have a cached authentication token
@@ -1793,68 +1825,10 @@ Request::SendEntityChunkFromMemory(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
   return result;
 }
 
-// Sending one (1) file from opened file handle in the chunk to the socket
-// int
-// Request::SendEntityChunkFromFile(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
-// {
-//   if(m_listener->GetSecureMode())
-//   {
-//     return SendFileByMemoryBlocks(p_chunk, p_bytes);
-//   }
-//   else
-//   {
-//     return SendFileByTransmitFunction(p_chunk, p_bytes);
-//   }
-// }
-// 
-// int
-// Request::SendFileByTransmitFunction(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
-// {
-//   SOCKET actual = reinterpret_cast<PlainSocket*>(m_socket)->GetActualSocket();
-//   PointTransmitFile transmit = m_queue->GetTransmitFile(actual);
-// 
-//   DWORD high = 0;
-//   DWORD size = GetFileSize(p_chunk->FromFileHandle.FileHandle,&high);
-// 
-//   // But we restrict on this much if possible
-//   if(p_chunk->FromFileHandle.ByteRange.Length.LowPart > 0 && 
-//      p_chunk->FromFileHandle.ByteRange.Length.LowPart < size)
-//   {
-//     size = p_chunk->FromFileHandle.ByteRange.Length.LowPart;
-//   }
-// 
-//   if(transmit)
-//   {
-//     if((*transmit)(actual
-//                   ,p_chunk->FromFileHandle.FileHandle
-//                   ,(DWORD)p_chunk->FromFileHandle.ByteRange.Length.LowPart
-//                   ,0
-//                   ,NULL
-//                   ,NULL
-//                   ,TF_DISCONNECT) == FALSE)
-//     {
-//       int error = WSAGetLastError();
-//       LogError("Error while sending a file: %d", error);
-//       return error;
-//     }
-//   }
-//   else
-//   {
-//     LogError("Could not send a file. Injected 'TransmitFile' functionality not found");
-//     return ERROR_CONNECTION_ABORTED;
-//   }
-// 
-//   // Record the fact that we have written this much
-//   m_bytesWritten += size;
-//   *p_bytes       += size;
-// 
-//   return NO_ERROR;
-// }
-
 int
 Request::SendEntityChunkFromFile(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
 {
-  char buffer[MESSAGE_BUFFER_LENGTH];
+  char buffer[FILE_BUFFER_LENGTH];
 
   // Getting the total file size
   DWORD fhigh = 0;
@@ -1888,8 +1862,8 @@ Request::SendEntityChunkFromFile(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
   while(size < length)
   {
     // Calculate next block size
-    ULONG blocksize = MESSAGE_BUFFER_LENGTH;
-    if((ULONG)(length - size) < MESSAGE_BUFFER_LENGTH)
+    ULONG blocksize = FILE_BUFFER_LENGTH;
+    if((ULONG)(length - size) < FILE_BUFFER_LENGTH)
     {
       blocksize = (ULONG)(length - size);
     }
@@ -2079,3 +2053,37 @@ Request::WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 
   return NO_ERROR;;
 }
+
+// Register the fact that the request starts a WebSocket
+void
+Request::CreateWebSocket()
+{
+  // Are we starting a WebSocket?
+  if(m_websocketKey.IsEmpty())
+  {
+    return;
+  }
+
+  // See if it was already defined earlier
+  // It might be a reconnect attempt
+  SYSWebSocket* existing = m_queue->FindWebSocket(m_websocketKey);
+  if(existing)
+  {
+    // Remember the old one
+    Request* oldRequest = m_websocket->GetRequest();
+
+    // Send acknowledgment back
+    m_websocket = existing;
+    m_queue->ReconnectWebsocket(m_websocketKey,m_websocket);
+
+    // Ready with the previous request
+    m_queue->RemoveRequest(oldRequest);
+  }
+  else
+  {
+    // Register new socket
+    m_websocket = new SYSWebSocket(this);
+    m_queue->AddWebSocket(m_websocketKey,m_websocket);
+  }
+}
+

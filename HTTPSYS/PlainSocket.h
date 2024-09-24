@@ -11,11 +11,10 @@
 #include "SocketStream.h"
 #include <WS2tcpip.h>
 
-#pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib,"Ws2_32.lib")
 
 // Keep-alive times must be a minimum of 1 second
 #define MINIMUM_KEEPALIVE 1000
-
 
 class PlainSocket : public SocketStream
 {
@@ -41,6 +40,10 @@ public:
 	int   RecvPartial(LPVOID p_buffer, const ULONG p_length) override;
   // Sends up to      p_length bytes of data and returns the amount sent     - or SOCKET_ERROR if it times out
 	int   SendPartial(LPCVOID p_buffer,const ULONG p_length) override;
+  // Receives up to   p_length bytes of data with an OVERLAPPED callback
+  int   RecvPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped) override;
+  // Sends    up to   p_length bytes of data with an OVERLAPPED callback
+  int   SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped) override;
 
   // Set up SSL/TLS state for this connection: NEVER USED ON PLAIN SOCKETS! Only on derived classes!!
   HRESULT InitializeSSL(const void* p_buffer = nullptr,const int p_length = 0) override;
@@ -77,6 +80,11 @@ public:
   // Waiting for this socket to disconnect
   ULONG   RegisterForDisconnect();
 
+
+  // Public: but only meant for the overlapping I/O routines !!
+  void ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags);
+
+
 protected:
 	DWORD   m_lastError  { 0       };  // Last WSA socket error or OS error
   CString m_hostName;                // Connected to this host
@@ -94,8 +102,10 @@ private:
 	CTime           m_sendEndTime         { 0       };  // Moment where the send will time out
 	WSAEVENT        m_write_event         { nullptr };  // Event used when writing to the socket
 	WSAEVENT        m_read_event          { nullptr };  // Event used when reading from the socket
-	WSAOVERLAPPED   m_os                  { 0       };  // Overlapping I/O structure
+	WSAOVERLAPPED   m_os                  { 0       };  // Overlapping I/O structure for reading and listner stopping
+  LPOVERLAPPED    m_readOverlapped      { nullptr };  // Overlapped for reading from the socket
 	bool            m_recvInitiated       { false   };  // Receive in transit, used for retrying a receive operation
+  LPVOID          m_receiveBuffer       { nullptr };  // Current read buffer
 	SOCKET          m_actualSocket        { NULL    };  // The underlying WSA socket from the MS-Windows operating system
   int             m_connTimeoutSeconds  { 1       };  // Connection timeout in seconds
   int             m_sendTimeoutSeconds  { 1       };  // Send timeout in seconds

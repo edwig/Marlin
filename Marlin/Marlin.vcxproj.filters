@@ -198,9 +198,6 @@
     <ClCompile Include="OAuth2Cache.cpp">
       <Filter>MarlinClient</Filter>
     </ClCompile>
-    <ClCompile Include="WebSocketContext.cpp">
-      <Filter>MarlinServer</Filter>
-    </ClCompile>
     <ClCompile Include="ServerEventDriver.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
@@ -414,9 +411,6 @@
     <ClInclude Include="OAuth2Cache.h">
       <Filter>MarlinClient\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="WebSocketContext.h">
-      <Filter>MarlinServer\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="ServerEventDriver.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
@@ -446,6 +440,9 @@
     </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="HTTPSYS_Websocket.h">
+      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -185,7 +185,7 @@ unsigned __stdcall StartAsyncSendHttpBody(void* p_param)
   {
     return ERROR_INVALID_PARAMETER;
   }
-  SetThreadName("HTTPSendBody");
+  SetThreadName(_T("HTTPSendBody"));
   _set_se_translator(SeTranslator);
   XString error;
 

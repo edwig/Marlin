@@ -783,7 +783,7 @@ HTTPServerMarlin::SendAsChunk(HTTPMessage* p_message, bool p_final /*= false*/)
   // If we want to send a (g)zipped buffer, that should have been done already by now
   p_message->SetAcceptEncoding(_T(""));
   // Add chunked indicator
-  p_message->AddHeader(HttpHeaderTransferEncoding,"chunked");
+  p_message->AddHeader(HttpHeaderTransferEncoding,_T("chunked"));
 
   // Get the chunk number (first->next)
   unsigned chunk = p_message->GetChunkNumber();

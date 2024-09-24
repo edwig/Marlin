@@ -8,7 +8,6 @@
 // - Because it can be done :-)
 //
 // Not implemented features of HTTP.SYS are:
-// - Asynchronous I/O
 // - HTTP 2.0 Server push
 //
 // Copyright 2018 (c) ir. W.E. Huisman

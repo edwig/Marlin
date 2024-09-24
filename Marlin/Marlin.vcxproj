@@ -214,6 +214,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
+    <Lib>
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|x64'">
     <ClCompile>
@@ -403,7 +406,6 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="WebSocketClient.cpp" />
-    <ClCompile Include="WebSocketContext.cpp" />
     <ClCompile Include="WebSocketServer.cpp" />
     <ClCompile Include="WebSocketServerIIS.cpp" />
     <ClCompile Include="WebSocketServerSync.cpp" />
@@ -434,6 +436,7 @@
     <ClInclude Include="HTTPSite.h" />
     <ClInclude Include="HTTPSiteIIS.h" />
     <ClInclude Include="HTTPSiteMarlin.h" />
+    <ClInclude Include="HTTPSYS_Websocket.h" />
     <ClInclude Include="HTTPURLGroup.h" />
     <ClInclude Include="IISDebug.h" />
     <ClInclude Include="IISSiteConfig.h" />
@@ -478,7 +481,6 @@
     <ClInclude Include="WebServiceServer.h" />
     <ClInclude Include="WebSocket.h" />
     <ClInclude Include="WebSocketClient.h" />
-    <ClInclude Include="WebSocketContext.h" />
     <ClInclude Include="WebSocketServer.h" />
     <ClInclude Include="WebSocketServerIIS.h" />
     <ClInclude Include="WebSocketServerSync.h" />

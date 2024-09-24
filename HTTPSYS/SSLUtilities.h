@@ -32,7 +32,7 @@ CString         GetUserName(void);
 bool            SplitString(CString p_input,CString& p_output1,CString& p_output2,TCHAR p_separator);
 bool            IsUserAdmin();
 void            SetThreadName(LPCTSTR threadName);
-void            SetThreadName(LPCSTR threadName, DWORD dwThreadID);
+void            SetThreadName(LPCTSTR threadName, DWORD dwThreadID);
 bool            SSLEncodeThumbprint(CString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len);
 bool            FindCertificateByThumbprint(PCCERT_CONTEXT& p_certContext, LPCTSTR p_store, PTCHAR p_thumbprint);
 
