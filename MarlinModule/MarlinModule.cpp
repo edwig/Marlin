@@ -40,6 +40,7 @@
 #include "ServiceReporting.h"
 #include "StdException.h"
 #include "IISDebug.h"
+#include <winhttp.h>
 #include <io.h>
 
 #ifdef _DEBUG
@@ -56,6 +57,7 @@ static WebConfigIIS* g_config  { nullptr };  // The ApplicationHost.config infor
 static wchar_t       g_moduleName[SERVERNAME_BUFFERSIZE + 1] = L"";
 static bool          g_debugMode = false;
        TCHAR         g_adminEmail[MAX_PATH];
+       IHttpServer*  g_iisServer = nullptr;
 
 // Logging macro for this file only
 #define DETAILLOG(text)    SvcReportInfoEvent(false,text);
@@ -87,8 +89,7 @@ RegisterModule(DWORD                        p_version
   TRACE("REGISTER MODULE\n");
 
   // Global name for the WMI Service event registration
-  PRODUCT_NAME = _T("Marlin_for_IIS");
-  _tcscpy_s(g_svcname,SERVICE_NAME_LENGTH,PRODUCT_NAME);
+  _tcscpy_s(g_svcname,SERVICE_NAME_LENGTH,_T("Marlin_for_IIS"));
 
   // Declaration of the start log function
   bool ApplicationConfigStart(DWORD p_version);
@@ -355,7 +356,6 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     XString error;
     error.Format(_T("Marlin found an error while starting application [%s] %s"),appName.GetString(),ex.GetErrorMessage().GetString());
     ERRORLOG(error);
-    ErrorReport::Report(ERROR_SERVICE_NEVER_STARTED,0,webroot,_T("Crash_"));
   }
   return GL_NOTIFICATION_HANDLED;
 };
@@ -399,18 +399,13 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
     _set_se_translator(SeTranslator);
     try
     {
-      // STOP!!
-      app->UnloadSites();
-
-      // Let the application stop itself 
-      app->ExitInstance();
+      (*poolapp->m_exitServerApp)(app);
     }
     catch(StdException& ex)
     {
       XString error;
       error.Format(_T("Marlin found an error while stopping application [%s] %s"),appName.GetString(),ex.GetErrorMessage().GetString());
       ERRORLOG(error);
-      ErrorReport::Report(ERROR_SERVICE_NOTIFICATION,0,webroot,_T("Crash_"));
     }
   }
   // Destroy the application and the IIS pool app

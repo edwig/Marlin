@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "PoolApp.h"
 #include "ServiceReporting.h"
+#include "..\Marlin\Version.h"
+#include <map>
 #include <io.h>
 
 #ifdef _DEBUG
@@ -97,7 +99,6 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
   {
     extern TCHAR g_adminEmail[];
     _tcsncpy_s(g_adminEmail,MAX_PATH - 1,adminEmail.GetString(),MAX_PATH - 1);
-    PRODUCT_ADMIN_EMAIL = g_adminEmail;
   }
 
   // Tell MS-Windows where to look while loading our DLL
@@ -139,6 +140,8 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
 
     // Getting the start address of the application factory
     m_createServerApp = (CreateServerAppFunc)GetProcAddress(m_module,"CreateServerApp");
+    m_initServerApp   = (InitServerAppFunc)  GetProcAddress(m_module,"InitServerApp");
+    m_exitServerApp   = (ExitServerAppFunc)  GetProcAddress(m_module,"ExitServerApp");
     m_findSite        = (FindHTTPSiteFunc)   GetProcAddress(m_module,"FindHTTPSite");
     m_getHttpStream   = (GetHTTPStreamFunc)  GetProcAddress(m_module,"GetStreamFromRequest");
     m_getHttpMessage  = (GetHTTPMessageFunc) GetProcAddress(m_module,"GetHTTPMessageFromRequest");
@@ -147,6 +150,8 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
     m_minVersion      = (MinVersionFunc)     GetProcAddress(m_module,"MinMarlinVersion");
 
     if(m_createServerApp == nullptr ||
+       m_initServerApp   == nullptr ||
+       m_exitServerApp   == nullptr ||
        m_findSite        == nullptr ||
        m_getHttpStream   == nullptr ||
        m_getHttpMessage  == nullptr ||
@@ -154,7 +159,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
        m_sitesInAppPool  == nullptr ||
        m_minVersion      == nullptr )
     {
-      XString error(_T("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'FindHTTPSite', 'GetStreamFromRequest', ")
+      XString error(_T("MarlinModule loaded ***INCORRECT*** DLL. Missing 'CreateServerApp', 'InitServerApp', 'ExitServerApp', 'FindHTTPSite', 'GetStreamFromRequest', ")
                     _T("'GetHTTPMessageFromRequest', 'HandleHTTPMessage', 'SitesInApplicPool' or 'MinMarlinVersion'"));
       Unhealthy(error,ERROR_NOT_FOUND);
       return false;
@@ -184,22 +189,13 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
     return false;
   }
 
-  // Call the initialization
-  m_application->InitInstance();
-
-  // Try loading the sites from IIS in the application
-  m_application->LoadSites(p_httpapp,p_physical);
-
-  // Check if everything went well
-  if(m_application->CorrectlyStarted() == false)
+  // Call the initialization of the application
+  if(!(*m_initServerApp)(m_application,p_httpapp,p_physical))
   {
     XString error(_T("ERROR STARTING Application: ") + p_application);
     Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
     return false;
   }
-  // Ready, so stop the timer
-  m_application->StopCounter();
-
   return true;
 }
 

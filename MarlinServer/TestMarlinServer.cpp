@@ -66,6 +66,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+IHttpServer* g_iisServer = nullptr;
+
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define SERVERSTATUSOK            _T("Server status: Running & OK")
 

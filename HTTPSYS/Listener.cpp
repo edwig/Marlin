@@ -81,7 +81,7 @@ Listener::~Listener(void)
 
 // This is the individual worker process, all it does is start, change its name to something useful,
 // then call the Lambda function passed in via the BeginListening method
-UINT __cdecl Listener::Worker(void* p_argument)
+unsigned __stdcall Listener::Worker(void* p_argument)
 {
   Request*  request = reinterpret_cast<Request*>(p_argument);
   Listener* listener = request->GetListener();
@@ -97,7 +97,7 @@ UINT __cdecl Listener::Worker(void* p_argument)
 }
 
 // Worker process for connection listening
-UINT __cdecl Listener::ListenerWorker(LPVOID p_param)
+unsigned __stdcall Listener::ListenerWorker(LPVOID p_param)
 {
   // See _beginthread call for parameter definition
   Listener* listener = reinterpret_cast<Listener *>(p_param); 

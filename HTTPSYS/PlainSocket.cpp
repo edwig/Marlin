@@ -528,10 +528,10 @@ PlainSocket::RecvPartial(LPVOID p_buffer, const ULONG p_length)
 }
 
 // Call back from the WinSockets2 implementation
-void PlainSocketReceiveOverlapped(DWORD dwError,
-                                  DWORD cbTransferred,
-                                  LPWSAOVERLAPPED lpOverlapped,
-                                  DWORD dwFlags)
+void CALLBACK PlainSocketReceiveOverlapped(DWORD dwError,
+                                           DWORD cbTransferred,
+                                           LPWSAOVERLAPPED lpOverlapped,
+                                           DWORD dwFlags)
 {
   PlainSocket* socket = reinterpret_cast<PlainSocket*>(lpOverlapped->hEvent);
   if(socket)

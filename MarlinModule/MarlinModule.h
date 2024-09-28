@@ -30,17 +30,18 @@
 #pragma warning (disable:4091)
 #include <httpserv.h>
 #pragma warning (error:4091)
-
 #include "PoolApp.h"
 #include <map>
 
 #define SERVERNAME_BUFFERSIZE 256
 
+// Standard ports for HTTP connections
+#define INTERNET_DEFAULT_HTTP_PORT   80
+#define INTERNET_DEFAULT_HTTPS_PORT 443
+
 // Forward reference
-class ServerApp;
 class LogAnalysis;
 class HTTPServerIIS;
-class ErrorReport;
 
 // All applications in the application pool
 using AppPool = std::map<int,PoolApp*>;

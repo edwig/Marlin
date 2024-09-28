@@ -28,6 +28,4 @@
 
 // Auto link with BaseLibrary
 #include <BaseLibrary.h>
-// Auto link with Marlin
-#include <Marlin.h>
 

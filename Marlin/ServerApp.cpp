@@ -45,7 +45,6 @@ static char THIS_FILE[] = __FILE__;
 #define WARNINGLOG(text,...)    m_httpServer->DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__)
 #define ERRORLOG(code,text)     m_httpServer->ErrorLog  (_T(__FUNCTION__),code,text)
 
-IHttpServer*  g_iisServer   = nullptr;
 LogAnalysis*  g_analysisLog = nullptr;
 ErrorReport*  g_report      = nullptr;
 
@@ -67,6 +66,55 @@ ServerApp* _stdcall CreateServerApp(IHttpServer* p_server
                                    ,LPCTSTR     p_appName)
 {
   return appFactory->CreateServerApp(p_server,p_webroot,p_appName);
+}
+
+__declspec(dllexport)
+bool _stdcall InitServerApp(ServerApp* p_application,IHttpApplication* p_httpapp,XString p_physical)
+{
+  if(p_application)
+  {
+    _set_se_translator(SeTranslator);
+    try
+    {
+      // Call the initialization
+      p_application->InitInstance();
+
+      // Try loading the sites from IIS in the application
+      p_application->LoadSites(p_httpapp,p_physical);
+
+      // Ready, so stop the timer
+      p_application->StopCounter();
+
+      // Check if everything went well
+      return p_application->CorrectlyStarted();
+    }
+    catch(StdException& ex)
+    {
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while initializing the server application: ") + ex.GetErrorMessage());
+    }
+  }
+  return false;
+}
+
+__declspec(dllexport)
+void _stdcall ExitServerApp(ServerApp* p_application)
+{
+  if(p_application)
+  {
+    _set_se_translator(SeTranslator);
+    try
+    {
+      // STOP!!
+      p_application->UnloadSites();
+
+      // Let the application stop itself 
+      p_application->ExitInstance();
+    }
+    catch(StdException& ex)
+    {
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while stopping the server application: ") + ex.GetErrorMessage());
+    }
+  }
 }
 
 __declspec(dllexport)

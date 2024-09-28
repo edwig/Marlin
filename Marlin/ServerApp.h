@@ -45,6 +45,8 @@ class ServerApp;
 
 // Exported functions that can be called from the MarlinModule
 typedef ServerApp*    (CALLBACK* CreateServerAppFunc)(IHttpServer*,LPCTSTR,LPCTSTR);
+typedef bool          (CALLBACK* InitServerAppFunc)  (ServerApp*,IHttpApplication* p_hhtpapp,XString p_physial);
+typedef void          (CALLBACK* ExitServerAppFunc)  (ServerApp*);
 typedef HTTPSite*     (CALLBACK* FindHTTPSiteFunc)   (ServerApp*,int port,PCWSTR p_url);
 typedef int           (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
 typedef HTTPMessage*  (CALLBACK* GetHTTPMessageFunc) (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
@@ -55,6 +57,7 @@ typedef bool          (CALLBACK* MinVersionFunc)     (ServerApp*,int version);
 extern IHttpServer*  g_iisServer;
 extern LogAnalysis*  g_analysisLog;
 extern ErrorReport*  g_report;
+extern IHttpServer*  g_iisServer;
 
 //////////////////////////////////////////////////////////////////////////
 //

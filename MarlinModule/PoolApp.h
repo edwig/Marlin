@@ -26,10 +26,26 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include <ServerApp.h>
+#include <httpserv.h>
+#include <WebConfigIIS.h>
 
-// Forward reference
-class IHttpApplication;
+typedef void ServerApp;
+typedef void HTTPSite;
+typedef void HTTPMessage;
+
+// Exported functions that can be called from the MarlinModule
+typedef ServerApp*    (CALLBACK* CreateServerAppFunc)(IHttpServer*,LPCTSTR,LPCTSTR);
+typedef bool          (CALLBACK* InitServerAppFunc)  (ServerApp*,IHttpApplication* p_hhtpapp,XString p_physial);
+typedef void          (CALLBACK* ExitServerAppFunc)  (ServerApp*);
+typedef HTTPSite*     (CALLBACK* FindHTTPSiteFunc)   (ServerApp*,int port,PCWSTR p_url);
+typedef int           (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
+typedef HTTPMessage*  (CALLBACK* GetHTTPMessageFunc) (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
+typedef bool          (CALLBACK* HandleMessageFunc)  (ServerApp*,HTTPSite* p_site,HTTPMessage*);
+typedef int           (CALLBACK* SitesInApplicPool)  (ServerApp*);
+typedef bool          (CALLBACK* MinVersionFunc)     (ServerApp*,int version);
+
+// Our IIS Server
+extern IHttpServer* g_iisServer;
 
 // Helper class with a web application
 // Also contains the function pointers into our application DLL
@@ -48,6 +64,8 @@ public:
   HMODULE             m_module          { NULL    };
   // DLL Loaded functions
   CreateServerAppFunc m_createServerApp { nullptr };
+  InitServerAppFunc   m_initServerApp   { nullptr };
+  ExitServerAppFunc   m_exitServerApp   { nullptr };
   FindHTTPSiteFunc    m_findSite        { nullptr };
   GetHTTPStreamFunc   m_getHttpStream   { nullptr };
   GetHTTPMessageFunc  m_getHttpMessage  { nullptr };
