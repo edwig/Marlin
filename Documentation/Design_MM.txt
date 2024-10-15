@@ -1,0 +1,23 @@
+DESIGN MARLIN MANAGEMENT 
+
+
+
++------------------------------------------------------------------------+
+| Marlin Management                                                      |
++--------------+---------------------------------------------------------+
+| Server_one   | URL         : [/localhost:443/WocasDocuments__________] |
+| Server_two   | Secure      : [yes] [Certificate_marlin.org___________] |
+| Server_three | Service     : [WocasDocuments_2025.1__________________] |
+=>Documents    |                                                         |
+|              | Logfile     : [On ][C:\www\wd\20251\logfile.txt_______] |
+|              | 
+|              |
+|              |
+|              |
+|              |
+|              |
+|              | [Query ][Start ][Stop  ][Bounce][Configure]             |
++--------------+---------------------------------------------------------+
+| Status: RUNNING                                                        |
++--------------+---------------------------------------------------------+
+
