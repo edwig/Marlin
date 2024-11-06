@@ -564,7 +564,12 @@ HTTPSite::RemoveSiteFromGroup()
     if(m_isSubsite == false)
     {
       retCode = HttpRemoveUrlFromUrlGroup(group,uniURL.c_str(),0);
-      if(retCode != NO_ERROR)
+      if(m_site.Compare(_T("/")) == 0 && retCode == ERROR_FILE_NOT_FOUND)
+      {
+        // Ignore for the base site
+        retCode = NO_ERROR;
+      }
+      else if(retCode != NO_ERROR)
       {
         ERRORLOG(retCode,_T("Cannot remove site from URL group: ") + m_prefixURL);
       }

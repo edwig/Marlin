@@ -187,6 +187,7 @@ WSDLCache::GenerateWSDL()
 
   // Open file;
   WinFile file(m_filename);
+  file.CreateDirectory();
   if(file.Open(winfile_write | open_trans_text,FAttributes::attrib_none,Encoding::UTF8))
   {
     XString wsdlcontent;
