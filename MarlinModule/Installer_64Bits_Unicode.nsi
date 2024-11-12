@@ -10,7 +10,7 @@
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 64Bits"
  !define PRODUCT_VERSION                      "8.4.0"
- !define PRODUCT_EXT                          "840"
+ !define PRODUCT_EXT                          "840U"
  !define PRODUCT_PUBLISHER                    "Edwig Huisman"
  !define PRODUCT_WEB_SITE                     "https://github.com/Edwig/Marlin"
  !define PRODUCT_DIR_REGKEY                   "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"
@@ -22,7 +22,7 @@
  !define LogFile                              "MarlinIISModule_64bits"
   
  ; Directories containing our files
- !define InputDirectory64                     "C:\Develop\Marlin\BinRelease_x64"
+ !define InputDirectory64                     "C:\Develop\Marlin\BinReleaseUnicode_x64"
  !define ExtraDirectory                       "C:\Develop\Marlin\ExtraParts"
  !define RedistMap                            "C:\Develop\Marlin\Documentation"
 
@@ -44,10 +44,10 @@ SetCompressorDictSize 8
  XPStyle on
  RequestExecutionLevel admin
 ;--------------------------------------------------------------------------------------------------------
- OutFile "MarlinModule_${PRODUCT_VERSION}_64_bits.exe"
+ OutFile "MarlinModuleUnicode_${PRODUCT_VERSION}_64_bits.exe"
 ;--------------------------------------------------------------------------------------------------------
  ; title of the setup
- Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
+ Name "${PRODUCT_NAME} ${PRODUCT_VERSION} (Unicode)"
 ;--------------------------------------------------------------------------------------------------------
  ; Places it in the standard installation folder
  ; IIS is never in program files, but in it's own directory under MS-Windows
@@ -164,11 +164,11 @@ SectionEnd
 
 ;--------------------------------------------------------------------------------------------------------
 Section -Post
- WriteUninstaller "$INSTDIR\uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.exe"
+ WriteUninstaller "$INSTDIR\uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}U.exe"
  
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName"     "$(^Name)"
- WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.exe"
- WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon"     "$INSTDIR\uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.exe"
+ WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}U.exe"
+ WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon"     "$INSTDIR\uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}U.exe"
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion"  "${PRODUCT_VERSION}"
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout"    "${PRODUCT_WEB_SITE}"
  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher"       "${PRODUCT_PUBLISHER}"
