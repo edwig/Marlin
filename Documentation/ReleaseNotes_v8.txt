@@ -20,6 +20,12 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     in real life production scenario's. The 'tls_lastErrror' variable has been removed from the 
     HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
 
+CHANGES IN VERSION 8.4.0 of xx-xx-xxxx
+--------------------------------------
+1)  The "MinMarlinVersion" API call of the MarlinModule has been expanded with the "unicode" 
+    parameter, so that we can report of a cross ANSI/UNICODE combination of the MarlinModule
+    and an application DLL.
+
 CHANGES IN VERSION 8.3.4 of 14-08-2024
 --------------------------------------
 1)  More profound checking of the EventPolicy in the server event driver for the existing of a 

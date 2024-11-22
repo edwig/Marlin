@@ -33,10 +33,12 @@
 #include <rpc.h>
 #include <wincrypt.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // General logfile macro
@@ -138,14 +140,14 @@ WebServiceClient::SetLogLevel(int p_logLevel)
 bool
 WebServiceClient::GetDetailLogging()
 {
-  TRACE(_T("WARNING: Rewrite your program with GetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Rewrite your program with GetLogLevel()\n"));
   return (m_logLevel > HLL_ERRORS);
 }
 
 void
 WebServiceClient::SetDetailLogging(bool p_detail)
 {
-  TRACE(_T("WARNING: Rewrite your program with SetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Rewrite your program with SetLogLevel()\n"));
   m_logLevel = p_detail ? HLL_LOGGING : HLL_NOLOG;
 }
 

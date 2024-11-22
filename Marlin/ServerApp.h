@@ -101,7 +101,7 @@ public:
   virtual int  SitesInThePool();
 
   // Minimal needed MarlinModule version. Checked after DLL loading in MarlinModule
-  virtual bool MinMarlinVersion(int p_version);
+  virtual bool MinMarlinVersion(int p_version,bool p_unicode);
 
   // Add new MarlinModule used virtual overrides at this end of the table!
   // END OF THE VTABLE

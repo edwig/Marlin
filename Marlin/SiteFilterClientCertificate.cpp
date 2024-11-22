@@ -30,10 +30,12 @@
 #include "SiteHandler.h"
 #include "HTTPCertificate.h"
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Remember the certificate for this thread

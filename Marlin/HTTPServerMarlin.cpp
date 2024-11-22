@@ -37,11 +37,14 @@
 #include "WebSocketServer.h"
 #include "ServiceReporting.h"
 #include <httpserv.h>
+#include <assert.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Logging macro's
@@ -757,7 +760,7 @@ HTTPServerMarlin::ReceiveWebSocket(WebSocket* /*p_socket*/,HTTP_OPAQUE_ID /*p_re
 bool       
 HTTPServerMarlin::ReceiveIncomingRequest(HTTPMessage* /*p_message*/,Encoding /*p_encoding*/)
 {
-  ASSERT(false);
+  assert(false);
   ERRORLOG(ERROR_INVALID_PARAMETER,_T("ReceiveIncomingRequest in HTTPServerMarlin: Should never come to here!!"));
   return false;
 }

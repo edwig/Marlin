@@ -38,10 +38,12 @@
 #include <ServiceReporting.h>
 #include <WebSocket.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
@@ -86,13 +88,13 @@ HTTPRequest::HTTPRequest(HTTPServer* p_server)
 
   InitializeCriticalSection(&m_critical);
 
-  TRACE0("CTOR request\n");
+  OutputDebugString(_T("CTOR request\n"));
 }
 
 // DTOR
 HTTPRequest::~HTTPRequest()
 {
-  TRACE0("XTOR request\n");
+  OutputDebugString(_T("XTOR request\n"));
   ClearMemory();
   DeleteCriticalSection(&m_critical);
 }
@@ -144,7 +146,7 @@ HTTPRequest::ClearMemory()
 /*static*/ void
 HandleAsynchroneousIO(OVERLAPPED* p_overlapped)
 {
-  TRACE0("Handle ASYNC I/O\n");
+  OutputDebugString(_T("Handle ASYNC I/O\n"));
 
   OutstandingIO* outstanding = reinterpret_cast<OutstandingIO*>(p_overlapped);
   HTTPRequest* request = dynamic_cast<HTTPRequest*>(outstanding->m_request);
@@ -158,7 +160,7 @@ HandleAsynchroneousIO(OVERLAPPED* p_overlapped)
 void
 HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
 {
-  TRACE0("Handle I/O Action\n");
+  OutputDebugString(_T("Handle I/O Action\n"));
 
   switch(p_action)
   {
@@ -178,7 +180,7 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
 void 
 HTTPRequest::StartRequest()
 {
-  TRACE0("Start request\n");
+  OutputDebugString(_T("Start request\n"));
 
   // Buffer size for a new request
   DWORD size = INIT_HTTP_BUFFERSIZE;
@@ -227,7 +229,7 @@ HTTPRequest::StartRequest()
 void
 HTTPRequest::StartResponse(HTTPMessage* p_message)
 {
-  TRACE0("Start response\n");
+  OutputDebugString(_T("Start response\n"));
 
   // CHECK if we send the same message!!
   if(p_message && p_message != m_message)
@@ -248,7 +250,7 @@ HTTPRequest::StartResponse(HTTPMessage* p_message)
 void
 HTTPRequest::ReceivedRequest()
 {
-  TRACE0("Received request\n");
+  OutputDebugString(_T("Received request\n"));
 
   // Check server pointer
   if(m_server == nullptr)
@@ -504,7 +506,7 @@ HTTPRequest::ReceivedRequest()
 void 
 HTTPRequest::StartReceiveRequest()
 {
-  TRACE0("Start received request\n");
+  OutputDebugString(_T("Start received request\n"));
 
   // Make sure we have a buffer
   if(!m_readBuffer)
@@ -544,7 +546,7 @@ HTTPRequest::StartReceiveRequest()
 void 
 HTTPRequest::ReceivedBodyPart()
 {
-  TRACE0("Receive body part\n");
+  OutputDebugString(_T("Receive body part\n"));
 
   DWORD result = (DWORD)(m_reading.Internal & 0x0FFFF);
   if(result == ERROR_HANDLE_EOF || result == NO_ERROR)
@@ -583,7 +585,7 @@ HTTPRequest::ReceivedBodyPart()
 void
 HTTPRequest::PostReceive()
 {
-  TRACE0("Post Receive\n");
+  OutputDebugString(_T("Post Receive\n"));
 
   // Now also trace the request body of the message
   m_server->LogTraceRequestBody(m_message);
@@ -609,7 +611,7 @@ HTTPRequest::PostReceive()
 void
 HTTPRequest::StartSendResponse()
 {
-  TRACE0("Start SendResponse\n");
+  OutputDebugString(_T("Start SendResponse\n"));
 
   // Mark the fact that we begin responding
   m_responding = true;
@@ -667,8 +669,6 @@ HTTPRequest::StartSendResponse()
                                       overlapped,        // LPOVERLAPPED(OPTIONAL)
                                       nullptr);          // LogData     (must be NULL)
 
-  TRACE1("Result of HttpSendHttpResponse: %d\n", result);
-
   // Check for error
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
   {
@@ -684,7 +684,7 @@ HTTPRequest::StartSendResponse()
 void
 HTTPRequest::SendResponseBody()
 {
-  TRACE0("Send ResponseBody\n");
+  OutputDebugString(_T("Send ResponseBody\n"));
 
   DWORD error = m_writing.Internal & 0x0FFFF;
   if(error)
@@ -790,7 +790,7 @@ HTTPRequest::SendResponseBody()
 void
 HTTPRequest::SendBodyPart()
 {
-  TRACE0("Send BodyPart\n");
+  OutputDebugString(_T("Send BodyPart\n"));
 
   // Check status of the OVERLAPPED structure
   DWORD error = m_writing.Internal & 0x0FFFF;
@@ -853,7 +853,7 @@ HTTPRequest::SendBodyPart()
 void 
 HTTPRequest::StartEventStreamResponse()
 {
-  TRACE0("Start EventStream Response\n");
+  OutputDebugString(_T("Start EventStream Response\n"));
 
   // First comment to push to the stream (not an event!)
   // Always UTF-8 compatible, so simple ANSI string
@@ -922,7 +922,7 @@ HTTPRequest::StartEventStreamResponse()
 void
 HTTPRequest::StartedStream()
 {
-  TRACE0("Started stream\n");
+  OutputDebugString(_T("Started stream\n"));
 
   // Check status of the OVERLAPPED structure
   DWORD error = m_writing.Internal & 0x0FFFF;
@@ -944,7 +944,7 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
                                ,size_t   p_length
                                ,bool     p_continue /*=true*/)
 {
-  TRACE0("Send Response stream\n");
+  OutputDebugString(_T("Send Response stream\n"));
 
   // Check server pointer
   if(m_server == nullptr)
@@ -1039,7 +1039,7 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
 void
 HTTPRequest::SendStreamPart()
 {
-  TRACE0("Send stream part\n");
+  OutputDebugString(_T("Send stream part\n"));
 
   // Check status of the OVERLAPPED structure
   DWORD error = m_writing.Internal & 0x0FFFF;
@@ -1073,7 +1073,7 @@ HTTPRequest::SendStreamPart()
 void
 HTTPRequest::Finalize()
 {
-  TRACE0("Finalize\n");
+  OutputDebugString(_T("Finalize\n"));
 
   AutoCritSec lock(&m_critical);
 
@@ -1177,7 +1177,7 @@ HTTPRequest::AddKnownHeader(HTTP_HEADER_ID p_header,LPCTSTR p_value)
 void
 HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
 {
-  TRACE0("Add Unknown Headers\n");
+  OutputDebugString(_T("Add Unknown Headers\n"));
 
   // Something to do?
   if(p_headers.empty())
@@ -1212,7 +1212,7 @@ HTTPRequest::AddUnknownHeaders(UKHeaders& p_headers)
 void
 HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
 {
-  TRACE0("Fill Response\n");
+  OutputDebugString(_T("Fill Response\n"));
 
   // Check site pointer
   if(m_site == nullptr)
@@ -1485,7 +1485,7 @@ HTTPRequest::FillResponseWebSocketHeaders(UKHeaders& p_headers)
 void 
 HTTPRequest::ResetOutstanding(OutstandingIO& p_outstanding)
 {
-  TRACE0("Reset Outstanding overlapped I/O\n");
+  OutputDebugString(_T("Reset Outstanding overlapped I/O\n"));
 
   p_outstanding.Internal     = 0;
   p_outstanding.InternalHigh = 0;
@@ -1496,7 +1496,7 @@ HTTPRequest::ResetOutstanding(OutstandingIO& p_outstanding)
 void
 HTTPRequest::CancelRequest()
 {
-  TRACE0("Cancel Request\n");
+  OutputDebugString(_T("Cancel Request\n"));
 
   if(m_requestID)
   {

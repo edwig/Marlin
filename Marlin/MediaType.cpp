@@ -28,11 +28,14 @@
 #include "stdafx.h"
 #include "MediaType.h"
 #include <WinFile.h>
+#include <assert.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 MediaType::MediaType(bool p_logging,XString p_extension,XString p_contentType)
@@ -117,7 +120,7 @@ MediaTypes::MediaTypes()
   }
   else
   {
-    ASSERT(_T("There can only be ONE mediatypes object"));
+    assert(_T("There can only be ONE mediatypes object"));
   }
 }
 

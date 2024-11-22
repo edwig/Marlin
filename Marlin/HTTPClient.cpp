@@ -55,10 +55,12 @@
 #endif
 #include <Security.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Logging macro's
@@ -917,42 +919,42 @@ HTTPClient::GetWebsocketHandle()
 bool
 HTTPClient::GetDetailLogging()
 {
-  TRACE(_T("WARNING: Rewrite your program with GetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Rewrite your program with GetLogLevel()\n"));
   return (m_logLevel > HLL_ERRORS);
 }
 
 bool
 HTTPClient::GetTraceRequest()
 {
-  TRACE(_T("WARNING: Rewrite your program with GetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Rewrite your program with GetLogLevel()\n"));
   return (m_logLevel >= HLL_TRACE);
 }
 
 bool
 HTTPClient::GetTraceData()
 {
-  TRACE(_T("WARNING: Rewrite your program with GetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Rewrite your program with GetLogLevel()\n"));
   return (m_logLevel >= HLL_TRACEDUMP);
 }
 
 void 
 HTTPClient::SetDetailLogging(bool p_detail)
 {
-  TRACE(_T("WARNING: Rewrite your program with SetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Rewrite your program with SetLogLevel()\n"));
   m_logLevel = p_detail ? HLL_LOGGING : HLL_NOLOG;
 }
 
 void 
 HTTPClient::SetTraceRequest(bool p_trace)
 {
-  TRACE(_T("WARNING: Rewrite your program with SetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Rewrite your program with SetLogLevel()\n"));
   m_logLevel = p_trace ? HLL_TRACE : HLL_LOGGING;
 }
 
 void
 HTTPClient::SetTraceData(bool p_trace)
 {
-  TRACE(_T("WARNING: Rewrite your program with SetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Rewrite your program with SetLogLevel()\n"));
   m_logLevel = p_trace ? HLL_TRACEDUMP : HLL_LOGGING;
 }
 

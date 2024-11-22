@@ -57,10 +57,12 @@
 #include <io.h>
 #include <sys/timeb.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 //////////////////////////////////////////////////////////////////////////
@@ -304,14 +306,14 @@ HTTPServer::SetLogLevel(int p_logLevel)
 void
 HTTPServer::SetDetailedLogging(bool p_detail)
 {
-  TRACE(_T("WARNING: Use SetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Use SetLogLevel()\n"));
   m_logLevel = p_detail ? HLL_LOGGING : HLL_NOLOG;
 }
 
 bool
 HTTPServer::GetDetailedLogging()
 {
-  TRACE(_T("WARNING: Use GetLogLevel()\n"));
+  OutputDebugString(_T("WARNING: Use GetLogLevel()\n"));
   return (m_logLevel>=HLL_LOGGING);
 }
 

@@ -47,10 +47,12 @@
 #include <VersionHelpers.h>
 #include <io.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Each buffer in a event buffer array has a limit of 32K characters
@@ -91,13 +93,6 @@ int _tmain(int argc,TCHAR* argv[],TCHAR* /*envp[]*/)
   if(hModule == NULL)
   {
     _tprintf(_T("Fatal error: Windows-OS GetModuleHandle failed\n"));
-    return 1;
-  }
-
-  // initialize MFC and print and error on failure
-  if(!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
-  {
-    _tprintf(_T("MFC Initialisation has failed\n"));
     return 1;
   }
 

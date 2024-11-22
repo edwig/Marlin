@@ -41,10 +41,12 @@
 #include "ErrorReport.h"
 #include <WinFile.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
-static CHAR THIS_FILE[] = __FILE__;
+static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 #ifdef CRASHLOG

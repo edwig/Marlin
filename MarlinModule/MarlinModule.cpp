@@ -43,10 +43,12 @@
 #include <winhttp.h>
 #include <io.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 #define MODULE_XSS  "XSSBlocking"
@@ -86,7 +88,7 @@ RegisterModule(DWORD                        p_version
               ,IHttpModuleRegistrationInfo* p_moduleInfo
               ,IHttpServer*                 p_server)
 {
-  TRACE("REGISTER MODULE\n");
+  OutputDebugString(_T("REGISTER MODULE\n"));
 
   // Global name for the WMI Service event registration
   _tcscpy_s(g_svcname,SERVICE_NAME_LENGTH,_T("Marlin_for_IIS"));

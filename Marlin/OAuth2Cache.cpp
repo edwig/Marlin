@@ -55,10 +55,12 @@
 // And of course, as always, check for errors, session == 0 etc :-)
 //
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 OAuth2Cache::OAuth2Cache()

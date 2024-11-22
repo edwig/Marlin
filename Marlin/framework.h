@@ -19,9 +19,10 @@
 #ifdef _DEBUG
 #define DEBUG_NEW new( _NORMAL_BLOCK, __FILE__, __LINE__)
 #endif
+#endif // _ATL
+
 //use XString in ATL
 #include <atlstr.h>
-#endif // _ATL
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -30,4 +31,4 @@
 //////////////////////////////////////////////////////////////////////////
 
 // Extras needed for MFC in this program
-#include <afxext.h>         // MFC extensions
+// #include <afxext.h>         // MFC extensions

@@ -147,7 +147,7 @@ TestMarlinServerAppPool::CorrectlyStarted()
 }
 
 bool
-TestMarlinServerAppPool::MinMarlinVersion(int p_version)
+TestMarlinServerAppPool::MinMarlinVersion(int p_version,bool p_unicode)
 {
   int minVersion = (MARLIN_VERSION_MAJOR - 2) * 10000;    // Major version main
   int maxVersion = (MARLIN_VERSION_MAJOR + 2) * 10000;    // Major version main
@@ -159,8 +159,23 @@ TestMarlinServerAppPool::MinMarlinVersion(int p_version)
                         _T("This application was compiled for: %d.%d.%d")
                        ,p_version / 10000,(p_version % 10000)/100,p_version % 100
                        ,MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP);
-    return 0;
+    return false;
   }
+#ifdef _UNICODE
+  if(!p_unicode)
+  {
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("An ANSI mode MarlinModule is calling an UNICODE application DLL\n")
+                                                 _T("This is an unsupported scenario and will cause errors!"));
+    return false;
+  }
+#else
+  if(p_unicode)
+  {
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("An UNICODE mode MarlinModule is calling an ANSI application DLL\n")
+                                                 _T("This is an unsupported scenario and will cause errors!"));
+    return false;
+  }
+#endif
   // We have done our version check
   return m_versionCheck = true;
 }

@@ -32,13 +32,16 @@
 #include "Version.h"
 #include "ServiceReporting.h"
 #include <WinFile.h>
+#include <assert.h>
 #include <string>
 #include <set>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 #define DETAILLOGV(text,...)    m_httpServer->DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__)
@@ -233,9 +236,9 @@ int __stdcall SitesInApplicationPool(ServerApp* p_application)
 }
 
 __declspec(dllexport)
-bool __stdcall MinMarlinVersion(ServerApp* p_application,int p_version)
+bool __stdcall MinMarlinVersion(ServerApp* p_application,int p_version,bool p_unicode)
 {
-  return p_application->MinMarlinVersion(p_version);
+  return p_application->MinMarlinVersion(p_version,p_unicode);
 }
 
 }
@@ -463,7 +466,7 @@ ServerApp::SitesInThePool()
 }
 
 bool
-ServerApp::MinMarlinVersion(int p_version)
+ServerApp::MinMarlinVersion(int p_version,bool p_unicode)
 {
   int minVersion =  MARLIN_VERSION_MAJOR      * 10000 +   // Major version main
                     MARLIN_VERSION_MINOR      *   100;
@@ -476,8 +479,23 @@ ServerApp::MinMarlinVersion(int p_version)
                        ,_T("This application was compiled for: %d.%d.%d")
                        ,p_version / 10000,(p_version % 10000)/100,p_version % 100
                        ,MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP);
-    return 0;
+    return false;
   }
+#ifdef _UNICODE
+  if(!p_unicode)
+  {
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("An ANSI mode MarlinModule is calling an UNICODE application DLL\n")
+                                                 _T("This is an unsupported scenario and will cause errors!"));
+    return false;
+  }
+#else
+  if(p_unicode)
+  {
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("An UNICODE mode MarlinModule is calling an ANSI application DLL\n")
+                                                 _T("This is an unsupported scenario and will cause errors!"));
+    return false;
+  }
+#endif
   // We have done our version check
   m_versionCheck = true;
   return true;
@@ -847,8 +865,8 @@ ServerAppFactory::ServerAppFactory()
 {
   if(appFactory)
   {
-    TRACE(_T("You can only have ONE singleton ServerAppFactory in your program logic"));
-    ASSERT(FALSE);
+    OutputDebugString(_T("You can only have ONE singleton ServerAppFactory in your program logic"));
+    assert(FALSE);
   }
   else
   {

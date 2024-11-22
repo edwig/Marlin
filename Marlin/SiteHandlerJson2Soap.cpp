@@ -32,10 +32,12 @@
 #include "WebServiceServer.h"
 #include "HTTPSite.h"
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // A JSON2SOAP handler is an override for the HTTP GET handler

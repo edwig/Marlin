@@ -32,10 +32,12 @@
 #include <map>
 #include <io.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 #define MODULE_NAME  _T("Application")
@@ -139,6 +141,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
     }
 
     // Getting the start address of the application factory
+    // Beware: GetProcAddress is one of the only MS-Windows API's that does *NOT* have 'A' and 'W' variants
     m_createServerApp = (CreateServerAppFunc)GetProcAddress(m_module,"CreateServerApp");
     m_initServerApp   = (InitServerAppFunc)  GetProcAddress(m_module,"InitServerApp");
     m_exitServerApp   = (ExitServerAppFunc)  GetProcAddress(m_module,"ExitServerApp");
@@ -182,7 +185,14 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
   int version = MARLIN_VERSION_MAJOR * 10000 +   // Major version main
                 MARLIN_VERSION_MINOR *   100 +   // Minor version number
                 MARLIN_VERSION_SP;               // Service pack
-  if(!(*m_minVersion)(m_application,version))
+  // And also check if our ANSI/UNICODE configurations match!
+#ifdef _UNICODE
+  bool unicode = true;
+#else
+  bool unicode = false;
+#endif
+
+  if(!(*m_minVersion)(m_application,version,unicode))
   {
     XString error(_T("ERROR WRONG VERSION Application: ") + p_application);
     Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);
