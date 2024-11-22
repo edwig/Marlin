@@ -30,10 +30,12 @@
 #include "AutoCritical.h"
 #include <time.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 RunRedirect::RunRedirect(ULONG p_maxTime /*=INFINITE*/)
@@ -172,7 +174,7 @@ RunRedirect::FlushStdIn()
 int 
 CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,XString& p_result,bool p_show /*= false*/)
 {
-#ifdef _ATL
+#ifdef _AFX
    AFX_MANAGE_STATE(AfxGetStaticModuleState());
 #endif
   RunRedirect run;
@@ -199,7 +201,7 @@ CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,XString& p_result
 int
 CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPTSTR p_stdInput,XString& p_result,int p_waittime,bool p_show /*= false*/)
 {
-#ifdef _ATL
+#ifdef _AFX
   AFX_MANAGE_STATE(AfxGetStaticModuleState());
 #endif
   RunRedirect run;
@@ -233,7 +235,7 @@ CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPTSTR p_stdInput
 int
 CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPCTSTR p_stdInput,XString& p_result,XString& p_errors,int p_waittime,bool p_show /*= false*/)
 {
-#ifdef _ATL
+#ifdef _AFX
   AFX_MANAGE_STATE(AfxGetStaticModuleState());
 #endif
   RunRedirect run;
@@ -270,7 +272,7 @@ CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPCTSTR p_stdInpu
 int
 CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,XString& p_result,int p_waittime,bool p_show /*= false*/)
 {
-#ifdef _ATL
+#ifdef _AFX
    AFX_MANAGE_STATE(AfxGetStaticModuleState());
  #endif
   RunRedirect run;
@@ -304,7 +306,7 @@ CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,XString& p_result
 int 
 CallProgram(LPCTSTR p_program,LPCTSTR p_commandLine,bool p_show /*= false*/)
 {
-#ifdef _ATL
+#ifdef _AFX
   AFX_MANAGE_STATE(AfxGetStaticModuleState());
 #endif
   RunRedirect run;
@@ -337,7 +339,7 @@ PosixCallProgram(XString  p_directory
                 ,ULONG    p_maxRunningTime  /*= INFINITE*/
                 ,RunRedirect** p_run        /*= nullptr */)
 {
-#ifdef _ATL
+#ifdef _AFX
   AFX_MANAGE_STATE(AfxGetStaticModuleState());
 #endif
   RunRedirect run(p_maxRunningTime);

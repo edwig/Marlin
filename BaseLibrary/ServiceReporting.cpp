@@ -33,10 +33,12 @@
 #include "Alert.h"
 #include "strsafe.h"
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Each buffer in a event buffer array has a limit of 31K characters

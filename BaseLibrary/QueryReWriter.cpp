@@ -29,10 +29,12 @@
 #include "QueryReWriter.h"
 #include "WiNFile.h"
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // All tokens that must be recognized

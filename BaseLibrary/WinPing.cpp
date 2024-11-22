@@ -41,10 +41,12 @@
 #define DEFAULT_RECV_TIMEOUT   6000     // six second
 #define MAX_RECV_BUF_LEN       0xFFFF   // Max incoming packet size.
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 //

@@ -32,29 +32,42 @@
 #define MB_CANCELTRYCONTINUE 0x006L
 #endif
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+#endif
+
+class WMBPoint
+{
+public:
+  WMBPoint(int x,int y) :cx(x),cy(y){}
+  WMBPoint(int one): cx(one),cy(one){}
+  
+  int cx;
+  int cy;
+};
 
 // Measure the extents of a string of text in a specified font
 // by drawing it on an off-screen DC and by doing so,
 // getting the outer measures in a CRect.
 static BOOL 
-_WMB_CalcTextSize(const XString& strText, CSize& sizeText,HFONT font)
+_WMB_CalcTextSize(const XString& strText,WMBPoint& sizeText,HFONT font)
 {
   BOOL result = FALSE;
 
   if(strText.IsEmpty() || font == NULL)
   {
-    sizeText = CSize(0,0);
+    sizeText = WMBPoint(0,0);
     return FALSE;
   }
   HDC dc = ::GetDC(NULL);
   HGDIOBJ pFontPrev = ::SelectObject(dc,font);
 
-  CRect rectText = CRect(CPoint(0,0),sizeText);
+  RECT rectText(0,0,sizeText.cx,sizeText.cy);
+
   if(::DrawText(dc,strText,strText.GetLength(),&rectText,DT_CALCRECT|DT_LEFT|DT_NOPREFIX|DT_TOP|DT_WORDBREAK) != 0)
   {
     sizeText.cx = (int)(rectText.right  * 1.04);
@@ -64,7 +77,7 @@ _WMB_CalcTextSize(const XString& strText, CSize& sizeText,HFONT font)
   }
   else
   {
-    sizeText = CSize(0,0);
+    sizeText = WMBPoint(0,0);
   }
   // Reset the font
   ::SelectObject(dc,pFontPrev);
@@ -73,13 +86,13 @@ _WMB_CalcTextSize(const XString& strText, CSize& sizeText,HFONT font)
 
 // Convert pixels to DLU's
 // See the MSDN documentation at "GetDialogBaseUnits"
-static CPoint 
+static WMBPoint 
 _WMB_Pix2Dlu(int pixX, int pixY)
 {
-  CPoint baseXY(::GetDialogBaseUnits());
-  CPoint dluXY;
-  dluXY.x = ::MulDiv(pixX, 4, baseXY.x);
-  dluXY.y = ::MulDiv(pixY, 8, baseXY.y);
+  WMBPoint baseXY(::GetDialogBaseUnits());
+  WMBPoint dluXY(0,0);
+  dluXY.cx = ::MulDiv(pixX, 4, baseXY.cx);
+  dluXY.cy = ::MulDiv(pixY, 8, baseXY.cy);
   return dluXY;
 }
 
@@ -243,7 +256,7 @@ WideMessageBox(HWND    p_hwnd
   text.Replace(_T("\n"), _T("\r\n"));
 
   // Calculate size of the text
-  CSize sizeText(4000,2000);
+  WMBPoint sizeText(4000,2000);
   if(_WMB_CalcTextSize(text,sizeText,font))
   {
     // Left / Right margin in the dialog
@@ -260,12 +273,12 @@ WideMessageBox(HWND    p_hwnd
       sizeText.cx = maxWidth;
     }
     // Convert pixels to dialog-units (DLU's)
-    CPoint sizeDLU = _WMB_Pix2Dlu(sizeText.cx,sizeText.cy);
-    config.cxWidth = sizeDLU.x;
+    WMBPoint sizeDLU = _WMB_Pix2Dlu(sizeText.cx,sizeText.cy);
+    config.cxWidth = sizeDLU.cx;
   }
   else
   {
-    TRACE(_T("WideMessageBox: Cannot get an off-screen measure of the text: %s"),text.GetString());
+    OutputDebugString(_T("WideMessageBox: Cannot get an off-screen measure of the text: ") + text);
     return ::MessageBox(p_hwnd,p_message,p_title,p_buttons);
   }
   std::wstring mess = StringToWString(text);

@@ -27,12 +27,14 @@
 //
 #include "pch.h"
 #include "Base64.h"
+#include <ConvertWideString.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
-
+#endif
 #endif
 
 Base64::Base64(int p_method /*= CRYPT_STRING_BASE64*/,int p_options /*= CRYPT_STRING_NOCRLF*/)
@@ -105,6 +107,7 @@ Base64::Encrypt(XString p_unencrypted)
   return result;
 }
 
+// Convert into a string
 XString
 Base64::Decrypt(XString p_encrypted)
 {
@@ -113,16 +116,23 @@ Base64::Decrypt(XString p_encrypted)
     return XString();
   }
   DWORD length = 0;
-  DWORD type = CRYPT_STRING_BASE64_ANY;
-  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,NULL,&length,0,&type);
-  _TUCHAR* buffer = new _TUCHAR[length + 2];
-  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,(BYTE*) buffer,&length,0,&type);
-  buffer[length / sizeof(TCHAR)] = 0;
+  DWORD type   = CRYPT_STRING_BASE64_ANY;
+  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,nullptr,&length,0,&type);
+  BYTE* buffer = new BYTE[length + 1];
+  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,buffer,&length,0,&type);
+  buffer[length] = 0;
+#ifdef _UNICODE
+  XString result;
+  bool bom(false);
+  TryConvertNarrowString(buffer,length,_T(""),result,bom);
+#else
   XString result(buffer);
+#endif
   delete[] buffer;
   return result;
 }
 
+// Convert into a binary buffer for further processing
 bool
 Base64::Decrypt(XString p_encrypted,BYTE* p_buffer,int p_length)
 {

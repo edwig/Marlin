@@ -28,6 +28,14 @@
 #include "pch.h"
 #include "StringUtilities.h"
 
+#ifdef _AFX
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+#endif
+
 XString AsString(int p_number,int p_radix /*=10*/)
 {
   XString string;

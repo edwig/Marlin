@@ -29,10 +29,12 @@
 #include "ConvertWideString.h"
 #include "Namespace.h"
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Special entities, so we do not mess with the XML structures
@@ -203,6 +205,13 @@ XMLParser::ParseMessage(XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_W
 
   // Conclusion of condensed level
   m_message->SetCondensed(m_spaces < m_elements);
+
+  // We believe what the header said :-)
+  int charset = CharsetToCodepage(m_encoding);
+  if(charset > 0 && charset != (int)m_message->GetEncoding())
+  {
+    m_message->SetEncoding((Encoding)charset);
+  }
 }
 
 // Parse from a beginning node

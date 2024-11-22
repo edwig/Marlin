@@ -26,6 +26,14 @@
 #include "pch.h"
 #include "Environment.h"
 
+#ifdef _AFX
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+#endif
+
 #define BUFFER_LINE 4096
 
 // Getting the <modulename>.env file

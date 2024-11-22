@@ -34,8 +34,7 @@
 #include "ConvertWideString.h"
 #include <atlbase.h>
 
-#ifndef _ATL
-
+#ifndef __ATLSTR_H__
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE

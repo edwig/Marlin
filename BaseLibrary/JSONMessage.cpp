@@ -34,10 +34,12 @@
 #include <iterator>
 #include <algorithm>
 
-#ifdef _DEBUG
+#ifdef _AFX
+#ifdef _DEBUG 
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 JSONvalue::JSONvalue()
@@ -1144,6 +1146,13 @@ JSONMessage::LoadFile(const XString& p_fileName)
     // Record the found encodings
     m_encoding = file.GetEncoding();
     m_sendBOM  = file.GetFoundBOM();
+
+    // No encoding in the file: presume it is a file from our OS
+    // JSON is always UTF-8 by default
+    if(!m_sendBOM && m_encoding == Encoding::EN_ACP)
+    {
+      m_encoding = Encoding::UTF8;
+    }
 
     // Done with the file
     if(!file.Close())

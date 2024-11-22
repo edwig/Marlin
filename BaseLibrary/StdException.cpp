@@ -38,10 +38,12 @@
 #include "pch.h"
 #include "StdException.h"
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Macro to help with the display switch in GetErrorMessage()
@@ -68,7 +70,9 @@ StdException::StdException(unsigned p_safeExceptionCode,_EXCEPTION_POINTERS* p_e
 StdException::StdException(const StdException& p_other)
 {
   m_safeExceptionCode = p_other.m_safeExceptionCode;
-	m_exceptionPointers = p_other.m_exceptionPointers;
+  m_exceptionPointers = p_other.m_exceptionPointers;
+  m_applicationCode   = p_other.m_applicationCode;
+  m_applicationFault  = p_other.m_applicationFault;
 }
 
 // CTOR: Create exception from static text or XString
@@ -195,7 +199,7 @@ StdException::GetErrorMessage(PTCHAR p_error, unsigned p_maxSize, unsigned* p_he
   return true;
 }
 
-#ifdef _ATL
+#ifdef _AFX
 XString
 MessageFromException(CException& p_exception)
 {

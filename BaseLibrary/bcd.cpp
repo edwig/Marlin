@@ -45,14 +45,17 @@
 
 #include "pch.h"            // Precompiled headers
 #include "bcd.h"            // OUR INTERFACE
+#include "StdException.h"   // Exceptions
 #include <math.h>           // Still needed for conversions of double
 #include <locale.h>
 #include <winnls.h>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Theoretical maximum of numerical separators
@@ -855,6 +858,7 @@ bcd::operator<(const bcd& p_value) const
       return (m_sign == Sign::Negative);
     }
   }
+
   // Signs are the same and exponents are the same
   // Now compare the mantissa
   for(int ind = 0;ind < bcdLength; ++ind)
@@ -1375,10 +1379,14 @@ bcd::Ceiling() const
   return result;
 }
 
+#ifndef ALT_SQUAREROOT
+
 // bcd::SquareRoot
 // Description: Do the square root of the bcd
 // Technical:   Do first approximation by sqrt(double)
 //              Then use Newton's equation
+
+
 bcd
 bcd::SquareRoot() const
 {
@@ -1449,6 +1457,58 @@ bcd::SquareRoot() const
 
   return result;
 }
+
+#else
+
+// Description: Square root of the number
+// What it does: Does an estimation through a double and then
+// Uses the Newton estimation to calculate the root
+bcd
+bcd::SquareRoot() const
+{
+  bcd number(0L, 0L);
+  bcd half(_T("0.5"));
+  bcd two(2L);
+  bcd three(3L);
+  int sqrti = 0;
+
+  // Optimization: sqrt(0) = 0
+  if (IsNULL())
+  {
+    return number;
+  }
+
+  // Getting the breaking criterion
+  bcd epsilon = Epsilon(10);
+
+  number = *this; // Number to get the square-root from
+  if (number.GetSign() == -1)
+  {
+    return SetInfinity(_T("BCD: Infinity does not have a square root!"));
+  }
+  // First estimate
+  double estimate1 = number.AsDouble() / 2;
+  double estimate2 = 1 / sqrt(estimate1);
+  bcd result(estimate1);
+  bcd between;
+
+  // Newton's iteration
+  bcd last_result(_T("0.0"));
+
+  while (true)
+  {
+    result = (result + number / result) / two;
+    between = last_result - result;
+    if (between.AbsoluteValue() < epsilon)
+    {
+      break;
+    }
+
+    last_result = result;
+  }
+  return result;
+}
+#endif
 
 // bcd::Power
 // Description: Get BCD number to a power
@@ -1751,7 +1811,6 @@ bcd::Sine() const
   }
 
   number = *this;
-
   sign = number.GetSign();
   if( sign < 0 )
   {
@@ -2371,9 +2430,12 @@ bcd::AsLong() const
 
   // Adjust to exponent
   int exponent = 2 * bcdDigits - m_exponent - 1;
-  while(exponent--)
+  if(exponent > 0)
   {
-    result /= 10;
+    while(exponent--)
+    {
+      result /= 10;
+    }
   }
 
   // Take care of sign and over/under flows

@@ -36,10 +36,12 @@
 #include <schannel.h>
 #include <vector>
 
+#ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
 #endif
 
 // Encryption providers support password-hashing and encryption algorithms

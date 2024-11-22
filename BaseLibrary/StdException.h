@@ -70,7 +70,7 @@ protected:
 };
 
 void SeTranslator(unsigned p_safe,_EXCEPTION_POINTERS* p_exceptionPointers);
-#ifdef _ATL
+#ifdef _AFX 
 // Translate CException to XString
 XString MessageFromException(CException& p_exception);
 #endif

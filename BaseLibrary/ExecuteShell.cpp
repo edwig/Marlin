@@ -29,6 +29,14 @@
 #include "ExecuteShell.h"
 #include <shellapi.h>
 
+#ifdef _AFX
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+#endif
+
 // General function to start a 'command' option in the MS-Windows shell
 // Adds error handling stuff if needed.
 // Normally used for actions like 'open' or 'print'
