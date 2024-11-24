@@ -35,7 +35,6 @@
 #include "Stdafx.h"
 #include "AutoCritical.h"
 #include "MarlinModule.h"
-#include "WebConfigIIS.h"
 #include "RunRedirect.h"
 #include "ServiceReporting.h"
 #include "StdException.h"
@@ -55,15 +54,14 @@ static char THIS_FILE[] = __FILE__;
 
 // GLOBALS Needed for the module
        AppPool       g_IISApplicationPool;   // All applications in the application pool
-static WebConfigIIS* g_config  { nullptr };  // The ApplicationHost.config information only!
 static wchar_t       g_moduleName[SERVERNAME_BUFFERSIZE + 1] = L"";
 static bool          g_debugMode = false;
        TCHAR         g_adminEmail[MAX_PATH];
        IHttpServer*  g_iisServer = nullptr;
 
 // Logging macro for this file only
-#define DETAILLOG(text)    SvcReportInfoEvent(false,text);
-#define ERRORLOG(text)     SvcReportErrorEvent(0,false,_T(__FUNCTION__),text);
+#define DETAILLOG(text)    SvcReportInfoEvent(false,text)
+#define ERRORLOG(text)     SvcReportErrorEvent(0,false,_T(__FUNCTION__),text)
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -88,13 +86,11 @@ RegisterModule(DWORD                        p_version
               ,IHttpModuleRegistrationInfo* p_moduleInfo
               ,IHttpServer*                 p_server)
 {
-  OutputDebugString(_T("REGISTER MODULE\n"));
+  // Declaration of the start log function
+  void ApplicationConfigStart(DWORD p_version);
 
   // Global name for the WMI Service event registration
   _tcscpy_s(g_svcname,SERVICE_NAME_LENGTH,_T("Marlin_for_IIS"));
-
-  // Declaration of the start log function
-  bool ApplicationConfigStart(DWORD p_version);
 
   // What we want to have from IIS
   DWORD globalEvents = GL_APPLICATION_START |       // Starting application pool
@@ -109,13 +105,9 @@ RegisterModule(DWORD                        p_version
   }
 
   // First moment IIS is calling us.
-  // Read the ApplicationConfig file of IIS
+  // Find the debugging status for this session
   // Start/Restart the logging in the WMI
-  if(!ApplicationConfigStart(p_version))
-  {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("MarlinModule cannot run without the ApplicationConfig.host"));
-    return (HRESULT)ERROR_FILE_NOT_FOUND;
-  }
+  ApplicationConfigStart(p_version);
 
   // Preserving the server in a global pointer
   if(g_iisServer == nullptr)
@@ -175,11 +167,9 @@ RegisterModule(DWORD                        p_version
 //
 //////////////////////////////////////////////////////////////////////////
 
-bool
+void
 ApplicationConfigStart(DWORD p_version)
 {
-  bool read = false;
-
   // See if we have a debug.txt in the "%windir%\system32\inetsrv\" directory
   XString debugPath;
   if(!debugPath.GetEnvironmentVariable(_T("windir")))
@@ -192,34 +182,18 @@ ApplicationConfigStart(DWORD p_version)
     g_debugMode = true;
   }
 
-  // Depending on the application pool settings, we are sometimes
-  // called more than once, so see if the log is not already started
-  if(g_config == nullptr)
-  {
-    g_config = new WebConfigIIS();
-    // Only reads system wide "ApplicationHost.Config"
-    read = g_config->ReadConfig();
-  }
-
   // Tell that we started the module.
   SvcReportInfoEvent(true
-                    ,_T("Marlin native module called by IIS version %d.%d. ApplicationHost.Config read: %s")
+                    ,_T("Marlin native module called by IIS version %d.%d. Debug mode: %s")
                     ,p_version / 0x10000
                     ,p_version % 0x10000
-                    ,read ? _T("OK") : _T("ERROR"));
-  return read;
+                    ,g_debugMode ? _T("ON") : _T("OFF"));
 }
 
 // Stopping the ApplicationHost.Config
 void
 ApplicationConfigStop()
 {
-  // Removing the application config registration
-  if(g_config)
-  {
-    delete g_config;
-    g_config = nullptr;
-  }
   SvcReportInfoEvent(false,_T("ApplicationHost.Config unloaded. Marlin native module stopped."));
 }
 
@@ -296,15 +270,13 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
   USES_CONVERSION;
 
   IHttpApplication* httpapp = p_provider->GetApplication();
-  XString appName    = (LPCTSTR) CW2T(httpapp->GetApplicationId());
-  XString configPath = (LPCTSTR) CW2T(httpapp->GetAppConfigPath());
-  XString physical   = (LPCTSTR) CW2T(httpapp->GetApplicationPhysicalPath());
-  XString webroot    = ExtractWebroot(configPath,physical);
-  XString appSite    = ExtractAppSite(configPath);
-
-  // IIS Guarantees that every app site is on an unique port
-  int applicationPort = g_config->GetSitePort(appSite,INTERNET_DEFAULT_HTTPS_PORT);
-  XString application = g_config->GetSiteName(appSite);
+  XString appName     = (LPCTSTR) CW2T(httpapp->GetApplicationId());
+  XString configPath  = (LPCTSTR) CW2T(httpapp->GetAppConfigPath());
+  XString physical    = (LPCTSTR) CW2T(httpapp->GetApplicationPhysicalPath());
+  XString webroot     = ExtractWebroot(configPath,physical);
+  XString appSite     = ExtractAppSite(configPath);
+  int applicationPort = INTERNET_DEFAULT_HTTPS_PORT;
+  XString application = appSite;
   
   if(!ModuleInHandlers(configPath))
   {
@@ -312,13 +284,17 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     return GL_NOTIFICATION_CONTINUE;
   }
 
+  // IIS Guarantees that every app site is on an unique port
+  ApplicationNameAndPort(configPath,application,applicationPort);
+
   // Starting the following application
   XString message(_T("Starting IIS Application"));
-  message += _T("\nIIS ApplicationID/name: ") + appName;
-  message += _T("\nIIS Configuration path: ") + configPath;
-  message += _T("\nIIS Physical path     : ") + physical;
-  message += _T("\nIIS Extracted webroot : ") + webroot;
-  message += _T("\nIIS Application       : ") + application;
+  message += _T("\r\nIIS ApplicationID/name: ") + appName;
+  message += _T("\r\nIIS Configuration path: ") + configPath;
+  message += _T("\r\nIIS Physical path     : ") + physical;
+  message += _T("\r\nIIS Extracted webroot : ") + webroot;
+  message += _T("\r\nIIS Application       : ") + application;
+  message.AppendFormat(_T("\r\nIIS Application port  : %d"),applicationPort);
   DETAILLOG(message.GetString());
 
   _set_se_translator(SeTranslator);
@@ -376,10 +352,15 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   XString physical   = (LPCTSTR) CW2T(httpapp->GetApplicationPhysicalPath());
   XString appSite    = ExtractAppSite(configPath);
   XString webroot    = ExtractWebroot(configPath,physical);
+  XString application(appSite);
+  int     applicationPort = INTERNET_DEFAULT_HTTPS_PORT;
 
   // IIS Guarantees that every app site is on an unique port
-  int applicationPort = g_config->GetSitePort(appSite,INTERNET_DEFAULT_HTTPS_PORT);
-  XString application = g_config->GetSiteName(appSite);
+  if(ApplicationNameAndPort(configPath,application,applicationPort) == false)
+  {
+    // application manager already gone. Continue silently
+    return GL_NOTIFICATION_CONTINUE;
+  }
 
   // Find our application in the application pool
   AppPool::iterator it = g_IISApplicationPool.find(applicationPort);
@@ -541,6 +522,93 @@ MarlinGlobalFactory::ModuleInHandlers(const XString& p_configPath)
             if(wcsncmp(vvar.bstrVal,g_moduleName,SERVERNAME_BUFFERSIZE) == 0)
             {
               // At least one of the handlers of the website refers to this module and wants to use it.
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+// Finding the 'real' application name (correct case) and first binded internet port.
+bool
+MarlinGlobalFactory::ApplicationNameAndPort(const XString& p_configPath,XString& p_application,int& p_port)
+{
+  IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+
+  // Finding all HTTP Handlers in the configuration
+  IAppHostElement* handlersElement = nullptr;
+  if(manager->GetAdminSection(CComBSTR(L"system.applicationHost/sites"),CComBSTR(p_configPath),&handlersElement) == S_OK)
+  {
+    IAppHostElementCollection* handlersCollection = nullptr;
+    handlersElement->get_Collection(&handlersCollection);
+    if(handlersCollection)
+    {
+      DWORD dwElementCount = 0;
+      handlersCollection->get_Count(&dwElementCount);
+      for(USHORT dwElement = 0; dwElement < dwElementCount; ++dwElement)
+      {
+        VARIANT vtItemIndex;
+        vtItemIndex.vt = VT_I2;
+        vtItemIndex.iVal = dwElement;
+
+        IAppHostElement* childElement = nullptr;
+        if(handlersCollection->get_Item(vtItemIndex,&childElement) == S_OK)
+        {
+          IAppHostProperty* prop = nullptr;
+          VARIANT vvar;
+          vvar.bstrVal = 0;
+
+          if(childElement->GetPropertyByName(CComBSTR(L"name"),&prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
+          {
+            CComBSTR applic(p_application);
+            if(_wcsnicmp(vvar.bstrVal,applic.m_str,p_application.GetLength()) == 0)
+            {
+              // We found our site
+              CString realapp(vvar.bstrVal);
+              p_application = realapp;
+
+              IAppHostElement* bindingsElement = nullptr;
+              childElement->GetElementByName(CComBSTR(L"bindings"),&bindingsElement);
+              if(bindingsElement)
+              {
+                IAppHostElementCollection* bindingsCollection = nullptr;
+                bindingsElement->get_Collection(&bindingsCollection);
+                if(bindingsCollection)
+                {
+                  DWORD bindElementCount = 0;
+                  bindingsCollection->get_Count(&bindElementCount);
+                  for(USHORT bElem = 0;bElem < bindElementCount;++bElem)
+                  {
+                    VARIANT bindIndex;
+                    bindIndex.vt   = VT_I2;
+                    bindIndex.iVal = bElem;
+
+                    IAppHostElement* bindElement = nullptr;
+                    bindingsCollection->get_Item(bindIndex,&bindElement);
+                    if(bindElement)
+                    {
+                      IAppHostProperty* bindprop = nullptr;
+                      VARIANT bindvar;
+                      bindvar.bstrVal = 0;
+                      if(bindElement->GetPropertyByName(CComBSTR(L"bindingInformation"),&prop) == S_OK && prop->get_Value(&bindvar) == S_OK && bindvar.vt == VT_BSTR)
+                      {
+                        // Finds something like '*:433:' or '+:80:'
+                        CString binding(bindvar.bstrVal);
+                        int pos = binding.Find(':');
+                        if(pos > 0)
+                        {
+                          // This is our port!
+                          p_port = _ttoi(binding.Mid(pos + 1));
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              // Ready with site collection
               return true;
             }
           }

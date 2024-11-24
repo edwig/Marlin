@@ -25,6 +25,12 @@ CHANGES IN VERSION 8.4.0 of xx-xx-xxxx
 1)  The "MinMarlinVersion" API call of the MarlinModule has been expanded with the "unicode" 
     parameter, so that we can report of a cross ANSI/UNICODE combination of the MarlinModule
     and an application DLL.
+2)  The MarlinModule no longer needs to read the "%windir%\system32\inetsrv\config\AppplicationHost.config"
+    file on order to start the application correctly, and stop it.
+    Rights to the 'inetsrv\config' directory can stay/by revoked for the application pool user.
+    This simplifies the administration tasks of the IIS admins.
+3)  It is (again) possible to build a version of the MarlinModule without the whole MFC 
+    library 'on board'. So the file size shrinks by a factor of 5!
 
 CHANGES IN VERSION 8.3.4 of 14-08-2024
 --------------------------------------

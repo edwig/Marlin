@@ -109,6 +109,7 @@ public:
   virtual void Terminate() override;
 private:
   bool    ModuleInHandlers(const XString& p_configPath);
+  bool    ApplicationNameAndPort(const XString& p_configPath,XString& p_application,int& p_port);
   bool    StillUsed(const HMODULE& p_module);
   int     CountAppPoolApplications(ServerApp* p_application);
 
