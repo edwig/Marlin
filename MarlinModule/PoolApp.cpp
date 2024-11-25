@@ -63,36 +63,38 @@ PoolApp::~PoolApp()
 }
 
 bool
-PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_physical,XString p_application)
+PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
+                    ,XString p_configPath
+                    ,XString p_webroot
+                    ,XString p_physical
+                    ,XString p_application)
 {
   // Read Web config from "physical-application-path" + "web.config"
   XString baseWebConfig = p_physical + _T("web.config");
   baseWebConfig.MakeLower();
-  m_config.ReadConfig(p_application,baseWebConfig);
+
+  WebConfigSettings(p_configPath);
 
   // Load the **real** application DLL from the settings of web.config
-  XString dllLocation = m_config.GetSetting(MODULE_NAME);
-  if(dllLocation.IsEmpty())
+  if(m_dllLocation.IsEmpty())
   {
     Unhealthy(_T("MarlinModule could **NOT** locate the 'Application' in web.config: ") + baseWebConfig,ERROR_NOT_FOUND);
     return false;
   }
 
-  XString dllPath = m_config.GetSetting(MODULE_PATH);
-  if(dllPath.IsEmpty())
+  if(m_dllPath.IsEmpty())
   {
     Unhealthy(_T("MarlinModule could **NOT** locate the 'Directory' in web.config: ") + baseWebConfig,ERROR_NOT_FOUND);
     return false;
   }
-  if(dllPath.Left(2).Compare(_T("..")) == 0)
+  if(m_dllPath.Left(2).Compare(_T("..")) == 0)
   {
-    Unhealthy(_T("MarlinModule could **NOT** use a relative path in the 'Directory' in web.config: ") + baseWebConfig,ERROR_NOT_FOUND);
+    Unhealthy(_T("MarlinModule can **NOT** use a relative path in the 'Directory' in web.config: ") + baseWebConfig,ERROR_NOT_FOUND);
     return false;
   } 
 
   // Find our default administrator email to send a Error report to
-  XString adminEmail = m_config.GetSetting(MODULE_EMAIL);
-  if(adminEmail.IsEmpty())
+  if(m_adminEmail.IsEmpty())
   {
     Unhealthy(_T("MarlinModule could **NOT** locate the 'AdministratorEmail' in the web.config: ") + baseWebConfig,ERROR_NOT_FOUND);
     return false;
@@ -100,42 +102,42 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_phy
   else
   {
     extern TCHAR g_adminEmail[];
-    _tcsncpy_s(g_adminEmail,MAX_PATH - 1,adminEmail.GetString(),MAX_PATH - 1);
+    _tcsncpy_s(g_adminEmail,MAX_PATH - 1,m_adminEmail.GetString(),MAX_PATH - 1);
   }
 
   // Tell MS-Windows where to look while loading our DLL
-  dllPath = ConstructDLLLocation(p_physical,dllPath);
-  if(SetDllDirectory(dllPath) == FALSE)
+  m_dllPath = ConstructDLLLocation(p_physical,m_dllPath);
+  if(SetDllDirectory(m_dllPath) == FALSE)
   {
-    Unhealthy(_T("MarlinModule could **NOT** append DLL-loading search path with: ") + dllPath,ERROR_NOT_FOUND);
+    Unhealthy(_T("MarlinModule could **NOT** append DLL-loading search path with: ") + m_dllPath,ERROR_NOT_FOUND);
     return false;
   }
 
   // Ultimately check that the directory exists and that we have read rights on the application's DLL
-  if(!CheckApplicationPresent(dllPath, dllLocation))
+  if(!CheckApplicationPresent(m_dllPath, m_dllLocation))
   {
-    Unhealthy(_T("MarlinModule could not access the application module DLL: ") + dllLocation,ERROR_ACCESS_DENIED);
+    Unhealthy(_T("MarlinModule could not access the application module DLL: ") + m_dllLocation,ERROR_ACCESS_DENIED);
     return false;
   }
 
   // See if we must load the DLL application
-  if(AlreadyLoaded(dllLocation))
+  if(AlreadyLoaded(m_dllLocation))
   {
-    DETAILLOG(_T("MarlinModule already loaded DLL [") + dllLocation + _T("] for application: ") + p_application);
+    DETAILLOG(_T("MarlinModule already loaded DLL [") + m_dllLocation + _T("] for application: ") + p_application);
   }
   else
   {
     // Try to load the DLL
-    m_module = LoadLibrary(dllLocation);
+    m_module = LoadLibrary(m_dllLocation);
     if (m_module)
     {
-      m_marlinDLL = dllLocation;
-      DETAILLOG(_T("MarlinModule loaded DLL from: ") + dllLocation);
+      m_marlinDLL = m_dllLocation;
+      DETAILLOG(_T("MarlinModule loaded DLL from: ") + m_dllLocation);
     }
     else
     {
       HRESULT code = GetLastError();
-      XString error(_T("MarlinModule could **NOT** load DLL from: ") + dllLocation);
+      XString error(_T("MarlinModule could **NOT** load DLL from: ") + m_dllLocation);
       Unhealthy(error,code);
       return false;
     }
@@ -294,3 +296,70 @@ PoolApp::AlreadyLoaded(XString p_path_to_dll)
   return false;
 }
 
+bool
+PoolApp::WebConfigSettings(XString p_configPath)
+{
+  IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+
+  // Finding all application settings
+  IAppHostElement* handlersElement = nullptr;
+  if(manager->GetAdminSection(CComBSTR(L"appSettings"),CComBSTR(p_configPath),&handlersElement) == S_OK)
+  {
+    IAppHostElementCollection* handlersCollection = nullptr;
+    handlersElement->get_Collection(&handlersCollection);
+    if(handlersCollection)
+    {
+      DWORD dwElementCount = 0;
+      handlersCollection->get_Count(&dwElementCount);
+      for(USHORT dwElement = 0; dwElement < dwElementCount; ++dwElement)
+      {
+        VARIANT vtItemIndex;
+        vtItemIndex.vt   = VT_I2;
+        vtItemIndex.iVal = dwElement;
+
+        IAppHostElement* childElement = nullptr;
+        if(handlersCollection->get_Item(vtItemIndex,&childElement) == S_OK)
+        {
+          // Read key/value pairs
+          // <add key="Directory" value="@C:\Develop\Marlin\BinDebug_x64\" />
+          XString key;
+          XString value;
+
+          IAppHostProperty* propKey = nullptr;
+          VARIANT vkey;
+          vkey.bstrVal = 0;
+          IAppHostProperty* propValue = nullptr;
+          VARIANT vvalue;
+          vvalue.bstrVal = 0;
+
+          if(childElement->GetPropertyByName(CComBSTR(L"key"),&propKey) == S_OK && propKey->get_Value(&vkey) == S_OK && vkey.vt == VT_BSTR)
+          {
+            key = vkey.bstrVal;
+          }
+          if(childElement->GetPropertyByName(CComBSTR(L"value"),&propValue) == S_OK && propValue->get_Value(&vvalue) == S_OK && vvalue.vt == VT_BSTR)
+          {
+            value = vvalue.bstrVal;
+          }
+
+          if(key.CompareNoCase(_T("Directory")) == 0)
+          {
+            m_dllPath = value;
+          }
+          if(key.CompareNoCase(_T("Application")) == 0)
+          {
+            m_dllLocation = value;
+          }
+          if(key.CompareNoCase(_T("AdministratorEmail")) == 0)
+          {
+            m_adminEmail = value;
+          }
+          if(key.CompareNoCase(_T("XSSBlocking")) == 0)
+          {
+            m_xssBlocking = (value.CompareNoCase(_T("true")) == 0);
+          }
+        }
+      }
+    }
+  }
+  return !m_dllPath.IsEmpty() && !m_dllLocation.IsEmpty() && !m_adminEmail.IsEmpty();
+}

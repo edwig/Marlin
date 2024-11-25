@@ -27,7 +27,6 @@
 //
 #pragma once
 #include <httpserv.h>
-#include <WebConfigIIS.h>
 
 typedef void ServerApp;
 typedef void HTTPSite;
@@ -55,13 +54,17 @@ public:
   // Conditional destructor!!
   ~PoolApp();
 
-  bool LoadPoolApp(IHttpApplication* p_httpapp,XString p_webroot,XString p_physical,XString p_application);
+  bool LoadPoolApp(IHttpApplication* p_httpapp
+                  ,XString p_configPath
+                  ,XString p_webroot
+                  ,XString p_physical
+                  ,XString p_application);
 
   // DATA
-  WebConfigIIS        m_config;
   XString             m_marlinDLL;
   ServerApp*          m_application     { nullptr };
   HMODULE             m_module          { NULL    };
+  bool                m_xssBlocking     { false   };
   // DLL Loaded functions
   CreateServerAppFunc m_createServerApp { nullptr };
   InitServerAppFunc   m_initServerApp   { nullptr };
@@ -74,8 +77,14 @@ public:
   MinVersionFunc      m_minVersion      { nullptr };
 
 private:
+  bool    WebConfigSettings(XString p_configPath);
   XString ConstructDLLLocation(XString p_rootpath, XString p_dllPath);
   bool    CheckApplicationPresent(XString& p_dllPath, XString& p_dllName);
   bool    AlreadyLoaded(XString p_path_to_dll);
+
+  // Application settings
+  XString m_dllPath;                // mostly "<webroot>\<application>\bin"
+  XString m_dllLocation;            // Name of the DLL
+  XString m_adminEmail;             // Who to notify of an error
 };
 

@@ -39,6 +39,7 @@
 #include "ServiceReporting.h"
 #include "StdException.h"
 #include "IISDebug.h"
+#include <ConvertWideString.h>
 #include <winhttp.h>
 #include <io.h>
 
@@ -49,8 +50,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 #endif
-
-#define MODULE_XSS  "XSSBlocking"
 
 // GLOBALS Needed for the module
        AppPool       g_IISApplicationPool;   // All applications in the application pool
@@ -315,7 +314,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
 
     // Create a new pool application
     PoolApp* poolapp = new PoolApp();
-    if(poolapp->LoadPoolApp(httpapp,webroot,physical,application))
+    if(poolapp->LoadPoolApp(httpapp,configPath,webroot,physical,application))
     {
       // Keep application in our IIS application pool
       g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
@@ -537,6 +536,10 @@ bool
 MarlinGlobalFactory::ApplicationNameAndPort(const XString& p_configPath,XString& p_application,int& p_port)
 {
   IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+  if(manager == nullptr)
+  {
+    return false;
+  }
 
   // Finding all HTTP Handlers in the configuration
   IAppHostElement* handlersElement = nullptr;
@@ -776,7 +779,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   }
 
   // Detect Cross Site Scripting (XSS) and block if detected
-  if(app->m_config.GetSetting(_T(MODULE_XSS)).CompareNoCase(_T("true")) == 0)
+  if(app->m_xssBlocking)
   {
     // Detect Cross Site Scripting (XSS)
     HRESULT hr = p_context->GetServerVariable("SERVER_NAME",&serverName, &size);
@@ -785,7 +788,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
       hr = p_context->GetServerVariable("HTTP_REFERER", &referer, &size);
       if (hr == S_OK)
       {
-        if(strstr(referer, serverName) == 0)
+        if(strstr(referer,serverName) == 0)
         {
           XString message("XSS Detected!! Referrer not our server!");
           message += XString("SERVER_NAME : ") + LPCSTRToString(serverName);
@@ -884,7 +887,7 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   }
 
   // Detect Cross Site Scripting (XSS) and block if detected
-  if(app->m_config.GetSetting(_T(MODULE_XSS)).CompareNoCase(_T("true")) == 0)
+  if(app->m_xssBlocking)
   {
     HRESULT hr = p_context->GetServerVariable("SERVER_NAME", &serverName, &size);
     if (hr == S_OK)

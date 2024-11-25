@@ -425,7 +425,6 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|Win32'">stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="WebConfigIIS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MarlinModule.rc">

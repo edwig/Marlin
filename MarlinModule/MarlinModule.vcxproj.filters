@@ -44,9 +44,6 @@
     <ClCompile Include="PoolApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WebConfigIIS.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="IISDebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
