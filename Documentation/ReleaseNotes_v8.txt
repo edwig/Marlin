@@ -31,6 +31,9 @@ CHANGES IN VERSION 8.4.0 of xx-xx-xxxx
     This simplifies the administration tasks of the IIS admins.
 3)  It is (again) possible to build a version of the MarlinModule without the whole MFC 
     library 'on board'. So the file size shrinks by a factor of 5!
+4)  Removed the need to use WebConfigIIS in the MarlinModule, shrinking it further.
+    By reading the internal IIS appSettings, this gets also stabeler, as we wil only see, what
+    IIS has parsed in it's config files.
 
 CHANGES IN VERSION 8.3.4 of 14-08-2024
 --------------------------------------

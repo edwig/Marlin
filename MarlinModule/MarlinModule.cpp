@@ -209,7 +209,7 @@ void Unhealthy(XString p_error, HRESULT p_code)
   ERRORLOG(p_error);
   CComBSTR werr = T2CW(p_error);
   // Report to IIS to kill the application with **this** reason
-  g_iisServer->ReportUnhealthy(werr, p_code);
+  g_iisServer->ReportUnhealthy(werr,p_code);
 
   _set_se_translator(SeTranslator);
   try
@@ -238,9 +238,12 @@ void Unhealthy(XString p_error, HRESULT p_code)
   {
     // PROGRAM ALREADY DEAD!!
   }
-  // Program is dead after this point. 
-  // AFTER CALING THIS FUNCTION, YOU SHOULD END THE MODULE WITH:
-  // return GL_NOTIFICATION_CONTINUE;
+  // Safer to completely terminate the W3WP.exe process!!
+  HANDLE hProc = OpenProcess(PROCESS_TERMINATE,FALSE,GetCurrentProcessId());
+  if(hProc)
+  {
+    TerminateProcess(hProc,-3);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
