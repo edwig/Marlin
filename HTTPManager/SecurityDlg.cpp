@@ -205,22 +205,24 @@ SecurityDlg::ReadRegistry(XString p_protocol,XString p_serverClient,XString p_va
                     p_protocol + _T("\\") + p_serverClient;
 
   DWORD dwErr = RegOpenKeyEx(HKEY_LOCAL_MACHINE
-                            ,sleutel.GetString()
+                            ,(LPCTSTR) sleutel
                             ,0
                             ,KEY_QUERY_VALUE
                             ,&hkUserURL);
   if(dwErr == ERROR_SUCCESS)
   {
-    DWORD dwIndex = 0;
-    DWORD dwType  = 0;
+    DWORD dwIndex    = 0;
+    DWORD dwType     = 0;
+    DWORD dwNameSize = 0;
+    DWORD dwDataSize = 0;
     TCHAR buffName[BUFF_LEN];
     BYTE  buffData[BUFF_LEN];
 
     //enumerate this key's values
     while(ERROR_SUCCESS == dwErr)
     {
-      DWORD dwNameSize = BUFF_LEN;
-      DWORD dwDataSize = BUFF_LEN;
+      dwNameSize = BUFF_LEN;
+      dwDataSize = BUFF_LEN;
       dwErr = RegEnumValue(hkUserURL
                           ,dwIndex++
                           ,buffName
@@ -255,7 +257,7 @@ SecurityDlg::WriteRegistry(XString p_protocol,XString p_serverClient,XString p_v
                   p_protocol + _T("\\") + p_serverClient;
 
   dwErr = RegCreateKeyEx(HKEY_LOCAL_MACHINE
-                        ,key.GetString()
+                        ,(LPCTSTR)key
                         ,0
                         ,NULL
                         ,REG_OPTION_NON_VOLATILE

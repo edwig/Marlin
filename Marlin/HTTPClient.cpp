@@ -2991,10 +2991,8 @@ HTTPClient::Send()
                                   // Get the content type header
                                   m_contentType = ReadHeaderField(WINHTTP_QUERY_CONTENT_TYPE);
                                   break;
-          case HTTP_STATUS_FORBIDDEN:iRetryTimes = retries + 1;
-                                  break;
-          case HTTP_STATUS_DENIED:ntlm3Step = true;
-                                  if(lastStatus == m_status)
+          case HTTP_STATUS_FORBIDDEN:[[fallthrough]];
+          case HTTP_STATUS_DENIED:if(lastStatus == m_status)
                                   {
                                     // Cannot do this twice!
                                     getReponseSucceed = true;

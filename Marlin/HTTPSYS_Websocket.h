@@ -31,7 +31,7 @@ typedef VOID
 
 class HTTPSYS_WebSocket;
 
-__declspec(dllimport)
+//__declspec(dllimport)
 HTTPSYS_WebSocket* WINAPI
 HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
                     ,IN HTTP_REQUEST_ID       RequestId

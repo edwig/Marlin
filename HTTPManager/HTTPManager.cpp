@@ -120,7 +120,7 @@ BOOL HTTPManagerApp::InitInstance()
 	}
 	else if (nResponse == -1)
 	{
-		TRACE(traceAppMsg,0,"Warning: dialog creation failed, so application is terminating unexpectedly.\n");
+		TRACE(traceAppMsg, 0, _T("Warning: dialog creation failed, so application is terminating unexpectedly.\n"));
 	}
 
 	// Delete the shell manager created above.
@@ -146,13 +146,13 @@ HTTPManagerApp::ParseCommandLine()
   {
     LPCTSTR lpszParam = __targv[i];
 
-    if (lpszParam[0] == '-' || lpszParam[0] == '/')
+    if (lpszParam[0] == _T('-') || lpszParam[0] == '/')
     {
-      if (_tcsnicmp(&lpszParam[1], _T("IIS"), 3) == 0)
+      if (_tcsncicmp(&lpszParam[1], _T("IIS"), 3) == 0)
       {
         result = MODE_IIS;
       }
-      else if (_tcsnicmp(&lpszParam[1],_T("STANDALONE"), 10) == 0)
+      else if (_tcsncicmp(&lpszParam[1], _T("STANDALONE"), 10) == 0)
       {
         result = MODE_STANDALONE;
       }

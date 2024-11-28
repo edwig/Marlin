@@ -50,6 +50,7 @@ static char THIS_FILE[] = __FILE__;
 
 LogAnalysis*  g_analysisLog = nullptr;
 ErrorReport*  g_report      = nullptr;
+IHttpServer*  g_iisServer   = nullptr;
 
 // IIS calls as a C program (no function decoration in object and linker)
 extern "C"
@@ -112,6 +113,9 @@ void _stdcall ExitServerApp(ServerApp* p_application)
 
       // Let the application stop itself 
       p_application->ExitInstance();
+
+      // Free the application
+      delete p_application;
     }
     catch(StdException& ex)
     {
@@ -236,9 +240,9 @@ int __stdcall SitesInApplicationPool(ServerApp* p_application)
 }
 
 __declspec(dllexport)
-bool __stdcall MinMarlinVersion(ServerApp* p_application,int p_version,bool p_unicode)
+bool __stdcall MinMarlinVersion(ServerApp* p_application,int p_version)
 {
-  return p_application->MinMarlinVersion(p_version,p_unicode);
+  return p_application->MinMarlinVersion(p_version);
 }
 
 }
@@ -466,7 +470,7 @@ ServerApp::SitesInThePool()
 }
 
 bool
-ServerApp::MinMarlinVersion(int p_version,bool p_unicode)
+ServerApp::MinMarlinVersion(int p_version)
 {
   int minVersion =  MARLIN_VERSION_MAJOR      * 10000 +   // Major version main
                     MARLIN_VERSION_MINOR      *   100;
@@ -481,21 +485,6 @@ ServerApp::MinMarlinVersion(int p_version,bool p_unicode)
                        ,MARLIN_VERSION_MAJOR,MARLIN_VERSION_MINOR,MARLIN_VERSION_SP);
     return false;
   }
-#ifdef _UNICODE
-  if(!p_unicode)
-  {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("An ANSI mode MarlinModule is calling an UNICODE application DLL\n")
-                                                 _T("This is an unsupported scenario and will cause errors!"));
-    return false;
-  }
-#else
-  if(p_unicode)
-  {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("An UNICODE mode MarlinModule is calling an ANSI application DLL\n")
-                                                 _T("This is an unsupported scenario and will cause errors!"));
-    return false;
-  }
-#endif
   // We have done our version check
   m_versionCheck = true;
   return true;

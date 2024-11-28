@@ -20,11 +20,10 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     in real life production scenario's. The 'tls_lastErrror' variable has been removed from the 
     HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
 
-CHANGES IN VERSION 8.4.0 of xx-xx-xxxx
+CHANGES IN VERSION 8.4.0 of 28-11-2024
 --------------------------------------
-1)  The "MinMarlinVersion" API call of the MarlinModule has been expanded with the "unicode" 
-    parameter, so that we can report of a cross ANSI/UNICODE combination of the MarlinModule
-    and an application DLL.
+1)  The MarlinModule is now Unicode/ANSI independent. One MarlinModule can be used for both
+    ANSI compiled and UNICODE compiled appliction DLL's
 2)  The MarlinModule no longer needs to read the "%windir%\system32\inetsrv\config\AppplicationHost.config"
     file on order to start the application correctly, and stop it.
     Rights to the 'inetsrv\config' directory can stay/by revoked for the application pool user.

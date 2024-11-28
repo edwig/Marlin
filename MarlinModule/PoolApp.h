@@ -41,7 +41,7 @@ typedef int           (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,H
 typedef HTTPMessage*  (CALLBACK* GetHTTPMessageFunc) (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
 typedef bool          (CALLBACK* HandleMessageFunc)  (ServerApp*,HTTPSite* p_site,HTTPMessage*);
 typedef int           (CALLBACK* SitesInApplicPool)  (ServerApp*);
-typedef bool          (CALLBACK* MinVersionFunc)     (ServerApp*,int version,bool);
+typedef bool          (CALLBACK* MinVersionFunc)     (ServerApp*,int version);
 
 // Our IIS Server
 extern IHttpServer* g_iisServer;
@@ -51,16 +51,15 @@ extern IHttpServer* g_iisServer;
 class PoolApp
 {
 public:
-  // Conditional destructor!!
-  ~PoolApp();
-
   bool LoadPoolApp(IHttpApplication* p_httpapp
                   ,XString p_configPath
                   ,XString p_webroot
                   ,XString p_physical
-                  ,XString p_application);
+                  ,XString p_application
+                  ,XString p_appSite);
 
   // DATA
+  XString             m_appSite;
   XString             m_marlinDLL;
   ServerApp*          m_application     { nullptr };
   HMODULE             m_module          { NULL    };

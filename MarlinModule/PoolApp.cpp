@@ -51,24 +51,17 @@ static char THIS_FILE[] = __FILE__;
 // General error function
 void Unhealthy(XString p_error, HRESULT p_code);
 
-PoolApp::~PoolApp()
-{
-  // Only delete application if last site was deallocated
-  // If ServerApp::LoadSite() overloads forget to call base method
-  // the reference count can drop below zero
-  if (m_application && (*m_sitesInAppPool)(m_application) <= 0)
-  {
-    delete m_application;
-  }
-}
-
 bool
 PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
                     ,XString p_configPath
                     ,XString p_webroot
                     ,XString p_physical
-                    ,XString p_application)
+                    ,XString p_application
+                    ,XString p_appSite)
 {
+  // Remember the original IIS Site name
+  m_appSite = p_appSite;
+
   // Read Web config from "physical-application-path" + "web.config"
   XString baseWebConfig = p_physical + _T("web.config");
   baseWebConfig.MakeLower();
@@ -187,14 +180,8 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
   int version = MARLIN_VERSION_MAJOR * 10000 +   // Major version main
                 MARLIN_VERSION_MINOR *   100 +   // Minor version number
                 MARLIN_VERSION_SP;               // Service pack
-  // And also check if our ANSI/UNICODE configurations match!
-#ifdef _UNICODE
-  bool unicode = true;
-#else
-  bool unicode = false;
-#endif
 
-  if(!(*m_minVersion)(m_application,version,unicode))
+  if(!(*m_minVersion)(m_application,version))
   {
     XString error(_T("ERROR WRONG VERSION Application: ") + p_application);
     Unhealthy(error,ERROR_SERVICE_NOT_ACTIVE);

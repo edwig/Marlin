@@ -46,6 +46,14 @@ static char THIS_FILE[] = __FILE__;
 #define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
 #define ERRORLOG(code,text)       ErrorLog (_T(__FUNCTION__),code,text)
 
+HTTPSYS_WebSocket* WINAPI
+HttpReceiveWebSocket(IN HANDLE                /*RequestQueueHandle*/
+                     ,IN HTTP_REQUEST_ID       /*RequestId*/
+                     ,IN WEB_SOCKET_HANDLE     /*SocketHandle*/
+                     ,IN PWEB_SOCKET_PROPERTY  /*SocketProperties */ OPTIONAL
+                     ,IN DWORD                 /*PropertyCount*/     OPTIONAL);
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // SERVER MARLIN WebSocketServer

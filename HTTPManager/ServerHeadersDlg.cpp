@@ -205,7 +205,7 @@ ServerHeadersDlg::CheckFields()
     MessageBox(_T("In order to use XSS blocking mode, you must turn on XSS protection!"),_T("Server headers"),MB_OK|MB_ICONERROR);
     return false;
   }
-  if(m_config->m_hstsSubDomain && m_config->m_hstsMaxAge == 0)
+  if(m_config->m_hstsSubDomain && m_config->m_hstsMaxAge <= 0)
   {
     MessageBox(_T("In order to allow HSTS sub-domains, specify a HSTS max-age (standard value = 16070400)"),_T("Server headers"),MB_OK|MB_ICONERROR);
     return false;

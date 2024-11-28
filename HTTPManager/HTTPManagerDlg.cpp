@@ -442,19 +442,19 @@ HTTPManagerDlg::DoCommand(ConfigCmd p_config
     p_command = _T("httpcfg.exe");
     switch(p_config)
     {
-      case CONFIG_ASKURL: p_parameters.Format(_T("query urlacl -u %s"),p_prefix);
+      case CONFIG_ASKURL: p_parameters.Format(_T("query urlacl -u %s"),p_prefix.GetString());
                           break;
-      case CONFIG_ADDURL: p_parameters.Format(_T("set urlacl -u %s -a D:(A;;GX;;;WD)"),p_prefix);
+      case CONFIG_ADDURL: p_parameters.Format(_T("set urlacl -u %s -a D:(A;;GX;;;WD)"),p_prefix.GetString());
                           break;
-      case CONFIG_DELURL: p_parameters.Format(_T("delete urlacl -u %s"),p_prefix);
+      case CONFIG_DELURL: p_parameters.Format(_T("delete urlacl -u %s"),p_prefix.GetString());
                           break;
-      case CONFIG_ASKSSL: p_parameters.Format(_T("query ssl -i 0.0.0.0:%s"),p_prefix);
+      case CONFIG_ASKSSL: p_parameters.Format(_T("query ssl -i 0.0.0.0:%s"),p_prefix.GetString());
                           break;
       case CONFIG_ADDSSL: p_parameters.Format(_T("set ssl -i 0.0.0.0:%s -h \"%s\" ")
                                               _T("-g {00112233-4455-6677-8899-AABBCCDDEEFF} -c %s")
-                                             ,p_prefix,p_prefix2,p_prefix3);
+                                             ,p_prefix.GetString(),p_prefix2.GetString(),p_prefix3.GetString());
                           break;
-      case CONFIG_DELSSL: p_parameters.Format(_T("delete ssl -i 0.0.0.0:%s"),p_prefix);
+      case CONFIG_DELSSL: p_parameters.Format(_T("delete ssl -i 0.0.0.0:%s"),p_prefix.GetString());
                           break;
       case CONFIG_ASKLIST:p_parameters = _T("query iplisten");
                           break;
@@ -469,20 +469,20 @@ HTTPManagerDlg::DoCommand(ConfigCmd p_config
     p_command = _T("netsh.exe");
     switch(p_config)
     {
-      case CONFIG_ASKURL: p_parameters.Format(_T("http show urlacl url=%s"),p_prefix);
+      case CONFIG_ASKURL: p_parameters.Format(_T("http show urlacl url=%s"),p_prefix.GetString());
                           break;
-      case CONFIG_ADDURL: p_parameters.Format(_T("http add urlacl url=%s sddl=D:(A;;GX;;;WD)"),p_prefix);
+      case CONFIG_ADDURL: p_parameters.Format(_T("http add urlacl url=%s sddl=D:(A;;GX;;;WD)"),p_prefix.GetString());
                           break;
-      case CONFIG_DELURL: p_parameters.Format(_T("http delete urlacl url=%s"),p_prefix);
+      case CONFIG_DELURL: p_parameters.Format(_T("http delete urlacl url=%s"),p_prefix.GetString());
                           break;
-      case CONFIG_ASKSSL: p_parameters.Format(_T("http show sslcert ipport=0.0.0.0:%s"),p_prefix);
+      case CONFIG_ASKSSL: p_parameters.Format(_T("http show sslcert ipport=0.0.0.0:%s"),p_prefix.GetString());
                           break;
       case CONFIG_ADDSSL: p_parameters.Format(_T("http add sslcert ipport=0.0.0.0:%s certhash=%s ")
                                               _T("appid={00112233-4455-6677-8899-AABBCCDDEEFF} certstorename=%s ")
                                               _T("clientcertnegotiation=%s")
-                                              ,p_prefix,p_prefix2,p_prefix3,p_prefix4);
+                                              ,p_prefix.GetString(),p_prefix2.GetString(),p_prefix3.GetString(),p_prefix4.GetString());
                           break;
-      case CONFIG_DELSSL: p_parameters.Format(_T("http delete sslcert ipport=0.0.0.0:%s"),p_prefix);
+      case CONFIG_DELSSL: p_parameters.Format(_T("http delete sslcert ipport=0.0.0.0:%s"),p_prefix.GetString());
                           break;
       case CONFIG_ASKLIST:p_parameters = _T("http show iplisten");
                           break;
@@ -766,10 +766,10 @@ HTTPManagerDlg::OnBnClickedAddFW()
   XString naam = MakeFirewallRuleName(ports);
   parameters1.Format(_T("advfirewall firewall add rule name=\"%s\" ")
                      _T("dir=in protocol=TCP localport=%s edge=yes action=allow profile=any")
-                    ,naam,ports);
+                    ,naam.GetString(),ports.GetString());
   parameters2.Format(_T("advfirewall firewall add rule name=\"%s\" ")
                      _T("dir=out protocol=TCP localport=%s action=allow profile=any")
-                     ,naam,ports);
+                     ,naam.GetString(),ports.GetString());
 
   m_editStatus.SetWindowText(_T("Creating Firewall rules for: ") + naam);
   MessagePump();
@@ -799,7 +799,7 @@ HTTPManagerDlg::OnBnClickedDelFW()
   CWaitCursor diepe_zucht;
 
   XString naam = MakeFirewallRuleName(ports);
-  parameters.Format(_T("advfirewall firewall delete rule name=\"%s\""),naam);
+  parameters.Format(_T("advfirewall firewall delete rule name=\"%s\""),naam.GetString());
 
   m_editStatus.SetWindowText(_T("Removing Firewall rules for: ") + naam);
   MessagePump();

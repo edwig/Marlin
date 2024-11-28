@@ -317,7 +317,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
 
     // Create a new pool application
     PoolApp* poolapp = new PoolApp();
-    if(poolapp->LoadPoolApp(httpapp,configPath,webroot,physical,application))
+    if(poolapp->LoadPoolApp(httpapp,configPath,webroot,physical,application,appSite))
     {
       // Keep application in our IIS application pool
       g_IISApplicationPool.insert(std::make_pair(applicationPort,poolapp));
@@ -349,49 +349,39 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   USES_CONVERSION;
 
   IHttpApplication* httpapp = p_provider->GetApplication();
-  XString appName    = (LPCTSTR) CW2T(httpapp->GetApplicationId());
   XString configPath = (LPCTSTR) CW2T(httpapp->GetAppConfigPath());
-  XString physical   = (LPCTSTR) CW2T(httpapp->GetApplicationPhysicalPath());
   XString appSite    = ExtractAppSite(configPath);
-  XString webroot    = ExtractWebroot(configPath,physical);
-  XString application(appSite);
-  int     applicationPort = INTERNET_DEFAULT_HTTPS_PORT;
+  PoolApp* poolapp   = nullptr;
 
-  // IIS Guarantees that every app site is on an unique port
-  if(ApplicationNameAndPort(configPath,application,applicationPort) == false)
+  // Find the application in our application pool by IIS original site name
+  AppPool::iterator it = g_IISApplicationPool.begin();
+  while(it != g_IISApplicationPool.end())
   {
-    // application manager already gone. Continue silently
-    return GL_NOTIFICATION_CONTINUE;
+    if(it->second->m_appSite.Compare(appSite) == 0)
+    {
+      poolapp = it->second;
+      break;
+    }
+    ++it;
   }
-
-  // Find our application in the application pool
-  AppPool::iterator it = g_IISApplicationPool.find(applicationPort);
   if(it == g_IISApplicationPool.end())
   {
     // Not our application to stop. Continue silently!
     return GL_NOTIFICATION_CONTINUE;
   }
-  PoolApp* poolapp = it->second;
+
+  // This is our application to stop
   ServerApp* app = poolapp->m_application;
 
   // Tell that we are stopping
   XString stopping(_T("Marlin stopping application: "));
-  stopping += application;
+  stopping += appSite;
   DETAILLOG(stopping);
 
+  // Really stop the application (if only once in the pool)
   if(CountAppPoolApplications(app) == 1)
   {
-    _set_se_translator(SeTranslator);
-    try
-    {
-      (*poolapp->m_exitServerApp)(app);
-    }
-    catch(StdException& ex)
-    {
-      XString error;
-      error.Format(_T("Marlin found an error while stopping application [%s] %s"),appName.GetString(),ex.GetErrorMessage().GetString());
-      ERRORLOG(error);
-    }
+    (*poolapp->m_exitServerApp)(app);
   }
   // Destroy the application and the IIS pool app
   // And possibly unload the application DLL
