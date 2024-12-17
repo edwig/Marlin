@@ -10,7 +10,7 @@
 // Not implemented features of HTTP.SYS are:
 // - HTTP 2.0 Server push
 //
-// Copyright 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
