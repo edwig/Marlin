@@ -29,7 +29,7 @@
 #include "TestMarlinServer.h"
 #include "ServerApp.h"
 #include "HTTPSite.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 #include "SiteHandlerWebSocket.h"
 
 #ifdef _DEBUG
@@ -150,7 +150,7 @@ TestMarlinServer::TestWebSocket()
   xprintf(_T("==============================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Sockets/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber,url,true);
   if(site)
   {
     // --- "---------------------------- - ------

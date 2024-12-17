@@ -168,7 +168,7 @@ TestMarlinServer::TestFormData()
   xprintf(_T("===============================================================\n"));
 
   // Create HTTP site to listen to "http://+:port/MarlinTest/FormData/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
   if(site)
   {
     // SUMMARY OF THE TEST

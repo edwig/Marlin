@@ -70,7 +70,7 @@ TestStreams(HTTPServer* p_server)
   xprintf(_T("==================================================================\n"));
   CString url(_T("/MarlinTest/Streams/"));
   // Create URL site to listen to events "http://+:port/MarlinTest/Streams/"
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if(site)
   {
     // SUMMARY OF THE TEST
@@ -164,7 +164,7 @@ int TestForms(HTTPServer* p_server)
   xprintf(_T("======================================\n"));
 
   // Create HTTP site to listen to "http://+:port/MarlinTest/Forms/"
-  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url);
+  HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if(site)
   {
     // SUMMARY OF THE TEST

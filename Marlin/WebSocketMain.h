@@ -28,6 +28,7 @@
 #pragma once
 #include "HTTPClient.h"
 #include "LogAnalysis.h"
+#include <websocket.h>
 #include <deque>
 #include <map>
 

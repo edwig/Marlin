@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "UrlGroup.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -36,16 +37,16 @@ HttpRemoveUrlFromUrlGroup(IN HTTP_URL_GROUP_ID  UrlGroupId
   }
 
   // Find the URL group
-  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  UrlGroup* group = g_handles.GetUrGroupFromOpaqueHandle(UrlGroupId);
   if(group == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }
 
   // Find the prefix of the URL registration
-  USES_CONVERSION;
-  CString prefix(W2A(pFullyQualifiedUrl));
+  CStringW fullUrl(pFullyQualifiedUrl);
+  CStringA prefix(fullUrl);
 
   // And remove from the group
-  return group->DelUrlPrefix(prefix,Flags);
+  return group->DelUrlPrefix(UrlGroupId,prefix,Flags);
 }

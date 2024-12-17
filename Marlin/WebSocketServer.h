@@ -26,8 +26,7 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "WebSocket.h"
-#include <Websocket.h>
+#include "WebSocketMain.h"
 #include "HTTPSYS_Websocket.h"
 
 // Documented by Microsoft on:

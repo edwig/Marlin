@@ -37,7 +37,7 @@
 #include "HTTPCertificate.h"
 #include "HTTPRequest.h"
 #include "WebServiceServer.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 #include "ThreadPool.h"
 // BaseLibrary
 #include <AutoCritical.h>

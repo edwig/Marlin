@@ -179,21 +179,3 @@ private:
   CString           m_websocketKey;
   SYSWebSocket*     m_websocket;
 };
-
-inline Request*
-GetRequestFromHandle(HTTP_REQUEST_ID p_handle)
-{
-  try
-  {
-    Request* request = reinterpret_cast<Request*>(p_handle);
-    if(request && request->GetIdent() == HTTP_REQUEST_IDENT)
-    {
-      return request;
-    }
-  }
-  catch(...)
-  {
-    // Error in application: Not a Request handle
-  }
-  return nullptr;
-}

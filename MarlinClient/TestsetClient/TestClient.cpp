@@ -134,7 +134,7 @@ int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
     if(argc >= 2 && _tcsicmp(argv[1],_T("/ws")) == 0)
     {
       // Testing WebServiceClient standalone
-//    errors += TestContract(nullptr,false,false);
+      errors += TestContract(nullptr,false,false);
     }
     else
     {
@@ -153,13 +153,12 @@ int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
       errors += TestPatching(client);
       errors += TestCompression(client);
       errors += TestEvents(client);
-      errors += TestEvents(client);
 
 #ifdef TEST_WEBSOCKETS
-//       errors += TestWebSocketAccept();
-//       errors += TestWebSocket(g_log);
-//       errors += TestCloseWebSocket();
-//       errors += TestEventDriver(g_log);
+//      errors += TestWebSocketAccept();
+//      errors += TestWebSocket(g_log);
+//      errors += TestCloseWebSocket();
+//      errors += TestEventDriver(g_log);
 #endif
       errors += TestWebservices(*client);
     }

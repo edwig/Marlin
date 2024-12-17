@@ -14,6 +14,7 @@
 #include "ServerSession.h"
 #include "UrlGroup.h"
 #include "SSLUtilities.h"
+#include "OpaqueHandles.h"
 #include <LogAnalysis.h>
 
 #ifdef _DEBUG
@@ -82,8 +83,8 @@ HttpSendResponseEntityBody(IN HANDLE          RequestQueueHandle
   }
 
   // Finding the elementary object
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
-  Request*    request = GetRequestFromHandle(RequestId);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
+  Request*    request = g_handles.GetRequestFromOpaqueHandle(RequestId);
   ULONG        result = ERROR_HANDLE_EOF;
 
   if(queue == nullptr || request == nullptr)

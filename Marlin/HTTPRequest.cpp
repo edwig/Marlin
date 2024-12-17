@@ -35,8 +35,8 @@
 #include "WebSocketServer.h"
 #include "AutoCritical.h"
 #include "ConvertWideString.h"
+#include "WebSocketMain.h"
 #include <ServiceReporting.h>
-#include <WebSocket.h>
 
 #ifdef _AFX
 #ifdef _DEBUG
@@ -425,7 +425,7 @@ HTTPRequest::ReceivedRequest()
                                             ,m_site
                                             ,m_site->GetSite()
                                             ,absolutePath
-                                            ,(HTTP_OPAQUE_ID) this
+                                            ,(HTTP_REQUEST_ID)this
                                             ,accessToken);
   }
 
@@ -649,8 +649,6 @@ HTTPRequest::StartSendResponse()
     m_writing.m_action     = IO_Nothing;
     m_policy.Policy        = HttpCachePolicyNocache;
     m_policy.SecondsToLive = 0;
-    // Last action is non-overlapped.
-    overlapped = nullptr;
   }
 
   // Trace the principal response, before sending
@@ -996,28 +994,28 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
                                               nullptr);       // LOGDATA
 
     // Check for error
-//     if(result != ERROR_IO_PENDING && result != NO_ERROR)
-//     {
-//       ERRORLOG(result,_T("Sending stream part"));
-//       m_responding = false;
-//       CancelRequest();
-//       return;
-//     }
-//     else
-//     {
-//       // Final closing of the connection
-//       if(p_continue == false)
-//       {
-//         DETAILLOG1(_T("Stream connection closed"));
-//       }
-//     }
-    if(result != NO_ERROR)
+    if(result != ERROR_IO_PENDING && result != NO_ERROR)
     {
-      ERRORLOG(result,_T("While sending HTTP stream part"));
+      ERRORLOG(result,_T("While sending stream part"));
+      m_responding = false;
       CancelRequest();
+      return;
     }
     else
     {
+      // Final closing of the connection
+      if(p_continue == false)
+      {
+        DETAILLOG1(_T("Stream connection closed"));
+      }
+//     }
+//     if(result != NO_ERROR)
+//     {
+//       ERRORLOG(result,_T("While sending HTTP stream part"));
+//       CancelRequest();
+//     }
+//     else
+//     {
       // Free the last send buffer and continue to send
       if(m_sendBuffer)
       {
@@ -1125,12 +1123,10 @@ HTTPRequest::Finalize()
   }
 
   // Free the message
-  if(m_message)
+  if(m_message && m_message->GetReferences() >= 1)
   {
-    if(m_message->DropReference())
-    {
-      m_message = nullptr;
-    }
+    m_message->DropReference();
+    m_message = nullptr;
   }
 
   // Remove header strings
@@ -1505,7 +1501,7 @@ HTTPRequest::CancelRequest()
 
     // Request cancellation
     ULONG result = HttpCancelHttpRequest(m_server->GetRequestQueue(),m_requestID,&m_incoming);
-    if(result == NO_ERROR)
+    if(result == NO_ERROR || result == ERROR_INVALID_PARAMETER)
     {
       DETAILLOG1(_T("Event stream connection closed"));
     }
@@ -1515,8 +1511,5 @@ HTTPRequest::CancelRequest()
       ERRORLOG(result,_T("Event stream incorrectly canceled"));
     }
   }
-  else
-  {
-    Finalize();
-  }
+  Finalize();
 }

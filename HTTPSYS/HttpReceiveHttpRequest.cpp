@@ -12,6 +12,7 @@
 #include "RequestQueue.h"
 #include "UrlGroup.h"
 #include "ServerSession.h"
+#include "OpaqueHandles.h"
 #include <LogAnalysis.h>
 
 #ifdef _DEBUG
@@ -68,7 +69,7 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
   }
 
   // Find the request queue
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
   if(queue == nullptr)
   {
     return ERROR_INVALID_PARAMETER;

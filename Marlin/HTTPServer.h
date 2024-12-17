@@ -64,12 +64,12 @@ using std::wstring;
 // Should be the same as the initial size for the HTTPClient!
 constexpr auto INIT_HTTP_BUFFERSIZE   = (32 * 1024);
 // Initial HTTP backlog queue length
-constexpr auto INIT_HTTP_BACKLOGQUEUE = 64;
+constexpr auto INIT_HTTP_BACKLOGQUEUE = 1000;
 constexpr auto MAXX_HTTP_BACKLOGQUEUE = 640;
-// Timeout after bruteforce attack
+// Timeout after brute-force attack
 constexpr auto TIMEOUT_BRUTEFORCE     = (10 * CLOCKS_PER_SEC);
 
-// Websockets are two sided sockets, not HTTP
+// WebSockets are two sided sockets, not HTTP
 #ifndef HANDLER_HTTPSYS_UNFRIENDLY
 #define HANDLER_HTTPSYS_UNFRIENDLY 9
 #endif

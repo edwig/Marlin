@@ -14,6 +14,7 @@
 #include "WebSocket.h"
 #include "HTTPSYS_Websocket.h"
 #include "SYSWebSocket.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -38,8 +39,8 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
                     ,IN DWORD                 PropertyCount    OPTIONAL)
 {
   // Getting the elementary objects
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
-  Request*    request = GetRequestFromHandle(RequestId);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
+  Request*    request = g_handles.GetRequestFromOpaqueHandle(RequestId);
 
   // Check for correct RequestQUeue and current request
   if(queue == nullptr || request == nullptr)
@@ -71,7 +72,7 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
       {
         switch(SocketProperties[index].Type)
         {
-          case WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE:        websocket->SetReceiveBufferSize (*((ULONG*)SocketProperties[index].pvValue));
+          case WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE:        websocket->SetReceiveBufferSize  (*((ULONG*)SocketProperties[index].pvValue));
                                                                     break;
           case WEB_SOCKET_SEND_BUFFER_SIZE_PROPERTY_TYPE:           websocket->SetSendBufferSize     (*((ULONG*)SocketProperties[index].pvValue));
                                                                     break;

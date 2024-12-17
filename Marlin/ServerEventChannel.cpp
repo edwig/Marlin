@@ -30,7 +30,7 @@
 #include "ServerEventDriver.h"
 #include "LongTermEvent.h"
 #include "ConvertWideString.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 #include "AutoCritical.h"
 #include "Base64.h"
 #include "CRC32.h"

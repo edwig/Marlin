@@ -11,6 +11,7 @@
 #include "http_private.h"
 #include "ServerSession.h"
 #include "UrlGroup.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -24,7 +25,7 @@ HttpCreateUrlGroup(IN  HTTP_SERVER_SESSION_ID ServerSessionId
                   ,_Reserved_ IN ULONG        Reserved)
 {
   // Getting the server session
-  ServerSession* session = GetServerSessionFromHandle(ServerSessionId);
+  ServerSession* session = g_handles.GetSessionFromOpaqueHandle(ServerSessionId);
   if(session == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
@@ -36,7 +37,7 @@ HttpCreateUrlGroup(IN  HTTP_SERVER_SESSION_ID ServerSessionId
   }
 
   // Should not happen
-  if(Reserved)
+  if(Reserved || pUrlGroupId == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }
@@ -46,7 +47,8 @@ HttpCreateUrlGroup(IN  HTTP_SERVER_SESSION_ID ServerSessionId
   session->AddUrlGroup(group);
 
   // Reflect the group ID back
-  *pUrlGroupId = (HTTP_URL_GROUP_ID)group;
+  HANDLE handle = g_handles.CreateOpaqueHandle(HTTPHandleType::HTTP_UrlGroup,group);
+  *pUrlGroupId = (HTTP_URL_GROUP_ID)handle;
 
   return NO_ERROR;
 }

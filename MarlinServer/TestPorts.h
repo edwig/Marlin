@@ -33,3 +33,4 @@
 const int TESTING_HTTP_PORT   = 1200;
 const int TESTING_HTTPS_PORT  = 1201;   // Port + 1
 const int TESTING_CLCERT_PORT = 1202;   // Port + 2
+const int TESTING_TOKEN_PORT  = 1203;   // Port + 3

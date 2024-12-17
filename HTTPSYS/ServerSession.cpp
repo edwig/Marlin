@@ -13,6 +13,8 @@
 #include "UrlGroup.h"
 #include "Logging.h"
 #include "HTTPReadRegister.h"
+#include "RequestQueue.h"
+#include "OpaqueHandles.h"
 #include <LogAnalysis.h>
 
 #ifdef _DEBUG
@@ -50,8 +52,15 @@ ServerSession::~ServerSession()
   // Remove the logfile
   if(m_logfile)
   {
+    HANDLE writer = m_logfile->GetBackgroundWriterThread();
+
     LogAnalysis::DeleteLogfile(m_logfile);
     m_logfile = nullptr;
+
+    if(writer)
+    {
+      WaitForSingleObject(writer,10 * CLOCKS_PER_SEC);
+    }
   }
 
   DeleteCriticalSection(&m_lock);
@@ -78,7 +87,7 @@ ServerSession::AddUrlGroup(UrlGroup* p_group)
 }
 
 bool
-ServerSession::RemoveUrlGroup(UrlGroup* p_group)
+ServerSession::RemoveUrlGroup(HTTP_URL_GROUP_ID p_handle,UrlGroup* p_group)
 {
   AutoCritSec lock(&m_lock);
 
@@ -86,6 +95,22 @@ ServerSession::RemoveUrlGroup(UrlGroup* p_group)
   {
     if(*it == p_group)
     {
+      // Remove UrlGroup from global handles as soon as possible
+      g_handles.RemoveOpaqueHandle((HANDLE)p_handle);
+
+      // Remove group from all queues
+      HandleMap map;
+      g_handles.GetAllQueueHandles(map);
+      for(auto& handle : map)
+      {
+        RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(handle.first);
+        if(queue)
+        {
+          queue->RemoveURLGroup(p_group);
+        }
+      }
+
+      // Remove the group
       delete p_group;
       m_groups.erase(it);
       return true;

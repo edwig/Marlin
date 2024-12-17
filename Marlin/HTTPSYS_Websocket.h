@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #pragma once
+#include <websocket.h>
 
 // WebSockets can only be operational in MS-Windows version 8.0 and higher
 #if NTDDI_VERSION >= NTDDI_WIN8

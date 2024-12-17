@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 #include "AutoCritical.h"
 #include "Crypto.h"
 #include "ConvertWideString.h"

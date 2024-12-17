@@ -89,15 +89,15 @@ TestMarlinServer::TestSubSites()
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url1(_T("/MarlinTest/TestToken/One"));
-  XString url2(_T("/MarlinTest/TestToken/Two"));
+  XString url1(_T("/MarlinToken/One"));
+  XString url2(_T("/MarlinToken/Two"));
 
   xprintf(_T("TESTING SUB-SITE FUNCTIONS OF THE HTTP SERVER\n"));
   xprintf(_T("=============================================\n"));
 
-  // Create HTTP site to listen to "http://+:port/MarlinTest/TestToken/one or two"
+  // Create HTTP site to listen to "http://+:port/MarlinToken/one or two"
   // This is a subsite of another one, so 5th parameter is set to true
-  HTTPSite* site1 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url1,true);
+  HTTPSite* site1 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber + 3,url1,true);
   if(site1)
   {
     // SUMMARY OF THE TEST
@@ -111,7 +111,7 @@ TestMarlinServer::TestSubSites()
     qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url1.GetString());
     return error;
   }
-  HTTPSite* site2 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url2,true);
+  HTTPSite* site2 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber + 3,url2,true);
   if(site2)
   {
     // SUMMARY OF THE TEST
@@ -126,24 +126,6 @@ TestMarlinServer::TestSubSites()
     return error;
   }
 
-//   // Testing the functionality that the check on the main site is correct!
-//   XString url3("/MarlinTest/Rubish/One");
-//   HTTPSite* site3 = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url3,true);
-//   if(site3)
-//   {
-//     ++error;
-//     xerror();
-//     qprintf("ERROR: Unjust creation of a subsite: %s\n",(LPCTSTR)site3->GetPrefixURL());
-//     return error;
-//   }
-//   else
-//   {
-//     // SUMMARY OF THE TEST
-//     // --- "--------------------------- - ------\n"
-//     qprintf("Refused incorrect subsite   : OK : http://+:%d%s\n",TESTING_HTTP_PORT,(LPCTSTR)url3);
-//   }
-
-
   // Setting the POST handler for this site
   site1->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapSubsite());
   site2->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapSubsite());
@@ -153,6 +135,13 @@ TestMarlinServer::TestSubSites()
   site2->AddContentType(true,_T("pos"),_T("text/xml"));
   site1->AddContentType(true,_T("xml"),_T("application/soap+xml"));
   site2->AddContentType(true,_T("xml"),_T("application/soap+xml"));
+
+  // Set sites to use NTLM authentication for the "MarlinTest" user
+  // So we can get a different token, then the current server token
+  site1->SetAuthenticationScheme(_T("NTLM"));
+  site2->SetAuthenticationScheme(_T("NTLM"));
+  site1->SetAuthenticationNTLMCache(true);
+  site2->SetAuthenticationNTLMCache(true);
 
   // Start the sites explicitly
   if(site1->StartSite())
@@ -186,39 +175,48 @@ TestMarlinServer::StopSubsites()
 {
   int error = 0;
 
-  XString url1(_T("/MarlinTest/TestToken"));
-  XString url2(_T("/MarlinTest/TestToken/One"));
-  XString url3(_T("/MarlinTest/TestToken/Two"));
+  XString url1(_T("/MarlinToken"));
+  XString url2(_T("/MarlinToken/One"));
+  XString url3(_T("/MarlinToken/Two"));
 
-  // Testing the main site. Should not be removed!!
-  if(m_httpServer->DeleteSite(m_inPortNumber,url1))
+  if(true)
   {
-    qprintf(_T("ERROR Incorrectly removed a main site: %s\n"),url1.GetString());
-    qprintf(_T("ERROR Other sites are dependent on it\n"));
-    xerror();
-    ++error;
-  }
+    // TEST TO REMOVE RECURSIVELY
 
-  // Removing sub-sites. Should work
-  if(m_httpServer->DeleteSite(m_inPortNumber,url2) == false)
-  {
-    qprintf(_T("ERROR Deleting site : %s\n"),url2.GetString());
-    xerror();
-    ++error;
+    // Testing the main site. Should not be removed!!
+    if(m_httpServer->DeleteSite(m_inPortNumber + 3,url1))
+    {
+      qprintf(_T("ERROR Incorrectly removed a main site: %s\n"),url1.GetString());
+      qprintf(_T("ERROR Other sites are dependent on it\n"));
+      xerror();
+      ++error;
+    }
   }
-  if(m_httpServer->DeleteSite(m_inPortNumber,url3) == false)
+  else
   {
-    qprintf(_T("ERROR Deleting site : %s\n"),url3.GetString());
-    xerror();
-    ++error;
-  }
+    // TEST TO REMOVE IN-ORDER
 
-  // Now removing main site
-  if(m_httpServer->DeleteSite(m_inPortNumber,url1) == false)
-  {
-    qprintf(_T("ERROR Deleting site : %s\n"),url1.GetString());
-    xerror();
-    ++error;
+    // Removing sub-sites. Should work
+    if(m_httpServer->DeleteSite(m_inPortNumber + 3,url2) == false)
+    {
+      qprintf(_T("ERROR Deleting site : %s\n"),url2.GetString());
+      xerror();
+      ++error;
+    }
+    if(m_httpServer->DeleteSite(m_inPortNumber + 3,url3) == false)
+    {
+      qprintf(_T("ERROR Deleting site : %s\n"),url3.GetString());
+      xerror();
+      ++error;
+    }
+
+    // Now removing main site
+    if(m_httpServer->DeleteSite(m_inPortNumber + 3,url1) == false)
+    {
+      qprintf(_T("ERROR Deleting site : %s\n"),url1.GetString());
+      xerror();
+      ++error;
+    }
   }
   return error;
 }

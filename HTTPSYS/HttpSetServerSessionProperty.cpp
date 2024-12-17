@@ -11,6 +11,7 @@
 #include "http_private.h"
 #include "ServerSession.h"
 #include "RequestQueue.h"
+#include "OpaqueHandles.h"
 #include <ConvertWideString.h>
 #include <string>
 
@@ -35,13 +36,16 @@ HttpSetServerSessionProperty(IN HTTP_SERVER_SESSION_ID  ServerSessionId
                             ,IN ULONG                   PropertyInformationLength)
 {
   // See if we have minimal parameters
-  if(ServerSessionId == NULL || PropertyInformation == nullptr)
+  if(PropertyInformation == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }
-
   // Grab our session
-  ServerSession* session = reinterpret_cast<ServerSession*>(ServerSessionId);
+  ServerSession* session = g_handles.GetSessionFromOpaqueHandle(ServerSessionId);
+  if(session == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   switch(Property)
   {

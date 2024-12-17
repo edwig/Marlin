@@ -165,7 +165,7 @@ TestMarlinServer::TestPushEvents()
   xprintf(_T("=====================================================================\n"));
   XString url(_T("/MarlinTest/Events/"));
   // Create URL site to listen to events "http://+:port/MarlinTest/Events/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
   if (site)
   {
     // SUMMARY OF THE TEST

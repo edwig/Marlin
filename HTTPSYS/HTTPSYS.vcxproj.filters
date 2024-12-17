@@ -84,6 +84,9 @@
     <ClInclude Include="SYSWebSocket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OpaqueHandles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -235,6 +238,9 @@
     </ClCompile>
     <ClCompile Include="HttpReceiveWebSocket.cpp">
       <Filter>HTTP_API</Filter>
+    </ClCompile>
+    <ClCompile Include="OpaqueHandles.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

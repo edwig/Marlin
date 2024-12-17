@@ -585,10 +585,12 @@ HTTPSite::RemoveSiteFromGroup()
       return true;
     }
   }
-  else
+  // Site could be a divider (e.g. 'Driver' for events)
+  if(m_hasSubSites)
   {
-    ERRORLOG(ERROR_INVALID_PARAMETER,_T("No recorded URL-Group. Cannot remove URL Site: ") + m_site);
+    return true;
   }
+  ERRORLOG(ERROR_INVALID_PARAMETER,_T("No recorded URL-Group. Cannot remove URL Site: ") + m_site);
   return false;
 }
 

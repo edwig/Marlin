@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "RequestQueue.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -40,7 +41,7 @@ HttpQueryRequestQueueProperty(_In_ HANDLE                 RequestQueueHandle
   }
 
   // Finding our request queue
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
   if (queue == nullptr)
   {
     return ERROR_INVALID_PARAMETER;

@@ -103,7 +103,7 @@ TestMarlinServer::TestReliable()
   // Create URL channel to listen to "http://+:port/MarlinTest/Reliable/"
   // But WebConfig can override all values except for the callback function address
   XString url(_T("/MarlinTest/Reliable/"));
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
   if (site)
   {
     // SUMMARY OF THE TEST
@@ -153,7 +153,7 @@ TestMarlinServer::TestReliableBA()
   // Create URL channel to listen to "http://+:port/MarlinTest/ReliableBA/"
   // But WebConfig can override all values except for the callback function address
   XString url(_T("/MarlinTest/ReliableBA/"));
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
   if(site)
   {
     // SUMMARY OF THE TEST

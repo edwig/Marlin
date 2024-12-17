@@ -12,6 +12,7 @@
 #include "URL.h"
 #include "RequestQueue.h"
 #include "Request.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -25,8 +26,8 @@ HttpCancelHttpRequest(IN HANDLE           RequestQueueHandle
                      ,IN LPOVERLAPPED     Overlapped OPTIONAL)
 {
   // Finding the elementary object
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
-  Request*    request = GetRequestFromHandle(RequestId);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
+  Request*    request = g_handles.GetRequestFromOpaqueHandle(RequestId);
   if (queue == nullptr || request == nullptr)
   {
     return ERROR_INVALID_PARAMETER;

@@ -32,6 +32,7 @@
 #include "HTTPSite.h"
 #include "AutoCritical.h"
 #include "ConvertWideString.h"
+#include <websocket.h>
 
 #ifdef _AFX
 #ifdef _DEBUG
@@ -483,7 +484,7 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
                                        clientHeaders, 5,
                                        &serverheaders, &serverheadersCount);
   }
-  if(!SUCCEEDED(hr))
+  if(SUCCEEDED(hr))
   {
     // Record the handshake in our HTTPMessage
     DETAILLOG1(_T("WebSocketHandshake succeeded"));

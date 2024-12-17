@@ -29,7 +29,7 @@
 #include "ServerEventDriver.h"
 #include "SiteHandlerOptions.h"
 #include "HTTPServer.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 #include "AutoCritical.h"
 
 #ifdef _AFX
@@ -340,6 +340,7 @@ ServerEventDriver::UnRegisterChannel(int p_channel,bool p_flush /*=true*/)
 bool
 ServerEventDriver::StartEventDriver()
 {
+  if(m_server && m_site)
   if(m_server && m_site)
   {
     m_active = true;

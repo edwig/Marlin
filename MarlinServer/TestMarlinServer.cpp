@@ -483,10 +483,10 @@ TestMarlinServer::RegisterSiteHandlers()
   TestMessageEncryption();
   TestReliable();
   TestReliableBA();
-  TestSubSites();
   TestThreadPool(m_pool);
   TestHTTPTime();
   TestToken();
+  TestSubSites();
   TestWebSocket();
 }
 
@@ -514,9 +514,9 @@ TestMarlinServer::AfterTests()
   AfterTestCompression();
   AfterTestMessageEncryption();
   AfterTestReliable();
-  AfterTestSubSites();
   AfterTestThreadpool();
   AfterTestHTTPTime();
   AfterTestToken();
+  AfterTestSubSites();
   AfterTestWebSocket();
 }

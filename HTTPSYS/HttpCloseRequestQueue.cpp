@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "RequestQueue.h"
+#include "OpaqueHandles.h"
 #include <vector>
 
 #ifdef _DEBUG
@@ -22,21 +23,17 @@ ULONG WINAPI
 HttpCloseRequestQueue(IN HANDLE RequestQueueHandle)
 {
   // Finding our request queue
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
   if (queue == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }
 
   // Find this queue in our global queues registration
-  for(RequestQueues::iterator it = g_requestQueues.begin(); it != g_requestQueues.end(); ++it)
+  if(g_handles.RemoveOpaqueHandle(RequestQueueHandle))
   {
-    if(it->second != queue)
-    {
-      delete queue;
-      g_requestQueues.erase(it);
-      return NO_ERROR;
-    }
+    delete queue;
+    return NO_ERROR;
   }
 
   // Queue not found

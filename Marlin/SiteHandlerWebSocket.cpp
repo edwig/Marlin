@@ -27,7 +27,7 @@
 //
 #include "stdafx.h"
 #include "SiteHandlerWebSocket.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 
 #ifdef _AFX
 #ifdef _DEBUG

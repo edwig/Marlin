@@ -29,7 +29,7 @@ public:
 
   // FUNCTIONS
   ULONG AddUrlPrefix(CString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext);
-  ULONG DelUrlPrefix(CString pFullyQualifiedUrl,ULONG p_flags);
+  ULONG DelUrlPrefix(HTTP_URL_GROUP_ID p_handle,CString pFullyQualifiedUrl,ULONG p_flags);
   ULONG NumberOfPorts (USHORT p_port);
   URL*  FindLongestURL(USHORT p_port,CString p_abspath,int& p_length);
 
@@ -93,21 +93,3 @@ private:
   // Locking
   CRITICAL_SECTION   m_lock;
 };
-
-inline UrlGroup*
-GetUrlGroupFromHandle(HTTP_URL_GROUP_ID p_handle)
-{
-  try
-  {
-    UrlGroup* group = reinterpret_cast<UrlGroup*>(p_handle);
-    if(group && group->GetIdent() == HTTP_URLGROUP_IDENT)
-    {
-      return group;
-    }
-  }
-  catch(...)
-  {
-    // Error in application: Not a Request handle
-  }
-  return nullptr;
-}

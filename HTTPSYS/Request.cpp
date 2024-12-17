@@ -21,6 +21,7 @@
 #include "SSLUtilities.h"
 #include "Base64.h"
 #include "SYSWebSocket.h"
+#include "OpaqueHandles.h"
 #include <ConvertWideString.h>
 #include <LogAnalysis.h>
 #include <wininet.h>
@@ -65,7 +66,7 @@ Request::Request(RequestQueue* p_queue
   // Setting OUR identity!!
   // This is WHY we implemented HTTP.SYS in user space!
   m_request.ConnectionId = (HTTP_CONNECTION_ID)m_socket;
-  m_request.RequestId    = (HTTP_REQUEST_ID)   this;
+  m_request.RequestId    = (HTTP_REQUEST_ID)   0L;
 }
 
 Request::~Request()
@@ -80,6 +81,10 @@ Request::~Request()
 void
 Request::ReceiveRequest()
 {
+  // Place request in the global handles
+  HANDLE handle = g_handles.CreateOpaqueHandle(HTTPHandleType::HTTP_Request,this);
+  m_request.RequestId = (HTTP_REQUEST_ID)handle;
+
   // Wake up any application that will service me!
   m_queue->DemandStart();
 
@@ -1000,7 +1005,7 @@ Request::FindUrlContext()
     return;
   }
   // Weird: no context found
-  // throw HTTP_STATUS_NOT_FOUND;
+  throw HTTP_STATUS_NOT_FOUND;
 }
 
 // Finding the content length header
@@ -2008,6 +2013,10 @@ Request::HTTPSystemTime()
 int
 Request::ReadBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 {
+  if(m_socket == nullptr)
+  {
+    return SOCKET_ERROR;
+  }
   int result = m_socket->RecvPartial(p_buffer,p_size);
   if (result == SOCKET_ERROR)
   {
@@ -2028,6 +2037,10 @@ Request::ReadBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 int
 Request::WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 {
+  if(m_socket == nullptr)
+  {
+    return SOCKET_ERROR;
+  }
   int result = m_socket->SendPartial(p_buffer,p_size);
   if (result == SOCKET_ERROR)
   {

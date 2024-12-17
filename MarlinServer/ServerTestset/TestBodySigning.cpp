@@ -124,7 +124,7 @@ TestMarlinServer::TestBodySigning()
   // Create URL channel to listen to "http://+:port/MarlinTest/BodySigning/"
   // But WebConfig can override all values except for the callback function address
   XString url(_T("/MarlinTest/BodySigning/"));
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
   if (site)
   {
     // SUMMARY OF THE TEST

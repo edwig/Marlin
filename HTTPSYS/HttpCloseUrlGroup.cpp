@@ -11,6 +11,7 @@
 #include "http_private.h"
 #include "ServerSession.h"
 #include "UrlGroup.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -22,14 +23,16 @@ ULONG WINAPI
 HttpCloseUrlGroup(IN HTTP_URL_GROUP_ID UrlGroupId)
 {
   // Find the URL group
-  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  UrlGroup* group = g_handles.GetUrGroupFromOpaqueHandle(UrlGroupId);
   if(group == nullptr)
   {
-    return ERROR_INVALID_PARAMETER;
+    // Group was already removed 
+    // e.q. by HttpRemoveUrlFromUrlGroup
+    return NO_ERROR;
   }
 
   ServerSession* session = group->GetServerSession();
-  if(session->RemoveUrlGroup(group))
+  if(session->RemoveUrlGroup(UrlGroupId,group))
   {
     return NO_ERROR;
   }

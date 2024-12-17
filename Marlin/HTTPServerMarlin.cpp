@@ -136,7 +136,7 @@ HTTPServerMarlin::Initialise()
     ERRORLOG(retCode,_T("CreateRequestQueue"));
     return false;
   }
-  DETAILLOGV(_T("Request queue created: %p"),m_requestQueue);
+  DETAILLOGV(_T("Request queue created: %I64X"),m_requestQueue);
 
   // STEP 6: SET UP FOR ASYNC I/O
   // Register the request queue for asynchronous I/O
@@ -238,6 +238,17 @@ HTTPServerMarlin::Cleanup()
     it->second->Stop();
   }
 
+  // Try to stop and remove all groups
+  while(!m_urlGroups.empty())
+  {
+    URLGroupMap::iterator it = m_urlGroups.begin();
+    HTTPURLGroup* group = *it;
+    // Gracefully stop
+    group->StopGroup();
+    // And delete memory
+    delete group;
+  }
+
   // Remove all URL's in the sites map
   while(!m_allsites.empty())
   {
@@ -245,32 +256,21 @@ HTTPServerMarlin::Cleanup()
     it->second->StopSite(true);
   }
 
-  // Try to stop and remove all groups
-  for(auto& group : m_urlGroups)
-  {
-    // Gracefully stop
-    group->StopGroup();
-    // And delete memory
-    delete group;
-  }
-  m_urlGroups.clear();
-
   // Close the Request Queue handle.
   // Do this before removing the group
   if(m_requestQueue)
   {
     // using: HttpCloseRequestQueue
     retCode = HttpCloseRequestQueue(m_requestQueue);
-    m_requestQueue = NULL;
-
     if(retCode == NO_ERROR)
     {
-      DETAILLOG1(_T("Closed the request queue"));
+      DETAILLOGV(_T("Closed the request queue: %I64X"),m_requestQueue);
     }
     else
     {
       ERRORLOG(retCode,_T("Cannot close the request queue"));
     }
+    m_requestQueue = nullptr;
   }
 
   // Now close the session
@@ -278,22 +278,21 @@ HTTPServerMarlin::Cleanup()
   {
     // Using: HttpCloseServerSession
     retCode = HttpCloseServerSession(m_session);
-    m_session = NULL;
-
     if(retCode == NO_ERROR)
     {
-      DETAILLOG1(_T("Closed the HTTP server session"));
+      DETAILLOGV(_T("Closed the HTTP server session: %I64X"),m_session);
     }
     else
     {
       ERRORLOG(retCode,_T("Cannot close the HTTP server session"));
     }
+    m_session = 0L;
   }
 
   if(m_initialized)
   {
     // Call HttpTerminate.
-    retCode = HttpTerminate(HTTP_INITIALIZE_SERVER,NULL);
+    retCode = HttpTerminate(HTTP_INITIALIZE_SERVER,nullptr);
 
     if(retCode == NO_ERROR)
     {
@@ -309,8 +308,14 @@ HTTPServerMarlin::Cleanup()
   // Closing the logging file
   if(m_log && m_logOwner)
   {
+    HANDLE writer = m_log->GetBackgroundWriterThread();
     LogAnalysis::DeleteLogfile(m_log);
-    m_log = NULL;
+    m_log = nullptr;
+
+    if(writer)
+    {
+      WaitForSingleObject(writer,10 * CLOCKS_PER_SEC);
+    }
   }
 }
 
@@ -411,6 +416,7 @@ HTTPServerMarlin::CreateSite(PrefixType    p_type
         ERRORLOG(ERROR_NOT_FOUND,message);
         return nullptr;
       }
+      mainSite->SetHasSubSites(true);
     }
     // Create and register a URL
     // Remember URL Prefix strings, and create the site
@@ -445,17 +451,15 @@ HTTPServerMarlin::DeleteSite(int p_port,XString p_baseURL,bool p_force /*=false*
     HTTPSite* site = it->second;
 
     // See if other sites are dependent on this one
-    if(p_force == false && site->GetIsSubsite() == false)
+    if(site->GetHasSubSites())
     {
-      // Walk all sites, to see if subsites still dependent on this main site
+      // Walk all sites, to see if sub-sites still dependent on this main site
       for(SiteMap::iterator fit = m_allsites.begin(); fit != m_allsites.end(); ++fit)
       {
         if(fit->second->GetMainSite() == site)
         {
-          // Cannot delete this site, other sites are dependent on this one
-          ERRORLOG(ERROR_ACCESS_DENIED,_T("Cannot remove site. Sub-sites still dependent on: ") + p_baseURL);
-          m_counter.Stop();
-          return false;
+          fit->second->StopSite(true);
+          fit = m_allsites.begin();
         }
       }
     }
@@ -505,8 +509,7 @@ HTTPServerMarlin::FindUrlGroup(XString p_authName
   if(group->StartGroup())
   {
     m_urlGroups.push_back(group);
-    int number = (int)m_urlGroups.size();
-    DETAILLOGV(_T("Created URL group [%d] for authentication: %s"),number,p_authName.GetString());
+    DETAILLOGV(_T("Created URL group [%I64X] for authentication: %s"),group->GetUrlGroupID(),p_authName.GetString());
   }
   else
   {
@@ -525,6 +528,15 @@ HTTPServerMarlin::RemoveURLGroup(const HTTPURLGroup* p_group)
   {
     if(p_group == *it)
     {
+      ULONG error = HttpCloseUrlGroup(p_group->GetUrlGroupID());
+      if(error == NO_ERROR)
+      {
+        DETAILLOGV(_T("Closed the URL-Group: %I64X"),p_group->GetUrlGroupID());
+      }
+      else
+      {
+        ERRORLOG(error,_T("Cannot remove URL group from HTTPSYS driver!"));
+      }
       m_urlGroups.erase(it);
       return;
     }

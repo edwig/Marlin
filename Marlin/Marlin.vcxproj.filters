@@ -159,9 +159,6 @@
     <ClCompile Include="HostedWebCore.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
-    <ClCompile Include="WebSocket.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="SiteHandlerWebSocket.cpp">
       <Filter>MarlinServer</Filter>
     </ClCompile>
@@ -217,6 +214,9 @@
       <Filter>Configuration</Filter>
     </ClCompile>
     <ClCompile Include="CPULoad.cpp">
+      <Filter>MarlinGeneral</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocketMain.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
   </ItemGroup>
@@ -371,9 +371,6 @@
     <ClInclude Include="EventStream.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="WebSocket.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="SiteHandlerWebSocket.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
@@ -443,6 +440,9 @@
     </ClInclude>
     <ClInclude Include="HTTPSYS_Websocket.h">
       <Filter>MarlinServer\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketMain.h">
+      <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

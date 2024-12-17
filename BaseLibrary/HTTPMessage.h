@@ -258,6 +258,7 @@ public:
   // Reference system for storing the message elsewhere
   void    AddReference();
   bool    DropReference();
+  long    GetReferences();
 
   // Operators
   HTTPMessage& operator=(const JSONMessage& p_message);

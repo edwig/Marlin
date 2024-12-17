@@ -8,6 +8,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "http_private.h"
+#include <http.h>
 #include <vector>
 #include <string>
 
@@ -31,7 +33,7 @@ public:
 
  // FUNCTIONS
  ULONG      AddUrlGroup   (UrlGroup* p_group);
- bool       RemoveUrlGroup(UrlGroup* p_group);
+ bool       RemoveUrlGroup(HTTP_URL_GROUP_ID p_handle,UrlGroup* p_group);
  // SETTERS
  void       SetSocketLogging(int p_logging);
  void       SetEnabledState(HTTP_ENABLED_STATE p_state);
@@ -83,21 +85,3 @@ private:
   // Locking for update
   CRITICAL_SECTION    m_lock;
 };
-
-inline ServerSession*
-GetServerSessionFromHandle(HTTP_SERVER_SESSION_ID p_handle)
-{
-  try
-  {
-    ServerSession* session = reinterpret_cast<ServerSession*>(p_handle);
-    if(session && session->GetIdent() == HTTP_SERVER_IDENT)
-    {
-      return session;
-    }
-  }
-  catch(...)
-  {
-    // Error in application: Not a ServerSession handle
-  }
-  return nullptr;
-}

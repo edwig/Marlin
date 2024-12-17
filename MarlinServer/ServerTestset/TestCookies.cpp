@@ -137,7 +137,7 @@ TestMarlinServer::TestCookies()
   // Create URL channel to listen to "http://+:port/MarlinTest/CookieTest/"
   // Callback function is no longer required!
   XString webaddress = _T("/MarlinTest/CookieTest/");
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress,true);
   if(site)
   {
     // SUMMARY OF THE TEST

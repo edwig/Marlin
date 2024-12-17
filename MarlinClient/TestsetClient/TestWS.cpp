@@ -26,12 +26,13 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "SOAPMessage.h"
-#include "XMLMessage.h"
 #include "TestClient.h"
-#include "HTTPClient.h"
-#include "WebServiceClient.h"
-#include "GetLastErrorAsString.h"
+#include <SOAPMessage.h>
+#include <XMLMessage.h>
+#include <HTTPClient.h>
+#include <WebServiceClient.h>
+#include <GetLastErrorAsString.h>
+#include <HTTPSYS_Websocket.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -369,6 +370,14 @@ CreateURL(XString p_extra)
   return url;
 }
 
+inline XString
+CreateTokenURL(XString p_extra)
+{
+  XString url;
+  url.Format(_T("http://%s:%d/MarlinToken/%s"),MARLIN_HOST,TESTING_HTTP_PORT + 3,p_extra.GetString());
+  return url;
+}
+
 int TestWebservices(HTTPClient& client)
 {
   int errors = 0;
@@ -423,33 +432,36 @@ int TestWebservices(HTTPClient& client)
   errors += TestReliableMessaging(&client,namesp,command,url,true);
 
   // Test 7
-  xprintf(_T("TESTING THE TOKEN FUNCTION TO /MarlinTest/TestToken/\n"));
+  xprintf(_T("TESTING THE TOKEN FUNCTION TO /MarlinToken/\n"));
   xprintf(_T("====================================================\n"));
-  url = CreateURL(_T("TestToken"));
+  url = CreateTokenURL(_T(""));
   msg = CreateSoapMessage(namesp,command,url);
   client.SetSingleSignOn(true);
   XString user(_T("CERT7\\Beheerder"));
   XString password(_T("altijd"));
   client.SetUser(user);
   client.SetPassword(password);
-  // client.SetPreEmptiveAuthorization(WINHTTP_AUTH_SCHEME_NTLM);
+  client.SetPreEmptiveAuthorization(WINHTTP_AUTH_SCHEME_NTLM);
   errors += DoSend(client,msg,_T("token testing"));
   client.SetSingleSignOn(false);
+  client.SetPreEmptiveAuthorization(0);
 
   // Test 8
-  xprintf(_T("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/One/\n"));
-  xprintf(_T("TESTING THE SUB-SITES FUNCTION TO /MarlinTest/TestToken/Two/\n"));
+  xprintf(_T("TESTING THE SUB-SITES FUNCTION TO /MarlinToken/One/\n"));
+  xprintf(_T("TESTING THE SUB-SITES FUNCTION TO /MarlinToken/Two/\n"));
   xprintf(_T("============================================================\n"));
-  XString url1 = CreateURL(_T("TestToken/One"));
-  XString url2 = CreateURL(_T("TestToken/Two"));
+  XString url1 = CreateTokenURL(_T("One"));
+  XString url2 = CreateTokenURL(_T("Two"));
   msg = CreateSoapMessage(namesp,command,url1);
   client.SetSingleSignOn(true);
   client.SetUser(user);
   client.SetPassword(password);
+  client.SetPreEmptiveAuthorization(WINHTTP_AUTH_SCHEME_NTLM);
   errors += DoSend(client,msg,_T("single sign on"));
   msg = CreateSoapMessage(namesp,command,url2);
   errors += DoSend(client,msg,_T("single sign on"));
   client.SetSingleSignOn(false);
+  client.SetPreEmptiveAuthorization(0);
 
   // Test 9
   xprintf(_T("TESTING SOAP FAULT TO /MarlinTest/Insecure/\n"));

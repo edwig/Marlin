@@ -120,7 +120,7 @@ TestMarlinServer::TestEventDriver()
   xprintf(_T("=====================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Driver/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong, false, m_inPortNumber, url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong, false, m_inPortNumber,url,true);
   if (site)
   {
     // SUMMARY OF THE TEST

@@ -15,6 +15,7 @@
 #include "ServerSession.h"
 #include "LogAnalysis.h"
 #include "SSLUtilities.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -78,8 +79,8 @@ HttpSendHttpResponse(IN HANDLE              RequestQueueHandle
   }
 
   // Finding the elementary object
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
-  Request*    request = GetRequestFromHandle(RequestId);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
+  Request*    request = g_handles.GetRequestFromOpaqueHandle(RequestId);
   ULONG        result = ERROR_HANDLE_EOF;
 
   if(queue == nullptr || request == nullptr)
