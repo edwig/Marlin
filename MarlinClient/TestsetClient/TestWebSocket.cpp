@@ -219,11 +219,11 @@ TestWebSocket(LogAnalysis* p_log)
       {
         // Testing strings that are longer than the TCP/IP buffering for WebSockets
         // So strings longer than typical 8K bytes must be transportable
-        // This string is 23501 bytes long
+        // This string is 23503 bytes long
         XString large = CreateLargeMessage();
         if(!socket->WriteString(large))
         {
-           ++errors;
+          ++errors;
         }
       }
     }

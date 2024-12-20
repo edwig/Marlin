@@ -22,6 +22,8 @@
 // Documented: https://learn.microsoft.com/en-us/windows/win32/api/websocket/ne-websocket-web_socket_property_type
 #define DEF_BUFF_SIZE  4096
 
+#define TCPIP_KEEPALIVE_FRAMESIZE 6
+
 class  SYSWebSocket : public HTTPSYS_WebSocket
 {
 public:
@@ -99,25 +101,42 @@ public:
   void           SetTranslationHandle(WEB_SOCKET_HANDLE p_handle);
   // Public, but intended for internal use
   void           ReceiveFragment(LPOVERLAPPED p_overlapped);
+  void           WritingFragment(LPOVERLAPPED p_overlapped);
+  // Before writing, encode the frame buffer
+  DWORD          EncodingFragment(bool p_closing = false);
 
 private:
+  DWORD          SetupForReceive();
+
   // Read call lives here
   VOID*  m_read_Data                { nullptr };
   DWORD* m_read_Size                { nullptr };
-  BOOL*  m_read_UTF8Encoded         { nullptr };
-  BOOL*  m_read_FinalFragement      { nullptr };
-  BOOL*  m_read_ConnectionClose     { nullptr };
   VOID*  m_read_CompletionContext   { nullptr };
-  BOOL*  m_read_CompletionExpected  { nullptr };
   BYTE*  m_read_buffer              { nullptr };
   DWORD  m_read_AccomodatedSize     { 0L      };
+  // Write call lives here
+  VOID*  m_send_Data                { nullptr };
+  DWORD* m_send_Size                { nullptr };
+  VOID*  m_send_CompletionContext   { nullptr };
+  BYTE*  m_send_buffer              { nullptr };
+  DWORD  m_send_AccomodatedSize     { 0L      };
+  BOOL   m_send_utf8                { TRUE };
+  BOOL   m_send_final               { FALSE };
+  BOOL   m_send_close               { FALSE };
+
+  PVOID  m_actionSendContext        { nullptr };
+  PVOID  m_actionReadContext        { nullptr };
 
   WCHAR  m_closeReason[WEB_SOCKET_MAX_CLOSE_REASON_LENGTH + 1] = { 0 };
   ULONG  m_closeReasonLength{ 0 };
   USHORT m_closeStatus      { 0 };
 
   PFN_WEBSOCKET_COMPLETION m_read_Completion { nullptr };
+  PFN_WEBSOCKET_COMPLETION m_send_Completion { nullptr };
 
   // The buffer translation process
-  WEB_SOCKET_HANDLE m_handle        { NULL    };
+  WEB_SOCKET_HANDLE       m_handle       { NULL };
+  WEB_SOCKET_BUFFER       m_recvBuffers[2]   { 0 };
+  WEB_SOCKET_BUFFER_TYPE  m_recvBufferType   { WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE };
+  WEB_SOCKET_ACTION       m_recvAction       { WEB_SOCKET_NO_ACTION };
 };

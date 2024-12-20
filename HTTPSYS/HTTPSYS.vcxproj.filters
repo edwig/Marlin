@@ -242,5 +242,8 @@
     <ClCompile Include="OpaqueHandles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HttpCloseWebSocket.cpp">
+      <Filter>HTTP_API</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

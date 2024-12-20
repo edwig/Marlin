@@ -76,12 +76,6 @@ WebSocketServer::Reset()
 {
   WebSocket::Reset();
 
-  if(m_ws_buffer)
-  {
-    delete [] m_ws_buffer;
-    m_ws_buffer = nullptr;
-  }
-
   // Simply close the socket handle and ignore the errors
   if(m_handle)
   {
@@ -159,12 +153,6 @@ WebSocketServer::SetDisableUTF8Checking(BOOL p_disable)
 bool
 WebSocketServer::CreateServerHandle()
 {
-  // Make sure we have enough buffering space for the socket
-  if(!m_ws_buffer)
-  {
-    m_ws_buffer = new BYTE[(size_t)m_ws_recv_buffersize + (size_t)m_ws_send_buffersize + WEBSOCKET_BUFFER_OVERHEAD];
-  }
-
   WEB_SOCKET_PROPERTY properties[4] =
   {
     { WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE,      &m_ws_recv_buffersize,     sizeof(ULONG) }
@@ -217,14 +205,29 @@ WebSocketServer::SocketReader(HRESULT p_error
 
   if(!p_final)
   {
-    m_reading->m_data = reinterpret_cast<BYTE*>(realloc(m_reading->m_data,static_cast<size_t>(m_reading->m_length) + static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
+    BYTE* data = reinterpret_cast<BYTE*>(realloc(m_reading->m_data,static_cast<size_t>(m_reading->m_length) + static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
+    if(data)
+    {
+      m_reading->m_data = data;
+    }
+    else
+    {
+      ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Reading socket data!"));
+      CloseSocket();
+      return;
+    }
   }
 
   // Setting the type of message
   if(p_close)
   {
     ReceiveCloseSocket();
-    AutoCSTR closing(m_closing);
+    USHORT   code   = 0;
+    LPCWSTR  reason = nullptr;
+    USHORT cbReason = 0;
+
+    m_websocket->GetCloseStatus(&code,&reason,&cbReason);
+    AutoCSTR closing(reason);
 
     m_reading->m_utf8   = true;
     m_reading->m_final  = true;
@@ -290,7 +293,12 @@ WebSocketServer::SocketListener()
   BOOL  isclosing = FALSE;
   BOOL  expected  = FALSE;
 
+  // How much to read
   m_reading->m_read = m_fragmentsize;
+  if(m_reading->m_read > m_ws_recv_buffersize)
+  {
+    m_reading->m_read = m_ws_recv_buffersize;
+  }
 
   if(!m_reading->m_data)
   {
@@ -308,15 +316,15 @@ WebSocketServer::SocketListener()
                                         ,ServerReadCompletion
                                         ,this
                                         ,&expected);
-  if(FAILED(hr))
+  if(hr == S_FALSE)
   {
-    DWORD error = hr & 0x0F;
+    DWORD error = GetLastError();
     ERRORLOG(error,_T("Websocket failed to register read command for a fragment"));
     CloseSocket();
     return;
   }
 
-  if(!expected)
+  if(!expected && (hr == S_OK))
   {
     // Was issued in-sync after all, so re-work the received data
     m_reading->m_length += m_reading->m_read;
@@ -371,11 +379,159 @@ WebSocketServer::SendCloseSocket(USHORT /*p_code*/,XString /*p_reason*/)
   return true;
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+// WRITING TO THE HTTPSYS_WebSocket
+//
+//////////////////////////////////////////////////////////////////////////
+
+void WINAPI
+ServerWriteCompletion(HRESULT p_error,
+                      VOID*   p_completionContext,
+                      DWORD   p_bytes,
+                      BOOL    p_utf8,
+                      BOOL    p_final,
+                      BOOL    p_close)
+{
+  WebSocketServer* socket = reinterpret_cast<WebSocketServer*>(p_completionContext);
+  if(socket)
+  {
+    socket->SocketWriter(p_error,p_bytes,p_utf8,p_final,p_close);
+  }
+}
+
+// Duties to perform after writing of a fragment is completed
+void
+WebSocketServer::SocketWriter(HRESULT p_error
+                             ,DWORD /*p_bytes*/
+                             ,BOOL  /*p_utf8*/
+                             ,BOOL  /*p_final*/
+                             ,BOOL    p_close)
+{
+  // Pop first WSFrame from the writing queue
+  {
+    AutoCritSec lock(&m_lock);
+    if(!m_writing.empty())
+    {
+      WSFrame* frame = m_writing.front();
+      delete frame;
+      m_writing.pop_front();
+    }
+  }
+  // TRACE("WS BLOCK WRITTEN: %d\n",p_bytes);
+
+  // Handle any error (if any)
+  if(p_error != (HRESULT)0)
+  {
+    DWORD error = (p_error & 0x000F);
+    ERRORLOG(error,_T("Websocket failed to write fragment"));
+    OnError();
+    CloseSocket();
+    return;
+  }
+  if(p_close)
+  {
+    ReceiveCloseSocket();
+    OnClose();
+    CloseSocket();
+    return;
+  }
+
+  // Ready with last write command
+  m_dispatched = false;
+
+  // See if we must dispatch an extra write command
+  SocketDispatch();
+}
+
 // Write fragment to a WebSocket
 bool 
-WebSocketServer::WriteFragment(BYTE* /*p_buffer*/,DWORD /*p_length*/,Opcode /*p_opcode*/,bool /*p_last*/ /*= true*/)
+WebSocketServer::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last /*= true*/)
 {
+  // Check if we can write
+  if(!m_server || !m_websocket)
+  {
+    return false;
+  }
+
+  // Store the buffer in a WSFrame for asynchronous storage
+  WSFrame* frame  = new WSFrame();
+  frame->m_utf8   = (p_opcode == Opcode::SO_UTF8);
+  frame->m_length = p_length;
+  frame->m_data   = reinterpret_cast<BYTE*>(malloc((size_t)p_length + WS_OVERHEAD));
+  frame->m_final  = p_last;
+  memcpy_s(frame->m_data,(size_t)p_length + WS_OVERHEAD,p_buffer,p_length);
+
+  // Put it in the writing queue
+  // While locking the queue
+  bool dispatch_running = false;
+  {
+    AutoCritSec lock(&m_lock);
+    m_writing.push_back(frame);
+    dispatch_running = m_dispatched;
+  }
+
+  // Start dispatching write commands after last block is in the buffer
+  if(!dispatch_running && p_last)
+  {
+    SocketDispatch();
+  }
+
+  // Issue a asynchronous write command for this buffer
+  BOOL expected = FALSE;
+  try
+  {
+    HRESULT hr = m_websocket->WriteFragment(frame->m_data
+                                           ,&frame->m_length
+                                           ,TRUE
+                                           ,(BOOL)frame->m_utf8
+                                           ,(BOOL)frame->m_final
+                                           ,ServerWriteCompletion
+                                           ,this
+                                           ,&expected);
+    if(hr == S_FALSE)
+    {
+      DWORD error = hr & 0x0F;
+      ERRORLOG(error,_T("Websocket failed to register write command for a fragment"));
+      CloseSocket();
+      return false;
+    }
+    if(!expected)
+    {
+      // Finished synchronized after all, perform after-writing actions
+      SocketWriter(hr,frame->m_length,frame->m_utf8,frame->m_final,false);
+    }
+  }
+  catch(StdException& ex)
+  {
+    ERRORLOG(ERROR_INVALID_HANDLE,_T("Error writing fragment to HTTPSYS64 WebSocket: " + ex.GetErrorMessage()));
+  }
   return true;
+}
+
+// Writing fragments dispatcher
+void
+WebSocketServer::SocketDispatch()
+{
+  WSFrame* frame = nullptr;
+
+  // Get from the writing queue
+  // While locking the queue
+  {
+    AutoCritSec lock(&m_lock);
+    if(m_writing.empty())
+    {
+      return;
+    }
+    m_dispatched = true;
+    frame = m_writing.front();
+  }
+
+  if(IsBadReadPtr(m_websocket,sizeof(HTTPSYS_WebSocket)))
+  {
+    ERRORLOG(ERROR_INVALID_HANDLE,_T("Websocket context of HTTPSYS64 unreachable"));
+    return;
+  }
 }
 
 // Perform the server handshake
@@ -403,6 +559,7 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
   XString wsConnection(_T("Connection"));
   XString wsUpgrade   (_T("Upgrade"));
   XString wsHost      (_T("Host"));
+  XString wsAccept    (_T("Sec-WebSocket-Accept"));
 
   XString version    = p_message->GetHeader(wsVersion);
   XString clientKey  = p_message->GetHeader(wsClientKey);
@@ -490,8 +647,24 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
     DETAILLOG1(_T("WebSocketHandshake succeeded"));
     for (unsigned header = 0; header < serverheadersCount; ++header)
     {
-      p_message->AddHeader(LPCSTRToString(serverheaders[header].pcName)
-                          ,LPCSTRToString(serverheaders[header].pcValue));
+      // Extract the values
+      BYTE namebuf[MAX_PATH];
+      BYTE valuebf[MAX_PATH];
+      memcpy_s(namebuf,MAX_PATH,serverheaders[header].pcName, serverheaders[header].ulNameLength);
+      memcpy_s(valuebf,MAX_PATH,serverheaders[header].pcValue,serverheaders[header].ulValueLength);
+      namebuf[serverheaders[header].ulNameLength ] = 0;
+      valuebf[serverheaders[header].ulValueLength] = 0;
+
+      // Translate to string
+      CString pcName  = LPCSTRToString((LPCSTR)namebuf);
+      CString pcValue = LPCSTRToString((LPCSTR)valuebf);
+      p_message->AddHeader(pcName,pcValue);
+
+      // Remember our client key as the registration
+      if(pcName.Compare(wsAccept) == 0)
+      {
+        m_key = pcValue;
+      }
     }
     return true;
   }
@@ -540,7 +713,7 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
   // THIS IS THE MISSING CALL IN THE STANDARD "HTTP Server API"
   m_request   = req->GetRequest();
   m_websocket = HttpReceiveWebSocket(m_server->GetRequestQueue()
-                                    ,p_message->GetRequestHandle()
+                                    ,m_request
                                     ,m_handle
                                     ,properties
                                     ,4);

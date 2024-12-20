@@ -89,6 +89,7 @@ SiteHandlerWebSocket::Handle(HTTPMessage* p_message)
         // but keep the channel OPEN
         m_site->SendResponse(p_message);
         // Flush socket, so object will be created in IIS and client receives confirmation
+        // For the async-server: the HTTP response cache of the queue will be flushed!
         server->FlushSocket(request,m_site->GetPrefixURL());
 
         // Find the internal structures for the server

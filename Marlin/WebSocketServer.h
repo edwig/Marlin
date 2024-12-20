@@ -76,6 +76,7 @@ public:
   ULONG GetSendBufferSize()       { return m_ws_send_buffersize;      }
   BOOL  GetDisableClientMasking() { return m_ws_disable_masking;      }
   BOOL  GetDisableUTF8Checking()  { return m_ws_disable_utf8_verify;  }
+  HTTP_OPAQUE_ID GetRequestID()   { return m_request;                 }
 
   // To be called for ASYNC I/O completion!
   void      SocketReader(HRESULT p_error, DWORD p_bytes, BOOL p_utf8, BOOL p_final, BOOL p_close);
@@ -90,6 +91,9 @@ protected:
   bool      CreateServerHandle();
   // Complete the server handshake
   bool      CompleteHandshake();
+  // Writing fragments dispatcher
+  void      SocketDispatch();
+
 
   // Private data for the server variant of the WebSocket
   HTTPServer*         m_server  { nullptr };
@@ -97,6 +101,7 @@ protected:
   XString             m_subProtocol;
   // Asynchronous write buffer
   WSFrameStack        m_writing;
+  bool                m_dispatched { false };
 
   // Buffer translation  protocol handle
   WEB_SOCKET_HANDLE   m_handle    { NULL    };
@@ -107,6 +112,5 @@ protected:
   ULONG m_ws_send_buffersize      { WEBSOCKET_BUFFSIZE_DEFAULT };
   BOOL  m_ws_disable_masking      { FALSE   };
   BOOL  m_ws_disable_utf8_verify  { TRUE    };
-  BYTE* m_ws_buffer               { nullptr };
 };
 

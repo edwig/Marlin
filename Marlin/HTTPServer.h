@@ -220,6 +220,10 @@ public:
   // Sending a response as a chunk
   virtual void       SendAsChunk(HTTPMessage* p_message,bool p_final = false) = 0;
 
+
+  // Remove registration of a WebSocket
+  virtual bool       UnRegisterWebSocket(WebSocket* p_socket);
+
   // SETTERS
  
   // MANDATORY: Set the webroot of the server
@@ -365,8 +369,6 @@ public:
   bool       UnRegisterService (XString p_serviceName);
   // Register a WebSocket
   bool       RegisterSocket(WebSocket* p_socket);
-  // Remove registration of a WebSocket
-  bool       UnRegisterWebSocket(WebSocket* p_socket);
   // Find our extra header for RemoteDesktop (Citrix!) support
   int        FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers);
   // Authentication failed for this reason

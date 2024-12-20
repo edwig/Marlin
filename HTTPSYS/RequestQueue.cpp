@@ -559,7 +559,7 @@ RequestQueue::FlushFragment(CString p_prefix,ULONG Flags)
   }
 
   // Return flushed or no fragments found
-  return erased > 0 ? NO_ERROR : ERROR_NOT_FOUND;
+  return NO_ERROR;
 }
 
 // Signal all listeners to stop listening
@@ -757,12 +757,18 @@ RequestQueue::DeleteAllWebSockets()
 {
   AutoCritSec lock(&m_lock);
 
-  for(auto& sock : m_websockets)
-  {
-    sock.second->CloseTcpConnection();
-    delete sock.second;
-  }
-  m_websockets.clear();
+//   try
+//   {
+//     for(auto& sock : m_websockets)
+//     {
+//       sock.second->CloseTcpConnection();
+//       delete sock.second;
+//     }
+//     m_websockets.clear();
+//   }
+//   catch(StdException& /*ex*/)
+//   {
+//   }
 }
 
 // See if a WebSocket with this secure key already exists in the driver

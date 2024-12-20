@@ -105,12 +105,12 @@ WebSocketServerIIS::OpenSocket()
 }
 
 void WINAPI
-ServerWriteCompletion(HRESULT p_error,
-                      VOID*   p_completionContext,
-                      DWORD   p_bytes,
-                      BOOL    p_utf8,
-                      BOOL    p_final,
-                      BOOL    p_close)
+ServerWriteCompletionIIS(HRESULT p_error,
+                         VOID*   p_completionContext,
+                         DWORD   p_bytes,
+                         BOOL    p_utf8,
+                         BOOL    p_final,
+                         BOOL    p_close)
 {
   WebSocketServerIIS* socket = reinterpret_cast<WebSocketServerIIS*>(p_completionContext);
   if(socket)
@@ -233,7 +233,7 @@ WebSocketServerIIS::SocketDispatch()
                                             ,TRUE
                                             ,(BOOL)frame->m_utf8
                                             ,(BOOL)frame->m_final
-                                            ,ServerWriteCompletion
+                                            ,ServerWriteCompletionIIS
                                             ,this
                                             ,&expected);
     if(FAILED(hr))
@@ -434,7 +434,7 @@ WebSocketServerIIS::SocketListener()
     ERRORLOG(error,_T("Websocket failed to register read command for a fragment"));
   }
 
-  if(!expected)
+  if(!expected && SUCCEEDED(hr))
   {
     // Was issued in-sync after all, so re-work the received data
     SocketReader(hr,m_reading->m_read,utf8,last,isclosing);
@@ -472,7 +472,7 @@ WebSocketServerIIS::SendCloseSocket(USHORT p_code,XString p_reason)
     hr = m_iis_socket->SendConnectionClose(TRUE
                                           ,p_code
                                           ,pointer
-                                          ,ServerWriteCompletion
+                                          ,ServerWriteCompletionIIS
                                           ,this
                                           ,&expected);
   }

@@ -533,9 +533,9 @@ WebSocket::WriteString(XString p_string)
       // Calculate the length of the next fragment
       bool last = true;
       DWORD toWrite = toSend - total;
-      if(toWrite >= m_fragmentsize)
+      if(toWrite >= (m_fragmentsize - WS_MAX_HEADER))
       {
-        toWrite = m_fragmentsize;
+        toWrite = m_fragmentsize - WS_MAX_HEADER;
         last    = false;
       }
 
@@ -579,9 +579,9 @@ WebSocket::WriteObject(BYTE* p_buffer,int64 p_length)
     // Calculate the length of the next fragment
     bool  last = true;
     DWORD toWrite = (DWORD)(p_length - total);
-    if(toWrite > m_fragmentsize)
+    if(toWrite > (m_fragmentsize - WS_MAX_HEADER))
     {
-      toWrite = m_fragmentsize;
+      toWrite = m_fragmentsize - WS_MAX_HEADER;
       last    = false;
     }
     // Write out

@@ -443,6 +443,7 @@
     <ClCompile Include="GetUserAccount.cpp" />
     <ClCompile Include="HttpAddFragmentToCache.cpp" />
     <ClCompile Include="HttpAddUrl.cpp" />
+    <ClCompile Include="HttpCloseWebSocket.cpp" />
     <ClCompile Include="HttpCreateHttpHandle.cpp" />
     <ClCompile Include="HttpDeclarePush.cpp" />
     <ClCompile Include="HttpDeleteServiceConfiguration.cpp" />

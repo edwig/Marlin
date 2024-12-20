@@ -83,6 +83,7 @@ public:
 
   // Public: but only meant for the overlapping I/O routines !!
   void ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags);
+  void SendingOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags);
 
 
 protected:
@@ -103,9 +104,15 @@ private:
 	WSAEVENT        m_write_event         { nullptr };  // Event used when writing to the socket
 	WSAEVENT        m_read_event          { nullptr };  // Event used when reading from the socket
 	WSAOVERLAPPED   m_os                  { 0       };  // Overlapping I/O structure for reading and listner stopping
-  LPOVERLAPPED    m_readOverlapped      { nullptr };  // Overlapped for reading from the socket
+  LPOVERLAPPED    m_readOverlapped      { nullptr };  // Overlapped for reading from the socket (from the application)
+  WSAOVERLAPPED   m_overReading         { 0       };  // Overlapping for sockets
+  LPOVERLAPPED    m_sendOverlapped      { nullptr };  // Overlapped for sending from the socket (from the application)
+  WSAOVERLAPPED   m_overSending         { 0       };  // Overlapping for sockets
+  PTP_IO          m_threadPoolIO        { nullptr };  // Threadpool IO for reading sockets
 	bool            m_recvInitiated       { false   };  // Receive in transit, used for retrying a receive operation
+	bool            m_sendInitiated       { false   };  // Sending in transit, used for retrying a receive operation
   LPVOID          m_receiveBuffer       { nullptr };  // Current read buffer
+  LPVOID          m_sendingBuffer       { nullptr };  // Current send buffer
 	SOCKET          m_actualSocket        { NULL    };  // The underlying WSA socket from the MS-Windows operating system
   int             m_connTimeoutSeconds  { 1       };  // Connection timeout in seconds
   int             m_sendTimeoutSeconds  { 1       };  // Send timeout in seconds

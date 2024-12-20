@@ -40,6 +40,11 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
                     ,IN WEB_SOCKET_PROPERTY*  SocketProperties = NULL OPTIONAL
                     ,IN DWORD                 PropertyCount    = NULL OPTIONAL);
 
+//__declspec(dllimport)
+ULONG WINAPI
+HttpCloseWebSocket(IN HANDLE          RequestQueueHandle
+                  ,IN HTTP_REQUEST_ID RequestId);
+
 //////////////////////////////////////////////////////////////////////////
 // 
 // PURE VIRTUAL CLASS INTERFACE DEFINITION

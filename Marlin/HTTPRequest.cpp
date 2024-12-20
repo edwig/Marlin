@@ -639,7 +639,9 @@ HTTPRequest::StartSendResponse()
   m_policy.SecondsToLive = m_server->GetCacheSecondsToLive();
 
   // Special case for WebSockets protocol
-  OutstandingIO* overlapped = &m_writing;
+  OutstandingIO* overlapped = nullptr;
+  ULONG   bytes = 0;
+  PULONG pbytes = nullptr;
   if (m_response->StatusCode == HTTP_STATUS_SWITCH_PROTOCOLS)
   {
     // Keep the request/socket open
@@ -649,6 +651,13 @@ HTTPRequest::StartSendResponse()
     m_writing.m_action     = IO_Nothing;
     m_policy.Policy        = HttpCachePolicyNocache;
     m_policy.SecondsToLive = 0;
+    // Overlapped must be nullptr, to wait on the affirmation of the socket headers
+    // But we must provide a ULONG bytes pointer for the sending of the headers
+    pbytes = &bytes;
+  }
+  else
+  {
+    overlapped = &m_writing;
   }
 
   // Trace the principal response, before sending
@@ -661,7 +670,7 @@ HTTPRequest::StartSendResponse()
                                       flags,             // Flags
                                       m_response,        // HTTP response
                                       &m_policy,         // Policy
-                                      nullptr,           // bytes sent  (OPTIONAL)
+                                      pbytes,            // bytes sent  (OPTIONAL)
                                       nullptr,           // pReserved2  (must be NULL)
                                       0,                 // Reserved3   (must be 0)
                                       overlapped,        // LPOVERLAPPED(OPTIONAL)

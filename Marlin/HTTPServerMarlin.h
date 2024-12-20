@@ -59,6 +59,8 @@ public:
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request) override;
   // Flushing a WebSocket intermediate
   virtual bool       FlushSocket(HTTP_OPAQUE_ID p_request,XString p_prefix) override;
+  // Remove registration of a WebSocket
+  virtual bool       UnRegisterWebSocket(WebSocket* p_socket) override;
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message) override;
   // Sending a response as a chunk
