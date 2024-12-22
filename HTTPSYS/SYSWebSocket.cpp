@@ -20,6 +20,7 @@
 #include "SYSWebSocket.h"
 #include "SocketStream.h"
 #include "Logging.h"
+#include <AutoCritical.h>
 #include <ConvertWideString.h>
 #include <assert.h>
 
@@ -34,12 +35,15 @@ constexpr auto WS_MAX_HEADER = 14;  // Maximum header size in octets
 SYSWebSocket::SYSWebSocket(Request* p_request)
 {
   ReConnectSocket(p_request);
+  InitializeCriticalSection(&m_lock);
 }
 
 SYSWebSocket::~SYSWebSocket()
 {
   Close();
   Reset();
+
+  DeleteCriticalSection(&m_lock);
 }
 
 void SYSWebSocket::ReConnectSocket(Request* p_request)
@@ -51,6 +55,8 @@ void SYSWebSocket::ReConnectSocket(Request* p_request)
 void
 SYSWebSocket::Close()
 {
+  AutoCritSec lock(&m_lock);
+
   if(m_socket)
   {
     if(m_socket->Close() == false)
@@ -62,15 +68,23 @@ SYSWebSocket::Close()
     delete m_socket;
     m_socket = nullptr;
   }
+
 }
 
 void
 SYSWebSocket::Reset()
 {
+  // Cleaning th reading buffer
   if(m_read_buffer)
   {
     delete [] m_read_buffer;
     m_read_buffer = nullptr;
+  }
+  // clean the sending buffer
+  if(m_send_buffer)
+  {
+    delete[] m_send_buffer;
+    m_send_buffer = nullptr;
   }
 }
 
@@ -158,60 +172,65 @@ HRESULT SYSWebSocket::WriteFragment(_In_    VOID*  pData,
   {
     return ERROR_INVALID_PARAMETER;
   }
-  // Preset expectations for results
-  if(pfCompletionExpected)
-  {
-    *pfCompletionExpected = FALSE;
-  }
 
-  // FASE 2: REMEMBER OUR CONTEXT
-  m_send_Data               = pData;
-  m_send_Size               = pcbSent;
-  m_send_Completion         = pfnCompletion;
-  m_send_CompletionContext  = pvCompletionContext;
-  m_send_utf8               = fUTF8Encoded;
-  m_send_final              = fFinalFragment;
-  m_send_close              = FALSE;
-  // Read at the moment of incoming call
-  m_send_AccomodatedSize    = *pcbSent;
+  { // Locking scope
+    AutoCritSec lock(&m_lock);
 
-  // FASE 3: START THE WRITE OPERATION
+    // Preset expectations for results
+    if(pfCompletionExpected)
+    {
+      *pfCompletionExpected = FALSE;
+    }
 
-  if(fAsync)
-  {
-    // Make sure we have a send buffer
-    if(!m_send_buffer)
-    {
-      m_send_buffer = new BYTE[m_bufferSizeSend + WS_MAX_HEADER];
-    }
-    // Set up the WebSocket translation
-    DWORD extra = EncodingFragment();
-    if(extra == 0)
-    {
-      return S_FALSE;
-    }
-    strncpy_s((char*)&m_send_buffer[extra],(int)m_bufferSizeSend,(char*)pData,*m_send_Size);
-    m_send_buffer[extra + *m_send_Size] = 0;
+    // FASE 2: REMEMBER OUR CONTEXT
+    m_send_Data = pData;
+    m_send_Size = pcbSent;
+    m_send_Completion = pfnCompletion;
+    m_send_CompletionContext = pvCompletionContext;
+    m_send_utf8 = fUTF8Encoded;
+    m_send_final = fFinalFragment;
+    m_send_close = FALSE;
+    // Read at the moment of incoming call
+    m_send_AccomodatedSize = *pcbSent;
 
-    // Set up for overlapped I/O
-    m_wswr.Pointer = this;
-    m_wswr.hEvent  = (HANDLE)WebSocketWritingPartialOverlapped;
-    written = m_socket->SendPartialOverlapped(m_send_buffer,extra + *m_send_Size,&m_wswr);
-    // Should return IO_PENDING
-    if(written != NO_ERROR)
+    // FASE 3: START THE WRITE OPERATION
+
+    if(fAsync)
     {
-      return S_FALSE;
+      // Make sure we have a send buffer
+      if(!m_send_buffer)
+      {
+        m_send_buffer = new BYTE[m_bufferSizeSend + WS_MAX_HEADER];
+      }
+      // Set up the WebSocket translation
+      DWORD extra = EncodingFragment();
+      if(extra == 0)
+      {
+        return S_FALSE;
+      }
+      strncpy_s((char*)&m_send_buffer[extra],(int)m_bufferSizeSend,(char*)pData,*m_send_Size);
+      m_send_buffer[extra + *m_send_Size] = 0;
+
+      // Set up for overlapped I/O
+      m_wswr.Pointer = this;
+      m_wswr.hEvent = (HANDLE)WebSocketWritingPartialOverlapped;
+      written = m_socket->SendPartialOverlapped(m_send_buffer,extra + *m_send_Size,&m_wswr);
+      // Should return IO_PENDING
+      if(written != NO_ERROR)
+      {
+        return S_FALSE;
+      }
     }
-  }
-  else
-  {
-    // SYNC Receive
-    written = m_socket->SendPartial(m_send_Data,*m_send_Size);
-    if(written == SOCKET_ERROR)
+    else
     {
-      return S_FALSE;
+      // SYNC Receive
+      written = m_socket->SendPartial(m_send_Data,*m_send_Size);
+      if(written == SOCKET_ERROR)
+      {
+        return S_FALSE;
+      }
     }
-  }
+  } // End of locking scope
 
   // PHASE 4: After the sending
 
@@ -221,10 +240,11 @@ HRESULT SYSWebSocket::WriteFragment(_In_    VOID*  pData,
     *pfCompletionExpected = (written > 0) ? FALSE : TRUE;
   }
   // Synchronous receive, even from overlapped I/O
-  if(written > 0)
+  if(written > 0 && pvCompletionContext)
   {
     // Synchronous receive: past it on directly
     OVERLAPPED over;
+    memset(&over,0,sizeof(OVERLAPPED));
     over.Internal     = m_socket->GetLastError();
     over.InternalHigh = written;
     WritingFragment(&over);
@@ -298,8 +318,8 @@ SYSWebSocket::EncodingFragment(bool p_closing /*= false*/)
 
     // Get an action to process.
     hr = WebSocketGetAction(m_handle,
-                            WEB_SOCKET_ALL_ACTION_QUEUE,
-                            sendBuffers,
+                            WEB_SOCKET_SEND_ACTION_QUEUE,
+                            m_sendBuffers,
                             &bufferCount,
                             &sendAction,
                             &sendBufferType,
@@ -317,8 +337,8 @@ SYSWebSocket::EncodingFragment(bool p_closing /*= false*/)
             break;
       case  WEB_SOCKET_SEND_TO_NETWORK_ACTION:
             assert(bufferCount >= 1);
-            memcpy_s(m_send_buffer,*m_read_Size + WS_MAX_HEADER,sendBuffers[0].Data.pbBuffer,sendBuffers[0].Data.ulBufferLength);
-            bytesTransferred = sendBuffers[0].Data.ulBufferLength;
+            memcpy_s(m_send_buffer,*m_read_Size + WS_MAX_HEADER,m_sendBuffers[0].Data.pbBuffer,m_sendBuffers[0].Data.ulBufferLength);
+            bytesTransferred = m_sendBuffers[0].Data.ulBufferLength;
             break;
       case  WEB_SOCKET_INDICATE_SEND_COMPLETE_ACTION:
             break;
@@ -326,6 +346,14 @@ SYSWebSocket::EncodingFragment(bool p_closing /*= false*/)
             hr = E_FAIL;
             return hr;
     }
+
+    if(bytesTransferred== 12)
+    {
+      ++bytesTransferred;
+      --bytesTransferred;
+    }
+
+
     if(FAILED(hr))
     {
       // If we failed at some point processing actions, abort the handle but continue processing
@@ -410,61 +438,80 @@ HRESULT SYSWebSocket::ReadFragment(_Out_   VOID*  pData,
   {
     return ERROR_INVALID_PARAMETER;
   }
-  // Preset expectations for results
-  if(pfCompletionExpected)
-  {
-    *pfCompletionExpected = FALSE;
-  }
 
-  // FASE 2: REMEMBER OUR CONTEXT
-  m_read_Data               = pData;
-  m_read_Size               = pcbData;
-  m_read_Completion         = pfnCompletion;
-  m_read_CompletionContext  = pvCompletionContext;
-  // Read at the moment of incoming call
-  m_read_AccomodatedSize    = *pcbData;
+  { // Locking scope
+    AutoCritSec lock(&m_lock);
 
-  // FASE 3: START THE READ
-
-  // Make sure we have a read buffer
-  if(!m_read_buffer)
-  {
-    m_read_buffer = new BYTE[m_bufferSizeReceive];
-  }
-
-  if(fAsync)
-  {
-    // Set up the WebSocket translation
-    DWORD receiveSize = SetupForReceive();
-    if(receiveSize == 0)
+    // Preset expectations for results
+    if(pfCompletionExpected)
     {
-      return S_FALSE;
-    }
-    // WebSocket translation library requests fewer bytes
-    if(receiveSize < m_read_AccomodatedSize)
-    {
-      m_read_AccomodatedSize = receiveSize;
+      *pfCompletionExpected = FALSE;
     }
 
-    // Set up for overlapped I/O
-    m_wsrd.Pointer = this;
-    m_wsrd.hEvent  = (HANDLE) WebSocketReceivePartialOverlapped;
-    received       = m_socket->RecvPartialOverlapped(m_read_buffer,m_read_AccomodatedSize,&m_wsrd);
-    // Should return IO_PENDING
-    if(!(received == NO_ERROR && (m_socket->GetLastError() == WSA_IO_PENDING)))
+    // FASE 2: REMEMBER OUR CONTEXT
+    m_read_Data = pData;
+    m_read_Size = pcbData;
+    m_read_Completion = pfnCompletion;
+    m_read_CompletionContext = pvCompletionContext;
+    // Read at the moment of incoming call
+    m_read_AccomodatedSize = *pcbData;
+
+    // FASE 3: START THE READ
+
+    // Make sure we have a read buffer
+    if(!m_read_buffer)
     {
-      return S_FALSE;
+      m_read_buffer = new BYTE[m_bufferSizeReceive];
     }
-  }
-  else
-  {
-    // SYNC Receive
-    received = m_socket->RecvPartial(m_read_buffer,m_read_AccomodatedSize);
-    if(received == SOCKET_ERROR)
+
+    if(fAsync)
     {
-      return S_FALSE;
+      // Set up the WebSocket translation
+      DWORD receiveSize = SetupForReceive();
+      if(receiveSize == SOCKET_ERROR)
+      {
+        // Cannot setup websocket driver for reading
+        return S_FALSE;
+      }
+      if(receiveSize == 0)
+      {
+        // Already processed call
+        return S_OK;
+      }
+      // WebSocket translation library requests fewer bytes
+      if(receiveSize < m_read_AccomodatedSize)
+      {
+        m_read_AccomodatedSize = receiveSize;
+      }
+
+      TRACE("SYSWEBSOCKET Register ReadFragment\n");
+
+      // Set up for overlapped I/O
+      memset(&m_wsrd,0,sizeof(OVERLAPPED));
+      m_wsrd.Pointer = this;
+      m_wsrd.hEvent = (HANDLE)WebSocketReceivePartialOverlapped;
+      received = m_socket->RecvPartialOverlapped(m_read_buffer,m_read_AccomodatedSize,&m_wsrd);
+      // Should return IO_PENDING
+      if(!(received == NO_ERROR && (m_socket->GetLastError() == 0 || m_socket->GetLastError() == WSA_IO_PENDING)))
+      {
+        return S_FALSE;
+      }
     }
-  }
+    else
+    {
+      // SYNC Receive
+      received = m_socket->RecvPartial(m_read_buffer,m_read_AccomodatedSize);
+      if(received == SOCKET_ERROR)
+      {
+        return S_FALSE;
+      }
+      else
+      {
+        // Return how much we did exactly receive
+        *pcbData = received;
+      }
+    }
+  } // End of locking scope
 
   // PHASE 4: After the read
 
@@ -474,10 +521,11 @@ HRESULT SYSWebSocket::ReadFragment(_Out_   VOID*  pData,
     *pfCompletionExpected = (received > 0) ? FALSE : TRUE;
   }
   // Synchronous receive, even from overlapped I/O
-  if(received > 0)
+  if(received > 0 && pvCompletionContext)
   {
     // Synchronous receive: past it on directly
     OVERLAPPED over;
+    memset(&over,0,sizeof(OVERLAPPED));
     over.Internal     = m_socket->GetLastError();
     over.InternalHigh = received;
     ReceiveFragment(&over);
@@ -485,14 +533,26 @@ HRESULT SYSWebSocket::ReadFragment(_Out_   VOID*  pData,
   return S_OK;
 }
 
-DWORD
+int
 SYSWebSocket::SetupForReceive()
 {
+  // See if there was already an outstanding receive action
+  if(m_recvAction == WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION)
+  {
+    return m_recvBuffers[0].Data.ulBufferLength;
+  }
+
+  m_actionReadContext = nullptr;
+  m_recvBuffers[0].Data.pbBuffer = nullptr;
+  m_recvBuffers[0].Data.ulBufferLength = 0;
+  m_recvBuffers[1].Data.pbBuffer = nullptr;
+  m_recvBuffers[1].Data.ulBufferLength = 0;
+
+  ULONG bufferCount = ARRAYSIZE(m_recvBuffers);
+
   HRESULT hr = WebSocketReceive(m_handle,nullptr,nullptr);
   if(SUCCEEDED(hr))
   {
-    ULONG bufferCount   = ARRAYSIZE(m_recvBuffers);
-    m_actionReadContext = nullptr;
 
     // Get an action to process.
     hr = WebSocketGetAction(m_handle,
@@ -505,13 +565,25 @@ SYSWebSocket::SetupForReceive()
                             &m_actionReadContext);
     if(SUCCEEDED(hr))
     {
+      TRACE("Buffersize for receive: %d\n",m_recvBuffers[0].Data.ulBufferLength);
       if(m_recvAction == WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION)
       {
         return m_recvBuffers[0].Data.ulBufferLength;
       }
+      // Something left in the context of the websocket driver
+      if(m_recvAction == WEB_SOCKET_INDICATE_RECEIVE_COMPLETE_ACTION)
+      {
+        OVERLAPPED over;
+        memset(&over,0,sizeof(OVERLAPPED));
+        over.Internal     = S_OK;
+        over.InternalHigh = m_recvBuffers[0].Data.ulBufferLength;
+        ReceiveFragment(&over);
+        return 0L;
+      }
     }
   } 
-  return 0L;
+  TRACE("Failed to setup for receive: %d\n",hr);
+  return SOCKET_ERROR;
 }
 
 // We now are waked by the I/O completion and have a filled m_read_buffer
@@ -536,95 +608,106 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
     return;
   }
 
-  // FASE 1: TRANSLATE INCOMING BUFFER
-  do
-  {
-    // Initialize variables that change with every loop revolution.
-    // SHOULD NEVER BY SMALLER THAN 2!!
-    bufferCount = ARRAYSIZE(m_recvBuffers);
+  TRACE("SYSWEBSOCKET ReceiveFragment\n");
 
-    // Get an action to process.
-    if(getNextAction)
+  // Locking scope
+  {
+    AutoCritSec lock(&m_lock);
+
+    // FASE 1: TRANSLATE INCOMING BUFFER
+    do
     {
-      hr = WebSocketGetAction(m_handle,
-                              WEB_SOCKET_RECEIVE_ACTION_QUEUE,
-                              m_recvBuffers,
-                              &bufferCount,
-                              &m_recvAction,
-                              &m_recvBufferType,
-                              nullptr,
-                              &m_actionReadContext);
+      // Initialize variables that change with every loop revolution.
+      // SHOULD NEVER BY SMALLER THAN 2!!
+      bufferCount = ARRAYSIZE(m_recvBuffers);
+
+      // Get an action to process.
+      if(getNextAction)
+      {
+        hr = WebSocketGetAction(m_handle,
+                                WEB_SOCKET_RECEIVE_ACTION_QUEUE,
+                                m_recvBuffers,
+                                &bufferCount,
+                                &m_recvAction,
+                                &m_recvBufferType,
+                                nullptr,
+                                &m_actionReadContext);
+        if(FAILED(hr))
+        {
+          // If we cannot get an action, abort the handle but continue processing until all operations are completed.
+          goto quit;
+        }
+      }
+      switch(m_recvAction)
+      {
+        case WEB_SOCKET_NO_ACTION:
+             // No action to perform - just exit the loop.
+             break;
+
+        case WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION:
+             assert(bufferCount >= 1);
+             memcpy_s(m_recvBuffers[0].Data.pbBuffer,m_recvBuffers[0].Data.ulBufferLength,m_read_buffer,bytesTransferred);
+             break;
+        case WEB_SOCKET_INDICATE_RECEIVE_COMPLETE_ACTION:
+             // Copy out the data to the application
+             memcpy_s(m_read_Data,*m_read_Size,m_recvBuffers[0].Data.pbBuffer,m_recvBuffers[0].Data.ulBufferLength);
+
+             switch(m_recvBufferType)
+             {
+                case WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE:     utf8Encoded   = TRUE;
+                                                              finalFragment = TRUE;
+                                                              break;
+                case WEB_SOCKET_UTF8_FRAGMENT_BUFFER_TYPE:    utf8Encoded   = TRUE;
+                                                              finalFragment = FALSE;
+                                                              break;
+                case WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE:   utf8Encoded   = FALSE;
+                                                              finalFragment = TRUE;
+                                                              break;
+                case WEB_SOCKET_BINARY_FRAGMENT_BUFFER_TYPE:  utf8Encoded   = FALSE;
+                                                              finalFragment = FALSE;
+                                                              break;
+                case WEB_SOCKET_CLOSE_BUFFER_TYPE:            memcpy_s(m_closeReason,WEB_SOCKET_MAX_CLOSE_REASON_LENGTH,m_recvBuffers[0].CloseStatus.pbReason,m_recvBuffers[0].CloseStatus.ulReasonLength);
+                                                              m_closeReason[m_recvBuffers[0].CloseStatus.ulReasonLength] = 0;
+                                                              m_closeStatus       = m_recvBuffers[0].CloseStatus.usStatus;
+                                                              m_closeReasonLength = m_recvBuffers[0].CloseStatus.ulReasonLength;
+                                                              connectionClose = TRUE;
+                                                              break;
+                case WEB_SOCKET_PING_PONG_BUFFER_TYPE:        // Send a PONG back [ TO BE IMPLEMENTED ]
+                                                              // TODO: Restart the read action
+                                                              break;
+                case WEB_SOCKET_UNSOLICITED_PONG_BUFFER_TYPE: // That's quite OK. Do not take any action
+                                                              // TODO: Restart the read action
+                                                              break;
+             }
+             bytesTranslated += m_recvBuffers[0].Data.ulBufferLength;
+             break;
+      default:
+             // This should never happen.
+             hr = E_FAIL;
+             goto quit;
+      }
       if(FAILED(hr))
       {
-        // If we cannot get an action, abort the handle but continue processing until all operations are completed.
-        goto quit;
+        // If we failed at some point processing actions, abort the handle but continue processing
+        // until all operations are completed.
+        WebSocketAbortHandle(m_handle);
       }
-    }
-    switch(m_recvAction)
-    {
-      case WEB_SOCKET_NO_ACTION:
-           // No action to perform - just exit the loop.
-           break;
 
-      case WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION:
-           assert(bufferCount >= 1);
-           memcpy_s(m_recvBuffers[0].Data.pbBuffer,m_recvBuffers[0].Data.ulBufferLength,m_read_buffer,bytesTransferred);
-           break;
-      case WEB_SOCKET_INDICATE_RECEIVE_COMPLETE_ACTION:
-           // Copy out the data to the application
-           memcpy_s(m_read_Data,*m_read_Size,m_recvBuffers[0].Data.pbBuffer,m_recvBuffers[0].Data.ulBufferLength);
+      // Complete the action. If application performs asynchronous operation, the action has to be
+      // completed after the async operation has finished. The 'actionContext' then has to be preserved
+      // so the operation can complete properly.
+      WebSocketCompleteAction(m_handle,m_actionReadContext,bytesTransferred);
 
-           switch(m_recvBufferType)
-           {
-              case WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE:     utf8Encoded   = TRUE;
-                                                            finalFragment = TRUE;
-                                                            break;
-              case WEB_SOCKET_UTF8_FRAGMENT_BUFFER_TYPE:    utf8Encoded   = TRUE;
-                                                            finalFragment = FALSE;
-                                                            break;
-              case WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE:   utf8Encoded   = FALSE;
-                                                            finalFragment = TRUE;
-                                                            break;
-              case WEB_SOCKET_BINARY_FRAGMENT_BUFFER_TYPE:  utf8Encoded   = FALSE;
-                                                            finalFragment = FALSE;
-                                                            break;
-              case WEB_SOCKET_CLOSE_BUFFER_TYPE:            memcpy_s(m_closeReason,WEB_SOCKET_MAX_CLOSE_REASON_LENGTH,m_recvBuffers[0].CloseStatus.pbReason,m_recvBuffers[0].CloseStatus.ulReasonLength);
-                                                            m_closeReason[m_recvBuffers[0].CloseStatus.ulReasonLength] = 0;
-                                                            m_closeStatus       = m_recvBuffers[0].CloseStatus.usStatus;
-                                                            m_closeReasonLength = m_recvBuffers[0].CloseStatus.ulReasonLength;
-                                                            connectionClose = TRUE;
-                                                            break;
-              case WEB_SOCKET_PING_PONG_BUFFER_TYPE:        // Send a PONG back [ TO BE IMPLEMENTED ]
-                                                            // TODO: Restart the read action
-                                                            break;
-              case WEB_SOCKET_UNSOLICITED_PONG_BUFFER_TYPE: // That's quite OK. Do not take any action
-                                                            // TODO: Restart the read action
-                                                            break;
-           }
-           bytesTranslated += m_recvBuffers[0].Data.ulBufferLength;
-           break;
+      getNextAction = true;
+    } 
+    while(m_recvAction != WEB_SOCKET_NO_ACTION);
 
-    default:
-           // This should never happen.
-           hr = E_FAIL;
-           goto quit;
-    }
-    if(FAILED(hr))
-    {
-      // If we failed at some point processing actions, abort the handle but continue processing
-      // until all operations are completed.
-      WebSocketAbortHandle(m_handle);
-    }
-
-    // Complete the action. If application performs asynchronous operation, the action has to be
-    // completed after the async operation has finished. The 'actionContext' then has to be preserved
-    // so the operation can complete properly.
-    WebSocketCompleteAction(m_handle,m_actionReadContext,bytesTransferred);
-
-    getNextAction = true;
-  } 
-  while(m_recvAction != WEB_SOCKET_NO_ACTION);
-
+    m_actionReadContext = nullptr;
+    m_recvBuffers[0].Data.pbBuffer = nullptr;
+    m_recvBuffers[0].Data.ulBufferLength = 0;
+    m_recvBuffers[1].Data.pbBuffer = nullptr;
+    m_recvBuffers[1].Data.ulBufferLength = 0;
+  } // End of locking scope
 quit:
 
   // FASE 2: STORE CLOSING REASON AS AN UTF-16 STRING
@@ -652,7 +735,7 @@ quit:
   *m_read_Size = bytesTranslated;
 
   // In case of an overlapped I/O action, call back our application context
-  if(m_wsrd.Pointer && m_read_Completion)
+  if(m_read_Completion)
   {
     (*m_read_Completion)(hr
                         ,m_read_CompletionContext
@@ -672,8 +755,8 @@ SYSWebSocket::SendConnectionClose(_In_    BOOL                     fAsync,
                                   _In_    USHORT                   uStatusCode,
                                   _In_    LPCWSTR                  pszReason            /*= NULL*/,
                                   _In_    PFN_WEBSOCKET_COMPLETION pfnCompletion        /*= NULL*/,
-                                  _In_    VOID*                    pvCompletionContext  /*= NULL*/,
-                                  _Out_   BOOL*                    pfCompletionExpected /*= NULL*/)
+                                  _In_    VOID* pvCompletionContext  /*= NULL*/,
+                                  _Out_   BOOL* pfCompletionExpected /*= NULL*/)
 {
   int written = 0;
 
@@ -688,59 +771,67 @@ SYSWebSocket::SendConnectionClose(_In_    BOOL                     fAsync,
   {
     return ERROR_INVALID_PARAMETER;
   }
-  wcscpy_s(m_closeReason,WEB_SOCKET_MAX_CLOSE_REASON_LENGTH,pszReason);
-  m_closeReasonLength = (ULONG)wcslen(pszReason);
 
-  // Remember new closed status
-  m_closeStatus = uStatusCode;
-
-  CStringW reason(pszReason);
-  CStringA reasonA(reason);
-  DWORD length = reasonA.GetLength();
-
-  m_send_Data = (void*)reasonA.GetString();
-  m_send_Size = &length;
-  m_send_Completion = pfnCompletion;
-  m_send_CompletionContext = pvCompletionContext;
-  m_send_utf8  = TRUE;
-  m_send_final = TRUE;
-  m_send_close = TRUE;
-
-  if(fAsync)
+  // Lock early, in race conditions the close can happen twice
   {
-    // Make sure we have a send buffer
-    if(!m_send_buffer)
-    {
-      m_send_buffer = new BYTE[m_bufferSizeSend + WS_MAX_HEADER];
-    }
-    // Set up the WebSocket translation
-    DWORD extra = EncodingFragment(true);
-    if(extra == 0)
-    {
-      return S_FALSE;
-    }
-    strncpy_s((char*)&m_send_buffer[extra],(int)m_bufferSizeSend,(char*)m_send_Data,*m_send_Size);
-    m_send_buffer[extra + *m_send_Size] = 0;
+    AutoCritSec lock(&m_lock);
 
-    // Set up for overlapped I/O
-    m_wswr.Pointer = this;
-    m_wswr.hEvent  = (HANDLE)WebSocketWritingPartialOverlapped;
-    written = m_socket->SendPartialOverlapped(m_send_buffer,extra + *m_send_Size,&m_wswr);
-    // Should return IO_PENDING
-    if(written != NO_ERROR)
+    wcscpy_s(m_closeReason,WEB_SOCKET_MAX_CLOSE_REASON_LENGTH,pszReason);
+    m_closeReasonLength = (ULONG)wcslen(pszReason);
+
+    // Remember new closed status
+    m_closeStatus = uStatusCode;
+
+    CStringW reason(pszReason);
+    CStringA reasonA(reason);
+    DWORD length = reasonA.GetLength();
+
+    m_send_Data = (void*)reasonA.GetString();
+    m_send_Size = &length;
+    m_send_Completion = pfnCompletion;
+    m_send_CompletionContext = pvCompletionContext;
+    m_send_utf8 = TRUE;
+    m_send_final = TRUE;
+    m_send_close = TRUE;
+
+    if(fAsync)
     {
-      return S_FALSE;
+      // Make sure we have a send buffer
+      if(!m_send_buffer)
+      {
+        m_send_buffer = new BYTE[m_bufferSizeSend + WS_MAX_HEADER];
+      }
+      strncpy_s((char*)m_send_buffer,(int)m_bufferSizeSend,(char*)m_send_Data,*m_send_Size);
+
+      // Set up the WebSocket translation
+      DWORD extra = EncodingFragment(true);
+      if(extra == 0)
+      {
+        return S_FALSE;
+      }
+      strncpy_s((char*)&m_send_buffer[extra],(int)m_bufferSizeSend,(char*)m_send_Data,*m_send_Size);
+      m_send_buffer[extra + *m_send_Size] = 0;
+
+      // Set up for overlapped I/O
+      m_wswr.Pointer = this;
+      m_wswr.hEvent = (HANDLE)WebSocketWritingPartialOverlapped;
+      written = m_socket->SendPartialOverlapped(m_send_buffer,extra + *m_send_Size,&m_wswr);
+      // Should return IO_PENDING
+      if(written != NO_ERROR)
+      {
+        return S_FALSE;
+      }
     }
-  }
-  else
-  {
-    // SYNC Receive
-    written = m_socket->SendPartial(m_send_Data,*m_send_Size);
-    if(written == SOCKET_ERROR)
+    else
     {
-      return S_FALSE;
+      // SYNC Receive
+      written = m_socket->SendPartial(m_send_Data,*m_send_Size);
+      if(written == SOCKET_ERROR)
+      {
+        return S_FALSE;
+      }
     }
-  }
+  } // End of locking scope
 
   // PHASE 4: After the sending
 
@@ -749,12 +840,14 @@ SYSWebSocket::SendConnectionClose(_In_    BOOL                     fAsync,
   {
     *pfCompletionExpected = (written > 0) ? FALSE : TRUE;
   }
+
   // Synchronous receive, even from overlapped I/O
-  if(written > 0)
+  if(written > 0 && pvCompletionContext)
   {
     // Synchronous receive: past it on directly
     OVERLAPPED over;
-    over.Internal = m_socket->GetLastError();
+    memset(&over,0,sizeof(OVERLAPPED));
+    over.Internal     = m_socket->GetLastError();
     over.InternalHigh = written;
     WritingFragment(&over);
   }
@@ -768,6 +861,8 @@ SYSWebSocket::GetCloseStatus(_Out_   USHORT*  pStatusCode,
                              _Out_   LPCWSTR* ppszReason  /*= NULL*/,
                              _Out_   USHORT*  pcchReason  /*= NULL*/)
 {
+  AutoCritSec lock(&m_lock);
+
   if(pStatusCode == nullptr)
   {
     return E_FAIL;
@@ -800,3 +895,8 @@ SYSWebSocket::CancelOutstandingIO(VOID)
   }
 }
 
+UINT64 
+SYSWebSocket::GetSocketIdentifier(VOID)
+{
+  return m_ident;
+}

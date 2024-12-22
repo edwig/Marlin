@@ -914,19 +914,3 @@ HTTPServerMarlin::FlushSocket(HTTP_OPAQUE_ID p_request,XString p_prefix)
   }
   return true;
 }
-
-// Remove registration of a WebSocket
-bool
-HTTPServerMarlin::UnRegisterWebSocket(WebSocket* p_socket)
-{
-  WebSocketServer* socket = dynamic_cast<WebSocketServer*>(p_socket);
-  if(socket)
-  {
-    // Unregister socket from HTTPSYS driver
-    HttpCloseWebSocket(GetRequestQueue(),(HTTP_REQUEST_ID)socket->GetRequestID());
-
-    HTTPServer::UnRegisterWebSocket(p_socket);
-    return true;
-  }
-  return false;
-}

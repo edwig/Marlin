@@ -556,19 +556,34 @@ void CALLBACK PlainSocketOverlappedResult(PTP_CALLBACK_INSTANCE pInstance
                                          ,ULONG_PTR             NumberOfBytesTransferred
                                          ,PTP_IO                pIo)
 {
-  PlainSocket* socket = reinterpret_cast<PlainSocket*>(pvContext);
-  if(socket)
+  _set_se_translator(SeTranslator);
+  try
   {
-    if(((LPOVERLAPPED)pOverlapped)->Offset == SD_SEND)
+    PlainSocket* socket = reinterpret_cast<PlainSocket*>(pvContext);
+    if(socket)
     {
-      socket->SendingOverlapped(IoResult,(DWORD)NumberOfBytesTransferred,0);
+      // See if we are still a socket. Read/write process stops here!
+      if(IsBadReadPtr(socket,sizeof(PlainSocket*)) || socket->m_ident != SOCKETSTREAM_IDENT)
+      {
+        return;
+      }
+      if(((LPOVERLAPPED)pOverlapped)->Offset == SD_SEND)
+      {
+        socket->SendingOverlapped(IoResult,(DWORD)NumberOfBytesTransferred,0);
+      }
+      else // SD_RECEIVE
+      {
+        socket->ReceiveOverlapped(IoResult,(DWORD)NumberOfBytesTransferred,0);
+      }
+      // Ready
+      ((LPOVERLAPPED)pOverlapped)->OffsetHigh = 0;
     }
-    else // SD_RECEIVE
-    {
-      socket->ReceiveOverlapped(IoResult,(DWORD)NumberOfBytesTransferred,0);
-    }
-    // Ready
-    ((LPOVERLAPPED)pOverlapped)->OffsetHigh = 0;
+  }
+  catch(StdException& /*ex*/)
+  {
+    // Socket is already dead
+    // Most probably the socket is already closed
+    // and we have a race condition here.
   }
 }
 
@@ -626,7 +641,7 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 
   if(m_lastError == 0 || m_lastError == WSA_IO_PENDING)  // Read in progress, normal case
 	{
-    TRACE("PlainSocket: WSA_IO_PENDING Succeeded!\n");
+    TRACE("PlainSocket: WSA_IO_PENDING Succeeded for RECEIVE\n");
     return NO_ERROR;
 	}
   TRACE("PlainSocket: FAILED IOCP!\n");
@@ -648,6 +663,8 @@ PlainSocket::ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
 {
   // Reset the receive
   m_recvInitiated = false;
+
+  TRACE("PLAINSOCKET RECEIVE OVERLAPPED\n");
 
   if(!InSecureMode())
   {
@@ -812,7 +829,7 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
 
   if(m_lastError == 0 || m_lastError == WSA_IO_PENDING)  // write  in progress, normal case
 	{
-    TRACE("PlainSocket: WSA_IO_PENDING Succeeded!\n");
+    TRACE("PlainSocket: WSA_IO_PENDING Succeeded for SEND\n");
     return NO_ERROR;
 	}
   TRACE("PlainSocket: FAILED IOCP!\n");

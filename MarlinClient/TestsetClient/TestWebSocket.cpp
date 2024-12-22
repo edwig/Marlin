@@ -231,8 +231,8 @@ TestWebSocket(LogAnalysis* p_log)
   }
 
   // Waiting for server write to drain
-  int seconds = 2;
-  // --- "---------------------------------------------- - ------
+  int seconds = 3;
+  // -------- "---------------------------------------------- - ------
   _tprintf(_T("WebSocket waiting for the server %d seconds     : OK\n"), seconds);
   Sleep(seconds * CLOCKS_PER_SEC);
 
@@ -240,7 +240,7 @@ TestWebSocket(LogAnalysis* p_log)
 
   if(!g_closed)
   {
-    if(!socket->SendCloseSocket(WS_CLOSE_NORMAL, _T("TestWebSocket did close the socket")))
+    if(!socket->SendCloseSocket(WS_CLOSE_NORMAL, _T("Client TestWebSocket did close the socket")))
     {
       ++errors;
     }

@@ -48,5 +48,9 @@ HttpRemoveUrlFromUrlGroup(IN HTTP_URL_GROUP_ID  UrlGroupId
   CStringA prefix(fullUrl);
 
   // And remove from the group
+#ifdef _UNICODE
+  return group->DelUrlPrefix(UrlGroupId,fullUrl,Flags);
+#else
   return group->DelUrlPrefix(UrlGroupId,prefix,Flags);
+#endif
 }

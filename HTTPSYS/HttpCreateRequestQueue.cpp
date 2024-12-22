@@ -76,7 +76,11 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
     RequestQueue* other = g_handles.GetReQueueFromOpaqueHandle(handle.first);
     if(other)
     {
+#ifdef _UNICODE
+      if(other->GetName().CompareNoCase(orgName) == 0)
+#else
       if(other->GetName().CompareNoCase(name) == 0)
+#endif
       {
         return ERROR_ALREADY_EXISTS;
       }
@@ -84,7 +88,11 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
   }
 
   // Create the request queue
+#ifdef _UNICODE
+  RequestQueue* queue = new RequestQueue(orgName);
+#else
   RequestQueue* queue = new RequestQueue(name);
+#endif
   HANDLE handle = queue->CreateHandle();
   
   bool stored = false;

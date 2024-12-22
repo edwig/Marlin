@@ -185,14 +185,23 @@ TestMarlinServer::TestWebSocket()
 void
 TestMarlinServer::StopWebSocket()
 {
-  WebSocket* socket = m_httpServer->FindWebSocket(m_socket);
-  if (socket)
+  try
   {
-    if(socket->CloseSocket() == false)
+    WebSocket* socket = m_httpServer->FindWebSocket(m_socket);
+    if(socket)
     {
-      xerror();
+      if(socket->CloseSocket() == false)
+      {
+        xerror();
+      }
+      m_httpServer->UnRegisterWebSocket(socket);
     }
-    m_httpServer->UnRegisterWebSocket(socket);
+  }
+  catch(StdException& ex)
+  {
+    xerror();
+    qprintf(_T("ERROR while closing and unregistering the WebSocket\n"));
+    qprintf(ex.GetErrorMessage());
   }
 }
 

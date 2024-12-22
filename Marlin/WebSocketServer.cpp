@@ -105,6 +105,21 @@ WebSocketServer::OpenSocket()
   return false;
 }
 
+// SYSWebSocket still a valid object
+bool
+WebSocketServer::SYSWebSocketValid()
+{
+  if(IsBadReadPtr(m_websocket,sizeof(HTTPSYS_WebSocket*)))
+  {
+    return false;
+  }
+  if(m_websocket->GetSocketIdentifier() != SYSWEBSOCKET_IDENT)
+  {
+    return false;
+  }
+  return true;
+}
+
 void
 WebSocketServer::SetRecieveBufferSize(ULONG p_size)
 {
@@ -199,9 +214,18 @@ WebSocketServer::SocketReader(HRESULT p_error
   }
 
   // Consolidate the reading buffer
-  m_reading->m_length += p_bytes;
-  m_reading->m_data[m_reading->m_length] = 0;
-  m_reading->m_final = (p_final == TRUE);
+  if(m_reading)
+  {
+    m_reading->m_length += p_bytes;
+    m_reading->m_data[m_reading->m_length] = 0;
+    m_reading->m_final = (p_final == TRUE);
+  }
+  else
+  {
+    m_reading = new WSFrame();
+    m_reading->m_length = 0;
+    m_reading->m_data = reinterpret_cast<BYTE*>(malloc(static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
+  }
 
   if(!p_final)
   {
@@ -222,11 +246,15 @@ WebSocketServer::SocketReader(HRESULT p_error
   if(p_close)
   {
     ReceiveCloseSocket();
-    USHORT   code   = 0;
-    LPCWSTR  reason = nullptr;
+    USHORT   code   = WS_CLOSE_NORMAL;
+    LPCWSTR  reason = L"";
     USHORT cbReason = 0;
 
-    m_websocket->GetCloseStatus(&code,&reason,&cbReason);
+    // Is still a valid WebSocket?, use the closing status
+    if(SYSWebSocketValid())
+    {
+      m_websocket->GetCloseStatus(&code,&reason,&cbReason);
+    }
     AutoCSTR closing(reason);
 
     m_reading->m_utf8   = true;
@@ -307,6 +335,13 @@ WebSocketServer::SocketListener()
     return;
   }
 
+  // See if the websocket is still alive
+  if(!SYSWebSocketValid())
+  {
+    m_server->UnRegisterWebSocket(this);
+    return;
+  }
+
   HRESULT hr = m_websocket->ReadFragment(&m_reading->m_data[m_reading->m_length]
                                         ,&m_reading->m_read
                                         ,TRUE
@@ -319,16 +354,18 @@ WebSocketServer::SocketListener()
   if(hr == S_FALSE)
   {
     DWORD error = GetLastError();
-    ERRORLOG(error,_T("Websocket failed to register read command for a fragment"));
-    CloseSocket();
-    return;
+    if(error && error != WSA_IO_PENDING)
+    {
+      ERRORLOG(error,_T("Websocket failed to register read command for a fragment"));
+      CloseSocket();
+      return;
+    }
   }
 
   if(!expected && (hr == S_OK))
   {
     // Was issued in-sync after all, so re-work the received data
-    m_reading->m_length += m_reading->m_read;
-    SocketReader(hr,m_reading->m_length,utf8,last,isclosing);
+    SocketReader(hr,m_reading->m_read,utf8,last,isclosing);
   }
 }
 
@@ -342,6 +379,12 @@ WebSocketServer::ReceiveCloseSocket()
   // Reset the result
   m_closingError = 0;
   m_closing.Empty();
+
+  // Socket already gone!
+  if(!SYSWebSocketValid())
+  {
+    return false;
+  }
 
   // Getting the closing status in UTF-16 format (instead of UTF-8 from RFC 6455)
   HRESULT hr = m_websocket->GetCloseStatus(&m_closingError,&pointer,&length);
@@ -367,15 +410,26 @@ WebSocketServer::ReceiveCloseSocket()
 bool 
 WebSocketServer::CloseSocket()
 {
-  CloseForReading();
-  CloseForWriting();
-  return true;
-}
+  // Already busy closing?
+  if(m_inClosing)
+  {
+    return true;
+  }
+  // Do not recursively return here
+  m_inClosing = true;
 
-// Close the socket with a closing frame
-bool 
-WebSocketServer::SendCloseSocket(USHORT /*p_code*/,XString /*p_reason*/)
-{
+  CloseForReading();
+  SendCloseSocket(WS_CLOSE_NORMAL,"");
+  CloseForWriting();
+
+  if(HttpCloseWebSocket(m_server->GetRequestQueue(),m_request) != NO_ERROR)
+  {
+    ERRORLOG(ERROR_INVALID_HANDLE,_T("Error closing WebSocket"));
+    return false;
+  }
+  m_websocket = nullptr;
+  m_server->UnRegisterWebSocket(this);
+  // This pointer is now removed
   return true;
 }
 
@@ -449,7 +503,7 @@ bool
 WebSocketServer::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last /*= true*/)
 {
   // Check if we can write
-  if(!m_server || !m_websocket)
+  if(!m_server || !m_websocket || !SYSWebSocketValid())
   {
     return false;
   }
@@ -526,12 +580,37 @@ WebSocketServer::SocketDispatch()
     m_dispatched = true;
     frame = m_writing.front();
   }
+}
 
-  if(IsBadReadPtr(m_websocket,sizeof(HTTPSYS_WebSocket)))
+// Close the socket with a closing frame
+bool
+WebSocketServer::SendCloseSocket(USHORT p_code,XString p_reason)
+{
+  // See if we are still open for writing
+  if(!m_openWriting)
   {
-    ERRORLOG(ERROR_INVALID_HANDLE,_T("Websocket context of HTTPSYS64 unreachable"));
-    return;
+    return true;
   }
+  // Socket already gone!
+  if(!SYSWebSocketValid())
+  {
+    return true;
+  }
+
+#ifdef _UNICODE
+  LPCWSTR reason = p_reason.GetString();
+#else
+  CStringW reasonString(p_reason);
+  LPCWSTR  reason = reasonString.GetString();
+#endif
+
+  BOOL expected = FALSE;
+  HRESULT hr = m_websocket->SendConnectionClose(true,p_code,reason,ServerWriteCompletion,&expected);
+  if(hr != S_OK)
+  {
+    return false;
+  }
+  return true;
 }
 
 // Perform the server handshake

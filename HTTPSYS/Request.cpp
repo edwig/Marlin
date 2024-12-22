@@ -161,8 +161,17 @@ Request::ReceiveRequest()
 void
 Request::CloseRequest()
 {
-  if(m_socket)
+  // If we are a WebSocket: close that
+  if(m_websocket)
   {
+    // Close websocket AND the physical socket
+    delete m_websocket;
+    m_websocket = nullptr;
+    m_socket    = nullptr;
+  }
+  else if(m_socket)
+  {
+  // Close the physical socket
     if(m_socket->Close() == false)
     {
       // Log the error

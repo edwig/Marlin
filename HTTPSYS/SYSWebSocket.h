@@ -62,10 +62,13 @@ public:
 
   virtual VOID CancelOutstandingIO(VOID);
 
+  virtual UINT64 GetSocketIdentifier(VOID);
+
 protected:
   void Close();
   void Reset();
 
+  UINT64        m_ident   { SYSWEBSOCKET_IDENT }; // Identification of the object
   Request*      m_request { nullptr };     // HTTP Request that started last socket connection
   SocketStream* m_socket  { nullptr };     // Communication low-level socket
   CString       m_serverkey;               // Sec-WebSocket-Key of the Server-Handshake
@@ -106,7 +109,7 @@ public:
   DWORD          EncodingFragment(bool p_closing = false);
 
 private:
-  DWORD          SetupForReceive();
+  int            SetupForReceive();
 
   // Read call lives here
   VOID*  m_read_Data                { nullptr };
@@ -137,6 +140,9 @@ private:
   // The buffer translation process
   WEB_SOCKET_HANDLE       m_handle       { NULL };
   WEB_SOCKET_BUFFER       m_recvBuffers[2]   { 0 };
+  WEB_SOCKET_BUFFER       m_sendBuffers[2]   { 0 };
   WEB_SOCKET_BUFFER_TYPE  m_recvBufferType   { WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE };
   WEB_SOCKET_ACTION       m_recvAction       { WEB_SOCKET_NO_ACTION };
+  // Lock on the WEB_SOCKET_HANDLE
+  CRITICAL_SECTION        m_lock;
 };

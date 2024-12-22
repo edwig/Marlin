@@ -21,6 +21,8 @@
 // WebSockets can only be operational in MS-Windows version 8.0 and higher
 #if NTDDI_VERSION >= NTDDI_WIN8
 
+#define SYSWEBSOCKET_IDENT 0x8866AABB77553311
+
 typedef VOID
 (WINAPI * PFN_WEBSOCKET_COMPLETION)(HRESULT     hrError,
                                     VOID *      pvCompletionContext,
@@ -106,6 +108,8 @@ public:
     virtual VOID CloseTcpConnection(VOID) = 0;
 
     virtual VOID CancelOutstandingIO(VOID) = 0;
+
+    virtual UINT64 GetSocketIdentifier(VOID) = 0;
 };
 
 #endif /* NTDDI_VERSION >= NTDDI_WIN8 */

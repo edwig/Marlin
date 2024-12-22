@@ -93,7 +93,8 @@ protected:
   bool      CompleteHandshake();
   // Writing fragments dispatcher
   void      SocketDispatch();
-
+  // SYSWebSocket still a valid object
+  bool      SYSWebSocketValid();
 
   // Private data for the server variant of the WebSocket
   HTTPServer*         m_server  { nullptr };
@@ -102,6 +103,7 @@ protected:
   // Asynchronous write buffer
   WSFrameStack        m_writing;
   bool                m_dispatched { false };
+  bool                m_inClosing  { false };
 
   // Buffer translation  protocol handle
   WEB_SOCKET_HANDLE   m_handle    { NULL    };

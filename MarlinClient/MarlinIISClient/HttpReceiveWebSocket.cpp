@@ -41,3 +41,9 @@ HttpReceiveWebSocket(IN HANDLE                /*RequestQueueHandle*/
   return nullptr;
 }
 
+ULONG WINAPI
+HttpCloseWebSocket(IN HANDLE          /*RequestQueueHandle*/
+                  ,IN HTTP_REQUEST_ID /*RequestId*/)
+{
+  return 0L;
+}
