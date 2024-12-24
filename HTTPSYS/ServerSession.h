@@ -80,8 +80,8 @@ private:
   USHORT              m_timeoutHeaderWait        { URL_TIMEOUT_HEADER_WAIT     };
   ULONG               m_timeoutMinSendRate       { URL_DEFAULT_MIN_SEND_RATE   };
   // Registry settings
-  int                 m_disableServerHeader { 0    };
-  unsigned            m_maxConnections      { SESSION_MIN_CONNECTIONS };
+  int                 m_disableServerHeader      { 0    };
+  unsigned            m_maxConnections           { SESSION_MIN_CONNECTIONS };
   // Locking for update
   CRITICAL_SECTION    m_lock;
 };

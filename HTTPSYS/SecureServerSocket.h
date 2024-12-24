@@ -35,6 +35,8 @@ public:
   int     SendMsg    (LPCVOID p_buffer,const ULONG p_length) override;
 	int     RecvPartial(LPVOID  p_buffer,const ULONG p_length) override;
 	int     SendPartial(LPCVOID p_buffer,const ULONG p_length) override;
+  int     RecvPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped) override;
+  int     SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped) override;
 	int     Disconnect(int p_how = SD_BOTH) override;
   bool    Close(void) override;
 
@@ -50,6 +52,8 @@ public:
   CertificateInfo*  GetClientCertificate() { return m_clientCertificate; };
   CertificateInfo*  GetServerCertificate() { return m_serverCertificate; };
 
+  // Public: but only meant for the overlapping I/O routines !!
+  void              RecvPartialOverlappedContinuation(LPOVERLAPPED p_overlapped);
 private:
   static HRESULT    InitializeClass(void);
          HRESULT    LogSSLInitError(HRESULT hr);
@@ -75,4 +79,11 @@ private:
   // SSL Certificate
   CertificateInfo*  m_serverCertificate { nullptr };
   CertificateInfo*  m_clientCertificate { nullptr };
+  // Overlapping I/O
+  LPOVERLAPPED      m_readOverlapped    { nullptr };
+  OVERLAPPED        m_overReceiving     { 0 };
+  LPVOID            m_originalBuffer    { nullptr };
+  ULONG             m_originalLength    { 0 };
+  BYTE*             m_overflowBuffer    { nullptr };
+  ULONG             m_overflowSize      { 0 };
 };

@@ -142,9 +142,17 @@ WebSocketClient::OpenSocket()
     return false;
   }
 
+  bool secure = false;
+  if(m_uri.Left(3).Compare(_T("wss"))   == 0 ||
+     m_uri.Left(5).Compare(_T("https")) == 0  ) 
+  {
+    secure = true;
+  }
+
   // GET this URI (ws[s]://resource) !!
   client.SetVerb(_T("GET"));
   client.SetURL(m_uri);
+  client.SetSecure(secure);
 
   // Also send the desktop number
   client.SetTerminalServices(true);

@@ -26,17 +26,17 @@ static char THIS_FILE[] = __FILE__;
 // General purpose helper class for SSL, decodes buffers for diagnostics, handles SNI
 
 SSLTracer::SSLTracer(const byte* BufPtr,const int BufBytes)
-          :contentType(0),
-           major(0),
-           minor(0),
-           length(0),
-           handshakeType(0),
-           handshakeLength(0),
-           OriginalBufPtr(BufPtr),
-           DataPtr(BufPtr),
-           MaxBufBytes(BufBytes)
+          :m_contentType(0),
+           m_major(0),
+           m_minor(0),
+           m_length(0),
+           m_handshakeType(0),
+           m_handshakeLength(0),
+           m_originalBufPtr(BufPtr),
+           m_dataPtr(BufPtr),
+           m_maxBufBytes(BufBytes)
 {
-  decoded = (BufPtr != nullptr) && CanDecode();
+  m_decoded = (BufPtr != nullptr) && CanDecode();
 }
 
 SSLTracer::~SSLTracer() = default;
@@ -44,36 +44,36 @@ SSLTracer::~SSLTracer() = default;
 // Decode a buffer
 bool SSLTracer::CanDecode()
 {
-  if(MaxBufBytes < 5)
+  if(m_maxBufBytes < 5)
   {
     return false;
   }
   else
   {
-    contentType = *(DataPtr++);
-    major       = *(DataPtr++);
-    minor       = *(DataPtr++);
-    length      = (*(DataPtr) << 8) + *(DataPtr + 1);
-    DataPtr    += 2;
+    m_contentType = *(m_dataPtr++);
+    m_major       = *(m_dataPtr++);
+    m_minor       = *(m_dataPtr++);
+    m_length      = (*(m_dataPtr) << 8) + *(m_dataPtr + 1);
+    m_dataPtr    += 2;
 
-    if(length + 5 > MaxBufBytes)
+    if(m_length + 5 > m_maxBufBytes)
     {
       return false;
     }
     // This is a version we recognize
-    if(contentType != 22)
+    if(m_contentType != 22)
     {
       return false;
     }
     // This is a handshake message (content type 22)
-    handshakeType   = *(DataPtr++);
-    handshakeLength = (*DataPtr << 16) + (*(DataPtr + 1) << 8) + *(DataPtr + 2);
-    DataPtr += 3;
-    if(handshakeType != 1)
+    m_handshakeType   = *(m_dataPtr++);
+    m_handshakeLength = (*m_dataPtr << 16) + (*(m_dataPtr + 1) << 8) + *(m_dataPtr + 2);
+    m_dataPtr += 3;
+    if(m_handshakeType != 1)
     {
       return false;
     }
-    BufEnd = OriginalBufPtr + 5 + 4 + handshakeLength;
+    m_bufEnd = m_originalBufPtr + 5 + 4 + m_handshakeLength;
     return true;
   }
 }
@@ -81,18 +81,18 @@ bool SSLTracer::CanDecode()
 // Trace handshake buffer
 void SSLTracer::TraceHandshake()
 {
-  if(MaxBufBytes < 5)
+  if(m_maxBufBytes < 5)
   {
     LogError(_T("Buffer space too small"));
   }
   else
   {
-    const byte * BufPtr = DataPtr;
-    if(length + 5 == MaxBufBytes)
+    const byte * BufPtr = m_dataPtr;
+    if(m_length + 5 == m_maxBufBytes)
     {
       DebugMsg(_T("Exactly one buffer is present"));
     }
-    else if(length + 5 <= MaxBufBytes)
+    else if(m_length + 5 <= m_maxBufBytes)
     {
       DebugMsg(_T("Whole buffer is present"));
     }
@@ -100,33 +100,33 @@ void SSLTracer::TraceHandshake()
     {
       DebugMsg(_T("Only part of the buffer is present"));
     }
-    if (major == 3)
+    if (m_major == 3)
     {
-           if (minor == 0)  DebugMsg(_T("SSL version 3.0"));
-      else if (minor == 1)  DebugMsg(_T("TLS version 1.0"));
-      else if (minor == 2)  DebugMsg(_T("TLS version 1.1"));
-      else if (minor == 3)  DebugMsg(_T("TLS version 1.2"));
+           if (m_minor == 0)  DebugMsg(_T("SSL version 3.0"));
+      else if (m_minor == 1)  DebugMsg(_T("TLS version 1.0"));
+      else if (m_minor == 2)  DebugMsg(_T("TLS version 1.1"));
+      else if (m_minor == 3)  DebugMsg(_T("TLS version 1.2"));
       else                  DebugMsg(_T("TLS version after 1.2"));
     }
     else
     {
-        DebugMsg(_T("Content Type = %d, Major.Minor Version = %d.%d, length %d (0x%04X)"), contentType, major, minor, length, length);
+        DebugMsg(_T("Content Type = %d, Major.Minor Version = %d.%d, length %d (0x%04X)"), m_contentType, m_major, m_minor, m_length, m_length);
         DebugMsg(_T("This version is not recognized so no more information is available"));
-        PrintHexDump(MaxBufBytes, OriginalBufPtr);
+        PrintHexDump(m_maxBufBytes, m_originalBufPtr);
         return;
     }
     // This is a version we recognize
-    if (contentType != 22)
+    if (m_contentType != 22)
     {
-        DebugMsg(_T("This content type (%d) is not recognized"), contentType);
-        PrintHexDump(MaxBufBytes, OriginalBufPtr);
+        DebugMsg(_T("This content type (%d) is not recognized"), m_contentType);
+        PrintHexDump(m_maxBufBytes, m_originalBufPtr);
         return;
     }
     // This is a handshake message (content type 22)
-    if (handshakeType != 1)
+    if (m_handshakeType != 1)
     {
-        DebugMsg(_T("This handshake type (%d) is not recognized"), handshakeType);
-        PrintHexDump(MaxBufBytes, OriginalBufPtr);
+        DebugMsg(_T("This handshake type (%d) is not recognized"), m_handshakeType);
+        PrintHexDump(m_maxBufBytes, m_originalBufPtr);
         return;
     }
     // This is a client hello message (handshake type 1)
@@ -139,14 +139,14 @@ void SSLTracer::TraceHandshake()
     BufPtr += 2 + cipherSuitesLength; // Skip CipherSuites
     UINT8 compressionMethodsLength = *BufPtr;
     BufPtr += 1 + compressionMethodsLength; // Skip Compression methods
-    bool extensionsPresent = BufPtr < BufEnd;
+    bool extensionsPresent = BufPtr < m_bufEnd;
     UINT16 extensionsLength = (*(BufPtr) << 8) + *(BufPtr + 1);
     BufPtr += 2;
-    if(extensionsLength == BufEnd - BufPtr)
+    if(extensionsLength == m_bufEnd - BufPtr)
     {
       DebugMsg(_T("There are %d bytes of extension data"),extensionsLength);
     }
-    while (BufPtr < BufEnd)
+    while (BufPtr < m_bufEnd)
     {
       UINT16 extensionType = (*(BufPtr) << 8) + *(BufPtr + 1);
       BufPtr += 2;
@@ -180,7 +180,7 @@ void SSLTracer::TraceHandshake()
         BufPtr += extensionDataLength;
       }
     }
-    if(BufPtr == BufEnd)
+    if(BufPtr == m_bufEnd)
     {
       DebugMsg(_T("Extensions exactly filled the header, as expected"));
     }
@@ -189,21 +189,21 @@ void SSLTracer::TraceHandshake()
       LogError(_T("** Error ** Extensions did not fill the header"));
     }
   }
-  PrintHexDump(MaxBufBytes, OriginalBufPtr);
+  PrintHexDump(m_maxBufBytes, m_originalBufPtr);
   return;
 }
 
 // Is this packet a complete client initialize packet
 bool SSLTracer::IsClientInitialize()
 {
-   return decoded;
+   return m_decoded;
 }
 
 // Get SNI provided hostname
 CString SSLTracer::GetSNIHostname()
 {
-   const byte * BufPtr = DataPtr;
-   if (decoded)
+   const byte * BufPtr = m_dataPtr;
+   if (m_decoded)
    {
       // This is a client hello message (handshake type 1)
       BufPtr += 2; // Skip ClientVersion
@@ -214,10 +214,10 @@ CString SSLTracer::GetSNIHostname()
       BufPtr += 2 + cipherSuitesLength; // Skip CipherSuites
       UINT8 compressionMethodsLength = *BufPtr;
       BufPtr += 1 + compressionMethodsLength; // Skip Compression methods
-      bool extensionsPresent = BufPtr < BufEnd;
+      bool extensionsPresent = BufPtr < m_bufEnd;
       UINT16 extensionsLength = (*(BufPtr) << 8) + *(BufPtr + 1);
       BufPtr += 2;
-      while (BufPtr < BufEnd)
+      while (BufPtr < m_bufEnd)
       {
          UINT16 extensionType = (*(BufPtr) << 8) + *(BufPtr + 1);
          BufPtr += 2;

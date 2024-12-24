@@ -309,13 +309,22 @@ void PrintHexDump(DWORD p_length, const void* p_buffer)
 void
 ServerSession::CreateLogfile()
 {
+  // No logging
+  if(m_socketLogging == SOCK_LOGGING_OFF)
+  {
+    return;
+  }
+
   CString name(_T("HTTP_Server"));
   m_logfile = LogAnalysis::CreateLogfile(name);
   m_logfile->SetLogRotation(true);
-  // m_logfile->SetLogLevel(m_socketLogging = SOCK_LOGGING_FULLTRACE);
+  m_logfile->SetLogLevel(m_socketLogging);
 
   CString filename;
-  filename.GetEnvironmentVariable(_T("WINDIR"));
+  if(!filename.GetEnvironmentVariable(_T("WINDIR")))
+  {
+    filename = _T("C:\\Windows");
+  }
   filename += _T("\\TEMP\\HTTP_Server.txt");
 
   m_logfile->SetLogFilename(filename);
@@ -344,6 +353,14 @@ ServerSession::ReadRegistrySettings()
     if(value2 >= SESSION_MIN_CONNECTIONS && value2 <= SESSION_MAX_CONNECTIONS)
     {
       m_maxConnections = value2;
+    }
+  }
+
+  if(HTTPReadRegister(sectie,_T("HTTPSYS64_Logging"),REG_DWORD,value1,&value2,value3,&size3))
+  {
+    if(value2 >= SOCK_LOGGING_OFF && value2 <= SOCK_LOGGING_FULLTRACE)
+    {
+      m_socketLogging = value2;
     }
   }
 }

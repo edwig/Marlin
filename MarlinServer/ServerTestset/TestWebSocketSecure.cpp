@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: TestWebSocket.cpp
+// SourceFile: TestWebSocketSecure.cpp
 //
 // Marlin Server: Internet server/client
 // 
@@ -31,6 +31,7 @@
 #include "HTTPSite.h"
 #include "WebSocketMain.h"
 #include "SiteHandlerWebSocket.h"
+#include "TestPorts.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,10 +40,10 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Open, close and 2 messages
-int totalChecks = 4;
+int totalChecksSecure = 4;
 
 XString 
-GenerateLargePushMessage()
+GenerateLargePushMessageSecure()
 {
   XString large;
   XString extra;
@@ -66,17 +67,17 @@ GenerateLargePushMessage()
 //
 //////////////////////////////////////////////////////////////////////////
 
-void OnOpen(WebSocket* p_socket,const WSFrame* /*p_frame*/)
+void OnOpenSecure(WebSocket* p_socket,const WSFrame* /*p_frame*/)
 {
   qprintf(_T("TEST handler: Opened a websocket for: %s"),p_socket->GetIdentityKey().GetString());
-  --totalChecks;
+  --totalChecksSecure;
 }
 
-void OnMessage(WebSocket* p_socket,const WSFrame* p_frame)
+void OnMessageSecure(WebSocket* p_socket,const WSFrame* p_frame)
 {
   XString message(reinterpret_cast<TCHAR*>(p_frame->m_data));
   qprintf(_T("TEST handler: Incoming WebSocket [%s] message: %s"),p_socket->GetIdentityKey().GetString(),message.GetString());
-  --totalChecks;
+  --totalChecksSecure;
 
   if(message.CompareNoCase(_T("RequestClose")) == 0)
   {
@@ -92,7 +93,7 @@ void OnMessage(WebSocket* p_socket,const WSFrame* p_frame)
   }
 }
 
-void OnClose(WebSocket* p_socket,const WSFrame* p_frame)
+void OnCloseSecure(WebSocket* p_socket,const WSFrame* p_frame)
 {
   XString message(reinterpret_cast<TCHAR*>(p_frame->m_data));
   if(!message.IsEmpty())
@@ -100,7 +101,7 @@ void OnClose(WebSocket* p_socket,const WSFrame* p_frame)
     qprintf(_T("TEST handler: Closing WebSocket message: %s"),message.GetString());
   }
   qprintf(_T("TEST handler: Closed the WebSocket for: %s"),p_socket->GetIdentityKey().GetString());
-  --totalChecks;
+  --totalChecksSecure;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -109,48 +110,48 @@ void OnClose(WebSocket* p_socket,const WSFrame* p_frame)
 //
 //////////////////////////////////////////////////////////////////////////
 
-class SiteHandlerTestSocket : public SiteHandlerWebSocket
+class SiteHandlerTestSocketSecure : public SiteHandlerWebSocket
 {
 public:
-  explicit SiteHandlerTestSocket(TestMarlinServer* p_server) : m_server(p_server) {}
+  explicit SiteHandlerTestSocketSecure(TestMarlinServer* p_server) : m_server(p_server) {}
 protected:
   virtual bool Handle(HTTPMessage* p_message,WebSocket* p_socket) override;
   TestMarlinServer* m_server;
 };
 
 bool
-SiteHandlerTestSocket::Handle(HTTPMessage* p_message,WebSocket* p_socket)
+SiteHandlerTestSocketSecure::Handle(HTTPMessage* p_message,WebSocket* p_socket)
 {
   // We use the default WebSocket handshake
   // So we do not need the HTTPMessage parameter
   UNREFERENCED_PARAMETER(p_message);
 
   // We only set the message handlers of the socket
-  p_socket->SetOnOpen(OnOpen);
-  p_socket->SetOnMessage(OnMessage);
-  p_socket->SetOnClose(OnClose);
+  p_socket->SetOnOpen(OnOpenSecure);
+  p_socket->SetOnMessage(OnMessageSecure);
+  p_socket->SetOnClose(OnCloseSecure);
 
-  m_server->m_socket = p_socket->GetIdentityKey();
+  m_server->m_socketSecure = p_socket->GetIdentityKey();
 
   // Returning a 'true' will trigger the handling!!
   return true;
 }
 
 int
-TestMarlinServer::TestWebSocket()
+TestMarlinServer::TestWebSocketSecure()
 {
   int error = 0;
 
   // If errors, change detail level
   m_doDetails = false;
 
-  XString url(_T("/MarlinTest/Sockets/"));
+  XString url(_T("/SecureSockets/"));
 
-  xprintf(_T("TESTING WEBSOCKET FUNCTIONS OF THE HTTP SERVER\n"));
-  xprintf(_T("==============================================\n"));
+  xprintf(_T("TESTING SECURE WEBSOCKET FUNCTIONS OF THE HTTP SERVER\n"));
+  xprintf(_T("=====================================================\n"));
 
-  // Create URL channel to listen to "http://+:port/MarlinTest/Sockets/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
+  // Create URL channel to listen to "https://+:port/SecureSockets/"
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,(ushort)TESTING_SECURE_WS,url);
   if(site)
   {
     // --- "---------------------------- - ------
@@ -165,7 +166,7 @@ TestMarlinServer::TestWebSocket()
   }
 
   // Set a WebSocket handler on the GET handler of this site
-  SiteHandlerTestSocket* handler = new SiteHandlerTestSocket(this);
+  SiteHandlerTestSocketSecure* handler = new SiteHandlerTestSocketSecure(this);
   site->SetHandler(HTTPCommand::http_get,handler);
 
   // Start the site explicitly
@@ -183,20 +184,11 @@ TestMarlinServer::TestWebSocket()
 }
 
 void
-TestMarlinServer::StopWebSocket()
+TestMarlinServer::StopWebSocketSecure()
 {
   try
   {
-    WebSocket* socket = m_httpServer->FindWebSocket(m_socket);
-    if(socket)
-    {
-      if(socket->CloseSocket() == false)
-      {
-        xerror();
-      }
-      m_httpServer->UnRegisterWebSocket(socket);
-    }
-    socket = m_httpServer->FindWebSocket(m_socketSecure);
+    WebSocket* socket = m_httpServer->FindWebSocket(m_socketSecure);
     if(socket)
     {
       if(socket->CloseSocket() == false)
@@ -216,10 +208,10 @@ TestMarlinServer::StopWebSocket()
 
 
 int 
-TestMarlinServer::AfterTestWebSocket()
+TestMarlinServer::AfterTestWebSocketSecure()
 {
   // SUMMARY OF THE TEST
   // ---- "---------------------------------------------- - ------
-  qprintf(_T("Serverside WebSocket tests                     : %s\n"),totalChecks > 0 ? _T("INCOMPLETE") : _T("OK"));
-  return totalChecks > 0;
+  qprintf(_T("Serverside WebSocket tests                     : %s\n"),totalChecksSecure > 0 ? _T("INCOMPLETE") : _T("OK"));
+  return totalChecksSecure > 0;
 }

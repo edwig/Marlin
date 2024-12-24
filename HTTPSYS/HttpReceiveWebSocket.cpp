@@ -34,6 +34,7 @@ HTTPSYS_WebSocket* WINAPI
 HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
                     ,IN HTTP_REQUEST_ID       RequestId
                     ,IN WEB_SOCKET_HANDLE     SocketHandle
+                    ,IN HANDLE                ThreadPoolIOCP
                     ,IN WEB_SOCKET_PROPERTY*  SocketProperties OPTIONAL
                     ,IN DWORD                 PropertyCount    OPTIONAL)
 {
@@ -47,7 +48,13 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
     return nullptr;
   }
   // Must have a buffer translation handle from the handshaking process
-  if(SocketHandle == NULL)
+  if(SocketHandle == nullptr)
+  {
+    return nullptr;
+  }
+
+  // We must have a threadpool I/O Completion Port for overlapping I/O to work
+  if(ThreadPoolIOCP == nullptr)
   {
     return nullptr;
   }
@@ -61,6 +68,9 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
 
   // Remember our buffer translation handle
   websocket->SetTranslationHandle(SocketHandle);
+
+  // Associate our socket with the correct threadpool
+  websocket->AssociateThreadPool(ThreadPoolIOCP);
 
   // Optional socket properties
   __try

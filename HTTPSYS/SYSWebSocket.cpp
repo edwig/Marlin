@@ -95,6 +95,12 @@ SYSWebSocket::SetTranslationHandle(WEB_SOCKET_HANDLE p_handle)
   m_handle = p_handle;
 }
 
+void
+SYSWebSocket::AssociateThreadPool(HANDLE p_threadPoolIOCP)
+{
+  m_socket->AssociateThreadPool(p_threadPoolIOCP);
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // VIRTUAL INTERFACE
@@ -590,7 +596,8 @@ SYSWebSocket::SetupForReceive()
 void 
 SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
 {
-  ULONG   bytesTransferred = (int)p_overlapped->InternalHigh;
+  ULONG   error            = (ULONG)p_overlapped->Internal;
+  ULONG   bytesTransferred = (ULONG)p_overlapped->InternalHigh;
   ULONG   bytesTranslated  = 0;
   HRESULT hr = S_OK;
   ULONG   bufferCount;
@@ -599,6 +606,25 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
   BOOL    connectionClose = FALSE;
   BOOL    utf8Encoded     = TRUE;
   BOOL    finalFragment   = FALSE;
+
+  // In case of an error: pass it on to the application
+  // we cannot continue to translate any buffered data
+  if(error)
+  {
+    // See if other side is closing the WebSocket
+    connectionClose = (error == ERROR_NO_MORE_ITEMS);
+
+    if(m_read_Completion)
+    {
+      (*m_read_Completion)(error
+                          ,m_read_CompletionContext
+                          ,bytesTranslated
+                          ,TRUE
+                          ,TRUE
+                          ,connectionClose);
+    }
+    return;
+  }
 
   // Most likely an TCP/IP keep alive frame
   // Restart the read operation for the next TCP/IP frame

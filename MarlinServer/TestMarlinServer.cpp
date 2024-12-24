@@ -488,6 +488,7 @@ TestMarlinServer::RegisterSiteHandlers()
   TestToken();
   TestSubSites();
   TestWebSocket();
+  TestWebSocketSecure();
 }
 
 // Perform all after test reporting
@@ -519,4 +520,5 @@ TestMarlinServer::AfterTests()
   AfterTestToken();
   AfterTestSubSites();
   AfterTestWebSocket();
+  AfterTestWebSocketSecure();
 }

@@ -23,6 +23,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+void CALLBACK PlainSocketOverlappedResult(void* p_overlapped);
+
 // Constructor for an active connection, socket created later
 PlainSocket::PlainSocket(HANDLE p_stopEvent)
             :m_stopEvent(p_stopEvent)
@@ -278,6 +280,20 @@ PlainSocket::InitializeSSL(const void* /*p_buffer*/ /*= nullptr*/,const int /*p_
   return SOCKET_ERROR;
 }
 
+// Connect to the threadpool of the server
+void
+PlainSocket::AssociateThreadPool(HANDLE p_threadPoolIOCP)
+{
+  p_threadPoolIOCP = CreateIoCompletionPort((HANDLE)m_actualSocket,p_threadPoolIOCP,(ULONG_PTR)PlainSocketOverlappedResult,0);
+  if(!p_threadPoolIOCP)
+  {
+    DWORD error = GetLastError();
+    LogError(_T("Threadpool cannot register file handle for asynchroneous I/O completion. Error: %d"),error);
+  }
+
+  SetFileCompletionNotificationModes((HANDLE)m_actualSocket,FILE_SKIP_SET_EVENT_ON_HANDLE);
+}
+
 void PlainSocket::SetConnTimeoutSeconds(int p_newTimeoutSeconds)
 {
   if(p_newTimeoutSeconds == INFINITE)
@@ -363,25 +379,33 @@ DWORD PlainSocket::GetLastError()
 	return m_lastError; 
 }
 
+bool
+PlainSocket::InputQueueHasWaitingData()
+{
+  ULONG bytes    = 0;
+  DWORD returned = 0;
+  if(WSAIoctl(m_actualSocket,FIONREAD,nullptr,0,&bytes,sizeof(ULONG),&returned,nullptr,nullptr) == 0)
+  {
+    // <bytes> data is available for reading on the socket
+    if(bytes > 0)
+    {
+      return true;
+    }
+  }
+  if(WSAIoctl(m_actualSocket,SIOCATMARK,nullptr,0,&bytes,0,&returned,nullptr,nullptr) == 0)
+  {
+    // OOB (Out-Of-Band) data is available (read position is not at the end mark)
+    return true;
+  }
+  return false;
+}
+
 // Shutdown one of the sides of the socket, or both
 int 
 PlainSocket::Disconnect(int p_how)
 {
   if(m_actualSocket)
   {
-    if(p_how == SD_BOTH)
-    {
-      Close();
-      return NO_ERROR;
-    }
-    if(p_how == SD_RECEIVE && m_readOverlapped->OffsetHigh)
-    {
-      CancelThreadpoolIo(m_threadPoolIO);
-    }
-    if(p_how == SD_SEND && m_sendOverlapped->OffsetHigh)
-    {
-      CancelThreadpoolIo(m_threadPoolIO);
-    }
     // Only shutdown one side
     return ::shutdown(m_actualSocket,p_how);
   }
@@ -391,13 +415,6 @@ PlainSocket::Disconnect(int p_how)
 bool 
 PlainSocket::Close(void)
 {
-  // In case of an outstanding threadpool IO, cancel that
-  if(m_threadPoolIO)
-  {
-    CloseThreadpoolIo (m_threadPoolIO);
-    m_threadPoolIO = nullptr;
-  }
-
   // Possibly notify a waiting application for HttpWaitForDisconnect
   if(m_extraStop)
   {
@@ -549,17 +566,14 @@ PlainSocket::RecvPartial(LPVOID p_buffer, const ULONG p_length)
 	return SOCKET_ERROR;
 }
 
-void CALLBACK PlainSocketOverlappedResult(PTP_CALLBACK_INSTANCE pInstance
-                                         ,PVOID                 pvContext
-                                         ,PVOID                 pOverlapped
-                                         ,ULONG                 IoResult
-                                         ,ULONG_PTR             NumberOfBytesTransferred
-                                         ,PTP_IO                pIo)
+void CALLBACK PlainSocketOverlappedResult(void* p_overlapped)
 {
   _set_se_translator(SeTranslator);
   try
   {
-    PlainSocket* socket = reinterpret_cast<PlainSocket*>(pvContext);
+    LPOVERLAPPED overlapped = reinterpret_cast<LPOVERLAPPED>(p_overlapped);
+
+    PlainSocket* socket = reinterpret_cast<PlainSocket*>(overlapped->Pointer);
     if(socket)
     {
       // See if we are still a socket. Read/write process stops here!
@@ -567,16 +581,22 @@ void CALLBACK PlainSocketOverlappedResult(PTP_CALLBACK_INSTANCE pInstance
       {
         return;
       }
-      if(((LPOVERLAPPED)pOverlapped)->Offset == SD_SEND)
+      if(overlapped->hEvent == (HANDLE)SD_SEND)
       {
-        socket->SendingOverlapped(IoResult,(DWORD)NumberOfBytesTransferred,0);
+        socket->SendingOverlapped((DWORD)overlapped->Internal,(DWORD)overlapped->InternalHigh,0);
       }
       else // SD_RECEIVE
       {
-        socket->ReceiveOverlapped(IoResult,(DWORD)NumberOfBytesTransferred,0);
+        if(overlapped->Internal == 259)
+        {
+          int a = 0;
+        }
+        socket->ReceiveOverlapped((DWORD)overlapped->Internal,(DWORD)overlapped->InternalHigh,0);
       }
-      // Ready
-      ((LPOVERLAPPED)pOverlapped)->OffsetHigh = 0;
+    }
+    else
+    {
+      overlapped->Internal = 123;
     }
   }
   catch(StdException& /*ex*/)
@@ -600,16 +620,6 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
   // The intended use is to NOT wait and return immediately
   m_recvEndTime = 0;
 
-	if(m_recvInitiated)
-	{
-		// Overlapped I/O not yet ready
-		m_lastError   = WSA_IO_PENDING;
-    return SOCKET_ERROR;
-  }
-
-  // Now initiating a read action
-  m_recvInitiated = true;
-
   // Overlapped I/O from caller
   m_readOverlapped = p_overlapped;
 
@@ -621,21 +631,10 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 	buffer.buf = static_cast<char*>(p_buffer);
 	buffer.len = p_length;
 	
-  // Make sure we have a threadpool IO record for reading
-  if(m_threadPoolIO == nullptr)
-  {
-    m_threadPoolIO = CreateThreadpoolIo((HANDLE)m_actualSocket,PlainSocketOverlappedResult,this,nullptr);
-    if(m_threadPoolIO == nullptr)
-    {
-      return SOCKET_ERROR;
-    }
-  }
-  StartThreadpoolIo(m_threadPoolIO);
-
 	// Create the overlapped I/O event and structures
-	memset(&m_overReading,0,sizeof(WSAOVERLAPPED));
-  m_overReading.Offset = SD_RECEIVE;
-  m_overReading.OffsetHigh = 1;
+	memset(&m_overReading,0,sizeof(OVERLAPPED));
+  m_overReading.Pointer = this;
+  m_overReading.hEvent  = (HANDLE) SD_RECEIVE;
 	received    = WSARecv(m_actualSocket,&buffer,1,&bytes_read,&msg_flags,&m_overReading,nullptr);
 	m_lastError = WSAGetLastError();
 
@@ -645,9 +644,6 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
     return NO_ERROR;
 	}
   TRACE("PlainSocket: FAILED IOCP!\n");
-
-  // Cancel again
-  CancelThreadpoolIo(m_threadPoolIO);
 
   // See if already received in-sync
   if(received > 0)
@@ -661,9 +657,6 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 void
 PlainSocket::ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
 {
-  // Reset the receive
-  m_recvInitiated = false;
-
   TRACE("PLAINSOCKET RECEIVE OVERLAPPED\n");
 
   if(!InSecureMode())
@@ -788,16 +781,6 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
   // The intended use is to NOT wait and return immediately
   m_sendEndTime = 0;
 
-	if(m_sendInitiated)
-	{
-		// Overlapped I/O not yet ready
-		m_lastError   = WSA_IO_PENDING;
-    return SOCKET_ERROR;
-  }
-
-  // Now initiating a read action
-  m_sendInitiated = true;
-
   // Overlapped I/O from caller
   m_sendOverlapped = p_overlapped;
 
@@ -809,21 +792,10 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
 	buffer.buf = static_cast<char*>(p_buffer);
 	buffer.len = p_length;
 	
-  // Make sure we have a threadpool IO record for reading
-  if(m_threadPoolIO == nullptr)
-  {
-    m_threadPoolIO = CreateThreadpoolIo((HANDLE)m_actualSocket,PlainSocketOverlappedResult,this,nullptr);
-    if(m_threadPoolIO == nullptr)
-    {
-      return SOCKET_ERROR;
-    }
-  }
-  StartThreadpoolIo(m_threadPoolIO);
-
 	// Create the overlapped I/O event and structures
-	memset(&m_overSending,0,sizeof(WSAOVERLAPPED));
-  m_overSending.Offset = SD_SEND;
-  m_overSending.OffsetHigh = 1;
+	memset(&m_overSending,0,sizeof(OVERLAPPED));
+  m_overReading.Pointer = this;
+  m_overReading.hEvent  = (HANDLE) SD_SEND;
 	written     = WSASend(m_actualSocket,&buffer,1,&bytes_sent,msg_flags,&m_overSending,nullptr);
 	m_lastError = WSAGetLastError();
 
@@ -833,9 +805,6 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
     return NO_ERROR;
 	}
   TRACE("PlainSocket: FAILED IOCP!\n");
-
-  // Cancel again
-  CancelThreadpoolIo(m_threadPoolIO);
 
   // See if already received in-sync
   if(written > 0)
@@ -849,9 +818,6 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
 void
 PlainSocket::SendingOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
 {
-  // Reset the receive
-  m_sendInitiated = false;
-
   if(!InSecureMode())
   {
     DebugMsg(_T(" "));

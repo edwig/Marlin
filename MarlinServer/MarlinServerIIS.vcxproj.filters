@@ -91,6 +91,9 @@
     <ClCompile Include="HttpReceiveWebSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ServerTestset\TestWebSocketSecure.cpp">
+      <Filter>Testset</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestMarlinServerApp.h">

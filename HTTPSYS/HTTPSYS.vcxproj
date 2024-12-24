@@ -419,6 +419,7 @@
     <ClInclude Include="HTTPSYS_Websocket.h" />
     <ClInclude Include="Listener.h" />
     <ClInclude Include="HTTPLoglevel.h" />
+    <ClInclude Include="Logging.h" />
     <ClInclude Include="OpaqueHandles.h" />
     <ClInclude Include="PlainSocket.h" />
     <ClInclude Include="Request.h" />

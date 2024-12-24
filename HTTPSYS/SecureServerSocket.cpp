@@ -58,6 +58,11 @@ SecureServerSocket::~SecureServerSocket(void)
     delete m_clientCertificate;
     m_clientCertificate = nullptr;
   }
+  if(m_overflowBuffer)
+  {
+    delete m_overflowBuffer;
+    m_overflowBuffer = nullptr;
+  }
 }
 
 // Avoid using (or exporting) g_pSSPI directly to give us some flexibility in case we want
@@ -208,11 +213,9 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
   }
 
   // Secure receive after this point
-	INT err;
-	INT i;
 	SecBufferDesc   Message;
 	SecBuffer       Buffers[4];
-	SECURITY_STATUS scRet;
+	SECURITY_STATUS scRet = SEC_E_OK;
 
 	//
 	// Initialize security buffer structs, basically, these point to places to put encrypted data,
@@ -220,8 +223,8 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 	// (ReadBuffer) and then decrypted. So one SecBuffer points to the header, one to the data, and one to the trailer.
 	//
 	Message.ulVersion = SECBUFFER_VERSION;
-	Message.cBuffers = 4;
-	Message.pBuffers = Buffers;
+	Message.cBuffers  = 4;
+	Message.pBuffers  = Buffers;
 
 	Buffers[0].BufferType = SECBUFFER_EMPTY;
 	Buffers[1].BufferType = SECBUFFER_EMPTY;
@@ -236,7 +239,7 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 	{	
     // There is already data in the buffer, so process it first
 		DebugMsg(_T(" "));
-		DebugMsg(_T("Using the saved %d bytes from client"), m_readBufferBytes);
+		DebugMsg(_T("Using the saved %d bytes from the client"), m_readBufferBytes);
 		PrintHexDump(m_readBufferBytes, m_readPointer);
 		Buffers[0].pvBuffer = m_readPointer;
 		Buffers[0].cbBuffer = m_readBufferBytes;
@@ -246,9 +249,9 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 
 	while (scRet == SEC_E_INCOMPLETE_MESSAGE)
 	{
-		err = PlainSocket::RecvPartial((char*)m_readPointer + m_readBufferBytes,(int)( sizeof(m_readBuffer) - m_readBufferBytes - ((char*)m_readPointer - &m_readBuffer[0])));
+		int result = PlainSocket::RecvPartial((char*)m_readPointer + m_readBufferBytes,(int)( sizeof(m_readBuffer) - m_readBufferBytes - ((char*)m_readPointer - &m_readBuffer[0])));
     m_lastError = 0; // Means use the one from m_SocketStream
-		if ((err == SOCKET_ERROR) || (err == 0))
+		if ((result == SOCKET_ERROR) || (result == 0))
 		{
       if(WSA_IO_PENDING == GetLastError())
       {
@@ -265,9 +268,9 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 			return SOCKET_ERROR;
 		}
 		DebugMsg(_T(" "));
-		DebugMsg(_T("Received %d (request) bytes from client"), err);
-		PrintHexDump(err, (TCHAR*)m_readPointer + m_readBufferBytes);
-		m_readBufferBytes += err;
+		DebugMsg(_T("Received %d (request) bytes from client"), result);
+		PrintHexDump(result, (TCHAR*)m_readPointer + m_readBufferBytes);
+		m_readBufferBytes += result;
 
 		Buffers[0].pvBuffer   = m_readPointer;
 		Buffers[0].cbBuffer   = m_readBufferBytes;
@@ -294,9 +297,9 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 
 	// Locate the data buffer because the decrypted data is placed there. It's almost certainly
 	// the second buffer (index 1) and we start there, but search all but the first just in case...
-	PSecBuffer pDataBuffer(NULL);
+	PSecBuffer pDataBuffer(0);
 
-	for(i = 1; i < 4; i++)
+	for(int i = 1; i < 4; i++)
 	{
 		if(Buffers[i].BufferType == SECBUFFER_DATA)
 		{
@@ -330,9 +333,9 @@ int SecureServerSocket::RecvPartial(LPVOID p_buffer,const ULONG p_length)
 	// See if there was any extra data read beyond what was needed for the message we are handling
 	// TCP can sometimes merge multiple messages into a single one, if there is, it will almost 
 	// certainly be in the fourth buffer (index 3), but search all but the first, just in case.
-	PSecBuffer pExtraDataBuffer(NULL);
+	PSecBuffer pExtraDataBuffer(0);
 
-	for(i = 1; i < 4; i++)
+	for(int i = 1; i < 4; i++)
 	{
 		if(Buffers[i].BufferType == SECBUFFER_EXTRA)
 		{
@@ -415,6 +418,7 @@ int SecureServerSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
 
 	Buffers[3].BufferType = SECBUFFER_EMPTY;
 
+  // ENCRYPT THE MESSAGE
 	scRet = g_pSSPI->EncryptMessage(&m_context, 0, &Message, 0);
 
 	DebugMsg(_T(" "));
@@ -973,4 +977,378 @@ SecureServerSocket::RecvMsg(LPVOID p_buffer,const ULONG p_length)
   }
 
   return (total_bytes_received);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// ASYNCHROUNOUS OVERLAPPED I/O SECTION
+//
+//////////////////////////////////////////////////////////////////////////
+
+// Coming back from the overlapped receive from the PlainSocket
+// Here we have read an encrypted buffer for the SecureSocket
+void WINAPI 
+SecureSocketCompletion(LPOVERLAPPED p_overlapped)
+{
+  SecureServerSocket* socket = (SecureServerSocket*)p_overlapped->Pointer;
+  if(socket && socket->m_ident == SOCKETSTREAM_IDENT)
+  {
+    socket->RecvPartialOverlappedContinuation(p_overlapped);
+  }
+  else
+  {
+    LogError(_T("SecureSocketCompletion: Invalid socket pointer"));
+  }
+}
+
+// Receives up to p_length bytes of data with an OVERLAPPED callback
+int
+SecureServerSocket::RecvPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped)
+{
+  // If not in Secure SSL/TLS mode, pass on the the plain socket
+  if(!InSecureMode())
+  {
+    return PlainSocket::RecvPartialOverlapped(p_buffer,p_length,p_overlapped);
+  }
+
+  // Storing the overlapped structure for later use
+  m_readOverlapped = p_overlapped;
+  m_originalBuffer = p_buffer;
+  m_originalLength = p_length;
+  memset(&m_overReceiving,0,sizeof(OVERLAPPED));
+  m_overReceiving.Pointer = this;
+  m_overReceiving.hEvent  = SecureSocketCompletion;
+
+  // Overflow detected of already decoded data
+  if(m_overflowBuffer)
+  {
+    ULONG decoded = 0;
+
+    if(p_length >= m_overflowSize)
+    {
+      // Use the extra overflow buffer
+      memcpy_s(p_buffer,p_length,m_overflowBuffer,m_overflowSize);
+      decoded = m_overflowSize;
+      // Extra overflow buffer no longer needed
+      delete [] m_overflowBuffer;
+      m_overflowBuffer  = nullptr;
+      m_overflowSize    = 0;
+    }
+    else
+    {
+      // Split the overflow buffer again
+      memcpy_s(m_overflowBuffer,m_overflowSize,&m_overflowBuffer[p_length],m_overflowSize - p_length);
+      m_overflowSize -= p_length;
+      decoded = p_length;
+    }
+    // Pass the result on!
+    if(m_readOverlapped)
+    {
+      PFN_SOCKET_COMPLETION completion = reinterpret_cast<PFN_SOCKET_COMPLETION>(m_readOverlapped->hEvent);
+      m_readOverlapped->Internal     = S_OK;
+      m_readOverlapped->InternalHigh = decoded;
+      (*completion)(m_readOverlapped);
+      return S_OK;
+    }
+    // Overflow without overlapping cannot happen
+    return SOCKET_ERROR;
+  }
+
+  // No input yet, so start the receiving process
+  if(m_readBufferBytes > 0)
+  {
+    // There is already data in the buffer from the last call
+    // so process it first
+    m_overReceiving.Internal = S_OK;
+    m_overReceiving.InternalHigh = 0;
+    RecvPartialOverlappedContinuation(&m_overReceiving);
+    return S_OK;
+  }
+  if(InputQueueHasWaitingData())
+  {
+    int result = PlainSocket::RecvPartial((char*)&((BYTE*)m_readPointer)[m_readBufferBytes],p_length);
+    if(result > 0)
+    {
+      m_overReceiving.Internal     = S_OK;
+      m_overReceiving.InternalHigh = result;
+      RecvPartialOverlappedContinuation(&m_overReceiving);
+      return S_OK;
+    }
+    if(result == SOCKET_ERROR)
+    {
+      return SOCKET_ERROR;
+    }
+  }
+
+  // Starting the 'real' overlapped I/O operation
+  // Chances are that it will return immediately, but we have to be prepared for the opposite
+  int result = PlainSocket::RecvPartialOverlapped(m_readPointer,p_length,&m_overReceiving);
+  if(result == 0 && (m_lastError == 0 || m_lastError == WSA_IO_PENDING))
+  {
+    return S_OK;
+  }
+  if(result == SOCKET_ERROR)
+  {
+    LogError(_T("SecureSocket error while trying to start overlapped I/O"));
+    return SOCKET_ERROR;
+  }
+  if(result > 0)
+  {
+    // Sync completion after all. Process it directly
+    m_overReceiving.Internal     = S_OK;
+    m_overReceiving.InternalHigh = result;
+    RecvPartialOverlappedContinuation(&m_overReceiving);
+    return S_OK;
+  }
+  // Other errors in m_lastError!!
+  return SOCKET_ERROR;
+}
+
+void
+SecureServerSocket::RecvPartialOverlappedContinuation(LPOVERLAPPED p_overlapped)
+{
+  // Get the results of the overlapped operation
+  int error  = (int)p_overlapped->Internal;
+  int result = (int)p_overlapped->InternalHigh;
+
+  // Other side is closing the socket
+  if(error == ERROR_NO_MORE_ITEMS)
+  {
+    PFN_SOCKET_COMPLETION completion = reinterpret_cast<PFN_SOCKET_COMPLETION>(m_readOverlapped->hEvent);
+    m_readOverlapped->Internal     = ERROR_NO_MORE_ITEMS;
+    m_readOverlapped->InternalHigh = 0;
+    (*completion)(m_readOverlapped);
+    return;
+  }
+
+  // Secure buffer translation setup
+  SecBufferDesc   Message;
+  SecBuffer       Buffers[4];
+  SECURITY_STATUS scRet = SEC_E_INCOMPLETE_MESSAGE;
+
+  // Initialize security buffer structs, basically, these point to places to put encrypted data,
+  // for SSL there's a header, some encrypted data, then a trailer. All three get put in the same buffer
+  // (ReadBuffer) and then decrypted. So one SecBuffer points to the header, one to the data, and one to the trailer.
+  //
+  Message.ulVersion = SECBUFFER_VERSION;
+  Message.cBuffers  = 4;
+  Message.pBuffers  = Buffers;
+
+  Buffers[0].BufferType = SECBUFFER_EMPTY;
+  Buffers[1].BufferType = SECBUFFER_EMPTY;
+  Buffers[2].BufferType = SECBUFFER_EMPTY;
+  Buffers[3].BufferType = SECBUFFER_EMPTY;
+
+  if(scRet == SEC_E_INCOMPLETE_MESSAGE)
+  {
+    // How many we did read extra
+    m_readBufferBytes += result;
+
+    DebugMsg(_T(" "));
+    DebugMsg(_T("Received %d (request) bytes from client"),result);
+    PrintHexDump(result,(TCHAR*)m_readPointer + m_readBufferBytes);
+
+    Buffers[0].pvBuffer = m_readPointer;
+    Buffers[0].cbBuffer = m_readBufferBytes;
+    Buffers[0].BufferType = SECBUFFER_DATA;
+
+    Buffers[1].BufferType = SECBUFFER_EMPTY;
+    Buffers[2].BufferType = SECBUFFER_EMPTY;
+    Buffers[3].BufferType = SECBUFFER_EMPTY;
+
+    // DECRYPT THE INCOMING BUFFER!!
+    scRet = g_pSSPI->DecryptMessage(&m_context,&Message,0,NULL);
+
+    // Could not completely decrypt the incoming buffer, so read some more
+    if(scRet == SEC_E_INCOMPLETE_MESSAGE)
+    {
+      // Read an extra buffer to see if we come to the completion trailer
+      // We expect that there is more data in the input buffer of the socket
+      result = PlainSocket::RecvPartialOverlapped((char*)m_readPointer + m_readBufferBytes,(int)(sizeof(m_readBuffer) - m_readBufferBytes),&m_overReceiving);
+      if(result == 0 && (m_lastError == 0 || m_lastError == WSA_IO_PENDING))
+      {
+        return;
+      }
+      // Something went wrong
+      result = SOCKET_ERROR;
+    }
+  }
+	
+
+  PSecBuffer pDataBuffer(nullptr);
+  ULONG decoded = 0;
+
+  if(scRet != SEC_E_OK)
+  {
+    LogError(_T("Couldn't decrypt, error %lx"),scRet);
+    m_lastError = scRet;
+    error = SOCKET_ERROR;
+  }
+  else
+  {
+    DebugMsg(_T("Decrypted message from client."));
+
+    // Locate the data buffer because the decrypted data is placed there. It's almost certainly
+    // the second buffer (index 1) and we start there, but search all but the first just in case...
+
+    for(int i = 1; i < 4; i++)
+    {
+      if(Buffers[i].BufferType == SECBUFFER_DATA)
+      {
+        pDataBuffer = &Buffers[i];
+        break;
+      }
+    }
+
+    if(!pDataBuffer)
+    {
+      LogError(_T("No data returned"));
+      m_lastError = WSASYSCALLFAILURE;
+      error = SOCKET_ERROR;
+    }
+    else
+    {
+      DebugMsg(_T(" "));
+      DebugMsg(_T("Decrypted message has %d bytes"),pDataBuffer->cbBuffer);
+      PrintHexDump(pDataBuffer->cbBuffer,pDataBuffer->pvBuffer);
+
+      // Move the data to the output stream
+      if(m_originalLength >= int(pDataBuffer->cbBuffer))
+      {
+        memcpy_s(m_originalBuffer,m_originalLength,pDataBuffer->pvBuffer,pDataBuffer->cbBuffer);
+        decoded = pDataBuffer->cbBuffer;
+      }
+      else
+      {	
+        // Copy as much as the receiver wants
+        memcpy_s(m_originalBuffer,m_originalLength,pDataBuffer->pvBuffer,m_originalLength);
+        decoded = m_originalLength;
+        // The rest goes into the overflow buffer
+        if(m_overflowBuffer)
+        {
+          delete m_overflowBuffer;
+        }
+        m_overflowSize   = pDataBuffer->cbBuffer - m_originalLength;
+        m_overflowBuffer = new BYTE[m_overflowSize];
+        memcpy_s(m_overflowBuffer,m_overflowSize,&(((BYTE*)pDataBuffer->pvBuffer)[m_originalLength]),m_overflowSize);
+      }
+
+      // See if there was any extra data read beyond what was needed for the message we are handling
+      // TCP can sometimes merge multiple messages into a single one, if there is, it will almost 
+      // certainly be in the fourth buffer (index 3), but search all but the first, just in case.
+      PSecBuffer pExtraDataBuffer(nullptr);
+
+      for(int i = 1; i < 4; i++)
+      {
+        if(Buffers[i].BufferType == SECBUFFER_EXTRA)
+        {
+          pExtraDataBuffer = &Buffers[i];
+          break;
+        }
+      }
+
+      if(pExtraDataBuffer)
+      {
+        // More data was read than is needed, this happens sometimes with TCP
+        DebugMsg(_T(" "));
+        DebugMsg(_T("Some extra cipher text was read (%d bytes)"),pExtraDataBuffer->cbBuffer);
+        // Remember where the data is for next time
+        m_readBufferBytes = pExtraDataBuffer->cbBuffer;
+        m_readPointer     = pExtraDataBuffer->pvBuffer;
+      }
+      else
+      {
+        DebugMsg(_T("No extra cipher text was read"));
+        m_readBufferBytes = 0;
+        m_readPointer     = m_readBuffer;
+      }
+    }
+  }
+
+  // Do not pass the I/O pending on to the application
+  if(m_lastError == WSA_IO_PENDING)
+  {
+    m_lastError = 0;
+  }
+
+  // Pass the result on!
+  if(m_readOverlapped)
+  {
+    PFN_SOCKET_COMPLETION completion = reinterpret_cast<PFN_SOCKET_COMPLETION>(m_readOverlapped->hEvent);
+    m_readOverlapped->Internal     = m_lastError ? m_lastError : error;
+    m_readOverlapped->InternalHigh = decoded;
+    (*completion)(m_readOverlapped);
+  }
+}
+
+// Sends up to p_length bytes of data with an OVERLAPPED callback
+int
+SecureServerSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped)
+{
+  if(!p_buffer || p_length > m_maxMsgSize)
+  {
+    return SOCKET_ERROR;
+  }
+
+  // If not in SSL/TLS mode: pass on the the insecure plain socket
+  if(!InSecureMode())
+  {
+    return PlainSocket::SendPartialOverlapped(p_buffer,p_length,p_overlapped);
+  }
+
+  SecBufferDesc   Message;
+  SecBuffer       Buffers[4];
+  SECURITY_STATUS scRet;
+
+  //
+  // Initialize security buffer structs
+  //
+  Message.ulVersion = SECBUFFER_VERSION;
+  Message.cBuffers = 4;
+  Message.pBuffers = Buffers;
+
+  Buffers[0].BufferType = SECBUFFER_EMPTY;
+  Buffers[1].BufferType = SECBUFFER_EMPTY;
+  Buffers[2].BufferType = SECBUFFER_EMPTY;
+  Buffers[3].BufferType = SECBUFFER_EMPTY;
+
+  // Put the message in the right place in the buffer
+  memcpy_s(m_writeBuffer + m_sizes.cbHeader,sizeof(m_writeBuffer) - m_sizes.cbHeader - m_sizes.cbTrailer,p_buffer,p_length);
+
+  // Line up the buffers so that the header, trailer and content will be
+  // all positioned in the right place to be sent across the TCP connection as one message.
+  //
+  Buffers[0].pvBuffer = m_writeBuffer;
+  Buffers[0].cbBuffer = m_sizes.cbHeader;
+  Buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
+
+  Buffers[1].pvBuffer = m_writeBuffer + m_sizes.cbHeader;
+  Buffers[1].cbBuffer = p_length;
+  Buffers[1].BufferType = SECBUFFER_DATA;
+
+  Buffers[2].pvBuffer = m_writeBuffer + m_sizes.cbHeader + p_length;
+  Buffers[2].cbBuffer = m_sizes.cbTrailer;
+  Buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
+
+  Buffers[3].BufferType = SECBUFFER_EMPTY;
+
+  // ENCRYPT THE MESSAGE
+  scRet = g_pSSPI->EncryptMessage(&m_context,0,&Message,0);
+
+  DebugMsg(_T(" "));
+  DebugMsg(_T("Plaintext message has %d bytes"),p_length);
+  PrintHexDump(p_length,p_buffer);
+
+  if(FAILED(scRet))
+  {
+    LogError(_T("EncryptMessage failed with %#x"),scRet);
+    m_lastError = scRet;
+    return SOCKET_ERROR;
+  }
+
+  DebugMsg(_T("Send %d encrypted bytes to client"),Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer);
+  PrintHexDump(Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer,m_writeBuffer);
+
+  m_lastError = 0;
+  return PlainSocket::SendPartialOverlapped(m_writeBuffer,Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer,p_overlapped);
 }

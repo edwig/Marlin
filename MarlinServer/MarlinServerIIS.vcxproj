@@ -373,6 +373,7 @@ copy marlin.config $(OutDir)</Command>
     <ClCompile Include="ServerTestset\TestTime.cpp" />
     <ClCompile Include="ServerTestset\TestToken.cpp" />
     <ClCompile Include="ServerTestset\TestWebSocket.cpp" />
+    <ClCompile Include="ServerTestset\TestWebSocketSecure.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

@@ -41,6 +41,9 @@ public:
   // Sends    up to   p_length bytes of data with an OVERLAPPED callback
   virtual int     SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped) = 0;
 
+  // Connect to the threadpool of the server
+  virtual void    AssociateThreadPool(HANDLE p_threadPoolIOCP) = 0;
+
   // Last error state of deepest derived class
 	virtual DWORD   GetLastError() = 0;
   // Disconnect the socket SD_RECEIVE / SD_SEND / SD_BOTH

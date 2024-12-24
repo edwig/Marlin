@@ -424,6 +424,7 @@
     <ClCompile Include="..\TestsetClient\TestPatch.cpp" />
     <ClCompile Include="..\TestsetClient\TestSecureSite.cpp" />
     <ClCompile Include="..\TestsetClient\TestWebSocket.cpp" />
+    <ClCompile Include="..\TestsetClient\TestWebSocketSecure.cpp" />
     <ClCompile Include="..\TestsetClient\TestWS.cpp" />
     <ClCompile Include="HttpReceiveWebSocket.cpp" />
     <ClCompile Include="stdafx.cpp">

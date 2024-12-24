@@ -49,10 +49,11 @@ static char THIS_FILE[] = __FILE__;
 
 HTTPSYS_WebSocket* WINAPI
 HttpReceiveWebSocket(IN HANDLE                /*RequestQueueHandle*/
-                     ,IN HTTP_REQUEST_ID       /*RequestId*/
-                     ,IN WEB_SOCKET_HANDLE     /*SocketHandle*/
-                     ,IN PWEB_SOCKET_PROPERTY  /*SocketProperties */ OPTIONAL
-                     ,IN DWORD                 /*PropertyCount*/     OPTIONAL);
+                    ,IN HTTP_REQUEST_ID       /*RequestId*/
+                    ,IN WEB_SOCKET_HANDLE     /*SocketHandle*/
+                    ,IN HANDLE                /*ThreadPoolIOCP*/
+                    ,IN PWEB_SOCKET_PROPERTY  /*SocketProperties */ OPTIONAL
+                    ,IN DWORD                 /*PropertyCount*/     OPTIONAL);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -75,6 +76,13 @@ void
 WebSocketServer::Reset()
 {
   WebSocket::Reset();
+
+  // Remove left over writing frames
+  for(auto& frame : m_writing)
+  {
+    delete frame;
+  }
+  m_writing.clear();
 
   // Simply close the socket handle and ignore the errors
   if(m_handle)
@@ -207,8 +215,10 @@ WebSocketServer::SocketReader(HRESULT p_error
   // Handle any error (if any)
   if(p_error != S_OK)
   {
-    DWORD error = (p_error & 0x0F);
-    ERRORLOG(error,_T("Websocket failed to read fragment"));
+    if(!(p_error == ERROR_NO_MORE_ITEMS || m_inClosing))
+    {
+      ERRORLOG(p_error,_T("Websocket failed to read fragment"));
+    }
     CloseSocket();
     return;
   }
@@ -419,7 +429,6 @@ WebSocketServer::CloseSocket()
   m_inClosing = true;
 
   CloseForReading();
-  SendCloseSocket(WS_CLOSE_NORMAL,"");
   CloseForWriting();
 
   if(HttpCloseWebSocket(m_server->GetRequestQueue(),m_request) != NO_ERROR)
@@ -591,6 +600,8 @@ WebSocketServer::SendCloseSocket(USHORT p_code,XString p_reason)
   {
     return true;
   }
+  m_inClosing = true;
+
   // Socket already gone!
   if(!SYSWebSocketValid())
   {
@@ -794,6 +805,7 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
   m_websocket = HttpReceiveWebSocket(m_server->GetRequestQueue()
                                     ,m_request
                                     ,m_handle
+                                    ,m_server->GetThreadPool()->GetIOCompletionPort()
                                     ,properties
                                     ,4);
   if(m_websocket == nullptr)

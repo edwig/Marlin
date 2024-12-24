@@ -94,7 +94,6 @@ HTTPRequest::HTTPRequest(HTTPServer* p_server)
 // DTOR
 HTTPRequest::~HTTPRequest()
 {
-  OutputDebugString(_T("XTOR request\n"));
   ClearMemory();
   DeleteCriticalSection(&m_critical);
 }

@@ -366,6 +366,8 @@ CheckPlatform()
 //
 VOID WINAPI SvcMain(DWORD dwArgc,LPTSTR *lpszArgv)
 {
+  _set_se_translator(SeTranslator);
+
   // Register the handler function for the service
   g_svcStatusHandle = RegisterServiceCtrlHandler(g_svcname,SvcCtrlHandler);
   if(!g_svcStatusHandle)

@@ -98,6 +98,8 @@ public:
 
   // FUNCTIONS
 
+  // Connect to the threadpool of the server
+  void           AssociateThreadPool(HANDLE p_threadPoolIOCP);
   // Reconnecting to an already previously opened socket
   void           ReConnectSocket(Request* p_request);
   // HTTP server application has created this handle for the header handshaking already
