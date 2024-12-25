@@ -121,11 +121,11 @@ TestMarlinServer::TestEventDriver()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Driver/"
   HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong, false, m_inPortNumber,url,true);
-  if (site)
+  if(site)
   {
     // SUMMARY OF THE TEST
-    // --- "---------------------------------------------- - ------
-    qprintf(_T("HTTPSite for ServerEventDriver                : OK : %s\n"), site->GetPrefixURL().GetString());
+    // ------- "---------------------------------------------- - ------
+    qprintf(_T("HTTPSite for ServerEventDriver                 : OK : %s\n"), site->GetPrefixURL().GetString());
   }
   else
   {
@@ -134,9 +134,32 @@ TestMarlinServer::TestEventDriver()
     qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url.GetString());
     return error;
   }
+  if(site->StartSite())
+  {
+    // ------- "---------------------------------------------- - ------
+    qprintf(_T("HTTPSite for ServerEventDriver started         : OK : %s\n"),site->GetPrefixURL().GetString());
+  }
+  else
+  {
+    ++error;
+    xerror();
+    qprintf(_T("ERROR: Cannot start a HTTP site for: %s\n"),url.GetString());
+    return error;
+  }
 
   // Register the URL for starting sessions
-  m_driver.RegisterSites(m_httpServer,site);
+  if(m_driver.RegisterSites(m_httpServer,site))
+  {
+    // ------- "---------------------------------------------- - ------
+    qprintf(_T("Sub-Site for ServerEventDriver started         : OK : %s\n"),site->GetPrefixURL().GetString());
+  }
+  else
+  {
+    ++error;
+    xerror();
+    qprintf(_T("ERROR: Cannot start a HTTP subsite for event driver: %s\n"),url.GetString());
+    return error;
+  }
 
   // In real life we would generate the session names and the cookie values!!
   // these values make the debugging easier in the test application

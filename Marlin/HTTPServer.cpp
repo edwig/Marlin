@@ -572,9 +572,15 @@ HTTPServer::FindHTTPSite(HTTPSite* p_site,const XString& p_url)
   if(site)
   {
     // Check if the found site is indeed it's main site
-    if(site->GetMainSite() == p_site)
+    // Could be linked multiple levels below the current one
+    HTTPSite* main = site->GetMainSite();
+    while(main)
     {
-      return site;
+      if(main == p_site)
+      {
+        return site;
+      }
+      main = main->GetMainSite();
     }
   }
   return p_site;
