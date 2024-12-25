@@ -232,6 +232,7 @@ WebSocketServer::SocketReader(HRESULT p_error
   }
   else
   {
+    AutoCritSec lock(&m_disp);
     m_reading = new WSFrame();
     m_reading->m_length = 0;
     m_reading->m_data = reinterpret_cast<BYTE*>(malloc(static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
@@ -239,6 +240,7 @@ WebSocketServer::SocketReader(HRESULT p_error
 
   if(!p_final)
   {
+    AutoCritSec lock(&m_disp);
     BYTE* data = reinterpret_cast<BYTE*>(realloc(m_reading->m_data,static_cast<size_t>(m_reading->m_length) + static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
     if(data)
     {

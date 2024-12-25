@@ -386,7 +386,7 @@ SYSWebSocket::EncodingFragment(bool p_closing /*= false*/)
 
 // Plain/Secure socket did wake up and send us some results
 //
-void 
+void WINAPI
 WebSocketReceivePartialOverlapped(LPOVERLAPPED p_overlapped)
 {
   __try

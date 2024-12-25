@@ -23,7 +23,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-void CALLBACK PlainSocketOverlappedResult(void* p_overlapped);
+void WINAPI PlainSocketOverlappedResult(void* p_overlapped);
 
 // Constructor for an active connection, socket created later
 PlainSocket::PlainSocket(HANDLE p_stopEvent)
@@ -566,7 +566,7 @@ PlainSocket::RecvPartial(LPVOID p_buffer, const ULONG p_length)
 	return SOCKET_ERROR;
 }
 
-void CALLBACK PlainSocketOverlappedResult(void* p_overlapped)
+void WINAPI PlainSocketOverlappedResult(void* p_overlapped)
 {
   _set_se_translator(SeTranslator);
   try
@@ -587,16 +587,16 @@ void CALLBACK PlainSocketOverlappedResult(void* p_overlapped)
       }
       else // SD_RECEIVE
       {
-        if(overlapped->Internal == 259)
-        {
-          int a = 0;
-        }
         socket->ReceiveOverlapped((DWORD)overlapped->Internal,(DWORD)overlapped->InternalHigh,0);
       }
     }
     else
     {
-      overlapped->Internal = 123;
+      // We've gotten something for this socket, but the overlapped structure is not ours
+      // Most likely it's a TCP/IP frame for keep-alive or some other bookkeeping
+      // Mark the structure, so the cleanup routine in the threadpool will not crash on it.
+      overlapped->Internal = 0xDEADBEAF;
+      TRACE("OTHER IOCP Action on websocket\n");
     }
   }
   catch(StdException& /*ex*/)
@@ -670,7 +670,15 @@ PlainSocket::ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
     PFN_SOCKET_COMPLETION completion = reinterpret_cast<PFN_SOCKET_COMPLETION>(m_readOverlapped->hEvent);
     m_readOverlapped->Internal     = dwError;
     m_readOverlapped->InternalHigh = cbTransferred;
-    (*completion)(m_readOverlapped);
+    if(completion && (dwError || cbTransferred))
+    {
+      (*completion)(m_readOverlapped);
+    }
+    else
+    {
+      // Some other event that we ignore
+      TRACE("Plainsocket: ignored read completion event\n");
+    }
   }
 }
 

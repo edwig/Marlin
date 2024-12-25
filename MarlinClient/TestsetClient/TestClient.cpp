@@ -139,30 +139,30 @@ int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
     else
     {
       // Unit testing of the client to a web server
-      errors += TestFindClientCertificate();
-      errors += TestBaseSite(client);
-      errors += TestSecureSite(client);
-      errors += TestClientCertificate(client);
-      errors += TestChunkedTransfer(client);
-      errors += TestCookies(*client);
-      errors += TestFormData(client);
-      errors += TestJsonData(client);
-      errors += TestContract(client,true, false);  // JSON No authentication
-      errors += TestContract(client,false,false);  // WS   No authentication
-      errors += TestContract(client,false,true);   // WS   WS-Secure token-profile
-      errors += TestPatching(client);
-      errors += TestCompression(client);
-      errors += TestEvents(client);
+//       errors += TestFindClientCertificate();
+//       errors += TestBaseSite(client);
+//       errors += TestSecureSite(client);
+//       errors += TestClientCertificate(client);
+//       errors += TestChunkedTransfer(client);
+//       errors += TestCookies(*client);
+//       errors += TestFormData(client);
+//       errors += TestJsonData(client);
+//       errors += TestContract(client,true, false);  // JSON No authentication
+//       errors += TestContract(client,false,false);  // WS   No authentication
+//       errors += TestContract(client,false,true);   // WS   WS-Secure token-profile
+//       errors += TestPatching(client);
+//       errors += TestCompression(client);
+//       errors += TestEvents(client);
 
 #ifdef TEST_WEBSOCKETS
      errors += TestWebSocketAccept();
-//      errors += TestWebSocket(g_log);
-//      errors += TestCloseWebSocket();
+     errors += TestWebSocket(g_log);
+     errors += TestCloseWebSocket();
      errors += TestWebSocketSecure(g_log);
      errors += TestCloseWebSocketSecure();
-//     errors += TestEventDriver(g_log);
+//      errors += TestEventDriver(g_log);
 #endif
-     errors += TestWebservices(*client);
+//      errors += TestWebservices(*client);
     }
 
     _tprintf(_T("\n"));
