@@ -27,8 +27,9 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "HTTPSite.h"
-#include "SiteHandlerSoap.h"
+#include "TestPorts.h"
+#include <HTTPSite.h>
+#include <SiteHandlerSoap.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -97,7 +98,7 @@ TestMarlinServer::TestSubSites()
 
   // Create HTTP site to listen to "http://+:port/MarlinToken/one or two"
   // This is a subsite of another one, so 5th parameter is set to true
-  HTTPSite* site1 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber + 3,url1,true);
+  HTTPSite* site1 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_TOKEN_PORT,url1,true);
   if(site1)
   {
     // SUMMARY OF THE TEST
@@ -111,7 +112,7 @@ TestMarlinServer::TestSubSites()
     qprintf(_T("ERROR: Cannot make a HTTP site for: %s\n"),url1.GetString());
     return error;
   }
-  HTTPSite* site2 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber + 3,url2,true);
+  HTTPSite* site2 = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_TOKEN_PORT,url2,true);
   if(site2)
   {
     // SUMMARY OF THE TEST
@@ -184,7 +185,7 @@ TestMarlinServer::StopSubsites()
     // TEST TO REMOVE RECURSIVELY
 
     // Testing the main site. Should not be removed!!
-    if(m_httpServer->DeleteSite(m_inPortNumber + 3,url1))
+    if(m_httpServer->DeleteSite(TESTING_TOKEN_PORT,url1))
     {
       qprintf(_T("ERROR Incorrectly removed a main site: %s\n"),url1.GetString());
       qprintf(_T("ERROR Other sites are dependent on it\n"));
@@ -197,13 +198,13 @@ TestMarlinServer::StopSubsites()
     // TEST TO REMOVE IN-ORDER
 
     // Removing sub-sites. Should work
-    if(m_httpServer->DeleteSite(m_inPortNumber + 3,url2) == false)
+    if(m_httpServer->DeleteSite(TESTING_TOKEN_PORT,url2) == false)
     {
       qprintf(_T("ERROR Deleting site : %s\n"),url2.GetString());
       xerror();
       ++error;
     }
-    if(m_httpServer->DeleteSite(m_inPortNumber + 3,url3) == false)
+    if(m_httpServer->DeleteSite(TESTING_TOKEN_PORT,url3) == false)
     {
       qprintf(_T("ERROR Deleting site : %s\n"),url3.GetString());
       xerror();
@@ -211,7 +212,7 @@ TestMarlinServer::StopSubsites()
     }
 
     // Now removing main site
-    if(m_httpServer->DeleteSite(m_inPortNumber + 3,url1) == false)
+    if(m_httpServer->DeleteSite(TESTING_TOKEN_PORT,url1) == false)
     {
       qprintf(_T("ERROR Deleting site : %s\n"),url1.GetString());
       xerror();

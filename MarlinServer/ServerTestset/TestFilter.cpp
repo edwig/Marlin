@@ -27,8 +27,9 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "SiteHandlerSoap.h"
-#include "SiteFilter.h"
+#include "TestPorts.h"
+#include <SiteHandlerSoap.h>
+#include <SiteFilter.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -148,7 +149,7 @@ TestMarlinServer::TestFilter()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Filter/"
   // Callback function is no longer required!
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if (site)
   {
     // SUMMARY OF THE TEST

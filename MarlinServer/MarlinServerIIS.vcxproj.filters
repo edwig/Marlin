@@ -114,6 +114,9 @@
     <ClInclude Include="framework.h">
       <Filter>Configuration</Filter>
     </ClInclude>
+    <ClInclude Include="TestPorts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Testset">

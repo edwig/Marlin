@@ -27,11 +27,11 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "ServerApp.h"
-#include "HTTPSite.h"
-#include "WebSocketMain.h"
-#include "SiteHandlerWebSocket.h"
 #include "TestPorts.h"
+#include <ServerApp.h>
+#include <HTTPSite.h>
+#include <WebSocketMain.h>
+#include <SiteHandlerWebSocket.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

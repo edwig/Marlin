@@ -27,6 +27,7 @@
 //
 #include "stdafx.h"
 #include "TestClient.h"
+#include "TestPorts.h"
 #include <SOAPMessage.h>
 #include <XMLMessage.h>
 #include <HTTPClient.h>
@@ -374,7 +375,7 @@ inline XString
 CreateTokenURL(XString p_extra)
 {
   XString url;
-  url.Format(_T("http://%s:%d/MarlinToken/%s"),MARLIN_HOST,TESTING_HTTP_PORT + 3,p_extra.GetString());
+  url.Format(_T("http://%s:%d/MarlinToken/%s"),MARLIN_HOST,TESTING_TOKEN_PORT,p_extra.GetString());
   return url;
 }
 

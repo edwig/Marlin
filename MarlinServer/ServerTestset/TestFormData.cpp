@@ -27,8 +27,9 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "SiteHandlerFormData.h"
-#include "MultiPartBuffer.h"
+#include "TestPorts.h"
+#include <SiteHandlerFormData.h>
+#include <MultiPartBuffer.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -168,7 +169,7 @@ TestMarlinServer::TestFormData()
   xprintf(_T("===============================================================\n"));
 
   // Create HTTP site to listen to "http://+:port/MarlinTest/FormData/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if(site)
   {
     // SUMMARY OF THE TEST

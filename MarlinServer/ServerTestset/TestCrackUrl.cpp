@@ -27,8 +27,8 @@
 //
 #include "Stdafx.h"
 #include "TestMarlinServer.h"
-#include "CrackURL.h"
-#include "WinHttp.h"
+#include <CrackURL.h>
+#include <WinHttp.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -33,8 +33,14 @@
 #include "JSONMessage.h"
 #include "MultiPartBuffer.h"
 
+#ifdef MARLIN_IIS
+// For IIS we provide the absolute pathname
+// BEWARE: Could be different on you machine!!
+XString file = _T("C:\\Develop\\Marlin\\Documentation\\HTML5-eventsource.js");
+#else
 // Beware Debugging starting directory MUST be "$(OutDir)"
 XString file = _T("..\\Documentation\\HTML5-eventsource.js");
+#endif
 
 XString GetJsonString()
 {

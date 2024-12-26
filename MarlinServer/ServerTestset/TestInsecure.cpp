@@ -27,8 +27,9 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "HTTPSite.h"
-#include "SiteHandlerSoap.h"
+#include "TestPorts.h"
+#include <HTTPSite.h>
+#include <SiteHandlerSoap.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -131,7 +132,7 @@ TestMarlinServer::TestInsecure()
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Insecure/"
   // Callback function is no longer required!
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if (site)
   {
     // SUMMARY OF THE TEST

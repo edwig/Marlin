@@ -395,6 +395,7 @@ copy marlin.config $(OutDir)</Command>
     <ClInclude Include="TestMarlinServer.h" />
     <ClInclude Include="TestMarlinServerApp.h" />
     <ClInclude Include="TestMarlinServerAppFactory.h" />
+    <ClInclude Include="TestPorts.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

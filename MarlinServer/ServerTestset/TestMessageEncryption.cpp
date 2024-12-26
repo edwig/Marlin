@@ -27,8 +27,9 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "HTTPSite.h"
-#include "SiteHandlerSoap.h"
+#include "TestPorts.h"
+#include <HTTPSite.h>
+#include <SiteHandlerSoap.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -146,7 +147,7 @@ TestMarlinServer::TestMessageEncryption()
   // Create URL channel to listen to "http://+:port/MarlinTest/MessageSigning/"
   // But WebConfig can override all values except for the callback function address
   XString url(_T("/MarlinTest/MessageEncrypt/"));
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url,true);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if (site)
   {
     // SUMMARY OF THE TEST

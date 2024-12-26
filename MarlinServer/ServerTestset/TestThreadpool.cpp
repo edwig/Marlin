@@ -27,7 +27,7 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "ThreadPool.h"
+#include <ThreadPool.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

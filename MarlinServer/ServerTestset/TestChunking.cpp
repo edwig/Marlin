@@ -27,7 +27,8 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "SiteHandlerGet.h"
+#include "TestPorts.h"
+#include <SiteHandlerGet.h>
 #include <io.h>
 
 #ifdef _DEBUG
@@ -102,7 +103,7 @@ TestMarlinServer::TestChunking()
   // Create URL channel to listen to "http://+:port/MarlinTest/Chunking/"
   // Callback function is no longer required!
   XString webaddress = _T("/MarlinTest/Chunking/");
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress,true);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,webaddress,true);
   if (site)
   {
     // SUMMARY OF THE TEST

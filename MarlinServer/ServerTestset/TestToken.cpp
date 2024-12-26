@@ -27,10 +27,11 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "HTTPSite.h"
-#include "SiteHandlerSoap.h"
-#include "PrintToken.h"
-#include "GetLastErrorAsString.h"
+#include "TestPorts.h"
+#include <HTTPSite.h>
+#include <SiteHandlerSoap.h>
+#include <PrintToken.h>
+#include <GetLastErrorAsString.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -225,7 +226,7 @@ TestMarlinServer::TestToken()
   xprintf(_T("==============================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinToken/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber + 3,url,false);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_TOKEN_PORT,url,false);
   if(site)
   {
     // SUMMARY OF THE TEST

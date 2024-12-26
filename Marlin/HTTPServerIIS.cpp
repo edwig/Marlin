@@ -325,7 +325,7 @@ HTTPServerIIS::CreateSite(PrefixType    p_type
 
 // Delete a channel (from prefix OR base URL forms)
 bool
-HTTPServerIIS::DeleteSite(int p_port,XString p_baseURL,bool p_force /*=false*/)
+HTTPServerIIS::DeleteSite(int p_port,XString p_baseURL,bool /*p_force /*=false*/)
 {
   AutoCritSec lock(&m_sitesLock);
   // Default result
@@ -339,16 +339,15 @@ HTTPServerIIS::DeleteSite(int p_port,XString p_baseURL,bool p_force /*=false*/)
     HTTPSite* site = it->second;
 
     // See if other sites are dependent on this one
-    if(p_force == false && site->GetIsSubsite() == false)
+    if(site->GetHasSubSites())
     {
       // Walk all sites, to see if sub-sites still dependent on this main site
       for(SiteMap::iterator fit = m_allsites.begin(); fit != m_allsites.end(); ++fit)
       {
         if(fit->second->GetMainSite() == site)
         {
-          // Cannot delete this site, other sites are dependent on this one
-          ERRORLOG(ERROR_ACCESS_DENIED,_T("Cannot remove site. Sub-sites still dependent on: ") + p_baseURL);
-          return false;
+          fit->second->StopSite(true);
+          fit = m_allsites.begin();
         }
       }
     }
