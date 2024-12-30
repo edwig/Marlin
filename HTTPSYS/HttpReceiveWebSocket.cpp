@@ -34,7 +34,6 @@ HTTPSYS_WebSocket* WINAPI
 HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
                     ,IN HTTP_REQUEST_ID       RequestId
                     ,IN WEB_SOCKET_HANDLE     SocketHandle
-                    ,IN HANDLE                ThreadPoolIOCP
                     ,IN WEB_SOCKET_PROPERTY*  SocketProperties OPTIONAL
                     ,IN DWORD                 PropertyCount    OPTIONAL)
 {
@@ -53,12 +52,6 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
     return nullptr;
   }
 
-  // We must have a threadpool I/O Completion Port for overlapping I/O to work
-  if(ThreadPoolIOCP == nullptr)
-  {
-    return nullptr;
-  }
-
   // Returns the WebSocket or nullptr
   SYSWebSocket* websocket = request->GetWebSocket();
   if(websocket == nullptr)
@@ -70,7 +63,7 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
   websocket->SetTranslationHandle(SocketHandle);
 
   // Associate our socket with the correct threadpool
-  websocket->AssociateThreadPool(ThreadPoolIOCP);
+  websocket->AssociateThreadPool(queue->GetIOCompletionPort());
 
   // Optional socket properties
   __try

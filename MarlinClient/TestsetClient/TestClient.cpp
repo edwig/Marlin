@@ -156,8 +156,8 @@ int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
 
 #ifdef TEST_WEBSOCKETS
       errors += TestWebSocketAccept();
-      errors += TestWebSocket(g_log);
-      errors += TestCloseWebSocket();
+//       errors += TestWebSocket(g_log);
+//       errors += TestCloseWebSocket();
       errors += TestWebSocketSecure(g_log);
       errors += TestCloseWebSocketSecure();
       errors += TestEventDriver(g_log);

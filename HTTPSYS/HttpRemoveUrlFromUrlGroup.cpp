@@ -43,6 +43,9 @@ HttpRemoveUrlFromUrlGroup(IN HTTP_URL_GROUP_ID  UrlGroupId
     return ERROR_INVALID_PARAMETER;
   }
 
+  // Decrease the number of endpoints
+  g_session->RemoveEndpoint();
+
   // Find the prefix of the URL registration
   CStringW fullUrl(pFullyQualifiedUrl);
   CStringA prefix(fullUrl);

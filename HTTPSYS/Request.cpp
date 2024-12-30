@@ -73,6 +73,9 @@ Request::~Request()
 {
   CloseRequest();
   Reset();
+
+  // Decrement the connection counter
+  g_session->RemoveConnection();
 }
 
 // Starting of a request.
@@ -178,7 +181,7 @@ Request::CloseRequest()
       int error = m_socket->GetLastError();
       LogError(_T("Error shutdown connection: %s Error: %d"),m_request.pRawUrl,error);
     }
-    delete m_socket;
+    m_socket->DropReference();
     m_socket = nullptr;
   }
 
@@ -218,14 +221,19 @@ Request::DrainRequest()
   // drain the incoming request body
   if(readin > 0)
   {
+    unsigned size = g_session->GetMaxRequestBytes();
+    if(size < MESSAGE_BUFFER_LENGTH)
+    {
+      size = MESSAGE_BUFFER_LENGTH;
+    }
     // Temporary read buffer
-    unsigned char* drain_buffer = new unsigned char[MESSAGE_BUFFER_LENGTH + 1];
+    unsigned char* drain_buffer = new unsigned char[size + 1];
 
     // Loop until the end of the content (the body)
     while(readin > 0)
     {
       ULONG read = 0L;
-      if(ReceiveBuffer(drain_buffer,MESSAGE_BUFFER_LENGTH,&read,false) > 0)
+      if(ReceiveBuffer(drain_buffer,size,&read,false) > 0)
       {
         if(read <= readin)
         {
@@ -839,12 +847,18 @@ void
 Request::ReadInitialMessage()
 {
   FreeInitialBuffer();
-  m_initialBuffer = (BYTE*) malloc(MESSAGE_BUFFER_LENGTH + 1);
+
+  unsigned size = g_session->GetMaxRequestBytes();
+  if(size < MESSAGE_BUFFER_LENGTH)
+  {
+    size = MESSAGE_BUFFER_LENGTH;
+  }
+  m_initialBuffer = (BYTE*) malloc(size);
   if(!m_initialBuffer)
   {
     throw (INT)ERROR_OUTOFMEMORY;
   }
-  int length = m_socket->RecvPartial(m_initialBuffer,MESSAGE_BUFFER_LENGTH);
+  int length = m_socket->RecvPartial(m_initialBuffer,size - 1);
   if (length > 0)
   {
     m_initialBuffer[length] = 0;
@@ -1775,10 +1789,20 @@ Request::CreateServerHeader(PHTTP_RESPONSE p_response)
 
     if(disable == 0 || (disable == 1 && p_response->StatusCode < HTTP_STATUS_BAD_REQUEST))
     {
+      // Add our own server header tot the output stream
       if(p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue == nullptr)
       {
         p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue      = version;
         p_response->Headers.KnownHeaders[HttpHeaderServer].RawValueLength = (USHORT) strlen(version);
+      }
+    }
+    if(disable == 2)
+    {
+      // Remove the server header
+      if(p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue != nullptr)
+      {
+        p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue      = nullptr;
+        p_response->Headers.KnownHeaders[HttpHeaderServer].RawValueLength = 0;
       }
     }
   }

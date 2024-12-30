@@ -583,7 +583,7 @@ CancelHTTPRequest(void* p_argument,bool p_stayInThePool,bool p_forcedAbort)
     if (status == 0 && outstanding->Offset == 0 && outstanding->OffsetHigh == 0)
     {
       HTTPRequest* request = reinterpret_cast<HTTPRequest*>(outstanding->m_request);
-      if (request)
+      if (request && request->m_ident == HTTPREQUEST_IDENT)
       {
         if ((!request->GetIsActive() && !p_stayInThePool) || p_forcedAbort)
         {

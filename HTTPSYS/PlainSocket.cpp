@@ -579,8 +579,10 @@ void WINAPI PlainSocketOverlappedResult(void* p_overlapped)
       // See if we are still a socket. Read/write process stops here!
       if(IsBadReadPtr(socket,sizeof(PlainSocket*)) || socket->m_ident != SOCKETSTREAM_IDENT)
       {
+        // If it is **NOT** a socket, the AddReference will have done nothing
         return;
       }
+      socket->AddReference();
       if(overlapped->hEvent == (HANDLE)SD_SEND)
       {
         socket->SendingOverlapped((DWORD)overlapped->Internal,(DWORD)overlapped->InternalHigh,0);
@@ -589,6 +591,7 @@ void WINAPI PlainSocketOverlappedResult(void* p_overlapped)
       {
         socket->ReceiveOverlapped((DWORD)overlapped->Internal,(DWORD)overlapped->InternalHigh,0);
       }
+      socket->DropReference();
     }
     else
     {

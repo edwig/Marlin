@@ -484,6 +484,7 @@
     <ClCompile Include="RequestQueue.cpp" />
     <ClCompile Include="SecureServerSocket.cpp" />
     <ClCompile Include="ServerSession.cpp" />
+    <ClCompile Include="SocketStream.cpp" />
     <ClCompile Include="SplitUrlPrefix.cpp" />
     <ClCompile Include="SSLTracer.cpp" />
     <ClCompile Include="SSLUtilities.cpp" />

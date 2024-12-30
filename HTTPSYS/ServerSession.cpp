@@ -71,7 +71,7 @@ ServerSession::GetServerVersion()
 {
   if(!m_server[0])
   {
-    sprintf_s(m_server,50,"Marlin HTTPAPI/%s Version: %s",VERSION_HTTPAPI,VERSION_HTTPSYS);
+    sprintf_s(m_server,50,"Marlin-HTTPAPI/%s Version: %s",VERSION_HTTPAPI,VERSION_HTTPSYS);
   }
   return m_server;
 }
@@ -225,6 +225,56 @@ ServerSession::SetAuthentication(ULONG p_scheme,CString p_domain,CString p_realm
   }
 }
 
+bool
+ServerSession::AddConnection()
+{
+  if(!m_maxConnections)
+  {
+    InterlockedIncrement(&m_connections);
+    return true;
+  }
+  if(m_connections < m_maxConnections)
+  {
+    InterlockedIncrement(&m_connections);
+    return true;
+  }
+  return false;
+}
+
+bool
+ServerSession::AddEndpoint()
+{
+  if(!m_maxEndpoints)
+  {
+    InterlockedIncrement(&m_endpoints);
+    return true;
+  }
+  if(m_endpoints < m_maxEndpoints)
+  {
+    InterlockedIncrement(&m_endpoints);
+    return true;
+  }
+  return false;
+}
+
+void
+ServerSession::RemoveConnection()
+{
+  if(m_connections)
+  {
+    InterlockedDecrement(&m_connections);
+  }
+}
+
+void
+ServerSession::RemoveEndpoint()
+{
+  if(m_endpoints)
+  {
+    InterlockedDecrement(&m_endpoints);
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // GLOBAL LOGGING FUNCTIONS
@@ -340,6 +390,10 @@ ServerSession::ReadRegistrySettings()
   TCHAR   value3[BUFF_LEN];
   DWORD   size3 = BUFF_LEN;
 
+  // Usage of the HTTP header "Server:"
+  // 0 -> Add our own server header "Marlin-HTTPAPI/2.0"
+  // 1 -> Only add our own server header if status code is < 400
+  // 2 -> Remove the server header altogether
   if(HTTPReadRegister(sectie,_T("DisableServerHeader"),REG_DWORD,value1,&value2,value3,&size3))
   {
     if(value2 >= 0 && value2 <= 2)
@@ -348,6 +402,9 @@ ServerSession::ReadRegistrySettings()
     }
   }
 
+  // Maximum number of live connections to service clients
+  // Normally between 1024 and 2031616 
+  // Default = 0 (no restrictions)
   if(HTTPReadRegister(sectie,_T("MaxConnections"),REG_DWORD,value1,&value2,value3,&size3))
   {
     if(value2 >= SESSION_MIN_CONNECTIONS && value2 <= SESSION_MAX_CONNECTIONS)
@@ -356,11 +413,51 @@ ServerSession::ReadRegistrySettings()
     }
   }
 
-  if(HTTPReadRegister(sectie,_T("HTTPSYS64_Logging"),REG_DWORD,value1,&value2,value3,&size3))
+  // Maximum number of URL endpoints to service
+  // Normally between 1 and 1024
+  // Default = 0 (no restrictions)
+  if(HTTPReadRegister(sectie,_T("MaxEndpoints"),REG_DWORD,value1,&value2,value3,&size3))
+  {
+    if(value2 <= SESSION_MAX_ENDPOINTS)
+    {
+      m_maxEndpoints = value2;
+    }
+  }
+
+  // Logging level
+  // 0    No logging
+  // 1    Results logging
+  // 2    Hex dump tracing first line
+  // 3    Full hex dump tracing
+  if(HTTPReadRegister(sectie,_T("Logging"),REG_DWORD,value1,&value2,value3,&size3))
   {
     if(value2 >= SOCK_LOGGING_OFF && value2 <= SOCK_LOGGING_FULLTRACE)
     {
       m_socketLogging = value2;
+    }
+  }
+
+  // Max number of bytes for a header field
+  // Normally 16k (default) upto 64k
+  if(HTTPReadRegister(sectie,_T("MaxFieldLength"),REG_DWORD,value1,&value2,value3,&size3))
+  {
+    if(value2 >= SESSION_DEF_FIELDLENGTH && value2 <= SESSION_MAX_FIELDLENGTH)
+    {
+      m_maxFieldLength = value2;
+    }
+  }
+
+  // Max number of bytes of the initial request (HTTP line + URL + headers)
+  // Normally 16k (default) upto 16MB
+  if(HTTPReadRegister(sectie,_T("MaxRequestBytes"),REG_DWORD,value1,&value2,value3,&size3))
+  {
+    if(value2 >= SESSION_DEF_REQUESTBYTES && value2 <= SESSION_MAX_REQUESTBYTES)
+    {
+      m_maxRequestBytes = value2;
+      if(m_maxRequestBytes < m_maxFieldLength)
+      {
+        m_maxFieldLength = m_maxRequestBytes;
+      }
     }
   }
 }

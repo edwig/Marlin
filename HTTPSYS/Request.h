@@ -14,7 +14,7 @@
 // Test to see if it is still a request object
 #define HTTP_REQUEST_IDENT 0x00EDED0000EDED00
 
-// For header lines
+// For header lines (minimum to impose)
 #define MESSAGE_BUFFER_LENGTH (16*1024)
 // For files, the buffer should be arbitrarily shorter than the maximum TCP/IP frame
 // To accommodate the header blocks of the TCP/IP stack ( a few hundred bytes)

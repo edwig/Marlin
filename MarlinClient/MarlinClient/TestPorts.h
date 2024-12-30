@@ -33,6 +33,7 @@
 const int TESTING_HTTP_PORT   = 1200;  // For site "/MarlinTest/" 
 const int TESTING_HTTPS_PORT  = 1201;  // For site "/SecureTest/" 
 const int TESTING_CLCERT_PORT = 1202;  // For site "/SecureClientCert/" 
+const int TESTING_TOKEN_PORT  = 1203;  // For site "/MarlinToken/"
 const int TESTING_SECURE_WS   = 1204;  // For site "/SecureSockets/"
 
 // COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST

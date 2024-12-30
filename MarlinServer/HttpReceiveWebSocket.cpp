@@ -58,7 +58,6 @@ HTTPSYS_WebSocket* WINAPI
 HttpReceiveWebSocket(IN HANDLE                /*RequestQueueHandle*/
                     ,IN HTTP_REQUEST_ID       /*RequestId*/
                     ,IN WEB_SOCKET_HANDLE     /*SocketHandle*/
-                    ,IN HANDLE                /*ThreadPoolIOCP*/
                     ,IN PWEB_SOCKET_PROPERTY  /*SocketProperties */ OPTIONAL
                     ,IN DWORD                 /*PropertyCount*/     OPTIONAL)
 {

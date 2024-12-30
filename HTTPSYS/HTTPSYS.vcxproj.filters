@@ -248,5 +248,8 @@
     <ClCompile Include="HttpCloseWebSocket.cpp">
       <Filter>HTTP_API</Filter>
     </ClCompile>
+    <ClCompile Include="SocketStream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

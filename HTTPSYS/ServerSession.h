@@ -18,6 +18,11 @@
 
 #define SESSION_MIN_CONNECTIONS      1024
 #define SESSION_MAX_CONNECTIONS   2000000
+#define SESSION_MAX_ENDPOINTS        1024
+#define SESSION_DEF_FIELDLENGTH     16384
+#define SESSION_MAX_FIELDLENGTH     65534
+#define SESSION_DEF_REQUESTBYTES    16384
+#define SESSION_MAX_REQUESTBYTES 16777216
 
 class UrlGroup;
 class LogAnalysis;
@@ -34,6 +39,10 @@ public:
  // FUNCTIONS
  ULONG      AddUrlGroup   (UrlGroup* p_group);
  bool       RemoveUrlGroup(HTTP_URL_GROUP_ID p_handle,UrlGroup* p_group);
+ bool       AddConnection();
+ bool       AddEndpoint();
+ void       RemoveConnection();
+ void       RemoveEndpoint();
  // SETTERS
  void       SetSocketLogging(int p_logging);
  void       SetEnabledState(HTTP_ENABLED_STATE p_state);
@@ -59,6 +68,11 @@ public:
  ULONG      GetTimeoutMinSendRate()     { return m_timeoutMinSendRate;      }
  int        GetDisableServerHeader()    { return m_disableServerHeader;     }
  unsigned   GetMaxConnections()         { return m_maxConnections;          }
+ unsigned   GetMaxEndpoints()           { return m_maxEndpoints;            }
+ unsigned   GetMaxFieldLength()         { return m_maxFieldLength;          }
+ unsigned   GetMaxRequestBytes()        { return m_maxRequestBytes;         }
+ unsigned   GetCurrentConnections()     { return m_connections;             }
+ unsigned   GetCurrentEndpoints()       { return m_endpoints;               }
 
 private:
   // Create and start our logfile
@@ -80,8 +94,14 @@ private:
   USHORT              m_timeoutHeaderWait        { URL_TIMEOUT_HEADER_WAIT     };
   ULONG               m_timeoutMinSendRate       { URL_DEFAULT_MIN_SEND_RATE   };
   // Registry settings
-  int                 m_disableServerHeader      { 0    };
-  unsigned            m_maxConnections           { SESSION_MIN_CONNECTIONS };
+  int                 m_disableServerHeader      { 0 };
+  unsigned            m_maxConnections           { 0 };
+  unsigned            m_maxEndpoints             { 0 };
+  unsigned            m_maxFieldLength           { SESSION_DEF_FIELDLENGTH  };
+  unsigned            m_maxRequestBytes          { SESSION_DEF_REQUESTBYTES };
+  // Current endpoints and connections
+  unsigned            m_endpoints                { 0 };
+  unsigned            m_connections              { 0 };
   // Locking for update
   CRITICAL_SECTION    m_lock;
 };

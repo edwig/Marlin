@@ -51,7 +51,6 @@ HTTPSYS_WebSocket* WINAPI
 HttpReceiveWebSocket(IN HANDLE                /*RequestQueueHandle*/
                     ,IN HTTP_REQUEST_ID       /*RequestId*/
                     ,IN WEB_SOCKET_HANDLE     /*SocketHandle*/
-                    ,IN HANDLE                /*ThreadPoolIOCP*/
                     ,IN PWEB_SOCKET_PROPERTY  /*SocketProperties */ OPTIONAL
                     ,IN DWORD                 /*PropertyCount*/     OPTIONAL);
 
@@ -807,7 +806,6 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
   m_websocket = HttpReceiveWebSocket(m_server->GetRequestQueue()
                                     ,m_request
                                     ,m_handle
-                                    ,m_server->GetThreadPool()->GetIOCompletionPort()
                                     ,properties
                                     ,4);
   if(m_websocket == nullptr)

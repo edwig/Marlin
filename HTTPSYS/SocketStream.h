@@ -52,12 +52,19 @@ public:
 	virtual bool    Close() = 0; 
 
   // Are we running in secure SSL/TLS mode?
-  bool            InSecureMode() { return m_secureMode; };
+  bool            InSecureMode();
+
+  // Plain/Secure sockets can be kept alive longer for callbacks from the threadpool
+  // With the drop of the last reference, the object WILL destroy itself
+  void            AddReference();
+  void            DropReference();
 
   // Identification of the object for callbacks to see if we still exist
   UINT64 m_ident { SOCKETSTREAM_IDENT };
 protected:
   // Are we initialized in secure mode or not?
   bool   m_secureMode { false };
+  // Externally referenced, keep alive counter
+  long   m_references { 1     };
 };
 

@@ -83,7 +83,7 @@ SiteHandlerPutSecure::Handle(HTTPMessage* p_message)
 // RELIES ON THE DEFAULT 'GET' HANDLER OF THE SERVER
 
 int 
-TestMarlinServer::TestSecureSite(bool p_standalone)
+TestMarlinServer::TestSecureSite(bool /*p_standalone*/)
 {
   int error = 0;
 

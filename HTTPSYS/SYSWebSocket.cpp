@@ -65,7 +65,7 @@ SYSWebSocket::Close()
       int error = m_socket->GetLastError();
       LogError(_T("Error shutdown websocket: %s Error: %d"),m_serverkey,error);
     }
-    delete m_socket;
+    m_socket->DropReference();
     m_socket = nullptr;
   }
 
@@ -542,18 +542,6 @@ HRESULT SYSWebSocket::ReadFragment(_Out_   VOID*  pData,
 int
 SYSWebSocket::SetupForReceive()
 {
-  // See if there was already an outstanding receive action
-  if(m_recvAction == WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION)
-  {
-    return m_recvBuffers[0].Data.ulBufferLength;
-  }
-
-  m_actionReadContext = nullptr;
-  m_recvBuffers[0].Data.pbBuffer = nullptr;
-  m_recvBuffers[0].Data.ulBufferLength = 0;
-  m_recvBuffers[1].Data.pbBuffer = nullptr;
-  m_recvBuffers[1].Data.ulBufferLength = 0;
-
   ULONG bufferCount = ARRAYSIZE(m_recvBuffers);
 
   HRESULT hr = WebSocketReceive(m_handle,nullptr,nullptr);
@@ -574,6 +562,7 @@ SYSWebSocket::SetupForReceive()
       TRACE("Buffersize for receive: %d\n",m_recvBuffers[0].Data.ulBufferLength);
       if(m_recvAction == WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION)
       {
+        m_contextReady = true;
         return m_recvBuffers[0].Data.ulBufferLength;
       }
       // Something left in the context of the websocket driver
@@ -583,6 +572,7 @@ SYSWebSocket::SetupForReceive()
         memset(&over,0,sizeof(OVERLAPPED));
         over.Internal     = S_OK;
         over.InternalHigh = m_recvBuffers[0].Data.ulBufferLength;
+        m_contextReady    = true;
         ReceiveFragment(&over);
         return 0L;
       }
@@ -636,6 +626,14 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
 
   TRACE("SYSWEBSOCKET ReceiveFragment\n");
 
+
+  while(m_contextReady == false)
+  {
+    TRACE("Sleep for context ready\n");
+    Sleep(1);
+  }
+
+
   // Locking scope
   {
     AutoCritSec lock(&m_lock);
@@ -664,19 +662,34 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
           goto quit;
         }
       }
+      ULONG processed = 0;
+
       switch(m_recvAction)
       {
         case WEB_SOCKET_NO_ACTION:
-             // No action to perform - just exit the loop.
+             // Ready with this receiving action. Must set up a new one!
+             m_contextReady = false;
              break;
 
         case WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION:
              assert(bufferCount >= 1);
+
+//              if(bytesTransferred > m_recvBuffers[0].Data.ulBufferLength)
+//              {
+//                TRACE("TOO BIG\n");
+//              }
+
              memcpy_s(m_recvBuffers[0].Data.pbBuffer,m_recvBuffers[0].Data.ulBufferLength,m_read_buffer,bytesTransferred);
+             processed = bytesTransferred;
              break;
         case WEB_SOCKET_INDICATE_RECEIVE_COMPLETE_ACTION:
              // Copy out the data to the application
              memcpy_s(m_read_Data,*m_read_Size,m_recvBuffers[0].Data.pbBuffer,m_recvBuffers[0].Data.ulBufferLength);
+
+             // TRACING
+//              m_recvBuffers[0].Data.pbBuffer[m_recvBuffers[0].Data.ulBufferLength] = 0;
+//              strcat_s((char*)m_recvBuffers[0].Data.pbBuffer,4096,"\n");
+//              OutputDebugString((char*)m_recvBuffers[0].Data.pbBuffer);
 
              switch(m_recvBufferType)
              {
@@ -722,19 +735,16 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
       // Complete the action. If application performs asynchronous operation, the action has to be
       // completed after the async operation has finished. The 'actionContext' then has to be preserved
       // so the operation can complete properly.
-      WebSocketCompleteAction(m_handle,m_actionReadContext,bytesTransferred);
+      WebSocketCompleteAction(m_handle,m_actionReadContext,processed);
 
       getNextAction = true;
     } 
     while(m_recvAction != WEB_SOCKET_NO_ACTION);
 
-    m_actionReadContext = nullptr;
-    m_recvBuffers[0].Data.pbBuffer = nullptr;
-    m_recvBuffers[0].Data.ulBufferLength = 0;
-    m_recvBuffers[1].Data.pbBuffer = nullptr;
-    m_recvBuffers[1].Data.ulBufferLength = 0;
   } // End of locking scope
 quit:
+  // Ready with this receiving action. Must set up a new one!
+  m_contextReady = false;
 
   // FASE 2: STORE CLOSING REASON AS AN UTF-16 STRING
   if(m_closeReasonLength)
