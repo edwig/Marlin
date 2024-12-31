@@ -57,7 +57,17 @@ HttpSetRequestQueueProperty(_In_ HANDLE               RequestQueueHandle
     default:  return ERROR_INVALID_PARAMETER;
   }
 
-  if(Property == HttpServer503VerbosityProperty)
+  if(Property == HttpServerLoggingProperty)
+  {
+    if(PropertyInformationLength == sizeof(HTTP_LOGGING_INFO))
+    {
+      if(!g_session->SetupForLogging((PHTTP_LOGGING_INFO)PropertyInformation))
+      {
+        return ERROR_INVALID_PARAMETER;
+      }
+    }
+  }
+  else if(Property == HttpServer503VerbosityProperty)
   {
     if(!queue->SetVerbosity((HTTP_503_RESPONSE_VERBOSITY)value))
     {

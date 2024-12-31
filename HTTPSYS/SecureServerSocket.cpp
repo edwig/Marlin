@@ -668,7 +668,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
         else
         {
           DebugMsg(_T("Client Certificate returned"));
-          if(g_session->GetSocketLogging() >= SOCK_LOGGING_TRACE && pCertContext)
+          if(g_session->GetSocketLogging() >= SOCK_LOGGING_FULLTRACE && pCertContext)
           {
             ShowCertInfo(pCertContext,_T("Server Received Client Certificate"));
           }

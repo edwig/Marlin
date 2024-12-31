@@ -74,6 +74,8 @@ public:
                             ,XString p_domain);
   // Remove an URLGroup. Called by HTTPURLGroup itself
   void          RemoveURLGroup(const HTTPURLGroup* p_group);
+  // Initialize the logging of the HTTPSYS driver
+  void          InitHTTPLogging();
 
 protected:
   // Cleanup the server

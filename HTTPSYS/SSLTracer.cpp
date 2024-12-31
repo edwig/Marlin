@@ -106,7 +106,7 @@ void SSLTracer::TraceHandshake()
       else if (m_minor == 1)  DebugMsg(_T("TLS version 1.0"));
       else if (m_minor == 2)  DebugMsg(_T("TLS version 1.1"));
       else if (m_minor == 3)  DebugMsg(_T("TLS version 1.2"));
-      else                  DebugMsg(_T("TLS version after 1.2"));
+      else                    DebugMsg(_T("TLS version after 1.2"));
     }
     else
     {

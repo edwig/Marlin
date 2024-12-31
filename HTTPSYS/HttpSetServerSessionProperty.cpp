@@ -27,6 +27,7 @@ using std::wstring;
 ULONG SetServerState         (ServerSession* p_session,PVOID p_info,ULONG p_length);
 ULONG SetServerTimeouts      (ServerSession* p_session,PVOID p_info,ULONG p_length);
 ULONG SetServerAuthentication(ServerSession* p_session,PVOID p_info,ULONG p_length);
+ULONG SetServerLogging       (ServerSession* p_session,PVOID p_info,ULONG p_length);
 
 HTTPAPI_LINKAGE
 ULONG WINAPI
@@ -51,8 +52,8 @@ HttpSetServerSessionProperty(IN HTTP_SERVER_SESSION_ID  ServerSessionId
   {
     case HttpServerStateProperty:                   return SetServerState   (session,PropertyInformation,PropertyInformationLength);
     case HttpServerTimeoutsProperty:                return SetServerTimeouts(session,PropertyInformation,PropertyInformationLength);
-    case HttpServerQosProperty:                     // Fall through
-    case HttpServerLoggingProperty:                 return ERROR_INVALID_PARAMETER;
+    case HttpServerQosProperty:                     return ERROR_INVALID_PARAMETER;
+    case HttpServerLoggingProperty:                 return SetServerLogging (session,PropertyInformation,PropertyInformationLength);
     case HttpServerAuthenticationProperty:          // Fall through
     case HttpServerExtendedAuthenticationProperty:  return SetServerAuthentication(session,PropertyInformation,PropertyInformationLength);
     case HttpServerChannelBindProperty:             // Fall through
@@ -96,6 +97,18 @@ SetServerTimeouts(ServerSession* p_session, PVOID p_info, ULONG p_length)
     p_session->SetTimeoutHeaderWait    (info->HeaderWait);
     p_session->SetTimeoutMinSendRate   (info->MinSendRate);
     return NO_ERROR;
+  }
+  return ERROR_INVALID_PARAMETER;
+}
+
+ULONG SetServerLogging(ServerSession* p_session,PVOID p_info,ULONG p_length)
+{
+  if(p_length == sizeof(HTTP_LOGGING_INFO))
+  {
+    if(p_session->SetupForLogging((PHTTP_LOGGING_INFO)p_info))
+    {
+      return NO_ERROR;
+    }
   }
   return ERROR_INVALID_PARAMETER;
 }

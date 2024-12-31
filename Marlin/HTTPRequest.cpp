@@ -476,6 +476,7 @@ HTTPRequest::ReceivedRequest()
       DETAILLOGV(_T("Request VERB changed to: %s"),m_message->GetVerb().GetString());
     }
   }
+  m_originalVerb = m_message->GetVerb();
 
   // Go handle the stream if we got one
   if(stream)
@@ -663,6 +664,12 @@ HTTPRequest::StartSendResponse()
   // Sometimes the async is so quick, we cannot trace it after the sending
   m_server->LogTraceResponse(m_response,nullptr,m_message->GetEncoding());
 
+  // Create the logging data for the HTTPSYS driver
+  if((flags & HTTP_SEND_RESPONSE_FLAG_MORE_DATA) == 0)
+  {
+    CreateLogData();
+  }
+
   // Send the response
   ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
                                       m_requestID,       // Request ID
@@ -673,7 +680,7 @@ HTTPRequest::StartSendResponse()
                                       nullptr,           // pReserved2  (must be NULL)
                                       0,                 // Reserved3   (must be 0)
                                       overlapped,        // LPOVERLAPPED(OPTIONAL)
-                                      nullptr);          // LogData     (must be NULL)
+                                      m_logData);        // LogData     (OPTIONAL)
 
   // Check for error
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
@@ -767,6 +774,11 @@ HTTPRequest::SendResponseBody()
     flags = HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
   }
 
+  if(flags != HTTP_SEND_RESPONSE_FLAG_MORE_DATA)
+  {
+    CreateLogData();
+  }
+
   ULONG result = HttpSendResponseEntityBody(m_server->GetRequestQueue(),
                                             m_requestID,    // Our request
                                             flags,          // More/Last data
@@ -776,7 +788,7 @@ HTTPRequest::SendResponseBody()
                                             nullptr,        // Reserved1
                                             0,              // Reserved2
                                             &m_writing,     // OVERLAPPED
-                                            nullptr);       // LOGDATA
+                                            m_logData);     // Logging
 
   // Check for error
   if(result != ERROR_IO_PENDING && result != NO_ERROR)
@@ -849,6 +861,82 @@ HTTPRequest::SendBodyPart()
   }
 }
 
+// Create the logging data
+void
+HTTPRequest::CreateLogData()
+{
+  // See if we need to build the log data
+  if(m_server->GetLogLevel() < HLL_ERRORS)
+  {
+    return;
+  }
+
+  PHTTP_LOG_FIELDS_DATA log = new HTTP_LOG_FIELDS_DATA();
+  memset(log,0,sizeof(HTTP_LOG_FIELDS_DATA));
+  log->Base.Type = HttpLogDataTypeFields;
+
+  CString empty(_T("-"));
+
+  // Referrer
+  log->Referrer = (PCHAR)m_request->Headers.KnownHeaders[HttpHeaderReferer].pRawValue;
+  log->ReferrerLength = log->Referrer ? (USHORT)strlen(log->Referrer) : 0;
+  if(log->Referrer == nullptr)
+  {
+    LPSTR refer = nullptr;
+    USHORT referLen = 0;
+    AddRequestString(empty,refer,referLen);
+    log->Referrer = refer;
+    log->ReferrerLength = referLen;
+  }
+
+  // Username
+  LPSTR  user = nullptr;
+  USHORT userSize = 0;
+  AddRequestString(m_message ? m_message->GetUser() : _T("-"),user,userSize);
+  log->UserName = (PWCHAR)user;
+  log->UserNameLength = userSize;
+
+  // Hostname
+  log->ServerName = (PCHAR)m_server->GetHostname().GetString();
+  log->ServerNameLength = (USHORT)m_server->GetHostname().GetLength();
+
+  // IP Address of sender
+  CString ipaddress = SocketToServer((PSOCKADDR_IN6)m_request->Address.pRemoteAddress);
+  LPSTR   ipadd = nullptr;
+  USHORT  iplen = 0;
+  AddRequestString(ipaddress,ipadd,iplen);
+  log->ClientIp = ipadd;
+  log->ClientIpLength = iplen;
+
+  // VERB
+  log->Method = (PCHAR) m_originalVerb.GetString();
+  log->MethodLength = (USHORT) m_originalVerb.GetLength();
+
+  // Port number
+  log->ServerPort = (USHORT) m_site->GetPort();
+
+  // HTTP status
+  log->ProtocolStatus = m_response->StatusCode;
+
+  // URI stem
+  XString rawUrl = WStringToString(m_request->CookedUrl.pFullUrl);
+  LPSTR uristem = nullptr;
+  USHORT urilen = 0;
+  AddRequestString(rawUrl,uristem,urilen);
+  log->UriStem = (PWCHAR) uristem;
+  log->UriStemLength = urilen;
+
+  // Last WIN32 status
+  log->Win32Status = GetLastError();
+
+  // Structure filled in, keep it!
+  if(m_logData)
+  {
+    delete ((PHTTP_LOG_FIELDS_DATA)m_logData);
+  }
+  m_logData = (PHTTP_LOG_DATA)log;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // OUTGOING STREAMS
@@ -900,6 +988,7 @@ HTTPRequest::StartEventStreamResponse()
 
   ResetOutstanding(m_writing);
   m_writing.m_action = IO_StartStream;
+  CreateLogData();
 
   ULONG result = HttpSendHttpResponse(m_server->GetRequestQueue(),    // ReqQueueHandle
                                       m_requestID,       // Request ID
@@ -910,7 +999,7 @@ HTTPRequest::StartEventStreamResponse()
                                       nullptr,           // pReserved2  (must be NULL)
                                       0,                 // Reserved3   (must be 0)
                                       &m_writing,        // LPOVERLAPPED(OPTIONAL)
-                                      nullptr);          // pReserved4  (must be NULL)
+                                      m_logData);        // Logging data
 
   DETAILLOGV(_T("HTTP Response %d %s"),m_response->StatusCode,m_response->pReason);
 
@@ -1143,6 +1232,13 @@ HTTPRequest::Finalize()
     delete[] str;
   }
   m_strings.clear();
+
+  // Remove the logging data
+  if(m_logData)
+  {
+    delete ((PHTTP_LOG_FIELDS_DATA)m_logData);
+    m_logData = nullptr;
+  }
 
   // Reset parameters
   m_site       = nullptr;

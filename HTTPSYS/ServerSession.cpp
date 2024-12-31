@@ -16,6 +16,8 @@
 #include "RequestQueue.h"
 #include "OpaqueHandles.h"
 #include <LogAnalysis.h>
+#include <ConvertWideString.h>
+#include <winhttp.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,7 +31,6 @@ ServerSession::ServerSession()
   ASSERT(g_session == nullptr);
 
   ReadRegistrySettings();
-  CreateLogfile();
   InitializeCriticalSection(&m_lock);
 }
 
@@ -275,11 +276,132 @@ ServerSession::RemoveEndpoint()
   }
 }
 
+bool
+ServerSession::SetupForLogging(PHTTP_LOGGING_INFO p_information)
+{
+  if(p_information->Flags.Present == 0)
+  {
+    m_socketLogging = SOCK_LOGGING_OFF;
+    if(m_logfile)
+    {
+      LogAnalysis::DeleteLogfile(m_logfile);
+      m_logfile = nullptr;
+    }
+    return true;
+  }
+  // Set up the log file
+  if(m_socketLogging == SOCK_LOGGING_OFF)
+  {
+    // Not for this session
+    return true;
+  }
+  // Only supported format
+  if(p_information->Format != HttpLoggingTypeW3C)
+  {
+    return false;
+  }
+  // Must have a software name
+  if(p_information->SoftwareNameLength == 0)
+  {
+    return false;
+  }
+
+  // The following is ignored:
+  // p_information->Fields
+
+  int loglevel = 3;
+  if(p_information->LoggingFlags & HTTP_LOGGING_FLAG_LOG_ERRORS_ONLY)
+  {
+    loglevel = 1;
+  }
+  if(p_information->LoggingFlags & HTTP_LOGGING_FLAG_LOG_SUCCESS_ONLY)
+  {
+    loglevel = 2;
+  }
+  CStringW softwareNameW(p_information->SoftwareName);
+  CString  softwareName(softwareNameW);
+
+  CStringW directoryNameW(p_information->DirectoryName);
+  CString  directoryName(directoryNameW);
+
+  bool rotate = false;
+  if(p_information->RolloverType >= HttpLoggingRolloverDaily)
+  {
+    rotate = true;
+  }
+
+  // Creating the logfile name
+  CString filename(directoryName);
+  if(filename.IsEmpty())
+  {
+    if(!filename.GetEnvironmentVariable("WINDIR"))
+    {
+      filename = _T("C:\\Windows");
+    }
+    filename += _T("\\TEMP");
+  }
+  filename += _T("\\");
+  filename += softwareName;
+  filename += _T(".txt");
+
+  m_logfile = LogAnalysis::CreateLogfile(softwareName);
+  m_logfile->SetLogRotation(rotate);
+  m_logfile->SetLogLevel(m_socketLogging = loglevel);
+  m_logfile->SetLogFilename(filename);
+
+  return true;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // GLOBAL LOGGING FUNCTIONS
 //
 //////////////////////////////////////////////////////////////////////////
+
+void
+ServerSession::ProcessLogData(PHTTP_LOG_DATA p_data)
+{
+  PHTTP_LOG_FIELDS_DATA log = reinterpret_cast<PHTTP_LOG_FIELDS_DATA>(p_data);
+
+  // See if it is the correct subtype
+  // For now the HTTPAPI only knows of one (1) type
+  if(log->Base.Type != HttpLogDataTypeFields)
+  {
+    return;
+  }
+  // Are we doing a logfile?
+  if(m_logfile == nullptr)
+  {
+    return;
+  }
+  // Check if we should only log the errors
+  if(m_socketLogging == 1 && log->ProtocolStatus < HTTP_STATUS_BAD_REQUEST)
+  {
+    return;
+  }
+
+  // Printing W3C Format (approximately)
+  // referrer username client-ip method port uri-stem uri-query protocol-status sub-status (win32status)
+  CStringA line;
+  line.Format("%s %s %s %s %s %d.%d (%ld)"
+             ,log->Referrer
+             ,(PCHAR)log->UserName
+             ,log->ClientIp
+             ,log->Method
+             ,(PCHAR)log->UriStem
+             ,log->ProtocolStatus
+             ,log->SubStatus
+             ,log->Win32Status);
+
+  LogType type = log->ProtocolStatus >= HTTP_STATUS_BAD_REQUEST ? LogType::LOG_ERROR : LogType::LOG_INFO;
+
+#ifdef _UNICODE
+  CString theline(line);
+  m_logfile->AnalysisLog(_T("HTTPSYS"),type,false,theline.GetString());
+#else
+  m_logfile->AnalysisLog(_T("HTTPSYS"),type,false,line.GetString());
+#endif
+}
 
 static void PrintHexDumpActual(DWORD p_length,const void* p_buffer)
 {
@@ -342,9 +464,9 @@ static void PrintHexDumpActual(DWORD p_length,const void* p_buffer)
 	}
 }
 
-void PrintHexDump(DWORD p_length, const void* p_buffer)
+void DebugPrintHexDump(DWORD p_length, const void* p_buffer)
 {
-  if(g_session && g_session->GetSocketLogging() >= SOCK_LOGGING_TRACE)
+  if(g_session && g_session->GetSocketLogging() >= SOCK_LOGGING_FULLTRACE)
   {
     PrintHexDumpActual(p_length,p_buffer);
   }
@@ -355,30 +477,6 @@ void PrintHexDump(DWORD p_length, const void* p_buffer)
 // PRIVATE
 //
 //////////////////////////////////////////////////////////////////////////
-
-void
-ServerSession::CreateLogfile()
-{
-  // No logging
-  if(m_socketLogging == SOCK_LOGGING_OFF)
-  {
-    return;
-  }
-
-  CString name(_T("HTTP_Server"));
-  m_logfile = LogAnalysis::CreateLogfile(name);
-  m_logfile->SetLogRotation(true);
-  m_logfile->SetLogLevel(m_socketLogging);
-
-  CString filename;
-  if(!filename.GetEnvironmentVariable(_T("WINDIR")))
-  {
-    filename = _T("C:\\Windows");
-  }
-  filename += _T("\\TEMP\\HTTP_Server.txt");
-
-  m_logfile->SetLogFilename(filename);
-}
 
 // Reading the general registry settings
 void    
@@ -426,8 +524,8 @@ ServerSession::ReadRegistrySettings()
 
   // Logging level
   // 0    No logging
-  // 1    Results logging
-  // 2    Hex dump tracing first line
+  // 1    Error logging (HTTP status 400 and above)
+  // 2    Log all actions
   // 3    Full hex dump tracing
   if(HTTPReadRegister(sectie,_T("Logging"),REG_DWORD,value1,&value2,value3,&size3))
   {

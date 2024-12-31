@@ -143,8 +143,8 @@ private:
   void ResetOutstanding(OutstandingIO& p_outstanding);
   // Add a request string for a header
   void AddRequestString(XString p_string,LPSTR& p_buffer,USHORT& p_size);
-  // Change response & unknown headers in one protocol string
-  XString ResponseToString();
+  // Create the logging data
+  void CreateLogData();
 
   HTTPServer*       m_server     { nullptr };   // Our server
   bool              m_active     { false   };   // Authentication done: may receive
@@ -169,5 +169,7 @@ private:
   HANDLE            m_chunkEvent { NULL    };   // Event for first chunk
   int               m_bufferpart { 0       };   // Buffer part being sent
   PHTTP_UNKNOWN_HEADER m_unknown { nullptr };   // Send unknown headers
+  CString           m_originalVerb;             // Verb before the send
+  PHTTP_LOG_DATA    m_logData    { nullptr };   // Data to log for this request (in last send!)
   CRITICAL_SECTION  m_critical;                 // Locking section
 };

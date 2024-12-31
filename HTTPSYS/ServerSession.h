@@ -39,6 +39,8 @@ public:
  // FUNCTIONS
  ULONG      AddUrlGroup   (UrlGroup* p_group);
  bool       RemoveUrlGroup(HTTP_URL_GROUP_ID p_handle,UrlGroup* p_group);
+ bool       SetupForLogging(PHTTP_LOGGING_INFO p_information);
+ void       ProcessLogData(PHTTP_LOG_DATA p_data);
  bool       AddConnection();
  bool       AddEndpoint();
  void       RemoveConnection();
@@ -75,8 +77,6 @@ public:
  unsigned   GetCurrentEndpoints()       { return m_endpoints;               }
 
 private:
-  // Create and start our logfile
-  void    CreateLogfile();
   // Reading the general registry settings
   void    ReadRegistrySettings();
 

@@ -206,6 +206,9 @@ HTTPServerMarlin::Initialise()
   // STEP 13: Init the ThreadPool
   InitThreadPool();
 
+  // STEP 14: Init the HTTPSYS logging
+  InitHTTPLogging();
+
   // We are airborne!
   return (m_initialized = true);
 }
@@ -342,6 +345,47 @@ HTTPServerMarlin::InitHeaders()
   else
   {
     DETAILLOGS(_T("Server sends 'server' response header: "),type);
+  }
+}
+
+void
+HTTPServerMarlin::InitHTTPLogging()
+{
+  // See if we have logging
+  if(m_logLevel <= HLL_NOLOG)
+  {
+    return;
+  }
+  HTTP_LOGGING_INFO info;
+  memset(&info,0,sizeof(HTTP_LOGGING_INFO));
+  info.Flags.Present = 1;
+  // Log level
+  info.LoggingFlags = (m_logLevel == HLL_ERRORS) ? HTTP_LOGGING_FLAG_LOG_ERRORS_ONLY : HTTP_LOGGING_FLAG_LOG_SUCCESS_ONLY;
+  // Name
+  CStringW name(m_name);
+  info.SoftwareName = name.GetString();
+  info.SoftwareNameLength = (USHORT) (name.GetLength() * 2);
+  // Directory
+  CString file(m_log->GetLogFileName());
+  int pos = file.ReverseFind(_T('\\'));
+  if(pos)
+  {
+    file = file.Left(pos);
+  }
+  CStringW dir(file);
+  info.DirectoryName = dir.GetString();
+  info.DirectoryNameLength = (USHORT) (dir.GetLength() * 2);
+  // Logging type
+  // Currently the only supported format
+  info.Format = HttpLoggingTypeW3C;
+  // Rotating the logfile
+  info.RolloverType = HttpLoggingRolloverDaily;
+
+  // Tel it to the HTTPSYS driver
+  ULONG ret = HttpSetServerSessionProperty(GetServerSessionID(),HTTP_SERVER_PROPERTY::HttpServerLoggingProperty,&info,sizeof(HTTP_LOGGING_INFO));
+  if(ret)
+  {
+    ERRORLOG(ret,_T("Cannot setup the logging for the HTTPSYS driver!"));
   }
 }
 
