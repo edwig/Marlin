@@ -81,9 +81,14 @@ void OnMessage(WebSocket* p_socket,const WSFrame* p_frame)
 
   if(message.CompareNoCase(_T("RequestClose")) == 0)
   {
-    p_socket->SendCloseSocket(WS_CLOSE_NORMAL,_T("Marlin TestServer closing socket"));
-    // Simply close will NOT work!!
-    // p_socket->CloseSocket();
+    if(p_socket->SendCloseSocket(WS_CLOSE_NORMAL,_T("Marlin TestServer closing socket")))
+    {
+      qprintf(_T("TEST handler: Sent close message WS_CLOSE_NORMAL to: %s"),p_socket->GetIdentityKey().GetString());
+    }
+    if(!p_socket->CloseSocket())
+    {
+      qprintf(_T("TEST handler: Error closing the WebSocket for: %s"),p_socket->GetIdentityKey().GetString());
+    }
   }
   else
   {

@@ -74,6 +74,7 @@ WebSocketServer::~WebSocketServer()
 void
 WebSocketServer::Reset()
 {
+  // General reset
   WebSocket::Reset();
 
   // Remove left over writing frames
@@ -83,11 +84,17 @@ WebSocketServer::Reset()
   }
   m_writing.clear();
 
-  // Simply close the socket handle and ignore the errors
+  // Delete the translation handle
   if(m_handle)
   {
     WebSocketDeleteHandle(m_handle);
     m_handle = NULL;
+  }
+
+  // Remove from the server (if not already done)
+  if(m_server)
+  {
+    m_server->UnRegisterWebSocket(this,false);
   }
 }
 
@@ -175,6 +182,9 @@ WebSocketServer::SetDisableUTF8Checking(BOOL p_disable)
 bool
 WebSocketServer::CreateServerHandle()
 {
+  m_ws_recv_buffersize += 1024;
+  m_ws_send_buffersize += 1024;
+
   WEB_SOCKET_PROPERTY properties[4] =
   {
     { WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE,      &m_ws_recv_buffersize,     sizeof(ULONG) }
@@ -185,6 +195,10 @@ WebSocketServer::CreateServerHandle()
 
   // Create our handle
   HRESULT hr = WebSocketCreateServerHandle(properties,4,&m_handle);
+
+  m_ws_recv_buffersize -= 1024;
+  m_ws_send_buffersize -= 1024;
+
   return SUCCEEDED(hr);
 }
 
@@ -223,33 +237,33 @@ WebSocketServer::SocketReader(HRESULT p_error
   }
 
   // Consolidate the reading buffer
-  if(m_reading)
-  {
-    m_reading->m_length += p_bytes;
-    m_reading->m_data[m_reading->m_length] = 0;
-    m_reading->m_final = (p_final == TRUE);
-  }
-  else
-  {
-    AutoCritSec lock(&m_disp);
-    m_reading = new WSFrame();
-    m_reading->m_length = 0;
-    m_reading->m_data = reinterpret_cast<BYTE*>(malloc(static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
-  }
-
-  if(!p_final)
-  {
-    AutoCritSec lock(&m_disp);
-    BYTE* data = reinterpret_cast<BYTE*>(realloc(m_reading->m_data,static_cast<size_t>(m_reading->m_length) + static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
-    if(data)
+  { AutoCritSec lock(&m_disp);
+    if(m_reading)
     {
-      m_reading->m_data = data;
+      m_reading->m_length += p_bytes;
+      m_reading->m_data[m_reading->m_length] = 0;
+      m_reading->m_final = (p_final == TRUE);
     }
     else
     {
-      ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Reading socket data!"));
-      CloseSocket();
-      return;
+      m_reading = new WSFrame();
+      m_reading->m_length = 0;
+      m_reading->m_data = reinterpret_cast<BYTE*>(malloc(static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
+    }
+
+    if(!p_final)
+    {
+      BYTE* data = reinterpret_cast<BYTE*>(realloc(m_reading->m_data,static_cast<size_t>(m_reading->m_length) + static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
+      if(data)
+      {
+        m_reading->m_data = data;
+      }
+      else
+      {
+        ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Reading socket data!"));
+        CloseSocket();
+        return;
+      }
     }
   }
 
@@ -372,12 +386,6 @@ WebSocketServer::SocketListener()
       return;
     }
   }
-
-  if(!expected && (hr == S_OK))
-  {
-    // Was issued in-sync after all, so re-work the received data
-    SocketReader(hr,m_reading->m_read,utf8,last,isclosing);
-  }
 }
 
 // Decode the incoming close socket message
@@ -424,7 +432,8 @@ WebSocketServer::CloseSocket()
   // Already busy closing?
   if(m_inClosing)
   {
-    return true;
+    // If we did send an close message, we should wait for the writing
+    Sleep(WEBSOCKET_SLEEP_AFTER_CLOSE);
   }
   // Do not recursively return here
   m_inClosing = true;
@@ -438,7 +447,11 @@ WebSocketServer::CloseSocket()
     return false;
   }
   m_websocket = nullptr;
-  m_server->UnRegisterWebSocket(this);
+
+  // Remove from the server
+  HTTPServer* server(m_server);
+  m_server = nullptr;
+  server->UnRegisterWebSocket(this);
   // This pointer is now removed
   return true;
 }
@@ -598,6 +611,11 @@ WebSocketServer::SendCloseSocket(USHORT p_code,XString p_reason)
 {
   // See if we are still open for writing
   if(!m_openWriting)
+  {
+    return true;
+  }
+  // Do not recursively return here
+  if(m_inClosing)
   {
     return true;
   }

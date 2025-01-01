@@ -219,10 +219,8 @@ public:
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
   // Sending a response as a chunk
   virtual void       SendAsChunk(HTTPMessage* p_message,bool p_final = false) = 0;
-
-
   // Remove registration of a WebSocket
-  virtual bool       UnRegisterWebSocket(WebSocket* p_socket);
+  virtual bool       UnRegisterWebSocket(WebSocket* p_socket,bool p_destroy = true);
 
   // SETTERS
  

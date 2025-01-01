@@ -89,7 +89,6 @@ public:
   Request*       GetRequest()               { return m_request;       }
   CString        GetServerKey()             { return m_serverkey;     }
   SocketStream*  GetRealSocket()            { return m_socket;        }
-  bool           GetReceivingContextReady() { return m_contextReady;  }
 
   // SETTERS
   void           SetReceiveBufferSize(ULONG p_size)       { m_bufferSizeReceive = p_size;   }
@@ -132,7 +131,6 @@ private:
   // Context for sending and receiving
   PVOID  m_actionSendContext        { nullptr };
   PVOID  m_actionReadContext        { nullptr };
-  bool   m_contextReady             { false   };
 
   WCHAR  m_closeReason[WEB_SOCKET_MAX_CLOSE_REASON_LENGTH + 1] = { 0 };
   ULONG  m_closeReasonLength{ 0 };

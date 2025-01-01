@@ -489,6 +489,10 @@ HRESULT SYSWebSocket::ReadFragment(_Out_   VOID*  pData,
       {
         m_read_AccomodatedSize = receiveSize;
       }
+      if(m_read_AccomodatedSize > *pcbData)
+      {
+        m_read_AccomodatedSize = *pcbData;
+      }
 
       TRACE("SYSWEBSOCKET Register ReadFragment\n");
 
@@ -562,7 +566,6 @@ SYSWebSocket::SetupForReceive()
       TRACE("Buffersize for receive: %d\n",m_recvBuffers[0].Data.ulBufferLength);
       if(m_recvAction == WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION)
       {
-        m_contextReady = true;
         return m_recvBuffers[0].Data.ulBufferLength;
       }
       // Something left in the context of the websocket driver
@@ -572,7 +575,6 @@ SYSWebSocket::SetupForReceive()
         memset(&over,0,sizeof(OVERLAPPED));
         over.Internal     = S_OK;
         over.InternalHigh = m_recvBuffers[0].Data.ulBufferLength;
-        m_contextReady    = true;
         ReceiveFragment(&over);
         return 0L;
       }
@@ -624,15 +626,7 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
     return;
   }
 
-  TRACE("SYSWEBSOCKET ReceiveFragment\n");
-
-
-  while(m_contextReady == false)
-  {
-    TRACE("Sleep for context ready\n");
-    Sleep(1);
-  }
-
+  TRACE("SYSWEBSOCKET ReceiveFragment: %d bytes\n",bytesTransferred);
 
   // Locking scope
   {
@@ -668,17 +662,10 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
       {
         case WEB_SOCKET_NO_ACTION:
              // Ready with this receiving action. Must set up a new one!
-             m_contextReady = false;
              break;
 
         case WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION:
              assert(bufferCount >= 1);
-
-//              if(bytesTransferred > m_recvBuffers[0].Data.ulBufferLength)
-//              {
-//                TRACE("TOO BIG\n");
-//              }
-
              memcpy_s(m_recvBuffers[0].Data.pbBuffer,m_recvBuffers[0].Data.ulBufferLength,m_read_buffer,bytesTransferred);
              processed = bytesTransferred;
              break;
@@ -688,8 +675,8 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
 
              // TRACING
 //              m_recvBuffers[0].Data.pbBuffer[m_recvBuffers[0].Data.ulBufferLength] = 0;
-//              strcat_s((char*)m_recvBuffers[0].Data.pbBuffer,4096,"\n");
 //              OutputDebugString((char*)m_recvBuffers[0].Data.pbBuffer);
+//              OutputDebugString("\n");
 
              switch(m_recvBufferType)
              {
@@ -743,8 +730,17 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
 
   } // End of locking scope
 quit:
+
   // Ready with this receiving action. Must set up a new one!
-  m_contextReady = false;
+  if(finalFragment)
+  {
+    // Reset the action context
+    m_recvBuffers[0].Data.pbBuffer = nullptr;
+    m_recvBuffers[0].Data.ulBufferLength = 0;
+    m_recvBuffers[1].Data.pbBuffer = nullptr;
+    m_recvBuffers[1].Data.ulBufferLength = 0;
+    m_actionReadContext = nullptr;
+  }
 
   // FASE 2: STORE CLOSING REASON AS AN UTF-16 STRING
   if(m_closeReasonLength)

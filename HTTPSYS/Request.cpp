@@ -174,7 +174,7 @@ Request::CloseRequest()
   }
   else if(m_socket)
   {
-  // Close the physical socket
+    // Close the physical socket
     if(m_socket->Close() == false)
     {
       // Log the error

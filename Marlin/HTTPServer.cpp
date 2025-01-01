@@ -1867,7 +1867,7 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
 
 // Remove registration of a WebSocket
 bool
-HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
+HTTPServer::UnRegisterWebSocket(WebSocket* p_socket,bool p_destroy /*= true*/)
 {
   XString key;
   AutoCritSec lock(&m_socketLock);
@@ -1880,8 +1880,12 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
     SocketMap::iterator it = m_sockets.find(key);
     if(it != m_sockets.end())
     {
-      delete it->second;
+      WebSocket* socket = p_destroy ? it->second : nullptr;
       m_sockets.erase(it);
+      if(socket)
+      {
+        delete socket;
+      }
       return true;
     }
   }
@@ -1889,8 +1893,11 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
   {
     ERRORLOG(ERROR_INVALID_ACCESS,_T("WebSocket memory NOT FOUND! : " + ex.GetErrorMessage()));
   }
-  // We don't have it
-  ERRORLOG(ERROR_FILE_NOT_FOUND,_T("Websocket to unregister NOT FOUND! : ") + key);
+  if(p_destroy)
+  {
+    // We don't have it
+    ERRORLOG(ERROR_FILE_NOT_FOUND,_T("Websocket to unregister NOT FOUND! : ") + key);
+  }
   return false;
 }
 

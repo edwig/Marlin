@@ -34,6 +34,7 @@
 #define WEBSOCKET_BUFFER_OVERHEAD   256
 #define WEBSOCKET_BUFFER_MINIMUM    256
 #define WEBSOCKET_BUFFSIZE_DEFAULT 4096
+#define WEBSOCKET_SLEEP_AFTER_CLOSE 500
 
 //////////////////////////////////////////////////////////////////////////
 //

@@ -282,6 +282,12 @@ HTTPRequest::ReceivedRequest()
   // Get the primary request-id for the request queue
   m_requestID = m_request->RequestId;
 
+  // Did we receive any request?
+  if(m_requestID == 0L)
+  {
+    return;
+  }
+
   // Grab the senders content
   XString   acceptTypes     = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderAccept         ].pRawValue);
   XString   contentType     = LPCSTRToString(m_request->Headers.KnownHeaders[HttpHeaderContentType    ].pRawValue);
