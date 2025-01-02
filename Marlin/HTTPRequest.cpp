@@ -660,6 +660,7 @@ HTTPRequest::StartSendResponse()
     // Overlapped must be nullptr, to wait on the affirmation of the socket headers
     // But we must provide a ULONG bytes pointer for the sending of the headers
     pbytes = &bytes;
+    CreateLogData();
   }
   else
   {

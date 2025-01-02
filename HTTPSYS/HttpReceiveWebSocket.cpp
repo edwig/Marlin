@@ -82,6 +82,8 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
                                                                     break;
           case WEB_SOCKET_DISABLE_UTF8_VERIFICATION_PROPERTY_TYPE:  websocket->SetUTF8Verification    (*((BOOL*)SocketProperties[index].pvValue));
                                                                     break;
+          case WEB_SOCKET_KEEPALIVE_INTERVAL_PROPERTY_TYPE:         websocket->SetPingPongInterval    (*((ULONG*)SocketProperties[index].pvValue));
+                                                                    break;
         }
       }
     }
@@ -95,6 +97,7 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
       websocket->SetReceiveBufferSize(DEF_BUFF_SIZE);
       websocket->SetDisableClientMasking(FALSE);
       websocket->SetUTF8Verification(TRUE);
+      websocket->SetPingPongInterval(WEBSOCKET_PINGPONG_TIMEOUT);
     }
   }
 

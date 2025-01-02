@@ -142,8 +142,7 @@ WebSocketServerIIS::SocketWriter(HRESULT p_error
   // Handle any error (if any)
   if(p_error != (HRESULT)0)
   {
-    DWORD error = (p_error & 0x000F);
-    ERRORLOG(error,_T("Websocket failed to write fragment"));
+    ERRORLOG((DWORD)p_error,_T("Websocket failed to write fragment."));
     OnError();
     CloseSocket();
     return;
@@ -220,7 +219,7 @@ WebSocketServerIIS::SocketDispatch()
 
   if(IsBadReadPtr(m_iis_socket,sizeof(IWebSocketContext)))
   {
-    ERRORLOG(ERROR_INVALID_HANDLE,_T("Websocket IIS context unreachable"));
+    ERRORLOG(ERROR_INVALID_HANDLE,_T("Websocket IIS context unreachable."));
     return;
   }
 
@@ -238,8 +237,7 @@ WebSocketServerIIS::SocketDispatch()
                                             ,&expected);
     if(FAILED(hr))
     {
-      DWORD error = hr & 0x0F;
-      ERRORLOG(error,_T("Websocket failed to register write command for a fragment"));
+      ERRORLOG((DWORD)hr,_T("Websocket failed to register write command for a fragment."));
     }
     if(!expected)
     {
@@ -308,8 +306,7 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
   // Handle any error (if any)
   if(p_error != S_OK)
   {
-    DWORD error = (p_error & 0x0F);
-    ERRORLOG(error,_T("Websocket failed to read fragment"));
+    ERRORLOG((DWORD)p_error,_T("Websocket failed to read fragment."));
     CloseSocket();
     return;
   }
@@ -430,8 +427,7 @@ WebSocketServerIIS::SocketListener()
                                          ,&expected);
   if(FAILED(hr))
   {
-    DWORD error = hr & 0x0F;
-    ERRORLOG(error,_T("Websocket failed to register read command for a fragment"));
+    ERRORLOG((DWORD)hr,_T("Websocket failed to register read command for a fragment."));
   }
 
   if(!expected && SUCCEEDED(hr))
@@ -717,4 +713,12 @@ WebSocketServerIIS::SetClosingStatus(USHORT p_code)
     m_closingError = p_code;
     OnClose();
   }
+}
+
+// Send a ping/pong keep alive message
+bool
+WebSocketServerIIS::SendKeepAlive() 
+{
+  // No way to do this in IIS
+  return true;
 }

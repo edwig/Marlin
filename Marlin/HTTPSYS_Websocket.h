@@ -106,6 +106,8 @@ public:
         _Out_   USHORT *              pcchReason = NULL
     ) = 0;
 
+    virtual BOOL SendPingPong(BOOL p_ping = TRUE) = 0;
+
     virtual VOID CloseTcpConnection(VOID) = 0;
 
     virtual VOID CancelOutstandingIO(VOID) = 0;

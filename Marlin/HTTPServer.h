@@ -446,6 +446,7 @@ protected:
   void      TryStartEventHeartbeat();
   // Check all event streams for the heartbeat monitor
   UINT      CheckEventStreams();
+  UINT      CheckWebsocketStreams();
   // For the handling of the event streams: implement this function
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
                                       ,CRITICAL_SECTION*  p_lock

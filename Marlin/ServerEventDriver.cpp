@@ -132,9 +132,6 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
     eventsSite->SetIsEventStream(true);
     eventsSite->AddContentType(true,_T("txt"),_T("text/event-stream"));
 
-    // Server must now do keep-alive jobs for SSE streams
-    server->SetEventKeepAlive(5000);
-
     // And start the site
     if(eventsSite->StartSite()) ++started;
   }

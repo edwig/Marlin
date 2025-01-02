@@ -178,6 +178,15 @@ WebSocketServer::SetDisableUTF8Checking(BOOL p_disable)
   }
 }
 
+void
+WebSocketServer::SetKeepaliveInterval(ULONG p_interval)
+{
+  if(m_ws_keepalive_interval > WEBSOCKET_KEEPALIVE_MINTIME && m_ws_keepalive_interval < WEBSOCKET_KEEPALIVE_MAXTIME)
+  {
+    m_ws_keepalive_interval = p_interval;
+  }
+}
+
 // Create the buffer protocol handle
 bool
 WebSocketServer::CreateServerHandle()
@@ -214,7 +223,14 @@ ServerReadCompletion(HRESULT p_error,
   WebSocketServer* socket = reinterpret_cast<WebSocketServer*>(p_completionContext);
   if(socket)
   {
-    socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+    try
+    {
+      socket->SocketReader(p_error,p_bytes,p_utf8,p_final,p_close);
+    }
+    catch(StdException&)
+    {
+      // Socket already dead. Ignore this error
+    }
   }
 }
 
@@ -225,14 +241,29 @@ WebSocketServer::SocketReader(HRESULT p_error
                              ,BOOL    p_final
                              ,BOOL    p_close)
 {
+  // See if the object is still alive
+  // Could be already deleted or dead
+  if(m_ident != WEBSOCKETSERVER_IDENT)
+  {
+    return;
+  }
+
   // Handle any error (if any)
   if(p_error != S_OK)
   {
     if(!(p_error == ERROR_NO_MORE_ITEMS || m_inClosing))
     {
-      ERRORLOG(p_error,_T("Websocket failed to read fragment"));
+      ERRORLOG(p_error,_T("Websocket failed to read fragment."));
     }
     CloseSocket();
+    return;
+  }
+
+  // Possibly an empty PING/PONG frame
+  if(p_error == S_OK && p_bytes == 0 && p_final && !p_close)
+  {
+    // Empty frame, but not closing
+    SocketListener();
     return;
   }
 
@@ -381,7 +412,7 @@ WebSocketServer::SocketListener()
     DWORD error = GetLastError();
     if(error && error != WSA_IO_PENDING)
     {
-      ERRORLOG(error,_T("Websocket failed to register read command for a fragment"));
+      ERRORLOG(error,_T("Websocket failed to register read command for a fragment."));
       CloseSocket();
       return;
     }
@@ -435,6 +466,11 @@ WebSocketServer::CloseSocket()
     // If we did send an close message, we should wait for the writing
     Sleep(WEBSOCKET_SLEEP_AFTER_CLOSE);
   }
+  // Are we still alive?
+  if(m_ident != WEBSOCKETSERVER_IDENT)
+  {
+    return true;
+  }
   // Do not recursively return here
   m_inClosing = true;
 
@@ -443,7 +479,7 @@ WebSocketServer::CloseSocket()
 
   if(HttpCloseWebSocket(m_server->GetRequestQueue(),m_request) != NO_ERROR)
   {
-    ERRORLOG(ERROR_INVALID_HANDLE,_T("Error closing WebSocket"));
+    ERRORLOG(ERROR_INVALID_HANDLE,_T("Error closing WebSocket."));
     return false;
   }
   m_websocket = nullptr;
@@ -473,7 +509,14 @@ ServerWriteCompletion(HRESULT p_error,
   WebSocketServer* socket = reinterpret_cast<WebSocketServer*>(p_completionContext);
   if(socket)
   {
-    socket->SocketWriter(p_error,p_bytes,p_utf8,p_final,p_close);
+    try
+    {
+      socket->SocketWriter(p_error,p_bytes,p_utf8,p_final,p_close);
+    }
+    catch(StdException&)
+    {
+      // Socket already dead. Ignore this error
+    }
   }
 }
 
@@ -500,8 +543,7 @@ WebSocketServer::SocketWriter(HRESULT p_error
   // Handle any error (if any)
   if(p_error != (HRESULT)0)
   {
-    DWORD error = (p_error & 0x000F);
-    ERRORLOG(error,_T("Websocket failed to write fragment"));
+    ERRORLOG((DWORD)p_error,_T("Websocket failed to write fragment."));
     OnError();
     CloseSocket();
     return;
@@ -568,8 +610,7 @@ WebSocketServer::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,boo
                                            ,&expected);
     if(hr == S_FALSE)
     {
-      DWORD error = hr & 0x0F;
-      ERRORLOG(error,_T("Websocket failed to register write command for a fragment"));
+      ERRORLOG((DWORD)hr,_T("Websocket failed to register write command for a fragment."));
       CloseSocket();
       return false;
     }
@@ -662,6 +703,9 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
   m_server   = p_message->GetHTTPSite()->GetHTTPServer();
   m_logfile  = m_server->GetLogfile();
   m_logLevel = m_server->GetLogLevel();
+
+  // Propagate the keep-alive interval from the server
+  SetKeepaliveInterval(m_server->GetEventKeepAlive());
 
   XString wsVersion   (_T("Sec-WebSocket-Version"));
   XString wsClientKey (_T("Sec-WebSocket-Key"));
@@ -777,7 +821,7 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
     }
     return true;
   }
-  ERRORLOG(ERROR_PROCESS_ABORTED,_T("WebSocketHandshake failed"));
+  ERRORLOG(ERROR_PROCESS_ABORTED,_T("WebSocketHandshake failed."));
   Reset();
   return false;
 }
@@ -804,18 +848,19 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
   HTTPRequest* req = reinterpret_cast<HTTPRequest*>(p_message->GetRequestHandle());
   if(req == nullptr)
   {
-    ERRORLOG(ERROR_NOT_FOUND,_T("No request/websocket found in the HTTP call!"));
+    ERRORLOG(ERROR_NOT_FOUND,_T("No request/websocket found in the HTTP call!."));
     Reset();
     return false;
   }
 
   // Our configuration for the socket
-  WEB_SOCKET_PROPERTY properties[4] =
+  WEB_SOCKET_PROPERTY properties[5] =
   {
     { WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE,      &m_ws_recv_buffersize,     sizeof(ULONG) }
    ,{ WEB_SOCKET_SEND_BUFFER_SIZE_PROPERTY_TYPE,         &m_ws_send_buffersize,     sizeof(ULONG) }
    ,{ WEB_SOCKET_DISABLE_MASKING_PROPERTY_TYPE,          &m_ws_disable_masking,     sizeof(BOOL)  }
    ,{ WEB_SOCKET_DISABLE_UTF8_VERIFICATION_PROPERTY_TYPE,&m_ws_disable_utf8_verify, sizeof(BOOL)  }
+   ,{ WEB_SOCKET_KEEPALIVE_INTERVAL_PROPERTY_TYPE,       &m_ws_keepalive_interval,  sizeof(ULONG) }
   };
 
   // Remember our request and retrieve our WebSocket from the driver
@@ -825,10 +870,10 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
                                     ,m_request
                                     ,m_handle
                                     ,properties
-                                    ,4);
+                                    ,5);
   if(m_websocket == nullptr)
   {
-    ERRORLOG(ERROR_NOT_FOUND,_T("Websocket not created by HTTPSYS"));
+    ERRORLOG(ERROR_NOT_FOUND,_T("Websocket not created by HTTPSYS."));
     return false;
   }
 
@@ -844,4 +889,15 @@ WebSocketServer::RegisterSocket(HTTPMessage* p_message)
     DETAILLOG1(_T("WebSocket handshake completed."));
   }
   return true;
+}
+
+// Send a ping/pong keep alive message
+bool
+WebSocketServer::SendKeepAlive()
+{
+  if(m_websocket == nullptr)
+  {
+    return false;
+  }
+  return m_websocket->SendPingPong();
 }

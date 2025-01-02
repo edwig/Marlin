@@ -324,7 +324,7 @@ WebSocket::ErrorLog(LPCTSTR p_function,DWORD p_code,XString p_text)
 
   if(m_logfile)
   {
-    p_text.AppendFormat(_T(" Error [%d] %s"),p_code,GetLastErrorAsString(p_code).GetString());
+    p_text.AppendFormat(_T(" Error [%X] %s"),p_code,GetLastErrorAsString(p_code).GetString());
     result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,p_text);
 
     WSFrame* frame  = new WSFrame();
@@ -342,7 +342,7 @@ WebSocket::ErrorLog(LPCTSTR p_function,DWORD p_code,XString p_text)
   if(!result)
   {
     // What can we do? As a last result: print debug pane
-    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("%s Error [%d] %s\n"),_T(MARLIN_SERVER_VERSION),p_code,p_text.GetString());
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("%s Error [%X] %s\n"),_T(MARLIN_SERVER_VERSION),p_code,p_text.GetString());
   }
 }
 
@@ -391,7 +391,7 @@ WebSocket::OnMessage()
     }
     else
     {
-      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame message data"));
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame message data."));
     }
     delete frame;
   }
@@ -417,7 +417,7 @@ WebSocket::OnBinary()
     }
     else
     {
-      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame binary data"));
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame binary data."));
     }
     delete frame;
   }
@@ -463,7 +463,7 @@ WebSocket::OnClose()
     else
     {
       // Application already stopped accepting info
-      // ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost closing frame");
+      // ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost closing frame.");
     }
     delete frame;
   }
@@ -669,7 +669,7 @@ WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
   else
   {
     // Out of memory
-    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("While receiving UTF-8 block"));
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("While receiving UTF-8 block."));
   }
 
   // This is the data, as we interpret it in MBCS

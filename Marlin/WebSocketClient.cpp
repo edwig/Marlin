@@ -318,6 +318,14 @@ WebSocketClient::SendCloseSocket(USHORT p_code,XString p_reason)
   return true;
 }
 
+// Send a ping/pong keep alive message
+bool
+WebSocketClient::SendKeepAlive()
+{
+  // Not known how to accomplish this in WinHTTP
+  return true;
+}
+
 // Decode the incoming close socket message
 bool
 WebSocketClient::ReceiveCloseSocket()

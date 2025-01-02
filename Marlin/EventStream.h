@@ -28,11 +28,11 @@
 #pragma once
 
 // Initial event keep alive milliseconds
-constexpr auto DEFAULT_EVENT_KEEPALIVE = 10000;
+constexpr auto DEFAULT_EVENT_KEEPALIVE = 60000;
 // Initial event retry time in milliseconds
 constexpr auto DEFAULT_EVENT_RETRYTIME = 3000;
 // Minimum and maximum values
-constexpr auto EVENT_KEEPALIVE_MIN =  1000;   //  1 second
+constexpr auto EVENT_KEEPALIVE_MIN = 15000;   //  1 second
 constexpr auto EVENT_KEEPALIVE_MAX = 90000;   // 90 seconds
 constexpr auto EVENT_RETRYTIME_MIN =  1000;   //  1 second
 constexpr auto EVENT_RETRYTIME_MAX =  5000;   //  5 seconds
