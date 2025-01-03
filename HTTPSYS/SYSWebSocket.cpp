@@ -602,8 +602,6 @@ HRESULT SYSWebSocket::ReadFragment(_Out_   VOID*  pData,
         m_read_AccomodatedSize = *pcbData;
       }
 
-      TRACE("SYSWEBSOCKET Register ReadFragment\n");
-
       // Set up for overlapped I/O
       memset(&m_wsrd,0,sizeof(OVERLAPPED));
       m_wsrd.Pointer = this;
@@ -674,7 +672,6 @@ SYSWebSocket::SetupForReceive()
                             &m_actionReadContext);
     if(SUCCEEDED(hr))
     {
-      TRACE("Buffersize for receive: %d\n",m_recvBuffers[0].Data.ulBufferLength);
       if(m_recvAction == WEB_SOCKET_RECEIVE_FROM_NETWORK_ACTION)
       {
         return m_recvBuffers[0].Data.ulBufferLength;
@@ -691,7 +688,6 @@ SYSWebSocket::SetupForReceive()
       }
     }
   } 
-  TRACE("Failed to setup for receive: %d\n",hr);
   return SOCKET_ERROR;
 }
 
@@ -741,8 +737,6 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
     return;
   }
 
-  TRACE("SYSWEBSOCKET ReceiveFragment: %d bytes\n",bytesTransferred);
-
   // Locking scope
   {
     AutoCritSec lock(&m_lock);
@@ -786,12 +780,6 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
         case WEB_SOCKET_INDICATE_RECEIVE_COMPLETE_ACTION:
              // Copy out the data to the application
              memcpy_s(m_read_Data,*m_read_Size,m_recvBuffers[0].Data.pbBuffer,m_recvBuffers[0].Data.ulBufferLength);
-
-             // TRACING
-//              m_recvBuffers[0].Data.pbBuffer[m_recvBuffers[0].Data.ulBufferLength] = 0;
-//              OutputDebugString((char*)m_recvBuffers[0].Data.pbBuffer);
-//              OutputDebugString("\n");
-
              switch(m_recvBufferType)
              {
                 case WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE:     utf8Encoded   = TRUE;

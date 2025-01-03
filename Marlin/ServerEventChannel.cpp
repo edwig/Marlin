@@ -601,6 +601,8 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
     p_message->SetParameter(_T("Number"), ltevent->m_number);
     p_message->SetParameter(_T("Message"),ltevent->m_payload);
     p_message->SetParameter(_T("Type"), LTEvent::EventTypeToString(ltevent->m_type));
+
+    delete ltevent;
   } 
   if(queue)
   {

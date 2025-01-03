@@ -599,7 +599,6 @@ void WINAPI PlainSocketOverlappedResult(void* p_overlapped)
       // Most likely it's a TCP/IP frame for keep-alive or some other bookkeeping
       // Mark the structure, so the cleanup routine in the threadpool will not crash on it.
       overlapped->Internal = 0xDEADBEAF;
-      TRACE("OTHER IOCP Action on websocket\n");
     }
   }
   catch(StdException& /*ex*/)
@@ -643,10 +642,8 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 
   if(m_lastError == 0 || m_lastError == WSA_IO_PENDING)  // Read in progress, normal case
 	{
-    TRACE("PlainSocket: WSA_IO_PENDING Succeeded for RECEIVE\n");
     return NO_ERROR;
 	}
-  TRACE("PlainSocket: FAILED IOCP!\n");
 
   // See if already received in-sync
   if(received > 0)
@@ -660,8 +657,6 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 void
 PlainSocket::ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
 {
-  TRACE("PLAINSOCKET RECEIVE OVERLAPPED\n");
-
   if(!InSecureMode())
   {
     DebugMsg(_T(" "));
@@ -676,11 +671,6 @@ PlainSocket::ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
     if(completion && (dwError || cbTransferred))
     {
       (*completion)(m_readOverlapped);
-    }
-    else
-    {
-      // Some other event that we ignore
-      TRACE("Plainsocket: ignored read completion event\n");
     }
   }
 }
@@ -812,10 +802,8 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
 
   if(m_lastError == 0 || m_lastError == WSA_IO_PENDING)  // write  in progress, normal case
 	{
-    TRACE("PlainSocket: WSA_IO_PENDING Succeeded for SEND\n");
     return NO_ERROR;
 	}
-  TRACE("PlainSocket: FAILED IOCP!\n");
 
   // See if already received in-sync
   if(written > 0)

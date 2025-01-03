@@ -787,7 +787,7 @@ HTTPServerMarlin::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/
   // Cancel the outstanding request from the request queue
   if(request)
   {
-    request->CancelRequest();
+    request->CancelRequestStream();
   }
 }
 
@@ -877,7 +877,6 @@ HTTPServerMarlin::SendAsChunk(HTTPMessage* p_message, bool p_final /*= false*/)
     size_t length = 0;
     buffer->GetBuffer(bytes,length);
     request->SendResponseStream(bytes,length,!p_final);
-
     if(p_final)
     {
       // Do **NOT** send an another chunk

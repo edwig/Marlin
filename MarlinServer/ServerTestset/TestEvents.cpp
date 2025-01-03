@@ -55,8 +55,9 @@ public:
 };
 
 bool
-SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream)
+SiteHandlerStream::HandleStream(HTTPMessage* p_message,EventStream* p_stream)
 {
+  UNREFERENCED_PARAMETER(p_message);
   bool result = false;
 
   // Use the event stream

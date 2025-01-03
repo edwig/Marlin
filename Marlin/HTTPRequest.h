@@ -85,7 +85,7 @@ public:
   // Callback from I/O Completion port
   void HandleAsynchroneousIO(IOAction p_action);
   // Cancel the request at the HTTP driver
-  void CancelRequest();
+  void CancelRequestStream();
   // Start a response stream
   void StartEventStreamResponse();
   // Send as a stream part to an existing stream
