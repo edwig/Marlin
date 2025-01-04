@@ -384,10 +384,10 @@ SYSWebSocket::EncodingFragment(bool p_closing /*= false*/)
 BOOL
 SYSWebSocket::SendPingPong(BOOL p_ping /*= TRUE*/)
 {
-  // SEE IF WE MUST SPRING TO ACTION
+  // PHASE 1: SEE IF WE MUST SPRING TO ACTION
   
   // Check that we are beyond the timeout
-  if((m_lastAction + m_pingpongTimeout) > (UINT64)_time64(nullptr))
+  if(p_ping && (m_lastAction + m_pingpongTimeout) > (UINT64)_time64(nullptr))
   {
     // Nothing to be done, keep the socket alive
     return true;
@@ -400,7 +400,7 @@ SYSWebSocket::SendPingPong(BOOL p_ping /*= TRUE*/)
     return false;
   }
 
-  // Prepare for the ping/pong buffer
+  // PHASE 2: PREPARE THE BUFFER
   HRESULT hr = S_OK;
   ULONG   bufferCount = 2;
   DWORD   bytesTransferred = 0;
@@ -421,7 +421,7 @@ SYSWebSocket::SendPingPong(BOOL p_ping /*= TRUE*/)
     return false;
   }
 
-  // FASE 1: CREATE PING/PONG BUFFER
+  // PHASE 3: CREATE PING/PONG BUFFER
   do
   {
     // Initialize variables that change with every loop revolution.
@@ -464,6 +464,8 @@ SYSWebSocket::SendPingPong(BOOL p_ping /*= TRUE*/)
     m_pingpong[4] = 'o';
   }
 
+  // PHASE 4: SEND THE PING/PONG BUFFER
+
   // Set up for overlapped I/O
   memset(&m_wsping,0,sizeof(OVERLAPPED));
   // m_wsping.Internal     = 0;
@@ -475,7 +477,7 @@ SYSWebSocket::SendPingPong(BOOL p_ping /*= TRUE*/)
   // Should return IO_PENDING
   if(written != NO_ERROR)
   {
-    // Socket most probably dead. Close the websocket
+    // Socket most probably dead. Close the WebSocket
     LogError("Error sending ping/pong: %s",m_serverkey.GetString());
     return FALSE;
   }
@@ -801,6 +803,10 @@ SYSWebSocket::ReceiveFragment(LPOVERLAPPED p_overlapped)
                                                               connectionClose = TRUE;
                                                               break;
                 case WEB_SOCKET_PING_PONG_BUFFER_TYPE:        // Possibly send back a PONG
+                                                              if(m_recvBuffers[0].Data.ulBufferLength >= 4 && _strnicmp((char*)m_recvBuffers[0].Data.pbBuffer,"ping",4) == 0)
+                                                              {
+                                                                sendPingPong = TRUE;
+                                                              }
                                                               sendPingPong = TRUE;
                                                               // Restart the read action
                                                               [[fallthrough]];
