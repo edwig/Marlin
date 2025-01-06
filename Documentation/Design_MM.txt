@@ -9,14 +9,14 @@ DESIGN MARLIN MANAGEMENT
 | Server_two   | Secure      : [yes] [Certificate_marlin.org___________] |
 | Server_three | Service     : [WocasDocuments_2025.1__________________] |
 =>Documents    |                                                         |
+|              | Application : [C:\www\wd\bin\WocasDocuments.exe_______] |
 |              | Logfile     : [On ][C:\www\wd\20251\logfile.txt_______] |
-|              | 
 |              |
 |              |
 |              |
 |              |
 |              |
-|              | [Query ][Start ][Stop  ][Bounce][Configure]             |
+|              |     [Query   ][Start   ][Stop    ][Bounce  ][Configure] |
 +--------------+---------------------------------------------------------+
 | Status: RUNNING                                                        |
 +--------------+---------------------------------------------------------+
