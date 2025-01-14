@@ -84,8 +84,7 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
 
   // Create HTTP site to listen to "https://+:1202/SecureClientCert/"
   // 
-  int port = p_standalone ? TESTING_CLCERT_PORT : 1222;
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,port,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,TESTING_CLCERT_PORT,url);
   if(site)
   {
     // SUMMARY OF THE TEST

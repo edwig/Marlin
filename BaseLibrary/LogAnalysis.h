@@ -149,6 +149,7 @@ public:
   bool    GetLogRotation()                     { return m_rotate;     }
   int     GetKeepfiles()                       { return m_keepfiles;  }
   bool    GetBackgroundWriter()                { return m_useWriter;  }
+  HANDLE  GetBackgroundWriterThread()          { return m_logThread;  }
   int     GetCacheSize();
   int     GetCacheMaxSize();
 

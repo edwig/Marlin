@@ -54,6 +54,7 @@ public:
   void  Server_qprintf(LPCTSTR p_format, ...);
 
   XString m_socket;
+  XString m_socketSecure;
 
   // Testing the ServerEventDriver
   void IncomingEvent(LTEvent* p_event);
@@ -122,11 +123,13 @@ private:
   int TestHTTPTime();
   int TestToken();
   int TestWebSocket();
+  int TestWebSocketSecure();
   int TestEventDriver();
 
   // AFTER THE TEST
   int  StopSubsites();
   void StopWebSocket();
+  void StopWebSocketSecure();
 
   // REPORTING TEST RESULTS
   int AfterTestAsynchrone();
@@ -154,6 +157,7 @@ private:
   int AfterTestHTTPTime();
   int AfterTestToken();
   int AfterTestWebSocket();
+  int AfterTestWebSocketSecure();
 
   // SERVICE TESTING OnMarlin.....
   XString Translation(XString p_language, XString p_translation, XString p_word);

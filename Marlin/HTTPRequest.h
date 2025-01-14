@@ -31,7 +31,6 @@
 class HTTPMessage;
 class HTTPSite;
 class HTTPRequest;
-class HTTPWebSocket;
 class WebSocketServer;
 
 // Event action type for asynchronous I/O
@@ -70,6 +69,8 @@ void HandleAsynchroneousIO(OVERLAPPED* p_overlapped);
 // They must always be in ANSI/MBCS format!
 using RequestStrings = std::vector<LPCSTR>;
 
+#define HTTPREQUEST_IDENT 0x66FACE66
+
 // Our outstanding request in the server
 class HTTPRequest
 {
@@ -84,7 +85,7 @@ public:
   // Callback from I/O Completion port
   void HandleAsynchroneousIO(IOAction p_action);
   // Cancel the request at the HTTP driver
-  void CancelRequest();
+  void CancelRequestStream();
   // Start a response stream
   void StartEventStreamResponse();
   // Send as a stream part to an existing stream
@@ -109,6 +110,8 @@ public:
   // SETTERS
   void SetChunkEvent(HANDLE p_event){ m_chunkEvent = p_event; }
 
+  // Identity for callbacks
+  ULONG m_ident { HTTPREQUEST_IDENT };
 private:
   // Ready with the response
   void Finalize();
@@ -140,10 +143,10 @@ private:
   void ResetOutstanding(OutstandingIO& p_outstanding);
   // Add a request string for a header
   void AddRequestString(XString p_string,LPSTR& p_buffer,USHORT& p_size);
-  // Change response & unknown headers in one protocol string
-  XString ResponseToString();
+  // Create the logging data
+  void CreateLogData();
 
-  HTTPServer*       m_server;                   // Our server
+  HTTPServer*       m_server     { nullptr };   // Our server
   bool              m_active     { false   };   // Authentication done: may receive
   HTTP_OPAQUE_ID    m_requestID  { NULL    };   // The request we are processing
   PHTTP_REQUEST     m_request    { nullptr };   // Pointer to the request  object
@@ -151,8 +154,7 @@ private:
   HTTPSite*         m_site       { nullptr };   // Site from the HTTP context
   HTTPMessage*      m_message    { nullptr };   // The message we are processing in the request
   WebSocketServer*  m_socket     { nullptr };   // WebSocket (if any)
-  HTTPWebSocket*    m_ws{nullptr};
-  HTTP_CACHE_POLICY m_policy;                   // Sending cache policy
+  HTTP_CACHE_POLICY m_policy     { HttpCachePolicyNocache,0 };   // Sending cache policy
   long              m_expect     { 0       };   // Expected content length
   OutstandingIO     m_incoming;                 // Incoming IO request
   OutstandingIO     m_reading;                  // Outstanding reading action
@@ -167,5 +169,7 @@ private:
   HANDLE            m_chunkEvent { NULL    };   // Event for first chunk
   int               m_bufferpart { 0       };   // Buffer part being sent
   PHTTP_UNKNOWN_HEADER m_unknown { nullptr };   // Send unknown headers
+  CString           m_originalVerb;             // Verb before the send
+  PHTTP_LOG_DATA    m_logData    { nullptr };   // Data to log for this request (in last send!)
   CRITICAL_SECTION  m_critical;                 // Locking section
 };

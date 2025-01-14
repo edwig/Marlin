@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,7 @@
 #include "SSLUtilities.h"
 #include "Base64.h"
 #include "SYSWebSocket.h"
+#include "OpaqueHandles.h"
 #include <ConvertWideString.h>
 #include <LogAnalysis.h>
 #include <wininet.h>
@@ -65,13 +66,16 @@ Request::Request(RequestQueue* p_queue
   // Setting OUR identity!!
   // This is WHY we implemented HTTP.SYS in user space!
   m_request.ConnectionId = (HTTP_CONNECTION_ID)m_socket;
-  m_request.RequestId    = (HTTP_REQUEST_ID)   this;
+  m_request.RequestId    = (HTTP_REQUEST_ID)   0L;
 }
 
 Request::~Request()
 {
   CloseRequest();
   Reset();
+
+  // Decrement the connection counter
+  g_session->RemoveConnection();
 }
 
 // Starting of a request.
@@ -80,6 +84,10 @@ Request::~Request()
 void
 Request::ReceiveRequest()
 {
+  // Place request in the global handles
+  HANDLE handle = g_handles.CreateOpaqueHandle(HTTPHandleType::HTTP_Request,this);
+  m_request.RequestId = (HTTP_REQUEST_ID)handle;
+
   // Wake up any application that will service me!
   m_queue->DemandStart();
 
@@ -104,9 +112,7 @@ Request::ReceiveRequest()
   {
     try
     {
-      TRACE("Reading HTTP request header line.. Port: %d\n",m_port);
       ReceiveHeaders();
-      TRACE("Reading HTTP request continuation. Port: %d\n",m_port);
 
       if(CheckAuthentication())
       {
@@ -117,7 +123,6 @@ Request::ReceiveRequest()
       }
       else
       {
-        TRACE("Reading HTTP request accepted req. Port: %d\n", m_port);
         CreateWebSocket();
         m_queue->AddIncomingRequest(this);
         looping = false;
@@ -156,15 +161,24 @@ Request::ReceiveRequest()
 void
 Request::CloseRequest()
 {
-  if(m_socket)
+  // If we are a WebSocket: close that
+  if(m_websocket)
   {
+    // Close websocket AND the physical socket
+    delete m_websocket;
+    m_websocket = nullptr;
+    m_socket    = nullptr;
+  }
+  else if(m_socket)
+  {
+    // Close the physical socket
     if(m_socket->Close() == false)
     {
       // Log the error
       int error = m_socket->GetLastError();
       LogError(_T("Error shutdown connection: %s Error: %d"),m_request.pRawUrl,error);
     }
-    delete m_socket;
+    m_socket->DropReference();
     m_socket = nullptr;
   }
 
@@ -204,14 +218,19 @@ Request::DrainRequest()
   // drain the incoming request body
   if(readin > 0)
   {
+    unsigned size = g_session->GetMaxRequestBytes();
+    if(size < MESSAGE_BUFFER_LENGTH)
+    {
+      size = MESSAGE_BUFFER_LENGTH;
+    }
     // Temporary read buffer
-    unsigned char* drain_buffer = new unsigned char[MESSAGE_BUFFER_LENGTH + 1];
+    unsigned char* drain_buffer = new unsigned char[size + 1];
 
     // Loop until the end of the content (the body)
     while(readin > 0)
     {
       ULONG read = 0L;
-      if(ReceiveBuffer(drain_buffer,MESSAGE_BUFFER_LENGTH,&read,false) > 0)
+      if(ReceiveBuffer(drain_buffer,size,&read,false) > 0)
       {
         if(read <= readin)
         {
@@ -825,12 +844,18 @@ void
 Request::ReadInitialMessage()
 {
   FreeInitialBuffer();
-  m_initialBuffer = (BYTE*) malloc(MESSAGE_BUFFER_LENGTH + 1);
+
+  unsigned size = g_session->GetMaxRequestBytes();
+  if(size < MESSAGE_BUFFER_LENGTH)
+  {
+    size = MESSAGE_BUFFER_LENGTH;
+  }
+  m_initialBuffer = (BYTE*) malloc(size);
   if(!m_initialBuffer)
   {
     throw (INT)ERROR_OUTOFMEMORY;
   }
-  int length = m_socket->RecvPartial(m_initialBuffer,MESSAGE_BUFFER_LENGTH);
+  int length = m_socket->RecvPartial(m_initialBuffer,size - 1);
   if (length > 0)
   {
     m_initialBuffer[length] = 0;
@@ -1000,7 +1025,7 @@ Request::FindUrlContext()
     return;
   }
   // Weird: no context found
-  // throw HTTP_STATUS_NOT_FOUND;
+  throw HTTP_STATUS_NOT_FOUND;
 }
 
 // Finding the content length header
@@ -1761,10 +1786,20 @@ Request::CreateServerHeader(PHTTP_RESPONSE p_response)
 
     if(disable == 0 || (disable == 1 && p_response->StatusCode < HTTP_STATUS_BAD_REQUEST))
     {
+      // Add our own server header tot the output stream
       if(p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue == nullptr)
       {
         p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue      = version;
         p_response->Headers.KnownHeaders[HttpHeaderServer].RawValueLength = (USHORT) strlen(version);
+      }
+    }
+    if(disable == 2)
+    {
+      // Remove the server header
+      if(p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue != nullptr)
+      {
+        p_response->Headers.KnownHeaders[HttpHeaderServer].pRawValue      = nullptr;
+        p_response->Headers.KnownHeaders[HttpHeaderServer].RawValueLength = 0;
       }
     }
   }
@@ -2008,6 +2043,10 @@ Request::HTTPSystemTime()
 int
 Request::ReadBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 {
+  if(m_socket == nullptr)
+  {
+    return SOCKET_ERROR;
+  }
   int result = m_socket->RecvPartial(p_buffer,p_size);
   if (result == SOCKET_ERROR)
   {
@@ -2028,6 +2067,10 @@ Request::ReadBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 int
 Request::WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 {
+  if(m_socket == nullptr)
+  {
+    return SOCKET_ERROR;
+  }
   int result = m_socket->SendPartial(p_buffer,p_size);
   if (result == SOCKET_ERROR)
   {

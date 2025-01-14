@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "RequestQueue.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,13 +34,18 @@ HttpTerminate(IN ULONG Flags,_Reserved_ IN OUT PVOID pReserved)
   }
 
   // Still outstanding request queues: gracefully shutdown
-  if(!g_requestQueues.empty())
+  HandleMap map;
+  if(g_handles.GetAllQueueHandles(map))
   {
-    for(auto& queue : g_requestQueues)
+    for(auto& handle : map)
     {
-      delete queue.second;
+      RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(handle.first);
+      if(queue)
+      {
+        delete queue;
+        g_handles.RemoveOpaqueHandle(handle.first);
+      }
     }
-    g_requestQueues.clear();
   }
 
   // If still a session open: close it

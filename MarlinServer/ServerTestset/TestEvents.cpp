@@ -27,8 +27,9 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "HTTPServer.h"
-#include "HTTPSite.h"
+#include "TestPorts.h"
+#include <HTTPServer.h>
+#include <HTTPSite.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -54,8 +55,9 @@ public:
 };
 
 bool
-SiteHandlerStream::HandleStream(HTTPMessage* /*p_message*/,EventStream* p_stream)
+SiteHandlerStream::HandleStream(HTTPMessage* p_message,EventStream* p_stream)
 {
+  UNREFERENCED_PARAMETER(p_message);
   bool result = false;
 
   // Use the event stream
@@ -165,7 +167,7 @@ TestMarlinServer::TestPushEvents()
   xprintf(_T("=====================================================================\n"));
   XString url(_T("/MarlinTest/Events/"));
   // Create URL site to listen to events "http://+:port/MarlinTest/Events/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if (site)
   {
     // SUMMARY OF THE TEST

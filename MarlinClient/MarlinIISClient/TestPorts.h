@@ -30,9 +30,11 @@
 #define CLIENT_CONFIG "IIS/HWCore"
 
 // All tests running on these ports in Marlin IIS mode
-const int TESTING_HTTP_PORT   = 80;
-const int TESTING_HTTPS_PORT  = 1220;
-const int TESTING_CLCERT_PORT = 1222;
+const int TESTING_HTTP_PORT   =   80;   //            Site: /MarlinTest/
+const int TESTING_HTTPS_PORT  = 1221;   // Port + 1   Site: /SecureTest/
+const int TESTING_CLCERT_PORT = 1222;   // Port + 2   Site: /SecureClientCert/
+const int TESTING_TOKEN_PORT  = 1223;   // Port + 3   Site: /MarlinToken/
+const int TESTING_SECURE_WS   = 1224;   // Port + 4   Site: /SecureSockets/
 
 // COMPILE FOR A CROSS-HOST TEST, OR A LOCALHOST TEST
 #define MARLIN_HOST _T("localhost")

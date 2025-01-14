@@ -28,6 +28,7 @@
 #pragma once
 #include "HTTPClient.h"
 #include "LogAnalysis.h"
+#include <websocket.h>
 #include <deque>
 #include <map>
 
@@ -168,6 +169,8 @@ public:
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) = 0;
   // Register the server request for sending info
   virtual bool RegisterSocket(HTTPMessage* p_message) = 0;
+  // Send a ping/pong keep alive message
+  virtual bool SendKeepAlive() = 0;
   // Decoded close connection (use in 'OnClose')
   virtual bool GetCloseSocket(USHORT& p_code,XString& p_reason);
   // Detected a closing status on read-completion

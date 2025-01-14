@@ -27,10 +27,11 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "ServerApp.h"
-#include "HTTPSite.h"
-#include "WebSocket.h"
-#include "SiteHandlerWebSocket.h"
+#include "TestPorts.h"
+#include <ServerApp.h>
+#include <HTTPSite.h>
+#include <WebSocketMain.h>
+#include <SiteHandlerWebSocket.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -80,9 +81,14 @@ void OnMessage(WebSocket* p_socket,const WSFrame* p_frame)
 
   if(message.CompareNoCase(_T("RequestClose")) == 0)
   {
-    p_socket->SendCloseSocket(WS_CLOSE_NORMAL,_T("Marlin TestServer closing socket"));
-    // Simply close will NOT work!!
-    // p_socket->CloseSocket();
+    if(p_socket->SendCloseSocket(WS_CLOSE_NORMAL,_T("Marlin TestServer closing socket")))
+    {
+      qprintf(_T("TEST handler: Sent close message WS_CLOSE_NORMAL to: %s"),p_socket->GetIdentityKey().GetString());
+    }
+    if(!p_socket->CloseSocket())
+    {
+      qprintf(_T("TEST handler: Error closing the WebSocket for: %s"),p_socket->GetIdentityKey().GetString());
+    }
   }
   else
   {
@@ -150,7 +156,7 @@ TestMarlinServer::TestWebSocket()
   xprintf(_T("==============================================\n"));
 
   // Create URL channel to listen to "http://+:port/MarlinTest/Sockets/"
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,true,m_inPortNumber,url);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if(site)
   {
     // --- "---------------------------- - ------
@@ -185,14 +191,32 @@ TestMarlinServer::TestWebSocket()
 void
 TestMarlinServer::StopWebSocket()
 {
-  WebSocket* socket = m_httpServer->FindWebSocket(m_socket);
-  if (socket)
+  try
   {
-    if(socket->CloseSocket() == false)
+    WebSocket* socket = m_httpServer->FindWebSocket(m_socket);
+    if(socket)
     {
-      xerror();
+      if(socket->CloseSocket() == false)
+      {
+        xerror();
+      }
+      m_httpServer->UnRegisterWebSocket(socket);
     }
-    m_httpServer->UnRegisterWebSocket(socket);
+    socket = m_httpServer->FindWebSocket(m_socketSecure);
+    if(socket)
+    {
+      if(socket->CloseSocket() == false)
+      {
+        xerror();
+      }
+      m_httpServer->UnRegisterWebSocket(socket);
+    }
+  }
+  catch(StdException& ex)
+  {
+    xerror();
+    qprintf(_T("ERROR while closing and unregistering the WebSocket\n"));
+    qprintf(ex.GetErrorMessage());
   }
 }
 

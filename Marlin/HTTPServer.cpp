@@ -37,7 +37,7 @@
 #include "HTTPCertificate.h"
 #include "HTTPRequest.h"
 #include "WebServiceServer.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 #include "ThreadPool.h"
 // BaseLibrary
 #include <AutoCritical.h>
@@ -269,8 +269,8 @@ HTTPServer::InitEventstreamKeepalive()
   if(m_eventRetryTime < EVENT_RETRYTIME_MIN) m_eventRetryTime = EVENT_RETRYTIME_MIN;
   if(m_eventRetryTime > EVENT_RETRYTIME_MAX) m_eventRetryTime = EVENT_RETRYTIME_MAX;
 
-  DETAILLOGV(_T("Server SSE keepalive interval: %d ms"), m_eventKeepAlive);
-  DETAILLOGV(_T("Server SSE client retry time : %d ms"), m_eventRetryTime);
+  DETAILLOGV(_T("Server SSE/WS keepalive interval: %d ms"), m_eventKeepAlive);
+  DETAILLOGV(_T("Server SSE/WS client retry time : %d ms"), m_eventRetryTime);
 }
 
 void
@@ -572,9 +572,15 @@ HTTPServer::FindHTTPSite(HTTPSite* p_site,const XString& p_url)
   if(site)
   {
     // Check if the found site is indeed it's main site
-    if(site->GetMainSite() == p_site)
+    // Could be linked multiple levels below the current one
+    HTTPSite* main = site->GetMainSite();
+    while(main)
     {
-      return site;
+      if(main == p_site)
+      {
+        return site;
+      }
+      main = main->GetMainSite();
     }
   }
   return p_site;
@@ -1477,7 +1483,8 @@ HTTPServer::EventMonitor()
     DWORD waited = WaitForSingleObjectEx(m_eventEvent,m_eventKeepAlive,true);
     switch(waited)
     {
-      case WAIT_TIMEOUT:        streams = CheckEventStreams();
+      case WAIT_TIMEOUT:        streams  = CheckEventStreams();
+                                streams += CheckWebsocketStreams();
                                 break;
       case WAIT_OBJECT_0:       // Explicit check event (stopping!)
                                 streams = 0;
@@ -1615,6 +1622,43 @@ HTTPServer::CheckEventStreams()
 
   // Monitor still needed?
   return (unsigned) m_eventStreams.size();
+}
+
+UINT
+HTTPServer::CheckWebsocketStreams()
+{
+  UINT number = 0;
+  bool retry(true);
+
+  while(retry)
+  {
+    number = 0;
+    retry  = false;
+    for(SocketMap::iterator it = m_sockets.begin();it != m_sockets.end();++it)
+    {
+      try
+      {
+        if(!it->second->SendKeepAlive())
+        {
+          it->second->CloseSocket();
+          retry  = true;
+          break;
+        }
+        ++number;
+      }
+      catch(StdException&)
+      {
+        ERRORLOG(ERROR_NOT_FOUND,_T("WebSocket stream already gone!"));
+        retry = true;
+        break;
+      }
+    }
+  }
+  // What we just did
+  DETAILLOGV(_T("Sent pingpong heartbeat to %d websocket clients."),number);
+
+  // Monitor still needed?
+  return (unsigned)m_sockets.size();
 }
 
 // Return the fact that we have an event stream
@@ -1855,13 +1899,17 @@ HTTPServer::RegisterSocket(WebSocket* p_socket)
     // Drop the double socket. Removes socket from the mapping!
     it->second->CloseSocket();
   }
+  // Register new socket
   m_sockets.insert(std::make_pair(key,p_socket));
+
+  // Keep the sockets alive
+  TryStartEventHeartbeat();
   return true;
 }
 
 // Remove registration of a WebSocket
 bool
-HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
+HTTPServer::UnRegisterWebSocket(WebSocket* p_socket,bool p_destroy /*= true*/)
 {
   XString key;
   AutoCritSec lock(&m_socketLock);
@@ -1874,8 +1922,12 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
     SocketMap::iterator it = m_sockets.find(key);
     if(it != m_sockets.end())
     {
-      delete it->second;
+      WebSocket* socket = p_destroy ? it->second : nullptr;
       m_sockets.erase(it);
+      if(socket)
+      {
+        delete socket;
+      }
       return true;
     }
   }
@@ -1883,8 +1935,11 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket)
   {
     ERRORLOG(ERROR_INVALID_ACCESS,_T("WebSocket memory NOT FOUND! : " + ex.GetErrorMessage()));
   }
-  // We don't have it
-  ERRORLOG(ERROR_FILE_NOT_FOUND,_T("Websocket to unregister NOT FOUND! : ") + key);
+  if(p_destroy)
+  {
+    // We don't have it
+    ERRORLOG(ERROR_FILE_NOT_FOUND,_T("Websocket to unregister NOT FOUND! : ") + key);
+  }
   return false;
 }
 

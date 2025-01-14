@@ -166,25 +166,19 @@ HTTPURLGroup::StopGroup()
   // Close URL group
   if(m_group)
   {
-    // If not all sites stopped. Do not stop the group
-    if(!m_sites.empty())
+    // If not all sites stopped, stop them now
+    // as the group can no longer service the URL's
+    while(!m_sites.empty())
     {
-      ERRORLOG(ERROR_NOT_EMPTY,_T("URL GROUP not empty. Still running sites"));
-      return;
+      UrlSiteMap::iterator it = m_sites.begin();
+      HTTPSite* site = it->second;
+      site->StopSite(true);
     }
+    // Remove from server registration and driver
+    m_server->RemoveURLGroup(this);
 
-    // Closing the URL group
-    ULONG retCode = HttpCloseUrlGroup(m_group);
-    if(retCode == NO_ERROR)
-    {
-      DETAILLOG(_T("Closed the URL-Group: %I64X"),m_group);
-    }
-    else
-    {
-      ERRORLOG(retCode,_T("Cannot close the URL-group"));
-    }
     // Reset the group
-    m_group = NULL;
+    m_group     = NULL;
     m_isStarted = false;
   }
 }
@@ -215,10 +209,11 @@ HTTPURLGroup::UnRegisterSite(HTTPSite* p_site)
   }
 
   // After all sites are removed, clean up the whole group
-  if(m_sites.empty())
-  {
-    m_server->RemoveURLGroup(this);
-    // Deleting the group will call StopGroup()
-    delete this;
-  }
+//   if(m_sites.empty() && m_group)
+//   {
+//     // Remove from server registration and driver
+//     m_server->RemoveURLGroup(this);
+//     // Deleting the group will call StopGroup()
+//     delete this;
+//   }
 }

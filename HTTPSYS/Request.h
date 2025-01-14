@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@
 // Test to see if it is still a request object
 #define HTTP_REQUEST_IDENT 0x00EDED0000EDED00
 
-// For header lines
+// For header lines (minimum to impose)
 #define MESSAGE_BUFFER_LENGTH (16*1024)
 // For files, the buffer should be arbitrarily shorter than the maximum TCP/IP frame
 // To accommodate the header blocks of the TCP/IP stack ( a few hundred bytes)
@@ -179,21 +179,3 @@ private:
   CString           m_websocketKey;
   SYSWebSocket*     m_websocket;
 };
-
-inline Request*
-GetRequestFromHandle(HTTP_REQUEST_ID p_handle)
-{
-  try
-  {
-    Request* request = reinterpret_cast<Request*>(p_handle);
-    if(request && request->GetIdent() == HTTP_REQUEST_IDENT)
-    {
-      return request;
-    }
-  }
-  catch(...)
-  {
-    // Error in application: Not a Request handle
-  }
-  return nullptr;
-}

@@ -33,13 +33,15 @@ public:
 private:
   bool CanDecode();
 
-  const byte* OriginalBufPtr;
-  const byte* DataPtr; // Points to data inside message
-  const byte* BufEnd;
-  const int   MaxBufBytes;
-  UINT8       contentType,major,minor;
-  UINT16      length;
-  UINT8       handshakeType;
-  UINT16      handshakeLength;
-  bool        decoded;
+  const byte* m_originalBufPtr;
+  const byte* m_dataPtr; // Points to data inside message
+  const byte* m_bufEnd;
+  const int   m_maxBufBytes;
+  UINT8       m_contentType;
+  UINT8       m_major;
+  UINT8       m_minor;
+  UINT16      m_length;
+  UINT8       m_handshakeType;
+  UINT16      m_handshakeLength;
+  bool        m_decoded;
 };

@@ -213,34 +213,37 @@ public:
   void            SetCookiesExpires(int p_minutes);
   // OPTIONAL: Set all cookies to max-age 
   void            SetCookiesMaxAge(int p_seconds);
-
+  // OPTIONAL: Another site is registered as a sub-site of me
+  void            SetHasSubSites(bool p_subsite);
+ 
   // GETTERS
-  XString         GetSite() const                   { return m_site;          };
-  int             GetPort() const                   { return m_port;          };
-  bool            GetIsStarted()                    { return m_isStarted;     };
-  bool            GetIsSubsite()                    { return m_isSubsite;     };
-  bool            GetAsync()                        { return m_async;         };
-  XString         GetPrefixURL()                    { return m_prefixURL;     };
-  bool            GetIsEventStream()                { return m_isEventStream; };
-  LPFN_CALLBACK   GetCallback()                     { return m_callback;      };
-  MediaTypeMap&   GetContentTypeMap()               { return m_contentTypes;  };
-  XMLEncryption   GetEncryptionLevel()              { return m_securityLevel; };
-  XString         GetEncryptionPassword()           { return m_enc_password;  };
-  bool            GetReliable()                     { return m_reliable;      };
-  bool            GetReliableLogIn()                { return m_reliableLogIn; };
-  void*           GetPayload()                      { return m_payload;       };
-  HTTPServer*     GetHTTPServer()                   { return m_server;        };
-  HTTPSite*       GetMainSite()                     { return m_mainSite;      };
-  bool            GetSendUnicode()                  { return m_sendUnicode;   };
-  bool            GetSendSoapBOM()                  { return m_sendSoapBOM;   };
-  bool            GetSendJsonBOM()                  { return m_sendJsonBOM;   };
-  bool            GetVerbTunneling()                { return m_verbTunneling; };
-  bool            GetHTTPCompression()              { return m_compression;   };
-  bool            GetHTTPThrotteling()              { return m_throttling;    };
-  bool            GetUseCORS()                      { return m_useCORS;       };
-  XString         GetCORSOrigin()                   { return m_allowOrigin;   };
-  XString         GetCORSHeaders()                  { return m_allowHeaders;  };
-  int             GetCORSMaxAge()                   { return m_corsMaxAge;    };
+  XString         GetSite() const                   { return m_site;          }
+  int             GetPort() const                   { return m_port;          }
+  bool            GetIsStarted()                    { return m_isStarted;     }
+  bool            GetIsSubsite()                    { return m_isSubsite;     }
+  bool            GetHasSubSites()                  { return m_hasSubSites;   }
+  bool            GetAsync()                        { return m_async;         }
+  XString         GetPrefixURL()                    { return m_prefixURL;     }
+  bool            GetIsEventStream()                { return m_isEventStream; }
+  LPFN_CALLBACK   GetCallback()                     { return m_callback;      }
+  MediaTypeMap&   GetContentTypeMap()               { return m_contentTypes;  }
+  XMLEncryption   GetEncryptionLevel()              { return m_securityLevel; }
+  XString         GetEncryptionPassword()           { return m_enc_password;  }
+  bool            GetReliable()                     { return m_reliable;      }
+  bool            GetReliableLogIn()                { return m_reliableLogIn; }
+  void*           GetPayload()                      { return m_payload;       }
+  HTTPServer*     GetHTTPServer()                   { return m_server;        }
+  HTTPSite*       GetMainSite()                     { return m_mainSite;      }
+  bool            GetSendUnicode()                  { return m_sendUnicode;   }
+  bool            GetSendSoapBOM()                  { return m_sendSoapBOM;   }
+  bool            GetSendJsonBOM()                  { return m_sendJsonBOM;   }
+  bool            GetVerbTunneling()                { return m_verbTunneling; }
+  bool            GetHTTPCompression()              { return m_compression;   }
+  bool            GetHTTPThrotteling()              { return m_throttling;    }
+  bool            GetUseCORS()                      { return m_useCORS;       }
+  XString         GetCORSOrigin()                   { return m_allowOrigin;   }
+  XString         GetCORSHeaders()                  { return m_allowHeaders;  }
+  int             GetCORSMaxAge()                   { return m_corsMaxAge;    }
   bool            GetCORSAllowCredentials()         { return m_corsCredentials;  }
   bool            GetCookieHasSecure()              { return m_cookieHasSecure;  }
   bool            GetCookieHasHttpOnly()            { return m_cookieHasHttp;    }
@@ -355,6 +358,7 @@ protected:
   HTTPServer*       m_server          { nullptr };        // Site of this server
   HTTPURLGroup*     m_group           { nullptr };        // Site is in this group
   HTTPSite*         m_mainSite        { nullptr };        // Main site of this site
+  bool              m_hasSubSites     { false   };        // This sites has sub sites
   XString           m_webroot;                            // Webroot of this site
   bool              m_virtualDirectory{ false   };        // Webroot is a virtual directory outside the server webroot
   XString           m_prefixURL;                          // Channel prefix
@@ -541,4 +545,10 @@ inline void
 HTTPSite::SetCORSMaxAge(unsigned p_maxAge)
 {
   m_corsMaxAge = p_maxAge;
+}
+
+inline void
+HTTPSite::SetHasSubSites(bool p_subsite)
+{
+  m_hasSubSites = p_subsite;
 }

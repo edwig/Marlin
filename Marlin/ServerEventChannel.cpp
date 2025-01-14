@@ -30,7 +30,7 @@
 #include "ServerEventDriver.h"
 #include "LongTermEvent.h"
 #include "ConvertWideString.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 #include "AutoCritical.h"
 #include "Base64.h"
 #include "CRC32.h"
@@ -155,7 +155,7 @@ ServerEventChannel::Reset()
 }
 
 // Register a new event
-// Called fromm the ServerEventDriver.
+// Called from the ServerEventDriver.
 int 
 ServerEventChannel::PostEvent(XString p_payload
                              ,XString p_sender
@@ -601,6 +601,8 @@ ServerEventChannel::HandleLongPolling(SOAPMessage* p_message,bool p_check /*=fal
     p_message->SetParameter(_T("Number"), ltevent->m_number);
     p_message->SetParameter(_T("Message"),ltevent->m_payload);
     p_message->SetParameter(_T("Type"), LTEvent::EventTypeToString(ltevent->m_type));
+
+    delete ltevent;
   } 
   if(queue)
   {
@@ -741,6 +743,7 @@ ServerEventChannel::SendEventToSockets(LTEvent* p_event)
     // Next socket
     ++it;
   }
+
   // No more sockets connected. Stop the queue if only sockets are used
   if(m_sockets.empty() && (m_current == EDT_Sockets))
   {
@@ -897,11 +900,12 @@ ServerEventChannel::CloseChannel()
     {
       try
       {
-        LTEvent* ltevent   = new LTEvent(EvtType::EV_Close);
+        LTEvent* ltevent  = new LTEvent(EvtType::EV_Close);
         ltevent->m_payload = _T("Channel closed");
         ltevent->m_number  = ++m_maxNumber;
         ltevent->m_sent    = m_appData;
 
+        // Incoming events are destroyed by the receiver
         (*m_application)(ltevent);
       }
       catch(StdException& ex)
@@ -963,7 +967,6 @@ ServerEventChannel::CloseSocket(WebSocket* p_socket)
     error.Format(_T("Server event driver cannot close socket [%s] Error: %s"),m_name.GetString(),ex.GetErrorMessage().GetString());
     ERRORLOG(ERROR_INVALID_HANDLE,error);
   }
-  m_server->UnRegisterWebSocket(p_socket);
 }
 
 void 

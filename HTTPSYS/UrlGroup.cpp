@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -13,6 +13,9 @@
 #include "RequestQueue.h"
 #include "UrlGroup.h"
 #include "HTTPReadRegister.h"
+#include "ServerSession.h"
+#include "OpaqueHandles.h"
+#include "http_private.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -43,7 +46,7 @@ UrlGroup::SetRequestQueue(HANDLE p_requestQueue)
   if(p_requestQueue)
   {
     // Finding our request queue
-    m_queue = GetRequestQueueFromHandle(p_requestQueue);
+    m_queue = g_handles.GetReQueueFromOpaqueHandle(p_requestQueue);
     if(m_queue == nullptr)
     {
       return;
@@ -136,7 +139,7 @@ UrlGroup::AddUrlPrefix(CString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
 // Remove an URL from an URL-Group. 
 // If it was the last URL, remove the group from the request-queue
 ULONG 
-UrlGroup::DelUrlPrefix(CString pFullyQualifiedUrl,ULONG p_flags)
+UrlGroup::DelUrlPrefix(HTTP_URL_GROUP_ID p_handle,CString pFullyQualifiedUrl,ULONG p_flags)
 {
   AutoCritSec lock(&m_lock);
 
@@ -159,10 +162,10 @@ UrlGroup::DelUrlPrefix(CString pFullyQualifiedUrl,ULONG p_flags)
     else ++it;
   }
 
-  // If no URL's left in the group, remove the group from the queue
+  // If no URL's left in the group, remove the group from the queue and the session
   if(m_urls.empty())
   {
-    m_queue->RemoveURLGroup(this);
+    g_session->RemoveUrlGroup(p_handle,this);
   }
   return NO_ERROR;
 }

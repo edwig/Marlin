@@ -401,13 +401,8 @@
     <ClCompile Include="WebConfigIIS.cpp" />
     <ClCompile Include="WebServiceClient.cpp" />
     <ClCompile Include="WebServiceServer.cpp" />
-    <ClCompile Include="WebSocket.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|x64'">
-      </ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="WebSocketClient.cpp" />
+    <ClCompile Include="WebSocketMain.cpp" />
     <ClCompile Include="WebSocketServer.cpp" />
     <ClCompile Include="WebSocketServerIIS.cpp" />
     <ClCompile Include="WebSocketServerSync.cpp" />
@@ -481,8 +476,8 @@
     <ClInclude Include="WebConfigIIS.h" />
     <ClInclude Include="WebServiceClient.h" />
     <ClInclude Include="WebServiceServer.h" />
-    <ClInclude Include="WebSocket.h" />
     <ClInclude Include="WebSocketClient.h" />
+    <ClInclude Include="WebSocketMain.h" />
     <ClInclude Include="WebSocketServer.h" />
     <ClInclude Include="WebSocketServerIIS.h" />
     <ClInclude Include="WebSocketServerSync.h" />

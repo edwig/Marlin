@@ -20,6 +20,16 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     in real life production scenario's. The 'tls_lastErrror' variable has been removed from the 
     HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
 
+CHANGES IN VERSION 8.4.1 of 25-12-2024
+--------------------------------------
+1)  The XMas edition of Marlin :-)
+2)  Full websockets are now implemented on the async HTTPServerMarlin outside of IIS
+3)  Completion of the HTTPSYS driver outside of Microsofts HTTP-API library
+    The driver supports now synchroneous as well as asynchroneous I/O through IOCP
+    (IO-Completion-Ports) for 'plain' and 'secure' sockets and websockets.
+4)  Small fixes w/o the fix for the ServerEventDriver. Start your driver-site before you
+    register the subsites and start the whole driver. See the server testset!
+
 CHANGES IN VERSION 8.4.0 of 28-11-2024
 --------------------------------------
 1)  The MarlinModule is now Unicode/ANSI independent. One MarlinModule can be used for both

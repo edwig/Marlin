@@ -419,6 +419,8 @@
     <ClInclude Include="HTTPSYS_Websocket.h" />
     <ClInclude Include="Listener.h" />
     <ClInclude Include="HTTPLoglevel.h" />
+    <ClInclude Include="Logging.h" />
+    <ClInclude Include="OpaqueHandles.h" />
     <ClInclude Include="PlainSocket.h" />
     <ClInclude Include="Request.h" />
     <ClInclude Include="RequestQueue.h" />
@@ -442,6 +444,7 @@
     <ClCompile Include="GetUserAccount.cpp" />
     <ClCompile Include="HttpAddFragmentToCache.cpp" />
     <ClCompile Include="HttpAddUrl.cpp" />
+    <ClCompile Include="HttpCloseWebSocket.cpp" />
     <ClCompile Include="HttpCreateHttpHandle.cpp" />
     <ClCompile Include="HttpDeclarePush.cpp" />
     <ClCompile Include="HttpDeleteServiceConfiguration.cpp" />
@@ -475,11 +478,13 @@
     <ClCompile Include="HttpSetRequestQueueProperty.cpp" />
     <ClCompile Include="HttpSetUrlGroupProperty.cpp" />
     <ClCompile Include="HttpTerminate.cpp" />
+    <ClCompile Include="OpaqueHandles.cpp" />
     <ClCompile Include="PlainSocket.cpp" />
     <ClCompile Include="Request.cpp" />
     <ClCompile Include="RequestQueue.cpp" />
     <ClCompile Include="SecureServerSocket.cpp" />
     <ClCompile Include="ServerSession.cpp" />
+    <ClCompile Include="SocketStream.cpp" />
     <ClCompile Include="SplitUrlPrefix.cpp" />
     <ClCompile Include="SSLTracer.cpp" />
     <ClCompile Include="SSLUtilities.cpp" />

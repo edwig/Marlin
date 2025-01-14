@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -12,6 +12,7 @@
 #include "RequestQueue.h"
 #include "UrlGroup.h"
 #include "ServerSession.h"
+#include "OpaqueHandles.h"
 #include <LogAnalysis.h>
 
 #ifdef _DEBUG
@@ -68,7 +69,7 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
   }
 
   // Find the request queue
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
   if(queue == nullptr)
   {
     return ERROR_INVALID_PARAMETER;

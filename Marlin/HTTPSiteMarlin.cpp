@@ -129,8 +129,20 @@ HTTPSiteMarlin::StartSite()
     // The registration
     if(m_mainSite)
     {
-      DETAILLOGV(_T("URL not registered to URL-Group. Site [%s] is subsite of [%s]"),m_site.GetString(),m_mainSite->GetSite().GetString());
-      result = true;
+      if(m_mainSite->GetAuthentication() == (int) m_authScheme &&
+         m_mainSite->GetAuthenticationScheme() == m_scheme     &&
+         m_mainSite->GetAuthenticationRealm()  == m_realm      &&
+         m_mainSite->GetAuthenticationDomain() == m_domain)
+      {
+        DETAILLOGV(_T("URL registered to URL-Group of main-site. Site [%s] is subsite of [%s]"),m_site.GetString(),m_mainSite->GetSite().GetString());
+        result = true;
+      }
+      else
+      {
+        CString error;
+        error.Format(_T("URL not registered to correct URL-Group. Different authentication scheme. Site: %s"),m_site.GetString());
+        ERRORLOG(ERROR_WRONG_TARGET_NAME,error);
+      }
     }
     else
     {

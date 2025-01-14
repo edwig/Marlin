@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -13,6 +13,7 @@
 #include "RequestQueue.h"
 #include "UrlGroup.h"
 #include "SYSWebSocket.h"
+#include "OpaqueHandles.h"
 #include <malloc.h>
 #include <algorithm>
 #include <winhttp.h>
@@ -23,9 +24,6 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-// These are all request queues
-RequestQueues g_requestQueues;
 
 // CTOR
 RequestQueue::RequestQueue(CString p_name)
@@ -51,27 +49,31 @@ RequestQueue::~RequestQueue()
 HANDLE
 RequestQueue::CreateHandle()
 {
-  if(m_handle)
-  {
-    return NULL;
-  }
+  HANDLE handle = nullptr;
   CString tempFilename;
-  tempFilename.GetEnvironmentVariable(_T("WINDIR"));
+  if(!tempFilename.GetEnvironmentVariable(_T("WINDIR")))
+  {
+    tempFilename = _T("C:\\Windows");
+  }
   tempFilename += _T("\\TEMP\\RequestQueue_");
   tempFilename += m_name;
 
-  m_handle = CreateFile(tempFilename
-                       ,GENERIC_READ|GENERIC_WRITE
-                       ,FILE_SHARE_READ|FILE_SHARE_WRITE
-                       ,NULL  // Security
-                       ,OPEN_ALWAYS
-                       ,FILE_ATTRIBUTE_NORMAL| FILE_FLAG_RANDOM_ACCESS | FILE_FLAG_OVERLAPPED | FILE_FLAG_DELETE_ON_CLOSE
-                       ,NULL);
-  if(m_handle == INVALID_HANDLE_VALUE)
+  handle = CreateFile(tempFilename
+                     ,GENERIC_READ | GENERIC_WRITE
+                     ,FILE_SHARE_READ | FILE_SHARE_WRITE
+                     ,NULL  // Security
+                     ,OPEN_ALWAYS
+                     ,FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS | FILE_FLAG_OVERLAPPED | FILE_FLAG_DELETE_ON_CLOSE
+                     ,NULL);
+  if(handle == INVALID_HANDLE_VALUE)
   {
     return NULL;
   }
-  return m_handle;
+  if(m_handle)
+  {
+    CloseHandle(m_handle);
+  }
+  return (m_handle = handle);
 }
 
 // Add an URL-Group to the queue
@@ -436,7 +438,6 @@ RequestQueue::RemoveRequest(Request* p_request)
   Requests::iterator it = std::find(m_servicing.begin(),m_servicing.end(),p_request);
   if(it != m_servicing.end())
   {
-    TRACE("DELETE request from servicing queue\n");
     delete p_request;
     m_servicing.erase(it);
     return;
@@ -446,7 +447,6 @@ RequestQueue::RemoveRequest(Request* p_request)
   it = std::find(m_incoming.begin(),m_incoming.end(),p_request);
   if(it != m_incoming.end())
   {
-    TRACE("DELETE request from incoming queue\n");
     delete p_request;
     m_incoming.erase(it);
     return;
@@ -454,7 +454,6 @@ RequestQueue::RemoveRequest(Request* p_request)
 
   // Request was not found in any queue
   // Delete it all the while
-  TRACE("DELETE dangling request\n");
   delete p_request;
 }
 
@@ -557,7 +556,7 @@ RequestQueue::FlushFragment(CString p_prefix,ULONG Flags)
   }
 
   // Return flushed or no fragments found
-  return erased > 0 ? NO_ERROR : ERROR_NOT_FOUND;
+  return NO_ERROR;
 }
 
 // Signal all listeners to stop listening
@@ -673,6 +672,7 @@ RequestQueue::CloseQueueHandle()
 {
   if(m_handle)
   {
+    g_handles.RemoveOpaqueHandle(m_handle);
     CloseHandle(m_handle);
     m_handle = nullptr;
   }
@@ -754,12 +754,18 @@ RequestQueue::DeleteAllWebSockets()
 {
   AutoCritSec lock(&m_lock);
 
-  for(auto& sock : m_websockets)
-  {
-    sock.second->CloseTcpConnection();
-    delete sock.second;
-  }
-  m_websockets.clear();
+//   try
+//   {
+//     for(auto& sock : m_websockets)
+//     {
+//       sock.second->CloseTcpConnection();
+//       delete sock.second;
+//     }
+//     m_websockets.clear();
+//   }
+//   catch(StdException& /*ex*/)
+//   {
+//   }
 }
 
 // See if a WebSocket with this secure key already exists in the driver

@@ -66,8 +66,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
-IHttpServer* g_iisServer = nullptr;
-
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define SERVERSTATUSOK            _T("Server status: Running & OK")
 
@@ -485,11 +483,12 @@ TestMarlinServer::RegisterSiteHandlers()
   TestMessageEncryption();
   TestReliable();
   TestReliableBA();
-  TestSubSites();
   TestThreadPool(m_pool);
   TestHTTPTime();
   TestToken();
+  TestSubSites();
   TestWebSocket();
+  TestWebSocketSecure();
 }
 
 // Perform all after test reporting
@@ -516,9 +515,10 @@ TestMarlinServer::AfterTests()
   AfterTestCompression();
   AfterTestMessageEncryption();
   AfterTestReliable();
-  AfterTestSubSites();
   AfterTestThreadpool();
   AfterTestHTTPTime();
   AfterTestToken();
+  AfterTestSubSites();
   AfterTestWebSocket();
+  AfterTestWebSocketSecure();
 }

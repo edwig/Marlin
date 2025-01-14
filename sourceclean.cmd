@@ -53,6 +53,7 @@ rmdir /q /s MarlinServer\Debug
 rmdir /q /s MarlinServer\DebugUnicode
 rmdir /q /s MarlinServer\Release
 rmdir /q /s MarlinServer\ReleaseUnicode
+rmdir /q /s MarlinServer\Win32
 rmdir /q /s HTTPManager\Debug
 rmdir /q /s HTTPManager\DebugUnicode
 rmdir /q /s HTTPManager\Release

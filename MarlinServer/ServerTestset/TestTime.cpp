@@ -27,8 +27,8 @@
 //
 #include "Stdafx.h"
 #include "TestMarlinServer.h"
-#include "HTTPTime.h"
-#include "WinHttp.h"
+#include <HTTPTime.h>
+#include <WinHttp.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

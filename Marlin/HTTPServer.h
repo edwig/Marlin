@@ -64,12 +64,12 @@ using std::wstring;
 // Should be the same as the initial size for the HTTPClient!
 constexpr auto INIT_HTTP_BUFFERSIZE   = (32 * 1024);
 // Initial HTTP backlog queue length
-constexpr auto INIT_HTTP_BACKLOGQUEUE = 64;
+constexpr auto INIT_HTTP_BACKLOGQUEUE = 1000;
 constexpr auto MAXX_HTTP_BACKLOGQUEUE = 640;
-// Timeout after bruteforce attack
+// Timeout after brute-force attack
 constexpr auto TIMEOUT_BRUTEFORCE     = (10 * CLOCKS_PER_SEC);
 
-// Websockets are two sided sockets, not HTTP
+// WebSockets are two sided sockets, not HTTP
 #ifndef HANDLER_HTTPSYS_UNFRIENDLY
 #define HANDLER_HTTPSYS_UNFRIENDLY 9
 #endif
@@ -219,6 +219,8 @@ public:
   virtual void       SendResponse(HTTPMessage* p_message) = 0;
   // Sending a response as a chunk
   virtual void       SendAsChunk(HTTPMessage* p_message,bool p_final = false) = 0;
+  // Remove registration of a WebSocket
+  virtual bool       UnRegisterWebSocket(WebSocket* p_socket,bool p_destroy = true);
 
   // SETTERS
  
@@ -365,8 +367,6 @@ public:
   bool       UnRegisterService (XString p_serviceName);
   // Register a WebSocket
   bool       RegisterSocket(WebSocket* p_socket);
-  // Remove registration of a WebSocket
-  bool       UnRegisterWebSocket(WebSocket* p_socket);
   // Find our extra header for RemoteDesktop (Citrix!) support
   int        FindRemoteDesktop(USHORT p_count,PHTTP_UNKNOWN_HEADER p_headers);
   // Authentication failed for this reason
@@ -446,6 +446,7 @@ protected:
   void      TryStartEventHeartbeat();
   // Check all event streams for the heartbeat monitor
   UINT      CheckEventStreams();
+  UINT      CheckWebsocketStreams();
   // For the handling of the event streams: implement this function
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response
                                       ,CRITICAL_SECTION*  p_lock

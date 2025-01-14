@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -165,32 +165,3 @@ private:
   CRITICAL_SECTION            m_lock;           // Queue synchronization
   HANDLE                      m_event { 0L };   // Queue waiting event
 };
-
-// All request queues are held globally
-// There will always be a very low number of these in any server application
-// We just keep them in a vector
-using RequestQueues = std::map<HANDLE,RequestQueue *>;
-
-extern RequestQueues g_requestQueues;
-
-inline RequestQueue*
-GetRequestQueueFromHandle(HANDLE p_handle)
-{
-  try
-  {
-    RequestQueues::iterator it = g_requestQueues.find(p_handle);
-    if(it != g_requestQueues.end())
-    {
-      RequestQueue* queue = it->second;
-      if (queue && queue->GetIdent() == HTTP_QUEUE_IDENT)
-      {
-        return queue;
-      }
-    }
-  }
-  catch (...)
-  {
-    // Error in application: Not a RequestQueue handle
-  }
-  return nullptr;
-}

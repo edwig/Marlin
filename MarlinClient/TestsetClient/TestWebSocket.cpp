@@ -219,11 +219,11 @@ TestWebSocket(LogAnalysis* p_log)
       {
         // Testing strings that are longer than the TCP/IP buffering for WebSockets
         // So strings longer than typical 8K bytes must be transportable
-        // This string is 23501 bytes long
+        // This string is 23503 bytes long
         XString large = CreateLargeMessage();
         if(!socket->WriteString(large))
         {
-           ++errors;
+          ++errors;
         }
       }
     }
@@ -231,8 +231,8 @@ TestWebSocket(LogAnalysis* p_log)
   }
 
   // Waiting for server write to drain
-  int seconds = 2;
-  // --- "---------------------------------------------- - ------
+  int seconds = 3;
+  // -------- "---------------------------------------------- - ------
   _tprintf(_T("WebSocket waiting for the server %d seconds     : OK\n"), seconds);
   Sleep(seconds * CLOCKS_PER_SEC);
 
@@ -240,7 +240,7 @@ TestWebSocket(LogAnalysis* p_log)
 
   if(!g_closed)
   {
-    if(!socket->SendCloseSocket(WS_CLOSE_NORMAL, _T("TestWebSocket did close the socket")))
+    if(!socket->SendCloseSocket(WS_CLOSE_NORMAL, _T("Client TestWebSocket did close the socket")))
     {
       ++errors;
     }

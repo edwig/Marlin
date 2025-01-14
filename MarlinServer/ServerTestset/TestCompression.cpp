@@ -27,7 +27,8 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "SiteHandlerGet.h"
+#include "TestPorts.h"
+#include <SiteHandlerGet.h>
 #include <io.h>
 
 #ifdef _DEBUG
@@ -80,7 +81,7 @@ TestMarlinServer::TestCompression()
   // Create URL channel to listen to "http://+:port/MarlinTest/Compression/"
   // Callback function is no longer required!
   XString webaddress = _T("/MarlinTest/Compression/");
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,webaddress,true);
   if(site)
   {
     // SUMMARY OF THE TEST

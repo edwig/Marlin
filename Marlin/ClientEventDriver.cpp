@@ -366,8 +366,6 @@ ClientEventDriver::StartDispatcher()
 bool
 ClientEventDriver::TestDispatcher()
 {
-  AutoCritSec lock(&m_lockChannel);
-
   bool restart = false;
 
   if(m_websocket)

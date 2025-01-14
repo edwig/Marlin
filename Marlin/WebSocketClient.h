@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -64,6 +64,8 @@ public:
   virtual bool SendCloseSocket(USHORT p_code,XString p_reason) override;
   // Register the server request for sending info
   virtual bool RegisterSocket(HTTPMessage* p_message) override;
+  // Send a ping/pong keep alive message
+  virtual bool SendKeepAlive() override;
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) override;
   // Generate a handshake key

@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -14,13 +14,13 @@
 #include "WebSocket.h"
 #include "HTTPSYS_Websocket.h"
 #include "SYSWebSocket.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -38,8 +38,8 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
                     ,IN DWORD                 PropertyCount    OPTIONAL)
 {
   // Getting the elementary objects
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
-  Request*    request = GetRequestFromHandle(RequestId);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
+  Request*    request = g_handles.GetRequestFromOpaqueHandle(RequestId);
 
   // Check for correct RequestQUeue and current request
   if(queue == nullptr || request == nullptr)
@@ -47,7 +47,7 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
     return nullptr;
   }
   // Must have a buffer translation handle from the handshaking process
-  if(SocketHandle == NULL)
+  if(SocketHandle == nullptr)
   {
     return nullptr;
   }
@@ -62,6 +62,9 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
   // Remember our buffer translation handle
   websocket->SetTranslationHandle(SocketHandle);
 
+  // Associate our socket with the correct threadpool
+  websocket->AssociateThreadPool(queue->GetIOCompletionPort());
+
   // Optional socket properties
   __try
   {
@@ -71,13 +74,15 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
       {
         switch(SocketProperties[index].Type)
         {
-          case WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE:        websocket->SetReceiveBufferSize (*((ULONG*)SocketProperties[index].pvValue));
+          case WEB_SOCKET_RECEIVE_BUFFER_SIZE_PROPERTY_TYPE:        websocket->SetReceiveBufferSize  (*((ULONG*)SocketProperties[index].pvValue));
                                                                     break;
           case WEB_SOCKET_SEND_BUFFER_SIZE_PROPERTY_TYPE:           websocket->SetSendBufferSize     (*((ULONG*)SocketProperties[index].pvValue));
                                                                     break;
           case WEB_SOCKET_DISABLE_MASKING_PROPERTY_TYPE:            websocket->SetDisableClientMasking(*((BOOL*)SocketProperties[index].pvValue));
                                                                     break;
           case WEB_SOCKET_DISABLE_UTF8_VERIFICATION_PROPERTY_TYPE:  websocket->SetUTF8Verification    (*((BOOL*)SocketProperties[index].pvValue));
+                                                                    break;
+          case WEB_SOCKET_KEEPALIVE_INTERVAL_PROPERTY_TYPE:         websocket->SetPingPongInterval    (*((ULONG*)SocketProperties[index].pvValue));
                                                                     break;
         }
       }
@@ -92,6 +97,7 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
       websocket->SetReceiveBufferSize(DEF_BUFF_SIZE);
       websocket->SetDisableClientMasking(FALSE);
       websocket->SetUTF8Verification(TRUE);
+      websocket->SetPingPongInterval(WEBSOCKET_PINGPONG_TIMEOUT);
     }
   }
 

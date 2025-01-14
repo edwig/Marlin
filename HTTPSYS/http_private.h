@@ -44,8 +44,8 @@
 // Logging level in the SSL socket library
 //
 #define SOCK_LOGGING_OFF       0    // No logging
-#define SOCK_LOGGING_ON        1    // Results logging
-#define SOCK_LOGGING_TRACE     2    // Hex dump tracing first line
+#define SOCK_LOGGING_ERRORS    1    // Log HTTP status 400 and above
+#define SOCK_LOGGING_ALL       2    // Log all HTTP actions
 #define SOCK_LOGGING_FULLTRACE 3    // Full hex dump tracing
 
 // Size of a certificate thumb-print

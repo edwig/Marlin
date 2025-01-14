@@ -14,6 +14,8 @@
 #pragma once
 #include <winsock2.h>
 
+#define SOCKETSTREAM_IDENT 0x4321DEAF43211BAD
+
 // Callback function (in the "Pointer" member)
 typedef VOID(WINAPI* PFN_SOCKET_COMPLETION)(LPOVERLAPPED p_overlapped);
 
@@ -39,6 +41,9 @@ public:
   // Sends    up to   p_length bytes of data with an OVERLAPPED callback
   virtual int     SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLAPPED p_overlapped) = 0;
 
+  // Connect to the threadpool of the server
+  virtual void    AssociateThreadPool(HANDLE p_threadPoolIOCP) = 0;
+
   // Last error state of deepest derived class
 	virtual DWORD   GetLastError() = 0;
   // Disconnect the socket SD_RECEIVE / SD_SEND / SD_BOTH
@@ -47,10 +52,19 @@ public:
 	virtual bool    Close() = 0; 
 
   // Are we running in secure SSL/TLS mode?
-  bool            InSecureMode() { return m_secureMode; };
+  bool            InSecureMode();
 
+  // Plain/Secure sockets can be kept alive longer for callbacks from the threadpool
+  // With the drop of the last reference, the object WILL destroy itself
+  void            AddReference();
+  void            DropReference();
+
+  // Identification of the object for callbacks to see if we still exist
+  UINT64 m_ident { SOCKETSTREAM_IDENT };
 protected:
   // Are we initialized in secure mode or not?
-  bool m_secureMode { false };
+  bool   m_secureMode { false };
+  // Externally referenced, keep alive counter
+  long   m_references { 1     };
 };
 

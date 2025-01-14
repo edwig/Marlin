@@ -47,6 +47,8 @@ public:
 
   // Set up SSL/TLS state for this connection: NEVER USED ON PLAIN SOCKETS! Only on derived classes!!
   HRESULT InitializeSSL(const void* p_buffer = nullptr,const int p_length = 0) override;
+  // Connect to the threadpool of the server
+  void     AssociateThreadPool(HANDLE p_threadPoolIOCP) override;
 
   // Returns true if the close worked for both sides
   bool  Close(void) override;
@@ -83,9 +85,13 @@ public:
 
   // Public: but only meant for the overlapping I/O routines !!
   void ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags);
+  void SendingOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags);
 
 
 protected:
+  // See if data is coming in
+  bool InputQueueHasWaitingData();
+
 	DWORD   m_lastError  { 0       };  // Last WSA socket error or OS error
   CString m_hostName;                // Connected to this host
   USHORT  m_portNumber { 0       };  // Connected to this port
@@ -103,9 +109,14 @@ private:
 	WSAEVENT        m_write_event         { nullptr };  // Event used when writing to the socket
 	WSAEVENT        m_read_event          { nullptr };  // Event used when reading from the socket
 	WSAOVERLAPPED   m_os                  { 0       };  // Overlapping I/O structure for reading and listner stopping
-  LPOVERLAPPED    m_readOverlapped      { nullptr };  // Overlapped for reading from the socket
+  LPOVERLAPPED    m_readOverlapped      { nullptr };  // Overlapped for reading from the socket (from the application)
+  OVERLAPPED      m_overReading         { 0       };  // Overlapping for sockets
+  LPOVERLAPPED    m_sendOverlapped      { nullptr };  // Overlapped for sending from the socket (from the application)
+  OVERLAPPED      m_overSending         { 0       };  // Overlapping for sockets
 	bool            m_recvInitiated       { false   };  // Receive in transit, used for retrying a receive operation
+	bool            m_sendInitiated       { false   };  // Sending in transit, used for retrying a receive operation
   LPVOID          m_receiveBuffer       { nullptr };  // Current read buffer
+  LPVOID          m_sendingBuffer       { nullptr };  // Current send buffer
 	SOCKET          m_actualSocket        { NULL    };  // The underlying WSA socket from the MS-Windows operating system
   int             m_connTimeoutSeconds  { 1       };  // Connection timeout in seconds
   int             m_sendTimeoutSeconds  { 1       };  // Send timeout in seconds

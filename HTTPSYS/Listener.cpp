@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -256,7 +256,17 @@ void Listener::Listen(void)
       continue;
     }
 
-    TRACE("Accepted socket for port: %d\n",m_port);
+    // See if we can have one more connection
+    if(g_session->AddConnection())
+    {
+      DebugMsg(_T("Accepted socket for port: %d\n"),m_port);
+    }
+    else
+    {
+      LogError(_T("Server overloaded: rejected a new connection!"));
+      closesocket(readSocket);
+      continue;
+    }
 
     // A request to open a socket has been received, begin a thread to handle that connection.
     // Secure connections can take long to establish because of the handshaking, 

@@ -141,7 +141,7 @@ XMLParserJSON::ParseLevel(XMLElement* p_element,JSONvalue& p_value,XString p_arr
     case JsonType::JDT_array:       array = &p_value.GetArray();
                                     for(auto& val : *array)
                                     {
-                                      element = m_soap->AddElement(p_element,p_arrayName,XDT_String,"");
+                                      element = m_soap->AddElement(p_element,p_arrayName,XDT_String,_T(""));
                                       ParseLevel(element,val);
                                     }
                                     break;

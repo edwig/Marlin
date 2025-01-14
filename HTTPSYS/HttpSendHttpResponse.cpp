@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -15,6 +15,7 @@
 #include "ServerSession.h"
 #include "LogAnalysis.h"
 #include "SSLUtilities.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -78,8 +79,8 @@ HttpSendHttpResponse(IN HANDLE              RequestQueueHandle
   }
 
   // Finding the elementary object
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
-  Request*    request = GetRequestFromHandle(RequestId);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
+  Request*    request = g_handles.GetRequestFromOpaqueHandle(RequestId);
   ULONG        result = ERROR_HANDLE_EOF;
 
   if(queue == nullptr || request == nullptr)
@@ -93,78 +94,70 @@ HttpSendHttpResponse(IN HANDLE              RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  if(queue->RequestStillInService(request))
+  // See if we are still in service
+  if(queue->RequestStillInService(request) == false)
   {
+    return result;
+  }
 
-    if(Overlapped)
+  // Log our response BEFORE sending
+  if(LogData && g_session)
+  {
+    g_session->ProcessLogData(LogData);
+  }
+
+  if(Overlapped)
+  {
+    PREGISTER_HTTP_SEND_RESPONSE reg = new REGISTER_HTTP_SEND_RESPONSE();
+    reg->r_size         = sizeof(REGISTER_HTTP_SEND_RESPONSE);
+    reg->r_queue        = queue;
+    reg->r_request      = request;
+    reg->r_httpResponse = HttpResponse;
+    reg->r_flags        = Flags;
+    reg->r_overlapped   = Overlapped;
+
+    uintptr_t thread = 0L;
+    do
     {
-      PREGISTER_HTTP_SEND_RESPONSE reg = new REGISTER_HTTP_SEND_RESPONSE();
-      reg->r_size         = sizeof(REGISTER_HTTP_SEND_RESPONSE);
-      reg->r_queue        = queue;
-      reg->r_request      = request;
-      reg->r_httpResponse = HttpResponse;
-      reg->r_flags        = Flags;
-      reg->r_overlapped   = Overlapped;
-
-      uintptr_t thread = 0L;
-      do
+      thread = _beginthreadex(nullptr,0,StartAsyncSendHttpResponse,reg,0,nullptr);
+      if(thread)
       {
-        thread = _beginthreadex(nullptr,0,StartAsyncSendHttpResponse,reg,0,nullptr);
-        if(thread)
-        {
-          break;
-        }
-        if(errno != EAGAIN)
-        {
-          return GetLastError();
-        }
-        // To many threads in the system, wait until drained!
-        Sleep(THREAD_RETRY_WAITING);
-      } 
-      while (thread == 0L);
+        break;
+      }
+      if(errno != EAGAIN)
+      {
+        return GetLastError();
+      }
+      // To many threads in the system, wait until drained!
+      Sleep(THREAD_RETRY_WAITING);
+    } 
+    while (thread == 0L);
 
-      // IO completion pending
-      result = ERROR_IO_PENDING;
-    }
-    else
+    // IO completion pending
+    result = ERROR_IO_PENDING;
+  }
+  else
+  {
+    // Create and send the response
+    result = request->SendResponse(HttpResponse,Flags,BytesSent);
+
+    if(((Flags & (HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE)) == 0) && request->GetResponseComplete())
     {
-      // Create and send the response
-      result = request->SendResponse(HttpResponse,Flags,BytesSent);
-
-      if(((Flags & (HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE)) == 0) && request->GetResponseComplete())
+      if(Flags & HTTP_SEND_RESPONSE_FLAG_DISCONNECT)
       {
-        if(Flags & HTTP_SEND_RESPONSE_FLAG_DISCONNECT)
+        // Force close connection
+        queue->RemoveRequest(request);
+      }
+      else
+      {
+        if(request->RestartConnection() == false)
         {
-          // Force close connection
+          // No keep-alive found: Request/Response now complete
           queue->RemoveRequest(request);
         }
-        else
-        {
-          if(request->RestartConnection() == false)
-          {
-            // No keep-alive found: Request/Response now complete
-            queue->RemoveRequest(request);
-          }
-        }
       }
     }
   }
-
-  // Log our response
-  if(LogData)
-  {
-    // Not yet implemented in the Microsoft base HTTPSYS.DLL driver.
-    UrlGroup* group = queue->FirstURLGroup();
-    if(group)
-    {
-      ServerSession* session = group->GetServerSession();
-      if(session)
-      {
-        session->GetLogfile()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,_T("Response %s: %d bytes"),Overlapped ? _T("pending") : _T("sent"),BytesSent);
-      }
-    }
-  }
-
   return result;
 }
 

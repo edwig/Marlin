@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -60,6 +60,8 @@ public:
   virtual bool GetCloseSocket(USHORT& p_code,XString& p_reason) override;
   // Detected a closing status on read-completion
   virtual void SetClosingStatus(USHORT p_code) override;
+  // Send a ping/pong keep alive message
+  virtual bool SendKeepAlive() override;
 
   // To be called for ASYNC I/O completion!
   void    SocketReader(HRESULT p_error,DWORD p_bytes,BOOL p_utf8,BOOL p_final,BOOL p_close);

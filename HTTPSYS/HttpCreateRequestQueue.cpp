@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "RequestQueue.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -53,22 +54,60 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
     return ERROR_INVALID_PARAMETER;
   }
 
-  USES_CONVERSION;
-  CString name = (LPCTSTR) CW2T(Name);
+  // Check if HttpInitialize was called
+  if(!g_httpsys_initialized)
+  {
+    return ERROR_DLL_INIT_FAILED;
+  }
+
+  // Create a name for the request queue
+  CStringW orgName(Name);
+  CStringA name(orgName);
   if(name.IsEmpty())
   {
     name = "HTTPServer";
   }
 
+  // Check if name is unique
+  HandleMap map;
+  g_handles.GetAllQueueHandles(map);
+  for(auto& handle : map)
+  {
+    RequestQueue* other = g_handles.GetReQueueFromOpaqueHandle(handle.first);
+    if(other)
+    {
+#ifdef _UNICODE
+      if(other->GetName().CompareNoCase(orgName) == 0)
+#else
+      if(other->GetName().CompareNoCase(name) == 0)
+#endif
+      {
+        return ERROR_ALREADY_EXISTS;
+      }
+    }
+  }
+
   // Create the request queue
+#ifdef _UNICODE
+  RequestQueue* queue = new RequestQueue(orgName);
+#else
   RequestQueue* queue = new RequestQueue(name);
+#endif
   HANDLE handle = queue->CreateHandle();
-
-  // Remember our queue
-  g_requestQueues.insert(std::make_pair(handle, queue));
-
+  
+  bool stored = false;
+  do 
+  {
+    stored = g_handles.StoreOpaqueHandle(HTTPHandleType::HTTP_Queue,handle,queue);
+    if(!stored)
+    {
+      // Try a new one
+      handle = queue->CreateHandle();
+    }
+  } 
+  while(!stored);
+  
   // Tell it our application
   *RequestQueueHandle = handle;
   return NO_ERROR;
 }
-

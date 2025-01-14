@@ -64,7 +64,7 @@ public:
 
   HTTPServerMarlin* GetHTTPServer()              { return m_server;     };
   bool              GetIsStarted()               { return m_isStarted;  };
-  HTTP_URL_GROUP_ID GetUrlGroupID()              { return m_group;      };
+  HTTP_URL_GROUP_ID GetUrlGroupID() const        { return m_group;      };
   XString           GetAuthenticationName()      { return m_authName;   };
   ULONG             GetAuthenticationScheme()    { return m_authScheme; };
   bool              GetAuthenticationNtlmCache() { return m_ntlmCache;  };

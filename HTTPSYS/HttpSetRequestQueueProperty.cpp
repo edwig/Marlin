@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "RequestQueue.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -31,7 +32,7 @@ HttpSetRequestQueueProperty(_In_ HANDLE               RequestQueueHandle
                            ,_Reserved_ _In_ PVOID     Reserved2)
 {
   // Finding our request queue
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
   if (queue == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
@@ -56,7 +57,17 @@ HttpSetRequestQueueProperty(_In_ HANDLE               RequestQueueHandle
     default:  return ERROR_INVALID_PARAMETER;
   }
 
-  if(Property == HttpServer503VerbosityProperty)
+  if(Property == HttpServerLoggingProperty)
+  {
+    if(PropertyInformationLength == sizeof(HTTP_LOGGING_INFO))
+    {
+      if(!g_session->SetupForLogging((PHTTP_LOGGING_INFO)PropertyInformation))
+      {
+        return ERROR_INVALID_PARAMETER;
+      }
+    }
+  }
+  else if(Property == HttpServer503VerbosityProperty)
   {
     if(!queue->SetVerbosity((HTTP_503_RESPONSE_VERBOSITY)value))
     {

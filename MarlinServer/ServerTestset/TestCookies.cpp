@@ -27,9 +27,10 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "HTTPSite.h"
-#include "HTTPMessage.h"
-#include "SiteHandlerPut.h"
+#include "TestPorts.h"
+#include <HTTPSite.h>
+#include <HTTPMessage.h>
+#include <SiteHandlerPut.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -137,7 +138,7 @@ TestMarlinServer::TestCookies()
   // Create URL channel to listen to "http://+:port/MarlinTest/CookieTest/"
   // Callback function is no longer required!
   XString webaddress = _T("/MarlinTest/CookieTest/");
-  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,m_inPortNumber,webaddress);
+  HTTPSite* site = m_httpServer->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,webaddress,true);
   if(site)
   {
     // SUMMARY OF THE TEST

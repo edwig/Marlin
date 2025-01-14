@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 //
 #include "stdafx.h"
-#include "WebSocket.h"
+#include "WebSocketMain.h"
 #include "AutoCritical.h"
 #include "Crypto.h"
 #include "ConvertWideString.h"
@@ -324,7 +324,7 @@ WebSocket::ErrorLog(LPCTSTR p_function,DWORD p_code,XString p_text)
 
   if(m_logfile)
   {
-    p_text.AppendFormat(_T(" Error [%d] %s"),p_code,GetLastErrorAsString(p_code).GetString());
+    p_text.AppendFormat(_T(" Error [%X] %s"),p_code,GetLastErrorAsString(p_code).GetString());
     result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,p_text);
 
     WSFrame* frame  = new WSFrame();
@@ -342,7 +342,7 @@ WebSocket::ErrorLog(LPCTSTR p_function,DWORD p_code,XString p_text)
   if(!result)
   {
     // What can we do? As a last result: print debug pane
-    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("%s Error [%d] %s\n"),_T(MARLIN_SERVER_VERSION),p_code,p_text.GetString());
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("%s Error [%X] %s\n"),_T(MARLIN_SERVER_VERSION),p_code,p_text.GetString());
   }
 }
 
@@ -391,7 +391,7 @@ WebSocket::OnMessage()
     }
     else
     {
-      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame message data"));
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame message data."));
     }
     delete frame;
   }
@@ -417,7 +417,7 @@ WebSocket::OnBinary()
     }
     else
     {
-      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame binary data"));
+      ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,_T("WebSocket lost WSFrame binary data."));
     }
     delete frame;
   }
@@ -463,7 +463,7 @@ WebSocket::OnClose()
     else
     {
       // Application already stopped accepting info
-      // ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost closing frame");
+      // ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost closing frame.");
     }
     delete frame;
   }
@@ -533,9 +533,9 @@ WebSocket::WriteString(XString p_string)
       // Calculate the length of the next fragment
       bool last = true;
       DWORD toWrite = toSend - total;
-      if(toWrite >= m_fragmentsize)
+      if(toWrite >= (m_fragmentsize - WS_MAX_HEADER))
       {
-        toWrite = m_fragmentsize;
+        toWrite = m_fragmentsize - WS_MAX_HEADER;
         last    = false;
       }
 
@@ -579,9 +579,9 @@ WebSocket::WriteObject(BYTE* p_buffer,int64 p_length)
     // Calculate the length of the next fragment
     bool  last = true;
     DWORD toWrite = (DWORD)(p_length - total);
-    if(toWrite > m_fragmentsize)
+    if(toWrite > (m_fragmentsize - WS_MAX_HEADER))
     {
-      toWrite = m_fragmentsize;
+      toWrite = m_fragmentsize - WS_MAX_HEADER;
       last    = false;
     }
     // Write out
@@ -669,7 +669,7 @@ WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
   else
   {
     // Out of memory
-    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("While receiving UTF-8 block"));
+    ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("While receiving UTF-8 block."));
   }
 
   // This is the data, as we interpret it in MBCS

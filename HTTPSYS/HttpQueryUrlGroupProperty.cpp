@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "UrlGroup.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -30,7 +31,7 @@ ULONG WINAPI HttpQueryUrlGroupProperty(IN HTTP_URL_GROUP_ID     UrlGroupId
                                       ,_Out_opt_ PULONG         ReturnLength)
 {
   // Find the URL group
-  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  UrlGroup* group = g_handles.GetUrGroupFromOpaqueHandle(UrlGroupId);
   if (group == nullptr)
   {
     return ERROR_INVALID_PARAMETER;

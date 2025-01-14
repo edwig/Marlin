@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -14,6 +14,7 @@
 #include "ServerSession.h"
 #include "UrlGroup.h"
 #include "SSLUtilities.h"
+#include "OpaqueHandles.h"
 #include <LogAnalysis.h>
 
 #ifdef _DEBUG
@@ -82,8 +83,8 @@ HttpSendResponseEntityBody(IN HANDLE          RequestQueueHandle
   }
 
   // Finding the elementary object
-  RequestQueue* queue = GetRequestQueueFromHandle(RequestQueueHandle);
-  Request*    request = GetRequestFromHandle(RequestId);
+  RequestQueue* queue = g_handles.GetReQueueFromOpaqueHandle(RequestQueueHandle);
+  Request*    request = g_handles.GetRequestFromOpaqueHandle(RequestId);
   ULONG        result = ERROR_HANDLE_EOF;
 
   if(queue == nullptr || request == nullptr)
@@ -97,81 +98,74 @@ HttpSendResponseEntityBody(IN HANDLE          RequestQueueHandle
     return ERROR_INVALID_PARAMETER;
   }
 
-  if(queue->RequestStillInService(request))
+  if(!queue->RequestStillInService(request))
   {
-    if(Overlapped)
-    {
-      PREGISTER_HTTP_SEND_BODY reg = new REGISTER_HTTP_SEND_BODY();
-      reg->r_size       = sizeof(REGISTER_HTTP_SEND_BODY);
-      reg->r_queue      = queue;
-      reg->r_request    = request;
-      reg->r_flags      = Flags;
-      reg->r_chunks     = EntityChunks;
-      reg->r_count      = EntityChunkCount;
-      reg->r_overlapped = Overlapped;
-
-
-      uintptr_t thread = 0L;
-      do
-      {
-        thread = _beginthreadex(nullptr,0,StartAsyncSendHttpBody,reg,0,nullptr);
-        if(thread)
-        {
-          break;
-        }
-        if(errno != EAGAIN)
-        {
-          return GetLastError();
-        }
-        // To many threads in the system, wait until drained!
-        Sleep(THREAD_RETRY_WAITING);
-      } 
-      while (thread == 0L);
-
-      result = ERROR_IO_PENDING;
-    }
-    else
-    {
-      ULONG bytes;
-      result = request->SendEntityChunks(EntityChunks,EntityChunkCount,&bytes);
-
-      // Sometimes propagate the number of bytes sent
-      if(result == NO_ERROR && BytesSent)
-      {
-        *BytesSent = bytes;
-      }
-
-
-      if(((Flags & (HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE)) == 0) && request->GetResponseComplete())
-      {
-        if(Flags & HTTP_SEND_RESPONSE_FLAG_DISCONNECT)
-        {
-          // Force close connection
-          queue->RemoveRequest(request);
-        }
-        else
-        {
-          if(request->RestartConnection() == false)
-          {
-            // No keep-alive found: Request/Response now complete
-            queue->RemoveRequest(request);
-          }
-        }
-      }
-    }
+    return result;
   }
 
-  // Log our response on the closing of the call
-  if(LogData)
+  // Log our response before sending
+  if(LogData && g_session)
   {
-    // Not yet implemented in the Microsoft base HTTPSYS.DLL driver.
-    UrlGroup* group = queue->FirstURLGroup();
-    if(group)
+    g_session->ProcessLogData(LogData);
+  }
+
+  if(Overlapped)
+  {
+    PREGISTER_HTTP_SEND_BODY reg = new REGISTER_HTTP_SEND_BODY();
+    reg->r_size       = sizeof(REGISTER_HTTP_SEND_BODY);
+    reg->r_queue      = queue;
+    reg->r_request    = request;
+    reg->r_flags      = Flags;
+    reg->r_chunks     = EntityChunks;
+    reg->r_count      = EntityChunkCount;
+    reg->r_overlapped = Overlapped;
+
+
+    uintptr_t thread = 0L;
+    do
     {
-      ServerSession* session = group->GetServerSession();
-      if(session)
+      thread = _beginthreadex(nullptr,0,StartAsyncSendHttpBody,reg,0,nullptr);
+      if(thread)
       {
-        session->GetLogfile()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,_T("Response body %s: %d bytes"),Overlapped ? _T("pending") : _T("sent"),BytesSent);
+        break;
+      }
+      if(errno != EAGAIN)
+      {
+        return GetLastError();
+      }
+      // To many threads in the system, wait until drained!
+      Sleep(THREAD_RETRY_WAITING);
+    } 
+    while (thread == 0L);
+
+    result = ERROR_IO_PENDING;
+  }
+  else
+  {
+    ULONG bytes;
+    result = request->SendEntityChunks(EntityChunks,EntityChunkCount,&bytes);
+
+    // Sometimes propagate the number of bytes sent
+    if(result == NO_ERROR && BytesSent)
+    {
+      *BytesSent = bytes;
+    }
+
+
+    if(((Flags & (HTTP_SEND_RESPONSE_FLAG_MORE_DATA | HTTP_SEND_RESPONSE_FLAG_OPAQUE)) == 0) && request->GetResponseComplete())
+    {
+      if(Flags & HTTP_SEND_RESPONSE_FLAG_DISCONNECT)
+      {
+        // Force close connection
+        queue->RemoveRequest(request);
+      }
+      else
+      {
+        if(request->RestartConnection() == false)
+        {
+          // No keep-alive found: Request/Response now complete
+          queue->RemoveRequest(request);
+        }
       }
     }
   }

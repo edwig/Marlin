@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "UrlGroup.h"
+#include "OpaqueHandles.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,8 +30,14 @@ HttpAddUrlToUrlGroup(IN HTTP_URL_GROUP_ID UrlGroupId
     return ERROR_INVALID_PARAMETER;
   }
 
+  // See if we can add another endpoint
+  if(!g_session->AddEndpoint())
+  {
+    return ERROR_ACCESS_DENIED;
+  }
+
   // Find the URL group
-  UrlGroup* group = GetUrlGroupFromHandle(UrlGroupId);
+  UrlGroup* group = g_handles.GetUrGroupFromOpaqueHandle(UrlGroupId);
   if (group == nullptr)
   {
     return ERROR_INVALID_PARAMETER;

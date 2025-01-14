@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -11,6 +11,7 @@
 #include "http_private.h"
 #include "ServerSession.h"
 #include "RequestQueue.h"
+#include "OpaqueHandles.h"
 #include <ConvertWideString.h>
 #include <string>
 
@@ -26,6 +27,7 @@ using std::wstring;
 ULONG SetServerState         (ServerSession* p_session,PVOID p_info,ULONG p_length);
 ULONG SetServerTimeouts      (ServerSession* p_session,PVOID p_info,ULONG p_length);
 ULONG SetServerAuthentication(ServerSession* p_session,PVOID p_info,ULONG p_length);
+ULONG SetServerLogging       (ServerSession* p_session,PVOID p_info,ULONG p_length);
 
 HTTPAPI_LINKAGE
 ULONG WINAPI
@@ -35,20 +37,23 @@ HttpSetServerSessionProperty(IN HTTP_SERVER_SESSION_ID  ServerSessionId
                             ,IN ULONG                   PropertyInformationLength)
 {
   // See if we have minimal parameters
-  if(ServerSessionId == NULL || PropertyInformation == nullptr)
+  if(PropertyInformation == nullptr)
   {
     return ERROR_INVALID_PARAMETER;
   }
-
   // Grab our session
-  ServerSession* session = reinterpret_cast<ServerSession*>(ServerSessionId);
+  ServerSession* session = g_handles.GetSessionFromOpaqueHandle(ServerSessionId);
+  if(session == nullptr)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
 
   switch(Property)
   {
     case HttpServerStateProperty:                   return SetServerState   (session,PropertyInformation,PropertyInformationLength);
     case HttpServerTimeoutsProperty:                return SetServerTimeouts(session,PropertyInformation,PropertyInformationLength);
-    case HttpServerQosProperty:                     // Fall through
-    case HttpServerLoggingProperty:                 return ERROR_INVALID_PARAMETER;
+    case HttpServerQosProperty:                     return ERROR_INVALID_PARAMETER;
+    case HttpServerLoggingProperty:                 return SetServerLogging (session,PropertyInformation,PropertyInformationLength);
     case HttpServerAuthenticationProperty:          // Fall through
     case HttpServerExtendedAuthenticationProperty:  return SetServerAuthentication(session,PropertyInformation,PropertyInformationLength);
     case HttpServerChannelBindProperty:             // Fall through
@@ -92,6 +97,18 @@ SetServerTimeouts(ServerSession* p_session, PVOID p_info, ULONG p_length)
     p_session->SetTimeoutHeaderWait    (info->HeaderWait);
     p_session->SetTimeoutMinSendRate   (info->MinSendRate);
     return NO_ERROR;
+  }
+  return ERROR_INVALID_PARAMETER;
+}
+
+ULONG SetServerLogging(ServerSession* p_session,PVOID p_info,ULONG p_length)
+{
+  if(p_length == sizeof(HTTP_LOGGING_INFO))
+  {
+    if(p_session->SetupForLogging((PHTTP_LOGGING_INFO)p_info))
+    {
+      return NO_ERROR;
+    }
   }
   return ERROR_INVALID_PARAMETER;
 }

@@ -27,9 +27,20 @@
 //
 #pragma once
 
-// #define MARLIN_VIRTUAL_DIR
-
+#ifdef MARLIN_IIS
+// All tests running on these ports in Marlin IIS
+// See project: MarlinServerIIS
+const int TESTING_HTTP_PORT   =   80;   //            Site: /MarlinTest/
+const int TESTING_HTTPS_PORT  = 1221;   // Port + 1   Site: /SecureTest/
+const int TESTING_CLCERT_PORT = 1222;   // Port + 2   Site: /SecureClientCert/
+const int TESTING_TOKEN_PORT  = 1223;   // Port + 3   Site: /MarlinToken/
+const int TESTING_SECURE_WS   = 1224;   // Port + 4   Site: /SecureSockets/
+#else
 // All tests running on these ports in Marlin Standalone
+// See project: MarlinServer
 const int TESTING_HTTP_PORT   = 1200;
 const int TESTING_HTTPS_PORT  = 1201;   // Port + 1
 const int TESTING_CLCERT_PORT = 1202;   // Port + 2
+const int TESTING_TOKEN_PORT  = 1203;   // Port + 3
+const int TESTING_SECURE_WS   = 1204;   // Port + 4
+#endif

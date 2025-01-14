@@ -27,9 +27,9 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "WebServiceServer.h"
-#include "SiteHandlerSoap.h"
-#include "XMLRestriction.h"
+#include <WebServiceServer.h>
+#include <SiteHandlerSoap.h>
+#include <XMLRestriction.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

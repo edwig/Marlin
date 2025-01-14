@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 (c) ir. W.E. Huisman
+// 2018 - 2024 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "http_private.h"
 #include "ServerSession.h"
+#include "OpaqueHandles.h"
 
 ServerSession* g_session = nullptr;
 
@@ -38,7 +39,8 @@ HttpCreateServerSession(IN  HTTPAPI_VERSION         Version
 
   // Create session and reflect back
   g_session = new ServerSession();
-  *ServerSessionId = (HTTP_SERVER_SESSION_ID) g_session;
+  HANDLE handle = g_handles.CreateOpaqueHandle(HTTPHandleType::HTTP_Session,g_session);
+  *ServerSessionId = (HTTP_SERVER_SESSION_ID) handle;
 
   return NO_ERROR;
 }

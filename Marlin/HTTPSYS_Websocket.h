@@ -16,9 +16,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #pragma once
+#include <websocket.h>
 
 // WebSockets can only be operational in MS-Windows version 8.0 and higher
 #if NTDDI_VERSION >= NTDDI_WIN8
+
+#define SYSWEBSOCKET_IDENT 0x8866AABB77553311
 
 typedef VOID
 (WINAPI * PFN_WEBSOCKET_COMPLETION)(HRESULT     hrError,
@@ -38,6 +41,11 @@ HttpReceiveWebSocket(IN HANDLE                RequestQueueHandle
                     ,IN WEB_SOCKET_HANDLE     SocketHandle
                     ,IN WEB_SOCKET_PROPERTY*  SocketProperties = NULL OPTIONAL
                     ,IN DWORD                 PropertyCount    = NULL OPTIONAL);
+
+//__declspec(dllimport)
+ULONG WINAPI
+HttpCloseWebSocket(IN HANDLE          RequestQueueHandle
+                  ,IN HTTP_REQUEST_ID RequestId);
 
 //////////////////////////////////////////////////////////////////////////
 // 
@@ -98,9 +106,13 @@ public:
         _Out_   USHORT *              pcchReason = NULL
     ) = 0;
 
+    virtual BOOL SendPingPong(BOOL p_ping = TRUE) = 0;
+
     virtual VOID CloseTcpConnection(VOID) = 0;
 
     virtual VOID CancelOutstandingIO(VOID) = 0;
+
+    virtual UINT64 GetSocketIdentifier(VOID) = 0;
 };
 
 #endif /* NTDDI_VERSION >= NTDDI_WIN8 */
