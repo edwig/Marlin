@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<MarlinServer>
-  <Name>MarlinTest</Name>
-  <Role>ClientServer</Role>
-  <Instance>1</Instance>
-  <Server>localhost</Server>
-  <Secure>false</Secure>
-  <ServerPort>80</ServerPort>
-  <BaseURL>/MarlinTest/</BaseURL>
-  <ServerLog>C:\Inetpub\logs\LogFiles\MarlinTest\logfile.txt</ServerLog>
-  <ServerLogging>5</ServerLogging>
-  <WebRoot>C:\inetpub\wwwroot\</WebRoot>
-  <RunAsService>2</RunAsService>
-</MarlinServer>
+<Configuration>
+  <Application>
+    <Name>MarlinTest</Name>
+    <Role>ClientServer</Role>
+    <Instance>1</Instance>
+    <Server>localhost</Server>
+    <Secure>false</Secure>
+    <ServerPort>80</ServerPort>
+    <BaseURL>/MarlinTest/</BaseURL>
+    <ServerLog>C:\Inetpub\logs\LogFiles\MarlinTest\logfile.txt</ServerLog>
+    <ServerLogging>5</ServerLogging>
+    <WebRoot>C:\inetpub\wwwroot\</WebRoot>
+    <RunAsService>2</RunAsService>
+  </Application>
+</Configuration>

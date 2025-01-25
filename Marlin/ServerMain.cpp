@@ -32,6 +32,7 @@
 #include "stdafx.h"
 #include "Marlin.h"
 #include "ServerMain.h"
+#include "MarlinConfig.h"
 #include "AppConfig.h"
 #include "MarlinServer.h"
 #include <strsafe.h>
@@ -276,9 +277,9 @@ int _tmain(int argc,TCHAR* argv[],TCHAR* /*envp[]*/)
     // Tell it to the user
     _tprintf(_T("%s\n%s\n\n"),PRODUCT_DISPLAY_NAME,PRODUCT_COPYRIGHT);
     _tprintf(_T("ERROR : %s\n")
-           _T("REASON: %s.\n")
-          ,error.GetString()
-          ,reason.GetString());
+             _T("REASON: %s.\n")
+             ,error.GetString()
+             ,reason.GetString());
   }
   return 0;
 }
@@ -288,15 +289,15 @@ void ReadConfig()
   AppConfig config(_T(""));
   config.ReadConfig();
 
-  int instance = config.GetInstance();
+  int instance = config.GetParameterInteger(SECTION_APPLICATION,_T("Instance"),1);
   _stprintf_s(g_svcname,SERVICE_NAME_LENGTH,_T("%s_%d_v%s"),PRODUCT_NAME,instance,PRODUCT_VERSION);
 
   // Run as a service or as a stand-alone program?
-  g_runAsService = config.GetRunAsService();
+  g_runAsService = config.GetParameterInteger(SECTION_APPLICATION,_T("RunAsService"),RUNAS_NTSERVICE);
 
   // Global server name = IIS application pool
-  g_serverName = config.GetName();
-  g_baseURL    = config.GetBaseURL();
+  g_serverName = config.GetParameterString(SECTION_APPLICATION,_T("Name"),PRODUCT_NAME);
+  g_baseURL    = config.GetParameterString(SECTION_APPLICATION,_T("BaseURL"),_T("/"));
 
   // Make the names?
   if(g_runAsService == RUNAS_STANDALONE)

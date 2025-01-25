@@ -28,6 +28,7 @@
 #include "Stdafx.h"
 #include "MarlinConfig.h"
 #include "Crypto.h"
+#include <io.h>
 
 #ifdef _AFX
 #ifdef _DEBUG
@@ -165,6 +166,24 @@ MarlinConfig::GetURLConfig(XString p_url)
   return _T("");
 }
 
+// Is the config file writable
+bool
+MarlinConfig::GetConfigWritable()
+{
+  if(_taccess(m_fileName,00) == -1)
+  {
+    // File does not exist. Assume that we can create it
+    // for instance in the ServerApplet config dialog
+    return true;
+  }
+  if(_taccess(m_fileName,06) == 0)
+  {
+    // Read AND write access tot the file
+    return true;
+  }
+  return false;
+}
+
 bool
 MarlinConfig::ReadConfig(XString p_filename)
 {
@@ -264,6 +283,8 @@ MarlinConfig::SetSection(XString p_section)
   return true;
 }
 
+// Add a parameter to a section
+// To succeed, the section must exist already
 bool 
 MarlinConfig::SetParameter(XString p_section,XString p_parameter,XString p_value)
 {
@@ -514,8 +535,6 @@ MarlinConfig::GetEncryptedString (XString p_section,XString p_parameter,XString 
 XString 
 MarlinConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_default)
 {
-  XString val = p_default;
-
   XMLElement* section = FindElement(p_section);
   if(section)
   {
@@ -525,14 +544,12 @@ MarlinConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attri
       return XMLMessage::GetAttribute(param,p_attrib);
     }
   }
-  return val;
+  return p_default;
 }
 
 int
 MarlinConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,int p_default)
 {
-  int val = p_default;
-
   XMLElement* section = FindElement(p_section);
   if(section)
   {
@@ -542,14 +559,12 @@ MarlinConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attri
       return _ttoi(XMLMessage::GetAttribute(param,p_attrib));
     }
   }
-  return val;
+  return p_default;
 }
 
 double
 MarlinConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,double p_default)
 {
-  double val = p_default;
-
   XMLElement* section = FindElement(p_section);
   if(section)
   {
@@ -559,7 +574,7 @@ MarlinConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attri
       return _ttof(XMLMessage::GetAttribute(param,p_attrib));
     }
   }
-  return val;
+  return p_default;
 }
 
 // DISCOVERY

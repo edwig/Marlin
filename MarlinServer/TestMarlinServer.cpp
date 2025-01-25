@@ -267,16 +267,18 @@ TestMarlinServer::ReadConfig()
 {
   AppConfig   config(PRODUCT_NAME);
   bool readOK = config.ReadConfig();
+  XString section(SECTION_APPLICATION);
 
-  m_baseURL         =          config.GetBaseURL();
-  m_runAsService    =          config.GetRunAsService();
-  m_inPortNumber    = (ushort) config.GetServerPort();
-  m_serverSecure    =          config.GetServerSecure();
-  m_logLevel        =          config.GetServerLoglevel();
-  m_serverLogfile   =          config.GetServerLogfile();
-  m_webroot         =          config.GetWebRoot();
-  m_instance        =          config.GetInstance();
-  m_serverName      =          config.GetName();
+  // Read the configuration
+  m_baseURL         = config.GetParameterString (section,_T("BaseURL"),_T("/"));
+  m_runAsService    = config.GetParameterInteger(section,_T("RunAsService"),RUNAS_NTSERVICE);
+  m_inPortNumber    = config.GetParameterInteger(section,_T("ServerPort"),INTERNET_DEFAULT_HTTPS_PORT);
+  m_serverSecure    = config.GetParameterBoolean(section,_T("Secure"),true);
+  m_logLevel        = config.GetParameterInteger(section,_T("ServerLogging"),HLL_ERRORS);
+  m_serverLogfile   = config.GetParameterString (section,_T("ServerLog"),_T("Logfile.txt"));
+  m_webroot         = config.GetParameterString (section,_T("WebRoot"),_T(""));
+  m_instance        = config.GetParameterInteger(section,_T("Instance"),1);
+  m_serverName      = config.GetParameterString (section,_T("Name"),PRODUCT_NAME);
 
   // Check instance number
   if(m_instance)

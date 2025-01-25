@@ -334,7 +334,7 @@ ServerSession::SetupForLogging(PHTTP_LOGGING_INFO p_information)
   CString filename(directoryName);
   if(filename.IsEmpty())
   {
-    if(!filename.GetEnvironmentVariable("WINDIR"))
+    if(!filename.GetEnvironmentVariable(_T("WINDIR")))
     {
       filename = _T("C:\\Windows");
     }

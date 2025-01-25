@@ -478,7 +478,7 @@ SYSWebSocket::SendPingPong(BOOL p_ping /*= TRUE*/)
   if(written != NO_ERROR)
   {
     // Socket most probably dead. Close the WebSocket
-    LogError("Error sending ping/pong: %s",m_serverkey.GetString());
+    LogError(_T("Error sending ping/pong: %s"),m_serverkey.GetString());
     return FALSE;
   }
 

@@ -26,28 +26,22 @@
 // THE SOFTWARE.
 //
 #pragma once
-
-#pragma once
 #include "XMLMessage.h"
+
+class MarlinConfig;
 
 // DEFAULTS for the application config file: "<PRODUCT_NAME>.Config"
 
-#define DEFAULT_NAME        "<DTAP Name>"   // DTAP = "Development", "Test", "Acceptance", "Production"
-#define DEFAULT_SERVER      "mymachine"
-#define DEFAULT_URL         "/myserver/"
-#define DEFAULT_SERVERLOG   "C:\\WWW\\Serverlog.txt"
-#define DEFAULT_WEBROOT     "C:\\WWW\\"
-#define DEFAULT_INSTANCE         1          // Machine instance
-#define MAXIMUM_INSTANCE       100          // No more than 100 instances on 1 machine
-#define DEFAULT_SERVERPORT     443          // Default HTTPS port of the server
-#define RUNAS_STANDALONE         0          // Running as a one-time standalone program
-#define RUNAS_NTSERVICE          1          // Running as an integrated Windows-NT service
-#define RUNAS_IISAPPPOOL         2          // Running as an IIS application pool
+#define SECTION_ROOTNAME    _T("Configuration")
+#define SECTION_APPLICATION _T("Application")
 
+// The application configuration file
+// This is a special XML file with a special root node
+//
 class AppConfig : public XMLMessage
 {
 public:
-  explicit AppConfig(XString p_rootname);
+  explicit AppConfig(XString p_fileName = "",bool p_readMarlinConfig = true);
   virtual ~AppConfig();
 
   // Read the config from disk
@@ -55,210 +49,71 @@ public:
   // Write back the config to disk
   bool WriteConfig();
 
-  // GETTERS
-
-  // The name of the server
-  XString  GetName();
-  // Getting the role of the server
-  XString  GetRole();
-  // Getting the host server
-  XString  GetServer();
-  // Server URL is not stored in this form
-  XString  GetServerURL();
-  // Getting secure server or not
-  bool     GetServerSecure();
-  // Base URL of the server itself
-  XString  GetBaseURL();
-  // Server port of the server itself
-  int      GetServerPort();
-  // The instance number
-  int      GetInstance();
-  // The server logfile
-  XString  GetServerLogfile();
-  // Should the server do extra logging
-  int      GetServerLoglevel();
-  // Is the config file writable
-  bool     GetConfigWritable();
-  // The config file as an absolute pathname
-  XString  GetConfigFilename();
-  // Get the webroot
-  XString  GetWebRoot();
-  // Get run-as status
-  int      GetRunAsService();
-
   // SETTERS
 
-  void  SetName(XString p_name);
-  void  SetRole(XString p_role);
-  void  SetInstance(int p_instance);
-  void  SetServer(XString p_server);
-  void  SetBaseURL(XString p_baseURL);
-  void  SetServerSecure(bool p_secure);
-  void  SetWebRoot(XString p_webroot);
-  void  SetServerLog(XString p_logfile);
-  void  SetServerPort(unsigned p_port);
-  void  SetServerLoglevel(int p_loglevel);
-  void  SetRunAsService(int p_service);
+  bool SetSection  (XString p_section);
+  bool SetParameter(XString p_section,XString p_parameter,XString p_value);
+  bool SetParameter(XString p_section,XString p_parameter,int     p_value);
+  bool SetParameter(XString p_section,XString p_parameter,bool    p_value);
+  bool SetEncrypted(XString p_section,XString p_parameter,XString p_value);
+  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,int     p_value);
+  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,double  p_value);
+  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_value);
 
-protected:
-  // OVERRIDES FOR YOUR APPLICATION
+  bool RemoveSection  (XString p_section);
+  bool RemoveParameter(XString p_section,XString p_parameter);
+  bool RemoveAttribute(XString p_section,XString p_parameter,XString p_attrib);
 
-  // Check the root node for the correct config file
-  virtual bool CheckRootNodeName();
-  // Check for consistency of members
-  virtual bool CheckConsistency();
-  // Remember a parameter
-  virtual bool AddParameter(XString& p_param,XString& p_value);
-  // Adding extra elements to the file
-  virtual void WriteConfigElements();
+  // GETTERS
 
-  // Clean before write
-  virtual void Clean();
+  bool    IsFilled()    { return m_filled;   };
+  bool    IsChanged()   { return m_changed;  };
+  XString GetFilename() { return m_fileName; };
+  XString GetParameterString (XString p_section,XString p_parameter,XString p_default);
+  bool    GetParameterBoolean(XString p_section,XString p_parameter,bool    p_default);
+  int     GetParameterInteger(XString p_section,XString p_parameter,int     p_default);
+  XString GetEncryptedString (XString p_section,XString p_parameter,XString p_default);
+  int     GetAttribute(XString p_section,XString p_parameter,XString p_attrib,int     p_default);
+  double  GetAttribute(XString p_section,XString p_parameter,XString p_attrib,double  p_default);
+  XString GetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_default);
+  // Is the config file writable
+  bool    GetConfigWritable();
+  // The config file as an absolute pathname
+  XString GetConfigFilename();
+  // Server URL is not stored in this form,but it is used in many places.
+  XString GetServerURL();
 
-  XString m_rootname;
+  // DISCOVERY
+
+  bool    HasSection  (XString p_section);
+  bool    HasParameter(XString p_section,XString p_parameter);
+  bool    HasAttribute(XString p_section,XString p_parameter,XString p_attribute);
 
 private:
-  XString  m_name;               // Name of the server or IIS application-pool name
-  XString  m_role;               // Server / Client / Server&Client
-  int      m_instance;           // Between 1 and 100
-  XString  m_server;             // Server host name
-  bool     m_secure;             // HTTP or HTTPS
-  unsigned m_serverPort;         // Server input port number
-  XString  m_baseUrl;            // Base URL only
-  XString  m_serverLog;          // Server logfile path name
-  int      m_serverLoglevel;     // See HTTPLoglevel.h
-  XString  m_webroot;
-  int      m_runAsService;       // Start method RUNAS_*
+  // Find section with this name
+  XMLElement*  FindSection(XString p_section);
+  // Find parameter within a section
+  XMLElement*  FindParameter(XMLElement* p_section,XString p_parameter);
+// Check the root node for the correct config file
+  virtual bool CheckRootNodeName();
+
+  // Config filename (relative) if not 'Marlin.config'
+  XString       m_fileName;
+  // Status fields
+  bool          m_changed { false };
+  bool          m_filled  { false };
+  // Backed up by this MarlinConfig
+  MarlinConfig* m_config  { nullptr };
+
+//   XString  m_name;               // Name of the server or IIS application-pool name
+//   XString  m_role;               // Server / Client / Server&Client
+//   int      m_instance;           // Between 1 and 100
+//   XString  m_server;             // Server host name
+//   bool     m_secure;             // HTTP or HTTPS
+//   unsigned m_serverPort;         // Server input port number
+//   XString  m_baseUrl;            // Base URL only
+//   XString  m_serverLog;          // Server logfile path name
+//   int      m_serverLoglevel;     // See HTTPLoglevel.h
+//   XString  m_webroot;
+//   int      m_runAsService;       // Start method RUNAS_*
 };
-
-inline XString
-AppConfig::GetName()
-{
-  return m_name;
-}
-
-inline void
-AppConfig::SetName(XString p_name)
-{
-  m_name = p_name;
-}
-
-inline int
-AppConfig::GetInstance()
-{
-  return m_instance;
-}
-
-inline void
-AppConfig::SetInstance(int p_instance)
-{
-  m_instance = p_instance;
-}
-
-inline XString
-AppConfig::GetServer()
-{
-  return m_server;
-}
-
-inline int
-AppConfig::GetServerLoglevel()
-{
-  return m_serverLoglevel;
-}
-
-inline void
-AppConfig::SetServer(XString p_server)
-{
-  m_server = p_server;
-}
-
-inline void
-AppConfig::SetServerPort(unsigned p_port)
-{
-  m_serverPort = p_port;
-}
-
-inline void
-AppConfig::SetServerLoglevel(int p_loglevel)
-{
-  m_serverLoglevel = p_loglevel;
-}
-
-inline void
-AppConfig::SetWebRoot(XString p_webroot)
-{
-  m_webroot = p_webroot;
-}
-
-inline XString
-AppConfig::GetWebRoot()
-{
-  return m_webroot;
-}
-
-inline XString
-AppConfig::GetServerLogfile()
-{
-  return m_serverLog;
-}
-
-inline void
-AppConfig::SetServerLog(XString p_logfile)
-{
-  m_serverLog = p_logfile;
-}
-
-inline int
-AppConfig::GetRunAsService()
-{
-  return m_runAsService;
-}
-
-inline void
-AppConfig::SetRunAsService(int p_service)
-{
-  m_runAsService = p_service;
-}
-
-inline void
-AppConfig::SetServerSecure(bool p_secure)
-{
-  m_secure = p_secure;
-}
-
-inline void
-AppConfig::SetBaseURL(XString p_baseURL)
-{
-  m_baseUrl = p_baseURL;
-}
-
-inline XString
-AppConfig::GetBaseURL()
-{
-  return m_baseUrl;
-}
-
-inline int
-AppConfig::GetServerPort()
-{
-  return m_serverPort;
-}
-
-inline bool
-AppConfig::GetServerSecure()
-{
-  return m_secure;
-}
-
-inline void
-AppConfig::SetRole(XString p_role)
-{
-  m_role = p_role;
-}
-
-inline XString
-AppConfig::GetRole()
-{
-  return m_role;
-}
