@@ -78,21 +78,23 @@ AppConfig::~AppConfig()
 bool
 AppConfig::SetSection(XString p_section)
 {
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    return m_config->SetSection(p_section);
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
   if(FindElement(p_section))
   {
-    // Section already exists
+    // Section already exists, nothing to do
+    return true;
+  }
+  if(AddElement(NULL,p_section,XDT_Complex,_T("")) == nullptr)
+  {
     return false;
   }
-  if(AddElement(NULL,p_section,XDT_Complex,_T("")))
-  {
-    m_changed = true;
-  }
-  // Also try to add to the MarlinConfig
-  if(m_config)
-  {
-    m_config->SetSection(p_section);
-  }
-  return true;
+  return (m_changed = true);
 }
 
 // Add a parameter to a section
@@ -100,8 +102,19 @@ AppConfig::SetSection(XString p_section)
 bool
 AppConfig::SetParameter(XString p_section,XString p_parameter,XString p_value)
 {
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    if(m_config->HasSection(p_section))
+    {
+      return m_config->SetParameter(p_section,p_parameter,p_value);
+    }
+    return false;
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
+  // But first make sure the section does exists
   XMLElement* section = FindElement(p_section);
-
   if(section == nullptr)
   {
     return false;
@@ -109,38 +122,30 @@ AppConfig::SetParameter(XString p_section,XString p_parameter,XString p_value)
   XMLElement* elem = FindElement(section,p_parameter);
   if(elem)
   {
-    if(elem->GetValue().Compare(p_value))
+    if(elem->GetValue().Compare(p_value) == 0)
     {
-      elem->SetValue(p_value);
-      m_changed = true;
+      // Value is not changed
+      return true;
+    }
+    // Element did exist, but the value is different
+    // update the value to the new value
+    elem->SetValue(p_value);
+  }
+  else
+  {
+    if(AddElement(section,p_parameter,XDT_String,p_value) == nullptr)
+    {
+      return false;
     }
   }
-  else if(AddElement(section,p_parameter,XDT_String,p_value))
-  {
-    m_changed = true;
-  }
-
-  // Also try to add to the MarlinConfig
-  // For the general sections of the config file
-  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
-  {
-    if(!m_config->HasSection(p_section))
-    {
-      m_config->SetSection(p_section);
-    }
-    m_config->SetParameter(p_section,p_parameter,p_value);
-  }
-  return true;
+  return (m_changed = true);
 }
 
 bool
 AppConfig::SetParameter(XString p_section,XString p_parameter,int p_value)
 {
   XString value;
-  if(p_value)
-  {
-    value.Format(_T("%d"),p_value);
-  }
+  value.Format(_T("%d"),p_value);
   return SetParameter(p_section,p_parameter,value);
 }
 
@@ -171,6 +176,19 @@ AppConfig::SetEncrypted(XString p_section,XString p_parameter,XString p_value)
 bool
 AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_value)
 {
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    if(m_config->HasSection(p_section) && m_config->HasParameter(p_section,p_parameter))
+    {
+      return m_config->SetAttribute(p_section,p_parameter,p_attrib,p_value);
+    }
+    return false;
+  }
+
+  // We are the Marlin.config file, or it is the 'Application' section
+  // But first make sure the parameter does exists
   XMLElement* section = FindElement(p_section);
   if(section == nullptr)
   {
@@ -181,21 +199,11 @@ AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,X
   {
     return false;
   }
-  if(XMLMessage::SetAttribute(param,p_attrib,p_value))
+  if(XMLMessage::SetAttribute(param,p_attrib,p_value) == nullptr)
   {
-    m_changed = true;
+    return false;
   }
-
-  // Also try to add to the MarlinConfig
-  // For the general sections of the config file
-  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
-  {
-    if(m_config->HasSection(p_section) && m_config->HasParameter(p_section,p_parameter))
-    {
-      m_config->SetAttribute(p_section,p_parameter,p_attrib,p_value);
-    }
-  }
-  return true;
+  return (m_changed = true);
 }
 
 bool
@@ -223,27 +231,35 @@ AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,d
 bool
 AppConfig::RemoveSection(XString p_section)
 {
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    return m_config->RemoveSection(p_section);
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
   XMLElement* section = FindElement(p_section);
   if(section == nullptr)
   {
     return false;
   }
-  if(DeleteElement(m_root,section))
+  if(!DeleteElement(m_root,section))
   {
-    m_changed = true;
+    return false;
   }
-  // Also try to remove from the MarlinConfig
-  // if it is the special application section
-  if(m_config && p_section.Compare(SECTION_APPLICATION) == 0)
-  {
-    m_config->RemoveSection(p_section);
-  }
-  return true;
+  return (m_changed = true);
 }
 
 bool
 AppConfig::RemoveParameter(XString p_section,XString p_parameter)
 {
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    return m_config->RemoveParameter(p_section,p_parameter);
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
   XMLElement* section = FindElement(p_section);
   if(section == nullptr)
   {
@@ -252,23 +268,24 @@ AppConfig::RemoveParameter(XString p_section,XString p_parameter)
   XMLElement* param = FindElement(section,p_parameter);
   if(param)
   {
-    if(DeleteElement(section,param))
+    if(!DeleteElement(section,param))
     {
-      m_changed = true;
+      return false;
     }
   }
-  // Also try to remove from the MarlinConfig
-  // if it is the special application section
-  if(m_config && p_section.Compare(SECTION_APPLICATION) == 0)
-  {
-    m_config->RemoveParameter(p_section,p_parameter);
-  }
-  return true;
+  return (m_changed = true);
 }
 
 bool
 AppConfig::RemoveAttribute(XString p_section,XString p_parameter,XString p_attrib)
 {
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    return m_config->RemoveAttribute(p_section,p_parameter,p_attrib);
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
   XMLElement* section = FindElement(p_section);
   if(section == nullptr)
   {
@@ -277,18 +294,12 @@ AppConfig::RemoveAttribute(XString p_section,XString p_parameter,XString p_attri
   XMLElement* param = FindElement(section,p_parameter);
   if(param)
   {
-    if(DeleteAttribute(param,p_attrib))
+    if(!DeleteAttribute(param,p_attrib))
     {
-      m_changed = true;
+      return false;
     }
   }
-  // Also try to remove from the MarlinConfig
-  // if it is the special application section
-  if(m_config && p_section.Compare(SECTION_APPLICATION) == 0)
-  {
-    m_config->RemoveAttribute(p_section,p_parameter,p_attrib);
-  }
-  return true;
+  return (m_changed = true);
 }
 
 //////////////////////////////////////////////////////////////////////////
