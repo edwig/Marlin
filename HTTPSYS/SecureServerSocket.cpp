@@ -27,7 +27,7 @@ PSecurityFunctionTable SecureServerSocket::g_pSSPI = NULL;
 // Cached server credentials (a handle to a certificate), usually these do not change 
 // because the server name does not change, but occasionally they may change due to SNI
 CredHandle SecureServerSocket::g_ServerCreds = { 0 };
-CString    SecureServerSocket::g_ServerName  = CString();
+XString    SecureServerSocket::g_ServerName  = XString();
 
 // The SecureServerSocket class, this declares an SSL server side implementation that requires
 // some means to send messages to a client (a PlainSocket).
@@ -39,7 +39,7 @@ SecureServerSocket::SecureServerSocket(SOCKET p_socket,HANDLE p_stopEvent)
   m_context.dwUpper = ((ULONG_PTR) ((INT_PTR)-1)); // Invalidate it
 
   // Clear the thumbprint
-  ZeroMemory(&m_thumbprint,CERT_THUMBPRINT_SIZE + 1);
+  ZeroMemory(&m_thumbprint,(CERT_THUMBPRINT_SIZE + 1));
 }
 
 SecureServerSocket::~SecureServerSocket(void)
@@ -183,7 +183,7 @@ SecureServerSocket::LogSSLInitError(HRESULT hr)
 
 // Keep this thumbprint to search for in the certificate store
 void
-SecureServerSocket::SetThumbprint(PTCHAR p_thumprint)
+SecureServerSocket::SetThumbprint(LPBYTE p_thumprint)
 {
   memcpy_s(m_thumbprint,CERT_THUMBPRINT_SIZE,p_thumprint,CERT_THUMBPRINT_SIZE);
   m_thumbprint[CERT_THUMBPRINT_SIZE] = 0;
@@ -191,7 +191,7 @@ SecureServerSocket::SetThumbprint(PTCHAR p_thumprint)
 
 // Search in this certificate store for a server SSL/TLS certificate
 void    
-SecureServerSocket::SetCertificateStore(CString p_store)
+SecureServerSocket::SetCertificateStore(XString p_store)
 {
   m_certificateStore = p_store;
 }
@@ -529,7 +529,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
         if (tracer.IsClientInitialize())
         {  
           // Figure out what certificate we might want to use, either using SNI or the local host name
-          CString serverName = tracer.GetSNIHostname();
+          XString serverName = tracer.GetSNIHostname();
           if ((!g_ServerCreds.dwLower && !g_ServerCreds.dwUpper) // No certificate handle stored
             || (serverName.Compare(g_ServerName) != 0)) // Requested names are different
           {  // 
@@ -561,7 +561,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
               break;
             }
 
-            g_ServerName = (SUCCEEDED(status)) ? serverName : CString();
+            g_ServerName = (SUCCEEDED(status)) ? serverName : XString();
             if(SUCCEEDED(status))
             {
               status = CreateCredentialsFromCertificate(&g_ServerCreds,pCertContext);
@@ -1107,6 +1107,9 @@ SecureServerSocket::RecvPartialOverlapped(LPVOID p_buffer,const ULONG p_length,L
 void
 SecureServerSocket::RecvPartialOverlappedContinuation(LPOVERLAPPED p_overlapped)
 {
+  // No longer any outstanding read operation
+  m_readInProgress = false;
+
   // Get the results of the overlapped operation
   int error  = (int)p_overlapped->Internal;
   int result = (int)p_overlapped->InternalHigh;

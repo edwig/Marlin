@@ -47,7 +47,7 @@ HttpReadFragmentFromCache(IN HANDLE           RequestQueueHandle
   }
 
   USES_CONVERSION;
-  CString prefix(W2A(UrlPrefix));
+  XString prefix(W2A(UrlPrefix));
 
   PHTTP_DATA_CHUNK chunk = queue->FindFragment(prefix);
   if(chunk)

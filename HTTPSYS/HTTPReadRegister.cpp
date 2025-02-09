@@ -20,14 +20,14 @@ static char THIS_FILE[] = __FILE__;
 // Read one value from the registry
 // Special function to read HTTP parameters
 bool
-HTTPReadRegister(CString  p_sectie,CString p_key,DWORD p_type
-                ,CString& p_value1
+HTTPReadRegister(XString  p_sectie,XString p_key,DWORD p_type
+                ,XString& p_value1
                 ,PDWORD   p_value2
                 ,PTCHAR   p_value3,PDWORD p_size3)
 {
   HKEY    hkUserURL;
   bool    result = false;
-  CString key = _T("SYSTEM\\ControlSet001\\Services\\HTTP\\Parameters\\") + p_sectie;
+  XString key = _T("SYSTEM\\ControlSet001\\Services\\HTTP\\Parameters\\") + p_sectie;
 
   DWORD dwErr = RegOpenKeyEx(HKEY_LOCAL_MACHINE
                             ,(LPCTSTR) key
@@ -58,7 +58,8 @@ HTTPReadRegister(CString  p_sectie,CString p_key,DWORD p_type
       {
         if(p_key.CompareNoCase(buffName) == 0)
         {
-          p_value1 = buffData;
+          buffData[dwDataSize] = 0;
+          p_value1 = (LPCTSTR)buffData;
           result   = true;
           break;
         }

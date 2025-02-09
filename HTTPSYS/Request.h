@@ -83,9 +83,9 @@ public:
   void              CloseRequest();
   // Reply with an error
   void              ReplyClientError();
-  void              ReplyClientError(int p_error,CString p_errorText);
+  void              ReplyClientError(int p_error,XString p_errorText);
   void              ReplyServerError();
-  void              ReplyServerError(int p_error, CString p_errorText);
+  void              ReplyServerError(int p_error, XString p_errorText);
 
 private:
 
@@ -121,17 +121,17 @@ private:
   // Authentication of the request
   bool              CheckAuthentication();
   bool              AlreadyAuthenticated       (PHTTP_REQUEST_AUTH_INFO p_info);
-  bool              CheckBasicAuthentication   (PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload);
-  bool              CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload,CString p_provider);
+  bool              CheckBasicAuthentication   (PHTTP_REQUEST_AUTH_INFO p_info,XString p_payload);
+  bool              CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,XString p_payload,XString p_provider);
   PHTTP_REQUEST_AUTH_INFO GetAuthenticationInfoRecord();
-  DWORD             GetProviderMaxTokenLength(CString p_provider);
+  DWORD             GetProviderMaxTokenLength(XString p_provider);
   // Sending the response
   void              DrainRequest();
-  CString           HTTPSystemTime();
+  XString           HTTPSystemTime();
   void              CreateServerHeader(PHTTP_RESPONSE p_response);
-  void              AddResponseLine  (CString& p_buffer,PHTTP_RESPONSE p_response);
-  void              AddAllKnownResponseHeaders  (CString& p_buffer,PHTTP_KNOWN_HEADER   p_headers);
-  void              AddAllUnknownResponseHeaders(CString& p_buffer,PHTTP_UNKNOWN_HEADER p_headers,int p_count);
+  void              AddResponseLine  (CStringA& p_buffer,PHTTP_RESPONSE p_response);
+  void              AddAllKnownResponseHeaders  (CStringA& p_buffer,PHTTP_KNOWN_HEADER   p_headers);
+  void              AddAllUnknownResponseHeaders(CStringA& p_buffer,PHTTP_UNKNOWN_HEADER p_headers,int p_count);
   int               SendEntityChunk              (PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
   int               SendEntityChunkFromMemory    (PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
   int               SendEntityChunkFromFile      (PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
@@ -142,6 +142,8 @@ private:
 //int               SendFileByMemoryBlocks    (PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
 
   // Reading and writing
+  int               WriteBuffer(XString& p_string,PULONG p_bytes);
+  // Low level reading and writing
   int               ReadBuffer (PVOID p_buffer,ULONG p_size,PULONG p_bytes);
   int               WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes);
 
@@ -166,7 +168,7 @@ private:
   bool              m_keepAlive;      // Keep connection alive
   URL*              m_url;            // URL with longest matching absolute path
   // SSPI authentication handlers
-  CString           m_challenge;      // Authentication challenge
+  XString           m_challenge;      // Authentication challenge
   CtxtHandle        m_context;        // Authentication context
   clock_t           m_timestamp;      // Time of the authentication
   HANDLE            m_token;          // Primary authentication token
@@ -176,6 +178,6 @@ private:
   ULONG             m_bufferPosition{ 0 };
   // WebSocket
   bool              m_websocketPrepare;
-  CString           m_websocketKey;
+  XString           m_websocketKey;
   SYSWebSocket*     m_websocket;
 };

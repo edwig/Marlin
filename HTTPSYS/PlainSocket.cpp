@@ -476,6 +476,14 @@ PlainSocket::RecvPartial(LPVOID p_buffer, const ULONG p_length)
   DWORD			bytes_read = 0;
   DWORD     msg_flags  = 0;
 	int       received   = 0;
+  unsigned  maxwait    = m_recvTimeoutSeconds * CLOCKS_PER_SEC;
+
+  // Latching until no more overlapped read in progress with the OS
+  while(m_readInProgress && maxwait--)
+  {
+    Sleep(1);
+  }
+  AutoIOinProgress sending(&m_readInProgress);
 
 	if (m_recvInitiated)
 	{
@@ -617,7 +625,13 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
   DWORD			bytes_read = 0;
   DWORD     msg_flags  = 0;
 	int       received   = 0;
+  unsigned  maxwait    = m_recvTimeoutSeconds * CLOCKS_PER_SEC;
 
+  // Latching until no more overlapped read in progress with the OS
+  while(m_readInProgress && maxwait--)
+  {
+    Sleep(1);
+  }
   // Not using timeout on overlapped I/O
   // The intended use is to NOT wait and return immediately
   m_recvEndTime = 0;
@@ -634,14 +648,16 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 	buffer.len = p_length;
 	
 	// Create the overlapped I/O event and structures
-	memset(&m_overReading,0,sizeof(OVERLAPPED));
-  m_overReading.Pointer = this;
-  m_overReading.hEvent  = (HANDLE) SD_RECEIVE;
+  m_overReading.Internal = 0;
+  m_overReading.InternalHigh = 0;
+  m_overReading.Pointer  = this;
+  m_overReading.hEvent   = (HANDLE) SD_RECEIVE;
 	received    = WSARecv(m_actualSocket,&buffer,1,&bytes_read,&msg_flags,&m_overReading,nullptr);
 	m_lastError = WSAGetLastError();
 
   if(m_lastError == 0 || m_lastError == WSA_IO_PENDING)  // Read in progress, normal case
 	{
+    m_readInProgress = true;
     return NO_ERROR;
 	}
 
@@ -657,6 +673,9 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 void
 PlainSocket::ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
 {
+  // No longer any outstanding overlapped read action
+  m_readInProgress = false;
+
   if(!InSecureMode())
   {
     DebugMsg(_T(" "));
@@ -706,13 +725,22 @@ int PlainSocket::RecvMsg(LPVOID p_buffer, const ULONG p_length)
 int PlainSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
 {
 	WSAOVERLAPPED os;
-	WSABUF buffer;
-	DWORD bytes_sent = 0;
+	WSABUF    buffer;
+	DWORD     bytes_sent = 0;
+  unsigned  maxwait    = m_sendTimeoutSeconds * CLOCKS_PER_SEC;
+
+  // Latching until no more overlapped write in progress with the OS
+  while(m_writeInProgress && maxwait--)
+  {
+    Sleep(1);
+  }
+  AutoIOinProgress sending(&m_writeInProgress);
+
+  TRACE("PlainSocket::SendPartial. Length: %d\n",p_length);
 
 	// Setup the buffer array
 	buffer.buf = (char *)p_buffer;
 	buffer.len = p_length;
-
 
   if(!InSecureMode())
   {
@@ -738,7 +766,7 @@ int PlainSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
 	// Now wait for the I/O to complete if necessary, and see what happened
 	bool IOCompleted = false;
 
-	if ((received == SOCKET_ERROR) && (m_lastError == WSA_IO_PENDING))  // Write in progress
+	if((received == SOCKET_ERROR) && (m_lastError == WSA_IO_PENDING))  // Write in progress
 	{
 		WSAEVENT hEvents[2] = { m_stopEvent,m_write_event };
 	  DWORD dwWait;
@@ -754,7 +782,7 @@ int PlainSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
     IOCompleted = true;
   }
 
-	if (IOCompleted)
+	if(IOCompleted)
 	{
 		DWORD msg_flags = 0;
 		if (WSAGetOverlappedResult(m_actualSocket, &os, &bytes_sent, true, &msg_flags))
@@ -763,9 +791,11 @@ int PlainSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
       {
         m_sendEndTime = 0;  // Invalidate the timer so it is set next time through
       }
+      m_writeInProgress = false;
 			return bytes_sent;
 		}
 	}
+  m_writeInProgress = false;
 	return SOCKET_ERROR;
 }
 
@@ -777,6 +807,13 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
   DWORD			bytes_sent = 0;
   DWORD     msg_flags  = 0;
 	int       written    = 0;
+  unsigned  maxwait    = m_sendTimeoutSeconds * CLOCKS_PER_SEC;
+
+  // Latching until no more overlapped write in progress with the OS
+  while(m_writeInProgress && maxwait--)
+  {
+    Sleep(1);
+  }
 
   // Not using timeout on overlapped I/O
   // The intended use is to NOT wait and return immediately
@@ -802,6 +839,7 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
 
   if(m_lastError == 0 || m_lastError == WSA_IO_PENDING)  // write  in progress, normal case
 	{
+    m_writeInProgress = true;
     return NO_ERROR;
 	}
 
@@ -817,6 +855,9 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
 void
 PlainSocket::SendingOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
 {
+  // No longer any outstanding overlapped write action
+  m_writeInProgress = false;
+
   if(!InSecureMode())
   {
     DebugMsg(_T(" "));

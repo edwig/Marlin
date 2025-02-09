@@ -51,7 +51,7 @@ HttpFlushResponseCache(IN HANDLE        RequestQueueHandle
 
   // Prefix name of the object to flush
   USES_CONVERSION;
-  CString prefix(W2A(UrlPrefix));
+  XString prefix(W2A(UrlPrefix));
 
   // Flush the fragment cache
   return queue->FlushFragment(prefix,Flags);

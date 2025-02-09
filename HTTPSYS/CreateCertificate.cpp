@@ -130,7 +130,7 @@ CreateCertificate(bool    p_machineCert
 	try
 	{
 		// Encode certificate Subject
-    CString X500(L"CN=");
+    XString X500(L"CN=");
     if(p_subject)
     {
       X500 += p_subject;

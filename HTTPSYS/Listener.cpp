@@ -86,7 +86,7 @@ unsigned __stdcall Listener::Worker(void* p_argument)
   Request*  request = reinterpret_cast<Request*>(p_argument);
   Listener* listener = request->GetListener();
 
-  SetThreadName(_T("Request worker"));
+  SetThreadName("Request worker");
 
   // Doing our work
   InterlockedIncrement(&listener->m_workerThreadCount);
@@ -104,13 +104,9 @@ unsigned __stdcall Listener::ListenerWorker(LPVOID p_param)
 
 #ifdef _DEBUG
   // Setting the thread name for the debugger
-  CString listenerName;
-  listenerName.Format(_T("HTTPListener on port: %d"),listener->GetPort());
-  if (listener->GetSecureMode())
-  {
-    listenerName += _T(" (secure)");
-  }
-  SetThreadName(listenerName.GetString(),GetCurrentThreadId());
+  char listenerName[100];
+  sprintf_s(listenerName,100,"HTTP%cListener on port: %d",listener->m_secure ? 'S' : ' ',listener->GetPort());
+  SetThreadName(listenerName,GetCurrentThreadId());
 #endif
 
   // Do the actual listening
@@ -122,7 +118,7 @@ unsigned __stdcall Listener::ListenerWorker(LPVOID p_param)
 ErrorType 
 Listener::Initialize(int p_tcpListenPort)
 {
-  CString portText;
+  XString portText;
   portText.Format(_T("%i"),p_tcpListenPort);
 
   // Get list of addresses to listen on

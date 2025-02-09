@@ -18,7 +18,7 @@ class ServerSession;
 class RequestQueue;
 
 // Mappings of URLS in the URL group
-using URLNames = std::multimap<CString,URL>;
+using URLNames = std::multimap<XString,URL>;
 using std::wstring;
 
 class UrlGroup
@@ -28,10 +28,10 @@ public:
  ~UrlGroup();
 
   // FUNCTIONS
-  ULONG AddUrlPrefix(CString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext);
-  ULONG DelUrlPrefix(HTTP_URL_GROUP_ID p_handle,CString pFullyQualifiedUrl,ULONG p_flags);
+  ULONG AddUrlPrefix(XString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext);
+  ULONG DelUrlPrefix(HTTP_URL_GROUP_ID p_handle,XString pFullyQualifiedUrl,ULONG p_flags);
   ULONG NumberOfPorts (USHORT p_port);
-  URL*  FindLongestURL(USHORT p_port,CString p_abspath,int& p_length);
+  URL*  FindLongestURL(USHORT p_port,XString p_abspath,int& p_length);
 
   // SETTERS
   void SetRequestQueue(HANDLE p_requestQueue);
@@ -42,7 +42,7 @@ public:
   void SetTimeoutIdleConnection(USHORT p_timeout) { m_timeoutIdleConnection  = p_timeout; };
   void SetTimeoutHeaderWait    (USHORT p_timeout) { m_timeoutHeaderWait      = p_timeout; };
   void SetTimeoutMinSendRate   (ULONG  p_rate)    { m_timeoutMinSendRate     = p_rate;    };
-  void SetAuthentication(ULONG p_scheme,CString p_domain,CString p_realm,bool p_caching);
+  void SetAuthentication(ULONG p_scheme,XString p_domain,XString p_realm,bool p_caching);
   void SetAuthenticationWide(wstring p_domain,wstring p_realm);
 
   // GETTERS
@@ -58,15 +58,15 @@ public:
   USHORT              GetTimeoutHeaderWait()        { return m_timeoutHeaderWait;       };
   ULONG               GetTimeoutMinSendRate()       { return m_timeoutMinSendRate;      };
   ULONG               GetAuthenticationScheme()     { return m_scheme;                  };
-  CString             GetAuthenticationDomain()     { return m_domain;                  };
-  CString             GetAuthenticationRealm()      { return m_realm;                   };
+  XString             GetAuthenticationDomain()     { return m_domain;                  };
+  XString             GetAuthenticationRealm()      { return m_realm;                   };
   bool                GetAuthenticationCaching()    { return m_ntlmCaching;             };
   wstring             GetAuthenticationDomainWide() { return m_domainWide;              };
   wstring             GetAuthenticationRealmWide()  { return m_realmWide;               };
 
 private:
   int                 SegmentedCompare(LPCTSTR p_left,LPCTSTR p_right);
-  bool                UrlIsRegistered(CString p_prefix);
+  bool                UrlIsRegistered(XString p_prefix);
   bool                GetURLSettings(URL& p_url);
 
   // Primary identity
@@ -85,8 +85,8 @@ private:
   URLNames           m_urls;
   // Authentication type of the URL group
   ULONG              m_scheme { 0 };
-  CString            m_domain;
-  CString            m_realm;
+  XString            m_domain;
+  XString            m_realm;
   wstring            m_domainWide;
   wstring            m_realmWide;
   bool               m_ntlmCaching { true };

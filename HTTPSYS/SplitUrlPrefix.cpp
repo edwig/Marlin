@@ -20,7 +20,7 @@ static char THIS_FILE[] = __FILE__;
 // Splits a URL-Prefix string into an URL object (no context yet)
 //
 ULONG
-SplitURLPrefix(CString p_fullprefix,PURL p_url)
+SplitURLPrefix(XString p_fullprefix,PURL p_url)
 {
   // Check that we are called correctly
   if(p_fullprefix.IsEmpty() || p_url == nullptr)
@@ -37,7 +37,7 @@ SplitURLPrefix(CString p_fullprefix,PURL p_url)
   p_url->m_abspath.Empty();
 
   // Take copy of the string to work on
-  CString prefix(p_fullprefix);
+  XString prefix(p_fullprefix);
 
   // Check if it begins with HTTP
   if(prefix.Left(4).CompareNoCase(_T("http")))
@@ -65,7 +65,7 @@ SplitURLPrefix(CString p_fullprefix,PURL p_url)
   int pospath = prefix.Find('/');
 
   // FInd host binding
-  CString host;
+  XString host;
   if(posport >= 0)
   {
     host   = prefix.Left(posport);

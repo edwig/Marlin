@@ -174,7 +174,12 @@ SOAPSecurity::CheckSecurity(SOAPMessage* p_message)
 
       Crypto  crypt;
       XString encrypt  = DeBase64(nonce) + created + shouldbePassword;
+#ifdef _UNICODE
+      AutoCSTR enc(encrypt);
+      shouldbePassword = crypt.Digest(enc.cstr(),enc.size(),CALG_SHA1);
+#else
       shouldbePassword = crypt.Digest(encrypt,encrypt.GetLength(),CALG_SHA1);
+#endif
     }
 
     // Try if passwords do match

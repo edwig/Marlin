@@ -370,6 +370,7 @@ ConfigDlg::WriteConfig()
   }
   CString section(SECTION_APPLICATION);
 
+  config.SetSection  (section);
   config.SetParameter(section,_T("Role"),           m_role);
   config.SetParameter(section,_T("Name"),           m_naam);
   config.SetParameter(section,_T("Instance"),       m_instance);

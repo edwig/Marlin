@@ -104,7 +104,7 @@ void OnMessage(ServerEvent* p_event,void* p_data)
   xprintf(_T("MaxID is now: %u\n"),maxID);
 
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
+  //      --- "---------------------------------------------- - ------
   _tprintf(_T("EVENT channel OnMessage received               : OK\n"));
   xprintf(_T("%d %s\n"),p_event->m_id,p_event->m_data.GetString());
 
@@ -208,8 +208,8 @@ TestEvents(HTTPClient* p_client)
   // All event types seen and a minimum of 3 OnMessage events
   bool result = (onOpenSeen && onMessageSeen && onOtherSeen && onErrorSeen && maxID == 3) ? true : false;
   // SUMMARY OF THE TEST
-  // --- "---------------------------------------------- - ------
-  _tprintf(_T("Send: Testing the SSE event channel complete   : %s\n"), result ? _T("OK") : _T("ERROR"));
+  // -------- "---------------------------------------------- - ------
+  _tprintf(_T("Testing the SSE event channel complete         : %s\n"), result ? _T("OK") : _T("ERROR"));
 
   if(!result)
   {

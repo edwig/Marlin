@@ -16,7 +16,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-CString 
+XString 
 HTTP_GetUserAccount(EXTENDED_NAME_FORMAT p_format /*=NameUnknown*/,bool p_normalized /*=false*/)
 {
   BOOL  ret = FALSE;
@@ -46,10 +46,10 @@ HTTP_GetUserAccount(EXTENDED_NAME_FORMAT p_format /*=NameUnknown*/,bool p_normal
   {
     // No ADS or no SAM/WIN32 account
     // or getting the VERY LONG name from the AD?
-    return CString(_T("GUEST"));
+    return XString(_T("GUEST"));
   }
   // Remember our user
-  CString user(name);
+  XString user(name);
 
   // De-normalize the form for usage in e.g. filenames
   if(p_normalized)

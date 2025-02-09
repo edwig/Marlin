@@ -636,6 +636,13 @@ AppConfig::WriteConfig()
   {
     m_config->WriteConfig();
   }
+
+  // Be sure we have the correct root node
+  if(GetRoot()->GetName().IsEmpty())
+  {
+    SetRootNodeName(SECTION_ROOTNAME);
+  }
+
   // Writing to file is the result
   return SaveFile(GetConfigFilename());
 }

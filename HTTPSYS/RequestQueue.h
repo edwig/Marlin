@@ -41,9 +41,9 @@ REGISTER_HTTP_RECEIVE_REQUEST,*PREGISTER_HTTP_RECEIVE_REQUEST;
 using UrlGroups       = std::vector<UrlGroup*>;
 using Listeners       = std::map<USHORT,Listener*>;
 using Requests        = std::deque<Request*>;
-using Fragments       = std::map<CString,PHTTP_DATA_CHUNK>;
+using Fragments       = std::map<XString,PHTTP_DATA_CHUNK>;
 using WaitingRequests = std::deque<PREGISTER_HTTP_RECEIVE_REQUEST>;
-using WebSockets      = std::map<CString,SYSWebSocket*>;
+using WebSockets      = std::map<XString,SYSWebSocket*>;
 
 typedef BOOL (* PointTransmitFile)(SOCKET hSocket,
                                    HANDLE hFile,
@@ -65,13 +65,13 @@ void StartAsyncReceiveHttpRequest(PREGISTER_HTTP_RECEIVE_REQUEST reg);
 class RequestQueue
 {
 public:
-  RequestQueue(CString p_name);
+  RequestQueue(XString p_name);
  ~RequestQueue();
 
   // GETTERS
   ULONGLONG                   GetIdent()            { return m_ident;       }
   HANDLE                      GetHandle()           { return m_handle;      }
-  CString                     GetName()             { return m_name;        }
+  XString                     GetName()             { return m_name;        }
   HTTP_503_RESPONSE_VERBOSITY GetVerbosity()        { return m_verbosity;   }
   ULONG                       GetQueueLength()      { return m_queueLength; }
   HTTP_ENABLED_STATE          GetEnabledState()     { return m_state;       }
@@ -97,7 +97,7 @@ public:
   HANDLE    CreateHandle();
   void      AddIncomingRequest(Request* p_request);
   bool      ResetToServicing  (Request* p_request);
-  URL*      FindLongestURL(USHORT p_port,CString p_abspath);
+  URL*      FindLongestURL(USHORT p_port,XString p_abspath);
   void      RemoveRequest(Request* p_request);
   void      ClearIncomingWaiters();
   bool      RequestStillInService(Request* p_request);
@@ -113,15 +113,15 @@ public:
   ULONG     GetNextRequest(HTTP_REQUEST_ID RequestId,ULONG Flags,PHTTP_REQUEST RequestBuffer,ULONG RequestBufferLength,PULONG Bytes);
 
   // The fragment cache
-  ULONG             AddFragment  (CString p_prefix,PHTTP_DATA_CHUNK p_chunk);
-  ULONG             FlushFragment(CString p_prefix,ULONG Flags);
-  PHTTP_DATA_CHUNK  FindFragment (CString p_prefix);
+  ULONG             AddFragment  (XString p_prefix,PHTTP_DATA_CHUNK p_chunk);
+  ULONG             FlushFragment(XString p_prefix,ULONG Flags);
+  PHTTP_DATA_CHUNK  FindFragment (XString p_prefix);
 
   // WebSocket functionality
-  SYSWebSocket* FindWebSocket     (CString p_websocketKey);
-  bool          AddWebSocket      (CString p_websocketKey,SYSWebSocket* p_websocket);
-  bool          ReconnectWebsocket(CString p_websocketKey,SYSWebSocket* p_websocket);
-  bool          DeleteWebSocket   (CString p_websocketKey);
+  SYSWebSocket* FindWebSocket     (XString p_websocketKey);
+  bool          AddWebSocket      (XString p_websocketKey,SYSWebSocket* p_websocket);
+  bool          ReconnectWebsocket(XString p_websocketKey,SYSWebSocket* p_websocket);
+  bool          DeleteWebSocket   (XString p_websocketKey);
 
 private:
   void        StopAllListeners();
@@ -137,7 +137,7 @@ private:
   // Identification of the request queue
   ULONGLONG                   m_ident       { HTTP_QUEUE_IDENT };
   HANDLE                      m_handle      { NULL };
-  CString                     m_name;
+  XString                     m_name;
   // Request queue properties
   HTTP_503_RESPONSE_VERBOSITY m_verbosity   { Http503ResponseVerbosityBasic };
   ULONG                       m_queueLength { HTTP_REQUEST_QUEUE_DEFAULT    };

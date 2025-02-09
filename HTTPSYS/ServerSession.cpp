@@ -215,7 +215,7 @@ ServerSession::SetTimeoutMinSendRate(ULONG  p_rate)
 }
 
 void     
-ServerSession::SetAuthentication(ULONG p_scheme,CString p_domain,CString p_realm,wstring p_domainW,wstring p_realmW,bool p_caching)
+ServerSession::SetAuthentication(ULONG p_scheme,XString p_domain,XString p_realm,wstring p_domainW,wstring p_realmW,bool p_caching)
 {
   AutoCritSec lock(&m_lock);
 
@@ -319,10 +319,10 @@ ServerSession::SetupForLogging(PHTTP_LOGGING_INFO p_information)
     loglevel = 2;
   }
   CStringW softwareNameW(p_information->SoftwareName);
-  CString  softwareName(softwareNameW);
+  XString  softwareName(softwareNameW);
 
   CStringW directoryNameW(p_information->DirectoryName);
-  CString  directoryName(directoryNameW);
+  XString  directoryName(directoryNameW);
 
   bool rotate = false;
   if(p_information->RolloverType >= HttpLoggingRolloverDaily)
@@ -331,7 +331,7 @@ ServerSession::SetupForLogging(PHTTP_LOGGING_INFO p_information)
   }
 
   // Creating the logfile name
-  CString filename(directoryName);
+  XString filename(directoryName);
   if(filename.IsEmpty())
   {
     if(!filename.GetEnvironmentVariable(_T("WINDIR")))
@@ -396,7 +396,7 @@ ServerSession::ProcessLogData(PHTTP_LOG_DATA p_data)
   LogType type = log->ProtocolStatus >= HTTP_STATUS_BAD_REQUEST ? LogType::LOG_ERROR : LogType::LOG_INFO;
 
 #ifdef _UNICODE
-  CString theline(line);
+  XString theline(line);
   m_logfile->AnalysisLog(_T("HTTPSYS"),type,false,theline.GetString());
 #else
   m_logfile->AnalysisLog(_T("HTTPSYS"),type,false,line.GetString());
@@ -482,8 +482,8 @@ void DebugPrintHexDump(DWORD p_length, const void* p_buffer)
 void    
 ServerSession::ReadRegistrySettings()
 {
-  CString value1;
-  CString sectie;
+  XString value1;
+  XString sectie;
   DWORD   value2 = 0;
   TCHAR   value3[BUFF_LEN];
   DWORD   size3 = BUFF_LEN;

@@ -59,7 +59,7 @@ HttpAddFragmentToCache(IN HANDLE              RequestQueueHandle
   }
 
   USES_CONVERSION;
-  CString prefix(W2A(UrlPrefix));
+  XString prefix(W2A(UrlPrefix));
 
   // Add fragment to the fragment cache of the request queue
   return queue->AddFragment(prefix,DataChunk);
