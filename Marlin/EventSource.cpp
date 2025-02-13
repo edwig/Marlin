@@ -30,7 +30,8 @@
 #include "ServerEvent.h"
 #include "ThreadPool.h"
 #include "HTTPClient.h"
-#include "LogAnalysis.h"
+#include <LogAnalysis.h>
+#include <AutoCritical.h>
 
 #ifdef _AFX
 #ifdef _DEBUG
@@ -51,6 +52,8 @@ EventSource::EventSource(HTTPClient* p_client,XString p_url)
             ,m_ownPool(false)
 {
   Reset();
+
+  InitializeCriticalSection(&m_parseLock);
 }
 
 EventSource::~EventSource()
@@ -62,6 +65,7 @@ EventSource::~EventSource()
     m_pool = nullptr;
     m_ownPool = false;
   }
+  DeleteCriticalSection(&m_parseLock);
 }
 
 // Set an external threadpool
@@ -355,6 +359,8 @@ EventSource::OnRetry(ServerEvent* p_event)
 void
 EventSource::Parse(BYTE* p_buffer,unsigned& p_length)
 {
+  AutoCritSec lock(&m_parseLock);
+
   // Only parse events if we have the 'open' state
   if(m_readyState != OPEN)
   {

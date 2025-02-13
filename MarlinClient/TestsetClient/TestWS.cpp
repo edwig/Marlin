@@ -33,7 +33,6 @@
 #include <HTTPClient.h>
 #include <WebServiceClient.h>
 #include <GetLastErrorAsString.h>
-#include <HTTPSYS_Websocket.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -629,6 +629,17 @@ CancelHTTPRequest(void* p_argument,bool p_stayInThePool,bool p_forcedAbort)
       HTTPRequest* request = reinterpret_cast<HTTPRequest*>(outstanding->m_request);
       if (request && request->m_ident == HTTPREQUEST_IDENT)
       {
+        // If request is used for event/websocket, make a new one for this thread
+        if(request->GetLongTerm())
+        {
+          // Start new request and keep thread
+          HTTPServer* server = request->GetHTTPServer();
+          if(server)
+          {
+            StartHTTPRequest(server);
+          }
+          return true;
+        }
         if ((!request->GetIsActive() && !p_stayInThePool) || p_forcedAbort)
         {
           HTTPServer* server = request->GetHTTPServer();
@@ -636,16 +647,18 @@ CancelHTTPRequest(void* p_argument,bool p_stayInThePool,bool p_forcedAbort)
           {
             server->UnRegisterHTTPRequest(request);
           }
+          // Remove request and thread to stay balanced
           delete request;
           return false;
         }
         else if (p_stayInThePool && !request->GetIsActive())
         {
           // Start a new request, in case we completed the previous one
+          // We stay in the pool, so requests and threads are balanced
           request->StartRequest();
           return true;
         }
-        else if (request->GetIsActive())
+        else if(request->GetIsActive())
         {
           // Still processing, we must stay in the pool
           return true;
@@ -788,6 +801,9 @@ HTTPServerMarlin::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/
   if(request)
   {
     request->CancelRequestStream();
+
+    // Long running request may now be deleted
+    UnRegisterHTTPRequest(request);
   }
 }
 
@@ -936,8 +952,7 @@ HTTPServerMarlin::SendResponseEventBuffer(HTTP_OPAQUE_ID    p_requestID
   HTTPRequest* request = reinterpret_cast<HTTPRequest*>(p_requestID);
   if(request)
   {
-    request->SendResponseStream(*p_buffer,p_length,p_continue);
-    return true;
+    return request->SendResponseStream(*p_buffer,p_length,p_continue);
   }
   return false;
 }

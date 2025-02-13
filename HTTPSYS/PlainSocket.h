@@ -13,22 +13,6 @@
 
 #pragma comment(lib,"Ws2_32.lib")
 
-class AutoIOinProgress
-{
-public:
-  AutoIOinProgress(bool* p_ioInProgress)
-         :m_ioInProgress(p_ioInProgress)
-  {
-    *m_ioInProgress = true;
-  }
-  ~AutoIOinProgress()
-  {
-    *m_ioInProgress = false;
-  }
-private:
-  bool* m_ioInProgress;
-};
-
 // Keep-alive times must be a minimum of 1 second
 #define MINIMUM_KEEPALIVE 1000
 
@@ -111,8 +95,6 @@ protected:
 	DWORD   m_lastError       { 0     }; // Last WSA socket error or OS error
   XString m_hostName;                  // Connected to this host
   USHORT  m_portNumber      { 0     }; // Connected to this port
-  bool    m_readInProgress  { false }; // Overlapped reading in progress
-  bool    m_writeInProgress { false }; // Overlapped writing in progress
 
 private:
   // Activate keep-alive and keep-alive times

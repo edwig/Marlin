@@ -27,7 +27,6 @@
 //
 #include "stdafx.h"
 #include "TestClient.h"
-#include "WebSocketServer.h"
 #include "WebSocketClient.h"
 #include "LogAnalysis.h"
 #include "TestPorts.h"

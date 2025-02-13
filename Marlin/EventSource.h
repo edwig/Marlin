@@ -171,6 +171,8 @@ private:
   // Incoming event
   XString     m_eventName;
   XString     m_eventData;
+
+  CRITICAL_SECTION m_parseLock;
 };
 
 inline ReadyState

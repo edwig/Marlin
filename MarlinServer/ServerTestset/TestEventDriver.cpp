@@ -96,7 +96,13 @@ TestMarlinServer::PostEventsToDrivers(CString p_event)
   int chan = 0;
   if(channel.CompareNoCase(_T("firstsession_123"))  == 0) chan = 1;
   if(channel.CompareNoCase(_T("secondsession_456")) == 0) chan = 2;
-  if(channel.Find(_T("[Open]")) >= 0) chan = 3;
+  if(channel.Find(_T("[Open]")) >= 0)                     chan = 3;
+
+  if(chan == 0)
+  {
+    xprintf(_T("ALARM: Strange driver channel in test!\n"));
+    return;
+  }
 
   for(int ind = 0; ind < NUM_TEST; ++ind)
   {
@@ -108,6 +114,8 @@ TestMarlinServer::PostEventsToDrivers(CString p_event)
       case 2: m_driver.PostEvent(m_channel2, payload); break;
       case 3: m_driver.PostEvent(m_channel3, payload); break;
     }
+    CStringA pay(payload);
+    TRACE("Posted event: %s\n",pay.GetString());
   }
 }
 

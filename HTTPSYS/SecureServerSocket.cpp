@@ -1107,9 +1107,6 @@ SecureServerSocket::RecvPartialOverlapped(LPVOID p_buffer,const ULONG p_length,L
 void
 SecureServerSocket::RecvPartialOverlappedContinuation(LPOVERLAPPED p_overlapped)
 {
-  // No longer any outstanding read operation
-  m_readInProgress = false;
-
   // Get the results of the overlapped operation
   int error  = (int)p_overlapped->Internal;
   int result = (int)p_overlapped->InternalHigh;

@@ -36,11 +36,13 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+// CTOR: Default is a message event
 LTEvent::LTEvent()
         :m_type(EvtType::EV_Message)
 {
 }
 
+// CTOR: Create event with special type
 LTEvent::LTEvent(EvtType p_type)
         :m_type(p_type)
 {
