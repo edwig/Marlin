@@ -359,7 +359,12 @@ SOAPSecurity::DigestPassword()
   XString encrypted = nonce + m_timestamp.AsString() + _T("Z") + m_password;
 
   Crypto crypt;
+#ifdef _UNICODE
+  AutoCSTR enc(encrypted);
+  return crypt.Digest(enc.cstr(),enc.size(),CALG_SHA1);
+#else
   return crypt.Digest(encrypted,encrypted.GetLength(),CALG_SHA1);
+#endif
 }
 
 void

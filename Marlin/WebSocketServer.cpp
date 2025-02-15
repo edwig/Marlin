@@ -75,6 +75,7 @@ void
 WebSocketServer::Reset()
 {
   // General reset
+  WebSocket::Close();
   WebSocket::Reset();
 
   // Remove left over writing frames

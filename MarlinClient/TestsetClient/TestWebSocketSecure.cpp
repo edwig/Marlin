@@ -88,7 +88,9 @@ void
 OnErrorWebSocketSecure(WebSocket* p_socket,const WSFrame* p_frame)
 {
   XString message;
-  message.Format(_T("ERROR from WebSocket at URI: %s\n"),p_socket->GetIdentityKey().GetString());
+  message.Format(_T("ERROR from WebSocket from URI [%s] with key [%s]\n")
+                ,p_socket->GetURI().GetString()
+                ,p_socket->GetIdentityKey().GetString());
   if(p_frame)
   {
     message += reinterpret_cast<TCHAR*>(p_frame->m_data);
@@ -114,7 +116,7 @@ OnCloseWebsocketSecure(WebSocket* /*p_socket*/,const WSFrame* p_frame)
   g_closedSecure = 1;
 
   // WebSocket has been closed
-  // --- "---------------------------------------------- - ------
+  // -------- "---------------------------------------------- - ------
   _tprintf(_T("WebSocket gotten the 'OnClose' event           : OK\n"));
 }
 

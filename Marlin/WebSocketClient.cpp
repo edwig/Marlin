@@ -464,7 +464,8 @@ WebSocketClient::SocketListener()
                                      ,&type);
     if(error)
     {
-      if(error != ERROR_WINHTTP_OPERATION_CANCELLED)
+      if(error != ERROR_WINHTTP_OPERATION_CANCELLED &&
+         error != ERROR_WINHTTP_CONNECTION_ERROR)
       {
         ERRORLOG(error,_T("ERROR while receiving from WebSocket: ") + m_uri);
         CloseSocket();

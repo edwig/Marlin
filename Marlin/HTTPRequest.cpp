@@ -169,7 +169,11 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
     case IO_StartStream:StartedStream();    break;
     case IO_WriteStream:SendStreamPart();   break;
     case IO_Cancel:     Finalize();         break;
-    default:            ERRORLOG(ERROR_INVALID_PARAMETER,_T("Unexpected outstanding async I/O"));
+    default:            if(m_ident == HTTPREQUEST_IDENT)
+                        {
+                          ERRORLOG(ERROR_INVALID_PARAMETER,_T("Unexpected outstanding async I/O"));
+                        }
+                        break;
   }
 }
 

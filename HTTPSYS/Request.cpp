@@ -2106,7 +2106,7 @@ Request::WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
   {
     return SOCKET_ERROR;
   }
-  int result = m_socket->SendPartial(p_buffer,p_size);
+  int result = m_socket->SendMsg(p_buffer,p_size);
   if (result == SOCKET_ERROR)
   {
     // Log the error

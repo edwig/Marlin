@@ -1984,6 +1984,7 @@ HTTPServer::UnRegisterHTTPRequest(const HTTPRequest* p_request)
     if((*it) == p_request)
     {
       m_requests.erase(it);
+      delete p_request;
       return;
     }
   }
