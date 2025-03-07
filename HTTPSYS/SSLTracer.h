@@ -28,7 +28,7 @@ public:
   // Is this packet a complete client initialize packet
   bool    IsClientInitialize();
   // Get SNI provided hostname
-  CString GetSNIHostname();
+  XString GetSNIHostname();
 
 private:
   bool CanDecode();

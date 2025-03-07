@@ -89,10 +89,9 @@ public:
   // Start a response stream
   void StartEventStreamResponse();
   // Send as a stream part to an existing stream
-  void SendResponseStream(BYTE*   p_buffer
+  bool SendResponseStream(BYTE*   p_buffer
                          ,size_t  p_length
                          ,bool    p_continue = true);
-
 
   // GETTERS
 
@@ -106,6 +105,8 @@ public:
   HTTP_OPAQUE_ID    GetRequest()    { return m_requestID; }
   // OPAQUE Response
   PHTTP_RESPONSE    GetResponse()   { return m_response;  }
+  // Getting the long term status
+  bool              GetLongTerm()   { return m_longTerm;  }
 
   // SETTERS
   void SetChunkEvent(HANDLE p_event){ m_chunkEvent = p_event; }
@@ -170,6 +171,7 @@ private:
   int               m_bufferpart { 0       };   // Buffer part being sent
   PHTTP_UNKNOWN_HEADER m_unknown { nullptr };   // Send unknown headers
   CString           m_originalVerb;             // Verb before the send
+  bool              m_longTerm   { false   };   // Long term connection (SSE or WebSocket)
   PHTTP_LOG_DATA    m_logData    { nullptr };   // Data to log for this request (in last send!)
   CRITICAL_SECTION  m_critical;                 // Locking section
 };

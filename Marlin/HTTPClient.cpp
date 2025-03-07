@@ -3831,7 +3831,12 @@ HTTPClient::CheckBodySigning(XString p_password,SOAPMessage* p_message)
       Crypto sign;
       sign.SetHashMethod(method);
       p_message->SetSigningMethod(sign.GetHashMethod());
-      XString digest = sign.Digest(signedXML.GetString(),signedXML.GetLength() * sizeof(TCHAR));
+#ifdef _UNICODE
+      AutoCSTR sigXml(signedXML);
+      XString digest = sign.Digest(sigXml.cstr(),sigXml.size());
+#else
+      XString digest = sign.Digest(signedXML.GetString(),signedXML.GetLength());
+#endif
 
       if(signature.CompareNoCase(digest) == 0)
       {

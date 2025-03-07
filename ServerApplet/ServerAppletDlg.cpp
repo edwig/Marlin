@@ -647,11 +647,11 @@ ServerAppletDlg::GetServerStatusLocally()
 void
 ServerAppletDlg::GetConfigVariables()
 {
-  AppConfig config(PRODUCT_NAME);
+  AppConfig config;
 
   config.ReadConfig();
-  m_role    = _T("Machine: ") + config.GetRole();
-  m_service = config.GetRunAsService();
+  m_role    = _T("Machine: ") + config.GetParameterString(SECTION_APPLICATION,_T("Role"),_T("ServerClient"));
+  m_service = config.GetParameterInteger(SECTION_APPLICATION,_T("RunAsService"),RUNAS_NTSERVICE);
   m_url     = config.GetServerURL();
 }
 

@@ -32,6 +32,7 @@
 #include "BrowseForDirectory.h"
 #include "BrowseForFilename.h"
 #include <AppConfig.h>
+#include <MarlinConfig.h>
 #include <afxdialogex.h>
 #include <CrackURL.h>
 #include <CreateURLPrefix.h>
@@ -231,21 +232,22 @@ ConfigDlg::SetControlWriteable(UINT p_dlgID)
 void
 ConfigDlg::ReadConfig()
 {
-  AppConfig config(PRODUCT_NAME);
+  AppConfig config;
   config.ReadConfig();
+  CString section(SECTION_APPLICATION);
 
   m_configWriteable       = config.GetConfigWritable();
-  m_role                  = config.GetRole();
-  m_naam                  = config.GetName();
-  m_instance              = config.GetInstance();
-  m_server                = config.GetServer();
-  m_serverPort            = config.GetServerPort();
-  m_baseURL               = config.GetBaseURL();
-  m_serverLogfile         = config.GetServerLogfile();
-  m_serverLogging         = config.GetServerLoglevel();
-  m_secureServer          = config.GetServerSecure();
-  m_webroot               = config.GetWebRoot();
-  m_runAsService          = config.GetRunAsService();
+  m_role                  = config.GetParameterString (section,_T("Role"),_T(""));
+  m_naam                  = config.GetParameterString (section,_T("Name"),_T(""));
+  m_instance              = config.GetParameterInteger(section,_T("Instance"),0);
+  m_server                = config.GetParameterString (section,_T("Server"),_T(""));
+  m_serverPort            = config.GetParameterInteger(section,_T("ServerPort"),0);
+  m_baseURL               = config.GetParameterString (section,_T("BaseURL"),_T("/"));
+  m_serverLogfile         = config.GetParameterString (section,_T("ServerLog"),_T(""));
+  m_serverLogging         = config.GetParameterInteger(section,_T("ServerLoglevel"),0);
+  m_secureServer          = config.GetParameterBoolean(section,_T("Secure"),false);
+  m_webroot               = config.GetParameterString (section,_T("WebRoot"),_T(""));
+  m_runAsService          = config.GetParameterInteger(section,_T("RunAsService"),RUNAS_NTSERVICE);
 //   m_mailServer            = config.GetMailServer();
 //   m_foutRapportVestuur    = config.GetFoutRapportageVerstuur();
 //   m_foutRapportAfzender   = config.GetFoutRapportageAfzender();
@@ -358,7 +360,7 @@ bool
 ConfigDlg::WriteConfig()
 {
   // Save
-  AppConfig config(PRODUCT_NAME);
+  AppConfig config;
 
   m_configWriteable = config.GetConfigWritable();
   if(!m_configWriteable)
@@ -366,17 +368,20 @@ ConfigDlg::WriteConfig()
     WarningWriteRights();
     return false;
   }
-  config.SetRole(m_role);
-  config.SetName(m_naam);
-  config.SetInstance(m_instance);
-  config.SetServer(m_server);
-  config.SetServerPort(m_serverPort);
-  config.SetBaseURL(m_baseURL);
-  config.SetServerSecure(m_secureServer);
-  config.SetServerLog(m_serverLogfile);
-  config.SetServerLoglevel(m_serverLogging);
-  config.SetWebRoot(m_webroot);
-  config.SetRunAsService(m_runAsService);
+  CString section(SECTION_APPLICATION);
+
+  config.SetSection  (section);
+  config.SetParameter(section,_T("Role"),           m_role);
+  config.SetParameter(section,_T("Name"),           m_naam);
+  config.SetParameter(section,_T("Instance"),       m_instance);
+  config.SetParameter(section,_T("Server"),         m_server);
+  config.SetParameter(section,_T("ServerPort"),     m_serverPort);
+  config.SetParameter(section,_T("BaseURL"),        m_baseURL);
+  config.SetParameter(section,_T("Secure"),         m_secureServer);
+  config.SetParameter(section,_T("ServerLog"),      m_serverLogfile);
+  config.SetParameter(section,_T("ServerLoglevel"), m_serverLogging);
+  config.SetParameter(section,_T("WebRoot"),        m_webroot);
+  config.SetParameter(section,_T("RunAsService"),   m_runAsService);
 
   //Mail server
 //   config.SetMailServer(m_mailServer);

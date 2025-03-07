@@ -32,6 +32,18 @@
 
 #define MARLINCONFIG_WACHTWOORD _T("W!e@b#.$C%o^n&f*i(g")
 
+#define DEFAULT_NAME        "<DTAP Name>"   // DTAP = "Development", "Test", "Acceptance", "Production"
+#define DEFAULT_SERVER      "mymachine"
+#define DEFAULT_URL         "/myserver/"
+#define DEFAULT_SERVERLOG   "C:\\WWW\\Serverlog.txt"
+#define DEFAULT_WEBROOT     "C:\\WWW\\"
+#define DEFAULT_INSTANCE         1          // Machine instance
+#define MAXIMUM_INSTANCE       100          // No more than 100 instances on 1 machine
+#define DEFAULT_SERVERPORT     443          // Default HTTPS port of the server
+#define RUNAS_STANDALONE         0          // Running as a one-time standalone program
+#define RUNAS_NTSERVICE          1          // Running as an integrated Windows-NT service
+#define RUNAS_IISAPPPOOL         2          // Running as an IIS application pool
+
 class MarlinConfig : public XMLMessage
 {
 public:
@@ -82,6 +94,7 @@ public:
   bool    HasAttribute(XString p_section,XString p_parameter,XString p_attribute);
   bool    IsChanged();
   void    ForgetChanges(); // Thread with care!
+  bool    GetConfigWritable();
 
 private:
   // Find section with this name

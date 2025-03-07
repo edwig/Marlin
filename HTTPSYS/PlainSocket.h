@@ -92,9 +92,9 @@ protected:
   // See if data is coming in
   bool InputQueueHasWaitingData();
 
-	DWORD   m_lastError  { 0       };  // Last WSA socket error or OS error
-  CString m_hostName;                // Connected to this host
-  USHORT  m_portNumber { 0       };  // Connected to this port
+	DWORD   m_lastError       { 0     }; // Last WSA socket error or OS error
+  XString m_hostName;                  // Connected to this host
+  USHORT  m_portNumber      { 0     }; // Connected to this port
 
 private:
   // Activate keep-alive and keep-alive times

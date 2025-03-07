@@ -168,7 +168,7 @@ unsigned __stdcall StartAsyncSendHttpResponse(void* p_param)
   {
     return ERROR_INVALID_PARAMETER;
   }
-  SetThreadName(_T("HTTPSendResponse"));
+  SetThreadName("HTTPSendResponse");
   _set_se_translator(SeTranslator);
   XString error;
 

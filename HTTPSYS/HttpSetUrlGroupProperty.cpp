@@ -94,8 +94,8 @@ SetUrlGroupAuthentication(UrlGroup* p_group,PHTTP_SERVER_AUTHENTICATION_INFO p_i
 
     ULONG scheme = p_info->AuthSchemes;
     bool ntlmcache = !(p_info->DisableNTLMCredentialCaching);
-    CString domain;
-    CString realm;
+    XString domain;
+    XString realm;
     wstring domainWide;
     wstring realmWide;
 

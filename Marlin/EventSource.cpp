@@ -30,7 +30,9 @@
 #include "ServerEvent.h"
 #include "ThreadPool.h"
 #include "HTTPClient.h"
-#include "LogAnalysis.h"
+#include <ConvertWideString.h>
+#include <LogAnalysis.h>
+#include <AutoCritical.h>
 
 #ifdef _AFX
 #ifdef _DEBUG
@@ -51,6 +53,8 @@ EventSource::EventSource(HTTPClient* p_client,XString p_url)
             ,m_ownPool(false)
 {
   Reset();
+
+  InitializeCriticalSection(&m_parseLock);
 }
 
 EventSource::~EventSource()
@@ -62,6 +66,7 @@ EventSource::~EventSource()
     m_pool = nullptr;
     m_ownPool = false;
   }
+  DeleteCriticalSection(&m_parseLock);
 }
 
 // Set an external threadpool
@@ -355,13 +360,22 @@ EventSource::OnRetry(ServerEvent* p_event)
 void
 EventSource::Parse(BYTE* p_buffer,unsigned& p_length)
 {
+  AutoCritSec lock(&m_parseLock);
+
   // Only parse events if we have the 'open' state
   if(m_readyState != OPEN)
   {
     return;
   }
   // Getting the raw buffer
-  XString buffer(p_buffer);
+#ifdef _UNICODE
+  XString buffer;
+  bool bom(false);
+  TryConvertNarrowString(p_buffer,p_length,_T(""),buffer,bom);
+#else
+  XString input(p_buffer);
+  XString buffer = DecodeStringFromTheWire(input);
+#endif
 
   // normalize lines
   if(buffer.Find('\r') >= 0)
@@ -384,9 +398,18 @@ EventSource::Parse(BYTE* p_buffer,unsigned& p_length)
   }
   else if((ULONG)buffer.GetLength() < p_length)
   {
-    // Place tail end of buffer back. Wait for more on HTTP connection
-    memcpy_s(p_buffer,p_length,buffer.GetString(),buffer.GetLength());
-    p_length = buffer.GetLength();
+    // Place tail end of buffer back in original UTF-8 encoding
+    // Wait for more on HTTP connection
+#ifdef _UNICODE
+    BYTE* back = nullptr;
+    TryCreateNarrowString(buffer,_T(""),false,&back,(int&)p_length);
+    memcpy_s(p_buffer,p_length,back,p_length);
+    delete [] back;
+#else
+    XString back = EncodeStringForTheWire(buffer);
+    memcpy_s(p_buffer,p_length,back.GetString(),back.GetLength());
+    p_length = back.GetLength();
+#endif;
   }
 }
 

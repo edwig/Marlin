@@ -78,7 +78,7 @@ protected:
   UINT64        m_ident   { SYSWEBSOCKET_IDENT }; // Identification of the object
   Request*      m_request { nullptr };     // HTTP Request that started last socket connection
   SocketStream* m_socket  { nullptr };     // Communication low-level socket
-  CString       m_serverkey;               // Sec-WebSocket-Key of the Server-Handshake
+  XString       m_serverkey;               // Sec-WebSocket-Key of the Server-Handshake
 
   OVERLAPPED    m_wsrd;                    // Receiving callback
   OVERLAPPED    m_wswr;                    // Sending   callback
@@ -95,7 +95,7 @@ public:
 
   // GETTERS
   Request*       GetRequest()               { return m_request;       }
-  CString        GetServerKey()             { return m_serverkey;     }
+  XString        GetServerKey()             { return m_serverkey;     }
   SocketStream*  GetRealSocket()            { return m_socket;        }
 
   // SETTERS

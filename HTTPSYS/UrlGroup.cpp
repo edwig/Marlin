@@ -76,7 +76,7 @@ UrlGroup::SetEnabledState(HTTP_ENABLED_STATE p_state)
 // URL Must be registered in the MS-Windows registry (services\http\parameters)
 // Optionally start a listener for the portnumber if not already started
 ULONG 
-UrlGroup::AddUrlPrefix(CString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
+UrlGroup::AddUrlPrefix(XString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
 {
   AutoCritSec lock(&m_lock);
 
@@ -100,7 +100,7 @@ UrlGroup::AddUrlPrefix(CString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
       return ERROR_INVALID_PARAMETER;
     }
     // Getting the parameters
-    CString name = url.m_abspath;
+    XString name = url.m_abspath;
     USHORT  port = url.m_port;
 
     // See if registered before
@@ -139,11 +139,11 @@ UrlGroup::AddUrlPrefix(CString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
 // Remove an URL from an URL-Group. 
 // If it was the last URL, remove the group from the request-queue
 ULONG 
-UrlGroup::DelUrlPrefix(HTTP_URL_GROUP_ID p_handle,CString pFullyQualifiedUrl,ULONG p_flags)
+UrlGroup::DelUrlPrefix(HTTP_URL_GROUP_ID p_handle,XString pFullyQualifiedUrl,ULONG p_flags)
 {
   AutoCritSec lock(&m_lock);
 
-  CString path(pFullyQualifiedUrl);
+  XString path(pFullyQualifiedUrl);
   path.MakeLower();
 
   URLNames::iterator it = m_urls.begin();
@@ -191,7 +191,7 @@ UrlGroup::NumberOfPorts(USHORT p_port)
 // Find best fitting URL through the longest match algorithm
 // Optimized for segmented compare of site names
 URL*
-UrlGroup::FindLongestURL(USHORT p_port,CString p_abspath,int& p_length)
+UrlGroup::FindLongestURL(USHORT p_port,XString p_abspath,int& p_length)
 {
   AutoCritSec lock(&m_lock);
 
@@ -228,7 +228,7 @@ UrlGroup::FindLongestURL(USHORT p_port,CString p_abspath,int& p_length)
 
 // Just copy the properties. 
 void 
-UrlGroup::SetAuthentication(ULONG p_scheme, CString p_domain, CString p_realm, bool p_caching)
+UrlGroup::SetAuthentication(ULONG p_scheme, XString p_domain, XString p_realm, bool p_caching)
 {
   m_scheme = p_scheme;
   m_domain = p_domain;
@@ -279,8 +279,8 @@ UrlGroup::SegmentedCompare(LPCTSTR p_left,LPCTSTR p_right)
       break;
     }
     // Find length of segments
-    int lenleft  = (int)((ULONGLONG)posleft  - (ULONGLONG)p_left)  + 1;
-    int lenright = (int)((ULONGLONG)posright - (ULONGLONG)p_right) + 1;
+    int lenleft  = (int)(((ULONGLONG)posleft  - (ULONGLONG)p_left)  / sizeof(TCHAR)) + 1;
+    int lenright = (int)(((ULONGLONG)posright - (ULONGLONG)p_right) / sizeof(TCHAR)) + 1;
 
     // Different lengths of segments: stop the comparison
     if(lenleft != lenright)
@@ -303,12 +303,12 @@ UrlGroup::SegmentedCompare(LPCTSTR p_left,LPCTSTR p_right)
 // Find out if our URL is registered in the MS-Windows registry
 // As created and maintained by the 'netsh' application
 bool
-UrlGroup::UrlIsRegistered(CString pFullyQualifiedUrl)
+UrlGroup::UrlIsRegistered(XString pFullyQualifiedUrl)
 {
   bool result = false;
 
   // Get the absolute prefix path
-  CString url(pFullyQualifiedUrl);
+  XString url(pFullyQualifiedUrl);
   int pos = pFullyQualifiedUrl.Find('?');
   if (pos > 0)
   {
@@ -317,7 +317,7 @@ UrlGroup::UrlIsRegistered(CString pFullyQualifiedUrl)
 
   while(true)
   {
-    CString value1;
+    XString value1;
     DWORD   value2 = 0;
     TCHAR   value3[BUFF_LEN];
     DWORD   size3 = BUFF_LEN;
@@ -349,7 +349,7 @@ UrlGroup::UrlIsRegistered(CString pFullyQualifiedUrl)
 bool
 UrlGroup::GetURLSettings(URL& p_url)
 {
-  CString value1;
+  XString value1;
   DWORD   value2 = 0;
   TCHAR   value3 [BUFF_LEN];
   DWORD   size3 = BUFF_LEN;
@@ -359,7 +359,7 @@ UrlGroup::GetURLSettings(URL& p_url)
   p_url.m_requestClientCert = false;
 
   // Construct the sectie
-  CString sectie;
+  XString sectie;
   sectie.Format(_T("SslBindingInfo\\0.0.0.0:%u"),p_url.m_port);
 
   if(HTTPReadRegister(sectie,_T("SslCertHash"),REG_BINARY,value1,&value2,value3,&size3))

@@ -2213,8 +2213,13 @@ SOAPMessage::SignBody()
 {
   Crypto md5(m_signingMethod);
   XString total = GetBodyPart();
-  XString sign = md5.Digest(total.GetString(),total.GetLength() * sizeof(TCHAR));
 
+#ifdef _UNICODE
+  AutoCSTR body(total);
+  XString sign = md5.Digest(body.cstr(),body.size());
+#else
+  XString sign = md5.Digest(total.GetString(),total.GetLength());
+#endif
   if(!md5.GetError().IsEmpty())
   {
     sign = md5.GetError();

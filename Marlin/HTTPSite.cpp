@@ -34,6 +34,7 @@
 #include "Crypto.h"
 #include "WinINETError.h"
 #include "ErrorReport.h"
+#include "ConvertWideString.h"
 #include <WinFile.h>
 #include <winerror.h>
 #include <sddl.h>
@@ -1646,8 +1647,13 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
       Crypto sign;
       sign.SetHashMethod(method);
       p_message->SetSigningMethod(sign.GetHashMethod());
-      XString digest = sign.Digest(signedXML.GetString(),signedXML.GetLength() * sizeof(TCHAR));
 
+#ifdef _UNICODE
+      AutoCSTR xml(signedXML);
+      XString digest = sign.Digest(xml.cstr(),xml.size());
+#else
+      XString digest = sign.Digest(signedXML.GetString(),signedXML.GetLength());
+#endif
       if(signature.CompareNoCase(digest) == 0)
       {
         // Not yet ready with this message

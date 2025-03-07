@@ -153,7 +153,6 @@ int _tmain(int argc,const TCHAR* argv[],const TCHAR* /*envp[]*/)
       errors += TestPatching(client);
       errors += TestCompression(client);
       errors += TestEvents(client);
-
 #ifdef TEST_WEBSOCKETS
       errors += TestWebSocketAccept();
       errors += TestWebSocket(g_log);

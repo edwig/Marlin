@@ -172,7 +172,7 @@ private:
   bool            m_serverSecure{ false };
   XString         m_agent;                              // Agent's name (spoofing!!)
   int             m_instance    { 1  };                 // Instance number on this machine
-  ushort          m_inPortNumber{ 80 };                 // Port number of incoming port
+  int             m_inPortNumber{ 80 };                 // Port number of incoming port
   int             m_alertModule { -1 };                 // Server alert module
   // Others
   HPFCounter      m_counter;

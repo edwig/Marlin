@@ -174,7 +174,12 @@ SOAPSecurity::CheckSecurity(SOAPMessage* p_message)
 
       Crypto  crypt;
       XString encrypt  = DeBase64(nonce) + created + shouldbePassword;
+#ifdef _UNICODE
+      AutoCSTR enc(encrypt);
+      shouldbePassword = crypt.Digest(enc.cstr(),enc.size(),CALG_SHA1);
+#else
       shouldbePassword = crypt.Digest(encrypt,encrypt.GetLength(),CALG_SHA1);
+#endif
     }
 
     // Try if passwords do match
@@ -354,7 +359,12 @@ SOAPSecurity::DigestPassword()
   XString encrypted = nonce + m_timestamp.AsString() + _T("Z") + m_password;
 
   Crypto crypt;
+#ifdef _UNICODE
+  AutoCSTR enc(encrypted);
+  return crypt.Digest(enc.cstr(),enc.size(),CALG_SHA1);
+#else
   return crypt.Digest(encrypted,encrypted.GetLength(),CALG_SHA1);
+#endif
 }
 
 void

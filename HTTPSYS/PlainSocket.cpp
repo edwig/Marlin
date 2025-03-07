@@ -634,9 +634,10 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 	buffer.len = p_length;
 	
 	// Create the overlapped I/O event and structures
-	memset(&m_overReading,0,sizeof(OVERLAPPED));
-  m_overReading.Pointer = this;
-  m_overReading.hEvent  = (HANDLE) SD_RECEIVE;
+  m_overReading.Internal = 0;
+  m_overReading.InternalHigh = 0;
+  m_overReading.Pointer  = this;
+  m_overReading.hEvent   = (HANDLE) SD_RECEIVE;
 	received    = WSARecv(m_actualSocket,&buffer,1,&bytes_read,&msg_flags,&m_overReading,nullptr);
 	m_lastError = WSAGetLastError();
 
@@ -706,13 +707,12 @@ int PlainSocket::RecvMsg(LPVOID p_buffer, const ULONG p_length)
 int PlainSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
 {
 	WSAOVERLAPPED os;
-	WSABUF buffer;
-	DWORD bytes_sent = 0;
+	WSABUF    buffer;
+	DWORD     bytes_sent = 0;
 
 	// Setup the buffer array
 	buffer.buf = (char *)p_buffer;
 	buffer.len = p_length;
-
 
   if(!InSecureMode())
   {
@@ -738,7 +738,7 @@ int PlainSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
 	// Now wait for the I/O to complete if necessary, and see what happened
 	bool IOCompleted = false;
 
-	if ((received == SOCKET_ERROR) && (m_lastError == WSA_IO_PENDING))  // Write in progress
+	if((received == SOCKET_ERROR) && (m_lastError == WSA_IO_PENDING))  // Write in progress
 	{
 		WSAEVENT hEvents[2] = { m_stopEvent,m_write_event };
 	  DWORD dwWait;
@@ -754,7 +754,7 @@ int PlainSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
     IOCompleted = true;
   }
 
-	if (IOCompleted)
+	if(IOCompleted)
 	{
 		DWORD msg_flags = 0;
 		if (WSAGetOverlappedResult(m_actualSocket, &os, &bytes_sent, true, &msg_flags))

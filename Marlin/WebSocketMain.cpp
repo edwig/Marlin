@@ -707,12 +707,8 @@ WebSocket::ServerAcceptKey(XString p_clientKey)
   XString key = p_clientKey + _T("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
 
 #ifdef _UNICODE
-  BYTE* buffer = nullptr;
-  int   length = 0;
-  TryCreateNarrowString(key,_T(""),false,&buffer,length);
-  XString result = crypt.Digest(buffer,length,CALG_SHA1);
-  delete[] buffer;
-  return result;
+  AutoCSTR akey(key);
+  return crypt.Digest(akey.cstr(),akey.size(),CALG_SHA1);
 #else
   // Step 2: Take the SHA1 hash of the resulting string
   return crypt.Digest(key.GetString(),(size_t) key.GetLength(),CALG_SHA1);

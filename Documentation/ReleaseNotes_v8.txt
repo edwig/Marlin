@@ -19,6 +19,14 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     Despite the fact that this was done in a thread-local-storage variable, this could go wrong
     in real life production scenario's. The 'tls_lastErrror' variable has been removed from the 
     HTTPServer altogether. The creation of new sites can no longer be stopped by this situation.
+5)  Re-Write of the AppConfig class for application configurations. You can now read the application
+    configuration from the 'appSettings' section of the 'web.config' file. The 'appSettings' section
+    is read in the 'MarlinModule' and passed to the 'ServerApp' class. The 'ServerApp' class can
+    read the 'appSettings' section from the 'web.config' file and pass it to the '
+    Convert your existing application files as follows:
+    o   Replace the root space name with "<Configuration>"
+    o   Place all application settings in an "<Application>" section
+    o   See the examples in the "MarlinServer" directory.
 
 CHANGES IN VERSION 8.4.1 of 25-12-2024
 --------------------------------------

@@ -71,7 +71,7 @@ Base64::Ascii_length(size_t len)
   return  (len*6)/8;
 }
 
-// ANSI Version only
+// Encrypt a binary buffer to an ANSI/UNICODE aware string
 XString
 Base64::Encrypt(BYTE* p_buffer,int p_length)
 {
@@ -89,9 +89,37 @@ Base64::Encrypt(BYTE* p_buffer,int p_length)
   return result;
 }
 
-// ANSI/UNICODE aware version
+// Encrypt a ANSI/UNICODE string to a ANSI/UNICODE base64
+// In UNICODE use only for purposes where strings contain characters > 0x00FF
 XString
 Base64::Encrypt(XString p_unencrypted)
+{
+  if(p_unencrypted.GetLength() == 0)
+  {
+    return XString();
+  }
+#ifdef _UNICODE
+  AutoCSTR unen(p_unencrypted);
+  const BYTE* unencrypted = (BYTE*) unen.cstr();
+  const int   length      = unen.size();
+#else
+  const BYTE* unencrypted = (BYTE*) p_unencrypted.GetString();
+  const int   length      = p_unencrypted.GetLength();
+#endif
+  DWORD tchars = 0;
+  CryptBinaryToString(unencrypted,length,m_method | m_options,(LPTSTR)NULL,&tchars);
+  _TUCHAR* buffer = new _TUCHAR[tchars + 2];
+  CryptBinaryToString(unencrypted,length,m_method | m_options,(LPTSTR)buffer,&tchars);
+  buffer[tchars] = 0;
+  XString result(buffer);
+  delete[] buffer;
+  return result;
+}
+
+// Encrypt a ANSI/UNICODE string to a ANSI/UNICODE base64
+// In UNICODE use only for purposes where strings contain characters > 0x00FF
+XString
+Base64::EncryptUnicode(XString p_unencrypted)
 {
   if(p_unencrypted.GetLength() == 0)
   {
@@ -116,18 +144,12 @@ Base64::Decrypt(XString p_encrypted)
     return XString();
   }
   DWORD length = 0;
-  DWORD type   = CRYPT_STRING_BASE64_ANY;
-  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,nullptr,&length,0,&type);
-  BYTE* buffer = new BYTE[length + 1];
-  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,buffer,&length,0,&type);
+  DWORD type = CRYPT_STRING_BASE64_ANY;
+  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,NULL,&length,0,&type);
+  unsigned char* buffer = new unsigned char[length + 2];
+  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,(BYTE*)buffer,&length,0,&type);
   buffer[length] = 0;
-#ifdef _UNICODE
-  XString result;
-  bool bom(false);
-  TryConvertNarrowString(buffer,length,_T(""),result,bom);
-#else
   XString result(buffer);
-#endif
   delete[] buffer;
   return result;
 }

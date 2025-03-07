@@ -38,7 +38,7 @@ int g_closed = 0;
 int
 TestWebSocketAccept(void)
 {
-  bool result = false;
+   bool result = false;
   XString clientkey = _T("dGhlIHNhbXBsZSBub25jZQ==");
 
   WebSocketServer socket(_T("ws://localhost/testing"));

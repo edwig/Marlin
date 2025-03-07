@@ -42,8 +42,8 @@ public:
 
   USHORT    GetPort()       { return m_port;   };
   bool      GetSecureMode() { return m_secure; };
-  PTCHAR    GetThumbprint()               { return m_thumbprint;               };
-  CString   GetCertificateStore()         { return m_certificateStore;         };
+  BYTE*     GetThumbprint()               { return m_thumbprint;               };
+  XString   GetCertificateStore()         { return m_certificateStore;         };
   bool      GetRequestClientCertificate() { return m_requestClientCertificate; };
 
   void      SetSendTimeoutSeconds(int p_timeout) { m_sendTimeoutSeconds = p_timeout; };
@@ -51,7 +51,7 @@ public:
   int       GetSendTimeoutSeconds() { return m_sendTimeoutSeconds; };
   int       GetRecvTimeoutSeconds() { return m_recvTimeoutSeconds; };
 
-  std::function<SECURITY_STATUS(PCCERT_CONTEXT & pCertContext, LPCTSTR p_certSTore,PTCHAR p_thumbprint)> m_selectServerCert;
+  std::function<SECURITY_STATUS(PCCERT_CONTEXT & pCertContext, LPCTSTR p_certSTore,BYTE* p_thumbprint)> m_selectServerCert;
   std::function<bool(PCCERT_CONTEXT pCertContext, const bool trusted)> m_clientCertAcceptable;
 
   static unsigned __stdcall ListenerWorker(void* p_param);
@@ -76,8 +76,8 @@ private:
   int               m_sendTimeoutSeconds { 30 };  // Send timeout in seconds
   int               m_recvTimeoutSeconds { 30 };  // Receive timeout in seconds
   // Secure channel information
-  TCHAR             m_thumbprint[CERT_THUMBPRINT_SIZE + 1]; // SSL/TLS certificate used for HTTPS
-  CString           m_certificateStore;
+  BYTE              m_thumbprint[CERT_THUMBPRINT_SIZE + 1]; // SSL/TLS certificate used for HTTPS
+  XString           m_certificateStore;
   bool              m_requestClientCertificate { false };
 };
 

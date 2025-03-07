@@ -200,7 +200,7 @@ bool SSLTracer::IsClientInitialize()
 }
 
 // Get SNI provided hostname
-CString SSLTracer::GetSNIHostname()
+XString SSLTracer::GetSNIHostname()
 {
    const byte * BufPtr = m_dataPtr;
    if (m_decoded)
@@ -235,7 +235,7 @@ CString SSLTracer::GetSNIHostname()
                BufPtr += 2;
                if(serverNameType == 0)
                {
-                 return CString((TCHAR*)BufPtr,serverNameLength);
+                 return XString((TCHAR*)BufPtr,serverNameLength);
                }
                BufPtr += serverNameLength;
             }
@@ -246,5 +246,5 @@ CString SSLTracer::GetSNIHostname()
          }
       }
    }
-   return CString();
+   return XString();
 }

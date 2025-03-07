@@ -89,6 +89,9 @@
     <ClCompile Include="..\TestsetClient\TestWebSocketSecure.cpp">
       <Filter>TestSet</Filter>
     </ClCompile>
+    <ClCompile Include="HttpReceiveWebSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Web.Config">

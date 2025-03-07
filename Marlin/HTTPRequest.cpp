@@ -169,7 +169,11 @@ HTTPRequest::HandleAsynchroneousIO(IOAction p_action)
     case IO_StartStream:StartedStream();    break;
     case IO_WriteStream:SendStreamPart();   break;
     case IO_Cancel:     Finalize();         break;
-    default:            ERRORLOG(ERROR_INVALID_PARAMETER,_T("Unexpected outstanding async I/O"));
+    default:            if(m_ident == HTTPREQUEST_IDENT)
+                        {
+                          ERRORLOG(ERROR_INVALID_PARAMETER,_T("Unexpected outstanding async I/O"));
+                        }
+                        break;
   }
 }
 
@@ -192,6 +196,13 @@ HTTPRequest::StartRequest()
     Finalize();
     return;
   }
+  // Check that we are not an SSE or WebSocket request
+  if(m_longTerm)
+  {
+    ERRORLOG(ERROR_CALLBACK_POP_STACK,_T("Long term request in the threadpool. Cannot start reqular HTTP request!"));
+    return;
+  }
+
   // Set type of request
   m_incoming.m_action = IO_Request;
   // Get queue handle
@@ -994,7 +1005,11 @@ HTTPRequest::StartEventStreamResponse()
     ERRORLOG(result,_T("Sending HTTP Response for event stream"));
     Finalize();
   }
-
+  else
+  {
+    // We are now a long term request
+    m_longTerm = true;
+  }
   // Log&Trace what we just send
   m_server->LogTraceResponse(m_response,m_sendBuffer,length);
 }
@@ -1013,11 +1028,13 @@ HTTPRequest::StartedStream()
   {
     // Simply reset this request for writing
     ResetOutstanding(m_writing);
+    // We are now a long term request
+    m_longTerm = true;
   }
 }
 
 // Send a response stream buffer.
-void
+bool
 HTTPRequest::SendResponseStream(BYTE*    p_buffer
                                ,size_t   p_length
                                ,bool     p_continue /*=true*/)
@@ -1026,7 +1043,7 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
   if(m_server == nullptr)
   {
     SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("FATAL ERROR: No server when sending HTTP response stream!"));
-    return;
+    return false;
   }
 
   // Now begin writing our response body parts
@@ -1077,7 +1094,7 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
       ERRORLOG(result,_T("While sending stream part"));
       m_responding = false;
       CancelRequestStream();
-      return;
+      return false;
     }
     else
     {
@@ -1085,12 +1102,6 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
       if(p_continue == false)
       {
         DETAILLOG1(_T("Stream connection closed"));
-      }
-      // Free the last send buffer and continue to send
-      if(m_sendBuffer)
-      {
-        delete[] m_sendBuffer;
-        m_sendBuffer = nullptr;
       }
     }
     if(!p_continue)
@@ -1100,6 +1111,8 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
   }
   // Still responding or done?
   m_responding = p_continue;
+
+  return true;
 }
 
 // Only come her if OVERLAPPED parameter in "SendResponseStream" was used !!

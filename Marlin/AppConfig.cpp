@@ -28,9 +28,9 @@
 #include "stdafx.h"
 #include "Marlin.h"
 #include "AppConfig.h"
-#include "MarlinServer.h"
 #include "MarlinConfig.h"
 #include <winhttp.h>
+#include <Crypto.h>
 #include <io.h>
 
 #ifdef _AFX
@@ -41,23 +41,437 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
-AppConfig::AppConfig(XString p_rootname)
-          :m_rootname  (p_rootname)
-	  ,m_name      (DEFAULT_NAME)
-	  ,m_instance  (DEFAULT_INSTANCE)
-	  ,m_server    (DEFAULT_SERVER)
-	  ,m_secure    (false)
-	  ,m_serverPort(INTERNET_DEFAULT_HTTPS_PORT)
-	  ,m_baseUrl   (DEFAULT_URL)
-	  ,m_webroot   (DEFAULT_WEBROOT)
-	  ,m_serverLog (DEFAULT_SERVERLOG)
-	  ,m_serverLoglevel(false)
-	  ,m_runAsService(false)
+// XTOR
+// In essence there are two practical use cases
+// 1) Create a new config file separate from the MarlinConfig (2 files)
+//    use case is when we have multiple servers in the same directory
+//    Simply do this: m_config = new AppConfig();
+// 2) Create a new config file IN the Marlin.config file (1 file)
+//    use case is when we have only one server in the directory
+//    Setup is: m_config = new AppConfig(_T("Marlin.config"),false);
+//
+AppConfig::AppConfig(XString p_fileName /*= ""*/,bool p_readMarlinConfig /*= true*/)
+          :m_fileName(p_fileName)
 {
+  if(p_readMarlinConfig)
+  {
+    m_config = new MarlinConfig();
+  }
 }
 
+// DTOR: Optionally drop the marlin.config file
+//
 AppConfig::~AppConfig()
 {
+  if(m_config)
+  {
+    delete m_config;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// SETTERS FOR SECTIONS, PARAMETERS and ATTRIBUTES
+//
+//////////////////////////////////////////////////////////////////////////
+
+bool
+AppConfig::SetSection(XString p_section)
+{
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    return m_config->SetSection(p_section);
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
+  if(FindElement(p_section))
+  {
+    // Section already exists, nothing to do
+    return true;
+  }
+  if(AddElement(NULL,p_section,XDT_Complex,_T("")) == nullptr)
+  {
+    return false;
+  }
+  return (m_changed = true);
+}
+
+// Add a parameter to a section
+// To succeed, the section must exist already
+bool
+AppConfig::SetParameter(XString p_section,XString p_parameter,XString p_value)
+{
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    if(m_config->HasSection(p_section))
+    {
+      return m_config->SetParameter(p_section,p_parameter,p_value);
+    }
+    return false;
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
+  // But first make sure the section does exists
+  XMLElement* section = FindElement(p_section);
+  if(section == nullptr)
+  {
+    return false;
+  }
+  XMLElement* elem = FindElement(section,p_parameter);
+  if(elem)
+  {
+    if(elem->GetValue().Compare(p_value) == 0)
+    {
+      // Value is not changed
+      return true;
+    }
+    // Element did exist, but the value is different
+    // update the value to the new value
+    elem->SetValue(p_value);
+  }
+  else
+  {
+    if(AddElement(section,p_parameter,XDT_String,p_value) == nullptr)
+    {
+      return false;
+    }
+  }
+  return (m_changed = true);
+}
+
+bool
+AppConfig::SetParameter(XString p_section,XString p_parameter,int p_value)
+{
+  XString value;
+  value.Format(_T("%d"),p_value);
+  return SetParameter(p_section,p_parameter,value);
+}
+
+bool
+AppConfig::SetParameter(XString p_section,XString p_parameter,bool p_value)
+{
+  XString value = p_value ? _T("true") : _T("false");
+  return SetParameter(p_section,p_parameter,value);
+}
+
+bool
+AppConfig::SetEncrypted(XString p_section,XString p_parameter,XString p_value)
+{
+  Crypto crypt;
+  XString encrypted;
+  if(!p_value.IsEmpty())
+  {
+    XString reverse(p_value);
+    reverse.MakeReverse();
+    XString value = reverse + _T(":") + p_value;
+    encrypted = crypt.Encryption(value,MARLINCONFIG_WACHTWOORD);
+  }
+  return SetParameter(p_section,p_parameter,encrypted);
+}
+
+// Add a attribute to a section parameter
+// To succeed, the section and the parameter must exist already
+bool
+AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_value)
+{
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    if(m_config->HasSection(p_section) && m_config->HasParameter(p_section,p_parameter))
+    {
+      return m_config->SetAttribute(p_section,p_parameter,p_attrib,p_value);
+    }
+    return false;
+  }
+
+  // We are the Marlin.config file, or it is the 'Application' section
+  // But first make sure the parameter does exists
+  XMLElement* section = FindElement(p_section);
+  if(section == nullptr)
+  {
+    return false;
+  }
+  XMLElement* param = FindElement(section,p_parameter);
+  if(param == nullptr)
+  {
+    return false;
+  }
+  if(XMLMessage::SetAttribute(param,p_attrib,p_value) == nullptr)
+  {
+    return false;
+  }
+  return (m_changed = true);
+}
+
+bool
+AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,int p_value)
+{
+  XString value;
+  value.Format(_T("%d"),p_value);
+  return SetAttribute(p_section,p_parameter,p_attrib,value);
+}
+
+bool
+AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,double p_value)
+{
+  XString value;
+  value.Format(_T("%G"),p_value);
+  return SetAttribute(p_section,p_parameter,p_attrib,value);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// REMOVE SECTION, PARAMETER AND ATTRIBUTE
+//
+//////////////////////////////////////////////////////////////////////////
+
+bool
+AppConfig::RemoveSection(XString p_section)
+{
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    return m_config->RemoveSection(p_section);
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
+  XMLElement* section = FindElement(p_section);
+  if(section == nullptr)
+  {
+    return false;
+  }
+  if(!DeleteElement(m_root,section))
+  {
+    return false;
+  }
+  return (m_changed = true);
+}
+
+bool
+AppConfig::RemoveParameter(XString p_section,XString p_parameter)
+{
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    return m_config->RemoveParameter(p_section,p_parameter);
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
+  XMLElement* section = FindElement(p_section);
+  if(section == nullptr)
+  {
+    return false;
+  }
+  XMLElement* param = FindElement(section,p_parameter);
+  if(param)
+  {
+    if(!DeleteElement(section,param))
+    {
+      return false;
+    }
+  }
+  return (m_changed = true);
+}
+
+bool
+AppConfig::RemoveAttribute(XString p_section,XString p_parameter,XString p_attrib)
+{
+  // If it is not the application config, and we have a MarlinConfig
+  // Set it in the general Marlin.config file
+  if(m_config && p_section.Compare(SECTION_APPLICATION) != 0)
+  {
+    return m_config->RemoveAttribute(p_section,p_parameter,p_attrib);
+  }
+  // We are the Marlin.config file, or it is the 'Application' section
+  XMLElement* section = FindElement(p_section);
+  if(section == nullptr)
+  {
+    return false;
+  }
+  XMLElement* param = FindElement(section,p_parameter);
+  if(param)
+  {
+    if(!DeleteAttribute(param,p_attrib))
+    {
+      return false;
+    }
+  }
+  return (m_changed = true);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// GETTERS
+//
+//////////////////////////////////////////////////////////////////////////
+
+
+XString
+AppConfig::GetParameterString(XString p_section,XString p_parameter,XString p_default)
+{
+  // Search first in our own config
+  XMLElement* section = FindElement(p_section);
+  if(section)
+  {
+    XMLElement* element = FindElement(section,p_parameter);
+    if(element)
+    {
+      return element->GetValue();
+    }
+  }
+  // Second guess: search in the MarlinConfig
+  if(m_config)
+  {
+    if(m_config->HasParameter(p_section,p_parameter))
+    {
+      return m_config->GetParameterString(p_section,p_parameter,p_default);
+    }
+  }
+  // Nope: Return the default value
+  return p_default;
+}
+
+int
+AppConfig::GetParameterInteger(XString p_section,XString p_parameter,int p_default)
+{
+  if(!HasParameter(p_section,p_parameter))
+  {
+    return p_default;
+  }
+  XString param = GetParameterString(p_section,p_parameter,_T(""));
+  return _ttoi(param);
+}
+
+bool
+AppConfig::GetParameterBoolean(XString p_section,XString p_parameter,bool p_default)
+{
+  if(!HasParameter(p_section,p_parameter))
+  {
+    return p_default;
+  }
+  XString param = GetParameterString(p_section,p_parameter,_T(""));
+  if(param.IsEmpty())
+  {
+    return p_default;
+  }
+  if(param.CompareNoCase(_T("true")) == 0)
+  {
+    return true;
+  }
+  if(param.CompareNoCase(_T("false")) == 0)
+  {
+    return false;
+  }
+  // Simply 0 or 1 (Greater than zero)
+  return (_ttoi(param) > 0);
+}
+
+XString
+AppConfig::GetEncryptedString(XString p_section,XString p_parameter,XString p_default)
+{
+  // Check if it exists first
+  if(!HasParameter(p_section,p_parameter))
+  {
+    return p_default;
+  }
+
+  Crypto crypt;
+  XString decrypted;
+
+  try
+  {
+    XString encrypted = GetParameterString(p_section,p_parameter,_T(""));
+    if(!encrypted.IsEmpty())
+    {
+      decrypted = crypt.Decryption(encrypted,MARLINCONFIG_WACHTWOORD);
+      int pos = decrypted.Find(':');
+      if(pos > 0)
+      {
+        XString reversed = decrypted.Left(pos);
+        decrypted = decrypted.Mid(pos + 1);
+        reversed.MakeReverse();
+        if(reversed != decrypted)
+        {
+          // preempt invalid results
+          decrypted.Empty();
+        }
+      }
+      else
+      {
+        // preempt invalid results
+        decrypted.Empty();
+      }
+      return decrypted;
+    }
+  }
+  catch(StdException& er)
+  {
+    UNREFERENCED_PARAMETER(er);
+  }
+  return p_default;
+}
+
+XString
+AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_default)
+{
+  XMLElement* section = FindElement(p_section);
+  if(section)
+  {
+    XMLElement* param = FindElement(section,p_parameter);
+    if(param)
+    {
+      return XMLMessage::GetAttribute(param,p_attrib);
+    }
+  }
+  // Not found: Search our marlin.config
+  if(m_config)
+  {
+    return m_config->GetAttribute(p_section,p_parameter,p_attrib,p_default);
+  }
+  return p_default;
+}
+
+int
+AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,int p_default)
+{
+  XMLElement* section = FindElement(p_section);
+  if(section)
+  {
+    XMLElement* param = FindElement(section,p_parameter);
+    if(param)
+    {
+      return _ttoi(XMLMessage::GetAttribute(param,p_attrib));
+    }
+  }
+  // Not found: Search our marlin.config
+  if(m_config)
+  {
+    return m_config->GetAttribute(p_section,p_parameter,p_attrib,p_default);
+  }
+  return p_default;
+}
+
+double
+AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,double p_default)
+{
+  XMLElement* section = FindElement(p_section);
+  if(section)
+  {
+    XMLElement* param = FindElement(section,p_parameter);
+    if(param)
+    {
+      return _ttof(XMLMessage::GetAttribute(param,p_attrib));
+    }
+  }
+  // Not found: Search our marlin.config
+  if(m_config)
+  {
+    return m_config->GetAttribute(p_section,p_parameter,p_attrib,p_default);
+  }
+  return p_default;
 }
 
 // Server URL is not stored in this form
@@ -65,22 +479,90 @@ AppConfig::~AppConfig()
 XString
 AppConfig::GetServerURL()
 {
-  XString MDAServerURL;
+  XString serverURL;
+  XString section(SECTION_APPLICATION);
+  
+  int serverPort  = GetParameterInteger(section,_T("ServerPort"),INTERNET_DEFAULT_HTTPS_PORT);
+  XString server  = GetParameterString (section,_T("Server"),    _T(""));
+  XString baseUrl = GetParameterString (section,_T("BaseURL"),   _T("/"));
 
-  if (m_serverPort == INTERNET_DEFAULT_HTTP_PORT)
+  if(serverPort == INTERNET_DEFAULT_HTTP_PORT)
   {
-    MDAServerURL.Format(_T("http://%s%s"), m_server.GetString(), m_baseUrl.GetString());
+    serverURL.Format(_T("http://%s%s"),server.GetString(),baseUrl.GetString());
   }
-  else if (m_serverPort == INTERNET_DEFAULT_HTTPS_PORT)
+  else if(serverPort == INTERNET_DEFAULT_HTTPS_PORT)
   {
-    MDAServerURL.Format(_T("https://%s%s"), m_server.GetString(), m_baseUrl.GetString());
+    serverURL.Format(_T("https://%s%s"),server.GetString(),baseUrl.GetString());
   }
   else
   {
-    MDAServerURL.Format(_T("http://%s:%d%s"), m_server.GetString(), m_serverPort, m_baseUrl.GetString());
+    serverURL.Format(_T("http://%s:%d%s"),server.GetString(),serverPort,baseUrl.GetString());
   }
-  return MDAServerURL;
+  return serverURL;
 }
+
+//////////////////////////////////////////////////////////////////////////
+//
+// DISCOVERY
+//
+//////////////////////////////////////////////////////////////////////////
+
+bool
+AppConfig::HasSection(XString p_section)
+{
+  if(FindSection(p_section))
+  {
+    return true;
+  }
+  if(m_config)
+  {
+    return m_config->HasSection(p_section);
+  }
+  return false;
+}
+
+bool
+AppConfig::HasParameter(XString p_section,XString p_parameter)
+{
+  XMLElement* section = FindSection(p_section);
+  if(section != nullptr)
+  {
+    return FindParameter(section,p_parameter) != nullptr;
+  }
+  if(m_config)
+  {
+    return m_config->HasParameter(p_section,p_parameter);
+  }
+  return false;
+}
+
+bool
+AppConfig::HasAttribute(XString p_section,XString p_parameter,XString p_attribute)
+{
+  XMLElement* section = FindElement(p_section);
+  if(section)
+  {
+    XMLElement* param = FindElement(section,p_parameter);
+    if(param)
+    {
+      if(FindAttribute(param,p_attribute))
+      {
+        return true;
+      }
+    }
+  }
+  if(m_config)
+  {
+    return m_config->HasAttribute(p_section,p_parameter,p_attribute);
+  } 
+  return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// READING AND WRITING THE CONFIG FILE
+//
+//////////////////////////////////////////////////////////////////////////
 
 // Is the config file writable
 bool
@@ -93,8 +575,15 @@ AppConfig::GetConfigWritable()
     // for instance in the ServerApplet config dialog
     return true;
   }
-  if (_taccess(fileNaam, 06) == 0)
+  if(_taccess(fileNaam, 06) == 0)
   {
+    if(m_config)
+    {
+      if(m_config->GetConfigWritable() == false)
+      {
+        return false;
+      }
+    }
     // Read AND write access tot the file
     return true;
   }
@@ -105,6 +594,11 @@ AppConfig::GetConfigWritable()
 XString
 AppConfig::GetConfigFilename()
 {
+  // Special configured file from the constructor
+  if(!m_fileName.IsEmpty())
+  {
+    return MarlinConfig::GetExePath() + m_fileName;
+  }
   // This is our config file
   return MarlinConfig::GetExePath() + PRODUCT_NAME + _T(".Config");
 }
@@ -127,68 +621,30 @@ AppConfig::ReadConfig()
     return false;
   }
 
-  XMLElement* node = GetElementFirstChild(m_root);
-  while (node)
+  if(XMLMessage::GetInternalError() != XmlError::XE_NoError)
   {
-    XString param = node->GetName();
-    XString value = node->GetValue();
-
-    // Remember
-    AddParameter(param,value);
-
-    // Next node
-    node = GetElementSibling(node);
+    return false;
   }
-
-  // Post reading checks, see if everything OK
-  return CheckConsistency();
+  return true;
 }
 
 // Write back the config to disk
 bool
 AppConfig::WriteConfig()
 {
-  // Post settings checks
-  CheckConsistency();
+  if(m_config)
+  {
+    m_config->WriteConfig();
+  }
 
-  // Set the root node name, possibly not done yet
-  m_root->SetName(m_rootname);
-
-  // Rebuild the XML structure
-  Clean();
-
-  SetElement(_T("Name"),          m_name);
-  SetElement(_T("Role"),          m_role);
-  SetElement(_T("Instance"),      m_instance);
-  SetElement(_T("Server"),        m_server);
-  SetElement(_T("Secure"),        m_secure);
-  SetElement(_T("ServerPort"),    (int)m_serverPort);
-  SetElement(_T("BaseURL"),       m_baseUrl);
-  SetElement(_T("ServerLog"),     m_serverLog);
-  SetElement(_T("ServerLogging"), m_serverLoglevel);
-  SetElement(_T("WebRoot"),       m_webroot);
-  SetElement(_T("RunAsService"),  m_runAsService);
-
-  WriteConfigElements();
+  // Be sure we have the correct root node
+  if(GetRoot()->GetName().IsEmpty())
+  {
+    SetRootNodeName(SECTION_ROOTNAME);
+  }
 
   // Writing to file is the result
   return SaveFile(GetConfigFilename());
-}
-
-// In the base class this is always ok
-// Used to just read the base members.
-// E.g. in the ServerMain startup methods
-bool
-AppConfig::CheckRootNodeName()
-{
-  return true;
-}
-
-// Adding extra elements to the file
-// Used in derived classes only
-void 
-AppConfig::WriteConfigElements()
-{
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -197,110 +653,26 @@ AppConfig::WriteConfigElements()
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Remember a parameter
+// Find section with this name
+XMLElement*
+AppConfig::FindSection(XString p_section)
+{
+  return FindElement(p_section);
+}
+
+// Find parameter within a section
+XMLElement*
+AppConfig::FindParameter(XMLElement* p_section,XString p_parameter)
+{
+  return FindElement(p_section,p_parameter);
+}
+
+// In the base class this is always ok
+// Used to just read the base members.
+// E.g. in the ServerMain startup methods
 bool
-AppConfig::AddParameter(XString& p_param,XString& p_value)
+AppConfig::CheckRootNodeName()
 {
-       if(p_param.Compare(_T("Name"))          == 0) m_name           = p_value;
-  else if(p_param.Compare(_T("Role"))          == 0) m_role           = p_value;
-  else if(p_param.Compare(_T("Instance"))      == 0) m_instance       = _ttoi(p_value);
-  else if(p_param.Compare(_T("Server"))        == 0) m_server         = p_value;
-  else if(p_param.Compare(_T("Secure"))        == 0) m_secure         = (p_value.CompareNoCase(_T("true")) == 0);
-  else if(p_param.Compare(_T("ServerPort"))    == 0) m_serverPort     = _ttoi(p_value);
-  else if(p_param.Compare(_T("BaseURL"))       == 0) m_baseUrl        = p_value;
-  else if(p_param.Compare(_T("ServerLog"))     == 0) m_serverLog      = p_value;
-  else if(p_param.Compare(_T("ServerLogging")) == 0) m_serverLoglevel = _ttoi(p_value);
-  else if(p_param.Compare(_T("WebRoot"))       == 0) m_webroot        = p_value;
-  else if(p_param.Compare(_T("RunAsService"))  == 0) m_runAsService   = _ttoi(p_value);
-  else return false;
-
-  return true;
+  XMLElement* root = XMLMessage::GetRoot();
+  return root->GetName().CompareNoCase(SECTION_ROOTNAME) == 0;
 }
-
-// Check for consistency of members
-bool
-AppConfig::CheckConsistency()
-{
-  // Name
-  if(m_name.IsEmpty())
-  {
-    m_name = DEFAULT_NAME;
-  }
-
-  // Instance number
-  if(m_instance <=  0)              m_instance = DEFAULT_INSTANCE;
-  if(m_instance > MAXIMUM_INSTANCE) m_instance = MAXIMUM_INSTANCE;
-
-  // Server name
-  if(m_server.IsEmpty())
-  {
-    m_server = DEFAULT_SERVER;
-  }
-
-  // CHeck the BaseURL
-  if(m_baseUrl.IsEmpty())
-  {
-    m_baseUrl = PRODUCT_SITE;
-  }
-
-  // Port numbers back to default?
-  if(m_serverPort != INTERNET_DEFAULT_HTTP_PORT  && 
-     m_serverPort != INTERNET_DEFAULT_HTTPS_PORT && 
-     m_serverPort < 1025)
-  {
-    m_serverPort = DEFAULT_SERVERPORT;
-  }
-
-  // Log files
-  if(m_serverLog.IsEmpty())
-  {
-    m_serverLog = DEFAULT_SERVERLOG;
-  }
-
-  // Check webroot
-  if(m_webroot.IsEmpty())
-  {
-    m_webroot = DEFAULT_WEBROOT;
-  }
-  else
-  {
-    // Must end on a directory separator 
-    if(m_webroot.Right(1) != _T("\\") && m_webroot.Right(1) != _T("/"))
-    {
-      m_webroot += _T("\\");
-    }
-  }
-
-  // Check for the base URL 
-  // It needs to begin and end with an '/' marker
-  if(m_baseUrl.GetLength() > 1)
-  {
-    if(m_baseUrl.Left(1) != _T("/"))
-    {
-      m_baseUrl = _T("/") + m_baseUrl;
-    }
-    if(m_baseUrl.Right(1) != _T("/"))
-    {
-      m_baseUrl += _T("/");
-    }
-  }
-
-  return true;
-}
-
-// Clean the body to put something different in it
-// The SOAP Fault or the body encryption
-void
-AppConfig::Clean()
-{
-  XMLElement* child = nullptr;
-  do
-  {
-    child = GetElementFirstChild(m_root);
-    if (child)
-    {
-      DeleteElement(m_root, child);
-    }
-  } while (child);
-}
-

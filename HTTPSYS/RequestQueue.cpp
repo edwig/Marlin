@@ -26,7 +26,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // CTOR
-RequestQueue::RequestQueue(CString p_name)
+RequestQueue::RequestQueue(XString p_name)
 {
   m_name = p_name;
   InitializeCriticalSection(&m_lock);
@@ -50,7 +50,7 @@ HANDLE
 RequestQueue::CreateHandle()
 {
   HANDLE handle = nullptr;
-  CString tempFilename;
+  XString tempFilename;
   if(!tempFilename.GetEnvironmentVariable(_T("WINDIR")))
   {
     tempFilename = _T("C:\\Windows");
@@ -401,7 +401,7 @@ RequestQueue::GetNextRequest(HTTP_REQUEST_ID  RequestId
 // Find best matching URL for each incoming request
 // Uses the 'longest matching' algorithm
 URL*
-RequestQueue::FindLongestURL(USHORT p_port,CString p_abspath)
+RequestQueue::FindLongestURL(USHORT p_port,XString p_abspath)
 {
   URL* longesturl = nullptr;
   int  longest = 0;
@@ -459,7 +459,7 @@ RequestQueue::RemoveRequest(Request* p_request)
 
 // Add a fragment to the fragment cache
 ULONG
-RequestQueue::AddFragment(CString p_prefix, PHTTP_DATA_CHUNK p_chunk)
+RequestQueue::AddFragment(XString p_prefix, PHTTP_DATA_CHUNK p_chunk)
 {
   AutoCritSec lock(&m_lock);
 
@@ -499,7 +499,7 @@ RequestQueue::AddFragment(CString p_prefix, PHTTP_DATA_CHUNK p_chunk)
 
 // Finding a fragment in the fragment cache
 PHTTP_DATA_CHUNK
-RequestQueue::FindFragment(CString p_prefix)
+RequestQueue::FindFragment(XString p_prefix)
 {
   AutoCritSec lock(&m_lock);
 
@@ -516,7 +516,7 @@ RequestQueue::FindFragment(CString p_prefix)
 // Flush (remove) a fragment from the cache
 // Removes one fragment or all descendants of it.
 ULONG
-RequestQueue::FlushFragment(CString p_prefix,ULONG Flags)
+RequestQueue::FlushFragment(XString p_prefix,ULONG Flags)
 {
   AutoCritSec lock(&m_lock);
 
@@ -770,7 +770,7 @@ RequestQueue::DeleteAllWebSockets()
 
 // See if a WebSocket with this secure key already exists in the driver
 SYSWebSocket*
-RequestQueue::FindWebSocket(CString p_websocketKey)
+RequestQueue::FindWebSocket(XString p_websocketKey)
 {
   AutoCritSec lock(&m_lock);
 
@@ -784,7 +784,7 @@ RequestQueue::FindWebSocket(CString p_websocketKey)
 
 // If the WebSocket with this secure key does not exist, add it to the mapping
 bool
-RequestQueue::AddWebSocket(CString p_websocketKey,SYSWebSocket* p_websocket)
+RequestQueue::AddWebSocket(XString p_websocketKey,SYSWebSocket* p_websocket)
 {
   AutoCritSec lock(&m_lock);
 
@@ -798,7 +798,7 @@ RequestQueue::AddWebSocket(CString p_websocketKey,SYSWebSocket* p_websocket)
 
 // If the WebSocket was already known by this key, replace it
 bool
-RequestQueue::ReconnectWebsocket(CString p_websocketKey,SYSWebSocket* p_websocket)
+RequestQueue::ReconnectWebsocket(XString p_websocketKey,SYSWebSocket* p_websocket)
 {
   AutoCritSec lock(&m_lock);
 
@@ -812,7 +812,7 @@ RequestQueue::ReconnectWebsocket(CString p_websocketKey,SYSWebSocket* p_websocke
 }
 
 bool
-RequestQueue::DeleteWebSocket(CString p_websocketKey)
+RequestQueue::DeleteWebSocket(XString p_websocketKey)
 {
   AutoCritSec lock(&m_lock);
 

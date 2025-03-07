@@ -44,7 +44,7 @@ HttpAddUrlToUrlGroup(IN HTTP_URL_GROUP_ID UrlGroupId
   }
 
   USES_CONVERSION;
-  CString prefix = (LPCTSTR) CW2T(pFullyQualifiedUrl);
+  XString prefix = (LPCTSTR) CW2T(pFullyQualifiedUrl);
 
   return group->AddUrlPrefix(prefix,UrlContext);
 }

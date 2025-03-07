@@ -29,14 +29,14 @@ class URL
 public:
   bool          m_secure;             // HTTP (false) or HTTPS (true)
   UrlPrefixType m_type;               // +, *, IP, name or full-name
-  CString       m_host;               // Hostname
+  XString       m_host;               // Hostname
   USHORT        m_port;               // port number
-  CString       m_abspath;            // Absolute URL path
+  XString       m_abspath;            // Absolute URL path
   ULONGLONG     m_context;            // Registered context number
   UrlGroup*     m_urlGroup;           // UrlGroup we where added to
   // SSL/TLS settings
-  CString       m_certStoreName;                        // Certificate store
-  TCHAR         m_thumbprint[CERT_THUMBPRINT_SIZE + 1]; // SSL/TLS certificate used for HTTPS
+  XString       m_certStoreName;                        // Certificate store
+  BYTE          m_thumbprint[CERT_THUMBPRINT_SIZE + 1]; // SSL/TLS certificate used for HTTPS
   bool          m_requestClientCert;                    // Do request a client certificate
 };
 

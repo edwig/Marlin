@@ -33,4 +33,4 @@
 
 #define MAX_USER_NAME 512
 
-CString HTTP_GetUserAccount(EXTENDED_NAME_FORMAT p_format = NameUnknown,bool p_normalized = false);
+XString HTTP_GetUserAccount(EXTENDED_NAME_FORMAT p_format = NameUnknown,bool p_normalized = false);

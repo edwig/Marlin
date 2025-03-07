@@ -28,37 +28,37 @@ static char THIS_FILE[] = __FILE__;
 // Miscellaneous functions in support of SSL
 
 // Utility function to get the hostname of the host I am running on
-CString GetHostName(COMPUTER_NAME_FORMAT WhichName)
+XString GetHostName(COMPUTER_NAME_FORMAT WhichName)
 {
   DWORD NameLength = 0;
   //BOOL R = GetComputerNameExW(ComputerNameDnsHostname, NULL, &NameLength);
   if (ERROR_SUCCESS == ::GetComputerNameEx(WhichName, NULL, &NameLength))
   {
-    CString ComputerName;
+    XString ComputerName;
     if (1 == ::GetComputerNameEx(WhichName, ComputerName.GetBufferSetLength(NameLength), &NameLength))
     {
       ComputerName.ReleaseBuffer();
       return ComputerName;
     }
   }
-  return CString();
+  return XString();
 }
 
 // Utility function to return the user name I'm running under
-CString GetUserName(void)
+XString GetUserName(void)
 {
   DWORD NameLength = 0;
   //BOOL R = GetComputerNameExW(ComputerNameDnsHostname, NULL, &NameLength);
   if (ERROR_SUCCESS == ::GetUserName(NULL, &NameLength))
   {
-    CString UserName;
+    XString UserName;
     if (1 == ::GetUserName(UserName.GetBufferSetLength(NameLength), &NameLength))
     {
       UserName.ReleaseBuffer();
       return UserName;
     }
   }
-  return CString();
+  return XString();
 }
 
 bool IsUserAdmin()
@@ -91,14 +91,14 @@ const DWORD MS_VC_EXCEPTION = 0x406D1388;
 typedef struct tagTHREADNAME_INFO
 {
   DWORD  dwType;       // Must be 0x1000.
-  LPCTSTR szName;       // Pointer to name (in user addr space).
+  LPCSTR szName;       // Pointer to name (in user addr space).
   DWORD  dwThreadID;   // Thread ID (MAXDWORD=caller thread).
   DWORD  dwFlags;      // Reserved for future use, must be zero.
 }
 THREADNAME_INFO;
 #pragma pack(pop)
 
-void SetThreadName(LPCTSTR threadName,DWORD dwThreadID)
+void SetThreadName(LPCSTR threadName,DWORD dwThreadID)
 {
   THREADNAME_INFO info;
   info.dwType     = 0x1000;
@@ -115,14 +115,14 @@ void SetThreadName(LPCTSTR threadName,DWORD dwThreadID)
   }
 }
 
-void SetThreadName(LPCTSTR threadName)
+void SetThreadName(LPCSTR threadName)
 {
   SetThreadName(threadName, MAXDWORD);
 }
 
-bool HostNameMatches(CString HostName, LPWSTR pDNSName)
+bool HostNameMatches(XString HostName, LPWSTR pDNSName)
 {
-  CString DNSName(pDNSName);
+  XString DNSName(pDNSName);
 
   if(DnsNameCompare(HostName,DNSName)) // The HostName is the DNSName
   {
@@ -150,7 +150,7 @@ bool HostNameMatches(CString HostName, LPWSTR pDNSName)
     else // at this point, the decision is whether the last hostname node matches the wildcard
     {
       DNSName = DNSName.SpanExcluding(_T("."));
-      CString HostShortName = HostName.SpanExcluding(_T("."));
+      XString HostShortName = HostName.SpanExcluding(_T("."));
       return (S_OK == PathMatchSpecEx(HostShortName, DNSName, PMSF_NORMAL));
     }
   }
@@ -172,7 +172,7 @@ bool MatchCertHostName(PCCERT_CONTEXT pCertContext, LPCTSTR hostname)
                                   ,pCertContext->pCertInfo->cExtension
                                   ,pCertContext->pCertInfo->rgExtension);
   }
-  CString HostName(hostname);
+  XString HostName(hostname);
 
   // Extract the SAN information (list of names) 
   DWORD cbStructInfo = 0xFFFF;
@@ -209,7 +209,7 @@ bool MatchCertHostName(PCCERT_CONTEXT pCertContext, LPCTSTR hostname)
     return false;
   }
   USES_CONVERSION;
-  CString CommonName;
+  XString CommonName;
   CertGetNameString(pCertContext, CERT_NAME_ATTR_TYPE, 0,(PVOID) szOID_COMMON_NAME, CommonName.GetBufferSetLength(dwCommonNameLength), dwCommonNameLength);
   CommonName.ReleaseBufferSetLength(dwCommonNameLength);
   return HostNameMatches(HostName,(LPWSTR) T2CW(CommonName));
@@ -524,7 +524,7 @@ cleanup:
 }
 
 // Display a UI with the certificate info and also write it to the SSL_socket_logging output
-HRESULT ShowCertInfo(PCCERT_CONTEXT pCertContext, CString Title)
+HRESULT ShowCertInfo(PCCERT_CONTEXT pCertContext, XString Title)
 {
 	TCHAR pszNameString[256];
 	void*            pvData;
@@ -819,7 +819,7 @@ SECURITY_STATUS CertFindServerByName(PCCERT_CONTEXT & pCertContext, LPCTSTR pszS
 // Without spaces: "db344064f2fc1318dd90f507fe78e81b031600"
 // P_blob must point to a blob that is sufficiently large (20 bytes)
 bool
-SSLEncodeThumbprint(CString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len)
+SSLEncodeThumbprint(XString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len)
 {
   // Removing
   p_thumbprint.Replace(_T(" "), _T(""));
@@ -851,10 +851,10 @@ SSLEncodeThumbprint(CString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len)
 //
 //////////////////////////////////////////////////////////////////////////
 
-CString 
+XString 
 GetCertificateName(PCCERT_CONTEXT pCertContext)
 {
-  CString certName;
+  XString certName;
   auto good = CertGetNameString(pCertContext, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, NULL, certName.GetBuffer(128), certName.GetAllocLength() - 1);
   certName.ReleaseBuffer();
   if (good)
@@ -868,7 +868,7 @@ GetCertificateName(PCCERT_CONTEXT pCertContext)
 }
 
 SECURITY_STATUS
-SelectServerCert(PCCERT_CONTEXT& pCertContext, LPCTSTR p_storeName,PTCHAR p_thumbprint)
+SelectServerCert(PCCERT_CONTEXT& pCertContext, LPCTSTR p_storeName,BYTE* p_thumbprint)
 {
   // Go looking for this serverside publishing certificate
   SECURITY_STATUS status = FindCertificateByThumbprint(pCertContext,p_storeName,p_thumbprint);
@@ -882,7 +882,7 @@ SelectServerCert(PCCERT_CONTEXT& pCertContext, LPCTSTR p_storeName,PTCHAR p_thum
 bool
 ClientCertAcceptable(PCCERT_CONTEXT pCertContext, const bool trusted)
 {
-  CString type;
+  XString type;
   if(trusted)
   {
     type = _T("A trusted");
@@ -899,7 +899,7 @@ ClientCertAcceptable(PCCERT_CONTEXT pCertContext, const bool trusted)
 
 // Find server certificate by thumbprint
 bool
-FindCertificateByThumbprint(PCCERT_CONTEXT& p_certContext,LPCTSTR p_store,PTCHAR p_thumbprint)
+FindCertificateByThumbprint(PCCERT_CONTEXT& p_certContext,LPCTSTR p_store,BYTE* p_thumbprint)
 {
   bool result = false;
 
@@ -909,7 +909,7 @@ FindCertificateByThumbprint(PCCERT_CONTEXT& p_certContext,LPCTSTR p_store,PTCHAR
   {
     CRYPT_HASH_BLOB blob;
     blob.cbData = CERT_THUMBPRINT_SIZE;
-    blob.pbData = (BYTE*) p_thumbprint; 
+    blob.pbData = p_thumbprint; 
 
     // Finding our certificate by hash-blob of the thumbprint
     PCCERT_CONTEXT certificate = CertFindCertificateInStore(hStore
@@ -940,7 +940,7 @@ FindCertificateByThumbprint(PCCERT_CONTEXT& p_certContext,LPCTSTR p_store,PTCHAR
 
 // Used for authentication records
 bool
-SplitString(CString p_input,CString& p_output1,CString& p_output2,TCHAR p_separator)
+SplitString(XString p_input,XString& p_output1,XString& p_output2,TCHAR p_separator)
 {
   // Prepare
   p_input.Trim();

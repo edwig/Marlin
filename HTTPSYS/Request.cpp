@@ -104,6 +104,13 @@ Request::ReceiveRequest()
     return;
   }
 
+  // Make sure we have a socket!
+  if(m_socket == nullptr)
+  {
+    CloseRequest();
+    return;
+  }
+
   bool looping = false;
 
   // Receive the headers and an initial body part
@@ -125,6 +132,12 @@ Request::ReceiveRequest()
       {
         CreateWebSocket();
         m_queue->AddIncomingRequest(this);
+        looping = false;
+      }
+
+      // Ready with request (wrong authentication)
+      if(m_socket == nullptr)
+      {
         looping = false;
       }
     }
@@ -405,8 +418,8 @@ Request::SendResponse(PHTTP_RESPONSE p_response,ULONG p_flags,PULONG p_bytes)
   // Reset bytes written
   m_bytesWritten = 0;
 
-  // Create the response line
-  CString buffer;
+  // Create the response line in an ANSI string buffer
+  CStringA buffer;
   AddResponseLine(buffer,p_response);
 
   // Create server header (or not!!)
@@ -416,12 +429,11 @@ Request::SendResponse(PHTTP_RESPONSE p_response,ULONG p_flags,PULONG p_bytes)
   AddAllKnownResponseHeaders  (buffer,p_response->Headers.KnownHeaders);
   AddAllUnknownResponseHeaders(buffer,p_response->Headers.pUnknownHeaders
                                      ,p_response->Headers.UnknownHeaderCount);
-  
   // Line between headers and body
   buffer += "\r\n";
 
   // Perform one write of all header lines in one go!
-  int result = WriteBuffer((PVOID)buffer.GetString(),buffer.GetLength(),p_bytes);
+  int result = WriteBuffer((PVOID)buffer.GetString(),(ULONG)buffer.GetLength(),p_bytes);
   if(result == NO_ERROR)
   {
     // Reset byte pointers
@@ -991,7 +1003,7 @@ void
 Request::FindUrlContext()
 {
   // Find absolute path in the raw URL
-  CString abspath(m_request.pRawUrl);
+  XString abspath(m_request.pRawUrl);
   int posquery = abspath.Find('?');
   if(posquery >= 0)
   {
@@ -1164,7 +1176,7 @@ Request::FindURL(LPSTR p_url)
   USES_CONVERSION;
 
   // skip whitespace
-  CString full(p_url);
+  XString full(p_url);
   full = full.Trim();
 
   // Copy the raw URL
@@ -1307,7 +1319,7 @@ int
 Request::FindKnownHeader(LPSTR p_header)
 {
   USES_CONVERSION;
-  CString header(A2CT(p_header));
+  XString header(A2CT(p_header));
   // skip whitespace before and after the header name
   header.Trim();
 
@@ -1330,14 +1342,14 @@ void
 Request::FindKeepAlive()
 {
   USES_CONVERSION;
-  CString connection = A2T((LPSTR)m_request.Headers.KnownHeaders[HttpHeaderConnection].pRawValue);
+  XString connection = A2T((LPSTR)m_request.Headers.KnownHeaders[HttpHeaderConnection].pRawValue);
   connection.Trim();
   m_keepAlive = connection.CompareNoCase(_T("keep-alive")) == 0;
 }
 
 // Reply with a client error in the range 400 - 499
 void
-Request::ReplyClientError(int p_error, CString p_errorText)
+Request::ReplyClientError(int p_error,XString p_errorText)
 {
   // Drain the request first
   DrainRequest();
@@ -1345,17 +1357,16 @@ Request::ReplyClientError(int p_error, CString p_errorText)
 
   bool retry = false;
 
-  CString header;
+  XString header;
   header.Format(_T("HTTP/1.1 %d %s\r\n"),p_error,p_errorText.GetString());
   header += _T("Content-Type: text/html; charset=us-ascii\r\n");
 
-  CString body;
+  XString body;
   body.Format(http_client_error,p_error,p_errorText);
 
   if(m_challenge)
   {
     header += _T("WWW-Authenticate: ") + m_challenge + _T("\r\n");
-    m_challenge.Empty();
     retry   = true;
   }
 
@@ -1364,16 +1375,17 @@ Request::ReplyClientError(int p_error, CString p_errorText)
   header += "\r\n";
   header += body;
 
-  // Write out to the client:
-  ULONG written = 0;
-  WriteBuffer((PVOID)header.GetString(),header.GetLength(),&written);
+  // Write out to the client ANSI/UNICODE
+  ULONG written;
+  int res = WriteBuffer(header,&written);
 
-  if(!retry)
+  if(m_challenge.IsEmpty() && (!retry || res <= 0))
   {
     // And be done with this request;
     m_keepAlive = false;
     CloseRequest();
   }
+  m_challenge.Empty();
 }
 
 // General Client error 400 (Client did something stupid)
@@ -1385,18 +1397,18 @@ Request::ReplyClientError()
 
 // Reply with a server error in the range 500-599
 void
-Request::ReplyServerError(int p_error,CString p_errorText)
+Request::ReplyServerError(int p_error,XString p_errorText)
 {
   // Drain the request first
   DrainRequest();
   m_status = RQ_ANSWERING;
 
   // The answer
-  CString header;
+  XString header;
   header.Format(_T("HTTP/1.1 %d %s\r\n"), p_error, p_errorText.GetString());
   header += _T("Content-Type: text/html; charset=us-ascii\r\n");
 
-  CString body;
+  XString body;
   body.Format(http_server_error, p_error, p_errorText);
 
   header.AppendFormat(_T("Content-Length: %d\r\n"), body.GetLength());
@@ -1404,10 +1416,9 @@ Request::ReplyServerError(int p_error,CString p_errorText)
   header += _T("\r\n");
   header += body;
 
-  // Write out to the client:
+  // Write out to the client. ANSI/UNICODE
   ULONG written = 0;
-  WriteBuffer((PVOID)header.GetString(),header.GetLength(),&written);
-  // And be done with this request. Always close the request
+  WriteBuffer(header,&written);
   m_keepAlive = false;
   CloseRequest();
 }
@@ -1475,7 +1486,7 @@ Request::CheckAuthentication()
   }
 
   // This is our authorization (if any)
-  CString authorization(m_request.Headers.KnownHeaders[HttpHeaderAuthorization].pRawValue);
+  XString authorization(m_request.Headers.KnownHeaders[HttpHeaderAuthorization].pRawValue);
   if(authorization.IsEmpty())
   {
     // Authorization required but none is provided
@@ -1483,8 +1494,8 @@ Request::CheckAuthentication()
   }
 
   // Find method and payload of that method
-  CString method;
-  CString payload;
+  XString method;
+  XString payload;
   SplitString(authorization,method,payload,' ');
 
        if(method.CompareNoCase(_T("Basic"))     == 0)  info->AuthType = HttpRequestAuthTypeBasic;
@@ -1588,16 +1599,16 @@ Request::AlreadyAuthenticated(PHTTP_REQUEST_AUTH_INFO p_info)
 }
 
 bool
-Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload)
+Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,XString p_payload)
 {
   // Prepare decoding the base64 payload
   Base64  base;
-  CString decoded = base.Decrypt(p_payload);
+  XString decoded = base.Decrypt(p_payload);
 
   // Split into user and password
-  CString user;
-  CString domain;
-  CString password;
+  XString user;
+  XString domain;
+  XString password;
   SplitString(decoded,user,password,':');
 
   // Try to find a domain name and split it off
@@ -1627,15 +1638,20 @@ Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,CString p_paylo
 }
 
 bool
-Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_payload,CString p_provider)
+Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,XString p_payload,XString p_provider)
 {
   // Prepare decoding the base64 payload
   Base64 base;
   int len = (int)base.Ascii_length(p_payload.GetLength());
   BYTE* buffer = new BYTE[len + 10];
 
-  // Decrypt into a string
+  // Decrypt payload into an opaque buffer
+#ifdef _UNICODE
+  AutoCSTR payload(p_payload);
+  len = base.Decrypt((BYTE*)payload.cstr(),payload.size(),buffer,(len + 10));
+#else
   len = base.Decrypt((BYTE*)p_payload.GetString(),p_payload.GetLength(),buffer,(len + 10));
+#endif
 
   bool       continuation = false;
   CredHandle credentials;
@@ -1748,7 +1764,7 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,CString p_pa
 // Getting the maximum security token buffer length
 // of the connected SSPI provider package
 DWORD
-Request::GetProviderMaxTokenLength(CString p_provider)
+Request::GetProviderMaxTokenLength(XString p_provider)
 {
   PSecPkgInfo pkgInfo = nullptr;
 
@@ -1765,13 +1781,13 @@ Request::GetProviderMaxTokenLength(CString p_provider)
 
 // Create the general HTTP response status line to the output buffer
 void
-Request::AddResponseLine(CString& p_buffer,PHTTP_RESPONSE p_response)
+Request::AddResponseLine(CStringA& p_buffer,PHTTP_RESPONSE p_response)
 {
   // Send the initial response line of the server
-  p_buffer.Format(_T("HTTP/%u.%u %d %s\r\n"),p_response->Version.MajorVersion
-                                            ,p_response->Version.MinorVersion
-                                            ,p_response->StatusCode
-                                            ,p_response->pReason);
+  p_buffer.Format("HTTP/%u.%u %d %s\r\n",p_response->Version.MajorVersion
+                                        ,p_response->Version.MinorVersion
+                                        ,p_response->StatusCode
+                                        ,p_response->pReason);
 }
 
 // Add a server header (only if server header not yet set)
@@ -1807,26 +1823,30 @@ Request::CreateServerHeader(PHTTP_RESPONSE p_response)
 
 // Add all known response headers to the output buffer
 void
-Request::AddAllKnownResponseHeaders(CString& p_buffer,PHTTP_KNOWN_HEADER p_headers)
+Request::AddAllKnownResponseHeaders(CStringA& p_buffer,PHTTP_KNOWN_HEADER p_headers)
 {
   for(int index = 0;index < HttpHeaderResponseMaximum;++index)
   {
     if(p_headers[index].pRawValue && strlen(p_headers[index].pRawValue) > 0)
     {
       LPCTSTR name = index < HttpHeaderAcceptRanges ? all_headers[index] : all_responses[index - HttpHeaderAcceptRanges];
-
-      p_buffer.AppendFormat(_T("%s: %s\r\n"),name,p_headers[index].pRawValue);
+#ifdef _UNICODE
+      AutoCSTR header(name);
+      p_buffer.AppendFormat("%s: %s\r\n",header.cstr(),p_headers[index].pRawValue);
+#else
+      p_buffer.AppendFormat("%s: %s\r\n",name,p_headers[index].pRawValue);
+#endif
     }
   }
 }
 
 // Add all 'unknown' response headers to the output buffer
 void
-Request::AddAllUnknownResponseHeaders(CString& p_buffer,PHTTP_UNKNOWN_HEADER p_headers,int p_count)
+Request::AddAllUnknownResponseHeaders(CStringA& p_buffer,PHTTP_UNKNOWN_HEADER p_headers,int p_count)
 {
   for(int index = 0; index < p_count; ++index)
   {
-    p_buffer.AppendFormat(_T("%s: %s\r\n"),p_headers[index].pName,p_headers[index].pRawValue);
+    p_buffer.AppendFormat("%s: %s\r\n",p_headers[index].pName,p_headers[index].pRawValue);
   }
 }
 
@@ -1936,7 +1956,7 @@ int
 Request::SendEntityChunkFromFragment(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
 {
   USES_CONVERSION;
-  CString prefix(W2A(p_chunk->FromFragmentCache.pFragmentName));
+  XString prefix(W2A(p_chunk->FromFragmentCache.pFragmentName));
 
   // Find memory chunk
   PHTTP_DATA_CHUNK chunk = m_queue->FindFragment(prefix);
@@ -1956,7 +1976,7 @@ int
 Request::SendEntityChunkFromFragmentEx(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
 {
   USES_CONVERSION;
-  CString prefix(W2A(p_chunk->FromFragmentCacheEx.pFragmentName));
+  XString prefix(W2A(p_chunk->FromFragmentCacheEx.pFragmentName));
 
   // Find memory chunk
   PHTTP_DATA_CHUNK chunk = m_queue->FindFragment(prefix);
@@ -2014,10 +2034,10 @@ LPCTSTR month[12] =
 
 // Print HTTP time in RFC 1123 format (Preferred standard)
 // as in "Tue, 8 Dec 2015 21:26:32 GMT"
-CString
+XString
 Request::HTTPSystemTime()
 {
-  CString    time;
+  XString    time;
   SYSTEMTIME systemtime;
   GetSystemTime(&systemtime);
 
@@ -2063,6 +2083,21 @@ Request::ReadBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
   return NO_ERROR;
 }
 
+int
+Request::WriteBuffer(XString& p_string,PULONG p_bytes)
+{
+#ifdef _UNICODE
+  int   length = 0;
+  BYTE* buffer = nullptr;
+  TryCreateNarrowString(p_string,_T("utf-8"),false,&buffer,length);
+  int res = WriteBuffer(buffer,length,p_bytes);
+  delete [] buffer;
+  return res;
+#else
+  return WriteBuffer((PVOID)p_string.GetString(),p_string.GetLength(),p_bytes);
+#endif
+}
+
 // Low level write to socket
 int
 Request::WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
@@ -2071,7 +2106,7 @@ Request::WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
   {
     return SOCKET_ERROR;
   }
-  int result = m_socket->SendPartial(p_buffer,p_size);
+  int result = m_socket->SendMsg(p_buffer,p_size);
   if (result == SOCKET_ERROR)
   {
     // Log the error

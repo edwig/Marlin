@@ -42,11 +42,11 @@ public:
 
 	static PSecurityFunctionTable SSPI(void);
 
-  void    SetThumbprint(PTCHAR p_thumprint);
-  void    SetCertificateStore(CString p_store);
+  void    SetThumbprint(LPBYTE p_thumprint);
+  void    SetCertificateStore(XString p_store);
   void    SetRequestClientCertificate(bool p_request);
 
-  std::function<SECURITY_STATUS(PCCERT_CONTEXT & pCertContext, LPCTSTR p_certStore,PTCHAR p_thumbprint)> m_selectServerCert;
+  std::function<SECURITY_STATUS(PCCERT_CONTEXT & pCertContext, LPCTSTR p_certStore,BYTE* p_thumbprint)> m_selectServerCert;
   std::function<bool(PCCERT_CONTEXT pCertContext, const bool trusted)> m_clientCertAcceptable;
 
   CertificateInfo*  GetClientCertificate() { return m_clientCertificate; };
@@ -62,7 +62,7 @@ private:
 
   static PSecurityFunctionTable g_pSSPI;
 	static CredHandle g_ServerCreds;
-  static CString    g_ServerName;
+  static XString    g_ServerName;
 
   // Private data
 	static const int  m_maxMsgSize   = 16000; // Arbitrary but less than 16384 limit, including MaxExtraSize
@@ -73,8 +73,8 @@ private:
 	void*             m_readPointer     { nullptr };
 	CtxtHandle        m_context;
 	SecPkgContext_StreamSizes m_sizes;
-  TCHAR             m_thumbprint[CERT_THUMBPRINT_SIZE + 1];
-  CString           m_certificateStore;
+  BYTE              m_thumbprint[CERT_THUMBPRINT_SIZE + 1];
+  XString           m_certificateStore;
   bool              m_requestClientCertificate { false };
   // SSL Certificate
   CertificateInfo*  m_serverCertificate { nullptr };

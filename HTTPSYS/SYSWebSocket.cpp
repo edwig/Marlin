@@ -478,7 +478,7 @@ SYSWebSocket::SendPingPong(BOOL p_ping /*= TRUE*/)
   if(written != NO_ERROR)
   {
     // Socket most probably dead. Close the WebSocket
-    LogError("Error sending ping/pong: %s",m_serverkey.GetString());
+    LogError(_T("Error sending ping/pong: %s"),m_serverkey.GetString());
     return FALSE;
   }
 
@@ -863,12 +863,12 @@ quit:
   if(m_closeReasonLength)
   {
 #ifdef _UNICODE
-    CString reason;
+    XString reason;
     bool foundBom(false);
     TryConvertNarrowString((const BYTE*)m_closeReason,m_closeReasonLength,_T(""),reason,foundBom);
     wcscpy_s((wchar_t*)m_closeReason,WEB_SOCKET_MAX_CLOSE_REASON_LENGTH,(wchar_t*)reason.GetString());
 #else
-    CString reason((char*)m_closeReason);
+    XString reason((char*)m_closeReason);
     BYTE* buffer = nullptr;
     int length   = 0;
     TryCreateWideString(reason,_T(""),false,&buffer,length);

@@ -130,8 +130,8 @@ SetServerAuthentication(ServerSession* p_session,PVOID p_info,ULONG p_length)
 
   ULONG   scheme    = info->AuthSchemes;
   bool    ntlmcache = !(info->DisableNTLMCredentialCaching);
-  CString domain;
-  CString realm;
+  XString domain;
+  XString realm;
   wstring domainWide;
   wstring realmWide;
 
