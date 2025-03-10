@@ -112,8 +112,12 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
     SiteHandler* handler = new SiteHandlerEventSocket(this);
     socketSite->SetHandler(HTTPCommand::http_get,handler);
     socketSite->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
+    socketSite->SetCookiesExpires(m_cookieTimeout);
 
-    if(socketSite->StartSite()) ++started;
+    if(socketSite->StartSite())
+    {
+      ++started;
+    }
   }
 
   // Start SSE site
@@ -131,9 +135,16 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
     // Tell site we handle SSE streams
     eventsSite->SetIsEventStream(true);
     eventsSite->AddContentType(true,_T("txt"),_T("text/event-stream"));
+    eventsSite->SetCookiesExpires(m_cookieTimeout);
+
+    // Server must now do keep-alive jobs for SSE streams
+    server->SetEventKeepAlive(5000);
 
     // And start the site
-    if(eventsSite->StartSite()) ++started;
+    if(eventsSite->StartSite())
+    {
+      ++started;
+    }
   }
 
   // Start Polling site
@@ -148,9 +159,13 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
     pollingSite->SetHandler(HTTPCommand::http_post,handler);
     pollingSite->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
     pollingSite->AddContentType(true,_T("xml"),_T("application/soap+xml"));
+    pollingSite->SetCookiesExpires(m_cookieTimeout);
 
     // And start the site
-    if(pollingSite->StartSite()) ++started;
+    if(pollingSite->StartSite())
+    {
+      ++started;
+    }
   }
 
   // Error handling
@@ -211,6 +226,15 @@ ServerEventDriver::SetBruteForceAttackInterval(int p_interval)
     return true;
   }
   return false;
+}
+
+void
+ServerEventDriver::SetCookieTimeout(int p_minutes)
+{
+  if(p_minutes > 0)
+  {
+    m_cookieTimeout = p_minutes;
+  }
 }
 
 // Set or change the policy for a channel

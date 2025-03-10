@@ -136,6 +136,8 @@ public:
   bool  StopEventDriver();
   // Check the event channel for proper working
   bool  CheckChannelPolicy(int m_channel);
+  // Cookie timout in minutes
+  void  SetCookieTimeout(int p_minutes);
 
   // Flush messages as much as possible for a channel
   bool  FlushChannel(XString p_cookie,XString p_token);
@@ -205,6 +207,7 @@ private:
   ChannelMap      m_channels;               // All channels (by channel number)
   ChanNameMap     m_names;                  // Extra redundant lookup in the channels for speed by session-name
   ChanNameMap     m_cookies;                // Extra redundant lookup in the channels for speed by cookie:value
+  int             m_cookieTimeout { 0 };    // Timeout for cookies in minutes
   // Brute force attack on the event channels
   SenderMap       m_senders;                // Last time of sender attach
   int             m_interval { 10 * CLOCKS_PER_SEC };

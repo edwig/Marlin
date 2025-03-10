@@ -282,7 +282,10 @@ ServerReadCompletionIIS(HRESULT p_error,
         {
           // Empty frame, final closing frame. Just ignore it
           // Chances are that the socket is already closed and gone.
-          socket->SetClosingStatus(WS_CLOSE_GOINGAWAY);
+          if(socket->m_header == WEBSOCKET_HEADER)
+          {
+            socket->SetClosingStatus(WS_CLOSE_GOINGAWAY);
+          }
           return;
         }
         // Read this frame part into the socket

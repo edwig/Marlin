@@ -27,6 +27,7 @@
 //
 #pragma once
 #include "WebSocketMain.h"
+#define WEBSOCKET_HEADER 0x77884321
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -71,6 +72,10 @@ public:
   // Dispatch an extra write action
   void    SocketDispatch();
   void    PostCompletion(DWORD dwErrorCode,DWORD dwNumberOfBytes);
+
+  // Private data for the server variant of the WebSocket
+  ULONG               m_header { WEBSOCKET_HEADER };
+
 protected:
   // Decode the incoming close socket message
   bool    ReceiveCloseSocket();
