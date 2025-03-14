@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -179,7 +179,8 @@ LogAnalysis::Reset()
   }
 
   // Reset loglevel
-  m_logLevel = HLL_NOLOG;
+  m_useWriter   = false;
+  m_logLevel    = HLL_NOLOG;
   m_initialised = false;
 }
 
@@ -731,7 +732,7 @@ LogAnalysis::ReadConfig()
       if(line.GetLength() > 0)
       {
         // Look for a comment
-        TCHAR ch = line.GetAt(0);
+        TCHAR ch = (TCHAR) line.GetAt(0);
         if(ch == ';' || ch == '#')
         {
           continue;

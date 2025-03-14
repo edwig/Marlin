@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -72,7 +72,7 @@ int ConfigureApplicationAlerts(XString p_path)
   AutoCritSec lock(&g_alertCritical);
 
   // Check that the path always ends in a backslash
-  if(p_path.Right(1) != "\\")
+  if(p_path.Right(1) != _T("\\"))
   {
     p_path += '\\';
   }

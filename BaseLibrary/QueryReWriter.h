@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -128,7 +128,7 @@ public:
   // Getters
   int     GetReplaced() { return m_replaced; }
   int     GetOptions()  { return m_options;  }
-  CString GetSchema()   { return m_schema;   }
+  XString GetSchema()   { return m_schema;   }
 private:
   void    Reset();
   void    Initialization();

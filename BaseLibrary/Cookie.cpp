@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -309,7 +309,7 @@ Cookie::CheckName()
 {
   for(int ind = 0; ind < m_name.GetLength(); ++ind)
   {
-    XString::XCHAR ch = m_name.GetAt(ind);
+    TCHAR ch = (TCHAR) m_name.GetAt(ind);
     if((ch < MIN_COOKIE_CHAR || ch > MAX_COOKIE_CHAR) || (ch == '=') || (ch == ';'))
     {
       throw StdException(_T("Cookie name characters out of range 0x21-0x7E"));
@@ -323,7 +323,7 @@ Cookie::CheckValue()
 {
   for(int ind = 0;ind < m_value.GetLength(); ++ind)
   {
-    XString::XCHAR ch = m_value.GetAt(ind);
+    TCHAR ch = (TCHAR) m_value.GetAt(ind);
     if((ch < MIN_COOKIE_CHAR || ch > MAX_COOKIE_CHAR) || (ch == ';'))
     {
       throw StdException(_T("Cookie value characters out of range 0x21-0x7E"));

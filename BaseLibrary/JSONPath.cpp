@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -261,7 +261,7 @@ JSONPath::PresetStatus()
 bool
 JSONPath::FindDelimiterType(const XString& p_parsing)
 {
-  TCHAR ch = p_parsing.GetAt(0);
+  TCHAR ch = (TCHAR) p_parsing.GetAt(0);
   if(ch == '.' || ch == '[')
   {
     m_delimiter = ch;
@@ -280,8 +280,8 @@ JSONPath::FindDelimiterType(const XString& p_parsing)
 bool
 JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex,bool& p_isFilter)
 {
-  TCHAR firstChar  = p_parsing.GetAt(0);
-  TCHAR secondChar = p_parsing.GetAt(1);
+  TCHAR firstChar  = (TCHAR) p_parsing.GetAt(0);
+  TCHAR secondChar = (TCHAR) p_parsing.GetAt(1);
 
   // Reset
   p_token.Empty();
@@ -295,7 +295,7 @@ JSONPath::GetNextToken(XString& p_parsing,XString& p_token,bool& p_isIndex,bool&
     m_recursive = true;
     p_parsing = p_parsing.Mid(1);
     firstChar = secondChar;
-    secondChar = p_parsing.GetAt(1);
+    secondChar = (TCHAR) p_parsing.GetAt(1);
   }
 
   // Special case: Wildcard
@@ -548,16 +548,16 @@ JSONPath::ProcessFilter(XString p_token)
   {
     if(opening >= 0 && p_token.GetAt(i) != '\'')
     {
-      token += p_token.GetAt(i);
+      token += (TCHAR) p_token.GetAt(i);
     } 
     else if(p_token.GetAt(i) == '\'')
     {
-      token += p_token.GetAt(i);
+      token += (TCHAR) p_token.GetAt(i);
       opening = i;
     }
     else if(!isspace(p_token.GetAt(i)))
     {
-      token += p_token.GetAt(i);
+      token += (TCHAR) p_token.GetAt(i);
     }
   }
   ProcessFilterTokenCharacters(token);
@@ -930,7 +930,7 @@ JSONPath::HandleLogicalAnd(XString p_token,int& p_pos)
       rightSide = p_token.Mid(p_pos,p_token.GetLength()).Trim();
 
       // Evaluate the part after "&&" separately
-      JSONPath path(m_message,CString(_T("$")) + m_rootWord + _T("[?(") + rightSide + _T(")]"));
+      JSONPath path(m_message,XString(_T("$")) + m_rootWord + _T("[?(") + rightSide + _T(")]"));
       JPResults newResults;
 
       bool exist = false;
@@ -1077,7 +1077,7 @@ JSONPath::WithinQuotes(XString p_token,int p_pos,int p_charPos)
 }
 
 int
-JSONPath::FindMatchingBracket(const CString& p_string, int p_bracketPos)
+JSONPath::FindMatchingBracket(const XString& p_string, int p_bracketPos)
 {
   TCHAR bracket = p_string[p_bracketPos];
   TCHAR match   = 0;

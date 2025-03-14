@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 //
-// // Copyright (c) 2014-2024 ir. W.E. Huisman
+// // Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -39,6 +39,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+#define EXTRABUF 5
+
 // ALGORITHM
 //
 // 1) Add user and password together with a '~' in between
@@ -56,116 +58,138 @@ XString CreateAuthentication(XString p_user,XString p_password)
 
   // STEP 2) Make it an UTF-8 string
   //         Don't do this in other languages that are already in UTF-8
-  authenticate = EncodeStringForTheWire(authenticate);
+  BYTE* buffer = nullptr;
+  int   length = 0;
 
-  // STEP 3) Reverse our string
-  authenticate.MakeReverse();
+#ifdef _UNICODE
+  TryCreateNarrowString(authenticate,_T(""),false,&buffer,length);
+#else
+  XString ext = EncodeStringForTheWire(authenticate);
+  length = ext.GetLength();
+  buffer = new BYTE[length + 1];
+  strncpy_s((char*)buffer,length + 1,ext.GetString(),length);
+#endif
+
+
+  // STEP 3) Reverse our string in the buffer
+  BYTE* resbuffer = new BYTE[length + 1 + 2 * EXTRABUF];
+  for(int ind = 0;ind <length; ++ind)
+  {
+    resbuffer[EXTRABUF + ind] = buffer[length - ind - 1];
+  }
 
   // STEP 4) Apply a Caesar cipher revert(ascii 126 ~->ascii 32 (space))
   //         with the formula ('~' - char + ' ')
-  for(int index = 0;index < authenticate.GetLength(); ++index)
+  for(int index = 0;index < length; ++index)
   {
-    uchar ch = (uchar) authenticate.GetAt(index);
+    BYTE ch = resbuffer[EXTRABUF + index];
     if(ch >= _T(' ') && ch <= _T('~'))
     {
       ch = _T('~') - ch + _T(' ');
-      authenticate.SetAt(index,ch);
+      resbuffer[EXTRABUF + index] = ch;
     }
   }
 
   // STEP 5) Five random characters in front and as a trailer
   // '~' (ASCII 127) - ' ' (ASCII 32) = 95. Equi-distance of printable chars
   time_t now;
-  XString before,after;
   srand((unsigned int)time(&now));
-  for(int index = 0;index < 5;++index)
+  for(int index = 0;index < EXTRABUF;++index)
   {
-    before += (TCHAR)(_T(' ') + (TCHAR)(rand() % 95) - _T(' '));
-    after  += (TCHAR)(_T(' ') + (TCHAR)(rand() % 95) - _T(' '));
+    resbuffer[index]                     = (BYTE)(_T(' ') + (BYTE)(rand() % 95));
+    resbuffer[EXTRABUF + length + index] = (BYTE)(_T(' ') + (BYTE)(rand() % 95));
   }
-  authenticate = before + authenticate + after;
+  resbuffer[length + 2 * EXTRABUF] = 0;
     
   // STEP 6) Base64 encryption 
   Base64 base;
-  return base.Encrypt(authenticate);
+  XString result = base.Encrypt(resbuffer,length + 2 * EXTRABUF);
+
+  delete [] buffer;
+  delete [] resbuffer;
+
+  return result;
 }
 
 // DECODE ALGORITHM
 //
 // 1) Empty the result
 // 2) Base64 decode the string
-// 3) If long enough, remove first and last five random characters
+// 3) Check if longer than 2 extra buffers
 // 4) Apply Caesar Cipher by inverting in between ' ' and '~'
-// 5) Search for the LAST separator in the string
-// 6) Split the strings and reverse the order
-// 7) Do the UTF-8 decoding (if necessary for your language)
+// 5) Revert the buffer
+// 6) Revert the UTF-8 in the buffer to stirng
+// 7) Search for the LAST separator in the string
+//    Split the strings and reverse the order
 
-bool DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password)
+bool 
+DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password)
 {
+  bool result(false);
+
   // STEP 1) Reset the output
   p_user.Empty();
   p_password.Empty();
 
   // STEP 2) Decode base64
   Base64 base;
-  XString authenticate = base.Decrypt(p_scramble);
-  if(p_scramble.IsEmpty() || authenticate.IsEmpty())
+  int length = (int)base.Ascii_length(p_scramble.GetLength());
+  BYTE* buffer = new BYTE[length + 1];
+  base.Decrypt(p_scramble,buffer,length + 1);
+  length = (int) strlen((char*)buffer);
+  if(p_scramble.IsEmpty() || length == 0)
   {
     return false;
   }
 
   // STEP 3) Remove prefix and postfix of five characters
-  if(authenticate.GetLength() > 5)
-  {
-    authenticate = authenticate.Mid(5);
-  }
-  if(authenticate.GetLength() > 5)
-  {
-    authenticate = authenticate.Mid(0,authenticate.GetLength() - 5);
-  }
-  if(authenticate.IsEmpty())
+  length -= 2 * EXTRABUF;
+  if(length <= 0)
   {
     return false;
   }
 
   // STEP 4) Invert the Caesar cipher
-  for(int index = 0;index < authenticate.GetLength(); ++index)
+  for(int index = 0;index < length; ++index)
   {
-    uchar ch = (uchar) authenticate.GetAt(index);
+    BYTE ch = buffer[EXTRABUF + index];
     if(ch >= _T(' ') && ch <= _T('~'))
     {
       ch = _T('~') - ch + _T(' ');
-      authenticate.SetAt(index,ch);
+      buffer[EXTRABUF + index] = ch;
     }
   }
 
-  // STEP 5: Search the separator
-  int pos1 = authenticate.Find(_T("^"));
-  if(pos1 > 0)
+  // STEP 5: Revert the buffer
+  BYTE* resbuffer = new BYTE[length + 1 + 2 * EXTRABUF];
+  for(int ind = 0;ind < length; ++ind)
   {
-    // Just in case someone uses it in a password
-    // Can be used multiple times and on the last position!
-    int pos2(0);
-    while((pos2 = authenticate.Find(_T("^"),pos1 + 1)) >= 0)
-    {
-      pos1 = pos2;
-    }
-
-    // Split result
-    p_password = authenticate.Left(pos1);
-    p_user     = authenticate.Mid(pos1 + 1);
-
-    // STEP 6: Reverse the strings
-    p_password.MakeReverse();
-    p_user.MakeReverse();
-
-    // STEP 7: Assume the input is in UTF-8 format
-    //         Don't do this in other languages that are already in UTF-8
-    p_user     = DecodeStringFromTheWire(p_user);
-    p_password = DecodeStringFromTheWire(p_password);
-
-    return true;
+    resbuffer[ind] = buffer[EXTRABUF + length - ind - 1];
   }
-  // No separator!!
-  return false;
+  resbuffer[length] = 0;
+
+  // STEP 6: Revert UTF-8 buffer to string
+  XString authenticate;
+#ifdef _UNICODE
+  bool bom(false);
+  TryConvertNarrowString(resbuffer,length,_T(""),authenticate,bom);
+#else
+  XString buf(resbuffer);
+  authenticate = DecodeStringFromTheWire(buf);
+#endif
+
+  // STEP 7: Search the separator
+  int pos = authenticate.Find(_T("^"));
+  if(pos > 0)
+  {
+    // Split result
+    p_user     = authenticate.Left(pos);
+    p_password = authenticate.Mid(pos + 1);
+    result     = true;
+  }
+
+  delete [] buffer;
+  delete [] resbuffer;
+
+  return result;
 }

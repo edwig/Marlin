@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -388,7 +388,7 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     if (explicitEntry->grfInheritance & SUB_CONTAINERS_AND_OBJECTS_INHERIT) p_list += _T("[containers and objects] ");
     if (explicitEntry->grfInheritance & SUB_CONTAINERS_ONLY_INHERIT)        p_list += _T("[sub-containers] ");
     if (explicitEntry->grfInheritance & SUB_OBJECTS_ONLY_INHERIT)           p_list += _T("[sub-objects] ");
-    p_list += "\n";
+    p_list += _T("\n");
     
     text.Format(_T("  Access permission mask = 0x%08lx\n"), explicitEntry->grfAccessPermissions);
     p_list += text;

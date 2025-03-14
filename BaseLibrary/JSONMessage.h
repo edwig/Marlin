@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -102,7 +102,7 @@ public:
   bool        GetMark()      const { return m_mark;     }
   JSONarray&  GetArray()           { return m_array;    }
   JSONobject& GetObject()          { return m_object;   }
-  XString     GetAsJsonString(bool p_white,unsigned p_level = 0);
+  XString     GetAsJsonString(bool p_white,unsigned p_level = 0,bool p_exponential = false);
 
   // FUNCTIONS
   void        JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive = true);
@@ -277,6 +277,7 @@ public:
   XString         GetReferrer() const      { return m_referrer;              }
   const Routing&  GetRouting() const       { return m_routing;               }
   XString         GetExtension() const     { return m_cracked.GetExtension();}
+  bool            GetExponentialFormat() const       { return m_exponential; }
   XString         GetHeader(XString p_name);
   XString         GetRoute(int p_index);
   XString         GetContentType() const;
@@ -305,6 +306,8 @@ public:
   void            SetVerbTunneling(bool p_tunnel)         { m_verbTunnel         = p_tunnel;   }
   void            SetHasBeenAnswered()                    { m_request            = NULL;       }
   void            SetReferrer(XString p_referrer)         { m_referrer           = p_referrer; }
+  void            SetExponentialFormat(bool p_exp)        { m_exponential        = p_exp;      }
+
   void            SetAcceptEncoding(XString p_encoding);
   void            AddHeader(XString p_name,XString p_value);
   void            DelHeader(XString p_name);
@@ -340,6 +343,7 @@ private:
   Encoding        m_encoding    { Encoding::UTF8 };             // Encoding details
   bool            m_sendBOM     { false };                      // Prepend message with UTF-8 or UTF-16 Byte-Order-Mark
   bool            m_verbTunnel  { false };                      // HTTP-VERB Tunneling used
+  bool            m_exponential { false };                      // Use exponential notation for numbers
   // DESTINATION
   XString         m_url;                                        // Full URL of the JSON service
   CrackedURL      m_cracked;                                    // Cracked down URL (all parts)

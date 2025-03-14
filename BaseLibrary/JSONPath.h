@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -135,7 +135,7 @@ private:
   void    HandleLogicalOr(XString p_token,int& p_pos);
   void    HandleBrackets(XString p_token,int& p_pos);
   bool    WithinQuotes(XString p_token,int p_pos,int p_charPos);
-  int     FindMatchingBracket(const CString& p_string,int p_bracketPos);
+  int     FindMatchingBracket(const XString& p_string,int p_bracketPos);
 
   // DATA
   XString           m_path;

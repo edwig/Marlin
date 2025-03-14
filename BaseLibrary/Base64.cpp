@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -99,7 +99,7 @@ Base64::Encrypt(XString p_unencrypted)
     return XString();
   }
 #ifdef _UNICODE
-  AutoCSTR unen(p_unencrypted);
+  AutoCSTR unen(p_unencrypted,false);
   const BYTE* unencrypted = (BYTE*) unen.cstr();
   const int   length      = unen.size();
 #else
@@ -149,7 +149,7 @@ Base64::Decrypt(XString p_encrypted)
   unsigned char* buffer = new unsigned char[length + 2];
   CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,(BYTE*)buffer,&length,0,&type);
   buffer[length] = 0;
-  XString result(buffer);
+  XString result((LPCTSTR)buffer);
   delete[] buffer;
   return result;
 }
@@ -160,7 +160,7 @@ Base64::Decrypt(XString p_encrypted,BYTE* p_buffer,int p_length)
 {
   if(p_encrypted.GetLength() == 0 || p_length <= 0)
   {
-    return XString();
+    return false;
   }
   DWORD length = 0;
   CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,NULL,&length,0,NULL);

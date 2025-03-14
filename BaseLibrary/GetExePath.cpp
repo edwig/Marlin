@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -105,7 +105,8 @@ CheckExePath(XString p_runtimer,XString p_productName)
   GetModuleFileName(GetModuleHandle(NULL),buffer,_MAX_PATH);
   _tsplitpath_s(buffer,drive,_MAX_DRIVE,directory,_MAX_DIR,filename,_MAX_FNAME,extension,_MAX_EXT);
 
-  XString runtimer = XString(filename) + XString(extension);
+  XString runtimer  = XString(filename);
+          runtimer += XString(extension);
   XString title = _T("Installation");
   if(runtimer.CompareNoCase(p_runtimer))
   {

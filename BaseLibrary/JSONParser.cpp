@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -962,7 +962,7 @@ JSONParserSOAP::Trim(XString& p_value)
   while(p_value.GetLength())
   {
     int index = p_value.GetLength() - 1;
-    TCHAR ch  = p_value.GetAt(index);
+    TCHAR ch  = (TCHAR) p_value.GetAt(index);
     if(_tcschr(WHITESPACE,ch))
     {
       p_value = p_value.Left(index);
@@ -975,7 +975,7 @@ JSONParserSOAP::Trim(XString& p_value)
 
   while(p_value.GetLength())
   {
-    if(_tcschr(WHITESPACE,p_value.GetAt(0)))
+    if(_tcschr(WHITESPACE,(TCHAR)p_value.GetAt(0)))
     {
       p_value = p_value.Mid(1);
     }

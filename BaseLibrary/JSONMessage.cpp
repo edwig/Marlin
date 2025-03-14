@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -352,7 +352,7 @@ JSONvalue::Add(JSONpair& p_value)
 }
 
 XString
-JSONvalue::GetAsJsonString(bool p_white,unsigned p_level /*=0*/)
+JSONvalue::GetAsJsonString(bool p_white,unsigned p_level /*=0*/,bool p_exponential /*= false*/)
 {
   XString result;
   XString separ,less;
@@ -380,13 +380,13 @@ JSONvalue::GetAsJsonString(bool p_white,unsigned p_level /*=0*/)
     case JsonType::JDT_string:      return XMLParser::PrintJsonString(m_string);
     case JsonType::JDT_number_int:  result.Format(_T("%d"),m_intNumber);
                                     break;
-    case JsonType::JDT_number_bcd:  result = m_bcdNumber.AsString(bcd::Format::Bookkeeping,false,0);
+    case JsonType::JDT_number_bcd:  result = m_bcdNumber.AsString(p_exponential ? bcd::Format::Engineering : bcd::Format::Bookkeeping,false,0);
                                     break;
     case JsonType::JDT_array:       result = _T("[") + newln;
                                     for(unsigned ind = 0;ind < m_array.size();++ind)
                                     {
                                       result += separ;
-                                      result += m_array[ind].GetAsJsonString(p_white,p_level+1);
+                                      result += m_array[ind].GetAsJsonString(p_white,p_level+1,p_exponential);
                                       if(ind < m_array.size() - 1)
                                       {
                                         result += _T(",");
@@ -410,7 +410,7 @@ JSONvalue::GetAsJsonString(bool p_white,unsigned p_level /*=0*/)
                                       result += p_white ? _T("\t") : _T("");
                                       result += XMLParser::PrintJsonString(m_object[ind].m_name);
                                       result += _T(":");
-                                      result += m_object[ind].m_value.GetAsJsonString(p_white,p_level+1).TrimLeft('\t');
+                                      result += m_object[ind].m_value.GetAsJsonString(p_white,p_level+1,p_exponential).TrimLeft('\t');
                                       if(ind < m_object.size() - 1)
                                       {
                                         result += _T(",");
@@ -1095,7 +1095,7 @@ JSONMessage::ParseMessage(XString p_message)
 XString 
 JSONMessage::GetJsonMessage() const
 {
-  return m_value->GetAsJsonString(m_whitespace);
+  return m_value->GetAsJsonString(m_whitespace,0,m_exponential);
 }
 
 // Use POST method for PUT/MERGE/PATCH/DELETE

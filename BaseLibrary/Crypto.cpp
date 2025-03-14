@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -739,15 +739,15 @@ Crypto::GetKeyExchange(unsigned p_type)
 
   switch(p_type)
   {
-    case CALG_RSA_KEYX:      exchange = "RSA KEYX";       break;
-    case CALG_DH_SF:         exchange = "Diffie-Hellman"; break;
-    case CALG_DH_EPHEM:      exchange = "DH EPHEM";       break;
-    case CALG_AGREEDKEY_ANY: exchange = "Any-AgreedKey";  break;
-    case CALG_KEA_KEYX:      exchange = "KEA KEYX";       break;
-    case CALG_HUGHES_MD5:    exchange = "Hughes MD5";     break;
-    case CALG_ECDH:          exchange = "ECDH";           break;
-    case CALG_ECMQV:         exchange = "ECMQV";          break;
-    default:                 exchange = "AES";            break;
+    case CALG_RSA_KEYX:      exchange = _T("RSA KEYX");       break;
+    case CALG_DH_SF:         exchange = _T("Diffie-Hellman"); break;
+    case CALG_DH_EPHEM:      exchange = _T("DH EPHEM");       break;
+    case CALG_AGREEDKEY_ANY: exchange = _T("Any-AgreedKey");  break;
+    case CALG_KEA_KEYX:      exchange = _T("KEA KEYX");       break;
+    case CALG_HUGHES_MD5:    exchange = _T("Hughes MD5");     break;
+    case CALG_ECDH:          exchange = _T("ECDH");           break;
+    case CALG_ECMQV:         exchange = _T("ECMQV");          break;
+    default:                 exchange = _T("AES");            break;
   }
   return exchange;
 }

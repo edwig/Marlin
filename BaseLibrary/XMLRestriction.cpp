@@ -2,7 +2,7 @@
 //
 // SourceFile: XMLRestriction.cpp
 //
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -615,7 +615,7 @@ XMLRestriction::CheckInteger(XString p_value)
 {
   XString value(p_value);
   value.Trim();
-  _TUCHAR ch = value.GetAt(0);
+  _TUCHAR ch = (_TUCHAR) value.GetAt(0);
   if(ch == '+' || ch == '-')
   {
     value = value.Mid(1);
@@ -699,7 +699,7 @@ XMLRestriction::CheckNumber(XString p_value,bool p_specials)
   }
   for(int ind = 0; ind < p_value.GetLength(); ++ind)
   {
-    _TUCHAR ch = p_value.GetAt(ind);
+    _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
     if(!isspace(ch) && !isdigit(ch) && ch != '.' && ch != '+' && ch != '-' && toupper(ch) != 'E')
     {
       result  = _T("Not a number: ");
@@ -1005,7 +1005,7 @@ XMLRestriction::CheckHexBin(XString p_value)
 {
   for(int ind = 0; ind < p_value.GetLength(); ++ind)
   {
-    _TUCHAR ch = p_value.GetAt(ind);
+    _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
     if(!isspace(ch) && !isxdigit(ch))
     {
       return _T("Not a base64Binary field");
@@ -1181,7 +1181,7 @@ XMLRestriction::CheckNormal(XString p_value)
 
   for(int ind = 0;ind < p_value.GetLength(); ++ind)
   {
-    _TUCHAR ch = p_value.GetAt(ind);
+    _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
     if(ch == '\r' || ch == '\n' || ch == '\t')
     {
       result = _T("normalizedString contains red space: ") + p_value;
@@ -1219,7 +1219,7 @@ XMLRestriction::CheckNMTOKEN(XString p_value)
   {
     for(int ind = 0;ind < p_value.GetLength(); ++ind)
     {
-      _TUCHAR ch = p_value.GetAt(ind);
+      _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
       if(!isalnum(ch) && ch != ':' && ch != '-' && ch != '.' && ch != '_' && ch < 128)
       {
         result = _T("NMTOKEN with illegal characters: ") + p_value;
@@ -1235,7 +1235,7 @@ XMLRestriction::CheckName(XString p_value)
   XString result = CheckNMTOKEN(p_value);
   if(result.IsEmpty())
   {
-    _TUCHAR ch = p_value.GetAt(0);
+    _TUCHAR ch = (_TUCHAR) p_value.GetAt(0);
     if(ch != ':' && !isalpha(ch) && ch != '_' && ch < 128)
     {
       result = _T("Name should begin with a name-start-character: ") + p_value;
@@ -1370,7 +1370,7 @@ XMLRestriction::CheckDuration(XString p_value,int& p_type)
 
   // Parse the negative sign
   duration.Trim();
-  if(duration.Left(1) == "-")
+  if(duration.Left(1) == _T("-"))
   {
     duration = duration.Mid(1);
   }
@@ -1482,7 +1482,7 @@ XMLRestriction::ScanDurationValue(XString& p_duration
   // Scan a marker
   if(isalpha(p_duration.GetAt(0)))
   {
-    p_marker   = p_duration.GetAt(0);
+    p_marker   = (TCHAR) p_duration.GetAt(0);
     p_duration = p_duration.Mid(1);
   }
 

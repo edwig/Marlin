@@ -2,7 +2,7 @@
 //
 // SourceFile: XMLTemporal.cpp
 //
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1134,7 +1134,7 @@ XMLDuration::ScanDurationValue(XString& p_duration
   // Scan a marker
   if(isalpha(p_duration.GetAt(0)))
   {
-    p_marker = p_duration.GetAt(0);
+    p_marker   = (TCHAR) p_duration.GetAt(0);
     p_duration = p_duration.Mid(1);
   }
 

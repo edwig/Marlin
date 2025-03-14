@@ -144,7 +144,7 @@ public:
   // CTOR 
   WinFile();
   // CTOR from a filename
-  WinFile(CString p_filename);
+  WinFile(XString p_filename);
   // CTOR from another file pointer
   WinFile(WinFile& p_other);
   // DTOR
@@ -160,16 +160,16 @@ public:
   bool      DeleteFile();
   unsigned  DeleteDirectory(bool p_recursive = false);
   bool      DeleteToTrashcan(bool p_show = false, bool p_confirm = false);
-  bool      CopyFile(CString p_destination,FCopy p_how = winfile_copy);
-  bool      MoveFile(CString p_destination,FMove p_how = winfile_move);
-  bool      CreateTempFileName(CString p_pattern,CString p_extension = _T(""));
+  bool      CopyFile(XString p_destination,FCopy p_how = winfile_copy);
+  bool      MoveFile(XString p_destination,FMove p_how = winfile_move);
+  bool      CreateTempFileName(XString p_pattern,XString p_extension = _T(""));
   bool      GrantFullAccess();
   void      ForgetFile(); // BEWARE!
 
   // OPERATIONS TO READ AND WRITE CONTENT
   bool      Read(XString& p_string,uchar p_delim = '\n');
   bool      Read(void* p_buffer,size_t p_bufsize,int& p_read);
-  bool      Write(const CString& p_string);
+  bool      Write(const XString& p_string);
   bool      Write(void* p_buffer,size_t p_bufsize);
   bool      Format(LPCTSTR p_format,...);
   bool      FormatV(LPCTSTR p_format,va_list p_list);
@@ -187,9 +187,9 @@ public:
   bool      Ungetch(uchar p_ch);  // only works in conjunction with "Getch()"
 
   // SETTERS
-  bool      SetFilename(CString p_filename);
-  bool      SetFilenameInFolder(int p_folder,CString p_filename);  // Use CSIDL_* names !
-  bool      SetFilenameFromResource(CString p_resource);
+  bool      SetFilename(XString p_filename);
+  bool      SetFilenameInFolder(int p_folder,XString p_filename);  // Use CSIDL_* names !
+  bool      SetFilenameFromResource(XString p_resource);
   bool      SetFileHandle(HANDLE p_handle);
   bool      SetFileAttribute(FAttributes p_attribute,bool p_set);
   bool      SetHidden(bool p_hidden);
@@ -207,20 +207,20 @@ public:
 
   // GETTERS
   bool      GetIsOpen() const;
-  CString   GetFilename();
+  XString   GetFilename();
   HANDLE    GetFileHandle();
   DWORD     GetOpenFlags();
   int       GetLastError();
-  CString   GetLastErrorString();
+  XString   GetLastErrorString();
   size_t    GetFileSize() const;
   bool      GetIsAtEnd() const;
   size_t    GetSharedMemorySize();
-  CString   GetNamePercentEncoded();
-  CString   GetFilenamePartDirectory();
-  CString   GetFilenamePartFilename();
-  CString   GetFilenamePartBasename();
-  CString   GetFilenamePartExtension();
-  CString   GetFilenamePartDrive();
+  XString   GetNamePercentEncoded();
+  XString   GetFilenamePartDirectory();
+  XString   GetFilenamePartFilename();
+  XString   GetFilenamePartBasename();
+  XString   GetFilenamePartExtension();
+  XString   GetFilenamePartDrive();
   FILETIME  GetFileTimeCreated();
   FILETIME  GetFileTimeModified();
   FILETIME  GetFileTimeAccessed();
@@ -252,20 +252,20 @@ public:
   // Getting the filename from a dialog
   bool      SetFilenameByDialog(HWND     p_parent             // Parent HWND (if any)
                                ,bool     p_open               // true = Open/New, false = SaveAs
-                               ,CString  p_title              // Title of the dialog
-                               ,CString  p_defext   = _T("")  // Default extension
-                               ,CString  p_filename = _T("")  // Default first file
+                               ,XString  p_title              // Title of the dialog
+                               ,XString  p_defext   = _T("")  // Default extension
+                               ,XString  p_filename = _T("")  // Default first file
                                ,int      p_flags    = 0       // Default flags
-                               ,CString  p_filter   = _T("")  // Filter for extensions
-                               ,CString  p_direct   = _T(""));// Directory to start in
+                               ,XString  p_filter   = _T("")  // Filter for extensions
+                               ,XString  p_direct   = _T(""));// Directory to start in
   // Open file as a shared memory segment
-  void*     OpenAsSharedMemory(CString  p_name                // Name of the shared memory segment to open
+  void*     OpenAsSharedMemory(XString  p_name                // Name of the shared memory segment to open
                               ,bool     p_local     = true    // Standard on your local session, otherwise global
                               ,bool     p_trycreate = false   // Create with m_filename if not exists
                               ,size_t   p_size      = 0);     // Size of memory if we create it
-  CString   LegalDirectoryName(CString  p_name,bool p_extensionAllowed = true);
+  XString   LegalDirectoryName(XString  p_name,bool p_extensionAllowed = true);
   // Create a file name from an HTTP resource name
-  CString   FileNameFromResourceName(CString p_resource);
+  XString   FileNameFromResourceName(XString p_resource);
   // Reduce file path name for RE-BASE of directories, removing \..\ parts
   XString  ReduceDirectoryPath(XString& path);
   // Makes a relative pathname from an absolute one
@@ -287,7 +287,7 @@ public:
   WinFile& operator<<(const float    p_num);
   WinFile& operator<<(const double   p_num);
   WinFile& operator<<(const LPCTSTR  p_string);
-  WinFile& operator<<(const CString& p_string);
+  WinFile& operator<<(const XString& p_string);
 
   WinFile& operator>>(TCHAR&    p_char);
   WinFile& operator>>(short&    p_num);
@@ -296,7 +296,7 @@ public:
   WinFile& operator>>(INT64&    p_num);
   WinFile& operator>>(float&    p_num);
   WinFile& operator>>(double&   p_num);
-  WinFile& operator>>(CString&  p_string);
+  WinFile& operator>>(XString&  p_string);
 
   // Handy for streaming an end-of-line as output
   // Does *NOT* do a flush as std::endl does!!
@@ -310,16 +310,16 @@ public:
   // Convert a time_t value to a FILETIME
   static FILETIME ConvertTimetToFileTime(time_t p_time);
   // Translating UTF-8 / UTF-16-LE and UTF-16-BE in reading and writing
-  CString         TranslateInputBuffer(std::string& p_string);
-  std::string     TranslateOutputBuffer(const CString& p_string);
+  XString         TranslateInputBuffer(std::string& p_string);
+  std::string     TranslateOutputBuffer(const XString& p_string);
 
 private:
   // PRIVATE OPERATIONS
-  void      FilenameParts(CString p_fullpath,CString& p_drive,CString& p_directory,CString& p_filename,CString& p_extension);
-  CString   StripFileProtocol  (CString  p_fileref);
-  int       ResolveSpecialChars(CString& p_value);
+  void      FilenameParts(XString p_fullpath,XString& p_drive,XString& p_directory,XString& p_filename,XString& p_extension);
+  XString   StripFileProtocol  (XString  p_fileref);
+  int       ResolveSpecialChars(XString& p_value);
   int       EncodeSpecialChars(XString& p_value);
-  CString   GetBaseDirectory   (CString& p_path);
+  XString   GetBaseDirectory   (XString& p_path);
   // Page buffer cache functions
   uchar*    PageBuffer();
   void      PageBufferFree();
@@ -334,13 +334,13 @@ private:
   // Convert Big-Endian (Blefuscu) to Little-Endian (Lilliput)
   void        BlefuscuToLilliput(std::string& p_gulliver);
 #ifdef _UNICODE
-  CString     ExplodeString(const std::string& p_string,unsigned p_codepage);
-  std::string ImplodeString(const     CString& p_string,unsigned p_codepage);
+  XString     ExplodeString(const std::string& p_string,unsigned p_codepage);
+  std::string ImplodeString(const     XString& p_string,unsigned p_codepage);
 #endif
   // PRIVATE DATA
 
   // The file and open actions
-  CString     m_filename;                           // Name of the file (if any)
+  XString     m_filename;                           // Name of the file (if any)
   HANDLE      m_file         { nullptr };           // Handle to the OS file
   DWORD       m_openMode     { FFlag::no_mode   };  // How the file was opened
   Encoding    m_encoding     { Encoding::EN_ACP };  // Encoding found by BOM

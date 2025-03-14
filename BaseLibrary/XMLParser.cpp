@@ -2,7 +2,7 @@
 //
 // SourceFile: XMLParser.cpp
 //
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -109,7 +109,7 @@ XMLParser::PrintJsonString(const XString& p_string)
 
   for(int ind = 0; ind < p_string.GetLength(); ++ind)
   {
-    TCHAR ch = p_string.GetAt(ind);
+    TCHAR ch = (TCHAR) p_string.GetAt(ind);
     switch(ch)
     {
       case '\"':  *pointer++ = '\\';

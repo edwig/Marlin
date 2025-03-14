@@ -12,7 +12,7 @@
 //                          __/ |                                           
 //                         |___/                                            
 //
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // MIT License:

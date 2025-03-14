@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -55,12 +55,12 @@ XString AsString(double p_number)
 
 int AsInteger(XString p_string)
 {
-  return _ttoi(p_string.GetBuffer());
+  return _ttoi(p_string.GetString());
 }
 
 double  AsDouble(XString p_string)
 {
-  return _ttof(p_string.GetBuffer());
+  return _ttof(p_string.GetString());
 }
 
 bcd AsBcd(XString p_string)

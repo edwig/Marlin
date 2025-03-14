@@ -2,7 +2,7 @@
 //
 // SourceFile: WideMessageBox.cpp
 //
-// Copyright (c) 2006-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -278,7 +278,8 @@ WideMessageBox(HWND    p_hwnd
   }
   else
   {
-    OutputDebugString(_T("WideMessageBox: Cannot get an off-screen measure of the text: ") + text);
+    OutputDebugString(_T("WideMessageBox: Cannot get an off-screen measure of the text: "));
+    OutputDebugString(text.GetString());
     return ::MessageBox(p_hwnd,p_message,p_title,p_buttons);
   }
   std::wstring mess = StringToWString(text);

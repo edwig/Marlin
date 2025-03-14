@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -204,9 +204,9 @@ MultiPart::CreateHeader(XString p_boundary,bool p_extensions /*=false*/)
   for(const auto& head : m_headers)
   {
     header += head.first;
-    header += ": ";
+    header += _T(": ");
     header += head.second;
-    header += "\r\n";
+    header += _T("\r\n");
   }
   // Empty line for the body
   header += _T("\r\n");
@@ -1047,7 +1047,7 @@ MultiPartBuffer::GetAttributeFromLine(const XString& p_line,XString p_name)
   XString line(p_line);
   XString find(p_name);
   line.MakeLower();
-  find += "=";
+  find += _T("=");
 
   int pos = line.Find(find);
   if(pos >= 0)

@@ -2,7 +2,7 @@
 //
 // SourceFile: Environment.cpp
 //
-// Copyright (c) 2015-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -68,11 +68,11 @@ XString GetGeneralFile(XString p_file)
 
 // Remove newline characters from the line buffer
 //
-void RemoveNewline(CString& buffer)
+void RemoveNewline(XString& buffer)
 {
   for(int len = 0;len < buffer.GetLength();++len)
   {
-    TCHAR ch = buffer.GetAt(len);
+    TCHAR ch = (TCHAR) buffer.GetAt(len);
     if(ch == '\n' || ch == '\r')
     {
       buffer.Truncate(len);
@@ -83,7 +83,7 @@ void RemoveNewline(CString& buffer)
 
 // Skip lines that begin with a comment character
 //
-bool SkipComment(CString& p_buffer)
+bool SkipComment(XString& p_buffer)
 {
   if(p_buffer[0] == ';' || p_buffer[0] == '#')
   {
@@ -98,7 +98,7 @@ bool SkipComment(CString& p_buffer)
 // variable > value   ->   variable=<oldvalue>value
 // variable !         ->   Delete variable from the environment
 //
-void ProcessVariable(CString& p_string)
+void ProcessVariable(XString& p_string)
 {
   // Finding the delimiter character (operator)
   int pos = p_string.FindOneOf(_T("+=<>!"));
@@ -154,7 +154,7 @@ void DoProcessEnvironment()
   // Process if found
   if(file.GetIsOpen())
   {
-    CString line;
+    XString line;
     while(file.Read(line))
     {
       RemoveNewline(line);

@@ -7,7 +7,7 @@
 // The string is derived from std::string with XString methods
 // SMX = std::string with MFC eXtensions
 //
-// Copyright (c) 2016-2024 ir. W.E. Huisman MSC
+// Copyright (c) 2016-2025 ir. W.E. Huisman MSC
 //
 // Permission is hereby granted, free of charge, to any person obtaining a 
 // copy of this software and associated documentation files(the "Software"), 
@@ -30,15 +30,25 @@
 
 #include "pch.h"
 #include "BaseLibrary.h"
-#include "XString.h"
 #include "ConvertWideString.h"
-#include <atlbase.h>
+#include "XString.h"
 
-#ifndef __ATLSTR_H__
+// Are we using MFC (AFX)
+#ifdef _AFX
+// If we are using the BaseLibrary within a MFC project
+// The string definition is purely the MFC XString class
+typedef CString XString;
+#pragma message("XString is now defined as MFC::CString")
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#endif
+#else
+#ifdef __ATLSTR_H__
+#pragma message("XString is now defined as ATL::CString")
+#else
+#pragma message("XString is now defined as std::string::MSX_String")
 #endif
 
 SMX_String::SMX_String()
@@ -46,19 +56,13 @@ SMX_String::SMX_String()
 }
 
 // CTOR from character pointer
-SMX_String::SMX_String(const char* p_string)
-           :string(p_string)
+SMX_String::SMX_String(LPCTSTR p_string)
+           :stdstring(p_string)
 {
-}
-
-// CTOR from unsigned char
-SMX_String::SMX_String(const unsigned char* p_string)
-{
-  append((const char*)p_string);
 }
 
 // CTOR from a number of characters
-SMX_String::SMX_String(char p_char,int p_count)
+SMX_String::SMX_String(TCHAR p_char,int p_count /* = 1*/)
 {
   append(p_count,p_char);
 }
@@ -70,15 +74,33 @@ SMX_String::SMX_String(const SMX_String& p_string)
 }
 
 // CTOR from std::string
-SMX_String::SMX_String(const string& p_string)
-           :string(p_string)
+SMX_String::SMX_String(const stdstring& p_string)
+           :stdstring(p_string)
 {
+}
+
+// CTOR from a ANSI string
+SMX_String::SMX_String(PCSTR p_string)
+{
+#ifdef _UNICODE
+  int len = MultiByteToWideChar(CP_ACP,0,p_string,(int)strlen(p_string),nullptr,0);
+  wchar_t* buffer = new wchar_t[len + 1];
+  MultiByteToWideChar(CP_ACP,0,p_string,(int)strlen(p_string),buffer,len);
+  append(buffer);
+  delete [] buffer;
+#else
+  append(p_string);
+#endif
 }
 
 BSTR 
 SMX_String::AllocSysString()
 {
+#ifdef _UNICODE
+  wstring str = *this;
+#else
   wstring str = StringToWString(this->c_str());
+#endif
   BSTR bstrResult = ::SysAllocString(str.c_str());
 
   if(bstrResult == NULL)
@@ -88,18 +110,27 @@ SMX_String::AllocSysString()
   return(bstrResult);
 }
 
+void 
+SMX_String::AnsiToOem()
+{
+#ifndef _UNICODE
+  // Only works for MBCS, not for Unicode
+  ::CharToOemBuff(reinterpret_cast<LPCSTR>(c_str()),reinterpret_cast<LPSTR>(c_str()),reinterpret_cast<DWORD>(length()));
+#endif
+}
+
 // Append a string, or n chars from a string
 //
 void 
-SMX_String::Append(LPCSTR p_string,int p_length)
+SMX_String::Append(LPCTSTR p_string,int p_length)
 {
-  string str(p_string);
+  stdstring str(p_string);
   append(str.substr(0,p_length));
 }
 
 // Append a formatted string
 void 
-SMX_String::AppendFormat(LPCSTR p_format,...)
+SMX_String::AppendFormat(LPCTSTR p_format,...)
 {
   va_list argList;
   va_start(argList,p_format);
@@ -121,13 +152,13 @@ SMX_String::AppendFormat(UINT p_strID,...)
 }
 
 void 
-SMX_String::AppendFormatV(LPCSTR p_format,va_list p_list)
+SMX_String::AppendFormatV(LPCTSTR p_format,va_list p_list)
 {
   // Getting a buffer of the correct length
-  int len = _vscprintf(p_format,p_list) + 1;
-  char* buffer = new char[len];
+  int len = _vsctprintf(p_format,p_list) + 1;
+  TCHAR* buffer = new TCHAR[len];
   // Formatting the parameters
-  vsprintf_s(buffer,len,p_format,p_list);
+  _vstprintf_s(buffer,len,p_format,p_list);
   // Adding to the string
   append(buffer);
 
@@ -142,10 +173,10 @@ SMX_String::AppendFormatV(UINT p_strID,va_list p_list)
   if(str.LoadString(p_strID))
   {
     // Getting a buffer of the correct length
-    int len = _vscprintf(str.c_str(),p_list) + 1;
-    char* buffer = new char[len];
+    int len = _vsctprintf(str.c_str(),p_list) + 1;
+    TCHAR* buffer = new TCHAR[len];
     // Formatting the parameters
-    vsprintf_s(buffer,len,str.c_str(),p_list);
+    _vstprintf_s(buffer,len,str.c_str(),p_list);
     // Adding to the string
     append(buffer);
 
@@ -163,7 +194,7 @@ SMX_String::Delete(int p_index,int p_count)
 
 // Format a string
 void 
-SMX_String::Format(LPCSTR p_format,...)
+SMX_String::Format(LPCTSTR p_format,...)
 {
   va_list argList;
   va_start(argList,p_format);
@@ -187,7 +218,7 @@ SMX_String::Format(UINT p_strID,...)
 void
 SMX_String::Format(SMX_String p_format,...)
 {
-  LPCSTR format = p_format.c_str();
+  LPCTSTR format = p_format.c_str();
   va_list argList;
   va_start(argList,format);
 
@@ -198,15 +229,15 @@ SMX_String::Format(SMX_String p_format,...)
 
 // Format a variable list
 void 
-SMX_String::FormatV(LPCSTR p_format,va_list p_list)
+SMX_String::FormatV(LPCTSTR p_format,va_list p_list)
 {
   // Getting a buffer of the correct length
-  int len = _vscprintf(p_format,p_list) + 1;
-  char* buffer = new char[len];
+  int len = _vsctprintf(p_format,p_list) + 1;
+  TCHAR* buffer = new TCHAR[len];
   // Formatting the parameters
-  vsprintf_s(buffer,len,p_format,p_list);
+  _vstprintf_s(buffer,len,p_format,p_list);
   // Adding to the string
-  *this = buffer;
+  *this = (LPCTSTR)buffer;
 
   delete[] buffer;
 }
@@ -219,12 +250,12 @@ SMX_String::FormatV(UINT p_strID,va_list p_list)
   if(str.LoadString(p_strID))
   {
     // Getting a buffer of the correct length
-    int len = _vscprintf(str.c_str(),p_list) + 1;
-    char* buffer = new char[len];
+    int len = _vsctprintf(str.c_str(),p_list) + 1;
+    TCHAR* buffer = new TCHAR[len];
     // Formatting the parameters
-    vsprintf_s(buffer,len,str.c_str(),p_list);
+    _vstprintf_s(buffer,len,str.c_str(),p_list);
     // Adding to the string
-    *this = buffer;
+    *this = (LPCTSTR)buffer;
 
     delete[] buffer;
   }
@@ -232,7 +263,7 @@ SMX_String::FormatV(UINT p_strID,va_list p_list)
 
 // Format a message by system format instead of printf
 void 
-SMX_String::FormatMessage(LPCSTR p_format,...)
+SMX_String::FormatMessage(LPCTSTR p_format,...)
 {
   va_list argList;
   va_start(argList,p_format);
@@ -254,10 +285,10 @@ SMX_String::FormatMessage(UINT p_strID,...)
 }
 
 void 
-SMX_String::FormatMessageV(LPCSTR p_format,va_list* p_list)
+SMX_String::FormatMessageV(LPCTSTR p_format,va_list* p_list)
 {
   // format message into temporary buffer pszTemp
-  CHeapPtr<CHAR,CLocalAllocator> pszTemp;
+  CHeapPtr<TCHAR,CLocalAllocator> pszTemp;
 
   // FormatMessage returns zero in case of failure or the number of characters
   // if it is success, but we may actually get 0 as a number of characters.
@@ -275,7 +306,7 @@ SMX_String::FormatMessageV(LPCSTR p_format,va_list* p_list)
   }
   ::SetLastError(dwLastError);
 
-  *this = (LPSTR)pszTemp;
+  *this = (LPCTSTR)pszTemp;
 }
 
 void 
@@ -286,7 +317,7 @@ SMX_String::FormatMessageV(UINT p_strID,va_list* p_list)
   if(format.LoadString(p_strID))
   {
     // format message into temporary buffer pszTemp
-    CHeapPtr<CHAR,CLocalAllocator> pszTemp;
+    CHeapPtr<TCHAR,CLocalAllocator> pszTemp;
     DWORD dwLastError = ::GetLastError();
     ::SetLastError(0);
 
@@ -299,16 +330,16 @@ SMX_String::FormatMessageV(UINT p_strID,va_list* p_list)
     }
     ::SetLastError(dwLastError);
 
-    *this = (LPSTR)pszTemp;
+    *this = (LPCTSTR)pszTemp;
   }
 }
 
 // Getting buffer of at least p_length + 1 size
-PSTR 
+PTSTR 
 SMX_String::GetBufferSetLength(int p_length)
 {
   reserve(p_length);
-  return (PSTR)c_str();
+  return (PTSTR)c_str();
 }
 
 // Getting a shell environment variable
@@ -324,7 +355,7 @@ SMX_String::GetEnvironmentVariable(LPCTSTR p_variable)
   }
   else
   {
-    char* pszBuffer = new char[length + 1];
+    TCHAR* pszBuffer = new TCHAR[length + 1];
     ::GetEnvironmentVariable(p_variable,(LPTSTR)pszBuffer,length);
     *this = pszBuffer;
     delete [] pszBuffer;
@@ -335,14 +366,14 @@ SMX_String::GetEnvironmentVariable(LPCTSTR p_variable)
 
 // Insert char or string
 int 
-SMX_String::Insert(int p_index,LPCSTR p_string)
+SMX_String::Insert(int p_index,LPCTSTR p_string)
 {
   insert(p_index,p_string);
   return (int)length();
 }
 
 int 
-SMX_String::Insert(int p_index,char p_char)
+SMX_String::Insert(int p_index,TCHAR p_char)
 {
   insert(p_index,1,p_char);
   return (int)length();
@@ -356,7 +387,10 @@ SMX_String::Left(int p_length) const
   {
     p_length = 0;
   }
-  return SMX_String(substr(0,p_length));
+
+  stdstring copy(*this);
+  const SMX_String left(copy.substr(0,p_length));
+  return left;
 }
 
 // Load a string from the resources
@@ -392,7 +426,11 @@ SMX_String::LoadString(HINSTANCE p_inst,UINT p_strID,WORD p_languageID)
   ((char*)temp)[realSize - 1] = 0;
   ((char*)temp)[realSize - 2] = 0;
 
-  *this = (LPSTR) WStringToString(temp).GetString();
+#ifdef _UNICODE
+  *this = temp;
+#else
+  *this = (LPCSTR) WStringToString(temp).GetString();
+#endif
 
   delete [] temp;
   return(TRUE);
@@ -400,7 +438,7 @@ SMX_String::LoadString(HINSTANCE p_inst,UINT p_strID,WORD p_languageID)
 
 // Lock the buffer returning the string
 // Does not exactly what XString does!!
-PCSTR 
+PCTSTR 
 SMX_String::LockBuffer()
 {
   // Lock();
@@ -454,7 +492,7 @@ SMX_String::ReleaseBufferSetLength(int p_newLength)
 
 // Remove all occurrences of char
 int 
-SMX_String::Remove(char p_char)
+SMX_String::Remove(TCHAR p_char)
 {
   int count = 0;
   size_t pos = 0;
@@ -475,10 +513,10 @@ SMX_String::Remove(char p_char)
 
 // Replace a string or a character
 
-int SMX_String::Replace(PCSTR p_old,PCSTR p_new)
+int SMX_String::Replace(PCTSTR p_old,PCTSTR p_new)
 {
   int    count  = 0;
-  size_t length = strlen(p_old);
+  size_t length = _tcslen(p_old);
   size_t pos    = find(p_old);
 
   while(pos != string::npos)
@@ -491,7 +529,7 @@ int SMX_String::Replace(PCSTR p_old,PCSTR p_new)
 }
 
 int 
-SMX_String::Replace(char p_old,char p_new)
+SMX_String::Replace(TCHAR p_old,TCHAR p_new)
 {
   int count = 0;
   size_t pos = find(p_old);
@@ -519,7 +557,7 @@ SMX_String::Right(int p_length) const
 
 // Set char at a position
 void 
-SMX_String::SetAt(int p_index,char p_char)
+SMX_String::SetAt(int p_index,TCHAR p_char)
 {
   int sz = (int) size();
   if(p_index < 0 || p_index > sz)
@@ -538,7 +576,7 @@ SMX_String::SetAt(int p_index,char p_char)
 
 // SetString interface
 void 
-SMX_String::SetString(PCSTR p_string)
+SMX_String::SetString(PCTSTR p_string)
 {
   if(p_string == nullptr)
   {
@@ -560,13 +598,13 @@ SMX_String::SetString(PCSTR p_string)
 }
 
 void 
-SMX_String::SetString(PCSTR p_string,int p_length)
+SMX_String::SetString(PCTSTR p_string,int p_length)
 {
   if(p_string == nullptr)
   {
     throw std::exception("Null pointer string");
   }
-  std::string str(p_string);
+  stdstring str(p_string);
   if(p_length < (int)str.size())
   {
     str.resize(p_length);
@@ -580,6 +618,9 @@ SMX_String::SetString(PCSTR p_string,int p_length)
 BSTR 
 SMX_String::SetSysString(BSTR* p_string)
 {
+#ifdef _UNICODE
+  _tcscpy_s(*p_string,GetLength(),c_str());
+#else
   int nLen = ::MultiByteToWideChar(CP_ACP,0,c_str(),(DWORD)size(),NULL,NULL);
   BOOL bSuccess = ::SysReAllocStringLen(p_string,NULL,nLen);
   if(bSuccess)
@@ -588,47 +629,48 @@ SMX_String::SetSysString(BSTR* p_string)
   }
   else
   {
-    throw StdException("Bad SMX_String allocation!");
+    throw StdException(_T("Bad SMX_String allocation!"));
   }
+#endif
   return(*p_string);
 }
 
 // Leftmost string not in argument
 SMX_String 
-SMX_String::SpanExcluding(PCSTR p_string)
+SMX_String::SpanExcluding(PCTSTR p_string)
 {
   if(p_string == nullptr)
   {
-    throw std::exception("Null pointer string");
+    throw StdException(_T("Null pointer string"));
   }
-  return Left((int)strcspn(c_str(),p_string));
+  return Left((int)_tcscspn(c_str(),p_string));
 }
 
 // Leftmost string in argument
 SMX_String 
-SMX_String::SpanIncluding(PCSTR p_string)
+SMX_String::SpanIncluding(PCTSTR p_string)
 {
   if(p_string == nullptr)
   {
     throw std::exception("Null pointer string");
   }
-  return Left((int)strspn(c_str(),p_string));
+  return Left((int)_tcsspn(c_str(),p_string));
 }
 
 // Length of the string
 int 
-SMX_String::StringLength(PCSTR p_string)
+SMX_String::StringLength(PCTSTR p_string)
 {
   if(p_string == nullptr)
   {
     return 0;
   }
-  return (int)strlen(p_string);
+  return (int)_tcslen(p_string);
 }
 
 // Return tokenized strings
 SMX_String 
-SMX_String::Tokenize(PCSTR p_tokens,int& p_curpos) const
+SMX_String::Tokenize(PCTSTR p_tokens,int& p_curpos) const
 {
   if(p_curpos < 0)
   {
@@ -643,16 +685,16 @@ SMX_String::Tokenize(PCSTR p_tokens,int& p_curpos) const
   }
   else
   {
-    PCSTR pszPlace = c_str() + p_curpos;
-    PCSTR pszEnd   = c_str() + size();
+    PCTSTR pszPlace = c_str() + p_curpos;
+    PCTSTR pszEnd   = c_str() + size();
     if(pszPlace < pszEnd)
     {
-      int nIncluding = (int)strspn(pszPlace,p_tokens);
+      int nIncluding = (int)_tcsspn(pszPlace,p_tokens);
 
       if((pszPlace + nIncluding) < pszEnd)
       {
         pszPlace += nIncluding;
-        int nExcluding = (int)strcspn(pszPlace,p_tokens);
+        int nExcluding = (int)_tcscspn(pszPlace,p_tokens);
 
         int iFrom  = p_curpos + nIncluding;
         int nUntil = nExcluding;
@@ -665,14 +707,14 @@ SMX_String::Tokenize(PCSTR p_tokens,int& p_curpos) const
   // return empty string, done tokenizing
   p_curpos = -1;
 
-  return SMX_String("");
+  return SMX_String(_T(""));
 }
 
 SMX_String& 
-SMX_String::TrimLeft(char p_char)
+SMX_String::TrimLeft(TCHAR p_char)
 {
   int count = 0;
-  PCSTR str = c_str();
+  PCTSTR str = c_str();
   while(*str && *str == p_char)
   {
     ++str;
@@ -684,7 +726,7 @@ SMX_String::TrimLeft(char p_char)
 }
 
 SMX_String& 
-SMX_String::TrimLeft(PCSTR p_string)
+SMX_String::TrimLeft(PCTSTR p_string)
 {
   // if we're not trimming anything, we're not doing any work
   if((p_string == nullptr) || (*p_string == 0))
@@ -692,8 +734,8 @@ SMX_String::TrimLeft(PCSTR p_string)
     return(*this);
   }
 
-  PCSTR psz = c_str();
-  while((*psz != 0) && (strchr(p_string,*psz) != NULL)) ++psz;
+  PCTSTR psz = c_str();
+  while((*psz != 0) && (_tcschr(p_string,*psz) != NULL)) ++psz;
 
   if(psz != c_str())
   {
@@ -704,7 +746,7 @@ SMX_String::TrimLeft(PCSTR p_string)
   return(*this);
 }
 
-SMX_String& SMX_String::TrimRight(char p_char)
+SMX_String& SMX_String::TrimRight(TCHAR p_char)
 {
   if(!empty())
   {
@@ -724,7 +766,7 @@ SMX_String& SMX_String::TrimRight(char p_char)
 }
 
 SMX_String& 
-SMX_String::TrimRight(PCSTR p_string)
+SMX_String::TrimRight(PCTSTR p_string)
 {
   // if we're not trimming anything, we're not doing any work
   if((p_string == nullptr) || (*p_string == 0))
@@ -736,7 +778,7 @@ SMX_String::TrimRight(PCSTR p_string)
   size_t pos = size() - 1;
   while(pos != string::npos)
   {
-    if(strchr(p_string,at(pos)) != nullptr)
+    if(_tcschr(p_string,at(pos)) != nullptr)
     {
       --pos;
     }
@@ -758,21 +800,37 @@ SMX_String::TrimRight(PCSTR p_string)
 //
 //////////////////////////////////////////////////////////////////////////
 
-SMX_String::operator char*() const
+SMX_String::operator LPTSTR() const
 {
-  return (char*)c_str();
+  return (LPTSTR)c_str();
 }
 
-SMX_String::operator const char*() const
+SMX_String::operator LPCTSTR() const
 {
   return c_str();
 }
 
 SMX_String
-SMX_String::operator+(SMX_String& p_extra) const
+SMX_String::operator+(const SMX_String& p_extra) const
+{
+  SMX_String string(c_str());
+  string.append(p_extra.c_str());
+  return string;
+}
+
+SMX_String
+SMX_String::operator+(LPCTSTR p_extra) const
 {
   SMX_String string(c_str());
   string.append(p_extra);
+  return string;
+}
+
+SMX_String 
+SMX_String::operator+ (const TCHAR p_char) const
+{
+  SMX_String string(c_str());
+  string.append(1,p_char);
   return string;
 }
 
@@ -784,20 +842,20 @@ SMX_String::operator+=(SMX_String& p_extra)
 }
 
 SMX_String
-SMX_String::operator+=(std::string& p_string)
+SMX_String::operator+=(stdstring& p_string)
 {
   append(p_string);
   return *this;
 }
 
 SMX_String
-SMX_String::operator+=(const char* p_extra)
+SMX_String::operator+=(LPCTSTR p_extra)
 {
   append(p_extra);
   return *this;
 }
 
-SMX_String
+SMX_String&
 SMX_String::operator=(const SMX_String& p_extra)
 {
   assign(p_extra);
@@ -805,11 +863,19 @@ SMX_String::operator=(const SMX_String& p_extra)
 }
 
 SMX_String
-SMX_String::operator+=(const char p_char)
+SMX_String::operator+=(const TCHAR p_char)
 {
   append(1,p_char);
   return *this;
 }
+
+SMX_String&
+SMX_String::operator=(LPCTSTR p_string)
+{
+  assign(p_string);
+  return *this;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //

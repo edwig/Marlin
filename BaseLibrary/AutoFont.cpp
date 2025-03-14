@@ -4,7 +4,7 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
+// Copyright (c) 2014-2025 ir. W.E. Huisman
 // All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -405,7 +405,7 @@ XString AutoFont::ContractFont()
             m_lf.lfPitchAndFamily,
             m_lf.lfFaceName);
   color.Format(_T("%ul"),m_fontColor);
-  str += ",";
+  str += _T(",");
   str += color;
 
 	return str;
