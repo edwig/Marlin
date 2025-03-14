@@ -626,23 +626,10 @@ WebServiceServer::RunService()
     return false;
   }
 
-  // Only starting the server if no (real) errors found
-  if(::GetLastError() == NO_ERROR || 
-     ::GetLastError() == ERROR_ALREADY_EXISTS)
+  // Go run our service!!
+  if(m_httpServer->GetIsRunning() == false)
   {
-    // Go run our service!!
-    if(m_httpServer->GetIsRunning() == false)
-    {
-      m_httpServer->Run();
-    }
-  }
-  else
-  {
-    m_errorMessage.Format(_T("Cannot start HTTPServer. Server in error state. Error %lu: %s")
-                          ,::GetLastError()
-                          ,GetLastErrorAsString().GetString());
-    m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,m_errorMessage);
-    return false;
+    m_httpServer->Run();
   }
   // Now legally running
   return (m_isRunning = true);

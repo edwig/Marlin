@@ -33,8 +33,8 @@ typedef void HTTPSite;
 typedef void HTTPMessage;
 
 // Exported functions that can be called from the MarlinModule
-typedef ServerApp*    (CALLBACK* CreateServerAppFunc)(IHttpServer*,LPCTSTR,LPCTSTR);
-typedef bool          (CALLBACK* InitServerAppFunc)  (ServerApp*,IHttpApplication* p_hhtpapp,XString p_physial);
+typedef ServerApp*    (CALLBACK* CreateServerAppFunc)(IHttpServer*,PCWSTR,PCWSTR);
+typedef bool          (CALLBACK* InitServerAppFunc)  (ServerApp*,IHttpApplication* p_hhtpapp,PCWSTR p_physial);
 typedef void          (CALLBACK* ExitServerAppFunc)  (ServerApp*);
 typedef HTTPSite*     (CALLBACK* FindHTTPSiteFunc)   (ServerApp*,int port,PCWSTR p_url);
 typedef int           (CALLBACK* GetHTTPStreamFunc)  (ServerApp*,IHttpContext*,HTTPSite*,PHTTP_REQUEST);
@@ -44,7 +44,7 @@ typedef int           (CALLBACK* SitesInApplicPool)  (ServerApp*);
 typedef bool          (CALLBACK* MinVersionFunc)     (ServerApp*,int version);
 
 // Our IIS Server
-extern IHttpServer* g_iisServer;
+extern IHttpServer* g_IISServer;
 
 // Helper class with a web application
 // Also contains the function pointers into our application DLL

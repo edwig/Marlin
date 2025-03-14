@@ -76,23 +76,23 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Static</UseOfMfc>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
-    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -100,7 +100,7 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Static</UseOfMfc>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -194,7 +194,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;wldap32.lib;ws2_32.lib;bcrypt.lib</AdditionalDependencies>
+      <AdditionalDependencies>comdlg32.lib;bcrypt.lib;crypt32.lib;winhttp.lib;rpcrt4.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
@@ -220,7 +220,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;wldap32.lib;ws2_32.lib;bcrypt.lib</AdditionalDependencies>
+      <AdditionalDependencies>comdlg32.lib;bcrypt.lib;crypt32.lib;winhttp.lib;rpcrt4.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
@@ -294,7 +294,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;wldap32.lib;ws2_32.lib;bcrypt.lib;Comdlg32.lib</AdditionalDependencies>
+      <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;wldap32.lib;ws2_32.lib;bcrypt.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseUnicode|Win32'">
@@ -322,7 +322,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;wldap32.lib;ws2_32.lib;bcrypt.lib;Comdlg32.lib</AdditionalDependencies>
+      <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;wldap32.lib;ws2_32.lib;bcrypt.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -347,7 +347,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;wldap32.lib;ws2_32.lib;bcrypt.lib;Comdlg32.lib</AdditionalDependencies>
+      <AdditionalDependencies>comdlg32.lib;bcrypt.lib;crypt32.lib;winhttp.lib;rpcrt4.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -373,7 +373,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>httpapi.lib;secur32.lib;Rpcrt4.lib;winhttp.lib;crypt32.lib;websocket.lib;wldap32.lib;ws2_32.lib;bcrypt.lib;Comdlg32.lib</AdditionalDependencies>
+      <AdditionalDependencies>comdlg32.lib;bcrypt.lib;crypt32.lib;winhttp.lib;rpcrt4.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>

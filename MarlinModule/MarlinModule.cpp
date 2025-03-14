@@ -52,11 +52,11 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // GLOBALS Needed for the module
-       AppPool       g_IISApplicationPool;   // All applications in the application pool
-static wchar_t       g_moduleName[SERVERNAME_BUFFERSIZE + 1] = L"";
-static bool          g_debugMode = false;
-       TCHAR         g_adminEmail[MAX_PATH];
-       IHttpServer*  g_iisServer = nullptr;
+AppPool       g_IISApplicationPool;   // All applications in the application pool
+wchar_t       g_IISModuleName[SERVERNAME_BUFFERSIZE + 1] = L"";
+bool          g_IISDebugMode = false;
+wchar_t       g_IISAdminEmail[MAX_PATH];
+IHttpServer*  g_IISServer    = nullptr;
 
 // Logging macro for this file only
 #define DETAILLOG(text)    SvcReportInfoEvent(false,text)
@@ -97,7 +97,7 @@ RegisterModule(DWORD                        p_version
   DWORD moduleEvents = RQ_RESOLVE_REQUEST_CACHE |   // Request is found in the cache or from internet
                        RQ_EXECUTE_REQUEST_HANDLER;  // Request is authenticated, ready for processing
   // Add RQ_BEGIN_REQUEST only for debugging purposes!!
-  if(g_debugMode)
+  if(g_IISDebugMode)
   {
     // First point to intercept the IIS integrated pipeline
     moduleEvents |= RQ_BEGIN_REQUEST;
@@ -109,9 +109,9 @@ RegisterModule(DWORD                        p_version
   ApplicationConfigStart(p_version);
 
   // Preserving the server in a global pointer
-  if(g_iisServer == nullptr)
+  if(g_IISServer == nullptr)
   {
-    g_iisServer = p_server;
+    g_IISServer = p_server;
   }
   else
   {
@@ -121,7 +121,7 @@ RegisterModule(DWORD                        p_version
   }
 
   // Register name of our module
-  wcsncpy_s(g_moduleName,SERVERNAME_BUFFERSIZE,p_moduleInfo->GetName(),SERVERNAME_BUFFERSIZE);
+  wcsncpy_s(g_IISModuleName,SERVERNAME_BUFFERSIZE,p_moduleInfo->GetName(),SERVERNAME_BUFFERSIZE);
 
   // Register global notifications to process
   HRESULT hr = p_moduleInfo->SetGlobalNotifications(new MarlinGlobalFactory(),globalEvents);
@@ -178,7 +178,7 @@ ApplicationConfigStart(DWORD p_version)
   debugPath += _T("\\system32\\inetsrv\\debug.txt");
   if(_taccess(debugPath.GetString(),0) == 0)
   {
-    g_debugMode = true;
+    g_IISDebugMode = true;
   }
 
   // Tell that we started the module.
@@ -186,7 +186,7 @@ ApplicationConfigStart(DWORD p_version)
                     ,_T("Marlin native module called by IIS version %d.%d. Debug mode: %s")
                     ,p_version / 0x10000
                     ,p_version % 0x10000
-                    ,g_debugMode ? _T("ON") : _T("OFF"));
+                    ,g_IISDebugMode ? _T("ON") : _T("OFF"));
 }
 
 // Stopping the ApplicationHost.Config
@@ -203,19 +203,17 @@ ApplicationConfigStop()
 // and must stop the complete pool (w3wp.exe) process
 void Unhealthy(XString p_error, HRESULT p_code)
 {
-  USES_CONVERSION;
-
   // Print to the MS-Windows WMI
   ERRORLOG(p_error);
-  CComBSTR werr = T2CW(p_error);
+  CComBSTR werr(p_error);
   // Report to IIS to kill the application with **this** reason
-  g_iisServer->ReportUnhealthy(werr,p_code);
+  g_IISServer->ReportUnhealthy(werr,p_code);
 
   _set_se_translator(SeTranslator);
   try
   {
     // Stopping the application pool
-    XString appPoolName = (LPCTSTR) CW2T(g_iisServer->GetAppPoolName());
+    XString appPoolName = g_IISServer->GetAppPoolName();
     XString command;
     XString parameters;
     if(!command.GetEnvironmentVariable(_T("WINDIR")))
@@ -269,12 +267,11 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
 {
   // One application start at the time
   AutoCritSec lock(&m_lock);
-  USES_CONVERSION;
 
   IHttpApplication* httpapp = p_provider->GetApplication();
-  XString appName     = (LPCTSTR) CW2T(httpapp->GetApplicationId());
-  XString configPath  = (LPCTSTR) CW2T(httpapp->GetAppConfigPath());
-  XString physical    = (LPCTSTR) CW2T(httpapp->GetApplicationPhysicalPath());
+  XString appName     = httpapp->GetApplicationId();
+  XString configPath  = httpapp->GetAppConfigPath();
+  XString physical    = httpapp->GetApplicationPhysicalPath();
   XString webroot     = ExtractWebroot(configPath,physical);
   XString appSite     = ExtractAppSite(configPath);
   int applicationPort = INTERNET_DEFAULT_HTTPS_PORT;
@@ -291,11 +288,11 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
 
   // Starting the following application
   XString message(_T("Starting IIS Application"));
-  message += _T("\r\nIIS ApplicationID/name: ") + appName;
-  message += _T("\r\nIIS Configuration path: ") + configPath;
-  message += _T("\r\nIIS Physical path     : ") + physical;
-  message += _T("\r\nIIS Extracted webroot : ") + webroot;
-  message += _T("\r\nIIS Application       : ") + application;
+  message += XString(_T("\r\nIIS ApplicationID/name: ")) + appName;
+  message += XString(_T("\r\nIIS Configuration path: ")) + configPath;
+  message += XString(_T("\r\nIIS Physical path     : ")) + physical;
+  message += XString(_T("\r\nIIS Extracted webroot : ")) + webroot;
+  message += XString(_T("\r\nIIS Application       : ")) + application;
   message.AppendFormat(_T("\r\nIIS Application port  : %d"),applicationPort);
   DETAILLOG(message.GetString());
 
@@ -346,10 +343,9 @@ GLOBAL_NOTIFICATION_STATUS
 MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider* p_provider)
 {
   AutoCritSec lock(&m_lock);
-  USES_CONVERSION;
 
   IHttpApplication* httpapp = p_provider->GetApplication();
-  XString configPath = (LPCTSTR) CW2T(httpapp->GetAppConfigPath());
+  XString configPath = httpapp->GetAppConfigPath();
   XString appSite    = ExtractAppSite(configPath);
   PoolApp* poolapp   = nullptr;
 
@@ -441,7 +437,7 @@ MarlinGlobalFactory::ExtractWebroot(XString p_configPath,XString p_physicalPath)
     if(config.Compare(physic) == 0)
     {
       XString webroot = p_physicalPath.Left(lastPosPhys);
-      webroot += "\\";
+      webroot += _T("\\");
       return webroot;
     }
   }
@@ -484,7 +480,7 @@ MarlinGlobalFactory::StillUsed(const HMODULE& p_module)
 bool
 MarlinGlobalFactory::ModuleInHandlers(const XString& p_configPath)
 {
-  IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+  IAppHostAdminManager* manager = g_IISServer->GetAdminManager();
 
   // Finding all HTTP Handlers in the configuration
   IAppHostElement* handlersElement = nullptr;
@@ -511,7 +507,7 @@ MarlinGlobalFactory::ModuleInHandlers(const XString& p_configPath)
 
           if(childElement->GetPropertyByName(CComBSTR(L"modules"),&prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
           {
-            if(wcsncmp(vvar.bstrVal,g_moduleName,SERVERNAME_BUFFERSIZE) == 0)
+            if(wcsncmp(vvar.bstrVal,g_IISModuleName,SERVERNAME_BUFFERSIZE) == 0)
             {
               // At least one of the handlers of the website refers to this module and wants to use it.
               return true;
@@ -528,7 +524,7 @@ MarlinGlobalFactory::ModuleInHandlers(const XString& p_configPath)
 bool
 MarlinGlobalFactory::ApplicationNameAndPort(const XString& p_configPath,XString& p_application,int& p_port)
 {
-  IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+  IAppHostAdminManager* manager = g_IISServer->GetAdminManager();
   if(manager == nullptr)
   {
     return false;
@@ -723,8 +719,9 @@ MarlinModule::OnBeginRequest(IN IHttpContext*       p_context,
     // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
     const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
     // This is the call we are getting
-    XString logging("Request for: ");
-    logging += rawRequest->pRawUrl;
+    XString logging(_T("Request for: "));
+    XString url(rawRequest->pRawUrl);
+    logging += url;
     DETAILLOG(logging);
 
     // Here we can debug IIS variables, before other functionality is called!
@@ -802,7 +799,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   }
 
   // This is the call we are getting
-  if(g_debugMode)
+  if(g_IISDebugMode)
   {
     XString url = LPCSTRToString(rawRequest->pRawUrl);
     DETAILLOG(url);
@@ -816,10 +813,10 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
   {
     // Not our request: Other app running on this machine!
     // This is why it is wasteful to use IIS for our internet server!
-    if(g_debugMode)
+    if(g_IISDebugMode)
     {
       XString message(_T("Rejected HTTP call: "));
-      message += rawRequest->pRawUrl;
+      message += XString(rawRequest->pRawUrl);
       ERRORLOG(message);
     }
     // Let someone else handle this call (if any :-( )
@@ -907,7 +904,7 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   }
 
   // This is the call we are getting
-  if(g_debugMode)
+  if(g_IISDebugMode)
   {
     XString url = LPCSTRToString(rawRequest->pRawUrl);
     DETAILLOG(url);
@@ -922,7 +919,7 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
   {
     // Not our request: Other app running on this machine!
     // This is why it is wasteful to use IIS for our internet server!
-    if(g_debugMode)
+    if(g_IISDebugMode)
     {
       XString message(_T("Rejected HTTP call: "));
       message += LPCSTRToString(rawRequest->pRawUrl);

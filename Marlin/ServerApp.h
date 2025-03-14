@@ -68,8 +68,8 @@ class ServerApp
 {
 public:
   ServerApp(IHttpServer* p_iis
-           ,LPCTSTR      p_webroot
-           ,LPCTSTR      p_appName);
+           ,PCWSTR       p_webroot
+           ,PCWSTR       p_appName);
   virtual ~ServerApp();
 
   // BEWARE: MarlinModule uses VTABLE in this order
@@ -90,7 +90,7 @@ public:
   virtual void SetLogLevel(int p_logLevel);
 
   // Start our sites from the IIS configuration
-  virtual void LoadSites(IHttpApplication* p_app,XString p_physicalPath);
+  virtual void LoadSites(IHttpApplication* p_app,PCWSTR p_physicalPath);
   // Stopping all of our sites in the IIS configuration
   virtual void UnloadSites();
 
@@ -125,7 +125,6 @@ protected:
   // Read the site's configuration from the IIS internal structures
   bool  ReadSite    (IAppHostElementCollection* p_sites,XString p_site,int p_num,IISSiteConfig& p_config);
   bool  ReadBinding (IAppHostElementCollection* p_bindings,int p_item,IISBinding& p_binding);
-  void  ReadModules (CComBSTR& p_configPath);
   void  ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config);
 
   // General way to read a property
@@ -157,8 +156,8 @@ public:
   ServerAppFactory();
 
   virtual ServerApp* CreateServerApp(IHttpServer* p_iis
-                                    ,LPCTSTR      p_webroot
-                                    ,LPCTSTR      p_appName);
+                                    ,PCWSTR       p_webroot
+                                    ,PCWSTR       p_appName);
 };
 
 extern ServerAppFactory* appFactory;

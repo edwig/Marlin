@@ -66,14 +66,14 @@ extern "C"
 //
 __declspec(dllexport)
 ServerApp* _stdcall CreateServerApp(IHttpServer* p_server
-                                   ,LPCTSTR      p_webroot
-                                   ,LPCTSTR     p_appName)
+                                   ,PCWSTR       p_webroot
+                                   ,PCWSTR       p_appName)
 {
   return appFactory->CreateServerApp(p_server,p_webroot,p_appName);
 }
 
 __declspec(dllexport)
-bool _stdcall InitServerApp(ServerApp* p_application,IHttpApplication* p_httpapp,XString p_physical)
+bool _stdcall InitServerApp(ServerApp* p_application,IHttpApplication* p_httpapp,PCWSTR p_physical)
 {
   if(p_application)
   {
@@ -255,12 +255,21 @@ bool __stdcall MinMarlinVersion(ServerApp* p_application,int p_version)
 
 // XTOR
 ServerApp::ServerApp(IHttpServer* p_iis
-                    ,LPCTSTR      p_webroot
-                    ,LPCTSTR      p_appName)
+                    ,PCWSTR       p_webroot
+                    ,PCWSTR       p_appName)
           :m_iis(p_iis)
           ,m_webroot(p_webroot)
           ,m_applicationName(p_appName)
 {
+#ifdef _UNICODE
+  m_webroot         = p_webroot;
+  m_applicationName = p_appName;
+#else
+  CStringA webroot(p_webroot);
+  CStringA appname(p_appName);
+  m_webroot         = webroot;
+  m_applicationName = appname;
+#endif
   // Keep global pointer to the server
   g_iisServer = p_iis;
 }
@@ -542,7 +551,7 @@ ServerApp::GetSiteConfig(int ind)
 
 // Start our sites from the IIS configuration
 void 
-ServerApp::LoadSites(IHttpApplication* p_app,XString p_physicalPath)
+ServerApp::LoadSites(IHttpApplication* p_app,PCWSTR p_physicalPath)
 {
   XString config(p_app->GetAppConfigPath());
   int pos = config.ReverseFind('/');
@@ -550,9 +559,6 @@ ServerApp::LoadSites(IHttpApplication* p_app,XString p_physicalPath)
 
   CComBSTR siteCollection = L"system.applicationHost/sites";
   CComBSTR configPath = StringToWString(config).c_str();
-
-  // Reading all global modules of the IIS installation
-  ReadModules(configPath);
 
   IAppHostElement*      element = nullptr;
   IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
@@ -562,13 +568,20 @@ ServerApp::LoadSites(IHttpApplication* p_app,XString p_physicalPath)
     element->get_Collection(&sites);
     if(sites)
     {
+#ifdef _UNICODE
+      XString physicalPath(p_physicalPath);
+#else
+      CStringA physical(p_physicalPath);
+      XString physicalPath(physical);
+#endif
+
       DWORD count = 0;
       sites->get_Count(&count);
       for(int i = 0; i < (int)count; ++i)
       {
         IISSiteConfig* iisConfig = new IISSiteConfig();
         iisConfig->m_id       = 0;
-        iisConfig->m_physical = p_physicalPath;
+        iisConfig->m_physical = physicalPath;
         
         // Now read in the rest of the configuration
         if(ReadSite(sites,configSite,i,*iisConfig))
@@ -601,53 +614,6 @@ ServerApp::UnloadSites()
   {
     UnloadSite(site);
   }
-}
-
-void
-ServerApp::ReadModules(CComBSTR& /*p_configPath*/)
-{
-//   USES_CONVERSION;
-//   IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
-// 
-//   // Reading all names of the modules of our DLL
-//   IAppHostElement* modulesElement = nullptr;
-//   if (manager->GetAdminSection(CComBSTR(L"system.webServer/globalModules"),p_configPath,&modulesElement) == S_OK)
-//   {
-//     IAppHostElementCollection* modulesCollection = nullptr;
-//     modulesElement->get_Collection(&modulesCollection);
-//     if (modulesCollection)
-//     {
-//       DWORD dwElementCount = 0;
-//       modulesCollection->get_Count(&dwElementCount);
-// 
-//       for (USHORT dwElement = 0; dwElement < dwElementCount; ++dwElement)
-//       {
-//         VARIANT vtItemIndex;
-//         vtItemIndex.vt = VT_I2;
-//         vtItemIndex.iVal = dwElement;
-// 
-//         IAppHostElement* childElement = nullptr;
-//         if (modulesCollection->get_Item(vtItemIndex, &childElement) == S_OK)
-//         {
-//           IAppHostProperty* prop = nullptr;
-//           VARIANT vvar;
-//           vvar.bstrVal = 0;
-// 
-//           if (childElement->GetPropertyByName(CComBSTR(L"image"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
-//           {
-//             XString image = W2A(vvar.bstrVal);
-//             if (image.CompareNoCase(GetDLLName()) == 0)
-//             {
-//               if (childElement->GetPropertyByName(CComBSTR(L"name"), &prop) == S_OK && prop->get_Value(&vvar) == S_OK && vvar.vt == VT_BSTR)
-//               {
-//                 m_modules.insert(XString(W2A(vvar.bstrVal)).MakeLower());
-//               }
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
 }
 
 void  
@@ -865,8 +831,8 @@ ServerAppFactory::ServerAppFactory()
 
 ServerApp* 
 ServerAppFactory::CreateServerApp(IHttpServer*  p_iis
-                                 ,const TCHAR*   p_webroot
-                                 ,const TCHAR*   p_appName)
+                                 ,const PCWSTR  p_webroot
+                                 ,const PCWSTR  p_appName)
 {
   return new ServerApp(p_iis,p_webroot,p_appName);
 }

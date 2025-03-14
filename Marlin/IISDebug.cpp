@@ -50,7 +50,7 @@ DebugVariable(IHttpContext* p_context,LPCTSTR p_description,const char* p_name)
   PCSTR pointer = reinterpret_cast<PCSTR>(p_context->AllocateRequestMemory(size));
   HRESULT hr    = p_context->GetServerVariable(p_name,&pointer,&size);
 
-  XString name  = LPCSTRToString(p_name);
+  XString name  = LPCSTRToString((PCSTR) p_name);
   XString value = LPCSTRToString(pointer);
   if(SUCCEEDED(hr))
   {

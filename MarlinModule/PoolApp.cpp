@@ -94,8 +94,8 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
   }
   else
   {
-    extern TCHAR g_adminEmail[];
-    _tcsncpy_s(g_adminEmail,MAX_PATH - 1,m_adminEmail.GetString(),MAX_PATH - 1);
+    extern wchar_t g_IISAdminEmail[];
+    wcsncpy_s(g_IISAdminEmail,MAX_PATH - 1,m_adminEmail.GetString(),MAX_PATH - 1);
   }
 
   // Tell MS-Windows where to look while loading our DLL
@@ -116,7 +116,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
   // See if we must load the DLL application
   if(AlreadyLoaded(m_dllLocation))
   {
-    DETAILLOG(_T("MarlinModule already loaded DLL [") + m_dllLocation + _T("] for application: ") + p_application);
+    DETAILLOG(XString(_T("MarlinModule already loaded DLL [")) + m_dllLocation + XString(_T("] for application: ")) + p_application);
   }
   else
   {
@@ -125,7 +125,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
     if (m_module)
     {
       m_marlinDLL = m_dllLocation;
-      DETAILLOG(_T("MarlinModule loaded DLL from: ") + m_dllLocation);
+      DETAILLOG(XString(_T("MarlinModule loaded DLL from: ")) + m_dllLocation);
     }
     else
     {
@@ -166,7 +166,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
 
   // Let the server app factory create a new one for us
   // And store it in our representation of the active application pool
-  m_application = (*m_createServerApp)(g_iisServer                 // Microsoft IIS server object
+  m_application = (*m_createServerApp)(g_IISServer                 // Microsoft IIS server object
                                       ,p_webroot.GetString()       // The IIS registered webroot
                                       ,p_application.GetString()); // The application's name
   if(m_application == nullptr)
@@ -203,13 +203,16 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
 XString
 PoolApp::ConstructDLLLocation(XString p_rootpath, XString p_dllPath)
 {
-#ifdef _DEBUG
-  // ONLY FOR DEVELOPMENT TEAMS RUNNING OUTSIDE THE WEBROOT
-  if(p_dllPath.GetAt(0) == '@')
+  extern bool g_IISDebugMode;
+
+  if(g_IISDebugMode)
   {
-    return p_dllPath.Mid(1);
+    // ONLY FOR DEVELOPMENT TEAMS RUNNING OUTSIDE THE WEBROOT
+    if(p_dllPath.GetAt(0) == _T('@'))
+    {
+      return p_dllPath.Mid(1);
+    }
   }
-#endif
   // Default implementation
   XString pathname = p_rootpath;
   if(pathname.Right(1) != _T("\\"))
@@ -231,7 +234,7 @@ PoolApp::CheckApplicationPresent(XString& p_dllPath,XString& p_dllName)
   // Check if the directory exists
   if(_taccess(p_dllPath, 0) == -1)
   {
-    ERRORLOG(_T("The directory does not exist: ") + p_dllPath);
+    ERRORLOG(XString(_T("The directory does not exist: ")) + p_dllPath);
     return false;
   }
 
@@ -239,7 +242,7 @@ PoolApp::CheckApplicationPresent(XString& p_dllPath,XString& p_dllName)
   int pos = p_dllName.Find('\\');
   if (pos >= 0)
   {
-    ERRORLOG(_T("The variable 'Application' must only be the name of the application DLL: ") + p_dllName);
+    ERRORLOG(XString(_T("The variable 'Application' must only be the name of the application DLL: ")) + p_dllName);
     return false;
   }
 
@@ -247,7 +250,7 @@ PoolApp::CheckApplicationPresent(XString& p_dllPath,XString& p_dllName)
   p_dllName = p_dllPath + p_dllName;
   if(_taccess(p_dllPath, 4) == -1)
   {
-    ERRORLOG(_T("The application DLL cannot be read: ") + p_dllName);
+    ERRORLOG(XString(_T("The application DLL cannot be read: ")) + p_dllName);
     return false;
   }
   return true;
@@ -286,7 +289,7 @@ PoolApp::AlreadyLoaded(XString p_path_to_dll)
 bool
 PoolApp::WebConfigSettings(XString p_configPath)
 {
-  IAppHostAdminManager* manager = g_iisServer->GetAdminManager();
+  IAppHostAdminManager* manager = g_IISServer->GetAdminManager();
 
   // Finding all application settings
   IAppHostElement* handlersElement = nullptr;
