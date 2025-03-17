@@ -327,15 +327,18 @@ WebSocket::ErrorLog(LPCTSTR p_function,DWORD p_code,XString p_text)
     p_text.AppendFormat(_T(" Error [%X] %s"),p_code,GetLastErrorAsString(p_code).GetString());
     result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,p_text);
 
-    WSFrame* frame  = new WSFrame();
-    frame->m_data   = reinterpret_cast<BYTE*>(_tcsdup(p_text.GetString()));
-    frame->m_length = p_text.GetLength();
-    frame->m_utf8   = false;  // Internal CString copy
-    frame->m_final  = true;
-    
-    // Store frame and call onError handler
-    StoreWSFrame(frame);
-    OnError();
+    if(!m_closingError)
+    {
+      WSFrame* frame = new WSFrame();
+      frame->m_data = reinterpret_cast<BYTE*>(_tcsdup(p_text.GetString()));
+      frame->m_length = p_text.GetLength();
+      frame->m_utf8 = false;  // Internal CString copy
+      frame->m_final = true;
+
+      // Store frame and call onError handler
+      StoreWSFrame(frame);
+      OnError();
+    }
   }
 
   // nothing logged
@@ -455,15 +458,16 @@ WebSocket::OnClose()
       {
         (*m_onclose)(this,frame);
       }
-      catch(StdException& ex)
+      catch(StdException& /*ex*/)
       {
-        ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+        // Most notably already closed
+        SvcReportInfoEvent(false,_T("Websocket closed with warning: already closed"));
       }
     }
     else
     {
       // Application already stopped accepting info
-      // ERRORLOG(ERROR_LOST_WRITEBEHIND_DATA,"WebSocket lost closing frame.");
+      SvcReportInfoEvent(false,_T("Websocket lost closing frame."));
     }
     delete frame;
   }
@@ -477,9 +481,10 @@ WebSocket::OnClose()
       {
         (*m_onclose)(this,&empty);
       }
-      catch(StdException& ex)
+      catch(StdException& /*ex*/)
       {
-        ERRORLOG(ERROR_APPEXEC_INVALID_HOST_STATE,ex.GetErrorMessage());
+        // Most notably already closed
+        SvcReportInfoEvent(false,_T("Websocket closed with warning: already closed"));
       }
     }
   }

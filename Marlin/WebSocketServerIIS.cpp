@@ -715,6 +715,7 @@ WebSocketServerIIS::SetClosingStatus(USHORT p_code)
   {
     m_closingError = p_code;
     OnClose();
+    m_server->UnRegisterWebSocket(this);
   }
 }
 
