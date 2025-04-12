@@ -105,6 +105,7 @@ public:
   bool      m_foundHost;
   bool      m_foundPort;
   bool      m_foundPath;
+  bool      m_foundExtension;
   bool      m_foundParameters;
   bool      m_foundAnchor;
 

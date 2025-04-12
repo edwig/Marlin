@@ -110,6 +110,7 @@ CrackedURL::Reset()
   m_foundHost       = false;
   m_foundPort       = false;
   m_foundPath       = false;
+  m_foundExtension  = false;
   m_foundParameters = false;
   m_foundAnchor     = false;
 }
@@ -281,12 +282,14 @@ CrackedURL::CrackURL(XString p_url)
     {
       m_extension.Empty();
     }
+    else
+    {
+      m_foundExtension = true;
+    }
   }
-
   // Now a valid URL
   return (m_valid = true);
 }
-
 
 void
 CrackedURL::SetPath(XString p_path)
@@ -629,13 +632,14 @@ CrackedURL*
 CrackedURL::operator=(CrackedURL* p_orig)
 {
   // Copy the info
-  m_valid    = p_orig->m_valid;
-  m_scheme   = p_orig->m_scheme;
-  m_secure   = p_orig->m_secure;
-  m_host     = p_orig->m_host;
-  m_port     = p_orig->m_port;
-  m_path     = p_orig->m_path;
-  m_anchor   = p_orig->m_anchor;
+  m_valid     = p_orig->m_valid;
+  m_scheme    = p_orig->m_scheme;
+  m_secure    = p_orig->m_secure;
+  m_host      = p_orig->m_host;
+  m_port      = p_orig->m_port;
+  m_path      = p_orig->m_path;
+  m_extension = p_orig->m_extension;
+  m_anchor    = p_orig->m_anchor;
 
   // Copy status info
   m_foundScheme     = p_orig->m_foundScheme;

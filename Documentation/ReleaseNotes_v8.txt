@@ -27,6 +27,9 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     o   Replace the root space name with "<Configuration>"
     o   Place all application settings in an "<Application>" section
     o   See the examples in the "MarlinServer" directory.
+6)  Added a URLRewriter class for URL rewriting purposes. So we can now use the URLRewriter
+    class to rewrite the URL's in the incoming HTTP request. 
+    HTTPMessages can be diverted to a different URL, returning the answer.
 
 CHANGES IN VERSION 8.4.1 of 25-12-2024
 --------------------------------------

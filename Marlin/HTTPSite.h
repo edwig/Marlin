@@ -28,13 +28,13 @@
 #pragma once
 #include "SoapTypes.h"
 #include "HTTPServer.h"
-#include "HTTPMessage.h"
-#include "SOAPMessage.h"
-#include "JSONMessage.h"
 #include "ThreadPool.h"
 #include "SiteFilter.h"
 #include "SiteHandler.h"
-#include "Cookie.h"
+#include <HTTPMessage.h>
+#include <SOAPMessage.h>
+#include <JSONMessage.h>
+#include <Cookie.h>
 #include <map>
 
 // Session address for reliable messaging
@@ -102,6 +102,7 @@ class HTTPURLGroup;
 class MarlinConfig;
 class SiteFilter;
 class SiteHandler;
+class URLRewriter;
 
 // Keeping a mapping of all the site handlers
 typedef struct _regHandler
@@ -215,6 +216,8 @@ public:
   void            SetCookiesMaxAge(int p_seconds);
   // OPTIONAL: Another site is registered as a sub-site of me
   void            SetHasSubSites(bool p_subsite);
+  // OPTIONAL: Set a rewriter for the URL of the site
+  void            SetURLRewriter(URLRewriter* p_rewriter);
  
   // GETTERS
   XString         GetSite() const                   { return m_site;          }
@@ -260,6 +263,7 @@ public:
   int             GetCookiesExpires()               { return m_cookieExpires;    }
   int             GetCookiesMaxAge()                { return m_cookieMaxAge;     }
   int             GetAuthentication()               { return m_authScheme;       }
+  URLRewriter*    GetURLRewriter()                  { return m_rewriter;         }
   XString         GetAuthenticationScheme();
   bool            GetAuthenticationNTLMCache();
   XString         GetAuthenticationRealm();
@@ -394,6 +398,7 @@ protected:
   // HTTP Site handlers and filters
   HandlerMap        m_handlers;                           // Site handlers
   FilterMap         m_filters;                            // Site filters
+  URLRewriter*      m_rewriter        { nullptr };        // URL rewriter for this site
   // Multi-threading
   CRITICAL_SECTION  m_filterLock;                         // Adding/deleting/calling filters
   CRITICAL_SECTION  m_sessionLock;                        // Adding/deleting sessions sequences
@@ -552,3 +557,4 @@ HTTPSite::SetHasSubSites(bool p_subsite)
 {
   m_hasSubSites = p_subsite;
 }
+

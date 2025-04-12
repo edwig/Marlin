@@ -69,7 +69,6 @@ public:
 // Implementation
 protected:
   void        ConfigureForIIS();
-  XString     GetSiteConfig(XString p_prefix);
   void        CheckPortRange();
   void        MessagePump();
   void        SetVersion();

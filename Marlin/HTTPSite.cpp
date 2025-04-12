@@ -28,14 +28,17 @@
 #include "stdafx.h"
 #include "HTTPSite.h"
 #include "HTTPURLGroup.h"
-#include "LogAnalysis.h"
-#include "AutoCritical.h"
-#include "GenerateGUID.h"
-#include "Crypto.h"
+#include "URLRewriter.h"
 #include "WinINETError.h"
 #include "ErrorReport.h"
-#include "ConvertWideString.h"
+// BaseLibrary
+#include <LogAnalysis.h>
+#include <AutoCritical.h>
+#include <GenerateGUID.h>
+#include <Crypto.h>
+#include <ConvertWideString.h>
 #include <WinFile.h>
+// Windows SDK
 #include <winerror.h>
 #include <sddl.h>
 
@@ -441,6 +444,13 @@ HTTPSite::InitSite(MarlinConfig& p_config)
     m_cookieMaxAge = p_config.GetParameterInteger(_T("Cookies"),_T("MaxAge"),0);
   }
 
+  // Do we have a URL rewriter?
+  if(p_config.HasSection(_T("Rewriter")))
+  {
+    m_rewriter = new URLRewriter();
+    m_rewriter->InitRewriter(p_config);
+  }
+
   // Add and report the automatic headers as a last resort for responsive apps
   SetAutomaticHeaders(p_config);
 }
@@ -682,41 +692,50 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       return;
     }
 
-    // If site in asynchronous SOAP/XML mode
-    if(m_async)
+    /// URL REWRITER PRESENT?
+    if(m_rewriter && m_rewriter->ProcessHTTPMessage(p_message))
     {
-      // Send back an OK immediately, even before processing the message
-      // In fact we might totally ignore it.
-      AsyncResponse(p_message);
-    }
-
-    // Call all site filters first, in priority order
-    // But only if we do have filters
-    bool doPerformHandlers = true;
-    if(!m_filters.empty())
-    {
-      doPerformHandlers = CallFilters(p_message);
-    }
-
-    // Call the correct handler for this site
-    if(doPerformHandlers)
-    {
-      handler = GetSiteHandler(p_message->GetCommand());
-      if(handler)
-      {
-        handler->HandleMessage(p_message);
-      }
-      else
-      {
-        HandleHTTPMessageDefault(p_message);
-      }
+      // Rewriter has done its job
+      // The message has been reset and sent back to the client
+      SendResponse(p_message);
     }
     else
     {
-      // Post the results of the filters
-      PostHandle(p_message,false);
-    }
+      // If site in asynchronous SOAP/XML mode
+      if(m_async)
+      {
+        // Send back an OK immediately, even before processing the message
+        // In fact we might totally ignore it.
+        AsyncResponse(p_message);
+      }
 
+      // Call all site filters first, in priority order
+      // But only if we do have filters
+      bool doPerformHandlers = true;
+      if(!m_filters.empty())
+      {
+        doPerformHandlers = CallFilters(p_message);
+      }
+
+      // Call the correct handler for this site
+      if(doPerformHandlers)
+      {
+        handler = GetSiteHandler(p_message->GetCommand());
+        if(handler)
+        {
+          handler->HandleMessage(p_message);
+        }
+        else
+        {
+          HandleHTTPMessageDefault(p_message);
+        }
+      }
+      else
+      {
+        // Post the results of the filters
+        PostHandle(p_message,false);
+      }
+    }
     // Remove the throttling lock!
     if(m_throttling)
     {
@@ -1061,6 +1080,19 @@ HTTPSite::TryFlushThrottling()
       ++it;
     }
   }
+}
+
+// Set the URL rewriter BEFORE starting the site
+// to be able to read the standard config settings
+void
+HTTPSite::SetURLRewriter(URLRewriter* p_rewriter)
+{
+  if(m_rewriter)
+  {
+    m_rewriter->AddRewriter(p_rewriter);
+    return;
+  }
+  m_rewriter = p_rewriter;
 }
 
 //////////////////////////////////////////////////////////////////////////

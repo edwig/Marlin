@@ -439,6 +439,7 @@
     <ClInclude Include="WebConfigClient.h" />
     <ClInclude Include="WebConfigDlg.h" />
     <ClInclude Include="WebConfigLogging.h" />
+    <ClInclude Include="WebConfigRewriter.h" />
     <ClInclude Include="WebConfigServer.h" />
     <ClInclude Include="WebConfigWServices.h" />
   </ItemGroup>
@@ -467,6 +468,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugUnicode|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="WebConfigRewriter.cpp" />
     <ClCompile Include="WebConfigServer.cpp" />
     <ClCompile Include="WebConfigWServices.cpp" />
   </ItemGroup>

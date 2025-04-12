@@ -41,7 +41,7 @@ class MarlinConfig;
 class AppConfig : public XMLMessage
 {
 public:
-  explicit AppConfig(XString p_fileName = "",bool p_readMarlinConfig = true);
+  explicit AppConfig(XString p_fileName = _T(""),bool p_readMarlinConfig = true);
   virtual ~AppConfig();
 
   // Read the config from disk

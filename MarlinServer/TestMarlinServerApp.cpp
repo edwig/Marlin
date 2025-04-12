@@ -50,9 +50,9 @@ WebConfigIIS* g_config = nullptr;
 //
 //////////////////////////////////////////////////////////////////////////
 
-TestMarlinServerAppPool::TestMarlinServerAppPool(IHttpServer*   p_iis
-                                                ,LPCTSTR    p_webroot
-                                                ,LPCTSTR    p_appName)
+TestMarlinServerAppPool::TestMarlinServerAppPool(IHttpServer* p_iis
+                                                ,PCWSTR       p_webroot
+                                                ,PCWSTR       p_appName)
                     :ServerApp(p_iis,p_webroot,p_appName)
 {
 }

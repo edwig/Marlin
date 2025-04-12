@@ -31,6 +31,7 @@
 #include "WebConfigAuthentication.h"
 #include "WebConfigWServices.h"
 #include "WebConfigLogging.h"
+#include "WebConfigRewriter.h"
 
 class MarlinConfig;
 
@@ -72,6 +73,7 @@ protected:
   WebConfigAuthentication m_page3 { m_iis,this };
   WebConfigWServices      m_page4 { m_iis,this };
   WebConfigLogging        m_page5 { m_iis,this };
+  WebConfigRewriter       m_page6 { m_iis,this };
 
   MarlinConfig* m_webconfig { nullptr };
 public:

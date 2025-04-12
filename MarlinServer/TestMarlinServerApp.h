@@ -34,9 +34,9 @@
 class TestMarlinServerAppPool : public ServerApp
 {
 public:
-  TestMarlinServerAppPool(IHttpServer*  p_iis
-                         ,LPCTSTR       p_webroot
-                         ,LPCTSTR       p_appName);
+  TestMarlinServerAppPool(IHttpServer* p_iis
+                         ,PCWSTR       p_webroot
+                         ,PCWSTR       p_appName);
   virtual ~TestMarlinServerAppPool();
 
   virtual void InitInstance();

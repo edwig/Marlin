@@ -38,7 +38,7 @@ class WebConfigLogging : public CDialogEx
 public:
   explicit WebConfigLogging(bool p_iis,CWnd* pParent = NULL);   // standard constructor
   virtual ~WebConfigLogging();
-  BOOL OnInitDialog();
+  BOOL OnInitDialog() override;
   void ReadWebConfig (MarlinConfig& p_config);
   void WriteWebConfig(MarlinConfig& p_config);
 

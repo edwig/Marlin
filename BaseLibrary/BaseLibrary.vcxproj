@@ -40,6 +40,7 @@
     <ProjectGuid>{2364c44b-2e4d-4631-a050-b47509afbc82}</ProjectGuid>
     <RootNamespace>BaseLibrary</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>BaseLibrary</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

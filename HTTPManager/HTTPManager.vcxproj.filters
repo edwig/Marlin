@@ -72,6 +72,9 @@
     <ClInclude Include="SetCookieDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WebConfigRewriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HTTPManager.cpp">
@@ -114,6 +117,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SetCookieDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WebConfigRewriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

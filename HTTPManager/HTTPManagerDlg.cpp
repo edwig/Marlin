@@ -1061,31 +1061,6 @@ HTTPManagerDlg::MessagePump()
   }
 }
 
-XString
-HTTPManagerDlg::GetSiteConfig(XString p_prefix)
-{
-  XString pathName = MarlinConfig::GetExePath();
-
-  XString name(p_prefix);
-  int pos = name.Find(_T("//"));
-  if (pos)
-  {
-    name = _T("Site") + name.Mid(pos + 2);
-    name.Replace(_T(':'), '-');
-    name.Replace(_T('+'), '-');
-    name.Replace(_T('*'), '-');
-    name.Replace(_T('.'), '_');
-    name.Replace(_T('/'), '-');
-    name.Replace(_T('\\'), '-');
-    name.Replace(_T("--"), _T("-"));
-    name.TrimRight('-');
-    name += _T(".config");
-
-    return pathName + name;
-  }
-  return _T("");
-}
-
 void 
 HTTPManagerDlg::OnBnClickedWebconfig()
 {

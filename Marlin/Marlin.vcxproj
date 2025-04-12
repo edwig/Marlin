@@ -398,6 +398,7 @@
     </ClCompile>
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="MarlinConfig.cpp" />
+    <ClCompile Include="URLRewriter.cpp" />
     <ClCompile Include="WebConfigIIS.cpp" />
     <ClCompile Include="WebServiceClient.cpp" />
     <ClCompile Include="WebServiceServer.cpp" />
@@ -471,6 +472,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="URLRewriter.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="MarlinConfig.h" />
     <ClInclude Include="WebConfigIIS.h" />
