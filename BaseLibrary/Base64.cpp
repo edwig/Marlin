@@ -146,10 +146,16 @@ Base64::Decrypt(XString p_encrypted)
   DWORD length = 0;
   DWORD type = CRYPT_STRING_BASE64_ANY;
   CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,NULL,&length,0,&type);
-  unsigned char* buffer = new unsigned char[length + 2];
-  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,(BYTE*)buffer,&length,0,&type);
+  BYTE* buffer = new BYTE[length + 2];
+  CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,buffer,&length,0,&type);
   buffer[length] = 0;
+#ifdef _UNICODE
+  XString result;
+  bool bomfound(false);
+  TryConvertNarrowString(buffer,length,_T(""),result,bomfound);
+#else
   XString result((LPCTSTR)buffer);
+#endif
   delete[] buffer;
   return result;
 }

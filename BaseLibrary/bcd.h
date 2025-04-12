@@ -199,9 +199,13 @@ public:
 
   // CONSTANTS
 
-  static bcd PI();     // Circumference/Radius ratio of a circle
-  static bcd LN2();    // Natural logarithm of 2
-  static bcd LN10();   // Natural logarithm of 10
+  static bcd PI();          // Circumference/Radius ratio of a circle
+  static bcd LN2();         // Natural logarithm of 2
+  static bcd LN10();        // Natural logarithm of 10
+
+  static bcd MIN_BCD();     // Maximum number a bcd can hold
+  static bcd MAX_BCD();     // Minimum number a bcd can hold
+  static bcd MIN_EPSILON(); // Smallest number a bcd can hold
 
   // ERROR HANDLING
 
