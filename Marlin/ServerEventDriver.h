@@ -103,6 +103,9 @@ private:
   ServerEventDriver* m_driver;
 };
 
+// Authentication callback of an application, returning an event channel number
+typedef int (*LPFN_AUTHENTICATE)(HTTPMessage* p_message,XString p_channel);
+
 //////////////////////////////////////////////////////////////////////////
 //
 // The Driver
@@ -136,8 +139,10 @@ public:
   bool  StopEventDriver();
   // Check the event channel for proper working
   bool  CheckChannelPolicy(int m_channel);
-  // Cookie timout in minutes
+  // Cookie timeout in minutes
   void  SetCookieTimeout(int p_minutes);
+  // Set the authentication callback of the application
+  void  SetAuthenticationCallback(LPFN_AUTHENTICATE p_callback);
 
   // Flush messages as much as possible for a channel
   bool  FlushChannel(XString p_cookie,XString p_token);
@@ -186,12 +191,15 @@ private:
   ServerEventChannel* FindSession(int p_session);
 
   // Register incoming event/stream
-  bool RegisterSocketByCookie (HTTPMessage* p_message,WebSocket*   p_socket);
-  bool RegisterStreamByCookie (HTTPMessage* p_message,EventStream* p_stream);
-  bool RegisterSocketByRouting(HTTPMessage* p_message,WebSocket*   p_socket);
-  bool RegisterStreamByRouting(HTTPMessage* p_message,EventStream* p_stream);
-  bool HandlePollingByCookie  (SOAPMessage* p_message);
-  bool HandlePollingByRouting (SOAPMessage* p_message);
+  bool RegisterSocketByCookie  (HTTPMessage* p_message,WebSocket*   p_socket);
+  bool RegisterStreamByCookie  (HTTPMessage* p_message,EventStream* p_stream);
+  bool RegisterSocketByRouting (HTTPMessage* p_message,WebSocket*   p_socket);
+  bool RegisterStreamByRouting (HTTPMessage* p_message,EventStream* p_stream);
+  bool RegisterSocketByCallback(HTTPMessage* p_message,WebSocket*   p_socket);
+  bool RegisterStreamByCallback(HTTPMessage* p_message,EventStream* p_stream);
+  bool HandlePollingByCookie   (SOAPMessage* p_message);
+  bool HandlePollingByRouting  (SOAPMessage* p_message);
+  bool HandlePollingByCallback (SOAPMessage* p_message);
 
   // Working on the channels
   void SendChannels();
@@ -202,7 +210,7 @@ private:
   HTTPSite*       m_site   { nullptr };     // Our Events site
   // Sessions
   bool            m_active { false   };     // Central queue is active
-  bool            m_force  { false   };     // Force the authenticaiton
+  bool            m_force  { true    };     // Force the authentication
   int             m_nextSession  { 0 };     // Next session number
   ChannelMap      m_channels;               // All channels (by channel number)
   ChanNameMap     m_names;                  // Extra redundant lookup in the channels for speed by session-name
@@ -217,6 +225,8 @@ private:
   // Metadata for secure cookie encryption
   // Requires that the metadata for all cookies are the same
   XString         m_metadata;
+  // Application authentication callback
+  LPFN_AUTHENTICATE m_authCallback { nullptr }; // Callback for authentication
   // LOCKING
   CRITICAL_SECTION m_lock;
 };
