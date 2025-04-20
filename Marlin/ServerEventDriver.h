@@ -34,14 +34,17 @@
 
 //////////////////////////////////////////////////////////////////////////
 //
-// http(s)://+:port/BaseURL/Sockets/<session>   -> Websockets base URL
-// http(s)://+:port/BaseURL/Events/<session>    -> SSE base URL
-// http(s)://+:port/BaseURL/Polling/<session>   -> Long polling base URL
+// FIRST PRIORITY:
+// Sessions can be defined by a application callback function 
+// to be set by the method: SetAuthenticationCallback
+// The callback receives the HTTPMessage and the session name and **MUST** return
+// the session number or 0 if not authenticated.
 //
-// Session can be a <routing> of multiple paths e.g.
-// https://server.com/Product/Events/database_name/john_doe
-// Here the "database_name/john_doe" part is the session name
-//
+// http(s)://+:port/BaseURL/Sockets  + application callback authentication
+// http(s)://+:port/BaseURL/Events   + application callback authentication
+// http(s)://+:port/BaseURL/Polling  + application callback authentication
+// 
+// SECOND PRIORITY:
 // Sessions can also be named by cookie/value combinations
 // In this case we need not be concerned by routing
 //
@@ -52,6 +55,18 @@
 // Here the USERGUID is the cookie name and the value is the part after the '='
 // The cookie value denotes the user session.
 // The Cookie/value method is the shortest, safest and has the highest performance
+// Use in combination with the application callback is strongly advised for re-connection.
+//
+// THIRD PRIORITY:
+// Session can be a <routing> of multiple paths e.g.
+// http(s)://server.com/Product/Events/database_name/john_doe
+// Here the "database_name/john_doe" part is the session name
+// In order to work, you **MUST** use the SetForceAuthentication method 
+// to set the 'force' flag to true.
+//
+// http(s)://+:port/BaseURL/Sockets/<session>   -> Websockets base URL
+// http(s)://+:port/BaseURL/Events/<session>    -> SSE base URL
+// http(s)://+:port/BaseURL/Polling/<session>   -> Long polling base URL
 //
 class HTTPServer;
 class WebSocket;
@@ -210,7 +225,7 @@ private:
   HTTPSite*       m_site   { nullptr };     // Our Events site
   // Sessions
   bool            m_active { false   };     // Central queue is active
-  bool            m_force  { true    };     // Force the authentication
+  bool            m_force  { false   };     // Force the authentication
   int             m_nextSession  { 0 };     // Next session number
   ChannelMap      m_channels;               // All channels (by channel number)
   ChanNameMap     m_names;                  // Extra redundant lookup in the channels for speed by session-name
