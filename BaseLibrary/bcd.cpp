@@ -908,7 +908,14 @@ bcd::operator<(const bcd& p_value) const
     if(m_mantissa[ind] != p_value.m_mantissa[ind])
     {
       // Result by comparing the mantissa positions
-      return (m_mantissa[ind] < p_value.m_mantissa[ind]);
+      if(m_sign == Sign::Positive)
+      {
+        return (m_mantissa[ind] < p_value.m_mantissa[ind]);
+      }
+      else
+      {
+        return (m_mantissa[ind] > p_value.m_mantissa[ind]);
+      }
     }
   }
   // Numbers are exactly the same
@@ -979,7 +986,14 @@ bcd::operator>(const bcd& p_value) const
     if(m_mantissa[ind] != p_value.m_mantissa[ind])
     {
       // Result by comparing the mantissa positions
-      return (m_mantissa[ind] > p_value.m_mantissa[ind]);
+      if(m_sign == Sign::Positive)
+      {
+        return (m_mantissa[ind] > p_value.m_mantissa[ind]);
+      }
+      else
+      {
+        return (m_mantissa[ind] < p_value.m_mantissa[ind]);
+      }
     }
   }
   // Numbers are exactly the same
