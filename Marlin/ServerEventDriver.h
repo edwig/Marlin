@@ -67,7 +67,7 @@ class ServerEventChannel;
 #define MONITOR_INTERVAL_MIN      500
 #define MONITOR_INTERVAL_MAX     (10 * CLOCKS_PER_SEC)
 // Minimum seconds for a brute-force attack vector
-#define BRUTEFORCE_INTERVAL_MIN  (3  * CLOCKS_PER_SEC)
+#define BRUTEFORCE_INTERVAL_MIN  (1  * CLOCKS_PER_SEC)
 #define BRUTEFORCE_INTERVAL_MAX  (60 * CLOCKS_PER_SEC)
 
 // Handler for incoming WebSocket stream request
@@ -210,7 +210,7 @@ private:
   int             m_cookieTimeout { 0 };    // Timeout for cookies in minutes
   // Brute force attack on the event channels
   SenderMap       m_senders;                // Last time of sender attach
-  int             m_interval { 10 * CLOCKS_PER_SEC };
+  int             m_interval { BRUTEFORCE_INTERVAL_MIN };
   // The worker bee
   HANDLE          m_thread { NULL };
   HANDLE          m_event  { NULL };

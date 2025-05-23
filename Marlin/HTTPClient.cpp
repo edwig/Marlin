@@ -1193,7 +1193,7 @@ HTTPClient::FlushAllHeaders()
       // Log error but continue. A lot of headers are optional to a HTTP call
       ErrorLog(_T(__FUNCTION__),_T("Request headers NOT set. Error [%d] %s"));
     }
-    DETAILLOG(_T("Header => %S"),theHeader.c_str());
+    DETAILLOG(_T("Header => %s"),header.GetString());
   }
 }
 

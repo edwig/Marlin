@@ -382,6 +382,7 @@ WebServiceClient::Send(SOAPMessage* p_message)
     // If user/password not set in the message, user ours (if any)
     p_message->SetUser(m_user);
     p_message->SetPassword(m_password);
+    m_httpClient->SetPreEmptiveAuthorization(WINHTTP_AUTH_SCHEME_BASIC);
   }
 
   // Override van de SOAPAction
