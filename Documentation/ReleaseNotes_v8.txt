@@ -9,6 +9,8 @@ Version 8.x contains the new BaseLibrary where all general classes are moved int
 that can be shared with other library modules like SQLComponents and CXHibernate
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 8.4.2 of 15-01-2025
+--------------------------------------
 1)  Added named SSE Events in the ServerEventChannels. So that you can sent other 'normal'
     messages, not named 'message' through an SSE channel.
 2)  Extra checks on the initial handling of an incoming SSE event channel. If the channel cannnot
@@ -27,6 +29,14 @@ that can be shared with other library modules like SQLComponents and CXHibernate
     o   Replace the root space name with "<Configuration>"
     o   Place all application settings in an "<Application>" section
     o   See the examples in the "MarlinServer" directory.
+6)  Added a URLRewriter class for URL rewriting purposes. So we can now use the URLRewriter
+    class to rewrite the URL's in the incoming HTTP request. 
+    HTTPMessages can be diverted to a different URL, returning the answer.
+7)  Applications now can register an authentication method with the ServerEventDriver.
+    The driver will give the application a 'go' on the authencation process of the incoming streams.
+    This makes it possible to use the same authentication method for the ServerEventDriver as for the
+    application itself. Other methods than cookies can now be used. E.g. Bearer tokens from OAuth2
+    or basic authentication.
 
 CHANGES IN VERSION 8.4.1 of 25-12-2024
 --------------------------------------

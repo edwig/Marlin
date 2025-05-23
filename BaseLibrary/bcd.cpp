@@ -314,6 +314,47 @@ bcd::LN10()
   return ln10;
 }
 
+ // Maximum number a bcd can hold
+bcd
+bcd::MIN_BCD()
+{
+  bcd min = MAX_BCD();
+  // Turn the sign around
+  min.m_sign = Sign::Negative;
+
+  return min;
+}
+
+// Minimum number a bcd can hold
+bcd
+bcd::MAX_BCD()
+{
+  bcd max;
+
+  max.m_sign        = Sign::Positive;
+  max.m_mantissa[0] = 99999999L;
+  max.m_mantissa[1] = 99999999L;
+  max.m_mantissa[2] = 99999999L;
+  max.m_mantissa[3] = 99999999L;
+  max.m_mantissa[4] = 99999999L;
+  max.m_exponent    = SHRT_MAX;
+
+  return max;
+}
+
+// Smallest number a bcd can hold
+bcd
+bcd::MIN_EPSILON()
+{
+  bcd eps;
+
+  eps.m_sign        = Sign::Positive;
+  eps.m_mantissa[0] = 1L;
+  eps.m_exponent    = SHRT_MIN;
+
+  return eps;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // END OF CONSTANTS OF BCD
@@ -867,7 +908,14 @@ bcd::operator<(const bcd& p_value) const
     if(m_mantissa[ind] != p_value.m_mantissa[ind])
     {
       // Result by comparing the mantissa positions
-      return (m_mantissa[ind] < p_value.m_mantissa[ind]);
+      if(m_sign == Sign::Positive)
+      {
+        return (m_mantissa[ind] < p_value.m_mantissa[ind]);
+      }
+      else
+      {
+        return (m_mantissa[ind] > p_value.m_mantissa[ind]);
+      }
     }
   }
   // Numbers are exactly the same
@@ -938,7 +986,14 @@ bcd::operator>(const bcd& p_value) const
     if(m_mantissa[ind] != p_value.m_mantissa[ind])
     {
       // Result by comparing the mantissa positions
-      return (m_mantissa[ind] > p_value.m_mantissa[ind]);
+      if(m_sign == Sign::Positive)
+      {
+        return (m_mantissa[ind] > p_value.m_mantissa[ind]);
+      }
+      else
+      {
+        return (m_mantissa[ind] < p_value.m_mantissa[ind]);
+      }
     }
   }
   // Numbers are exactly the same

@@ -237,6 +237,14 @@ ServerEventDriver::SetCookieTimeout(int p_minutes)
   }
 }
 
+// Set the authentication callback of the application
+void
+ServerEventDriver::SetAuthenticationCallback(LPFN_AUTHENTICATE p_callback)
+{
+  m_authCallback = p_callback;
+}
+
+
 // Set or change the policy for a channel
 // To be called after 'RegisterChannel' or on a later moment to change the policy
 bool
@@ -403,16 +411,24 @@ ServerEventDriver::StopEventDriver()
 bool
 ServerEventDriver::IncomingNewSocket(HTTPMessage* p_message,WebSocket* p_socket)
 {
-  if(!RegisterSocketByCookie(p_message,p_socket))
+  if(!RegisterSocketByCallback(p_message,p_socket))
   {
-    if(!RegisterSocketByRouting(p_message,p_socket))
+    if(!RegisterSocketByCookie(p_message,p_socket))
     {
-      ERRORLOG(ERROR_NOT_FOUND,_T("No registered session found for incoming socket on: ") + p_socket->GetURI());
-      p_message->Reset();
-      p_message->SetStatus(HTTP_STATUS_FORBIDDEN);
-      m_server->SendResponse(p_message);
-      return false;
+      if(!RegisterSocketByRouting(p_message,p_socket))
+      {
+        ERRORLOG(ERROR_NOT_FOUND,_T("No registered session found for incoming socket on: ") + p_socket->GetURI());
+        p_message->Reset();
+        p_message->SetStatus(HTTP_STATUS_FORBIDDEN);
+        m_server->SendResponse(p_message);
+        return false;
+      }
     }
+  }
+  // Possibly sent messages to newfound channel right away
+  if(m_active)
+  {
+    SetEvent(m_event);
   }
   return true;
 }
@@ -421,15 +437,18 @@ ServerEventDriver::IncomingNewSocket(HTTPMessage* p_message,WebSocket* p_socket)
 bool
 ServerEventDriver::IncomingNewStream(HTTPMessage* p_message,EventStream* p_stream)
 {
-  if(!RegisterStreamByCookie(p_message,p_stream))
+  if(!RegisterStreamByCallback(p_message,p_stream))
   {
-    if(!RegisterStreamByRouting(p_message,p_stream))
+    if(!RegisterStreamByCookie(p_message,p_stream))
     {
-      ERRORLOG(ERROR_NOT_FOUND,_T("No registered session found for incoming stream on: ") + p_stream->m_absPath);
-      p_message->Reset();
-      p_message->SetStatus(HTTP_STATUS_FORBIDDEN);
-      m_server->SendResponse(p_message);
-      return false;
+      if(!RegisterStreamByRouting(p_message,p_stream))
+      {
+        ERRORLOG(ERROR_NOT_FOUND,_T("No registered session found for incoming stream on: ") + p_stream->m_absPath);
+        p_message->Reset();
+        p_message->SetStatus(HTTP_STATUS_FORBIDDEN);
+        m_server->SendResponse(p_message);
+        return false;
+      }
     }
   }
   // Possibly sent messages to newfound channel right away
@@ -443,16 +462,21 @@ ServerEventDriver::IncomingNewStream(HTTPMessage* p_message,EventStream* p_strea
 bool
 ServerEventDriver::IncomingLongPoll(SOAPMessage* p_message)
 {
-  if(!HandlePollingByCookie(p_message))
+  if(!HandlePollingByCallback(p_message))
   {
-    if(!HandlePollingByRouting(p_message))
+    if(!HandlePollingByCookie(p_message))
     {
-      XString errortext;
-      errortext.Format(_T("No registered session found for long-polling message [%s]"),p_message->GetAbsolutePath().GetString());
-      ERRORLOG(ERROR_NOT_FOUND,errortext);
-      return false;
+      if(!HandlePollingByRouting(p_message))
+      {
+        XString errortext;
+        errortext.Format(_T("No registered session found for long-polling message [%s]"),p_message->GetAbsolutePath().GetString());
+        ERRORLOG(ERROR_NOT_FOUND,errortext);
+        return false;
+      }
     }
   }
+  // Long polling cannot activate the queue
+  // because we do not send the messages ourselves!
   return true;
 }
 
@@ -721,6 +745,64 @@ ServerEventDriver::HandlePollingByRouting(SOAPMessage* p_message)
   {
     // Register stream, but cookie needs to be checked!
     return it->second->HandleLongPolling(p_message,m_force);
+  }
+  return false;
+}
+
+bool
+ServerEventDriver::RegisterSocketByCallback(HTTPMessage* p_message,WebSocket* p_socket)
+{
+  if(m_authCallback)
+  {
+    AutoCritSec lock(&m_lock);
+
+    // Finding the session name from the routing
+    XString channel = FindChannel(p_message->GetRouting(),_T("Sockets"));
+    int chan = (*m_authCallback)(p_message,channel);
+    if(chan > 0)
+    {
+      // Register socket, authentication already done
+      return m_channels[chan]->RegisterNewSocket(p_message,p_socket,false);
+    }
+  }
+  return false;
+}
+
+bool
+ServerEventDriver::RegisterStreamByCallback(HTTPMessage* p_message,EventStream* p_stream)
+{
+  if(m_authCallback)
+  {
+    AutoCritSec lock(&m_lock);
+
+    // Finding the session name from the routing
+    XString channel = FindChannel(p_message->GetRouting(),_T("Events"));
+    int chan = (*m_authCallback)(p_message,channel);
+    if(chan > 0)
+    {
+      // Register stream, authentication already done
+      return m_channels[chan]->RegisterNewStream(p_message,p_stream,false);
+    }
+  }
+  return false;
+}
+
+bool
+ServerEventDriver::HandlePollingByCallback(SOAPMessage* p_message)
+{
+  if(m_authCallback)
+  {
+    AutoCritSec lock(&m_lock);
+
+    // Finding the channel name from the routing
+    XString channel = FindChannel(p_message->GetRouting(),_T("Polling"));
+    HTTPMessage msg(HTTPCommand::http_post,p_message);
+    int chan = (*m_authCallback)(&msg,channel);
+    if(chan > 0)
+    {
+      // Register polling stream, authentication already done
+      return m_channels[chan]->HandleLongPolling(p_message,false);
+    }
   }
   return false;
 }

@@ -43,8 +43,8 @@ TestMarlinServerAppFactory factory;
 //
 ServerApp* 
 TestMarlinServerAppFactory::CreateServerApp(IHttpServer* p_iis
-                                           ,LPCTSTR      p_webroot
-                                           ,LPCTSTR      p_appName)
+                                           ,PCWSTR       p_webroot
+                                           ,PCWSTR       p_appName)
 {
   static TestMarlinServerAppPool* theOne = nullptr;
 

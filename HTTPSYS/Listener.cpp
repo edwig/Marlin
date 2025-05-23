@@ -237,7 +237,10 @@ void Listener::Listen(void)
     wait = WaitForMultipleObjects(m_numListenSockets+1,events,false,INFINITE);
     if(wait == WAIT_OBJECT_0)
     {
-      DebugMsg(_T("Listener::Listen received a stop event"));
+      if(g_session)
+      {
+        DebugMsg(_T("Listener::Listen received a stop event"));
+      }
       break;
     }
     int iMyIndex = wait-1;
@@ -286,5 +289,8 @@ void Listener::Listen(void)
   {
     closesocket(readSocket);
   }
-  DebugMsg(_T("End Listen method"));
+  if(g_session)
+  {
+    DebugMsg(_T("End Listen method"));
+  }
 }

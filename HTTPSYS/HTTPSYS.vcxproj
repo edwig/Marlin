@@ -440,6 +440,7 @@
   <ItemGroup>
     <ClCompile Include="CertificateInfo.cpp" />
     <ClCompile Include="CreateCertificate.cpp" />
+    <ClCompile Include="DLLMain.cpp" />
     <ClCompile Include="ErrorPages.cpp" />
     <ClCompile Include="GetUserAccount.cpp" />
     <ClCompile Include="HttpAddFragmentToCache.cpp" />

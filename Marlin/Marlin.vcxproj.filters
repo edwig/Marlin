@@ -219,6 +219,9 @@
     <ClCompile Include="WebSocketMain.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
+    <ClCompile Include="URLRewriter.cpp">
+      <Filter>MarlinServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SiteFilter.h">
@@ -443,6 +446,9 @@
     </ClInclude>
     <ClInclude Include="WebSocketMain.h">
       <Filter>MarlinGeneral\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="URLRewriter.h">
+      <Filter>MarlinServer\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

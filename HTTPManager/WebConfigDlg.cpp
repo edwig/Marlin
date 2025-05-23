@@ -42,6 +42,7 @@ WebConfigDlg::WebConfigDlg(bool p_iis,CWnd* pParent)
              ,m_page3(p_iis,this)
              ,m_page4(p_iis,this)
              ,m_page5(p_iis,this)
+             ,m_page6(p_iis,this)
 {
   m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -72,6 +73,7 @@ BOOL
 WebConfigDlg::OnInitDialog()
 {
   CDialogEx::OnInitDialog();
+  SetWindowText(_T("Editor for: Marlin.config"));
 
   // Set the icon for this dialog.  The framework does this automatically
   //  when the application's main window is not a dialog
@@ -92,10 +94,10 @@ WebConfigDlg::OnInitDialog()
   else
   {
     XString subject = m_url.IsEmpty() ? XString(_T("server")) : m_url;
-    m_title = base + _T(" Editor for: ") + subject;
+    m_title  = base + _T(" Editor for: ") + subject;
+    m_title += _T(" - ");
+    m_title += m_siteConfigFile;
   }
-  SetWindowText(_T("Marlin.Config"));
-
   UpdateData(FALSE);
   return TRUE;
 }
@@ -108,6 +110,7 @@ WebConfigDlg::InitTabs()
   m_page3.Create(IDD_WC_AUTHENTICATION,this);
   m_page4.Create(IDD_WC_WSERVICES,     this);
   m_page5.Create(IDD_WC_LOGGING,       this);
+  m_page6.Create(IDD_WC_REWRITE,       this);
 
   // Set titles
   m_tab.InsertItem(0, _T("Server"));
@@ -115,6 +118,7 @@ WebConfigDlg::InitTabs()
   m_tab.InsertItem(2, _T("Authentication"));
   m_tab.InsertItem(3, _T("Web Services"));
   m_tab.InsertItem(4, _T("Logging"));
+  m_tab.InsertItem(5, _T("URL-Rewrite"));
 
   // Position relative to the parent window 
   // Including the tab title bar
@@ -133,6 +137,7 @@ WebConfigDlg::InitTabs()
   m_page3.MoveWindow(rect,false);
   m_page4.MoveWindow(rect,false);
   m_page5.MoveWindow(rect,false);
+  m_page6.MoveWindow(rect,false);
 
   // Start first page
   m_page1.ShowWindow(SW_SHOW);
@@ -174,6 +179,7 @@ WebConfigDlg::ReadWebConfig()
   m_page3.ReadWebConfig(*m_webconfig);
   m_page4.ReadWebConfig(*m_webconfig);
   m_page5.ReadWebConfig(*m_webconfig);
+  m_page6.ReadWebConfig(*m_webconfig);
 }
 
 bool
@@ -193,6 +199,7 @@ WebConfigDlg::WriteWebConfig()
   m_page3.WriteWebConfig(*m_webconfig);
   m_page4.WriteWebConfig(*m_webconfig);
   m_page5.WriteWebConfig(*m_webconfig);
+  m_page6.WriteWebConfig(*m_webconfig);
 
   // WRITE THE WEB.CONFIG
   if(m_webconfig->WriteConfig() == false)
@@ -225,6 +232,7 @@ WebConfigDlg::OnTcnSelchangeTab(NMHDR *pNMHDR,LRESULT *pResult)
   m_page3.ShowWindow(num == 2);
   m_page4.ShowWindow(num == 3);
   m_page5.ShowWindow(num == 4);
+  m_page6.ShowWindow(num == 5);
 }
 
 void WebConfigDlg::OnBnClickedOk()
