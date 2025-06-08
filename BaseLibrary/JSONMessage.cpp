@@ -1313,6 +1313,103 @@ JSONMessage::FindPair(JSONvalue* p_value,XString p_name,bool p_recursief /*= tru
   return nullptr;
 }
 
+// Deleting the first name/value pair of this name
+bool
+JSONMessage::DeletePair(XString p_name)
+{
+  if(m_value)
+  {
+    return DeletePair(m_value,p_name);
+  }
+  return false;
+}
+
+// Finding the first name/value pair AFTER this value
+bool
+JSONMessage::DeletePair(JSONvalue* p_value,XString p_name)
+{
+  if(p_value && p_value->GetDataType() == JsonType::JDT_object)
+  {
+    for(JSONobject::iterator it = p_value->GetObject().begin(); it != p_value->GetObject().end();++it)
+    {
+      if(it->m_name.Compare(p_name) == 0)
+      {
+        p_value->GetObject().erase(it);
+        return true;
+      }
+      bool deleted = DeletePair(&(it->m_value),p_name);
+      if(deleted)
+      {
+        return true;
+      }
+    }
+  }
+  if(p_value && (p_value->GetDataType() == JsonType::JDT_array))
+  {
+    for(auto& val : p_value->GetArray())
+    {
+      if(val.GetDataType() == JsonType::JDT_object ||
+         val.GetDataType() == JsonType::JDT_array)
+      {
+        bool deleted = DeletePair(&val,p_name);
+        if(deleted)
+        {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+// Finding the EXACT JSONvalue (can come from a JSONPath or JSONPointer) !!
+bool
+JSONMessage::DeletePair(JSONvalue* p_value,JSONvalue* p_base /*= nullptr*/)
+{
+  if(p_base == nullptr)
+  {
+    p_base = m_value;
+  }
+
+  if(p_base && p_base->GetDataType() == JsonType::JDT_object)
+  {
+    for(JSONobject::iterator it = p_base->GetObject().begin(); it != p_base->GetObject().end();++it)
+    {
+      if(&(it->m_value) == p_value)
+      {
+        p_base->GetObject().erase(it);
+        return true;
+      }
+      bool deleted = DeletePair(p_value,&(it->m_value));
+      if(deleted)
+      {
+        return true;
+      }
+    }
+  }
+  if(p_base && (p_base->GetDataType() == JsonType::JDT_array))
+  {
+    for(JSONarray::iterator it = p_base->GetArray().begin(); it != p_base->GetArray().end();++it)
+    {
+      if(&(*it) == p_value)
+      {
+        p_base->GetArray().erase(it);
+        return true;
+      }
+      if(it->GetDataType() == JsonType::JDT_object ||
+         it->GetDataType() == JsonType::JDT_array)
+      {
+        bool deleted = DeletePair(p_value,&(*it));
+        if(deleted)
+        {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 // Get an array element of an array value node
 JSONvalue* 
 JSONMessage::GetArrayElement(JSONvalue* p_array,int p_index)

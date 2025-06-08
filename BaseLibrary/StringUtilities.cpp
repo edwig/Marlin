@@ -139,7 +139,7 @@ void NormalizeLineEndings(XString& p_string)
 // Find the position of the matching bracket
 // starting at the bracket in the parameters bracketPos
 //
-int FindMatchingBracket(const CString& p_string,int p_bracketPos)
+int FindMatchingBracket(const XString& p_string,int p_bracketPos)
 {
   TCHAR bracket = p_string[p_bracketPos];
   TCHAR   match = 0;
@@ -208,7 +208,7 @@ int FindMatchingBracket(const CString& p_string,int p_bracketPos)
 
 // Split arguments with p_splitter not within brackets
 // p_pos must be 0 initially
-bool SplitArgument(int& p_pos,const CString& p_data,TCHAR p_splitter,CString& p_argument)
+bool SplitArgument(int& p_pos,const XString& p_data,TCHAR p_splitter,XString& p_argument)
 {
   int len = p_data.GetLength();
   if(p_pos >= len)

@@ -71,6 +71,8 @@ public:
   XString   GetExtension() const;
   // Setting a new extension on the path
   void      SetExtension(XString p_extension);
+  // Allow a '+' in an URL (webservers should be configured!)
+  void      SetAllowPlusSign(bool p_allow);
   // Resulting UNC
   XString   UNC() const;
   // Resulting parameter
@@ -82,7 +84,7 @@ public:
   bool      DelParameter(XString p_parameter);
 
   static    XString   EncodeURLChars(XString p_text,bool p_queryValue = false);
-  static    XString   DecodeURLChars(XString p_text,bool p_queryValue = false);
+  static    XString   DecodeURLChars(XString p_text,bool p_queryValue = false,bool p_allowPlus = true);
 
   CrackedURL* operator=(CrackedURL* p_orig);
 
@@ -98,6 +100,7 @@ public:
   XString   m_extension;
   UriParams m_parameters;
   XString   m_anchor;
+  bool      m_allowPlus { true };
 
   // Parts found in the url (otherwise empty)
   bool      m_foundScheme;
@@ -115,7 +118,8 @@ private:
   static uchar   GetHexcodedChar(XString& p_string
                                 ,int&     p_index
                                 ,bool&    p_percent
-                                ,bool&    p_queryValue);
+                                ,bool&    p_queryValue
+                                ,bool     p_allowPlus = true);
 };
 
 inline bool

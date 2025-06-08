@@ -510,6 +510,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ActiveDirectory.h" />
     <ClInclude Include="Alert.h" />
     <ClInclude Include="AuthenticationHeader.h" />
     <ClInclude Include="AutoCritical.h" />
@@ -595,6 +596,7 @@
     <ClInclude Include="ZIP\zutil.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ActiveDirectory.cpp" />
     <ClCompile Include="Alert.cpp" />
     <ClCompile Include="AuthenticationHeader.cpp" />
     <ClCompile Include="AutoCritical.cpp" />

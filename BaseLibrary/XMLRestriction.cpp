@@ -318,7 +318,7 @@ XMLRestrictions::HasEnumeration(XString p_name,XString p_enum)
 }
 
 XString
-XMLRestrictions::GiveDisplayValue(XString p_name,XString p_enum)
+XMLRestrictions::GiveDisplayValue(XString p_name,XString /*p_enum*/)
 {
   XMLRestriction* res = FindRestriction(p_name);
   if(res)

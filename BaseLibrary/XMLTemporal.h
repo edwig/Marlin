@@ -168,11 +168,13 @@ class XMLDuration : public XMLTemporal
 {
 public:
   explicit XMLDuration(XString p_value);
+  explicit XMLDuration(SQL_INTERVAL_STRUCT* p_interval);
 private:
   bool ParseDuration(XString p_value);
   // Parsing/scanning one value of a XML duration string
   bool ScanDurationValue(XString& p_duraction,int& p_value,int& p_fraction,TCHAR& p_marker,bool& p_didTime);
   void Normalise();
+  void RecalculateString();
   void RecalculateValue();
 
   // The one and only interval

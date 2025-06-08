@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: StringUtilities.h
+// SourceFile: ActiveDirectory.h
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
@@ -26,32 +26,10 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include <vector>
 
-// Get a number (int,double) as a string
-XString AsString(int p_number,int p_radix = 10);
-XString AsString(double p_number);
-
-// Convert a string to int,double,bcd
-int     AsInteger(XString p_string);
-double  AsDouble(XString p_string);
-bcd     AsBcd(XString p_string);
-
-int     SplitString(XString p_string,std::vector<XString>& p_vector,TCHAR p_separator = _T(','),bool p_trim = false);
-void    NormalizeLineEndings(XString& p_string);
-
-// Find the position of the matching bracket
-// starting at the bracket in the parameters bracketPos
-//
-int     FindMatchingBracket(const XString& p_string,int p_bracketPos);
-
-// Split arguments with p_splitter not within brackets
-// p_pos must be 0 initially
-bool    SplitArgument(int& p_pos,const XString& p_data,TCHAR p_splitter,XString& p_argument);
-
-// Unicode aware Clipboard handling
-XString GetStringFromClipboard(HWND p_wnd = NULL);
-bool    PutStringToClipboard(XString p_string,HWND p_wnd = NULL,bool p_append = false);
-
-// Count the number of instances of a character in a string
-int     CountOfChars(XString p_string,TCHAR p_char);
+// Gets the users email address from the AD
+// If not connected to the AD, it will retrieve the primary MS-Office mail address
+XString GetUserMailaddress();     // Current user email address according to the ADSI
+XString GetADOrganization();      // Getting the organization name according to the AD
+XString GetUserLogincode();       // Returns <domain>\<usercode>
+XString GetUserPrincipalName();   // Returns <user>@organisation.com (mostly!)

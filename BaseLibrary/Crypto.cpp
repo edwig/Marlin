@@ -351,8 +351,8 @@ Crypto::Decryption(XString p_input,XString p_password)
      TryCreateNarrowString(p_password,_T("utf-8"),false,&bufferPWD,lengthPWD))
   {
     bool bom(false);
-    CStringA result = ImplementDecryption(bufferINP,lengthINP,bufferPWD,lengthPWD);
-    if(!TryConvertNarrowString((const BYTE*)result.GetString(),result.GetLength(),_T("utf-8"),decoded,bom))
+    std::string result = ImplementDecryption(bufferINP,lengthINP,bufferPWD,lengthPWD);
+    if(!TryConvertNarrowString((const BYTE*)result.c_str(),(int)result.size(),_T("utf-8"),decoded,bom))
     {
       decoded.Empty();
     }
@@ -369,31 +369,31 @@ Crypto::Decryption(XString p_input, XString p_password)
   XString passwUTF8 = EncodeStringForTheWire(p_password);
 
   return ImplementDecryption((const BYTE*)inputUTF8.GetString(),inputUTF8.GetLength(),
-                             (const BYTE*)passwUTF8.GetString(),passwUTF8.GetLength());
+                             (const BYTE*)passwUTF8.GetString(),passwUTF8.GetLength()).c_str();
 }
 #endif
 
 // Implementation of the DECRYPT of a buffer
-CStringA
+std::string
 Crypto::ImplementDecryption(const BYTE* p_input,int p_lengthINP,const BYTE* p_password,int p_lengthPWD)
 {
   AutoCritSec lock(&m_lock);
 
-  HCRYPTPROV hCryptProv = NULL;
-  HCRYPTKEY  hCryptKey  = NULL;
-  HCRYPTHASH hCryptHash = NULL;
-  DWORD      dwDataLen  = 0;
-  DWORD      dataLength = 0;
-  BYTE*      pbData     = NULL;
-  BYTE*      pbEncrypt  = nullptr;
-  DWORD      blocklen   = 0;
-  DWORD      cbBlocklen = sizeof(DWORD);
-  BOOL       bFinal     = FALSE;
-  DWORD      dwFlags    = 0;
-  DWORD      totallen   = 0;
-  BYTE*      decrypting = nullptr;
-  CStringA   result;
-  Base64     base64;
+  HCRYPTPROV  hCryptProv = NULL;
+  HCRYPTKEY   hCryptKey  = NULL;
+  HCRYPTHASH  hCryptHash = NULL;
+  DWORD       dwDataLen  = 0;
+  DWORD       dataLength = 0;
+  BYTE*       pbData     = NULL;
+  BYTE*       pbEncrypt  = nullptr;
+  DWORD       blocklen   = 0;
+  DWORD       cbBlocklen = sizeof(DWORD);
+  BOOL        bFinal     = FALSE;
+  DWORD       dwFlags    = 0;
+  DWORD       totallen   = 0;
+  BYTE*       decrypting = nullptr;
+  std::string result;
+  Base64      base64;
 
   dwDataLen = p_lengthINP;
 

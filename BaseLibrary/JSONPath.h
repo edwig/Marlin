@@ -80,9 +80,9 @@ using JPResults = std::vector<JSONvalue*>;
 
 struct Relation
 {
-  CString leftSide;
-  CString rightSide;
-  CString clause;
+  XString leftSide;
+  XString rightSide;
+  XString clause;
 };
 
 class JSONPath

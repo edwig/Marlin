@@ -244,6 +244,9 @@ public:
   JsonConst       GetValueConstant(XString p_name);
   bool            AddNamedObject(XString p_name,const JSONobject& p_object,bool p_forceArray = false);
   int             JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,bool p_caseSensitive = true);
+  bool            DeletePair(JSONvalue* p_value,JSONvalue* p_base = nullptr);
+  bool            DeletePair(XString p_name);
+  bool            DeletePair(JSONvalue* p_value,XString p_name);
 
   // GETTERS
   XString         GetJsonMessage() const;
