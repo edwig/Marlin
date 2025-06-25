@@ -34,6 +34,8 @@
 #include "ConvertWideString.h"
 #include <websocket.h>
 
+#pragma comment (lib,"websocket.lib")
+
 #ifdef _AFX
 #ifdef _DEBUG
 #define new DEBUG_NEW

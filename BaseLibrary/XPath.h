@@ -37,6 +37,7 @@
 // /Bookstore/book[price>35.00]   -> Selects all the books with a price larger than 35 (dollar/euros)
 // /Bookstore/book[price<100]     -> Selects all the books with a price lower than 100 (dollar/euros)
 // /name/other/house[last()]      -> Selects the last 'house' node under 'other'
+// //name[3]/Some                 -> Selects the 'Some' node in the 3th 'name' node, down in the hierarchyv
 // /bookstore/book[contains(title,'Start')]    -> Selects books with 'Start' in the title
 // /bookstore/book[begins-with(title,'Start')] -> Selects books where title begins with 'Start'
 //
@@ -95,7 +96,7 @@ private:
   XString GetToken  (XString& p_parsing);
   bool    GetNumber (XString& p_parsing,XString& p_token);
   void    NeedToken (XString& p_parsing,TCHAR p_token);
-  bool    FindRecursivly(XMLElement* p_elem,XString token);
+  bool    FindRecursivly(XMLElement* p_elem,XString token,bool* p_store);
   bool    FindRecursivlyAttribute(XMLElement* p_elem,XString token,bool p_recursivly);
 
   // ParseLevel helpers (parsing got split up)

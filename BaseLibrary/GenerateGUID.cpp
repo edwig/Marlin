@@ -37,6 +37,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+#pragma comment(lib,"rpcrt4.lib")
+
 // Caller **MUST** do the COM+ (un)initialize with
 // CoInitialize
 // CoUninitialize

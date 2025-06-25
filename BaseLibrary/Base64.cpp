@@ -37,6 +37,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+#pragma comment(lib,"crypt32.lib")
+
 Base64::Base64(int p_method /*= CRYPT_STRING_BASE64*/,int p_options /*= CRYPT_STRING_NOCRLF*/)
 {
   if(p_method >= 0 && p_method <= CRYPT_STRING_BASE64URI)

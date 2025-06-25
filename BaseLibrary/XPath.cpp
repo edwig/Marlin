@@ -342,19 +342,25 @@ XPath::GetNumber(XString& p_parsing,XString& p_token)
 }
 
 bool
-XPath::FindRecursivly(XMLElement* p_elem,XString token)
+XPath::FindRecursivly(XMLElement* p_elem,XString token,bool* p_store)
 {
   bool found = false;
-  for(auto& elem : p_elem->GetChildren())
+
+  if(p_elem->GetName().Compare(token) == 0)
   {
-    if(elem->GetName().Compare(token) == 0)
+    m_results.push_back(p_elem);
+    found = true;
+    if(*p_store)
     {
-      m_results.push_back(elem);
-      found = true;
+      m_element = p_elem;
+      *p_store  = false;
     }
-    if(!elem->GetChildren().empty())
+  }
+  else
+  {
+    for(auto& elem : p_elem->GetChildren())
     {
-      if(FindRecursivly(elem, token))
+      if(FindRecursivly(elem,token,p_store))
       {
         found = true;
       }
@@ -483,9 +489,11 @@ XPath::ParseLevelFindIndex(XString p_token)
   int index = _ttoi(p_token) - XPATH_ONE_BASED;
   XMLElement* parent = m_element->GetParent();
 
-  if (index >= 0 && index < (int)parent->GetChildren().size())
+  if(parent && (index >= 0 && index < (int)parent->GetChildren().size()))
   {
     m_element = parent->GetChildren()[index];
+    m_results.clear();
+    m_results.push_back(m_element);
     return true;
   }
   m_errorInfo = _T("Index out of bounds!");
@@ -525,7 +533,8 @@ XPath::ParseLevelFindNodes(XString p_token,bool p_recurse)
 
   if(p_recurse)
   {
-    found = FindRecursivly(m_element,p_token);
+    bool store = true;
+    found = FindRecursivly(m_element,p_token,&store);
     if(!found)
     {
       m_element = nullptr;
@@ -548,15 +557,20 @@ XPath::ParseLevelFindNodes(XString p_token,bool p_recurse)
 bool
 XPath::ParseLevelNameReduce(XString p_token, bool p_recurse)
 {
+  XmlElementMap found;
   XmlElementMap::iterator it = m_results.begin();
   while(it != m_results.end())
   {
-    if(m_message->FindElement(*it,p_token,p_recurse) == nullptr)
+    XMLElement* child = m_message->FindElement(*it,p_token,p_recurse);
+    if(child)
     {
-      it = m_results.erase(it);
-      continue;
+      found.push_back(child);
     }
-    ++it;
+    it = m_results.erase(it);
+  }
+  if(!found.empty())
+  {
+    m_results.insert(m_results.begin(),found.begin(),found.end());
   }
   return !m_results.empty();
 }

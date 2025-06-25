@@ -37,6 +37,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+#pragma comment(lib,"secur32.lib")
+
 XString
 GetUserAccount(EXTENDED_NAME_FORMAT p_format /*=NameUnknown*/,bool p_normalized /*=false*/)
 {

@@ -43,7 +43,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Name of the event log category in the WMI
-LPTSTR g_eventLogCategory = _T("Application");
+LPCTSTR g_eventLogCategory = _T("Application");
 
 // Register our DLL. Return '1' if successful, otherwise '0'
 int

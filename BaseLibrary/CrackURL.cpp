@@ -354,7 +354,7 @@ CrackedURL::EncodeURLChars(XString p_text,bool p_queryValue /*=false*/)
     }
     else if(ch == '\'') ++singlequote;
     else if(ch == '\"') ++doublequote;
-    else if(ch == '0x09' || ch == '0x0D' || ch == '0x20')
+    else if(_istspace(ch))
     {
       // Collapse all red/white space chars to space
       ch = ' ';

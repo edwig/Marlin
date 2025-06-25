@@ -44,6 +44,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+#pragma comment(lib,"bcrypt.lib")
+
 // Encryption providers support password-hashing and encryption algorithms
 // See the documentation on: "Cryptographic Provider Types"
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa380244(v=vs.85).aspx

@@ -40,6 +40,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+#pragma comment(lib,"Winhttp.lib")
+
 // XTOR: Empty cookie
 Cookie::Cookie()
 {
