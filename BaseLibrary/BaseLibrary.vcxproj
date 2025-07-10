@@ -522,6 +522,7 @@
     <ClInclude Include="Cookie.h" />
     <ClInclude Include="CrackURL.h" />
     <ClInclude Include="CRC32.h" />
+    <ClInclude Include="CreateFullThread.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="Encoding.h" />
     <ClInclude Include="Environment.h" />
@@ -607,6 +608,7 @@
     <ClCompile Include="Cookie.cpp" />
     <ClCompile Include="CrackURL.cpp" />
     <ClCompile Include="CRC32.cpp" />
+    <ClCompile Include="CreateFullThread.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="EventLogRegistration.cpp" />

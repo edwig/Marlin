@@ -29,7 +29,8 @@
 #include "ThreadPool.h"
 #include "ErrorReport.h"
 #include "CPULoad.h"
-#include "AutoCritical.h"
+#include <AutoCritical.h>
+#include <CreateFullThread.h>
 
 #ifdef _AFX
 #ifdef _DEBUG
@@ -51,44 +52,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Static function, running a thread
-static unsigned _stdcall RunThread(void* p_myThread);
-static unsigned _stdcall RunHeartBeat(void* p_pool);
-
-
-// Set a name on your thread
-// By executing a fake SEH Exception
-//
-const DWORD MS_VC_EXCEPTION = 0x406D1388;
-
-#pragma pack(push,8)
-typedef struct tagTHREADNAME_INFO
-{
-  DWORD  dwType;       // Must be 0x1000.
-  LPCSTR szName;       // Pointer to name (in user addr space).
-  DWORD  dwThreadID;   // Thread ID (MAXDWORD=caller thread).
-  DWORD  dwFlags;      // Reserved for future use, must be zero.
-}
-THREADNAME_INFO;
-#pragma pack(pop)
-
-void SetThreadName(char* threadName, DWORD dwThreadID)
-{
-  THREADNAME_INFO info;
-  info.dwType     = 0x1000;
-  info.szName     = threadName;
-  info.dwThreadID = dwThreadID;
-  info.dwFlags    = 0;
-
-  __try
-  {
-    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR),reinterpret_cast<ULONG_PTR*>(&info));
-  }
-  __except (EXCEPTION_EXECUTE_HANDLER)
-  {
-    // Nothing done here: just name changed
-    memset(&info, 0, sizeof(THREADNAME_INFO));
-  }
-}
+static unsigned RunThread(void* p_myThread);
+static unsigned RunHeartBeat(void* p_pool);
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -212,8 +177,7 @@ ThreadPool::CreateThreadPoolThread()
 
     // Now create our thread
     TP_TRACE0("Creating thread pool thread\n");
-    th->m_thread = reinterpret_cast<HANDLE>(_beginthreadex(nullptr,m_stackSize,RunThread,reinterpret_cast<void*>(th),0,&th->m_threadId));
-
+    th->m_thread = CreateFullThread(RunThread,&th,&th->m_threadId,m_stackSize);
     if(th->m_thread == INVALID_HANDLE_VALUE)
     {
       // Error on thread creation
@@ -406,8 +370,7 @@ ThreadPool::SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_TRYABORT p_abort,voi
 }
 
 // Running our thread!
-/*static*/ unsigned _stdcall
-RunThread(void* p_myThread)
+/*static*/ unsigned RunThread(void* p_myThread)
 {
   // If we come to here, we exist!
   ThreadRegister* reg = reinterpret_cast<ThreadRegister*>(p_myThread);
@@ -415,7 +378,7 @@ RunThread(void* p_myThread)
 }
 
 DWORD
-ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
+ThreadPool::RunAThread(ThreadRegister* p_register)
 {
   // Install SEH to regular exception translator
   _set_se_translator(SeTranslator);
@@ -425,6 +388,8 @@ ThreadPool::RunAThread(ThreadRegister* /*p_register*/)
   TP_TRACE0("Thread is entering the pool\n");
   InterlockedIncrement(&m_curThreads);
   InterlockedIncrement(&m_bsyThreads);
+
+  SetThreadName("Marlin::ThreadPool",p_register->m_threadId);
 
   // Check that there is a initialization routine
   if(m_initialization)
@@ -620,8 +585,8 @@ ThreadPool::CreateHeartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_
 
   if(m_heartbeatEvent)
   {
-    HANDLE thread = reinterpret_cast<HANDLE>(_beginthreadex(nullptr,m_stackSize,RunHeartBeat,reinterpret_cast<void*>(this),0,NULL));
-    if(thread)
+    HANDLE thread = CreateFullThread(RunHeartBeat,this,nullptr,m_stackSize);
+    if(thread != INVALID_HANDLE_VALUE)
     {
       TP_TRACE0("Created a heartbeat thread!\n");
       CloseHandle(thread);

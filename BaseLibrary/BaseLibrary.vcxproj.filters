@@ -288,6 +288,9 @@
     <ClInclude Include="ActiveDirectory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CreateFullThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bcd.cpp">
@@ -504,6 +507,9 @@
       <Filter>Source Files\HTTP_JSON</Filter>
     </ClCompile>
     <ClCompile Include="ActiveDirectory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CreateFullThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

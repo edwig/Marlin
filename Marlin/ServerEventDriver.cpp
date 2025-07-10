@@ -762,7 +762,11 @@ ServerEventDriver::RegisterSocketByCallback(HTTPMessage* p_message,WebSocket* p_
     if(chan > 0)
     {
       // Register socket, authentication already done
-      return m_channels[chan]->RegisterNewSocket(p_message,p_socket,false);
+      ChannelMap::iterator it = m_channels.find(chan);
+      if(it != m_channels.end())
+      {
+        return it->second->RegisterNewSocket(p_message,p_socket,false);
+      }
     }
   }
   return false;
@@ -781,7 +785,11 @@ ServerEventDriver::RegisterStreamByCallback(HTTPMessage* p_message,EventStream* 
     if(chan > 0)
     {
       // Register stream, authentication already done
-      return m_channels[chan]->RegisterNewStream(p_message,p_stream,false);
+      ChannelMap::iterator it = m_channels.find(chan);
+      if(it != m_channels.end())
+      {
+        return it->second->RegisterNewStream(p_message,p_stream,false);
+      }
     }
   }
   return false;
@@ -801,7 +809,11 @@ ServerEventDriver::HandlePollingByCallback(SOAPMessage* p_message)
     if(chan > 0)
     {
       // Register polling stream, authentication already done
-      return m_channels[chan]->HandleLongPolling(p_message,false);
+      ChannelMap::iterator it = m_channels.find(chan);
+      if(it != m_channels.end())
+      {
+        return it->second->HandleLongPolling(p_message,false);
+      }
     }
   }
   return false;
