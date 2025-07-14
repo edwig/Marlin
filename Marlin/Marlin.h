@@ -52,7 +52,7 @@ extern LPCTSTR PRODUCT_ADMIN_EMAIL;    // Default administrator to be notified i
 
 // Load product and application constants
 // in the constants above
-void LoadConstants(LPTSTR p_app_name);
+void LoadConstants(LPCTSTR p_app_name);
 
 // Selecting the right library to link with automatically
 // So we do not need to worry about which library to use in the linker settings
