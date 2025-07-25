@@ -9,6 +9,18 @@ Version 8.x contains the new BaseLibrary where all general classes are moved int
 that can be shared with other library modules like SQLComponents and CXHibernate
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 8.4.3 of 25-07-2025
+--------------------------------------
+1)  AppConfig has been re-written so that you can integrate your applicatio config file with the
+    standard Marlin.Config and remain with just one configuration file, instead of two.
+2)  HTTPSYS now fully functionally with WebSockets and Server-Sent-Events (SSE) in both ANSI and
+    Unicode modes for the asynchroneous server, so we can support WebSockets out of IIS
+3)  MarlinModule now running for both Unicode *and* ANSI mode, fully debuggable as Release build
+4)  Autolinking for all OS libraries, so you can just include <Marlin.h> in your project and 
+    you have no more need to specify all OS libraries in the linker settings.
+5)  The threadpool now can use threads with full security specification of the process and can
+    let their security be inherited to started processes (needed for webserver bouncingg)
+
 CHANGES IN VERSION 8.4.2 of 15-01-2025
 --------------------------------------
 1)  Added named SSE Events in the ServerEventChannels. So that you can sent other 'normal'

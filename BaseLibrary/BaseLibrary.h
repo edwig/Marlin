@@ -47,7 +47,7 @@
 #include "bcd.h"
 
 // VERSION NUMBER OF THIS LIBRARY
-#define BASELIBRARY_VERSION 1.3.2
+#define BASELIBRARY_VERSION 1.3.3
 
 // Selecting the right library to link with automatically
 // So we do not need to worry about which library to use in the linker settings
