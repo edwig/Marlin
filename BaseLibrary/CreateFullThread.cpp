@@ -63,39 +63,149 @@ void SetThreadName(char* threadName,DWORD dwThreadID)
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+
+// The following function frees memory allocated in the BuildRestrictedSD() function
+VOID FreeRestrictedSD(PVOID ptr)
+{
+  if(ptr)
+  {
+    HeapFree(GetProcessHeap(),0,ptr);
+  }
+}
+
+PVOID BuildRestrictedSD(PSECURITY_DESCRIPTOR pSD)
+{
+  DWORD  dwAclLength;
+  PSID   pAuthenticatedUsersSID = NULL;
+  PACL   pDACL = NULL;
+  BOOL   bResult = FALSE;
+  SID_IDENTIFIER_AUTHORITY siaNT = SECURITY_NT_AUTHORITY;
+
+  __try
+  {
+
+    // initialize the security descriptor
+    if(!InitializeSecurityDescriptor(pSD,SECURITY_DESCRIPTOR_REVISION))
+    {
+      TRACE("InitializeSecurityDescriptor() failed with error %d\n",GetLastError());
+      __leave;
+    }
+
+    // obtain a sid for the Authenticated Users Group
+    if(!AllocateAndInitializeSid(&siaNT,1,
+                                 SECURITY_AUTHENTICATED_USER_RID,0,0,0,0,0,0,0,
+                                 &pAuthenticatedUsersSID))
+    {
+      TRACE("AllocateAndInitializeSid() failed with error %d\n",GetLastError());
+      __leave;
+    }
+
+    // NOTE:
+    // 
+    // The Authenticated Users group includes all user accounts that
+    // have been successfully authenticated by the system. If access
+    // must be restricted to a specific user or group other than 
+    // Authenticated Users, the SID can be constructed using the
+    // LookupAccountSid() API based on a user or group name.
+
+    // calculate the DACL length
+    // add space for Authenticated Users group ACE
+    dwAclLength = sizeof(ACL)
+                  + sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)
+                  + GetLengthSid(pAuthenticatedUsersSID);
+
+    // allocate memory for the DACL
+    pDACL = (PACL)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,dwAclLength);
+    if(!pDACL)
+    {
+      TRACE("HeapAlloc() failed with error %d\n",GetLastError());
+      __leave;
+    }
+
+    // initialize the DACL
+    if(!InitializeAcl(pDACL,dwAclLength,ACL_REVISION))
+    {
+      TRACE("InitializeAcl() failed with error %d\n",GetLastError());
+      __leave;
+    }
+
+    // add the Authenticated Users group ACE to the DACL with
+    // GENERIC_READ, GENERIC_WRITE, and GENERIC_EXECUTE access
+    if(!AddAccessAllowedAce(pDACL
+                           ,ACL_REVISION,
+                            GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,
+                            pAuthenticatedUsersSID))
+    {
+      TRACE("AddAccessAllowedAce() failed with error %d\n",GetLastError());
+      __leave;
+    }
+
+    // set the DACL in the security descriptor
+    if(!SetSecurityDescriptorDacl(pSD,TRUE,pDACL,FALSE))
+    {
+      TRACE("SetSecurityDescriptorDacl() failed with error %d\n",GetLastError());
+      __leave;
+    }
+
+    bResult = TRUE;
+  }
+  __finally
+  {
+    if(pAuthenticatedUsersSID)
+    {
+      FreeSid(pAuthenticatedUsersSID);
+    }
+  }
+
+  if(bResult == FALSE)
+  {
+    if(pDACL)
+    { 
+      FreeRestrictedSD(pDACL);
+    }
+    pDACL = NULL;
+  }
+  return (PVOID)pDACL;
+}
+
 // Create a new thread that inherits the security context of the current process
 // And use a non-memory leaking create function
 //
 HANDLE CreateFullThread(LPFN_THREADSTART p_startFunction
                        ,void*            p_context
                        ,unsigned*        p_threadID  /* = nullptr */
-                       ,int              p_stacksize /* = 0       */)
+                       ,int              p_stacksize /* = 0       */
+                       ,bool             p_inherit   /* = false   */
+                       ,bool             p_suspended /* = false   */)
 {
   HANDLE result = 0L;
-  // Get the current thread's security descriptor
-  HANDLE hCurrentProcess = GetCurrentProcess();
-  DWORD  dwSize = 0;
+  unsigned initflag = p_suspended ? CREATE_SUSPENDED : 0;
 
-  // First call to get the required buffer size
-  GetKernelObjectSecurity(hCurrentProcess,DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,nullptr,0,&dwSize);
-  PSECURITY_DESCRIPTOR pSD = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR,dwSize);
-  bool doSecurity = GetKernelObjectSecurity(hCurrentProcess,DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,pSD,dwSize,&dwSize) != 0;
-
-  // Set up SECURITY_ATTRIBUTES
+  // Create security descriptor
+  // Thread should inherit the security rights of the current process
+  SECURITY_DESCRIPTOR sd;
   SECURITY_ATTRIBUTES sa;
-  sa.nLength              = sizeof(SECURITY_ATTRIBUTES);
-  sa.lpSecurityDescriptor = pSD;
-  sa.bInheritHandle       = TRUE;
+  LPVOID psd = BuildRestrictedSD(&sd);
+  sa.nLength              = sizeof(sa);
+  sa.lpSecurityDescriptor = &sd;
+  sa.bInheritHandle       = p_inherit ? TRUE : FALSE;
 
   // Now create our thread
   unsigned ID = 0;
-  result = reinterpret_cast<HANDLE>(_beginthreadex(doSecurity ? &sa : nullptr,p_stacksize,p_startFunction,p_context,0,&ID));
-
+  result = reinterpret_cast<HANDLE>(_beginthreadex(psd ? &sa : nullptr  // Inherited rights, or default
+                                                  ,p_stacksize          // Extra stacksize
+                                                  ,p_startFunction      // Thread start
+                                                  ,p_context            // Context
+                                                  ,initflag             // Start directly or suspend
+                                                  ,&ID));               // Created ID is returned here
   if((result != INVALID_HANDLE_VALUE) && p_threadID)
   {
+    // propagate our new thread ID
     *p_threadID = ID;
   }
-  LocalFree(pSD);
+  // Security descriptor destruction
+  FreeRestrictedSD(psd);
 
   return result;  
 }

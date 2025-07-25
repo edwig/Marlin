@@ -41,7 +41,7 @@
 #include <WinFile.h>
 
 // Load product and application constants
-void LoadConstants(LPTSTR /*p_app_name*/)
+void LoadConstants(LPCTSTR /*p_app_name*/)
 {
   // These constants reside in the "ServerMain"
   APPLICATION_NAME      = _T("MarlinServer.exe");                     // Name of the application EXE file!!

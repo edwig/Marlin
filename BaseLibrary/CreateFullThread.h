@@ -27,10 +27,16 @@
 //
 #pragma once
 
+// Prototype for the starting point of a thread
 typedef unsigned (*LPFN_THREADSTART)(void* p_context);
 
 // Create a thread that inherits the process security context
-HANDLE CreateFullThread(LPFN_THREADSTART p_start,void* p_context,unsigned* p_threadID = nullptr,int p_stacksize = 0);
+HANDLE CreateFullThread(LPFN_THREADSTART p_start                    // Starting point of the new thread
+                       ,void*            p_context                  // Context argument of the starting point
+                       ,unsigned*        p_threadID  = nullptr      // Possibly return the thread ID
+                       ,int              p_stacksize = 0            // Possibly set extra stack space for the thread
+                       ,bool             p_inherit   = false        // Sub-processes can inherit the security handle
+                       ,bool             p_suspended = false);      // Create suspended (Use "ResumeThread")
 
 // Setting the name of a thread
 void   SetThreadName(char* threadName,DWORD dwThreadID);

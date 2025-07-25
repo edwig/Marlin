@@ -117,6 +117,8 @@ public:
   bool  TrySetMaximum(int p_maxThreads);
   // Setting the stack size
   void  SetStackSize(int p_stackSize);
+  // All threads inherit the process security descriptor
+  void  SetInheritSecurity(bool p_inherit);
   // Extend the maximum for a period of time
   void  ExtendMaximumThreads (AutoIncrementPoolMax& p_increment);
   void  RestoreMaximumThreads(AutoIncrementPoolMax& p_increment);
@@ -132,7 +134,7 @@ public:
   bool  EliminateSleepingThread (DWORD_PTR p_unique);
 
   // Create a heartbeat thread (Can be called **ONCE**)
-  bool  CreateHeartbeat(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heartbeat);
+  bool  CreateHeartbeat(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heartbeat,bool p_inherit = false);
   // Stop a heartbeat thread
   void  StopHeartbeat();
   // Perform a single heartbeat extra
@@ -155,6 +157,7 @@ public:
   int    GetCleanupJobs()         { return (int)m_cleanup.size(); }
   int    GetHeartBeatTime()       { return m_heartbeat;           }
   HANDLE GetIOCompletionPort()    { return m_completion;          }
+  bool   GetInheritSecurity()     { return m_inherit;             }
 
   // These running-a-thread methods are public, but really should only be called 
   // from within the static work functions of the ThreadPool itself, to get things working
@@ -208,6 +211,7 @@ private:
   int               m_maxThreads      { NUM_THREADS_MAXIMUM };  // TP maximum number of threads
   int               m_stackSize       { THREAD_STACKSIZE    };  // TP size of SP stack of each thread
   int               m_processors      { 1       };              // Number of logical processors on the system
+  bool              m_inherit         { false   };              // Threads inherit the proces security handle
   HANDLE            m_completion      { nullptr };              // I/O Completion port for I/O and thread sync
   ThreadMap         m_threads;                                  // Map with all running and waiting threads
   SleepingMap       m_sleeping;                                 // Registration of sleeping threads
@@ -231,6 +235,12 @@ inline long
 ThreadPool::GetCurrentThreads()
 {
   return m_curThreads;
+}
+
+inline void
+ThreadPool::SetInheritSecurity(bool p_inherit)
+{
+  m_inherit = p_inherit;
 }
 
 // Auto locking mechanism for the ThreadPool

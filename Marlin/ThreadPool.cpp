@@ -177,7 +177,7 @@ ThreadPool::CreateThreadPoolThread()
 
     // Now create our thread
     TP_TRACE0("Creating thread pool thread\n");
-    th->m_thread = CreateFullThread(RunThread,&th,&th->m_threadId,m_stackSize);
+    th->m_thread = CreateFullThread(RunThread,th,&th->m_threadId,m_stackSize,m_inherit);
     if(th->m_thread == INVALID_HANDLE_VALUE)
     {
       // Error on thread creation
@@ -571,7 +571,7 @@ ThreadPool::StopThread(ThreadRegister* /*p_reg*/)
 
 // Create a heartbeat thread (Can be called **ONCE**)
 bool
-ThreadPool::CreateHeartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_heartbeat)
+ThreadPool::CreateHeartbeat(LPFN_CALLBACK p_callback,void* p_argument,DWORD p_heartbeat,bool p_inherit /*=false*/)
 {
   // See if a heartbeat was already running
   if(m_heartbeat)
@@ -585,10 +585,12 @@ ThreadPool::CreateHeartbeat(LPFN_CALLBACK p_callback, void* p_argument, DWORD p_
 
   if(m_heartbeatEvent)
   {
-    HANDLE thread = CreateFullThread(RunHeartBeat,this,nullptr,m_stackSize);
+    unsigned ID = 0;
+    HANDLE thread = CreateFullThread(RunHeartBeat,this,&ID,m_stackSize,p_inherit);
     if(thread != INVALID_HANDLE_VALUE)
     {
       TP_TRACE0("Created a heartbeat thread!\n");
+      SetThreadName("Heartbeat",ID);
       CloseHandle(thread);
       return true;
     }
