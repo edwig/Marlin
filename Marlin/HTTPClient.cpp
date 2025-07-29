@@ -2174,6 +2174,7 @@ HTTPClient::Send(HTTPMessage* p_msg)
     m_port     = p_msg->GetPort();
     m_url      = p_msg->GetAbsolutePath();
     m_secure   = p_msg->GetSecure();
+    m_scheme   = p_msg->GetCrackedURL().m_scheme;
   }
   else
   {
@@ -2244,6 +2245,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
     m_port     = p_msg->GetPort();
     m_url      = p_msg->GetAbsolutePath();
     m_secure   = p_msg->GetSecure();
+    m_scheme = p_msg->GetCrackedURL().m_scheme;
 
     DETAILLOG(_T("SOAP Message for: http%s//%s:%d%s"),m_secure ? _T("s") : _T(""),m_server.GetString(),m_port,m_url.GetString());
   }
@@ -2433,6 +2435,7 @@ HTTPClient::Send(JSONMessage* p_msg)
     m_port   = p_msg->GetPort();
     m_url    = p_msg->GetAbsolutePath();
     m_secure = p_msg->GetSecure();
+    m_scheme = p_msg->GetCrackedURL().m_scheme;
   }
   else
   {
