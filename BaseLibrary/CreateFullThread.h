@@ -28,7 +28,7 @@
 #pragma once
 
 // Prototype for the starting point of a thread
-typedef unsigned (*LPFN_THREADSTART)(void* p_context);
+typedef unsigned (__stdcall *LPFN_THREADSTART)(void* p_context);
 
 // Create a thread that inherits the process security context
 HANDLE CreateFullThread(LPFN_THREADSTART p_start                    // Starting point of the new thread
