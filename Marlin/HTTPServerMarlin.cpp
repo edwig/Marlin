@@ -48,8 +48,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
-#pragma comment(lib,"httpapi.lib")
-
 // Logging macro's
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }

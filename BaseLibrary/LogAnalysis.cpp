@@ -98,8 +98,10 @@ long
 LogAnalysis::Release()
 {
   long refs = InterlockedDecrement(&m_refcounter);
-  if(refs <= 0)
+  if(refs == 0)
   {
+    // First thread instance to reach zero deletes the object
+    // Extra passes (e.g. the writer) leave the memory alone
     delete this;
   }
   else if(refs == 1 && m_useWriter)

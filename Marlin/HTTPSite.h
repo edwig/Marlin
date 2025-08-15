@@ -318,6 +318,7 @@ protected:
   void              CleanupHandlers();
   void              CleanupFilters();
   void              CleanupThrotteling();
+  void              CleanupRewriter();
   // Finding the SiteHandler registration
   RegHandler*       FindSiteHandler(HTTPCommand p_command);
   // Calling all filters

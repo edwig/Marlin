@@ -1173,25 +1173,36 @@ Request::FindVerb(LPSTR p_verb)
 void
 Request::FindURL(LPSTR p_url)
 {
-  USES_CONVERSION;
-
-  // skip whitespace
   XString full(p_url);
-  full = full.Trim();
-
-  // Copy the raw URL
-  m_request.pRawUrl      = _strdup(p_url);
-  m_request.RawUrlLength = (USHORT) strlen(p_url);
-  // FULL URL
-  wchar_t* copy  = _wcsdup(A2CW(p_url));
-  m_request.CookedUrl.pFullUrl = copy;
-  m_request.CookedUrl.FullUrlLength = (USHORT) (wcslen(m_request.CookedUrl.pFullUrl) * sizeof(wchar_t));
 
   // Cook the URL
   int posHost  = full.Find(_T("//"));
   int posPort  = full.Find(':', posHost + 1);
   int posPath  = full.Find('/', posHost > 0 ? posHost + 2 : 0);
   int posQuery = full.Find('?');
+
+  if(posQuery > 0)
+  {
+    // "%20" spaces are encoded 'on-the-wire' as '+'
+    for(int index = posQuery + 1;index < full.GetLength(); ++index)
+    {
+      if(full.GetAt(index) == _T('+'))
+      {
+        p_url[index] = _T(' ');
+        full.SetAt(index,_T(' '));
+      }
+    }
+  }
+
+
+  // Copy the raw URL
+  m_request.pRawUrl      = _strdup(p_url);
+  m_request.RawUrlLength = (USHORT) strlen(p_url);
+  // FULL URL
+  CStringW wurl(full);
+  wchar_t* copy  = _wcsdup(wurl.GetString());
+  m_request.CookedUrl.pFullUrl = copy;
+  m_request.CookedUrl.FullUrlLength = (USHORT) (wcslen(m_request.CookedUrl.pFullUrl) * sizeof(wchar_t));
 
   // Find pointers and lengths
   if(posHost >= 0)

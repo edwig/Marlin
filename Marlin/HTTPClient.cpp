@@ -2833,6 +2833,11 @@ HTTPClient::Send()
     flags |= WINHTTP_FLAG_SECURE;
     DETAILLOG(_T("Making secure HTTPS connection"));
   }
+  // See if escaping has already been done
+  if(m_url.Find('%') > 0)
+  {
+    flags |= WINHTTP_FLAG_ESCAPE_DISABLE;
+  }
 
   // Make a request header to be send
   wstring verb = StringToWString(m_verb);

@@ -93,6 +93,7 @@ HTTPSite::~HTTPSite()
   CleanupFilters();
   CleanupHandlers();
   CleanupThrotteling();
+  CleanupRewriter();
   DeleteCriticalSection(&m_filterLock);
   DeleteCriticalSection(&m_sessionLock);
 }
@@ -140,6 +141,17 @@ HTTPSite::CleanupThrotteling()
     delete it->second;
   }
   m_throttels.clear();
+}
+
+// Remove the URL rewriter
+void
+HTTPSite::CleanupRewriter()
+{
+  if(m_rewriter)
+  {
+    delete m_rewriter;
+    m_rewriter = nullptr;
+  }
 }
 
 // OPTIONAL: Set one or more text-based content types
