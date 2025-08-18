@@ -933,7 +933,12 @@ SecureServerSocket::SendMsg(LPCVOID p_buffer,const ULONG p_length)
 
   while(total_bytes_sent < p_length)
   {
-    bytes_sent = SecureServerSocket::SendPartial((TCHAR*)p_buffer + total_bytes_sent,p_length - total_bytes_sent);
+    ULONG toSend = p_length - total_bytes_sent;
+    if(toSend > m_maxMsgSize)
+    {
+      toSend = m_maxMsgSize;
+    }
+    bytes_sent = SecureServerSocket::SendPartial((TCHAR*)p_buffer + total_bytes_sent,toSend);
     if((bytes_sent == SOCKET_ERROR))
     {
       return SOCKET_ERROR;

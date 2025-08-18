@@ -75,7 +75,10 @@ Request::~Request()
   Reset();
 
   // Decrement the connection counter
-  g_session->RemoveConnection();
+  if(g_session)
+  {
+    g_session->RemoveConnection();
+  }
 }
 
 // Starting of a request.
