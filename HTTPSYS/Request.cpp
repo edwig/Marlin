@@ -2,7 +2,7 @@
 //
 // USER-SPACE IMPLEMENTTION OF HTTP.SYS
 //
-// 2018 - 2024 (c) ir. W.E. Huisman
+// 2018 - 2025 (c) ir. W.E. Huisman
 // License: MIT
 //
 //////////////////////////////////////////////////////////////////////////
@@ -22,6 +22,7 @@
 #include "Base64.h"
 #include "SYSWebSocket.h"
 #include "OpaqueHandles.h"
+#include <CrackURL.h>
 #include <ConvertWideString.h>
 #include <LogAnalysis.h>
 #include <wininet.h>
@@ -1176,33 +1177,21 @@ Request::FindVerb(LPSTR p_verb)
 void
 Request::FindURL(LPSTR p_url)
 {
-  XString full(p_url);
-
-  // Cook the URL
-  int posHost  = full.Find(_T("//"));
-  int posPort  = full.Find(':', posHost + 1);
-  int posPath  = full.Find('/', posHost > 0 ? posHost + 2 : 0);
-  int posQuery = full.Find('?');
-
-  if(posQuery > 0)
-  {
-    // "%20" spaces are encoded 'on-the-wire' as '+'
-    for(int index = posQuery + 1;index < full.GetLength(); ++index)
-    {
-      if(full.GetAt(index) == _T('+'))
-      {
-        p_url[index] = _T(' ');
-        full.SetAt(index,_T(' '));
-      }
-    }
-  }
-
-
   // Copy the raw URL
-  m_request.pRawUrl      = _strdup(p_url);
-  m_request.RawUrlLength = (USHORT) strlen(p_url);
+  m_request.pRawUrl = _strdup(p_url);
+  m_request.RawUrlLength = (USHORT)strlen(p_url);
+
+  // Cook our URL
+  XString cooked = CrackedURL::DecodeURLChars(p_url);
+
+  // Positions in the cooked the URL
+  int posHost  = cooked.Find(_T("//"));
+  int posPort  = cooked.Find(':',posHost + 1);
+  int posPath  = cooked.Find('/',posHost > 0 ? posHost + 2 : 0);
+  int posQuery = cooked.Find('?');
+
   // FULL URL
-  CStringW wurl(full);
+  CStringW wurl(cooked);
   wchar_t* copy  = _wcsdup(wurl.GetString());
   m_request.CookedUrl.pFullUrl = copy;
   m_request.CookedUrl.FullUrlLength = (USHORT) (wcslen(m_request.CookedUrl.pFullUrl) * sizeof(wchar_t));
