@@ -148,12 +148,13 @@ MediaTypes::Init()
   AddContentType(true, _T("svg"),    _T("image/svg+xml"));
   AddContentType(false,_T("pdf"),    _T("application/pdf"));
   AddContentType(false,_T("ttf"),    _T("application/octet-stream"));
+  AddContentType(false,_T("bmp"),    _T("image/bmp"));
   AddContentType(false,_T("png"),    _T("image/png"));
   AddContentType(false,_T("jpg"),    _T("image/jpg"));
   AddContentType(false,_T("jpeg"),   _T("image/jpg"));
   AddContentType(false,_T("gif"),    _T("image/gif"));
   AddContentType(false,_T("ico"),    _T("image/x-icon"));
-  // Old style MS-Word upto version 2013/XP
+  // Old style MS-Word up to version 2013/XP
   AddContentType(false,_T("doc"),    _T("application/msword"));
   AddContentType(false,_T("doc"),    _T("application/msword"));
   AddContentType(false,_T("xls"),    _T("application/vnd.ms-excel"));
