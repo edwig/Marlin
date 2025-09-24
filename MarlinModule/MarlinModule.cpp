@@ -360,7 +360,7 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
     }
     ++it;
   }
-  if(it == g_IISApplicationPool.end())
+  if(it == g_IISApplicationPool.end() || poolapp == nullptr)
   {
     // Not our application to stop. Continue silently!
     return GL_NOTIFICATION_CONTINUE;
@@ -368,6 +368,11 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
 
   // This is our application to stop
   ServerApp* app = poolapp->m_application;
+  if(app == nullptr)
+  {
+    // No application found. Continue silently!
+    return GL_NOTIFICATION_CONTINUE;
+  }
 
   // Tell that we are stopping
   XString stopping(_T("Marlin stopping application: "));
