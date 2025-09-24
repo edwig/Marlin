@@ -95,7 +95,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
   else
   {
     extern wchar_t g_IISAdminEmail[];
-    wcsncpy_s(g_IISAdminEmail,MAX_PATH - 1,m_adminEmail.GetString(),MAX_PATH - 1);
+    wcsncpy_s(g_IISAdminEmail,MAX_PATH - 1,(wchar_t*)m_adminEmail.GetString(),MAX_PATH - 1);
   }
 
   // Tell MS-Windows where to look while loading our DLL
@@ -167,8 +167,8 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
   // Let the server app factory create a new one for us
   // And store it in our representation of the active application pool
   m_application = (*m_createServerApp)(g_IISServer                 // Microsoft IIS server object
-                                      ,p_webroot.GetString()       // The IIS registered webroot
-                                      ,p_application.GetString()); // The application's name
+                                      ,(LPTSTR)p_webroot.GetString()       // The IIS registered webroot
+                                      ,(LPTSTR)p_application.GetString()); // The application's name
   if(m_application == nullptr)
   {
     XString error(_T("NO APPLICATION CREATED IN THE APP-FACTORY!"));

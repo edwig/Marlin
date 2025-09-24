@@ -52,8 +52,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Static function, running a thread
-static unsigned RunThread(void* p_myThread);
-static unsigned RunHeartBeat(void* p_pool);
+static unsigned __stdcall RunThread(void* p_myThread);
+static unsigned __stdcall RunHeartBeat(void* p_pool);
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -370,7 +370,7 @@ ThreadPool::SetThreadInitFunction(LPFN_CALLBACK p_init,LPFN_TRYABORT p_abort,voi
 }
 
 // Running our thread!
-/*static*/ unsigned RunThread(void* p_myThread)
+/*static*/ unsigned __stdcall RunThread(void* p_myThread)
 {
   // If we come to here, we exist!
   ThreadRegister* reg = reinterpret_cast<ThreadRegister*>(p_myThread);

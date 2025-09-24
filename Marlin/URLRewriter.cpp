@@ -205,7 +205,7 @@ URLRewriter::InitRewriter(MarlinConfig& p_config)
   {
     std::vector<XString> routes;
     SplitString(removeRoute,routes,_T(','));
-    for(int ind = 0; ind < routes.size(); ++ind)
+    for(int ind = 0; ind < (int) routes.size(); ++ind)
     {
       int route = _ttoi(routes[ind]);
       AddDelRoute(route);
@@ -363,10 +363,10 @@ URLRewriter::RewriteFromRoute(CrackedURL& p_url,Routing& p_routing)
   }
   int changes = 0;
 
-  if(p_routing.size() > m_fromRoute)
+  if((int)p_routing.size() > m_fromRoute)
   {
     XString path(_T("/"));
-    for(int ind = m_fromRoute;ind < p_routing.size() ;++ind)
+    for(int ind = m_fromRoute;ind < (int)p_routing.size() ;++ind)
     {
       path += p_routing[ind];
       path += _T("/");
@@ -381,7 +381,7 @@ int
 URLRewriter::RewriteRoute(CrackedURL& p_url,Routing& p_routing)
 {
   int changes = 0;
-  for(int ind = 0; ind < p_routing.size(); ++ind)
+  for(int ind = 0; ind < (int)p_routing.size(); ++ind)
   {
     RWRoute::iterator it = m_routeMap.find(ind);
     if(it != m_routeMap.end())
@@ -414,7 +414,7 @@ URLRewriter::RewriteDelRoute(CrackedURL& p_url,Routing& p_routing)
 
   for(auto& delroute : m_delRoute)
   {
-    if(delroute >= 0 && delroute < p_routing.size())
+    if(delroute >= 0 && delroute < (int)p_routing.size())
     {
       p_routing.erase(p_routing.begin() + delroute);
       ++changes;
