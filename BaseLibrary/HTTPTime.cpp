@@ -36,7 +36,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
-const TCHAR* weekday_short[7] =
+static const TCHAR* weekday_short[7] =
 {
   _T("Sun")
  ,_T("Mon")
@@ -47,7 +47,7 @@ const TCHAR* weekday_short[7] =
  ,_T("Sat")
 };
 
-const TCHAR* weekday_long[7] =
+static const TCHAR* weekday_long[7] =
 {
    _T("Sunday")
   ,_T("Monday")
@@ -58,7 +58,7 @@ const TCHAR* weekday_long[7] =
   ,_T("Saturday")
 };
 
-const TCHAR* month[12] =
+static const TCHAR* month[12] =
 {
   _T("Jan")
  ,_T("Feb")

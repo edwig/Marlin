@@ -526,6 +526,7 @@
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="Encoding.h" />
     <ClInclude Include="Environment.h" />
+    <ClInclude Include="ErrorReport.h" />
     <ClInclude Include="EventLogRegistration.h" />
     <ClInclude Include="ExecuteProcess.h" />
     <ClInclude Include="ExecuteShell.h" />
@@ -611,6 +612,7 @@
     <ClCompile Include="CreateFullThread.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Environment.cpp" />
+    <ClCompile Include="ErrorReport.cpp" />
     <ClCompile Include="EventLogRegistration.cpp" />
     <ClCompile Include="ExecuteProcess.cpp" />
     <ClCompile Include="ExecuteShell.cpp" />

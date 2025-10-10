@@ -27,9 +27,6 @@
     <ClCompile Include="CreateURLPrefix.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="ErrorReport.cpp">
-      <Filter>MarlinGeneral</Filter>
-    </ClCompile>
     <ClCompile Include="EventSource.cpp">
       <Filter>MarlinClient</Filter>
     </ClCompile>
@@ -312,9 +309,6 @@
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="CreateURLPrefix.h">
-      <Filter>MarlinGeneral\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ErrorReport.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
     <ClInclude Include="HTTPCertificate.h">

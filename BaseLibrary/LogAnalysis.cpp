@@ -40,14 +40,15 @@
 #include "GetExePath.h"
 #include "GetUserAccount.h"
 #include "AutoCritical.h"
-#include "ConvertWideString.h"
-#include <string.h>
+#include "ServiceReporting.h"
+#include "ErrorReport.h"
 #include <sys/timeb.h>
 #include <process.h>
 #include <io.h>
 // STL includes
 #include <vector>
 #include <algorithm>
+#include <stdarg.h>
 
 #ifdef _AFX
 #ifdef _DEBUG
@@ -56,6 +57,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 #endif
+
+static bool g_except = false;
 
 // CTOR is private: See static NewLogfile method
 LogAnalysis::LogAnalysis(XString p_name)
@@ -151,7 +154,7 @@ LogAnalysis::Reset()
       // Wait for a max of 200ms For the thread to stop
       for(unsigned ind = 0; ind < 10; ++ind)
       {
-        if(m_logThread == NULL)
+        if(m_logThread == nullptr)
         {
           break;
         }
@@ -177,7 +180,7 @@ LogAnalysis::Reset()
   if(m_eventLog)
   {
     DeregisterEventSource(m_eventLog);
-    m_eventLog = NULL;
+    m_eventLog = nullptr;
   }
 
   // Reset loglevel
@@ -280,7 +283,7 @@ LogAnalysis::SetKeepfiles(int p_keepfiles)
 bool
 LogAnalysis::SetBackgroundWriter(bool p_writer)
 {
-  if(m_logThread == NULL)
+  if(m_logThread == nullptr)
   {
     m_useWriter = p_writer;
     return true;
@@ -354,8 +357,8 @@ LogAnalysis::Initialisation()
   if(m_doEvents)
   {
     // Use standard application event log
-    m_eventLog = RegisterEventSource(NULL,m_name);
-    if(m_eventLog == NULL)
+    m_eventLog = RegisterEventSource(nullptr,m_name);
+    if(m_eventLog == nullptr)
     {
       m_doEvents = false;
     }
@@ -449,8 +452,8 @@ LogAnalysis::AnalysisLog(LPCTSTR p_function,LogType p_type,bool p_doFormat,LPCTS
   // Get/print the time
   if(m_doTiming)
   {
-    __timeb64 now;
-    struct tm today;
+    __timeb64 now   { 0 };
+    struct tm today { 0 };
 
     position = 26;  // Prefix string length
     _ftime64_s(&now);
@@ -539,7 +542,7 @@ LogAnalysis::WriteEvent(HANDLE p_eventLog,LogType p_type,XString& p_buffer)
     case LogType::LOG_WARN: type = EVENTLOG_WARNING_TYPE;     break;
   }
 
-  ReportEvent(p_eventLog,type,0,0,NULL,1,0,lpszStrings,0);
+  ReportEvent(p_eventLog,type,0,0,nullptr,1,0,lpszStrings,nullptr);
 }
 
 // Hexadecimal view of an object added to the logfile
@@ -627,13 +630,17 @@ LogAnalysis::BareStringLog(XString p_string)
 void
 LogAnalysis::BareBufferLog(void* p_buffer,unsigned p_length)
 {
-  XString marker(_T(BUFFER_MARKER));
+  // Input validation with early return
+  if(!p_buffer || p_length == 0) [[likely]]
+  {
+    return;
+  }
+
+  static const XString marker(_T(BUFFER_MARKER));
   BYTE* copy = new BYTE[p_length];
   memcpy(copy,p_buffer,p_length);
 
-  LogBuff buff;
-  buff.m_buffer = copy;
-  buff.m_length = p_length;
+  LogBuff buff { copy,p_length };
 
   // Multi threaded protection
   AutoCritSec lock(&m_lock);
@@ -817,13 +824,25 @@ LogAnalysis::RunLog()
   else
   {
     // Create the event before starting the thread and before ending this call!!
-    m_event = CreateEvent(NULL,FALSE,FALSE,NULL);
+    m_event = CreateEvent(nullptr,FALSE,FALSE,nullptr);
     // Basis thread of the InOutPort
     unsigned int threadID;
-    if((m_logThread = reinterpret_cast<HANDLE>(_beginthreadex(NULL,0,StartingTheLog,(void *)(this),0,&threadID))) == INVALID_HANDLE_VALUE)
+    if((m_logThread = reinterpret_cast<HANDLE>(_beginthreadex(nullptr,0,StartingTheLog,(void *)(this),0,&threadID))) == INVALID_HANDLE_VALUE)
     {
-      m_logThread = NULL;
+      m_logThread = nullptr;
       //ATLTRACE("Cannot make a thread for the LogAnalysis function\n");
+    }
+    else
+    {
+      // Wait for the writer to start
+      for(int ind = 0;ind < LOGWRITE_MINCACHE;++ind)
+      {
+        Sleep(2);
+        if(m_wrRunning)
+        {
+          break;
+        }
+      }
     }
   }
 }
@@ -835,38 +854,80 @@ void
 LogAnalysis::RunLogAnalysis()
 {
   DWORD sync = 0;
+  _set_se_translator(SeTranslator);
 
-  // Writing thread acquires a lock on the object
-  Acquire();
-
-  while(m_initialised && m_refcounter > 1)
+  try
   {
-    DWORD res = WaitForSingleObjectEx(m_event,m_interval,true);
+    // Writing thread acquires a lock on the object
+    Acquire();
 
-    switch(res)
+    m_wrRunning = true;
+    while(m_initialised && m_refcounter > 1)
     {
-      case WAIT_OBJECT_0:       // Full flushing requested, do it
-                                Flush(true);
-      case WAIT_IO_COMPLETION:  break;
-      case WAIT_ABANDONED:      break;
-      case WAIT_TIMEOUT:        // Timeout - see if we must flush
-                                // Every fourth round, we do a forced flush
-                                Flush((++sync % LOGWRITE_FORCED) == 0);
-                                break;
+      DWORD res = WaitForSingleObjectEx(m_event,m_interval,true);
+
+      switch(res)
+      {
+        case WAIT_OBJECT_0:       // Full flushing requested, do it
+                                  Flush(true);
+                                  break;
+        case WAIT_IO_COMPLETION:  break;
+        case WAIT_ABANDONED:      break;
+        case WAIT_TIMEOUT:        // Timeout - see if we must flush
+                                  // Every fourth round, we do a forced flush
+                                  Flush((++sync % LOGWRITE_FORCED) == 0);
+                                  break;
+      }
+    }
+    // Flush out the rest
+    Flush(true);
+    // Closing our event
+    CloseHandle(m_event);
+    m_event = nullptr;
+
+    // Also ending this thread
+    m_logThread = NULL;
+    m_useWriter = false;
+    m_wrRunning = false;
+
+    // TEST CRASH HANDLER
+    // HANDLE* event = nullptr;
+    // *event = 0L;
+
+    // Release hold on the object
+    Release();
+  }
+  catch(StdException& ex)
+  {
+    XString mapname(m_file.GetFilenamePartDrive() + m_file.GetFilenamePartDirectory());
+
+    if(ex.GetSafeExceptionCode())
+    {
+      // We need to detect the fact that a second exception can occur,
+      // so we do **not** call the error report method again
+      // Otherwise we would end into an infinite loop
+      XString empty;
+      g_except = true;
+      g_except = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),mapname,empty);
+
+      if(g_except)
+      {
+        // Error while sending an error report
+        // This error can originate from another thread, OR from the sending of this error report
+        SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("DOUBLE INTERNAL ERROR while making an error report.!!"));
+        g_exception = false;
+      }
+      else
+      {
+        SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("CRASH: Errorreport has been made in: %s"),mapname.GetString());
+      }
+    }
+    else
+    {
+      // 'Normal' C++ exception: But it was forgotten elsewhere to catch it
+      ErrorReport::Report(ex.GetErrorMessage(),0,mapname,_T(""));
     }
   }
-  // Flush out the rest
-  Flush(true);
-  // Closing our event
-  CloseHandle(m_event);
-  m_event = NULL;
-
-  // Also ending this thread
-  m_logThread = NULL;
-  m_useWriter = false;
-
-  // Release hold on the object
-  Release();
 }
 
 // Append date time to log's filename
@@ -897,8 +958,8 @@ LogAnalysis::AppendDateTimeToFilename()
 
   // Append timestamp to the filename (before extension)
   XString append;
-  __timeb64 now;
-  struct tm today;
+  __timeb64 now   { 0 };
+  struct tm today { 0 };
 
   _ftime64_s(&now);
   _localtime64_s(&today,&now.time);
@@ -947,7 +1008,7 @@ LogAnalysis::RemoveLastMonthsFiles(XString p_filename,XString p_pattern,struct t
   // Walk through all the files in the pattern
   // Even works on relative file paths
   intptr_t nHandle = 0;
-  struct _tfinddata_t fileInfo;
+  struct _tfinddata_t fileInfo { 0 };
   nHandle = _tfindfirst(pattern.GetString(),&fileInfo);
   if(nHandle != -1)
   {
@@ -977,7 +1038,7 @@ LogAnalysis::RemoveLogfilesKeeping(XString p_filename,XString p_pattern)
 
   // Read in all files
   intptr_t nHandle = 0;
-  struct _tfinddata_t fileInfo;
+  struct _tfinddata_t fileInfo { 0 };
   nHandle = _tfindfirst(pattern.GetString(),&fileInfo);
   if(nHandle != -1)
   {

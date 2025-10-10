@@ -183,6 +183,7 @@ private:
   bool    m_doEvents    { false };              // Also write to WMI event log
   bool    m_rotate      { false };              // Log rotation for server solutions
   bool    m_useWriter   { true  };              // Use thread writer in the background
+  bool    m_wrRunning   { false };              // Signals that the writer is running
   size_t  m_cacheMaxSize{ LOGWRITE_CACHE     }; // Number of cached lines
   int     m_interval    { LOGWRITE_INTERVAL  }; // Interval between writes (in seconds)
   int     m_keepfiles   { LOGWRITE_KEEPFILES }; // Keep a maximum of n files in a directory

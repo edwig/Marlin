@@ -2008,7 +2008,7 @@ Request::SendEntityChunkFromFragmentEx(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
   return ERROR_INVALID_PARAMETER;
 }
 
-LPCTSTR weekday_short[7] =
+static LPCTSTR weekday_short[7] =
 {
    _T("Sun")
   ,_T("Mon")
@@ -2019,7 +2019,7 @@ LPCTSTR weekday_short[7] =
   ,_T("Sat")
 };
 
-LPCTSTR month[12] =
+static LPCTSTR month[12] =
 {
    _T("Jan")
   ,_T("Feb")

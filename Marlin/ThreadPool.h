@@ -172,6 +172,8 @@ private:
   void InitThreadPool();
   // Stopping the thread pool
   void StopThreadPool();
+  // Setting the crash report map
+  void SetCrashReportMap();
   // Create a thread in the ThreadPool
   ThreadRegister* CreateThreadPoolThread();
   // Stop a thread for good
@@ -217,6 +219,7 @@ private:
   SleepingMap       m_sleeping;                                 // Registration of sleeping threads
   WorkMap           m_work;                                     // Map with the backlog of work to do
   WorkMap           m_cleanup;                                  // Cleanup jobs after closing the queue
+  XString           m_crashMap;                                 // Where we write crash reports
   CRITICAL_SECTION  m_critical;                                 // Locking synchronization object
   CRITICAL_SECTION  m_cpuclock;                                 // Lock for CPULoad
   LPFN_CALLBACK     m_initialization   { nullptr };             // TP thread initialization

@@ -748,6 +748,10 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
         PostHandle(p_message,false);
       }
     }
+    // TEST CRASH HANDLER
+    // HANDLE* event = nullptr;
+    // *event = 0L;
+
     // Remove the throttling lock!
     if(m_throttling)
     {
@@ -768,7 +772,7 @@ HTTPSite::HandleHTTPMessage(HTTPMessage* p_message)
       {
         // Error while sending an error report
         // This error can originate from another thread, OR from the sending of this error report
-        CRASHLOG(310L,_T("DOUBLE INTERNAL ERROR while making an error report.!!"));
+        CRASHLOG(ERROR_INVALID_EXCEPTION_HANDLER,_T("DOUBLE INTERNAL ERROR while making an error report.!!"));
         g_exception = false;
       }
       else

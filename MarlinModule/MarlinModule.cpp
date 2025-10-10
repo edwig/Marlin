@@ -40,8 +40,9 @@
 #include "StdException.h"
 #include "IISDebug.h"
 #include <ConvertWideString.h>
+#include <ErrorReport.h>
+#include <Version.h>
 #include <winhttp.h>
-#include <io.h>
 
 #ifdef _AFX
 #ifdef _DEBUG
@@ -54,9 +55,14 @@ static char THIS_FILE[] = __FILE__;
 // GLOBALS Needed for the module
 AppPool       g_IISApplicationPool;   // All applications in the application pool
 wchar_t       g_IISModuleName[SERVERNAME_BUFFERSIZE + 1] = L"";
+wchar_t       g_IISMapCrashes[SERVERNAME_BUFFERSIZE + 1] = L"";
 bool          g_IISDebugMode = false;
 wchar_t       g_IISAdminEmail[MAX_PATH];
 IHttpServer*  g_IISServer    = nullptr;
+static bool   g_exception    = false;
+
+// Error report only for this module
+static ErrorReport g_report;
 
 // Logging macro for this file only
 #define DETAILLOG(text)    SvcReportInfoEvent(false,text)
@@ -96,17 +102,18 @@ RegisterModule(DWORD                        p_version
                        GL_APPLICATION_STOP;         // Stopping application pool
   DWORD moduleEvents = RQ_RESOLVE_REQUEST_CACHE |   // Request is found in the cache or from internet
                        RQ_EXECUTE_REQUEST_HANDLER;  // Request is authenticated, ready for processing
+
+  // First moment IIS is calling us.
+  // Find the debugging status for this session
+  // Start/Restart the logging in the WMI
+  ApplicationConfigStart(p_version);
+
   // Add RQ_BEGIN_REQUEST only for debugging purposes!!
   if(g_IISDebugMode)
   {
     // First point to intercept the IIS integrated pipeline
     moduleEvents |= RQ_BEGIN_REQUEST;
   }
-
-  // First moment IIS is calling us.
-  // Find the debugging status for this session
-  // Start/Restart the logging in the WMI
-  ApplicationConfigStart(p_version);
 
   // Preserving the server in a global pointer
   if(g_IISServer == nullptr)
@@ -175,6 +182,9 @@ ApplicationConfigStart(DWORD p_version)
   {
     debugPath = _T("C:\\Windows");
   }
+  wcsncpy_s(g_IISMapCrashes,debugPath.GetString(),SERVERNAME_BUFFERSIZE);
+  wcsncat_s(g_IISMapCrashes,_T("\\Temp"),         SERVERNAME_BUFFERSIZE);
+
   debugPath += _T("\\system32\\inetsrv\\debug.txt");
   if(_taccess(debugPath.GetString(),0) == 0)
   {
@@ -183,10 +193,18 @@ ApplicationConfigStart(DWORD p_version)
 
   // Tell that we started the module.
   SvcReportInfoEvent(true
-                    ,_T("Marlin native module called by IIS version %d.%d. Debug mode: %s")
+                    ,_T("Marlin native module (%d.%d.%d) called by IIS version %d.%d. Debug mode: %s")
+                    ,MARLIN_VERSION_MAJOR
+                    ,MARLIN_VERSION_MINOR
+                    ,MARLIN_VERSION_SP
                     ,p_version / 0x10000
                     ,p_version % 0x10000
                     ,g_IISDebugMode ? _T("ON") : _T("OFF"));
+
+  ErrorReport::RegisterProduct(_T(MARLIN_PRODUCT_NAME)
+                              ,_T(MARLIN_VERSION_NUMBER)
+                              ,_T(MARLIN_VERSION_BUILD)
+                              ,_T(MARLIN_VERSION_DATE));
 }
 
 // Stopping the ApplicationHost.Config
@@ -349,55 +367,64 @@ MarlinGlobalFactory::OnGlobalApplicationStop(_In_ IHttpApplicationStartProvider*
   XString appSite    = ExtractAppSite(configPath);
   PoolApp* poolapp   = nullptr;
 
-  // Find the application in our application pool by IIS original site name
-  AppPool::iterator it = g_IISApplicationPool.begin();
-  while(it != g_IISApplicationPool.end())
+  _set_se_translator(SeTranslator);
+  try
   {
-    if(it->second->m_appSite.Compare(appSite) == 0)
+    // Find the application in our application pool by IIS original site name
+    AppPool::iterator it = g_IISApplicationPool.begin();
+    while(it != g_IISApplicationPool.end())
     {
-      poolapp = it->second;
-      break;
+      if(it->second->m_appSite.Compare(appSite) == 0)
+      {
+        poolapp = it->second;
+        break;
+      }
+      ++it;
     }
-    ++it;
+    if(it == g_IISApplicationPool.end() || poolapp == nullptr)
+    {
+      // Not our application to stop. Continue silently!
+      return GL_NOTIFICATION_CONTINUE;
+    }
+
+    // This is our application to stop
+    ServerApp* app = poolapp->m_application;
+    if(app == nullptr)
+    {
+      // No application found. Continue silently!
+      return GL_NOTIFICATION_CONTINUE;
+    }
+
+    // Tell that we are stopping
+    XString stopping(_T("Marlin stopping application: "));
+    stopping += appSite;
+    DETAILLOG(stopping);
+
+    // Really stop the application (if only once in the pool)
+    if(CountAppPoolApplications(app) == 1)
+    {
+      (*poolapp->m_exitServerApp)(app);
+    }
+    // Destroy the application and the IIS pool app
+    // And possibly unload the application DLL
+    HMODULE hmodule = poolapp->m_module;
+    delete poolapp;
+
+    // Remove from our application pool
+    g_IISApplicationPool.erase(it);
+
+    if (hmodule != NULL && !StillUsed(hmodule))
+    {
+      FreeLibrary(hmodule);
+      DETAILLOG(_T("Unloaded the application DLL"));
+    }
   }
-  if(it == g_IISApplicationPool.end() || poolapp == nullptr)
+  catch(StdException& ex)
   {
-    // Not our application to stop. Continue silently!
-    return GL_NOTIFICATION_CONTINUE;
+    XString error;
+    error.Format(_T("Marlin found an error while stopping application [%s] %s"),appSite.GetString(),ex.GetErrorMessage().GetString());
+    ERRORLOG(error);
   }
-
-  // This is our application to stop
-  ServerApp* app = poolapp->m_application;
-  if(app == nullptr)
-  {
-    // No application found. Continue silently!
-    return GL_NOTIFICATION_CONTINUE;
-  }
-
-  // Tell that we are stopping
-  XString stopping(_T("Marlin stopping application: "));
-  stopping += appSite;
-  DETAILLOG(stopping);
-
-  // Really stop the application (if only once in the pool)
-  if(CountAppPoolApplications(app) == 1)
-  {
-    (*poolapp->m_exitServerApp)(app);
-  }
-  // Destroy the application and the IIS pool app
-  // And possibly unload the application DLL
-  HMODULE hmodule = poolapp->m_module;
-  delete poolapp;
-
-  // Remove from our application pool
-  g_IISApplicationPool.erase(it);
-
-  if (hmodule != NULL && !StillUsed(hmodule))
-  {
-    FreeLibrary(hmodule);
-    DETAILLOG(_T("Unloaded the application DLL"));
-  }
-
   return GL_NOTIFICATION_HANDLED;
 };
 
@@ -744,102 +771,140 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
 {
   UNREFERENCED_PARAMETER(p_provider);
   REQUEST_NOTIFICATION_STATUS status = RQ_NOTIFICATION_CONTINUE;
-  char  buffer1[SERVERNAME_BUFFERSIZE + 1];
-  char  buffer2[SERVERNAME_BUFFERSIZE + 1];
-  DWORD size  = SERVERNAME_BUFFERSIZE;
-  PCSTR serverName = buffer1;
-  PCSTR referer    = buffer2;
 
-  // Getting the HTTPSite through the server port/absPath combination
-  int  serverPort = GetServerPort(p_context);
+  // Set SEH handler
+  _set_se_translator(SeTranslator);
 
-  // Find if it is for one of our applications
-  AppPool::iterator it = g_IISApplicationPool.find(serverPort);
-  if(it == g_IISApplicationPool.end())
+  try
   {
-    return status;
-  }
+    char  buffer1[SERVERNAME_BUFFERSIZE + 1];
+    char  buffer2[SERVERNAME_BUFFERSIZE + 1];
+    DWORD size  = SERVERNAME_BUFFERSIZE;
+    PCSTR serverName = buffer1;
+    PCSTR referer    = buffer2;
 
-  // Find our app
-  PoolApp* app = it->second;
-  ServerApp* serverapp = app->m_application;
+    // Getting the HTTPSite through the server port/absPath combination
+    int  serverPort = GetServerPort(p_context);
 
-  // Getting the request/response objects
-  IHttpRequest*  request  = p_context->GetRequest();
-  IHttpResponse* response = p_context->GetResponse();
-  if(request == nullptr || response == nullptr)
-  {
-    ERRORLOG(_T("No request or response objects"));
-    return status;
-  }
-
-  // Detect Cross Site Scripting (XSS) and block if detected
-  if(app->m_xssBlocking)
-  {
-    // Detect Cross Site Scripting (XSS)
-    HRESULT hr = p_context->GetServerVariable("SERVER_NAME",&serverName, &size);
-    if (hr == S_OK)
+    // Find if it is for one of our applications
+    AppPool::iterator it = g_IISApplicationPool.find(serverPort);
+    if(it == g_IISApplicationPool.end())
     {
-      hr = p_context->GetServerVariable("HTTP_REFERER", &referer, &size);
+      return status;
+    }
+
+    // Find our app
+    PoolApp* app = it->second;
+    ServerApp* serverapp = app->m_application;
+
+    // Getting the request/response objects
+    IHttpRequest*  request  = p_context->GetRequest();
+    IHttpResponse* response = p_context->GetResponse();
+    if(request == nullptr || response == nullptr)
+    {
+      ERRORLOG(_T("No request or response objects"));
+      return status;
+    }
+
+    // Detect Cross Site Scripting (XSS) and block if detected
+    if(app->m_xssBlocking)
+    {
+      // Detect Cross Site Scripting (XSS)
+      HRESULT hr = p_context->GetServerVariable("SERVER_NAME",&serverName, &size);
       if (hr == S_OK)
       {
-        if(strstr(referer,serverName) == 0)
+        hr = p_context->GetServerVariable("HTTP_REFERER", &referer, &size);
+        if (hr == S_OK)
         {
-          XString message("XSS Detected!! Referrer not our server!");
-          message += XString("SERVER_NAME : ") + LPCSTRToString(serverName);
-          message += XString("HTTP_REFERER: ") + LPCSTRToString(referer);
-          ERRORLOG(message);
-          response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
-          return RQ_NOTIFICATION_FINISH_REQUEST;
+          if(strstr(referer,serverName) == 0)
+          {
+            XString message("XSS Detected!! Referrer not our server!");
+            message += XString("SERVER_NAME : ") + LPCSTRToString(serverName);
+            message += XString("HTTP_REFERER: ") + LPCSTRToString(referer);
+            ERRORLOG(message);
+            response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
+            return RQ_NOTIFICATION_FINISH_REQUEST;
+          }
         }
       }
     }
-  }
-  // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
-  const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
-  if(rawRequest == nullptr)
-  {
-    ERRORLOG(_T("Abort: IIS did not provide a raw request object!"));
-    return status;
-  }
+    // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
+    const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
+    if(rawRequest == nullptr)
+    {
+      ERRORLOG(_T("Abort: IIS did not provide a raw request object!"));
+      return status;
+    }
 
-  // This is the call we are getting
-  if(g_IISDebugMode)
-  {
-    XString url = LPCSTRToString(rawRequest->pRawUrl);
-    DETAILLOG(url);
-  }
-  // Find our marlin representation of the site
-  // Use HTTPServer()->FindHTTPSite of the application in the loaded DLL
-  HTTPSite* site =  (*app->m_findSite)(serverapp,serverPort,rawRequest->CookedUrl.pAbsPath);
-
-  // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
-  if(site == nullptr)
-  {
-    // Not our request: Other app running on this machine!
-    // This is why it is wasteful to use IIS for our internet server!
+    // This is the call we are getting
     if(g_IISDebugMode)
     {
-      XString message(_T("Rejected HTTP call: "));
-      message += XString(rawRequest->pRawUrl);
-      ERRORLOG(message);
+      XString url = LPCSTRToString(rawRequest->pRawUrl);
+      DETAILLOG(url);
     }
-    // Let someone else handle this call (if any :-( )
-    return RQ_NOTIFICATION_CONTINUE;
-  }
+    // Find our marlin representation of the site
+    // Use HTTPServer()->FindHTTPSite of the application in the loaded DLL
+    HTTPSite* site =  (*app->m_findSite)(serverapp,serverPort,rawRequest->CookedUrl.pAbsPath);
 
-  // Grab an event stream, if it was present, otherwise continue to the next handler
-  // Use the HTTPServer() method GetHTTPStreamFromRequest to see if we must turn it into a stream
-  int stream = (*app->m_getHttpStream)(serverapp,p_context,site,rawRequest);
-  if( stream > 0)
-  {
-    // If we turn into a stream, more notifications are pending
-    // This means the context of this request will **NOT** end
-    status = RQ_NOTIFICATION_PENDING;
+    // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
+    if(site == nullptr)
+    {
+      // Not our request: Other app running on this machine!
+      // This is why it is wasteful to use IIS for our internet server!
+      if(g_IISDebugMode)
+      {
+        XString message(_T("Rejected HTTP call: "));
+        message += XString(rawRequest->pRawUrl);
+        ERRORLOG(message);
+      }
+      // Let someone else handle this call (if any :-( )
+      return RQ_NOTIFICATION_CONTINUE;
+    }
+
+    // Grab an event stream, if it was present, otherwise continue to the next handler
+    // Use the HTTPServer() method GetHTTPStreamFromRequest to see if we must turn it into a stream
+    int stream = (*app->m_getHttpStream)(serverapp,p_context,site,rawRequest);
+    if( stream > 0)
+    {
+      // If we turn into a stream, more notifications are pending
+      // This means the context of this request will **NOT** end
+      status = RQ_NOTIFICATION_PENDING;
+    }
+    else if(stream < 0)
+    {
+      // In case of a failed stream (authentication, DDOS attack etc)
+      status = RQ_NOTIFICATION_FINISH_REQUEST;
+    }
   }
-  else if(stream < 0)
+  catch(StdException& ex)
   {
-    // In case of a failed stream (authentication, DDOS attack etc)
+    if(ex.GetSafeExceptionCode())
+    {
+      // We need to detect the fact that a second exception can occur,
+      // so we do **not** call the error report method again
+      // Otherwise we would end into an infinite loop
+      XString empty;
+      XString mapname(g_IISMapCrashes);
+      g_exception = true;
+      g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),mapname,empty);
+
+      if(g_exception)
+      {
+        // Error while sending an error report
+        // This error can originate from another thread, OR from the sending of this error report
+        ERRORLOG(_T("DOUBLE INTERNAL ERROR while making an error report.!!"));
+        g_exception = false;
+      }
+      else
+      {
+        ERRORLOG(_T("CRASH: Errorreport has been made in: ") + mapname);
+      }
+    }
+    else
+    {
+      // 'Normal' C++ exception: But it was forgotten elsewhere to catch it
+      ErrorReport::Report(ex.GetErrorMessage(),0,g_IISMapCrashes,_T(""));
+    }
     status = RQ_NOTIFICATION_FINISH_REQUEST;
   }
   // OR NOT a stream: return RQ_NOTIFICATION_CONTINUE
@@ -852,109 +917,152 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
 {
   UNREFERENCED_PARAMETER(p_provider);
   REQUEST_NOTIFICATION_STATUS status = RQ_NOTIFICATION_CONTINUE;
-  char  buffer1[SERVERNAME_BUFFERSIZE + 1];
-  char  buffer2[SERVERNAME_BUFFERSIZE + 1];
-  DWORD size = SERVERNAME_BUFFERSIZE;
-  PCSTR serverName = buffer1;
-  PCSTR referer    = buffer2;
 
-  // Getting the HTTPSite through the server port/absPath combination
-  int  serverPort = GetServerPort(p_context);
+  // Set SEH handler
+  _set_se_translator(SeTranslator);
 
-  // Find if it is for one of our applications
-  AppPool::iterator it = g_IISApplicationPool.find(serverPort);
-  if (it == g_IISApplicationPool.end())
+  try
   {
-    return status;
-  }
+    char  buffer1[SERVERNAME_BUFFERSIZE + 1];
+    char  buffer2[SERVERNAME_BUFFERSIZE + 1];
+    DWORD size = SERVERNAME_BUFFERSIZE;
+    PCSTR serverName = buffer1;
+    PCSTR referer    = buffer2;
 
-  // Find our app
-  PoolApp* app = it->second;
-  ServerApp* serverapp = app->m_application;
+    // Getting the HTTPSite through the server port/absPath combination
+    int  serverPort = GetServerPort(p_context);
 
-  // Getting the request/response objects
-  IHttpRequest*  request  = p_context->GetRequest();
-  IHttpResponse* response = p_context->GetResponse();
-  if (request == nullptr || response == nullptr)
-  {
-    ERRORLOG(_T("No request or response objects"));
-    return status;
-  }
-
-  // Detect Cross Site Scripting (XSS) and block if detected
-  if(app->m_xssBlocking)
-  {
-    HRESULT hr = p_context->GetServerVariable("SERVER_NAME", &serverName, &size);
-    if (hr == S_OK)
+    // Find if it is for one of our applications
+    AppPool::iterator it = g_IISApplicationPool.find(serverPort);
+    if (it == g_IISApplicationPool.end())
     {
-      hr = p_context->GetServerVariable("HTTP_REFERER", &referer, &size);
-      if((hr == S_OK) && (strstr(referer, serverName) == 0))
+      return status;
+    }
+
+    // Find our app
+    PoolApp* app = it->second;
+    ServerApp* serverapp = app->m_application;
+
+    // Getting the request/response objects
+    IHttpRequest*  request  = p_context->GetRequest();
+    IHttpResponse* response = p_context->GetResponse();
+    if (request == nullptr || response == nullptr)
+    {
+      ERRORLOG(_T("No request or response objects"));
+      return status;
+    }
+
+    // TEST CRASH HANDLER
+    // HANDLE* event = nullptr;
+    // *event = 0L;
+
+    // Detect Cross Site Scripting (XSS) and block if detected
+    if(app->m_xssBlocking)
+    {
+      HRESULT hr = p_context->GetServerVariable("SERVER_NAME", &serverName, &size);
+      if (hr == S_OK)
       {
-        XString message("XSS Detected!! Referrer not our server!");
-        message += XString("SERVER_NAME : ") + LPCSTRToString(serverName);
-        message += XString("HTTP_REFERER: ") + LPCSTRToString(referer);
-        ERRORLOG(message);
-        response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
-        return RQ_NOTIFICATION_FINISH_REQUEST;
+        hr = p_context->GetServerVariable("HTTP_REFERER", &referer, &size);
+        if((hr == S_OK) && (strstr(referer, serverName) == 0))
+        {
+          XString message("XSS Detected!! Referrer not our server!");
+          message += XString("SERVER_NAME : ") + LPCSTRToString(serverName);
+          message += XString("HTTP_REFERER: ") + LPCSTRToString(referer);
+          ERRORLOG(message);
+          response->SetStatus(HTTP_STATUS_BAD_REQUEST,"XSS Detected");
+          return RQ_NOTIFICATION_FINISH_REQUEST;
+        }
       }
     }
-  }
 
-  // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
-  const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
-  if(rawRequest == nullptr)
-  {
-    ERRORLOG(_T("Abort: IIS did not provide a raw request object!"));
-    return status;
-  }
+    // Finding the raw HTT_REQUEST from the HTTPServer API 2.0
+    const PHTTP_REQUEST rawRequest = request->GetRawHttpRequest();
+    if(rawRequest == nullptr)
+    {
+      ERRORLOG(_T("Abort: IIS did not provide a raw request object!"));
+      return status;
+    }
 
-  // This is the call we are getting
-  if(g_IISDebugMode)
-  {
-    XString url = LPCSTRToString(rawRequest->pRawUrl);
-    DETAILLOG(url);
-  }
-
-  // Getting the HTTPSite through the server port/absPath combination
-  // Use the HTTPServer() method FindHTTPSite to grab the site
-  HTTPSite* site = (*app->m_findSite)(serverapp,serverPort,rawRequest->CookedUrl.pAbsPath);
-
-  // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
-  if (site == nullptr)
-  {
-    // Not our request: Other app running on this machine!
-    // This is why it is wasteful to use IIS for our internet server!
+    // This is the call we are getting
     if(g_IISDebugMode)
     {
-      XString message(_T("Rejected HTTP call: "));
-      message += LPCSTRToString(rawRequest->pRawUrl);
-      ERRORLOG(message);
+      XString url = LPCSTRToString(rawRequest->pRawUrl);
+      DETAILLOG(url);
     }
-    // Let someone else handle this call (if any :-( )
-    return RQ_NOTIFICATION_CONTINUE;
-  }
 
-  // Grab a message from the raw request
-  // Uste the HTTPServer() method GetHTTPMessageFromRequest to construct the message
-  HTTPMessage* msg = (*app->m_getHttpMessage)(serverapp,p_context,site,rawRequest);
-  if(msg)
-  {
-    // Call HTTPSite->HandleMessage
-    bool handled = (*app->m_handleMessage)(serverapp,site,msg);
-    if(handled)
+    // Getting the HTTPSite through the server port/absPath combination
+    // Use the HTTPServer() method FindHTTPSite to grab the site
+    HTTPSite* site = (*app->m_findSite)(serverapp,serverPort,rawRequest->CookedUrl.pAbsPath);
+
+    // ONLY IF WE ARE HANDLING THIS SITE AND THIS MESSAGE!!!
+    if (site == nullptr)
     {
-       // Ready for IIS!
-       p_context->SetRequestHandled();
+      // Not our request: Other app running on this machine!
+      // This is why it is wasteful to use IIS for our internet server!
+      if(g_IISDebugMode)
+      {
+        XString message(_T("Rejected HTTP call: "));
+        message += LPCSTRToString(rawRequest->pRawUrl);
+        ERRORLOG(message);
+      }
+      // Let someone else handle this call (if any :-( )
+      return RQ_NOTIFICATION_CONTINUE;
+    }
 
-      // This request is now completely handled
-      status = GetCompletionStatus(response);
+    // Grab a message from the raw request
+    // Uste the HTTPServer() method GetHTTPMessageFromRequest to construct the message
+    HTTPMessage* msg = (*app->m_getHttpMessage)(serverapp,p_context,site,rawRequest);
+    if(msg)
+    {
+      // Call HTTPSite->HandleMessage
+      bool handled = (*app->m_handleMessage)(serverapp,site,msg);
+      if(handled)
+      {
+         // Ready for IIS!
+         p_context->SetRequestHandled();
+
+        // This request is now completely handled
+        status = GetCompletionStatus(response);
+      }
+    }
+    else
+    {
+      ERRORLOG(_T("Cannot handle the request: IIS did not provide enough info for a HTTPMessage."));
+      status = RQ_NOTIFICATION_CONTINUE;
     }
   }
-  else
+  catch(StdException& ex)
   {
-    ERRORLOG(_T("Cannot handle the request: IIS did not provide enough info for a HTTPMessage."));
-    status = RQ_NOTIFICATION_CONTINUE;
+    if(ex.GetSafeExceptionCode())
+    {
+      // We need to detect the fact that a second exception can occur,
+      // so we do **not** call the error report method again
+      // Otherwise we would end into an infinite loop
+      XString empty;
+      XString mapname(g_IISMapCrashes);
+      g_exception = true;
+      g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),mapname,empty);
+
+      if(g_exception)
+      {
+        // Error while sending an error report
+        // This error can originate from another thread, OR from the sending of this error report
+        ERRORLOG(_T("DOUBLE INTERNAL ERROR while making an error report.!!"));
+        g_exception = false;
+      }
+      else
+      {
+        ERRORLOG(_T("CRASH: Errorreport has been made in: ") + mapname);
+      }
+    }
+    else
+    {
+      // 'Normal' C++ exception: But it was forgotten elsewhere to catch it
+      ErrorReport::Report(ex.GetErrorMessage(),0,g_IISMapCrashes,_T(""));
+    }
+    status = RQ_NOTIFICATION_FINISH_REQUEST;
   }
+  // Default status = RQ_NOTIFICATION_CONTINUE;
   return status;
 }
 

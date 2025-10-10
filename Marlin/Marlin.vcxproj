@@ -341,7 +341,6 @@
     <ClCompile Include="HostedWebCore.cpp" />
     <ClCompile Include="HTTPCertificate.cpp" />
     <ClCompile Include="CreateURLPrefix.cpp" />
-    <ClCompile Include="ErrorReport.cpp" />
     <ClCompile Include="EventSource.cpp" />
     <ClCompile Include="FindProxy.cpp" />
     <ClCompile Include="HTTPClient.cpp" />
@@ -420,7 +419,6 @@
     <ClInclude Include="HTTPCertificate.h" />
     <ClInclude Include="CPULoad.h" />
     <ClInclude Include="CreateURLPrefix.h" />
-    <ClInclude Include="ErrorReport.h" />
     <ClInclude Include="EventSource.h" />
     <ClInclude Include="FindProxy.h" />
     <ClInclude Include="HTTPClient.h" />

@@ -9,6 +9,22 @@ Version 8.x contains the new BaseLibrary where all general classes are moved int
 that can be shared with other library modules like SQLComponents and CXHibernate
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 8.5.0 of 10-10-2025
+--------------------------------------
+1)  ErrorReporting is moved from Marlin to the BaseLibrary, so that other programs can take 
+    advantage of exception reporting
+2)  The asynchroneous writing of the LogAnalysis file can be protected with an exception handler
+    and ErrorReport, as this is one of the few places in Marlin servers where crashes could occur
+    that where not reported to users, and could in the end lead to crashin the whole IIS w3wp server.
+3)  The main loop of a ThreadPool thread can now also be proteced against crashes and be complemented
+    with an ErrorReport.
+4)  The main IIS handlers in the MarlinModule now have a try-catch handler with an ErroReport.
+    The advantage of this is the fact that any thread that originates in the IIS service now has
+    an exception handler from the very beginning.
+5)  As a result of the 4 changes described here above, all 'holes' in the exception handling and crash
+    handling of a server have now been 'plugged'. This allows for far stabler and better construction
+    of IIS server programs.
+
 CHANGES IN VERSION 8.4.3 of 25-07-2025
 --------------------------------------
 1)  AppConfig has been re-written so that you can integrate your applicatio config file with the
