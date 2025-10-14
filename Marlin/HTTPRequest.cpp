@@ -873,7 +873,7 @@ HTTPRequest::CreateLogData()
   memset(log,0,sizeof(HTTP_LOG_FIELDS_DATA));
   log->Base.Type = HttpLogDataTypeFields;
 
-  CString empty(_T("-"));
+  XString empty(_T("-"));
 
   // Referrer
   log->Referrer = (PCHAR)m_request->Headers.KnownHeaders[HttpHeaderReferer].pRawValue;
@@ -899,7 +899,7 @@ HTTPRequest::CreateLogData()
   log->ServerNameLength = (USHORT)m_server->GetHostname().GetLength();
 
   // IP Address of sender
-  CString ipaddress = SocketToServer((PSOCKADDR_IN6)m_request->Address.pRemoteAddress);
+  XString ipaddress = SocketToServer((PSOCKADDR_IN6)m_request->Address.pRemoteAddress);
   LPSTR   ipadd = nullptr;
   USHORT  iplen = 0;
   AddRequestString(ipaddress,ipadd,iplen);

@@ -141,7 +141,7 @@ void NormalizeLineEndings(XString& p_string)
 //
 int FindMatchingBracket(const XString& p_string,int p_bracketPos)
 {
-  TCHAR bracket = p_string[p_bracketPos];
+  TCHAR bracket = (TCHAR) p_string.GetAt(p_bracketPos);
   TCHAR   match = 0;
   bool  reverse = false;
 
@@ -171,7 +171,7 @@ int FindMatchingBracket(const XString& p_string,int p_bracketPos)
   {
     for(int pos = p_bracketPos - 1,nest = 1; pos >= 0; --pos)
     {
-      TCHAR c = p_string[pos];
+      TCHAR c = (TCHAR) p_string.GetAt(pos);
       if(c == bracket)
       {
         ++nest;
@@ -189,7 +189,7 @@ int FindMatchingBracket(const XString& p_string,int p_bracketPos)
   {
     for(int pos = p_bracketPos + 1,nest = 1,len = p_string.GetLength(); pos < len; ++pos)
     {
-      TCHAR c = p_string[pos];
+      TCHAR c = (TCHAR) p_string.GetAt(pos);
       if(c == bracket)
       {
         ++nest;
@@ -217,7 +217,7 @@ bool SplitArgument(int& p_pos,const XString& p_data,TCHAR p_splitter,XString& p_
   }
   for(int pos = p_pos,nest = 0; pos < len; ++pos)
   {
-    switch(TCHAR c = p_data[pos])
+    switch(TCHAR c = (TCHAR) p_data.GetAt(pos))
     {
       case '(': ++nest;
                 break;

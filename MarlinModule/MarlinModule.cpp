@@ -897,7 +897,7 @@ MarlinModule::OnResolveRequestCache(IN IHttpContext*       p_context,
       }
       else
       {
-        ERRORLOG(_T("CRASH: Errorreport has been made in: ") + mapname);
+        ERRORLOG(XString(_T("CRASH: Errorreport has been made in: ")) + mapname);
       }
     }
     else
@@ -1052,7 +1052,7 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
       }
       else
       {
-        ERRORLOG(_T("CRASH: Errorreport has been made in: ") + mapname);
+        ERRORLOG(XString(_T("CRASH: Errorreport has been made in: ")) + mapname);
       }
     }
     else

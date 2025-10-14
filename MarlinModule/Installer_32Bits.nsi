@@ -5,12 +5,12 @@
 ;
 ; Copyright (c) 2019-2024 Edwig Huisman
 ;
-; Date of last change: 14-03-2025
-; Version:             8.4.1
+; Date of last change: 14-10-2025
+; Version:             8.5.0
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 32Bits"
- !define PRODUCT_VERSION                      "8.4.1"
- !define PRODUCT_EXT                          "841"
+ !define PRODUCT_VERSION                      "8.5.0"
+ !define PRODUCT_EXT                          "850"
  !define PRODUCT_PUBLISHER                    "Edwig Huisman"
  !define PRODUCT_WEB_SITE                     "https://github.com/Edwig/Marlin"
  !define PRODUCT_DIR_REGKEY                   "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"
@@ -22,7 +22,7 @@
  !define LogFile                              "MarlinIISModule_32bits"
   
  ; Directories containing our files
- !define InputDirectory32                     "C:\Develop\Marlin\BinRelease_Win32"
+ !define InputDirectory32                     "C:\Develop\Marlin\BinReleaseUnicode_Win32"
  !define ExtraDirectory                       "C:\Develop\Marlin\ExtraParts"
  !define RedistMap                            "C:\Develop\Marlin\Documentation"
 
@@ -96,6 +96,7 @@ InstallDir "$WINDIR\system32\inetsrv\"
 
 ;--------------------------------------------------------------------------------------------------------
 Function .onInit
+ SetRegView 32
  strcpy $R0 "$TEMP\${LogFile}.log"
  call OpenLogfile
  
@@ -151,8 +152,8 @@ Section "MarlinModule"
  !insertmacro LogDetail "Output directory set to: $INSTDIR"
  !insertmacro LogDetail "Copiing files."
 
- File /r "${InputDirectory32}\MarlinModule${PRODUCT_EXT}.dll"
- File /r "${InputDirectory32}\MarlinModule${PRODUCT_EXT}.pdb"
+ File /r "${InputDirectory32}\MarlinModule32_${PRODUCT_EXT}.dll"
+ File /r "${InputDirectory32}\MarlinModule32_${PRODUCT_EXT}.pdb"
  File /r "${ExtraDirectory}\dbghelp32.dll"
 
  ; Registering the module

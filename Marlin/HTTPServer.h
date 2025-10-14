@@ -357,7 +357,7 @@ public:
   // Close event streams for an URL and probably a user
   void       CloseEventStreams(int p_port,XString p_url,XString p_user = _T(""));
   // Delete event stream
-  void       RemoveEventStream(CString p_url);
+  void       RemoveEventStream(XString p_url);
   void       RemoveEventStream(const EventStream* p_stream);
   // Monitor all server push event streams
   void       EventMonitor();

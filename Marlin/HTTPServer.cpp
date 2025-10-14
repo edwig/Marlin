@@ -1795,7 +1795,7 @@ HTTPServer::AbortEventStream(EventStream* p_stream)
 }
 
 void
-HTTPServer::RemoveEventStream(CString p_url)
+HTTPServer::RemoveEventStream(XString p_url)
 {
   // Event stream NOT accepted
   AutoCritSec lock(&m_eventLock);
@@ -2049,7 +2049,8 @@ HTTPServer::TraceRequest(PHTTP_REQUEST p_request)
     XString uheader;
     uheader  = p_request->Headers.pUnknownHeaders[ind].pName;
     uheader += _T(": ");
-    uheader += p_request->Headers.pUnknownHeaders[ind].pRawValue;
+    XString raw = p_request->Headers.pUnknownHeaders[ind].pRawValue;
+    uheader += raw;
     m_log->BareStringLog(uheader);
   }
 
@@ -2221,7 +2222,8 @@ HTTPServer::TraceResponse(PHTTP_RESPONSE p_response)
       XString uheader;
       uheader = p_response->Headers.pUnknownHeaders[ind].pName;
       uheader += _T(": ");
-      uheader += p_response->Headers.pUnknownHeaders[ind].pRawValue;
+      XString raw = p_response->Headers.pUnknownHeaders[ind].pRawValue;
+      uheader += raw;
       m_log->BareStringLog(uheader);
     }
   }

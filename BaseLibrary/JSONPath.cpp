@@ -1079,7 +1079,7 @@ JSONPath::WithinQuotes(XString p_token,int p_pos,int p_charPos)
 int
 JSONPath::FindMatchingBracket(const XString& p_string, int p_bracketPos)
 {
-  TCHAR bracket = p_string[p_bracketPos];
+  TCHAR bracket = (TCHAR) p_string.GetAt(p_bracketPos);
   TCHAR match   = 0;
   bool  reverse = false;
 
@@ -1109,7 +1109,7 @@ JSONPath::FindMatchingBracket(const XString& p_string, int p_bracketPos)
   {
     for (int pos = p_bracketPos - 1, nest = 1; pos >= 0; --pos)
     {
-      TCHAR c = p_string[pos];
+      TCHAR c = (TCHAR) p_string.GetAt(pos);
       if (c == bracket)
       {
         ++nest;
@@ -1127,7 +1127,7 @@ JSONPath::FindMatchingBracket(const XString& p_string, int p_bracketPos)
   {
     for (int pos = p_bracketPos + 1, nest = 1, len = p_string.GetLength(); pos < len; ++pos)
     {
-      TCHAR c = p_string[pos];
+      TCHAR c = (TCHAR) p_string.GetAt(pos);
 
       // skip finding matching bracket if encased in single quotes
       if(c == '\'')

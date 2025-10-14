@@ -147,9 +147,9 @@ public:
   BOOL        LoadString(HINSTANCE p_inst,UINT p_strID);
   BOOL        LoadString(HINSTANCE p_inst,UINT p_strID,WORD p_languageID);
   // Make lower/upper case or reverse
-  void        MakeLower();
-  void        MakeReverse();
-  void        MakeUpper();
+  SMX_String& MakeLower();
+  SMX_String& MakeReverse();
+  SMX_String& MakeUpper();
   // Take substring out of the middle
   SMX_String  Mid(int p_index) const;
   SMX_String  Mid(int p_index,int p_length) const;
@@ -315,9 +315,10 @@ inline BOOL SMX_String::LoadString(HINSTANCE p_inst,UINT p_strID)
   return LoadString(p_inst,p_strID,0);
 }
 
-inline void SMX_String::MakeReverse()
+inline SMX_String& SMX_String::MakeReverse()
 {
   _tcsrev((TCHAR*)(c_str()));
+  return *this;
 }
 
 inline SMX_String SMX_String::Mid(int p_index) const

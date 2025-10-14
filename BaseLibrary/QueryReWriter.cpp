@@ -194,7 +194,7 @@ QueryReWriter::AddSQLWordsFromFile(XString p_filename)
     while(file.Read(line))
     {
       line = line.TrimRight(_T("\n"));
-      if(!line.GetLength() || line[0] == '#')
+      if(!line.GetLength() || line.GetAt(0) == '#')
       {
         // Empty line or comment line
         continue;
@@ -749,7 +749,7 @@ QueryReWriter::Parenthesis()
   if(ch == '+')
   {
     // One extra look-ahead
-    if(m_input[m_position] == ')')
+    if(m_input.GetAt(m_position) == ')')
     {
       GetChar();
       return Token::TK_PAR_OUTER;

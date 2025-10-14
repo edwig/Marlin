@@ -85,7 +85,7 @@ void RemoveNewline(XString& buffer)
 //
 bool SkipComment(XString& p_buffer)
 {
-  if(p_buffer[0] == ';' || p_buffer[0] == '#')
+  if(p_buffer.GetAt(0) == _T(';') || p_buffer.GetAt(0) == _T('#'))
   {
     return true;
   }
@@ -119,7 +119,7 @@ void ProcessVariable(XString& p_string)
   GetEnvironmentVariable(variable,envvar,size);
 
   // Perform the operator calculation
-  switch(p_string[pos])
+  switch(p_string.GetAt(pos))
   {
     case '=': break;
     case '!': value.Empty(); 

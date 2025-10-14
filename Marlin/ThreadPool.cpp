@@ -534,7 +534,7 @@ ThreadPool::RunAThread(ThreadRegister* p_register)
       }
       else
       {
-        SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("CRASH: Errorreport has been made in: ") + m_crashMap);
+        SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("CRASH: Errorreport has been made in: ")) + m_crashMap);
       }
     }
     else

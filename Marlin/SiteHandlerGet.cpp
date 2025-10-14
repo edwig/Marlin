@@ -128,9 +128,9 @@ SiteHandlerGet::FileNameTransformations(XString & p_filename)
 {
   // Almost **ALL** webservers in the world fall back to 'index.html'
   // if no resource given for a site or a subsite
-  if(p_filename.Right(1) == '/')
+  if(p_filename.Right(1) == _T("/"))
   {
-    p_filename += BASE_INDEX_PAGE;
+    p_filename += _T(BASE_INDEX_PAGE);
     return true;
   }
   return FileNameRestrictions(p_filename);

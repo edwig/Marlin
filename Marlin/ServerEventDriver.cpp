@@ -99,7 +99,7 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
   HTTPServer* server = m_site->GetHTTPServer();
   XString baseURL = m_site->GetSite();
   int  portNumber = m_site->GetPort();
-  bool siteSecure = m_site->GetPrefixURL()[4] == _T('s');
+  bool siteSecure = m_site->GetPrefixURL().GetAt(4) == _T('s');
 
   // Start socket site
   XString socketSiteURL = baseURL + _T("Sockets/");
@@ -107,7 +107,7 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
   if(socketSite)
   {
     XString urlPrefix = socketSite->GetPrefixURL();
-    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,_T("Registered WebSocket EventDriver for: ") + urlPrefix);
+    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,XString(_T("Registered WebSocket EventDriver for: ")) + urlPrefix);
 
     SiteHandler* handler = new SiteHandlerEventSocket(this);
     socketSite->SetHandler(HTTPCommand::http_get,handler);
@@ -126,7 +126,7 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
   if(eventsSite)
   {
     XString urlPrefix = eventsSite->GetPrefixURL();
-    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,_T("Registered SSSE EventDriver for: ") + urlPrefix);
+    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,XString(_T("Registered SSSE EventDriver for: ")) + urlPrefix);
 
     SiteHandler* handler = new SiteHandlerEventStream(this);
     eventsSite->SetHandler(HTTPCommand::http_get,handler);
@@ -153,7 +153,7 @@ ServerEventDriver::RegisterSites(HTTPServer* p_server,HTTPSite* p_site)
   if(pollingSite)
   {
     XString urlPrefix = eventsSite->GetPrefixURL();
-    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,_T("Registered Long-Polling for: ") + urlPrefix);
+    server->DetailLog(_T(__FUNCTION__),LogType::LOG_INFO,XString(_T("Registered Long-Polling for: ")) + urlPrefix);
 
     SiteHandler* handler = new SiteHandlerPolling(this);
     pollingSite->SetHandler(HTTPCommand::http_post,handler);

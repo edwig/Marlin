@@ -123,7 +123,7 @@ XMLElement::IsValidName(const XString& p_name)
 
   for (int i = p_name.GetLength() - 1; i >= 0; --i)
   {
-    TCHAR c = p_name[i];
+    TCHAR c = (TCHAR) p_name.GetAt(i);
     if (c == '_' ||
      // c == ':' || Formally correct, but gives unwanted results
        (c >= 'A' && c <= 'Z') ||

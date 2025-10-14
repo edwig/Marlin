@@ -48,6 +48,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 #endif
 
+#pragma comment(lib,"comdlg32.lib")
+
 //////////////////////////////////////////////////////////////////////////
 //
 // HERE IS THE MOST IMPORTANT MAGIC!!
@@ -617,7 +619,7 @@ WinFile::CreateTempFileName(XString p_pattern,XString p_extension /*= ""*/)
     {
       m_filename = m_filename.Left(pos);
     }
-    if(p_extension[0] != '.')
+    if(p_extension.GetAt(0) != _T('.'))
     {
       m_filename += '.';
     }
@@ -2366,7 +2368,7 @@ WinFile::GetNamePercentEncoded()
   // Watch out: strange code ahead!
   for(int ind = 0;ind < m_filename.GetLength(); ++ind)
   {
-    TCHAR ch = m_filename[ind];
+    TCHAR ch = (TCHAR) m_filename.GetAt(ind);
     if(ch == '?')
     {
       queryValue = true;
@@ -2714,7 +2716,10 @@ WinFile::SetFilenameByDialog(HWND    p_parent      // Parent window (if any)
   filter += _T("||");
   for(int index = 0; index < filter.GetLength(); ++index)
   {
-    if(filter[index] == _T('|')) filter.SetAt(index,0);
+    if(filter.GetAt(index) == _T('|')) 
+    {
+      filter.SetAt(index,0);
+    }
   }
 
   // Fill in the filename structure
@@ -2885,7 +2890,7 @@ WinFile::LegalDirectoryName(XString p_name,bool p_extensionAllowed /*= true*/)
     if(pos == 0 && name.GetLength() > (int)_tcslen(reserved[index]))
     {
       pos += (int)_tcslen(reserved[index]);
-      if(name[pos] == '.')
+      if(name.GetAt(pos) == _T('.'))
       {
         name.SetAt(pos,'_');
         break;
@@ -2956,8 +2961,8 @@ WinFile::StripFileProtocol(XString p_fileref)
   // Create a filename separator char name
   for(int index = 0; index < p_fileref.GetLength(); ++index)
   {
-    if(p_fileref[index] == '/') p_fileref.SetAt(index,'\\');
-    if(p_fileref[index] == '|') p_fileref.SetAt(index,':');
+    if(p_fileref.GetAt(index) == _T('/')) p_fileref.SetAt(index,'\\');
+    if(p_fileref.GetAt(index) == _T('|')) p_fileref.SetAt(index,':');
   }
 
   // Resolve the '%' chars in the filename
@@ -2978,25 +2983,25 @@ WinFile::ResolveSpecialChars(XString& p_value)
     ++total;
     int num = 0;
     XString hexstring = p_value.Mid(pos+1,2);
-    hexstring.SetAt(0,(TCHAR)toupper(hexstring[0]));
-    hexstring.SetAt(1,(TCHAR)toupper(hexstring[1]));
+    hexstring.SetAt(0,(TCHAR)toupper(hexstring.GetAt(0)));
+    hexstring.SetAt(1,(TCHAR)toupper(hexstring.GetAt(1)));
 
-    if(isdigit(hexstring[0]))
+    if(isdigit(hexstring.GetAt(0)))
     {
-      num = hexstring[0] - '0';
+      num = hexstring.GetAt(0) - '0';
     }
     else
     {
-      num = hexstring[0] - 'A' + 10;
+      num = hexstring.GetAt(0) - 'A' + 10;
     }
     num *= 16;
-    if (isdigit(hexstring[1]))
+    if (isdigit(hexstring.GetAt(1)))
     {
-      num += hexstring[1] - '0';
+      num += hexstring.GetAt(1) - '0';
     }
     else
     {
-      num += hexstring[1] - 'A' + 10;
+      num += hexstring.GetAt(1) - 'A' + 10;
     }
     p_value.SetAt(pos,(char)num);
     p_value  = p_value.Left(pos+1);
@@ -3047,7 +3052,7 @@ WinFile::GetBaseDirectory(XString& p_path)
   XString result;
 
   // Strip of an extra path separator
-  while (p_path[0] == '\\')
+  while (p_path.GetAt(0) == _T('\\'))
   {
     p_path = p_path.Mid(1);
   }

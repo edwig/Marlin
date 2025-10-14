@@ -445,22 +445,24 @@ SMX_String::LockBuffer()
   return c_str();
 }
 
-void 
+SMX_String&
 SMX_String::MakeLower()
 {
   for(size_t ind = 0;ind < length();++ind)
   {
     replace(ind,1,1,(char)tolower(at(ind)));
   }
+  return *this;
 }
 
-void 
+SMX_String&
 SMX_String::MakeUpper()
 {
   for(size_t ind = 0;ind < length(); ++ind)
   {
     replace(ind,1,1,(char)toupper(at(ind)));
   }
+  return *this;
 }
 
 // Releasing the buffer again

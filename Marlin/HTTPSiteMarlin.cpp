@@ -139,7 +139,7 @@ HTTPSiteMarlin::StartSite()
       }
       else
       {
-        CString error;
+        XString error;
         error.Format(_T("URL not registered to correct URL-Group. Different authentication scheme. Site: %s"),m_site.GetString());
         ERRORLOG(ERROR_WRONG_TARGET_NAME,error);
       }

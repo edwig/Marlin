@@ -397,7 +397,7 @@ void
 PrintMenu()
 {
   XString line;
-  for(int ind = 0; ind < 51; ++ind) line += "-";
+  for(int ind = 0; ind < 51; ++ind) line += _T("-");
 
   _tprintf(_T("+%s+\n"),line.GetString());
   _tprintf(_T("| %-50s|\n"),_T("MENU HOSTED WEBCORE"));

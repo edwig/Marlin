@@ -268,7 +268,7 @@ XPath::GetToken(XString& p_parsing)
 
   // Parse identifier
   int index = 1;
-  while(isalnum(p_parsing[index]) || p_parsing[index] == '_' || p_parsing[index] == '-')
+  while(isalnum(p_parsing.GetAt(index)) || p_parsing.GetAt(index) == '_' || p_parsing.GetAt(index) == '-')
   {
     ++index;
   }
@@ -691,7 +691,7 @@ XPath::ParseLevelOperator(XString&  p_parsing
     }
     if(m_isString)
     {
-      switch(p_operator[0])
+      switch(p_operator.GetAt(0))
       {
         case '=': doErase = leftValue.Compare(rightSide) != 0; break;
         case '<': doErase = leftValue.Compare(rightSide) >= 0; break;
@@ -704,7 +704,7 @@ XPath::ParseLevelOperator(XString&  p_parsing
       bcd numberRight(rightSide);
       bcd numberLeft (leftValue);
 
-      switch(p_operator[0])
+      switch(p_operator.GetAt(0))
       {
         case '=': doErase = numberLeft != numberRight; break;
         case '<': doErase = numberLeft >= numberRight; break;

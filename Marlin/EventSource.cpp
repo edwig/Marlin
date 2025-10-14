@@ -529,7 +529,7 @@ bool
 EventSource::GetLine(XString& p_buffer,XString& p_line)
 {
   // Test for a BOM at the beginning of the stream
-  _TUCHAR* buf = reinterpret_cast<_TUCHAR*>(p_buffer.GetBuffer());
+  _TUCHAR* buf = (_TUCHAR*)p_buffer.GetString();
   if(*buf == 0xFE && *++buf == 0xFF)
   {
     p_buffer = p_buffer.Mid(2);

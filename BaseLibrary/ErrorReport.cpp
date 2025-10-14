@@ -188,13 +188,13 @@ ErrorReportWriteToFile(const XString& p_filename
   XString productDir(p_url);
   productDir.Trim(_T("/"));
   productDir.Replace(_T("/"),_T("\\"));
-  if(productDir.Right(1) != '\\')
+  if(productDir.Right(1) != _T("\\"))
   {
     productDir += _T("\\");
   }
 
   // Checking webroot
-  if(pathname.Right(1) != '\\')
+  if(pathname.Right(1) != _T("'\\"))
   {
     pathname += _T("\\");
   }

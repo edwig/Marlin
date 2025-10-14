@@ -57,7 +57,7 @@ void EventChannelOnOpen(WebSocket* p_socket,const WSFrame* p_event)
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
   {
-    XString message(p_event->m_data);
+    XString message((LPCTSTR)p_event->m_data);
     if(p_event->m_utf8)
     {
       message = DecodeStringFromTheWire(message);
@@ -72,7 +72,7 @@ void EventChannelOnMessage(WebSocket* p_socket,const WSFrame* p_event)
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
   {
-    XString message(p_event->m_data);
+    XString message((LPCTSTR)p_event->m_data);
     if(p_event->m_utf8)
     {
       message = DecodeStringFromTheWire(message);
@@ -95,7 +95,7 @@ void EventChannelOnError(WebSocket* p_socket,const WSFrame* p_event)
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel && p_event)
   {
-    XString message(p_event->m_data);
+    XString message((LPCTSTR)p_event->m_data);
     if(p_event->m_utf8)
     {
       message = DecodeStringFromTheWire(message);
@@ -109,7 +109,7 @@ void EventChannelOnClose(WebSocket* p_socket,const WSFrame* p_event)
   ServerEventChannel* channel = reinterpret_cast<ServerEventChannel*>(p_socket->GetApplication());
   if(channel)
   {
-    XString message(p_event->m_data);
+    XString message((LPCTSTR)p_event->m_data);
     if(p_event->m_utf8)
     {
       message = DecodeStringFromTheWire(message);

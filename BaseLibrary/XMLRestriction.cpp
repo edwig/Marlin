@@ -656,7 +656,7 @@ XMLRestriction::CheckBase64(XString p_value)
   int len = p_value.GetLength();
   for(int ind = 0; ind < len; ++ind)
   {
-    _TUCHAR ch = p_value[ind];
+    _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
     switch(ch)
     {
       case  9:      // Tab
@@ -667,7 +667,7 @@ XMLRestriction::CheckBase64(XString p_value)
       case _T('+'): // Plus
                     continue;
       case _T('='): if(ind == len - 1 ||
-                      (ind == len - 2 && p_value[ind + 1] == '='))
+                      (ind == len - 2 && p_value.GetAt(ind + 1) == _T('=')))
                     {
                       return _T("");
                     }

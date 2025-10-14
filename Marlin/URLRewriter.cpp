@@ -141,29 +141,29 @@ URLRewriter::ReWriteURL(CrackedURL& p_url,Routing& p_routing)
 void
 URLRewriter::InitRewriter(MarlinConfig& p_config)
 { 
-  CString rewriter(_T("Rewriter"));
+  XString rewriter(_T("Rewriter"));
 
-  CString protocol        = p_config.GetParameterString(rewriter,_T("Protocol"),      _T(""));
-  CString server          = p_config.GetParameterString(rewriter,_T("Server"),        _T(""));
-  CString port            = p_config.GetParameterString(rewriter,_T("Port"),          _T(""));
-  CString abspath         = p_config.GetParameterString(rewriter,_T("Path"),          _T(""));
-  CString route0          = p_config.GetParameterString(rewriter,_T("Route0"),        _T(""));
-  CString route1          = p_config.GetParameterString(rewriter,_T("Route1"),        _T(""));
-  CString route2          = p_config.GetParameterString(rewriter,_T("Route2"),        _T(""));
-  CString route3          = p_config.GetParameterString(rewriter,_T("Route3"),        _T(""));
-  CString route4          = p_config.GetParameterString(rewriter,_T("Route4"),        _T(""));
-  CString removeRoute     = p_config.GetParameterString(rewriter,_T("RemoveRoute"),   _T(""));
-  CString startRoute      = p_config.GetParameterString(rewriter,_T("StartRoute"),    _T(""));
+  XString protocol        = p_config.GetParameterString(rewriter,_T("Protocol"),      _T(""));
+  XString server          = p_config.GetParameterString(rewriter,_T("Server"),        _T(""));
+  XString port            = p_config.GetParameterString(rewriter,_T("Port"),          _T(""));
+  XString abspath         = p_config.GetParameterString(rewriter,_T("Path"),          _T(""));
+  XString route0          = p_config.GetParameterString(rewriter,_T("Route0"),        _T(""));
+  XString route1          = p_config.GetParameterString(rewriter,_T("Route1"),        _T(""));
+  XString route2          = p_config.GetParameterString(rewriter,_T("Route2"),        _T(""));
+  XString route3          = p_config.GetParameterString(rewriter,_T("Route3"),        _T(""));
+  XString route4          = p_config.GetParameterString(rewriter,_T("Route4"),        _T(""));
+  XString removeRoute     = p_config.GetParameterString(rewriter,_T("RemoveRoute"),   _T(""));
+  XString startRoute      = p_config.GetParameterString(rewriter,_T("StartRoute"),    _T(""));
 
-  CString targetProtocol  = p_config.GetParameterString(rewriter,_T("TargetProtocol"),_T(""));
-  CString targetServer    = p_config.GetParameterString(rewriter,_T("TargetServer"),  _T(""));
-  CString targetPort      = p_config.GetParameterString(rewriter,_T("TargetPort"),    _T(""));
-  CString targetAbspath   = p_config.GetParameterString(rewriter,_T("TargetPath"),    _T(""));
-  CString targetRoute0    = p_config.GetParameterString(rewriter,_T("TargetRoute0"),  _T(""));
-  CString targetRoute1    = p_config.GetParameterString(rewriter,_T("TargetRoute1"),  _T(""));
-  CString targetRoute2    = p_config.GetParameterString(rewriter,_T("TargetRoute2"),  _T(""));
-  CString targetRoute3    = p_config.GetParameterString(rewriter,_T("TargetRoute3"),  _T(""));
-  CString targetRoute4    = p_config.GetParameterString(rewriter,_T("TargetRoute4"),  _T(""));
+  XString targetProtocol  = p_config.GetParameterString(rewriter,_T("TargetProtocol"),_T(""));
+  XString targetServer    = p_config.GetParameterString(rewriter,_T("TargetServer"),  _T(""));
+  XString targetPort      = p_config.GetParameterString(rewriter,_T("TargetPort"),    _T(""));
+  XString targetAbspath   = p_config.GetParameterString(rewriter,_T("TargetPath"),    _T(""));
+  XString targetRoute0    = p_config.GetParameterString(rewriter,_T("TargetRoute0"),  _T(""));
+  XString targetRoute1    = p_config.GetParameterString(rewriter,_T("TargetRoute1"),  _T(""));
+  XString targetRoute2    = p_config.GetParameterString(rewriter,_T("TargetRoute2"),  _T(""));
+  XString targetRoute3    = p_config.GetParameterString(rewriter,_T("TargetRoute3"),  _T(""));
+  XString targetRoute4    = p_config.GetParameterString(rewriter,_T("TargetRoute4"),  _T(""));
 
   if(!protocol.IsEmpty())
   {

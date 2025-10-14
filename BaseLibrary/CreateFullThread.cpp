@@ -88,7 +88,7 @@ PVOID BuildRestrictedSD(PSECURITY_DESCRIPTOR pSD)
     // initialize the security descriptor
     if(!InitializeSecurityDescriptor(pSD,SECURITY_DESCRIPTOR_REVISION))
     {
-      TRACE("InitializeSecurityDescriptor() failed with error %d\n",GetLastError());
+      ATLTRACE("InitializeSecurityDescriptor() failed with error %d\n",GetLastError());
       __leave;
     }
 
@@ -97,7 +97,7 @@ PVOID BuildRestrictedSD(PSECURITY_DESCRIPTOR pSD)
                                  SECURITY_AUTHENTICATED_USER_RID,0,0,0,0,0,0,0,
                                  &pAuthenticatedUsersSID))
     {
-      TRACE("AllocateAndInitializeSid() failed with error %d\n",GetLastError());
+      ATLTRACE("AllocateAndInitializeSid() failed with error %d\n",GetLastError());
       __leave;
     }
 
@@ -119,14 +119,14 @@ PVOID BuildRestrictedSD(PSECURITY_DESCRIPTOR pSD)
     pDACL = (PACL)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,dwAclLength);
     if(!pDACL)
     {
-      TRACE("HeapAlloc() failed with error %d\n",GetLastError());
+      ATLTRACE("HeapAlloc() failed with error %d\n",GetLastError());
       __leave;
     }
 
     // initialize the DACL
     if(!InitializeAcl(pDACL,dwAclLength,ACL_REVISION))
     {
-      TRACE("InitializeAcl() failed with error %d\n",GetLastError());
+      ATLTRACE("InitializeAcl() failed with error %d\n",GetLastError());
       __leave;
     }
 
@@ -137,14 +137,14 @@ PVOID BuildRestrictedSD(PSECURITY_DESCRIPTOR pSD)
                             GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,
                             pAuthenticatedUsersSID))
     {
-      TRACE("AddAccessAllowedAce() failed with error %d\n",GetLastError());
+      ATLTRACE("AddAccessAllowedAce() failed with error %d\n",GetLastError());
       __leave;
     }
 
     // set the DACL in the security descriptor
     if(!SetSecurityDescriptorDacl(pSD,TRUE,pDACL,FALSE))
     {
-      TRACE("SetSecurityDescriptorDacl() failed with error %d\n",GetLastError());
+      ATLTRACE("SetSecurityDescriptorDacl() failed with error %d\n",GetLastError());
       __leave;
     }
 

@@ -479,7 +479,7 @@ HTTPServerSync::RunHTTPServer()
       }
       else
       {
-        SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("FATAL: Site not found: ") + rawUrl);
+        SvcReportErrorEvent(0,true,_T(__FUNCTION__),XString(_T("FATAL: Site not found: ")) + rawUrl);
       }
       // See if we must substitute for a sub-site
       if(site && m_hasSubsites)
@@ -1212,8 +1212,8 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   // Sync server providing our own error page
   if(totalLength == 0 && status >= HTTP_STATUS_BAD_REQUEST)
   {
-    CString page;
-    CString reason = GetHTTPStatusText(status);
+    XString page;
+    XString reason = GetHTTPStatusText(status);
 
     if(status >= HTTP_STATUS_SERVER_ERROR)
     {

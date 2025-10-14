@@ -812,8 +812,8 @@ WebSocketServer::ServerHandshake(HTTPMessage* p_message)
       valuebf[serverheaders[header].ulValueLength] = 0;
 
       // Translate to string
-      CString pcName  = LPCSTRToString((LPCSTR)namebuf);
-      CString pcValue = LPCSTRToString((LPCSTR)valuebf);
+      XString pcName  = LPCSTRToString((LPCSTR)namebuf);
+      XString pcValue = LPCSTRToString((LPCSTR)valuebf);
       p_message->AddHeader(pcName,pcValue);
 
       // Remember our client key as the registration

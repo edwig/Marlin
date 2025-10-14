@@ -191,7 +191,7 @@ HTTPURLGroup::RegisterSite(HTTPSite* p_site)
   if(it != m_sites.end())
   {
     // Already registered
-    ERRORLOG(ERROR_ALREADY_ASSIGNED,_T("Cannot register site in URL-Group: ") + p_site->GetSite());
+    ERRORLOG(ERROR_ALREADY_ASSIGNED,XString(_T("Cannot register site in URL-Group: ")) + p_site->GetSite());
     return;
   }
   // Register this site

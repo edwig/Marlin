@@ -3,14 +3,14 @@
 ; File:     MarlinModule\Installer_64BIts.nsi
 ; Author:   W.E. Huisman
 ;
-; Copyright (c) 2019-2024 Edwig Huisman
+; Copyright (c) 2019-2025 Edwig Huisman
 ;
-; Date of last change: 14-03-2025
-; Version:             8.4.1
+; Date of last change: 14-10-2025
+; Version:             8.5.0
 ;-------------------------------------------------------
  !define PRODUCT_NAME                         "Marlin IIS Module 64Bits"
- !define PRODUCT_VERSION                      "8.4.1"
- !define PRODUCT_EXT                          "841"
+ !define PRODUCT_VERSION                      "8.5.0"
+ !define PRODUCT_EXT                          "850"
  !define PRODUCT_PUBLISHER                    "Edwig Huisman"
  !define PRODUCT_WEB_SITE                     "https://github.com/Edwig/Marlin"
  !define PRODUCT_DIR_REGKEY                   "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"
@@ -32,6 +32,7 @@
  
 ;--------------------------------------------------------------------------------------------------------
  !include "MUI.nsh"
+ !include x64.nsh
 ;--------------------------------------------------------------------------------------------------------
 
 ; This compressions saves about 40% diskspace
@@ -96,6 +97,8 @@ InstallDir "$WINDIR\system32\inetsrv\"
 
 ;--------------------------------------------------------------------------------------------------------
 Function .onInit
+ SetRegView 64
+
  strcpy $R0 "$TEMP\${LogFile}.log"
  call OpenLogfile
  

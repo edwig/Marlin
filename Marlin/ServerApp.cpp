@@ -94,7 +94,7 @@ bool _stdcall InitServerApp(ServerApp* p_application,IHttpApplication* p_httpapp
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while initializing the server application: ") + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("ERROR while initializing the server application: ")) + ex.GetErrorMessage());
     }
   }
   return false;
@@ -119,7 +119,7 @@ void _stdcall ExitServerApp(ServerApp* p_application)
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while stopping the server application: ") + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("ERROR while stopping the server application: ")) + ex.GetErrorMessage());
     }
   }
 }
@@ -139,7 +139,7 @@ HTTPSite* _stdcall FindHTTPSite(ServerApp* p_application,int p_port, PCWSTR p_ur
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while finding HTTP Site: ") + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("ERROR while finding HTTP Site: ")) + ex.GetErrorMessage());
       site = nullptr;
     }
   }
@@ -162,7 +162,7 @@ int _stdcall GetStreamFromRequest(ServerApp* p_application,IHttpContext* p_conte
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while getting new event stream: ") + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("ERROR while getting new event stream: ")) + ex.GetErrorMessage());
       gotstream = 0;
     }
   }
@@ -191,7 +191,7 @@ HTTPMessage* _stdcall GetHTTPMessageFromRequest(ServerApp*    p_application
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while getting a new HTTPMessage: ") + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("ERROR while getting a new HTTPMessage: ")) + ex.GetErrorMessage());
       msg = nullptr;
     }
   }
@@ -226,7 +226,7 @@ bool _stdcall HandleHTTPMessage(ServerApp* p_application,HTTPSite* p_site,HTTPMe
     }
     catch(StdException& ex)
     {
-      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("ERROR while handeling a HTTPMessage: ") + ex.GetErrorMessage());
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("ERROR while handeling a HTTPMessage: ")) + ex.GetErrorMessage());
       handled = false;
     }
   }
@@ -652,7 +652,7 @@ ServerApp::ReadHandlers(CComBSTR& p_configPath,IISSiteConfig& p_config)
           {
             modules = WStringToString(vvar.bstrVal);
           }
-          if (m_modules.find(modules.MakeLower()) == m_modules.end())
+          if(m_modules.find(modules.MakeLower()) == m_modules.end())
           {
             continue;
           }

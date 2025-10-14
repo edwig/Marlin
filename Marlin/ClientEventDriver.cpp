@@ -412,7 +412,7 @@ static void OnWebsocketOpen(WebSocket* p_socket,const WSFrame* p_event)
   event->m_type    = EvtType::EV_Open;
   event->m_sent    = 0;
   event->m_number  = 0;
-  event->m_payload = p_event->m_data;
+  event->m_payload = (LPCTSTR)(p_event->m_data);
 
   driver->RegisterIncomingEvent(event);
 }
@@ -425,7 +425,7 @@ static void OnWebsocketMessage(WebSocket* p_socket,const WSFrame* p_event)
   event->m_type    = EvtType::EV_Message;
   event->m_sent    = 0;
   event->m_number  = 0;
-  event->m_payload = p_event->m_data;
+  event->m_payload = (LPCTSTR)(p_event->m_data);
 
   driver->RegisterIncomingEvent(event);
 }
@@ -454,7 +454,7 @@ static void OnWebsocketError(WebSocket* p_socket,const WSFrame* p_event)
   event->m_type    = EvtType::EV_Error;
   event->m_sent    = 0;
   event->m_number  = 0;
-  event->m_payload = p_event->m_data;
+  event->m_payload = (LPCTSTR)p_event->m_data;
 
   driver->RegisterIncomingEvent(event);
 }
@@ -467,7 +467,7 @@ static void OnWebsocketClose(WebSocket* p_socket,const WSFrame* p_event)
   event->m_type    = EvtType::EV_Close;
   event->m_sent    = 0;
   event->m_number  = 0;
-  event->m_payload = p_event->m_data;
+  event->m_payload = (LPCTSTR)p_event->m_data;
 
   driver->RegisterIncomingEvent(event);
 }

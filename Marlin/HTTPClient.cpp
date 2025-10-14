@@ -2326,7 +2326,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
         soapAction = namesp + soapAction;
       }
     }
-    if(soapAction[0] != '\"' && soapAction.Find(':') >= 0)
+    if(soapAction.GetAt(0) != _T('\"') && soapAction.Find(':') >= 0)
     {
       soapAction = _T("\"") + soapAction + _T("\"");
     }
@@ -2405,7 +2405,7 @@ HTTPClient::Send(SOAPMessage* p_msg)
       }
       if(m_response)
       {
-        response += XString(m_response);
+        response += XString((LPCTSTR)m_response);
       }
       ReCreateAsSOAPFault(p_msg,oldVersion,response);
     }
@@ -3182,7 +3182,7 @@ HTTPClient::LogTheSend(wstring& p_server,int p_port)
 
 
   // Find secure call
-  XString secure = m_secure && m_scheme.Right(1) != _T('s') ? _T("s") : _T("");
+  XString secure = m_secure && m_scheme.Right(1) != _T("s") ? _T("s") : _T("");
 
   // Log in full, do the raw logging call directly
   m_log->AnalysisLog(_T("HTTPClient::Send"),LogType::LOG_INFO,true
@@ -4180,11 +4180,11 @@ HTTPClient::ProcessQueueMessage(HTTPMessage* p_message)
 
   if(Send(p_message))
   {
-    DETAILLOG(_T("Did send queued HTTPMessage to: ") + safeURL);
+    DETAILLOG(XString(_T("Did send queued HTTPMessage to: ")) + safeURL);
   }
   else
   {
-    ERRORLOG(_T("Error while sending queued HTTPMessage to: ") + safeURL);
+    ERRORLOG(XString(_T("Error while sending queued HTTPMessage to: ")) + safeURL);
   }
   // End of the line: Remove the queue message
   delete p_message;
@@ -4215,11 +4215,11 @@ HTTPClient::ProcessQueueMessage(JSONMessage* p_message)
 
   if(Send(p_message))
   {
-    DETAILLOG(_T("Did send queued JSONMessage to: ") + safeURL);
+    DETAILLOG(XString(_T("Did send queued JSONMessage to: ")) + safeURL);
   }
   else
   {
-    ERRORLOG(_T("Error while sending queued JSONMessage to: ") + safeURL);
+    ERRORLOG(XString(_T("Error while sending queued JSONMessage to: ")) + safeURL);
   }
   // End of the line: Remove the queue message
   delete p_message;

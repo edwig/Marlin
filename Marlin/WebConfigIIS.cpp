@@ -84,7 +84,7 @@ WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/
   {
     if(ReadConfig(p_extraWebConfig,nullptr) == false)
     {
-      SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the extra Web.Config file: ") + p_extraWebConfig);
+      SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("Cannot read the extra Web.Config file: ")) + p_extraWebConfig);
       return false;
     }
   }
@@ -401,12 +401,12 @@ WebConfigIIS::ReadConfig(XString p_configFile,IISSite* p_site /*=nullptr*/)
   XMLMessage msg;
   if(!msg.LoadFile(p_configFile))
   {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("Cannot read the application host file: ") + p_configFile);
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("Cannot read the application host file: ")) + p_configFile);
     return false;
   }
   if(msg.GetInternalError() != XmlError::XE_NoError)
   {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),_T("XML Error in the application host file: ") + p_configFile);
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("XML Error in the application host file: ")) + p_configFile);
     return false;
   }
   ReadLogPath(msg);
