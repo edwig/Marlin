@@ -194,7 +194,7 @@ ErrorReportWriteToFile(const XString& p_filename
   }
 
   // Checking webroot
-  if(pathname.Right(1) != _T("'\\"))
+  if(pathname.Right(1) != _T("\\"))
   {
     pathname += _T("\\");
   }
