@@ -29,12 +29,6 @@
 #include "TestMarlinServer.h"
 #include <ThreadPool.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 2;
 static unsigned number = 0;
 static ThreadPool* pool = nullptr;

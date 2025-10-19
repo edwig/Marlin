@@ -32,14 +32,6 @@
 #include "WebServiceServer.h"
 #include "HTTPSite.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // A JSON2SOAP handler is an override for the HTTP GET handler
 // Most likely you will only need to set it to a HTTPSite
 // that already has a SiteHandlerSoap as it's POST handler
@@ -54,7 +46,7 @@ SiteHandlerJson2Soap::PreHandle(HTTPMessage* p_message)
   if(p_message->GetContentType().Find(_T("json")) > 0)
   {
     // Create an EMPTY JSON/SOAP message for this thread, forcing version 1.2
-    g_soapMessage = new SOAPMessage(p_message);
+    g_soapMessage = alloc_new SOAPMessage(p_message);
     g_soapMessage->SetSoapVersion(SoapVersion::SOAP_12);
 
     // CONVERT url parameters to SOAPMessage

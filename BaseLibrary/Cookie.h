@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -47,14 +47,14 @@ class Cookie
 {
 public:
   Cookie();
-  explicit Cookie(XString p_fromHTTP);
+  explicit Cookie(const XString& p_fromHTTP);
 
   // SETTERS
 
-  void  SetCookie(XString p_value);
-  void  SetCookie(XString p_name,XString p_value);
-  void  SetCookie(XString p_name,XString p_value,XString p_metadata);
-  void  SetCookie(XString p_name,XString p_value,XString p_metadata,bool p_secure,bool p_httpOnly);
+  void  SetCookie(const XString& p_value);
+  void  SetCookie(const XString& p_name,const XString& p_value);
+  void  SetCookie(const XString& p_name,const XString& p_value,const XString& p_metadata);
+  void  SetCookie(const XString& p_name,const XString& p_value,const XString& p_metadata,bool p_secure,bool p_httpOnly);
 
   void  SetSecure   (bool p_secure)             { m_secure   = p_secure;   }
   void  SetHttpOnly (bool p_httpOnly)           { m_httpOnly = p_httpOnly; }
@@ -63,36 +63,36 @@ public:
   void  SetSameSite (CookieSameSite p_sameSite) { m_sameSite = p_sameSite; }
   void  SetMaxAge   (int p_maxAge)              { m_maxAge   = p_maxAge;   }
   void  SetExpires  (SYSTEMTIME* p_expires);
+  void  SetExpires  (const XString& p_expires);
 
   // GETTERS
 
   // Compound getters
-  XString        GetSetCookieText();
-  XString        GetCookieText();
-  XString        GetValue(XString p_metadata = _T(""));
+  XString        GetSetCookieText() const;
+  XString        GetCookieText() const;
+  XString        GetValue(const XString& p_metadata = _T("")) const;
   // Individual getters
-  XString        GetName()       { return m_name;     }
-  bool           GetSecure()     { return m_secure;   }
-  bool           GetHttpOnly()   { return m_httpOnly; }
-  XString        GetDomain()     { return m_domain;   }
-  XString        GetPath()       { return m_path;     }
-  CookieSameSite GetSameSite()   { return m_sameSite; }
-  SYSTEMTIME*    GetExpires()    { return &m_expires; }
-  int            GetMaxAge()     { return m_maxAge;   }
-  void           SetExpires(XString p_expires);
+  XString        GetName() const      { return m_name;     }
+  bool           GetSecure() const    { return m_secure;   }
+  bool           GetHttpOnly() const  { return m_httpOnly; }
+  XString        GetDomain() const    { return m_domain;   }
+  XString        GetPath() const      { return m_path;     }
+  CookieSameSite GetSameSite() const  { return m_sameSite; }
+  SYSTEMTIME*    GetExpires()         { return &m_expires; }
+  int            GetMaxAge() const    { return m_maxAge;   }
 
   // FUNCTIONS
-  bool           IsExpired();
+  bool           IsExpired() const;
 
   // OPERATORS
-  Cookie&     operator=(Cookie& p_other);
+  Cookie&     operator=(const Cookie& p_other);
 
 private:
   // Parse cookie text (from HTTP or from internal source)
-  void    ParseCookie(XString p_cookieText);
+  void    ParseCookie(const XString& p_cookieText);
   // Check the contents of the strings
-  void    CheckName();
-  void    CheckValue();
+  void    CheckName() const;
+  void    CheckValue() const;
 
   // Cookies class copies shallow/deep
   friend  Cookies;
@@ -118,18 +118,18 @@ using BiscuitTin = std::vector<Cookie>;
 class Cookies
 {
 public:
-  void        AddCookie(XString p_fromHTTP);
-  void        AddCookie(Cookie& p_cookie);
-  void        AddCookie(XString p_name,XString p_value,XString p_metadata = _T(""));
-  Cookie*     GetCookie(unsigned p_index = 0);
-  Cookie*     GetCookie(XString p_name);
-  XString     GetCookieText(); // Client side only!!
-  void        Clear()      { m_cookies.clear();       };
-  size_t      GetSize()    { return m_cookies.size(); };
-  BiscuitTin& GetCookies() { return m_cookies;        };
+  void        AddCookie(const XString& p_fromHTTP);
+  void        AddCookie(const Cookie& p_cookie);
+  void        AddCookie(const XString& p_name,const XString& p_value,const XString& p_metadata = _T(""));
+  const Cookie*     GetCookie(unsigned p_index = 0) const;
+  const Cookie*     GetCookie(const XString& p_name) const;
+  XString     GetCookieText() const; // Client side only!!
+  void        Clear()            { m_cookies.clear();       };
+  size_t      GetSize() const    { return m_cookies.size(); };
+  BiscuitTin& GetCookies()       { return m_cookies;        };
 
 private:
-  void        AddCookieUnique(Cookie& p_cookie);
+  void        AddCookieUnique(const Cookie& p_cookie);
   // All of our cookies are in the tin
   BiscuitTin  m_cookies;
 };

@@ -28,14 +28,6 @@
 #include "stdafx.h"
 #include "SiteHandlerSoap.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Remember SOAPMessage for this thread
 __declspec(thread) SOAPMessage* g_soapMessage = nullptr;
 
@@ -68,7 +60,7 @@ SiteHandlerSoap::PreHandle(HTTPMessage* p_message)
   {
     delete g_soapMessage;
   }
-  g_soapMessage = new SOAPMessage(p_message);
+  g_soapMessage = alloc_new SOAPMessage(p_message);
 
   // Detect XML SOAP errors
   if(g_soapMessage->GetInternalError() != XmlError::XE_NoError)
@@ -211,7 +203,7 @@ SiteHandlerSoap::SetTokenProfile(bool p_token)
   {
     if(m_soapSecurity == nullptr)
     {
-      m_soapSecurity = new SOAPSecurity();
+      m_soapSecurity = alloc_new SOAPSecurity();
     }
   }
   else

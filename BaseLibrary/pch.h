@@ -6,9 +6,11 @@
 
 #pragma once
 
+// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN
+
 // add headers that you want to pre-compile here
 #include "targetver.h"
-#include "framework.h"
 
 #include <stdio.h>
 #include <tchar.h>

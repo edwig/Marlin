@@ -29,21 +29,15 @@
 #include "BrowseForFilename.h"
 #include <dlgs.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 #pragma warning (disable:4312)
 
 BrowseForFilename::BrowseForFilename(bool    p_open        // true = open, false = SaveAs
-                                    ,XString p_title       // Title of the dialog
-                                    ,XString p_defext      // Default extension
-                                    ,XString p_filename    // Default first file
+                                    ,CString p_title       // Title of the dialog
+                                    ,CString p_defext      // Default extension
+                                    ,CString p_filename    // Default first file
                                     ,int     p_flags       // Default flags
-                                    ,XString p_filter      // Filter for extensions
-                                    ,XString p_direct)     
+                                    ,CString p_filter      // Filter for extensions
+                                    ,CString p_direct)     
                   :m_open(p_open)
                   ,m_initalDir(p_direct)
 {
@@ -119,10 +113,10 @@ BrowseForFilename::DoModal()
   return res;
 }
 
-XString 
+CString 
 BrowseForFilename::GetChosenFile()
 {
-  return (XString) m_ofn.lpstrFile;
+  return (CString) m_ofn.lpstrFile;
 }
 
 void

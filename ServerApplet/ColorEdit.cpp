@@ -28,12 +28,6 @@
 #include "stdafx.h"
 #include "ColorEdit.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // ColorEdit
 
@@ -42,7 +36,7 @@ ColorEdit::ColorEdit()
           ,m_bkBrush(m_colorBackground)
           ,m_bkEmptyBrush(m_colorBackground)
 {
-  m_pFont             = new CFont;
+  m_pFont             = new CFont();
   m_fontSize          = 110;         // 11 punts font
   m_colorText         = RGB(0,0,0);  // Black
   m_colorTextEmpty    = RGB(0x7F,0x7F,0x7F); // gray
@@ -153,7 +147,7 @@ ColorEdit::SetPasswordEyeColor(COLORREF p_colorPasswordEye)
 }
 
 void 
-ColorEdit::SetFontName(XString p_fontName,BYTE p_language /* = ENGLISH */)
+ColorEdit::SetFontName(CString p_fontName,BYTE p_language /* = ENGLISH */)
 {
   m_fontName = p_fontName;
   m_language = p_language;
@@ -199,7 +193,7 @@ ColorEdit::SetDoPixelShift(bool p_shift)
 }
 
 void
-ColorEdit::SetEmpty(bool p_empty, XString p_text)
+ColorEdit::SetEmpty(bool p_empty,CString p_text)
 {
   if(p_empty && p_text.IsEmpty())
   {
@@ -448,7 +442,7 @@ ColorEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
     }
     else
     {
-      XString text;
+      CString text;
       CEdit::GetWindowText(text);
       if(text.Compare(_T(EDIT_EMPTYFIELD)) == 0)
       {

@@ -145,7 +145,7 @@ public:
   // Send HTTP to an URL
   bool Send(const XString& p_url);
   // Send HTTP + body to an URL
-  bool Send(XString& p_url,XString& p_body);
+  bool Send(const XString& p_url,const XString& p_body);
   // Send HTTP + body-buffer to an URL
   bool Send(const XString& p_url,const void* p_buffer,unsigned p_length);
   // Send HTTPMessage
@@ -178,13 +178,13 @@ public:
 
   // FUNCTIONS
   // Add extra header for the call
-  bool AddHeader(XString p_header);
+  bool AddHeader(const XString& p_header);
   // Add extra header by name and value pair
-  void AddHeader(XString p_name,XString p_value);
+  void AddHeader(const XString& p_name,const XString& p_value);
   // Delete a header
-  bool DelHeader(XString p_name);
+  bool DelHeader(const XString& p_name);
   // Add extra cookie for the call
-  bool AddCookie(XString p_cookie);
+  bool AddCookie(const XString& p_cookie);
   // Disconnect from server
   void Disconnect();
   // Lock the client (for MT use)
@@ -192,11 +192,11 @@ public:
   // Unlock the client (for MT use)
   void UnlockClient();
   // Find a result header
-  XString FindHeader(XString p_header);
+  XString FindHeader(const XString& p_header);
   
   // SETTERS
-  bool SetURL(XString p_url);
-  bool SetBody(const XString& p_body,const XString p_charset = _T("utf-8"));
+  bool SetURL(const XString& p_url);
+  bool SetBody(const XString& p_body,const XString& p_charset = _T("utf-8"));
   void SetBody(const void* p_body,unsigned p_length);
   void SetLogging(LogAnalysis* p_log,bool p_transferOwnership = false);
   void SetSecure(bool p_secure)                         { m_secure            = p_secure;   }; // URL Part secure
@@ -211,7 +211,7 @@ public:
   void SetProxyBypass(const XString& p_bypass)          { m_proxyBypass       = p_bypass;   };
   void SetProxyUser(const XString& p_user)              { m_proxyUser         = p_user;     };
   void SetProxyPassword(const XString& p_pass)          { m_proxyPassword     = p_pass;     };
-  void SetVerb(XString p_verb)                          { m_verb              = p_verb;     };
+  void SetVerb(const XString& p_verb)                   { m_verb              = p_verb;     };
   void SetContentType(const XString& p_type)            { m_contentType       = p_type;     };
   void SetResolveChunked(const bool p_resolve)          { m_resolveChunked    = p_resolve;  };
   void SetHTTPCompression(bool p_compress)              { m_httpCompression   = p_compress; };
@@ -315,7 +315,7 @@ public:
   // EVENT STREAM INTERFACE
 
   // Start a new event stream object
-  EventSource*  CreateEventSource(XString p_url);
+  EventSource*  CreateEventSource(const XString& p_url);
   // Main loop of the event-interface (public: starting a thread)
   void          EventThreadRunning();
 
@@ -333,7 +333,7 @@ private:
   void     InitSettings();
   void     InitLogging();
   void     InitSecurity();
-  void     ReplaceSetting(XString* m_setting,XString p_potential);
+  void     ReplaceSetting(XString* m_setting,const XString& p_potential);
   bool     StartEventStream(const XString& p_url); // Called from EventStream
   // To be done inside a 'Send'
   void     AddProxyInfo();
@@ -351,7 +351,7 @@ private:
   void     AddMessageHeaders(HTTPMessage* p_message);
   void     AddMessageHeaders(SOAPMessage* p_message);
   void     AddMessageHeaders(JSONMessage* p_message);
-  void     LogTheSend(wstring& p_server,int p_port);
+  void     LogTheSend(const wstring& p_server,int p_port);
   void     TraceTheSend();
   void     TraceTheAnswer();
   void     ProcessResultCookies();
@@ -370,12 +370,12 @@ private:
   void     ResetOAuth2Session();
   bool     DoRedirectionAfterSend();
   void     ProcessChunkedEncoding();
-  void     ReCreateAsSOAPFault(SOAPMessage* p_msg,SoapVersion p_version,XString p_response);
+  void     ReCreateAsSOAPFault(SOAPMessage* p_msg,SoapVersion p_version,const XString& p_response);
   // Methods for WS-Security
-  void     CheckAnswerSecurity (SOAPMessage* p_msg,XString p_answer,XMLEncryption p_security,XString p_password);
-  void     CheckBodySigning    (XString p_password,SOAPMessage* p_msg);
-  void     DecodeBodyEncryption(XString p_password,SOAPMessage* p_msg,XString p_answer);
-  void     DecodeMesgEncryption(XString p_password,SOAPMessage* p_msg,XString p_answer);
+  void     CheckAnswerSecurity (SOAPMessage* p_msg,const XString& p_answer,XMLEncryption p_security,const XString& p_password);
+  void     CheckBodySigning    (const XString& p_password,SOAPMessage* p_msg);
+  void     DecodeBodyEncryption(const XString& p_password,SOAPMessage* p_msg,const XString& p_answer);
+  void     DecodeMesgEncryption(const XString& p_password,SOAPMessage* p_msg,const XString& p_answer);
   // Get next message from the queue
   bool     GetFromQueue(HTTPMessage** p_entry1,SOAPMessage** p_entry2,JSONMessage** p_entry3);
   void     CreateQueueEvent();

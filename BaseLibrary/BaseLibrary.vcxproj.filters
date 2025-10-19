@@ -246,9 +246,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Configuration</Filter>
     </ClInclude>
-    <ClInclude Include="framework.h">
-      <Filter>Configuration</Filter>
-    </ClInclude>
     <ClInclude Include="FileDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -516,6 +513,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ErrorReport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseLibrary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

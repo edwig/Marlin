@@ -4,8 +4,8 @@
 //
 // Marlin Component: Internet server/client
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -29,14 +29,6 @@
 #include "RunRedirect.h"
 #include "AutoCritical.h"
 #include <time.h>
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 RunRedirect::RunRedirect(ULONG p_maxTime /*=INFINITE*/)
             :m_ready(false)
@@ -326,18 +318,18 @@ CallProgram(LPCTSTR p_program,LPCTSTR p_commandLine,bool p_show /*= false*/)
 
 // Calling our program at last
 int 
-PosixCallProgram(XString  p_directory
-                ,XString  p_programma
-                ,XString  p_parameters
-                ,XString  p_charset
-                ,XString  p_stdin
-                ,XString& p_stdout
-                ,XString& p_stderr
-                ,HWND     p_console         /*= NULL    */
-                ,UINT     p_showWindow      /*= SW_HIDE */
-                ,BOOL     p_waitForIdle     /*= FALSE   */
-                ,ULONG    p_maxRunningTime  /*= INFINITE*/
-                ,RunRedirect** p_run        /*= nullptr */)
+PosixCallProgram(const XString& p_directory
+                ,const XString& p_programma
+                ,const XString& p_parameters
+                ,const XString& p_charset
+                ,const XString& p_stdin
+                ,      XString& p_stdout
+                ,      XString& p_stderr
+                ,      HWND     p_console         /*= NULL    */
+                ,      UINT     p_showWindow      /*= SW_HIDE */
+                ,      BOOL     p_waitForIdle     /*= FALSE   */
+                ,      ULONG    p_maxRunningTime  /*= INFINITE*/
+                ,RunRedirect**  p_run             /*= nullptr */)
 {
 #ifdef _AFX
   AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -356,10 +348,10 @@ PosixCallProgram(XString  p_directory
   p_stderr.Empty();
 
   // Remove backslash
-  p_directory.TrimRight('\\');
+  bool slash = (p_directory.Right(1) == _T("\\"));
 
   // Create a new command line
-  XString commandLine = p_directory + _T("\\") + p_programma;
+  XString commandLine = p_directory + (slash ? _T("") : _T("\\")) + p_programma;
 
   // Set console title
   if(p_console)
@@ -368,7 +360,7 @@ PosixCallProgram(XString  p_directory
   }
 
   // Adding parameters
-  commandLine  = _T("\"") + commandLine + _T("\" ");
+  commandLine  = XString(_T("\"")) + commandLine + _T("\" ");
   commandLine += p_parameters;
 
   // Start the command

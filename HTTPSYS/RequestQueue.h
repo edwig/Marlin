@@ -65,7 +65,7 @@ void StartAsyncReceiveHttpRequest(PREGISTER_HTTP_RECEIVE_REQUEST reg);
 class RequestQueue
 {
 public:
-  RequestQueue(XString p_name);
+  RequestQueue(const XString& p_name);
  ~RequestQueue();
 
   // GETTERS
@@ -113,15 +113,15 @@ public:
   ULONG     GetNextRequest(HTTP_REQUEST_ID RequestId,ULONG Flags,PHTTP_REQUEST RequestBuffer,ULONG RequestBufferLength,PULONG Bytes);
 
   // The fragment cache
-  ULONG             AddFragment  (XString p_prefix,PHTTP_DATA_CHUNK p_chunk);
-  ULONG             FlushFragment(XString p_prefix,ULONG Flags);
-  PHTTP_DATA_CHUNK  FindFragment (XString p_prefix);
+  ULONG             AddFragment  (const XString& p_prefix,PHTTP_DATA_CHUNK p_chunk);
+  ULONG             FlushFragment(const XString& p_prefix,ULONG Flags);
+  PHTTP_DATA_CHUNK  FindFragment (const XString& p_prefix);
 
   // WebSocket functionality
-  SYSWebSocket* FindWebSocket     (XString p_websocketKey);
-  bool          AddWebSocket      (XString p_websocketKey,SYSWebSocket* p_websocket);
-  bool          ReconnectWebsocket(XString p_websocketKey,SYSWebSocket* p_websocket);
-  bool          DeleteWebSocket   (XString p_websocketKey);
+  SYSWebSocket* FindWebSocket     (const XString& p_websocketKey);
+  bool          AddWebSocket      (const XString& p_websocketKey,SYSWebSocket* p_websocket);
+  bool          ReconnectWebsocket(const XString& p_websocketKey,SYSWebSocket* p_websocket);
+  bool          DeleteWebSocket   (const XString& p_websocketKey);
 
 private:
   void        StopAllListeners();

@@ -31,12 +31,6 @@
 #include "afxdialogex.h"
 #include <RunRedirect.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 #define WHITE     RGB(255,255,255)
 #define DARKBLUE  RGB(0,  0,  128)
 #define LIGHTBLUE RGB(0,  0,  255)
@@ -178,11 +172,11 @@ InstallDlg::OnBnClickedInstall()
   {
     XString result;
     XString arguments;
-    XString program(XString(PRODUCT_NAME) + _T(".exe"));
-    XString error(_T("Cannot start the server application for a NT-Service installation"));
+    XString program(CString(PRODUCT_NAME) + _T(".exe"));
+    CString error(_T("Cannot start the server application for a NT-Service installation"));
 
     // Format the command
-    XString user(m_username);
+    CString user(m_username);
     if(!m_domain.IsEmpty())
     {
       user = m_domain + _T("\\") + m_username;
@@ -191,7 +185,7 @@ InstallDlg::OnBnClickedInstall()
     int res = CallProgram_For_String(program,arguments,result);
     if(res)
     {
-      XString melding;
+      CString melding;
       melding.Format(_T("Installing the NT-Service failed. Error code: %d\n\n"),res);
       melding += result;
       ::MessageBox(GetSafeHwnd(),melding,_T("ERROR"),MB_OK|MB_ICONERROR);
@@ -221,7 +215,7 @@ InstallDlg::RemoveService(bool p_tonen)
   XString result;
   XString error(_T("Cannot stop the NT-service"));
   XString arguments(_T("stop"));
-  XString program(XString(PRODUCT_NAME) + _T(".exe"));
+  XString program(CString(PRODUCT_NAME) + _T(".exe"));
 
   // First: stop the service
   int res = CallProgram_For_String(program,arguments,result);
@@ -229,7 +223,7 @@ InstallDlg::RemoveService(bool p_tonen)
   {
     if(res)
     {
-      XString melding;
+      CString melding;
       melding.Format(_T("Stopping the NT-Service has failed. Error code: %d\n\n"),res);
       melding += result;
       ::MessageBox(GetSafeHwnd(),melding,_T("ERROR"),MB_OK | MB_ICONERROR);
@@ -244,7 +238,7 @@ InstallDlg::RemoveService(bool p_tonen)
   {
     if(res)
     {
-      XString message;
+      CString message;
       message.Format(_T("Removing the NT-Service definition has failed. Error code: %d\n\n"),res);
       message += result;
       ::MessageBox(GetSafeHwnd(),message,_T("ERROR"),MB_OK|MB_ICONERROR);

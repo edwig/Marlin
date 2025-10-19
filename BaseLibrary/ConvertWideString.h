@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 //
-// // Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// // Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -46,76 +46,76 @@
 
 // Init the code page system
 void    InitCodePageNames();
-// Getting the codepage number from the charset
-int     CharsetToCodepage(XString p_charset);
+// Getting the codepage number from the character set
+int     CharsetToCodepage(const XString& p_charset);
 // Getting the name of the codepage
 XString CodepageToCharset(int p_codepage);
 // Getting the description of the codepage
-XString CharsetToCodePageInfo(XString p_charset);
+XString CharsetToCodePageInfo(const XString& p_charset);
 // Find a field value within a HTTP header
-XString FindFieldInHTTPHeader(XString p_headervalue,XString p_field);
+XString FindFieldInHTTPHeader(const XString& p_headervalue,const XString& p_field);
 // Set (modify) the field value within a HTTP header
-XString SetFieldInHTTPHeader(XString p_headervalue,XString p_field,XString p_value);
+XString SetFieldInHTTPHeader(const XString& p_headervalue,const XString& p_field,const XString& p_value);
 // Find the charset in the content-type header
-XString FindCharsetInContentType(XString p_contentType);
+XString FindCharsetInContentType(const XString& p_contentType);
 // Find the mimetype in the content-type header
-XString FindMimeTypeInContentType(XString p_contentType);
+XString FindMimeTypeInContentType(const XString& p_contentType);
 
 #ifdef _UNICODE
 // Convert strings to/from Unicode-16
-bool    TryConvertNarrowString(const BYTE* p_buffer
-                              ,int         p_length
-                              ,XString     p_charset
-                              ,XString&    p_string
-                              ,bool&       p_foundBOM);
+bool    TryConvertNarrowString(const BYTE*    p_buffer
+                              ,int            p_length
+                              ,const XString& p_charset
+                              ,      XString& p_string
+                              ,bool&          p_foundBOM);
 bool    TryCreateNarrowString (const XString& p_string
-                              ,const XString  p_charset
+                              ,const XString& p_charset
                               ,const bool     p_doBom
                               ,      BYTE**   p_buffer
                               ,      int&     p_length);
 // Implode an UTF-16 string to a BYTE buffer (for UTF-8 purposes)
-void    ImplodeString(XString p_string,BYTE* p_buffer,unsigned p_length);
+void    ImplodeString(const XString& p_string,BYTE* p_buffer,unsigned p_length);
 XString ExplodeString(BYTE* p_buffer,unsigned p_length);
 // Construct a UTF-16 Byte-Order-Mark
 XString ConstructBOMUTF16();
 
 #else
 // Convert strings from/to Unicode-16
-bool    TryConvertWideString(const BYTE* p_buffer
-                            ,int         p_length
-                            ,XString     p_charset
-                            ,XString&    p_string
-                            ,bool&       p_foundBOM);
+bool    TryConvertWideString(const BYTE*    p_buffer
+                            ,int            p_length
+                            ,const XString& p_charset
+                            ,      XString& p_string
+                            ,bool&          p_foundBOM);
 bool    TryCreateWideString (const XString& p_string
-                            ,const XString  p_charset
+                            ,const XString& p_charset
                             ,const bool     p_doBom
                             ,      BYTE**   p_buffer
                             ,      int&     p_length);
 // Implode an UTF-16 string to a MBCS XString
-XString ImplodeString(BYTE* p_buffer,unsigned p_length);
-void    ExplodeString(XString p_string,BYTE* p_buffer,unsigned p_length);
+XString ImplodeString(const BYTE* p_buffer,const unsigned p_length);
+void    ExplodeString(const XString& p_string,BYTE* p_buffer,const unsigned p_length);
 // Construct a UTF-16 Byte-Order-Mark
 std::wstring ConstructBOMUTF16();
 #endif
 
 // Convert directly
-std::wstring StringToWString(XString p_string);
-XString      WStringToString(std::wstring p_string);
+std::wstring StringToWString(const XString& p_string);
+XString      WStringToString(const std::wstring& p_string);
 
 // Decoding incoming strings from the internet. Defaults to UTF-8 encoding
-XString DecodeStringFromTheWire(XString p_string,XString p_charset = _T("utf-8"),bool* p_foundBom = nullptr);
+XString DecodeStringFromTheWire(const XString& p_string,XString p_charset = _T("utf-8"),bool* p_foundBom = nullptr);
 // Encode to string for internet. Defaults to UTF-8 encoding
-XString EncodeStringForTheWire (XString p_string,XString p_charset = _T("utf-8"));
+XString EncodeStringForTheWire (const XString& p_string,XString p_charset = _T("utf-8"));
 
 // Construct an UTF-8 Byte-Order-Mark
 XString ConstructBOMUTF8();
 // Scan for UTF-8 chars in a string
-bool    DetectUTF8(XString& p_string);
+bool    DetectUTF8(const XString& p_string);
 bool    DetectUTF8(const BYTE* p_bytes);
 
 // Convert directly from LPCSTR (No 'T' !!) to XString and vice versa
-XString LPCSTRToString(LPCSTR p_string,bool p_utf8 = false);
-int     StringToLPCSTR(XString p_string,LPCSTR* p_buffer,int& p_size,bool p_utf8 = false);
+XString LPCSTRToString(const LPCSTR p_string,bool p_utf8 = false);
+int     StringToLPCSTR(const XString& p_string,LPCSTR* p_buffer,int& p_size,bool p_utf8 = false);
 
 // Auto class to convert a XString with ANSI/UTF-16 to a CSTR on the stack
 // So that we can call a IIS or MS-Windows API with an explicit LPCSTR parameter
@@ -127,7 +127,7 @@ public:
     m_string = nullptr;
     m_length = 0;
   }
-  AutoCSTR(XString p_string,bool p_utf8 = false)
+  AutoCSTR(const XString& p_string,bool p_utf8 = false)
    :m_string(nullptr)
    ,m_length(0)
   {
@@ -150,8 +150,8 @@ public:
   LPCSTR grab()
   {
     LPCSTR temp = m_string;
-    m_string = nullptr;
-    m_length = 0;
+    m_string    = nullptr;
+    m_length    = 0;
     return temp;
   }
 private:

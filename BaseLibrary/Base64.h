@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -34,14 +34,14 @@ public:
   Base64(int p_method = CRYPT_STRING_BASE64,int p_options = CRYPT_STRING_NOCRLF);
 
   // XString variants
-  XString  Encrypt(XString p_unencrypted);
-  XString  Decrypt(XString p_encrypted);
+  XString  Encrypt(const XString& p_unencrypted);
+  XString  Decrypt(const XString& p_encrypted);
   // Buffer to string and vice-versa
   XString  Encrypt(BYTE* p_buffer,int p_length);
-  bool     Decrypt(XString p_encrypted,BYTE* p_buffer,int p_length);
-  int      Decrypt(BYTE* p_buffer,int p_blen,BYTE* p_output,int p_olen);
+  bool     Decrypt(const XString& p_encrypted,BYTE* p_buffer,int p_length);
+  int      Decrypt(BYTE* p_buffer,int p_blen, BYTE* p_output,int p_olen);
   // Encrypt a ANSI/UNICODE string to a ANSI/UNICODE base64, where chars > 0x0FF
-  XString  EncryptUnicode(XString p_unencrypted);
+  XString  EncryptUnicode(const XString& p_unencrypted);
 
   // Helper methods
   size_t   B64_length  (size_t len);
@@ -56,6 +56,6 @@ class CRC4
 public:
   BYTE*   Encrypt(BYTE* pszText,int plen,const BYTE* pszKey,int klen);
   BYTE*   Decrypt(BYTE* pszText,int plen,const BYTE* pszKey,int klen);
-  XString Encrypt(const XString p_unencrypted,const XString p_key);
-  XString Decrypt(const XString p_encrypted,  const XString p_key);
+  XString Encrypt(const XString& p_unencrypted,const XString& p_key);
+  XString Decrypt(const XString& p_encrypted,  const XString& p_key);
 };

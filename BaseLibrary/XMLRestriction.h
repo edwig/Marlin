@@ -2,8 +2,8 @@
 //
 // SourceFile: XMLRestriction.h
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -32,32 +32,32 @@ using XmlEnums = std::map<XString,XString>;
 class XMLRestriction
 {
 public:
-  explicit XMLRestriction(XString p_name);
-  XString PrintRestriction(XString p_name);
-  XString CheckRestriction(XmlDataType p_type,XString p_value);
-  XString CheckDatatype   (XmlDataType p_type,XString p_value);
-  XString HandleWhitespace(XmlDataType p_type,XString p_value);
+  explicit XMLRestriction(const XString& p_name);
+  XString PrintRestriction(const XString& p_name);
+  XString CheckRestriction(XmlDataType p_type,const XString& p_value);
+  XString CheckDatatype   (XmlDataType p_type,const XString& p_value);
+  XString HandleWhitespace(XmlDataType p_type,      XString& p_value);
 
   // Set restrictions
-  void    AddEnumeration(XString p_enum,XString p_displayValue = _T(""));
-  void    AddBaseType(XString p_type)     { m_baseType       = p_type;   }
-  void    AddLength(int p_length)         { m_length         = p_length; }
-  void    AddMinLength(int p_length)      { m_minLength      = p_length; }
-  void    AddMaxLength(int p_length)      { m_maxLength      = p_length; }
-  void    AddTotalDigits(int p_digits)    { m_totalDigits    = p_digits; }
-  void    AddFractionDigits(int p_digits) { m_fractionDigits = p_digits; }
-  void    AddPattern(XString p_pattern)   { m_pattern        = p_pattern;}
-  void    AddWhitespace(int p_white)      { m_whiteSpace     = p_white;  }
-  void    AddMaxExclusive(XString p_max);
-  void    AddMaxInclusive(XString p_max);
-  void    AddMinExclusive(XString p_max);
-  void    AddMinInclusive(XString p_max);
-  void    AddMinOccurs(XString p_min);
-  void    AddMaxOccurs(XString p_max);
+  void    AddEnumeration(const XString& p_enum,const XString& p_displayValue = _T(""));
+  void    AddBaseType(const XString& p_type)     { m_baseType       = p_type;   }
+  void    AddLength(int p_length)                { m_length         = p_length; }
+  void    AddMinLength(int p_length)             { m_minLength      = p_length; }
+  void    AddMaxLength(int p_length)             { m_maxLength      = p_length; }
+  void    AddTotalDigits(int p_digits)           { m_totalDigits    = p_digits; }
+  void    AddFractionDigits(int p_digits)        { m_fractionDigits = p_digits; }
+  void    AddPattern(const XString& p_pattern)   { m_pattern        = p_pattern;}
+  void    AddWhitespace(int p_white)             { m_whiteSpace     = p_white;  }
+  void    AddMaxExclusive(const XString& p_max);
+  void    AddMaxInclusive(const XString& p_max);
+  void    AddMinExclusive(const XString& p_max);
+  void    AddMinInclusive(const XString& p_max);
+  void    AddMinOccurs(const XString& p_min);
+  void    AddMaxOccurs(const XString& p_max);
 
   // Get restrictions
-  bool    HasEnumeration  (XString p_enum);
-  XString GiveDisplayValue(XString p_enum);
+  bool    HasEnumeration  (const XString& p_enum);
+  XString GiveDisplayValue(const XString& p_enum);
   XString HasBaseType()                   { return m_baseType;       }
   int     HasLength()                     { return m_length;         }
   int     HasMaxLength()                  { return m_maxLength;      }
@@ -77,65 +77,65 @@ public:
   XString   GetName()                     { return m_name;           };
   XmlEnums& GetEnumerations()             { return m_enums;          };
 private:
-  XString   PrintEnumRestriction   (XString p_name);
-  XString   PrintIntegerRestriction(XString p_name,int p_value);
-  XString   PrintStringRestriction (XString p_name,XString p_value);
+  XString   PrintEnumRestriction   (const XString& p_name);
+  XString   PrintIntegerRestriction(const XString& p_name,int p_value);
+  XString   PrintStringRestriction (const XString& p_name,const XString& p_value);
   XString   PrintSpaceRestriction();
 
   // Checking the restrictions
-  XString   CheckAnyURI   (XString p_value);
-  XString   CheckInteger  (XString p_value);
-  XString   CheckBoolean  (XString p_value);
-  XString   CheckDate     (XString p_value);
-  XString   CheckBase64   (XString p_value);
-  XString   CheckNumber   (XString p_value,bool p_specials);
-  XString   CheckDateTime (XString p_value,bool p_explicit);
-  XString   CheckDatePart (XString p_value);
-  XString   CheckDuration (XString p_value);
-  XString   CheckYearMonth(XString p_value);
-  XString   CheckDaySecond(XString p_value);
-  XString   CheckTimePart (XString p_value); 
-  XString   CheckTime     (XString p_value);
-  XString   CheckTimeZone (XString p_value);
-  XString   CheckStampPart(XString p_value);
-  XString   CheckGregDay  (XString p_value);
-  XString   CheckGregMonth(XString p_value);
-  XString   CheckGregYear (XString p_value);
-  XString   CheckGregMD   (XString p_value);
-  XString   CheckGregYM   (XString p_value);
-  XString   CheckHexBin   (XString p_value);
-  XString   CheckLong     (XString p_value);
-  XString   CheckShort    (XString p_value);
-  XString   CheckByte     (XString p_value);
-  XString   CheckNNegInt  (XString p_value);
-  XString   CheckPosInt   (XString p_value);
-  XString   CheckUnsLong  (XString p_value);
-  XString   CheckUnsShort (XString p_value);
-  XString   CheckUnsByte  (XString p_value);
-  XString   CheckNonPosInt(XString p_value);
-  XString   CheckNegInt   (XString p_value);
-  XString   CheckNormal   (XString p_value);
-  XString   CheckToken    (XString p_value);
-  XString   CheckNMTOKEN  (XString p_value);
-  XString   CheckName     (XString p_value);
-  XString   CheckNCName   (XString p_value);
-  XString   CheckQName    (XString p_value);
-  XString   CheckNMTOKENS (XString p_value);
-  XString   CheckNames    (XString p_value);
-  XString   CheckDuration (XString p_value,int& p_type);
-  bool      ScanDurationValue  (XString& p_duration,int& p_value,int& p_fraction,TCHAR& p_marker,bool& p_didTime);
+  XString   CheckAnyURI   (const XString& p_value);
+  XString   CheckInteger  (const XString& p_value);
+  XString   CheckBoolean  (const XString& p_value);
+  XString   CheckDate     (const XString& p_value);
+  XString   CheckBase64   (const XString& p_value);
+  XString   CheckNumber   (const XString& p_value,bool p_specials);
+  XString   CheckDateTime (const XString& p_value,bool p_explicit);
+  XString   CheckDatePart (const XString& p_value);
+  XString   CheckDuration (const XString& p_value);
+  XString   CheckYearMonth(const XString& p_value);
+  XString   CheckDaySecond(const XString& p_value);
+  XString   CheckTimePart (const XString& p_value);
+  XString   CheckTime     (const XString& p_value);
+  XString   CheckTimeZone (const XString& p_value);
+  XString   CheckStampPart(const XString& p_value);
+  XString   CheckGregDay  (const XString& p_value);
+  XString   CheckGregMonth(const XString& p_value);
+  XString   CheckGregYear (const XString& p_value);
+  XString   CheckGregMD   (const XString& p_value);
+  XString   CheckGregYM   (const XString& p_value);
+  XString   CheckHexBin   (const XString& p_value);
+  XString   CheckLong     (const XString& p_value);
+  XString   CheckShort    (const XString& p_value);
+  XString   CheckByte     (const XString& p_value);
+  XString   CheckNNegInt  (const XString& p_value);
+  XString   CheckPosInt   (const XString& p_value);
+  XString   CheckUnsLong  (const XString& p_value);
+  XString   CheckUnsShort (const XString& p_value);
+  XString   CheckUnsByte  (const XString& p_value);
+  XString   CheckNonPosInt(const XString& p_value);
+  XString   CheckNegInt   (const XString& p_value);
+  XString   CheckNormal   (const XString& p_value);
+  XString   CheckToken    (const XString& p_value);
+  XString   CheckNMTOKEN  (const XString& p_value);
+  XString   CheckName     (const XString& p_value);
+  XString   CheckNCName   (const XString& p_value);
+  XString   CheckQName    (const XString& p_value);
+  XString   CheckNMTOKENS (const XString& p_value);
+  XString   CheckNames    (const XString& p_value);
+  XString   CheckDuration (const XString& p_value,int& p_type);
+  bool      ScanDurationValue  (const XString& p_duration,int& p_value,int& p_fraction,TCHAR& p_marker,bool& p_didTime);
   // Check max decimal/fraction digits
-  XString   CheckTotalDigits   (XString p_value);
-  XString   CheckFractionDigits(XString p_value);
+  XString   CheckTotalDigits   (const XString& p_value);
+  XString   CheckFractionDigits(const XString& p_value);
   // Check ranges max/min exclusive/inclusive
-  XString   CheckRangeFloat    (XString p_value);
-  XString   CheckRangeDecimal  (XString p_value);
-  XString   CheckRangeStamp    (XString p_timestamp);
-  XString   CheckRangeDate     (XString p_date);
-  XString   CheckRangeTime     (XString p_time);
-  XString   CheckRangeDuration (XString p_duration);
-  XString   CheckRangeGregYM   (XString p_yearmonth);
-  XString   CheckRangeGregMD   (XString p_monthday);
+  XString   CheckRangeFloat    (const XString& p_value);
+  XString   CheckRangeDecimal  (const XString& p_value);
+  XString   CheckRangeStamp    (const XString& p_timestamp);
+  XString   CheckRangeDate     (const XString& p_date);
+  XString   CheckRangeTime     (const XString& p_time);
+  XString   CheckRangeDuration (const XString& p_duration);
+  XString   CheckRangeGregYM   (const XString& p_yearmonth);
+  XString   CheckRangeGregMD   (const XString& p_monthday);
 
   XString   m_name;                     // Name of the restriction
   XString   m_baseType;                 // Base XSD type of the restriction
@@ -169,11 +169,11 @@ using AllRestrictions = std::map<XString,XMLRestriction>;
 class XMLRestrictions
 {
 public:
-  XMLRestriction* FindRestriction (XString p_name);
-  XMLRestriction* AddRestriction  (XString p_name);
-  void            AddEnumeration  (XString p_name,XString p_enum,XString p_displayValue = _T(""));
-  bool            HasEnumeration  (XString p_name,XString p_enum);
-  XString         GiveDisplayValue(XString p_name,XString p_enum);
+  XMLRestriction* FindRestriction (const XString& p_name);
+  XMLRestriction* AddRestriction  (const XString& p_name);
+  void            AddEnumeration  (const XString& p_name,const XString& p_enum,const XString& p_displayValue = _T(""));
+  bool            HasEnumeration  (const XString& p_name,const XString& p_enum);
+  XString         GiveDisplayValue(const XString& p_name,const XString& p_enum);
 
 private:
   AllRestrictions m_restrictions;

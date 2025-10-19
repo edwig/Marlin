@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -47,13 +47,13 @@ protected:
   //  within the OnSelChange function, so it
   //  is reasonable to keep them as protected.
   void EnableOk(bool bEnable);
-  void SetSelection(XString const& path);
-  void SetStatusText(XString const& text);
+  void SetSelection(const XString& path);
+  void SetStatusText(const XString& text);
 
 private:
 
   virtual void OnInitialized();
-  virtual void OnSelChange(XString const& path);
+  virtual void OnSelChange(const XString& path);
           int  CallbackProc(HWND hwnd,UINT uMsg,LPARAM lParam);
   static int CALLBACK CallbackProcS(HWND hwnd,UINT uMsg,LPARAM lParam,LPARAM lpData);
 

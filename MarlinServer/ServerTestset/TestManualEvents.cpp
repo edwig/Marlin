@@ -34,12 +34,6 @@
 #include "SiteHandlerFormData.h"
 #include "MultiPartBuffer.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 class SiteHandlerManualStream: public SiteHandler
 {
 public:
@@ -68,7 +62,7 @@ TestStreams(HTTPServer* p_server)
 
   xprintf(_T("TESTING SSE (Server-Sent-Events) CHANNEL FUNCTIONS FROM A WEB PAGE\n"));
   xprintf(_T("==================================================================\n"));
-  CString url(_T("/MarlinTest/Streams/"));
+  XString url(_T("/MarlinTest/Streams/"));
   // Create URL site to listen to events "http://+:port/MarlinTest/Streams/"
   HTTPSite* site = p_server->CreateSite(PrefixType::URLPRE_Strong,false,TESTING_HTTP_PORT,url,true);
   if(site)
@@ -85,7 +79,7 @@ TestStreams(HTTPServer* p_server)
     return error;
   }
 
-  site->SetHandler(HTTPCommand::http_get,new SiteHandlerManualStream());
+  site->SetHandler(HTTPCommand::http_get,alloc_new SiteHandlerManualStream());
 
   // HERE IS THE MAGIC. MAKE IT INTO AN EVENT STREAM HANDLER!!!
   // Modify standard settings for this site
@@ -126,8 +120,8 @@ FormsHandler::HandleData(HTTPMessage* p_message,MultiPart* p_part)
   SITE_DETAILLOGS(_T("Handling form-data data-part: "),p_part->GetName());
 
   int errors = 0;
-  CString data = p_part->GetData();
-  CString name = p_part->GetName();
+  XString data = p_part->GetData();
+  XString name = p_part->GetName();
   xprintf(_T("MANUAL FORMS DATA = Name : %s\n"),name.GetString());
   xprintf(_T("MANUAL FORMS Content-type: %s\n"),p_part->GetContentType().GetString());
   xprintf(_T("MANUAL FORMS \n%s\n"),data.GetString());
@@ -135,7 +129,7 @@ FormsHandler::HandleData(HTTPMessage* p_message,MultiPart* p_part)
   JSONMessage json(data);
   JSONvalue val = json.GetValue();
 
-  CString site(_T("/MarlinTest/Streams/42"));
+  XString site(_T("/MarlinTest/Streams/42"));
   ServerEvent event;
   event.m_data = _T("server message for programmer 42");
   event.m_id   = ++m_id;
@@ -158,7 +152,7 @@ int TestForms(HTTPServer* p_server)
   // If errors, change detail level
   // doDetails = false;
 
-  CString url(_T("/MarlinTest/Forms/"));
+  XString url(_T("/MarlinTest/Forms/"));
 
   xprintf(_T("TESTING FORM-DATA FOR STREAMS MANUALLY\n"));
   xprintf(_T("======================================\n"));
@@ -180,7 +174,7 @@ int TestForms(HTTPServer* p_server)
   }
 
   // Setting the POST handler for this site
-  site->SetHandler(HTTPCommand::http_post,new FormsHandler());
+  site->SetHandler(HTTPCommand::http_post,alloc_new FormsHandler());
 
   // Modify the standard settings for this site
   site->AddContentType(false,_T(""),_T("multipart/form-data;"));

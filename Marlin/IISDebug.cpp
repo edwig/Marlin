@@ -34,14 +34,6 @@
 #include <httpserv.h>
 #pragma warning (error:4091)
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 static XString
 DebugVariable(IHttpContext* p_context,LPCTSTR p_description,const char* p_name)
 {

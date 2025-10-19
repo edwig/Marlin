@@ -32,14 +32,6 @@
 #include "HTTPCertificate.h"
 #include <wincrypt.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #define TRACING(text,...) m_log->AnalysisLog(_T(__FUNCTION__),LogType::LOG_TRACE,true,(text),__VA_ARGS__)
 
 HTTPClientTracing::HTTPClientTracing(HTTPClient* p_client)
@@ -333,7 +325,7 @@ HTTPClientTracing::QueryString(HINTERNET p_handle,DWORD p_option,const TCHAR* p_
   bool result = WinHttpQueryOption(p_handle,p_option,&theString,&bufLength);
   if(result == false && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
   {
-    wchar_t* name = new wchar_t[(size_t)bufLength + 1];
+    wchar_t* name = alloc_new wchar_t[(size_t)bufLength + 1];
     result = WinHttpQueryOption(p_handle,p_option,name,&bufLength);
     if(result == TRUE)
     {

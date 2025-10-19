@@ -31,12 +31,6 @@
 #include <SiteHandlerFormData.h>
 #include <MultiPartBuffer.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 5;
 
 //////////////////////////////////////////////////////////////////////////
@@ -185,7 +179,7 @@ TestMarlinServer::TestFormData()
   }
 
   // Setting the POST handler for this site
-  site->SetHandler(HTTPCommand::http_post,new FormDataHandler());
+  site->SetHandler(HTTPCommand::http_post,alloc_new FormDataHandler());
 
   // Modify the standard settings for this site
   site->AddContentType(false,_T("form"),_T("multipart/form-data;"));

@@ -2,8 +2,8 @@
 //
 // SourceFile: XMLParser.h
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -47,9 +47,9 @@ public:
   explicit XMLParser(XMLMessage* p_message);
 
   // Parse a complete XML message string
-  void          ParseMessage(XString& p_message,WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);
+  void          ParseMessage(const XString& p_message,WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);
   // Parse from a beginning node
-  void          ParseForNode(XMLElement* p_node,XString& p_message,WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);
+  void          ParseForNode(XMLElement* p_node,const XString& p_message,WhiteSpace p_whiteSpace = WhiteSpace::PRESERVE_WHITESPACE);
 
   // Print string with entities and optionally as UTF8 again
   static XString PrintXmlString (const XString& p_string, bool p_utf8 = false);
@@ -88,7 +88,7 @@ protected:
   // Need special token
   void          NeedToken(_TUCHAR p_token);
   // Create a new element
-  void          MakeElement(XString& p_namespace,XString& p_name);
+  void          MakeElement(const XString& p_namespace,const XString& p_name);
 
   // Message being parsed
   XMLMessage*   m_message    { nullptr };

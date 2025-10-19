@@ -31,12 +31,6 @@
 #include <HTTPServer.h>
 #include <HTTPSite.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 #define NUM_TEST 20
 
 void EventCallback(void* p_data)
@@ -84,7 +78,7 @@ TestMarlinServer::IncomingEvent(LTEvent* p_event)
 }
 
 void
-TestMarlinServer::PostEventsToDrivers(CString p_event)
+TestMarlinServer::PostEventsToDrivers(const XString& p_event)
 {
   CString channel;
   int pos = p_event.ReverseFind('/');
@@ -106,7 +100,7 @@ TestMarlinServer::PostEventsToDrivers(CString p_event)
 
   for(int ind = 0; ind < NUM_TEST; ++ind)
   {
-    CString payload;
+    XString payload;
     payload.Format(_T("Testing event number [%d] to channel [%d]"),ind,chan);
     switch (chan)
     {
@@ -115,7 +109,7 @@ TestMarlinServer::PostEventsToDrivers(CString p_event)
       case 3: m_driver.PostEvent(m_channel3, payload); break;
     }
     CStringA pay(payload);
-    TRACE("Posted event: %s\n",pay.GetString());
+    ATLTRACE("Posted event: %s\n",pay.GetString());
   }
 }
 

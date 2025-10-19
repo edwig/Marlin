@@ -12,8 +12,8 @@
 //                          __/ |                                           
 //                         |___/                                            
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // MIT License:
 //
@@ -40,6 +40,21 @@
 // Minimal requirements from the MS-Windows OS
 #include <windows.h>
 
+// For the memory leak checks.
+//
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#pragma warning(push)
+#pragma warning(disable: 4005)
+#include <crtdbg.h>
+#pragma warning(pop)
+#define alloc_new new(_NORMAL_BLOCK,__FILE__,__LINE__)
+// Possibly replace _NORMAL_BLOCK with _CLIENT_BLOCK if you want the
+#else
+#define alloc_new new
+#endif
+
 // This is the compilation/include order of the base-library
 #include "XString.h"
 #include "StdException.h"
@@ -47,7 +62,10 @@
 #include "bcd.h"
 
 // VERSION NUMBER OF THIS LIBRARY
-#define BASELIBRARY_VERSION 1.3.4
+#define BASELIBRARY_VERSION 2.0.0
+
+// Call once at the start of your application to activate memory leak detection!!
+void InitBaseLibrary();
 
 // Selecting the right library to link with automatically
 // So we do not need to worry about which library to use in the linker settings

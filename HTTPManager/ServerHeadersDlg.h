@@ -52,11 +52,11 @@ protected:
 private:
   WebConfigServer* m_config;
 
-  XString       m_warning;
-  XString       m_XFrameURL;
+  CString       m_warning;
+  CString       m_XFrameURL;
   int           m_hstsMaxAge;
-  XString       m_allowOrigin;
-  XString       m_allowHeaders;
+  CString       m_allowOrigin;
+  CString       m_allowHeaders;
   int           m_allowMaxAge;
 
   CButton       m_buttonUseXFrame;

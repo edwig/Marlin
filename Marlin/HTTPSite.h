@@ -127,8 +127,8 @@ class HTTPSite
 public:
   HTTPSite(HTTPServer*    p_server
           ,int            p_port
-          ,XString        p_site
-          ,XString        p_prefix
+          ,const XString& p_site
+          ,const XString& p_prefix
           ,HTTPSite*      p_mainSite = nullptr
           ,LPFN_CALLBACK  p_callback = nullptr);
   virtual ~HTTPSite();
@@ -141,7 +141,7 @@ public:
   // SETTERS
 
   // OPTIONAL: Set the webroot of the site
-  virtual bool    SetWebroot(XString p_webroot) = 0;
+  virtual bool    SetWebroot(const XString& p_webroot) = 0;
   // MANDATORY: Set handler for HTTP command(s)
   void            SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner = true);
   // OPTIONAL Set filter for HTTP command(s)
@@ -153,19 +153,19 @@ public:
   // OPTIONAL: Set site's callback function
   void            SetCallback(LPFN_CALLBACK p_callback);
   // OPTIONAL: Set one or more text-based content types
-  void            AddContentType(bool p_logging,XString p_extension,XString p_contentType);
+  void            AddContentType(bool p_logging,const XString& p_extension,const XString& p_contentType);
   // OPTIONAL: Set the encryption level (signing/body/message)
   void            SetEncryptionLevel(XMLEncryption p_level);
   // OPTIONAL: Set the encryption password
-  void            SetEncryptionPassword(XString p_password);
+  void            SetEncryptionPassword(const XString& p_password);
   // OPTIONAL: Set authentication scheme (Basic, Digest, NTLM, Negotiate, All)
-  void            SetAuthenticationScheme(XString p_scheme);
+  void            SetAuthenticationScheme(const XString& p_scheme);
   // OPTIONAL: Set authentication parameters
   void            SetAuthenticationNTLMCache(bool p_cache);
   // OPTIONAL: Set an authentication Realm
-  void            SetAuthenticationRealm(XString p_realm);
+  void            SetAuthenticationRealm(const XString& p_realm);
   // OPTIONAL: Set an authentication Domain
-  void            SetAuthenticationDomain(XString p_domain);
+  void            SetAuthenticationDomain(const XString& p_domain);
   // OPTIONAL: Set WS-Reliability
   void            SetReliable(bool p_reliable);
   // OPTIONAL: Set WS-ReliableMessaging requires logged-in-user
@@ -173,7 +173,7 @@ public:
   // OPTIONAL: Set optional site payload, so you can hide your own context
   void            SetPayload(void* p_payload);
   // OPTIONAL: Set XFrame options on server answer
-  void            SetXFrameOptions(XFrameOption p_option,XString p_uri);
+  void            SetXFrameOptions(XFrameOption p_option,const XString& p_uri);
   // OPTIONAL: Set Strict Transport Security (HSTS)
   void            SetStrictTransportSecurity(unsigned p_maxAge,bool p_subDomains);
   // OPTIONAL: Set X-Content-Type options
@@ -197,7 +197,7 @@ public:
   // OPTIONAL: Set use CORS (Cross Origin Resource Sharing)
   void            SetUseCORS(bool p_use);
   // OPTIONAL: Set use this origin for CORS (otherwise all = '*')
-  void            SetCORSOrigin(XString p_origin);
+  void            SetCORSOrigin(const XString& p_origin);
   // OPTIONAL: Set use CORS max age promise
   void            SetCORSMaxAge(unsigned p_maxAge);
   // OPTIONAL: Set all cookies HttpOnly
@@ -207,9 +207,9 @@ public:
   // OPTIONAL: Set all cookies same-site attribute
   void            SetCookiesSameSite(CookieSameSite p_same);
   // OPTIONAL: Set all cookies path attribute
-  void            SetCookiesPath(XString p_path);
+  void            SetCookiesPath(const XString& p_path);
   // OPTIONAL: Set all cookies domain attribute
-  void            SetCookiesDomain(XString p_domain);
+  void            SetCookiesDomain(const XString& p_domain);
   // OPTIONAL: Set all cookies expire attribute
   void            SetCookiesExpires(int p_minutes);
   // OPTIONAL: Set all cookies to max-age 
@@ -272,8 +272,8 @@ public:
   XString         GetWebroot();
   SiteHandler*    GetSiteHandler(HTTPCommand p_command);
   SiteFilter*     GetFilter(unsigned p_priority);
-  XString         GetContentType(XString p_extension);
-  XString         GetContentTypeByResourceName(XString p_pathname);
+  XString         GetContentType(const XString& p_extension);
+  XString         GetContentTypeByResourceName(const XString& p_pathname);
   virtual bool    GetHasAnonymousAuthentication(HANDLE p_token);
 
   // FUNCTIONS
@@ -295,10 +295,10 @@ public:
   // Soap fault in response on error in SOAP/XML/RM protocol
   void SendSOAPFault(SessionAddress&  p_address
                     ,SOAPMessage*     p_message
-                    ,XString          p_code
-                    ,XString          p_actor
-                    ,XString          p_string
-                    ,XString          p_detail);
+                    ,const XString&   p_code
+                    ,const XString&   p_actor
+                    ,const XString&   p_string
+                    ,const XString&   p_detail);
   // Add all optional extra headers of this site
   void AddSiteOptionalHeaders(UKHeaders& p_headers);
   // Send responses
@@ -335,8 +335,8 @@ protected:
   XString           GetStringSID(HANDLE p_token);
   // Check for correct body signing
   bool              CheckBodySigning   (SessionAddress& p_address,SOAPMessage* p_soap);
-  bool              CheckBodyEncryption(SessionAddress& p_address,SOAPMessage* p_soap,XString p_body);
-  bool              CheckMesgEncryption(SessionAddress& p_address,SOAPMessage* p_soap,XString p_body);
+  bool              CheckBodyEncryption(SessionAddress& p_address,SOAPMessage* p_soap,const XString& p_body);
+  bool              CheckMesgEncryption(SessionAddress& p_address,SOAPMessage* p_soap,const XString& p_body);
   // Handling the Reliable-Messaging protocol
   bool              RM_HandleCreateSequence   (SessionAddress&  p_address, SOAPMessage* p_message);
   bool              RM_HandleLastMessage      (SessionAddress&  p_address, SOAPMessage* p_message);
@@ -347,7 +347,7 @@ protected:
   void              RemoveSequence(SessionAddress& p_address);
   SessionSequence*  FindSequence  (SessionAddress& p_address);
   SessionSequence*  CreateSequence(SessionAddress& p_address);
-  void              DebugPrintSessionAddress(XString p_prefix,SessionAddress& p_address);
+  void              DebugPrintSessionAddress(const XString& p_prefix,SessionAddress& p_address);
 
   // Handle HTTP throttling
   CRITICAL_SECTION* StartThrottling(HTTPMessage* p_message);
@@ -452,13 +452,13 @@ HTTPSite::SetEncryptionLevel(XMLEncryption p_level)
 }
 
 inline void
-HTTPSite::SetEncryptionPassword(XString p_password)
+HTTPSite::SetEncryptionPassword(const XString& p_password)
 {
   m_enc_password = p_password;
 }
 
 inline void
-HTTPSite::SetAuthenticationScheme(XString p_scheme)
+HTTPSite::SetAuthenticationScheme(const XString& p_scheme)
 {
   m_scheme = p_scheme;
 }
@@ -470,13 +470,13 @@ HTTPSite::SetAuthenticationNTLMCache(bool p_cache)
 }
 
 inline void
-HTTPSite::SetAuthenticationRealm(XString p_realm)
+HTTPSite::SetAuthenticationRealm(const XString& p_realm)
 {
   m_realm = p_realm;
 }
 
 inline void
-HTTPSite::SetAuthenticationDomain(XString p_domain)
+HTTPSite::SetAuthenticationDomain(const XString& p_domain)
 {
   m_domain = p_domain;
 }
@@ -542,7 +542,7 @@ HTTPSite::SetUseCORS(bool p_use)
 }
 
 inline void
-HTTPSite::SetCORSOrigin(XString p_origin)
+HTTPSite::SetCORSOrigin(const XString& p_origin)
 {
   m_allowOrigin = p_origin;
 }

@@ -48,65 +48,65 @@ class MarlinConfig : public XMLMessage
 {
 public:
   MarlinConfig();
-  explicit MarlinConfig(XString p_filename);
+  explicit MarlinConfig(const XString& p_filename);
   virtual ~MarlinConfig();
 
   // FILE METHODS
 
-  bool   ReadConfig(XString p_filename);
+  bool   ReadConfig(const XString& p_filename);
   bool   WriteConfig();
   static XString GetExePath();
   static XString GetExeModule();
-  static XString GetSiteConfig(XString p_prefixURL);
-  static XString GetURLConfig(XString p_url);
+  static XString GetSiteConfig(const XString& p_prefixURL);
+  static XString GetURLConfig (const XString& p_url);
 
   // SETTERS
 
-  bool SetSection  (XString p_section);
-  bool SetParameter(XString p_section,XString p_parameter,XString p_value);
-  bool SetParameter(XString p_section,XString p_parameter,int     p_value);
-  bool SetParameter(XString p_section,XString p_parameter,bool    p_value);
-  bool SetEncrypted(XString p_section,XString p_parameter,XString p_value);
-  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,int     p_value);
-  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,double  p_value);
-  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_value);
+  bool SetSection  (const XString& p_section);
+  bool SetParameter(const XString& p_section,const XString& p_parameter,const XString& p_value);
+  bool SetParameter(const XString& p_section,const XString& p_parameter,int   p_value);
+  bool SetParameter(const XString& p_section,const XString& p_parameter,bool  p_value);
+  bool SetEncrypted(const XString& p_section,const XString& p_parameter,const XString& p_value);
+  bool SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,int     p_value);
+  bool SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,double  p_value);
+  bool SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,const XString& p_value);
 
-  bool RemoveSection  (XString p_section);
-  bool RemoveParameter(XString p_section,XString p_parameter);
-  bool RemoveAttribute(XString p_section,XString p_parameter,XString p_attrib);
+  bool RemoveSection  (const XString& p_section);
+  bool RemoveParameter(const XString& p_section,const XString& p_parameter);
+  bool RemoveAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib);
 
   // GETTERS
 
-  bool    IsFilled() { return m_filled; };
-  XString GetFilename();
-  XString GetParameterString (XString p_section,XString p_parameter,XString p_default);
-  bool    GetParameterBoolean(XString p_section,XString p_parameter,bool    p_default);
-  int     GetParameterInteger(XString p_section,XString p_parameter,int     p_default);
-  XString GetEncryptedString (XString p_section,XString p_parameter,XString p_default);
-  int     GetAttribute(XString p_section,XString p_parameter,XString p_attrib,int     p_default);
-  double  GetAttribute(XString p_section,XString p_parameter,XString p_attrib,double  p_default);
-  XString GetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_default);
+  bool    IsFilled() const { return m_filled; };
+  XString GetFilename() const;
+  XString GetParameterString (const XString& p_section,const XString& p_parameter,const XString& p_default) const;
+  bool    GetParameterBoolean(const XString& p_section,const XString& p_parameter,bool  p_default) const;
+  int     GetParameterInteger(const XString& p_section,const XString& p_parameter,int   p_default) const;
+  XString GetEncryptedString (const XString& p_section,const XString& p_parameter,const XString& p_default) const;
+  int     GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,int    p_default) const;
+  double  GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,double p_default) const;
+  XString GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,const XString& p_default) const;
 
   // DISCOVERY
 
-  bool    HasSection  (XString p_section);
-  bool    HasParameter(XString p_section,XString p_parameter);
-  bool    HasAttribute(XString p_section,XString p_parameter,XString p_attribute);
-  bool    IsChanged();
+  bool    HasSection  (const XString& p_section) const;
+  bool    HasParameter(const XString& p_section,const XString& p_parameter) const;
+  bool    HasAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attribute) const;
+  bool    IsChanged() const;
   void    ForgetChanges(); // Thread with care!
-  bool    GetConfigWritable();
+  bool    GetConfigWritable() const;
 
 private:
   // Find section with this name
-  XMLElement*   FindSection(XString p_section);
+  XMLElement*   FindSection(const XString& p_section) const;
   // Find parameter within a section
-  XMLElement*   FindParameter(XMLElement* p_section,XString p_parameter);
+  XMLElement*   FindParameter(XMLElement* p_section,const XString& p_parameter) const;
   // Find an attribute within a parameter
-  XMLAttribute* FindAttribute(XMLElement* p_parameter,XString p_attribute);
+  XMLAttribute* FindAttribute(XMLElement* p_parameter,const XString& p_attribute) const;
   // Remove a parameter
-  void          RemoveParameter(XMLElement* p_section,XString p_parameter);
+  void          RemoveParameter(XMLElement* p_section,const XString& p_parameter);
   // Remove an attribute
-  void          RemoveAttribute(XMLElement* p_parameter,XString p_attribute);
+  void          RemoveAttribute(XMLElement* p_parameter,const XString& p_attribute);
 
   // Filename of read config file
   XString   m_fileName;

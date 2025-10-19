@@ -49,7 +49,7 @@ protected:
   bool CheckConfig();
   bool SaveConfig();
   bool WarningWriteRights();
-  bool CheckFRVeldIngevuld(const XString& frVeld, const XString& omschrijving);
+  bool CheckFRVeldIngevuld(const CString& frVeld, const CString& omschrijving);
   void SetItemActive(int p_item,bool p_active);
   bool CreateDirectories();
   void WriteableConfigDlg();
@@ -63,23 +63,23 @@ protected:
   bool      m_dialogWriteable;
   bool      m_configWriteable;
 
-  XString   m_role;
-  XString   m_naam;
+  CString   m_role;
+  CString   m_naam;
   int       m_instance;
-  XString   m_serverAddress;
-  XString   m_baseURL;
-  XString   m_server;
+  CString   m_serverAddress;
+  CString   m_baseURL;
+  CString   m_server;
   int       m_serverPort;
-  XString   m_serverLogfile;
+  CString   m_serverLogfile;
   int       m_serverLogging;
-  XString   m_webroot;
+  CString   m_webroot;
   int       m_runAsService;
   bool      m_secureServer;
   // Foutrapportages
-  XString   m_mailServer;
+  CString   m_mailServer;
   bool      m_foutRapportVestuur;
-  XString   m_foutRapportAfzender;
-  XString   m_foutRapportOntvanger;
+  CString   m_foutRapportAfzender;
+  CString   m_foutRapportOntvanger;
   bool      m_foutRapportTest;
 
   // Controls

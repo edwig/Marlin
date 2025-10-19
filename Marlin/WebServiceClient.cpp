@@ -33,14 +33,6 @@
 #include <rpc.h>
 #include <wincrypt.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // General logfile macro
 #undef  DETAILLOG
 #define DETAILLOG(text,...)  if(m_logfile)m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,text,__VA_ARGS__)
@@ -48,10 +40,10 @@ static char THIS_FILE[] = __FILE__;
 #undef  ERRORLOG
 #define ERRORLOG(text)       if(m_logfile)m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,text);
 
-WebServiceClient::WebServiceClient(XString p_contract
-                                  ,XString p_url
-                                  ,XString p_wsdl
-                                  ,bool    p_reliable)
+WebServiceClient::WebServiceClient(const XString& p_contract
+                                  ,const XString& p_url
+                                  ,const XString& p_wsdl
+                                  ,bool           p_reliable)
            :m_contract(p_contract)
            ,m_url(p_url)
            ,m_wsdlFile(p_wsdl)
@@ -170,7 +162,7 @@ WebServiceClient::Open()
   {
     DETAILLOG1(_T("Creating new HTTPClient"));
     m_owner  = true;
-    m_httpClient = new HTTPClient();
+    m_httpClient = alloc_new HTTPClient();
     // Propagate SOAP compression
     m_httpClient->SetSoapCompress(m_soapCompress);
     // Propagate all timeout values
@@ -216,7 +208,7 @@ WebServiceClient::Open()
   // See if we must create a token profile provider
   if(m_tokenProfile && m_soapSecurity == nullptr)
   {
-    m_soapSecurity = new SOAPSecurity();
+    m_soapSecurity = alloc_new SOAPSecurity();
 
     m_soapSecurity->SetUser(m_user);
     m_soapSecurity->SetPassword(m_password);
@@ -741,7 +733,7 @@ WebServiceClient::PutInMessageStore(SOAPMessage* p_message)
 {
   // Put in the message store
   SoapMsg soap;
-  soap.m_message       = new SOAPMessage(p_message);
+  soap.m_message       = alloc_new SOAPMessage(p_message);
   soap.m_retransmit    = true;
   soap.m_messageNumber = m_clientMessageNumber;
   m_messages.push_back(soap);

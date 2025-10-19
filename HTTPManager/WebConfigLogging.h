@@ -62,7 +62,7 @@ protected:
   bool        m_usePerUser;
 
   // LOGFILE OVERRIDES
-  XString     m_logfile;
+  CString     m_logfile;
   int         m_logCache;
   bool        m_doLogging;
   bool        m_doTiming;

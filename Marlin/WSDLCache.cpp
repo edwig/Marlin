@@ -41,14 +41,6 @@
 #include "ErrorReport.h"
 #include <WinFile.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #ifdef CRASHLOG
 #undef CRASHLOG
 #endif
@@ -108,7 +100,7 @@ WSDLCache::ClearCache()
 // MANDATORY: Set a service
 // Webroot must be set first !!!
 bool
-WSDLCache::SetService(XString p_servicename,XString p_url)
+WSDLCache::SetService(const XString& p_servicename,const XString& p_url)
 {
   // Record service name and URL
   m_serviceName = p_servicename;
@@ -136,7 +128,7 @@ WSDLCache::SetService(XString p_servicename,XString p_url)
 // Add SOAP message call and answer
 // Call exactly once for every SOAPMessage combination
 bool 
-WSDLCache::AddOperation(int p_code,XString p_name,SOAPMessage* p_input,SOAPMessage* p_output)
+WSDLCache::AddOperation(int p_code,const XString& p_name,SOAPMessage* p_input,SOAPMessage* p_output)
 {
   // See if the operation is already registered
   OperationMap::iterator it = m_operations.find(p_name);
@@ -148,8 +140,8 @@ WSDLCache::AddOperation(int p_code,XString p_name,SOAPMessage* p_input,SOAPMessa
   // Register a new operation
   WsdlOperation operation;
   operation.m_code   = p_code;
-  operation.m_input  = new SOAPMessage(p_input);
-  operation.m_output = new SOAPMessage(p_output);
+  operation.m_input  = alloc_new SOAPMessage(p_input);
+  operation.m_output = alloc_new SOAPMessage(p_output);
 
   m_operations.insert(std::make_pair(p_name,operation));
   return true;
@@ -157,7 +149,7 @@ WSDLCache::AddOperation(int p_code,XString p_name,SOAPMessage* p_input,SOAPMessa
 
 // Get command code from SOAP command name
 int
-WSDLCache::GetCommandCode(XString& p_commandName)
+WSDLCache::GetCommandCode(const XString& p_commandName)
 {
   OperationMap::iterator it = m_operations.find(p_commandName);
 
@@ -256,9 +248,9 @@ WSDLCache::GenerateTypes(XString& p_wsdlcontent)
 
 // Generate types for one message
 void
-WSDLCache::GenerateMessageTypes(XString&      p_wsdlcontent
-                               ,SOAPMessage*  p_msg
-                               ,TypeDone&     p_gedaan)
+WSDLCache::GenerateMessageTypes(XString& p_wsdlcontent
+                               ,SOAPMessage*   p_msg
+                               ,TypeDone&      p_gedaan)
 {
   // Put the parameters here
   GenerateParameterTypes(p_wsdlcontent
@@ -271,8 +263,8 @@ WSDLCache::GenerateMessageTypes(XString&      p_wsdlcontent
 
 // Generate types for all parameters
 void
-WSDLCache::GenerateParameterTypes(XString&       p_wsdlcontent
-                                 ,XString        p_element
+WSDLCache::GenerateParameterTypes(      XString& p_wsdlcontent
+                                 ,const XString& p_element
                                  ,XmlElementMap& p_map
                                  ,TypeDone&      p_done
                                  ,WsdlOrder      p_order
@@ -534,7 +526,7 @@ WSDLCache::GenerateBindings(XString& p_wsdlcontent)
 
 // Generate detailed binding
 void
-WSDLCache::GenerateBinding(XString& p_wsdlcontent,XString p_binding,XString p_soapNamespace)
+WSDLCache::GenerateBinding(XString& p_wsdlcontent,const XString& p_binding,const XString& p_soapNamespace)
 {
   XString temp;
 
@@ -687,7 +679,7 @@ WSDLCache::CheckOutgoingMessage(SOAPMessage* p_msg,bool p_checkFields)
 
 // Check message
 bool
-WSDLCache::CheckMessage(SOAPMessage* p_orig,SOAPMessage* p_tocheck,XString p_who,bool p_checkFields)
+WSDLCache::CheckMessage(SOAPMessage* p_orig,SOAPMessage* p_tocheck,const XString& p_who,bool p_checkFields)
 {
   if(p_orig == p_tocheck)
   {
@@ -727,7 +719,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
                           ,SOAPMessage* p_orig
                           ,XMLElement*  p_checkBase
                           ,SOAPMessage* p_check
-                          ,XString      p_who
+                          ,const XString& p_who
                           ,bool         p_fields)
 {
   XmlDataType type = 0;
@@ -823,7 +815,7 @@ bool
 WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
                                    ,XMLElement*   p_checkParam
                                    ,SOAPMessage*  p_check
-                                   ,XString       p_who)
+                                   ,const XString& p_who)
 {
   XString         value;
   XString         result;
@@ -910,7 +902,7 @@ WSDLCache::GetServicePage()
 
 // Get service page for operation
 XString 
-WSDLCache::GetOperationPage(XString p_operation,XString p_hostname)
+WSDLCache::GetOperationPage(const XString& p_operation,const XString& p_hostname)
 {
   XString temp;
   XString page;
@@ -1018,7 +1010,7 @@ WSDLCache::GetOperationWsdl()
 }
 
 XString
-WSDLCache::GetOperationNameLink(XString p_operation)
+WSDLCache::GetOperationNameLink(const XString& p_operation)
 {
   XString link;
   XString linkpage;
@@ -1030,7 +1022,7 @@ WSDLCache::GetOperationNameLink(XString p_operation)
 
 
 XString
-WSDLCache::GetOperationPageIntro(XString p_operation)
+WSDLCache::GetOperationPageIntro(const XString& p_operation)
 {
   XString intro;
 
@@ -1046,7 +1038,7 @@ WSDLCache::GetOperationPageIntro(XString p_operation)
 }
 
 XString
-WSDLCache::GetOperationPageHttpI(XString p_operation,XString p_hostname,bool p_soapVersion)
+WSDLCache::GetOperationPageHttpI(const XString& p_operation,const XString& p_hostname,bool p_soapVersion)
 {
   XString text; 
   text.Format(_T("      <span>\n")
@@ -1253,7 +1245,7 @@ WSDLCache::ReadWSDLFileSafe(LPCTSTR p_filename)
 }
 
 bool
-WSDLCache::ReadWSDLFileFromURL(XString p_url)
+WSDLCache::ReadWSDLFileFromURL(const XString& p_url)
 {
   bool result = false;
 
@@ -1281,7 +1273,7 @@ WSDLCache::ReadWSDLFileFromURL(XString p_url)
 }
 
 bool
-WSDLCache::ReadWSDLLocalFile(XString p_filename)
+WSDLCache::ReadWSDLLocalFile(const XString& p_filename)
 {
   XString message;
   message.Format(_T("Reading WSDL file: %s"),p_filename.GetString());
@@ -1299,7 +1291,7 @@ WSDLCache::ReadWSDLLocalFile(XString p_filename)
 
 // Read an existing WSDL from a file buffer
 bool
-WSDLCache::ReadWSDLString(XString p_wsdl)
+WSDLCache::ReadWSDLString(const XString& p_wsdl)
 {
   DETAILLOG(_T("Reading WSDL from internal buffer"));
 
@@ -1631,7 +1623,7 @@ WSDLCache::ReadMessage(XMLMessage& p_wsdl,SOAPMessage& p_message)
 }
 
 bool
-WSDLCache::ReadParameters(XMLMessage& p_wsdl,SOAPMessage& p_message,XString p_element)
+WSDLCache::ReadParameters(XMLMessage& p_wsdl,SOAPMessage& p_message,const XString& p_element)
 {
   XMLElement* base = nullptr;
 
@@ -1683,7 +1675,7 @@ WSDLCache::ReadParameters(XMLMessage& p_wsdl,SOAPMessage& p_message,XString p_el
 }
 
 XMLElement* 
-WSDLCache::ReadTypesType(XMLMessage& p_wsdl,XString p_element)
+WSDLCache::ReadTypesType(XMLMessage& p_wsdl,const XString& p_element)
 {
   // Earlier on already found
   TypeMap::iterator it = m_types.find(p_element);
@@ -1718,7 +1710,7 @@ WSDLCache::ReadTypesType(XMLMessage& p_wsdl,XString p_element)
 }
 
 XMLElement*
-WSDLCache::ReadTypesElement(XMLMessage& p_wsdl,XString p_element)
+WSDLCache::ReadTypesElement(XMLMessage& p_wsdl,const XString& p_element)
 {
   XMLElement* types = p_wsdl.FindElement(_T("types"));
   if(types == nullptr)
@@ -1742,7 +1734,7 @@ WSDLCache::ReadTypesElement(XMLMessage& p_wsdl,XString p_element)
 }
 
 int
-WSDLCache::ReadElementaryType(XString p_type)
+WSDLCache::ReadElementaryType(const XString& p_type)
 {
   int index = 0;
   while(baseTypes[index].m_name)
@@ -1897,7 +1889,7 @@ void
 WSDLCache::ReadRestriction(XMLMessage& p_wsdl
                           ,XMLElement* p_newelem
                           ,XMLElement* p_restrict
-                          ,XString     p_restriction
+                          ,const XString& p_restriction
                           ,int         p_options)
 {
   // Create the enumeration restriction
@@ -1945,7 +1937,7 @@ WSDLCache::ReadRestriction(XMLMessage& p_wsdl
 }
 
 int
-WSDLCache::ReadWhiteSpace(XString p_value)
+WSDLCache::ReadWhiteSpace(const XString& p_value)
 {
   if(p_value.CompareNoCase(_T("preserve")) == 0) return 1;
   if(p_value.CompareNoCase(_T("replace"))  == 0) return 2;

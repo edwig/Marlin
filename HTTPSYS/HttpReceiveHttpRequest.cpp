@@ -15,12 +15,6 @@
 #include "OpaqueHandles.h"
 #include <LogAnalysis.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 //////////////////////////////////////////////////////////////////////////
 //
 // Actual call
@@ -85,7 +79,7 @@ HttpReceiveHttpRequest(IN HANDLE          RequestQueueHandle
   if(Overlapped)
   {
     // Register our parameters
-    PREGISTER_HTTP_RECEIVE_REQUEST req = new REGISTER_HTTP_RECEIVE_REQUEST();
+    PREGISTER_HTTP_RECEIVE_REQUEST req = alloc_new REGISTER_HTTP_RECEIVE_REQUEST();
     req->r_size                = sizeof(REGISTER_HTTP_RECEIVE_REQUEST);
     req->r_queue               = queue;
     req->r_id                  = RequestId;

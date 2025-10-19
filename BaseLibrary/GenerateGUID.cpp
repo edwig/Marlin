@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -29,14 +29,6 @@
 #include "GenerateGUID.h"
 #include <combaseapi.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #pragma comment(lib,"rpcrt4.lib")
 
 // Caller **MUST** do the COM+ (un)initialize with
@@ -55,7 +47,7 @@ XString GenerateGUID()
   GUID*    pguid   = nullptr;
   XString  result;
   
-  pguid = new GUID; 
+  pguid = alloc_new GUID;
   // COM+ Initialize is already done
   if(SUCCEEDED(CoCreateGuid(pguid)))
   {

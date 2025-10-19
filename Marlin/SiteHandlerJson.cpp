@@ -29,14 +29,6 @@
 #include "SiteHandlerJson.h"
 #include "JSONMessage.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Remember JSONMessage for this thread in the TLS
 __declspec(thread) JSONMessage* g_jsonMessage = nullptr;
 
@@ -52,7 +44,7 @@ SiteHandlerJson::PreHandle(HTTPMessage* p_message)
   m_site->SetCleanup(this);
 
   // Create a JSON message for this thread
-  g_jsonMessage = new JSONMessage(p_message);
+  g_jsonMessage = alloc_new JSONMessage(p_message);
 
   // Detect XML JSON errors
   if(g_jsonMessage->GetErrorState())

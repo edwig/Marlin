@@ -31,12 +31,6 @@
 #include <HTTPSite.h>
 #include <SiteHandlerJson.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 12;
 
 class SiteHandlerJsonData: public SiteHandlerJson
@@ -142,7 +136,7 @@ TestMarlinServer::TestJsonData()
   }
 
   // Setting the POST handler for this site
-  site->SetHandler(HTTPCommand::http_post,new SiteHandlerJsonData());
+  site->SetHandler(HTTPCommand::http_post,alloc_new SiteHandlerJsonData());
 
   // Modify the standard settings for this site
   site->AddContentType(true,_T("json"),_T("application/json"));

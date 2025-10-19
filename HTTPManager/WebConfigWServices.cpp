@@ -34,12 +34,6 @@
 #include "HTTPClient.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // WebConfigDlg dialog
 
 IMPLEMENT_DYNAMIC(WebConfigWServices, CDialogEx)
@@ -189,14 +183,14 @@ WebConfigWServices::ReadWebConfig(MarlinConfig& config)
 void
 WebConfigWServices::WriteWebConfig(MarlinConfig& config)
 {
-
+  XString encPassword(m_encPassword);
   // WRITE THE CONFIG PARAMETERS
 
   config.SetSection(_T("Encryption"));
 
   if(m_useEncLevel)     config.SetParameter   (_T("Encryption"),_T("Level"),   m_encLevel);
   else                  config.RemoveParameter(_T("Encryption"),_T("Level"));
-  if(m_useEncPassword)  config.SetEncrypted   (_T("Encryption"),_T("Password"),m_encPassword);
+  if(m_useEncPassword)  config.SetEncrypted   (_T("Encryption"),_T("Password"),encPassword);
   else                  config.RemoveParameter(_T("Encryption"),_T("Password"));
 
   config.SetSection(_T("WebServices"));

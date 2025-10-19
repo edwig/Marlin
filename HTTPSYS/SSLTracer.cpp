@@ -17,12 +17,6 @@
 
 #pragma comment(lib, "dnsapi.lib")
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // General purpose helper class for SSL, decodes buffers for diagnostics, handles SNI
 
 SSLTracer::SSLTracer(const byte* BufPtr,const int BufBytes)
@@ -235,7 +229,9 @@ XString SSLTracer::GetSNIHostname()
                BufPtr += 2;
                if(serverNameType == 0)
                {
-                 return XString((TCHAR*)BufPtr,serverNameLength);
+                 XString answer;
+                 answer.append((size_t)serverNameLength,*(TCHAR*)BufPtr);
+                 return answer;
                }
                BufPtr += serverNameLength;
             }
@@ -246,5 +242,5 @@ XString SSLTracer::GetSNIHostname()
          }
       }
    }
-   return XString();
+   return _T("");
 }

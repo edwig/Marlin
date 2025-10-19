@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -37,14 +37,6 @@
 #include "HTTPMessage.h"
 #include "ConvertWideString.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 //////////////////////////////////////////////////////////////////////////
 //
 // MULTIPART
@@ -55,7 +47,7 @@ MultiPart::MultiPart()
 {
 }
 
-MultiPart::MultiPart(XString p_name,XString p_contentType)
+MultiPart::MultiPart(const XString& p_name,const XString& p_contentType)
           :m_name(p_name)
           ,m_contentType(p_contentType)
 {
@@ -63,7 +55,7 @@ MultiPart::MultiPart(XString p_name,XString p_contentType)
 
 // Setting the filename and all the times of the file
 bool    
-MultiPart::SetFile(XString p_filename)
+MultiPart::SetFile(const XString& p_filename)
 {
   // Initially empty file and all the times (new file!)
   m_shortFilename.Empty();
@@ -117,7 +109,7 @@ MultiPart::SetFile(XString p_filename)
 }
 
 bool    
-MultiPart::CheckBoundaryExists(XString p_boundary)
+MultiPart::CheckBoundaryExists(const XString& p_boundary)
 {
   // If data message, search in the form-data message
   if(m_data.GetLength())
@@ -151,7 +143,7 @@ MultiPart::CheckBoundaryExists(XString p_boundary)
 // The content-disposition header is part of the content
 // That's way we supply "\r\n" line breaks instead of "\n"
 XString
-MultiPart::CreateHeader(XString p_boundary,bool p_extensions /*=false*/)
+MultiPart::CreateHeader(const XString& p_boundary,bool p_extensions /*=false*/)
 {
   XString header(_T("--"));
   header += p_boundary;
@@ -294,7 +286,7 @@ MultiPart::FileTimeFromString(PFILETIME p_filetime,const XString& p_time)
 }
 
 void
-MultiPart::AddHeader(XString p_header,XString p_value)
+MultiPart::AddHeader(const XString& p_header,const XString& p_value)
 {
   // Case-insensitive search!
   HeaderMap::iterator it = m_headers.find(p_header);
@@ -317,7 +309,7 @@ MultiPart::AddHeader(XString p_header,XString p_value)
 }
 
 XString 
-MultiPart::GetHeader(XString p_header)
+MultiPart::GetHeader(const XString& p_header)
 {
   HeaderMap::iterator it = m_headers.find(p_header);
   if(it != m_headers.end())
@@ -328,7 +320,7 @@ MultiPart::GetHeader(XString p_header)
 }
 
 void
-MultiPart::DelHeader(XString p_header)
+MultiPart::DelHeader(const XString& p_header)
 {
   HeaderMap::iterator it = m_headers.find(p_header);
   if(it != m_headers.end())
@@ -423,11 +415,11 @@ MultiPartBuffer::SetFormDataType(FormDataType p_type)
 // 5) p_conversion  : If data is not delivered in designated charset, perform the conversion
 //
 MultiPart*   
-MultiPartBuffer::AddPart(XString p_name
-                        ,XString p_contentType
-                        ,XString p_data
-                        ,XString p_charset    /* = ""    */
-                        ,bool    p_conversion /* = false */)
+MultiPartBuffer::AddPart(const XString& p_name
+                        ,const XString& p_contentType
+                        ,const XString& p_data
+                        ,const XString& p_charset    /* = ""    */
+                        ,bool           p_conversion /* = false */)
 {
   // Check that the name is a printable ASCII character string
   if(!CheckName(p_name))
@@ -436,17 +428,22 @@ MultiPartBuffer::AddPart(XString p_name
   }
 
   // Add the part
-  MultiPart* part = new MultiPart(p_name,p_contentType);
+  MultiPart* part = alloc_new MultiPart(p_name,p_contentType);
 
   // See to data conversion
+  XString data;
   const XString charset = p_charset;
   if(p_charset.CompareNoCase(_T("windows-1252")) && p_conversion)
   {
-    p_data = EncodeStringForTheWire(p_data,charset);
+    data = EncodeStringForTheWire(p_data,charset);
+  }
+  else
+  {
+    data = p_data;
   }
 
   // Add the data to the MultiPart
-  part->SetData(p_data);
+  part->SetData(data);
 
   // Loose string parts are UTF-8 by default
   // Revert from version 6.01
@@ -462,7 +459,7 @@ MultiPartBuffer::AddPart(XString p_name
 }
 
 MultiPart*   
-MultiPartBuffer::AddFile(XString p_name,XString p_contentType,XString p_filename)
+MultiPartBuffer::AddFile(const XString& p_name,const XString& p_contentType,const XString& p_filename)
 {
   // Check that the name is a printable ASCII character string
   if(!CheckName(p_name))
@@ -471,7 +468,7 @@ MultiPartBuffer::AddFile(XString p_name,XString p_contentType,XString p_filename
   }
 
   // Create file part
-  MultiPart* part = new MultiPart(p_name,p_contentType);
+  MultiPart* part = alloc_new MultiPart(p_name,p_contentType);
   if(part->SetFile(p_filename) == false)
   {
     delete part;
@@ -485,7 +482,7 @@ MultiPartBuffer::AddFile(XString p_name,XString p_contentType,XString p_filename
 // Get part by name. Can fail as names may be duplicate
 // In case of duplicate names, you WILL get the FIRST one!
 MultiPart*   
-MultiPartBuffer::GetPart(XString p_name)
+MultiPartBuffer::GetPart(const XString& p_name)
 {
   for(auto& part : m_parts)
   {
@@ -511,7 +508,7 @@ MultiPartBuffer::GetPart(int p_index)
 
 // Delete a designated part
 bool
-MultiPartBuffer::DeletePart(XString p_name)
+MultiPartBuffer::DeletePart(const XString& p_name)
 {
   MultiPartMap::iterator it = m_parts.begin();
   while(it != m_parts.end())
@@ -566,7 +563,7 @@ MultiPartBuffer::CalculateBoundary(XString p_special /*= "#" */)
 // Check that the newly found boundary does *NOT* exist
 // within any of the parts of this MultiPartBuffer
 bool
-MultiPartBuffer::SetBoundary(XString p_boundary)
+MultiPartBuffer::SetBoundary(const XString& p_boundary)
 {
   // Search all parts for the existence of the boundary
   for(auto& part : m_parts)
@@ -620,10 +617,10 @@ MultiPartBuffer::CalculateAcceptHeader()
 
 // Re-create from an existing (incoming!) buffer
 bool         
-MultiPartBuffer::ParseBuffer(XString      p_contentType
-                            ,FileBuffer*  p_buffer
-                            ,bool         p_conversion /*=false*/
-                            ,bool         p_utf16      /*=false*/)
+MultiPartBuffer::ParseBuffer(const XString& p_contentType
+                            ,FileBuffer*    p_buffer
+                            ,bool           p_conversion /*=false*/
+                            ,bool           p_utf16      /*=false*/)
 {
   // Start anew
   Reset();
@@ -644,13 +641,12 @@ MultiPartBuffer::ParseBuffer(XString      p_contentType
     case FormDataType::FD_MULTIPART:  [[fallthrough]];
     case FormDataType::FD_MIXED:      return ParseBufferFormData(p_contentType,p_buffer,p_conversion);
     case FormDataType::FD_UNKNOWN:    [[fallthrough]];
-    default:            return false;
+    default:                          return false;
   }
-  return false;
 }
 
 bool
-MultiPartBuffer::ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,bool p_conversion)
+MultiPartBuffer::ParseBufferFormData(const XString& p_contentType,FileBuffer* p_buffer,bool p_conversion)
 {
   bool   result = false;
   uchar* buffer = nullptr;
@@ -760,13 +756,13 @@ MultiPartBuffer::CalculateBinaryBoundary(XString p_boundary,BYTE*& p_binary,unsi
   if(m_charSize == 2)
   {
     length *= 2;
-    p_binary = new BYTE[length + 2];
+    p_binary = alloc_new BYTE[length + 2];
     memcpy(p_binary,p_boundary.GetString(),length + 2);
   }
   else // m_charSize == 1
   {
     // Implode
-    p_binary = new BYTE[length + 2];
+    p_binary = alloc_new BYTE[length + 2];
     ImplodeString(p_boundary,p_binary,(unsigned) length);
   }
 #else
@@ -774,12 +770,12 @@ MultiPartBuffer::CalculateBinaryBoundary(XString p_boundary,BYTE*& p_binary,unsi
   {
     // Explode
     length *= 2;
-    p_binary = new BYTE[length + 2];
+    p_binary = alloc_new BYTE[length + 2];
     ExplodeString(p_boundary,p_binary,(unsigned) (length + 2));
   }
   else // m_charSize == 1
   {
-    p_binary = new BYTE[length + 2];
+    p_binary = alloc_new BYTE[length + 2];
     memcpy(p_binary,p_boundary.GetString(),length);
   }
 #endif
@@ -846,7 +842,7 @@ MultiPartBuffer::FindPartBuffer(uchar*& p_finding,size_t& p_remaining,BYTE* p_bo
 void
 MultiPartBuffer::AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEnd,bool p_conversion)
 {
-  MultiPart* part = new MultiPart();
+  MultiPart* part = alloc_new MultiPart();
   XString charset,boundary;
 
   while(true)
@@ -1002,7 +998,7 @@ MultiPartBuffer::GetLineFromBuffer(uchar*& p_begin,const uchar* p_end)
     line = ImplodeString(p_begin,(unsigned)length);
 #endif
   }
-  line.TrimRight(_T('\r'));
+  line = line.TrimRight(_T('\r'));
 
   // Position after the end
   p_begin = (uchar*)end + m_charSize;
@@ -1041,7 +1037,7 @@ MultiPartBuffer::GetHeaderFromLine(const XString& p_line,XString& p_header,XStri
 }
 
 XString
-MultiPartBuffer::GetAttributeFromLine(const XString& p_line,XString p_name)
+MultiPartBuffer::GetAttributeFromLine(const XString& p_line,const XString& p_name)
 {
   XString attribute;
   XString line(p_line);
@@ -1072,7 +1068,7 @@ MultiPartBuffer::GetAttributeFromLine(const XString& p_line,XString p_name)
 // content-type: multipart/mixed; boundary="--#BOUNDARY#12345678901234"
 // content-type: application/x-www-form-urlencoded
 FormDataType
-MultiPartBuffer::FindBufferType(XString p_contentType)
+MultiPartBuffer::FindBufferType(const XString& p_contentType)
 {
   if(p_contentType.Find(_T("urlencoded")) > 0)
   {
@@ -1092,7 +1088,7 @@ MultiPartBuffer::FindBufferType(XString p_contentType)
 // Find the boundary in the content-type header
 // content-type: multipart/form-data; boundary="--#BOUNDARY#12345678901234"
 XString
-MultiPartBuffer::FindBoundaryInContentType(XString p_contentType)
+MultiPartBuffer::FindBoundaryInContentType(const XString& p_contentType)
 {
   XString boundary;
   XString content(p_contentType);
@@ -1116,7 +1112,7 @@ MultiPartBuffer::FindBoundaryInContentType(XString p_contentType)
 
 // Check that name is in the printable ASCII range for a data part
 bool
-MultiPartBuffer::CheckName(XString p_name)
+MultiPartBuffer::CheckName(const XString& p_name)
 {
   for(int index = 0;index < p_name.GetLength(); ++index)
   {

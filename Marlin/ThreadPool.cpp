@@ -33,14 +33,6 @@
 #include <CreateFullThread.h>
 #include <ServiceReporting.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // A means to be free to debug the ThreadPool in debug mode
 #ifdef DEBUG_THREADPOOL
 #define TP_TRACE0(sz)        TRACE0(sz)
@@ -184,7 +176,7 @@ ThreadPool::InitThreadPool()
 ThreadRegister*
 ThreadPool::CreateThreadPoolThread()
 {
-  ThreadRegister* th = new ThreadRegister();
+  ThreadRegister* th = alloc_new ThreadRegister();
   if(th)
   {
     // Connect to the pool
@@ -835,7 +827,7 @@ ThreadPool::SleepThread(DWORD_PTR p_unique,void* p_payload)
     return nullptr;
   }
 
-  SleepingThread* sleep = new SleepingThread();
+  SleepingThread* sleep = alloc_new SleepingThread();
   sleep->m_threadId = GetCurrentThreadId();
   sleep->m_unique   = p_unique;
   sleep->m_payload  = p_payload;

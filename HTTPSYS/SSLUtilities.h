@@ -22,14 +22,14 @@
 #endif
 
 // handy functions declared in this file
-HRESULT         ShowCertInfo(PCCERT_CONTEXT  pCertContext, XString Title);
+HRESULT         ShowCertInfo(PCCERT_CONTEXT  pCertContext,const XString& Title);
 HRESULT         CertTrusted(PCCERT_CONTEXT  pCertContext);
-bool            MatchCertHostName(PCCERT_CONTEXT  pCertContext, LPCSTR hostname);
+bool            MatchCertHostName(PCCERT_CONTEXT  pCertContext,LPCSTR hostname);
 SECURITY_STATUS CertFindClient(PCCERT_CONTEXT& pCertContext, const LPCTSTR pszSubjectName = NULL);
 SECURITY_STATUS CertFindFromIssuerList(PCCERT_CONTEXT& pCertContext, SecPkgContext_IssuerListInfoEx & IssuerListInfo);
 XString         GetHostName(COMPUTER_NAME_FORMAT WhichName = ComputerNameDnsHostname);
 XString         GetUserName(void);
-bool            SplitString(XString p_input,XString& p_output1,XString& p_output2,TCHAR p_separator);
+bool            SplitString(const XString& p_input,XString& p_output1,XString& p_output2,TCHAR p_separator);
 bool            IsUserAdmin();
 void            SetThreadName(LPCSTR threadName);
 void            SetThreadName(LPCSTR threadName, DWORD dwThreadID);

@@ -15,12 +15,6 @@
 #include <LogAnalysis.h>
 #include <schannel.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Global value to optimize access since it is set only once
 PSecurityFunctionTable SecureServerSocket::g_pSSPI = NULL;
 
@@ -191,7 +185,7 @@ SecureServerSocket::SetThumbprint(LPBYTE p_thumprint)
 
 // Search in this certificate store for a server SSL/TLS certificate
 void    
-SecureServerSocket::SetCertificateStore(XString p_store)
+SecureServerSocket::SetCertificateStore(const XString& p_store)
 {
   m_certificateStore = p_store;
 }
@@ -574,7 +568,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
             }
 
             // Keep this certificate
-            m_serverCertificate = new CertificateInfo();
+            m_serverCertificate = alloc_new CertificateInfo();
             m_serverCertificate->AddCertificateByContext((PCERT_CONTEXT)pCertContext);
 
             CertFreeCertificateContext(pCertContext);
@@ -676,7 +670,7 @@ bool SecureServerSocket::SSPINegotiateLoop(void)
           bool acceptable = m_clientCertAcceptable(pCertContext, S_OK == CertTrusted(pCertContext));
 
           // Remember our client certificate
-          m_clientCertificate = new CertificateInfo();
+          m_clientCertificate = alloc_new CertificateInfo();
           m_clientCertificate->AddCertificateByContext(pCertContext);
 
           CertFreeCertificateContext(pCertContext);
@@ -1240,7 +1234,7 @@ SecureServerSocket::RecvPartialOverlappedContinuation(LPOVERLAPPED p_overlapped)
           delete m_overflowBuffer;
         }
         m_overflowSize   = pDataBuffer->cbBuffer - m_originalLength;
-        m_overflowBuffer = new BYTE[m_overflowSize];
+        m_overflowBuffer = alloc_new BYTE[m_overflowSize];
         memcpy_s(m_overflowBuffer,m_overflowSize,&(((BYTE*)pDataBuffer->pvBuffer)[m_originalLength]),m_overflowSize);
       }
 

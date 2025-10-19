@@ -35,12 +35,6 @@
 #include "EventStream.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // WebConfigDlg dialog
 
 IMPLEMENT_DYNAMIC(WebConfigServer, CDialogEx)
@@ -230,7 +224,7 @@ WebConfigServer::OnInitDialog()
 }
 
 void 
-WebConfigServer::SetSiteConfig(XString p_urlPrefix,XString p_fileName)
+WebConfigServer::SetSiteConfig(CString p_urlPrefix,CString p_fileName)
 {
   m_url            = p_urlPrefix;
   m_siteConfigFile = p_fileName;
@@ -515,10 +509,11 @@ void
 WebConfigServer::OnBnClickedButtWebroot()
 {
   XString rootdir;
+  XString webroot(m_webroot);
   MapDialog map;
   if(map.Browse(GetSafeHwnd()
                ,_T("Get the path to the webroot directory")
-               ,m_webroot
+               ,webroot
                ,rootdir
                ,false    // files
                ,true))   // status

@@ -34,14 +34,6 @@
 #include "LogAnalysis.h"
 #include "Base64.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Logging via the client
 #define DETAILLOG1(text)        if(m_logfile) m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,false,text)
 #define DETAILLOGS(text,extra)  if(m_logfile) m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,text,extra)
@@ -75,7 +67,11 @@ ClientEventDriver::SetApplicationCallback(LPFN_EVENTCALLBACK p_callback, void* p
 
 // Starting the driver in one go!
 bool
-ClientEventDriver::StartEventDriver(XString p_url,EVChannelPolicy p_policy,XString p_session,XString p_cookie,XString p_cookieValue)
+ClientEventDriver::StartEventDriver(const XString&  p_url
+                                   ,EVChannelPolicy p_policy
+                                   ,const XString&  p_session
+                                   ,const XString&  p_cookie
+                                   ,const XString&  p_cookieValue)
 {
   m_serverURL = p_url;
   m_policy    = p_policy;
@@ -114,7 +110,9 @@ ClientEventDriver::SetServerURL(XString p_url)
 
 // Start with session (Call SetChannelPolicy and SetServerURL first)
 bool
-ClientEventDriver::StartEventsForSession(XString p_session,XString p_cookie,XString p_cookieValue)
+ClientEventDriver::StartEventsForSession(const XString& p_session
+                                        ,const XString& p_cookie
+                                        ,const XString& p_cookieValue)
 {
   if(m_policy   != EVChannelPolicy::DP_NoPolicy &&
     !m_serverURL.IsEmpty() && 
@@ -142,7 +140,7 @@ ClientEventDriver::StopEventsForSession()
   
   if(!m_closeSeen)
   {
-    LTEvent* event = new LTEvent(EvtType::EV_Close);
+    LTEvent* event = alloc_new LTEvent(EvtType::EV_Close);
     try
     {
       (*m_callback)(m_object,event);
@@ -408,7 +406,7 @@ static void OnWebsocketOpen(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
-  LTEvent* event = new LTEvent();
+  LTEvent* event = alloc_new LTEvent();
   event->m_type    = EvtType::EV_Open;
   event->m_sent    = 0;
   event->m_number  = 0;
@@ -421,7 +419,7 @@ static void OnWebsocketMessage(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
-  LTEvent* event = new LTEvent();
+  LTEvent* event = alloc_new LTEvent();
   event->m_type    = EvtType::EV_Message;
   event->m_sent    = 0;
   event->m_number  = 0;
@@ -434,7 +432,7 @@ static void OnWebsocketBinary(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
-  LTEvent* event = new LTEvent();
+  LTEvent* event = alloc_new LTEvent();
   event->m_type    = EvtType::EV_Binary;
   event->m_sent    = 0;
   event->m_number  = 0;
@@ -450,7 +448,7 @@ static void OnWebsocketError(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
-  LTEvent* event = new LTEvent();
+  LTEvent* event = alloc_new LTEvent();
   event->m_type    = EvtType::EV_Error;
   event->m_sent    = 0;
   event->m_number  = 0;
@@ -463,7 +461,7 @@ static void OnWebsocketClose(WebSocket* p_socket,const WSFrame* p_event)
 {
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_socket->GetApplication());
 
-  LTEvent* event = new LTEvent();
+  LTEvent* event = alloc_new LTEvent();
   event->m_type    = EvtType::EV_Close;
   event->m_sent    = 0;
   event->m_number  = 0;
@@ -475,12 +473,12 @@ static void OnWebsocketClose(WebSocket* p_socket,const WSFrame* p_event)
 bool
 ClientEventDriver::StartSocketChannel()
 {
-  XString url = m_serverURL + _T("Sockets/") + m_session;
+  const XString url = m_serverURL + _T("Sockets/") + m_session;
 //   url.Replace("http://", "ws://");
 //   url.Replace("https://","wss://");
 
   // Create client side of the websocket and connect to this driver
-  m_websocket = new WebSocketClient(url);
+  m_websocket = alloc_new WebSocketClient(url);
   m_websocket->SetApplication(this);
 
   // Connect the logfile
@@ -519,7 +517,7 @@ static void OnEventOpen(ServerEvent* p_event,void* p_data)
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_data);
   if(driver)
   {
-    LTEvent* event = new LTEvent();
+    LTEvent* event = alloc_new LTEvent();
     event->m_type    = EvtType::EV_Open;
     event->m_sent    = 0;
     event->m_number  = p_event->m_id;
@@ -535,7 +533,7 @@ static void OnEventMessage(ServerEvent* p_event,void* p_data)
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_data);
   if(driver)
   {
-    LTEvent* event = new LTEvent();
+    LTEvent* event = alloc_new LTEvent();
     event->m_type    = EvtType::EV_Message;
     event->m_sent    = 0;
     event->m_number  = p_event->m_id;
@@ -552,7 +550,7 @@ static void OnEventBinary(ServerEvent* p_event, void* p_data)
   if (driver)
   {
     Base64 base;
-    LTEvent* event   = new LTEvent();
+    LTEvent* event   = alloc_new LTEvent();
     event->m_type    = EvtType::EV_Binary;
     event->m_sent    = 0;
     event->m_number  = p_event->m_id;
@@ -568,7 +566,7 @@ static void OnEventError(ServerEvent* p_event,void* p_data)
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_data);
   if(driver)
   {
-    LTEvent* event = new LTEvent();
+    LTEvent* event = alloc_new LTEvent();
     event->m_type    = EvtType::EV_Error;
     event->m_sent    = 0;
     event->m_number  = p_event->m_id;
@@ -584,7 +582,7 @@ static void OnEventClose(ServerEvent* p_event,void* p_data)
   ClientEventDriver* driver = reinterpret_cast<ClientEventDriver*>(p_data);
   if(driver)
   {
-    LTEvent* event = new LTEvent();
+    LTEvent* event = alloc_new LTEvent();
     event->m_type    = EvtType::EV_Close;
     event->m_sent    = 0;
     event->m_number  = p_event->m_id;
@@ -669,7 +667,7 @@ ClientEventDriver::StartPollingChannel()
 {
   XString url = m_serverURL + _T("Polling/") + m_session;
 
-  m_polling = new LongPolling();
+  m_polling = alloc_new LongPolling();
   m_polling->SetURL(url);
   m_polling->SetApplication(OnPollingEvent,this);
   m_polling->SetLogfile(m_logfile);

@@ -414,7 +414,6 @@
     <ClInclude Include="ClientEventDriver.h" />
     <ClInclude Include="CommandBus.h" />
     <ClInclude Include="EventStream.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="HostedWebCore.h" />
     <ClInclude Include="HTTPCertificate.h" />
     <ClInclude Include="CPULoad.h" />

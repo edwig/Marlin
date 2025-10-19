@@ -31,12 +31,6 @@
 #include <HTTPSite.h>
 #include <SiteHandlerSoap.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int highSpeed   = 0;
 static int totalChecks = 23;
 
@@ -148,7 +142,7 @@ TestMarlinServer::TestInsecure()
   }
 
   // Setting the POST handler for this site
-  SiteHandlerSoapInsecure* handler = new SiteHandlerSoapInsecure();
+  SiteHandlerSoapInsecure* handler = alloc_new SiteHandlerSoapInsecure();
   site->SetHandler(HTTPCommand::http_post,handler);
   site->SetHandler(HTTPCommand::http_get, handler,false);
 

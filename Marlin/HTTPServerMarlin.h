@@ -46,19 +46,19 @@ public:
   virtual HTTPSite*  CreateSite(PrefixType    p_type
                                ,bool          p_secure
                                ,int           p_port
-                               ,XString       p_baseURL
+                               ,XString&      p_baseURL
                                ,bool          p_subsite  = false
                                ,LPFN_CALLBACK p_callback = nullptr) override;
   // Delete a site from the remembered set of sites
-  virtual bool       DeleteSite(int p_port,XString p_baseURL,bool p_force = false) override;
+  virtual bool       DeleteSite(int p_port,const XString& p_baseURL,bool p_force = false) override;
   // Receive (the rest of the) incoming HTTP request
   virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_enconding) override;
   // Create a new WebSocket in the subclass of our server
-  virtual WebSocket* CreateWebSocket(XString p_uri) override;
+  virtual WebSocket* CreateWebSocket(const XString& p_uri) override;
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request) override;
   // Flushing a WebSocket intermediate
-  virtual bool       FlushSocket(HTTP_OPAQUE_ID p_request,XString p_prefix) override;
+  virtual bool       FlushSocket(HTTP_OPAQUE_ID p_request,const XString& p_prefix) override;
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message) override;
   // Sending a response as a chunk
@@ -67,11 +67,11 @@ public:
   // FUNCTIONS FOR STAND-ALONE SERVER
 
   // Find and make an URL group
-  HTTPURLGroup* FindUrlGroup(XString p_authName
-                            ,ULONG   p_authScheme
-                            ,bool    p_cache
-                            ,XString p_realm
-                            ,XString p_domain);
+  HTTPURLGroup* FindUrlGroup(const XString& p_authName
+                            ,ULONG          p_authScheme
+                            ,bool           p_cache
+                            ,const XString& p_realm
+                            ,const XString& p_domain);
   // Remove an URLGroup. Called by HTTPURLGroup itself
   void          RemoveURLGroup(const HTTPURLGroup* p_group);
   // Initialize the logging of the HTTPSYS driver

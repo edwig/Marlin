@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -37,14 +37,6 @@
 #include "GenerateGUID.h"
 #include "Base64.h"
 #include "Crypto.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 SOAPSecurity::SOAPSecurity()
 {
@@ -368,7 +360,7 @@ SOAPSecurity::DigestPassword()
 }
 
 void
-SOAPSecurity::GenerateNonce(XString p_nonce)
+SOAPSecurity::GenerateNonce(const XString& p_nonce)
 {
   Base64 base;
   m_nonce = base.Encrypt(p_nonce);
@@ -376,7 +368,7 @@ SOAPSecurity::GenerateNonce(XString p_nonce)
 
 // Incoming control field
 XString 
-SOAPSecurity::FindHeaderField(SOAPMessage* p_message,XMLElement* p_secure,XString p_field)
+SOAPSecurity::FindHeaderField(SOAPMessage* p_message,XMLElement* p_secure,const XString& p_field)
 {
   XString value;
 
@@ -392,7 +384,7 @@ SOAPSecurity::FindHeaderField(SOAPMessage* p_message,XMLElement* p_secure,XStrin
 }
 
 XString 
-SOAPSecurity::DeBase64(XString p_field)
+SOAPSecurity::DeBase64(const XString& p_field)
 {
   Base64  base;
   return base.Decrypt(p_field);

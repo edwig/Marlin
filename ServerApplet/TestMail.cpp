@@ -31,13 +31,7 @@
 #include <WinFile.h>
 #include <version.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
-TestMail::TestMail(XString p_afzender,XString p_ontvanger,XString p_server)
+TestMail::TestMail(CString p_afzender,CString p_ontvanger,CString p_server)
          :m_sender(p_afzender)
          ,m_receiver(p_ontvanger)
          ,m_server(p_server)
@@ -74,9 +68,10 @@ TestMail::Send()
     file.Close();
 
     // Send via POSTMAIL
-    XString program(_T("PostMail5.exe"));
-    XString melding(_T("Cannot find the e-mail program 'PostMail5' in the executable directory"));
-    cc = theApp.StartProgram(program,file.GetFilename(),true,melding);
+    CString program(_T("PostMail5.exe"));
+    CString melding(_T("Cannot find the e-mail program 'PostMail5' in the executable directory"));
+    CString filename(file.GetFilename());
+    cc = theApp.StartProgram(program,filename,true,melding);
   }
   return (cc == 0);
 }
@@ -87,7 +82,7 @@ TestMail::Send()
 //
 //////////////////////////////////////////////////////////////////////////
 
-static XString
+static CString
 ErrorString(int p_error)
 {
   TCHAR buffer[1024];
@@ -99,5 +94,5 @@ ErrorString(int p_error)
                 (LPTSTR)buffer,
                 1024,
                 NULL);
-  return XString(buffer);
+  return CString(buffer);
 }

@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -76,22 +76,22 @@ public:
   explicit JSONvalue(const JSONvalue* p_other);
   explicit JSONvalue(const JsonType   p_type);
   explicit JSONvalue(const JsonConst  p_value);
-  explicit JSONvalue(const XString    p_value);
+  explicit JSONvalue(const XString&   p_value);
   explicit JSONvalue(const int        p_value);
   explicit JSONvalue(const bcd&       p_value);
   explicit JSONvalue(const bool       p_value);
  ~JSONvalue();
 
   // SETTERS
-  void        SetDatatype(JsonType p_type);
-  void        SetValue(XString     p_value);
-  void        SetValue(LPCTSTR     p_value);
-  void        SetValue(JsonConst   p_value);
-  void        SetValue(JSONobject  p_value);
-  void        SetValue(JSONarray   p_value);
-  void        SetValue(int         p_value);
-  void        SetValue(const bcd&  p_value);
-  void        SetMark (bool        p_mark);
+  void        SetDatatype(JsonType    p_type);
+  void        SetValue(const XString& p_value);
+  void        SetValue(LPCTSTR        p_value);
+  void        SetValue(JsonConst      p_value);
+  void        SetValue(JSONobject     p_value);
+  void        SetValue(JSONarray      p_value);
+  void        SetValue(int            p_value);
+  void        SetValue(const bcd&     p_value);
+  void        SetMark (bool           p_mark);
 
   // GETTERS
   JsonType    GetDataType()  const { return m_type;     }
@@ -105,7 +105,11 @@ public:
   XString     GetAsJsonString(bool p_white,unsigned p_level = 0,bool p_exponential = false);
 
   // FUNCTIONS
-  void        JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive = true);
+  void        JsonReplace(const XString& p_namePattern
+                         ,const XString& p_tofind
+                         ,const XString& p_replace
+                         ,int&           p_number
+                         ,bool           p_caseSensitive = true);
 
   // Specials for the empty/null state
   void        Empty();
@@ -127,7 +131,7 @@ public:
   // Getting the value from an JSONarray
   JSONvalue&  operator[](int p_index);
   // Getting the value from an JSONobject
-  JSONvalue&  operator[](XString p_name);
+  JSONvalue&  operator[](const XString& p_name);
 
   // JSONvalue's can be stored elsewhere. Use the reference mechanism to add/drop references
   // With the drop of the last reference, the object WILL destroy itself
@@ -135,8 +139,16 @@ public:
   void        DropReference();
 
 private:
-  void        JsonReplaceObject(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive);
-  void        JsonReplaceArray (XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive);
+  void        JsonReplaceObject(const XString& p_namePattern
+                               ,const XString& p_tofind
+                               ,const XString& p_replace
+                               ,int&           p_number
+                               ,bool           p_caseSensitive);
+  void        JsonReplaceArray (const XString& p_namePattern
+                               ,const XString& p_tofind
+                               ,const XString& p_replace
+                               ,int&           p_number
+                               ,bool           p_caseSensitive);
 
   // JSONPointer may have access to the objects
   friend     JSONPointer;
@@ -161,23 +173,23 @@ class JSONpair
 {
 public:
   JSONpair() = default;
-  explicit JSONpair(XString p_name);
-  explicit JSONpair(XString p_name,JsonType    p_type);
-  explicit JSONpair(XString p_name,JSONvalue&  p_value);
-  explicit JSONpair(XString p_name,XString     p_value);
-  explicit JSONpair(XString p_name,LPCTSTR     p_value);
-  explicit JSONpair(XString p_name,int         p_value);
-  explicit JSONpair(XString p_name,const bcd&  p_value);
-  explicit JSONpair(XString p_name,bool        p_value);
-  explicit JSONpair(XString p_name,JsonConst   p_value);
+  explicit JSONpair(const XString& p_name);
+  explicit JSONpair(const XString& p_name,const JsonType    p_type);
+  explicit JSONpair(const XString& p_name,const JSONvalue&  p_value);
+  explicit JSONpair(const XString& p_name,const XString&    p_value);
+  explicit JSONpair(const XString& p_name,const LPTSTR      p_value);
+  explicit JSONpair(const XString& p_name,const int         p_value);
+  explicit JSONpair(const XString& p_name,const bcd&        p_value);
+  explicit JSONpair(const XString& p_name,const bool        p_value);
+  explicit JSONpair(const XString& p_name,const JsonConst   p_value);
 
   // Currently public. Will be moved to private in a future version
   XString   m_name;
   JSONvalue m_value;
 
-  void        SetName(XString p_name)             { m_name = p_name;             }
+  void        SetName(const XString&     p_name)  { m_name = p_name;             }
   void        SetDatatype(JsonType       p_type)  { m_value.SetDatatype(p_type); }
-  void        SetValue(XString           p_value) { m_value.SetValue(p_value);   }
+  void        SetValue(const XString&    p_value) { m_value.SetValue(p_value);   }
   void        SetValue(LPCTSTR           p_value) { m_value.SetValue(p_value);   }
   void        SetValue(JsonConst         p_value) { m_value.SetValue(p_value);   }
   void        SetValue(const JSONobject& p_value) { m_value.SetValue(p_value);   }
@@ -210,15 +222,15 @@ class JSONMessage
 public:
   JSONMessage();
   // XTOR: For incoming UTF-8 String
-  explicit JSONMessage(XString p_message);
+  explicit JSONMessage(const XString& p_message);
   // XTOR: Internal construction from MBCS string
-  explicit JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding = Encoding::UTF8);
+  explicit JSONMessage(const XString& p_message,bool p_whitespace,Encoding p_encoding = Encoding::UTF8);
   // XTOR: Outgoing to a URL
-  explicit JSONMessage(XString p_message,XString p_url);
+  explicit JSONMessage(const XString& p_message,const XString& p_url);
   // XTOR: From another XXXmessage
-  explicit JSONMessage(JSONMessage* p_other);
-  explicit JSONMessage(HTTPMessage* p_message);
-  explicit JSONMessage(SOAPMessage* p_message);
+  explicit JSONMessage(const JSONMessage* p_other);
+  explicit JSONMessage(const HTTPMessage* p_message);
+  explicit JSONMessage(const SOAPMessage* p_message);
   // General DTOR
  ~JSONMessage();
 
@@ -265,7 +277,7 @@ public:
   XString         GetAbsolutePath() const  { return m_cracked.AbsolutePath();}
   const Cookies&  GetCookies() const       { return m_cookies;               }
   HANDLE          GetAccessToken() const   { return m_token;                 }
-  PSOCKADDR_IN6   GetSender()              { return &m_sender;               }
+  const PSOCKADDR_IN6 GetSender() const    { return (const PSOCKADDR_IN6) &m_sender; }
   UINT            GetDesktop() const       { return m_desktop;               }
   bool            GetErrorState() const    { return m_errorstate;            }
   XString         GetLastError() const     { return m_lastError;             }

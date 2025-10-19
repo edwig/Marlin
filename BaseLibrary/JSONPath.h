@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -89,15 +89,15 @@ class JSONPath
 {
 public:
   explicit JSONPath(bool p_originOne = false);
-  explicit JSONPath(JSONMessage* p_message,XString p_path,bool p_originOne = false);
-  explicit JSONPath(JSONMessage& p_message,XString p_path,bool p_originOne = false);
+  explicit JSONPath(JSONMessage* p_message,const XString& p_path,bool p_originOne = false);
+  explicit JSONPath(JSONMessage& p_message,const XString& p_path,bool p_originOne = false);
  ~JSONPath();
 
   // Our main purpose: evaluate the path in the message
   bool Evaluate() noexcept;
 
   // SETTERS + Re-Evaluate
-  bool SetPath(XString p_path) noexcept;
+  bool SetPath(const XString& p_path) noexcept;
   bool SetMessage(JSONMessage* p_message) noexcept;
 
   // GETTERS

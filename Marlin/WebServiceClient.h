@@ -77,10 +77,10 @@ using MessageStore = std::deque<SoapMsg>;
 class WebServiceClient
 {
 public:
-  explicit WebServiceClient(XString p_contract
-                           ,XString p_url
-                           ,XString p_wsdlFile = _T("")
-                           ,bool    p_reliable = false);
+  explicit WebServiceClient(const XString& p_contract
+                           ,const XString& p_url
+                           ,const XString& p_wsdlFile = _T("")
+                           ,bool           p_reliable = false);
  ~WebServiceClient();
 
   // Opening and closing the sendport (HTTPClient)
@@ -126,18 +126,18 @@ public:
   void      SetLogAnalysis(LogAnalysis* p_log);
   void      SetReliable(bool p_reliable,ReliableType p_type = ReliableType::RELIABLE_ONCE);
   void      SetTimeouts(int p_resolve,int p_connect,int p_send,int p_receive);
-  void      SetUser(XString p_user)                         { m_user               = p_user;        }
-  void      SetPassword(XString p_password)                 { m_password           = p_password;    }
+  void      SetUser(const XString& p_user)                  { m_user               = p_user;        }
+  void      SetPassword(const XString& p_password)          { m_password           = p_password;    }
   void      SetTokenProfile(bool p_token)                   { m_tokenProfile       = p_token;       }
   void      SetWsdlCheck(bool p_check)                      { m_wsdlCheck          = p_check;       }
-  void      SetLogFilename(XString p_logFilename)           { m_logFilename        = p_logFilename; }
+  void      SetLogFilename(const XString& p_logFilename)    { m_logFilename        = p_logFilename; }
   void      SetSigningMethod(unsigned p_method)             { m_signingMethod      = p_method;      }
   void      SetSecurityLevel(XMLEncryption p_encryption)    { m_encryptionLevel    = p_encryption;  }
-  void      SetSecurityPassword(XString p_password)         { m_encryptionPassword = p_password;    }
+  void      SetSecurityPassword(const XString& p_password)  { m_encryptionPassword = p_password;    }
   void      SetSoapCompress(bool p_compress)                { m_soapCompress       = p_compress;    }
-  void      SetWSDLFilename(XString p_file)                 { m_wsdlFile           = p_file;        }
+  void      SetWSDLFilename(const XString& p_file)          { m_wsdlFile           = p_file;        }
   void      SetJsonSoapTranslation(bool p_json)             { m_jsonTranslation    = p_json;        }
-  void      SetSOAPAction(XString p_soapAction)             { m_soapAction         = p_soapAction;  }
+  void      SetSOAPAction(const XString& p_soapAction)      { m_soapAction         = p_soapAction;  }
   void      SetLogLevel(int p_logLevel);
   void      SetDetailLogging(bool p_detail);
 

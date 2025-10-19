@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -28,14 +28,6 @@
 #include "pch.h"
 #include "BaseLibrary.h"
 #include "GetExePath.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 static TCHAR g_staticAddress;
 
@@ -94,7 +86,7 @@ TerminateWithoutCleanup(int p_exitcode)
 // WARNING:
 // CANNOT BE CALLED FROM AN INTERNET IIS APPLICATION
 void
-CheckExePath(XString p_runtimer,XString p_productName)
+CheckExePath(const XString& p_runtimer,const XString& p_productName)
 {
   TCHAR buffer   [_MAX_PATH];
   TCHAR drive    [_MAX_DRIVE];

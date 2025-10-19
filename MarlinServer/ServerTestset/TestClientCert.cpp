@@ -33,12 +33,6 @@
 #include "ServerApp.h"
 #include "TestPorts.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 1;
 
 class SiteHandlerGetClientCert: public SiteHandlerGet
@@ -100,7 +94,7 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
   }
 
   // Setting the POST handler for this site
-  site->SetHandler(HTTPCommand::http_get,new SiteHandlerGetClientCert());
+  site->SetHandler(HTTPCommand::http_get,alloc_new SiteHandlerGetClientCert());
 
   // Standalone servers must filter on Client certificates
   if(p_standalone)
@@ -109,7 +103,7 @@ TestMarlinServer::TestClientCertificate(bool p_standalone)
     XString thumbprint = _T("8e02b7fe7d0e6a356d996664a542897fbae4d27e");
 
     // Add a site filter for the client certificate
-    SiteFilterClientCertificate* filter = new SiteFilterClientCertificate(10,_T("ClientCert"));
+    SiteFilterClientCertificate* filter = alloc_new SiteFilterClientCertificate(10,_T("ClientCert"));
     filter->SetClientCertificate(certName,thumbprint); // Here comes the name/thumbprint
     if(site->SetFilter(10,filter))
     {

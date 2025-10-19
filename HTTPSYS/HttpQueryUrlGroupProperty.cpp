@@ -12,12 +12,6 @@
 #include "UrlGroup.h"
 #include "OpaqueHandles.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 ULONG QueryUrlGroupAuthentication(UrlGroup* p_group,PVOID p_info,ULONG p_length,PULONG p_returned);
 ULONG QueryUrlGroupTimeoutInfo   (UrlGroup* p_group,PVOID p_info,ULONG p_length,PULONG p_returned);
 ULONG QueryUrlGroupStateInfo     (UrlGroup* p_group,PVOID p_info,ULONG p_length,PULONG p_returned);

@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -55,14 +55,14 @@ class JSONPointer
 {
 public:
   explicit JSONPointer(bool p_originOne = false);
-  explicit JSONPointer(JSONMessage* p_message,XString p_pointer,bool p_originOne = false);
+  explicit JSONPointer(JSONMessage* p_message,const XString& p_pointer,bool p_originOne = false);
  ~JSONPointer();
 
   // Our main purpose: evaluate the pointer in the message
   bool Evaluate();
 
   // SETTERS + Re-Evaluate
-  bool SetPointer(XString      p_pointer);
+  bool SetPointer(const XString& p_pointer);
   bool SetMessage(JSONMessage* p_message);
 
   // GETTERS

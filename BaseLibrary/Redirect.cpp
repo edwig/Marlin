@@ -4,8 +4,8 @@
 //
 // Marlin Component: Internet server/client
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -34,14 +34,6 @@
 #include <time.h>
 #include <corecrt_io.h>
 #include <fcntl.h>
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 #ifdef _DEBUG
 #define verify(x)  assert(x)
@@ -103,7 +95,7 @@ Redirect::SetTimeoutIdle(ULONG p_timeout)
 // or: "UTF-16" for PowerShell like programs
 // BEWARE: Does **NOT** support 32 bits codepages (e.g. UTF-32)
 bool
-Redirect::SetStreamCharset(XString p_charset)
+Redirect::SetStreamCharset(const XString& p_charset)
 {
   XString current = CodepageToCharset(GetACP());
   if(p_charset.CompareNoCase(current) == 0)
@@ -403,12 +395,12 @@ Redirect::PrepAndLaunchRedirectedChild(PTCHAR lpszCmdLine
   // This is made using an empty security descriptor. It is not the same
   // as using a NULL pointer for the security attribute!
 
-  PSECURITY_DESCRIPTOR lpSD = new SECURITY_DESCRIPTOR;
+  PSECURITY_DESCRIPTOR lpSD = alloc_new SECURITY_DESCRIPTOR;
   verify(::InitializeSecurityDescriptor(lpSD, SECURITY_DESCRIPTOR_REVISION));
 #pragma warning(disable: 6248) // Setting ZERO DACL.
   verify(::SetSecurityDescriptorDacl(lpSD, -1, 0, 0));
 
-  LPSECURITY_ATTRIBUTES lpSA = new SECURITY_ATTRIBUTES;
+  LPSECURITY_ATTRIBUTES lpSA = alloc_new SECURITY_ATTRIBUTES;
   lpSA->nLength = sizeof(SECURITY_ATTRIBUTES);
   lpSA->lpSecurityDescriptor = lpSD;
   lpSA->bInheritHandle = TRUE;
@@ -531,7 +523,7 @@ Redirect::StdOutThread8Bits(HANDLE hStdOutRead)
       else
       {
         // Convert UTF-8 to MBCS codepage
-        XString buffer(lineBuffer);
+        XString buffer((LPCSTR)lineBuffer);
         XString input = DecodeStringFromTheWire(buffer,m_streamCharset);
         OnChildStdOutWrite((PTCHAR)input.GetString());
       }
@@ -684,7 +676,7 @@ Redirect::StdErrThread8Bits(HANDLE hStdErrRead)
       else
       {
         // Convert UTF-8 to MBCS codepage
-        XString buffer(lineBuffer);
+        XString buffer((LPCSTR)lineBuffer);
         XString input = DecodeStringFromTheWire(buffer,m_streamCharset);
         OnChildStdErrWrite((PTCHAR)input.GetString());
       }

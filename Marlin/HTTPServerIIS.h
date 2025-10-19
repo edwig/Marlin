@@ -47,22 +47,22 @@ public:
   // Return a version string
   virtual XString    GetVersion() override;
   // Create a site to bind the traffic to
-  virtual HTTPSite*  CreateSite(PrefixType    p_type
-                               ,bool          p_secure
-                               ,int           p_port
-                               ,XString       p_baseURL
-                               ,bool          p_subsite  = false
-                               ,LPFN_CALLBACK p_callback = nullptr) override;
+  virtual HTTPSite*  CreateSite(PrefixType     p_type
+                               ,bool           p_secure
+                               ,int            p_port
+                               ,XString&       p_baseURL
+                               ,bool           p_subsite  = false
+                               ,LPFN_CALLBACK  p_callback = nullptr) override;
   // Delete a site from the remembered set of sites
-  virtual bool       DeleteSite(int p_port,XString p_baseURL,bool p_force = false) override;
+  virtual bool       DeleteSite(int p_port,const XString& p_baseURL,bool p_force = false) override;
   // Receive (the rest of the) incoming HTTP request
   virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encoding) override;
   // Create a new WebSocket in the subclass of our server
-  virtual WebSocket* CreateWebSocket(XString p_uri) override;
+  virtual WebSocket* CreateWebSocket(const XString& p_uri) override;
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request) override;
   // Flushing a WebSocket intermediate
-  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,XString p_prefix) override;
+  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,const XString& p_prefix) override;
   // Sending response for an incoming message
   virtual void       SendResponse(HTTPMessage* p_message) override;
   // Sending a response as a chunk
@@ -104,16 +104,16 @@ private:
   // Add unknown headers to the response
   void AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers);
   // Setting the overal status of the response message
-  void SetResponseStatus(IHttpResponse* p_response,USHORT p_status,XString p_statusMessage);
+  void SetResponseStatus(IHttpResponse* p_response,USHORT p_status,const XString& p_statusMessage);
   // Setting a reponse header by name
-  void SetResponseHeader(IHttpResponse* p_response,XString p_name,     XString p_value,bool p_replace);
-  void SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,XString p_value,bool p_replace);
+  void SetResponseHeader(IHttpResponse* p_response,const XString& p_name,const XString& p_value,bool p_replace);
+  void SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,  const XString& p_value,bool p_replace);
 
   // Sub-functions for SendResponse
   bool SendResponseBuffer     (IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
   void SendResponseBufferParts(IHttpResponse* p_response,FileBuffer* p_buffer,size_t p_totalLength,bool p_more = false);
   void SendResponseFileHandle (IHttpResponse* p_response,FileBuffer* p_buffer,bool p_more = false);
-  void SendResponseError      (IHttpResponse* p_response,XString& p_page,int p_error,LPCTSTR p_reason);
+  void SendResponseError      (IHttpResponse* p_response,const XString& p_page,int p_error,LPCTSTR p_reason);
 
   // For the handling of the event streams
   virtual bool SendResponseEventBuffer(HTTP_OPAQUE_ID     p_response

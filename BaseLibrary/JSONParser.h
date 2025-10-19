@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -55,7 +55,7 @@ public:
  ~JSONParser();
 
   // Parse a complete JSON message string
-  void    ParseMessage(XString& p_message,bool& p_whitespace);
+  void    ParseMessage(const XString& p_message,bool& p_whitespace);
 private:
   void    SetError(JsonError p_error,LPCTSTR p_text,bool p_throw = true);
   void    SkipWhitespace();
@@ -89,8 +89,8 @@ class JSONParserSOAP : public JSONParser
 {
 public:
   explicit JSONParserSOAP(JSONMessage* p_message);
-  explicit JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap);
-  explicit JSONParserSOAP(JSONMessage* p_message,XMLMessage*  p_xml);
+  explicit JSONParserSOAP(JSONMessage* p_message,const SOAPMessage* p_soap);
+  explicit JSONParserSOAP(JSONMessage* p_message,const XMLMessage*  p_xml);
 
   void Parse(XMLElement* p_element,bool p_forceerArray = false);
 private:

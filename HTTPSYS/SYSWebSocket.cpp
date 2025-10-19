@@ -24,12 +24,6 @@
 #include <ConvertWideString.h>
 #include <time.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 constexpr auto WS_MAX_HEADER = 14;  // Maximum header size in octets
 
 SYSWebSocket::SYSWebSocket(Request* p_request)
@@ -221,7 +215,7 @@ HRESULT SYSWebSocket::WriteFragment(_In_    VOID*  pData,
       // Make sure we have a send buffer
       if(!m_send_buffer)
       {
-        m_send_buffer = new BYTE[m_bufferSizeSend + WS_MAX_HEADER];
+        m_send_buffer = alloc_new BYTE[m_bufferSizeSend + WS_MAX_HEADER];
       }
       // Set up the WebSocket translation
       DWORD extra = EncodingFragment();
@@ -577,7 +571,7 @@ HRESULT SYSWebSocket::ReadFragment(_Out_   VOID*  pData,
     // Make sure we have a read buffer
     if(!m_read_buffer)
     {
-      m_read_buffer = new BYTE[m_bufferSizeReceive];
+      m_read_buffer = alloc_new BYTE[m_bufferSizeReceive];
     }
 
     if(fAsync)
@@ -948,7 +942,7 @@ SYSWebSocket::SendConnectionClose(_In_    BOOL                     fAsync,
       // Make sure we have a send buffer
       if(!m_send_buffer)
       {
-        m_send_buffer = new BYTE[m_bufferSizeSend + WS_MAX_HEADER];
+        m_send_buffer = alloc_new BYTE[m_bufferSizeSend + WS_MAX_HEADER];
       }
       strncpy_s((char*)m_send_buffer,(int)m_bufferSizeSend,(char*)m_send_Data,*m_send_Size);
 

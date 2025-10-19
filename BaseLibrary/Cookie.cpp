@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -32,14 +32,6 @@
 #include "HTTPTime.h"
 #include "ConvertWideString.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #pragma comment(lib,"Winhttp.lib")
 
 // XTOR: Empty cookie
@@ -49,7 +41,7 @@ Cookie::Cookie()
 }
 
 // XTOR as gotten from the server
-Cookie::Cookie(XString p_fromHTTP)
+Cookie::Cookie(const XString& p_fromHTTP)
 {
   memset(&m_expires,0,sizeof(SYSTEMTIME));
   ParseCookie(p_fromHTTP);
@@ -57,7 +49,7 @@ Cookie::Cookie(XString p_fromHTTP)
 
 // Set simple value "Cookie: value"
 void  
-Cookie::SetCookie(XString p_value)
+Cookie::SetCookie(const XString& p_value)
 {
   m_value    = p_value;
   m_secure   = false;
@@ -69,7 +61,7 @@ Cookie::SetCookie(XString p_value)
 
 // Set cookie "Cookie: name=value"
 void  
-Cookie::SetCookie(XString p_name,XString p_value)
+Cookie::SetCookie(const XString& p_name,const XString& p_value)
 {
   m_name     = p_name;
   m_value    = p_value;
@@ -82,7 +74,7 @@ Cookie::SetCookie(XString p_name,XString p_value)
 
 // Set std encrypted cookie "Set-Cookie: session=A7EB89D231; secure; httponly"
 void  
-Cookie::SetCookie(XString p_name,XString p_value,XString p_metadata)
+Cookie::SetCookie(const XString& p_name,const XString& p_value,const XString& p_metadata)
 {
   Crypto crypt;
 
@@ -97,7 +89,7 @@ Cookie::SetCookie(XString p_name,XString p_value,XString p_metadata)
 
 // Set cookie to your liking "Set-Cookie: [name=]value [; secure][; httponly]"
 void  
-Cookie::SetCookie(XString p_name,XString p_value,XString p_metadata,bool p_secure,bool p_httpOnly)
+Cookie::SetCookie(const XString& p_name,const XString& p_value,const XString& p_metadata,bool p_secure,bool p_httpOnly)
 {
   Crypto crypt;
 
@@ -112,7 +104,7 @@ Cookie::SetCookie(XString p_name,XString p_value,XString p_metadata,bool p_secur
 
 // Getting the value, optionally decrypting the cookie
 XString
-Cookie::GetValue(XString p_metadata /*=""*/)
+Cookie::GetValue(const XString& p_metadata /*=""*/) const
 {
   if(m_secure || !p_metadata.IsEmpty())
   {
@@ -127,7 +119,7 @@ Cookie::GetValue(XString p_metadata /*=""*/)
 
 // Cookie text for server side "Set-Cookie:" header
 XString     
-Cookie::GetSetCookieText()
+Cookie::GetSetCookieText() const
 {
   XString cookie;
 
@@ -200,7 +192,7 @@ Cookie::GetSetCookieText()
 
 // Cookie text for client side "Cookie:" header
 XString
-Cookie::GetCookieText()
+Cookie::GetCookieText() const
 {
   XString cookie;
   if(!m_name.IsEmpty())
@@ -223,7 +215,7 @@ Cookie::SetExpires(SYSTEMTIME* p_expires)
 
 // Setting new system time from HTTP text
 void
-Cookie::SetExpires(XString p_expires)
+Cookie::SetExpires(const XString& p_expires)
 {
   if(!HTTPTimeToSystemTime(p_expires,&m_expires))
   {
@@ -236,7 +228,7 @@ Cookie::SetExpires(XString p_expires)
 // Parse cookie text (from HTTP or from internal source)
 // Cannot throw (is called from XTOR)
 void    
-Cookie::ParseCookie(XString p_cookieText)
+Cookie::ParseCookie(const XString& p_cookieText)
 {
   XString cookie(p_cookieText);
   cookie.Trim();
@@ -307,7 +299,7 @@ Cookie::ParseCookie(XString p_cookieText)
 
 // Check if correct naming conventions are used for cookie's name
 void
-Cookie::CheckName()
+Cookie::CheckName() const
 {
   for(int ind = 0; ind < m_name.GetLength(); ++ind)
   {
@@ -321,7 +313,7 @@ Cookie::CheckName()
 
 // Check if correct naming conventions are used for cookie's value
 void
-Cookie::CheckValue()
+Cookie::CheckValue() const
 {
   for(int ind = 0;ind < m_value.GetLength(); ++ind)
   {
@@ -335,7 +327,7 @@ Cookie::CheckValue()
 
 // Test if our cookie is already expired
 bool
-Cookie::IsExpired()
+Cookie::IsExpired() const
 {
   // Attribute never set
   if(m_expires.wYear == 0)
@@ -350,7 +342,7 @@ Cookie::IsExpired()
 
 // Copying a cookie (for the cookie cache)
 Cookie&
-Cookie::operator=(Cookie& p_other)
+Cookie::operator=(const Cookie& p_other)
 {
   // Check if we are not assigning to ourselves
   if(&p_other == this)
@@ -377,7 +369,7 @@ Cookie::operator=(Cookie& p_other)
 
 // Add cookie to cache from HTTP
 void
-Cookies::AddCookie(XString p_fromHTTP)
+Cookies::AddCookie(const XString& p_fromHTTP)
 {
   if(p_fromHTTP.IsEmpty())
   {
@@ -389,14 +381,14 @@ Cookies::AddCookie(XString p_fromHTTP)
 
 // Add cookie from other cache
 void    
-Cookies::AddCookie(Cookie& p_cookie)
+Cookies::AddCookie(const Cookie& p_cookie)
 {
   AddCookieUnique(p_cookie);
 }
 
 // Add std encrypted cookie
 void    
-Cookies::AddCookie(XString p_name,XString p_value,XString p_metadata /*=""*/)
+Cookies::AddCookie(const XString& p_name,const XString& p_value,const XString& p_metadata /*=""*/)
 {
   if(p_name.IsEmpty() && p_value.IsEmpty())
   {
@@ -409,8 +401,8 @@ Cookies::AddCookie(XString p_name,XString p_value,XString p_metadata /*=""*/)
 
 // Getting the cookies one-by-one
 // Default is the first cookie for applications that handle only ONE cookie
-Cookie* 
-Cookies::GetCookie(unsigned p_index /*=0*/)
+const Cookie* 
+Cookies::GetCookie(unsigned p_index /*=0*/) const
 {
   if(m_cookies.size() > p_index)
   {
@@ -420,8 +412,8 @@ Cookies::GetCookie(unsigned p_index /*=0*/)
 }
 
 // Getting a cookie by name
-Cookie*
-Cookies::GetCookie(XString p_name)
+const Cookie*
+Cookies::GetCookie(const XString& p_name) const
 {
   for(auto& cookie : m_cookies)
   {
@@ -438,7 +430,7 @@ Cookies::GetCookie(XString p_name)
 // Without any attributes to the cookie
 // So only for "Cookie:", not for "Set-Cookie" !!!
 XString
-Cookies::GetCookieText()
+Cookies::GetCookieText() const
 {
   XString text;
   for(auto& cookie : m_cookies)
@@ -454,7 +446,7 @@ Cookies::GetCookieText()
 
 // Adding a cookie to the cache, but recycles cookies with existing names
 void    
-Cookies::AddCookieUnique(Cookie& p_cookie)
+Cookies::AddCookieUnique(const Cookie& p_cookie)
 {
   for(auto& cookie : m_cookies)
   {

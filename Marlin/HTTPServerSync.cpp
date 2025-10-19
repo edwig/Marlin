@@ -38,14 +38,6 @@
 #include "WebSocketServerSync.h"
 #include <ServiceReporting.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #pragma comment(lib,"httpapi.lib")
 
 // Logging macro's
@@ -56,7 +48,7 @@ static char THIS_FILE[] = __FILE__;
 #define ERRORLOG(code,text)       ErrorLog (_T(__FUNCTION__),code,text)
 #define HTTPERROR(code,text)      HTTPError(_T(__FUNCTION__),code,text)
 
-HTTPServerSync::HTTPServerSync(XString p_name)
+HTTPServerSync::HTTPServerSync(const XString& p_name)
                :HTTPServerMarlin(p_name)
 {
 }
@@ -373,7 +365,7 @@ HTTPServerSync::RunHTTPServer()
   // requests. The buffer size can be increased if required. Space
   // is also required for an HTTP_REQUEST structure.
   requestBufferLength = sizeof(HTTP_REQUEST) + INIT_HTTP_BUFFERSIZE;
-  requestBuffer       = reinterpret_cast<PCHAR>(new uchar[requestBufferLength]);
+  requestBuffer       = reinterpret_cast<PCHAR>(alloc_new uchar[requestBufferLength]);
 
   if(requestBuffer == NULL)
   {
@@ -567,7 +559,7 @@ HTTPServerSync::RunHTTPServer()
       }
 
       // For all types of requests: Create the HTTPMessage
-      message = new HTTPMessage(type,site);
+      message = alloc_new HTTPMessage(type,site);
       message->SetURL(rawUrl);
       message->SetReferrer(referrer);
       message->SetAuthorization(authorize);
@@ -614,7 +606,7 @@ HTTPServerSync::RunHTTPServer()
         // Remember our URL
         stream->m_baseURL = rawUrl;
         // Create callback structure
-        MsgStream* dispatch = new MsgStream();
+        MsgStream* dispatch = alloc_new MsgStream();
         dispatch->m_message = message;
         dispatch->m_stream  = stream;
         // Check for a correct callback
@@ -648,7 +640,7 @@ HTTPServerSync::RunHTTPServer()
       // Free the old buffer and allocate a new buffer.
       requestBufferLength = bytesRead;
       delete [] requestBuffer;
-      requestBuffer = reinterpret_cast<PCHAR>(new uchar[requestBufferLength]);
+      requestBuffer = reinterpret_cast<PCHAR>(alloc_new uchar[requestBufferLength]);
       if(requestBuffer == NULL)
       {
         ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Out of memory"));
@@ -725,7 +717,7 @@ HTTPServerSync::StopServer()
   for(auto& it : m_eventStreams)
   {
     // SEND OnClose event
-    ServerEvent* event = new ServerEvent(_T("close"));
+    ServerEvent* event = alloc_new ServerEvent(_T("close"));
     SendEvent(it.second->m_port,it.second->m_baseURL,event);
   }
   // Try to remove all event streams
@@ -783,9 +775,9 @@ HTTPServerSync::StopServer()
 
 // Create a new WebSocket in the subclass of our server
 WebSocket*
-HTTPServerSync::CreateWebSocket(XString p_uri)
+HTTPServerSync::CreateWebSocket(const XString& p_uri)
 {
-  WebSocketServer* socket = new WebSocketServerSync(p_uri);
+  WebSocketServer* socket = alloc_new WebSocketServerSync(p_uri);
 
   // Connect the server logfile, and logging level
   socket->SetLogfile(m_log);
@@ -833,7 +825,7 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encodin
   ULONG  entityBufferLength = INIT_HTTP_BUFFERSIZE;
 
   // Create a buffer + 1 extra byte for the closing 0
-  PUCHAR entityBuffer = new uchar[(size_t)entityBufferLength + 1];
+  PUCHAR entityBuffer = alloc_new uchar[(size_t)entityBufferLength + 1];
   if(entityBuffer == NULL)
   {
     ERRORLOG(ERROR_NOT_ENOUGH_MEMORY,_T("Out of memory"));
@@ -904,7 +896,7 @@ HTTPServerSync::ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encodin
     }
   }
   DETAILLOGV(_T("Received %s message from: %s Size: %lu")
-            ,headers[static_cast<unsigned>(p_message->GetCommand())]
+            ,g_headers[static_cast<unsigned>(p_message->GetCommand())]
             ,SocketToServer(p_message->GetSender()).GetString()
             ,p_message->GetBodyLength());
 
@@ -935,7 +927,7 @@ HTTPServerSync::AddUnknownHeaders(UKHeaders& p_headers)
     return nullptr;
   }
   // Alloc some space
-  PHTTP_UNKNOWN_HEADER unknown = new HTTP_UNKNOWN_HEADER[p_headers.size()];
+  PHTTP_UNKNOWN_HEADER unknown = alloc_new HTTP_UNKNOWN_HEADER[p_headers.size()];
 
   unsigned ind = 0;
   unsigned len = 0;
@@ -1134,7 +1126,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   // Because we can have more than one Set-Cookie: header
   // and HTTP API just supports one set-cookie.
   UKHeaders ukheaders;
-  Cookies& cookies = p_message->GetCookies();
+  Cookies& cookies = const_cast<Cookies&>(p_message->GetCookies());
   AutoCSTR headerCookie;
   if(cookies.GetCookies().empty())
   {
@@ -1173,7 +1165,7 @@ HTTPServerSync::SendResponse(HTTPMessage* p_message)
   // Add extra headers from the message, except for content-length
   p_message->DelHeader(_T("Content-Length"));
 
-  HeaderMap* map = p_message->GetHeaderMap();
+  HeaderMap* map = const_cast<HeaderMap*>(p_message->GetHeaderMap());
   for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
   {
     ukheaders.push_back(UKHeader(it->first,it->second));
@@ -1560,7 +1552,7 @@ HTTPServerSync::SendResponseChunk(PHTTP_RESPONSE  p_response
 void      
 HTTPServerSync::SendResponseError(PHTTP_RESPONSE p_response
                                  ,HTTP_OPAQUE_ID p_request
-                                 ,XString&       p_page
+                                 ,const XString& p_page
                                  ,int            p_error
                                  ,LPCTSTR        p_reason)
 {

@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -28,14 +28,6 @@
 #include "pch.h"
 #include "Base64.h"
 #include <ConvertWideString.h>
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 #pragma comment(lib,"crypt32.lib")
 
@@ -86,7 +78,7 @@ Base64::Encrypt(BYTE* p_buffer,int p_length)
   _TUCHAR* buffer = new _TUCHAR[tchars + 2];
   CryptBinaryToString(p_buffer,p_length,m_method | m_options,(LPTSTR)buffer,&tchars);
   buffer[tchars] = 0;
-  XString result(buffer);
+  XString result((LPTSTR)buffer);
   delete[] buffer;
   return result;
 }
@@ -94,7 +86,7 @@ Base64::Encrypt(BYTE* p_buffer,int p_length)
 // Encrypt a ANSI/UNICODE string to a ANSI/UNICODE base64
 // In UNICODE use only for purposes where strings contain characters > 0x00FF
 XString
-Base64::Encrypt(XString p_unencrypted)
+Base64::Encrypt(const XString& p_unencrypted)
 {
   if(p_unencrypted.GetLength() == 0)
   {
@@ -110,10 +102,10 @@ Base64::Encrypt(XString p_unencrypted)
 #endif
   DWORD tchars = 0;
   CryptBinaryToString(unencrypted,length,m_method | m_options,(LPTSTR)NULL,&tchars);
-  _TUCHAR* buffer = new _TUCHAR[tchars + 2];
+  _TUCHAR* buffer = alloc_new _TUCHAR[tchars + 2];
   CryptBinaryToString(unencrypted,length,m_method | m_options,(LPTSTR)buffer,&tchars);
   buffer[tchars] = 0;
-  XString result(buffer);
+  XString result((LPTSTR)buffer);
   delete[] buffer;
   return result;
 }
@@ -121,7 +113,7 @@ Base64::Encrypt(XString p_unencrypted)
 // Encrypt a ANSI/UNICODE string to a ANSI/UNICODE base64
 // In UNICODE use only for purposes where strings contain characters > 0x00FF
 XString
-Base64::EncryptUnicode(XString p_unencrypted)
+Base64::EncryptUnicode(const XString& p_unencrypted)
 {
   if(p_unencrypted.GetLength() == 0)
   {
@@ -129,17 +121,17 @@ Base64::EncryptUnicode(XString p_unencrypted)
   }
   DWORD tchars = 0;
   CryptBinaryToString((const BYTE*)p_unencrypted.GetString(),p_unencrypted.GetLength() * sizeof(TCHAR),m_method | m_options,(LPTSTR) NULL,&tchars);
-  _TUCHAR* buffer = new _TUCHAR[tchars + 2];
+  _TUCHAR* buffer = alloc_new _TUCHAR[tchars + 2];
   CryptBinaryToString((const BYTE*)p_unencrypted.GetString(),p_unencrypted.GetLength() * sizeof(TCHAR),m_method | m_options,(LPTSTR) buffer,&tchars);
   buffer[tchars] = 0;
-  XString result(buffer);
+  XString result((LPTSTR)buffer);
   delete[] buffer;
   return result;
 }
 
 // Convert into a string
 XString
-Base64::Decrypt(XString p_encrypted)
+Base64::Decrypt(const XString& p_encrypted)
 {
   if(p_encrypted.GetLength() == 0)
   {
@@ -148,7 +140,7 @@ Base64::Decrypt(XString p_encrypted)
   DWORD length = 0;
   DWORD type = CRYPT_STRING_BASE64_ANY;
   CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,NULL,&length,0,&type);
-  BYTE* buffer = new BYTE[length + 2];
+  BYTE* buffer = alloc_new BYTE[length + 2];
   CryptStringToBinary(p_encrypted.GetString(),p_encrypted.GetLength(),m_method,buffer,&length,0,&type);
   buffer[length] = 0;
 #ifdef _UNICODE
@@ -164,7 +156,7 @@ Base64::Decrypt(XString p_encrypted)
 
 // Convert into a binary buffer for further processing
 bool
-Base64::Decrypt(XString p_encrypted,BYTE* p_buffer,int p_length)
+Base64::Decrypt(const XString& p_encrypted,BYTE* p_buffer,int p_length)
 {
   if(p_encrypted.GetLength() == 0 || p_length <= 0)
   {
@@ -262,7 +254,7 @@ CRC4::Decrypt(BYTE* pszText,int plen,const BYTE* pszKey,int klen)
 }
 
 XString
-CRC4::Encrypt(const XString p_unencrypted,const XString p_key)
+CRC4::Encrypt(const XString& p_unencrypted,const XString& p_key)
 {
   int plen = p_unencrypted.GetLength() * sizeof(TCHAR);
   int klen = p_key.GetLength()         * sizeof(TCHAR);
@@ -273,7 +265,7 @@ CRC4::Encrypt(const XString p_unencrypted,const XString p_key)
 }
 
 XString
-CRC4::Decrypt(XString const p_encrypted,XString const p_key)
+CRC4::Decrypt(const XString& p_encrypted,const XString& p_key)
 {
   // Using the same function as encoding
   return Encrypt(p_encrypted,p_key);

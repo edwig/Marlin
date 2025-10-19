@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -54,7 +54,7 @@ class FileBuffer
 {
 public:
   FileBuffer();
-  explicit FileBuffer(XString p_fileName);
+  explicit FileBuffer(const XString& p_fileName);
   explicit FileBuffer(uchar* p_buffer,size_t p_length);
   explicit FileBuffer(FileBuffer& p_buffer);
  ~FileBuffer();
@@ -81,24 +81,24 @@ public:
   // Add buffer part
   void    AddBuffer(uchar* p_buffer,size_t p_length);
   void    AddBufferCRLF(uchar* p_buffer,size_t p_length);
-  void    AddStringToBuffer(XString p_string,XString p_charset,bool p_crlf = true);
+  void    AddStringToBuffer(const XString& p_string,const XString& p_charset,bool p_crlf = true);
   // Allocate a one-buffer block
   bool    AllocateBuffer(size_t p_length);
 
   // GETTERS
 
   // Has buffer parts
-  bool    GetHasBufferParts();
+  bool    GetHasBufferParts() const;
   // Number of buffer parts
   int     GetNumberOfParts();
   // Get the filename
   XString GetFileName();
   // Get the buffer in one go
-  void    GetBuffer(uchar*& p_buffer,size_t& p_length);
+  void    GetBuffer(uchar*& p_buffer,size_t& p_length) const;
   // Get a buffer part
-  bool    GetBufferPart(unsigned p_index,uchar*& p_buffer,size_t& p_length);
+  bool    GetBufferPart(unsigned p_index,uchar*& p_buffer,size_t& p_length) const;
   // Get a copy of the total buffer, call 'free' yourselves!
-  bool    GetBufferCopy(uchar*& p_buffer,size_t& p_length);
+  bool    GetBufferCopy(uchar*& p_buffer,size_t& p_length) const;
   // Get the length of the buffer
   size_t  GetLength();
   // Get resulting file handle
@@ -124,11 +124,11 @@ private:
   HANDLE   m_file          { NULL };
   size_t   m_binaryLength  { NULL };
   uchar*   m_buffer        { nullptr };
-  Parts    m_parts;
+  mutable Parts    m_parts;
 };
 
 inline bool
-FileBuffer::GetHasBufferParts()
+FileBuffer::GetHasBufferParts() const
 {
   return m_parts.size() > 0;
 }

@@ -19,12 +19,6 @@
 #include <ConvertWideString.h>
 #include <winhttp.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // CTOR of HTTP Server session
 ServerSession::ServerSession()
 {
@@ -215,7 +209,12 @@ ServerSession::SetTimeoutMinSendRate(ULONG  p_rate)
 }
 
 void     
-ServerSession::SetAuthentication(ULONG p_scheme,XString p_domain,XString p_realm,wstring p_domainW,wstring p_realmW,bool p_caching)
+ServerSession::SetAuthentication(ULONG p_scheme
+                                ,const XString& p_domain
+                                ,const XString& p_realm
+                                ,const wstring& p_domainW
+                                ,const wstring& p_realmW
+                                ,bool p_caching)
 {
   AutoCritSec lock(&m_lock);
 

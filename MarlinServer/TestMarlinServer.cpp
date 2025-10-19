@@ -27,18 +27,19 @@
 //
 #include "stdafx.h"
 #include "TestMarlinServer.h"
-#include "ServerApp.h"
-#include "StdException.h"
-#include "ServiceReporting.h"
-#include "AppConfig.h"
-#include "HTTPServerSync.h"
-#include "HTTPServerMarlin.h"
-#include "ErrorReport.h"
-#include "HTTPLoglevel.h"
-#include "AutoCritical.h"
-#include "Alert.h"
-#include "Version.h"
+#include <ServerApp.h>
+#include <StdException.h>
+#include <ServiceReporting.h>
+#include <AppConfig.h>
+#include <HTTPServerSync.h>
+#include <HTTPServerMarlin.h>
+#include <ErrorReport.h>
+#include <HTTPLoglevel.h>
+#include <AutoCritical.h>
+#include <Alert.h>
+#include <Version.h>
 #include <WinFile.h>
+#include <GetLastErrorAsString.h>
 
 // Load product and application constants
 void LoadConstants(LPCTSTR /*p_app_name*/)
@@ -58,12 +59,6 @@ void LoadConstants(LPCTSTR /*p_app_name*/)
 #ifndef MARLIN_IIS
 TestMarlinServer theServer;
 #include "..\Marlin\ServerMain.cpp"
-#else
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
 #endif
 
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
@@ -141,14 +136,14 @@ TestMarlinServer::Startup()
     // Back to ServerMain to wait for the ending event
     result = true;
   }
-  catch(CException& er)
-  {
-    XString error = MessageFromException(er);
-    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Server initialization failed: %s"),error.GetString());
-  }
   catch(StdException& er)
   {
     SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Server initialization failed: %s"),er.GetErrorMessage().GetString());
+  }
+  catch(...)
+  {
+    XString error = GetLastErrorAsString();
+    SvcReportErrorEvent(0,true,_T(__FUNCTION__),_T("Server initialization failed: %s"),error.GetString());
   }
   // Stop theClock
   m_counter.Stop();
@@ -174,10 +169,10 @@ TestMarlinServer::ShutDown()
 
 // Register the objects from the ServerApp out of the IIS configuration
 void
-TestMarlinServer::ConfigIISServer(XString      p_applicationName
-                                 ,HTTPServer*  p_server
-                                 ,ThreadPool*  p_pool
-                                 ,LogAnalysis* p_log)
+TestMarlinServer::ConfigIISServer(const XString& p_applicationName
+                                 ,HTTPServer*    p_server
+                                 ,ThreadPool*    p_pool
+                                 ,LogAnalysis*   p_log)
 {
   m_serverName = p_applicationName;
   m_httpServer = p_server;
@@ -256,7 +251,7 @@ TestMarlinServer::StartErrorReporting()
 {
   if(m_errorReport == nullptr && m_runAsService != RUNAS_IISAPPPOOL)
   {
-    WebServiceServer::m_errorReport = new ErrorReport();
+    WebServiceServer::m_errorReport = alloc_new ErrorReport();
     m_ownReport = true;
   }
 }
@@ -365,7 +360,7 @@ TestMarlinServer::ConfigToServer()
     // RUNAS_STANDALONE / RUNAS_NTSERVICE
   
     // Create a threadpool
-    m_pool        = new ThreadPool();
+    m_pool        = alloc_new ThreadPool();
     m_poolOwner   = true;  // Do DTOR ourselves!!
 
     // Create a logfile
@@ -376,8 +371,8 @@ TestMarlinServer::ConfigToServer()
     }
     // Create a sync server or a a-synchronous server
     // Un-Comment the other if you want to test it.
-    // m_httpServer  = new HTTPServerSync(m_serverName);
-    m_httpServer  = new HTTPServerMarlin(m_serverName);
+    // m_httpServer  = alloc_new HTTPServerSync(m_serverName);
+    m_httpServer  = alloc_new HTTPServerMarlin(m_serverName);
     m_serverOwner = true; // Do DTOR later!
   }
 

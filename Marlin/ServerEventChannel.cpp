@@ -35,14 +35,6 @@
 #include "Base64.h"
 #include "CRC32.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Logging via the server
 #define DETAILLOG1(text)        m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text)
 #define DETAILLOGS(text,extra)  m_server->DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra)
@@ -126,10 +118,10 @@ void EventChannelOnClose(WebSocket* p_socket,const WSFrame* p_event)
 //////////////////////////////////////////////////////////////////////////
 
 ServerEventChannel::ServerEventChannel(ServerEventDriver* p_driver
-                                      ,int     p_channel
-                                      ,XString p_sessionName
-                                      ,XString p_cookie
-                                      ,XString p_token)
+                                      ,int            p_channel
+                                      ,const XString& p_sessionName
+                                      ,const XString& p_cookie
+                                      ,const XString& p_token)
                    :m_driver(p_driver)
                    ,m_channel(p_channel)
                    ,m_name(p_sessionName)
@@ -157,13 +149,13 @@ ServerEventChannel::Reset()
 // Register a new event
 // Called from the ServerEventDriver.
 int 
-ServerEventChannel::PostEvent(XString p_payload
-                             ,XString p_sender
-                             ,EvtType p_type     /*= EvtType::EV_Message*/
-                             ,XString p_typeName /*= ""*/)
+ServerEventChannel::PostEvent(const XString& p_payload
+                             ,const XString& p_sender
+                             ,      EvtType  p_type     /*= EvtType::EV_Message*/
+                             ,const XString& p_typeName /*= ""*/)
 {
   // Create event and store at the back of the queue
-  LTEvent* ltevent    = new LTEvent();
+  LTEvent* ltevent    = alloc_new LTEvent();
   ltevent->m_number   = ++m_maxNumber;
   ltevent->m_sent     = 0; // Send to all clients
   ltevent->m_type     = p_type;
@@ -331,7 +323,7 @@ ServerEventChannel::RegisterNewSocket(HTTPMessage* p_message,WebSocket* p_socket
   if(p_check)
   {
     bool found = false;
-    Cookies& cookies = p_message->GetCookies();
+    Cookies& cookies = const_cast<Cookies&>(p_message->GetCookies());
     for(auto& cookie : cookies.GetCookies())
     {
       if(m_cookie.CompareNoCase(cookie.GetName())  == 0 &&
@@ -426,7 +418,7 @@ ServerEventChannel::RegisterNewStream(HTTPMessage* p_message,EventStream* p_stre
   if(p_check)
   {
     bool found = false;
-    Cookies& cookies = p_message->GetCookies();
+    Cookies& cookies = const_cast<Cookies&>(p_message->GetCookies());
     for(auto& cookie : cookies.GetCookies())
     {
       if(m_cookie.CompareNoCase(cookie.GetName())  == 0 &&
@@ -790,7 +782,7 @@ ServerEventChannel::SendEventToStreams(LTEvent* p_event)
 
       // Create SSE ServerEvent
       XString type = LTEvent::EventTypeToString(p_event->m_type);
-      ServerEvent* event = new ServerEvent(type);
+      ServerEvent* event = alloc_new ServerEvent(type);
       event->m_id = p_event->m_number;
       if(p_event->m_type == EvtType::EV_Binary)
       {
@@ -900,7 +892,7 @@ ServerEventChannel::CloseChannel()
     {
       try
       {
-        LTEvent* ltevent  = new LTEvent(EvtType::EV_Close);
+        LTEvent* ltevent  = alloc_new LTEvent(EvtType::EV_Close);
         ltevent->m_payload = _T("Channel closed");
         ltevent->m_number  = ++m_maxNumber;
         ltevent->m_sent    = m_appData;
@@ -1015,12 +1007,12 @@ ServerEventChannel::ChangeEventPolicy(EVChannelPolicy p_policy,LPFN_CALLBACK p_a
 
 // To be called by the socket handlers only!
 void
-ServerEventChannel::OnOpen(XString p_message)
+ServerEventChannel::OnOpen(const XString& p_message)
 {
   // Open seen. Do not generate again for this channel
   m_openSeen = true;
 
-  LTEvent* ltevent   = new LTEvent;
+  LTEvent* ltevent   = alloc_new LTEvent;
   ltevent->m_payload = p_message;
   ltevent->m_type    = EvtType::EV_Open;
   ltevent->m_number  = 0;
@@ -1041,9 +1033,9 @@ ServerEventChannel::OnOpen(XString p_message)
 
 // Called by socket handler and long-polling handler
 void
-ServerEventChannel::OnMessage(XString p_message)
+ServerEventChannel::OnMessage(const XString& p_message)
 {
-  LTEvent* ltevent   = new LTEvent;
+  LTEvent* ltevent   = alloc_new LTEvent;
   ltevent->m_payload = p_message;
   ltevent->m_type    = EvtType::EV_Message;
   ltevent->m_number  = 0;
@@ -1063,9 +1055,9 @@ ServerEventChannel::OnMessage(XString p_message)
 }
 
 void
-ServerEventChannel::OnError(XString p_message)
+ServerEventChannel::OnError(const XString& p_message)
 {
-  LTEvent* ltevent   = new LTEvent;
+  LTEvent* ltevent   = alloc_new LTEvent;
   ltevent->m_payload = p_message;
   ltevent->m_type    = EvtType::EV_Error;
   ltevent->m_number  = 0;
@@ -1085,9 +1077,9 @@ ServerEventChannel::OnError(XString p_message)
 }
 
 void
-ServerEventChannel::OnClose(XString p_message)
+ServerEventChannel::OnClose(const XString& p_message)
 {
-  LTEvent* ltevent   = new LTEvent;
+  LTEvent* ltevent   = alloc_new LTEvent;
   ltevent->m_payload = p_message;
   ltevent->m_type    = EvtType::EV_Close;
   ltevent->m_number  = 0;
@@ -1114,7 +1106,7 @@ ServerEventChannel::OnBinary(void* p_data,DWORD p_length)
     m_openSeen = true;
     OnOpen(_T("OpenChannel"));
   }
-  LTEvent* ltevent  = new LTEvent;
+  LTEvent* ltevent  = alloc_new LTEvent;
   ltevent->m_type   = EvtType::EV_Binary;
   ltevent->m_number = p_length;
   ltevent->m_sent   = m_appData;
@@ -1154,7 +1146,7 @@ ServerEventChannel::Receiving()
   {
     if(!m_openSeen && ltevent->m_type != EvtType::EV_Open)
     {
-      LTEvent* open = new LTEvent(EvtType::EV_Open);
+      LTEvent* open = alloc_new LTEvent(EvtType::EV_Open);
       pool->SubmitWork(m_application,open);
     }
     // Post it to the thread pool

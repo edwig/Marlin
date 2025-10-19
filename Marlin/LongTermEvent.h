@@ -65,10 +65,10 @@ public:
   LTEvent(EvtType p_type);
  ~LTEvent() = default;
 
-  static EvtType StringToEventType(XString p_type);
+  static EvtType StringToEventType(const XString& p_type);
   static XString EventTypeToString(EvtType p_type);
 
-  static EVChannelPolicy StringToChannelPolicy(XString p_policy);
+  static EVChannelPolicy StringToChannelPolicy(const XString& p_policy);
   static XString ChannelPolicyToString(EVChannelPolicy p_policy);
 
   // DATA

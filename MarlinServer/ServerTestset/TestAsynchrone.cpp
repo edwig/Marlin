@@ -31,12 +31,6 @@
 #include <HTTPSite.h>
 #include <SiteHandlerSoap.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int highSpeed = 0;
 
 class SiteHandlerSoapAsynchrone : public SiteHandlerSoap
@@ -127,7 +121,7 @@ TestMarlinServer::TestAsynchrone()
   }
 
   // Setting the POST handler for this site
-  SiteHandlerSoapAsynchrone* handler = new SiteHandlerSoapAsynchrone();
+  SiteHandlerSoapAsynchrone* handler = alloc_new SiteHandlerSoapAsynchrone();
   site->SetHandler(HTTPCommand::http_post,handler);
 
   // Modify the standard settings for this site

@@ -29,15 +29,7 @@
 #include "SiteFilterXSS.h"
 #include "SiteHandler.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
-SiteFilterXSS::SiteFilterXSS(unsigned p_priority,XString p_name)
+SiteFilterXSS::SiteFilterXSS(unsigned p_priority,const XString& p_name)
               :SiteFilter(p_priority,p_name)
 {
 }

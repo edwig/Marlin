@@ -2,8 +2,8 @@
 //
 // SourceFile: Namespace.h
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -35,7 +35,7 @@ bool SplitNamespaceAndAction(XString p_soapAction,XString& p_namespace,XString& 
 
 // Concatenate namespace and action to a soapaction entry
 // Can be used in HTTP and in SOAP messages
-XString CreateSoapAction(XString p_namespace,XString p_action);
+XString CreateSoapAction(const XString& p_namespace, const XString& p_action);
 
 // Split namespace from an identifier
 XString SplitNamespace(XString& p_name);

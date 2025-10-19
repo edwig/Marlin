@@ -85,18 +85,18 @@ public:
 class WebServiceServer
 {
 public:
-  WebServiceServer(XString    p_name
-                  ,XString    p_webroot
-                  ,XString    p_url
-                  ,PrefixType p_channelType
-                  ,XString    p_targetNamespace
-                  ,unsigned   p_maxThreads);
+  WebServiceServer(const XString& p_name
+                  ,const XString& p_webroot
+                  ,const XString& p_url
+                  ,PrefixType     p_channelType
+                  ,const XString& p_targetNamespace
+                  ,unsigned       p_maxThreads);
   virtual ~WebServiceServer();
  
   // Reset: Use before starting again
   void            Reset();
   // Add SOAP message call and answer. Call once for all messages in the service
-  bool            AddOperation(int p_code,XString p_name,SOAPMessage* p_input,SOAPMessage* p_output);
+  bool            AddOperation(int p_code,const XString& p_name,SOAPMessage* p_input,SOAPMessage* p_output);
   // Running the service
   virtual bool    RunService();
   // Stopping the service
@@ -123,45 +123,45 @@ public:
   // HIGHLY RECOMMENDED:  Set the error report object
   void    SetErrorReport(ErrorReport* p_errorReport);
   // OPTIONAL:  Set a logfile name (if no LogAnalysis given)
-  void    SetLogFilename(XString p_logFilename);
+  void    SetLogFilename(const XString& p_logFilename);
   // OPTIONAL:  Set create as a subsite from another site
-  void    SetSubsite(bool p_subsite)                 { m_subsite = p_subsite;              };
+  void    SetSubsite(bool p_subsite)                        { m_subsite = p_subsite;              };
   // OPTIONAL:  Set the WSDLCache to generate a WSDL file
-  void    SetGenerateWsdl(bool p_generate)           { m_generateWsdl = p_generate;        };
+  void    SetGenerateWsdl(bool p_generate)                  { m_generateWsdl = p_generate;        };
   // OPTIONAL:  Set an external WSDL file to be read
-  void    SetExternalWsdl(XString p_filename)        { m_externalWsdl = p_filename;        };
+  void    SetExternalWsdl(XString p_filename)               { m_externalWsdl = p_filename;        };
   // OPTIONAL:  Set checking of incoming messages
-  void    SetCheckIncoming(bool p_check)             { m_checkIncoming = p_check;          };
+  void    SetCheckIncoming(bool p_check)                    { m_checkIncoming = p_check;          };
   // OPTIONAL:  Set checking of outgoing messages
-  void    SetCheckOutgoing(bool p_check)             { m_checkOutgoing = p_check;          };
+  void    SetCheckOutgoing(bool p_check)                    { m_checkOutgoing = p_check;          };
   // OPTIONAL:  Set checking of field values against XSD
-  void    SetCheckFieldValues(bool p_check)          { m_checkFieldvalues = p_check;       };
+  void    SetCheckFieldValues(bool p_check)                 { m_checkFieldvalues = p_check;       };
   // OPTIONAL:  Set JSON-SOAP roundtrip engineering
-  void    SetJsonSoapTranslation(bool p_json)        { m_jsonTranslation = p_json;         };
+  void    SetJsonSoapTranslation(bool p_json)               { m_jsonTranslation = p_json;         };
   // OPTIONAL:  Set SOAP 1.0
-  void    SetPerformSoap10(bool p_perform)           { m_wsdl->SetPerformSoap10(p_perform);};
+  void    SetPerformSoap10(bool p_perform)                  { m_wsdl->SetPerformSoap10(p_perform);};
   // OPTIONAL:  Set SOAP 1.2
-  void    SetPerformSoap12(bool p_perform)           { m_wsdl->SetPerformSoap12(p_perform);};
+  void    SetPerformSoap12(bool p_perform)                  { m_wsdl->SetPerformSoap12(p_perform);};
   // OPTIONAL:  Set service postfix other than ".aspcxx"
-  void    SetServicePostfix(XString p_postfix)       { m_servicePostfix = p_postfix;       };
+  void    SetServicePostfix(const XString& p_postfix)       { m_servicePostfix = p_postfix;       };
   // OPTIONAL:  Set extra content type
-  void    SetContentType(bool p_logging,XString p_extension,XString p_contentType);
+  void    SetContentType(bool p_logging,const XString& p_extension,const XString& p_contentType);
   // OPTIONAL:  Set async mode for receiving of soap messages only
-  void    SetAsynchroneous(bool p_async)             { m_asyncMode = p_async;              };
+  void    SetAsynchroneous(bool p_async)                    { m_asyncMode = p_async;              };
   // OPTIONAL:  Set authentication scheme (Basic, Digest, NTLM, Negotiate, All)
-  void    SetAuthenticationScheme(XString p_scheme)  { m_authentScheme = p_scheme;         };
+  void    SetAuthenticationScheme(const XString& p_scheme)  { m_authentScheme = p_scheme;         };
   // OPTIONAL:  Set WS-Reliability
-  void    SetReliable(bool p_reliable)               { m_reliable = p_reliable;            };
+  void    SetReliable(bool p_reliable)                      { m_reliable = p_reliable;            };
   // OPTIONAL:  Set security encryption level
-  void    SetEncryptionLevel(XMLEncryption p_level)  { m_securityLevel = p_level;          };
+  void    SetEncryptionLevel(XMLEncryption p_level)         { m_securityLevel = p_level;          };
   // OPTIONAL:  Set security encryption password
-  void    SetEncryptionPassword(XString p_password)  { m_enc_password = p_password;        };
+  void    SetEncryptionPassword(const XString& p_password)  { m_enc_password = p_password;        };
   // OPTIONAL:  Set cache policy
   void    SetCachePolicy(HTTP_CACHE_POLICY_TYPE p_type,ULONG p_seconds);
   // OPTIONAL:  Set an authentication Realm
-  void    SetAuthenticationRealm(XString p_realm)    { m_authentRealm = p_realm;           };
+  void    SetAuthenticationRealm(const XString& p_realm)    { m_authentRealm = p_realm;           };
   // OPTIONAL:  Set an authentication Domain
-  void    SetAuthenticationDomain(XString p_domain)  { m_authentDomain = p_domain;         };
+  void    SetAuthenticationDomain(const XString& p_domain)  { m_authentDomain = p_domain;         };
   // OPTIONAL: Set a different SOAP handler, but beware!
   void    SetSoapHandler(SiteHandler* p_handler);
   // OPTIONAL: Set a different GET handler, but beware!
@@ -229,7 +229,7 @@ protected:
   void          StartWsdl();
   // Reading the settings from Marlin.config files
   void          ReadingWebconfig();
-  void          ReadingWebconfig(XString p_webconfig);
+  void          ReadingWebconfig(const XString& p_webconfig);
   // Define for your derived class by using the WEBSERVICE* macros
   // at the beginning of this interface description
   virtual void  OnProcessPost(int p_code,SOAPMessage* p_message);

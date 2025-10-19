@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -28,14 +28,6 @@
 #include "pch.h"
 #include "StringUtilities.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 XString AsString(int p_number,int p_radix /*=10*/)
 {
   XString string;
@@ -53,17 +45,17 @@ XString AsString(double p_number)
   return string;
 }
 
-int AsInteger(XString p_string)
+int AsInteger(const XString& p_string)
 {
   return _ttoi(p_string.GetString());
 }
 
-double  AsDouble(XString p_string)
+double  AsDouble(const XString& p_string)
 {
   return _ttof(p_string.GetString());
 }
 
-bcd AsBcd(XString p_string)
+bcd AsBcd(const XString& p_string)
 {
   bcd num(p_string.GetString());
   return num;
@@ -263,7 +255,7 @@ XString GetStringFromClipboard(HWND p_wnd /*=NULL*/)
   return string;
 }
 
-bool PutStringToClipboard(XString p_string,HWND p_wnd /*=NULL*/,bool p_append /*=false*/)
+bool PutStringToClipboard(const XString& p_string,HWND p_wnd /*=NULL*/,bool p_append /*=false*/)
 {
   bool result = false;
 #ifdef _UNICODE
@@ -283,7 +275,7 @@ bool PutStringToClipboard(XString p_string,HWND p_wnd /*=NULL*/,bool p_append /*
       if(data)
       {
         size /= sizeof(TCHAR);
-        _tcsncpy_s((LPTSTR)data,size,(LPCTSTR)p_string.GetString(),size);
+        _tcsncpy_s((LPTSTR) data,size,(LPCTSTR) p_string.GetString(),size);
       }
       else
       {
@@ -309,7 +301,7 @@ bool PutStringToClipboard(XString p_string,HWND p_wnd /*=NULL*/,bool p_append /*
 
 // Count the number of characters in a string
 int
-CountOfChars(XString p_string,TCHAR p_char)
+CountOfChars(const XString& p_string,TCHAR p_char)
 {
   int count = 0;
   for(int index = 0;index < p_string.GetLength();++index)

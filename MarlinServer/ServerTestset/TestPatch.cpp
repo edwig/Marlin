@@ -32,12 +32,6 @@
 #include <SiteHandlerOptions.h>
 #include <SiteFilter.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 2;
 
 //////////////////////////////////////////////////////////////////////////
@@ -129,8 +123,8 @@ TestMarlinServer::TestPatch()
 
   // Setting the POST handler for this site
   // And let the HTTP OPTIONS command reveal the fact that we handle patch calls
-  site->SetHandler(HTTPCommand::http_patch,  new SiteHandlerPatchMe());
-  site->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
+  site->SetHandler(HTTPCommand::http_patch,  alloc_new SiteHandlerPatchMe());
+  site->SetHandler(HTTPCommand::http_options,alloc_new SiteHandlerOptions());
   // And also handle verb tunneling requests for the HTTP PATCH command
   // To test with or without verb tunneling, turn 'true' to 'false'
   site->SetVerbTunneling(true);

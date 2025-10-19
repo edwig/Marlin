@@ -13,12 +13,6 @@
 // The system is/was initialized by calling HttpInitialize
 bool    g_httpsys_initialized = false;
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Initialization follows here
 HTTPAPI_LINKAGE
 ULONG WINAPI

@@ -2,8 +2,8 @@
 //
 // SourceFile: XPath.cpp
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -26,15 +26,7 @@
 #include "pch.h"
 #include "XPath.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
-XPath::XPath(XMLMessage* p_message,XString p_path)
+XPath::XPath(XMLMessage* p_message,const XString& p_path)
       :m_message(p_message)
       ,m_path(p_path)
 {
@@ -77,7 +69,7 @@ XPath::SetMessage(XMLMessage* p_message) noexcept
 }
 
 bool
-XPath::SetPath(XString p_path) noexcept
+XPath::SetPath(const XString& p_path) noexcept
 {
   m_path = p_path;
   if(m_message)
@@ -484,7 +476,7 @@ XPath::ParseLevel(XString& p_parsing)
 }
 
 bool
-XPath::ParseLevelFindIndex(XString p_token)
+XPath::ParseLevelFindIndex(const XString& p_token)
 {
   int index = _ttoi(p_token) - XPATH_ONE_BASED;
   XMLElement* parent = m_element->GetParent();
@@ -504,7 +496,7 @@ XPath::ParseLevelFindIndex(XString p_token)
 }
 
 bool
-XPath::ParseLevelFindAttrib(XString p_token,bool p_recurse)
+XPath::ParseLevelFindAttrib(const XString& p_token,bool p_recurse)
 {
   bool found = false;
   if(m_results.empty())
@@ -527,7 +519,7 @@ XPath::ParseLevelFindAttrib(XString p_token,bool p_recurse)
 
 // Finding the next node '/nodename/'
 bool
-XPath::ParseLevelFindNodes(XString p_token,bool p_recurse)
+XPath::ParseLevelFindNodes(const XString& p_token,bool p_recurse)
 {
   bool found = false;
 
@@ -539,7 +531,7 @@ XPath::ParseLevelFindNodes(XString p_token,bool p_recurse)
     {
       m_element = nullptr;
       m_results.clear();
-      m_errorInfo = _T("Unsuccessful recursive find of: ") + p_token;
+      m_errorInfo = XString(_T("Unsuccessful recursive find of: ")) + p_token;
       m_status = XPStatus::XP_Invalid;
     }
   }
@@ -555,7 +547,7 @@ XPath::ParseLevelFindNodes(XString p_token,bool p_recurse)
 // Already results, next node finding '/nodename/' reduces
 // the already found set of results
 bool
-XPath::ParseLevelNameReduce(XString p_token, bool p_recurse)
+XPath::ParseLevelNameReduce(const XString& p_token, bool p_recurse)
 {
   XmlElementMap found;
   XmlElementMap::iterator it = m_results.begin();
@@ -576,7 +568,7 @@ XPath::ParseLevelNameReduce(XString p_token, bool p_recurse)
 }
 
 bool
-XPath::ParseLevelAttrReduce(XString p_token)
+XPath::ParseLevelAttrReduce(const XString& p_token)
 {
   XmlElementMap::iterator it = m_results.begin();
   while(it != m_results.end())
@@ -598,7 +590,7 @@ XPath::ParseLevelAttrReduce(XString p_token)
 //////////////////////////////////////////////////////////////////////////
 
 bool
-XPath::IsOperator(XString p_token)
+XPath::IsOperator(const XString& p_token)
 {
   return 
   p_token == _T("=") || 
@@ -607,7 +599,7 @@ XPath::IsOperator(XString p_token)
 }
 
 bool 
-XPath::IsFunction(XString p_token)
+XPath::IsFunction(const XString& p_token)
 {
   return
   p_token.Compare(_T("last"))           == 0 ||
@@ -616,7 +608,7 @@ XPath::IsFunction(XString p_token)
 }
 
 bool
-XPath::ParseLevelFunction(XString& p_parsing,XString p_function)
+XPath::ParseLevelFunction(XString& p_parsing,const XString& p_function)
 {
   XMLElement* parent = m_element->GetParent();
 
@@ -661,15 +653,14 @@ XPath::ParseLevelFunction(XString& p_parsing,XString p_function)
     }
     return !m_results.empty();
   }
-  return false;
 }
 
 // Reduce the result set by applying a simple condition
 bool
-XPath::ParseLevelOperator(XString&  p_parsing
-                         ,XString   p_operator
-                         ,XString   p_element
-                         ,XString   p_attribute)
+XPath::ParseLevelOperator(      XString& p_parsing
+                         ,const XString& p_operator
+                         ,const XString& p_element
+                         ,const XString& p_attribute)
 {
   XString rightSide = GetToken(p_parsing);
 

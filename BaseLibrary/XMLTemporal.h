@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -37,19 +37,20 @@
 #endif
 
 // Storage of the time in hours,minutes & seconds
-struct XmlTimeStorage
+typedef struct _xmlTimeStorage 
 {
   int m_hour;
   int m_minute;
   int m_second;
-};
+}
+XmlTimeStorage;
 
 // Date in memory is a struct
 typedef struct _Date
 {
-  short m_year;   // 0 - 9999 jaren
-  char  m_month;  // 1 - 12   maanden
-  char  m_day;    // 1 - 31   dagen
+  short m_year;   // 0 - 9999 years
+  char  m_month;  // 1 - 12   months
+  char  m_day;    // 1 - 31   days
 }
 XmlDateStorage;
 
@@ -71,7 +72,7 @@ class XMLTimestamp;
 class XMLTemporal
 {
 public:
-  explicit XMLTemporal(XString p_value);
+  explicit XMLTemporal(const XString& p_value);
 
   XString GetString() { return m_string; };
   INT64   GetValue()  { return m_value;  };
@@ -90,12 +91,12 @@ protected:
 class XMLTime : public XMLTemporal
 {
 public:
-  explicit XMLTime(XString p_value);
+  explicit XMLTime(const XString& p_value);
   int Hour()   { return m_theTime.m_hour;   };
   int Minute() { return m_theTime.m_minute; };
   int Second() { return m_theTime.m_second; };
 private:
-  void ParseTime(XString p_value);
+  void ParseTime(const XString& p_value);
   bool ParseXMLTime(const XString& p_string);
   void SetTime(int p_hour,int p_minute,int p_second);
   void SetTime();
@@ -111,13 +112,13 @@ class XMLDate : public XMLTemporal
 {
 public:
   XMLDate();
-  explicit XMLDate(XString p_value);
+  explicit XMLDate(const XString& p_value);
   int  Year()  { return m_date.m_year;  };
   int  Month() { return m_date.m_month; };
   int  Day()   { return m_date.m_day;   };
   void Today();
 private:
-  bool ParseDate(XString p_value);
+  bool ParseDate(const XString& p_value);
   bool ParseDate(const XString& p_datum,int* p_jaar,int* p_maand,int* p_dag);
   bool SetDate(int p_year,int p_month,int p_day);
   bool SetMJD();
@@ -132,7 +133,7 @@ class XMLTimestamp : public XMLTemporal
 {
 public:
   XMLTimestamp();
-  explicit XMLTimestamp(XString p_value);
+  explicit XMLTimestamp(const XString& p_value);
   explicit XMLTimestamp(INT64   p_value);
   void SetTimestamp(int p_year,int p_month,int p_day
                    ,int p_hour,int p_minute,int p_second
@@ -152,7 +153,7 @@ public:
 
   XString AsString();
 private:
-  void ParseMoment(XString p_value);
+  void ParseMoment(const XString& p_value);
   void RecalculateValue();
   void Normalise();
   void Validate();
@@ -167,12 +168,12 @@ private:
 class XMLDuration : public XMLTemporal
 {
 public:
-  explicit XMLDuration(XString p_value);
+  explicit XMLDuration(const XString& p_value);
   explicit XMLDuration(SQL_INTERVAL_STRUCT* p_interval);
 private:
-  bool ParseDuration(XString p_value);
+  bool ParseDuration(const XString& p_value);
   // Parsing/scanning one value of a XML duration string
-  bool ScanDurationValue(XString& p_duraction,int& p_value,int& p_fraction,TCHAR& p_marker,bool& p_didTime);
+  bool ScanDurationValue(const XString& p_duraction,int& p_value,int& p_fraction,TCHAR& p_marker,bool& p_didTime);
   void Normalise();
   void RecalculateString();
   void RecalculateValue();
@@ -188,9 +189,9 @@ private:
 class XMLGregorianMD : public XMLTemporal
 {
 public:
-  explicit XMLGregorianMD(XString p_value);
+  explicit XMLGregorianMD(const XString& p_value);
 private:
-  void ParseGregorianMD(XString p_value);
+  void ParseGregorianMD(const XString& p_value);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -199,7 +200,7 @@ private:
 class XMLGregorianYM: public XMLTemporal
 {
 public:
-  explicit XMLGregorianYM(XString p_value);
+  explicit XMLGregorianYM(const XString& p_value);
 private:
-  void ParseGregorianYM(XString p_value);
+  void ParseGregorianYM(const XString& p_value);
 };

@@ -46,14 +46,6 @@
 #include "GetLastErrorAsString.h"
 #include "HTTPServerMarlin.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 //////////////////////////////////////////////////////////////////////////
 //
 // HANDLERS for the WebServiceServer
@@ -84,12 +76,12 @@ SiteHandlerGetWSService::Handle(HTTPMessage* p_message)
 //
 //////////////////////////////////////////////////////////////////////////
 
-WebServiceServer::WebServiceServer(XString    p_name
-                                  ,XString    p_webroot
-                                  ,XString    p_url
-                                  ,PrefixType p_channelType
-                                  ,XString    p_targetNamespace
-                                  ,unsigned   p_maxThreads)
+WebServiceServer::WebServiceServer(const XString& p_name
+                                  ,const XString& p_webroot
+                                  ,const XString& p_url
+                                  ,PrefixType     p_channelType
+                                  ,const XString& p_targetNamespace
+                                  ,unsigned       p_maxThreads)
                  :m_name(p_name)
                  ,m_webroot(p_webroot)
                  ,m_url(p_url)
@@ -343,14 +335,14 @@ WebServiceServer::SetThreadPool(ThreadPool* p_pool)
 
 // OPTIONAL: Set extra text content type
 void
-WebServiceServer::SetContentType(bool p_logging,XString p_extension,XString p_contentType)
+WebServiceServer::SetContentType(bool p_logging,const XString& p_extension,const XString& p_contentType)
 {
   m_contentTypes.insert(std::make_pair(p_extension,MediaType(p_logging,p_extension,p_contentType)));
 }
 
 // OPTIONAL:  Set a logfile name (if no LogAnalysis given)
 void
-WebServiceServer::SetLogFilename(XString p_logFilename)
+WebServiceServer::SetLogFilename(const XString& p_logFilename)
 {
   if(m_log)
   {
@@ -375,7 +367,7 @@ WebServiceServer::SetDetailedLogging(bool p_logging)
 
 // Add SOAP message call and answer. Call once for all messages in the service
 bool
-WebServiceServer::AddOperation(int p_code,XString p_name,SOAPMessage* p_input,SOAPMessage* p_output)
+WebServiceServer::AddOperation(int p_code,const XString& p_name,SOAPMessage* p_input,SOAPMessage* p_output)
 {
   if(m_wsdl == nullptr)
   {
@@ -390,7 +382,7 @@ WebServiceServer::StartWsdl()
 {
   if(m_wsdl == nullptr)
   {
-    m_wsdl = new WSDLCache(true);
+    m_wsdl = alloc_new WSDLCache(true);
     m_wsdlOwner = true;
   }
 }
@@ -406,7 +398,7 @@ WebServiceServer::ReadingWebconfig()
 }
 
 void
-WebServiceServer::ReadingWebconfig(XString p_webconfig)
+WebServiceServer::ReadingWebconfig(const XString& p_webconfig)
 {
   MarlinConfig config(p_webconfig);
 
@@ -445,7 +437,7 @@ WebServiceServer::RunService()
   // Configure our threadpool
   if(m_pool == nullptr)
   {
-    m_pool = new ThreadPool();
+    m_pool = alloc_new ThreadPool();
     m_poolOwner = true;
   }
   // Setting the correct parameters
@@ -470,7 +462,7 @@ WebServiceServer::RunService()
   // Start right type of server if not already given.
   if(m_httpServer == nullptr)
   {
-    m_httpServer  = new HTTPServerMarlin(m_name);
+    m_httpServer  = alloc_new HTTPServerMarlin(m_name);
     m_serverOwner = true;
     m_httpServer->SetWebroot(m_webroot);
   }
@@ -583,7 +575,7 @@ WebServiceServer::RunService()
   else
   {
     // If not use the default WSService handler
-    m_soapHandler = new SiteHandlerSoapWSService();
+    m_soapHandler = alloc_new SiteHandlerSoapWSService();
     m_site->SetHandler(HTTPCommand::http_post,m_soapHandler);
   }
 
@@ -595,14 +587,14 @@ WebServiceServer::RunService()
   else if(m_jsonTranslation)
   {
     // If JSON/SOAP translation: provide a handler for that
-    m_getHandler = new SiteHandlerJson2Soap();
+    m_getHandler = alloc_new SiteHandlerJson2Soap();
     m_site->SetHandler(HTTPCommand::http_get,m_getHandler);
   }
   else if(m_wsdl->GetOperationsCount() > 0)
   {
     // If not, use the default GetWSService handler
     // but only if we generate a WSDL for the users
-    m_getHandler = new SiteHandlerGetWSService();
+    m_getHandler = alloc_new SiteHandlerGetWSService();
     m_site->SetHandler(HTTPCommand::http_get,m_getHandler);
   }
 
@@ -659,7 +651,7 @@ WebServiceServer::SendResponse(SOAPMessage* p_response)
 void
 WebServiceServer::SendResponse(SOAPMessage* p_response,int p_httpStatus)
 {
-  HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_response);
+  HTTPMessage* answer = alloc_new HTTPMessage(HTTPCommand::http_response,p_response);
   answer->SetStatus(p_httpStatus);
   m_httpServer->SendResponse(answer);
   answer->DropReference();

@@ -38,14 +38,6 @@
 #include "WebSocketMain.h"
 #include <ServiceReporting.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
 #define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_server) { m_server->DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
@@ -373,7 +365,7 @@ HTTPRequest::ReceivedRequest()
     {
       m_message->DropReference();
     }
-    m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
+    m_message = alloc_new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_FOUND);
     m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
     StartSendResponse();
     return;
@@ -408,7 +400,7 @@ HTTPRequest::ReceivedRequest()
                               {
                                 m_message->DropReference();
                               }
-                              m_message = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
+                              m_message = alloc_new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_NOT_SUPPORTED);
                               m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
                               StartSendResponse();
                               return;
@@ -440,7 +432,7 @@ HTTPRequest::ReceivedRequest()
   {
     m_message->DropReference();
   }
-  m_message = new HTTPMessage(type,m_site);
+  m_message = alloc_new HTTPMessage(type,m_site);
   m_message->SetRequestHandle((HTTP_OPAQUE_ID)this);
   // Enter our primary information from the request
   m_message->SetURL(rawUrl);
@@ -518,7 +510,7 @@ HTTPRequest::StartReceiveRequest()
   // Make sure we have a buffer
   if(!m_readBuffer)
   {
-    m_readBuffer = new BYTE[INIT_HTTP_BUFFERSIZE];
+    m_readBuffer = alloc_new BYTE[INIT_HTTP_BUFFERSIZE];
   }
   // Set reading action
   ResetOutstanding(m_reading);
@@ -602,7 +594,7 @@ HTTPRequest::PostReceive()
     }
   }
   DETAILLOGV(_T("Received %s message from: %s Size: %lu")
-             ,headers[(unsigned)m_message->GetCommand()]
+             ,g_headers[(unsigned)m_message->GetCommand()]
              ,SocketToServer(m_message->GetSender()).GetString()
              ,m_message->GetBodyLength());
 
@@ -869,7 +861,7 @@ HTTPRequest::CreateLogData()
     return;
   }
 
-  PHTTP_LOG_FIELDS_DATA log = new HTTP_LOG_FIELDS_DATA();
+  PHTTP_LOG_FIELDS_DATA log = alloc_new HTTP_LOG_FIELDS_DATA();
   memset(log,0,sizeof(HTTP_LOG_FIELDS_DATA));
   log->Base.Type = HttpLogDataTypeFields;
 
@@ -961,7 +953,7 @@ HTTPRequest::StartEventStreamResponse()
   {
     delete[] m_sendBuffer;
   }
-  m_sendBuffer = new BYTE[length + 1];
+  m_sendBuffer = alloc_new BYTE[length + 1];
   memcpy_s(m_sendBuffer,(size_t)(length  + 1),init,(size_t)length + 1);
 
   // Setup as a data-chunk info structure
@@ -1062,7 +1054,7 @@ HTTPRequest::SendResponseStream(BYTE*    p_buffer
   {
     delete[] m_sendBuffer;
   }
-  m_sendBuffer = new BYTE[p_length + 1];
+  m_sendBuffer = alloc_new BYTE[p_length + 1];
   memcpy_s(m_sendBuffer,p_length + 1,p_buffer,p_length);
   m_sendBuffer[p_length] = 0;
 
@@ -1234,11 +1226,11 @@ HTTPRequest::Finalize()
 
 // Add a request string for a header
 void 
-HTTPRequest::AddRequestString(XString p_string,LPSTR& p_buffer,USHORT& p_size)
+HTTPRequest::AddRequestString(const XString& p_string,LPSTR& p_buffer,USHORT& p_size)
 {
   AutoCSTR str(p_string);
   int size = str.size();
-  p_buffer = new char[size + 1];
+  p_buffer = alloc_new char[size + 1];
   strncpy_s(p_buffer,size+1,str.cstr(),size);
   m_strings.push_back(p_buffer);
   p_size = (USHORT) size;
@@ -1302,7 +1294,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // Initialize the response body
   if(m_response == nullptr)
   {
-    m_response = new HTTP_RESPONSE();
+    m_response = alloc_new HTTP_RESPONSE();
   }
   RtlZeroMemory(m_response,sizeof(HTTP_RESPONSE));
   XString text = GetHTTPStatusText(p_status);
@@ -1418,7 +1410,7 @@ HTTPRequest::FillResponse(int p_status,bool p_responseOnly /*=false*/)
   // Because we can have more than one Set-Cookie: header
   // and HTTP API just supports one set-cookie.
   UKHeaders ukheaders;
-  Cookies& cookies = m_message->GetCookies();
+  Cookies& cookies = const_cast<Cookies&>(m_message->GetCookies());
   if(cookies.GetCookies().empty())
   {
     XString cookie = m_message->GetHeader(_T("Set-Cookie"));

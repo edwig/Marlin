@@ -12,12 +12,6 @@
 #include "RequestQueue.h"
 #include "OpaqueHandles.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 ULONG WINAPI
 HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
                       ,IN  PCWSTR               Name                OPTIONAL
@@ -61,11 +55,10 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
   }
 
   // Create a name for the request queue
-  CStringW orgName(Name);
-  CStringA name(orgName);
-  if(name.IsEmpty())
+  XString orgName(Name);
+  if(orgName.IsEmpty())
   {
-    name = "HTTPServer";
+    orgName = "HTTPServer";
   }
 
   // Check if name is unique
@@ -76,11 +69,7 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
     RequestQueue* other = g_handles.GetReQueueFromOpaqueHandle(handle.first);
     if(other)
     {
-#ifdef _UNICODE
       if(other->GetName().CompareNoCase(orgName) == 0)
-#else
-      if(other->GetName().CompareNoCase(name) == 0)
-#endif
       {
         return ERROR_ALREADY_EXISTS;
       }
@@ -88,11 +77,7 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
   }
 
   // Create the request queue
-#ifdef _UNICODE
-  RequestQueue* queue = new RequestQueue(orgName);
-#else
-  RequestQueue* queue = new RequestQueue(name);
-#endif
+  RequestQueue* queue = alloc_new RequestQueue(orgName);
   HANDLE handle = queue->CreateHandle();
   
   bool stored = false;

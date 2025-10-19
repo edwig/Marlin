@@ -2,8 +2,8 @@
 //
 // File: FileDialog.h
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
 // this software and associated documentation files (the "Software"), 
@@ -220,14 +220,14 @@ OFN_SHOWHELP          Causes the dialog box to display the Help button. The hwnd
 class DocFileDialog
 {
 public:
-  DocFileDialog(HWND    p_owner
-               ,bool    p_open                  // true = open, false = SaveAs
-               ,XString p_title                 // Title of the dialog
-               ,XString p_defext   = _T("")     // Default extension
-               ,XString p_filename = _T("")     // Default first file
-               ,int     p_flags    = 0          // Default flags
-               ,XString p_filter   = _T("")     // Filter for extensions
-               ,XString p_direct   = _T(""));   // Default directory to start in
+  DocFileDialog(HWND           p_owner
+               ,bool           p_open                  // true = open, false = SaveAs
+               ,const XString& p_title                 // Title of the dialog
+               ,const XString& p_defext   = _T("")     // Default extension
+               ,const XString& p_filename = _T("")     // Default first file
+               ,int            p_flags    = 0          // Default flags
+               ,const XString& p_filter   = _T("")     // Filter for extensions
+               ,const XString& p_direct   = _T(""));   // Default directory to start in
   ~DocFileDialog();
 
   int     DoModal();

@@ -31,12 +31,6 @@
 #include <SiteHandlerSoap.h>
 #include <SiteFilter.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 2;
 
 //////////////////////////////////////////////////////////////////////////
@@ -165,11 +159,11 @@ TestMarlinServer::TestFilter()
   }
 
   // Setting the POST handler for this site
-  site->SetHandler(HTTPCommand::http_post, new SiteHandlerSoapFiltering());
+  site->SetHandler(HTTPCommand::http_post, alloc_new SiteHandlerSoapFiltering());
 
   // Add filters to this site by priority of handling
-  site->SetFilter( 1, new SiteFilterTester1 ( 1,_T("Tester1")));
-  site->SetFilter(23, new SiteFilterTester23(23,_T("Tester23")));
+  site->SetFilter( 1, alloc_new SiteFilterTester1 ( 1,_T("Tester1")));
+  site->SetFilter(23, alloc_new SiteFilterTester23(23,_T("Tester23")));
 
   // Modify the standard settings for this site
   site->AddContentType(true,_T("pos"),_T("text/xml"));

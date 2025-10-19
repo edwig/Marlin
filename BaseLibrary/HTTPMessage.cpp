@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -37,17 +37,9 @@
 #include <xutility>
 #include <string>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // All headers. Must be in sequence with HTTPCommand
 // See HTTPCommand for sequencing
-LPCTSTR headers[] = 
+LPCTSTR g_headers[] = 
 {
    _T("HTTP")             // HTTP Response header
   ,_T("POST")             // Posting a resource
@@ -114,7 +106,7 @@ HTTPMessage::HTTPMessage(HTTPCommand p_command,HTTPSite* p_site)
 }
 
 // XTOR for HTTP command and a URL
-HTTPMessage::HTTPMessage(HTTPCommand p_command,XString p_url)
+HTTPMessage::HTTPMessage(HTTPCommand p_command,const XString& p_url)
             :m_command(p_command)
 {
   // Init these members
@@ -438,12 +430,13 @@ HTTPMessage::SetHTTPSite(HTTPSite* p_site)
 
 // Setting the verb 
 bool
-HTTPMessage::SetVerb(XString p_verb)
+HTTPMessage::SetVerb(const XString& p_verb)
 {
-  p_verb.MakeUpper();
-  for(unsigned ind = 0; ind < sizeof(headers) / sizeof(PTCHAR); ++ind)
+  XString verb(p_verb);
+  verb.MakeUpper();
+  for(unsigned ind = 0; ind < sizeof(g_headers) / sizeof(PTCHAR); ++ind)
   {
-    if(p_verb.Compare(headers[ind]) == 0)
+    if(verb.Compare(g_headers[ind]) == 0)
     {
       m_command = static_cast<HTTPCommand>(ind);
       return true;
@@ -454,19 +447,19 @@ HTTPMessage::SetVerb(XString p_verb)
 
 // Getting the verb (HTTPCommand to string)
 XString
-HTTPMessage::GetVerb()
+HTTPMessage::GetVerb() const
 {
   if(m_command >= HTTPCommand::http_response &&
      m_command <= HTTPCommand::http_last_command)
   {
-    return headers[static_cast<unsigned>(m_command)];
+    return g_headers[static_cast<unsigned>(m_command)];
   }
   return _T("");
 }
 
 // Getting the whole body as one string of chars
 XString
-HTTPMessage::GetBody()
+HTTPMessage::GetBody() const
 {
   XString answer;
   BYTE*   buffer = NULL;
@@ -495,7 +488,7 @@ HTTPMessage::GetBody()
     }
     else if(!charset.IsEmpty())
     {
-      XString buff(buffer);
+      XString buff((LPCSTR)buffer);
       answer = DecodeStringFromTheWire(buff,charset);
     }
     else
@@ -511,9 +504,9 @@ HTTPMessage::GetBody()
 // Get a RAW copy of the HTTP buffer
 // Size it big enough for Unicode translations
 void
-HTTPMessage::GetRawBody(uchar** p_body,size_t& p_length)
+HTTPMessage::GetRawBody(uchar** p_body,size_t& p_length) const
 {
-  p_length = m_buffer.GetLength();
+  p_length = const_cast<FileBuffer&>(m_buffer).GetLength();
 
   // No body in this buffer (FILE?)
   if(p_length == 0)
@@ -522,7 +515,7 @@ HTTPMessage::GetRawBody(uchar** p_body,size_t& p_length)
     return;
   }
   // Allocate a buffer, big enough for Unicode conversion
-  *p_body  = new uchar[p_length + 2];
+  *p_body  = alloc_new uchar[p_length + 2];
 
   if(m_buffer.GetHasBufferParts())
   {
@@ -558,7 +551,7 @@ HTTPMessage::SetURL(const XString& p_url)
 }
 
 void
-HTTPMessage::SetBody(XString p_body,XString p_charset /*=""*/)
+HTTPMessage::SetBody(const XString& p_body,XString p_charset /*=""*/)
 {
 #ifdef _UNICODE
   if(p_charset.CompareNoCase(_T("utf-16")) == 0)
@@ -586,8 +579,8 @@ HTTPMessage::SetBody(XString p_body,XString p_charset /*=""*/)
   }
   else
   {
-    p_body = EncodeStringForTheWire(p_body.GetString(),p_charset);
-    m_buffer.SetBuffer((uchar*) p_body.GetString(),p_body.GetLength());
+    XString body = EncodeStringForTheWire(p_body.GetString(),p_charset);
+    m_buffer.SetBuffer((uchar*)body.GetString(),body.GetLength());
 }
 #endif
 }
@@ -600,13 +593,13 @@ HTTPMessage::SetBody(LPCTSTR  p_body,XString p_charset /*=""*/)
 }
 
 void 
-HTTPMessage::SetAcceptEncoding(XString p_encoding)
+HTTPMessage::SetAcceptEncoding(const XString& p_encoding)
 {
   m_acceptEncoding = p_encoding;
 }
 
-Cookie*
-HTTPMessage::GetCookie(unsigned p_ind)
+const Cookie*
+HTTPMessage::GetCookie(unsigned p_ind) const
 {
   return m_cookies.GetCookie(p_ind);
 }
@@ -614,7 +607,7 @@ HTTPMessage::GetCookie(unsigned p_ind)
 XString
 HTTPMessage::GetCookieValue(unsigned p_ind /*=0*/,XString p_metadata /*=""*/)
 {
-  Cookie* cookie = m_cookies.GetCookie(p_ind);
+  const Cookie* cookie = m_cookies.GetCookie(p_ind);
   if(cookie)
   {
     return cookie->GetValue(p_metadata);
@@ -625,7 +618,7 @@ HTTPMessage::GetCookieValue(unsigned p_ind /*=0*/,XString p_metadata /*=""*/)
 XString
 HTTPMessage::GetCookieValue(XString p_name /*=""*/,XString p_metadata /*=""*/)
 {
-  Cookie* cookie = m_cookies.GetCookie(p_name);
+  const Cookie* cookie = m_cookies.GetCookie(p_name);
   if(cookie)
   {
     return cookie->GetValue(p_metadata);
@@ -670,15 +663,15 @@ HTTPMessage::GetRoute(int p_index)
 }
 
 void 
-HTTPMessage::SetCookie(XString p_fromHttp)
+HTTPMessage::SetCookie(const XString& p_fromHttp)
 {
   Cookie monster(p_fromHttp);
   m_cookies.AddCookie(monster);
 }
 
 void 
-HTTPMessage::SetCookie(XString p_name
-                      ,XString p_value
+HTTPMessage::SetCookie(const XString& p_name
+                      ,const XString& p_value
                       ,XString p_metadata /*= ""*/
                       ,bool    p_secure   /*= false*/
                       ,bool    p_httpOnly /*= false*/)
@@ -689,11 +682,11 @@ HTTPMessage::SetCookie(XString p_name
 }
 
 void 
-HTTPMessage::SetCookie(XString        p_name
-                      ,XString        p_value
-                      ,XString        p_metadata
-                      ,XString        p_path
-                      ,XString        p_domain
+HTTPMessage::SetCookie(const XString& p_name
+                      ,const XString& p_value
+                      ,const XString& p_metadata
+                      ,const XString& p_path
+                      ,const XString& p_domain
                       ,bool           p_secure   /*= false*/
                       ,bool           p_httpOnly /*= false*/
                       ,CookieSameSite p_samesite /*= CookieSameSite::NoSameSite*/
@@ -717,27 +710,28 @@ HTTPMessage::SetCookie(XString        p_name
 // From "Cookie:" only.
 // Can have multiple cookies, but NO attributes
 void 
-HTTPMessage::SetCookiePairs(XString p_cookies)
+HTTPMessage::SetCookiePairs(const XString& p_cookies)
 {
-  while(p_cookies.GetLength())
+  XString cookies = p_cookies;
+  while(cookies.GetLength())
   {
-    int pos = p_cookies.Find(';');
+    int pos = cookies.Find(';');
     if(pos >= 0)
     {
-      XString cookie = p_cookies.Left(pos);
-      p_cookies = p_cookies.Mid(pos+1);
+      XString cookie = cookies.Left(pos);
+      cookies = cookies.Mid(pos+1);
       SetCookie(cookie);
     }
     else
     {
-      SetCookie(p_cookies);
+      SetCookie(cookies);
       return;
     }
   }
 }
 
 void 
-HTTPMessage::SetExtension(XString p_ext,bool p_reparse /*= true*/)
+HTTPMessage::SetExtension(const XString& p_ext,bool p_reparse /*= true*/)
 { 
   m_cracked.m_extension = p_ext;
   if(p_reparse)
@@ -781,13 +775,13 @@ HTTPMessage::CheckServer()
 // Getting the user/password from the base authorization
 // for use in this and other programs for authorization purposes
 void
-HTTPMessage::SetAuthorization(XString& p_authorization)
+HTTPMessage::SetAuthorization(const XString& p_authorization)
 {
   if(p_authorization.Left(6).CompareNoCase(_T("basic ")) == 0)
   {
-    p_authorization.Delete(0, 6);
     Base64 base;
-    XString decrypted = base.Decrypt(p_authorization.GetString());
+    XString author = p_authorization.Mid(6);
+    XString decrypted = base.Decrypt(author.GetString());
     int from = decrypted.Find(':');
     if(from > 0)
     {
@@ -944,9 +938,9 @@ HTTPMessage::AddHeader(XString p_name,XString p_value)
 
 // Finding a header by lowercase name
 XString
-HTTPMessage::GetHeader(XString p_name)
+HTTPMessage::GetHeader(const XString& p_name) const
 {
-  HeaderMap::iterator it = m_headers.find(p_name);
+  HeaderMap::const_iterator it = m_headers.find(p_name);
   if(it != m_headers.end())
   {
     return it->second;
@@ -1027,7 +1021,7 @@ HTTPMessage::FindVerbTunneling()
     unsigned max = static_cast<unsigned>(HTTPCommand::http_last_command);
     for(unsigned ind = 1; ind <= max; ++ind)
     {
-      if(method.CompareNoCase(headers[ind]) == 0)
+      if(method.CompareNoCase(g_headers[ind]) == 0)
       {
         m_command = static_cast<HTTPCommand>(ind);
       }
@@ -1047,7 +1041,7 @@ HTTPMessage::UseVerbTunneling()
     if(m_command != HTTPCommand::http_post)
     {
       // Change of identity!
-      XString method = headers[static_cast<unsigned>(m_command)];
+      XString method = g_headers[static_cast<unsigned>(m_command)];
       AddHeader(_T("X-HTTP-Method-Override"),method);
       m_command = HTTPCommand::http_post;
       return true;
@@ -1182,7 +1176,7 @@ HTTPMessage::SetMultiPartBuffer(MultiPartBuffer* p_buffer)
 
   // The ending boundary after the last part
   // Beware. Does NOT end with CR-LF but two hyphens!
-  XString lastBoundary = _T("--") + boundary + _T("--");
+  XString lastBoundary = XString(_T("--")) + boundary + _T("--");
   m_buffer.AddStringToBuffer(lastBoundary,_T("utf-8"),false);
 
   return result;

@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -29,14 +29,6 @@
 #include "StoreMessage.h"
 #include "HTTPMessage.h"
 #include "GetLastErrorAsString.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 StoreMessage::StoreMessage()
 {
@@ -141,7 +133,7 @@ StoreMessage::ReadIncomingMessage()
     m_error = m_file.GetLastError();
     return nullptr;
   }
-  HTTPMessage* msg = new HTTPMessage();
+  HTTPMessage* msg = alloc_new HTTPMessage();
 
   try
   {
@@ -172,7 +164,7 @@ StoreMessage::ReadResponseMessage()
     m_error = m_file.GetLastError();
     return nullptr;
   }
-  HTTPMessage* msg = new HTTPMessage();
+  HTTPMessage* msg = alloc_new HTTPMessage();
 
   try
   {
@@ -471,13 +463,13 @@ StoreMessage::WriteSendBOM(bool p_bom)
 }
 
 void
-StoreMessage::WriteCookies(Cookies& p_cookies)
+StoreMessage::WriteCookies(const Cookies& p_cookies)
 {
   WriteHeader(MSGFieldType::FT_COOKIES);
   WriteNumber16((short)p_cookies.GetSize());
   for(size_t index = 0;index < p_cookies.GetSize();++index)
   {
-    Cookie* biscuit = p_cookies.GetCookie((unsigned)index);
+    const Cookie* biscuit = p_cookies.GetCookie((unsigned)index);
     WriteString(biscuit->GetSetCookieText());
   }
 }
@@ -509,7 +501,7 @@ StoreMessage::WriteHeaders(const HeaderMap* p_headers)
 }
 
 void
-StoreMessage::WriteRouting(Routing& p_routing)
+StoreMessage::WriteRouting(const Routing& p_routing)
 {
   WriteHeader(MSGFieldType::FT_ROUTING);
   WriteNumber16((short)p_routing.size());
@@ -820,7 +812,7 @@ StoreMessage::ReadBody(HTTPMessage* p_msg)
   if(length)
   {
     int read = 0;
-    unsigned char* buffer = new unsigned char[length];
+    unsigned char* buffer = alloc_new unsigned char[length];
     if(!m_file.Read(buffer,length,read))
     {
       delete[] buffer;

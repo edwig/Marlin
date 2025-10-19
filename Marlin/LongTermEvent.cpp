@@ -28,14 +28,6 @@
 #include "stdafx.h"
 #include "LongTermEvent.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // CTOR: Default is a message event
 LTEvent::LTEvent()
         :m_type(EvtType::EV_Message)
@@ -49,7 +41,7 @@ LTEvent::LTEvent(EvtType p_type)
 }
 
 EvtType
-LTEvent::StringToEventType(XString p_type)
+LTEvent::StringToEventType(const XString& p_type)
 {
   if(p_type.Compare(_T("open"))    == 0) return EvtType::EV_Open;
   if(p_type.Compare(_T("message")) == 0) return EvtType::EV_Message;
@@ -76,7 +68,7 @@ LTEvent::EventTypeToString(EvtType p_type)
 }
 
 EVChannelPolicy 
-LTEvent::StringToChannelPolicy(XString p_policy)
+LTEvent::StringToChannelPolicy(const XString& p_policy)
 {
   if(p_policy.CompareNoCase(_T("No policy"))        == 0) return EVChannelPolicy::DP_NoPolicy;
   if(p_policy.CompareNoCase(_T("Binary"))           == 0) return EVChannelPolicy::DP_Binary;

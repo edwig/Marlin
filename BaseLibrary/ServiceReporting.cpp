@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -32,14 +32,6 @@
 #include "GetLastErrorAsString.h"
 #include "Alert.h"
 #include "strsafe.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 // Each buffer in a event buffer array has a limit of 31K characters
 // See MSDN: ReportEvent function (31.839 bytes)
@@ -69,7 +61,7 @@ SvcStartEventBuffer()
   {
     return;
   }
-  g_eventBuffer = new TCHAR[EVENTBUFFER];
+  g_eventBuffer = alloc_new TCHAR[EVENTBUFFER];
 
   // Initialize the logging lock
   InitializeCriticalSection(&g_eventBufferLock);

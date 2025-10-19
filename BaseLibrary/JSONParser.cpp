@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -29,14 +29,6 @@
 #include "JSONParser.h"
 #include "XMLParser.h"
 #include "ConvertWideString.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 JSONParser::JSONParser(JSONMessage* p_message)
            :m_message(p_message)
@@ -67,7 +59,7 @@ JSONParser::SetError(JsonError p_error,LPCTSTR p_text,bool p_throw /*= true*/)
 }
 
 void
-JSONParser::ParseMessage(XString& p_message,bool& p_whitespace)
+JSONParser::ParseMessage(const XString& p_message,bool& p_whitespace)
 {
   // Check if we have something to do
   if(m_message == nullptr)
@@ -85,7 +77,7 @@ JSONParser::ParseMessage(XString& p_message,bool& p_whitespace)
   // Allocate scanning buffer
   // Individual string cannot be larger than this
   m_scanLength = p_message.GetLength();
-  m_scanString = new _TUCHAR[(size_t)m_scanLength + 1];
+  m_scanString = alloc_new _TUCHAR[(size_t)m_scanLength + 1];
 
   // See if we have an empty message string
   SkipWhitespace();
@@ -237,7 +229,7 @@ JSONParser::GetString()
 
   // Getting the string
   *buffer = 0;
-  return XString(m_scanString);
+  return XString((LPCTSTR)m_scanString);
 }
 
 // Conversion of xdigit to a numeric value
@@ -300,7 +292,7 @@ JSONParser::UnicodeChar()
   XString result;
   if(TryConvertWideString(reinterpret_cast<const uchar*>(buffer),1,"",result,foundBOM))
   {
-    return result.GetAt(0);
+    return result[0];
   }
   return '?';
 #endif
@@ -560,11 +552,11 @@ JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message)
 {
 }
 
-JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap)
+JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,const SOAPMessage* p_soap)
                :JSONParser(p_message)
 {
   // Construct the correct contents!!
-  p_soap->CompleteTheMessage();
+  const_cast<SOAPMessage*>(p_soap)->CompleteTheMessage();
 
   JSONvalue&  valPointer = *m_message->m_value;
   XMLElement& element    = *p_soap->GetParameterObjectNode();
@@ -572,7 +564,7 @@ JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,SOAPMessage* p_soap)
   ParseMain(valPointer,element);
 }
 
-JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,XMLMessage* p_xml)
+JSONParserSOAP::JSONParserSOAP(JSONMessage* p_message,const XMLMessage* p_xml)
                :JSONParser(p_message)
 {
   JSONvalue&  valPointer = *m_message->m_value;

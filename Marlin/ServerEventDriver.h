@@ -141,7 +141,10 @@ public:
   // Register our main site in the server
   bool  RegisterSites(HTTPServer* p_server,HTTPSite* p_site);
   // Create the three sites for the event driver for a user session
-  int   RegisterChannel(XString p_sessionName,XString p_cookie,XString p_token,XString p_metadata = _T(""));
+  int   RegisterChannel(const XString& p_sessionName
+                       ,const XString& p_cookie
+                       ,const XString& p_token
+                       ,const XString& p_metadata = _T(""));
   // Force the authentication of the cookie
   void  SetForceAuthentication(bool p_force);
   // Setting the brute force attack interval
@@ -160,10 +163,10 @@ public:
   void  SetAuthenticationCallback(LPFN_AUTHENTICATE p_callback);
 
   // Flush messages as much as possible for a channel
-  bool  FlushChannel(XString p_cookie,XString p_token);
+  bool  FlushChannel(const XString& p_cookie,const XString& p_token);
   bool  FlushChannel(int p_channel);
   // RemoveChannel (possibly at the end of an user session)
-  bool  UnRegisterChannel(XString p_cookie,XString p_token,bool p_flush = true);
+  bool  UnRegisterChannel(const XString& p_cookie,const XString& p_token,bool p_flush = true);
   bool  UnRegisterChannel(int p_channel,bool p_flush = true);
   // Incoming new Socket/SSE Stream
   bool  IncomingNewSocket(HTTPMessage* p_message,WebSocket*   p_socket);
@@ -177,14 +180,18 @@ public:
   bool        GetForceAuthentication()  { return m_force;     }
   size_t      GetNumberOfChannels()     { return m_channels.size(); }
   int         GetBruteForceInterval()   { return m_interval;  }
-  int         GetChannelQueueCount (int     p_channel);
-  int         GetChannelQueueCount (XString p_session);
-  int         GetChannelClientCount(int     p_channel);
-  int         GetChannelClientCount(XString p_session);
+  int         GetChannelQueueCount (int            p_channel);
+  int         GetChannelQueueCount (const XString& p_session);
+  int         GetChannelClientCount(int            p_channel);
+  int         GetChannelClientCount(const XString& p_session);
 
   // OUR WORKHORSE: Post an event to the client
   // If 'returnToSender' is filled, only this client will receive the message
-  int   PostEvent(int p_session,XString p_payload,XString p_returnToSender = _T(""),EvtType p_type = EvtType::EV_Message,XString p_typeName = _T(""));
+  int   PostEvent(int p_session
+                 ,const XString& p_payload
+                 ,const XString& p_returnToSender = _T("")
+                 ,      EvtType  p_type           = EvtType::EV_Message
+                 ,const XString& p_typeName       = _T(""));
 
   // Main loop of the event runner. DO NOT CALL!
   void  EventThreadRunning();
@@ -199,10 +206,10 @@ private:
   // Start a thread for the streaming WebSocket/server-push event interface
   bool  StartEventThread();
   // Find a channel from the routing information
-  XString FindChannel(const Routing& p_routing,XString p_base);
+  XString FindChannel(const Routing& p_routing,const XString& p_base);
 
   // Find an event session
-  ServerEventChannel* FindSession(XString p_cookie,XString p_token);
+  ServerEventChannel* FindSession(const XString& p_cookie,const XString& p_token);
   ServerEventChannel* FindSession(int p_session);
 
   // Register incoming event/stream

@@ -69,16 +69,16 @@ protected:
   bool        m_useCertThumbprint;
 
   // AUTHENTICATION OVERRIDES
-  XString     m_scheme;
+  CString     m_scheme;
   bool        m_ntlmCache;
-  XString     m_realm;
-  XString     m_domain;
-  XString     m_user;
-  XString     m_password;
+  CString     m_realm;
+  CString     m_domain;
+  CString     m_user;
+  CString     m_password;
   bool        m_sso;
   bool        m_requestCert;
-  XString     m_certName;
-  XString     m_certThumbprint;
+  CString     m_certName;
+  CString     m_certThumbprint;
 
   // Interface items
   CComboBox   m_comboScheme;

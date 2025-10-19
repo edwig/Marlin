@@ -35,12 +35,6 @@
 #include "HTTPClient.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // WebConfigDlg dialog
 
 IMPLEMENT_DYNAMIC(WebConfigLogging, CDialogEx)
@@ -231,11 +225,12 @@ void WebConfigLogging::OnEnChangeLogfile()
 
 void WebConfigLogging::OnBnClickedButtLogfile()
 {
+  XString logfile(m_logfile);
   DocFileDialog file(GetSafeHwnd()
                     ,true
                     ,_T("Enter the path to the logfile")
                     ,_T("txt")
-                    ,m_logfile
+                    ,logfile
                     ,0
                     ,_T("Text log files (*.txt)|*.txt|")
                     _T("All file types (*.*)|*.*|")

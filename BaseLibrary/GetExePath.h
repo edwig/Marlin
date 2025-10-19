@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -30,4 +30,4 @@
 XString GetExeFile();
 XString GetExePath();
 void    TerminateWithoutCleanup(int p_exitcode);
-void    CheckExePath(XString p_runtimer,XString p_productName);
+void    CheckExePath(const XString& p_runtimer,const XString& p_productName);

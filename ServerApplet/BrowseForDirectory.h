@@ -34,33 +34,33 @@ public:
    BrowseForDirectory();
    virtual ~BrowseForDirectory();
 
-  bool Browse(HWND            hwndParent, 
-              XString const&  title, 
-              XString const&  initdir    = _T(""),
-              XString const&  rootdir    = _T(""),
-              bool            showFiles  = false,
-              bool            showStatus = false);
+  bool Browse(HWND           hwndParent, 
+              const CString& title, 
+              const CString& initdir    = _T(""),
+              const CString& rootdir    = _T(""),
+              bool           showFiles  = false,
+              bool           showStatus = false);
 
-  XString const& GetPath() const { return m_path; }
+  CString const& GetPath() const { return m_path; }
 protected:
   //  These functions can only be called from
   //  within the OnSelChange function, so it
   //  is reasonable to keep them as protected.
   void EnableOk(bool bEnable);
-  void SetSelection(XString const& path);
-  void SetStatusText(XString const& text);
+  void SetSelection(const CString& path);
+  void SetStatusText(const CString& text);
 
 private:
 
   virtual void OnInitialized();
-  virtual void OnSelChange(XString const& path);
+  virtual void OnSelChange(const CString& path);
          int          CallbackProc (HWND hwnd,UINT uMsg,LPARAM lParam);
   static int CALLBACK CallbackProcS(HWND hwnd,UINT uMsg,LPARAM lParam,LPARAM lpData);
 
   HWND      m_hwnd;
   char      m_originalDir[MAX_PATH+1];
-  XString   m_disp;
-  XString   m_path;
-  XString   m_root;
-  XString   m_init;
+  CString   m_disp;
+  CString   m_path;
+  CString   m_root;
+  CString   m_init;
 };

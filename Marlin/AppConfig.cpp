@@ -33,14 +33,6 @@
 #include <Crypto.h>
 #include <io.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // XTOR
 // In essence there are two practical use cases
 // 1) Create a new config file separate from the MarlinConfig (2 files)
@@ -50,12 +42,12 @@ static char THIS_FILE[] = __FILE__;
 //    use case is when we have only one server in the directory
 //    Setup is: m_config = new AppConfig(_T("Marlin.config"),false);
 //
-AppConfig::AppConfig(XString p_fileName /*= ""*/,bool p_readMarlinConfig /*= true*/)
+AppConfig::AppConfig(const XString& p_fileName /*= ""*/,bool p_readMarlinConfig /*= true*/)
           :m_fileName(p_fileName)
 {
   if(p_readMarlinConfig)
   {
-    m_config = new MarlinConfig();
+    m_config = alloc_new MarlinConfig();
   }
 }
 
@@ -76,7 +68,7 @@ AppConfig::~AppConfig()
 //////////////////////////////////////////////////////////////////////////
 
 bool
-AppConfig::SetSection(XString p_section)
+AppConfig::SetSection(const XString& p_section)
 {
   // If it is not the application config, and we have a MarlinConfig
   // Set it in the general Marlin.config file
@@ -90,7 +82,7 @@ AppConfig::SetSection(XString p_section)
     // Section already exists, nothing to do
     return true;
   }
-  if(AddElement(NULL,p_section,XDT_Complex,_T("")) == nullptr)
+  if(AddElement(nullptr,p_section,XDT_Complex,_T("")) == nullptr)
   {
     return false;
   }
@@ -100,7 +92,7 @@ AppConfig::SetSection(XString p_section)
 // Add a parameter to a section
 // To succeed, the section must exist already
 bool
-AppConfig::SetParameter(XString p_section,XString p_parameter,XString p_value)
+AppConfig::SetParameter(const XString& p_section,const XString& p_parameter,const XString& p_value)
 {
   // If it is not the application config, and we have a MarlinConfig
   // Set it in the general Marlin.config file
@@ -142,7 +134,7 @@ AppConfig::SetParameter(XString p_section,XString p_parameter,XString p_value)
 }
 
 bool
-AppConfig::SetParameter(XString p_section,XString p_parameter,int p_value)
+AppConfig::SetParameter(const XString& p_section,const XString& p_parameter,int p_value)
 {
   XString value;
   value.Format(_T("%d"),p_value);
@@ -150,14 +142,14 @@ AppConfig::SetParameter(XString p_section,XString p_parameter,int p_value)
 }
 
 bool
-AppConfig::SetParameter(XString p_section,XString p_parameter,bool p_value)
+AppConfig::SetParameter(const XString& p_section,const XString& p_parameter,bool p_value)
 {
   XString value = p_value ? _T("true") : _T("false");
   return SetParameter(p_section,p_parameter,value);
 }
 
 bool
-AppConfig::SetEncrypted(XString p_section,XString p_parameter,XString p_value)
+AppConfig::SetEncrypted(const XString& p_section,const XString& p_parameter,const XString& p_value)
 {
   Crypto crypt;
   XString encrypted;
@@ -174,7 +166,7 @@ AppConfig::SetEncrypted(XString p_section,XString p_parameter,XString p_value)
 // Add a attribute to a section parameter
 // To succeed, the section and the parameter must exist already
 bool
-AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_value)
+AppConfig::SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,const XString& p_value)
 {
   // If it is not the application config, and we have a MarlinConfig
   // Set it in the general Marlin.config file
@@ -207,7 +199,7 @@ AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,X
 }
 
 bool
-AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,int p_value)
+AppConfig::SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,int p_value)
 {
   XString value;
   value.Format(_T("%d"),p_value);
@@ -215,7 +207,7 @@ AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,i
 }
 
 bool
-AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,double p_value)
+AppConfig::SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,double p_value)
 {
   XString value;
   value.Format(_T("%G"),p_value);
@@ -229,7 +221,7 @@ AppConfig::SetAttribute(XString p_section,XString p_parameter,XString p_attrib,d
 //////////////////////////////////////////////////////////////////////////
 
 bool
-AppConfig::RemoveSection(XString p_section)
+AppConfig::RemoveSection(const XString& p_section)
 {
   // If it is not the application config, and we have a MarlinConfig
   // Set it in the general Marlin.config file
@@ -251,7 +243,7 @@ AppConfig::RemoveSection(XString p_section)
 }
 
 bool
-AppConfig::RemoveParameter(XString p_section,XString p_parameter)
+AppConfig::RemoveParameter(const XString& p_section,const XString& p_parameter)
 {
   // If it is not the application config, and we have a MarlinConfig
   // Set it in the general Marlin.config file
@@ -277,7 +269,7 @@ AppConfig::RemoveParameter(XString p_section,XString p_parameter)
 }
 
 bool
-AppConfig::RemoveAttribute(XString p_section,XString p_parameter,XString p_attrib)
+AppConfig::RemoveAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib)
 {
   // If it is not the application config, and we have a MarlinConfig
   // Set it in the general Marlin.config file
@@ -310,7 +302,7 @@ AppConfig::RemoveAttribute(XString p_section,XString p_parameter,XString p_attri
 
 
 XString
-AppConfig::GetParameterString(XString p_section,XString p_parameter,XString p_default)
+AppConfig::GetParameterString(const XString& p_section,const XString& p_parameter,const XString& p_default) const
 {
   // Search first in our own config
   XMLElement* section = FindElement(p_section);
@@ -335,7 +327,7 @@ AppConfig::GetParameterString(XString p_section,XString p_parameter,XString p_de
 }
 
 int
-AppConfig::GetParameterInteger(XString p_section,XString p_parameter,int p_default)
+AppConfig::GetParameterInteger(const XString& p_section,const XString& p_parameter,int p_default) const
 {
   if(!HasParameter(p_section,p_parameter))
   {
@@ -346,7 +338,7 @@ AppConfig::GetParameterInteger(XString p_section,XString p_parameter,int p_defau
 }
 
 bool
-AppConfig::GetParameterBoolean(XString p_section,XString p_parameter,bool p_default)
+AppConfig::GetParameterBoolean(const XString& p_section,const XString& p_parameter,bool p_default) const
 {
   if(!HasParameter(p_section,p_parameter))
   {
@@ -370,7 +362,7 @@ AppConfig::GetParameterBoolean(XString p_section,XString p_parameter,bool p_defa
 }
 
 XString
-AppConfig::GetEncryptedString(XString p_section,XString p_parameter,XString p_default)
+AppConfig::GetEncryptedString(const XString& p_section,const XString& p_parameter,const XString& p_default) const
 {
   // Check if it exists first
   if(!HasParameter(p_section,p_parameter))
@@ -415,7 +407,7 @@ AppConfig::GetEncryptedString(XString p_section,XString p_parameter,XString p_de
 }
 
 XString
-AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_default)
+AppConfig::GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,const XString& p_default) const
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -435,7 +427,7 @@ AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,X
 }
 
 int
-AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,int p_default)
+AppConfig::GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,int p_default) const
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -455,7 +447,7 @@ AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,i
 }
 
 double
-AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,double p_default)
+AppConfig::GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,double p_default) const
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -477,7 +469,7 @@ AppConfig::GetAttribute(XString p_section,XString p_parameter,XString p_attrib,d
 // Server URL is not stored in this form
 // But  it is used in many places.
 XString
-AppConfig::GetServerURL()
+AppConfig::GetServerURL() const
 {
   XString serverURL;
   XString section(SECTION_APPLICATION);
@@ -508,7 +500,7 @@ AppConfig::GetServerURL()
 //////////////////////////////////////////////////////////////////////////
 
 bool
-AppConfig::HasSection(XString p_section)
+AppConfig::HasSection(const XString& p_section) const
 {
   if(FindSection(p_section))
   {
@@ -522,7 +514,7 @@ AppConfig::HasSection(XString p_section)
 }
 
 bool
-AppConfig::HasParameter(XString p_section,XString p_parameter)
+AppConfig::HasParameter(const XString& p_section,const XString& p_parameter) const
 {
   XMLElement* section = FindSection(p_section);
   if(section != nullptr)
@@ -537,7 +529,7 @@ AppConfig::HasParameter(XString p_section,XString p_parameter)
 }
 
 bool
-AppConfig::HasAttribute(XString p_section,XString p_parameter,XString p_attribute)
+AppConfig::HasAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attribute) const
 {
   XMLElement* section = FindElement(p_section);
   if(section)
@@ -566,7 +558,7 @@ AppConfig::HasAttribute(XString p_section,XString p_parameter,XString p_attribut
 
 // Is the config file writable
 bool
-AppConfig::GetConfigWritable()
+AppConfig::GetConfigWritable() const
 {
   XString fileNaam = GetConfigFilename();
   if (_taccess(fileNaam, 00) == -1)
@@ -592,7 +584,7 @@ AppConfig::GetConfigWritable()
 
 // The config file as an absolute pathname
 XString
-AppConfig::GetConfigFilename()
+AppConfig::GetConfigFilename() const
 {
   // Special configured file from the constructor
   if(!m_fileName.IsEmpty())
@@ -655,14 +647,14 @@ AppConfig::WriteConfig()
 
 // Find section with this name
 XMLElement*
-AppConfig::FindSection(XString p_section)
+AppConfig::FindSection(const XString& p_section) const
 {
   return FindElement(p_section);
 }
 
 // Find parameter within a section
 XMLElement*
-AppConfig::FindParameter(XMLElement* p_section,XString p_parameter)
+AppConfig::FindParameter(XMLElement* p_section,const XString& p_parameter) const
 {
   return FindElement(p_section,p_parameter);
 }
@@ -671,7 +663,7 @@ AppConfig::FindParameter(XMLElement* p_section,XString p_parameter)
 // Used to just read the base members.
 // E.g. in the ServerMain startup methods
 bool
-AppConfig::CheckRootNodeName()
+AppConfig::CheckRootNodeName() const
 {
   XMLElement* root = XMLMessage::GetRoot();
   return root->GetName().CompareNoCase(SECTION_ROOTNAME) == 0;

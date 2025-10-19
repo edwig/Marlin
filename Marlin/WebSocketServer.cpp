@@ -36,14 +36,6 @@
 
 #pragma comment (lib,"websocket.lib")
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
 #define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
@@ -63,7 +55,7 @@ HttpReceiveWebSocket(IN HANDLE                /*RequestQueueHandle*/
 //
 //////////////////////////////////////////////////////////////////////////
 
-WebSocketServer::WebSocketServer(XString p_uri)
+WebSocketServer::WebSocketServer(const XString& p_uri)
                 :WebSocket(p_uri)
 {
 }
@@ -280,7 +272,7 @@ WebSocketServer::SocketReader(HRESULT p_error
     }
     else
     {
-      m_reading = new WSFrame();
+      m_reading = alloc_new WSFrame();
       m_reading->m_length = 0;
       m_reading->m_data = reinterpret_cast<BYTE*>(malloc(static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
     }
@@ -369,7 +361,7 @@ WebSocketServer::SocketListener()
 {
   if(!m_reading)
   {
-    m_reading = new WSFrame();
+    m_reading = alloc_new WSFrame();
     m_reading->m_length = 0;
     m_reading->m_data   = reinterpret_cast<BYTE*>(malloc(static_cast<size_t>(m_fragmentsize) + WS_OVERHEAD));
   }
@@ -577,7 +569,7 @@ WebSocketServer::WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,boo
   }
 
   // Store the buffer in a WSFrame for asynchronous storage
-  WSFrame* frame  = new WSFrame();
+  WSFrame* frame  = alloc_new WSFrame();
   frame->m_utf8   = (p_opcode == Opcode::SO_UTF8);
   frame->m_length = p_length;
   frame->m_data   = reinterpret_cast<BYTE*>(malloc((size_t)p_length + WS_OVERHEAD));
@@ -651,7 +643,7 @@ WebSocketServer::SocketDispatch()
 
 // Close the socket with a closing frame
 bool
-WebSocketServer::SendCloseSocket(USHORT p_code,XString p_reason)
+WebSocketServer::SendCloseSocket(USHORT p_code,const XString& p_reason)
 {
   // See if we are still open for writing
   if(!m_openWriting)

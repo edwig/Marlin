@@ -42,27 +42,27 @@ using Commands   = std::pair<CommandMap::iterator,CommandMap::iterator>;
 class CommandBus
 {
 public:
-  CommandBus(XString p_name,ThreadPool* p_pool);
+  CommandBus(const XString& p_name,ThreadPool* p_pool);
  ~CommandBus();
 
   // FUNCTIONS
  
   // Subscribe a function to a command
-  bool SubscribeCommand(XString p_command,LPFN_CALLBACK p_function,void* p_default = NULL);
+  bool SubscribeCommand(const XString& p_command,LPFN_CALLBACK p_function,void* p_default = NULL);
   // Un-Subscribe a command function
-  bool UnSubscribe(XString p_command,LPFN_CALLBACK p_function);
+  bool UnSubscribe(const XString& p_command,LPFN_CALLBACK p_function);
   // Publish new command for all subscribers
-  bool PublishCommand(XString p_command,void* p_argument);
+  bool PublishCommand(const XString& p_command,void* p_argument);
   // Find out if command bus is (still) open
   bool IsOpen();
   // Close bus for new publishing
   void Close();
   // Find out if command has subscribers
-  int  GetNumberOfSubscribers(XString p_command);
+  int  GetNumberOfSubscribers(const XString& p_command);
 
   // SETTERS
-  void SetName(XString p_name)     { m_name = p_name; };
-  void SetPool(ThreadPool* p_pool) { m_pool = p_pool; };
+  void SetName(const XString& p_name)     { m_name = p_name; };
+  void SetPool(      ThreadPool* p_pool)  { m_pool = p_pool; };
 
   // GETTERS
   XString     GetName()   { return m_name; };

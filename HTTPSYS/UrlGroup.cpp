@@ -17,12 +17,6 @@
 #include "OpaqueHandles.h"
 #include "http_private.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 UrlGroup::UrlGroup(ServerSession* p_session)
          :m_session(p_session)
          ,m_queue(nullptr)
@@ -76,7 +70,7 @@ UrlGroup::SetEnabledState(HTTP_ENABLED_STATE p_state)
 // URL Must be registered in the MS-Windows registry (services\http\parameters)
 // Optionally start a listener for the portnumber if not already started
 ULONG 
-UrlGroup::AddUrlPrefix(XString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
+UrlGroup::AddUrlPrefix(const XString& pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
 {
   AutoCritSec lock(&m_lock);
 
@@ -104,8 +98,9 @@ UrlGroup::AddUrlPrefix(XString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
     USHORT  port = url.m_port;
 
     // See if registered before
-    pFullyQualifiedUrl.MakeLower();
-    URLNames::iterator it = m_urls.find(pFullyQualifiedUrl);
+    XString lowerUrl(pFullyQualifiedUrl);
+    lowerUrl.MakeLower();
+    URLNames::iterator it = m_urls.find(lowerUrl);
     if(it != m_urls.end())
     {
       return ERROR_ALREADY_EXISTS;
@@ -120,7 +115,7 @@ UrlGroup::AddUrlPrefix(XString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext)
     }
 
     // Keep URL in our mapping
-    m_urls.insert(std::make_pair(pFullyQualifiedUrl,url));
+    m_urls.insert(std::make_pair(lowerUrl,url));
 
     // Listener already exists. Do NOT make a new one
     if(listener)
@@ -228,7 +223,10 @@ UrlGroup::FindLongestURL(USHORT p_port,XString p_abspath,int& p_length)
 
 // Just copy the properties. 
 void 
-UrlGroup::SetAuthentication(ULONG p_scheme, XString p_domain, XString p_realm, bool p_caching)
+UrlGroup::SetAuthentication(ULONG p_scheme
+                           ,const XString& p_domain
+                           ,const XString& p_realm
+                           ,bool  p_caching)
 {
   m_scheme = p_scheme;
   m_domain = p_domain;
@@ -237,7 +235,7 @@ UrlGroup::SetAuthentication(ULONG p_scheme, XString p_domain, XString p_realm, b
 }
 
 void 
-UrlGroup::SetAuthenticationWide(wstring p_domain, wstring p_realm)
+UrlGroup::SetAuthenticationWide(const wstring& p_domain,const wstring& p_realm)
 {
   m_domainWide = p_domain;
   m_realmWide  = p_realm;
@@ -303,7 +301,7 @@ UrlGroup::SegmentedCompare(LPCTSTR p_left,LPCTSTR p_right)
 // Find out if our URL is registered in the MS-Windows registry
 // As created and maintained by the 'netsh' application
 bool
-UrlGroup::UrlIsRegistered(XString pFullyQualifiedUrl)
+UrlGroup::UrlIsRegistered(const XString& pFullyQualifiedUrl)
 {
   bool result = false;
 

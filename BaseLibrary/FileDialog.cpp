@@ -2,8 +2,8 @@
 //
 // File: FileDialog.cpp
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of 
 // this software and associated documentation files (the "Software"), 
@@ -27,32 +27,25 @@
 #include "FileDialog.h"
 #include <dlgs.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #pragma warning (disable:4312)
 
-DocFileDialog::DocFileDialog(HWND    p_owner
-                            ,bool    p_open        // true = open, false = SaveAs
-                            ,XString p_title       // Title of the dialog
-                            ,XString p_defext      // Default extension
-                            ,XString p_filename    // Default first file
-                            ,int     p_flags       // Default flags
-                            ,XString p_filter      // Filter for extensions
-                            ,XString p_direct)     
+DocFileDialog::DocFileDialog(HWND           p_owner
+                            ,bool           p_open        // true = open, false = SaveAs
+                            ,const XString& p_title       // Title of the dialog
+                            ,const XString& p_defext      // Default extension
+                            ,const XString& p_filename    // Default first file
+                            ,int            p_flags       // Default flags
+                            ,const XString& p_filter      // Filter for extensions
+                            ,const XString& p_direct)     
               :m_open(p_open)
 {
   // Init OPENFILENAME structure  
   memset(&m_ofn,0,sizeof(OPENFILENAME));
 
+  XString filter(p_filter);
   if(p_filter.IsEmpty())
   {
-    p_filter = _T("Text files (*.txt)|*.txt|");
+    filter = _T("Text files (*.txt)|*.txt|");
   }
   // Register original CWD (Current Working Directory)
   GetCurrentDirectory(MAX_PATH, m_original);
@@ -61,10 +54,10 @@ DocFileDialog::DocFileDialog(HWND    p_owner
     // Change to starting directory
     SetCurrentDirectory(p_direct.GetString());
   }
-  _tcsncpy_s(m_filter,  1024,   p_filter,  1024);
+  _tcsncpy_s(m_filter,  1024,    filter,    1024);
   _tcsncpy_s(m_filename,MAX_PATH,p_filename,MAX_PATH);
-  _tcsncpy_s(m_defext,  100,    p_defext,  100);
-  _tcsncpy_s(m_title,   100,    p_title,   100);
+  _tcsncpy_s(m_defext,  100,     p_defext,  100);
+  _tcsncpy_s(m_title,   100,     p_title,   100);
   FilterString(m_filter);
 
   // Fill in the filename structure

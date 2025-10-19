@@ -2,8 +2,8 @@
 //
 // SourceFile: Environment.cpp
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -25,14 +25,6 @@
 //
 #include "pch.h"
 #include "Environment.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 #define BUFFER_LINE 4096
 
@@ -115,7 +107,7 @@ void ProcessVariable(XString& p_string)
   // Get size of the variable value
   PTCHAR envvar = nullptr;
   int size = GetEnvironmentVariable(variable,envvar,0);
-  envvar = new TCHAR[size+1];
+  envvar = alloc_new TCHAR[size+1];
   GetEnvironmentVariable(variable,envvar,size);
 
   // Perform the operator calculation
@@ -125,7 +117,7 @@ void ProcessVariable(XString& p_string)
     case '!': value.Empty(); 
               break;
     case '+': // fall through
-    case '>': value = envvar + value; 
+    case '>': value = XString(envvar) + value; 
               break;
     case '<': value = value  + envvar;
               break;

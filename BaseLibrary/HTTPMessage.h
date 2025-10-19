@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -87,7 +87,7 @@ enum class HTTPCommand
 };
 
 // All HTTP header commands
-extern LPCTSTR headers[];
+extern LPCTSTR g_headers[];
 
 // Incoming and responding header names
 extern LPCTSTR header_fields[];
@@ -113,7 +113,7 @@ public:
   // XTOR for HTTP command from a HTTPServer
   explicit HTTPMessage(HTTPCommand p_command,HTTPSite* p_site);
   // XTOR for HTTP command and a URL
-  explicit HTTPMessage(HTTPCommand p_command,XString p_url);
+  explicit HTTPMessage(HTTPCommand p_command,const XString& p_url);
   // XTOR from another HTTPMessage
   explicit HTTPMessage(HTTPMessage* p_msg,bool p_deep = false);
   // XTOR from a SOAPMessage
@@ -127,17 +127,17 @@ public:
   void Reset(bool p_resetURL = false);
 
   // SETTERS
-  void SetBody(XString p_body,XString p_charset = _T(""));
+  void SetBody(const XString& p_body,XString p_charset = _T(""));
   void SetBody(LPCTSTR p_body,XString p_charset = _T(""));
   void SetBody(void* p_body,unsigned p_length);
   void SetURL(const XString& p_url);
-  bool SetVerb(XString p_verb);
-  void SetAcceptEncoding(XString p_encoding);
+  bool SetVerb(const XString& p_verb);
+  void SetAcceptEncoding(const XString& p_encoding);
   void SetCommand(HTTPCommand p_command)        { m_command            = p_command;   }
-  void SetReferrer(XString p_referrer)          { m_referrer           = p_referrer;  }
+  void SetReferrer(const XString& p_referrer)   { m_referrer           = p_referrer;  }
   void SetStatus(unsigned p_status)             { m_status             = p_status;    }
-  void SetUser(XString p_user)                  { m_user               = p_user;      }
-  void SetPassword(XString p_password)          { m_password           = p_password;  }
+  void SetUser(const XString& p_user)           { m_user               = p_user;      }
+  void SetPassword(const XString& p_password)   { m_password           = p_password;  }
   void SetSecure(bool p_secure)                 { m_cracked.m_secure   = p_secure;    ReparseURL();  }
   void SetServer(const XString& p_server)       { m_cracked.m_host     = p_server;    ReparseURL();  }
   void SetPort(unsigned p_port)                 { m_cracked.m_port     = p_port;      ReparseURL();  }
@@ -145,7 +145,7 @@ public:
   void SetRequestHandle(HTTP_OPAQUE_ID p_req)   { m_request            = p_req;       }
   void SetAccessToken(HANDLE p_token)           { m_token              = p_token;     }
   void SetRemoteDesktop(UINT p_desktop)         { m_desktop            = p_desktop;   }
-  void SetContentType(XString p_type)           { m_contentType        = p_type;      }
+  void SetContentType(const XString& p_type)    { m_contentType        = p_type;      }
   void SetContentLength(size_t p_length)        { m_contentLength      = p_length;    }
   void SetUseIfModified(bool p_ifmodified)      { m_ifmodified         = p_ifmodified;}
   void SetEncoding(Encoding p_encoding)         { m_encoding           = p_encoding;  }
@@ -156,74 +156,74 @@ public:
   void SetHasBeenAnswered()                     { m_request            = NULL;        }
   void SetChunkNumber(int p_chunk)              { m_chunkNumber        = p_chunk;     }
   void SetXMLHttpRequest(boolean p_value)       { m_XMLHttpRequest     = p_value;     }
-  void SetExtension(XString p_ext,bool p_reparse = true);
+  void SetExtension(const XString& p_ext,bool p_reparse = true);
   void SetReadBuffer(bool p_read,size_t p_length = 0);
   void SetSender  (PSOCKADDR_IN6 p_address);
   void SetReceiver(PSOCKADDR_IN6 p_address);
   void SetFile(const XString& p_fileName);
-  void SetAuthorization(XString& p_authorization);
+  void SetAuthorization(const XString& p_authorization);
   void SetAllHeaders    (PHTTP_REQUEST_HEADERS p_headers);
   void SetUnknownHeaders(PHTTP_REQUEST_HEADERS p_headers);
-  void SetCookie(Cookie& p_cookie);
-  void SetCookie(XString p_fromHttp);
-  void SetCookie(XString p_name,XString p_value,XString p_metadata = _T(""),bool p_secure = false,bool p_httpOnly = false);
-  void SetCookie(XString        p_name
-                ,XString        p_value
-                ,XString        p_metadata
-                ,XString        p_path
-                ,XString        p_domain
+  void SetCookie(const Cookie& p_cookie);
+  void SetCookie(const XString& p_fromHttp);
+  void SetCookie(const XString& p_name,const XString& p_value,XString p_metadata = _T(""),bool p_secure = false,bool p_httpOnly = false);
+  void SetCookie(const XString& p_name
+                ,const XString& p_value
+                ,const XString& p_metadata
+                ,const XString& p_path
+                ,const XString& p_domain
                 ,bool           p_secure   = false
                 ,bool           p_httpOnly = false
                 ,CookieSameSite p_samesite = CookieSameSite::NoSameSite
                 ,int            p_maxAge   = 0
                 ,SYSTEMTIME*    p_expires  = nullptr);
-  void SetCookiePairs(XString p_cookies);     // From "Cookie:" only
+  void SetCookiePairs(const XString& p_cookies);     // From "Cookie:" only
   void SetCookies(const Cookies& p_cookies);
   bool SetHTTPSite(HTTPSite* p_site);
 
   // GETTERS
-  HTTPCommand         GetCommand()              { return m_command;                   }
-  XString             GetURL()                  { return m_url;                       }
-  XString             GetReferrer()             { return m_referrer;                  }
-  CrackedURL&         GetCrackedURL()           { return m_cracked;                   }
-  unsigned            GetStatus()               { return m_status;                    }
-  XString             GetUser()                 { return m_user;                      }
-  XString             GetPassword()             { return m_password;                  }
-  bool                GetSecure()               { return m_cracked.m_secure;          }
-  XString             GetServer()               { return m_cracked.m_host;            }
-  unsigned            GetPort()                 { return m_cracked.m_port;            }
-  XString             GetAbsolutePath()         { return m_cracked.AbsolutePath();    }
+  HTTPCommand         GetCommand() const        { return m_command;                   }
+  XString             GetURL() const            { return m_url;                       }
+  XString             GetReferrer() const       { return m_referrer;                  }
+  const CrackedURL&   GetCrackedURL() const     { return m_cracked;                   }
+  unsigned            GetStatus() const         { return m_status;                    }
+  XString             GetUser() const           { return m_user;                      }
+  XString             GetPassword() const       { return m_password;                  }
+  bool                GetSecure() const         { return m_cracked.m_secure;          }
+  XString             GetServer() const         { return m_cracked.m_host;            }
+  unsigned            GetPort() const           { return m_cracked.m_port;            }
+  XString             GetAbsolutePath() const   { return m_cracked.AbsolutePath();    }
   XString             GetAbsoluteResource()     { return m_cracked.AbsoluteResource();}
-  XString             GetExtension()            { return m_cracked.GetExtension();    }
-  HTTP_OPAQUE_ID      GetRequestHandle()        { return m_request;                   }
-  HTTPSite*           GetHTTPSite()             { return m_site;                      }
-  bool                GetReadBuffer()           { return m_readBuffer;                }
-  size_t              GetContentLength()        { return m_contentLength;             }
+  XString             GetExtension() const      { return m_cracked.GetExtension();    }
+  HTTP_OPAQUE_ID      GetRequestHandle() const  { return m_request;                   }
+  HTTPSite*           GetHTTPSite() const       { return m_site;                      }
+  bool                GetReadBuffer() const     { return m_readBuffer;                }
+  size_t              GetContentLength() const  { return m_contentLength;             }
   FileBuffer*         GetFileBuffer()           { return &m_buffer;                   }
-  XString             GetContentType()          { return m_contentType;               }
-  HANDLE              GetAccessToken()          { return m_token;                     }
-  UINT                GetRemoteDesktop()        { return m_desktop;                   }
-  PSOCKADDR_IN6       GetSender()               { return &m_sender;                   }
-  PSOCKADDR_IN6       GetReceiver()             { return &m_receiver;                 }
-  bool                GetUseIfModified()        { return m_ifmodified;                }
+  XString             GetContentType() const    { return m_contentType;               }
+  HANDLE              GetAccessToken() const    { return m_token;                     }
+  UINT                GetRemoteDesktop() const  { return m_desktop;                   }
+  const PSOCKADDR_IN6 GetSender() const         { return (PSOCKADDR_IN6) &m_sender;   }
+  const PSOCKADDR_IN6 GetReceiver() const       { return (PSOCKADDR_IN6) &m_receiver; }
+  bool                GetUseIfModified() const  { return m_ifmodified;                }
   PSYSTEMTIME         GetSystemTime()           { return &m_systemtime;               }
-  HeaderMap*          GetHeaderMap()            { return &m_headers;                  }
-  Encoding            GetEncoding()             { return m_encoding;                  }
-  bool                GetSendBOM()              { return m_sendBOM;                   }
-  bool                GetVerbTunneling()        { return m_verbTunnel;                }
-  HTTP_CONNECTION_ID  GetConnectionID()         { return m_connectID;                 }
-  XString             GetAcceptEncoding()       { return m_acceptEncoding;            }
-  Cookies&            GetCookies()              { return m_cookies;                   }
-  Routing&            GetRouting()              { return m_routing;                   }
-  unsigned            GetChunkNumber()          { return m_chunkNumber;               }
-  boolean             GetXMLHttpRequest()       { return m_XMLHttpRequest;            }
+  const HeaderMap*    GetHeaderMap() const      { return &m_headers;                  }
+  Encoding            GetEncoding() const       { return m_encoding;                  }
+  bool                GetSendBOM() const        { return m_sendBOM;                   }
+  bool                GetVerbTunneling() const  { return m_verbTunnel;                }
+  HTTP_CONNECTION_ID  GetConnectionID() const   { return m_connectID;                 }
+  XString             GetAcceptEncoding() const { return m_acceptEncoding;            }
+  const Cookies&      GetCookies() const        { return m_cookies;                   }
+  const Routing&      GetRouting() const        { return m_routing;                   }
+  unsigned            GetChunkNumber() const    { return m_chunkNumber;               }
+  boolean             GetXMLHttpRequest() const { return m_XMLHttpRequest;            }
 
-  XString             GetBody();
-  size_t              GetBodyLength();
-  XString             GetVerb();
-  XString             GetHeader(XString p_name);
-  void                GetRawBody(uchar** p_body,size_t& p_length);
-  Cookie*             GetCookie(unsigned p_ind);
+  XString             GetBody() const;
+  size_t              GetBodyLength() const;
+  XString             GetVerb() const;
+  XString             GetHeader(const XString& p_name) const;
+  void                GetRawBody(uchar** p_body,size_t& p_length) const;
+  const Cookie*       GetCookie(unsigned p_ind) const;
   XString             GetCookieValue(unsigned p_ind = 0,XString p_metadata = _T(""));
   XString             GetCookieValue(XString p_name,    XString p_metadata = _T(""));
   XString             GetRoute(int p_index);
@@ -302,8 +302,8 @@ private:
   CrackedURL          m_cracked;                                      // Cracked down URL
   XString             m_referrer;                                     // Referrer of this call
   HANDLE              m_token         { NULL    };                    // Access token
-  SOCKADDR_IN6        m_sender;                                       // Senders  address end
-  SOCKADDR_IN6        m_receiver;                                     // Receiver address end
+  SOCKADDR_IN6        m_sender        { 0       };                    // Senders  address end
+  SOCKADDR_IN6        m_receiver      { 0       };                    // Receiver address end
   UINT                m_desktop       { 0       };                    // Remote desktop number
   HeaderMap           m_headers;                                      // All/Known headers
   Routing             m_routing;                                      // Routing information within a site
@@ -320,9 +320,9 @@ HTTPMessage::SetBody(void* p_body,unsigned p_length)
 }
 
 inline size_t
-HTTPMessage::GetBodyLength()
+HTTPMessage::GetBodyLength() const
 {
-  return m_buffer.GetLength();
+  return const_cast<FileBuffer&>(m_buffer).GetLength();
 }
 
 inline void
@@ -356,7 +356,7 @@ HTTPMessage::AddBody(void* p_body,unsigned p_length)
 }
 
 inline void 
-HTTPMessage::SetCookie(Cookie& p_cookie)
+HTTPMessage::SetCookie(const Cookie& p_cookie)
 {
   m_cookies.AddCookie(p_cookie);
 }

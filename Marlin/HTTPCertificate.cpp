@@ -28,14 +28,6 @@
 #include "stdafx.h"
 #include "HTTPCertificate.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 HTTPCertificate::HTTPCertificate()
 {
 }
@@ -145,7 +137,7 @@ HTTPCertificate::GetIssuer()
 
 // Finding a thumbprint in a certificate
 bool 
-HTTPCertificate::VerifyThumbprint(XString p_thumbprint)
+HTTPCertificate::VerifyThumbprint(const XString& p_thumbprint)
 {
   bool result = false;
 
@@ -225,7 +217,7 @@ HTTPCertificate::EncodeThumbprint(const XString& p_thumbprint,PCRYPT_HASH_BLOB p
 }
 
 XString 
-HTTPCertificate::CleanupCertificateString(XString p_name)
+HTTPCertificate::CleanupCertificateString(const XString& p_name)
 {
   int pos = p_name.GetLength();
   while(pos-- > 0)

@@ -77,7 +77,7 @@
 
 /*
 void *zmalloc(unsigned int len)
-{ char *buf = new char[len+32];
+{ char *buf = alloc_new char[len+32];
   for (int i=0; i<16; i++)
   { buf[i]=i;
     buf[len+31-i]=i;
@@ -2612,7 +2612,7 @@ LUFILE *lufopen(void *z,unsigned int len,DWORD flags,ZRESULT *err)
     DWORD res = SetFilePointer(h,0,0,FILE_CURRENT);
     canseek = (res!=0xFFFFFFFF);
   }
-  LUFILE *lf = new LUFILE;
+  LUFILE *lf = alloc_new LUFILE;
   if (flags==ZIP_HANDLE||flags==ZIP_FILENAME)
   { lf->is_handle=true; lf->mustclosehandle=mustclosehandle;
     lf->canseek=canseek;
@@ -3758,7 +3758,7 @@ public:
     if (pwd!=0) 
     {
       int len = (int) strlen(pwd);
-      password=new char[(size_t)len + 1]; 
+      password = alloc_new char[(size_t)len + 1];
       strcpy_s(password,(size_t)len + 1,pwd);
     }
   }
@@ -3841,7 +3841,7 @@ ZRESULT TUnzip::Get(int index,ZIPENTRY *ze)
   int res = unzlocal_CheckCurrentFileCoherencyHeader(uf,&iSizeVar,&offset,&extralen);
   if (res!=UNZ_OK) return ZR_CORRUPT;
   if (lufseek(uf->file,offset,SEEK_SET)!=0) return ZR_READ;
-  unsigned char *extra = new unsigned char[extralen];
+  unsigned char *extra = alloc_new unsigned char[extralen];
   if (lufread(extra,1,(uInt)extralen,uf->file)!=extralen) {delete[] extra; return ZR_READ;}
   //
   ze->index=uf->num_file;
@@ -4058,7 +4058,7 @@ ZRESULT TUnzip::Unzip(int index,void *dst,unsigned int len,DWORD flags)
   }
   if (h==INVALID_HANDLE_VALUE) return ZR_NOFILE;
   unzOpenCurrentFile(uf,password);
-  if (unzbuf==0) unzbuf=new char[16384]; DWORD haderr=0;
+  if (unzbuf==0) unzbuf= alloc_new char[16384]; DWORD haderr=0;
   //  
 
   for (; haderr==0;)
@@ -4133,10 +4133,10 @@ typedef struct
 } TUnzipHandleData;
 
 HZIP OpenZipInternal(void *z,unsigned int len,DWORD flags, const char *password)
-{ TUnzip *unz = new TUnzip(password);
+{ TUnzip *unz = alloc_new TUnzip(password);
   lasterrorU = unz->Open(z,len,flags);
   if (lasterrorU!=ZR_OK) {delete unz; return 0;}
-  TUnzipHandleData *han = new TUnzipHandleData;
+  TUnzipHandleData *han = alloc_new TUnzipHandleData;
   han->flag=1; han->unz=unz; return (HZIP)han;
 }
 HZIP OpenZipHandle(HANDLE h, const char *password) {return OpenZipInternal((void*)h,0,ZIP_HANDLE,password);}

@@ -33,12 +33,6 @@
 #include <PrintToken.h>
 #include <GetLastErrorAsString.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 8;
 
 class SiteHandlerSoapToken: public SiteHandlerSoap
@@ -242,7 +236,7 @@ TestMarlinServer::TestToken()
   }
 
   // Setting the POST handler for this site
-  site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapToken());
+  site->SetHandler(HTTPCommand::http_post,alloc_new SiteHandlerSoapToken());
 
   // Modify the standard settings for this site
   site->AddContentType(true,_T("pos"),_T("text/xml"));

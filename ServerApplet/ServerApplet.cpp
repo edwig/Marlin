@@ -35,12 +35,6 @@
 #include <ExecuteProcess.h>
 #include <io.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 LPCTSTR PROGRAM_NAME = nullptr;  // The current program
 
 // Default values
@@ -79,6 +73,7 @@ BOOL ServerAppletApp::InitInstance()
   InitCtrls.dwICC = ICC_WIN95_CLASSES;
   InitCommonControlsEx(&InitCtrls);
 
+  InitBaseLibrary();
   CWinApp::InitInstance();
 
   // Standard initialization
@@ -112,24 +107,20 @@ BOOL ServerAppletApp::InitInstance()
 }
 
 int
-ServerAppletApp::StartProgram(XString& p_program
-                             ,XString& p_arguments
+ServerAppletApp::StartProgram(CString& p_program
+                             ,CString& p_arguments
                              ,bool     p_currentdir
-                             ,XString& p_errormessage)
+                             ,CString& p_errormessage)
 {
-  XString path;
-  if(p_currentdir)
-  {
-    path = MarlinConfig::GetExePath();
-  }
-  path += p_program;
-
-  XString result;
-  int exitCode = ExecuteProcess(p_program,p_arguments,p_currentdir,p_errormessage,SW_HIDE,true);
+  XString program(p_program);
+  XString arguments(p_arguments);
+  XString errorMessage;
+  int exitCode = ExecuteProcess(program,arguments,p_currentdir,errorMessage,SW_HIDE,true);
   if(exitCode < 0)
   {
-    MessageBox(m_pMainWnd->GetSafeHwnd(),p_errormessage,_T("ERROR"),MB_OK|MB_ICONERROR);
+    MessageBox(m_pMainWnd->GetSafeHwnd(),errorMessage,_T("ERROR"),MB_OK|MB_ICONERROR);
   }
+  p_errormessage = errorMessage;
   return exitCode;
 }
 

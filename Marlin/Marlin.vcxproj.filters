@@ -432,9 +432,6 @@
     <ClInclude Include="Version.h">
       <Filter>Configuration</Filter>
     </ClInclude>
-    <ClInclude Include="framework.h">
-      <Filter>Configuration</Filter>
-    </ClInclude>
     <ClInclude Include="HTTPSYS_Websocket.h">
       <Filter>MarlinServer\Headers</Filter>
     </ClInclude>

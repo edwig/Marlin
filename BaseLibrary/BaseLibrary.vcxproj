@@ -532,7 +532,6 @@
     <ClInclude Include="ExecuteShell.h" />
     <ClInclude Include="FileBuffer.h" />
     <ClInclude Include="FileDialog.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="GenerateGUID.h" />
     <ClInclude Include="GetExePath.h" />
     <ClInclude Include="GetLastErrorAsString.h" />
@@ -604,6 +603,7 @@
     <ClCompile Include="AutoCritical.cpp" />
     <ClCompile Include="AutoFont.cpp" />
     <ClCompile Include="Base64.cpp" />
+    <ClCompile Include="BaseLibrary.cpp" />
     <ClCompile Include="bcd.cpp" />
     <ClCompile Include="ConvertWideString.cpp" />
     <ClCompile Include="Cookie.cpp" />

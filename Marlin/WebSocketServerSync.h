@@ -37,7 +37,7 @@
 class WebSocketServerSync: public WebSocketServer
 {
 public:
-  explicit WebSocketServerSync(XString p_uri);
+  explicit WebSocketServerSync(const XString& p_uri);
   virtual ~WebSocketServerSync();
 
   // Reset the socket

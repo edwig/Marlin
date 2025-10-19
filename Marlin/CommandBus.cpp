@@ -30,15 +30,7 @@
 #include "ThreadPool.h"
 #include "AutoCritical.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
-CommandBus::CommandBus(XString p_name,ThreadPool* p_pool)
+CommandBus::CommandBus(const XString& p_name,ThreadPool* p_pool)
            :m_name(p_name)
            ,m_pool(p_pool)
 {
@@ -69,7 +61,7 @@ CommandBus::Close()
 
 // Subscribe a function to a command
 bool
-CommandBus::SubscribeCommand(XString p_command,LPFN_CALLBACK p_function,void* p_default /*=NULL*/)
+CommandBus::SubscribeCommand(const XString& p_command,LPFN_CALLBACK p_function,void* p_default /*=NULL*/)
 {
   AutoCritSec lock(&m_lock);
 
@@ -99,7 +91,7 @@ CommandBus::SubscribeCommand(XString p_command,LPFN_CALLBACK p_function,void* p_
 
 // Find out if command has subscribers
 int  
-CommandBus::GetNumberOfSubscribers(XString p_command)
+CommandBus::GetNumberOfSubscribers(const XString& p_command)
 {
   AutoCritSec lock(&m_lock);
 
@@ -115,7 +107,7 @@ CommandBus::GetNumberOfSubscribers(XString p_command)
 
 // Un-Subscribe a command function
 bool 
-CommandBus::UnSubscribe(XString p_command,LPFN_CALLBACK p_function)
+CommandBus::UnSubscribe(const XString& p_command,LPFN_CALLBACK p_function)
 {
   AutoCritSec lock(&m_lock);
 
@@ -134,7 +126,7 @@ CommandBus::UnSubscribe(XString p_command,LPFN_CALLBACK p_function)
 
 // Publish new command for all subscribers
 bool 
-CommandBus::PublishCommand(XString p_command,void* p_argument)
+CommandBus::PublishCommand(const XString& p_command,void* p_argument)
 {
   AutoCritSec lock(&m_lock);
 

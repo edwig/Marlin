@@ -33,12 +33,6 @@
 #include <WebSocketMain.h>
 #include <SiteHandlerWebSocket.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Open, close and 2 messages
 int totalChecks = 4;
 
@@ -171,7 +165,7 @@ TestMarlinServer::TestWebSocket()
   }
 
   // Set a WebSocket handler on the GET handler of this site
-  SiteHandlerTestSocket* handler = new SiteHandlerTestSocket(this);
+  SiteHandlerTestSocket* handler = alloc_new SiteHandlerTestSocket(this);
   site->SetHandler(HTTPCommand::http_get,handler);
 
   // Start the site explicitly

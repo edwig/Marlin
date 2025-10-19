@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -35,14 +35,6 @@
 #include <bcrypt.h>
 #include <schannel.h>
 #include <vector>
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 #pragma comment(lib,"bcrypt.lib")
 
@@ -133,7 +125,7 @@ Crypto::Digest(const void* data,const size_t data_size,unsigned hashType /*=0*/)
     return _T("");
   }
 
-  BYTE* buffer = new BYTE[cbHashSize + 2];
+  BYTE* buffer = alloc_new BYTE[cbHashSize + 2];
   if(!CryptGetHashParam(hHash,HP_HASHVAL,buffer,&cbHashSize,0))
   {
     CryptDestroyHash(hHash);
@@ -443,11 +435,11 @@ Crypto::ImplementDecryption(const BYTE* p_input,int p_lengthINP,const BYTE* p_pa
   if(p_input[p_lengthINP - 2] == '=') --dataLength;
 
   // Create a data string of the base64 string
-  pbEncrypt  = new BYTE[dataLength + 2];
+  pbEncrypt  = alloc_new BYTE[dataLength + 2];
   base64.Decrypt(const_cast<BYTE*>(p_input),p_lengthINP,pbEncrypt,(int)(dataLength + 2));
   decrypting = pbEncrypt;
   // Buffer to do the conversion in
-  pbData     = new BYTE[blocklen + 2];
+  pbData     = alloc_new BYTE[blocklen + 2];
 
   do 
   {
@@ -539,7 +531,7 @@ error_exit:
 }
 
 XString
-Crypto::FastEncryption(XString p_input, XString password)
+Crypto::FastEncryption(const XString& p_input, XString password)
 {
   AutoCritSec lock(&m_lock);
   BCRYPT_ALG_HANDLE hAlgorithm = NULL;
@@ -571,7 +563,7 @@ Crypto::FastEncryption(XString p_input, XString password)
   }
     
   
-  PUCHAR datapointer = new UCHAR[cbCipherText + 2];
+  PUCHAR datapointer = alloc_new UCHAR[cbCipherText + 2];
   if (BCryptEncrypt(hKey,(PUCHAR)p_input.GetString(), p_input.GetLength() * sizeof(TCHAR),NULL,NULL,NULL,reinterpret_cast<PUCHAR>(datapointer),cbCipherText,&cbCipherText,NULL) != STATUS_SUCCESS)
   {
     return result;
@@ -589,7 +581,7 @@ Crypto::FastEncryption(XString p_input, XString password)
 }
 
 XString
-Crypto::FastDecryption(XString p_input,XString password)
+Crypto::FastDecryption(const XString& p_input,XString password)
 {
   AutoCritSec lock(&m_lock);
 
@@ -609,7 +601,7 @@ Crypto::FastDecryption(XString p_input,XString password)
   // Create a data string of the base64 string
   Base64 base64;
   DWORD dataLength = (DWORD)base64.Ascii_length(p_input.GetLength());
-  BYTE* pbData = new BYTE[(size_t)dataLength + 2];
+  BYTE* pbData = alloc_new BYTE[(size_t)dataLength + 2];
   base64.Decrypt(p_input,pbData,dataLength + 2);
 
   // Symmetric encryption

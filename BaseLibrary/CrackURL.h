@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 //
-// // Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// // Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -51,11 +51,11 @@ class CrackedURL
 {
 public:
   CrackedURL();
-  explicit CrackedURL(XString p_url);
+  explicit CrackedURL(const XString& p_url);
  ~CrackedURL();
 
-  void      SetPath(XString p_path);
-  bool      CrackURL(XString p_url);
+  void      SetPath (const XString& p_path);
+  bool      CrackURL(const XString& p_url);
   bool      Valid() const;
   void      Reset();
 
@@ -70,7 +70,7 @@ public:
   // Getting the resource extension
   XString   GetExtension() const;
   // Setting a new extension on the path
-  void      SetExtension(XString p_extension);
+  void      SetExtension(const XString& p_extension);
   // Allow a '+' in an URL (webservers should be configured!)
   void      SetAllowPlusSign(bool p_allow);
   // Resulting UNC
@@ -78,13 +78,13 @@ public:
   // Resulting parameter
   unsigned  GetParameterCount() const;
   const UriParam* GetParameter(unsigned p_parameter) const;
-  const XString   GetParameter(XString p_parameter)  const;
-  const bool      HasParameter(XString p_parameter)  const;
-  void      SetParameter(XString p_parameter,XString p_value);
-  bool      DelParameter(XString p_parameter);
+  const XString   GetParameter(const XString& p_parameter)  const;
+  const bool      HasParameter(const XString& p_parameter)  const;
+  void      SetParameter(const XString& p_parameter,const XString& p_value);
+  bool      DelParameter(const XString& p_parameter);
 
-  static    XString   EncodeURLChars(XString p_text,bool p_queryValue = false);
-  static    XString   DecodeURLChars(XString p_text,bool p_queryValue = false,bool p_allowPlus = true);
+  static    XString   EncodeURLChars(const XString& p_text,bool p_queryValue = false);
+  static    XString   DecodeURLChars(const XString& p_text,bool p_queryValue = false,bool p_allowPlus = true);
 
   CrackedURL* operator=(CrackedURL* p_orig);
 
@@ -115,7 +115,7 @@ public:
 private:
   static LPCTSTR m_unsafeString;
   static LPCTSTR m_reservedString;
-  static uchar   GetHexcodedChar(XString& p_string
+  static uchar   GetHexcodedChar(const XString& p_string
                                 ,int&     p_index
                                 ,bool&    p_percent
                                 ,bool&    p_queryValue

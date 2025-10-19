@@ -66,9 +66,9 @@ public:
   // Read an existing WSDL file
   bool    ReadWSDLFile(LPCTSTR p_filename);
   // Read an existing WSDL from file buffer
-  bool    ReadWSDLString(XString p_wsdl);
+  bool    ReadWSDLString(const XString& p_wsdl);
   // Add SOAP message call and answer
-  bool    AddOperation(int p_code,XString p_name,SOAPMessage* p_input,SOAPMessage* p_output);
+  bool    AddOperation(int p_code,const XString& p_name,SOAPMessage* p_input,SOAPMessage* p_output);
   // Check incoming SOAP message against WSDL
   bool    CheckIncomingMessage(SOAPMessage* p_msg,bool p_checkFields);
   // Check outgoing SOAP message against WSDL
@@ -77,28 +77,28 @@ public:
   // SETTERS
 
   // MANDATORY: Set a service
-  bool    SetService(XString p_servicename,XString p_url);
+  bool    SetService(const XString& p_servicename,const XString& p_url);
   // MANDATORY: Set a target namespace
-  void    SetTargetNamespace(XString p_name)     { m_targetNamespace = p_name;     };
+  void    SetTargetNamespace(const XString& p_name)     { m_targetNamespace = p_name;     };
   // MANDATORY: Set a webroot (where to save the WSDL)
-  void    SetWebroot(XString p_webroot)          { m_webroot         = p_webroot;  };
+  void    SetWebroot(const XString& p_webroot)          { m_webroot         = p_webroot;  };
   // OPTIONAL:  Set SOAP 1.0
-  void    SetPerformSoap10(bool p_perform)       { m_performSoap10   = p_perform;  };
+  void    SetPerformSoap10(bool p_perform)              { m_performSoap10   = p_perform;  };
   // OPTIONAL:  Set SOAP 1.2
-  void    SetPerformSoap12(bool p_perform)       { m_performSoap12   = p_perform;  };
+  void    SetPerformSoap12(bool p_perform)              { m_performSoap12   = p_perform;  };
   // OPTIONAL:  Set service postfix other than ".aspcxx"
-  void    SetServicePostfix(XString p_postfix)   { m_servicePostfix  = p_postfix;  };
+  void    SetServicePostfix(const XString& p_postfix)   { m_servicePostfix  = p_postfix;  };
   // OPTIONAL:  Set the logfile (never owned, or generated!)
-  void    SetLogAnalysis(LogAnalysis* p_log)     { m_logging         = p_log;      };
+  void    SetLogAnalysis(LogAnalysis* p_log)            { m_logging         = p_log;      };
   // OPTIONAL:  Set a new output filename before generating
-  void    SetWSDLFilename(XString p_filename)    {m_filename         = p_filename; };
+  void    SetWSDLFilename(const XString& p_filename)    {m_filename         = p_filename; };
 
   // GETTERS
 
   XString GetServicePage();
-  XString GetOperationPage(XString p_operation,XString p_hostname);
+  XString GetOperationPage(const XString& p_operation,const XString& p_hostname);
   XString GetServiceBasePageName();
-  int     GetCommandCode(XString& p_commandName);
+  int     GetCommandCode(const XString& p_commandName);
   size_t  GetOperationsCount()                   { return m_operations.size();     };
   XString GetErrorMessage()                      { return m_errormessage;          };
   XString GetWSDLFilename()                      { return m_filename;              };
@@ -113,24 +113,24 @@ public:
 
 private:
   // Check message
-  bool    CheckMessage(SOAPMessage* p_orig,SOAPMessage* p_tocheck,XString p_who,bool p_checkFields);
+  bool    CheckMessage(SOAPMessage* p_orig,SOAPMessage* p_tocheck,const XString& p_who,bool p_checkFields);
   // Check parameters
   bool    CheckParameters(XMLElement*  p_orgBase
                          ,SOAPMessage* p_orig
                          ,XMLElement*  p_checkBase
                          ,SOAPMessage* p_check
-                         ,XString      p_who
+                         ,const XString& p_who
                          ,bool         p_fields);
   // Check data field in depth
   bool    CheckFieldDatatypeValues(XMLElement*   p_origParam
                                   ,XMLElement*   p_checkParam
                                   ,SOAPMessage*  p_check
-                                  ,XString       p_who);
+                                  ,const XString& p_who);
   // GENERATING A WSDL
   void    GenerateTypes(XString& p_wsdlcontent);
   void    GenerateMessageTypes(XString& p_wsdlcontent,SOAPMessage* p_msg,TypeDone& p_gedaan);
-  void    GenerateParameterTypes(XString&         p_wsdlcontent
-                                ,XString          p_element
+  void    GenerateParameterTypes(      XString&   p_wsdlcontent
+                                ,const XString&   p_element
                                 ,XmlElementMap&   p_map
                                 ,TypeDone&        p_done
                                 ,WsdlOrder        p_order
@@ -138,23 +138,23 @@ private:
   void    GenerateMessages(XString& p_wsdlcontent);
   void    GeneratePortType(XString& p_wsdlcontent);
   void    GenerateBindings(XString& p_wsdlcontent);
-  void    GenerateBinding(XString& p_wsdlcontent,XString p_binding,XString p_soapNamespace);
+  void    GenerateBinding (XString& p_wsdlcontent,const XString& p_binding,const XString& p_soapNamespace);
   void    GenerateServiceBindings(XString& p_wsdlcontent);
   void    GenerateDefinitions(XString& p_wsdlcontent);
 
   // READING A WSDL
   bool    ReadWSDLFileSafe(LPCTSTR p_filename);
-  bool    ReadWSDLLocalFile(XString p_filename);
-  bool    ReadWSDLFileFromURL(XString p_url);
+  bool    ReadWSDLLocalFile(const XString& p_filename);
+  bool    ReadWSDLFileFromURL(const XString& p_url);
   bool    ReadWSDL             (XMLMessage& p_wsdl);
   bool    ReadDefinitions      (XMLMessage& p_wsdl);
   bool    ReadServiceBindings  (XMLMessage& p_wsdl);
   bool    ReadBindings         (XMLMessage& p_wsdl);
   bool    ReadPortTypes        (XMLMessage& p_wsdl);
   bool    ReadMessage          (XMLMessage& p_wsdl,SOAPMessage& p_message);
-  bool    ReadParameters       (XMLMessage& p_wsdl,SOAPMessage& p_message,XString m_element);
-  XMLElement* ReadTypesElement (XMLMessage& p_wsdl,XString p_element);
-  XMLElement* ReadTypesType    (XMLMessage& p_wsdl,XString p_type);
+  bool    ReadParameters       (XMLMessage& p_wsdl,SOAPMessage& p_message,const XString& m_element);
+  XMLElement* ReadTypesElement (XMLMessage& p_wsdl,const XString& p_element);
+  XMLElement* ReadTypesType    (XMLMessage& p_wsdl,const XString& p_type);
   int     ReadWSDLOptions      (XMLMessage& p_wsdl,XMLElement* p_element);
   int     ReadWSDLOrdering     (XMLElement* p_order);
   bool    ReadParametersInOrder(XMLMessage& p_wsdl
@@ -164,21 +164,21 @@ private:
   void    ReadRestriction      (XMLMessage& p_wsdl
                                ,XMLElement* p_newelem
                                ,XMLElement* p_order
-                               ,XString     p_restriction
+                               ,const XString& p_restriction
                                ,int         p_options);
-  int     ReadElementaryType   (XString p_type);
-  int     ReadWhiteSpace       (XString p_value);
+  int     ReadElementaryType   (const XString& p_type);
+  int     ReadWhiteSpace       (const XString& p_value);
   XString ReadAnnoDocumentation(XMLMessage& p_wsdl,XMLElement* enumeration);
 
   // Generating HTML pages for documentation
   XString GetPageHeader();
   XString GetPageFooter();
   XString GetOperationWsdl();
-  XString GetOperationNameLink(XString p_operation);
-  XString GetOperationPageIntro(XString p_operation);
-  XString GetOperationPageHttpI(XString p_operation,XString p_hostname,bool p_soapVersion);
+  XString GetOperationNameLink (const XString& p_operation);
+  XString GetOperationPageIntro(const XString& p_operation);
+  XString GetOperationPageHttpI(const XString& p_operation,const XString& p_hostname,bool p_soapVersion);
   XString GetOperationPageHttpO(bool p_soapVersion);
-  XString GetOperationPageSoap (SOAPMessage* p_msg, bool p_soapVersion);
+  XString GetOperationPageSoap (SOAPMessage* p_msg,bool p_soapVersion);
   XString GetOperationPageFooter();
   
   XString m_filename;               // Where we save the WSDL (webroot / service / name.wsdl)

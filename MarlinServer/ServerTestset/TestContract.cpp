@@ -30,12 +30,7 @@
 #include <WebServiceServer.h>
 #include <SiteHandlerSoap.h>
 #include <XMLRestriction.h>
-
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
+#include <assert.h>
 
 static int totalChecks = 10;
 
@@ -77,7 +72,7 @@ WEBSERVICE_MAP_END
 void
 TestMarlinServer::OnMarlinFirst(int p_code,SOAPMessage* p_message)
 {
-  ASSERT(p_code == CONTRACT_MF);
+  assert(p_code == CONTRACT_MF);
   UNREFERENCED_PARAMETER(p_code);
   
   m_language = p_message->GetParameter(_T("Language"));
@@ -95,7 +90,7 @@ TestMarlinServer::OnMarlinFirst(int p_code,SOAPMessage* p_message)
 void
 TestMarlinServer::OnMarlinSecond(int p_code,SOAPMessage* p_message)
 {
-  ASSERT(p_code == CONTRACT_MS);
+  assert(p_code == CONTRACT_MS);
   UNREFERENCED_PARAMETER(p_code);
 
   m_translation = p_message->GetParameter(_T("Translation"));
@@ -126,7 +121,7 @@ TestMarlinServer::OnMarlinSecond(int p_code,SOAPMessage* p_message)
 void
 TestMarlinServer::OnMarlinThird(int p_code,SOAPMessage* p_message)
 {
-  ASSERT(p_code == CONTRACT_MT);
+  assert(p_code == CONTRACT_MT);
   UNREFERENCED_PARAMETER(p_code);
 
   XString word   = p_message->GetParameter(_T("WordToTranslate"));
@@ -149,7 +144,7 @@ TestMarlinServer::OnMarlinThird(int p_code,SOAPMessage* p_message)
 void
 TestMarlinServer::OnMarlinFourth(int p_code,SOAPMessage* /*p_message*/)
 {
-  ASSERT(p_code == CONTRACT_M4);
+  assert(p_code == CONTRACT_M4);
   UNREFERENCED_PARAMETER(p_code);
 
   // --- "---------------------------------------------- - ------
@@ -160,7 +155,7 @@ TestMarlinServer::OnMarlinFourth(int p_code,SOAPMessage* /*p_message*/)
 void
 TestMarlinServer::OnMarlinFifth(int p_code,SOAPMessage* p_message)
 {
-  ASSERT(p_code == CONTRACT_MV);
+  assert(p_code == CONTRACT_MV);
   UNREFERENCED_PARAMETER(p_code);
 
   XString pi;
@@ -200,7 +195,7 @@ TestMarlinServer::OnMarlinFifth(int p_code,SOAPMessage* p_message)
 // VERY LIMITED TRANSLATION FUNCTION :-)
 //
 XString 
-TestMarlinServer::Translation(XString p_language,XString p_translation,XString p_word)
+TestMarlinServer::Translation(const XString& p_language,const XString& p_translation,const XString& p_word)
 {
   if(p_language == _T("Dutch") && p_translation == _T("Français"))
   {
@@ -217,7 +212,7 @@ TestMarlinServer::Translation(XString p_language,XString p_translation,XString p
 //////////////////////////////////////////////////////////////////////////
 
 void
-TestMarlinServer::AddOperations(XString p_contract)
+TestMarlinServer::AddOperations(const XString& p_contract)
 {
   // Defining the names of the operations
   XString first (_T("MarlinFirst"));

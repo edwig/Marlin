@@ -74,13 +74,13 @@ protected:
   void        SetVersion();
   void        CheckPathname(bool p_allow = false);
   XString     MakeFirewallRuleName(XString& p_ports);
-  bool        DoCommand(ConfigCmd p_config
-                       ,XString   p_prefix
-                       ,XString&  p_command
-                       ,XString&  p_parameters
-                       ,XString   p_prefix2 = _T("")
-                       ,XString   p_prefix3 = _T("")
-                       ,XString   p_prefix4 = _T(""));
+  bool        DoCommand(ConfigCmd      p_config
+                       ,const XString& p_prefix
+                       ,      XString& p_command
+                       ,      XString& p_parameters
+                       ,const XString& p_prefix2 = _T("")
+                       ,const XString& p_prefix3 = _T("")
+                       ,const XString& p_prefix4 = _T(""));
     
   // Runmode: true for Microsoft-IIS, false for Marlin stand-alone
   bool        m_iis;
@@ -92,9 +92,9 @@ protected:
   bool        m_doRange;
   CButton     m_buttonSecurity;
   CButton     m_buttonRange;
-  XString     m_absPath;
+  CString     m_absPath;
   OsVersie    m_version;
-  XString     m_rulesResult;
+  CString     m_rulesResult;
 
   HICON       m_hIcon;
   CComboBox   m_comboProtocol;

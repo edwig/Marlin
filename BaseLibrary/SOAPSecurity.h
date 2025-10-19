@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -50,8 +50,8 @@ public:
  ~SOAPSecurity();
 
   // Setting primary info
-  void    SetUser(XString p_user);
-  void    SetPassword(XString p_password);
+  void    SetUser(const XString& p_user);
+  void    SetPassword(const XString& p_password);
   void    SetDigesting(bool p_digest);
   void    SetFreshness(int p_seconds);
   void    SetUserPasswordFinder(void* p_context,UserPassword p_function);
@@ -74,10 +74,10 @@ private:
   bool    SetCreatedInMessage (SOAPMessage* p_message,XMLElement* p_secure);
   // Create a new nonce and a digested password string
   XString DigestPassword();
-  void    GenerateNonce(XString p_nonce);
+  void    GenerateNonce(const XString& p_nonce);
   // Incoming control field
-  XString FindHeaderField(SOAPMessage* p_message,XMLElement* p_secure,XString p_field);
-  XString DeBase64(XString p_field);
+  XString FindHeaderField(SOAPMessage* p_message,XMLElement* p_secure,const XString& p_field);
+  XString DeBase64(const XString& p_field);
 
   XString       m_username;                           // The username to use
   XString       m_password;                           // The user's password
@@ -90,13 +90,13 @@ private:
 };
 
 inline void
-SOAPSecurity::SetUser(XString p_user)
+SOAPSecurity::SetUser(const XString& p_user)
 {
   m_username = p_user;
 }
 
 inline void
-SOAPSecurity::SetPassword(XString p_password)
+SOAPSecurity::SetPassword(const XString& p_password)
 {
   m_password = p_password;
 }

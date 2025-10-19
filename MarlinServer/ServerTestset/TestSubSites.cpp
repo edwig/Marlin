@@ -31,12 +31,6 @@
 #include <HTTPSite.h>
 #include <SiteHandlerSoap.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 2;
 
 class SiteHandlerSoapSubsite: public SiteHandlerSoap
@@ -128,8 +122,8 @@ TestMarlinServer::TestSubSites()
   }
 
   // Setting the POST handler for this site
-  site1->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapSubsite());
-  site2->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapSubsite());
+  site1->SetHandler(HTTPCommand::http_post,alloc_new SiteHandlerSoapSubsite());
+  site2->SetHandler(HTTPCommand::http_post,alloc_new SiteHandlerSoapSubsite());
 
   // Modify the standard settings for this site
   site1->AddContentType(true,_T("pos"),_T("text/xml"));

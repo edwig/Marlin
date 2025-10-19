@@ -32,12 +32,6 @@
 #include <SiteHandlerGet.h>
 #include <SiteHandlerPut.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int g_gotten = 0;
 static int g_placed = 0;
 
@@ -113,8 +107,8 @@ TestMarlinServer::TestSecureSite(bool /*p_standalone*/)
   }
 
   // Setting the default GET and PUT handler for this site
-  SiteHandlerGetSecure* handlerGet = new SiteHandlerGetSecure();
-  SiteHandlerPutSecure* handlerPut = new SiteHandlerPutSecure();
+  SiteHandlerGetSecure* handlerGet = alloc_new SiteHandlerGetSecure();
+  SiteHandlerPutSecure* handlerPut = alloc_new SiteHandlerPutSecure();
   site->SetHandler(HTTPCommand::http_get,handlerGet);
   site->SetHandler(HTTPCommand::http_put,handlerPut);
 

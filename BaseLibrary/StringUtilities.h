@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -33,9 +33,9 @@ XString AsString(int p_number,int p_radix = 10);
 XString AsString(double p_number);
 
 // Convert a string to int,double,bcd
-int     AsInteger(XString p_string);
-double  AsDouble(XString p_string);
-bcd     AsBcd(XString p_string);
+int     AsInteger(const XString& p_string);
+double  AsDouble (const XString& p_string);
+bcd     AsBcd    (const XString& p_string);
 
 int     SplitString(XString p_string,std::vector<XString>& p_vector,TCHAR p_separator = _T(','),bool p_trim = false);
 void    NormalizeLineEndings(XString& p_string);
@@ -51,7 +51,7 @@ bool    SplitArgument(int& p_pos,const XString& p_data,TCHAR p_splitter,XString&
 
 // Unicode aware Clipboard handling
 XString GetStringFromClipboard(HWND p_wnd = NULL);
-bool    PutStringToClipboard(XString p_string,HWND p_wnd = NULL,bool p_append = false);
+bool    PutStringToClipboard(const XString& p_string,HWND p_wnd = NULL,bool p_append = false);
 
 // Count the number of instances of a character in a string
-int     CountOfChars(XString p_string,TCHAR p_char);
+int     CountOfChars(const XString& p_string,TCHAR p_char);

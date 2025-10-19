@@ -17,12 +17,6 @@
 #include "SSLUtilities.h"
 #include "OpaqueHandles.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Forward declarations
 unsigned __stdcall StartAsyncSendHttpResponse(void* p_param);
 
@@ -108,7 +102,7 @@ HttpSendHttpResponse(IN HANDLE              RequestQueueHandle
 
   if(Overlapped)
   {
-    PREGISTER_HTTP_SEND_RESPONSE reg = new REGISTER_HTTP_SEND_RESPONSE();
+    PREGISTER_HTTP_SEND_RESPONSE reg = alloc_new REGISTER_HTTP_SEND_RESPONSE();
     reg->r_size         = sizeof(REGISTER_HTTP_SEND_RESPONSE);
     reg->r_queue        = queue;
     reg->r_request      = request;

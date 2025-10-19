@@ -12,12 +12,6 @@
 #include "UrlGroup.h"
 #include "OpaqueHandles.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 HTTPAPI_LINKAGE
 ULONG WINAPI
 HttpRemoveUrlFromUrlGroup(IN HTTP_URL_GROUP_ID  UrlGroupId
@@ -47,13 +41,8 @@ HttpRemoveUrlFromUrlGroup(IN HTTP_URL_GROUP_ID  UrlGroupId
   g_session->RemoveEndpoint();
 
   // Find the prefix of the URL registration
-  CStringW fullUrl(pFullyQualifiedUrl);
-  CStringA prefix(fullUrl);
+  XString fullUrl(pFullyQualifiedUrl);
 
   // And remove from the group
-#ifdef _UNICODE
   return group->DelUrlPrefix(UrlGroupId,fullUrl,Flags);
-#else
-  return group->DelUrlPrefix(UrlGroupId,prefix,Flags);
-#endif
 }

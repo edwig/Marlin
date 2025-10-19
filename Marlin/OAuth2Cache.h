@@ -74,20 +74,28 @@ public:
   // FUNCIONS
 
   // Create a token server URL from  a template and a tenant
-  XString   CreateTokenURL(XString p_template,XString p_tenant);
+  XString   CreateTokenURL(const XString& p_template,const XString& p_tenant);
   // Create a credentials grant, returning a session ID
-  int       CreateClientCredentialsGrant(XString p_url,XString p_appID,XString p_appKey,XString p_scope);
+  int       CreateClientCredentialsGrant(const XString& p_url
+                                        ,const XString& p_appID
+                                        ,const XString& p_appKey
+                                        ,const XString& p_scope);
   // Create a resource owner grant, returning a session ID
-  int       CreateResourceOwnerCredentialsGrant(XString p_url,XString p_appID,XString p_appKey,XString p_scope,XString p_username,XString p_password);
+  int       CreateResourceOwnerCredentialsGrant(const XString& p_url
+                                               ,const XString& p_appID
+                                               ,const XString& p_appKey
+                                               ,const XString& p_scope
+                                               ,const XString& p_username
+                                               ,const XString& p_password);
   // Ending a session, removing from the cache
   bool      EndSession(int p_session);
 
   // GETTERS
   XString   GetBearerToken(int p_session,bool p_refresh = false);
-  bool      GetIsExpired(int p_session);
-  INT64     GetExpires(int p_session);
-  INT64     GetDefaultExpirationPeriod();
-  int       GetHasSession(XString p_appID,XString p_appKey);
+  bool      GetIsExpired(int p_session) const;
+  INT64     GetExpires(int p_session) const;
+  INT64     GetDefaultExpirationPeriod() const;
+  int       GetHasSession(const XString& p_appID,const XString& p_appKey) const;
 
   // SETTERS
   void      SetExpired(int p_session);
@@ -96,7 +104,7 @@ public:
   void      SetDevelopment(bool p_dev = true);
 
 private:
-  OAuthSession* FindSession(int p_session);
+  const OAuthSession* FindSession(int p_session) const;
   void          StartCredentialsGrant(OAuthSession* p_session);
   XString       CreateTokenRequest(OAuthSession* p_session);
   HTTPClient*   GetClient();
@@ -108,5 +116,5 @@ private:
   int           m_nextSession   { 0 };         // Next session number to register
   bool          m_development   { false };     // Used in a development environment
   // Locking of the session state
-  CRITICAL_SECTION m_lock;
+  mutable CRITICAL_SECTION m_lock;
 };

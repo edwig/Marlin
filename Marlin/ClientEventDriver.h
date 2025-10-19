@@ -78,13 +78,13 @@ public:
   // MANDATORY: Setting the application for which we work
   void  SetApplicationCallback(LPFN_EVENTCALLBACK p_callback,void* p_object);
   // OPTIONAL: Starting the driver in one go for the first (or only) session!
-  bool  StartEventDriver(XString p_url,EVChannelPolicy p_policy,XString p_session,XString p_cookie,XString p_cookieValue);
+  bool  StartEventDriver(const XString& p_url,EVChannelPolicy p_policy,const XString& p_session,const XString& p_cookie,const XString& p_cookieValue);
   // OPTIONAL: Set policy to change on next re-connect
   void  SetChannelPolicy(EVChannelPolicy p_policy);
   // OPTIONAL: Set server URL to change on next re-connect
   void  SetServerURL(XString p_url);
   // OPTIONAL: Start with session (Call SetChannelPolicy and SetServerURL first)
-  bool  StartEventsForSession(XString p_session,XString p_cookie,XString p_cookieValiue);
+  bool  StartEventsForSession(const XString& p_session,const XString& p_cookie,const XString& p_cookieValiue);
   // OPTIONAL: Stop an events session
   bool  StopEventsForSession();
 
@@ -113,7 +113,7 @@ private:
   void  StopEventsChannel();
   void  StopPollingChannel();
   // Sending to the server
-  void  SendToServer         (LTEvent* p_event);
+  void  SendToServer(LTEvent* p_event);
   // Test if channels still open
   bool  TestDispatcher();
   // Closing everything down

@@ -30,12 +30,6 @@
 #include "SecurityDlg.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 #define BUFF_LEN 1024
 
 // SecurityDlg dialog
@@ -197,11 +191,11 @@ SecurityDlg::Save()
 // Reading of the MS-WIndows registry
 // Only to be used for the protocol registration
 int
-SecurityDlg::ReadRegistry(XString p_protocol,XString p_serverClient,XString p_variable,int p_default)
+SecurityDlg::ReadRegistry(CString p_protocol,CString p_serverClient,CString p_variable,int p_default)
 {
   int waarde = p_default;
   HKEY hkUserURL;
-  XString sleutel = _T("SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\") + 
+  CString sleutel = _T("SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\") + 
                     p_protocol + _T("\\") + p_serverClient;
 
   DWORD dwErr = RegOpenKeyEx(HKEY_LOCAL_MACHINE
@@ -247,13 +241,13 @@ SecurityDlg::ReadRegistry(XString p_protocol,XString p_serverClient,XString p_va
 
 // Writing to the MS-Windows registry
 void
-SecurityDlg::WriteRegistry(XString p_protocol,XString p_serverClient,XString p_variable,bool p_set)
+SecurityDlg::WriteRegistry(CString p_protocol,CString p_serverClient,CString p_variable,bool p_set)
 {
   HKEY    hUserKey;
   DWORD   disposition = 0;
   DWORD   value = p_set ? 1 : 0;
   DWORD   dwErr = 0;
-  XString key   = _T("SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\") + 
+  CString key   = _T("SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols\\") + 
                   p_protocol + _T("\\") + p_serverClient;
 
   dwErr = RegCreateKeyEx(HKEY_LOCAL_MACHINE
@@ -276,7 +270,7 @@ SecurityDlg::WriteRegistry(XString p_protocol,XString p_serverClient,XString p_v
   }
   if(dwErr != ERROR_SUCCESS)
   {
-    XString message;
+    CString message;
     message.Format(_T("Cannot write registry key [%s] with value [%d]"),key.GetString(),value);
     ::MessageBox(GetSafeHwnd(),message,_T("ERROR"),MB_OK|MB_ICONERROR);
   }

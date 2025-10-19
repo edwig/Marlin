@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -65,9 +65,9 @@ public:
   XString  Decryption(XString p_input,XString password);
 
   // ENCRYPT a buffer quickly in RC4 through the BCrypt interface
-  XString  FastEncryption(XString p_input, XString password);
+  XString  FastEncryption(const XString& p_input, XString password);
   // DECRYPT a buffer quickly in RC4 through BCrypt interface
-  XString  FastDecryption(XString p_input, XString password);
+  XString  FastDecryption(const XString& p_input, XString password);
 
   // Make a MD5 Hash value for a buffer
   XString  Digest(const void* data,const size_t data_size,unsigned hashType = 0);

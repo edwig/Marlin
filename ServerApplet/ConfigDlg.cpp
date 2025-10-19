@@ -39,12 +39,6 @@
 #include <version.h>
 #include <winhttp.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // ConfigDlg dialog
 
 IMPLEMENT_DYNAMIC(ConfigDlg, CDialog)
@@ -234,7 +228,7 @@ ConfigDlg::ReadConfig()
 {
   AppConfig config;
   config.ReadConfig();
-  CString section(SECTION_APPLICATION);
+  XString section(SECTION_APPLICATION);
 
   m_configWriteable       = config.GetConfigWritable();
   m_role                  = config.GetParameterString (section,_T("Role"),_T(""));
@@ -348,7 +342,7 @@ ConfigDlg::CheckConfig()
   // Minimum base URL is one (1) char site "/x/"
   if(m_baseURL.IsEmpty() || m_baseURL.GetLength() < 3 || m_baseURL == _T("/") || m_baseURL.Left(1) != _T("/") || m_baseURL.Right(1) != _T("/"))
   {
-    MessageBox(XString(_T("The base URL of ")) + PRODUCT_NAME + _T(" cannot be empty or just the root reference!")
+    MessageBox(CString(_T("The base URL of ")) + PRODUCT_NAME + _T(" cannot be empty or just the root reference!")
               ,_T("ERROR"),MB_OK|MB_ICONERROR);
     return false;
   }
@@ -368,7 +362,7 @@ ConfigDlg::WriteConfig()
     WarningWriteRights();
     return false;
   }
-  CString section(SECTION_APPLICATION);
+  XString section(SECTION_APPLICATION);
 
   config.SetSection  (section);
   config.SetParameter(section,_T("Role"),           m_role);
@@ -394,7 +388,7 @@ ConfigDlg::WriteConfig()
   if(config.WriteConfig() == false)
   {
     ::MessageBox(GetSafeHwnd()
-                ,XString(_T("Cannot write the configuration file '")) + PRODUCT_NAME + _T(".config' to disk.\n")
+                ,CString(_T("Cannot write the configuration file '")) + PRODUCT_NAME + _T(".config' to disk.\n")
                  _T("Check the rights on the file and the rights on the directory it is in!")
                 ,PROGRAM_NAME
                 ,MB_OK | MB_ICONERROR);
@@ -429,11 +423,11 @@ ConfigDlg::WarningWriteRights()
 }
 
 bool 
-ConfigDlg::CheckFRVeldIngevuld(const XString& frVeld, const XString& description)
+ConfigDlg::CheckFRVeldIngevuld(const CString& frVeld, const CString& description)
 {
   if (frVeld.IsEmpty())
   {
-    XString error;
+    CString error;
     error.Format(_T("If sending error reports is 'on', the %s field needs to be filled in."),description.GetString());
 
     MessageBox(error,_T("ERROR"),MB_OK|MB_ICONERROR);
@@ -504,7 +498,8 @@ void
 ConfigDlg::OnEnChangeBriefserverURL()
 {
   UpdateData();
-  CrackedURL cracked(m_baseURL);
+  XString baseURL(m_baseURL);
+  CrackedURL cracked(baseURL);
   if(cracked.Valid())
   {
     m_server       = cracked.m_host;
@@ -572,7 +567,7 @@ ConfigDlg::OnEnChangeWebroot()
 void 
 ConfigDlg::OnBnClickedSearchroot()
 {
-  XString rootdir;
+  CString rootdir;
   BrowseForDirectory map;
   if(map.Browse(GetSafeHwnd()
                 ,_T("Get path to the WEBROOT directory")
@@ -581,7 +576,7 @@ ConfigDlg::OnBnClickedSearchroot()
                 ,false    // files
                 ,true))   // status
   {
-    XString path = map.GetPath();
+    CString path = map.GetPath();
     if(m_webroot.CompareNoCase(path))
     {
       m_webroot = path;
@@ -619,7 +614,7 @@ ConfigDlg::OnBnClickedSearchserverlog()
                         ,_T(""));
   if(file.DoModal() == IDOK)
   {
-    XString path = file.GetChosenFile();
+    CString path = file.GetChosenFile();
     if(m_serverLogfile.CompareNoCase(path))
     {
       m_serverLogfile = path;
@@ -639,7 +634,7 @@ ConfigDlg::OnCbnRunAs()
 
 
     // Prepare the message box
-    XString message;
+    CString message;
     int     buttons = MB_OK|MB_ICONWARNING;
 
     // Get the correct warning

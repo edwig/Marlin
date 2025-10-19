@@ -152,7 +152,7 @@ typedef void(*LPFN_SOCKETHANDLER)(WebSocket* p_socket,const WSFrame* p_event);
 class WebSocket
 {
 public:
-  explicit WebSocket(XString p_uri);
+  explicit WebSocket(const XString& p_uri);
   virtual ~WebSocket();
 
   // FUNCTIONS
@@ -164,7 +164,7 @@ public:
   // Close the socket unconditionally
   virtual bool CloseSocket() = 0;
   // Close the socket with a closing frame
-  virtual bool SendCloseSocket(USHORT p_code,XString p_reason) = 0;
+  virtual bool SendCloseSocket(USHORT p_code,const XString& p_reason) = 0;
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) = 0;
   // Register the server request for sending info
@@ -187,7 +187,7 @@ public:
   // HIGH LEVEL INTERFACE
 
   // Write as an UTF-8 string to the WebSocket
-  bool WriteString(XString p_string);
+  bool WriteString(const XString& p_string);
   // Write as a binary object to the channel
   bool WriteObject(BYTE* p_buffer,int64 p_length);
 
@@ -207,9 +207,9 @@ public:
   // Max fragmentation size
   void SetFragmentSize(ULONG p_fragment);
   // Setting the protocols
-  void SetProtocols(XString p_protocols);
+  void SetProtocols(const XString& p_protocols);
   // Setting the extensions
-  void SetExtensions(XString p_extensions);
+  void SetExtensions(const XString& p_extensions);
   // Setting the logfile
   void SetLogfile(LogAnalysis* p_logfile);
   // Set logging to on or off
@@ -247,22 +247,22 @@ public:
   XString GetClosingErrorAsString();
 
   // Add a URI parameter
-  void    AddParameter(XString p_name,XString p_value);
+  void    AddParameter(const XString& p_name,const XString& p_value);
   // Add a HTTP header
-  void    AddHeader(XString p_name,XString p_value);
+  void    AddHeader(const XString& p_name,const XString& p_value);
   // Find a URI parameter
-  XString GetParameter(XString p_name);
+  XString GetParameter(const XString& p_name);
 
   // LOGGING
   void    DetailLog (LPCTSTR p_function,LogType p_type,LPCTSTR p_text);
   void    DetailLogS(LPCTSTR p_function,LogType p_type,LPCTSTR p_text,LPCTSTR p_extra);
   void    DetailLogV(LPCTSTR p_function,LogType p_type,LPCTSTR p_text,...);
-  void    ErrorLog  (LPCTSTR p_function,DWORD p_code,XString p_text);
+  void    ErrorLog  (LPCTSTR p_function,DWORD p_code,const XString& p_text);
 
   // Perform the server handshake
   virtual bool ServerHandshake(HTTPMessage* p_message);
   // Generate a server key-answer
-  XString   ServerAcceptKey(XString p_clientKey);
+  XString   ServerAcceptKey(const XString& p_clientKey);
 
 protected:
   // Completely close the connection
@@ -337,13 +337,13 @@ WebSocket::CloseForWriting()
 }
 
 inline void 
-WebSocket::SetProtocols(XString p_protocols)
+WebSocket::SetProtocols(const XString& p_protocols)
 {
   m_protocols = p_protocols;
 }
 
 inline void 
-WebSocket::SetExtensions(XString p_extensions)
+WebSocket::SetExtensions(const XString& p_extensions)
 {
   m_extensions = p_extensions;
 }

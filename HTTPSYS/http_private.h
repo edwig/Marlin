@@ -71,5 +71,5 @@ extern LPCTSTR http_client_error;
 // GENERAL SERVICE FUNCTIONS
 
 // Splits a URL-Prefix string into an URL object (no context yet)
-ULONG SplitURLPrefix(XString p_fullprefix,URL* p_url);
+ULONG SplitURLPrefix(const XString& p_fullprefix,URL* p_url);
 

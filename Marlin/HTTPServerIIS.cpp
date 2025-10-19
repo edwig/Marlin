@@ -47,14 +47,6 @@
 #pragma warning (error:4091)
 #pragma warning (disable:6387)
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Logging macro's
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
@@ -68,7 +60,7 @@ HTTPServerIIS::HTTPServerIIS(XString p_name)
 {
   m_counter.Start();
 
-  m_marlinConfig = new MarlinConfig(_T("Marlin.config"));
+  m_marlinConfig = alloc_new MarlinConfig(_T("Marlin.config"));
 }
 
 HTTPServerIIS::~HTTPServerIIS()
@@ -235,7 +227,7 @@ HTTPServerIIS::StopServer()
   for(auto& it : m_eventStreams)
   {
     // SEND OnClose event
-    ServerEvent* event = new ServerEvent(_T("close"));
+    ServerEvent* event = alloc_new ServerEvent(_T("close"));
     SendEvent(it.second->m_port,it.second->m_baseURL,event);
   }
   // Try to remove all event streams
@@ -274,12 +266,12 @@ HTTPServerIIS::StopServer()
 
 // Create a site to bind the traffic to
 HTTPSite*
-HTTPServerIIS::CreateSite(PrefixType    p_type
-                         ,bool          p_secure
-                         ,int           p_port
-                         ,XString       p_baseURL
-                         ,bool          p_subsite  /* = false */
-                         ,LPFN_CALLBACK p_callback /* = NULL  */)
+HTTPServerIIS::CreateSite(PrefixType     p_type
+                         ,bool           p_secure
+                         ,int            p_port
+                         ,XString&       p_baseURL
+                         ,bool           p_subsite  /* = false */
+                         ,LPFN_CALLBACK  p_callback /* = NULL  */)
 {
   // USE OVERRIDES FROM WEBCONFIG 
   // BUT USE PROGRAM'S SETTINGS AS DEFAULT VALUES
@@ -311,7 +303,7 @@ HTTPServerIIS::CreateSite(PrefixType    p_type
     }
     // Create and register a URL
     // Remember URL Prefix strings, and create the site
-    HTTPSiteIIS* registeredSite = new HTTPSiteIIS(this,p_port,p_baseURL,prefix,mainSite,p_callback);
+    HTTPSiteIIS* registeredSite = alloc_new HTTPSiteIIS(this,p_port,p_baseURL,prefix,mainSite,p_callback);
     if(RegisterSite(registeredSite,prefix))
     {
       // Site created and registered
@@ -325,7 +317,7 @@ HTTPServerIIS::CreateSite(PrefixType    p_type
 
 // Delete a channel (from prefix OR base URL forms)
 bool
-HTTPServerIIS::DeleteSite(int p_port,XString p_baseURL,bool /*p_force /*=false*/)
+HTTPServerIIS::DeleteSite(int p_port,const XString& p_baseURL,bool /*p_force /*=false*/)
 {
   AutoCritSec lock(&m_sitesLock);
   // Default result
@@ -536,7 +528,7 @@ HTTPServerIIS::GetHTTPMessageFromRequest(IHttpContext* p_context
   }
 
   // For all types of requests: Create the HTTPMessage
-  HTTPMessage* message = new HTTPMessage(type,p_site);
+  HTTPMessage* message = alloc_new HTTPMessage(type,p_site);
   message->SetURL(rawUrl);
   message->SetReferrer(referrer);
   message->SetAuthorization(authorize);
@@ -639,7 +631,7 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encoding
 
   // Reading the buffer
   FileBuffer* fbuffer    = p_message->GetFileBuffer();
-  BYTE*       bytebuffer = new BYTE[INIT_HTTP_BUFFERSIZE + 1];
+  BYTE*       bytebuffer = alloc_new BYTE[INIT_HTTP_BUFFERSIZE + 1];
 
   // Main loop: as long as we must read extra bytes
   while(httpRequest->GetRemainingEntityBytes() > 0)
@@ -682,9 +674,9 @@ HTTPServerIIS::ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encoding
 
 // Create a new WebSocket in the subclass of our server
 WebSocket* 
-HTTPServerIIS::CreateWebSocket(XString p_uri)
+HTTPServerIIS::CreateWebSocket(const XString& p_uri)
 {
-  WebSocketServerIIS* socket = new WebSocketServerIIS(p_uri);
+  WebSocketServerIIS* socket = alloc_new WebSocketServerIIS(p_uri);
 
   // Connect the server logfile, and logging level
   socket->SetLogfile(m_log);
@@ -706,7 +698,7 @@ HTTPServerIIS::ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID /*p_request*/
 }
 
 bool
-HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request,XString /*p_prefix*/)
+HTTPServerIIS::FlushSocket(HTTP_OPAQUE_ID p_request,const XString& /*p_prefix*/)
 {
   IHttpContext*     context  = reinterpret_cast<IHttpContext*>(p_request);
   IHttpResponse*    response = context->GetResponse();
@@ -807,7 +799,7 @@ HTTPServerIIS::InitEventStream(EventStream& p_stream)
 }
 
 void
-HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,XString p_name,XString p_value,bool p_replace)
+HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,const XString& p_name,const XString& p_value,bool p_replace)
 {
 #ifdef _UNICODE
   AutoCSTR name(p_name);
@@ -825,7 +817,7 @@ HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,XString p_name,XStrin
 }
 
 void 
-HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,XString p_value,bool p_replace)
+HTTPServerIIS::SetResponseHeader(IHttpResponse* p_response,HTTP_HEADER_ID p_id,const XString& p_value,bool p_replace)
 {
 #ifdef _UNICODE
   AutoCSTR value(p_value);
@@ -857,7 +849,7 @@ HTTPServerIIS::AddUnknownHeaders(IHttpResponse* p_response,UKHeaders& p_headers)
 
 // Setting the overall status of the response message
 void
-HTTPServerIIS::SetResponseStatus(IHttpResponse* p_response,USHORT p_status,XString p_statusMessage)
+HTTPServerIIS::SetResponseStatus(IHttpResponse* p_response,USHORT p_status,const XString& p_statusMessage)
 {
   DETAILLOGV(_T("HTTP Response: %u %s"),p_status,p_statusMessage.GetString());
 #ifdef _UNICODE
@@ -1061,7 +1053,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
     p_message->DelHeader(_T("Set-Cookie"));
   }
   UKHeaders ukheaders;
-  Cookies& cookies = p_message->GetCookies();
+  Cookies& cookies = const_cast<Cookies&>(p_message->GetCookies());
   if(!cookies.GetCookies().empty())
   {
     for(auto& cookie : cookies.GetCookies())
@@ -1090,7 +1082,7 @@ HTTPServerIIS::SendResponse(HTTPMessage* p_message)
   // Add extra headers from the message, except for content-length and set-cookie
   p_message->DelHeader(_T("Content-Length"));
 
-  HeaderMap* map = p_message->GetHeaderMap();
+  HeaderMap* map = const_cast<HeaderMap*>(p_message->GetHeaderMap());
   for(HeaderMap::iterator it = map->begin(); it != map->end(); ++it)
   {
     ukheaders.push_back(UKHeader(it->first,it->second));
@@ -1328,7 +1320,7 @@ HTTPServerIIS::SendResponseFileHandle(IHttpResponse* p_response,FileBuffer* p_bu
 
 void
 HTTPServerIIS::SendResponseError(IHttpResponse* p_response
-                                ,XString&       p_page
+                                ,const XString& p_page
                                 ,int            p_error
                                 ,LPCTSTR        p_reason)
 {

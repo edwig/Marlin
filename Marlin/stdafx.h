@@ -5,7 +5,11 @@
 #pragma once
 
 #include "targetver.h"
-#include "framework.h"
+
+// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN
+
+#include <stdio.h>
 
 // Do not autolink with Marlin from within the library itself
 #define MARLIN_NOAUTOLINK

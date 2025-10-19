@@ -31,7 +31,7 @@
 class MediaType
 {
 public:
-  MediaType(bool p_logging,XString p_extension,XString p_contentType);
+  MediaType(bool p_logging,const XString& p_extension,const XString& p_contentType);
  ~MediaType();
 
   // Getters
@@ -41,9 +41,9 @@ public:
   XString GetContent();
 
   // Setters
-  void    SetDoLogging(bool p_logging)      { m_logging     = p_logging;   }
-  void    SetExtension(XString p_extension) { m_extension   = p_extension; }
-  void    SetContentType(XString p_type)    { m_contentType = p_type;      }
+  void    SetDoLogging(bool p_logging)               { m_logging     = p_logging;   }
+  void    SetExtension  (const XString& p_extension) { m_extension   = p_extension; }
+  void    SetContentType(const XString& p_type)      { m_contentType = p_type;      }
 
   bool    IsVendorSpecific();
   XString BaseType();
@@ -64,13 +64,13 @@ public:
   // Check for a valid object
   static void       CheckValid();
   // Registering your own content types
-         void       AddContentType(bool p_logging,XString p_extension,XString p_contentType);
+         void       AddContentType(bool p_logging,const XString& p_extension,const XString& p_contentType);
   // Finding the content types
-  static XString    FindContentTypeByExtension  (XString p_extension);
-  static XString    FindContentTypeByResouceName(XString p_resource);
-  static MediaType* FindMediaTypeByExtension    (XString p_extension);
-  static MediaType* FindMediaTypeByContentType  (XString p_contentType);
-  static XString    FindExtensionByContentType  (XString p_contentType);
+  static XString    FindContentTypeByExtension  (const XString& p_extension);
+  static XString    FindContentTypeByResouceName(const XString& p_resource);
+  static MediaType* FindMediaTypeByExtension    (const XString& p_extension);
+  static MediaType* FindMediaTypeByContentType  (const XString& p_contentType);
+  static XString    FindExtensionByContentType  (const XString& p_contentType);
 
 private:
   void Init();

@@ -10,12 +10,6 @@
 #include "stdafx.h"
 #include "http_private.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // HTTPServer API 1.0 function. SHould not be called on this implementation!
 
 ULONG WINAPI

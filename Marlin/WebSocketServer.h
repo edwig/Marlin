@@ -51,7 +51,7 @@
 class WebSocketServer : public WebSocket
 {
 public:
-  explicit WebSocketServer(XString p_uri);
+  explicit WebSocketServer(const XString& p_uri);
   virtual ~WebSocketServer();
 
   // Reset the socket
@@ -61,7 +61,7 @@ public:
   // Close the socket unconditionally
   virtual bool CloseSocket() override;
   // Close the socket with a closing frame
-  virtual bool SendCloseSocket(USHORT p_code,XString p_reason) override;
+  virtual bool SendCloseSocket(USHORT p_code,const XString& p_reason) override;
   // Write fragment to a WebSocket
   virtual bool WriteFragment(BYTE* p_buffer,DWORD p_length,Opcode p_opcode,bool p_last = true) override;
   // Send a ping/pong keep alive message

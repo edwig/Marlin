@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -34,14 +34,6 @@
 #include <strsafe.h>
 #include <io.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Name of the event log category in the WMI
 LPCTSTR g_eventLogCategory = _T("Application");
 
@@ -56,7 +48,7 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
   {
     if(StringCchCopy(g_svcname,SERVICE_NAME_LENGTH,p_serviceName) != S_OK)
     {
-      p_error = _T("The service name cannot be registered: ") + p_serviceName;
+      p_error = XString(_T("The service name cannot be registered: ")) + p_serviceName;
       return 0;
     }
   }

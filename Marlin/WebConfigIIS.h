@@ -91,61 +91,61 @@ using AppSettings = std::map<XString,XString>;
 class WebConfigIIS
 {
 public:
-  explicit WebConfigIIS(XString p_application = _T(""));
+  explicit WebConfigIIS(const XString& p_application = _T(""));
  ~WebConfigIIS();
 
   // Read total config
   bool ReadConfig();
-  bool ReadConfig(XString p_application,XString p_extraWebConfig = _T(""));
+  bool ReadConfig(const XString& p_application,const XString& p_extraWebConfig = _T(""));
   // Set a different application before re-reading the config
-  void SetApplication(XString p_app);
+  void SetApplication(const XString& p_app);
 
   // GETTERS
   
   // Getting information of the server
-  XString     GetLogfilePath()    { return m_logpath;         };
-  bool        GetDoLogging()      { return m_logging;         };
-  ULONG       GetStreamingLimit() { return m_streamingLimit;  };
+  XString     GetLogfilePath()    const { return m_logpath;         };
+  bool        GetDoLogging()      const { return m_logging;         };
+  ULONG       GetStreamingLimit() const { return m_streamingLimit;  };
 
   // Getting information of a site
-  IISSite*    GetSite         (XString p_site);
-  XString     GetSiteName     (XString p_site);
-  XString     GetSetting      (XString p_key);
-  XString     GetSiteAppPool  (XString p_site);
-  XString     GetSiteBinding  (XString p_site,XString p_default);
-  XString     GetSiteProtocol (XString p_site,XString p_default);
-  int         GetSitePort     (XString p_site,int     p_default);
-  bool        GetSiteSecure   (XString p_site,bool    p_default);
-  XString     GetSiteWebroot  (XString p_site,XString p_default);
-  XString     GetSitePathname (XString p_site,XString p_default);
-  ULONG       GetSiteScheme   (XString p_site,ULONG   p_default);
-  XString     GetSiteRealm    (XString p_site,XString p_default);
-  XString     GetSiteDomain   (XString p_site,XString p_default);
-  bool        GetSiteNTLMCache(XString p_site,bool    p_default);
-  bool        GetSitePreload  (XString p_site);
-  IISError    GetSiteError    (XString p_site);
+  const IISSite* GetSite      (const XString& p_site) const;
+  XString     GetSiteName     (const XString& p_site) const;
+  XString     GetSetting      (const XString& p_key)  const;
+  XString     GetSiteAppPool  (const XString& p_site) const;
+  XString     GetSiteBinding  (const XString& p_site,const XString& p_default) const;
+  XString     GetSiteProtocol (const XString& p_site,const XString& p_default) const;
+  int         GetSitePort     (const XString& p_site,const int      p_default) const;
+  bool        GetSiteSecure   (const XString& p_site,const bool     p_default) const;
+  XString     GetSiteWebroot  (const XString& p_site,const XString& p_default) const;
+  XString     GetSitePathname (const XString& p_site,const XString& p_default) const;
+  ULONG       GetSiteScheme   (const XString& p_site,const ULONG    p_default) const;
+  XString     GetSiteRealm    (const XString& p_site,const XString& p_default) const;
+  XString     GetSiteDomain   (const XString& p_site,const XString& p_default) const;
+  bool        GetSiteNTLMCache(const XString& p_site,const bool     p_default) const;
+  bool        GetSitePreload  (const XString& p_site) const;
+  IISError    GetSiteError    (const XString& p_site) const;
   XString     GetWebConfig();
 
-  IISHandlers* GetAllHandlers (XString p_site);
-  IISHandler*  GetHandler     (XString p_site,XString p_handler);
+  IISHandlers* GetAllHandlers (const XString& p_site) const;
+  IISHandler*  GetHandler     (const XString& p_site,const XString& p_handler) const;
   IISHandlers* GetWebConfigHandlers();
 
   // Getting information of a application pool
-  XString     GetPoolStartMode      (XString p_pool);
-  XString     GetPoolPeriodicRestart(XString p_pool);
-  XString     GetPoolIdleTimeout    (XString p_pool);
-  bool        GetPoolAutostart      (XString p_pool);
-  XString     GetPoolPipelineMode   (XString p_pool);
+  XString     GetPoolStartMode      (const XString& p_pool) const;
+  XString     GetPoolPeriodicRestart(const XString& p_pool) const;
+  XString     GetPoolIdleTimeout    (const XString& p_pool) const;
+  bool        GetPoolAutostart      (const XString& p_pool) const;
+  XString     GetPoolPipelineMode   (const XString& p_pool) const;
 
   // Read one config file
-  bool        ReadConfig(XString p_configFile,IISSite* p_site);
+  bool        ReadConfig(const XString& p_configFile,IISSite* p_site);
   void        ReadWebConfigHandlers(XMLMessage& p_msg);
 
 private:
   // Replace environment variables in a string
   static bool ReplaceEnvironVars(XString& p_string);
   // Pool registration
-  IISAppPool* GetPool(XString p_pool);
+  const IISAppPool* GetPool(const XString& p_pool) const;
   // Reading of the internal structures of a config file
   void        ReadLogPath (XMLMessage& p_msg);
   void        ReadAppPools(XMLMessage& p_msg);

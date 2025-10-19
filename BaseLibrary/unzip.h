@@ -151,7 +151,7 @@ unsigned int FormatZipMessage(ZRESULT code, TCHAR *buf,unsigned int len);
 // HZIP hz = OpenZip(zipbuf, ziplen, 0);
 //   - unzip to a membuffer -
 // ZIPENTRY ze; int i; FindZipItem(hz,"file.dat",true,&i,&ze);
-// char *ibuf = new char[ze.unc_size];
+// char *ibuf = alloc_new char[ze.unc_size];
 // UnzipItem(hz,i, ibuf, ze.unc_size);
 // delete[] ibuf;
 //   - unzip to a fixed membuff -

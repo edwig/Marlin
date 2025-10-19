@@ -34,7 +34,7 @@ class ResultDlg : public CDialogEx
 	DECLARE_DYNAMIC(ResultDlg)
 
 public:
-  explicit ResultDlg(CWnd* pParent,XString p_result);
+  explicit ResultDlg(CWnd* pParent,CString p_result);
 	virtual ~ResultDlg();
   BOOL OnInitDialog();
 
@@ -46,7 +46,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 
-  XString m_result;
+  CString m_result;
   CFont   m_font;
 public:
   afx_msg void OnEnChangeResult();

@@ -34,12 +34,6 @@
 #include "HTTPClient.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // WebConfigDlg dialog
 
 IMPLEMENT_DYNAMIC(WebConfigAuthentication, CDialogEx)
@@ -248,6 +242,7 @@ WebConfigAuthentication::WriteWebConfig(MarlinConfig& config)
   // WRITE THE CONFIG PARAMETERS
 
   config.SetSection(_T("Authentication"));
+  XString password(m_password);
 
   if(m_useScheme)         config.SetParameter   (_T("Authentication"),_T("Scheme"),   m_scheme);
   else                    config.RemoveParameter(_T("Authentication"),_T("Scheme"));
@@ -259,7 +254,7 @@ WebConfigAuthentication::WriteWebConfig(MarlinConfig& config)
   else                    config.RemoveParameter(_T("Authentication"),_T("NTLMCache"));
   if(m_useUsername)       config.SetParameter   (_T("Authentication"),_T("User"),     m_user);
   else                    config.RemoveParameter(_T("Authentication"),_T("User"));
-  if(m_usePassword)       config.SetEncrypted   (_T("Authentication"),_T("Password"), m_password);
+  if(m_usePassword)       config.SetEncrypted   (_T("Authentication"),_T("Password"), password);
   else                    config.RemoveParameter(_T("Authentication"),_T("Password"));
   if(m_useSSO)            config.SetParameter   (_T("Authentication"),_T("SSO"),      m_sso);
   else                    config.RemoveParameter(_T("Authentication"),_T("SSO"));

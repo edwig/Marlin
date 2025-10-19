@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -38,14 +38,6 @@
 #include <stdio.h>
 #include <assert.h>
 #include <tchar.h>
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 static void
 PrintSidUse(XString& p_list,SID_NAME_USE p_sidType)
@@ -171,7 +163,7 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     return FALSE;
   }
   
-  statistics = (TOKEN_STATISTICS *)new uchar[size];
+  statistics = (TOKEN_STATISTICS *)alloc_new uchar[size];
   GetTokenInformation(p_token, TokenStatistics, statistics, size, &size);
   assert(size);
   text.Format(_T("Token ID: 0x%lX\n"), statistics->TokenId.LowPart);
@@ -205,13 +197,13 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     return FALSE;
   }
   
-  owner = (TOKEN_OWNER *)new uchar[size];
+  owner = (TOKEN_OWNER *)alloc_new uchar[size];
   GetTokenInformation(p_token, TokenOwner, owner, size, &size);
 
   size = GetLengthSid(owner->Owner);
   assert(size);
   
-  sid = (SID *) new uchar[size];
+  sid = (SID *)alloc_new uchar[size];
 
   CopySid(size, sid, owner->Owner);
 
@@ -258,14 +250,14 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     return FALSE;
   }
 
-  user = (TOKEN_USER *)new uchar[size];
+  user = (TOKEN_USER *)alloc_new uchar[size];
   GetTokenInformation(p_token, TokenUser, user, size, &size);
   assert(size);
 
   size = GetLengthSid(user->User.Sid);
   assert(size);
 
-  sid = (SID *)new uchar[size];
+  sid = (SID *)alloc_new uchar[size];
 
   CopySid(size, sid, user->User.Sid);
   userSize = (sizeof userName / sizeof *userName) - 1;
@@ -291,14 +283,14 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     return FALSE;
   }
 
-  primaryGroup = (TOKEN_PRIMARY_GROUP *)new uchar[size];
+  primaryGroup = (TOKEN_PRIMARY_GROUP *)alloc_new uchar[size];
   GetTokenInformation(p_token, TokenPrimaryGroup, primaryGroup, size, &size);
   assert(size);
 
   size = GetLengthSid(primaryGroup->PrimaryGroup);
   assert(size);
 
-  sid = (SID *) new uchar[size];
+  sid = (SID *)alloc_new uchar[size];
   CopySid(size, sid, primaryGroup->PrimaryGroup);
 
     userSize = (sizeof userName / sizeof *userName)-1;
@@ -325,7 +317,7 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     return FALSE;
   }
 
-  defaultDacl = (TOKEN_DEFAULT_DACL *) new uchar[size];
+  defaultDacl = (TOKEN_DEFAULT_DACL *)alloc_new uchar[size];
   GetTokenInformation(p_token, TokenDefaultDacl, defaultDacl, size, &size);
   assert(size);
   text.Format(_T("Default DACL (%d bytes):\n"), defaultDacl->DefaultDacl->AclSize);
@@ -359,7 +351,7 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     {
       size = GetLengthSid((SID *)explicitEntry->Trustee.ptstrName);
       assert(size);
-      sid = (SID *) new uchar[size];
+      sid = (SID *)alloc_new uchar[size];
       CopySid(size, sid, (SID *)explicitEntry->Trustee.ptstrName);
       userSize   = (sizeof userName   / sizeof *userName  ) - 1;
       domainSize = (sizeof domainName / sizeof *domainName) - 1;
@@ -425,7 +417,7 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     return FALSE;
   }
 
-  privileges = (TOKEN_PRIVILEGES *) new uchar[size];
+  privileges = (TOKEN_PRIVILEGES *)alloc_new uchar[size];
   GetTokenInformation(p_token, TokenPrivileges, privileges, size, &size);
   assert(size);
 
@@ -477,7 +469,7 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     return FALSE;
   }
 
-  groups = (TOKEN_GROUPS *) new uchar[size];
+  groups = (TOKEN_GROUPS *)alloc_new uchar[size];
 
   GetTokenInformation(p_token, TokenRestrictedSids, groups, size, &size);
   assert(size);
@@ -492,7 +484,7 @@ BOOL DumpToken(XString& p_list,HANDLE p_token)
     size = GetLengthSid(groups->Groups[i].Sid);
     assert(size);
 
-    sid = (SID *) new uchar[size];
+    sid = (SID *)alloc_new uchar[size];
     CopySid(size, sid, groups->Groups[i].Sid);
     userSize = (sizeof userName / sizeof TCHAR) - 1;
     domainSize = (sizeof domainName / sizeof *domainName) - 1;
@@ -547,14 +539,14 @@ GetTokenOwner(HANDLE p_token,XString& p_userName)
     return false;
   }
 
-  user = (TOKEN_USER *) new uchar[size];
+  user = (TOKEN_USER *)alloc_new uchar[size];
   GetTokenInformation(p_token, TokenUser, user, size, &size);
   assert(size);
 
   size = GetLengthSid(user->User.Sid);
   assert(size);
 
-  sid = (SID *) new uchar[size];
+  sid = (SID *)alloc_new uchar[size];
   CopySid(size, sid, user->User.Sid);
 
   userSize   = (sizeof userName   / sizeof *userName)   - 1;

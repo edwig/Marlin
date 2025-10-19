@@ -30,15 +30,7 @@
 #include <WinFile.h>
 #include <assert.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
-MediaType::MediaType(bool p_logging,XString p_extension,XString p_contentType)
+MediaType::MediaType(bool p_logging,const XString& p_extension,const XString& p_contentType)
           :m_logging(p_logging)
           ,m_extension(p_extension)
           ,m_contentType(p_contentType)
@@ -217,18 +209,20 @@ MediaTypes::CheckValid()
 
 // Registering your own
 void   
-MediaTypes::AddContentType(bool p_logging,XString p_extension,XString p_contentType)
+MediaTypes::AddContentType(bool p_logging,const XString& p_extension,const XString& p_contentType)
 {
   m_types  .insert(std::make_pair(p_extension,  MediaType(p_logging,p_extension,p_contentType)));
   m_content.insert(std::make_pair(p_contentType,MediaType(p_logging,p_extension,p_contentType)));
 }
 
 /* static */ XString  
-MediaTypes::FindContentTypeByExtension(XString p_extension)
+MediaTypes::FindContentTypeByExtension(const XString& p_extension)
 {
   CheckValid();
-  p_extension.TrimLeft('.');
-  MediaTypeMap::iterator it = g_mt_instance->m_types.find(p_extension);
+
+  XString extension(p_extension);
+  extension.TrimLeft('.');
+  MediaTypeMap::iterator it = g_mt_instance->m_types.find(extension);
   if(it != g_mt_instance->m_types.end())
   {
     return it->second.GetContentType();
@@ -237,7 +231,7 @@ MediaTypes::FindContentTypeByExtension(XString p_extension)
 }
 
 /* static */ XString
-MediaTypes::FindContentTypeByResouceName(XString p_resource)
+MediaTypes::FindContentTypeByResouceName(const XString& p_resource)
 {
   CheckValid();
   WinFile ensure(p_resource);
@@ -246,11 +240,13 @@ MediaTypes::FindContentTypeByResouceName(XString p_resource)
 }
 
 /* static */ MediaType*
-MediaTypes::FindMediaTypeByExtension(XString p_extension)
+MediaTypes::FindMediaTypeByExtension(const XString& p_extension)
 {
   CheckValid();
-  p_extension.TrimLeft('.');
-  MediaTypeMap::iterator it = g_mt_instance->m_types.find(p_extension);
+
+  XString extension(p_extension);
+  extension.TrimLeft('.');
+  MediaTypeMap::iterator it = g_mt_instance->m_types.find(extension);
   if(it != g_mt_instance->m_types.end())
   {
     return &it->second;
@@ -259,10 +255,11 @@ MediaTypes::FindMediaTypeByExtension(XString p_extension)
 }
 
 /*static */ MediaType*
-MediaTypes::FindMediaTypeByContentType(XString p_contentType)
+MediaTypes::FindMediaTypeByContentType(const XString& p_contentType)
 {
-  p_contentType.MakeLower();
-  MediaTypeMap::iterator it = g_mt_instance->m_content.find(p_contentType);
+  XString contentType(p_contentType);
+  contentType.MakeLower();
+  MediaTypeMap::iterator it = g_mt_instance->m_content.find(contentType);
 
   if(it != g_mt_instance->m_content.end())
   {
@@ -272,10 +269,11 @@ MediaTypes::FindMediaTypeByContentType(XString p_contentType)
 }
 
 /* static */ XString  
-MediaTypes::FindExtensionByContentType(XString p_contentType)
+MediaTypes::FindExtensionByContentType(const XString& p_contentType)
 {
-  p_contentType.MakeLower();
-  MediaTypeMap::iterator it = g_mt_instance->m_content.find(p_contentType);
+  XString contentType(p_contentType);
+  contentType.MakeLower();
+  MediaTypeMap::iterator it = g_mt_instance->m_content.find(contentType);
 
   if (it != g_mt_instance->m_content.end())
   {

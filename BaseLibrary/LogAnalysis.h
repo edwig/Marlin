@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -61,6 +61,9 @@
 // Line that depicts the position of a binary log buffer
 #define BUFFER_MARKER  "@^@"
 
+// Number of bytes per line in a hex dump
+#define HEXBUFFER_LINENLEN 16 
+
 constexpr auto ANALYSIS_FUNCTION_SIZE = 48;                            // Size of prefix printing in logfile
 constexpr auto LOGWRITE_INTERVAL      = (CLOCKS_PER_SEC * 30);         // Median  is once per 30 seconds
 constexpr auto LOGWRITE_INTERVAL_MIN  = (CLOCKS_PER_SEC * 10);         // Minimum is once per 10 seconds
@@ -99,10 +102,10 @@ class LogAnalysis
 {
 private:
   // Use Create/Delete-Logfile methods instead!!
-  LogAnalysis(XString p_name);
+  LogAnalysis(const XString& p_name);
  ~LogAnalysis();
 public:
-  static LogAnalysis* CreateLogfile(XString p_name);
+  static LogAnalysis* CreateLogfile(const XString& p_name);
   static bool         DeleteLogfile(LogAnalysis* p_log);
 
   // Log this line
@@ -111,12 +114,12 @@ public:
   bool    AnalysisLog(LPCTSTR p_function,LogType p_type,bool p_doFormat,LPCTSTR p_format,...);
 
   // Logging of a string without headers or formatting
-  void    BareStringLog(XString p_string);
+  void    BareStringLog(const XString& p_string);
 
   // Hexadecimal view of an object
   // Intended to be called as:
   // AnalysisHex(__FUNCTION__,"MyMessage",buffer,len);
-  bool    AnalysisHex(LPCTSTR p_function,XString p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength = 16);
+  bool    AnalysisHex(LPCTSTR p_function,const XString& p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength = HEXBUFFER_LINENLEN);
 
   // Use sparingly!
   void    BareBufferLog(void* p_buffer,unsigned p_length);
@@ -127,7 +130,7 @@ public:
   void    Reset();
 
   // SETTERS
-  void    SetLogFilename(XString p_filename,bool p_perUser = false);
+  void    SetLogFilename(const XString& p_filename,bool p_perUser = false);
   void    SetDoLogging(bool p_logging);
   void    SetLogLevel(int p_logLevel);
   void    SetDoTiming(bool p_doTiming)         { m_doTiming    = p_doTiming; }
@@ -167,9 +170,9 @@ private:
   void    Initialisation();
   void    ReadConfig();
   void    AppendDateTimeToFilename();
-  void    RemoveLastMonthsFiles(XString p_file,XString p_pattern,struct tm& today);
-  void    RemoveLogfilesKeeping(XString p_file,XString p_pattern);
-  XString CreateUserLogfile(XString p_filename);
+  void    RemoveLastMonthsFiles(const XString& p_file, const XString& p_pattern,struct tm& today);
+  void    RemoveLogfilesKeeping(const XString& p_file, const XString& p_pattern);
+  XString CreateUserLogfile(const XString& p_filename);
   // Writing out a log line
   void    Flush(bool p_all);
   void    WriteLog(XString& p_buffer);

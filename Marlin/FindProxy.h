@@ -88,10 +88,10 @@ public:
   XString     Find(const XString& p_url,bool p_secure);
   XString     GetIngoreList();
   ProxyInfo*  GetProxyInfo();
-  void        SetInfo(XString p_proxy, XString p_bypass);
+  void        SetInfo(const XString& p_proxy,const XString& p_bypass);
 
 private:
-  void        FindUniqueProxy(XString p_proxyList,bool p_secure);
+  void        FindUniqueProxy(const XString& p_proxyList,bool p_secure);
   ProxyInfo*  m_info;
   bool        m_perDest;
   XString     m_ignored;

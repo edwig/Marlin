@@ -2,8 +2,8 @@
 //
 // SourceFile: XPath.h
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -70,14 +70,14 @@ class XPath
 {
 public:
   XPath() = default;
-  XPath(XMLMessage* p_message,XString p_path);
+  XPath(XMLMessage* p_message,const XString& p_path);
  ~XPath();
 
   bool Evaluate() noexcept;
 
   // SETTERS
   bool  SetMessage(XMLMessage* p_message) noexcept;
-  bool  SetPath(XString p_path) noexcept;
+  bool  SetPath(const XString& p_path) noexcept;
 
   // GETTERS
   XString      GetPath() const;
@@ -100,17 +100,17 @@ private:
   bool    FindRecursivlyAttribute(XMLElement* p_elem,XString token,bool p_recursivly);
 
   // ParseLevel helpers (parsing got split up)
-  bool    ParseLevelFindIndex (XString p_token);
-  bool    ParseLevelFindAttrib(XString p_token,bool p_recurse);
-  bool    ParseLevelFindNodes (XString p_token,bool p_recurse);
-  bool    ParseLevelNameReduce(XString p_token,bool p_recurse);
-  bool    ParseLevelAttrReduce(XString p_token);
+  bool    ParseLevelFindIndex (const XString& p_token);
+  bool    ParseLevelFindAttrib(const XString& p_token,bool p_recurse);
+  bool    ParseLevelFindNodes (const XString& p_token,bool p_recurse);
+  bool    ParseLevelNameReduce(const XString& p_token,bool p_recurse);
+  bool    ParseLevelAttrReduce(const XString& p_token);
 
   // Filter expressions
-  bool    IsOperator(XString p_token);
-  bool    IsFunction(XString p_token);
-  bool    ParseLevelFunction(XString& p_parsing,XString p_function);
-  bool    ParseLevelOperator(XString& p_parsing,XString p_operator,XString p_element,XString p_attribute);
+  bool    IsOperator(const XString& p_token);
+  bool    IsFunction(const XString& p_token);
+  bool    ParseLevelFunction(XString& p_parsing,const XString& p_function);
+  bool    ParseLevelOperator(XString& p_parsing,const XString& p_operator,const XString& p_element,const XString& p_attribute);
 
   // DATA
   XString       m_path;

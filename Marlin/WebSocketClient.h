@@ -49,7 +49,7 @@ typedef DWORD    (CALLBACK* WSOCK_RECEIVE)   (HINTERNET,PVOID,DWORD,DWORD*,WINHT
 class WebSocketClient: public WebSocket
 {
 public:
-  explicit WebSocketClient(XString p_uri);
+  explicit WebSocketClient(const XString& p_uri);
   virtual ~WebSocketClient();
 
   // FUNCTIONS
@@ -61,7 +61,7 @@ public:
   // Close the socket
   virtual bool CloseSocket() override;
   // Close the socket with a closing frame
-  virtual bool SendCloseSocket(USHORT p_code,XString p_reason) override;
+  virtual bool SendCloseSocket(USHORT p_code,const XString& p_reason) override;
   // Register the server request for sending info
   virtual bool RegisterSocket(HTTPMessage* p_message) override;
   // Send a ping/pong keep alive message

@@ -17,12 +17,6 @@
 #include "OpaqueHandles.h"
 #include <LogAnalysis.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Forward declarations
 unsigned __stdcall StartAsyncReceiveHttpBody(void* p_param);
 
@@ -100,7 +94,7 @@ HttpReceiveRequestEntityBody(IN HANDLE          RequestQueueHandle
     if(Overlapped)
     {
       // Register our parameters
-      PREGISTER_HTTP_RECEIVE_BODY reg = new REGISTER_HTTP_RECEIVE_BODY();
+      PREGISTER_HTTP_RECEIVE_BODY reg = alloc_new REGISTER_HTTP_RECEIVE_BODY();
       reg->r_size               = sizeof(REGISTER_HTTP_RECEIVE_BODY);
       reg->r_queue              = queue;
       reg->r_request            = request;

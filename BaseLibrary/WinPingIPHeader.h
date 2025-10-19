@@ -1,7 +1,7 @@
 // From Network Programming for Microsoft Windows, Second Edition by 
 // Anthony Jones and James Ohlund.  
 // Copyright 2002.   Reproduced by permission of Microsoft Press.  
-// All rights reserved.
+// MIT License.
 //
 //
 // Sample: Protocol header definitions used by ping (raw sockets)

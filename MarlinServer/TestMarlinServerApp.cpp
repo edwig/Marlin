@@ -30,12 +30,6 @@
 #include "ServiceReporting.h"
 #include "WebSocket.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Total number of errors registered while testing
 int g_errors = 0;
 WebConfigIIS* g_config = nullptr;

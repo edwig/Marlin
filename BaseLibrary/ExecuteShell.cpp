@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -29,25 +29,17 @@
 #include "ExecuteShell.h"
 #include <shellapi.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // General function to start a 'command' option in the MS-Windows shell
 // Adds error handling stuff if needed.
 // Normally used for actions like 'open' or 'print'
 // If you need to spawn a new executable properly: have a look at "ExecuteProcess"
 bool
-ExecuteShell(XString  p_command
-            ,XString  p_program
-            ,XString  p_arguments
-            ,HWND     p_parent
-            ,int      p_show
-            ,XString* p_error /*= nullptr*/)
+ExecuteShell(const XString& p_command
+            ,const XString& p_program
+            ,const XString& p_arguments
+            ,HWND           p_parent
+            ,int            p_show
+            ,XString*       p_error /*= nullptr*/)
 {
   HINSTANCE exec = ::ShellExecute(p_parent,p_command,p_program,p_arguments,NULL,p_show);
   __int64 res = (__int64)(exec);

@@ -43,7 +43,7 @@ public:
 	static PSecurityFunctionTable SSPI(void);
 
   void    SetThumbprint(LPBYTE p_thumprint);
-  void    SetCertificateStore(XString p_store);
+  void    SetCertificateStore(const XString& p_store);
   void    SetRequestClientCertificate(bool p_request);
 
   std::function<SECURITY_STATUS(PCCERT_CONTEXT & pCertContext, LPCTSTR p_certStore,BYTE* p_thumbprint)> m_selectServerCert;

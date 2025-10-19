@@ -41,12 +41,6 @@
 #include <io.h>
 #include <winsvc.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialog
@@ -64,13 +58,13 @@ public:
 protected:
   DECLARE_MESSAGE_MAP()
 
-  XString m_versie;
-  XString m_copyright;
+  CString m_versie;
+  CString m_copyright;
 };
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 {
-  m_versie    = XString(PROGRAM_NAME) +  _T(" ") + _T(MARLIN_VERSION_NUMBER);
+  m_versie    = CString(PROGRAM_NAME) +  _T(" ") + _T(MARLIN_VERSION_NUMBER);
   m_copyright = _T("Copyright (c) 2022 ir. W.E. Huisman");
 }
 
@@ -135,7 +129,7 @@ void ServerAppletDlg::DoDataExchange(CDataExchange* pDX)
       delete m_trafficLight;
       m_trafficLight = NULL;
     }
-    m_trafficLight = new CImage();
+    m_trafficLight = alloc_new CImage();
     HMODULE hmod = GetModuleHandle(NULL);
     switch(m_serverStatus)
     {
@@ -351,9 +345,9 @@ ServerAppletDlg::OnEnChangeStatus()
 }
 
 bool
-ServerAppletDlg::AreYouSure(XString p_actie)
+ServerAppletDlg::AreYouSure(CString p_actie)
 {
-  XString melding(_T("You are about to  "));
+  CString melding(_T("You are about to  "));
   melding += p_actie;
   melding += _T(" the server.\n\nAre you sure?");
   if(::MessageBox(GetSafeHwnd(),melding,_T("ServerApplet"),MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION) == IDYES)
@@ -436,7 +430,6 @@ ServerAppletDlg::OnBnClickedStart()
     XString result;
     XString program = MarlinConfig::GetExePath() +  PRODUCT_NAME + _T(".exe");
     XString arguments = _T("start");
-    XString fout(XString(_T("Cannot start the ")) + PRODUCT_NAME);
     XString actie = XString(_T("START: ")) + program + _T("\n\n");
     int stat = CallProgram_For_String(program,arguments,result,3000);
     m_serverStatus = stat == 0 ? Server_running : Server_stopped;
@@ -470,7 +463,6 @@ ServerAppletDlg::OnBnClickedStop()
       XString result;
       XString program = MarlinConfig::GetExePath() + PRODUCT_NAME + _T(".exe");
       XString arguments = _T("stop");
-      XString fout(XString(_T("Cannot stop the ")) +  PRODUCT_NAME);
       XString actie = XString(_T("START: ")) + program + _T("\n\n");
 
       int stat = CallProgram_For_String(program,arguments,result);
@@ -514,9 +506,9 @@ ServerAppletDlg::OnBnClickedBounce()
   UpdateData(FALSE);
   PumpMessage();
 
-  XString program = XString(PRODUCT_NAME) + _T(".exe");
-  XString arguments = _T("restart");
-  XString fout(_T("Cannot restart (bounce) the server"));
+  CString program = CString(PRODUCT_NAME) + _T(".exe");
+  CString arguments = _T("restart");
+  CString fout(_T("Cannot restart (bounce) the server"));
   theApp.StartProgram(program,arguments,true,fout);
 
   // Try multiple times
@@ -609,9 +601,9 @@ ServerAppletDlg::GetServerStatus()
 void
 ServerAppletDlg::GetServerStatusLocally()
 {
-  XString program   = XString(PRODUCT_NAME) + _T(".exe");
-  XString arguments = _T("query");
-  XString fout(XString(_T("Cannot get the status of the ")) + PRODUCT_NAME + _T(" server"));
+  CString program   = CString(PRODUCT_NAME) + _T(".exe");
+  CString arguments = _T("query");
+  CString fout(CString(_T("Cannot get the status of the ")) + PRODUCT_NAME + _T(" server"));
 
   int stat = theApp.StartProgram(program,arguments,true,fout);
 

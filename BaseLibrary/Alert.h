@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -29,7 +29,7 @@
 
 // Registers an alert log path for a module
 // Returns the module's alert number
-int     ConfigureApplicationAlerts(XString p_path);
+int     ConfigureApplicationAlerts(const XString& p_path);
 // Remove a alert modules path name
 bool    DeregisterApplicationAlerts(int p_module);
 // Clean up all alert paths and modules

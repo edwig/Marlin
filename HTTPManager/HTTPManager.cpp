@@ -29,12 +29,6 @@
 #include "HTTPManager.h"
 #include "HTTPManagerDlg.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Does nothing for the HTTPManager application
 void LoadConstants()
 {
@@ -78,6 +72,7 @@ BOOL HTTPManagerApp::InitInstance()
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
 
+	InitBaseLibrary();
 	CWinApp::InitInstance();
 
 	AfxEnableControlContainer();

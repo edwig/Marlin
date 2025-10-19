@@ -55,14 +55,6 @@
 // And of course, as always, check for errors, session == 0 etc :-)
 //
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 OAuth2Cache::OAuth2Cache()
 {
   InitializeCriticalSection(&m_lock);
@@ -82,7 +74,7 @@ OAuth2Cache::~OAuth2Cache()
 
 // Create a token server URL from  a template and a tenant
 XString
-OAuth2Cache::CreateTokenURL(XString p_template,XString p_tenant)
+OAuth2Cache::CreateTokenURL(const XString& p_template,const XString& p_tenant)
 {
   XString url;
   url.Format(p_template,p_tenant.GetString());
@@ -91,10 +83,10 @@ OAuth2Cache::CreateTokenURL(XString p_template,XString p_tenant)
 
 // Create a credentials grant, returning a session ID
 int
-OAuth2Cache::CreateClientCredentialsGrant(XString p_url
-                                         ,XString p_appID
-                                         ,XString p_appKey
-                                         ,XString p_scope)
+OAuth2Cache::CreateClientCredentialsGrant(const XString& p_url
+                                         ,const XString& p_appID
+                                         ,const XString& p_appKey
+                                         ,const XString& p_scope)
 {
   OAuthSession session;
   session.m_flow    = OAuthFlow::OA_CLIENT;
@@ -111,12 +103,12 @@ OAuth2Cache::CreateClientCredentialsGrant(XString p_url
 
 // Create a resource owner grant, returning a session ID
 int
-OAuth2Cache::CreateResourceOwnerCredentialsGrant(XString p_url
-                                                ,XString p_appID
-                                                ,XString p_appKey
-                                                ,XString p_scope
-                                                ,XString p_username
-                                                ,XString p_password)
+OAuth2Cache::CreateResourceOwnerCredentialsGrant(const XString& p_url
+                                                ,const XString& p_appID
+                                                ,const XString& p_appKey
+                                                ,const XString& p_scope
+                                                ,const XString& p_username
+                                                ,const XString& p_password)
 {
   OAuthSession session;
   session.m_flow     = OAuthFlow::OA_ROWNER;
@@ -153,7 +145,7 @@ OAuth2Cache::GetBearerToken(int p_session,bool p_refresh /*= false*/)
   AutoCritSec lock(&m_lock);
 
   XString token;
-  OAuthSession* session = FindSession(p_session);
+  OAuthSession* session = const_cast<OAuthSession*>(FindSession(p_session));
   if(session)
   {
     if(GetIsExpired(p_session) || p_refresh)
@@ -169,7 +161,7 @@ OAuth2Cache::GetBearerToken(int p_session,bool p_refresh /*= false*/)
 }
 
 bool
-OAuth2Cache::GetIsExpired(int p_session)
+OAuth2Cache::GetIsExpired(int p_session) const
 {
   AutoCritSec lock(&m_lock);
 
@@ -189,11 +181,11 @@ OAuth2Cache::GetIsExpired(int p_session)
 }
 
 INT64
-OAuth2Cache::GetExpires(int p_session)
+OAuth2Cache::GetExpires(int p_session) const
 {
   AutoCritSec lock(&m_lock);
 
-  OAuthSession* session = FindSession(p_session);
+  const OAuthSession* session = FindSession(p_session);
   if(session)
   {
     return session->m_expires;
@@ -202,7 +194,7 @@ OAuth2Cache::GetExpires(int p_session)
 }
 
 INT64
-OAuth2Cache::GetDefaultExpirationPeriod() 
+OAuth2Cache::GetDefaultExpirationPeriod() const
 {
   return m_defaultPeriod;
 }
@@ -227,7 +219,7 @@ OAuth2Cache::SetAnalysisLog(LogAnalysis* p_logfile)
 void
 OAuth2Cache::SetExpired(int p_session)
 {
-  OAuthSession* session = FindSession(p_session);
+  OAuthSession* session = const_cast<OAuthSession*>(FindSession(p_session));
   if(session)
   {
     session->m_expires = 0;
@@ -242,7 +234,7 @@ OAuth2Cache::SetDevelopment(bool p_dev /*= true*/)
 
 // Slow lookup of a session
 int
-OAuth2Cache::GetHasSession(XString p_appID,XString p_appKey)
+OAuth2Cache::GetHasSession(const XString& p_appID,const XString& p_appKey) const
 {
   AutoCritSec lock(&m_lock);
 
@@ -262,12 +254,12 @@ OAuth2Cache::GetHasSession(XString p_appID,XString p_appKey)
 //
 //////////////////////////////////////////////////////////////////////////
 
-OAuthSession* 
-OAuth2Cache::FindSession(int p_session)
+const OAuthSession* 
+OAuth2Cache::FindSession(int p_session) const
 {
   AutoCritSec lock(&m_lock);
 
-  AuthCache::iterator it = m_cache.find(p_session);
+  AuthCache::const_iterator it = m_cache.find(p_session);
   if(it != m_cache.end())
   {
     return &it->second;
@@ -280,7 +272,7 @@ OAuth2Cache::GetClient()
 {
   if(!m_client)
   {
-    m_client = new HTTPClient;
+    m_client = alloc_new HTTPClient;
     if(m_logfile)
     {
       m_client->SetLogging(m_logfile);

@@ -34,19 +34,11 @@
 #include <LogAnalysis.h>
 #include <AutoCritical.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Macro for logging
 #define DETAILLOG(text) if(m_client->GetLogging()) m_client->GetLogging()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO, false,(text))
 #define ERRORLOG(text)  if(m_client->GetLogging()) m_client->GetLogging()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_ERROR,false,(text))
 
-EventSource::EventSource(HTTPClient* p_client,XString p_url)
+EventSource::EventSource(HTTPClient* p_client,const XString& p_url)
             :m_url(p_url)
             ,m_client(p_client)
             ,m_serialize(false)
@@ -90,7 +82,7 @@ EventSource::EventSourceInit(bool p_withCredentials)
 
   if(m_pool == nullptr)
   {
-    m_pool = new ThreadPool(NUM_THREADS_MINIMUM,NUM_THREADS_MAXIMUM);
+    m_pool = alloc_new ThreadPool(NUM_THREADS_MINIMUM,NUM_THREADS_MAXIMUM);
     m_ownPool = true;
   }
   // Now starting the event stream
@@ -139,11 +131,12 @@ EventSource::Close()
 
 // Add event listener to the source
 bool 
-EventSource::AddEventListener(XString p_event,LPFN_EVENTHANDLER p_handler,bool p_useCapture /*=false*/)
+EventSource::AddEventListener(const XString& p_event,LPFN_EVENTHANDLER p_handler,bool p_useCapture /*=false*/)
 {
   // Always search on lower case
-  p_event.MakeLower();
-  ListenerMap::iterator it = m_listeners.find(p_event);
+  XString event(p_event);
+  event.MakeLower();
+  ListenerMap::iterator it = m_listeners.find(event);
   if(it != m_listeners.end())
   {
     // Event listener already exists
@@ -151,32 +144,32 @@ EventSource::AddEventListener(XString p_event,LPFN_EVENTHANDLER p_handler,bool p
   }
 
   // Handle special cases from the W3C Standard
-  if(p_event.CompareNoCase(_T("onopen")) == 0) 
+  if(event.CompareNoCase(_T("onopen")) == 0) 
   {
     m_onopen = p_handler; 
     return true; 
   }
-  if(p_event.CompareNoCase(_T("onerror")) == 0) 
+  if(event.CompareNoCase(_T("onerror")) == 0) 
   {
     m_onerror = p_handler;
     return true;
   }
-  if(p_event.CompareNoCase(_T("onmessage")) == 0)
+  if(event.CompareNoCase(_T("onmessage")) == 0)
   {
     m_onmessage = p_handler;
     return true;
   }
-  if(p_event.CompareNoCase(_T("onclose")) == 0)
+  if(event.CompareNoCase(_T("onclose")) == 0)
   {
     m_onclose = p_handler;
     return true;
   }
-  if(p_event.CompareNoCase(_T("oncomment")) == 0)
+  if(event.CompareNoCase(_T("oncomment")) == 0)
   {
     m_oncomment = p_handler;
     return true;
   }
-  if(p_event.CompareNoCase(_T("onretry")) == 0)
+  if(event.CompareNoCase(_T("onretry")) == 0)
   {
     m_onretry = p_handler;
     return true;
@@ -184,7 +177,7 @@ EventSource::AddEventListener(XString p_event,LPFN_EVENTHANDLER p_handler,bool p
 
   // Create listener and keep in the listeners map
   EventListener listener;
-  listener.m_event   = p_event;
+  listener.m_event   = event;
   listener.m_handler = p_handler;
   listener.m_capture = p_useCapture;
 
@@ -214,7 +207,7 @@ EventSource::SetApplicationData(void* p_data)
 }
 
 void
-EventSource::SetSecurity(XString p_cookie, XString p_secret)
+EventSource::SetSecurity(const XString& p_cookie,const XString& p_secret)
 {
   m_cookie = p_cookie;
   m_secret = p_secret;
@@ -373,7 +366,7 @@ EventSource::Parse(BYTE* p_buffer,unsigned& p_length)
   bool bom(false);
   TryConvertNarrowString(p_buffer,p_length,_T(""),buffer,bom);
 #else
-  XString input(p_buffer);
+  XString input((LPCSTR)p_buffer);
   XString buffer = DecodeStringFromTheWire(input);
 #endif
 
@@ -582,7 +575,7 @@ EventSource::DispatchEvent(XString* p_event,ULONG p_id,XString* p_data)
   // TRACE("EVENT %s %d %s\n",*p_event,p_id,*p_data);
 
   // Construct event
-  ServerEvent* theEvent = new ServerEvent();
+  ServerEvent* theEvent = alloc_new ServerEvent();
   theEvent->m_event = *p_event;
   theEvent->m_id    =  p_id;
   theEvent->m_data  = *p_data;

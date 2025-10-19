@@ -73,10 +73,10 @@ class ServerEventChannel
 {
 public:
   ServerEventChannel(ServerEventDriver* p_driver
-                    ,int     p_channel
-                    ,XString p_sesionName
-                    ,XString p_cookie
-                    ,XString p_token);
+                    ,int            p_channel
+                    ,const XString& p_sesionName
+                    ,const XString& p_cookie
+                    ,const XString& p_token);
  ~ServerEventChannel();
 
   // Send from this channel (if possible)
@@ -88,7 +88,7 @@ public:
   // Sanity check on channel
   bool CheckChannelPolicy();
   // Post a new event, giving a new event numerator
-  int  PostEvent(XString p_payload,XString p_sender,EvtType p_type = EvtType::EV_Message,XString p_typeName = _T(""));
+  int  PostEvent(const XString& p_payload,const XString& p_sender,EvtType p_type = EvtType::EV_Message,const XString& p_typeName = _T(""));
   // Flushing a channel directly
   bool FlushChannel();
   // Closing an event channel
@@ -114,10 +114,10 @@ public:
   EventDriverType GetDriverType() { return m_current; }
 
   // To be called by the socket handlers only!
-  void    OnOpen   (XString p_message);
-  void    OnMessage(XString p_message);
-  void    OnError  (XString p_message);
-  void    OnClose  (XString p_message);
+  void    OnOpen   (const XString& p_message);
+  void    OnMessage(const XString& p_message);
+  void    OnError  (const XString& p_message);
+  void    OnClose  (const XString& p_message);
   void    OnBinary (void* p_data,DWORD p_length);
   void    OnOpenSocket (const WebSocket* p_socket);
   void    OnCloseSocket(const WebSocket* p_socket);

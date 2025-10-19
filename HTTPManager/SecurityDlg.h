@@ -43,15 +43,15 @@ public:
 
 protected:
 	void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-  int  ReadRegistry  (XString p_protocol,XString p_serverClient,XString p_variable,int  p_default);
-  void WriteRegistry (XString p_protocol,XString p_serverClient,XString p_variable,bool p_set);
+  int  ReadRegistry  (CString p_protocol,CString p_serverClient,CString p_variable,int  p_default);
+  void WriteRegistry (CString p_protocol,CString p_serverClient,CString p_variable,bool p_set);
   void ReadServerOptions();
   void ReadClientOptions();
   bool Save();
 
 	DECLARE_MESSAGE_MAP()
 
-  XString m_text;
+  CString m_text;
   bool    m_changed;
 
   CButton m_buttonServerSSL20;

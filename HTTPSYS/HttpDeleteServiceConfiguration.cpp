@@ -10,12 +10,6 @@
 #include "stdafx.h"
 #include "http_private.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 HTTPAPI_LINKAGE
 ULONG WINAPI HttpDeleteServiceConfiguration(_Reserved_ IN HANDLE        ServiceHandle
                                            ,IN HTTP_SERVICE_CONFIG_ID   ConfigId

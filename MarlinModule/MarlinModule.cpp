@@ -44,14 +44,6 @@
 #include <Version.h>
 #include <winhttp.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // GLOBALS Needed for the module
 AppPool       g_IISApplicationPool;   // All applications in the application pool
 wchar_t       g_IISModuleName[SERVERNAME_BUFFERSIZE + 1] = L"";
@@ -131,7 +123,7 @@ RegisterModule(DWORD                        p_version
   wcsncpy_s(g_IISModuleName,SERVERNAME_BUFFERSIZE,p_moduleInfo->GetName(),SERVERNAME_BUFFERSIZE);
 
   // Register global notifications to process
-  HRESULT hr = p_moduleInfo->SetGlobalNotifications(new MarlinGlobalFactory(),globalEvents);
+  HRESULT hr = p_moduleInfo->SetGlobalNotifications(alloc_new MarlinGlobalFactory(),globalEvents);
   if(hr == S_OK)
   {
     hr = p_moduleInfo->SetPriorityForGlobalNotification(globalEvents,PRIORITY_ALIAS_FIRST);
@@ -147,7 +139,7 @@ RegisterModule(DWORD                        p_version
   }
 
   // Register module notifications to process
-  hr = p_moduleInfo->SetRequestNotifications(new MarlinModuleFactory(),moduleEvents,0);
+  hr = p_moduleInfo->SetRequestNotifications(alloc_new MarlinModuleFactory(),moduleEvents,0);
   if(hr == S_OK )
   {
     hr = p_moduleInfo->SetPriorityForRequestNotification(moduleEvents,PRIORITY_ALIAS_FIRST);
@@ -219,7 +211,7 @@ ApplicationConfigStop()
 
 // IIS cannot continue with this application pool for some reason
 // and must stop the complete pool (w3wp.exe) process
-void Unhealthy(XString p_error, HRESULT p_code)
+void Unhealthy(const XString& p_error, HRESULT p_code)
 {
   // Print to the MS-Windows WMI
   ERRORLOG(p_error);
@@ -331,7 +323,7 @@ MarlinGlobalFactory::OnGlobalApplicationStart(_In_ IHttpApplicationStartProvider
     }
 
     // Create a new pool application
-    PoolApp* poolapp = new PoolApp();
+    PoolApp* poolapp = alloc_new PoolApp();
     if(poolapp->LoadPoolApp(httpapp,configPath,webroot,physical,application,appSite))
     {
       // Keep application in our IIS application pool
@@ -448,7 +440,7 @@ MarlinGlobalFactory::CountAppPoolApplications(ServerApp* p_application)
 // WEBROOT will be    : C:\inetpub\wwwroot
 //
 XString
-MarlinGlobalFactory::ExtractWebroot(XString p_configPath,XString p_physicalPath)
+MarlinGlobalFactory::ExtractWebroot(const XString& p_configPath,const XString& p_physicalPath)
 {
   XString config(p_configPath);
   XString physic(p_physicalPath);
@@ -481,7 +473,7 @@ MarlinGlobalFactory::ExtractWebroot(XString p_configPath,XString p_physicalPath)
 // Extract site from the config combination
 // E.g: "MACHINE/WEBROOT/APPHOST/MARLINTEST" -> "MARLINTEST"
 XString
-MarlinGlobalFactory::ExtractAppSite(XString p_configPath)
+MarlinGlobalFactory::ExtractAppSite(const XString& p_configPath)
 {
   int pos = p_configPath.ReverseFind('/');
   if (pos >= 0)
@@ -687,7 +679,7 @@ MarlinModuleFactory::GetHttpModule(OUT CHttpModule**     p_module
 {
   UNREFERENCED_PARAMETER(p_allocator);
   // Create new module
-  MarlinModule* requestModule = new MarlinModule();
+  MarlinModule* requestModule = alloc_new MarlinModule();
   //Test for an error
   if(!requestModule)
   {

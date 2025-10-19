@@ -36,12 +36,6 @@
 #include "SecurityDlg.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -140,8 +134,8 @@ void HTTPManagerDlg::DoDataExchange(CDataExchange* pDX)
     m_buttonDisconnect.EnableWindow(m_secure && !m_iis);
     m_buttonSecurity  .EnableWindow(m_secure);
 
-    XString prefix = _T("URL Prefix: ") + CreateURLPrefix(m_binding,m_secure,m_port,m_absPath);
-    m_editStatus.SetWindowText(prefix);
+    XString prefix = _T("URL Prefix: ") + CreateURLPrefix(m_binding,m_secure,m_port,(LPCTSTR)m_absPath);
+    m_editStatus.SetWindowText(prefix.GetString());
 
     m_editPortUpto.EnableWindow(m_doRange);
 
@@ -425,13 +419,13 @@ HTTPManagerDlg::MakeFirewallRuleName(XString& p_ports)
 }
 
 bool
-HTTPManagerDlg::DoCommand(ConfigCmd p_config
-                         ,XString   p_prefix
-                         ,XString&  p_command
-                         ,XString&  p_parameters
-                         ,XString   p_prefix2
-                         ,XString   p_prefix3
-                         ,XString   p_prefix4)
+HTTPManagerDlg::DoCommand(ConfigCmd      p_config
+                         ,const XString& p_prefix
+                         ,      XString& p_command
+                         ,      XString& p_parameters
+                         ,const XString& p_prefix2
+                         ,const XString& p_prefix3
+                         ,const XString& p_prefix4)
 {
   bool result = true;
   XString temp;
@@ -535,7 +529,7 @@ HTTPManagerDlg::OnCbnSelchangeBinding()
 void 
 HTTPManagerDlg::OnEnChangePort()
 {
-  XString text;
+  CString text;
   m_editPort.GetWindowText(text);
   m_port = _ttoi(text);
   UpdateData(FALSE);
@@ -545,7 +539,7 @@ HTTPManagerDlg::OnEnChangePort()
 void 
 HTTPManagerDlg::OnEnChangePortUpto()
 {
-  XString text;
+  CString text;
   m_editPortUpto.GetWindowText(text);
   m_portUpto = _ttoi(text);
   UpdateData(FALSE);
@@ -591,8 +585,9 @@ HTTPManagerDlg::OnBnClickedAskurl()
   // Do all the ports
   for(int port = m_port;port <= m_portUpto;++port)
   {
-    XString prefix = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
-    m_editStatus.SetWindowText(_T("Inquiring for URL reservation: ") + prefix);
+    XString prefix = CreateURLPrefix(m_binding,m_secure,port,(LPCTSTR)m_absPath);
+    prefix = _T("Inquiring for URL reservation: ") + prefix;
+    m_editStatus.SetWindowText(prefix.GetString());
     MessagePump();
 
     if(DoCommand(CONFIG_ASKURL,prefix,command,parameters))
@@ -604,7 +599,8 @@ HTTPManagerDlg::OnBnClickedAskurl()
   }
 
   // Show result
-  ResultDlg dlg(this,show);
+  CString sh(show);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 
   // Reset status line
@@ -636,7 +632,7 @@ HTTPManagerDlg::OnBnClickedAddurl()
   // Do all the ports
   for(int port = m_port;port <= m_portUpto;++port)
   {
-    XString prefix  = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
+    XString prefix  = CreateURLPrefix(m_binding,m_secure,port,(LPCTSTR)m_absPath);
     m_editStatus.SetWindowText(_T("Adding URL reservation: ") + prefix);
     MessagePump();
 
@@ -656,7 +652,8 @@ HTTPManagerDlg::OnBnClickedAddurl()
   }
 
   // Show result
-  ResultDlg dlg(this,show);
+  CString sh(show);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 
   // Reset status line
@@ -687,8 +684,9 @@ HTTPManagerDlg::OnBnClickedDelurl()
 
   for(int port = m_port;port <= m_portUpto;++port)
   {
-    XString prefix  = CreateURLPrefix(m_binding,m_secure,port,m_absPath);
-    m_editStatus.SetWindowText(_T("Deleting URL reservation: ") + prefix);
+    XString prefix  = CreateURLPrefix(m_binding,m_secure,port,(LPCTSTR)m_absPath);
+    prefix = _T("Deleting URL reservation: ") + prefix;
+    m_editStatus.SetWindowText(prefix.GetString());
     MessagePump();
 
     if(DoCommand(CONFIG_DELURL,prefix,command,parameters))
@@ -700,7 +698,8 @@ HTTPManagerDlg::OnBnClickedDelurl()
   }
 
   // Show result
-  ResultDlg dlg(this,show);
+  CString sh(show);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 
   // Reset status line
@@ -733,7 +732,8 @@ HTTPManagerDlg::OnBnClickedAskFW()
   }
 
   // Show result
-  ResultDlg dlg(this,show);
+  CString sh(show);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 
   // Reset status line
@@ -781,7 +781,8 @@ HTTPManagerDlg::OnBnClickedAddFW()
   show += XString(_T(">")) + command + _T(" ") + parameters2 + _T("\r\n") + result;
 
   // Show result
-  ResultDlg dlg(this,show);
+  CString sh(show);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 
   // Reset status line
@@ -808,7 +809,8 @@ HTTPManagerDlg::OnBnClickedDelFW()
   show += XString(_T(">")) + command + _T(" ") + parameters + _T("\r\n") + result;
 
   // Show result
-  ResultDlg dlg(this,show);
+  CString sh(show);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 
   // Reset status line
@@ -858,7 +860,8 @@ HTTPManagerDlg::OnBnClickedAskcert()
   }
 
   // Show result
-  ResultDlg dlg(this,show);
+  CString sh(show);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 }
 
@@ -871,10 +874,12 @@ HTTPManagerDlg::OnBnClickedAddcert()
   XString prefix;
   XString parameters;
   XString command;
-  XString certificate;
   XString storename(_T("TrustedPublisher"));
   XString clientCert;
-  m_editCertificate.GetWindowText(certificate);
+  
+  CString cert;
+  m_editCertificate.GetWindowText(cert);
+  XString certificate(cert);
   certificate.Replace(_T(" "),_T(""));
   certificate = certificate.TrimLeft(_T("?"));
   CWaitCursor diepe_zucht;
@@ -918,7 +923,8 @@ HTTPManagerDlg::OnBnClickedAddcert()
     else return;
   }
   // Show result
-  ResultDlg dlg(this,showme);
+  CString sh(showme);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 }
 
@@ -967,7 +973,8 @@ HTTPManagerDlg::OnBnClickedDelcert()
   }
 
   // Show result
-  ResultDlg dlg(this,showme);
+  CString sh(showme);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 }
 
@@ -987,7 +994,8 @@ HTTPManagerDlg::OnBnClickedListner()
     showme  = _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
   }
   // Show result
-  ResultDlg dlg(this,showme);
+  CString sh(showme);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 }
 
@@ -1007,7 +1015,8 @@ HTTPManagerDlg::OnBnClickedListen()
     showme  = _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
   }
   // Show result
-  ResultDlg dlg(this,showme);
+  CString sh(showme);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 }
 
@@ -1025,7 +1034,8 @@ HTTPManagerDlg::OnBnClickedNetstat()
   XString tonen = _T(">") + command + _T(" ") + parameters + _T("\r\n") + result;
 
   // Show result
-  ResultDlg dlg(this,tonen);
+  CString sh(tonen);
+  ResultDlg dlg(this,sh);
   dlg.DoModal();
 }
 
@@ -1077,11 +1087,12 @@ HTTPManagerDlg::OnBnClickedSiteWebConfig()
     return;
   }
 
-  XString prefix = CreateURLPrefix(m_binding, m_secure, m_port, m_absPath);
-  XString filenm = MarlinConfig::GetSiteConfig(prefix);
+  XString prefix = CreateURLPrefix(m_binding, m_secure, m_port,(LPCTSTR)m_absPath);
+  CString filenm = MarlinConfig::GetSiteConfig(prefix);
 
   WebConfigDlg config(m_iis);
-  config.SetSiteConfig(prefix,filenm);
+  CString pre(prefix);
+  config.SetSiteConfig(pre,filenm);
   config.DoModal();
 }
 

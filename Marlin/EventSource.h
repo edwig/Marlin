@@ -90,7 +90,7 @@ typedef std::map<XString,EventListener> ListenerMap;
 class EventSource
 {
 public:
-  EventSource(HTTPClient* p_client,XString p_url);
+  EventSource(HTTPClient* p_client,const XString& p_url);
  ~EventSource();
 
   // Init the event source
@@ -98,7 +98,7 @@ public:
   // Closing the event source. Stopping on next HTTP round trip
   void        Close();
   // Add event listener to the source
-  bool        AddEventListener(XString p_event,LPFN_EVENTHANDLER p_handler,bool p_useCapture = false);
+  bool        AddEventListener(const XString& p_event,LPFN_EVENTHANDLER p_handler,bool p_useCapture = false);
   // Add application pointer
   void        SetApplicationData(void* p_data);
 
@@ -107,7 +107,7 @@ public:
   void        SetReconnectionTime(ULONG p_time);
   void        SetThreadPool(ThreadPool* p_pool);
   void        SetDirectMessage(bool p_direct);
-  void        SetSecurity(XString p_cookie,XString p_secret);
+  void        SetSecurity(const XString& p_cookie,const XString& p_secret);
 
   // Getters
   ReadyState  GetReadyState();

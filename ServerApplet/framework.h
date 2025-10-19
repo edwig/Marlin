@@ -13,8 +13,6 @@
 // turns off MFC's hiding of some common and often safely ignored warning messages
 #define _AFX_ALL_WARNINGS
 
-#include "..\framework.h"
-
 //////////////////////////////////////////////////////////////////////////
 //
 // Can be extended beyond this point with extra MFC requirements

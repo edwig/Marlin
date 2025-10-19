@@ -44,11 +44,11 @@ class HTTPURLGroup
 {
 public:
   HTTPURLGroup(HTTPServerMarlin* p_server
-              ,XString p_authName
-              ,ULONG   p_authScheme
-              ,bool    p_cache
-              ,XString p_realm
-              ,XString p_domain);
+              ,const XString& p_authName
+              ,ULONG          p_authScheme
+              ,bool           p_cache
+              ,const XString& p_realm
+              ,const XString& p_domain);
  ~HTTPURLGroup();
 
   // Starting a new URL Group

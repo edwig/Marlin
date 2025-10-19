@@ -134,7 +134,7 @@ WebConfigRewriter::OnInitDialog()
 void
 WebConfigRewriter::ReadWebConfig(MarlinConfig& p_config)
 {
-  CString rewriter(_T("Rewriter"));
+  XString rewriter(_T("Rewriter"));
 
   // Do we have a URL rewriter?
   m_useProtocol     = p_config.HasParameter(rewriter,_T("Protocol"));
@@ -189,7 +189,7 @@ WebConfigRewriter::ReadWebConfig(MarlinConfig& p_config)
 void 
 WebConfigRewriter::WriteWebConfig(MarlinConfig& p_config)
 {
-  CString rewriter(_T("Rewriter"));
+  XString rewriter(_T("Rewriter"));
   p_config.SetSection(rewriter);
 
   if(m_useProtocol)    p_config.SetParameter   (rewriter,_T("Protocol"),    m_protocol);

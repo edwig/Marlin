@@ -143,7 +143,7 @@ private:
   // Reset outstanding OVERLAPPED
   void ResetOutstanding(OutstandingIO& p_outstanding);
   // Add a request string for a header
-  void AddRequestString(XString p_string,LPSTR& p_buffer,USHORT& p_size);
+  void AddRequestString(const XString& p_string,LPSTR& p_buffer,USHORT& p_size);
   // Create the logging data
   void CreateLogData();
 

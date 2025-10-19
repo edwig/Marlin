@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -34,14 +34,6 @@
 #include <iterator>
 #include <algorithm>
 
-#ifdef _AFX
-#ifdef _DEBUG 
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 JSONvalue::JSONvalue()
 {
 }
@@ -61,7 +53,7 @@ JSONvalue::JSONvalue(const JsonConst  p_value)
   SetValue(p_value);
 }
 
-JSONvalue::JSONvalue(const XString p_value)
+JSONvalue::JSONvalue(const XString& p_value)
 {
   SetValue(p_value);
 }
@@ -211,7 +203,7 @@ JSONvalue::SetDatatype(JsonType p_type)
 }
 
 void
-JSONvalue::SetValue(XString p_value)
+JSONvalue::SetValue(const XString& p_value)
 {
   m_string = p_value;
   m_type   = JsonType::JDT_string;
@@ -382,7 +374,7 @@ JSONvalue::GetAsJsonString(bool p_white,unsigned p_level /*=0*/,bool p_exponenti
                                     break;
     case JsonType::JDT_number_bcd:  result = m_bcdNumber.AsString(p_exponential ? bcd::Format::Engineering : bcd::Format::Bookkeeping,false,0);
                                     break;
-    case JsonType::JDT_array:       result = _T("[") + newln;
+    case JsonType::JDT_array:       result = XString(_T("[")) + newln;
                                     for(unsigned ind = 0;ind < m_array.size();++ind)
                                     {
                                       result += separ;
@@ -441,7 +433,7 @@ JSONvalue::operator[](int p_index)
 
 // Getting the value from an JSONobject
 JSONvalue&
-JSONvalue::operator[](XString p_name)
+JSONvalue::operator[](const XString& p_name)
 {
   if(m_type != JsonType::JDT_object)
   {
@@ -458,7 +450,11 @@ JSONvalue::operator[](XString p_name)
 }
 
 void
-JSONvalue::JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive)
+JSONvalue::JsonReplace(const XString& p_namePattern
+                      ,const XString& p_tofind
+                      ,const XString& p_replace
+                      ,int&           p_number
+                      ,bool           p_caseSensitive)
 {
   switch(m_type)
   {
@@ -472,7 +468,11 @@ JSONvalue::JsonReplace(XString p_namePattern,XString p_tofind,XString p_replace,
 }
 
 void
-JSONvalue::JsonReplaceObject(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive /*=true*/)
+JSONvalue::JsonReplaceObject(const XString& p_namePattern
+                            ,const XString& p_tofind
+                            ,const XString& p_replace
+                            ,int&           p_number
+                            ,bool           p_caseSensitive /*=true*/)
 {
   for(auto& pair : m_object)
   {
@@ -506,7 +506,11 @@ JSONvalue::JsonReplaceObject(XString p_namePattern,XString p_tofind,XString p_re
 }
 
 void
-JSONvalue::JsonReplaceArray(XString p_namePattern,XString p_tofind,XString p_replace,int& p_number,bool p_caseSensitive /*=true*/)
+JSONvalue::JsonReplaceArray(const XString& p_namePattern
+                           ,const XString& p_tofind
+                           ,const XString& p_replace
+                           ,int&           p_number
+                           ,bool           p_caseSensitive /*=true*/)
 {
   for(auto& value : m_array)
   {
@@ -542,54 +546,54 @@ JSONvalue::DropReference()
 //
 //////////////////////////////////////////////////////////////////////////
 
-JSONpair::JSONpair(XString p_name) 
+JSONpair::JSONpair(const XString& p_name) 
          :m_name(p_name)
 {
 }
 
-JSONpair::JSONpair(XString p_name,JSONvalue& p_value)
+JSONpair::JSONpair(const XString& p_name,const JSONvalue& p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {
 }
 
-JSONpair::JSONpair(XString p_name, JsonType p_type)
+JSONpair::JSONpair(const XString& p_name,const JsonType p_type)
          :m_name(p_name)
          ,m_value(p_type)
 {
 }
 
-JSONpair::JSONpair(XString p_name,XString p_value)
+JSONpair::JSONpair(const XString& p_name,const XString& p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {
 }
 
-JSONpair::JSONpair(XString p_name,LPCTSTR p_value)
+JSONpair::JSONpair(const XString& p_name,const LPTSTR p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {
 }
 
-JSONpair::JSONpair(XString p_name,int p_value)
+JSONpair::JSONpair(const XString& p_name,int p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {
 }
 
-JSONpair::JSONpair(XString p_name,const bcd& p_value)
+JSONpair::JSONpair(const XString& p_name,const bcd& p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {
 }
 
-JSONpair::JSONpair(XString p_name,bool p_value)
+JSONpair::JSONpair(const XString& p_name,const bool p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {
 }
 
-JSONpair::JSONpair(XString p_name,JsonConst p_value)
+JSONpair::JSONpair(const XString& p_name,const JsonConst p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {
@@ -615,7 +619,7 @@ JSONMessage::JSONMessage()
   AddReference();
 
   // Set empty value
-  m_value = new JSONvalue();
+  m_value = alloc_new JSONvalue();
 
   // Set sender to null
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
@@ -623,12 +627,12 @@ JSONMessage::JSONMessage()
 
 // XTOR: From a string. 
 // Incoming string , no whitespace preservation, expect it to be UTF-8
-JSONMessage::JSONMessage(XString p_message)
+JSONMessage::JSONMessage(const XString& p_message)
 {
   AddReference();
 
   // Set empty value
-  m_value = new JSONvalue();
+  m_value = alloc_new JSONvalue();
 
   // Overrides from the declaration
   m_incoming = true; // INCOMING!!
@@ -641,13 +645,13 @@ JSONMessage::JSONMessage(XString p_message)
 }
 
 // XTOR: From an internal string with explicit space and encoding
-JSONMessage::JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding /*=Encoding::UTF8*/)
+JSONMessage::JSONMessage(const XString& p_message,bool p_whitespace,Encoding p_encoding /*=Encoding::UTF8*/)
             :m_encoding(p_encoding)
 {
   AddReference();
 
   // Set empty value
-  m_value = new JSONvalue();
+  m_value = alloc_new JSONvalue();
 
   // Preserve whitespace setting
   m_whitespace = p_whitespace;
@@ -660,12 +664,12 @@ JSONMessage::JSONMessage(XString p_message,bool p_whitespace,Encoding p_encoding
 }
 
 // XTOR: Outgoing message + url
-JSONMessage::JSONMessage(XString p_message,XString p_url)
+JSONMessage::JSONMessage(const XString& p_message,const XString& p_url)
 {
   AddReference();
 
   // Set empty value
-  m_value = new JSONvalue();
+  m_value = alloc_new JSONvalue();
 
   // Set sender to null
   memset(&m_sender,0,sizeof(SOCKADDR_IN6));
@@ -678,12 +682,12 @@ JSONMessage::JSONMessage(XString p_message,XString p_url)
 }
 
 // XTOR: From another message
-JSONMessage::JSONMessage(JSONMessage* p_other)
+JSONMessage::JSONMessage(const JSONMessage* p_other)
 {
   AddReference();
 
   // Copy the primary message value, and reference it
-  m_value = new JSONvalue(p_other->m_value);
+  m_value = alloc_new JSONvalue(p_other->m_value);
   m_value->AddReference();
 
   // Copy all other data members
@@ -725,12 +729,12 @@ JSONMessage::JSONMessage(JSONMessage* p_other)
   }
 }
 
-JSONMessage::JSONMessage(HTTPMessage* p_message)
+JSONMessage::JSONMessage(const HTTPMessage* p_message)
 {
   AddReference();
 
   // Set empty value
-  m_value          = new JSONvalue();
+  m_value          = alloc_new JSONvalue();
 
   // Copy all parts
   m_url            = p_message->GetURL();
@@ -797,12 +801,12 @@ JSONMessage::JSONMessage(HTTPMessage* p_message)
   delete [] buffer;
 }
 
-JSONMessage::JSONMessage(SOAPMessage* p_message)
+JSONMessage::JSONMessage(const SOAPMessage* p_message)
 {
   AddReference();
 
   // Set empty value
-  m_value = new JSONvalue();
+  m_value = alloc_new JSONvalue();
 
   // Copy all parts
   m_url             = p_message->GetURL();
@@ -886,12 +890,12 @@ JSONMessage::ConstructFromRawBuffer(uchar* p_buffer,unsigned p_length,XString p_
     else
     {
       // Probably already processed in HandleTextContext of the server
-      message = p_buffer;
+      message = (LPCSTR)p_buffer;
     }
   }
   else
   {
-    XString string(p_buffer);
+    XString string((LPCSTR)p_buffer);
     message = DecodeStringFromTheWire(string,p_charset);
   }
 #endif
@@ -918,7 +922,7 @@ JSONMessage::Reset(bool p_resetURL /*= false*/)
   m_value->DropReference();
 
   // Set empty value
-  m_value = new JSONvalue();
+  m_value = alloc_new JSONvalue();
 
   m_incoming = false;
   // Reset error

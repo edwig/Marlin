@@ -4,8 +4,8 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -54,19 +54,19 @@ using QOptionMap = std::map<int,QualityOption>;
 class ServiceQuality
 {
 public:
-  explicit ServiceQuality(XString p_header);
+  explicit ServiceQuality(const XString& p_header);
  ~ServiceQuality() = default;
 
   // Request options from the HTTP header in order of preference. Starts with 0.
   QualityOption* GetOptionByPreference(int p_preference);
   XString        GetStringByPreference(int p_preference);
   // Find if a option is acceptable
-  int            GetPreferenceByName(XString p_name);
+  int            GetPreferenceByName(const XString& p_name);
 
 private:
   // Parsing the incoming header
-  void ParseHeader(XString p_header);
-  void ParseOption(XString p_option);
+  void ParseHeader(const XString& p_header);
+  void ParseOption(const XString& p_option);
 
   QOptionMap m_options;
 };

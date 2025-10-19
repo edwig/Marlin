@@ -32,12 +32,6 @@
 #include <HTTPServer.h>
 #include <HTTPSite.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int EventTests  = 3;              // OnMessage
 static int totalChecks = EventTests + 3; // OnOther + OnError + OnClose
 
@@ -85,7 +79,7 @@ void SendSSEMessages(void* p_data)
 
   for(int x = 1; x <= EventTests; ++x)
   {
-    ServerEvent* eventx = new ServerEvent(_T("message"));
+    ServerEvent* eventx = alloc_new ServerEvent(_T("message"));
     eventx->m_id = x;
     eventx->m_data.Format(_T("This is message number: %u\n"),x);
 
@@ -125,7 +119,7 @@ void SendSSEMessages(void* p_data)
   }
 
   xprintf(_T("Sending other message\n"));
-  ServerEvent* other = new ServerEvent(_T("other"));
+  ServerEvent* other = alloc_new ServerEvent(_T("other"));
   other->m_data = _T("This is a complete different message in another set of stories.\r\n");
   other->m_data += otherData;
   result = server->SendEvent(stream,other);
@@ -141,7 +135,7 @@ void SendSSEMessages(void* p_data)
   }
 
   xprintf(_T("Sending an error message\n"));
-  ServerEvent* err = new ServerEvent(_T("error"));
+  ServerEvent* err = alloc_new ServerEvent(_T("error"));
   err->m_data = _T("This is a very serious bug report from your server! Heed attention to it!");
   result = server->SendEvent(stream,err);
   // --- "---------------------------------------------- - ------
@@ -197,7 +191,7 @@ TestMarlinServer::TestPushEvents()
     return error;
   }
 
-  site->SetHandler(HTTPCommand::http_get,new SiteHandlerStream());
+  site->SetHandler(HTTPCommand::http_get,alloc_new SiteHandlerStream());
 
   // HERE IS THE MAGIC. MAKE IT INTO AN EVENT STREAM HANDLER!!!
   // Modify standard settings for this site

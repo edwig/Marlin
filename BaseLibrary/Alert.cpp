@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -35,14 +35,6 @@
 #include <time.h>
 #include <map>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 using AlertPaths = std::map<int,XString>;
 
 //////////////////////////////////////////////////////////////////////////
@@ -58,27 +50,28 @@ CRITICAL_SECTION  g_alertCritical;
 
 // Registers an alert log path for a module
 // Returns the module's alert number
-int ConfigureApplicationAlerts(XString p_path)
+int ConfigureApplicationAlerts(const XString& p_path)
 {
   // Check that we have a registration
   if(g_alertPath == nullptr)
   {
     InitializeCriticalSection(&g_alertCritical);
 
-    g_alertPath = new AlertPaths();
+    g_alertPath = alloc_new AlertPaths();
     // Clean up at exit time of the process
     atexit(CleanupAlerts);
   }
-  AutoCritSec lock(&g_alertCritical);
 
   // Check that the path always ends in a backslash
+  XString path(p_path);
   if(p_path.Right(1) != _T("\\"))
   {
-    p_path += '\\';
+    path += _T("\\");
   }
 
   // register new path
-  (*g_alertPath)[++g_alertModules] = p_path;
+  AutoCritSec lock(&g_alertCritical);
+  (*g_alertPath)[++g_alertModules] = path;
 
   return g_alertModules;
 }

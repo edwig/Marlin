@@ -48,14 +48,6 @@
 #include <VersionHelpers.h>
 #include <io.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Each buffer in a event buffer array has a limit of 32K characters
 // See MSDN: ReportEvent function
 #define EVENTBUFFER     (32 * 1024)

@@ -19,14 +19,8 @@
 #include <winhttp.h>
 #include <algorithm>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // CTOR
-RequestQueue::RequestQueue(XString p_name)
+RequestQueue::RequestQueue(const XString& p_name)
 {
   m_name = p_name;
   InitializeCriticalSection(&m_lock);
@@ -178,7 +172,7 @@ RequestQueue::StartListener(USHORT p_port,URL* p_url,USHORT p_timeout)
   Listeners::iterator it = m_listeners.find(p_port);
   if(it == m_listeners.end())
   {
-    Listener* listener = new Listener(this,p_port,p_url,p_timeout);
+    Listener* listener = alloc_new Listener(this,p_port,p_url,p_timeout);
     m_listeners.insert(std::make_pair(p_port,listener));
 
     if(listener->Initialize(p_port) == NoError)
@@ -459,7 +453,7 @@ RequestQueue::RemoveRequest(Request* p_request)
 
 // Add a fragment to the fragment cache
 ULONG
-RequestQueue::AddFragment(XString p_prefix, PHTTP_DATA_CHUNK p_chunk)
+RequestQueue::AddFragment(const XString& p_prefix, PHTTP_DATA_CHUNK p_chunk)
 {
   AutoCritSec lock(&m_lock);
 
@@ -468,8 +462,9 @@ RequestQueue::AddFragment(XString p_prefix, PHTTP_DATA_CHUNK p_chunk)
     return ERROR_INVALID_PARAMETER;
   }
 
-  p_prefix.MakeLower();
-  Fragments::iterator it = m_fragments.find(p_prefix);
+  XString prefix(p_prefix);
+  prefix.MakeLower();
+  Fragments::iterator it = m_fragments.find(prefix);
   if(it != m_fragments.end())
   {
     // Make a copy of the memory data chunk
@@ -482,7 +477,7 @@ RequestQueue::AddFragment(XString p_prefix, PHTTP_DATA_CHUNK p_chunk)
     ULONG length = p_chunk->FromMemory.BufferLength;
     chunk->FromMemory.BufferLength =   length;
     chunk->FromMemory.pBuffer = malloc(length + 1);
-    if (chunk->FromMemory.pBuffer == nullptr)
+    if(chunk->FromMemory.pBuffer == nullptr)
     {
       return ERROR_OUTOFMEMORY;
     }
@@ -490,7 +485,7 @@ RequestQueue::AddFragment(XString p_prefix, PHTTP_DATA_CHUNK p_chunk)
     ((char*)chunk->FromMemory.pBuffer)[length] = 0;
 
     // Add the copied chunk into the cache
-    m_fragments.insert(std::make_pair(p_prefix,chunk));
+    m_fragments.insert(std::make_pair(prefix,chunk));
     return NO_ERROR;
   }
   // Duplicate fragment
@@ -499,12 +494,13 @@ RequestQueue::AddFragment(XString p_prefix, PHTTP_DATA_CHUNK p_chunk)
 
 // Finding a fragment in the fragment cache
 PHTTP_DATA_CHUNK
-RequestQueue::FindFragment(XString p_prefix)
+RequestQueue::FindFragment(const XString& p_prefix)
 {
   AutoCritSec lock(&m_lock);
 
-  p_prefix.MakeLower();
-  Fragments::iterator it = m_fragments.find(p_prefix);
+  XString prefix(p_prefix);
+  prefix.MakeLower();
+  Fragments::iterator it = m_fragments.find(prefix);
   if(it != m_fragments.end())
   {
     return it->second;
@@ -516,15 +512,16 @@ RequestQueue::FindFragment(XString p_prefix)
 // Flush (remove) a fragment from the cache
 // Removes one fragment or all descendants of it.
 ULONG
-RequestQueue::FlushFragment(XString p_prefix,ULONG Flags)
+RequestQueue::FlushFragment(const XString& p_prefix,ULONG Flags)
 {
   AutoCritSec lock(&m_lock);
 
   int erased = 0;
-  p_prefix.MakeLower();
+  XString prefix(p_prefix);
+  prefix.MakeLower();
 
   // Try to erase exactly this prefix from the cache
-  Fragments::iterator it = m_fragments.find(p_prefix);
+  Fragments::iterator it = m_fragments.find(prefix);
   if(it != m_fragments.end())
   {
     PHTTP_DATA_CHUNK chunk = it->second;
@@ -540,7 +537,7 @@ RequestQueue::FlushFragment(XString p_prefix,ULONG Flags)
     Fragments::iterator fr = m_fragments.begin();
     while(fr != m_fragments.end())
     {
-      if(p_prefix.Compare(fr->first.Left(p_prefix.GetLength())) == 0)
+      if(p_prefix.Compare(fr->first.Left(prefix.GetLength())) == 0)
       {
         PHTTP_DATA_CHUNK chunk = fr->second;
         free(chunk->FromMemory.pBuffer);
@@ -770,7 +767,7 @@ RequestQueue::DeleteAllWebSockets()
 
 // See if a WebSocket with this secure key already exists in the driver
 SYSWebSocket*
-RequestQueue::FindWebSocket(XString p_websocketKey)
+RequestQueue::FindWebSocket(const XString& p_websocketKey)
 {
   AutoCritSec lock(&m_lock);
 
@@ -784,7 +781,7 @@ RequestQueue::FindWebSocket(XString p_websocketKey)
 
 // If the WebSocket with this secure key does not exist, add it to the mapping
 bool
-RequestQueue::AddWebSocket(XString p_websocketKey,SYSWebSocket* p_websocket)
+RequestQueue::AddWebSocket(const XString& p_websocketKey,SYSWebSocket* p_websocket)
 {
   AutoCritSec lock(&m_lock);
 
@@ -798,7 +795,7 @@ RequestQueue::AddWebSocket(XString p_websocketKey,SYSWebSocket* p_websocket)
 
 // If the WebSocket was already known by this key, replace it
 bool
-RequestQueue::ReconnectWebsocket(XString p_websocketKey,SYSWebSocket* p_websocket)
+RequestQueue::ReconnectWebsocket(const XString& p_websocketKey,SYSWebSocket* p_websocket)
 {
   AutoCritSec lock(&m_lock);
 
@@ -812,7 +809,7 @@ RequestQueue::ReconnectWebsocket(XString p_websocketKey,SYSWebSocket* p_websocke
 }
 
 bool
-RequestQueue::DeleteWebSocket(XString p_websocketKey)
+RequestQueue::DeleteWebSocket(const XString& p_websocketKey)
 {
   AutoCritSec lock(&m_lock);
 

@@ -26,10 +26,10 @@
 // THE SOFTWARE.
 //
 #pragma once
-#include "WebServiceServer.h"
-#include "ServerEventDriver.h"
-#include "MarlinServer.h"
-#include "AppConfig.h"
+#include <WebServiceServer.h>
+#include <ServerEventDriver.h>
+#include <MarlinServer.h>
+#include <AppConfig.h>
 
 #define xprintf ((TestMarlinServer*)s_theServer)->Server_xprintf
 #define qprintf ((TestMarlinServer*)s_theServer)->Server_qprintf
@@ -45,7 +45,7 @@ public:
   virtual void ShutDown() override;   // Called from ServerMain / ServerApp
 
   // Register the objects from the ServerApp out of the IIS configuration
-  void    ConfigIISServer(XString p_appName,HTTPServer* p_server,ThreadPool* p_pool,LogAnalysis* p_log);
+  void    ConfigIISServer(const XString& p_appName,HTTPServer* p_server,ThreadPool* p_pool,LogAnalysis* p_log);
 
   // Registering an extra error while running: so we can report total errors
   void  Server_xerror();
@@ -91,10 +91,10 @@ protected:
   WEBSERVICE_DECLARE(OnMarlinFifth)
 
   // Add service operations for WSDL and service handlers
-  void AddOperations(XString p_contract);
+  void AddOperations(const XString& p_contract);
 
   // Testing ServerEventDriver
-  void PostEventsToDrivers(CString p_event);
+  void PostEventsToDrivers(const XString& p_event);
 
 private:
 
@@ -160,7 +160,7 @@ private:
   int AfterTestWebSocketSecure();
 
   // SERVICE TESTING OnMarlin.....
-  XString Translation(XString p_language, XString p_translation, XString p_word);
+  XString Translation(const XString& p_language,const XString& p_translation,const XString& p_word);
   // Set input/output languages
   XString m_language;
   XString m_translation;

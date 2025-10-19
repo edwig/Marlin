@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -55,21 +55,21 @@ class MultiPart
 {
 public: 
   MultiPart();
-  explicit MultiPart(XString p_name,XString p_contentType);
+  explicit MultiPart(const XString& p_name,const XString& p_contentType);
 
   // SETTERS
-  void    SetName(XString p_name)             { m_name             = p_name;    }
-  void    SetData(XString p_data)             { m_data             = p_data;    }
-  void    SetContentType(XString p_type)      { m_contentType      = p_type;    }
-  void    SetCharset(XString p_charset)       { m_charset          = p_charset; }
-  void    SetBoundary(XString p_boundary)     { m_boundary         = p_boundary;}
-  void    SetFileName(XString p_file)         { m_shortFilename    = p_file;    }
-  void    SetDateCreation(XString p_date)     { m_creationDate     = p_date;    }
-  void    SetDateModification(XString p_date) { m_modificationDate = p_date;    }
-  void    SetDateRead(XString p_date)         { m_readDate         = p_date;    }
-  void    SetSize(size_t p_size)              { m_size             = p_size;    }
+  void    SetName(const XString& p_name)             { m_name             = p_name;    }
+  void    SetData(const XString& p_data)             { m_data             = p_data;    }
+  void    SetContentType(const XString& p_type)      { m_contentType      = p_type;    }
+  void    SetCharset(const XString& p_charset)       { m_charset          = p_charset; }
+  void    SetBoundary(const XString& p_boundary)     { m_boundary         = p_boundary;}
+  void    SetFileName(const XString& p_file)         { m_shortFilename    = p_file;    }
+  void    SetDateCreation(const XString& p_date)     { m_creationDate     = p_date;    }
+  void    SetDateModification(const XString& p_date) { m_modificationDate = p_date;    }
+  void    SetDateRead(const XString& p_date)         { m_readDate         = p_date;    }
+  void    SetSize(size_t p_size)                     { m_size             = p_size;    }
   // Setting filename and reading the new access times
-  bool    SetFile(XString p_filename);
+  bool    SetFile(const XString& p_filename);
 
   // GETTERS
   XString GetName()             { return m_name;              }
@@ -87,12 +87,12 @@ public:
 
   // Functions
   bool    WriteFile();
-  bool    CheckBoundaryExists(XString p_boundary);
-  XString CreateHeader(XString p_boundary,bool p_extensions = false);
+  bool    CheckBoundaryExists(const XString& p_boundary);
+  XString CreateHeader(const XString& p_boundary,bool p_extensions = false);
   void    TrySettingFiletimes();
-  void    AddHeader(XString p_header,XString p_value);
-  XString GetHeader(XString p_header);
-  void    DelHeader(XString p_header);
+  void    AddHeader(const XString& p_header,const XString& p_value);
+  XString GetHeader(const XString& p_header);
+  void    DelHeader(const XString& p_header);
 
 private:
   XString   FileTimeToString  (PFILETIME p_filetime);
@@ -136,13 +136,13 @@ public:
   void         Reset();
   bool         SetFormDataType(FormDataType p_type);
   // Creating a MultiPartBuffer
-  MultiPart*   AddPart(XString p_name,XString p_contentType,XString p_data,XString p_charset = _T(""),bool p_conversion = false);
-  MultiPart*   AddFile(XString p_name,XString p_contentType,XString p_filename);
+  MultiPart*   AddPart(const XString& p_name,const XString& p_contentType,const XString& p_data,const XString& p_charset = _T(""),bool p_conversion = false);
+  MultiPart*   AddFile(const XString& p_name,const XString& p_contentType,const XString& p_filename);
   // Delete a designated part
-  bool         DeletePart(XString p_name);
+  bool         DeletePart(const XString& p_name);
   bool         DeletePart(const MultiPart* p_part);
   // Getting a part of the MultiPartBuffer
-  MultiPart*   GetPart(XString p_name);
+  MultiPart*   GetPart(const XString& p_name);
   MultiPart*   GetPart(int p_index);
   size_t       GetParts();
   FormDataType GetFormDataType();
@@ -152,12 +152,12 @@ public:
   // Functions for HTTPMessage
   XString      CalculateBoundary(XString p_special = _T("#"));
   XString      CalculateAcceptHeader();
-  bool         SetBoundary(XString p_boundary);
+  bool         SetBoundary(const XString& p_boundary);
   // Re-create from an existing (incoming!) buffer
-  bool         ParseBuffer(XString     p_contentType          // Content type including the 'boundary'
-                          ,FileBuffer* p_buffer               // Incoming buffer with body data
-                          ,bool        p_conversion = false   // Perform UTF-8 to internal character conversion
-                          ,bool        p_utf16      = false); // Incoming buffer is in UTF-16 format (rare!)
+  bool         ParseBuffer(const XString& p_contentType          // Content type including the 'boundary'
+                          ,FileBuffer*    p_buffer               // Incoming buffer with body data
+                          ,bool           p_conversion = false   // Perform UTF-8 to internal character conversion
+                          ,bool           p_utf16      = false); // Incoming buffer is in UTF-16 format (rare!)
 
   // File times & size extensions used in the Content-Disposition header
   // BEWARE: Some servers do not respect the file-times attributes
@@ -172,22 +172,22 @@ public:
 
 private:
   // Find which type of formdata we are receiving
-  FormDataType FindBufferType(XString p_contentType);
+  FormDataType FindBufferType(const XString& p_contentType);
   // Find the boundary in the content-type header
-  XString      FindBoundaryInContentType(XString p_contentType);
+  XString      FindBoundaryInContentType(const XString& p_contentType);
   // Parsing different types
-  bool         ParseBufferFormData(XString p_contentType,FileBuffer* p_buffer,bool p_conversion);
+  bool         ParseBufferFormData(const XString& p_contentType,FileBuffer* p_buffer,bool p_conversion);
   bool         ParseBufferUrlEncoded(FileBuffer* p_buffer);
   // Finding a new partial message
   void*        FindPartBuffer(uchar*& p_vinding,size_t& p_remaining,BYTE* p_boundary,unsigned p_boundaryLength);
   XString      GetLineFromBuffer(uchar*& p_begin,const uchar* p_end);
   bool         GetHeaderFromLine   (const XString& p_line,XString& p_header,XString& p_value);
-  XString      GetAttributeFromLine(const XString& p_line,XString p_name);
+  XString      GetAttributeFromLine(const XString& p_line,const XString& p_name);
   void         CalculateBinaryBoundary(XString p_boundary,BYTE*& p_binary,unsigned& p_length);
     // Adding a part from a raw buffer
   void         AddRawBufferPart(uchar* p_partialBegin,const uchar* p_partialEnd,bool p_conversion);
   // Check that name is in the ASCII range for a data part
-  bool         CheckName(XString p_name);
+  bool         CheckName(const XString& p_name);
 
   FormDataType m_type;                  // URL-encoded or form-data
   XString      m_boundary;              // Form-Data boundary string

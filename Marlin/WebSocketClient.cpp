@@ -31,14 +31,6 @@
 #include "HTTPError.h"
 #include "Base64.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
 #define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
@@ -50,7 +42,7 @@ static char THIS_FILE[] = __FILE__;
 //
 //////////////////////////////////////////////////////////////////////////
 
-WebSocketClient::WebSocketClient(XString p_uri)
+WebSocketClient::WebSocketClient(const XString& p_uri)
                 :WebSocket(p_uri)
 {
   LoadHTTPLibrary();
@@ -272,7 +264,7 @@ WebSocketClient::CloseSocket()
 
 // Close the socket with a closing frame
 bool 
-WebSocketClient::SendCloseSocket(USHORT p_code,XString p_reason)
+WebSocketClient::SendCloseSocket(USHORT p_code,const XString& p_reason)
 {
   // Already closed?
   if(!m_socket)
@@ -356,7 +348,7 @@ WebSocketClient::ReceiveCloseSocket()
       bool foundBom(false);
       TryConvertNarrowString(reason,received,_T(""),m_closing,foundBom);
 #else
-      m_closing = DecodeStringFromTheWire(XString(reason));
+      m_closing = DecodeStringFromTheWire(XString((LPCSTR)reason));
 #endif
       DETAILLOGV(_T("Closing WebSocket frame received [%d:%s]"),m_closingError,m_closing.GetString());
       WinHttpCloseHandle(m_socket);
@@ -438,7 +430,7 @@ WebSocketClient::SocketListener()
   {
     if(!m_reading)
     {
-      m_reading = new WSFrame;
+      m_reading = alloc_new WSFrame;
       m_reading->m_data = reinterpret_cast<BYTE*>(malloc((size_t)m_fragmentsize + WS_OVERHEAD));
     }
     // Happens on SocketClose from the server

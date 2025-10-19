@@ -2,8 +2,8 @@
 //
 // SourceFile: XMLRestriction.cpp
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -30,15 +30,7 @@
 #include <stdint.h>
 #include <regex>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
-XMLRestriction::XMLRestriction(XString p_name)
+XMLRestriction::XMLRestriction(const XString& p_name)
                :m_name(p_name)
 {
 }
@@ -46,7 +38,7 @@ XMLRestriction::XMLRestriction(XString p_name)
 // SETTING RESTRICTIONS
 
 void
-XMLRestriction::AddEnumeration(XString p_enum,XString p_displayValue /*=""*/)
+XMLRestriction::AddEnumeration(const XString& p_enum,const XString& p_displayValue /*=""*/)
 {
   if(!HasEnumeration(p_enum))
   {
@@ -55,7 +47,7 @@ XMLRestriction::AddEnumeration(XString p_enum,XString p_displayValue /*=""*/)
 }
 
 void
-XMLRestriction::AddMaxExclusive(XString p_max) 
+XMLRestriction::AddMaxExclusive(const XString& p_max)
 { 
   m_maxExclusive        = p_max; 
   m_maxExclusiveDouble  = p_max.GetString();
@@ -63,7 +55,7 @@ XMLRestriction::AddMaxExclusive(XString p_max)
 }
 
 void
-XMLRestriction::AddMaxInclusive(XString p_max)
+XMLRestriction::AddMaxInclusive(const XString& p_max)
 { 
   m_maxInclusive        = p_max; 
   m_maxInclusiveDouble  = p_max;
@@ -71,7 +63,7 @@ XMLRestriction::AddMaxInclusive(XString p_max)
 }
 
 void
-XMLRestriction::AddMinExclusive(XString p_max)
+XMLRestriction::AddMinExclusive(const XString& p_max)
 { 
   m_minExclusive        = p_max; 
   m_minExclusiveDouble  = p_max;
@@ -79,7 +71,7 @@ XMLRestriction::AddMinExclusive(XString p_max)
 }
 
 void
-XMLRestriction::AddMinInclusive(XString p_max)
+XMLRestriction::AddMinInclusive(const XString& p_max)
 { 
   m_minInclusive        = p_max; 
   m_minInclusiveDouble  = p_max;
@@ -87,7 +79,7 @@ XMLRestriction::AddMinInclusive(XString p_max)
 }
 
 void
-XMLRestriction::AddMinOccurs(XString p_min)
+XMLRestriction::AddMinOccurs(const XString& p_min)
 {
   m_minOccurs = (unsigned) _ttoll(p_min);
   if(m_minOccurs > m_maxOccurs)
@@ -97,7 +89,7 @@ XMLRestriction::AddMinOccurs(XString p_min)
 }
 
 void
-XMLRestriction::AddMaxOccurs(XString p_max)
+XMLRestriction::AddMaxOccurs(const XString& p_max)
 {
   if(p_max.Compare(_T("unbounded")) == 0)
   {
@@ -112,13 +104,13 @@ XMLRestriction::AddMaxOccurs(XString p_max)
 }
 
 bool 
-XMLRestriction::HasEnumeration(XString p_enum)
+XMLRestriction::HasEnumeration(const XString& p_enum)
 {
   return m_enums.find(p_enum) != m_enums.end();
 }
 
 XString 
-XMLRestriction::GiveDisplayValue(XString p_enum)
+XMLRestriction::GiveDisplayValue(const XString& p_enum)
 {
   XmlEnums::iterator it = m_enums.find(p_enum);
   if(it != m_enums.end())
@@ -132,7 +124,7 @@ XMLRestriction::GiveDisplayValue(XString p_enum)
 // <!--datatype has values: M (='Male customer') / F (='Female customer') / U (='Unknown')-->
 // <!--datatype has values: M / F / U-->
 XString
-XMLRestriction::PrintEnumRestriction(XString p_name)
+XMLRestriction::PrintEnumRestriction(const XString& p_name)
 {
   bool print = false;
   XString restriction;
@@ -157,7 +149,7 @@ XMLRestriction::PrintEnumRestriction(XString p_name)
 
 // <!--maxLength: 20-->
 XString
-XMLRestriction::PrintIntegerRestriction(XString p_name,int p_value)
+XMLRestriction::PrintIntegerRestriction(const XString& p_name,int p_value)
 {
   XString restriction;
   restriction.Format(_T("<!--%s: %d-->"),p_name.GetString(),p_value);
@@ -166,7 +158,7 @@ XMLRestriction::PrintIntegerRestriction(XString p_name,int p_value)
 
 // <!--pattern: ab*-->
 XString
-XMLRestriction::PrintStringRestriction(XString p_name,XString p_value)
+XMLRestriction::PrintStringRestriction(const XString& p_name,const XString& p_value)
 {
   XString restriction;
   restriction.Format(_T("<!--%s: %s-->"),p_name.GetString(),p_value.GetString());
@@ -189,7 +181,7 @@ XMLRestriction::PrintSpaceRestriction()
 }
 
 XString
-XMLRestriction::PrintRestriction(XString p_name)
+XMLRestriction::PrintRestriction(const XString& p_name)
 {
   XString restriction;
 
@@ -224,7 +216,7 @@ XMLRestriction::PrintRestriction(XString p_name)
 // If whitespace not given and it's a string -> preserve
 // Otherwise: use whitespace
 XString 
-XMLRestriction::HandleWhitespace(XmlDataType p_type,XString p_value)
+XMLRestriction::HandleWhitespace(XmlDataType p_type,XString& p_value)
 {
   if(m_whiteSpace == 0)
   {
@@ -271,7 +263,7 @@ XMLRestriction::HandleWhitespace(XmlDataType p_type,XString p_value)
 //////////////////////////////////////////////////////////////////////////
 
 XMLRestriction* 
-XMLRestrictions::FindRestriction(XString p_name)
+XMLRestrictions::FindRestriction(const XString& p_name)
 {
   AllRestrictions::iterator it = m_restrictions.find(p_name);
   if(it != m_restrictions.end())
@@ -282,7 +274,7 @@ XMLRestrictions::FindRestriction(XString p_name)
 }
 
 XMLRestriction* 
-XMLRestrictions::AddRestriction(XString p_name)
+XMLRestrictions::AddRestriction(const XString& p_name)
 {
   XMLRestriction* res = FindRestriction(p_name);
   if(res == nullptr)
@@ -297,7 +289,7 @@ XMLRestrictions::AddRestriction(XString p_name)
 }
 
 void
-XMLRestrictions::AddEnumeration(XString p_name,XString p_enum,XString p_displayValue /*=""*/)
+XMLRestrictions::AddEnumeration(const XString& p_name,const XString& p_enum,const XString& p_displayValue /*=""*/)
 {
   XMLRestriction* res = FindRestriction(p_name);
   if(res)
@@ -307,7 +299,7 @@ XMLRestrictions::AddEnumeration(XString p_name,XString p_enum,XString p_displayV
 }
 
 bool            
-XMLRestrictions::HasEnumeration(XString p_name,XString p_enum)
+XMLRestrictions::HasEnumeration(const XString& p_name,const XString& p_enum)
 {
   XMLRestriction* res = FindRestriction(p_name);
   if(res)
@@ -318,7 +310,7 @@ XMLRestrictions::HasEnumeration(XString p_name,XString p_enum)
 }
 
 XString
-XMLRestrictions::GiveDisplayValue(XString p_name,XString /*p_enum*/)
+XMLRestrictions::GiveDisplayValue(const XString& p_name,const XString& /*p_enum*/)
 {
   XMLRestriction* res = FindRestriction(p_name);
   if(res)
@@ -336,7 +328,7 @@ XMLRestrictions::GiveDisplayValue(XString p_name,XString /*p_enum*/)
 
 // Check ranges max/min exclusive/inclusive
 XString   
-XMLRestriction::CheckRangeFloat(XString p_value)
+XMLRestriction::CheckRangeFloat(const XString& p_value)
 {
   double d = _ttof(p_value);
   if(errno == ERANGE)
@@ -377,7 +369,7 @@ XMLRestriction::CheckRangeFloat(XString p_value)
 }
 
 XString   
-XMLRestriction::CheckRangeDecimal(XString p_value)
+XMLRestriction::CheckRangeDecimal(const XString& p_value)
 {
   _set_errno(0);
   INT64 value = _ttoi64(p_value.GetString());
@@ -418,7 +410,7 @@ XMLRestriction::CheckRangeDecimal(XString p_value)
 }
 
 XString
-XMLRestriction::CheckRangeTime(XString p_time)
+XMLRestriction::CheckRangeTime(const XString& p_time)
 {
   if(!m_minInclusive.IsEmpty())
   {
@@ -448,7 +440,7 @@ XMLRestriction::CheckRangeTime(XString p_time)
 }
 
 XString
-XMLRestriction::CheckRangeDate(XString p_date)
+XMLRestriction::CheckRangeDate(const XString& p_date)
 {
   if(!m_minInclusive.IsEmpty())
   {
@@ -478,7 +470,7 @@ XMLRestriction::CheckRangeDate(XString p_date)
 }
 
 XString   
-XMLRestriction::CheckRangeStamp(XString p_timestamp)
+XMLRestriction::CheckRangeStamp(const XString& p_timestamp)
 {
   if(!m_minInclusive.IsEmpty())
   {
@@ -508,7 +500,7 @@ XMLRestriction::CheckRangeStamp(XString p_timestamp)
 }
 
 XString
-XMLRestriction::CheckRangeDuration(XString p_duration)
+XMLRestriction::CheckRangeDuration(const XString& p_duration)
 {
   if(!m_minInclusive.IsEmpty())
   {
@@ -538,7 +530,7 @@ XMLRestriction::CheckRangeDuration(XString p_duration)
 }
 
 XString   
-XMLRestriction::CheckRangeGregYM(XString p_yearmonth)
+XMLRestriction::CheckRangeGregYM(const XString& p_yearmonth)
 {
   if(!m_minInclusive.IsEmpty())
   {
@@ -568,7 +560,7 @@ XMLRestriction::CheckRangeGregYM(XString p_yearmonth)
 }
 
 XString
-XMLRestriction::CheckRangeGregMD(XString p_monthday)
+XMLRestriction::CheckRangeGregMD(const XString& p_monthday)
 {
   if(!m_minInclusive.IsEmpty())
   {
@@ -598,20 +590,21 @@ XMLRestriction::CheckRangeGregMD(XString p_monthday)
 }
 
 XString
-XMLRestriction::CheckAnyURI(XString p_value)
+XMLRestriction::CheckAnyURI(const XString& p_value)
 {
   XString result;
   CrackedURL url(p_value);
   if(!url.Valid())
   {
-    result = _T("Not a valid URI: ") + p_value;
+    result  = _T("Not a valid URI: ");
+    result += p_value;
   }
   return result;
 }
 
 // Integer of an arbitrary length
 XString 
-XMLRestriction::CheckInteger(XString p_value)
+XMLRestriction::CheckInteger(const XString& p_value)
 {
   XString value(p_value);
   value.Trim();
@@ -625,25 +618,26 @@ XMLRestriction::CheckInteger(XString p_value)
   {
     if(!isdigit(value.GetAt(ind)))
     {
-      return _T("Not an integer, but: ") + p_value;
+      return XString(_T("Not an integer, but: ")) + p_value;
     }
   }
   return CheckRangeDecimal(p_value);
 }
 
 XString
-XMLRestriction::CheckBoolean(XString p_value)
+XMLRestriction::CheckBoolean(const XString& p_value)
 {
-  p_value.Trim();
   if(!p_value.IsEmpty())
   {
-    if(p_value.CompareNoCase(_T("true")) &&
-       p_value.CompareNoCase(_T("false")) &&
-       p_value.CompareNoCase(_T("1")) &&
-       p_value.CompareNoCase(_T("0")))
+    XString value(p_value);
+    value.Trim();
+    if(value.CompareNoCase(_T("true")) &&
+       value.CompareNoCase(_T("false")) &&
+       value.CompareNoCase(_T("1")) &&
+       value.CompareNoCase(_T("0")))
     {
       XString details(_T("Not a boolean, but: "));
-      details += p_value;
+      details += value;
       return details;
     }
   }
@@ -651,12 +645,12 @@ XMLRestriction::CheckBoolean(XString p_value)
 }
 
 XString
-XMLRestriction::CheckBase64(XString p_value)
+XMLRestriction::CheckBase64(const XString& p_value)
 {
   int len = p_value.GetLength();
   for(int ind = 0; ind < len; ++ind)
   {
-    _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
+    _TUCHAR ch = p_value[ind];
     switch(ch)
     {
       case  9:      // Tab
@@ -684,43 +678,43 @@ XMLRestriction::CheckBase64(XString p_value)
 
 // Number can be: nnnnn[.nnnnnn][[+|-]{E|e}nnn]
 XString
-XMLRestriction::CheckNumber(XString p_value,bool p_specials)
+XMLRestriction::CheckNumber(const XString& p_value,bool p_specials)
 {
   XString result;
-  p_value.TrimLeft('-');
-  p_value.TrimLeft('+');
+  XString value(p_value);
+  value.TrimLeft('-');
+  value.TrimLeft('+');
 
   if(p_specials)
   {
-    if(p_value == _T("INF") || p_value == _T("NaN"))
+    if(value == _T("INF") || value == _T("NaN"))
     {
       return result;
     }
   }
-  for(int ind = 0; ind < p_value.GetLength(); ++ind)
+  for(int ind = 0; ind < value.GetLength(); ++ind)
   {
-    _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
+    _TUCHAR ch = (_TUCHAR) value.GetAt(ind);
     if(!isspace(ch) && !isdigit(ch) && ch != '.' && ch != '+' && ch != '-' && toupper(ch) != 'E')
     {
       result  = _T("Not a number: ");
-      result += p_value;
+      result += value;
       return result;
     }
   }
-  return CheckRangeFloat(p_value);
+  return CheckRangeFloat(value);
 }
 
 XString
-XMLRestriction::CheckDatePart(XString p_value)
+XMLRestriction::CheckDatePart(const XString& p_value)
 {
   XString result;
   int dateYear,dateMonth,dateDay;
 
-  p_value.Trim();
   int num = _stscanf_s(p_value,_T("%d-%d-%d"),&dateYear,&dateMonth,&dateDay);
   if(num != 3)
   {
-    result = _T("Not a date: ");
+    result  = _T("Not a date: ");
     result += p_value;
     return result;
   }
@@ -730,7 +724,8 @@ XMLRestriction::CheckDatePart(XString p_value)
        dateMonth < 1 || dateMonth > 12   ||
        dateDay   < 1 || dateDay   > 31    )
     {
-      result = _T("Date out of range: ") + p_value;
+      result  = _T("Date out of range: ");
+      result += p_value;
       return result;
     }
   }
@@ -738,7 +733,7 @@ XMLRestriction::CheckDatePart(XString p_value)
 }
 
 XString
-XMLRestriction::CheckTimeZone(XString p_value)
+XMLRestriction::CheckTimeZone(const XString& p_value)
 {
   XString result;
   int pos = p_value.Find(':');
@@ -750,13 +745,13 @@ XMLRestriction::CheckTimeZone(XString p_value)
     int num = _stscanf_s(p_value,_T("%d:%d"),&hours,&minutes);
     if(num != 2)
     {
-      result = _T("Not a timezone hour:min but: ") + p_value;
+      result = XString(_T("Not a timezone hour:min but: ")) + p_value;
     }
     else
     {
       if(hours > 14 || minutes >= 60)
       {
-        result = _T("Timezone out of range: ") + p_value;
+        result = XString(_T("Timezone out of range: ") )+ p_value;
       }
     }
   }
@@ -765,13 +760,13 @@ XMLRestriction::CheckTimeZone(XString p_value)
     int num = _stscanf_s(p_value,_T("%d"),&hours);
     if(num != 1)
     {
-      result = _T("Not a timezone hour but: ") + p_value;
+      result = XString(_T("Not a timezone hour but: ")) + p_value;
     }
     else
     {
       if(hours > 14)
       {
-        result = _T("Timezone out of range: ") + p_value;
+        result = XString(_T("Timezone out of range: ")) + p_value;
       }
     }
   }
@@ -781,7 +776,7 @@ XMLRestriction::CheckTimeZone(XString p_value)
 // YYYY-MM-DD[[+/-]nn[:nn]]
 // YYYY-MM-DD[Znn[:nn]]
 XString
-XMLRestriction::CheckDate(XString p_value)
+XMLRestriction::CheckDate(const XString& p_value)
 {
   XString result;
   int dash1 = p_value.Find('-');
@@ -790,7 +785,7 @@ XMLRestriction::CheckDate(XString p_value)
   // Must have a date part
   if(dash1 < 0 || dash2 < 0)
   {
-    return _T("Not a date: ") + p_value;
+    return XString(_T("Not a date: ")) + p_value;
   }
 
   int tz1 = p_value.Find('Z',dash2 + 1);
@@ -814,26 +809,25 @@ XMLRestriction::CheckDate(XString p_value)
   }
   else
   {
-    result = _T("Invalid date: ") + p_value;
+    result = XString(_T("Invalid date: ")) + p_value;
   }
   return result;
 }
 
 // YYYY-MM-DDThh:mm:ss
 XString
-XMLRestriction::CheckStampPart(XString p_value)
+XMLRestriction::CheckStampPart(const XString& p_value)
 {
   XString result;
   int dateYear,dateMonth,dateDay;
   int timeHour,timeMin,timeSec;
 
-  p_value.Trim();
   int num = _stscanf_s(p_value,_T("%d-%d-%dT%d:%d:%d")
                       ,&dateYear,&dateMonth,&dateDay
                       ,&timeHour,&timeMin,  &timeSec);
   if(num != 6)
   {
-    result = _T("Not a dateTime: ") + p_value;
+    result = XString(_T("Not a dateTime: ")) + p_value;
     return result;
   }
   else if(dateYear  < 0 || dateYear  > 9999 ||
@@ -843,7 +837,7 @@ XMLRestriction::CheckStampPart(XString p_value)
           timeMin   < 0 || timeMin   >   59 ||
           timeSec   < 0 || timeSec   >   60  )
   {
-    result = _T("DateTime out of range: ") + p_value;
+    result = XString(_T("DateTime out of range: ")) + p_value;
     return result;
   }
   return CheckRangeStamp(p_value);
@@ -852,7 +846,7 @@ XMLRestriction::CheckStampPart(XString p_value)
 // YYYY-MM-DDThh:mm:ss[Znn[:nn]]
 // YYYY-MM-DDThh:mm:ss[[+/-]nn[:nn]]
 XString
-XMLRestriction::CheckDateTime(XString p_value,bool p_explicit)
+XMLRestriction::CheckDateTime(const XString& p_value,bool p_explicit)
 {
   XString result;
   int pos1 = p_value.Find('Z');
@@ -874,7 +868,7 @@ XMLRestriction::CheckDateTime(XString p_value,bool p_explicit)
   {
     if(p_explicit)
     {
-      result = _T("dayTimeStamp missing an explicit timezone: ") + p_value;
+      result = XString(_T("dayTimeStamp missing an explicit timezone: ")) + p_value;
     }
     else
     {
@@ -885,7 +879,7 @@ XMLRestriction::CheckDateTime(XString p_value,bool p_explicit)
 }
 
 XString
-XMLRestriction::CheckTimePart(XString p_value)
+XMLRestriction::CheckTimePart(const XString& p_value)
 {
   XString result;
   int hour = 0;
@@ -895,14 +889,14 @@ XMLRestriction::CheckTimePart(XString p_value)
   int num = _stscanf_s(p_value,_T("%d:%d:%d"),&hour,&min,&sec);
   if(num != 3)
   {
-    result = _T("Not a time: ") + p_value;
+    result = XString(_T("Not a time: ")) + p_value;
     return result;
   }
   else if(hour < 0 || hour > 23 ||
           min  < 0 || min  > 59 ||
           sec  < 0 || sec  > 60)
   {
-    result = _T("time out of range: ") + p_value;
+    result = XString(_T("time out of range: ")) + p_value;
     return result;
   }
   return CheckRangeTime(p_value);
@@ -911,7 +905,7 @@ XMLRestriction::CheckTimePart(XString p_value)
 // HH:MM::SS[Znn[:nn]]
 // HH:MM::SS[[+/-]nn[:nn]]
 XString
-XMLRestriction::CheckTime(XString p_value)
+XMLRestriction::CheckTime(const XString& p_value)
 {
   XString result;
   int pos1 = p_value.Find('Z');
@@ -937,54 +931,57 @@ XMLRestriction::CheckTime(XString p_value)
 }
 
 XString
-XMLRestriction::CheckGregDay(XString p_value)
+XMLRestriction::CheckGregDay(const XString& p_value)
 {
-  p_value.Trim();
-  p_value.Trim('-'); // Up to 2 chars may appear
-  int num = _ttoi(p_value);
+  XString value(p_value);
+  value.Trim();
+  value.Trim('-'); // Up to 2 chars may appear
+  int num = _ttoi(value);
   XString result;
 
   if(num < 1 || num > 31)
   {
-    result = _T("Not a Gregorian day in month: ") + p_value;
+    result = XString(_T("Not a Gregorian day in month: ")) + value;
     return result;
   }
-  return CheckRangeDecimal(p_value);
+  return CheckRangeDecimal(value);
 }
 
 XString
-XMLRestriction::CheckGregMonth(XString p_value)
+XMLRestriction::CheckGregMonth(const XString& p_value)
 {
-  p_value.Trim();
-  p_value.Trim('-'); // Up to 2 chars may appear
-  int num = _ttoi(p_value);
+  XString value(p_value);
+  value.Trim();
+  value.Trim('-'); // Up to 2 chars may appear
+  int num = _ttoi(value);
   XString result;
 
   if(num < 1 || num > 12)
   {
-    result = _T("Not a Gregorian month in year: ") + p_value;
+    result = XString(_T("Not a Gregorian month in year: ")) + value;
     return result;
   }
-  return CheckRangeDecimal(p_value);
+  return CheckRangeDecimal(value);
 }
 
 XString
-XMLRestriction::CheckGregYear(XString p_value)
+XMLRestriction::CheckGregYear(const XString& p_value)
 {
-  p_value.Trim();
-  int num = _ttoi(p_value);
+  XString value(p_value);
+  value.Trim();
+  int num = _ttoi(value);
   XString result;
 
   if(num < 01 || num > 9999)
   {
-    result = _T("Not a Gregorian XML year: ") + p_value;
+    result = XString(_T("Not a Gregorian XML year: ")) + value;
     return result;
   }
-  return CheckRangeDecimal(p_value);
+  return CheckRangeDecimal(value);
 }
 
 XString
-XMLRestriction::CheckGregMD(XString p_value)
+XMLRestriction::CheckGregMD(const XString& p_value)
 {
   // Try to convert to GregorianMD at least once
   XMLGregorianMD greg(p_value);
@@ -992,7 +989,7 @@ XMLRestriction::CheckGregMD(XString p_value)
 }
 
 XString
-XMLRestriction::CheckGregYM(XString p_value)
+XMLRestriction::CheckGregYM(const XString& p_value)
 {
   // Try to convert to GregorianYM at least once
   XMLGregorianYM greg(p_value);
@@ -1001,7 +998,7 @@ XMLRestriction::CheckGregYM(XString p_value)
 }
 
 XString
-XMLRestriction::CheckHexBin(XString p_value)
+XMLRestriction::CheckHexBin(const XString& p_value)
 {
   for(int ind = 0; ind < p_value.GetLength(); ++ind)
   {
@@ -1015,7 +1012,7 @@ XMLRestriction::CheckHexBin(XString p_value)
 }
 
 XString
-XMLRestriction::CheckLong(XString p_value)
+XMLRestriction::CheckLong(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1023,7 +1020,7 @@ XMLRestriction::CheckLong(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < INT32_MIN || INT32_MAX < val)
     {
-      result = _T("Long int out of range: ") + p_value;
+      result = XString(_T("Long int out of range: ")) + p_value;
       return result;
     }
   }
@@ -1031,7 +1028,7 @@ XMLRestriction::CheckLong(XString p_value)
 }
 
 XString
-XMLRestriction::CheckShort(XString p_value)
+XMLRestriction::CheckShort(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1039,7 +1036,7 @@ XMLRestriction::CheckShort(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < INT16_MIN || INT16_MAX < val)
     {
-      result = _T("Short out of range: ") + p_value;
+      result = XString(_T("Short out of range: ")) + p_value;
       return result;
     }
   }
@@ -1047,7 +1044,7 @@ XMLRestriction::CheckShort(XString p_value)
 }
 
 XString
-XMLRestriction::CheckByte(XString p_value)
+XMLRestriction::CheckByte(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1055,7 +1052,7 @@ XMLRestriction::CheckByte(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < INT8_MIN || INT8_MAX < val)
     {
-      result = _T("Byte out of range: ") + p_value;
+      result = XString(_T("Byte out of range: ")) + p_value;
       return result;
     }
   }
@@ -1063,7 +1060,7 @@ XMLRestriction::CheckByte(XString p_value)
 }
 
 XString
-XMLRestriction::CheckNNegInt(XString p_value)
+XMLRestriction::CheckNNegInt(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1071,7 +1068,7 @@ XMLRestriction::CheckNNegInt(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < 0 || INT32_MAX < val)
     {
-      result = _T("nonNegativeInteger out of range: ") + p_value;
+      result = XString(_T("nonNegativeInteger out of range: ")) + p_value;
       return result;
     }
   }
@@ -1079,7 +1076,7 @@ XMLRestriction::CheckNNegInt(XString p_value)
 }
 
 XString
-XMLRestriction::CheckPosInt(XString p_value)
+XMLRestriction::CheckPosInt(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1087,7 +1084,7 @@ XMLRestriction::CheckPosInt(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val <= 0 || INT32_MAX < val)
     {
-      result = _T("positiveInteger out of range: ") + p_value;
+      result = XString(_T("positiveInteger out of range: ")) + p_value;
       return result;
     }
   }
@@ -1095,7 +1092,7 @@ XMLRestriction::CheckPosInt(XString p_value)
 }
 
 XString
-XMLRestriction::CheckUnsLong(XString p_value)
+XMLRestriction::CheckUnsLong(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1103,7 +1100,7 @@ XMLRestriction::CheckUnsLong(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < 0 || UINT32_MAX < val)
     {
-      result = _T("unsignedLong / unsignedInt out of range: ") + p_value;
+      result = XString(_T("unsignedLong / unsignedInt out of range: ")) + p_value;
       return result;
     }
   }
@@ -1111,7 +1108,7 @@ XMLRestriction::CheckUnsLong(XString p_value)
 }
 
 XString
-XMLRestriction::CheckUnsShort(XString p_value)
+XMLRestriction::CheckUnsShort(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1119,7 +1116,7 @@ XMLRestriction::CheckUnsShort(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < 0 || UINT16_MAX < val)
     {
-      result = _T("unsignedShort out of range: ") + p_value;
+      result = XString(_T("unsignedShort out of range: ")) + p_value;
       return result;
     }
   }
@@ -1127,7 +1124,7 @@ XMLRestriction::CheckUnsShort(XString p_value)
 }
 
 XString
-XMLRestriction::CheckUnsByte(XString p_value)
+XMLRestriction::CheckUnsByte(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1135,7 +1132,7 @@ XMLRestriction::CheckUnsByte(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < 0 || UINT8_MAX < val)
     {
-      result = _T("unsignedByte out of range: ") + p_value;
+      result = XString(_T("unsignedByte out of range: ")) + p_value;
       return result;
     }
   }
@@ -1143,7 +1140,7 @@ XMLRestriction::CheckUnsByte(XString p_value)
 }
 
 XString
-XMLRestriction::CheckNonPosInt(XString p_value)
+XMLRestriction::CheckNonPosInt(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1151,7 +1148,7 @@ XMLRestriction::CheckNonPosInt(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < INT32_MIN || 0 < val)
     {
-      result = _T("nonPositiveInteger out of range: ") + p_value;
+      result = XString(_T("nonPositiveInteger out of range: ")) + p_value;
       return result;
     }
   }
@@ -1159,7 +1156,7 @@ XMLRestriction::CheckNonPosInt(XString p_value)
 }
 
 XString
-XMLRestriction::CheckNegInt(XString p_value)
+XMLRestriction::CheckNegInt(const XString& p_value)
 {
   XString result = CheckInteger(p_value);
   if(result.IsEmpty())
@@ -1167,7 +1164,7 @@ XMLRestriction::CheckNegInt(XString p_value)
     INT64 val = _ttoi64(p_value);
     if(val < INT32_MIN || 0 <= val)
     {
-      result = _T("negativeInteger out of range: ") + p_value;
+      result = XString(_T("negativeInteger out of range: ")) + p_value;
       return result;
     }
   }
@@ -1175,7 +1172,7 @@ XMLRestriction::CheckNegInt(XString p_value)
 }
 
 XString   
-XMLRestriction::CheckNormal(XString p_value)
+XMLRestriction::CheckNormal(const XString& p_value)
 {
   XString result;
 
@@ -1184,7 +1181,7 @@ XMLRestriction::CheckNormal(XString p_value)
     _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
     if(ch == '\r' || ch == '\n' || ch == '\t')
     {
-      result = _T("normalizedString contains red space: ") + p_value;
+      result = XString(_T("normalizedString contains red space: ")) + p_value;
       return result;
     }
   }
@@ -1192,7 +1189,7 @@ XMLRestriction::CheckNormal(XString p_value)
 }
 
 XString
-XMLRestriction::CheckToken(XString p_value)
+XMLRestriction::CheckToken(const XString& p_value)
 {
   XString result = CheckNormal(p_value);
 
@@ -1200,18 +1197,18 @@ XMLRestriction::CheckToken(XString p_value)
   {
     if(p_value.Left(1) == _T(" ") || p_value.Right(1) == _T(" "))
     {
-      result = _T("token cannot start or end with a space: ") + p_value;
+      result = XString(_T("token cannot start or end with a space: ")) + p_value;
     }
     else if(p_value.Find(_T("  ")) >= 0)
     {
-      result = _T("token cannot contain separators larger than a space: ") + p_value;
+      result = XString(_T("token cannot contain separators larger than a space: ")) + p_value;
     }
   }
   return result;
 }
 
 XString   
-XMLRestriction::CheckNMTOKEN(XString p_value)
+XMLRestriction::CheckNMTOKEN(const XString& p_value)
 {
   XString result = CheckToken(p_value);
 
@@ -1222,7 +1219,7 @@ XMLRestriction::CheckNMTOKEN(XString p_value)
       _TUCHAR ch = (_TUCHAR) p_value.GetAt(ind);
       if(!isalnum(ch) && ch != ':' && ch != '-' && ch != '.' && ch != '_' && ch < 128)
       {
-        result = _T("NMTOKEN with illegal characters: ") + p_value;
+        result = XString(_T("NMTOKEN with illegal characters: ")) + p_value;
       }
     }
   }
@@ -1230,7 +1227,7 @@ XMLRestriction::CheckNMTOKEN(XString p_value)
 }
 
 XString   
-XMLRestriction::CheckName(XString p_value)
+XMLRestriction::CheckName(const XString& p_value)
 {
   XString result = CheckNMTOKEN(p_value);
   if(result.IsEmpty())
@@ -1238,21 +1235,21 @@ XMLRestriction::CheckName(XString p_value)
     _TUCHAR ch = (_TUCHAR) p_value.GetAt(0);
     if(ch != ':' && !isalpha(ch) && ch != '_' && ch < 128)
     {
-      result = _T("Name should begin with a name-start-character: ") + p_value;
+      result = XString(_T("Name should begin with a name-start-character: ")) + p_value;
     }
   }
   return result;
 }
 
 XString   
-XMLRestriction::CheckNCName(XString p_value)
+XMLRestriction::CheckNCName(const XString& p_value)
 {
   XString result = CheckName(p_value);
   if(result.IsEmpty())
   {
     if(p_value.Find(':') >= 0)
     {
-      result = _T("NCName cannot contain a colon: ") + p_value;
+      result = XString(_T("NCName cannot contain a colon: ")) + p_value;
     }
   }
   return result;
@@ -1260,7 +1257,7 @@ XMLRestriction::CheckNCName(XString p_value)
 
 // Check "name:name" -> Qualified name
 XString   
-XMLRestriction::CheckQName(XString p_value)
+XMLRestriction::CheckQName(const XString& p_value)
 {
   XString result;
   int pos = p_value.Find(':');
@@ -1272,7 +1269,7 @@ XMLRestriction::CheckQName(XString p_value)
   int pos2 = p_value.Find(':',pos + 1);
   if(pos2 > pos)
   {
-    result = _T("QName cannot have more than one colon: ") + p_value;
+    result = XString(_T("QName cannot have more than one colon: ")) + p_value;
   }
   else
   {
@@ -1289,63 +1286,65 @@ XMLRestriction::CheckQName(XString p_value)
 }
 
 XString   
-XMLRestriction::CheckNMTOKENS(XString p_value)
+XMLRestriction::CheckNMTOKENS(const XString& p_value)
 {
   XString result;
 
   if(p_value.Find(_T("  ")) >= 0)
   {
-    return _T("NMTOKENS contains seperators larger than a space: ") + p_value;
+    return XString(_T("NMTOKENS contains seperators larger than a space: ")) + p_value;
   }
 
-  p_value.Trim();
-  int pos = p_value.Find(' ');
+  XString value(p_value);
+  value.Trim();
+  int pos = value.Find(' ');
 
   while(pos > 0)
   {
-    XString token = p_value.Left(pos);
-    p_value = p_value.Mid(pos + 1);
+    XString token = value.Left(pos);
+    value = value.Mid(pos + 1);
 
     result = CheckNMTOKEN(token);
     if(!result.IsEmpty())
     {
-      result = _T("NMTOKENS: ") + result;
+      result = XString(_T("NMTOKENS: ")) + result;
       return result;
     }
     // Next token
-    pos = p_value.Find(' ');
+    pos = value.Find(' ');
   }
-  return CheckNMTOKEN(p_value);
+  return CheckNMTOKEN(value);
 }
 
 XString
-XMLRestriction::CheckNames(XString p_value)
+XMLRestriction::CheckNames(const XString& p_value)
 {
   XString result;
 
   if(p_value.Find(_T("  ")) >= 0)
   {
-    return _T("ENTITIES/IDREFS contains seperators larger than a space: ") + p_value;
+    return XString(_T("ENTITIES/IDREFS contains seperators larger than a space: ")) + p_value;
   }
 
-  p_value.Trim();
-  int pos = p_value.Find(' ');
+  XString value(p_value);
+  value.Trim();
+  int pos = value.Find(' ');
 
   while(pos > 0)
   {
-    XString token = p_value.Left(pos);
-    p_value = p_value.Mid(pos + 1);
+    XString token = value.Left(pos);
+    value = value.Mid(pos + 1);
 
     result = CheckName(token);
     if(!result.IsEmpty())
     {
-      result = _T("ENTITIES/IDREFS: ") + result;
+      result = XString(_T("ENTITIES/IDREFS: ")) + result;
       return result;
     }
     // Next token
-    pos = p_value.Find(' ');
+    pos = value.Find(' ');
   }
-  return CheckName(p_value);
+  return CheckName(value);
 }
 
 // [-] P nY[nM[nD]]  [time part]
@@ -1355,7 +1354,7 @@ XMLRestriction::CheckNames(XString p_value)
 // [-] P T nM[nS[.S]]
 // [-] P T nS[.S]
 XString
-XMLRestriction::CheckDuration(XString p_value,int& p_type)
+XMLRestriction::CheckDuration(const XString& p_value,int& p_type)
 {
   bool  didTime     = false;
   int   value       = 0;
@@ -1397,7 +1396,7 @@ XMLRestriction::CheckDuration(XString p_value,int& p_type)
                 break;
       case 'S': break;
       default:  // Illegal string, leave interval at NULL
-                return _T("Illegal field markers in duration: ") + p_value;
+                return XString(_T("Illegal field markers in duration: ")) + p_value;
     }
     // Getting first/last marker
     lastMarker = marker;
@@ -1425,65 +1424,67 @@ XMLRestriction::CheckDuration(XString p_value,int& p_type)
   {
     // Beware: XML duration has combinations that are NOT compatible
     // with the SQL definition of an interval, like Month-to-Day
-    return _T("duration has incompatible field values: ") + p_value;
+    return XString(_T("duration has incompatible field values: ")) + p_value;
   }
   return CheckRangeDuration(p_value);
 }
 
 bool
-XMLRestriction::ScanDurationValue(XString& p_duration
+XMLRestriction::ScanDurationValue(const XString& p_duration
                                  ,int&     p_value
                                  ,int&     p_fraction
                                  ,TCHAR&   p_marker
                                  ,bool&    p_didTime)
 {
+  XString duration(p_duration);
+
   // Reset values
   p_value  = 0;
   p_marker = 0;
   bool found = false;
 
   // Check for empty string
-  if(p_duration.IsEmpty())
+  if(duration.IsEmpty())
   {
     return false;
   }
 
   // Scan for beginning of time part
-  if(p_duration.GetAt(0) == 'T')
+  if(duration.GetAt(0) == 'T')
   {
-    p_didTime  = true;
-    p_duration = p_duration.Mid(1);
+    p_didTime = true;
+    duration  = duration.Mid(1);
   }
 
   // Scan a number
-  while(isdigit(p_duration.GetAt(0)))
+  while(isdigit(duration.GetAt(0)))
   {
     found = true;
     p_value *= 10;
-    p_value += p_duration.GetAt(0) - '0';
-    p_duration = p_duration.Mid(1);
+    p_value += duration.GetAt(0) - '0';
+    duration = duration.Mid(1);
   }
 
-  if(p_duration.GetAt(0) == '.')
+  if(duration.GetAt(0) == '.')
   {
-    p_duration = p_duration.Mid(1);
+    duration = duration.Mid(1);
 
     int frac = 9;
-    while(isdigit(p_duration.GetAt(0)))
+    while(isdigit(duration.GetAt(0)))
     {
       --frac;
       p_fraction *= 10;
-      p_fraction += p_duration.GetAt(0) - '0';
-      p_duration  = p_duration.Mid(1);
+      p_fraction += duration.GetAt(0) - '0';
+      duration    = duration.Mid(1);
     }
     p_fraction *= (int) pow(10,frac);
   }
 
   // Scan a marker
-  if(isalpha(p_duration.GetAt(0)))
+  if(isalpha(duration.GetAt(0)))
   {
-    p_marker   = (TCHAR) p_duration.GetAt(0);
-    p_duration = p_duration.Mid(1);
+    p_marker = (TCHAR) duration.GetAt(0);
+    duration = duration.Mid(1);
   }
 
   // True if both found, and fraction only found for seconds
@@ -1492,40 +1493,40 @@ XMLRestriction::ScanDurationValue(XString& p_duration
 }
 
 XString
-XMLRestriction::CheckDuration(XString p_value)
+XMLRestriction::CheckDuration(const XString& p_value)
 {
   int p_type = 0;
   return CheckDuration(p_value,p_type);
 }
 
 XString
-XMLRestriction::CheckYearMonth(XString p_value)
+XMLRestriction::CheckYearMonth(const XString& p_value)
 {
   int p_type = 0;
   XString result = CheckDuration(p_value,p_type);
   if(result.IsEmpty() && (p_type < 1 || 3 < p_type))
   {
-    result = _T("yearMonthDuration out of bounds: ") + p_value;
+    result = XString(_T("yearMonthDuration out of bounds: ")) + p_value;
     return result;
   }
   return CheckRangeDuration(p_value);
 }
 
 XString
-XMLRestriction::CheckDaySecond(XString p_value)
+XMLRestriction::CheckDaySecond(const XString& p_value)
 {
   int p_type = 0;
   XString result = CheckDuration(p_value,p_type);
   if(result.IsEmpty() && (p_type < 4 || 13 < p_type))
   {
-    result = _T("dayTimeDuration out of bounds: ") + p_value;
+    result = XString(_T("dayTimeDuration out of bounds: ")) + p_value;
     return result;
   }
   return CheckRangeDuration(p_value);
 }
 
 XString
-XMLRestriction::CheckDatatype(XmlDataType p_type,XString p_value)
+XMLRestriction::CheckDatatype(XmlDataType p_type,const XString& p_value)
 {
   XString result;
 
@@ -1595,7 +1596,7 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,XString p_value)
 }
 
 XString   
-XMLRestriction::CheckTotalDigits(XString p_value)
+XMLRestriction::CheckTotalDigits(const XString& p_value)
 {
   XString error;
   XString value(p_value);
@@ -1617,19 +1618,19 @@ XMLRestriction::CheckTotalDigits(XString p_value)
 }
 
 XString
-XMLRestriction::CheckFractionDigits(XString p_value)
+XMLRestriction::CheckFractionDigits(const XString& p_value)
 {
   XString error;
   int pos = p_value.Find('.');
   if(pos >= 0)
   {
     // Take fraction part
-    p_value = p_value.Mid(pos + 1);
+    XString value = p_value.Mid(pos + 1);
    
     int count = 0;
-    for(int ind = 0; ind < p_value.GetLength(); ++ind)
+    for(int ind = 0; ind < value.GetLength(); ++ind)
     {
-      if(isdigit(p_value.GetAt(pos)))
+      if(isdigit(value.GetAt(pos)))
       {
         ++count;
       }
@@ -1648,7 +1649,7 @@ XMLRestriction::CheckFractionDigits(XString p_value)
 }
 
 XString 
-XMLRestriction::CheckRestriction(XmlDataType p_type,XString p_value)
+XMLRestriction::CheckRestriction(XmlDataType p_type,const XString& p_value)
 {
   XString result;
 

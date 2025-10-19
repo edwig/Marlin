@@ -4,8 +4,8 @@
 //
 // Marlin Server: Internet server/client
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -28,15 +28,7 @@
 #include "pch.h"
 #include "ServiceQuality.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
-ServiceQuality::ServiceQuality(XString p_header)
+ServiceQuality::ServiceQuality(const XString& p_header)
 {
   ParseHeader(p_header);
 }
@@ -75,7 +67,7 @@ ServiceQuality::GetStringByPreference(int p_preference)
 
 // Find if a option is acceptable
 int
-ServiceQuality::GetPreferenceByName(XString p_name)
+ServiceQuality::GetPreferenceByName(const XString& p_name)
 {
   for(auto& opt : m_options)
   {
@@ -99,27 +91,28 @@ ServiceQuality::GetPreferenceByName(XString p_name)
 
 // Parsing the incoming header
 void 
-ServiceQuality::ParseHeader(XString p_header)
+ServiceQuality::ParseHeader(const XString& p_header)
 {
-  while(p_header.GetLength())
+  XString header(p_header);
+  while(header.GetLength())
   {
-    int pos = p_header.Find(',');
+    int pos = header.Find(',');
     if(pos > 0)
     {
-      XString option = p_header.Left(pos).Trim();
-      p_header = p_header.Mid(pos + 1).Trim();
+      XString option = header.Left(pos).Trim();
+      header = header.Mid(pos + 1).Trim();
       ParseOption(option);
     }
     else
     {
-      ParseOption(p_header);
+      ParseOption(header);
       return;
     }
   }
 }
 
 void 
-ServiceQuality::ParseOption(XString p_option)
+ServiceQuality::ParseOption(const XString& p_option)
 {
   QualityOption option;
   XString parameters;
@@ -134,7 +127,8 @@ ServiceQuality::ParseOption(XString p_option)
   }
   else
   {
-    option.m_field = p_option.Trim();
+    option.m_field = p_option;
+    option.m_field.Trim();
   }
   // Parse parameters
   while(parameters.GetLength())

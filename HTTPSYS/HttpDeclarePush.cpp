@@ -10,12 +10,6 @@
 #include "stdafx.h"
 #include "http_private.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 ULONG WINAPI
 HttpDeclarePush(_In_ HANDLE           RequestQueueHandle
                ,_In_ HTTP_REQUEST_ID  RequestId

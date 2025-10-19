@@ -108,7 +108,7 @@ URLRewriter::ProcessHTTPMessage(HTTPMessage* p_message)
     p_message->SetStatus(message.GetStatus());
     p_message->GetFileBuffer()->Reset();
    *p_message->GetFileBuffer() = *message.GetFileBuffer();
-   *p_message->GetHeaderMap()  = *message.GetHeaderMap();
+    *(const_cast<HeaderMap*>(p_message->GetHeaderMap())) = *message.GetHeaderMap();
   }
   else
   {
@@ -219,14 +219,14 @@ URLRewriter::InitRewriter(MarlinConfig& p_config)
 }
 
 bool
-URLRewriter::AddProtocolMapping(XString p_from,XString p_to)
+URLRewriter::AddProtocolMapping(const XString& p_from,const XString& p_to)
 {
   m_protocolMap[p_from] = p_to;
   return true;
 }
 
 bool
-URLRewriter::AddServerMapping(XString p_from,XString p_to)
+URLRewriter::AddServerMapping(const XString& p_from,const XString& p_to)
 {
   m_serverMap[p_from] = p_to;
   return true;
@@ -240,21 +240,21 @@ URLRewriter::AddPortMapping(int p_from,int p_to)
 }
 
 bool
-URLRewriter::AddPathMapping(XString p_from,XString p_to)
+URLRewriter::AddPathMapping(const XString& p_from,const XString& p_to)
 {
   m_pathMap[p_from] = p_to;
   return true;
 }
 
 bool
-URLRewriter::AddExtensionMapping(XString p_from,XString p_to)
+URLRewriter::AddExtensionMapping(const XString& p_from,const XString& p_to)
 {
   m_extensionMap[p_from] = p_to;
   return true;
 }
 
 bool
-URLRewriter::AddRouteMapping(int p_route,XString p_from,XString p_to)
+URLRewriter::AddRouteMapping(int p_route,const XString& p_from,const XString& p_to)
 {
   m_routeMap[p_route][p_from] = p_to;
   return true;

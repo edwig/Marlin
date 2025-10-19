@@ -32,14 +32,6 @@
 #include "AutoCritical.h"
 #include "Base64.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Logging via the client
 #define DETAILLOG1(text)        if(m_logfile) m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,false,text)
 #define DETAILLOGS(text,extra)  if(m_logfile) m_logfile->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true, text,extra)
@@ -61,7 +53,7 @@ LongPolling::~LongPolling()
 }
 
 bool
-LongPolling::StartLongPolling(XString p_session,XString p_cookie,XString p_secret)
+LongPolling::StartLongPolling(const XString& p_session,const XString& p_cookie,const XString& p_secret)
 {
   m_session = p_session;
   m_cookie  = p_cookie;
@@ -116,7 +108,7 @@ LongPolling::StopLongPolling()
 }
 
 void
-LongPolling::SetURL(XString p_url)
+LongPolling::SetURL(const XString& p_url)
 {
   m_url = p_url;
   DETAILLOGV(_T("Registered long-polling URL: %s"),m_url.GetString());
@@ -147,9 +139,9 @@ LongPolling::GetIsReceiving()
 }
 
 void 
-LongPolling::RegisterEvent(XString p_payload,EvtType p_type,int p_number /*=0*/)
+LongPolling::RegisterEvent(const XString& p_payload,EvtType p_type,int p_number /*=0*/)
 {
-  LTEvent* event = new LTEvent();
+  LTEvent* event = alloc_new LTEvent();
   event->m_payload = p_payload;
   event->m_type    = p_type;
   event->m_number  = p_number;

@@ -31,7 +31,7 @@
 class SiteFilterClientCertificate : public SiteFilter
 {
 public:
-  explicit SiteFilterClientCertificate(unsigned p_priority,XString p_name);
+  explicit SiteFilterClientCertificate(unsigned p_priority,const XString& p_name);
   virtual ~SiteFilterClientCertificate();
 
   // Handle the filter

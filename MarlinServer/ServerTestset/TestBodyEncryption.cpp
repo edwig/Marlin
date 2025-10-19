@@ -31,12 +31,6 @@
 #include <HTTPSite.h>
 #include <SiteHandlerSoap.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 2;
 
 class SiteHandlerSoapBodyEncrypt: public SiteHandlerSoap
@@ -163,7 +157,7 @@ TestMarlinServer::TestBodyEncryption()
     return error;
   }
 
-  site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapBodyEncrypt());
+  site->SetHandler(HTTPCommand::http_post,alloc_new SiteHandlerSoapBodyEncrypt());
 
   // Modify the standard settings for this site
   site->AddContentType(true,_T("pos"),_T("text/xml"));

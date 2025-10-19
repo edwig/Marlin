@@ -52,11 +52,11 @@ class PoolApp
 {
 public:
   bool LoadPoolApp(IHttpApplication* p_httpapp
-                  ,XString p_configPath
-                  ,XString p_webroot
-                  ,XString p_physical
-                  ,XString p_application
-                  ,XString p_appSite);
+                  ,const XString& p_configPath
+                  ,const XString& p_webroot
+                  ,const XString& p_physical
+                  ,const XString& p_application
+                  ,const XString& p_appSite);
 
   // DATA
   XString             m_appSite;
@@ -76,10 +76,10 @@ public:
   MinVersionFunc      m_minVersion      { nullptr };
 
 private:
-  bool    WebConfigSettings(XString p_configPath);
-  XString ConstructDLLLocation(XString p_rootpath, XString p_dllPath);
-  bool    CheckApplicationPresent(XString& p_dllPath, XString& p_dllName);
-  bool    AlreadyLoaded(XString p_path_to_dll);
+  bool    WebConfigSettings(const XString& p_configPath);
+  XString ConstructDLLLocation(const XString& p_rootpath,const XString& p_dllPath);
+  bool    CheckApplicationPresent(const XString& p_dllPath,const XString& p_dllName);
+  bool    AlreadyLoaded(const XString& p_path_to_dll);
 
   // Application settings
   XString m_dllPath;                // mostly "<webroot>\<application>\bin"

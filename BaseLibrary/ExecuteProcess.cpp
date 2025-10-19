@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -31,14 +31,6 @@
 #include "GetExePath.h"
 #include <io.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // STARTING AN OS PROGRAM
 //
 // Parameters                   Use of the parameter
@@ -63,15 +55,15 @@ static char THIS_FILE[] = __FILE__;
 // Negative value               ERROR -> Evaluate / process / show the "p_foutboodschap"
 //                              See the error codes in the *.h interface file!!
 //
-int ExecuteProcess(XString  p_program
-                  ,XString  p_arguments
-                  ,bool     p_currentdir
-                  ,XString& p_errormessage                  // Prefix IN, Full error OUT
-                  ,int      p_showWindow  /*= SW_HIDE */    // SW_SHOW / SW_HIDE etc
-                  ,bool     p_waitForExit /*= false   */
-                  ,bool     p_waitForIdle /*= false   */
-                  ,unsigned p_factor      /*= 1       */
-                  ,DWORD*   p_threadID    /*= NULL    */)
+int ExecuteProcess(const XString& p_program
+                  ,const XString& p_arguments
+                  ,bool           p_currentdir
+                  ,XString&       p_errormessage                  // Prefix IN, Full error OUT
+                  ,int            p_showWindow  /*= SW_HIDE */    // SW_SHOW / SW_HIDE etc
+                  ,bool           p_waitForExit /*= false   */
+                  ,bool           p_waitForIdle /*= false   */
+                  ,unsigned       p_factor      /*= 1       */
+                  ,DWORD*         p_threadID    /*= NULL    */)
 {
   XString program = p_program;
   if(p_currentdir)

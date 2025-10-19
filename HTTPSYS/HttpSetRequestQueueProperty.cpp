@@ -12,12 +12,6 @@
 #include "RequestQueue.h"
 #include "OpaqueHandles.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Marlin extensions to HTTP_SERVER_PROPERTY enumeration
 #define HttpServerIOCPPort 32
 #define HttpServerIOCPKey  33

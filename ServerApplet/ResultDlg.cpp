@@ -30,17 +30,11 @@
 #include "ResultDlg.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // ResultDlg dialog
 
 IMPLEMENT_DYNAMIC(ResultDlg, CDialog)
 
-ResultDlg::ResultDlg(CWnd* pParent,XString p_result)
+ResultDlg::ResultDlg(CWnd* pParent,CString p_result)
           :CDialog(ResultDlg::IDD, pParent)
           ,m_result(p_result)
 {

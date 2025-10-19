@@ -32,14 +32,6 @@
 #include <map>
 #include <io.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #define MODULE_NAME  _T("Application")
 #define MODULE_PATH  _T("Directory")
 #define MODULE_EMAIL _T("AdministratorEmail")
@@ -49,15 +41,15 @@ static char THIS_FILE[] = __FILE__;
 #define ERRORLOG(text)     SvcReportErrorEvent(0,false,_T(__FUNCTION__),text);
 
 // General error function
-void Unhealthy(XString p_error, HRESULT p_code);
+void Unhealthy(const XString& p_error,HRESULT p_code);
 
 bool
 PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
-                    ,XString p_configPath
-                    ,XString p_webroot
-                    ,XString p_physical
-                    ,XString p_application
-                    ,XString p_appSite)
+                    ,const XString& p_configPath
+                    ,const XString& p_webroot
+                    ,const XString& p_physical
+                    ,const XString& p_application
+                    ,const XString& p_appSite)
 {
   // Remember the original IIS Site name
   m_appSite = p_appSite;
@@ -201,7 +193,7 @@ PoolApp::LoadPoolApp(IHttpApplication* p_httpapp
 // If the given DLL begins with a '@' it is an absolute pathname
 // Otherwise it is relative to the directory the 'web.config' is in
 XString
-PoolApp::ConstructDLLLocation(XString p_rootpath, XString p_dllPath)
+PoolApp::ConstructDLLLocation(const XString& p_rootpath,const XString& p_dllPath)
 {
   extern bool g_IISDebugMode;
 
@@ -229,7 +221,7 @@ PoolApp::ConstructDLLLocation(XString p_rootpath, XString p_dllPath)
 
 // Checking for the presence of the application DLL
 bool
-PoolApp::CheckApplicationPresent(XString& p_dllPath,XString& p_dllName)
+PoolApp::CheckApplicationPresent(const XString& p_dllPath,const XString& p_dllName)
 {
   // Check if the directory exists
   if(_taccess(p_dllPath, 0) == -1)
@@ -247,10 +239,10 @@ PoolApp::CheckApplicationPresent(XString& p_dllPath,XString& p_dllName)
   }
 
   // Construct the complete path and check for presence
-  p_dllName = p_dllPath + p_dllName;
-  if(_taccess(p_dllPath, 4) == -1)
+  XString totalPath = p_dllPath + p_dllName;
+  if(_taccess(totalPath.c_str(),4) == -1)
   {
-    ERRORLOG(XString(_T("The application DLL cannot be read: ")) + p_dllName);
+    ERRORLOG(XString(_T("The application DLL cannot be read: ")) + totalPath);
     return false;
   }
   return true;
@@ -259,7 +251,7 @@ PoolApp::CheckApplicationPresent(XString& p_dllPath,XString& p_dllName)
 // See if we already did load the module
 // For some reason reference counting does not work from within IIS.
 bool
-PoolApp::AlreadyLoaded(XString p_path_to_dll)
+PoolApp::AlreadyLoaded(const XString& p_path_to_dll)
 {
   // All applications in the application pool
   extern std::map<int,PoolApp*> g_IISApplicationPool;
@@ -287,7 +279,7 @@ PoolApp::AlreadyLoaded(XString p_path_to_dll)
 }
 
 bool
-PoolApp::WebConfigSettings(XString p_configPath)
+PoolApp::WebConfigSettings(const XString& p_configPath)
 {
   IAppHostAdminManager* manager = g_IISServer->GetAdminManager();
 

@@ -59,12 +59,12 @@ public:
   virtual void AddRewriter(URLRewriter* p_rewriter);
 
   // Setters
-  bool    AddProtocolMapping (XString p_from,XString p_to);
-  bool    AddServerMapping   (XString p_from,XString p_to);
+  bool    AddProtocolMapping (const XString& p_from,const XString& p_to);
+  bool    AddServerMapping   (const XString& p_from,const XString& p_to);
   bool    AddPortMapping     (int p_from,int p_to);
-  bool    AddPathMapping     (XString p_from,XString p_to);
-  bool    AddExtensionMapping(XString p_from,XString p_to);
-  bool    AddRouteMapping    (int p_route,XString p_from,XString p_to);
+  bool    AddPathMapping     (const XString& p_from,const XString& p_to);
+  bool    AddExtensionMapping(const XString& p_from,const XString& p_to);
+  bool    AddRouteMapping    (int p_route,const XString& p_from,const XString& p_to);
   bool    AddDelRoute        (int p_route);
   bool    AddFromRoute       (int p_route);
 

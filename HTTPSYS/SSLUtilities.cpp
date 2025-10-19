@@ -19,12 +19,6 @@
 
 #pragma comment(lib, "Dnsapi.lib")
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Miscellaneous functions in support of SSL
 
 // Utility function to get the hostname of the host I am running on
@@ -120,7 +114,7 @@ void SetThreadName(LPCSTR threadName)
   SetThreadName(threadName, MAXDWORD);
 }
 
-bool HostNameMatches(XString HostName, LPWSTR pDNSName)
+bool HostNameMatches(const XString& HostName, LPWSTR pDNSName)
 {
   XString DNSName(pDNSName);
 
@@ -158,7 +152,7 @@ bool HostNameMatches(XString HostName, LPWSTR pDNSName)
 
 // See http://etutorials.org/Programming/secure+programming/Chapter+10.+Public+Key+Infrastructure/10.8+Adding+Hostname+Checking+to+Certificate+Verification/
 // for a pre C++11 version of this algorithm
-bool MatchCertHostName(PCCERT_CONTEXT pCertContext, LPCTSTR hostname) 
+bool MatchCertHostName(PCCERT_CONTEXT pCertContext,LPCTSTR hostname) 
 {
   /* Try SUBJECT_ALT_NAME2 first - it supersedes SUBJECT_ALT_NAME */
   auto szOID = szOID_SUBJECT_ALT_NAME2;
@@ -386,7 +380,7 @@ SECURITY_STATUS CertFindFromIssuerList(PCCERT_CONTEXT & pCertContext, SecPkgCont
   return Status;
 }
 
-HRESULT FindCertificateByName(PCCERT_CONTEXT & pCertContext, const LPCTSTR pszSubjectName)
+HRESULT FindCertificateByName(PCCERT_CONTEXT& pCertContext,const LPCTSTR pszSubjectName)
 {
   HCERTSTORE  hMyCertStore = NULL;
 
@@ -524,7 +518,7 @@ cleanup:
 }
 
 // Display a UI with the certificate info and also write it to the SSL_socket_logging output
-HRESULT ShowCertInfo(PCCERT_CONTEXT pCertContext, XString Title)
+HRESULT ShowCertInfo(PCCERT_CONTEXT pCertContext,const XString& Title)
 {
 	TCHAR pszNameString[256];
 	void*            pvData;
@@ -855,7 +849,7 @@ XString
 GetCertificateName(PCCERT_CONTEXT pCertContext)
 {
   XString certName;
-  auto good = CertGetNameString(pCertContext, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, NULL, certName.GetBuffer(128), certName.GetAllocLength() - 1);
+  auto good = CertGetNameString(pCertContext, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, NULL, certName.GetBufferSetLength(128), certName.GetAllocLength() - 1);
   certName.ReleaseBuffer();
   if (good)
   {
@@ -940,21 +934,23 @@ FindCertificateByThumbprint(PCCERT_CONTEXT& p_certContext,LPCTSTR p_store,BYTE* 
 
 // Used for authentication records
 bool
-SplitString(XString p_input,XString& p_output1,XString& p_output2,TCHAR p_separator)
+SplitString(const XString& p_input,XString& p_output1,XString& p_output2,TCHAR p_separator)
 {
+  XString input(p_input);
+
   // Prepare
-  p_input.Trim();
+  input.Trim();
   p_output1.Empty();
   p_output2.Empty();
 
   // Find separator
-  int pos = p_input.Find(p_separator);
+  int pos = input.Find(p_separator);
 
   // See if we can split
   if(pos > 0)
   {
-    p_output1 = p_input.Left(pos);
-    p_output2 = p_input.Mid(pos + 1);
+    p_output1 = input.Left(pos);
+    p_output2 = input.Mid(pos + 1);
     p_output2.TrimLeft();
 
     return true;

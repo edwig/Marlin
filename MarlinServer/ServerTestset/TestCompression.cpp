@@ -31,12 +31,6 @@
 #include <SiteHandlerGet.h>
 #include <io.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 1;
 
 class SiteHandlerGetCompress: public SiteHandlerGet
@@ -97,7 +91,7 @@ TestMarlinServer::TestCompression()
   }
 
   // Setting a site handler !!
-  site->SetHandler(HTTPCommand::http_get,new SiteHandlerGetCompress());
+  site->SetHandler(HTTPCommand::http_get,alloc_new SiteHandlerGetCompress());
 
   // set compression on this site
   site->SetHTTPCompression(true);

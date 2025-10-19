@@ -30,12 +30,6 @@
 #include "ServerLoginDlg.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 #define WHITE     RGB(255,255,255)
 #define DARKBLUE  RGB(0,  0,  128)
 #define LIGHTBLUE RGB(0,  0,  255)
@@ -43,7 +37,7 @@ static char THIS_FILE[] = __FILE__;
 // ServerLoginDlg dialog
 IMPLEMENT_DYNAMIC(ServerLoginDlg, CDialog)
 
-ServerLoginDlg::ServerLoginDlg(XString p_titel,XString p_url,CWnd* p_parent /*=NULL*/)
+ServerLoginDlg::ServerLoginDlg(CString p_titel,CString p_url,CWnd* p_parent /*=NULL*/)
                :CDialog(ServerLoginDlg::IDD,p_parent)
                ,m_titel(p_titel)
                ,m_url(p_url)
@@ -65,7 +59,7 @@ void ServerLoginDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(ServerLoginDlg, CDialog)
   ON_EN_CHANGE(IDC_URL,       &ServerLoginDlg::OnEnChangeUrl)
-  ON_EN_CHANGE(IDC_LOGLINE2,      &ServerLoginDlg::OnEnChangeUser)
+  ON_EN_CHANGE(IDC_LOGLINE2,  &ServerLoginDlg::OnEnChangeUser)
   ON_EN_CHANGE(IDC_PASSWORD,  &ServerLoginDlg::OnEnChangePassword)
 END_MESSAGE_MAP()
 

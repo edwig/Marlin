@@ -30,12 +30,6 @@
 #include "TestMarlinServerAppFactory.h"
 #include "TestMarlinServerApp.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // The one and only app-factory for creating server apps
 TestMarlinServerAppFactory factory;
 
@@ -53,7 +47,7 @@ TestMarlinServerAppFactory::CreateServerApp(IHttpServer* p_iis
   // Generally we want only ONE app. Here we have one app and three sites
   if(theOne == nullptr)
   {
-    theOne = new TestMarlinServerAppPool(p_iis, p_webroot, p_appName);
+    theOne = alloc_new TestMarlinServerAppPool(p_iis, p_webroot, p_appName);
   }
   return theOne;
 }

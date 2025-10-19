@@ -47,7 +47,7 @@ class HTTPServerIIS;
 using AppPool = std::map<int,PoolApp*>;
 
 // General error function
-void Unhealthy(XString p_error, HRESULT p_code);
+void Unhealthy(const XString& p_error, HRESULT p_code);
 
 // Create the module class
 // Hooking into the 'integrated pipeline' of IIS
@@ -101,9 +101,9 @@ public:
   virtual GLOBAL_NOTIFICATION_STATUS OnGlobalApplicationStop (_In_ IHttpApplicationStartProvider* p_provider) override;
 
   // Extract webroot from config/physical combination
-  XString ExtractWebroot(XString p_configPath,XString p_physicalPath);
+  XString ExtractWebroot(const XString& p_configPath,const XString& p_physicalPath);
   // Extract site from the config combination
-  XString ExtractAppSite(XString p_configPath);
+  XString ExtractAppSite(const XString& p_configPath);
 
   // Stopping the global factory
   virtual void Terminate() override;

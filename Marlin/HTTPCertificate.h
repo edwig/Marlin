@@ -40,7 +40,7 @@ public:
 
   XString GetSubject();
   XString GetIssuer();
-  bool    VerifyThumbprint(XString p_thumbprint);
+  bool    VerifyThumbprint(const XString& p_thumbprint);
   void    SetRawCertificate(PUCHAR p_blob,ULONG p_size);
   // Encoding a thumbprint string
   // Preparing it to search in the certificate stores
@@ -49,7 +49,7 @@ public:
 
 private:
   bool    OpenContext();
-  XString CleanupCertificateString(XString p_name);
+  XString CleanupCertificateString(const XString& p_name);
 
   PUCHAR         m_blob    { nullptr };
   ULONG          m_size    { 0L      };

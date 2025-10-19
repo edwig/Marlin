@@ -31,12 +31,6 @@
 #include <HTTPSite.h>
 #include <SiteHandlerSoap.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 6;
 
 class SiteHandlerSoapReliable: public SiteHandlerSoap
@@ -119,7 +113,7 @@ TestMarlinServer::TestReliable()
     return error;
   }
 
-  site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapReliable());
+  site->SetHandler(HTTPCommand::http_post,alloc_new SiteHandlerSoapReliable());
 
   // Modify the standard settings for this site
   site->AddContentType(true,_T("pos"),_T("text/xml"));
@@ -169,7 +163,7 @@ TestMarlinServer::TestReliableBA()
     return error;
   }
 
-  SiteHandlerSoapReliable* handler = new SiteHandlerSoapReliable();
+  SiteHandlerSoapReliable* handler = alloc_new SiteHandlerSoapReliable();
   
   // Create and set handler
   handler->SetTokenProfile(true);

@@ -28,12 +28,6 @@
 #include <wininet.h>
 #include <mswsock.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 Request::Request(RequestQueue* p_queue
                 ,Listener*     p_listener
                 ,SOCKET        p_socket
@@ -241,7 +235,7 @@ Request::DrainRequest()
       size = MESSAGE_BUFFER_LENGTH;
     }
     // Temporary read buffer
-    unsigned char* drain_buffer = new unsigned char[size + 1];
+    unsigned char* drain_buffer = alloc_new unsigned char[size + 1];
 
     // Loop until the end of the content (the body)
     while(readin > 0)
@@ -701,11 +695,11 @@ Request::SetSocket(Listener* p_listener,SOCKET p_socket,HANDLE p_stop)
   if(p_listener->GetSecureMode())
   {
     m_secure = true;
-    m_socket = new SecureServerSocket(p_socket,p_stop);
+    m_socket = alloc_new SecureServerSocket(p_socket,p_stop);
   }
   else
   {
-    m_socket = new PlainSocket(p_socket,p_stop);
+    m_socket = alloc_new PlainSocket(p_socket,p_stop);
   }
 
   // Prepare socket for this request (addresses and timings)
@@ -896,7 +890,7 @@ Request::ReadTextLine()
     int len = (int)((ULONGLONG)end - (ULONGLONG)begin);
 
 
-    LPSTR buffer = (LPSTR) new char[len + 1];
+    LPSTR buffer = (LPSTR) alloc_new char[len + 1];
     memcpy_s(buffer,len + 1,begin,len);
     buffer[len] = 0;
     m_bufferPosition += len + 2;
@@ -1352,7 +1346,7 @@ Request::FindKeepAlive()
 
 // Reply with a client error in the range 400 - 499
 void
-Request::ReplyClientError(int p_error,XString p_errorText)
+Request::ReplyClientError(int p_error,const XString& p_errorText)
 {
   // Drain the request first
   DrainRequest();
@@ -1365,9 +1359,9 @@ Request::ReplyClientError(int p_error,XString p_errorText)
   header += _T("Content-Type: text/html; charset=us-ascii\r\n");
 
   XString body;
-  body.Format(http_client_error,p_error,p_errorText);
+  body.Format(http_client_error,p_error,p_errorText.GetString());
 
-  if(m_challenge)
+  if(!m_challenge.IsEmpty())
   {
     header += _T("WWW-Authenticate: ") + m_challenge + _T("\r\n");
     retry   = true;
@@ -1400,7 +1394,7 @@ Request::ReplyClientError()
 
 // Reply with a server error in the range 500-599
 void
-Request::ReplyServerError(int p_error,XString p_errorText)
+Request::ReplyServerError(int p_error,const XString& p_errorText)
 {
   // Drain the request first
   DrainRequest();
@@ -1412,7 +1406,7 @@ Request::ReplyServerError(int p_error,XString p_errorText)
   header += _T("Content-Type: text/html; charset=us-ascii\r\n");
 
   XString body;
-  body.Format(http_server_error, p_error, p_errorText);
+  body.Format(http_server_error, p_error, p_errorText.GetString());
 
   header.AppendFormat(_T("Content-Length: %d\r\n"), body.GetLength());
   header.AppendFormat(_T("Date: %s\r\n"),HTTPSystemTime().GetString());
@@ -1602,7 +1596,7 @@ Request::AlreadyAuthenticated(PHTTP_REQUEST_AUTH_INFO p_info)
 }
 
 bool
-Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,XString p_payload)
+Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,const XString& p_payload)
 {
   // Prepare decoding the base64 payload
   Base64  base;
@@ -1641,12 +1635,12 @@ Request::CheckBasicAuthentication(PHTTP_REQUEST_AUTH_INFO p_info,XString p_paylo
 }
 
 bool
-Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,XString p_payload,XString p_provider)
+Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,const XString& p_payload,const XString& p_provider)
 {
   // Prepare decoding the base64 payload
   Base64 base;
   int len = (int)base.Ascii_length(p_payload.GetLength());
-  BYTE* buffer = new BYTE[len + 10];
+  BYTE* buffer = alloc_new BYTE[len + 10];
 
   // Decrypt payload into an opaque buffer
 #ifdef _UNICODE
@@ -1673,7 +1667,7 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,XString p_pa
     SecBufferDesc     InBuffDesc;
     SecBuffer         InSecBuff;
     ULONG             Attribs = 0;
-    PBYTE             pOut    = new BYTE[maxTokenLength + 1];
+    PBYTE             pOut    = alloc_new BYTE[maxTokenLength + 1];
     DWORD             cbOut   = maxTokenLength;
 
     //  Prepare input buffers.
@@ -2087,7 +2081,7 @@ Request::ReadBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes)
 }
 
 int
-Request::WriteBuffer(XString& p_string,PULONG p_bytes)
+Request::WriteBuffer(const XString& p_string,PULONG p_bytes)
 {
 #ifdef _UNICODE
   int   length = 0;
@@ -2163,7 +2157,7 @@ Request::CreateWebSocket()
   else
   {
     // Register new socket
-    m_websocket = new SYSWebSocket(this);
+    m_websocket = alloc_new SYSWebSocket(this);
     m_queue->AddWebSocket(m_websocketKey,m_websocket);
   }
 }

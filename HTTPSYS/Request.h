@@ -83,9 +83,9 @@ public:
   void              CloseRequest();
   // Reply with an error
   void              ReplyClientError();
-  void              ReplyClientError(int p_error,XString p_errorText);
+  void              ReplyClientError(int p_error,const XString& p_errorText);
   void              ReplyServerError();
-  void              ReplyServerError(int p_error, XString p_errorText);
+  void              ReplyServerError(int p_error,const XString& p_errorText);
 
 private:
 
@@ -121,8 +121,8 @@ private:
   // Authentication of the request
   bool              CheckAuthentication();
   bool              AlreadyAuthenticated       (PHTTP_REQUEST_AUTH_INFO p_info);
-  bool              CheckBasicAuthentication   (PHTTP_REQUEST_AUTH_INFO p_info,XString p_payload);
-  bool              CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,XString p_payload,XString p_provider);
+  bool              CheckBasicAuthentication   (PHTTP_REQUEST_AUTH_INFO p_info,const XString& p_payload);
+  bool              CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,const XString& p_payload,const XString& p_provider);
   PHTTP_REQUEST_AUTH_INFO GetAuthenticationInfoRecord();
   DWORD             GetProviderMaxTokenLength(XString p_provider);
   // Sending the response
@@ -142,7 +142,7 @@ private:
 //int               SendFileByMemoryBlocks    (PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes);
 
   // Reading and writing
-  int               WriteBuffer(XString& p_string,PULONG p_bytes);
+  int               WriteBuffer(const XString& p_string,PULONG p_bytes);
   // Low level reading and writing
   int               ReadBuffer (PVOID p_buffer,ULONG p_size,PULONG p_bytes);
   int               WriteBuffer(PVOID p_buffer,ULONG p_size,PULONG p_bytes);

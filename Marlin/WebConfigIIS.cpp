@@ -33,15 +33,7 @@
 #include <http.h>
 #include <io.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
-WebConfigIIS::WebConfigIIS(XString p_application /*=""*/)
+WebConfigIIS::WebConfigIIS(const XString& p_application /*=""*/)
              :m_application(p_application)
 {
 }
@@ -69,7 +61,7 @@ WebConfigIIS::ReadConfig()
 }
 
 bool
-WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/)
+WebConfigIIS::ReadConfig(const XString& p_application,const XString& p_extraWebConfig /*= ""*/)
 {
   // Reads the central IIS application host configuration file first
   if(!ReadConfig())
@@ -92,10 +84,10 @@ WebConfigIIS::ReadConfig(XString p_application,XString p_extraWebConfig /*= ""*/
 }
 
 void
-WebConfigIIS::SetApplication(XString p_application)
+WebConfigIIS::SetApplication(const XString& p_application)
 {
   // Try reading applications web.config
-  IISSite* site = GetSite(p_application);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_application));
   if(site)
   {
     // Get virtual directory: can be outside "inetpub\wwwroot"
@@ -115,9 +107,9 @@ WebConfigIIS::SetApplication(XString p_application)
 }
 
 XString
-WebConfigIIS::GetSiteName(XString p_site)
+WebConfigIIS::GetSiteName(const XString& p_site) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if (site)
   {
     return site->m_name;
@@ -126,15 +118,20 @@ WebConfigIIS::GetSiteName(XString p_site)
 }
 
 XString
-WebConfigIIS::GetSetting(XString p_key)
+WebConfigIIS::GetSetting(const XString& p_key) const
 {
-  return m_settings[p_key];
+  AppSettings::const_iterator it = m_settings.find(p_key);
+  if(it != m_settings.end())
+  {
+    return it->second;
+  }
+  return _T("");
 }
 
 XString
-WebConfigIIS::GetSiteAppPool(XString p_site)
+WebConfigIIS::GetSiteAppPool(const XString& p_site) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_appPool;
@@ -143,9 +140,9 @@ WebConfigIIS::GetSiteAppPool(XString p_site)
 }
 
 XString
-WebConfigIIS::GetSiteBinding(XString p_site,XString p_default)
+WebConfigIIS::GetSiteBinding(const XString& p_site,const XString& p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_binding;
@@ -154,9 +151,9 @@ WebConfigIIS::GetSiteBinding(XString p_site,XString p_default)
 }
 
 XString
-WebConfigIIS::GetSiteProtocol(XString p_site,XString p_default)
+WebConfigIIS::GetSiteProtocol(const XString& p_site,const XString& p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_protocol;
@@ -165,9 +162,9 @@ WebConfigIIS::GetSiteProtocol(XString p_site,XString p_default)
 }
 
 int
-WebConfigIIS::GetSitePort(XString p_site,int p_default)
+WebConfigIIS::GetSitePort(const XString& p_site,int p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_port;
@@ -176,9 +173,9 @@ WebConfigIIS::GetSitePort(XString p_site,int p_default)
 }
 
 bool
-WebConfigIIS::GetSiteSecure(XString p_site,bool p_default)
+WebConfigIIS::GetSiteSecure(const XString& p_site,bool p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_secure;
@@ -187,9 +184,9 @@ WebConfigIIS::GetSiteSecure(XString p_site,bool p_default)
 }
 
 XString
-WebConfigIIS::GetSiteWebroot(XString p_site,XString p_default)
+WebConfigIIS::GetSiteWebroot(const XString& p_site,const XString& p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_path;
@@ -198,9 +195,9 @@ WebConfigIIS::GetSiteWebroot(XString p_site,XString p_default)
 }
 
 XString
-WebConfigIIS::GetSitePathname(XString p_site,XString p_default)
+WebConfigIIS::GetSitePathname(const XString& p_site,const XString& p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_path;
@@ -209,9 +206,9 @@ WebConfigIIS::GetSitePathname(XString p_site,XString p_default)
 }
 
 ULONG
-WebConfigIIS::GetSiteScheme(XString p_site,ULONG   p_default)
+WebConfigIIS::GetSiteScheme(const XString& p_site,const ULONG p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_authScheme;
@@ -220,9 +217,9 @@ WebConfigIIS::GetSiteScheme(XString p_site,ULONG   p_default)
 }
 
 XString
-WebConfigIIS::GetSiteRealm(XString p_site,XString p_default)
+WebConfigIIS::GetSiteRealm(const XString& p_site,const XString& p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_realm;
@@ -231,9 +228,9 @@ WebConfigIIS::GetSiteRealm(XString p_site,XString p_default)
 }
 
 XString
-WebConfigIIS::GetSiteDomain(XString p_site,XString p_default)
+WebConfigIIS::GetSiteDomain(const XString& p_site,const XString& p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_domain;
@@ -242,9 +239,9 @@ WebConfigIIS::GetSiteDomain(XString p_site,XString p_default)
 }
 
 bool
-WebConfigIIS::GetSiteNTLMCache(XString p_site,bool p_default)
+WebConfigIIS::GetSiteNTLMCache(const XString& p_site,const bool p_default) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_ntlmCache;
@@ -253,9 +250,9 @@ WebConfigIIS::GetSiteNTLMCache(XString p_site,bool p_default)
 }
 
 bool
-WebConfigIIS::GetSitePreload(XString p_site)
+WebConfigIIS::GetSitePreload(const XString& p_site) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return site->m_preload;
@@ -264,9 +261,9 @@ WebConfigIIS::GetSitePreload(XString p_site)
 }
 
 IISError
-WebConfigIIS::GetSiteError(XString p_site)
+WebConfigIIS::GetSiteError(const XString& p_site) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if (site)
   {
     return site->m_error;
@@ -281,9 +278,9 @@ WebConfigIIS::GetWebConfig()
 }
 
 XString
-WebConfigIIS::GetPoolStartMode(XString p_pool)
+WebConfigIIS::GetPoolStartMode(const XString& p_pool) const
 {
-  IISAppPool* pool = GetPool(p_pool);
+  IISAppPool* pool = const_cast<IISAppPool*>(GetPool(p_pool));
   if(pool)
   {
     return pool->m_startMode;
@@ -292,9 +289,9 @@ WebConfigIIS::GetPoolStartMode(XString p_pool)
 }
 
 XString
-WebConfigIIS::GetPoolPeriodicRestart(XString p_pool)
+WebConfigIIS::GetPoolPeriodicRestart(const XString& p_pool) const
 {
-  IISAppPool* pool = GetPool(p_pool);
+  IISAppPool* pool = const_cast<IISAppPool*>(GetPool(p_pool));
   if(pool)
   {
     return pool->m_periodicRestart;
@@ -303,9 +300,9 @@ WebConfigIIS::GetPoolPeriodicRestart(XString p_pool)
 }
 
 XString
-WebConfigIIS::GetPoolIdleTimeout(XString p_pool)
+WebConfigIIS::GetPoolIdleTimeout(const XString& p_pool) const
 {
-  IISAppPool* pool = GetPool(p_pool);
+  IISAppPool* pool = const_cast<IISAppPool*>(GetPool(p_pool));
   if(pool)
   {
     return pool->m_idleTimeout;
@@ -314,9 +311,9 @@ WebConfigIIS::GetPoolIdleTimeout(XString p_pool)
 }
 
 bool
-WebConfigIIS::GetPoolAutostart(XString p_pool)
+WebConfigIIS::GetPoolAutostart(const XString& p_pool) const
 {
-  IISAppPool* pool = GetPool(p_pool);
+  IISAppPool* pool = const_cast<IISAppPool*>(GetPool(p_pool));
   if(pool)
   {
     return pool->m_autoStart;
@@ -325,9 +322,9 @@ WebConfigIIS::GetPoolAutostart(XString p_pool)
 }
 
 XString
-WebConfigIIS::GetPoolPipelineMode(XString p_pool)
+WebConfigIIS::GetPoolPipelineMode(const XString& p_pool) const
 {
-  IISAppPool* pool = GetPool(p_pool);
+  IISAppPool* pool = const_cast<IISAppPool*>(GetPool(p_pool));
   if(pool)
   {
     return pool->m_pipelineMode;
@@ -380,18 +377,19 @@ WebConfigIIS::ReplaceEnvironVars(XString& p_string)
 }
 
 bool
-WebConfigIIS::ReadConfig(XString p_configFile,IISSite* p_site /*=nullptr*/)
+WebConfigIIS::ReadConfig(const XString& p_configFile,IISSite* p_site /*=nullptr*/)
 {
+  XString configFile(p_configFile);
   // Find the file, see if we have read access at least
-  ReplaceEnvironVars(p_configFile);
-  if(_taccess(p_configFile,4) != 0)
+  ReplaceEnvironVars(configFile);
+  if(_taccess(configFile,4) != 0)
   {
     return false;
   }
 
   // See if we did already read this file earlier
-  p_configFile.MakeLower();
-  WCFiles::iterator it = m_files.find(p_configFile);
+  configFile.MakeLower();
+  WCFiles::iterator it = m_files.find(configFile);
   if(it != m_files.end() && !p_site)
   {
     return true;
@@ -399,14 +397,14 @@ WebConfigIIS::ReadConfig(XString p_configFile,IISSite* p_site /*=nullptr*/)
 
   // Parse the incoming file
   XMLMessage msg;
-  if(!msg.LoadFile(p_configFile))
+  if(!msg.LoadFile(configFile))
   {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("Cannot read the application host file: ")) + p_configFile);
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("Cannot read the application host file: ")) + configFile);
     return false;
   }
   if(msg.GetInternalError() != XmlError::XE_NoError)
   {
-    SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("XML Error in the application host file: ")) + p_configFile);
+    SvcReportErrorEvent(0,false,_T(__FUNCTION__),XString(_T("XML Error in the application host file: ")) + configFile);
     return false;
   }
   ReadLogPath(msg);
@@ -423,7 +421,7 @@ WebConfigIIS::ReadConfig(XString p_configFile,IISSite* p_site /*=nullptr*/)
   }
 
   // Remember we did read this file
-  m_files.insert(std::make_pair(p_configFile,1));
+  m_files.insert(std::make_pair(configFile,1));
 
   return true;
 }
@@ -830,9 +828,9 @@ WebConfigIIS::ReadHandlerMapping(IISSite& p_site,XMLMessage& p_msg,XMLElement* p
 }
 
 IISHandlers*
-WebConfigIIS::GetAllHandlers(XString p_site)
+WebConfigIIS::GetAllHandlers(const XString& p_site) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     return &(site->m_handlers);
@@ -841,9 +839,9 @@ WebConfigIIS::GetAllHandlers(XString p_site)
 }
 
 IISHandler*
-WebConfigIIS::GetHandler(XString p_site,XString p_handler)
+WebConfigIIS::GetHandler(const XString& p_site,const XString& p_handler) const
 {
-  IISSite* site = GetSite(p_site);
+  IISSite* site = const_cast<IISSite*>(GetSite(p_site));
   if(site)
   {
     IISHandlers::iterator it = site->m_handlers.find(p_handler);
@@ -864,22 +862,24 @@ WebConfigIIS::GetWebConfigHandlers()
 // Finding a site registration
 // Site/Subsite -> Finds "site"
 // Site         -> Finds "site"
-IISSite*
-WebConfigIIS::GetSite(XString p_site)
+const IISSite*
+WebConfigIIS::GetSite(const XString& p_site) const
 {
+  XString site(p_site);
+
   // Registration is in lower case
-  p_site.MakeLower();
-  p_site.Trim('/');
+  site.MakeLower();
+  site.Trim('/');
 
   // Knock off the sub sites
-  int pos = p_site.Find('/');
+  int pos = site.Find('/');
   if(pos > 0)
   {
-    p_site = p_site.Left(pos);
+    site = site.Left(pos);
   }
 
   // Find the site structure
-  IISSites::iterator it = m_sites.find(p_site);
+  IISSites::const_iterator it = m_sites.find(site);
   if(it != m_sites.end())
   {
     return &it->second;
@@ -888,11 +888,12 @@ WebConfigIIS::GetSite(XString p_site)
 }
 
 // Finding a application pool registration
-IISAppPool* 
-WebConfigIIS::GetPool(XString p_pool)
+const IISAppPool* 
+WebConfigIIS::GetPool(const XString& p_pool) const
 {
-  p_pool.MakeLower();
-  IISPools::iterator it = m_pools.find(p_pool);
+  XString pool(p_pool);
+  pool.MakeLower();
+  IISPools::const_iterator it = m_pools.find(pool);
   if(it != m_pools.end())
   {
     return &(it->second);

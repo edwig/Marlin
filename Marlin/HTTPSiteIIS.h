@@ -35,8 +35,8 @@ class HTTPSiteIIS : public HTTPSite
 public:
   explicit HTTPSiteIIS(HTTPServerIIS* p_server
                       ,int            p_port
-                      ,XString        p_site
-                      ,XString        p_prefix
+                      ,const XString& p_site
+                      ,const XString& p_prefix
                       ,HTTPSite*      p_mainSite = nullptr
                       ,LPFN_CALLBACK  p_callback = nullptr);
 
@@ -44,7 +44,7 @@ public:
   virtual bool StartSite() override;
 
   // OPTIONAL: Set the webroot of the site
-  virtual bool SetWebroot(XString p_webroot) override;
+  virtual bool SetWebroot(const XString& p_webroot) override;
   // Anonymous authentication?
   virtual bool GetHasAnonymousAuthentication(HANDLE p_token) override;
 

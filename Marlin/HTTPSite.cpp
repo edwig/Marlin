@@ -42,14 +42,6 @@
 #include <winerror.h>
 #include <sddl.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Logging via the server
 #define DETAILLOG1(text)        m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text)
 #define DETAILLOGS(text,extra)  m_server->DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra)
@@ -67,12 +59,12 @@ __declspec(thread) SiteHandler*      g_cleanup  = nullptr;
 __declspec(thread) CRITICAL_SECTION* g_throttle = nullptr;
 
 // THE XTOR
-HTTPSite::HTTPSite(HTTPServer*   p_server
-                  ,int           p_port
-                  ,XString       p_site
-                  ,XString       p_prefix
-                  ,HTTPSite*     p_mainSite /* = nullptr */
-                  ,LPFN_CALLBACK p_callback /* = nullptr */)
+HTTPSite::HTTPSite(HTTPServer*    p_server
+                  ,int            p_port
+                  ,const XString& p_site
+                  ,const XString& p_prefix
+                  ,HTTPSite*      p_mainSite /* = nullptr */
+                  ,LPFN_CALLBACK  p_callback /* = nullptr */)
         :m_server(p_server)
         ,m_port(p_port)
         ,m_site(p_site)
@@ -156,37 +148,41 @@ HTTPSite::CleanupRewriter()
 
 // OPTIONAL: Set one or more text-based content types
 void
-HTTPSite::AddContentType(bool p_logging,XString p_extension,XString p_contentType)
+HTTPSite::AddContentType(bool p_logging,const XString& p_extension,const XString& p_contentType)
 {
-  // Mapping is on lower case
-  p_extension.MakeLower();
-  p_extension.TrimLeft('.');
+  XString extension(p_extension);
 
-  MediaTypeMap::iterator it = m_contentTypes.find(p_extension);
+  // Mapping is on lower case
+  extension.MakeLower();
+  extension.TrimLeft('.');
+
+  MediaTypeMap::iterator it = m_contentTypes.find(extension);
 
   if(it == m_contentTypes.end())
   {
     // Insert a new one
-    m_contentTypes.insert(std::make_pair(p_extension,MediaType(p_logging,p_extension,p_contentType)));
+    m_contentTypes.insert(std::make_pair(extension,MediaType(p_logging,extension,p_contentType)));
   }
   else
   {
     // Overwrite the media type
-    it->second.SetExtension(p_extension);
+    it->second.SetExtension(extension);
     it->second.SetContentType(p_contentType);
   }
 }
 
 // Getting a registered content type for a file extension
 XString
-HTTPSite::GetContentType(XString p_extension)
+HTTPSite::GetContentType(const XString& p_extension)
 {
+  XString extension(p_extension);
+
   // Mapping is on lower case
-  p_extension.MakeLower();
-  p_extension.TrimLeft('.');
+  extension.MakeLower();
+  extension.TrimLeft('.');
 
   // STEP 1: Look in our own mappings
-  MediaTypeMap::iterator it = m_contentTypes.find(p_extension);
+  MediaTypeMap::iterator it = m_contentTypes.find(extension);
   if(it != m_contentTypes.end())
   {
     return it->second.GetContentType();
@@ -195,14 +191,14 @@ HTTPSite::GetContentType(XString p_extension)
   // STEP 2: Finding the general default content type
   if(g_media == nullptr)
   {
-    g_media = new MediaTypes();
+    g_media = alloc_new MediaTypes();
   }
-  return g_media->FindContentTypeByExtension(p_extension);
+  return g_media->FindContentTypeByExtension(extension);
 }
 
 // Finding the registered content type from the full resource name
 XString
-HTTPSite::GetContentTypeByResourceName(XString p_pathname)
+HTTPSite::GetContentTypeByResourceName(const XString& p_pathname)
 {
   WinFile ensure(p_pathname);
   XString extens = ensure.GetFilenamePartExtension();
@@ -264,7 +260,7 @@ void
 HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /*=true*/)
 {
   // Names are in HTTPMessage.cpp!
-  extern const TCHAR* headers[];
+  extern const TCHAR* g_headers[];
 
   HandlerMap::iterator it = m_handlers.find(p_command);
 
@@ -278,7 +274,7 @@ HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /
         delete it->second.m_handler;
       }
       m_handlers.erase(it);
-      DETAILLOGS(_T("Removing site handler for HTTP "),headers[(unsigned)p_command]);
+      DETAILLOGS(_T("Removing site handler for HTTP "),g_headers[(unsigned)p_command]);
     }
     return;
   }
@@ -317,7 +313,7 @@ HTTPSite::SetHandler(HTTPCommand p_command,SiteHandler* p_handler,bool p_owner /
     reg.m_handler = p_handler;
     m_handlers[p_command] = reg;
   }
-  DETAILLOGS(_T("Setting site handler for HTTP "),headers[(unsigned)p_command]);
+  DETAILLOGS(_T("Setting site handler for HTTP "),g_headers[(unsigned)p_command]);
 }
 
 // Finding the SiteHandler registration
@@ -459,7 +455,7 @@ HTTPSite::InitSite(MarlinConfig& p_config)
   // Do we have a URL rewriter?
   if(p_config.HasSection(_T("Rewriter")))
   {
-    m_rewriter = new URLRewriter();
+    m_rewriter = alloc_new URLRewriter();
     m_rewriter->InitRewriter(p_config);
   }
 
@@ -886,7 +882,7 @@ HTTPSite::AsyncResponse(HTTPMessage* p_message)
 {
   // Send back an OK immediately, without waiting for
   // worker thread to process the message in the callback
-  HTTPMessage* msg = new HTTPMessage(p_message);
+  HTTPMessage* msg = alloc_new HTTPMessage(p_message);
   msg->SetCommand(HTTPCommand::http_response);
   msg->SetStatus(HTTP_STATUS_OK);
   msg->GetFileBuffer()->Reset();
@@ -911,7 +907,7 @@ HTTPSite::HandleEventStream(HTTPMessage* p_message,EventStream* p_stream)
     return handler->HandleStream(p_message,p_stream);
   }
   ERRORLOG(ERROR_INVALID_PARAMETER,_T("Event stream can only be initialized through a HTTP GET to a event-handling site."));
-  HTTPMessage* msg = new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_BAD_REQUEST);
+  HTTPMessage* msg = alloc_new HTTPMessage(HTTPCommand::http_response,HTTP_STATUS_BAD_REQUEST);
   msg->SetRequestHandle(p_stream->m_requestID);
   HandleHTTPMessageDefault(msg);
   msg->DropReference();
@@ -943,7 +939,7 @@ HTTPSite::GetAllowHandlers()
   for(auto& handler : m_handlers)
   {
     allow += _T(" ");
-    allow += headers[(unsigned)handler.first];
+    allow += g_headers[(unsigned)handler.first];
     allow += _T(" ");
   }
 
@@ -1044,7 +1040,7 @@ HTTPSite::StartThrottling(HTTPMessage* p_message)
   if(it == m_throttels.end())
   {
     // Create a throttle for this address
-    section = new CRITICAL_SECTION();
+    section = alloc_new CRITICAL_SECTION();
     InitializeCriticalSection(section);
     m_throttels.insert(std::make_pair(address,section));
     it = m_throttels.find(address);
@@ -1437,7 +1433,7 @@ HTTPSite::RM_HandleTerminateSequence(SessionAddress& p_address,SOAPMessage* p_me
 }
 
 void
-HTTPSite::DebugPrintSessionAddress(XString p_prefix,SessionAddress& p_address)
+HTTPSite::DebugPrintSessionAddress(const XString& p_prefix,SessionAddress& p_address)
 {
   XString address;
   for(unsigned ind = 0;ind < sizeof(SOCKADDR_IN6); ++ind)
@@ -1517,10 +1513,10 @@ HTTPSite::RemoveSequence(SessionAddress& p_address)
 void
 HTTPSite::SendSOAPFault(SessionAddress& p_address
                        ,SOAPMessage*    p_message
-                       ,XString         p_code 
-                       ,XString         p_actor
-                       ,XString         p_string
-                       ,XString         p_detail)
+                       ,const XString&  p_code 
+                       ,const XString&  p_actor
+                       ,const XString&  p_string
+                       ,const XString&  p_detail)
 {
   // Destroy the session.
   // Clients must start new RM session after a fault has been received
@@ -1577,7 +1573,7 @@ HTTPSite::GetStringSID(HANDLE p_token)
   {
     if(dwSize)
     {
-      tokenUser = new BYTE[dwSize];
+      tokenUser = alloc_new BYTE[dwSize];
       if(GetTokenInformation(p_token,TokenUser,tokenUser,dwSize,&dwSize))
       {
         if(ConvertSidToStringSid(((PTOKEN_USER)tokenUser)->User.Sid,&stringSIDpointer))
@@ -1725,7 +1721,7 @@ HTTPSite::CheckBodySigning(SessionAddress& p_address
 bool
 HTTPSite::CheckBodyEncryption(SessionAddress& p_address
                              ,SOAPMessage*    p_soap
-                             ,XString         p_body)
+                             ,const XString&  p_body)
 {
   bool ready = true;
   XString crypt = p_soap->GetSecurityPassword();
@@ -1792,7 +1788,7 @@ HTTPSite::CheckBodyEncryption(SessionAddress& p_address
 bool
 HTTPSite::CheckMesgEncryption(SessionAddress& p_address
                              ,SOAPMessage*    p_soap
-                             ,XString         p_body)
+                             ,const XString&  p_body)
 {
   bool ready = true;
   XString crypt = p_soap->GetSecurityPassword();
@@ -1862,7 +1858,7 @@ HTTPSite::CheckMesgEncryption(SessionAddress& p_address
 //////////////////////////////////////////////////////////////////////////
 
 void
-HTTPSite::SetXFrameOptions(XFrameOption p_option,XString p_uri)
+HTTPSite::SetXFrameOptions(XFrameOption p_option,const XString& p_uri)
 {
   m_xFrameOption = p_option;
   if(m_xFrameOption == XFrameOption::XFO_ALLOWFROM)
@@ -2034,14 +2030,14 @@ HTTPSite::SetCookiesSameSite(CookieSameSite p_same)
 }
 
 void
-HTTPSite::SetCookiesPath(XString p_path)
+HTTPSite::SetCookiesPath(const XString& p_path)
 {
   m_cookiePath    = p_path;
   m_cookieHasPath = !p_path.IsEmpty();
 }
 
 void
-HTTPSite::SetCookiesDomain(XString p_domain)
+HTTPSite::SetCookiesDomain(const XString& p_domain)
 {
   m_cookieDomain    = p_domain;
   m_cookieHasDomain = !p_domain.IsEmpty();

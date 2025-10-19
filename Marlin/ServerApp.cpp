@@ -36,14 +36,6 @@
 #include <string>
 #include <set>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #define DETAILLOGV(text,...)    m_httpServer->DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__)
 #define WARNINGLOG(text,...)    m_httpServer->DetailLogV(_T(__FUNCTION__),LogType::LOG_WARN,text,__VA_ARGS__)
 #define ERRORLOG(code,text)     m_httpServer->ErrorLog  (_T(__FUNCTION__),code,text)
@@ -290,7 +282,7 @@ void
 ServerApp::InitInstance()
 {
   // Create a marlin HTTPServer object for IIS
-  m_httpServer = new HTTPServerIIS(m_applicationName);
+  m_httpServer = alloc_new HTTPServerIIS(m_applicationName);
   m_httpServer->SetWebroot(m_webroot);
 
   // Reading our IIS web.config and ApplicationHost.config info
@@ -305,7 +297,7 @@ ServerApp::InitInstance()
   // Create our error report
   if(g_report == nullptr)
   {
-    g_report      = new ErrorReport();
+    g_report      = alloc_new ErrorReport();
     m_errorReport = g_report;
     m_ownReport   = true;
   }
@@ -579,7 +571,7 @@ ServerApp::LoadSites(IHttpApplication* p_app,PCWSTR p_physicalPath)
       sites->get_Count(&count);
       for(int i = 0; i < (int)count; ++i)
       {
-        IISSiteConfig* iisConfig = new IISSiteConfig();
+        IISSiteConfig* iisConfig = alloc_new IISSiteConfig();
         iisConfig->m_id       = 0;
         iisConfig->m_physical = physicalPath;
         
@@ -834,7 +826,7 @@ ServerAppFactory::CreateServerApp(IHttpServer*  p_iis
                                  ,const PCWSTR  p_webroot
                                  ,const PCWSTR  p_appName)
 {
-  return new ServerApp(p_iis,p_webroot,p_appName);
+  return alloc_new ServerApp(p_iis,p_webroot,p_appName);
 }
 
 ServerAppFactory* appFactory = nullptr;

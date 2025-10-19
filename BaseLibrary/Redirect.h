@@ -4,8 +4,8 @@
 //
 // Marlin Component: Internet server/client
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -55,7 +55,7 @@ public:
   int  WriteChildStdIn(PTCHAR lpszInput);
   void SetTimeoutIdle(ULONG p_timeout);
   void CloseChildStdIn();
-  bool SetStreamCharset(XString p_charset);
+  bool SetStreamCharset(const XString& p_charset);
 
   // Virtual interface. Derived class must implement this!!
   virtual void OnChildStarted    (LPCTSTR lpszCmdLine) = 0;

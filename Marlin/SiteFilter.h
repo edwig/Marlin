@@ -34,7 +34,7 @@
 class SiteFilter
 {
 public:
-  SiteFilter(unsigned p_priority,XString p_name);
+  SiteFilter(unsigned p_priority,const XString& p_name);
   virtual ~SiteFilter();
 
   // When starting the site

@@ -12,12 +12,6 @@
 #include "UrlGroup.h"
 #include "OpaqueHandles.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static ULONG SetUrlGroupAuthentication(UrlGroup* p_group,PHTTP_SERVER_AUTHENTICATION_INFO p_info);
 static ULONG SetUrlGroupServerBinding (UrlGroup* p_group,PHTTP_BINDING_INFO       p_info);
 static ULONG SetUrlGroupEnabledState  (UrlGroup* p_group,PHTTP_STATE_INFO         p_info);

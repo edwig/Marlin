@@ -30,14 +30,6 @@
 #include "HTTPSite.h"
 #include "LogAnalysis.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Logging via the server
 #define DETAILLOG(text,...)       if(m_server->GetLogfile()) m_server->GetLogfile()->AnalysisLog(_T(__FUNCTION__),LogType::LOG_INFO,true,text,__VA_ARGS__)
 #define ERRORLOG(code,text)       if(m_server->GetLogfile())\
@@ -47,11 +39,11 @@ static char THIS_FILE[] = __FILE__;
                                   }
 
 HTTPURLGroup::HTTPURLGroup(HTTPServerMarlin* p_server
-                          ,XString p_authName
-                          ,ULONG   p_authScheme
-                          ,bool    p_cache
-                          ,XString p_realm
-                          ,XString p_domain)
+                          ,const XString& p_authName
+                          ,ULONG          p_authScheme
+                          ,bool           p_cache
+                          ,const XString& p_realm
+                          ,const XString& p_domain)
              :m_server(p_server)
              ,m_authName(p_authName)
              ,m_authScheme(p_authScheme)

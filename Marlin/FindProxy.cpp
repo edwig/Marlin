@@ -29,14 +29,6 @@
 #include "FindProxy.h"
 #include <ConvertWideString.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 FindProxy::FindProxy()
 {
   m_perDest = true;
@@ -103,7 +95,7 @@ FindProxy::Find(const XString& p_url,bool p_secure)
       {
         delete m_info;
       }
-      m_info = new ProxyInfo();
+      m_info = alloc_new ProxyInfo();
 
       WINHTTP_PROXY_INFO &autoCfg = m_info->cfg;
       if(internet.hInter && ::WinHttpGetProxyForUrl(internet.hInter, StringToWString(p_url).c_str(),&autoOpts,&autoCfg))
@@ -139,11 +131,11 @@ FindProxy::Find(const XString& p_url,bool p_secure)
 }
 
 void
-FindProxy::SetInfo(XString p_proxy,XString p_bypass)
+FindProxy::SetInfo(const XString& p_proxy,const XString& p_bypass)
 {
   if(!m_info)
   {
-    m_info = new ProxyInfo();
+    m_info = alloc_new ProxyInfo();
   }
   m_proxy   = p_proxy;
   m_ignored = p_bypass;
@@ -162,21 +154,23 @@ FindProxy::SetInfo(XString p_proxy,XString p_bypass)
 }
 
 void
-FindProxy::FindUniqueProxy(XString p_proxyList,bool p_secure)
+FindProxy::FindUniqueProxy(const XString& p_proxyList,bool p_secure)
 {
-  while(p_proxyList.GetLength())
+  XString proxyList(p_proxyList);
+
+  while(proxyList.GetLength())
   {
     XString part;
-    int pos = p_proxyList.Find(';');
+    int pos = proxyList.Find(';');
     if(pos > 0)
     {
-      part = p_proxyList.Left(pos);
-      p_proxyList = p_proxyList.Mid(pos + 1);
+      part = proxyList.Left(pos);
+      proxyList = proxyList.Mid(pos + 1);
     }
     else
     {
-      part = p_proxyList;
-      p_proxyList.Empty();
+      part = proxyList;
+      proxyList.Empty();
     }
     // Secure proxy goes before insecure proxy
     if(p_secure)
@@ -200,4 +194,3 @@ FindProxy::FindUniqueProxy(XString p_proxyList,bool p_secure)
   }
   // Protocol not found
 }
-

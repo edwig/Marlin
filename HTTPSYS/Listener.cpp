@@ -24,12 +24,6 @@
 #include <atlconv.h>
 #include <WS2tcpip.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Listener object, listens for connections on one thread, and initiates a worker
 // thread each time a client connects. Listens on both IPv4 and IPv6 addresses
 Listener::Listener(RequestQueue* p_queue,int p_port,URL* p_url,USHORT p_timeout)
@@ -271,7 +265,7 @@ void Listener::Listen(void)
     // Secure connections can take long to establish because of the handshaking, 
     // so we offload it to an extra thread to do the job.
     DebugMsg(_T("Starting request worker"));
-    Request* request = new Request(m_queue,this,readSocket,events[0]);
+    Request* request = alloc_new Request(m_queue,this,readSocket,events[0]);
     _beginthreadex(nullptr,0,Worker,request,0,nullptr);
   }
   // There has been a problem, wait for all the worker threads to terminate

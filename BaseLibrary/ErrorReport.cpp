@@ -5,7 +5,7 @@
 // Marlin Server: Internet server/client
 // 
 // Copyright (c) 2014-2024 ir. W.E. Huisman
-// All rights reserved
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -39,14 +39,6 @@
 #include <exception>
 #include <signal.h>
 #include <memory>
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 // Error report running
 __declspec(thread) bool g_exception       = false;
@@ -184,7 +176,7 @@ ErrorReportWriteToFile(const XString& p_filename
   XString current = FileTimeToMarker(nu);
   XString pathname(p_webroot);
 
-  // Creating product dir
+  // Creating product directory
   XString productDir(p_url);
   productDir.Trim(_T("/"));
   productDir.Replace(_T("/"),_T("\\"));
@@ -473,7 +465,7 @@ ErrorReport::DoReport(const XString&    p_subject
                      ,const XString&    p_url) const
 {
   // Getting process information
-  std::unique_ptr<ProcInfo> procInfo(new ProcInfo);
+  std::unique_ptr<ProcInfo> procInfo(alloc_new ProcInfo);
   FILETIME creationTime, exitTime, kernelTime, userTime;
   GetProcessTimes(GetCurrentProcess(),
                   &creationTime,
@@ -491,7 +483,7 @@ ErrorReport::DoReport(const XString&    p_subject
 #endif
 
   // Format the message
-  XString message = _T("SYSTEMUSER: ") + procInfo->m_username + _T(" on ") + procInfo->m_computer + _T("\n")
+  XString message = XString(_T("SYSTEMUSER: ")) + procInfo->m_username + _T(" on ") + procInfo->m_computer + _T("\n")
                     _T("PROGRAM   : ") + m_product +     _T(": version: ") + m_version + _T(": ") + p_subject + _T(" in ") + errorAddress + _T("\n")
                     _T("-------------\n")
                     _T("Version:      ") + m_version + _T("\n")

@@ -40,14 +40,6 @@
 #include <httpserv.h>
 #include <assert.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Logging macro's
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_log) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
@@ -70,7 +62,7 @@ HTTPServerMarlin::HTTPServerMarlin(XString p_name)
                  :HTTPServer(p_name)
 {
   // Default Marlin.config
-  m_marlinConfig = new MarlinConfig();
+  m_marlinConfig = alloc_new MarlinConfig();
 }
 
 HTTPServerMarlin::~HTTPServerMarlin()
@@ -391,12 +383,12 @@ HTTPServerMarlin::InitHTTPLogging()
 
 // Create a site to bind the traffic to
 HTTPSite*
-HTTPServerMarlin::CreateSite(PrefixType    p_type
-                            ,bool          p_secure
-                            ,int           p_port
-                            ,XString       p_baseURL
-                            ,bool          p_subsite  /* = false */
-                            ,LPFN_CALLBACK p_callback /* = NULL  */)
+HTTPServerMarlin::CreateSite(PrefixType     p_type
+                            ,bool           p_secure
+                            ,int            p_port
+                            ,XString&       p_baseURL
+                            ,bool           p_subsite  /* = false */
+                            ,LPFN_CALLBACK  p_callback /* = NULL  */)
 {
   // USE OVERRIDES FROM WEBCONFIG 
   // BUT USE PROGRAM'S SETTINGS AS DEFAULT VALUES
@@ -465,7 +457,7 @@ HTTPServerMarlin::CreateSite(PrefixType    p_type
     }
     // Create and register a URL
     // Remember URL Prefix strings, and create the site
-    HTTPSiteMarlin* registeredSite = new HTTPSiteMarlin(this,p_port,p_baseURL,prefix,mainSite,p_callback);
+    HTTPSiteMarlin* registeredSite = alloc_new HTTPSiteMarlin(this,p_port,p_baseURL,prefix,mainSite,p_callback);
     if(RegisterSite(registeredSite,prefix))
     {
       // Site created and registered
@@ -479,7 +471,7 @@ HTTPServerMarlin::CreateSite(PrefixType    p_type
 
 // Delete a channel (from prefix OR base URL forms)
 bool
-HTTPServerMarlin::DeleteSite(int p_port,XString p_baseURL,bool p_force /*=false*/)
+HTTPServerMarlin::DeleteSite(int p_port,const XString& p_baseURL,bool p_force /*=false*/)
 {
   AutoCritSec lock(&m_sitesLock);
   // Default result
@@ -527,11 +519,11 @@ HTTPServerMarlin::DeleteSite(int p_port,XString p_baseURL,bool p_force /*=false*
 
 // Find and make an URL group
 HTTPURLGroup*
-HTTPServerMarlin::FindUrlGroup(XString p_authName
-                              ,ULONG   p_authScheme
-                              ,bool    p_cache
-                              ,XString p_realm
-                              ,XString p_domain)
+HTTPServerMarlin::FindUrlGroup(const XString& p_authName
+                              ,ULONG          p_authScheme
+                              ,bool           p_cache
+                              ,const XString& p_realm
+                              ,const XString& p_domain)
 {
   // See if we already have a group of these combination
   // And if so: reuse that URL group
@@ -548,7 +540,7 @@ HTTPServerMarlin::FindUrlGroup(XString p_authName
   }
 
   // No group found, create a new one
-  HTTPURLGroup* group = new HTTPURLGroup(this,p_authName,p_authScheme,p_cache,p_realm,p_domain);
+  HTTPURLGroup* group = alloc_new HTTPURLGroup(this,p_authName,p_authScheme,p_cache,p_realm,p_domain);
 
   // Start the group
   if(group->StartGroup())
@@ -596,7 +588,7 @@ StartHTTPRequest(void* p_argument)
   HTTPServerMarlin* server = reinterpret_cast<HTTPServerMarlin*>(p_argument);
   if(server)
   {
-    HTTPRequest* request = new HTTPRequest(server);
+    HTTPRequest* request = alloc_new HTTPRequest(server);
     server->RegisterHTTPRequest(request);
     request->StartRequest();
   }
@@ -741,7 +733,7 @@ HTTPServerMarlin::StopServer()
   for(auto& it : m_eventStreams)
   {
     // SEND OnClose event
-    ServerEvent* event = new ServerEvent(_T("close"));
+    ServerEvent* event = alloc_new ServerEvent(_T("close"));
     SendEvent(it.second->m_port,it.second->m_baseURL,event);
   }
   // Try to remove all event streams
@@ -809,9 +801,9 @@ HTTPServerMarlin::CancelRequestStream(HTTP_OPAQUE_ID p_response,bool /*p_reset*/
 
 // Create a new WebSocket in the subclass of our server
 WebSocket*
-HTTPServerMarlin::CreateWebSocket(XString p_uri)
+HTTPServerMarlin::CreateWebSocket(const XString& p_uri)
 {
-  WebSocketServer* socket = new WebSocketServer(p_uri);
+  WebSocketServer* socket = alloc_new WebSocketServer(p_uri);
 
   // Connect the server logfile, and logging level
   socket->SetLogfile(m_log);
@@ -959,7 +951,7 @@ HTTPServerMarlin::SendResponseEventBuffer(HTTP_OPAQUE_ID    p_requestID
 
 // Cancel and close a WebSocket
 bool
-HTTPServerMarlin::FlushSocket(HTTP_OPAQUE_ID p_request,XString p_prefix)
+HTTPServerMarlin::FlushSocket(HTTP_OPAQUE_ID p_request,const XString& p_prefix)
 {
   wstring prefix = StringToWString(p_prefix);
   DWORD result = HttpFlushResponseCache(GetRequestQueue(),prefix.c_str(),HTTP_FLUSH_RESPONSE_FLAG_RECURSIVE,nullptr);

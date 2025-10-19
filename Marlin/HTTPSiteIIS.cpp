@@ -34,14 +34,6 @@
 #include "GetUserAccount.h"
 #include <WinFile.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Logging via the server
 #define DETAILLOG1(text)        m_server->DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text)
 #define DETAILLOGS(text,extra)  m_server->DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra)
@@ -56,8 +48,8 @@ static char THIS_FILE[] = __FILE__;
 
 HTTPSiteIIS::HTTPSiteIIS(HTTPServerIIS* p_server
                         ,int            p_port
-                        ,XString        p_site
-                        ,XString        p_prefix
+                        ,const XString& p_site
+                        ,const XString& p_prefix
                         ,HTTPSite*      p_mainSite /*=nullptr*/
                         ,LPFN_CALLBACK  p_callback /*=nullptr*/)
             :HTTPSite(p_server,p_port,p_site,p_prefix,p_mainSite,p_callback)
@@ -140,7 +132,7 @@ HTTPSiteIIS::StartSite()
 }
 
 bool
-HTTPSiteIIS::SetWebroot(XString p_webroot)
+HTTPSiteIIS::SetWebroot(const XString& p_webroot)
 {
   UNREFERENCED_PARAMETER(p_webroot);
 
@@ -208,7 +200,7 @@ HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
   }
 
   // Get owner information
-  TOKEN_OWNER* owner = reinterpret_cast<TOKEN_OWNER *>(new uchar[size]);
+  TOKEN_OWNER* owner = reinterpret_cast<TOKEN_OWNER *>(alloc_new uchar[size]);
   GetTokenInformation(p_token,TokenOwner,owner,size,&size);
   if(owner == nullptr)
   {
@@ -218,7 +210,7 @@ HTTPSiteIIS::GetHasAnonymousAuthentication(HANDLE p_token)
 
   // Get a copy of the SID
   size = GetLengthSid(owner->Owner);
-  SID* sid = reinterpret_cast<SID *>(new uchar[size]);
+  SID* sid = reinterpret_cast<SID *>(alloc_new uchar[size]);
   CopySid(size,sid,owner->Owner);
 
   TCHAR userName  [MAX_USER_NAME];

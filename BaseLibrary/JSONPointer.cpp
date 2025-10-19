@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -29,14 +29,6 @@
 #include "JSONPointer.h"
 #include "CrackURL.h"
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 // Global value to reference non-existing array or object members
 static TCHAR g_invalid_jp_value[] = _T("-");
 
@@ -45,7 +37,7 @@ JSONPointer::JSONPointer(bool p_originOne /*= false*/)
   m_origin = p_originOne ? 1 : 0;
 }
 
-JSONPointer::JSONPointer(JSONMessage* p_message,XString p_pointer,bool p_originOne /*= false*/)
+JSONPointer::JSONPointer(JSONMessage* p_message,const XString& p_pointer,bool p_originOne /*= false*/)
             :m_message(p_message)
             ,m_pointer(p_pointer)
 {
@@ -111,7 +103,7 @@ JSONPointer::Evaluate()
 
 // SETTERS
 bool
-JSONPointer::SetPointer(XString p_pointer)
+JSONPointer::SetPointer(const XString& p_pointer)
 {
   m_pointer = p_pointer;
   if(m_message)

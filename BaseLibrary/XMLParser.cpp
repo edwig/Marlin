@@ -2,8 +2,8 @@
 //
 // SourceFile: XMLParser.cpp
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -28,14 +28,6 @@
 #include "WinFile.h"
 #include "ConvertWideString.h"
 #include "Namespace.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 // Special entities, so we do not mess with the XML structures
 Entity g_entity[NUM_ENTITY] =
@@ -102,7 +94,7 @@ XMLParser::PrintXmlString(const XString& p_string,bool p_utf8 /*=false*/)
 XString
 XMLParser::PrintJsonString(const XString& p_string)
 {
-  _TUCHAR* buffer  = new _TUCHAR[2 * (size_t)p_string.GetLength() + 4];
+  _TUCHAR* buffer  = alloc_new _TUCHAR[2 * (size_t)p_string.GetLength() + 4];
   _TUCHAR* pointer = buffer;
 
   *pointer++ = '\"';
@@ -141,7 +133,7 @@ XMLParser::PrintJsonString(const XString& p_string)
   *pointer++ = '\"';
   *pointer   = 0;
 
-  XString result(buffer);
+  XString result((LPCTSTR)buffer);
   delete [] buffer;
   return result;
 }
@@ -158,7 +150,7 @@ XMLParser::XMLParser(XMLMessage* p_message)
 }
 
 void
-XMLParser::ParseMessage(XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_WHITESPACE*/)
+XMLParser::ParseMessage(const XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_WHITESPACE*/)
 {
   // Remember parsing mode
   m_whiteSpace = p_whiteSpace;
@@ -216,7 +208,7 @@ XMLParser::ParseMessage(XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_W
 
 // Parse from a beginning node
 void
-XMLParser::ParseForNode(XMLElement* p_node,XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_WHITESPACE*/)
+XMLParser::ParseForNode(XMLElement* p_node,const XString& p_message,WhiteSpace p_whiteSpace /*=PRESERVE_WHITESPACE*/)
 {
   m_lastElement = m_element = p_node;
   ParseMessage(p_message,p_whiteSpace);
@@ -849,7 +841,7 @@ XMLParser::NeedToken(_TUCHAR p_token)
 
 // Make an element
 void
-XMLParser::MakeElement(XString& p_namespace,XString& p_name)
+XMLParser::MakeElement(const XString& p_namespace,const XString& p_name)
 {
   // One element more
   ++m_elements;

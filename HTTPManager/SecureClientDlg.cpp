@@ -31,12 +31,6 @@
 #include "SecureClientDlg.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // SecureClientDlg dialog
 
 IMPLEMENT_DYNAMIC(SecureClientDlg, CDialogEx)

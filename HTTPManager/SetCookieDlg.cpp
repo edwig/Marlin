@@ -205,7 +205,9 @@ void
 SetCookieDlg::OnEnChangeCookiespath()
 {
   UpdateData();
-  m_editCookiePath.GetWindowText(m_config->m_cookiePath);
+  CString path;
+  m_editCookiePath.GetWindowText(path);
+  m_config->m_cookiePath = path;
 }
 
 void 
@@ -219,7 +221,9 @@ void
 SetCookieDlg::OnEnChangeCookiedomain()
 {
   UpdateData();
-  m_editCookieDomain.GetWindowText(m_config->m_cookieDomain);
+  CString domain;
+  m_editCookieDomain.GetWindowText(domain);
+  m_config->m_cookieDomain = domain;
 }
 
 void 

@@ -33,12 +33,6 @@
 #include <SiteHandlerPut.h>
 #include <SiteHandlerOptions.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char  THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 2;
 
 class SiteHandlerGetBase : public SiteHandlerGet
@@ -125,12 +119,12 @@ TestMarlinServer::TestBaseSite()
   }
 
   // Setting the default GET and PUT handler for this site
-  SiteHandlerGetBase* handlerGet = new SiteHandlerGetBase();
-  SiteHandlerPutBase* handlerPut = new SiteHandlerPutBase();
+  SiteHandlerGetBase* handlerGet = alloc_new SiteHandlerGetBase();
+  SiteHandlerPutBase* handlerPut = alloc_new SiteHandlerPutBase();
   site->SetHandler(HTTPCommand::http_get,handlerGet);
   site->SetHandler(HTTPCommand::http_put,handlerPut);
   // add OPTIONS handler for CORS
-  site->SetHandler(HTTPCommand::http_options,new SiteHandlerOptions());
+  site->SetHandler(HTTPCommand::http_options,alloc_new SiteHandlerOptions());
 
 #ifdef MARLIN_STANDALONE
   // Setting the virtual root directory

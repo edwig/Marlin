@@ -2,8 +2,8 @@
 //
 // SourceFile: WideMessageBox.cpp
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -30,14 +30,6 @@
 
 #ifndef MB_CANCELTRYCONTINUE
 #define MB_CANCELTRYCONTINUE 0x006L
-#endif
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
 #endif
 
 class WMBPoint

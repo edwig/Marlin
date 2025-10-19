@@ -197,22 +197,22 @@ public:
   // Return a version string
   virtual XString    GetVersion() = 0;
   // Create a site to bind the traffic to
-  virtual HTTPSite*  CreateSite(PrefixType    p_type
-                                  ,bool          p_secure
-                                  ,int           p_port
-                                  ,XString       p_baseURL
-                                  ,bool          p_subsite  = false
-                                  ,LPFN_CALLBACK p_callback = nullptr) = 0;
+  virtual HTTPSite*  CreateSite(PrefixType     p_type
+                               ,bool           p_secure
+                               ,int            p_port
+                               ,XString&       p_baseURL
+                               ,bool           p_subsite  = false
+                               ,LPFN_CALLBACK  p_callback = nullptr) = 0;
   // Delete a site from the remembered set of sites
-  virtual bool       DeleteSite(int p_port,XString p_baseURL,bool p_force = false) = 0;
+  virtual bool       DeleteSite(int p_port,const XString& p_baseURL,bool p_force = false) = 0;
   // Receive (the rest of the) incoming HTTP request
   virtual bool       ReceiveIncomingRequest(HTTPMessage* p_message,Encoding p_encoding) = 0;
   // Create a new WebSocket in the subclass of our server
-  virtual WebSocket* CreateWebSocket(XString p_uri) = 0;
+  virtual WebSocket* CreateWebSocket(const XString& p_uri) = 0;
   // Receive the WebSocket stream and pass on the the WebSocket
   virtual void       ReceiveWebSocket(WebSocket* p_socket,HTTP_OPAQUE_ID p_request) = 0;
   // Flushing a WebSocket intermediate
-  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,XString p_prefix) = 0;
+  virtual bool       FlushSocket (HTTP_OPAQUE_ID p_request,const XString& p_prefix) = 0;
   // Used for canceling a WebSocket for an event stream
   virtual void       CancelRequestStream(HTTP_OPAQUE_ID p_response,bool p_reset = false) = 0;
   // Sending a response on a message
@@ -225,7 +225,7 @@ public:
   // SETTERS
  
   // MANDATORY: Set the webroot of the server
-  void       SetWebroot(XString p_webroot);
+  void       SetWebroot(const XString& p_webroot);
   // MANDATORY: Set the ErrorReport object
   void       SetErrorReport(ErrorReport* p_report);
   // MANDATORY: Set the server to process incoming requests
@@ -237,7 +237,7 @@ public:
   // OPTIONAL: Set a logging object (lest we create our own!)
   void       SetLogging(LogAnalysis* p_log);
   // OPTIONAL: Set another name
-  void       SetName(XString p_name);
+  void       SetName(const XString& p_name);
   // OPTIONAL: Set cache policy
   void       SetCachePolicy(HTTP_CACHE_POLICY_TYPE p_type,ULONG p_seconds);
   // OPTIONAL: Set the event-streams keep-alive heartbeat
@@ -311,8 +311,8 @@ public:
   void       DetailLog (LPCTSTR p_function,LogType p_type,LPCTSTR p_text);
   void       DetailLogS(LPCTSTR p_function,LogType p_type,LPCTSTR p_text,LPCTSTR p_extra);
   void       DetailLogV(LPCTSTR p_function,LogType p_type,LPCTSTR p_text,...);
-  void       ErrorLog  (LPCTSTR p_function,DWORD p_code,XString p_text);
-  void       HTTPError (LPCTSTR p_function,int p_status,XString p_text);
+  void       ErrorLog  (LPCTSTR p_function,DWORD p_code,const XString& p_text);
+  void       HTTPError (LPCTSTR p_function,int p_status,const XString& p_text);
   // Log SSL Info of the connection
   void       LogSSLConnection(PHTTP_SSL_PROTOCOL_INFO p_sslInfo);
 
@@ -336,18 +336,18 @@ public:
   bool       CheckAuthentication(PHTTP_REQUEST  p_request
                                 ,HTTP_OPAQUE_ID p_id
                                 ,HTTPSite*      p_site
-                                ,XString&       p_rawUrl
-                                ,XString        p_authorize
+                                ,const XString& p_rawUrl
+                                ,const XString& p_authorize
                                 ,HANDLE&        p_token);
   // Sending response for an incoming message
   void       SendResponse(SOAPMessage* p_message);
   void       SendResponse(JSONMessage* p_message);
   // Return the number of push-event-streams for this URL, and probably for a user
-  int        HasEventStreams(int p_port,XString p_url,XString p_user = _T(""));
+  int        HasEventStreams(int p_port,const XString& p_url,const XString& p_user = _T(""));
   // Return the fact that we have an event stream
   bool       HasEventStream(const EventStream* p_stream);
   // Send to a server push event stream / deleting p_event
-  bool       SendEvent(int p_port,XString p_site,ServerEvent* p_event,XString p_user = _T(""));
+  bool       SendEvent(int p_port,const XString& p_site,ServerEvent* p_event,const XString& p_user = _T(""));
   // Send to a server push event stream on EventStream basis
   bool       SendEvent(EventStream* p_stream,ServerEvent* p_event,bool p_continue = true);
   // Close an event stream for one stream only
@@ -355,16 +355,16 @@ public:
   // Close and abort an event stream for whatever reason
   bool       AbortEventStream(EventStream* p_stream);
   // Close event streams for an URL and probably a user
-  void       CloseEventStreams(int p_port,XString p_url,XString p_user = _T(""));
+  void       CloseEventStreams(int p_port,const XString& p_url,const XString& p_user = _T(""));
   // Delete event stream
-  void       RemoveEventStream(XString p_url);
+  void       RemoveEventStream(const XString& p_url);
   void       RemoveEventStream(const EventStream* p_stream);
   // Monitor all server push event streams
   void       EventMonitor();
   // Register a WebServiceServer
   bool       RegisterService(WebServiceServer* p_service);
   // Remove registration of a service
-  bool       UnRegisterService (XString p_serviceName);
+  bool       UnRegisterService (const XString& p_serviceName);
   // Register a WebSocket
   bool       RegisterSocket(WebSocket* p_socket);
   // Find our extra header for RemoteDesktop (Citrix!) support
@@ -374,32 +374,32 @@ public:
   // Find routing information within the site
   void       CalculateRouting(const HTTPSite* p_site,HTTPMessage* p_message);
   // Finding a previous registered service endpoint
-  WebServiceServer* FindService(XString p_serviceName);
+  WebServiceServer* FindService(const XString& p_serviceName);
   // Finding a previous registered WebSocket
-  WebSocket*        FindWebSocket(XString p_uri);
+  WebSocket*        FindWebSocket(const XString& p_uri);
   // Finding the locking object for the sites.
   CRITICAL_SECTION* AcquireSitesLockObject();
   // Handle text-based content-type messages
   void       HandleTextContent(HTTPMessage* p_message);
   // Build the WWW-authenticate challenge
-  XString    BuildAuthenticationChallenge(XString p_authScheme,XString p_realm);
+  XString    BuildAuthenticationChallenge(const XString& p_authScheme,const XString& p_realm);
   // Find less known verb
   HTTPCommand GetUnknownVerb(PCSTR p_verb);
   // Response in the server error range (500-505)
   void       RespondWithServerError(HTTPMessage*    p_message
                                    ,int             p_error
-                                   ,XString         p_reason);
+                                   ,const XString&  p_reason);
   void       RespondWithServerError(HTTPMessage*    p_message
                                    ,int             p_error);
   // Response in the client error range (400-417)
   void       RespondWithClientError(HTTPMessage*    p_message
                                    ,int             p_error
-                                   ,XString         p_reason
-                                   ,XString         p_authScheme = _T("")
-                                   ,XString         p_realm      = _T(""));
+                                   ,const XString&  p_reason
+                                   ,const XString&  p_authScheme = _T("")
+                                   ,const XString&  p_realm      = _T(""));
   // Response in case of succesful sending of 2FA code
   void       RespondWith2FASuccess (HTTPMessage*    p_message
-                                   ,XString         p_body);
+                                   ,const XString&  p_body);
   // REQUEST HEADER METHODS
 
   // RFC 2616: paragraph 14.25: "if-modified-since"
@@ -408,13 +408,13 @@ public:
   EventStream*  SubscribeEventStream(PSOCKADDR_IN6   p_sender
                                     ,int             p_desktop
                                     ,HTTPSite*       p_site
-                                    ,XString         p_url
+                                    ,const XString&  p_url
                                     ,const XString&  p_pad
                                     ,HTTP_OPAQUE_ID  p_requestID
                                     ,HANDLE          p_token);
   // DDOS Attack mechanism
-  void       RegisterDDOSAttack  (PSOCKADDR_IN6 p_sender,XString p_path);
-  bool       CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path);
+  void       RegisterDDOSAttack  (PSOCKADDR_IN6 p_sender,const XString& p_path);
+  bool       CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,const XString& p_path);
 
 protected:
   // Cleanup the server
@@ -439,7 +439,7 @@ protected:
   // Checks if all sites are started
   void      CheckSitesStarted();
   // Make a "port:url" registration name
-  XString   MakeSiteRegistrationName(int p_port,XString p_url);
+  XString   MakeSiteRegistrationName(int p_port,const XString& p_url);
     // Form event to a stream string
   void      EventToStringBuffer(ServerEvent* p_event,BYTE** p_buffer,int& p_length);
   // Try to start the even heartbeat monitor
@@ -544,7 +544,7 @@ HTTPServer::SetServerErrorPage(const XString& p_errorPage)
 }
 
 inline void
-HTTPServer::SetName(XString p_name)
+HTTPServer::SetName(const XString& p_name)
 {
   m_name = p_name;
 }

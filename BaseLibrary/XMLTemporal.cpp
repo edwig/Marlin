@@ -2,8 +2,8 @@
 //
 // SourceFile: XMLTemporal.cpp
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -27,14 +27,6 @@
 #include "BaseLibrary.h"
 #include "XMLTemporal.h"
 #include <time.h>
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 // Number of days at the beginning of the month
 // 365 days at the end of the year
@@ -64,7 +56,7 @@ int g_daysInTheMonth[14] =
 //////////////////////////////////////////////////////////////////////////
 
 // XTOR Base class
-XMLTemporal::XMLTemporal(XString p_value)
+XMLTemporal::XMLTemporal(const XString& p_value)
             :m_string(p_value)
 {
 }
@@ -240,14 +232,14 @@ XMLTemporal::ParseXMLDate(const XString& p_string,XMLTimestamp& p_moment)
 //////////////////////////////////////////////////////////////////////////
 
 // XTOR Time
-XMLTime::XMLTime(XString p_value)
+XMLTime::XMLTime(const XString& p_value)
         :XMLTemporal(p_value)
 {
   ParseTime(p_value);
 }
 
 void 
-XMLTime::ParseTime(XString p_value)
+XMLTime::ParseTime(const XString& p_value)
 {
   // Copy and trim the string
   XString string(p_value);
@@ -481,14 +473,14 @@ XMLDate::XMLDate()
 {
 }
 
-XMLDate::XMLDate(XString p_value)
+XMLDate::XMLDate(const XString& p_value)
         :XMLTemporal(p_value)
 {
   ParseDate(p_value);
 }
 
 bool
-XMLDate::ParseDate(XString p_value)
+XMLDate::ParseDate(const XString& p_value)
 {
   XString datum(p_value);
   bool    success = false;
@@ -650,7 +642,7 @@ XMLTimestamp::XMLTimestamp()
 {
 }
 
-XMLTimestamp::XMLTimestamp(XString p_value)
+XMLTimestamp::XMLTimestamp(const XString& p_value)
              :XMLTemporal(p_value)
 {
   ParseMoment(p_value);
@@ -664,7 +656,7 @@ XMLTimestamp::XMLTimestamp(INT64 p_value)
 }
 
 void
-XMLTimestamp::ParseMoment(XString p_value)
+XMLTimestamp::ParseMoment(const XString& p_value)
 {
   XString string(p_value);
 
@@ -966,7 +958,7 @@ XMLTimestamp::SetSystemTimestamp(bool p_fraction)
 //
 //////////////////////////////////////////////////////////////////////////
 
-XMLDuration::XMLDuration(XString p_value)
+XMLDuration::XMLDuration(const XString& p_value)
             :XMLTemporal(p_value)
 {
   ParseDuration(p_value);
@@ -983,7 +975,7 @@ XMLDuration::XMLDuration(SQL_INTERVAL_STRUCT* p_interval)
 // Parse an interval from a XML duration string
 // a la: http://www.w3.org/TR/2012/REC-xmlschema11-2-20120405/datatypes.html#duration
 bool
-XMLDuration::ParseDuration(XString p_duration)
+XMLDuration::ParseDuration(const XString& p_duration)
 {
   bool  negative    = false;
   bool  didTime     = false;
@@ -998,22 +990,23 @@ XMLDuration::ParseDuration(XString p_duration)
   m_value = 0;
 
   // Parse the negative sign
-  p_duration.Trim();
-  if(p_duration.Left(1) == _T("-"))
+  XString duration(p_duration);
+  duration.Trim();
+  if(duration.Left(1) == _T("-"))
   {
     negative = true;
-    p_duration = p_duration.Mid(1);
+    duration = duration.Mid(1);
   }
 
   // Must see a 'P' for period
-  if(p_duration.Left(1) != _T("P"))
+  if(duration.Left(1) != _T("P"))
   {
     return false; // Leave interval at NULL
   }
-  p_duration = p_duration.Mid(1);
+  duration = duration.Mid(1);
 
   // Scan year/month/day/hour/min/second/fraction values
-  while(ScanDurationValue(p_duration,value,fraction,marker,didTime))
+  while(ScanDurationValue(duration,value,fraction,marker,didTime))
   {
     switch(marker)
     {
@@ -1091,7 +1084,7 @@ XMLDuration::ParseDuration(XString p_duration)
 }
 
 bool
-XMLDuration::ScanDurationValue(XString& p_duration
+XMLDuration::ScanDurationValue(const XString& p_duration
                               ,int&     p_value
                               ,int&     p_fraction
                               ,TCHAR&   p_marker
@@ -1108,42 +1101,43 @@ XMLDuration::ScanDurationValue(XString& p_duration
     return false;
   }
 
+  XString duration(p_duration);
   // Scan for beginning of time part
-  if(p_duration.GetAt(0) == 'T')
+  if(duration.GetAt(0) == 'T')
   {
-    p_didTime  = true;
-    p_duration = p_duration.Mid(1);
+    p_didTime = true;
+    duration  = duration.Mid(1);
   }
 
   // Scan a number
-  while(isdigit(p_duration.GetAt(0)))
+  while(isdigit(duration.GetAt(0)))
   {
     found = true;
     p_value *= 10;
-    p_value += p_duration.GetAt(0) - '0';
-    p_duration = p_duration.Mid(1);
+    p_value += duration.GetAt(0) - '0';
+    duration = duration.Mid(1);
   }
 
-  if(p_duration.GetAt(0) == '.')
+  if(duration.GetAt(0) == '.')
   {
-    p_duration = p_duration.Mid(1);
+    duration = duration.Mid(1);
 
     int frac = 9;
-    while(isdigit(p_duration.GetAt(0)))
+    while(isdigit(duration.GetAt(0)))
     {
       --frac;
       p_fraction *= 10;
-      p_fraction += p_duration.GetAt(0) - '0';
-      p_duration  = p_duration.Mid(1);
+      p_fraction += duration.GetAt(0) - '0';
+      duration  = duration.Mid(1);
     }
     p_fraction *= (int) pow(10,frac);
   }
 
   // Scan a marker
-  if(isalpha(p_duration.GetAt(0)))
+  if(isalpha(duration.GetAt(0)))
   {
-    p_marker   = (TCHAR) p_duration.GetAt(0);
-    p_duration = p_duration.Mid(1);
+    p_marker = (TCHAR) duration.GetAt(0);
+    duration = duration.Mid(1);
   }
 
   // True if both found, and fraction only found for seconds
@@ -1304,10 +1298,10 @@ XMLDuration::RecalculateString()
   }
 
   // Set Period and sign
-  m_string = _T("P") + m_string;
+  m_string = XString(_T("P")) + m_string;
   if(m_interval.interval_sign)
   {
-    m_string = _T("-") + m_string;
+    m_string = XString(_T("-")) + m_string;
   }
 
   // See if we have nano-seconds
@@ -1360,35 +1354,36 @@ XMLDuration::RecalculateValue()
 //
 //////////////////////////////////////////////////////////////////////////
 
-XMLGregorianMD::XMLGregorianMD(XString p_value)
+XMLGregorianMD::XMLGregorianMD(const XString& p_value)
                :XMLTemporal(p_value)
 {
   ParseGregorianMD(p_value);
 }
 
 void
-XMLGregorianMD::ParseGregorianMD(XString p_value)
+XMLGregorianMD::ParseGregorianMD(const XString& p_value)
 {
   int month = 0;
   int day   = 0;
   bool negative = false;
 
-  p_value.Trim();
-  if(p_value.GetAt(0) == '-')
+  XString value(p_value);
+  value.Trim();
+  if(value.GetAt(0) == '-')
   {
     negative = true;
-    p_value = p_value.Mid(1);
+    value = value.Mid(1);
   }
-  int num = _stscanf_s(p_value,_T("%d-%d"),&month,&day);
+  int num = _stscanf_s(value,_T("%d-%d"),&month,&day);
   if(num != 2)
   {
-    XString result = _T("Not a Gregorian month-day value: ") + p_value;
+    XString result = XString(_T("Not a Gregorian month-day value: ")) + value;
     throw StdException(result);
   }
   else if(month < 1 || month > 12 ||
           day   < 1 || day   > 31)
   {
-    XString result = _T("Gregorian month-day overflow: ") + p_value;
+    XString result = XString(_T("Gregorian month-day overflow: ")) + value;
     throw StdException(result);
   }
   m_value = (INT64)month * 31 + (INT64)day;
@@ -1404,37 +1399,39 @@ XMLGregorianMD::ParseGregorianMD(XString p_value)
 //
 //////////////////////////////////////////////////////////////////////////
 
-XMLGregorianYM::XMLGregorianYM(XString p_value)
+XMLGregorianYM::XMLGregorianYM(const XString& p_value)
                :XMLTemporal(p_value)
 {
   ParseGregorianYM(p_value);
 }
 
 void
-XMLGregorianYM::ParseGregorianYM(XString p_value)
+XMLGregorianYM::ParseGregorianYM(const XString& p_value)
 {
-  p_value.Trim();
+  XString value(p_value);
+
+  value.Trim();
   XString result;
   int year  = 0;
   int month = 0;
   bool negative = false;
 
-  if(p_value.GetAt(0) == '-')
+  if(value.GetAt(0) == '-')
   {
     negative = true;
-    p_value = p_value.Mid(1);
+    value = value.Mid(1);
   }
 
-  int num = _stscanf_s(p_value,_T("%d-%d"),&year,&month);
+  int num = _stscanf_s(value,_T("%d-%d"),&year,&month);
   if(num != 2)
   {
-    result = _T("Not a Gregorian year-month value: ") + p_value;
+    result = XString(_T("Not a Gregorian year-month value: ")) + value;
     throw StdException(result);
   }
   else if(year  < 0 || year  > 9999 ||
           month < 1 || month >   12  )
   {
-    result = _T("Gregorian year-month overflow: ") + p_value;
+    result = XString(_T("Gregorian year-month overflow: ")) + value;
     throw StdException(result);
   }
   m_value = (INT64)year * 12 + (INT64)month;

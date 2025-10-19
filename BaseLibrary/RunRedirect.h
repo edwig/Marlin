@@ -4,8 +4,8 @@
 //
 // Marlin Component: Internet server/client
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -43,18 +43,18 @@ int  CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,XString& p_r
 int  CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPCTSTR p_stdInput,XString& p_result,int p_waittime,bool p_show = false);
 int  CallProgram_For_String(LPCTSTR p_program,LPCTSTR p_commandLine,LPCTSTR p_stdInput,XString& p_result,XString& p_errors,int p_waittime,bool p_show = false);
 
-int  PosixCallProgram(XString  p_directory
-                     ,XString  p_programma
-                     ,XString  p_commandLine
-                     ,XString  p_charset
-                     ,XString  p_stdin
-                     ,XString& p_stdout
-                     ,XString& p_stderror
-                     ,HWND     p_console        = NULL
-                     ,UINT     p_showWindow     = SW_HIDE
-                     ,BOOL     p_waitForIdle    = FALSE
-                     ,ULONG    p_maxRunningTime = INFINITE
-                     ,RunRedirect** p_redirect  = nullptr);
+int  PosixCallProgram(const XString& p_directory
+                     ,const XString& p_programma
+                     ,const XString& p_commandLine
+                     ,const XString& p_charset
+                     ,const XString& p_stdin
+                     ,      XString& p_stdout
+                     ,      XString& p_stderror
+                     ,      HWND     p_console        = NULL
+                     ,      UINT     p_showWindow     = SW_HIDE
+                     ,      BOOL     p_waitForIdle    = FALSE
+                     ,      ULONG    p_maxRunningTime = INFINITE
+                     ,RunRedirect**  p_redirect  = nullptr);
 
 class RunRedirect : public Redirect
 {

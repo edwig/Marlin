@@ -31,12 +31,6 @@
 #include <HTTPSite.h>
 #include <SiteHandlerSoap.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 2;
 
 class SiteHandlerSoapBodySign: public SiteHandlerSoap
@@ -139,7 +133,7 @@ TestMarlinServer::TestBodySigning()
     qprintf(_T("ERROR: Cannot create an HTTP site: %s\n"),url.GetString());
     return error;
   }
-  site->SetHandler(HTTPCommand::http_post,new SiteHandlerSoapBodySign());
+  site->SetHandler(HTTPCommand::http_post,alloc_new SiteHandlerSoapBodySign());
 
   // Modify the standard settings for this site
   site->AddContentType(true,_T("pos"),_T("text/xml"));

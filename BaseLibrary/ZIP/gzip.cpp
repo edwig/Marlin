@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -42,7 +42,7 @@
 bool gzip_compress_memory(void *in_data,size_t in_data_size,std::vector<uint8_t>& buffer)
 {
   const size_t BUFSIZE = 128 * 1024;
-  uint8_t* temp_buffer = new uint8_t[BUFSIZE];
+  uint8_t* temp_buffer = alloc_new uint8_t[BUFSIZE];
 
   z_stream strm;
   memset(&strm,0,sizeof(z_stream));
@@ -101,7 +101,7 @@ bool gzip_compress_memory(void *in_data,size_t in_data_size,std::vector<uint8_t>
 bool gzip_decompress_memory(void *in_data,size_t in_data_size,std::vector<uint8_t>& buffer)
 {
   const size_t BUFSIZE = 128 * 1024;
-  uint8_t* temp_buffer = new uint8_t[BUFSIZE];
+  uint8_t* temp_buffer = alloc_new uint8_t[BUFSIZE];
 
   z_stream strm;
   memset(&strm,0,sizeof(z_stream));

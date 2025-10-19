@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -30,5 +30,5 @@
 
 // These functions are meant to be used in conjunction with your own HTTP X-<app>-Authentication header
 
-XString CreateAuthentication(XString p_user,XString p_password);
-bool    DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password);
+XString CreateAuthentication(const XString& p_user,const XString& p_password);
+bool    DecodeAuthentication(const XString& p_scramble,XString& p_user,XString& p_password);

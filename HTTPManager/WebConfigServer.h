@@ -43,7 +43,7 @@ public:
   explicit WebConfigServer(bool p_iis,CWnd* pParent = NULL);   // standard constructor
   virtual ~WebConfigServer();
   BOOL OnInitDialog();
-  void SetSiteConfig(XString p_urlPrefix,XString m_fileName);
+  void SetSiteConfig(CString p_urlPrefix,CString m_fileName);
   void ReadWebConfig (MarlinConfig& p_config);
   void WriteWebConfig(MarlinConfig& p_config);
 
@@ -63,8 +63,8 @@ protected:
   friend      SetCookieDlg;
 
   // Special config to edit
-  XString     m_url;
-  XString     m_siteConfigFile;
+  CString     m_url;
+  CString     m_siteConfigFile;
 
   bool        m_iis;
   // SERVER OVERRIDES
@@ -103,10 +103,10 @@ protected:
   bool        m_useNoCache;
   bool        m_useCORS;
 
-  XString     m_webroot;
-  XString     m_baseURL;
+  CString     m_webroot;
+  CString     m_baseURL;
   bool        m_secureProtocol;
-  XString     m_binding;
+  CString     m_binding;
   int         m_port;
   int         m_backlogQueue;
   bool        m_tunneling;
@@ -121,8 +121,8 @@ protected:
   int         m_keepalive;
   int         m_retrytime;
   // Server headers
-  XString     m_xFrameOption;
-  XString     m_xFrameAllowed;
+  CString     m_xFrameOption;
+  CString     m_xFrameAllowed;
   unsigned    m_hstsMaxAge;
   bool        m_hstsSubDomain;
   bool        m_xNoSniff;
@@ -130,15 +130,15 @@ protected:
   bool        m_XSSBlockMode;
   bool        m_noCacheControl;
   bool        m_cors;
-  XString     m_allowOrigin;
-  XString     m_allowHeaders;
+  CString     m_allowOrigin;
+  CString     m_allowHeaders;
   int         m_allowMaxAge;
   bool        m_corsCredentials;
   bool        m_cookieSecure;
   bool        m_cookieHttpOnly;
-  XString     m_cookieSameSite;
-  XString     m_cookiePath;
-  XString     m_cookieDomain;
+  CString     m_cookieSameSite;
+  CString     m_cookiePath;
+  CString     m_cookieDomain;
   int         m_cookieExpires;
   int         m_cookieMaxAge;
 

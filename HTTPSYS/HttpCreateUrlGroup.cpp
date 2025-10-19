@@ -13,12 +13,6 @@
 #include "UrlGroup.h"
 #include "OpaqueHandles.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 ULONG WINAPI
 HttpCreateUrlGroup(IN  HTTP_SERVER_SESSION_ID ServerSessionId
                   ,OUT PHTTP_URL_GROUP_ID     pUrlGroupId
@@ -43,7 +37,7 @@ HttpCreateUrlGroup(IN  HTTP_SERVER_SESSION_ID ServerSessionId
   }
 
   // Create and keep the group
-  UrlGroup* group = new UrlGroup(session);
+  UrlGroup* group = alloc_new UrlGroup(session);
   session->AddUrlGroup(group);
 
   // Reflect the group ID back

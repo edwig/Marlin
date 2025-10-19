@@ -1,11 +1,9 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
-// SourceFile: HTTPSiteMarlin.h
+// SourceFile: ConvertWideString.cpp
 //
-// Marlin Server: Internet server/client
-// 
-// Copyright (c) 2014-2024 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -25,28 +23,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#pragma once
-#include "HTTPSite.h"
+#include "pch.h"
 
-class HTTPServerMarlin;
+// Set up for testing memory leakings
 
-class HTTPSiteMarlin : public HTTPSite
+void InitBaseLibrary()
 {
-public:
-  HTTPSiteMarlin(HTTPServerMarlin*  p_server
-                ,int                p_port
-                ,const XString&     p_site
-                ,const XString&     p_prefix
-                ,HTTPSite*          p_mainSite = nullptr
-                ,LPFN_CALLBACK      p_callback = nullptr);
-
-  // MANDATORY: Explicitly starting after configuration of the site
-  virtual bool StartSite() override;
-
-  // OPTIONAL: Set the webroot of the site
-  virtual bool SetWebroot(const XString& p_webroot) override;
-
-protected:
-  // Initialize the site from automatic settings in the config
-  void         InitSite(MarlinConfig& p_config);
-};
+// This is the default behaviour!
+//  CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+// _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG); 
+// See also: https://learn.microsoft.com/en-us/cpp/c-runtime-library/find-memory-leaks-using-the-crt-library?view=msvc-170
+//
+#ifdef _DEBUG
+  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+}

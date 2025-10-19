@@ -28,7 +28,7 @@ public:
  ~UrlGroup();
 
   // FUNCTIONS
-  ULONG AddUrlPrefix(XString pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext);
+  ULONG AddUrlPrefix(const XString& pFullyQualifiedUrl,HTTP_URL_CONTEXT UrlContext);
   ULONG DelUrlPrefix(HTTP_URL_GROUP_ID p_handle,XString pFullyQualifiedUrl,ULONG p_flags);
   ULONG NumberOfPorts (USHORT p_port);
   URL*  FindLongestURL(USHORT p_port,XString p_abspath,int& p_length);
@@ -42,8 +42,8 @@ public:
   void SetTimeoutIdleConnection(USHORT p_timeout) { m_timeoutIdleConnection  = p_timeout; };
   void SetTimeoutHeaderWait    (USHORT p_timeout) { m_timeoutHeaderWait      = p_timeout; };
   void SetTimeoutMinSendRate   (ULONG  p_rate)    { m_timeoutMinSendRate     = p_rate;    };
-  void SetAuthentication(ULONG p_scheme,XString p_domain,XString p_realm,bool p_caching);
-  void SetAuthenticationWide(wstring p_domain,wstring p_realm);
+  void SetAuthentication(ULONG p_scheme,const XString& p_domain,const XString& p_realm,bool p_caching);
+  void SetAuthenticationWide(const wstring& p_domain,const wstring& p_realm);
 
   // GETTERS
   ULONGLONG           GetIdent()                    { return m_ident;                   };
@@ -66,7 +66,7 @@ public:
 
 private:
   int                 SegmentedCompare(LPCTSTR p_left,LPCTSTR p_right);
-  bool                UrlIsRegistered(XString p_prefix);
+  bool                UrlIsRegistered(const XString& p_prefix);
   bool                GetURLSettings(URL& p_url);
 
   // Primary identity

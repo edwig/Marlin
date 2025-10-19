@@ -11,16 +11,10 @@
 #include "http_private.h"
 #include "URL.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Splits a URL-Prefix string into an URL object (no context yet)
 //
 ULONG
-SplitURLPrefix(XString p_fullprefix,PURL p_url)
+SplitURLPrefix(const XString& p_fullprefix,PURL p_url)
 {
   // Check that we are called correctly
   if(p_fullprefix.IsEmpty() || p_url == nullptr)

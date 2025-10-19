@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 //
-// // Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// // Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -31,14 +31,6 @@
 #include "Base64.h"
 #include <time.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #define EXTRABUF 5
 
 // ALGORITHM
@@ -50,7 +42,7 @@ static char THIS_FILE[] = __FILE__;
 // 5) Add five random characters at the begining and the end
 // 6) Do Base64 encrypting
 //
-XString CreateAuthentication(XString p_user,XString p_password)
+XString CreateAuthentication(const XString& p_user,const XString& p_password)
 {
   XString authenticate;
   // STEP 1) Put together with a less used separator
@@ -66,13 +58,13 @@ XString CreateAuthentication(XString p_user,XString p_password)
 #else
   XString ext = EncodeStringForTheWire(authenticate);
   length = ext.GetLength();
-  buffer = new BYTE[length + 1];
+  buffer = alloc_new BYTE[length + 1];
   strncpy_s((char*)buffer,length + 1,ext.GetString(),length);
 #endif
 
 
   // STEP 3) Reverse our string in the buffer
-  BYTE* resbuffer = new BYTE[length + 1 + 2 * EXTRABUF];
+  BYTE* resbuffer = alloc_new BYTE[length + 1 + 2 * EXTRABUF];
   for(int ind = 0;ind <length; ++ind)
   {
     resbuffer[EXTRABUF + ind] = buffer[length - ind - 1];
@@ -123,7 +115,7 @@ XString CreateAuthentication(XString p_user,XString p_password)
 //    Split the strings and reverse the order
 
 bool 
-DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password)
+DecodeAuthentication(const XString& p_scramble,XString& p_user,XString& p_password)
 {
   bool result(false);
 
@@ -134,7 +126,7 @@ DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password)
   // STEP 2) Decode base64
   Base64 base;
   int length = (int)base.Ascii_length(p_scramble.GetLength());
-  BYTE* buffer = new BYTE[length + 1];
+  BYTE* buffer = alloc_new BYTE[length + 1];
   base.Decrypt(p_scramble,buffer,length + 1);
   length = (int) strlen((char*)buffer);
   if(p_scramble.IsEmpty() || length == 0)
@@ -161,7 +153,7 @@ DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password)
   }
 
   // STEP 5: Revert the buffer
-  BYTE* resbuffer = new BYTE[length + 1 + 2 * EXTRABUF];
+  BYTE* resbuffer = alloc_new BYTE[length + 1 + 2 * EXTRABUF];
   for(int ind = 0;ind < length; ++ind)
   {
     resbuffer[ind] = buffer[EXTRABUF + length - ind - 1];
@@ -174,7 +166,7 @@ DecodeAuthentication(XString p_scramble,XString& p_user,XString& p_password)
   bool bom(false);
   TryConvertNarrowString(resbuffer,length,_T(""),authenticate,bom);
 #else
-  XString buf(resbuffer);
+  XString buf((LPCSTR)resbuffer);
   authenticate = DecodeStringFromTheWire(buf);
 #endif
 

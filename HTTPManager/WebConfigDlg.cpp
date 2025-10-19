@@ -86,14 +86,14 @@ WebConfigDlg::OnInitDialog()
   ReadWebConfig();
 
   // Setting the type of editor
-  XString base(_T("Marlin.Config"));
+  CString base(_T("Marlin.Config"));
   if(m_siteConfigFile.IsEmpty())
   {
     m_title = base + _T(" Editor for: Marlin.config");
   }
   else
   {
-    XString subject = m_url.IsEmpty() ? XString(_T("server")) : m_url;
+    CString subject = m_url.IsEmpty() ? CString(_T("server")) : m_url;
     m_title  = base + _T(" Editor for: ") + subject;
     m_title += _T(" - ");
     m_title += m_siteConfigFile;
@@ -153,7 +153,7 @@ WebConfigDlg::RemoveLogTab()
 }
 
 void
-WebConfigDlg::SetSiteConfig(XString p_urlPrefix,XString p_fileName)
+WebConfigDlg::SetSiteConfig(CString p_urlPrefix,CString p_fileName)
 {
   m_url            = p_urlPrefix;
   m_siteConfigFile = p_fileName;
@@ -172,7 +172,8 @@ WebConfigDlg::ReadWebConfig()
     {
       RemoveLogTab();
     }
-    m_webconfig = new MarlinConfig(m_siteConfigFile);
+    XString configFile(m_siteConfigFile);
+    m_webconfig = alloc_new MarlinConfig(configFile);
   }
   m_page1.ReadWebConfig(*m_webconfig);
   m_page2.ReadWebConfig(*m_webconfig);
@@ -191,7 +192,8 @@ WebConfigDlg::WriteWebConfig()
     {
       m_siteConfigFile = _T("Marlin.config");
     }
-    m_webconfig = new MarlinConfig(m_siteConfigFile);
+    XString configFile(m_siteConfigFile);
+    m_webconfig = alloc_new MarlinConfig(configFile);
   }
 
   m_page1.WriteWebConfig(*m_webconfig);

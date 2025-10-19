@@ -12,12 +12,6 @@
 #include "ServerSession.h"
 #include "OpaqueHandles.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 ULONG WINAPI
 HttpCloseServerSession(IN HTTP_SERVER_SESSION_ID ServerSessionId)
 {

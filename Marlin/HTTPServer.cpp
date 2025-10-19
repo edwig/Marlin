@@ -57,14 +57,6 @@
 #include <io.h>
 #include <sys/timeb.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 //////////////////////////////////////////////////////////////////////////
 //
 // ERROR PAGES
@@ -355,14 +347,15 @@ HTTPServer::DetailLogV(const TCHAR* p_function,LogType p_type,const TCHAR* p_tex
 
 // Error logging to the log file
 void
-HTTPServer::ErrorLog(const TCHAR* p_function,DWORD p_code,XString p_text)
+HTTPServer::ErrorLog(const TCHAR* p_function,DWORD p_code,const XString& p_text)
 {
   bool result = false;
 
   if(m_log)
   {
-    p_text.AppendFormat(_T(" Error [%08lX] %s"),p_code,GetLastErrorAsString(p_code).GetString());
-    result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
+    XString text(p_text);
+    text.AppendFormat(_T(" Error [%08lX] %s"),p_code,GetLastErrorAsString(p_code).GetString());
+    result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,text.GetString());
   }
 
   // nothing logged
@@ -374,14 +367,15 @@ HTTPServer::ErrorLog(const TCHAR* p_function,DWORD p_code,XString p_text)
 }
 
 void
-HTTPServer::HTTPError(const TCHAR* p_function,int p_status,XString p_text)
+HTTPServer::HTTPError(const TCHAR* p_function,int p_status,const XString& p_text)
 {
   bool result = false;
 
   if(m_log)
   {
-    p_text.AppendFormat(_T(" HTTP Status [%d] %s"),p_status,GetHTTPStatusText(p_status));
-    result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,p_text);
+    XString text(p_text);
+    text.AppendFormat(_T(" HTTP Status [%d] %s"),p_status,GetHTTPStatusText(p_status));
+    result = m_log->AnalysisLog(p_function, LogType::LOG_ERROR,false,text.GetString());
   }
 
   // nothing logged
@@ -433,7 +427,7 @@ HTTPServer::SetLogging(LogAnalysis* p_log)
 }
 
 void
-HTTPServer::SetWebroot(XString p_webroot)
+HTTPServer::SetWebroot(const XString& p_webroot)
 {
   // Check WebRoot against your config
   m_webroot = m_marlinConfig->GetParameterString(_T("Server"),_T("WebRoot"),p_webroot);
@@ -448,28 +442,29 @@ HTTPServer::SetWebroot(XString p_webroot)
 }
 
 XString
-HTTPServer::MakeSiteRegistrationName(int p_port,XString p_url)
+HTTPServer::MakeSiteRegistrationName(int p_port,const XString& p_url)
 {
   XString registration;
-  p_url.MakeLower();
+  XString url(p_url);
+  url.MakeLower();
 
   // Now chop off all parameters and anchors
-  int posquest = p_url.Find('?');
-  int posquote = p_url.Find('\'');
-  int posanchr = p_url.Find('#');
+  int posquest = url.Find('?');
+  int posquote = url.Find('\'');
+  int posanchr = url.Find('#');
 
   if((posquest > 0 && posquote < 0) ||
      (posquest > 0 && posquote > 0 && posquest < posquote))
   {
-    p_url = p_url.Left(posquest);
+    url = url.Left(posquest);
   }
   else if((posanchr > 0 && posquote < 0) ||
           (posanchr > 0 && posquote > 0 && posanchr < posquote))
   {
-    p_url = p_url.Left(posanchr);
+    url = url.Left(posanchr);
   }
-  p_url.TrimRight('/');
-  registration.Format(_T("%d:%s"),p_port,p_url.GetString());
+  url.TrimRight('/');
+  registration.Format(_T("%d:%s"),p_port,url.GetString());
 
   return registration;
 }
@@ -689,8 +684,8 @@ bool
 HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
                                ,HTTP_OPAQUE_ID p_id
                                ,HTTPSite*      p_site
-                               ,XString&       p_rawUrl
-                               ,XString        p_authorize
+                               ,const XString& p_rawUrl
+                               ,const XString& p_authorize
                                ,HANDLE&        p_token)
 {
   bool doReceive = true;
@@ -767,7 +762,7 @@ HTTPServer::CheckAuthentication(PHTTP_REQUEST  p_request
 
 // Build the www-auhtenticate challenge
 XString
-HTTPServer::BuildAuthenticationChallenge(XString p_authScheme,XString p_realm)
+HTTPServer::BuildAuthenticationChallenge(const XString& p_authScheme,const XString& p_realm)
 {
   XString challenge;
 
@@ -827,7 +822,7 @@ HTTPServer::SendResponse(SOAPMessage* p_message)
   }
 
   // Convert to a HTTP response
-  HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
+  HTTPMessage* answer = alloc_new HTTPMessage(HTTPCommand::http_response,p_message);
 
   // Check if Content-type was correctly set
   if(answer->GetContentType().IsEmpty())
@@ -883,7 +878,7 @@ HTTPServer::SendResponse(JSONMessage* p_message)
   {
     DETAILLOGS(_T("Send JSON FAULT response:\n"),p_message->GetJsonMessage());
     // Convert to a HTTP response
-    HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
+    HTTPMessage* answer = alloc_new HTTPMessage(HTTPCommand::http_response,p_message);
     answer->SetStatus(HTTP_STATUS_BAD_REQUEST);
     answer->GetFileBuffer()->Reset();
     SendResponse(answer);
@@ -893,7 +888,7 @@ HTTPServer::SendResponse(JSONMessage* p_message)
   {
     DETAILLOG1(_T("Send JSON response"));
     // Convert to a HTTP response
-    HTTPMessage* answer = new HTTPMessage(HTTPCommand::http_response,p_message);
+    HTTPMessage* answer = alloc_new HTTPMessage(HTTPCommand::http_response,p_message);
     if(answer->GetContentType().Find(_T("json")) < 0)
     {
       answer->SetContentType(_T("application/json"));
@@ -908,9 +903,9 @@ HTTPServer::SendResponse(JSONMessage* p_message)
 
 // Response in the server error range (500-505)
 void
-HTTPServer::RespondWithServerError(HTTPMessage* p_message
-                                  ,int          p_error
-                                  ,XString      p_reason)
+HTTPServer::RespondWithServerError(HTTPMessage*   p_message
+                                  ,int            p_error
+                                  ,const XString& p_reason)
 {
   HTTPERROR(p_error,_T("Respond with server error"));
   XString page;
@@ -934,11 +929,11 @@ HTTPServer::RespondWithServerError(HTTPMessage*    p_message
 
 // Response in the client error range (400-417)
 void
-HTTPServer::RespondWithClientError(HTTPMessage* p_message
-                                  ,int          p_error
-                                  ,XString      p_reason
-                                  ,XString      p_authScheme
-                                  ,XString      p_realm)
+HTTPServer::RespondWithClientError(HTTPMessage*   p_message
+                                  ,int            p_error
+                                  ,const XString& p_reason
+                                  ,const XString& p_authScheme
+                                  ,const XString& p_realm)
 {
   HTTPERROR(p_error,_T("Respond with client error"));
   XString page;
@@ -960,7 +955,7 @@ HTTPServer::RespondWithClientError(HTTPMessage* p_message
 }
 
 void
-HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,XString p_body)
+HTTPServer::RespondWith2FASuccess(HTTPMessage* p_message,const XString& p_body)
 {
   p_message->Reset();
   p_message->GetFileBuffer()->Reset();
@@ -1176,7 +1171,7 @@ EventStream*
 HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
                                 ,int              p_desktop
                                 ,HTTPSite*        p_site
-                                ,XString          p_url
+                                ,const XString&   p_url
                                 ,const XString&   p_path
                                 ,HTTP_OPAQUE_ID   p_requestId
                                 ,HANDLE           p_token)
@@ -1204,7 +1199,7 @@ HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
   }
 
   // ADD NEW STREAM
-  EventStream* stream = new EventStream();
+  EventStream* stream = alloc_new EventStream();
   memcpy(&stream->m_sender,p_sender,sizeof(SOCKADDR_IN6));
   stream->m_desktop   = p_desktop;
   stream->m_port      = p_site->GetPort();
@@ -1234,13 +1229,14 @@ HTTPServer::SubscribeEventStream(PSOCKADDR_IN6    p_sender
 
 // Send to a server push event stream / deleting p_event
 bool
-HTTPServer::SendEvent(int p_port,XString p_site,ServerEvent* p_event,XString p_user /*=""*/)
+HTTPServer::SendEvent(int p_port,const XString& p_site,ServerEvent* p_event,const XString& p_user /*=""*/)
 {
   AutoCritSec lock(&m_eventLock);
   bool result = false;
 
-  p_site.MakeLower();
-  p_site.TrimRight('/');
+  XString site(p_site);
+  site.MakeLower();
+  site.TrimRight('/');
 
 //   // Get the stream-string of the event
 //   BYTE* buffer = nullptr;
@@ -1248,11 +1244,11 @@ HTTPServer::SendEvent(int p_port,XString p_site,ServerEvent* p_event,XString p_u
 //   EventToStringBuffer(p_event,&buffer,length);
 
   // Find the context of the URL (if any)
-  HTTPSite* context = FindHTTPSite(p_port,p_site);
+  HTTPSite* context = FindHTTPSite(p_port,site);
   if(context && context->GetIsEventStream())
   {
-    EventMap::iterator lower = m_eventStreams.lower_bound(p_site);
-    EventMap::iterator upper = m_eventStreams.upper_bound(p_site);
+    EventMap::iterator lower = m_eventStreams.lower_bound(site);
+    EventMap::iterator upper = m_eventStreams.upper_bound(site);
 
     while(lower != m_eventStreams.end())
     {
@@ -1269,7 +1265,7 @@ HTTPServer::SendEvent(int p_port,XString p_site,ServerEvent* p_event,XString p_u
       if(p_user.IsEmpty() || p_user.CompareNoCase(stream->m_user) == 0)
       {
         // Copy the event
-        ServerEvent* event = new ServerEvent(p_event);
+        ServerEvent* event = alloc_new ServerEvent(p_event);
 
         // Sending the event, while deleting it
         // Accumulating the results, true if at least one is sent :-)
@@ -1443,7 +1439,7 @@ HTTPServer::EventToStringBuffer(ServerEvent* p_event,BYTE** p_buffer,int& p_leng
 #else
   XString utf8stream = EncodeStringForTheWire(stream,_T("utf-8"));
   p_length  = utf8stream.GetLength();
-  *p_buffer = new BYTE[p_length + 1];
+  *p_buffer = alloc_new BYTE[p_length + 1];
   memcpy_s(*p_buffer,p_length + 1,utf8stream.GetString(),p_length);
   (*p_buffer)[p_length] = 0;
 #endif
@@ -1582,7 +1578,7 @@ HTTPServer::CheckEventStreams()
         DETAILLOGS(_T("Push-event stream out of data chunks: "),stream->m_baseURL);
 
         // Send a close-stream event
-        ServerEvent* event = new ServerEvent(_T("close"));
+        ServerEvent* event = alloc_new ServerEvent(_T("close"));
         SendEvent(stream,event);
         // Remove request from the request queue, closing the connection
         CancelRequestStream(stream->m_requestID);
@@ -1679,7 +1675,7 @@ HTTPServer::HasEventStream(const EventStream* p_stream)
 
 // Return the number of push-event-streams for this URL
 int
-HTTPServer::HasEventStreams(int p_port,XString p_url,XString p_user /*=""*/)
+HTTPServer::HasEventStreams(int p_port,const XString& p_url,const XString& p_user /*=""*/)
 {
   AutoCritSec lock(&m_eventLock);
   unsigned count = 0;
@@ -1720,7 +1716,7 @@ HTTPServer::CloseEventStream(const EventStream* p_stream)
       {
         // Send a close-stream event
         // And close the stream by sending a close flag
-        ServerEvent* event = new ServerEvent(_T("close"));
+        ServerEvent* event = alloc_new ServerEvent(_T("close"));
         SendEvent(stream.second,event,false);
       }
       else
@@ -1735,7 +1731,7 @@ HTTPServer::CloseEventStream(const EventStream* p_stream)
 
 // Close event streams for an URL and probably a user
 void
-HTTPServer::CloseEventStreams(int p_port,XString p_url,XString p_user /*=""*/)
+HTTPServer::CloseEventStreams(int p_port,const XString& p_url,const XString& p_user /*=""*/)
 {
   AutoCritSec lock(&m_eventLock);
 
@@ -1795,7 +1791,7 @@ HTTPServer::AbortEventStream(EventStream* p_stream)
 }
 
 void
-HTTPServer::RemoveEventStream(XString p_url)
+HTTPServer::RemoveEventStream(const XString& p_url)
 {
   // Event stream NOT accepted
   AutoCritSec lock(&m_eventLock);
@@ -1848,12 +1844,13 @@ HTTPServer::RegisterService(WebServiceServer* p_service)
 
 // Remove registration of a service
 bool
-HTTPServer::UnRegisterService(XString p_serviceName)
+HTTPServer::UnRegisterService(const XString& p_serviceName)
 {
   AutoCritSec lock(&m_sitesLock);
 
-  p_serviceName.MakeLower();
-  ServiceMap::iterator it = m_allServices.find(p_serviceName);
+  XString service(p_serviceName);
+  service.MakeLower();
+  ServiceMap::iterator it = m_allServices.find(service);
   if(it != m_allServices.end())
   {
     delete it->second;
@@ -1865,12 +1862,13 @@ HTTPServer::UnRegisterService(XString p_serviceName)
 
 // Finding a previous registered service endpoint
 WebServiceServer*
-HTTPServer::FindService(XString p_serviceName)
+HTTPServer::FindService(const XString& p_serviceName)
 {
   AutoCritSec lock(&m_sitesLock);
 
-  p_serviceName.MakeLower();
-  ServiceMap::iterator it = m_allServices.find(p_serviceName);
+  XString service(p_serviceName);
+  service.MakeLower();
+  ServiceMap::iterator it = m_allServices.find(service);
   if(it != m_allServices.end())
   {
     return it->second;
@@ -1945,12 +1943,13 @@ HTTPServer::UnRegisterWebSocket(WebSocket* p_socket,bool p_destroy /*= true*/)
 
 // Finding a previous registered websocket
 WebSocket*
-HTTPServer::FindWebSocket(XString p_key)
+HTTPServer::FindWebSocket(const XString& p_key)
 {
-  p_key.MakeLower();
+  XString key(p_key);
+  key.MakeLower();
 
   AutoCritSec lock(&m_socketLock);
-  SocketMap::iterator it = m_sockets.find(p_key);
+  SocketMap::iterator it = m_sockets.find(key);
   if(it != m_sockets.end())
   {
     return it->second;
@@ -2114,7 +2113,7 @@ HTTPServer::LogTraceRequestBody(HTTPMessage* p_message,Encoding p_encoding /*Enc
   {
     if(g_media == nullptr)
     {
-      g_media = new MediaTypes();
+      g_media = alloc_new MediaTypes();
     }
 
     // Find our media type
@@ -2258,7 +2257,7 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,HTTPMessage* p_message,En
       // Make sure we have a media type cache
       if(g_media == nullptr)
       {
-        g_media = new MediaTypes();
+        g_media = alloc_new MediaTypes();
       }
       // Find our media type
       XString ctype = p_message->GetContentType();
@@ -2372,7 +2371,7 @@ HTTPServer::LogTraceResponse(PHTTP_RESPONSE p_response,unsigned char* p_buffer,u
 // Applications may call this registration after several failed 
 // login attempts of several failed SSE stream registration events
 void
-HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
+HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,const XString& p_path)
 {
   AutoCritSec lock(&m_sitesLock);
 
@@ -2411,7 +2410,7 @@ HTTPServer::RegisterDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
 }
 
 bool
-HTTPServer::CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,XString p_path)
+HTTPServer::CheckUnderDDOSAttack(PSOCKADDR_IN6 p_sender,const XString& p_path)
 {
   AutoCritSec lock(&m_sitesLock);
 

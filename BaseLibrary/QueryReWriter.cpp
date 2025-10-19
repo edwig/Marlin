@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -28,14 +28,6 @@
 #include "pch.h"
 #include "QueryReWriter.h"
 #include "WiNFile.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 // All tokens that must be recognized
 // for the logic to work correctly
@@ -90,13 +82,13 @@ void QueryRewriterRemoveAllWords()
 
 ///////////////////////////////////////////////////////////////////////////
 
-QueryReWriter::QueryReWriter(XString p_schema)
+QueryReWriter::QueryReWriter(const XString& p_schema)
                :m_schema(p_schema)
 {
 }
 
 XString 
-QueryReWriter::Parse(XString p_input)
+QueryReWriter::Parse(const XString& p_input)
 {
   Reset();
   m_input = p_input;
@@ -123,11 +115,11 @@ QueryReWriter::SetOption(SROption p_option)
 }
 
 bool
-QueryReWriter::AddSQLWord(XString p_word
-                         ,XString p_replacement
-                         ,XString p_schema /*= ""*/
-                         ,Token   p_token  /*= Token::TK_EOS*/
-                         ,OdbcEsc p_odbc   /*= OdbcEsc::ODBCESC_None*/)
+QueryReWriter::AddSQLWord(const XString& p_word
+                         ,const XString& p_replacement
+                         ,const XString  p_schema /*= ""*/
+                         ,      Token    p_token  /*= Token::TK_EOS*/
+                         ,      OdbcEsc  p_odbc   /*= OdbcEsc::ODBCESC_None*/)
 {
   // Must be sure we have the tokens beforehand
   Initialization();
@@ -148,7 +140,7 @@ QueryReWriter::AddSQLWord(XString p_word
 }
 
 bool
-QueryReWriter::AddSQLWord(SQLWord& p_word)
+QueryReWriter::AddSQLWord(const SQLWord& p_word)
 {
   // Must be sure we have the tokens beforehand
   Initialization();
@@ -163,7 +155,7 @@ QueryReWriter::AddSQLWord(SQLWord& p_word)
 
 // Returns true if ALL words in parameter are added successfully
 bool
-QueryReWriter::AddSQLWords(SQLWords& p_words)
+QueryReWriter::AddSQLWords(const SQLWords& p_words)
 {
   // Must be sure we have the tokens beforehand
   Initialization();
@@ -181,7 +173,7 @@ QueryReWriter::AddSQLWords(SQLWords& p_words)
 }
 
 bool
-QueryReWriter::AddSQLWordsFromFile(XString p_filename)
+QueryReWriter::AddSQLWordsFromFile(const XString& p_filename)
 {
   // Must be sure we have the tokens beforehand
   Initialization();
@@ -623,9 +615,9 @@ QueryReWriter::FindToken()
   {
     switch(tok->second.m_odbcEscape)
     {
-      case OdbcEsc::Function:   m_tokenString = _T("{fn ") + tok->second.m_replacement;
+      case OdbcEsc::Function:   m_tokenString = XString(_T("{fn ")) + tok->second.m_replacement;
                                 break;
-      case OdbcEsc::Procedure:  m_tokenString = _T("{[?=]call ") + tok->second.m_replacement;
+      case OdbcEsc::Procedure:  m_tokenString = XString(_T("{[?=]call ")) + tok->second.m_replacement;
                                 break;
       case OdbcEsc::Date:       m_tokenString = _T("{d ");
                                 break;

@@ -32,12 +32,6 @@
 #include <HTTPMessage.h>
 #include <SiteHandlerPut.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 2;
 
 class SiteHandlerPutCookies: public SiteHandlerPut
@@ -51,7 +45,7 @@ SiteHandlerPutCookies::Handle(HTTPMessage* p_msg)
 {
   bool result = false;
   XString testname;
-  Cookie* cookie = p_msg->GetCookie(0);
+  const Cookie* cookie = p_msg->GetCookie(0);
   if(!cookie)
   {
     // SUMMARY OF THE TEST
@@ -154,7 +148,7 @@ TestMarlinServer::TestCookies()
   }
 
   // Setting a site handler !!
-  site->SetHandler(HTTPCommand::http_put,new SiteHandlerPutCookies());
+  site->SetHandler(HTTPCommand::http_put,alloc_new SiteHandlerPutCookies());
 
   // Modify the standard settings for this site
   site->AddContentType(true,_T("pos"),_T("text/xml"));

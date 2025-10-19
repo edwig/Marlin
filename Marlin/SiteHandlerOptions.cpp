@@ -33,14 +33,6 @@
 #include <winhttp.h>
 #include <io.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 bool
 SiteHandlerOptions::PreHandle(HTTPMessage* /*p_message*/)
 {
@@ -126,10 +118,10 @@ SiteHandlerOptions::PostHandle(HTTPMessage* p_message)
 //////////////////////////////////////////////////////////////////////////
 
 bool
-SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage* p_message
-                                            ,XString      p_origin
-                                            ,XString      p_method
-                                            ,XString      p_headers)
+SiteHandlerOptions::CheckCrossOriginSettings(HTTPMessage*   p_message
+                                            ,const XString& p_origin
+                                            ,const XString& p_method
+                                            ,const XString& p_headers)
 {
   // Check all requested header methods
   if(!CheckCORSOrigin (p_message,p_origin))  return false;
@@ -235,15 +227,17 @@ SiteHandlerOptions::CheckCORSHeaders(HTTPMessage* p_message,XString p_headers)
 }
 
 void 
-SiteHandlerOptions::SplitHeaders(XString p_headers,std::vector<XString>& p_map)
+SiteHandlerOptions::SplitHeaders(const XString& p_headers,std::vector<XString>& p_map)
 {
-  while(!p_headers.IsEmpty())
+  XString headers(p_headers);
+
+  while(!headers.IsEmpty())
   {
-    int pos = p_headers.Find(',');
+    int pos = headers.Find(',');
     if(pos > 0)
     {
-      XString header = p_headers.Left(pos);
-      p_headers = p_headers.Mid(pos + 1);
+      XString header = headers.Left(pos);
+      headers = headers.Mid(pos + 1);
       header.Trim();
       if(!header.IsEmpty())
       {
@@ -252,10 +246,10 @@ SiteHandlerOptions::SplitHeaders(XString p_headers,std::vector<XString>& p_map)
     }
     else
     {
-      p_headers.Trim();
-      if(!p_headers.IsEmpty())
+      headers.Trim();
+      if(!headers.IsEmpty())
       {
-        p_map.push_back(p_headers);
+        p_map.push_back(headers);
       }
       return;
     }

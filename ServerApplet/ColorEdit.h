@@ -67,9 +67,9 @@ public:
   void SetBkColor(COLORREF p_colorBackground);
   void SetBkColorEmpty(COLORREF p_colorEmptyBackground);
   void SetPasswordEyeColor(COLORREF p_colorPasswordEye);
-  void SetFontName(XString  p_fontName,BYTE language = ENGLISH);
+  void SetFontName(CString p_fontName,BYTE language = ENGLISH);
   void SetPassword(bool p_password);
-  void SetEmpty(bool p_empty,XString p_text = _T(""));
+  void SetEmpty(bool p_empty,CString p_text = _T(""));
   void SetDoPixelShift(bool p_shift);
 
   void SetBorderColor        (COLORREF p_inner,COLORREF p_outer);
@@ -78,7 +78,7 @@ public:
   void SetBorderColorNonFocus(COLORREF p_inner,COLORREF p_outer);
 
   bool    GetIsEmpty();
-  XString GetEmptyText();
+  CString GetEmptyText();
 
 public:
   afx_msg void    OnPaint();
@@ -110,14 +110,14 @@ private:
   bool     m_underLine;
   bool     m_focus;
   bool     m_over;
-  XString  m_fontName;
+  CString  m_fontName;
   BYTE     m_language;
   CBrush   m_bkBrush;
   CBrush   m_bkEmptyBrush;
   CFont*   m_pFont;
   bool     m_isPassword;
   bool     m_empty;
-  XString  m_emptyText;
+  CString  m_emptyText;
   bool     m_pixelShift;
 
   int      m_colorBorderInn;          // Normal border color inside
@@ -143,7 +143,7 @@ ColorEdit::GetIsEmpty()
   return m_empty;
 }
 
-inline XString 
+inline CString 
 ColorEdit::GetEmptyText()
 {
   return m_emptyText;

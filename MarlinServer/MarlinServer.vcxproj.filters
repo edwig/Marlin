@@ -33,9 +33,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Configuration</Filter>
     </ClInclude>
-    <ClInclude Include="framework.h">
-      <Filter>Configuration</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TestMarlinServer.cpp">

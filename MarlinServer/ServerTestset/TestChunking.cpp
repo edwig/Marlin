@@ -31,12 +31,6 @@
 #include <SiteHandlerGet.h>
 #include <io.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 static int totalChecks = 0;
 
 class SiteHandlerGetChunking : public SiteHandlerGet
@@ -49,7 +43,7 @@ bool
 SiteHandlerGetChunking::Handle(HTTPMessage* p_message)
 {
   // Check if releasenotes where requested
-  Routing& routing = p_message->GetRouting();
+  Routing& routing = const_cast<Routing&>(p_message->GetRouting());
   if(routing.size() > 0)
   {
     if(routing.back().CompareNoCase(_T("releasenotes.txt")))
@@ -119,7 +113,7 @@ TestMarlinServer::TestChunking()
   }
 
   // Setting a site handler !!
-  site->SetHandler(HTTPCommand::http_get, new SiteHandlerGetChunking());
+  site->SetHandler(HTTPCommand::http_get, alloc_new SiteHandlerGetChunking());
 
   // new: Start the site explicitly
   if (site->StartSite())

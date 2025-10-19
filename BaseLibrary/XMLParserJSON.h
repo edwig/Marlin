@@ -2,8 +2,8 @@
 //
 // SourceFile: XMLParserJSON.h
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -40,7 +40,7 @@ public:
  void  ParseMain(XMLElement* p_element,JSONvalue& p_value);
 private:
   void ParseMainSOAP (XMLElement* p_element,JSONvalue& p_value);
-  void ParseLevel    (XMLElement* p_element,JSONvalue& p_value,XString p_arrayName = _T(""));
+  void ParseLevel    (XMLElement* p_element,JSONvalue& p_value,const XString& p_arrayName = _T(""));
 private:
   SOAPMessage* m_soap      { nullptr };
   bool         m_rootFound { false   };

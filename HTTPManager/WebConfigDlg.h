@@ -45,7 +45,7 @@ public:
   explicit WebConfigDlg(bool p_iis,CWnd* pParent = NULL);   // standard constructor
   virtual ~WebConfigDlg();
   BOOL     OnInitDialog();
-  void     SetSiteConfig(XString p_urlPrefix,XString p_fileName);
+  void     SetSiteConfig(CString p_urlPrefix,CString p_fileName);
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -62,9 +62,9 @@ protected:
   DECLARE_MESSAGE_MAP()
 
   bool     m_iis;
-  XString  m_url;
-  XString  m_siteConfigFile;
-  XString  m_title;
+  CString  m_url;
+  CString  m_siteConfigFile;
+  CString  m_title;
   CTabCtrl m_tab;
   HICON    m_hIcon;
 

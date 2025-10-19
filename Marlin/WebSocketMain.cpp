@@ -36,14 +36,6 @@
 #include <wincrypt.h>
 #include <vadefs.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 #define DETAILLOG1(text)          if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLog (_T(__FUNCTION__),LogType::LOG_INFO,text); }
 #define DETAILLOGS(text,extra)    if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogS(_T(__FUNCTION__),LogType::LOG_INFO,text,extra); }
 #define DETAILLOGV(text,...)      if(MUSTLOG(HLL_LOGGING) && m_logfile) { DetailLogV(_T(__FUNCTION__),LogType::LOG_INFO,text,__VA_ARGS__); }
@@ -98,7 +90,7 @@ WSFrame::~WSFrame()
 //
 //////////////////////////////////////////////////////////////////////////
 
-WebSocket::WebSocket(XString p_uri)
+WebSocket::WebSocket(const XString& p_uri)
           :m_uri(p_uri)
           ,m_openReading(false)
           ,m_openWriting(false)
@@ -221,27 +213,30 @@ WebSocket::SetClosingTimeout(unsigned p_timeout)
 
 // Add a URI parameter
 void
-WebSocket::AddParameter(XString p_name,XString p_value)
+WebSocket::AddParameter(const XString& p_name,const XString& p_value)
 {
-  p_name.MakeLower();
-  m_parameters[p_name] = p_value;
+  XString name(p_name);
+  name.MakeLower();
+  m_parameters[name] = p_value;
 }
 
 // Add a HTTP header
 void
-WebSocket::AddHeader(XString p_name,XString p_value)
+WebSocket::AddHeader(const XString& p_name,const XString& p_value)
 {
-  p_name.MakeLower();
-  m_headers[p_name] = p_value;
+  XString name(p_name);
+  name.MakeLower();
+  m_headers[name] = p_value;
 }
 
 // Find a URI parameter
 XString
-WebSocket::GetParameter(XString p_name)
+WebSocket::GetParameter(const XString& p_name)
 {
   XString value;
-  p_name.MakeLower();
-  SocketParams::iterator it = m_parameters.find(p_name);
+  XString name(p_name);
+  name.MakeLower();
+  SocketParams::iterator it = m_parameters.find(name);
   if(it != m_parameters.end())
   {
     value = it->second;
@@ -318,22 +313,24 @@ WebSocket::DetailLogV(LPCTSTR p_function,LogType p_type,LPCTSTR p_text,...)
 
 // Error logging to the log file
 void
-WebSocket::ErrorLog(LPCTSTR p_function,DWORD p_code,XString p_text)
+WebSocket::ErrorLog(LPCTSTR p_function,DWORD p_code,const XString& p_text)
 {
   bool result = false;
+  XString text;
 
   if(m_logfile)
   {
-    p_text.AppendFormat(_T(" Error [%X] %s"),p_code,GetLastErrorAsString(p_code).GetString());
-    result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,p_text);
+    text = p_text;
+    text.AppendFormat(_T(" Error [%X] %s"),p_code,GetLastErrorAsString(p_code).GetString());
+    result = m_logfile->AnalysisLog(p_function,LogType::LOG_ERROR,false,text);
 
     if(!m_closingError)
     {
-      WSFrame* frame = new WSFrame();
-      frame->m_data = reinterpret_cast<BYTE*>(_tcsdup(p_text.GetString()));
-      frame->m_length = p_text.GetLength();
-      frame->m_utf8 = false;  // Internal CString copy
-      frame->m_final = true;
+      WSFrame* frame  = alloc_new WSFrame();
+      frame->m_data   = reinterpret_cast<BYTE*>(_tcsdup(text.GetString()));
+      frame->m_length = text.GetLength();
+      frame->m_utf8   = false;  // Internal CString copy
+      frame->m_final  = true;
 
       // Store frame and call onError handler
       StoreWSFrame(frame);
@@ -501,7 +498,7 @@ WebSocket::OnClose()
 
 // Write as an UTF-8 string to the WebSocket
 bool 
-WebSocket::WriteString(XString p_string)
+WebSocket::WriteString(const XString& p_string)
 {
   // Now encode MBCS/Unicode to UTF-8
   bool result  = false;
@@ -659,7 +656,7 @@ WebSocket::ConvertWSFrameToMBCS(WSFrame* p_frame)
   bool foundBom(false);
   TryConvertNarrowString(p_frame->m_data,p_frame->m_length,_T("utf-8"),encoded,foundBom);
 #else
-  XString input(p_frame->m_data);
+  XString input((LPCSTR)p_frame->m_data);
   XString encoded = DecodeStringFromTheWire(input);
 #endif
   size_t len = encoded.GetLength();
@@ -703,7 +700,7 @@ WebSocket::ServerHandshake(HTTPMessage* /*p_message*/)
 
 // Generate a server key-answer
 XString
-WebSocket::ServerAcceptKey(XString p_clientKey)
+WebSocket::ServerAcceptKey(const XString& p_clientKey)
 {
   Crypto crypt;
   crypt.SetDigestBase64(true);

@@ -41,7 +41,7 @@ class MarlinConfig;
 class AppConfig : public XMLMessage
 {
 public:
-  explicit AppConfig(XString p_fileName = _T(""),bool p_readMarlinConfig = true);
+  explicit AppConfig(const XString& p_fileName = _T(""),bool p_readMarlinConfig = true);
   virtual ~AppConfig();
 
   // Read the config from disk
@@ -51,51 +51,51 @@ public:
 
   // SETTERS
 
-  bool SetSection  (XString p_section);
-  bool SetParameter(XString p_section,XString p_parameter,XString p_value);
-  bool SetParameter(XString p_section,XString p_parameter,int     p_value);
-  bool SetParameter(XString p_section,XString p_parameter,bool    p_value);
-  bool SetEncrypted(XString p_section,XString p_parameter,XString p_value);
-  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,int     p_value);
-  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,double  p_value);
-  bool SetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_value);
+  bool SetSection  (const XString& p_section);
+  bool SetParameter(const XString& p_section,const XString& p_parameter,const XString& p_value);
+  bool SetParameter(const XString& p_section,const XString& p_parameter,int   p_value);
+  bool SetParameter(const XString& p_section,const XString& p_parameter,bool  p_value);
+  bool SetEncrypted(const XString& p_section,const XString& p_parameter,const XString& p_value);
+  bool SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,int    p_value);
+  bool SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,double p_value);
+  bool SetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,const XString& p_value);
 
-  bool RemoveSection  (XString p_section);
-  bool RemoveParameter(XString p_section,XString p_parameter);
-  bool RemoveAttribute(XString p_section,XString p_parameter,XString p_attrib);
+  bool RemoveSection  (const XString& p_section);
+  bool RemoveParameter(const XString& p_section,const XString& p_parameter);
+  bool RemoveAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib);
 
   // GETTERS
 
-  bool    IsFilled()    { return m_filled;   };
-  bool    IsChanged()   { return m_changed;  };
-  XString GetFilename() { return m_fileName; };
-  XString GetParameterString (XString p_section,XString p_parameter,XString p_default);
-  bool    GetParameterBoolean(XString p_section,XString p_parameter,bool    p_default);
-  int     GetParameterInteger(XString p_section,XString p_parameter,int     p_default);
-  XString GetEncryptedString (XString p_section,XString p_parameter,XString p_default);
-  int     GetAttribute(XString p_section,XString p_parameter,XString p_attrib,int     p_default);
-  double  GetAttribute(XString p_section,XString p_parameter,XString p_attrib,double  p_default);
-  XString GetAttribute(XString p_section,XString p_parameter,XString p_attrib,XString p_default);
+  bool    IsFilled() const    { return m_filled;   };
+  bool    IsChanged() const   { return m_changed;  };
+  XString GetFilename() const { return m_fileName; };
+  XString GetParameterString (const XString& p_section,const XString& p_parameter,const XString& p_default) const;
+  bool    GetParameterBoolean(const XString& p_section,const XString& p_parameter,bool    p_default) const;
+  int     GetParameterInteger(const XString& p_section,const XString& p_parameter,int     p_default) const;
+  XString GetEncryptedString (const XString& p_section,const XString& p_parameter,const XString& p_default) const;
+  int     GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,int     p_default) const;
+  double  GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,double  p_default) const;
+  XString GetAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attrib,const XString& p_default) const;
   // Is the config file writable
-  bool    GetConfigWritable();
+  bool    GetConfigWritable() const;
   // The config file as an absolute pathname
-  XString GetConfigFilename();
+  XString GetConfigFilename() const;
   // Server URL is not stored in this form,but it is used in many places.
-  XString GetServerURL();
+  XString GetServerURL() const;
 
   // DISCOVERY
 
-  bool    HasSection  (XString p_section);
-  bool    HasParameter(XString p_section,XString p_parameter);
-  bool    HasAttribute(XString p_section,XString p_parameter,XString p_attribute);
+  bool    HasSection  (const XString& p_section) const;
+  bool    HasParameter(const XString& p_section,const XString& p_parameter) const;
+  bool    HasAttribute(const XString& p_section,const XString& p_parameter,const XString& p_attribute) const;
 
 private:
   // Find section with this name
-  XMLElement*  FindSection(XString p_section);
+  XMLElement*  FindSection(const XString& p_section) const;
   // Find parameter within a section
-  XMLElement*  FindParameter(XMLElement* p_section,XString p_parameter);
+  XMLElement*  FindParameter(XMLElement* p_section,const XString& p_parameter) const;
 // Check the root node for the correct config file
-  virtual bool CheckRootNodeName();
+  virtual bool CheckRootNodeName() const;
 
   // Config filename (relative) if not 'Marlin.config'
   XString       m_fileName;
@@ -104,16 +104,4 @@ private:
   bool          m_filled  { false };
   // Backed up by this MarlinConfig
   MarlinConfig* m_config  { nullptr };
-
-//   XString  m_name;               // Name of the server or IIS application-pool name
-//   XString  m_role;               // Server / Client / Server&Client
-//   int      m_instance;           // Between 1 and 100
-//   XString  m_server;             // Server host name
-//   bool     m_secure;             // HTTP or HTTPS
-//   unsigned m_serverPort;         // Server input port number
-//   XString  m_baseUrl;            // Base URL only
-//   XString  m_serverLog;          // Server logfile path name
-//   int      m_serverLoglevel;     // See HTTPLoglevel.h
-//   XString  m_webroot;
-//   int      m_runAsService;       // Start method RUNAS_*
 };

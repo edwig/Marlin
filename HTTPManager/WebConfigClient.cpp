@@ -34,12 +34,6 @@
 #include "HTTPClient.h"
 #include "afxdialogex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // WebConfigDlg dialog
 
 IMPLEMENT_DYNAMIC(WebConfigClient, CDialog)
@@ -402,6 +396,7 @@ WebConfigClient::WriteWebConfig(MarlinConfig& config)
   XString toConnect;  toConnect .Format(_T("%d"),m_TO_connect);
   XString toSend;     toSend    .Format(_T("%d"),m_TO_send);
   XString toReceive;  toReceive .Format(_T("%d"),m_TO_receive);
+  XString ppasswd(m_proxyPassword);
 
   // WRITE THE CONFIG PARAMETERS
   config.SetSection(_T("Client"));
@@ -414,7 +409,7 @@ WebConfigClient::WriteWebConfig(MarlinConfig& config)
   else                  config.RemoveParameter(_T("Client"),_T("ProxyBypass"));
   if(m_useProxyUser)    config.SetParameter   (_T("Client"),_T("ProxyUser"),        m_proxyUser);
   else                  config.RemoveParameter(_T("Client"),_T("ProxyUser"));
-  if(m_useProxyPassword)config.SetEncrypted   (_T("Client"),_T("ProxyPassword"),    m_proxyPassword);
+  if(m_useProxyPassword)config.SetEncrypted   (_T("Client"),_T("ProxyPassword"),    ppasswd);
   else                  config.RemoveParameter(_T("Client"),_T("ProxyPassword"));
   if(m_useClientUnicode)config.SetParameter   (_T("Client"),_T("SendUnicode"),      m_clientUnicode);
   else                  config.RemoveParameter(_T("Client"),_T("SendUnicode"));

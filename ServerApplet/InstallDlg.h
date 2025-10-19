@@ -50,10 +50,10 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
   int      m_install;
-  XString  m_domain;
-  XString  m_username;
-  XString  m_password;
-  XString  m_confirm;
+  CString  m_domain;
+  CString  m_username;
+  CString  m_password;
+  CString  m_confirm;
   CButton  m_buttonInstall;
   CButton  m_buttonRemove;
 

@@ -2,8 +2,8 @@
 //
 // SourceFile: XMLMessage.cpp
 //
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -28,14 +28,6 @@
 #include "XMLParser.h"
 #include "XMLRestriction.h"
 #include "Namespace.h"
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
 
 // Defined in FileBuffer
 extern unsigned long g_streaming_limit; // = STREAMING_LIMIT;
@@ -68,7 +60,7 @@ XMLElement::XMLElement(const XMLElement& source)
 {
   for(const auto& element : source.m_elements)
   {
-    XMLElement* param = new XMLElement(*element);
+    XMLElement* param = alloc_new XMLElement(*element);
     param->m_parent = this;
     m_elements.push_back(param);
   }
@@ -151,7 +143,7 @@ XMLElement::InvalidNameMessage(const XString& p_name)
 }
 
 void
-XMLElement::SetName(XString p_name)
+XMLElement::SetName(const XString& p_name)
 {
   if (!p_name.IsEmpty() && !IsValidName(p_name))
   {
@@ -173,16 +165,16 @@ XMLElement::SetName(XString p_name)
 // XTOR XML Message
 XMLMessage::XMLMessage()
 {
-  m_root = new XMLElement();
+  m_root = alloc_new XMLElement();
   m_root->SetType(XDT_String);
   AddReference();
 }
 
 // XTOR from another message
-XMLMessage::XMLMessage(XMLMessage* p_orig)
+XMLMessage::XMLMessage(const XMLMessage* p_orig)
 {
   // Copy the element chain
-  m_root = new XMLElement(*p_orig->m_root);
+  m_root = alloc_new XMLElement(*p_orig->m_root);
   // Copy the contents
   m_version             = p_orig->m_version;
   m_encoding            = p_orig->m_encoding;
@@ -336,7 +328,7 @@ XMLMessage::SaveFile(const XString& p_fileName,Encoding p_encoding)
 
 // Parse incoming message to members
 void
-XMLMessage::ParseMessage(XString& p_message,WhiteSpace p_whiteSpace /* = PRESERVE_WHITESPACE*/)
+XMLMessage::ParseMessage(const XString& p_message,WhiteSpace p_whiteSpace /* = PRESERVE_WHITESPACE*/)
 {
   XMLParser parser(this);
   parser.ParseMessage(p_message,p_whiteSpace);
@@ -360,7 +352,7 @@ XMLMessage::ParseMessage(XMLParser* p_parser,XString& p_message,WhiteSpace p_whi
 
 // Parse from a beginning node
 void    
-XMLMessage::ParseForNode(XMLElement* p_node,XString& p_message,WhiteSpace p_whiteSpace /* = PRESERVE_WHITESPACE*/)
+XMLMessage::ParseForNode(XMLElement* p_node,const XString& p_message,WhiteSpace p_whiteSpace /* = PRESERVE_WHITESPACE*/)
 {
   XMLParser parser(this);
   parser.ParseForNode(p_node,p_message,p_whiteSpace);
@@ -704,22 +696,23 @@ XMLMessage::EncryptMessage(XString& /*p_message*/)
 
 // General add a parameter (always adds, so multiple parameters of same name can be added)
 XMLElement*
-XMLMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type /*=XDT_String*/, XString p_value /*=""*/, bool p_front /*=false*/)
+XMLMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type /*=XDT_String*/,const XString& p_value /*=""*/, bool p_front /*=false*/)
 {
+  XString name(p_name);
   // Removing the namespace from the name
-  XString namesp = SplitNamespace(p_name);
+  XString namesp = SplitNamespace(name);
 
   // Check for stupid programmers
-  if(p_name.Find(' ') > 0)
+  if(name.Find(' ') > 0)
   {
     throw StdException(_T("XML Messages with spaces in elementnames are invalid!"));
   }
 
   XmlElementMap& elements = p_base ? p_base->GetChildren() : m_root->GetChildren();
   XMLElement* parent = p_base ? p_base : m_root;
-  XMLElement* elem   = new XMLElement(parent);
+  XMLElement* elem   = alloc_new XMLElement(parent);
   elem->SetNamespace(namesp);
-  elem->SetName(p_name);
+  elem->SetName(name);
   elem->SetType(p_type);
   elem->SetValue(p_value);
 
@@ -736,7 +729,7 @@ XMLMessage::AddElement(XMLElement* p_base,XString p_name,XmlDataType p_type /*=X
 
 // Setting an element: Finding an existing node
 XMLElement*
-XMLMessage::SetElement(XMLElement* p_base,XString p_name,XmlDataType p_type,XString p_value,bool p_front /*=false*/)
+XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,const XString& p_value,bool p_front /*=false*/)
 {
   XString name(p_name);
   XString namesp = SplitNamespace(name);
@@ -761,20 +754,20 @@ XMLMessage::SetElement(XMLElement* p_base,XString p_name,XmlDataType p_type,XStr
 }
 
 XMLElement*
-XMLMessage::SetElement(XString p_name,const XString& p_value)
+XMLMessage::SetElement(const XString& p_name,const XString& p_value)
 {
   return SetElement(m_root,p_name,XDT_String,p_value);
 }
 
 XMLElement*
-XMLMessage::SetElement(XString p_name,LPCTSTR p_value)
+XMLMessage::SetElement(const XString& p_name,LPCTSTR p_value)
 {
   XString value(p_value);
   return SetElement(m_root,p_name,XDT_String,value);
 }
 
 XMLElement*
-XMLMessage::SetElement(XString p_name,int p_value)
+XMLMessage::SetElement(const XString& p_name,int p_value)
 {
   XString value;
   value.Format(_T("%d"),p_value);
@@ -782,7 +775,7 @@ XMLMessage::SetElement(XString p_name,int p_value)
 }
 
 XMLElement*
-XMLMessage::SetElement(XString p_name,bool p_value)
+XMLMessage::SetElement(const XString& p_name,bool p_value)
 {
   XString value;
   value.Format(_T("%s"),p_value ? _T("true") : _T("false"));
@@ -790,7 +783,7 @@ XMLMessage::SetElement(XString p_name,bool p_value)
 }
 
 XMLElement*
-XMLMessage::SetElement(XString p_name,double p_value)
+XMLMessage::SetElement(const XString& p_name,double p_value)
 {
   XString value;
   value.Format(_T("%G"),p_value);
@@ -798,19 +791,19 @@ XMLMessage::SetElement(XString p_name,double p_value)
 }
 
 XMLElement*
-XMLMessage::SetElement(XMLElement* p_base,XString p_name,const XString& p_value)
+XMLMessage::SetElement(XMLElement* p_base, const XString& p_name,const XString& p_value)
 {
   return SetElement(p_base,p_name,XDT_String,p_value);
 }
 
 XMLElement*
-XMLMessage::SetElement(XMLElement* p_base,XString p_name,LPCTSTR p_value)
+XMLMessage::SetElement(XMLElement* p_base, const XString& p_name,LPCTSTR p_value)
 {
   return SetElement(p_base,p_name,XDT_String,p_value);
 }
 
 XMLElement*
-XMLMessage::SetElement(XMLElement* p_base,XString p_name,int p_value)
+XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,int p_value)
 {
   XString value;
   value.Format(_T("%d"), p_value);
@@ -818,7 +811,7 @@ XMLMessage::SetElement(XMLElement* p_base,XString p_name,int p_value)
 }
 
 XMLElement*
-XMLMessage::SetElement(XMLElement* p_base,XString p_name,bool p_value)
+XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,bool p_value)
 {
   XString value;
   value.Format(_T("%s"),p_value ? _T("true") : _T("false"));
@@ -826,7 +819,7 @@ XMLMessage::SetElement(XMLElement* p_base,XString p_name,bool p_value)
 }
 
 XMLElement*
-XMLMessage::SetElement(XMLElement* p_base,XString p_name,double p_value)
+XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,double p_value)
 {
   XString value;
   value.Format(_T("%G"),p_value);
@@ -834,7 +827,7 @@ XMLMessage::SetElement(XMLElement* p_base,XString p_name,double p_value)
 }
 
 void
-XMLMessage::SetElementValue(XMLElement* p_elem,XmlDataType p_type,XString p_value)
+XMLMessage::SetElementValue(XMLElement* p_elem,XmlDataType p_type,const XString& p_value)
 {
   if(p_elem)
   {
@@ -857,7 +850,7 @@ XMLMessage::SetElementOptions(XMLElement* p_elem,XmlDataType p_options)
 // Setting the namespace name and contract of an element
 // Beware that a contract never ends on a '/' or a '\\'
 void
-XMLMessage::SetElementNamespace(XMLElement* p_elem, XString p_namespace, XString p_contract,bool p_trailingSlash /*=false*/)
+XMLMessage::SetElementNamespace(XMLElement* p_elem,const XString& p_namespace,const XString& p_contract,bool p_trailingSlash /*=false*/)
 {
   XString name = _T("xmlns");
   if (!p_namespace.IsEmpty())
@@ -865,28 +858,30 @@ XMLMessage::SetElementNamespace(XMLElement* p_elem, XString p_namespace, XString
     name += _T(":");
     name += p_namespace;
   }
+  XString contract(p_contract);
   if(p_trailingSlash == false)
   {
-    p_contract.TrimRight('/');
-    p_contract.TrimRight('\\');
+    contract.TrimRight('/');
+    contract.TrimRight('\\');
   }
-  SetAttribute(p_elem,name,p_contract);
+  SetAttribute(p_elem,name,contract);
 }
 
 // Set attribute of an element
 XMLAttribute*
-XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,const XString& p_value)
+XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,const XString& p_value)
 {
   if(p_elem == NULL)
   {
     return NULL;
   }
-  XString namesp = SplitNamespace(p_name);
+  XString name(p_name);
+  XString namesp = SplitNamespace(name);
 
   // Find in attribute map
   for(auto& attrib : p_elem->GetAttributes())
   {
-    if(attrib.m_name.Compare(p_name) == 0)
+    if(attrib.m_name.Compare(name) == 0)
     {
       // Already there, register new value
       attrib.m_type  = XDT_String;
@@ -898,7 +893,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,const XString& p_valu
   XMLAttribute attrib;
   attrib.m_type      = XDT_String;
   attrib.m_namespace = namesp;
-  attrib.m_name      = p_name;
+  attrib.m_name      = name;
   attrib.m_value     = p_value;
 
   p_elem->GetAttributes().push_back(attrib);
@@ -907,7 +902,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,const XString& p_valu
 
 // Set attribute of a element
 XMLAttribute*
-XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,LPCTSTR p_value)
+XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,LPCTSTR p_value)
 {
   XString value(p_value);
   return SetAttribute(p_elem,p_name,value);
@@ -915,7 +910,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,LPCTSTR p_value)
 
 // Set attribute of a element (integer)
 XMLAttribute*
-XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,int p_value)
+XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,int p_value)
 {
   XString value;
   value.Format(_T("%d"),p_value);
@@ -926,7 +921,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,int p_value)
 
 // Set attribute of a element (boolean)
 XMLAttribute*
-XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,bool p_value)
+XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,bool p_value)
 {
   XString value;
   value.Format(_T("%s"),p_value ? _T("true") : _T("false"));
@@ -937,7 +932,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,bool p_value)
 
 // Set attribute of a element (double)
 XMLAttribute*
-XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,double p_value)
+XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,double p_value)
 {
   XString value;
   value.Format(_T("%G"),p_value);
@@ -958,7 +953,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,XString p_name,double p_value)
 
 // Get an element in a format
 XString  
-XMLMessage::GetElement(XMLElement* p_elem,XString p_name)
+XMLMessage::GetElement(XMLElement* p_elem,const XString& p_name)
 {
   XmlElementMap& map = p_elem ? p_elem->GetChildren() : m_root->GetChildren();
 
@@ -974,13 +969,13 @@ XMLMessage::GetElement(XMLElement* p_elem,XString p_name)
 }
 
 int      
-XMLMessage::GetElementInteger(XMLElement* p_elem,XString p_name)
+XMLMessage::GetElementInteger(XMLElement* p_elem,const XString& p_name)
 {
   return _ttoi(GetElement(p_elem,p_name));
 }
 
 bool
-XMLMessage::GetElementBoolean(XMLElement* p_elem,XString p_name)
+XMLMessage::GetElementBoolean(XMLElement* p_elem,const XString& p_name)
 {
   XString value = GetElement(p_elem,p_name);
   if((value.CompareNoCase(_T("true")) == 0) ||
@@ -996,31 +991,31 @@ XMLMessage::GetElementBoolean(XMLElement* p_elem,XString p_name)
 }
 
 double
-XMLMessage::GetElementDouble(XMLElement* p_elem,XString p_name)
+XMLMessage::GetElementDouble(XMLElement* p_elem,const XString& p_name)
 {
   return _ttof(GetElement(p_elem,p_name));
 }
 
 XString
-XMLMessage::GetElement(XString p_name)
+XMLMessage::GetElement(const XString& p_name)
 {
   return GetElement(NULL,p_name);
 }
 
 int
-XMLMessage::GetElementInteger(XString p_name)
+XMLMessage::GetElementInteger(const XString& p_name)
 {
   return GetElementInteger(NULL,p_name);
 }
 
 bool
-XMLMessage::GetElementBoolean(XString p_name)
+XMLMessage::GetElementBoolean(const XString& p_name)
 {
   return GetElementBoolean(NULL,p_name);
 }
 
 double
-XMLMessage::GetElementDouble(XString p_name)
+XMLMessage::GetElementDouble(const XString& p_name)
 {
   return GetElementDouble(NULL,p_name);
 }
@@ -1063,7 +1058,7 @@ XMLMessage::GetElementSibling(XMLElement* p_elem)
 }
 
 XMLElement*
-XMLMessage::FindElement(XMLElement* p_base, XString p_name,bool p_recurse /*=true*/)
+XMLMessage::FindElement(XMLElement* p_base,const XString& p_name,bool p_recurse /*=true*/) const
 {
   XString elementName(p_name);
   XString namesp = SplitNamespace(elementName);
@@ -1102,24 +1097,25 @@ XMLMessage::FindElement(XMLElement* p_base, XString p_name,bool p_recurse /*=tru
 }
 
 XMLElement*
-XMLMessage::FindElement(XString p_name,bool p_recurse /*=true*/)
+XMLMessage::FindElement(const XString& p_name,bool p_recurse /*=true*/) const
 {
   return FindElement(m_root,p_name,p_recurse);
 }
 
 XMLElement*
-XMLMessage::FindElementWithAttribute(XMLElement* p_base
-                                    ,XString     p_elementName
-                                    ,XString     p_attribName
-                                    ,XString     p_attribValue /*=""*/
-                                    ,bool        p_recurse /*=true*/)
+XMLMessage::FindElementWithAttribute(      XMLElement* p_base
+                                    ,const XString&    p_elementName
+                                    ,const XString&    p_attribName
+                                    ,const XString&    p_attribValue /*=""*/
+                                    ,const bool        p_recurse /*=true*/)
 {
-  XString namesp = SplitNamespace(p_elementName);
+  XString elementName(p_elementName);
+  XString namesp = SplitNamespace(elementName);
   XMLElement* base = p_base ? p_base : m_root;
 
   for(auto& element : base->GetChildren())
   {
-    if(element->GetName().Compare(p_elementName) == 0)
+    if(element->GetName().Compare(elementName) == 0)
     {
       if(namesp.IsEmpty() || element->GetNamespace().Compare(namesp) == 0)
       {
@@ -1135,7 +1131,7 @@ XMLMessage::FindElementWithAttribute(XMLElement* p_base
     }
     if(p_recurse)
     {
-      XMLElement* elem = FindElementWithAttribute(element,p_elementName,p_attribName,p_attribValue,p_recurse);
+      XMLElement* elem = FindElementWithAttribute(element,elementName,p_attribName,p_attribValue,p_recurse);
       if(elem)
       {
         return elem;
@@ -1147,15 +1143,16 @@ XMLMessage::FindElementWithAttribute(XMLElement* p_base
 
 // Get the attribute 
 XString
-XMLMessage::GetAttribute(XMLElement* p_elem,XString p_attribName)
+XMLMessage::GetAttribute(XMLElement* p_elem,const XString& p_attribName) const
 {
   if(p_elem)
   {
-    XString namesp = SplitNamespace(p_attribName);
+    XString attribute(p_attribName);
+    XString namesp = SplitNamespace(attribute);
 
     for(auto& attrib : p_elem->GetAttributes())
     {
-      if(attrib.m_name.Compare(p_attribName) == 0)
+      if(attrib.m_name.Compare(attribute) == 0)
       {
         if(namesp.IsEmpty())
         {
@@ -1173,14 +1170,14 @@ XMLMessage::GetAttribute(XMLElement* p_elem,XString p_attribName)
 
 // Get the integer attribute
 int
-XMLMessage::GetAttributeInteger(XMLElement* p_elem,XString p_attribName)
+XMLMessage::GetAttributeInteger(XMLElement* p_elem,const XString& p_attribName) const
 {
   return _ttoi(GetAttribute(p_elem,p_attribName));
 }
 
 // Get the boolean attribute
 bool     
-XMLMessage::GetAttributeBoolean(XMLElement* p_elem,XString p_attribName)
+XMLMessage::GetAttributeBoolean(XMLElement* p_elem,const XString& p_attribName) const
 {
   XString value = GetAttribute(p_elem,p_attribName);
   if(value.CompareNoCase(_T("true")) == 0)
@@ -1197,13 +1194,13 @@ XMLMessage::GetAttributeBoolean(XMLElement* p_elem,XString p_attribName)
 
 // Get the double attribute
 double
-XMLMessage::GetAttributeDouble(XMLElement* p_elem,XString p_attribName)
+XMLMessage::GetAttributeDouble(XMLElement* p_elem,const XString& p_attribName) const
 {
   return _ttof(GetAttribute(p_elem,p_attribName));
 }
 
 XMLAttribute*
-XMLMessage::FindAttribute(XMLElement* p_elem,XString p_attribName)
+XMLMessage::FindAttribute(XMLElement* p_elem,const XString& p_attribName) const
 {
   for(auto& attrib : p_elem->GetAttributes())
   {
@@ -1227,7 +1224,7 @@ XMLMessage::FindAttribute(XMLElement* p_elem,XString p_attribName)
 
 // Delete parameter with this name (possibly the nth instance of this name)
 bool
-XMLMessage::DeleteElement(XMLElement* p_base, XString p_name, int p_instance /*= 0*/)
+XMLMessage::DeleteElement(XMLElement* p_base,const XString& p_name, int p_instance /*= 0*/)
 {
   XmlElementMap& map = p_base ? p_base->GetChildren() : m_root->GetChildren();
   XmlElementMap::iterator it = map.begin();
@@ -1281,7 +1278,7 @@ XMLMessage::DeleteElement(XMLElement* p_base,XMLElement* p_element)
 
 // Delete exactly this attribute
 bool
-XMLMessage::DeleteAttribute(XMLElement* p_element,XString p_attribName)
+XMLMessage::DeleteAttribute(XMLElement* p_element,const XString& p_attribName)
 {
   if(p_element == nullptr)
   {
@@ -1330,13 +1327,13 @@ XMLMessage::CleanUpElement(XMLElement* p_element,bool p_recurse)
 // Attribute values must be unique for this method to work
 // Preferable: attribute = 'Id', value = unique-identifier-or-number
 XMLElement*
-XMLMessage::FindElementByAttribute(XString p_attribute, XString p_value)
+XMLMessage::FindElementByAttribute(const XString& p_attribute,const XString& p_value)
 {
   return FindElementByAttribute(m_root, p_attribute, p_value);
 }
 
 XMLElement*
-XMLMessage::FindElementByAttribute(XMLElement* p_element, XString p_attribute, XString p_value)
+XMLMessage::FindElementByAttribute(XMLElement* p_element,const XString& p_attribute,const XString& p_value)
 {
   if (p_element)
   {

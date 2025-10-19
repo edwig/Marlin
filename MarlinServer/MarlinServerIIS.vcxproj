@@ -389,7 +389,6 @@ copy marlin.config $(OutDir)</Command>
     <ClCompile Include="TestMarlinServerAppFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TestMarlinServer.h" />

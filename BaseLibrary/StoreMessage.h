@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -145,11 +145,11 @@ private:
   void    WriteAcceptEncoding(XString p_encoding);
   void    WriteVerbTunnel(bool p_verb);
   void    WriteSendBOM(bool p_bom);
-  void    WriteCookies(Cookies& p_cookies);
+  void    WriteCookies(const Cookies& p_cookies);
   void    WriteReferrer(XString p_referrer);
   void    WriteDesktop(unsigned p_desktop);
   void    WriteHeaders(const HeaderMap* p_headers);
-  void    WriteRouting(Routing& p_routing);
+  void    WriteRouting(const Routing& p_routing);
   void    WriteIsModified(bool p_isModified);
   void    WriteSystemTime(PSYSTEMTIME p_systemtime);
   void    WriteBody(FileBuffer* p_buffer);

@@ -4,8 +4,8 @@
 //
 // BaseLibrary: Indispensable general objects and functions
 // 
-// Copyright (c) 2014-2025 ir. W.E. Huisman
-// All rights reserved
+// Created: 2014-2025 ir. W.E. Huisman
+// MIT License
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -50,18 +50,10 @@
 #include <algorithm>
 #include <stdarg.h>
 
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-#endif
-
 static bool g_except = false;
 
 // CTOR is private: See static NewLogfile method
-LogAnalysis::LogAnalysis(XString p_name)
+LogAnalysis::LogAnalysis(const XString& p_name)
             :m_name(p_name)
 {
   Acquire();
@@ -76,9 +68,9 @@ LogAnalysis::~LogAnalysis()
 
 /*static */
 LogAnalysis* 
-LogAnalysis::CreateLogfile(XString p_name)
+LogAnalysis::CreateLogfile(const XString& p_name)
 {
-  return new LogAnalysis(p_name);
+  return alloc_new LogAnalysis(p_name);
 }
 
 /*static */bool
@@ -190,7 +182,7 @@ LogAnalysis::Reset()
 }
 
 XString
-LogAnalysis::CreateUserLogfile(XString p_filename)
+LogAnalysis::CreateUserLogfile(const XString& p_filename)
 {
   XString extensie;
   XString filepart;
@@ -214,21 +206,23 @@ LogAnalysis::CreateUserLogfile(XString p_filename)
 }
 
 void    
-LogAnalysis::SetLogFilename(XString p_filename,bool p_perUser /*=false*/)
+LogAnalysis::SetLogFilename(const XString& p_filename,bool p_perUser /*=false*/)
 { 
   if(p_perUser)
   {
-    p_filename = CreateUserLogfile(p_filename);
+    m_logFileName = CreateUserLogfile(p_filename);
   }
-  if(m_logFileName.CompareNoCase(p_filename) != 0)
+  else
+  {
+    m_logFileName = p_filename;
+  }
+  if(m_logFileName.CompareNoCase(m_logFileName) != 0)
   {
     // See if a full reset is needed to flush and close the current file
     if(m_file.GetIsOpen() || m_initialised)
     {
       Reset();
     }
-    // Re-init at next log-line
-    m_logFileName = p_filename; 
   }
 };
 
@@ -547,7 +541,11 @@ LogAnalysis::WriteEvent(HANDLE p_eventLog,LogType p_type,XString& p_buffer)
 
 // Hexadecimal view of an object added to the logfile
 bool    
-LogAnalysis::AnalysisHex(LPCTSTR p_function,XString p_name,void* p_buffer,unsigned long p_length,unsigned p_linelength /*=16*/)
+LogAnalysis::AnalysisHex(LPCTSTR        p_function
+                        ,const XString& p_name
+                        ,void*          p_buffer
+                        ,unsigned long  p_length
+                        ,unsigned       p_linelength /*=HEXBUFFER_LINENLEN*/)
 {
   // Only dump in the logfile, not to the MS-Windows event log
   if(!m_file.GetIsOpen() || m_logLevel < HLL_TRACEDUMP)
@@ -615,15 +613,13 @@ LogAnalysis::AnalysisHex(LPCTSTR p_function,XString p_name,void* p_buffer,unsign
 
 // Dump string directly without formatting or headers
 void
-LogAnalysis::BareStringLog(XString p_string)
+LogAnalysis::BareStringLog(const XString& p_string)
 {
   if (m_file.GetIsOpen())
   {
     // Multi threaded protection
     AutoCritSec lock(&m_lock);
-
-    p_string += _T("\n");
-    m_list.push_back(p_string);
+    m_list.push_back(p_string + _T("\n"));
   }
 }
 
@@ -637,7 +633,7 @@ LogAnalysis::BareBufferLog(void* p_buffer,unsigned p_length)
   }
 
   static const XString marker(_T(BUFFER_MARKER));
-  BYTE* copy = new BYTE[p_length];
+  BYTE* copy = alloc_new BYTE[p_length];
   memcpy(copy,p_buffer,p_length);
 
   LogBuff buff { copy,p_length };
@@ -947,7 +943,7 @@ LogAnalysis::AppendDateTimeToFilename()
   if(lastPoint > 0 && (lastPoint > lastSlash))
   {
     extension = file.Mid(lastPoint);
-    pattern   = _T("*") + extension;
+    pattern   = XString(_T("*")) + extension;
     file      = file.Left(lastPoint);
   }
   else
@@ -985,7 +981,7 @@ LogAnalysis::AppendDateTimeToFilename()
 // This leaves time on the verge of a new month not to delete yesterdays files
 // But it will eventually cleanup the servers log directories.
 void
-LogAnalysis::RemoveLastMonthsFiles(XString p_filename,XString p_pattern,struct tm& p_today)
+LogAnalysis::RemoveLastMonthsFiles(const XString& p_filename,const XString& p_pattern,struct tm& p_today)
 {
   // Go two months back
   p_today.tm_mon -= 2;
@@ -1027,7 +1023,7 @@ LogAnalysis::RemoveLastMonthsFiles(XString p_filename,XString p_pattern,struct t
 }
 
 void
-LogAnalysis::RemoveLogfilesKeeping(XString p_filename,XString p_pattern)
+LogAnalysis::RemoveLogfilesKeeping(const XString& p_filename,const XString& p_pattern)
 {
   std::vector<XString> map;
 
