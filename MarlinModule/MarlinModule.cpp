@@ -1031,7 +1031,7 @@ MarlinModule::OnExecuteRequestHandler(IN IHttpContext*       p_context,
       // so we do **not** call the error report method again
       // Otherwise we would end into an infinite loop
       XString empty;
-      XString mapname(g_IISMapCrashes);
+      XString mapname((PCWSTR)g_IISMapCrashes);
       g_exception = true;
       g_exception = ErrorReport::Report(ex.GetSafeExceptionCode(),ex.GetExceptionPointers(),mapname,empty);
 

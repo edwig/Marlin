@@ -322,7 +322,7 @@ TestMarlinServer::StartAlerts()
   if(pos > 0)
   {
     path = path.Left(pos + 1);
-    path += "Alerts\\";
+    path += _T("Alerts\\");
     WinFile ensure(path);
     if(ensure.CreateDirectory())
     {

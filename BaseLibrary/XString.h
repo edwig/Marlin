@@ -54,10 +54,16 @@ public:
   XString(TCHAR p_char,int p_count = 1);
   // CTOR from other string
   XString(const XString& p_string);
+  // CTOR from other string
+  XString(const stdstring& p_string);
 #ifdef _UNICODE
+// CTOR form a wchar_t stream
+  XString(wchar_t* p_string);
   // CTOR from a ANSI string
   XString(PCSTR p_string);
 #else
+// CTOR from unsigned char stream
+  XString(unsigned char* p_string);
   // CTOR from unicode string
   XString(PCWSTR p_string);
 #endif
@@ -150,7 +156,7 @@ public:
   // Remove all occurrences of char
   int         Remove(TCHAR p_char);
   // Replace a string or a character
-  int         Replace(PCTSTR p_old,PCTSTR p_new);
+  int         Replace(LPCTSTR p_old,LPCTSTR p_new);
   int         Replace(TCHAR p_old,TCHAR p_new);
   // Find last occurrence of a char
   int         ReverseFind(TCHAR p_char) const;
@@ -164,8 +170,8 @@ public:
   // Set string from a COM BSTR
   BSTR        SetSysString(BSTR* p_string);
   // Leftmost string (not) in argument
-  XString     SpanExcluding(LPCTSTR p_string) const;
-  XString     SpanIncluding(LPCTSTR p_string) const;
+  XString     SpanExcluding(PCTSTR p_string) const;
+  XString     SpanIncluding(PCTSTR p_string) const;
   // Length of the string
  static int   StringLength (PCTSTR p_string);
   // Return tokenized strings

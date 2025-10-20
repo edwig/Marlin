@@ -647,7 +647,8 @@ StoreMessage::ReadString()
     {
       throw StdException(GetLastError());
     }
-    string = m_file.TranslateInputBuffer(input);
+    std::wstring extra;
+    string = m_file.TranslateInputBuffer(input,extra);
   }
   return string;
 }

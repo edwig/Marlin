@@ -4544,7 +4544,7 @@ end:
 
 // On overflow we set negative or positive infinity
 bcd
-bcd::SetInfinity(XString p_reason /*= ""*/) const
+bcd::SetInfinity(const XString& p_reason /*= ""*/) const
 {
   if(g_throwing)
   {

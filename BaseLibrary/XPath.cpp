@@ -249,7 +249,6 @@ XPath::GetToken(XString& p_parsing)
       return token;
     }
   }
-
   // NOT an identifier
   if(ch != '_' && !isalpha(ch))
   {
@@ -263,6 +262,10 @@ XPath::GetToken(XString& p_parsing)
   while(isalnum(p_parsing.GetAt(index)) || p_parsing.GetAt(index) == '_' || p_parsing.GetAt(index) == '-')
   {
     ++index;
+    if(index == p_parsing.GetLength())
+    {
+      break;
+    }
   }
   token     = p_parsing.Left(index);
   p_parsing = p_parsing.Mid(index);

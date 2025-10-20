@@ -56,7 +56,20 @@ XString::XString(const XString& p_string)
   append(p_string.c_str());
 }
 
+// CTOR from other string
+XString::XString(const stdstring& p_string)
+{
+  append(p_string.c_str());
+}
+
 #ifdef _UNICODE
+
+// CTOR form a wchar_t stream
+XString::XString(wchar_t* p_string)
+{
+  append(p_string);
+}
+
 // CTOR from a ANSI string
 XString::XString(PCSTR p_string)
 {
@@ -67,6 +80,13 @@ XString::XString(PCSTR p_string)
   delete [] buffer;
 }
 #else
+
+// CTOR from unsigned char stream
+XString::XString(unsigned char* p_string)
+{
+  append((const char*)p_string);
+}
+
 // CTOR from unicode string
 XString::XString(PCWSTR p_string)
 {
@@ -505,19 +525,20 @@ XString::Remove(TCHAR p_char)
 
 // Replace a string or a character
 
-int XString::Replace(PCTSTR p_old,PCTSTR p_new)
+int XString::Replace(LPCTSTR p_old,LPCTSTR p_new)
 {
-  int    count  = 0;
+  size_t count  = 0;
   size_t length = _tcslen(p_old);
+  size_t incr   = _tcslen(p_new);
   size_t pos    = find(p_old);
 
   while(pos != string::npos)
   {
     replace(pos,length,p_new);
-    pos = find(p_old);
+    pos = find(p_old,pos + incr);
     ++count;
   }
-  return count;
+  return (int)count;
 }
 
 int 

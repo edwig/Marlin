@@ -1369,7 +1369,7 @@ Request::ReplyClientError(int p_error,const XString& p_errorText)
 
   header.AppendFormat(_T("Content-Length: %d\r\n"),body.GetLength());
   header.AppendFormat(_T("Date: %s\r\n"),HTTPSystemTime().GetString());
-  header += "\r\n";
+  header += _T("\r\n");
   header += body;
 
   // Write out to the client ANSI/UNICODE

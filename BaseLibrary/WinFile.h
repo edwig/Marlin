@@ -312,7 +312,7 @@ public:
   // Convert a time_t value to a FILETIME
   static FILETIME ConvertTimetToFileTime(time_t p_time);
   // Translating UTF-8 / UTF-16-LE and UTF-16-BE in reading and writing
-  XString         TranslateInputBuffer(std::string& p_string);
+  XString         TranslateInputBuffer(std::string& p_string8,std::wstring& p_string16);
   std::string     TranslateOutputBuffer(const XString& p_string);
 
 private:
@@ -326,6 +326,7 @@ private:
   uchar*    PageBuffer();
   void      PageBufferFree();
   int       PageBufferRead();
+  int       PageBufferReadCharacter();
   bool      PageBufferReadForeward(bool p_scanBom);
   bool      PageBufferWrite(uchar ch);
   bool      PageBufferFlush();
