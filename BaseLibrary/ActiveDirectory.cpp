@@ -86,7 +86,7 @@ static XString DistinguishedName()
   if(SUCCEEDED(pADsys->get_UserName(&str)))
   {
     // Copy the name
-    XString dn((LPCTSTR)str);
+    XString dn((LPCWSTR)str);
     SysFreeString(str);
     return dn;
   }

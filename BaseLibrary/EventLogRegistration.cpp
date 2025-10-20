@@ -39,7 +39,7 @@ LPCTSTR g_eventLogCategory = _T("Application");
 
 // Register our DLL. Return '1' if successful, otherwise '0'
 int
-RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString& p_error)
+RegisterMessagesDllForService(const XString& p_serviceName,const XString& p_messageDLL,XString& p_error)
 {
   p_error.Empty();
 
@@ -158,7 +158,7 @@ RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString
 }
 
 bool 
-UnRegisterMessagesDllForService(XString p_serviceName,XString& p_error)
+UnRegisterMessagesDllForService(const XString& p_serviceName,XString& p_error)
 {
   TCHAR szBuf[MAX_PATH];
   size_t cchSize = MAX_PATH;
@@ -177,7 +177,7 @@ UnRegisterMessagesDllForService(XString p_serviceName,XString& p_error)
 }
 
 bool
-IsMessageDLLRegistered(XString p_serviceName)
+IsMessageDLLRegistered(const XString& p_serviceName)
 {
   HKEY   hk(nullptr);
   TCHAR  szBuf[MAX_PATH + 1] = _T("");

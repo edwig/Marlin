@@ -147,7 +147,7 @@ Crypto::Digest(const void* data,const size_t data_size,unsigned hashType /*=0*/)
 
 #ifdef _UNICODE
 XString
-Crypto::Encryption(XString p_input,XString p_password)
+Crypto::Encryption(const XString& p_input,const XString& p_password)
 {
   XString encoded;
   int   lengthINP = 0;
@@ -166,7 +166,7 @@ Crypto::Encryption(XString p_input,XString p_password)
 }
 #else
 XString
-Crypto::Encryption(XString p_input,XString p_password)
+Crypto::Encryption(const XString& p_input,const XString& p_password)
 {
   XString inputUTF8 = EncodeStringForTheWire(p_input);
   XString passwUTF8 = EncodeStringForTheWire(p_password);
@@ -333,7 +333,7 @@ error_exit:
 
 #ifdef _UNICODE
 XString
-Crypto::Decryption(XString p_input,XString p_password)
+Crypto::Decryption(const XString& p_input,const XString& p_password)
 {
   XString decoded;
   int   lengthINP = 0;
@@ -357,7 +357,7 @@ Crypto::Decryption(XString p_input,XString p_password)
 }
 #else
 XString
-Crypto::Decryption(XString p_input, XString p_password)
+Crypto::Decryption(const XString& p_input,const XString& p_password)
 {
   XString inputUTF8 = EncodeStringForTheWire(p_input);
   XString passwUTF8 = EncodeStringForTheWire(p_password);
@@ -531,7 +531,7 @@ error_exit:
 }
 
 XString
-Crypto::FastEncryption(const XString& p_input, XString password)
+Crypto::FastEncryption(const XString& p_input,const XString& password)
 {
   AutoCritSec lock(&m_lock);
   BCRYPT_ALG_HANDLE hAlgorithm = NULL;
@@ -581,7 +581,7 @@ Crypto::FastEncryption(const XString& p_input, XString password)
 }
 
 XString
-Crypto::FastDecryption(const XString& p_input,XString password)
+Crypto::FastDecryption(const XString& p_input,const XString& password)
 {
   AutoCritSec lock(&m_lock);
 
@@ -646,7 +646,7 @@ error_exit:
 
 // Set hashing digest method
 unsigned 
-Crypto::SetHashMethod(XString p_method)
+Crypto::SetHashMethod(const XString& p_method)
 {
   // Preferred by the standard: http://www.w3.org/2000/09/xmldsig#
   if(p_method.Compare(_T("sha1"))      == 0) m_hashMethod = CALG_SHA1;

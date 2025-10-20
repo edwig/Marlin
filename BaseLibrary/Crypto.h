@@ -54,20 +54,20 @@ public:
  ~Crypto();
 
   // Set hashing digest method
-  unsigned SetHashMethod(XString p_method);
+  unsigned SetHashMethod(const XString& p_method);
   void     SetHashMethod(unsigned p_hash);
   unsigned GetHashMethod();
   XString  GetHashMethod(unsigned p_hash);
 
   // ENCRYPT a buffer in AES-256
-  XString  Encryption(XString p_input,XString password);
+  XString  Encryption(const XString& p_input,const XString& password);
   // DECRYPT a buffer in AES-256
-  XString  Decryption(XString p_input,XString password);
+  XString  Decryption(const XString& p_input,const XString& password);
 
   // ENCRYPT a buffer quickly in RC4 through the BCrypt interface
-  XString  FastEncryption(const XString& p_input, XString password);
+  XString  FastEncryption(const XString& p_input,const XString& password);
   // DECRYPT a buffer quickly in RC4 through BCrypt interface
-  XString  FastDecryption(const XString& p_input, XString password);
+  XString  FastDecryption(const XString& p_input,const XString& password);
 
   // Make a MD5 Hash value for a buffer
   XString  Digest(const void* data,const size_t data_size,unsigned hashType = 0);

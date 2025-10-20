@@ -31,6 +31,6 @@
 // Defaulting to "Applications"
 extern LPCTSTR g_eventLogCategory;
 
-int    RegisterMessagesDllForService(XString p_serviceName,XString p_messageDLL,XString& p_error);
-bool UnRegisterMessagesDllForService(XString p_serviceName,XString& p_error);
-bool IsMessageDLLRegistered(XString p_serviceName);
+int    RegisterMessagesDllForService(const XString& p_serviceName,const XString& p_messageDLL,XString& p_error);
+bool UnRegisterMessagesDllForService(const XString& p_serviceName,XString& p_error);
+bool IsMessageDLLRegistered(const XString& p_serviceName);
