@@ -247,53 +247,53 @@ TestMarlinServer::AddOperations(const XString& p_contract)
   // Defining the parameters for all the operations
 
   // First: Getting an accepted language
-  input1 .AddElement(NULL,_T("Language"),WSDL_Mandatory | XDT_String, _T("string"));
-  input1 .AddElement(NULL,_T("Version"), WSDL_Mandatory | XDT_Integer,   _T("int"));
-  output1.AddElement(NULL,_T("Accepted"),WSDL_Mandatory | XDT_Boolean,  _T("bool"));
+  input1 .AddElement(NULL,_T("Language"),_T("string"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  input1 .AddElement(NULL,_T("Version"), _T("int"),   XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Integer));
+  output1.AddElement(NULL,_T("Accepted"), _T("bool"), XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Boolean));
   
   // Second: Getting an accepted translation
   XMLElement* trans = 
-  input2 .AddElement(NULL,_T("Translation"),WSDL_Mandatory | XDT_String, _T("string"));
-  output2.AddElement(NULL,_T("CanDo"),      WSDL_Mandatory | XDT_Boolean,_T("bool"));
+  input2 .AddElement(NULL,_T("Translation"),_T("string"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  output2.AddElement(NULL,_T("CanDo"),      _T("bool"),  XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Boolean));
   trans->SetRestriction(&g_restrict);
 
   // Third Getting the answer
-  input3 .AddElement(NULL,_T("WordToTranslate"),WSDL_Mandatory | XDT_String,_T("string"));
-  output3.AddElement(NULL,_T("TranslatedWord"), WSDL_Optional  | XDT_String,_T("string"));
+  input3 .AddElement(NULL,_T("WordToTranslate"),_T("string"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  output3.AddElement(NULL,_T("TranslatedWord"), _T("string"),XDT_Combine(XmlDataType::WSDL_Optional, XmlDataType::XDT_String));
 
   // Fourth. Recursive parameters and answers
-  XMLElement* param   = input4.AddElement(NULL, _T("Parameters"),   WSDL_Mandatory|XDT_Complex,_T(""));
-  XMLElement* lanFrom = input4.AddElement(param,_T("LanguageFrom"), WSDL_Mandatory|XDT_String, _T("language"));
-  XMLElement* lanTo   = input4.AddElement(param,_T("LanguageTo"),   WSDL_Mandatory|XDT_String, _T("language"));
-  XMLElement* datatp  = input4.AddElement(param,_T("DataTypes"),    WSDL_Mandatory|XDT_Complex,_T(""));
-  input4.AddElement(datatp,_T("String"),  WSDL_Optional|XDT_String,_T("string"));
-  input4.AddElement(datatp,_T("Diacrits"),WSDL_Optional|XDT_String,_T("diacritics"));
+  XMLElement* param   = input4.AddElement(NULL, _T("Parameters"),  _T(""),        XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Complex));
+  XMLElement* lanFrom = input4.AddElement(param,_T("LanguageFrom"),_T("language"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  XMLElement* lanTo   = input4.AddElement(param,_T("LanguageTo"),  _T("language"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  XMLElement* datatp  = input4.AddElement(param,_T("DataTypes"),    _T(""),       XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Complex));
+  input4.AddElement(datatp,_T("String"),  _T("string"),    XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_String));
+  input4.AddElement(datatp,_T("Diacrits"),_T("diacritics"),XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_String));
 
-  XMLElement* answer  = input4.AddElement(NULL, _T("DoubleWord"),   WSDL_Mandatory|XDT_Complex,_T(""));
-  input4.AddElement(answer,_T("WordToTranslate"),WSDL_Mandatory|XDT_String,_T("to_be_translated"));
-  input4.AddElement(answer,_T("AlternativeWord"),WSDL_Optional |XDT_String,_T("alternative"));
+  XMLElement* answer  = input4.AddElement(NULL,  _T("DoubleWord"),_T(""),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Complex));
+  input4.AddElement(answer,_T("WordToTranslate"),_T("to_be_translated"), XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  input4.AddElement(answer,_T("AlternativeWord"),_T("alternative"),      XDT_Combine(XmlDataType::WSDL_Optional, XmlDataType::XDT_String));
   lanFrom->SetRestriction(&g_restrict);
   lanTo  ->SetRestriction(&g_restrict);
 
-  output4.AddElement(NULL,_T("TranslatedWord"),WSDL_Optional|XDT_String,_T("string"));
-  output4.AddElement(NULL,_T("TranslationAlt"),WSDL_Optional|XDT_String,_T("string"));
+  output4.AddElement(NULL,_T("TranslatedWord"),_T("string"),XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_String));
+  output4.AddElement(NULL,_T("TranslationAlt"),_T("string"),XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_String));
 
   // Fifth. Has another "Parameters" node and "DoubleWord"
-  XMLElement* param5   = input5.AddElement(NULL, _T("Parameters"),   WSDL_Mandatory|XDT_Complex,_T(""));
-  input5.AddElement(param5,_T("Dialect"),      WSDL_Mandatory|XDT_String, _T("Dialect"));
-  input5.AddElement(param5,_T("Region"),       WSDL_Mandatory|XDT_String, _T("Region"));
-  input5.AddElement(param5,_T("PiApprox"),     WSDL_Optional |XDT_Float,  _T("Approximation of PI"));
-  XMLElement* datatyp  = input5.AddElement(param5,_T("DataTypes"), WSDL_Optional|XDT_Complex,_T(""));
-  input5.AddElement(datatyp,_T("MinLength"),  WSDL_Mandatory|XDT_Integer,_T("int"));
-  input5.AddElement(datatyp,_T("MaxLength"),  WSDL_Mandatory|XDT_Integer,_T("int"));
-  input5.AddElement(datatyp,_T("MaxDecimals"),WSDL_Mandatory|XDT_Integer,_T("int"));
+  XMLElement* param5   = input5.AddElement(NULL,_T("Parameters"),_T(""),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Complex));
+  input5.AddElement(param5,_T("Dialect"), _T("Dialect"),            XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  input5.AddElement(param5,_T("Region"),  _T("Region"),             XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  input5.AddElement(param5,_T("PiApprox"),_T("Approximation of PI"),XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_Float));
+  XMLElement* datatyp  = input5.AddElement(param5,_T("DataTypes"),_T(""),XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_Complex));
+  input5.AddElement(datatyp,_T("MinLength"),  _T("int"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Integer));
+  input5.AddElement(datatyp,_T("MaxLength"),  _T("int"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Integer));
+  input5.AddElement(datatyp,_T("MaxDecimals"),_T("int"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Integer));
   
-  XMLElement* answer5  = input5.AddElement(NULL, _T("DoubleWord"),   WSDL_Mandatory|XDT_Complex,_T("Wording"));
-  input5.AddElement(answer5,_T("Word"),        WSDL_Mandatory|XDT_String,_T("to_be_translated"));
-  input5.AddElement(answer5,_T("Alternative"), WSDL_Optional |XDT_String,_T("alternative"));
+  XMLElement* answer5  = input5.AddElement(NULL,_T("DoubleWord"),_T("Wording"),XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_Complex));
+  input5.AddElement(answer5,_T("Word"),_T("to_be_translated"),  XDT_Combine(XmlDataType::WSDL_Mandatory,XmlDataType::XDT_String));
+  input5.AddElement(answer5,_T("Alternative"),_T("alternative"),XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_String));
 
-  output5.AddElement(NULL,_T("TranslatedWord"),WSDL_Optional|XDT_String,_T("string"));
-  output5.AddElement(NULL,_T("TranslationAlt"),WSDL_Optional|XDT_String,_T("string"));
+  output5.AddElement(NULL,_T("TranslatedWord"),_T("string"),XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_String));
+  output5.AddElement(NULL,_T("TranslationAlt"),_T("string"),XDT_Combine(XmlDataType::WSDL_Optional,XmlDataType::XDT_String));
 
   // Putting the operations in the WSDL Cache
   AddOperation(CONTRACT_MF,first, &input1,&output1);

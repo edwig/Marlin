@@ -3,7 +3,7 @@
 // File: XString.h
 //
 // Std Mfc eXtension String is a string derived from std::string
-// But does just about everything that MFC XString also does
+// But does just about everything that MFC CString also does
 // 
 // Created: 2014-2025 ir. W.E. Huisman MSC
 //
@@ -25,6 +25,7 @@
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //////////////////////////////////////////////////////////////////////////
+
 #pragma once
 #include <wtypes.h>
 #include <string>
@@ -77,13 +78,15 @@ public:
   void        AppendChar(TCHAR p_char);
   // Append a formatted string
   void        AppendFormat(LPCTSTR p_format,...);
-  void        AppendFormat(UINT   p_strID ,...);
+  void        AppendFormat(UINT    p_strID ,...);
   // Append a formatted variable list
   void        AppendFormatV(LPCTSTR p_format,va_list p_list);
   void        AppendFormatV(UINT    p_strID, va_list p_list);
+
   // ANSI/OEM Conversions
   void        AnsiToOem();
   void        OemToAnsi();
+
   // Collate
   int         Collate(LPCTSTR p_string);
   int         CollateNoCase(LPCTSTR p_string);
@@ -104,7 +107,8 @@ public:
   int         FindOneOf(LPCTSTR p_string) const;
   // Format a string
   void        Format(LPCTSTR p_format,...);
-  void        Format(UINT   p_strID ,...);
+  void        Format(UINT    p_strID ,...);
+  void        Format(XString p_format,...);
   // Format a variable list
   void        FormatV(LPCTSTR p_format,va_list p_list);
   void        FormatV(UINT    p_strID, va_list p_list);
@@ -130,7 +134,7 @@ public:
   void        ReleaseBuffer(int p_newLength = -1);
   void        ReleaseBufferSetLength(int p_newLength);
   // Getting the string
-  PCTSTR      GetString() const;
+  LPCTSTR     GetString() const;
   // Insert char or string
   int         Insert(int p_index,LPCTSTR p_string);
   int         Insert(int p_index,TCHAR   p_char);
@@ -139,7 +143,7 @@ public:
   // Taking the left side of the string
   XString     Left(int p_length) const;
   // Locking the buffer
-  PCTSTR      LockBuffer();
+  LPCTSTR     LockBuffer();
   // Load a string from the resources
   BOOL        LoadString(UINT p_strID);
   BOOL        LoadString(HINSTANCE p_inst,UINT p_strID);
@@ -157,7 +161,7 @@ public:
   int         Remove(TCHAR p_char);
   // Replace a string or a character
   int         Replace(LPCTSTR p_old,LPCTSTR p_new);
-  int         Replace(TCHAR p_old,TCHAR p_new);
+  int         Replace(TCHAR   p_old,TCHAR   p_new);
   // Find last occurrence of a char
   int         ReverseFind(TCHAR p_char) const;
   // Get substring from the right 
@@ -165,43 +169,54 @@ public:
   // Set char at a position
   void        SetAt(int p_index,TCHAR p_char);
   // SetString interface
-  void        SetString(PCTSTR p_string);
-  void        SetString(PCTSTR p_string,int p_length);
+  void        SetString(LPCTSTR p_string);
+  void        SetString(LPCTSTR p_string,int p_length);
   // Set string from a COM BSTR
   BSTR        SetSysString(BSTR* p_string);
   // Leftmost string (not) in argument
-  XString     SpanExcluding(PCTSTR p_string) const;
-  XString     SpanIncluding(PCTSTR p_string) const;
+  XString     SpanExcluding(LPCTSTR p_string) const;
+  XString     SpanIncluding(LPCTSTR p_string) const;
   // Length of the string
- static int   StringLength (PCTSTR p_string);
+  static int  StringLength (LPCTSTR p_string);
   // Return tokenized strings
-  XString     Tokenize(PCTSTR p_tokens,int& p_curpos) const;
+  XString     Tokenize(LPCTSTR p_tokens,int& p_curpos) const;
   // Trim the string
   XString&    Trim();
   XString&    Trim(TCHAR  p_char);
-  XString&    Trim(PCTSTR p_string);
+  XString&    Trim(LPCTSTR p_string);
   XString&    TrimLeft();
   XString&    TrimLeft(TCHAR  p_char);
-  XString&    TrimLeft(PCTSTR p_string);
+  XString&    TrimLeft(LPCTSTR p_string);
   XString&    TrimRight();
   XString&    TrimRight(TCHAR  p_char);
-  XString&    TrimRight(PCTSTR p_string);
+  XString&    TrimRight(LPCTSTR p_string);
   // Truncate the string
   void        Truncate(int p_length);
 
   // OPERATORS
 
-  operator LPTSTR() const;
-  operator LPCTSTR() const;
+  operator  LPTSTR()  const;
+  operator  LPCTSTR() const;
   XString   operator+ (const XString& p_extra) const;
   XString   operator+ (LPCTSTR p_extra) const;
   XString   operator+ (const TCHAR p_char) const;
-  XString   operator+=(XString& p_extra);
-  XString   operator+=(stdstring& p_string);
-  XString   operator+=(LPCTSTR p_extra);
-  XString   operator+=(const TCHAR p_char);
+  XString&  operator+=(XString& p_extra);
+  XString&  operator+=(const stdstring& p_string);
+  XString&  operator+=(LPCTSTR p_extra);
+  XString&  operator+=(const TCHAR p_char);
   XString&  operator =(const XString& p_extra);
   XString&  operator =(LPCTSTR p_string);
+  // Extra conversion methods
+  int       AsInt();
+  long      AsLong();
+  unsigned  AsUnsigned();
+  INT64     AsInt64();
+  UINT64    AsUint64();
+
+  void      SetNumber(int      p_number,int p_radix = 10);
+  void      SetNumber(unsigned p_number);
+  void      SetNumber(INT64    p_number);
+  void      SetNumber(UINT64   p_number);
 
 private:
   // No extra private data
@@ -218,7 +233,7 @@ inline XString operator+(LPCTSTR lhs,const XString& rhs)
 //////////////////////////////////////////////////////////////////////////
 //
 // INLINING FOR PERFORMANCE
-// All methods consisting of one line of code are inline
+// All methods consisting of one line of code are inlined
 //
 //////////////////////////////////////////////////////////////////////////
 
@@ -283,7 +298,7 @@ inline int XString::GetLength() const
   return (int)length();
 }
 
-inline PCTSTR XString::GetString() const
+inline LPCTSTR XString::GetString() const
 {
   return c_str();
 }
@@ -336,7 +351,7 @@ inline XString& XString::Trim(TCHAR p_char)
   return TrimLeft(p_char).TrimRight(p_char);
 }
 
-inline XString& XString::Trim(PCTSTR p_string)
+inline XString& XString::Trim(LPCTSTR p_string)
 {
   return TrimLeft(p_string).TrimRight(p_string);
 }

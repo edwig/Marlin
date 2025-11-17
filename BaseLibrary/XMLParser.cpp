@@ -471,7 +471,7 @@ XMLParser::ParseCDATA(bool p_append /*= false*/)
     else
     {
       m_lastElement->SetValue(value);
-      m_lastElement->SetType(XDT_CDATA);
+      m_lastElement->SetType(XmlDataType::XDT_CDATA);
     }
   }
   SkipWhiteSpace();
@@ -856,7 +856,7 @@ XMLParser::MakeElement(const XString& p_namespace,const XString& p_name)
     return;
   }
   // Adding to an existing element
-  m_lastElement = m_message->AddElement(m_element,p_name,XDT_String,_T(""));
+  m_lastElement = m_message->AddElement(m_element,p_name,_T(""));
   if(m_lastElement == nullptr)
   {
     SetError(XmlError::XE_OutOfMemory,_T("OUT OF MEMORY"));

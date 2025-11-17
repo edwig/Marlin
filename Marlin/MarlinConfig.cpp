@@ -268,7 +268,7 @@ MarlinConfig::SetSection(const XString& p_section)
     // Section already exists
     return false;
   }
-  if(AddElement(NULL,p_section,XDT_Complex,_T("")))
+  if(AddElement(NULL,p_section,_T(""),XmlDataType::XDT_Complex))
   {
     m_changed = true;
   }
@@ -294,7 +294,7 @@ MarlinConfig::SetParameter(const XString& p_section,const XString& p_parameter,c
       }
       return false;
     }
-    if(AddElement(section,p_parameter,XDT_String,p_value))
+    if(AddElement(section,p_parameter,p_value))
     {
       m_changed = true;
       return true;

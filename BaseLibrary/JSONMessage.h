@@ -177,7 +177,7 @@ public:
   explicit JSONpair(const XString& p_name,const JsonType    p_type);
   explicit JSONpair(const XString& p_name,const JSONvalue&  p_value);
   explicit JSONpair(const XString& p_name,const XString&    p_value);
-  explicit JSONpair(const XString& p_name,const LPTSTR      p_value);
+  explicit JSONpair(const XString& p_name,      LPCTSTR     p_value);
   explicit JSONpair(const XString& p_name,const int         p_value);
   explicit JSONpair(const XString& p_name,const bcd&        p_value);
   explicit JSONpair(const XString& p_name,const bool        p_value);

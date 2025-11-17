@@ -78,7 +78,7 @@ XMLElement::Reset()
   m_namespace.Empty();
   m_value.Empty();
   m_name.Empty();
-  m_type = 0;
+  m_type = XmlDataType::XDT_Unknown;
 
   // Remove all attributes
   m_attributes.clear();
@@ -166,7 +166,7 @@ XMLElement::SetName(const XString& p_name)
 XMLMessage::XMLMessage()
 {
   m_root = alloc_new XMLElement();
-  m_root->SetType(XDT_String);
+  m_root->SetType(XmlDataType::XDT_String);
   AddReference();
 }
 
@@ -465,7 +465,7 @@ XMLMessage::PrintElements(XMLElement* p_element
     temp     = p_element->GetRestriction()->PrintRestriction(name);
     message += spaces + temp + newline;
   }
-  if((p_element->GetType() & WSDL_Mask) & ~(WSDL_Mandatory | WSDL_Sequence))
+  if(((int)p_element->GetType() & WSDL_Mask) & ~((int)XmlDataType::WSDL_Mandatory | (int)XmlDataType::WSDL_Sequence))
   {
     message += spaces;
     message += PrintWSDLComment(p_element);
@@ -473,7 +473,7 @@ XMLMessage::PrintElements(XMLElement* p_element
   }
 
   // Print by type
-  if(p_element->GetType() & XDT_CDATA)
+  if((int)p_element->GetType() & (int)XmlDataType::XDT_CDATA)
   {
     // CDATA section
     temp.Format(_T("<%s><![CDATA[%s]]>"),XMLParser::PrintXmlString(name,p_utf8).GetString(),value.GetString());
@@ -508,22 +508,22 @@ XMLMessage::PrintElements(XMLElement* p_element
       }
       message += temp;
 
-      switch(attrib.m_type & XDT_Mask & ~XDT_Type)
+      switch((int)attrib.m_type & XDT_Mask & ~(int)XmlDataType::XDT_Type)
       {
-        default:                    temp.Format(_T("\"%s\""),attrib.m_value.GetString());
-                                    break;
-        case XDT_String:            [[fallthrough]];
-        case XDT_AnyURI:            [[fallthrough]];
-        case XDT_NormalizedString:  temp.Format(_T("\"%s\""),XMLParser::PrintXmlString(attrib.m_value,p_utf8).GetString());
-                                    break;
+        default:                                      temp.Format(_T("\"%s\""),attrib.m_value.GetString());
+                                                      break;
+        case (int)XmlDataType::XDT_String:            [[fallthrough]];
+        case (int)XmlDataType::XDT_AnyURI:            [[fallthrough]];
+        case (int)XmlDataType::XDT_NormalizedString:  temp.Format(_T("\"%s\""),XMLParser::PrintXmlString(attrib.m_value,p_utf8).GetString());
+                                                      break;
       }
       message += temp;
     }
 
     // Mandatory type in the xml
-    if(p_element->GetType() & XDT_Type)
+    if((int)p_element->GetType() & (int)XmlDataType::XDT_Type)
     {
-      temp.Format(_T(" type=\"%s\""),XmlDataTypeToString(p_element->GetType() & XDT_MaskTypes).GetString());
+      temp.Format(_T(" type=\"%s\""),XmlDataTypeToString((XmlDataType)((int)p_element->GetType() & XDT_MaskTypes)).GetString());
       message += temp;
     }
 
@@ -562,19 +562,19 @@ XString
 XMLMessage::PrintWSDLComment(XMLElement* p_element)
 {
   XString comment(_T("<!--"));
-  switch(p_element->GetType() & WSDL_MaskField)
+  switch((XmlDataType)((int)p_element->GetType() & WSDL_MaskField))
   {
-    case WSDL_Mandatory: comment += _T("Mandatory");    break;
-    case WSDL_Optional:  [[fallthrough]];
-    case WSDL_ZeroOne:   comment += _T("Optional");     break;
-    case WSDL_OnceOnly:  comment += _T("Exactly ONE");  break;
-    case WSDL_ZeroMany:  comment += _T("ZERO or more"); break;
-    case WSDL_OneMany:   comment += _T("At LEAST one"); break;
+    case XmlDataType::WSDL_Mandatory: comment += _T("Mandatory");    break;
+    case XmlDataType::WSDL_Optional:  [[fallthrough]];
+    case XmlDataType::WSDL_ZeroOne:   comment += _T("Optional");     break;
+    case XmlDataType::WSDL_OnceOnly:  comment += _T("Exactly ONE");  break;
+    case XmlDataType::WSDL_ZeroMany:  comment += _T("ZERO or more"); break;
+    case XmlDataType::WSDL_OneMany:   comment += _T("At LEAST one"); break;
   }
-  switch(p_element->GetType() & WSDL_MaskOrder)
+  switch((XmlDataType)((int)p_element->GetType() & WSDL_MaskOrder))
   {
-    case WSDL_Choice:    comment += _T(": You have a CHOICE at this level"); break;
-    case WSDL_Sequence:  comment += _T(": Exactly in this SEQUENCE");        break;
+    case XmlDataType::WSDL_Choice:    comment += _T(": You have a CHOICE at this level"); break;
+    case XmlDataType::WSDL_Sequence:  comment += _T(": Exactly in this SEQUENCE");        break;
   }
   comment += _T(":-->");
 
@@ -638,15 +638,15 @@ XMLMessage::PrintElementsJson(XMLElement* p_element
   }
 
   // print element value
-  switch(p_element->GetType() & XDT_Mask & ~XDT_Type)
+  switch((int)p_element->GetType() & XDT_Mask & ~((int)XmlDataType::XDT_Type))
   {
-    default:                    temp.Format(_T("%s"),value.GetString());
-                                break;
-    case XDT_CDATA:             [[fallthrough]];
-    case XDT_String:            [[fallthrough]];
-    case XDT_AnyURI:            [[fallthrough]];
-    case XDT_NormalizedString:  temp = XMLParser::PrintJsonString(value);
-                                break;
+    default:                                      temp.Format(_T("%s"),value.GetString());
+                                                  break;
+    case (int)XmlDataType::XDT_CDATA:             [[fallthrough]];
+    case (int)XmlDataType::XDT_String:            [[fallthrough]];
+    case (int)XmlDataType::XDT_AnyURI:            [[fallthrough]];
+    case (int)XmlDataType::XDT_NormalizedString:  temp = XMLParser::PrintJsonString(value);
+                                                  break;
   }
   message += temp + newline;
 
@@ -696,7 +696,7 @@ XMLMessage::EncryptMessage(XString& /*p_message*/)
 
 // General add a parameter (always adds, so multiple parameters of same name can be added)
 XMLElement*
-XMLMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type /*=XDT_String*/,const XString& p_value /*=""*/, bool p_front /*=false*/)
+XMLMessage::AddElement(XMLElement* p_base,const XString& p_name,const XString& p_value /*=""*/, XmlDataType p_type /*=XDT_String*/,bool p_front /*=false*/)
 {
   XString name(p_name);
   // Removing the namespace from the name
@@ -729,16 +729,16 @@ XMLMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_ty
 
 // Setting an element: Finding an existing node
 XMLElement*
-XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,const XString& p_value,bool p_front /*=false*/)
+XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,const XString& p_value /*=_T("")*/,XmlDataType p_type /*=XDT_String*/,bool p_front /*=false*/)
 {
   XString name(p_name);
   XString namesp = SplitNamespace(name);
   XmlElementMap& elements = p_base ? p_base->GetChildren() : m_root->GetChildren();
 
   // Finding existing element
-  for (auto& element : elements)
+  for(auto& element : elements)
   {
-    if (element->GetName().Compare(name) == 0)
+    if(element->GetName().Compare(name) == 0)
     {
       // Just setting the values again
       element->SetNamespace(namesp);
@@ -750,20 +750,20 @@ XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,XmlDataType p_ty
   }
   
   // Create a new node
-  return AddElement(p_base,p_name,p_type,p_value,p_front);
+  return AddElement(p_base,p_name,p_value,p_type,p_front);
 }
 
 XMLElement*
 XMLMessage::SetElement(const XString& p_name,const XString& p_value)
 {
-  return SetElement(m_root,p_name,XDT_String,p_value);
+  return SetElement(m_root,p_name,p_value,XmlDataType::XDT_String);
 }
 
 XMLElement*
 XMLMessage::SetElement(const XString& p_name,LPCTSTR p_value)
 {
   XString value(p_value);
-  return SetElement(m_root,p_name,XDT_String,value);
+  return SetElement(m_root,p_name,value,XmlDataType::XDT_String);
 }
 
 XMLElement*
@@ -771,7 +771,7 @@ XMLMessage::SetElement(const XString& p_name,int p_value)
 {
   XString value;
   value.Format(_T("%d"),p_value);
-  return SetElement(m_root,p_name,XDT_Integer,value);
+  return SetElement(m_root,p_name,value,XmlDataType::XDT_Integer);
 }
 
 XMLElement*
@@ -779,7 +779,7 @@ XMLMessage::SetElement(const XString& p_name,bool p_value)
 {
   XString value;
   value.Format(_T("%s"),p_value ? _T("true") : _T("false"));
-  return SetElement(m_root,p_name,XDT_Boolean,value);
+  return SetElement(m_root,p_name,value,XmlDataType::XDT_Boolean);
 }
 
 XMLElement*
@@ -787,19 +787,20 @@ XMLMessage::SetElement(const XString& p_name,double p_value)
 {
   XString value;
   value.Format(_T("%G"),p_value);
-  return SetElement(m_root,p_name,XDT_Double,value);
+  return SetElement(m_root,p_name,value,XmlDataType::XDT_Double);
 }
 
-XMLElement*
-XMLMessage::SetElement(XMLElement* p_base, const XString& p_name,const XString& p_value)
-{
-  return SetElement(p_base,p_name,XDT_String,p_value);
-}
+//XMLElement*
+//XMLMessage::SetElement(XMLElement* p_base, const XString& p_name,const XString& p_value)
+//{
+//  return SetElement(p_base,p_name,p_value,XmlDataType::XDT_String);
+//}
 
 XMLElement*
 XMLMessage::SetElement(XMLElement* p_base, const XString& p_name,LPCTSTR p_value)
 {
-  return SetElement(p_base,p_name,XDT_String,p_value);
+  XString value(p_value);
+  return SetElement(p_base,p_name,value,XmlDataType::XDT_String);
 }
 
 XMLElement*
@@ -807,7 +808,7 @@ XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,int p_value)
 {
   XString value;
   value.Format(_T("%d"), p_value);
-  return SetElement(p_base,p_name,XDT_Integer,value);
+  return SetElement(p_base,p_name,value,XmlDataType::XDT_Integer);
 }
 
 XMLElement*
@@ -815,7 +816,7 @@ XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,bool p_value)
 {
   XString value;
   value.Format(_T("%s"),p_value ? _T("true") : _T("false"));
-  return SetElement(p_base,p_name,XDT_Boolean,value);
+  return SetElement(p_base,p_name,value,XmlDataType::XDT_Boolean);
 }
 
 XMLElement*
@@ -823,11 +824,11 @@ XMLMessage::SetElement(XMLElement* p_base,const XString& p_name,double p_value)
 {
   XString value;
   value.Format(_T("%G"),p_value);
-  return SetElement(p_base,p_name,XDT_Double,value);
+  return SetElement(p_base,p_name,value,XmlDataType::XDT_Double);
 }
 
 void
-XMLMessage::SetElementValue(XMLElement* p_elem,XmlDataType p_type,const XString& p_value)
+XMLMessage::SetElementValue(XMLElement* p_elem,const XString& p_value, XmlDataType p_type /*=XDT_String*/)
 {
   if(p_elem)
   {
@@ -843,7 +844,7 @@ XMLMessage::SetElementOptions(XMLElement* p_elem,XmlDataType p_options)
   {
     // Mask-off previous WSDL options
     // All need to be set in one go!!
-    p_elem->SetType((p_elem->GetType() & XDT_Mask) | (p_options & WSDL_Mask));
+    p_elem->SetType((XmlDataType) (((int)p_elem->GetType() & XDT_Mask) | ((int)p_options & WSDL_Mask)));
   }
 }
 
@@ -884,14 +885,14 @@ XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,const XString&
     if(attrib.m_name.Compare(name) == 0)
     {
       // Already there, register new value
-      attrib.m_type  = XDT_String;
+      attrib.m_type  = XmlDataType::XDT_String;
       attrib.m_value = p_value;
       return &(attrib);
     }
   }
   // New attribute
   XMLAttribute attrib;
-  attrib.m_type      = XDT_String;
+  attrib.m_type      = XmlDataType::XDT_String;
   attrib.m_namespace = namesp;
   attrib.m_name      = name;
   attrib.m_value     = p_value;
@@ -915,7 +916,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,int p_value)
   XString value;
   value.Format(_T("%d"),p_value);
   XMLAttribute* attrib = SetAttribute(p_elem,p_name,value);
-  attrib->m_type = XDT_Integer;
+  attrib->m_type = XmlDataType::XDT_Integer;
   return attrib;
 }
 
@@ -926,7 +927,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,bool p_value)
   XString value;
   value.Format(_T("%s"),p_value ? _T("true") : _T("false"));
   XMLAttribute* attrib = SetAttribute(p_elem,p_name,value);
-  attrib->m_type = XDT_Boolean;
+  attrib->m_type = XmlDataType::XDT_Boolean;
   return attrib;
 }
 
@@ -937,7 +938,7 @@ XMLMessage::SetAttribute(XMLElement* p_elem,const XString& p_name,double p_value
   XString value;
   value.Format(_T("%G"),p_value);
   XMLAttribute* attrib = SetAttribute(p_elem,p_name,value);
-  attrib->m_type = XDT_Double;
+  attrib->m_type = XmlDataType::XDT_Double;
   return attrib;
 }
 

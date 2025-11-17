@@ -83,7 +83,7 @@ using ushort        = unsigned short;
 class XMLAttribute
 {
 public:
-  XmlDataType  m_type { 0 };
+  XmlDataType  m_type { XmlDataType::XDT_Unknown };
   XString      m_namespace;
   XString      m_name;
   XString      m_value;
@@ -129,7 +129,7 @@ private:
   // Our element node data
   XString         m_namespace;
   XString         m_name;
-  XmlDataType     m_type { 0 };
+  XmlDataType     m_type { XmlDataType::XDT_Unknown };
   XString         m_value;
   XmlAttribMap    m_attributes;
   XmlElementMap   m_elements;
@@ -208,21 +208,21 @@ public:
   XMLElement*     SetElement(const XString& p_name, bool           p_value);
   XMLElement*     SetElement(const XString& p_name, double         p_value);
 
-  XMLElement*     SetElement(XMLElement* p_base,const XString& p_name, const XString& p_value);
+//XMLElement*     SetElement(XMLElement* p_base,const XString& p_name, const XString& p_value);
   XMLElement*     SetElement(XMLElement* p_base,const XString& p_name, LPCTSTR        p_value);
   XMLElement*     SetElement(XMLElement* p_base,const XString& p_name, int            p_value);
   XMLElement*     SetElement(XMLElement* p_base,const XString& p_name, bool           p_value);
   XMLElement*     SetElement(XMLElement* p_base,const XString& p_name, double         p_value);
 
   // Special setters for elements
-  void            SetElementValue    (XMLElement* p_elem,XmlDataType p_type,const XString& p_value);
+  void            SetElementValue    (XMLElement* p_elem,const XString& p_value,XmlDataType p_type = XmlDataType::XDT_String);
   void            SetElementOptions  (XMLElement* p_elem,XmlDataType p_options);
   void            SetElementNamespace(XMLElement* p_elem,const XString& p_namespace,const XString& p_contract,bool p_trailingSlash = false);
 
   // General base setting of an element
-  XMLElement*     SetElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,const XString& p_value,bool p_front = false);
+  XMLElement*     SetElement(XMLElement* p_base,const XString& p_name,const XString& p_value = _T(""),XmlDataType p_type = XmlDataType::XDT_String,bool p_front = false);
   // General add an element (always adds, so multiple parameters of same name can be added)
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type = XDT_String,const XString& p_value = _T(""),bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,const XString& p_value = _T(""),XmlDataType p_type = XmlDataType::XDT_String,bool p_front = false);
   // Set attribute of an element
   XMLAttribute*   SetAttribute(XMLElement* p_elem,const XString& p_name,const XString& p_value);
   XMLAttribute*   SetAttribute(XMLElement* p_elem,const XString& p_name,LPCTSTR        p_value);

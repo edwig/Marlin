@@ -50,6 +50,8 @@
 #include <locale.h>
 #include <winnls.h>
 
+#pragma warning(disable:4702) // Error in detecting unreachable code
+
 // Theoretical maximum of numerical separators
 #define SEP_LEN 10
 

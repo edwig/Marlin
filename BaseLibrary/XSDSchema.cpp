@@ -367,7 +367,7 @@ XSDSchema::ReadElementDefinition(XMLMessage&  p_doc
   XString minoccurs = p_doc.GetAttribute(p_elem,_T("minOccurs"));
   XString maxoccurs = p_doc.GetAttribute(p_elem,_T("maxOccurs"));
 
-  XmlDataType xmlType = 0;
+  XmlDataType xmlType = XmlDataType::XDT_Unknown;
   XMLRestriction* restrict = alloc_new XMLRestriction(type);
   m_restrictions.push_back(restrict);
 
@@ -491,7 +491,7 @@ XSDSchema::WriteXSDElements(XMLMessage& p_doc,XMLElement* p_base,ElementMap& p_e
 {
   for(int index = 0;index < (int) p_elements.size();++index)
   {
-    XMLElement* elem = p_doc.AddElement(p_base,_T("xs:element"),XDT_String,_T(""));
+    XMLElement* elem = p_doc.AddElement(p_base,_T("xs:element"),_T(""));
     p_doc.SetAttribute(elem,_T("name"),p_elements[index]->GetName());
     XMLRestriction* restrict = p_elements[index]->GetRestriction();
     if(restrict)
@@ -518,8 +518,8 @@ XSDSchema::WriteXSDElements(XMLMessage& p_doc,XMLElement* p_base,ElementMap& p_e
       if(XMLRestrictionMoreThanBase(restrict))
       {
         // Must be a simple type
-        XMLElement* simple = p_doc.AddElement(elem,  _T("xs:simpleType"), XDT_String,_T(""));
-        XMLElement* restrt = p_doc.AddElement(simple,_T("xs:restriction"),XDT_String,_T(""));
+        XMLElement* simple = p_doc.AddElement(elem,  _T("xs:simpleType"), _T(""));
+        XMLElement* restrt = p_doc.AddElement(simple,_T("xs:restriction"),_T(""));
         p_doc.SetAttribute(restrt,_T("base"),XString(_T("xs:")) + restrict->HasBaseType());
 
         WriteXSDRestrictions(p_doc,restrt,restrict);
@@ -535,15 +535,15 @@ XSDSchema::WriteXSDComplexTypes(XMLMessage& p_doc)
   for(const auto& comp : m_types)
   {
     XSDComplexType* complex = comp.second;
-    XMLElement* type = p_doc.AddElement(nullptr,_T("xs:complexType"),XDT_String,_T(""));
+    XMLElement* type = p_doc.AddElement(nullptr,_T("xs:complexType"),_T(""));
     p_doc.SetAttribute(type,_T("name"),complex->m_name);
     
     XMLElement* order(nullptr);
     switch(complex->m_order)
     {
-      case WsdlOrder::WS_All:      order = p_doc.AddElement(type,_T("xs:all"),     XDT_String,_T("")); break;
-      case WsdlOrder::WS_Choice:   order = p_doc.AddElement(type,_T("xs:choice"),  XDT_String,_T("")); break;
-      case WsdlOrder::WS_Sequence: order = p_doc.AddElement(type,_T("xs:sequence"),XDT_String,_T("")); break;
+      case WsdlOrder::WS_All:      order = p_doc.AddElement(type,_T("xs:all"),     _T("")); break;
+      case WsdlOrder::WS_Choice:   order = p_doc.AddElement(type,_T("xs:choice"),  _T("")); break;
+      case WsdlOrder::WS_Sequence: order = p_doc.AddElement(type,_T("xs:sequence"),_T("")); break;
       default:                     return;
     }
     // Write all parts of the complex type
@@ -580,57 +580,57 @@ XSDSchema::WriteXSDRestrictions(XMLMessage& p_doc,XMLElement* p_elem,XMLRestrict
 
   if(p_restrict->HasLength() > 0)
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:length"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:length"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasLength());
   }
   if(p_restrict->HasMaxLength() > 0)
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:maxLength"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:maxLength"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMaxLength());
   }
   if(p_restrict->HasMinLength() > 0)
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:minLength"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:minLength"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMinLength());
   }
   if(p_restrict->HasTotalDigits())
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:totalDigits"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:totalDigits"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasTotalDigits());
   }
   if(p_restrict->HasFractionDigits())
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:fractionDigits"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:fractionDigits"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasFractionDigits());
   }
   if(!p_restrict->HasMaxExclusive().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:maxExclusive"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:maxExclusive"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMaxExclusive());
   }
   if(!p_restrict->HasMaxInclusive().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:maxInclusive"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:maxInclusive"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMaxInclusive());
   }
   if(!p_restrict->HasMinExclusive().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:minExclusive"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:minExclusive"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMinExclusive());
   }
   if(!p_restrict->HasMinInclusive().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:minInclusive"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:minInclusive"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasMinInclusive());
   }
   if(!p_restrict->HasPattern().IsEmpty())
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:pattern"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:pattern"),empty);
     p_doc.SetAttribute(extra,_T("value"),p_restrict->HasPattern());
   }
   if(p_restrict->HasWhitespace())
   {
-    extra = p_doc.AddElement(p_elem,_T("xs:whiteSpace"),XDT_String,empty);
+    extra = p_doc.AddElement(p_elem,_T("xs:whiteSpace"),empty);
     // 1=preserve, 2=replace, 3=collapse
     switch(p_restrict->HasWhitespace())
     {
@@ -644,12 +644,12 @@ XSDSchema::WriteXSDRestrictions(XMLMessage& p_doc,XMLElement* p_elem,XMLRestrict
   {
     for(auto& num : enums)
     {
-      extra = p_doc.AddElement(p_elem,_T("xs:enumeration"),XDT_String,empty);
+      extra = p_doc.AddElement(p_elem,_T("xs:enumeration"),empty);
       p_doc.SetAttribute(extra,_T("value"),num.first);
       if(!num.second.IsEmpty())
       {
-        XMLElement* anno = p_doc.AddElement(extra,_T("annotation"),XDT_String,empty);
-        p_doc.AddElement(anno,_T("documentation"),XDT_String,num.second);
+        XMLElement* anno = p_doc.AddElement(extra,_T("annotation"),empty);
+        p_doc.AddElement(anno,_T("documentation"),num.second);
       }
     }
   }
@@ -744,7 +744,7 @@ XSDSchema::ValidateElement(XMLMessage& p_doc
   XSDComplexType* complex = FindComplexType(type);
 
   // 4) Simple type -> Validate the element value
-  if(complex == nullptr || p_schemaElement->GetType() > 0)
+  if(complex == nullptr || ((int)p_schemaElement->GetType() > 0))
   {
     return ValidateValue(rest,p_compare,p_schemaElement->GetType(),type,p_error);
   }
@@ -924,7 +924,7 @@ XSDSchema::ValidateValue(XMLRestriction*  p_restrict
   XsdError result = XsdError::XSDE_NoError;
 
   XmlDataType basetype = p_datatype;
-  if(!basetype && !p_type.IsEmpty())
+  if((basetype != XmlDataType::XDT_Unknown) && !p_type.IsEmpty())
   {
     basetype = StringToXmlDataType(p_type);
   }

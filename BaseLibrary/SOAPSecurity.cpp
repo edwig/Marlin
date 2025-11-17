@@ -249,7 +249,7 @@ SOAPSecurity::SetAddSecurityHeader(SOAPMessage* p_message)
       return security;
     }
     // Add the security node to the SOAP header
-    return p_message->AddElement(header,_T("wsse:Security"),XDT_String,_T(""));
+    return p_message->AddElement(header,_T("wsse:Security"),_T(""));
   }
   return nullptr;
 }
@@ -265,7 +265,7 @@ SOAPSecurity::SetUsernameInMessage(SOAPMessage* p_message,XMLElement* p_secure)
       username->SetValue(m_username);
       return true;
     }
-    else if(p_message->AddElement(p_secure,_T("wsse:Username"),XDT_String,m_username))
+    else if(p_message->AddElement(p_secure,_T("wsse:Username"),m_username))
     {
       return true;
     }
@@ -285,7 +285,7 @@ SOAPSecurity::SetPasswordInMessage(SOAPMessage* p_message,XMLElement* p_secure,X
     }
     else
     {
-      password = p_message->AddElement(p_secure,_T("wsse:Password"),XDT_String,p_password);
+      password = p_message->AddElement(p_secure,_T("wsse:Password"),p_password);
     }
     if(password)
     {
@@ -308,7 +308,7 @@ SOAPSecurity::SetNonceInMessage(SOAPMessage* p_message,XMLElement* p_secure)
       nonce->SetValue(m_nonce);
       return true;
     }
-    else if(p_message->AddElement(p_secure,_T("wsse:Nonce"),XDT_String,m_nonce))
+    else if(p_message->AddElement(p_secure,_T("wsse:Nonce"),m_nonce))
     {
       return true;
     }
@@ -329,7 +329,7 @@ SOAPSecurity::SetCreatedInMessage(SOAPMessage* p_message,XMLElement* p_secure)
       stamp->SetValue(timestamp);
       return true;
     }
-    stamp = p_message->AddElement(p_secure,_T("wsu:Created"),XDT_String,timestamp);
+    stamp = p_message->AddElement(p_secure,_T("wsu:Created"),timestamp);
     if(stamp)
     {
       p_message->SetAttribute(stamp,_T("xmlns:wsu"),_T("http://schemas.xmlsoap.org/ws/2002/07/utility"));

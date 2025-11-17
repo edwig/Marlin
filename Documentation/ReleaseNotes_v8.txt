@@ -9,6 +9,10 @@ Version 8.x contains the new BaseLibrary where all general classes are moved int
 that can be shared with other library modules like SQLComponents and CXHibernate
 ----------------------------------------------------------------------------------------------
 
+CHANGES IN VERSION 8.5.x of xx-xx-2025
+--------------------------------------
+1)  Converted to Visual Studio 2026
+
 CHANGES IN VERSION 8.5.0 of 10-10-2025
 --------------------------------------
 1)  ErrorReporting is moved from Marlin to the BaseLibrary, so that other programs can take 

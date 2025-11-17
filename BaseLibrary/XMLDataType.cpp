@@ -86,11 +86,11 @@ XString
 XmlDataTypeToString(XmlDataType p_type)
 {
   // See if XmlDataType is withing valid range
-  if(p_type < XDT_String || p_type > XDT_NMTOKENS)
+  if((p_type == XmlDataType::XDT_Unknown) || ((int)p_type > (int)XmlDataType::XDT_NMTOKENS))
   {
     return _T("");
   }
-  return XString(xml_datatypes[p_type]);
+  return XString(xml_datatypes[(int)p_type]);
 }
 
 XmlDataType
@@ -102,10 +102,10 @@ StringToXmlDataType(const XString& p_name)
   {
     if(p_name.Compare(datatypes[ind]) == 0)
     {
-      return ind;
+      return (XmlDataType)ind;
     }
   }
-  return 0;
+  return XmlDataType::XDT_Unknown;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -121,35 +121,35 @@ struct _xmlodbc
 } 
 xmlodbc_types [] =
 {
-  { XDT_String,           SQL_C_TCHAR     }
- ,{ XDT_Integer,          SQL_C_LONG      }
- ,{ XDT_Integer,          SQL_C_SLONG     }
- ,{ XDT_Boolean,          SQL_C_BIT       }
- ,{ XDT_Double,           SQL_C_DOUBLE    }
- ,{ XDT_DateTime,         SQL_C_TIMESTAMP }
- ,{ XDT_Date,             SQL_C_DATE      }
- ,{ XDT_Decimal,          SQL_C_NUMERIC   }
- ,{ XDT_Long,             SQL_C_LONG      }
- ,{ XDT_Long,             SQL_C_SLONG     }
- ,{ XDT_Int,              SQL_C_SLONG     }
- ,{ XDT_Short,            SQL_C_SHORT     }
- ,{ XDT_Short,            SQL_C_SSHORT    }
- ,{ XDT_Byte,             SQL_C_TINYINT   }
- ,{ XDT_Byte,             SQL_C_STINYINT  }
- ,{ XDT_UnsignedLong,     SQL_C_ULONG     }
- ,{ XDT_UnsignedInt,      SQL_C_ULONG     }
- ,{ XDT_UnsignedShort,    SQL_C_USHORT    }
- ,{ XDT_UnsignedByte,     SQL_C_UTINYINT  }
- ,{ XDT_DayTimeDuration,  SQL_C_INTERVAL_DAY_TO_SECOND }
- ,{ XDT_YearMonthDuration,SQL_C_INTERVAL_YEAR_TO_MONTH }
- ,{ XDT_Float,            SQL_C_FLOAT     }
+  { XmlDataType::XDT_String,           SQL_C_TCHAR     }
+ ,{ XmlDataType::XDT_Integer,          SQL_C_LONG      }
+ ,{ XmlDataType::XDT_Integer,          SQL_C_SLONG     }
+ ,{ XmlDataType::XDT_Boolean,          SQL_C_BIT       }
+ ,{ XmlDataType::XDT_Double,           SQL_C_DOUBLE    }
+ ,{ XmlDataType::XDT_DateTime,         SQL_C_TIMESTAMP }
+ ,{ XmlDataType::XDT_Date,             SQL_C_DATE      }
+ ,{ XmlDataType::XDT_Decimal,          SQL_C_NUMERIC   }
+ ,{ XmlDataType::XDT_Long,             SQL_C_LONG      }
+ ,{ XmlDataType::XDT_Long,             SQL_C_SLONG     }
+ ,{ XmlDataType::XDT_Int,              SQL_C_SLONG     }
+ ,{ XmlDataType::XDT_Short,            SQL_C_SHORT     }
+ ,{ XmlDataType::XDT_Short,            SQL_C_SSHORT    }
+ ,{ XmlDataType::XDT_Byte,             SQL_C_TINYINT   }
+ ,{ XmlDataType::XDT_Byte,             SQL_C_STINYINT  }
+ ,{ XmlDataType::XDT_UnsignedLong,     SQL_C_ULONG     }
+ ,{ XmlDataType::XDT_UnsignedInt,      SQL_C_ULONG     }
+ ,{ XmlDataType::XDT_UnsignedShort,    SQL_C_USHORT    }
+ ,{ XmlDataType::XDT_UnsignedByte,     SQL_C_UTINYINT  }
+ ,{ XmlDataType::XDT_DayTimeDuration,  SQL_C_INTERVAL_DAY_TO_SECOND }
+ ,{ XmlDataType::XDT_YearMonthDuration,SQL_C_INTERVAL_YEAR_TO_MONTH }
+ ,{ XmlDataType::XDT_Float,            SQL_C_FLOAT     }
 };
 
 int
 XmlDataTypeToODBC(XmlDataType p_type)
 {
   // See if XmlDataType is withing valid range
-  if(p_type < XDT_String || p_type > XDT_NMTOKENS)
+  if((p_type == XmlDataType::XDT_Unknown) || ((int)p_type > (int)XmlDataType::XDT_NMTOKENS))
   {
     return 0;
   }
@@ -173,5 +173,5 @@ ODBCToXmlDataType(int p_type)
       return xmlodbc_types[ind].m_xmlType;
     }
   }
-  return 0;
+  return XmlDataType::XDT_Unknown;
 }

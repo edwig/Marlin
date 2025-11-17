@@ -82,7 +82,7 @@ AppConfig::SetSection(const XString& p_section)
     // Section already exists, nothing to do
     return true;
   }
-  if(AddElement(nullptr,p_section,XDT_Complex,_T("")) == nullptr)
+  if(AddElement(nullptr,p_section,_T(""),XmlDataType::XDT_Complex) == nullptr)
   {
     return false;
   }
@@ -125,7 +125,7 @@ AppConfig::SetParameter(const XString& p_section,const XString& p_parameter,cons
   }
   else
   {
-    if(AddElement(section,p_parameter,XDT_String,p_value) == nullptr)
+    if(AddElement(section,p_parameter,p_value) == nullptr)
     {
       return false;
     }

@@ -3,8 +3,8 @@
 // XString
 //
 // Std Mfc eXtension (SMX)String is a string derived from std::string
-// But does just about everything that MFC XString also does
-// The string is derived from std::string with XString methods
+// But does just about everything that MFC CString also does
+// The string is derived from std::string with CString methods
 // SMX = std::string with MFC eXtensions
 //
 // Created: 2014-2025 ir. W.E. Huisman
@@ -33,7 +33,10 @@
 #include "BaseLibrary.h"
 #include "ConvertWideString.h"
 #include "XString.h"
+#include <atlbase.h>
+#include <WinNls.h>
 
+// Base CTOR
 XString::XString()
 {
 }
@@ -223,6 +226,20 @@ XString::Format(UINT p_strID,...)
   va_end(argList);
 }
 
+#pragma warning(push)
+#pragma warning(disable:4840)
+void
+XString::Format(XString p_format,...)
+{
+  va_list argList;
+  va_start(argList,p_format);
+
+  FormatV(p_format.c_str(),argList);
+
+  va_end(argList);
+}
+#pragma warning(pop)
+
 // Format a variable list
 void 
 XString::FormatV(LPCTSTR p_format,va_list p_list)
@@ -336,7 +353,7 @@ XString::GetBufferSetLength(int p_length)
 {
   if(p_length > size())
   {
-    append(((size_t)p_length - size()),' ');
+    append(((size_t)p_length - size()),0);
   }
   else
   {
@@ -350,7 +367,7 @@ BOOL
 XString::GetEnvironmentVariable(LPCTSTR p_variable)
 {
   BOOL  result = FALSE;
-  ULONG length = ::GetEnvironmentVariable(p_variable,NULL,0);
+  ULONG length = ::GetEnvironmentVariable(p_variable,nullptr,0);
 
   if(length == 0)
   {
@@ -403,7 +420,7 @@ XString::LoadString(UINT p_strID)
   const ATLSTRINGRESOURCEIMAGE* resource = nullptr;
   HINSTANCE instance = _AtlBaseModule.GetHInstanceAt(0);
 
-  for(int ind = 1; instance != NULL && resource == nullptr; instance = _AtlBaseModule.GetHInstanceAt(ind++))
+  for(int ind = 1; instance != nullptr && resource == nullptr; instance = _AtlBaseModule.GetHInstanceAt(ind++))
   {
     resource = AtlGetStringResourceImage(instance,p_strID,0);
     if(resource)
@@ -432,7 +449,7 @@ XString::LoadString(HINSTANCE p_inst,UINT p_strID,WORD p_languageID)
 #ifdef _UNICODE
   *this = temp;
 #else
-  *this = (LPCSTR) WStringToString(temp).GetString();
+  *this = (LPCSTR)WStringToString(temp).GetString();
 #endif
 
   delete [] temp;
@@ -440,8 +457,8 @@ XString::LoadString(HINSTANCE p_inst,UINT p_strID,WORD p_languageID)
 }
 
 // Lock the buffer returning the string
-// Does not exactly what XString does!!
-PCTSTR 
+// Does not exactly what CString does!!
+LPCTSTR 
 XString::LockBuffer()
 {
   // Lock();
@@ -486,6 +503,7 @@ XString::ReleaseBuffer(int p_newLength /*=-1*/)
   if(length() >= p_newLength)
   {
     erase(p_newLength);
+    shrink_to_fit();
   }
 }
 
@@ -496,9 +514,14 @@ XString::ReleaseBufferSetLength(int p_newLength)
   {
     throw std::bad_array_new_length();
   }
-  else
+  else if(p_newLength > length())
   {
     resize(p_newLength,0);
+  }
+  else if(p_newLength < length())
+  {
+    erase(p_newLength);
+    shrink_to_fit();
   }
 }
 
@@ -547,7 +570,7 @@ XString::Replace(TCHAR p_old,TCHAR p_new)
   int count = 0;
   size_t pos = find(p_old);
 
-  while(pos != string::npos)
+  while(pos != stdstring::npos)
   {
     replace(pos,1,1,p_new);
     pos = find(p_old);
@@ -589,7 +612,7 @@ XString::SetAt(int p_index,TCHAR p_char)
 
 // SetString interface
 void 
-XString::SetString(PCTSTR p_string)
+XString::SetString(LPCTSTR p_string)
 {
   if(p_string == nullptr)
   {
@@ -611,7 +634,7 @@ XString::SetString(PCTSTR p_string)
 }
 
 void 
-XString::SetString(PCTSTR p_string,int p_length)
+XString::SetString(LPCTSTR p_string,int p_length)
 {
   if(p_string == nullptr)
   {
@@ -626,13 +649,18 @@ XString::SetString(PCTSTR p_string,int p_length)
 }
 
 // Set string from a COM BSTR
-// Does something different than XString, because it does NOT 
+// Does something different than CString, because it does NOT 
 // reduce the amount of string space, but copies the BSTR to the String
 BSTR 
 XString::SetSysString(BSTR* p_string)
 {
-#ifdef _UNICODE
-  _tcscpy_s(*p_string,GetLength(),c_str());
+#ifdef UNICODE
+  int nLen = (int) _tcslen(*p_string);
+  BOOL bSuccess = ::SysReAllocStringLen(p_string,NULL,nLen);
+  if(bSuccess)
+  {
+    _tcsncpy_s(*p_string,nLen,c_str(),nLen);
+  }
 #else
   int nLen = ::MultiByteToWideChar(CP_ACP,0,c_str(),(DWORD)size(),NULL,NULL);
   BOOL bSuccess = ::SysReAllocStringLen(p_string,NULL,nLen);
@@ -640,11 +668,11 @@ XString::SetSysString(BSTR* p_string)
   {
     ::MultiByteToWideChar(CP_ACP,0,c_str(),(DWORD)size(),*p_string,nLen);
   }
+#endif
   else
   {
     throw StdException(_T("Bad XString allocation!"));
   }
-#endif
   return(*p_string);
 }
 
@@ -672,7 +700,7 @@ XString::SpanIncluding(LPCTSTR p_string) const
 
 // Length of the string
 int 
-XString::StringLength(PCTSTR p_string)
+XString::StringLength(LPCTSTR p_string)
 {
   if(p_string == nullptr)
   {
@@ -683,7 +711,7 @@ XString::StringLength(PCTSTR p_string)
 
 // Return tokenized strings
 XString 
-XString::Tokenize(PCTSTR p_tokens,int& p_curpos) const
+XString::Tokenize(LPCTSTR p_tokens,int& p_curpos) const
 {
   if(p_curpos < 0)
   {
@@ -698,8 +726,8 @@ XString::Tokenize(PCTSTR p_tokens,int& p_curpos) const
   }
   else
   {
-    PCTSTR pszPlace = c_str() + p_curpos;
-    PCTSTR pszEnd   = c_str() + size();
+    LPCTSTR pszPlace = c_str() + p_curpos;
+    LPCTSTR pszEnd   = c_str() + size();
     if(pszPlace < pszEnd)
     {
       int nIncluding = (int)_tcsspn(pszPlace,p_tokens);
@@ -727,7 +755,7 @@ XString&
 XString::TrimLeft(TCHAR p_char)
 {
   int count = 0;
-  PCTSTR str = c_str();
+  LPCTSTR str = c_str();
   while(*str && *str == p_char)
   {
     ++str;
@@ -739,7 +767,7 @@ XString::TrimLeft(TCHAR p_char)
 }
 
 XString& 
-XString::TrimLeft(PCTSTR p_string)
+XString::TrimLeft(LPCTSTR p_string)
 {
   // if we're not trimming anything, we're not doing any work
   if((p_string == nullptr) || (*p_string == 0))
@@ -747,7 +775,7 @@ XString::TrimLeft(PCTSTR p_string)
     return(*this);
   }
 
-  PCTSTR psz = c_str();
+  LPCTSTR psz = c_str();
   while((*psz != 0) && (_tcschr(p_string,*psz) != NULL)) ++psz;
 
   if(psz != c_str())
@@ -764,7 +792,7 @@ XString& XString::TrimRight(TCHAR p_char)
   if(!empty())
   {
     size_t pos = size() - 1;
-    while(pos != string::npos)
+    while(pos != stdstring::npos)
     {
       if(at(pos) != p_char)
       {
@@ -783,7 +811,7 @@ XString& XString::TrimRight(TCHAR p_char)
 }
 
 XString& 
-XString::TrimRight(PCTSTR p_string)
+XString::TrimRight(LPCTSTR p_string)
 {
   // if we're not trimming anything, we're not doing any work
   if((p_string == nullptr) || (*p_string == 0))
@@ -793,7 +821,7 @@ XString::TrimRight(PCTSTR p_string)
 
   // Start at the ending of the string
   size_t pos = size() - 1;
-  while(pos != string::npos)
+  while(pos != stdstring::npos)
   {
     if(_tcschr(p_string,at(pos)) != nullptr)
     {
@@ -807,7 +835,10 @@ XString::TrimRight(PCTSTR p_string)
   }
 
   // truncate at left-most matching character
-  erase(pos,string::npos);
+  if(pos >= 0)
+  {
+  	erase(pos,string::npos);
+  }
   return(*this);
 }
 
@@ -848,9 +879,9 @@ XString::operator LPCTSTR() const
 XString
 XString::operator+(const XString& p_extra) const
 {
-  XString string(c_str());
-  string.append(p_extra.c_str());
-  return string;
+  XString total(c_str());
+  total.append(p_extra);
+  return total;
 }
 
 XString
@@ -861,29 +892,29 @@ XString::operator+(LPCTSTR p_extra) const
   return string;
 }
 
-XString 
-XString::operator+ (const TCHAR p_char) const
+XString
+XString::operator+(const TCHAR p_char) const
 {
   XString string(c_str());
   string.append(1,p_char);
   return string;
 }
 
-XString
+XString&
 XString::operator+=(XString& p_extra)
 {
   append(p_extra.c_str());
   return *this;
 }
 
-XString
-XString::operator+=(stdstring& p_string)
+XString&
+XString::operator+=(const stdstring& p_string)
 {
   append(p_string);
   return *this;
 }
 
-XString
+XString&
 XString::operator+=(LPCTSTR p_extra)
 {
   append(p_extra);
@@ -897,7 +928,7 @@ XString::operator=(const XString& p_extra)
   return *this;
 }
 
-XString
+XString&
 XString::operator+=(const TCHAR p_char)
 {
   append(1,p_char);
@@ -909,4 +940,73 @@ XString::operator=(LPCTSTR p_string)
 {
   assign(p_string);
   return *this;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Conversion methods
+//
+//////////////////////////////////////////////////////////////////////////
+
+int
+XString::AsInt()
+{
+  return _ttoi(c_str());
+}
+
+long
+XString::AsLong()
+{
+  return _ttol(c_str());
+}
+
+unsigned
+XString::AsUnsigned()
+{
+  return (unsigned)_ttoi(c_str());
+}
+
+INT64
+XString::AsInt64()
+{
+  return _ttoi64(c_str());
+}
+
+UINT64
+XString::AsUint64()
+{
+  TCHAR* endptr = nullptr;
+  return _tcstoui64(c_str(),&endptr,10);
+}
+
+void
+XString::SetNumber(int p_number,int p_radix /*= 10*/)
+{
+  TCHAR buffer[14];
+  _itot_s(p_number,buffer,14,p_radix);
+  *this = buffer;
+}
+
+void
+XString::SetNumber(unsigned p_number)
+{
+  TCHAR buffer[14];
+  _itot_s(p_number,buffer,14,10);
+  *this = buffer;
+}
+
+void
+XString::SetNumber(INT64 p_number)
+{
+  TCHAR buffer[21];
+  _i64tot_s(p_number,buffer,21,10);
+  *this = buffer;
+}
+
+void
+XString::SetNumber(UINT64 p_number)
+{
+  TCHAR buffer[21];
+  _ui64tot_s(p_number,buffer,21,10);
+  *this = buffer;
 }

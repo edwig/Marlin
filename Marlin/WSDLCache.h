@@ -155,8 +155,8 @@ private:
   bool    ReadParameters       (XMLMessage& p_wsdl,SOAPMessage& p_message,const XString& m_element);
   XMLElement* ReadTypesElement (XMLMessage& p_wsdl,const XString& p_element);
   XMLElement* ReadTypesType    (XMLMessage& p_wsdl,const XString& p_type);
-  int     ReadWSDLOptions      (XMLMessage& p_wsdl,XMLElement* p_element);
-  int     ReadWSDLOrdering     (XMLElement* p_order);
+  XmlDataType ReadWSDLOptions  (XMLMessage& p_wsdl,XMLElement* p_element);
+  XmlDataType ReadWSDLOrdering (XMLElement* p_order);
   bool    ReadParametersInOrder(XMLMessage& p_wsdl
                                ,SOAPMessage& p_message
                                ,XMLElement* p_base
@@ -165,9 +165,9 @@ private:
                                ,XMLElement* p_newelem
                                ,XMLElement* p_order
                                ,const XString& p_restriction
-                               ,int         p_options);
-  int     ReadElementaryType   (const XString& p_type);
-  int     ReadWhiteSpace       (const XString& p_value);
+                               ,XmlDataType p_options);
+  XmlDataType ReadElementaryType(const XString& p_type);
+  int     ReadWhiteSpace        (const XString& p_value);
   XString ReadAnnoDocumentation(XMLMessage& p_wsdl,XMLElement* enumeration);
 
   // Generating HTML pages for documentation

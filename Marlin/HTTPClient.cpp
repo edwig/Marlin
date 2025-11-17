@@ -3729,21 +3729,21 @@ HTTPClient::ReCreateAsSOAPFault(SOAPMessage* p_msg,SoapVersion p_version,const X
   p_msg->SetSoapVersion(p_version);
   p_msg->Reset();
 
-  XMLElement* fault = p_msg->AddElement(p_msg->GetXMLBodyPart(),_T("Fault"),XDT_String,_T(""));
+  XMLElement* fault = p_msg->AddElement(p_msg->GetXMLBodyPart(),_T("Fault"),_T(""));
   if(p_version == SoapVersion::SOAP_12)
   {
     // SOAP 1.2
-    XMLElement* fcode = p_msg->AddElement(fault,_T("Code"),  XDT_String,_T(""));
-                        p_msg->AddElement(fcode,_T("Value"), XDT_String,_T("Client"));
-    XMLElement* reasn = p_msg->AddElement(fault,_T("Reason"),XDT_String,_T(""));
-                        p_msg->AddElement(reasn,_T("Text"),  XDT_String,p_response);
+    XMLElement* fcode = p_msg->AddElement(fault,_T("Code"),  _T(""));
+                        p_msg->AddElement(fcode,_T("Value"), _T("Client"));
+    XMLElement* reasn = p_msg->AddElement(fault,_T("Reason"),_T(""));
+                        p_msg->AddElement(reasn,_T("Text"),  p_response);
   }
   else
   {
     // SOAP 1.1 or less
-    p_msg->AddElement(fault,_T("faultcode"),  XDT_String,_T("Client"));
-    p_msg->AddElement(fault,_T("faultstring"),XDT_String,_T("Send result"));
-    p_msg->AddElement(fault,_T("detail"),     XDT_String,p_response);
+    p_msg->AddElement(fault,_T("faultcode"),  _T("Client"));
+    p_msg->AddElement(fault,_T("faultstring"),_T("Send result"));
+    p_msg->AddElement(fault,_T("detail"),     p_response);
   }
   p_msg->SetFault(_T("Client"),_T("Client"),_T("Send error"),p_response);
 }

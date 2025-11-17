@@ -569,7 +569,7 @@ JSONpair::JSONpair(const XString& p_name,const XString& p_value)
 {
 }
 
-JSONpair::JSONpair(const XString& p_name,const LPTSTR p_value)
+JSONpair::JSONpair(const XString& p_name,LPCTSTR p_value)
          :m_name(p_name)
          ,m_value(p_value)
 {

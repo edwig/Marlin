@@ -41,10 +41,10 @@
 #include "Cookie.h"
 #include "Routing.h"
 #include "CrackURL.h"
+#include "bcd.h"
 #include <winhttp.h>
 #include <http.h>
 #include <wincrypt.h>
-#include <map>
 #include <deque>
 #include <vector>
 
@@ -322,8 +322,8 @@ public:
 
   // PARAMETER INTERFACE
   // Most of it now is in XMLMessage in the Set/Get-Element interface
-  XMLElement*     SetParameter(const XString& p_name,const XString& p_value);
-  XMLElement*     SetParameter(const XString& p_name,const LPTSTR   p_value);
+  XMLElement*     SetParameter(const XString& p_name,const XString& p_value,XmlDataType p_type = XmlDataType::XDT_String);
+  XMLElement*     SetParameter(const XString& p_name,      LPCTSTR  p_value);
   XMLElement*     SetParameter(const XString& p_name,const int      p_value);
   XMLElement*     SetParameter(const XString& p_name,const bool     p_value);
   XMLElement*     SetParameter(const XString& p_name,const double   p_value);
@@ -332,15 +332,15 @@ public:
   // Set/Add parameter to the header section (level 1 only)
   XMLElement*     SetHeaderParameter(const XString& p_paramName, LPCTSTR p_value, bool p_first = false);
   // General add a parameter (always adds, so multiple parameters of same name can be added)
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,const XString&    p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,LPCTSTR           p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,int               p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,unsigned          p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,bool              p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,double            p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,const bcd&        p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,__int64           p_value,bool p_front = false);
-  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,unsigned __int64  p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,const XString&    p_value,XmlDataType p_type = XmlDataType::XDT_String,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,LPCTSTR           p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,int               p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,unsigned          p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,bool              p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,double            p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,const bcd&        p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,__int64           p_value,bool p_front = false);
+  XMLElement*     AddElement(XMLElement* p_base,const XString& p_name,unsigned __int64  p_value,bool p_front = false);
 
   XString         GetParameter       (const XString& p_name);
   int             GetParameterInteger(const XString& p_name);

@@ -221,7 +221,7 @@ XMLRestriction::HandleWhitespace(XmlDataType p_type,XString& p_value)
   if(m_whiteSpace == 0)
   {
     // If "whiteSpace" attribute is not given
-    if(p_type == XDT_String)
+    if(p_type == XmlDataType::XDT_String)
     {
       return p_value;
     }
@@ -1540,50 +1540,50 @@ XMLRestriction::CheckDatatype(XmlDataType p_type,const XString& p_value)
   {
     // Checking only base datatypes
     // String and CDATA are never checked!
-    switch(p_type & XDT_MaskTypes)
+    switch((XmlDataType)((int)p_type & XDT_MaskTypes))
     {
-      case XDT_AnyURI:            result = CheckAnyURI   (p_value);       break;
-      case XDT_Base64Binary:      result = CheckBase64   (p_value);       break;
-      case XDT_Boolean:           result = CheckBoolean  (p_value);       break;
-      case XDT_Date:              result = CheckDate     (p_value);       break;
-      case XDT_Integer:           result = CheckInteger  (p_value);       break;
-      case XDT_Decimal:           result = CheckNumber   (p_value,false); break;
-      case XDT_Double:            result = CheckNumber   (p_value,true);  break;
-      case XDT_DateTime:          result = CheckDateTime (p_value,false); break;
-      case XDT_DateTimeStamp:     result = CheckDateTime (p_value,true);  break;
-      case XDT_Float:             result = CheckNumber   (p_value,true);  break;
-      case XDT_Duration:          result = CheckDuration (p_value);       break;
-      case XDT_DayTimeDuration:   result = CheckDaySecond(p_value);       break;
-      case XDT_YearMonthDuration: result = CheckYearMonth(p_value);       break;
-      case XDT_GregDay:           result = CheckGregDay  (p_value);       break;
-      case XDT_GregMonth:         result = CheckGregMonth(p_value);       break;
-      case XDT_GregYear:          result = CheckGregYear (p_value);       break;
-      case XDT_GregMonthDay:      result = CheckGregMD   (p_value);       break;
-      case XDT_GregYearMonth:     result = CheckGregYM   (p_value);       break;
-      case XDT_HexBinary:         result = CheckHexBin   (p_value);       break;
-      case XDT_Long:              result = CheckLong     (p_value);       break;
-      case XDT_Int:               result = CheckLong     (p_value);       break;
-      case XDT_Short:             result = CheckShort    (p_value);       break;
-      case XDT_NonNegativeInteger:result = CheckNNegInt  (p_value);       break;
-      case XDT_PositiveInteger:   result = CheckPosInt   (p_value);       break;
-      case XDT_UnsignedLong:      result = CheckUnsLong  (p_value);       break;
-      case XDT_UnsignedInt:       result = CheckUnsLong  (p_value);       break;
-      case XDT_UnsignedShort:     result = CheckUnsShort (p_value);       break;
-      case XDT_UnsignedByte:      result = CheckUnsByte  (p_value);       break;
-      case XDT_NonPositiveInteger:result = CheckNonPosInt(p_value);       break;
-      case XDT_NegativeInteger:   result = CheckNegInt   (p_value);       break;
-      case XDT_Time:              result = CheckTime     (p_value);       break;
-      case XDT_Token:             result = CheckToken    (p_value);       break;
-      case XDT_NMTOKEN:           result = CheckNMTOKEN  (p_value);       break;
-      case XDT_Name:              result = CheckName     (p_value);       break;
-      case XDT_ENTITY:            result = CheckName     (p_value);       break;
-      case XDT_ID:                result = CheckName     (p_value);       break;
-      case XDT_IDREF:             result = CheckName     (p_value);       break;
-      case XDT_QName:             result = CheckQName    (p_value);       break;
-      case XDT_NMTOKENS:          result = CheckNMTOKENS (p_value);       break;
-      case XDT_ENTITIES:          result = CheckNames    (p_value);       break;
-      case XDT_IDREFS:            result = CheckNames    (p_value);       break;
-      default:                    break;
+      case XmlDataType::XDT_AnyURI:            result = CheckAnyURI   (p_value);       break;
+      case XmlDataType::XDT_Base64Binary:      result = CheckBase64   (p_value);       break;
+      case XmlDataType::XDT_Boolean:           result = CheckBoolean  (p_value);       break;
+      case XmlDataType::XDT_Date:              result = CheckDate     (p_value);       break;
+      case XmlDataType::XDT_Integer:           result = CheckInteger  (p_value);       break;
+      case XmlDataType::XDT_Decimal:           result = CheckNumber   (p_value,false); break;
+      case XmlDataType::XDT_Double:            result = CheckNumber   (p_value,true);  break;
+      case XmlDataType::XDT_DateTime:          result = CheckDateTime (p_value,false); break;
+      case XmlDataType::XDT_DateTimeStamp:     result = CheckDateTime (p_value,true);  break;
+      case XmlDataType::XDT_Float:             result = CheckNumber   (p_value,true);  break;
+      case XmlDataType::XDT_Duration:          result = CheckDuration (p_value);       break;
+      case XmlDataType::XDT_DayTimeDuration:   result = CheckDaySecond(p_value);       break;
+      case XmlDataType::XDT_YearMonthDuration: result = CheckYearMonth(p_value);       break;
+      case XmlDataType::XDT_GregDay:           result = CheckGregDay  (p_value);       break;
+      case XmlDataType::XDT_GregMonth:         result = CheckGregMonth(p_value);       break;
+      case XmlDataType::XDT_GregYear:          result = CheckGregYear (p_value);       break;
+      case XmlDataType::XDT_GregMonthDay:      result = CheckGregMD   (p_value);       break;
+      case XmlDataType::XDT_GregYearMonth:     result = CheckGregYM   (p_value);       break;
+      case XmlDataType::XDT_HexBinary:         result = CheckHexBin   (p_value);       break;
+      case XmlDataType::XDT_Long:              result = CheckLong     (p_value);       break;
+      case XmlDataType::XDT_Int:               result = CheckLong     (p_value);       break;
+      case XmlDataType::XDT_Short:             result = CheckShort    (p_value);       break;
+      case XmlDataType::XDT_NonNegativeInteger:result = CheckNNegInt  (p_value);       break;
+      case XmlDataType::XDT_PositiveInteger:   result = CheckPosInt   (p_value);       break;
+      case XmlDataType::XDT_UnsignedLong:      result = CheckUnsLong  (p_value);       break;
+      case XmlDataType::XDT_UnsignedInt:       result = CheckUnsLong  (p_value);       break;
+      case XmlDataType::XDT_UnsignedShort:     result = CheckUnsShort (p_value);       break;
+      case XmlDataType::XDT_UnsignedByte:      result = CheckUnsByte  (p_value);       break;
+      case XmlDataType::XDT_NonPositiveInteger:result = CheckNonPosInt(p_value);       break;
+      case XmlDataType::XDT_NegativeInteger:   result = CheckNegInt   (p_value);       break;
+      case XmlDataType::XDT_Time:              result = CheckTime     (p_value);       break;
+      case XmlDataType::XDT_Token:             result = CheckToken    (p_value);       break;
+      case XmlDataType::XDT_NMTOKEN:           result = CheckNMTOKEN  (p_value);       break;
+      case XmlDataType::XDT_Name:              result = CheckName     (p_value);       break;
+      case XmlDataType::XDT_ENTITY:            result = CheckName     (p_value);       break;
+      case XmlDataType::XDT_ID:                result = CheckName     (p_value);       break;
+      case XmlDataType::XDT_IDREF:             result = CheckName     (p_value);       break;
+      case XmlDataType::XDT_QName:             result = CheckQName    (p_value);       break;
+      case XmlDataType::XDT_NMTOKENS:          result = CheckNMTOKENS (p_value);       break;
+      case XmlDataType::XDT_ENTITIES:          result = CheckNames    (p_value);       break;
+      case XmlDataType::XDT_IDREFS:            result = CheckNames    (p_value);       break;
+      default:                                 break;
     }
   }
   catch(StdException& er)
@@ -1696,7 +1696,7 @@ XMLRestriction::CheckRestriction(XmlDataType p_type,const XString& p_value)
   }
 
   // Notation datatype must have a enumerator list
-  if(p_type == XDT_NOTATION)
+  if(p_type == XmlDataType::XDT_NOTATION)
   {
     if(m_enums.empty())
     {

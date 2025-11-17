@@ -35,7 +35,6 @@
 #include "Base64.h"
 #include "Namespace.h"
 #include "ConvertWideString.h"
-#include "XMLParser.h"
 #include "XMLParserJSON.h"
 #include <utility>
 
@@ -863,11 +862,11 @@ SOAPMessage::SetHeaderParameter(const XString& p_name,LPCTSTR p_value,bool p_fir
       header = m_root->GetNamespace() + _T(":");
     }
     header += _T("Header");
-    m_header = SetElement(m_root,header,XDT_String,_T(""),true);
+    m_header = SetElement(m_root,header,_T(""),XmlDataType::XDT_String,true);
   }
   if(m_header)
   {
-    return SetElement(m_header,p_name,XDT_String,p_value,p_first);
+    return SetElement(m_header,p_name,p_value,XmlDataType::XDT_String,p_first);
   }
   XString error;
   error.Format(_T("Tried to set a header parameter [%s:%s], but no header present (SOAP 1.0)!"),p_name.GetString(),p_value);
@@ -876,7 +875,7 @@ SOAPMessage::SetHeaderParameter(const XString& p_name,LPCTSTR p_value,bool p_fir
 
 // General add a parameter (always adds, so multiple parameters of same name can be added)
 XMLElement*
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,const XString& p_value,bool p_front /*= false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,const XString& p_value,XmlDataType p_type /*=XDT_String*/,bool p_front /*= false*/)
 {
   XMLElement* node(p_base);
   if(node == nullptr)
@@ -890,70 +889,70 @@ SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_t
       node = m_body;
     }
   }
-  return XMLMessage::AddElement(node,p_name,p_type,p_value,p_front);
+  return XMLMessage::AddElement(node,p_name,p_value,p_type,p_front);
 }
 
 // Override for an integer
 XMLElement*
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,int p_value,bool p_front /*=false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,int p_value,bool p_front /*=false*/)
 {
   XString value;
   value.Format(_T("%d"),p_value);
-  return AddElement(p_base,p_name,p_type,value,p_front);
+  return AddElement(p_base,p_name,value,XmlDataType::XDT_Integer,p_front);
 }
 
 XMLElement*
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,unsigned p_value,bool p_front /*=false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,unsigned p_value,bool p_front /*=false*/)
 {
   XString value;
   value.Format(_T("%u"),p_value);
-  return AddElement(p_base,p_name,p_type,value,p_front);
+  return AddElement(p_base,p_name,value,XmlDataType::XDT_UnsignedInt,p_front);
 }
 
 XMLElement* 
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,__int64 p_value,bool p_front /*= false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,__int64 p_value,bool p_front /*= false*/)
 {
   XString value;
   value.Format(_T("%I64d"),p_value);
-  return AddElement(p_base,p_name,p_type,value,p_front);
+  return AddElement(p_base,p_name,value,XmlDataType::XDT_Long,p_front);
 }
 
 XMLElement* 
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,unsigned __int64 p_value,bool p_front /*= false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,unsigned __int64 p_value,bool p_front /*= false*/)
 {
   XString value;
   value.Format(_T("%I64u"),p_value);
-  return AddElement(p_base,p_name,p_type,value,p_front);
+  return AddElement(p_base,p_name,value,XmlDataType::XDT_UnsignedLong,p_front);
 }
 
 XMLElement*
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,LPCTSTR p_value,bool p_front /*=false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,LPCTSTR p_value,bool p_front /*=false*/)
 {
   XString value(p_value);
-  return AddElement(p_base,p_name,p_type,value,p_front);
+  return AddElement(p_base,p_name,value,XmlDataType::XDT_String,p_front);
 }
 
 XMLElement*
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,bool p_value,bool p_front /*=false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,bool p_value,bool p_front /*=false*/)
 {
   XString value = p_value ? _T("true") : _T("false");
-  return AddElement(p_base,p_name,p_type,value,p_front);
+  return AddElement(p_base,p_name,value,XmlDataType::XDT_Boolean,p_front);
 }
 
 XMLElement*
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,double p_value,bool p_front /*=false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,double p_value,bool p_front /*=false*/)
 {
   XString value;
   value.Format(_T("16.16%g"),p_value);
   value = value.TrimRight('0');
-  return AddElement(p_base,p_name,p_type,value,p_front);
+  return AddElement(p_base,p_name,value,XmlDataType::XDT_Double,p_front);
 }
 
 XMLElement*
-SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,XmlDataType p_type,const bcd& p_value,bool p_front /*=false*/)
+SOAPMessage::AddElement(XMLElement* p_base,const XString& p_name,const bcd& p_value,bool p_front /*=false*/)
 {
   XString value = p_value.AsString(bcd::Format::Bookkeeping,false,0);
-  return AddElement(p_base,p_name,p_type,value,p_front);
+  return AddElement(p_base,p_name,value,XmlDataType::XDT_Decimal,p_front);
 }
 
 // Get parameter from the header
@@ -1015,7 +1014,7 @@ SOAPMessage::GetParameterObject() const
 }
 
 XMLElement*
-SOAPMessage::SetParameter(const XString& p_name,const XString& p_value)
+SOAPMessage::SetParameter(const XString& p_name,const XString& p_value,XmlDataType p_type /*=XDT_String*/)
 {
   XMLElement* elem = FindElement(m_paramObject,p_name,false);
   if(elem)
@@ -1023,11 +1022,11 @@ SOAPMessage::SetParameter(const XString& p_name,const XString& p_value)
     elem->SetValue(p_value);
     return elem;
   }
-  return AddElement(m_paramObject,p_name,XDT_String,p_value);
+  return AddElement(m_paramObject,p_name,p_value,p_type);
 }
 
 XMLElement*
-SOAPMessage::SetParameter(const XString& p_name,const LPTSTR p_value)
+SOAPMessage::SetParameter(const XString& p_name,LPCTSTR p_value)
 {
   XString value(p_value);
   return SetParameter(p_name,value);
@@ -1038,14 +1037,14 @@ SOAPMessage::SetParameter(const XString& p_name,const int p_value)
 {
   XString value;
   value.Format(_T("%d"),p_value);
-  return SetParameter(p_name,value);
+  return SetParameter(p_name,value,XmlDataType::XDT_Integer);
 }
 
 XMLElement*
 SOAPMessage::SetParameter(const XString& p_name,const bool p_value)
 {
   XString value = p_value ? _T("true") : _T("false");
-  return SetParameter(p_name,value);
+  return SetParameter(p_name,value,XmlDataType::XDT_Boolean);
 }
 
 XMLElement*
@@ -1053,7 +1052,7 @@ SOAPMessage::SetParameter(const XString& p_name,const double p_value)
 {
   XString value;
   value.Format(_T("%G"),p_value);
-  return SetParameter(p_name,value);
+  return SetParameter(p_name,value,XmlDataType::XDT_Double);
 }
 
 // Specialized URL: e.g. for Accept headers in RM-protocol
@@ -1490,8 +1489,8 @@ SOAPMessage::AddToHeaderSigning()
   // Add optional username-token/username
   if(!m_enc_user.IsEmpty())
   {
-    XMLElement* usrToken = SetElement(secure,_T("wsse:UsernameToken"),XDT_String,empty);
-    SetElement(usrToken,_T("wsse:Username"),XDT_String,m_enc_user);
+    XMLElement* usrToken = SetElement(secure,_T("wsse:UsernameToken"),empty);
+    SetElement(usrToken,_T("wsse:Username"),m_enc_user);
   }
 
   // Create a password token
@@ -1534,7 +1533,7 @@ SOAPMessage::AddToHeaderSigning()
     // setting the signing
     if(digVal)
     {
-      SetElementValue(digVal,XDT_String,sign);
+      SetElementValue(digVal,sign);
     }
     else
     {
@@ -1542,7 +1541,7 @@ SOAPMessage::AddToHeaderSigning()
     }
     if(sigVal)
     {
-      SetElementValue(sigVal, XDT_String, sign);
+      SetElementValue(sigVal,sign);
     }
     else
     {
@@ -2481,20 +2480,20 @@ SOAPMessage::SetTokenProfile(const XString& p_user
   if(!secur)
   {
     SetElementNamespace(m_root,_T("wsse"),namesp);
-    secur = AddElement(header,_T("wsse:Security"),XDT_String,empty);
+    secur = AddElement(header,_T("wsse:Security"),empty);
   }
 
   XMLElement* token = FindElement(secur,_T("UsernameToken"),false);
   if(!token)
   {
-    token = AddElement(secur,_T("wsse:UsernameToken"),XDT_String,empty);
+    token = AddElement(secur,_T("wsse:UsernameToken"),empty);
   }
 
   // Fill in the user
   XMLElement* user = FindElement(token,_T("Username"),false);
   if(!user)
   {
-    user = AddElement(token,_T("wsse:Username"),XDT_String,empty);
+    user = AddElement(token,_T("wsse:Username"),empty);
   }
   user->SetValue(p_user);
 
@@ -2502,7 +2501,7 @@ SOAPMessage::SetTokenProfile(const XString& p_user
   XMLElement* passwd = FindElement(token,_T("Password"),false);
   if(!passwd)
   {
-    passwd = AddElement(token,_T("wsse:Password"),XDT_String,empty);
+    passwd = AddElement(token,_T("wsse:Password"),empty);
   }
   passwd->SetValue(p_password);
 
@@ -2525,7 +2524,7 @@ SOAPMessage::SetTokenProfile(const XString& p_user
     XMLElement* nonce = FindElement(token,_T("Nonce"),false);
     if(!nonce)
     {
-      nonce = AddElement(token,_T("wsse:Nonce"),XDT_String,"");
+      nonce = AddElement(token,_T("wsse:Nonce"),_T(""));
     }
     Base64 base;
 
@@ -2547,7 +2546,7 @@ SOAPMessage::SetTokenProfile(const XString& p_user
   XMLElement* creat = FindElement(token,_T("Created"),false);
   if(!creat)
   {
-    creat = AddElement(token,_T("wsse:Created"),XDT_String,empty);
+    creat = AddElement(token,_T("wsse:Created"),empty);
   }
   creat->SetValue(p_created);
 

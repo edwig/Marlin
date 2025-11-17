@@ -326,21 +326,21 @@ WSDLCache::GenerateParameterTypes(      XString& p_wsdlcontent
       p_wsdlcontent += _T("        <s:element ");
 
       // Do occurrence type
-      switch (param->GetType() & WSDL_Mask)
+      switch((XmlDataType)((int)param->GetType() & WSDL_Mask))
       {
-        default:              [[fallthrough]];
-        case WSDL_OnceOnly:   [[fallthrough]];
-        case WSDL_Mandatory:  temp.Empty();
-                              break;
-        case WSDL_ZeroOne:    [[fallthrough]];
-        case WSDL_Optional:   temp = _T("minOccurs=\"0\" ");
-                              break;
-        case WSDL_ZeroMany:   temp = _T("minOccurs=\"0\" maxOccurs=\"unbounded\" ");
-                              array = p_element;
-                              break;
-        case WSDL_OneMany:    temp = _T("maxOccurs=\"unbounded\" ");
-                              array = p_element;
-                              break;
+        default:                          [[fallthrough]];
+        case XmlDataType::WSDL_OnceOnly:  [[fallthrough]];
+        case XmlDataType::WSDL_Mandatory: temp.Empty();
+                                          break;
+        case XmlDataType::WSDL_ZeroOne:   [[fallthrough]];
+        case XmlDataType::WSDL_Optional:  temp = _T("minOccurs=\"0\" ");
+                                          break;
+        case XmlDataType::WSDL_ZeroMany:  temp = _T("minOccurs=\"0\" maxOccurs=\"unbounded\" ");
+                                          array = p_element;
+                                          break;
+        case XmlDataType::WSDL_OneMany:   temp = _T("maxOccurs=\"unbounded\" ");
+                                          array = p_element;
+                                          break;
       }
       p_wsdlcontent += temp;
 
@@ -349,61 +349,61 @@ WSDLCache::GenerateParameterTypes(      XString& p_wsdlcontent
       p_wsdlcontent += temp;
 
       // Do data type
-      switch (param->GetType() & XDT_Mask)
+      switch((XmlDataType)((int)param->GetType() & XDT_Mask))
       {
-        case XDT_CDATA:             [[fallthrough]];
-        case (XDT_String|XDT_CDATA):[[fallthrough]];
-        case XDT_String:            temp = _T(" type=\"s:string\"");              break;
-        case XDT_Integer:           temp = _T(" type=\"s:integer\"");             break;
-        case XDT_Double:            temp = _T(" type=\"s:double\"");              break;
-        case XDT_Boolean:           temp = _T(" type=\"s:boolean\"");             break;
-        case XDT_Base64Binary:      temp = _T(" type=\"s:base64Binary\"");        break;
-        case XDT_DateTime:          temp = _T(" type=\"s:dateTime\"");            break;
-        case XDT_AnyURI:            temp = _T(" type=\"s:anyURI\"");              break;
-        case XDT_Date:              temp = _T(" type=\"s:date\"");                break;
-        case XDT_DateTimeStamp:     temp = _T(" type=\"s:dateTimeStamp\"");       break;
-        case XDT_Decimal:           temp = _T(" type=\"s:decimal\"");             break;
-        case XDT_Long:              temp = _T(" type=\"s:long\"");                break;
-        case XDT_Int:               temp = _T(" type=\"s:int\"");                 break;
-        case XDT_Short:             temp = _T(" type=\"s:short\"");               break;
-        case XDT_Byte:              temp = _T(" type=\"s:byte\"");                break;
-        case XDT_NonNegativeInteger:temp = _T(" type=\"s:nonNegativeInteger\"");  break;
-        case XDT_PositiveInteger:   temp = _T(" type=\"s:positiveInteger\"");     break;
-        case XDT_UnsignedLong:      temp = _T(" type=\"s:unsignedLong\"");        break;
-        case XDT_UnsignedInt:       temp = _T(" type=\"s:unsignedInt\"");         break;
-        case XDT_UnsignedShort:     temp = _T(" type=\"s:unsignedShort\"");       break;
-        case XDT_UnsignedByte:      temp = _T(" type=\"s:unsignedByte\"");        break;
-        case XDT_NonPositiveInteger:temp = _T(" type=\"s:nonPositiveInteger\"");  break;
-        case XDT_NegativeInteger:   temp = _T(" type=\"s:negativeInteger\"");     break;
-        case XDT_Duration:          temp = _T(" type=\"s:duration\"");            break;
-        case XDT_DayTimeDuration:   temp = _T(" type=\"s:dayTimeDuration\"");     break;
-        case XDT_YearMonthDuration: temp = _T(" type=\"s:yearMonthDuration\"");   break;
-        case XDT_Float:             temp = _T(" type=\"s:float\"");               break;
-        case XDT_GregDay:           temp = _T(" type=\"s:gDay\"");                break;
-        case XDT_GregMonth:         temp = _T(" type=\"s:gMonth\"");              break;
-        case XDT_GregMonthDay:      temp = _T(" type=\"s:gMonthDay\"");           break;
-        case XDT_GregYear:          temp = _T(" type=\"s:gYear\"");               break;
-        case XDT_GregYearMonth:     temp = _T(" type=\"s:gYearMonth\"");          break;
-        case XDT_HexBinary:         temp = _T(" type=\"s:hexBinary\"");           break;
-        case XDT_NOTATION:          temp = _T(" type=\"s:NOTATION\"");            break;
-        case XDT_QName:             temp = _T(" type=\"s:QName\"");               break;
-        case XDT_NormalizedString:  temp = _T(" type=\"s:normalizedString\"");    break;
-        case XDT_Token:             temp = _T(" type=\"s:token\"");               break;
-        case XDT_Language:          temp = _T(" type=\"s:language\"");            break;
-        case XDT_Name:              temp = _T(" type=\"s:name\"");                break;
-        case XDT_NCName:            temp = _T(" type=\"s:NCName\"");              break;
-        case XDT_ENTITY:            temp = _T(" type=\"s:ENTITY\"");              break;
-        case XDT_ID:                temp = _T(" type=\"s:ID\"");                  break;
-        case XDT_IDREF:             temp = _T(" type=\"s:IDREF\"");               break;
-        case XDT_NMTOKEN:           temp = _T(" type=\"s:NMTOKEN\"");             break;
-        case XDT_Time:              temp = _T(" type=\"s:time\"");                break;
-        case XDT_ENTITIES:          temp = _T(" type=\"s:ENTITIES\"");            break;
-        case XDT_IDREFS:            temp = _T(" type=\"s:IDREFS\"");              break;
-        case XDT_NMTOKENS:          temp = _T(" type=\"s:NMTOKENS\"");            break;
-        case XDT_Complex:           temp.Format(_T(" type=\"tns:%s%s\""),p_element.GetString(),param->GetName().GetString());
-                                    break;
-        default:                    temp = _T(" type=\"s:string\"");
-                                    break;
+        case XmlDataType::XDT_CDATA:             [[fallthrough]];
+        case XmlDataType::XDT_StringCDATA:       [[fallthrough]];
+        case XmlDataType::XDT_String:            temp = _T(" type=\"s:string\"");              break;
+        case XmlDataType::XDT_Integer:           temp = _T(" type=\"s:integer\"");             break;
+        case XmlDataType::XDT_Double:            temp = _T(" type=\"s:double\"");              break;
+        case XmlDataType::XDT_Boolean:           temp = _T(" type=\"s:boolean\"");             break;
+        case XmlDataType::XDT_Base64Binary:      temp = _T(" type=\"s:base64Binary\"");        break;
+        case XmlDataType::XDT_DateTime:          temp = _T(" type=\"s:dateTime\"");            break;
+        case XmlDataType::XDT_AnyURI:            temp = _T(" type=\"s:anyURI\"");              break;
+        case XmlDataType::XDT_Date:              temp = _T(" type=\"s:date\"");                break;
+        case XmlDataType::XDT_DateTimeStamp:     temp = _T(" type=\"s:dateTimeStamp\"");       break;
+        case XmlDataType::XDT_Decimal:           temp = _T(" type=\"s:decimal\"");             break;
+        case XmlDataType::XDT_Long:              temp = _T(" type=\"s:long\"");                break;
+        case XmlDataType::XDT_Int:               temp = _T(" type=\"s:int\"");                 break;
+        case XmlDataType::XDT_Short:             temp = _T(" type=\"s:short\"");               break;
+        case XmlDataType::XDT_Byte:              temp = _T(" type=\"s:byte\"");                break;
+        case XmlDataType::XDT_NonNegativeInteger:temp = _T(" type=\"s:nonNegativeInteger\"");  break;
+        case XmlDataType::XDT_PositiveInteger:   temp = _T(" type=\"s:positiveInteger\"");     break;
+        case XmlDataType::XDT_UnsignedLong:      temp = _T(" type=\"s:unsignedLong\"");        break;
+        case XmlDataType::XDT_UnsignedInt:       temp = _T(" type=\"s:unsignedInt\"");         break;
+        case XmlDataType::XDT_UnsignedShort:     temp = _T(" type=\"s:unsignedShort\"");       break;
+        case XmlDataType::XDT_UnsignedByte:      temp = _T(" type=\"s:unsignedByte\"");        break;
+        case XmlDataType::XDT_NonPositiveInteger:temp = _T(" type=\"s:nonPositiveInteger\"");  break;
+        case XmlDataType::XDT_NegativeInteger:   temp = _T(" type=\"s:negativeInteger\"");     break;
+        case XmlDataType::XDT_Duration:          temp = _T(" type=\"s:duration\"");            break;
+        case XmlDataType::XDT_DayTimeDuration:   temp = _T(" type=\"s:dayTimeDuration\"");     break;
+        case XmlDataType::XDT_YearMonthDuration: temp = _T(" type=\"s:yearMonthDuration\"");   break;
+        case XmlDataType::XDT_Float:             temp = _T(" type=\"s:float\"");               break;
+        case XmlDataType::XDT_GregDay:           temp = _T(" type=\"s:gDay\"");                break;
+        case XmlDataType::XDT_GregMonth:         temp = _T(" type=\"s:gMonth\"");              break;
+        case XmlDataType::XDT_GregMonthDay:      temp = _T(" type=\"s:gMonthDay\"");           break;
+        case XmlDataType::XDT_GregYear:          temp = _T(" type=\"s:gYear\"");               break;
+        case XmlDataType::XDT_GregYearMonth:     temp = _T(" type=\"s:gYearMonth\"");          break;
+        case XmlDataType::XDT_HexBinary:         temp = _T(" type=\"s:hexBinary\"");           break;
+        case XmlDataType::XDT_NOTATION:          temp = _T(" type=\"s:NOTATION\"");            break;
+        case XmlDataType::XDT_QName:             temp = _T(" type=\"s:QName\"");               break;
+        case XmlDataType::XDT_NormalizedString:  temp = _T(" type=\"s:normalizedString\"");    break;
+        case XmlDataType::XDT_Token:             temp = _T(" type=\"s:token\"");               break;
+        case XmlDataType::XDT_Language:          temp = _T(" type=\"s:language\"");            break;
+        case XmlDataType::XDT_Name:              temp = _T(" type=\"s:name\"");                break;
+        case XmlDataType::XDT_NCName:            temp = _T(" type=\"s:NCName\"");              break;
+        case XmlDataType::XDT_ENTITY:            temp = _T(" type=\"s:ENTITY\"");              break;
+        case XmlDataType::XDT_ID:                temp = _T(" type=\"s:ID\"");                  break;
+        case XmlDataType::XDT_IDREF:             temp = _T(" type=\"s:IDREF\"");               break;
+        case XmlDataType::XDT_NMTOKEN:           temp = _T(" type=\"s:NMTOKEN\"");             break;
+        case XmlDataType::XDT_Time:              temp = _T(" type=\"s:time\"");                break;
+        case XmlDataType::XDT_ENTITIES:          temp = _T(" type=\"s:ENTITIES\"");            break;
+        case XmlDataType::XDT_IDREFS:            temp = _T(" type=\"s:IDREFS\"");              break;
+        case XmlDataType::XDT_NMTOKENS:          temp = _T(" type=\"s:NMTOKENS\"");            break;
+        case XmlDataType::XDT_Complex:           temp.Format(_T(" type=\"tns:%s%s\""),p_element.GetString(),param->GetName().GetString());
+                                                 break;
+        default:                                 temp = _T(" type=\"s:string\"");
+                                                 break;
       }
       p_wsdlcontent += temp;
 
@@ -433,9 +433,9 @@ WSDLCache::GenerateParameterTypes(      XString& p_wsdlcontent
     {
       // Recurse WITHOUT postfix and target namespace
       XString name;
-      if((param->GetType() & WSDL_Mask) == WSDL_OneMany  ||
-         (param->GetType() & WSDL_Mask) == WSDL_ZeroMany ||
-         (param->GetType() & XDT_Mask)  == XDT_Complex   )
+      if(((int)param->GetType() & WSDL_Mask) == (int)XmlDataType::WSDL_OneMany  ||
+         ((int)param->GetType() & WSDL_Mask) == (int)XmlDataType::WSDL_ZeroMany ||
+         ((int)param->GetType() & XDT_Mask)  == (int)XmlDataType::XDT_Complex   )
       {
         name += p_element;
       }
@@ -722,7 +722,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
                           ,const XString& p_who
                           ,bool         p_fields)
 {
-  XmlDataType type = 0;
+  XmlDataType type = XmlDataType::XDT_Unknown;
   XMLElement* orgParam   = p_orig->GetElementFirstChild(p_orgBase);
   XMLElement* checkParam = p_check->GetElementFirstChild(p_checkBase);
   bool        scanning   = false;
@@ -732,7 +732,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     XString orgName = orgParam->GetName();
     type = orgParam->GetType();
     // If the ordering is choice, instead of sequence: do a free search
-    if(!(type & WSDL_Sequence) && !scanning)
+    if(!((int)type & (int)XmlDataType::WSDL_Sequence) && !scanning)
     {
       checkParam = p_check->FindElement(p_checkBase,orgName,false);
     }
@@ -741,7 +741,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     // DO CHECKS
 
     // Parameter is mandatory but not given in the definition
-    if((orgName != chkName) && (type & WSDL_Mandatory))
+    if((orgName != chkName) && ((int)type & (int)XmlDataType::WSDL_Mandatory))
     {
       p_check->Reset();
       p_check->SetFault(_T("Mandatory field not found"),p_who,_T("Message is missing a field"),orgParam->GetName());
@@ -772,7 +772,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
 
       // Message can have more than one nodes of this name
       // So check that next node, before continuing on the original template
-      if((type & WSDL_OneMany) || (type & WSDL_ZeroMany))
+      if(((int)type & (int)XmlDataType::WSDL_OneMany) || ((int)type & (int)XmlDataType::WSDL_ZeroMany))
       {
         XMLElement* next = p_check->GetElementSibling(checkParam);
         if(next && next->GetName().Compare(orgName) == 0)
@@ -788,7 +788,7 @@ WSDLCache::CheckParameters(XMLElement*  p_orgBase
     }
     // Next parameter in the template
     orgParam = p_orig ->GetElementSibling(orgParam);
-    type     = orgParam ? orgParam->GetType() : 0;
+    type     = orgParam ? orgParam->GetType() : XmlDataType::XDT_Unknown;
   }
 
   // See if we've got something extra left
@@ -821,7 +821,7 @@ WSDLCache::CheckFieldDatatypeValues(XMLElement*   p_origParam
   XString         result;
   XMLRestriction  restrict(_T("empty"));
   XMLRestriction* restriction = p_checkParam->GetRestriction();
-  XmlDataType     type = p_origParam->GetType() & XDT_MaskTypes;
+  XmlDataType     type = (XmlDataType)((int)p_origParam->GetType() & XDT_MaskTypes);
 
   // Use the restriction, or an empty one
   if(restriction)
@@ -1118,61 +1118,61 @@ WSDLCache::GetOperationPageFooter()
 struct _baseType
 {
   const TCHAR* m_name;
-  int         m_type;
+  XmlDataType  m_type;
 }
 baseTypes[] =
 {
-  { _T("anyURI"),               XDT_AnyURI                }
- ,{ _T("base64Binary"),         XDT_Base64Binary          }
- ,{ _T("boolean"),              XDT_Boolean               }
- ,{ _T("date"),                 XDT_Date                  }
- ,{ _T("dateTime"),             XDT_DateTime              }
- ,{ _T("dateTimeStamp"),        XDT_DateTimeStamp         }
- ,{ _T("decimal"),              XDT_Decimal               }
- ,{ _T("integer"),              XDT_Integer               }
- ,{ _T("long"),                 XDT_Long                  }
- ,{ _T("int"),                  XDT_Int                   }
- ,{ _T("short"),                XDT_Short                 }
- ,{ _T("byte"),                 XDT_Byte                  }
- ,{ _T("nonNegativeInteger"),   XDT_NonNegativeInteger    }
- ,{ _T("positiveInteger"),      XDT_PositiveInteger       }
- ,{ _T("unsignedLong"),         XDT_UnsignedLong          }
- ,{ _T("unsignedInt"),          XDT_UnsignedInt           }
- ,{ _T("unsignedShort"),        XDT_UnsignedShort         }
- ,{ _T("unsignedByte"),         XDT_UnsignedByte          }
- ,{ _T("nonPositiveInteger"),   XDT_NonPositiveInteger    }
- ,{ _T("negativeInteger"),      XDT_NegativeInteger       }
- ,{ _T("double"),               XDT_Double                }
- ,{ _T("duration"),             XDT_Duration              }
- ,{ _T("dayTimeDuration"),      XDT_DayTimeDuration       }
- ,{ _T("yearMonthDuration"),    XDT_YearMonthDuration     }
- ,{ _T("float"),                XDT_Float                 }
- ,{ _T("gDay"),                 XDT_GregDay               }
- ,{ _T("gMonth"),               XDT_GregMonth             }
- ,{ _T("gMonthDay"),            XDT_GregMonthDay          }
- ,{ _T("gYear"),                XDT_GregYear              }
- ,{ _T("gYearMonth"),           XDT_GregYearMonth         }
- ,{ _T("hexBinary"),            XDT_HexBinary             }
- ,{ _T("NOTATION"),             XDT_NOTATION              }
- ,{ _T("QName"),                XDT_QName                 }
- ,{ _T("string"),               XDT_String                }
- ,{ _T("normalizedString"),     XDT_NormalizedString      }
- ,{ _T("token"),                XDT_Token                 }
- ,{ _T("language"),             XDT_Language              }
- ,{ _T("Name"),                 XDT_Name                  }
- ,{ _T("NCName"),               XDT_NCName                }
- ,{ _T("ENTITY"),               XDT_ENTITY                }
- ,{ _T("ID"),                   XDT_ID                    }
- ,{ _T("IDREF"),                XDT_IDREF                 }
- ,{ _T("NMTOKEN"),              XDT_NMTOKEN               }
- ,{ _T("time"),                 XDT_Time                  }
- ,{ _T("ENTITIES"),             XDT_ENTITIES              }
- ,{ _T("IDREFS"),               XDT_IDREFS                }
- ,{ _T("NMTOKENS"),             XDT_NMTOKENS              }
- ,{ _T("anyAtomicType"),        XDT_String                }
- ,{ _T("anySimpleType"),        XDT_String                }
- ,{ _T("anyType"),              XDT_String                }
- ,{ NULL,                   0                         }
+  { _T("anyURI"),               XmlDataType::XDT_AnyURI                }
+ ,{ _T("base64Binary"),         XmlDataType::XDT_Base64Binary          }
+ ,{ _T("boolean"),              XmlDataType::XDT_Boolean               }
+ ,{ _T("date"),                 XmlDataType::XDT_Date                  }
+ ,{ _T("dateTime"),             XmlDataType::XDT_DateTime              }
+ ,{ _T("dateTimeStamp"),        XmlDataType::XDT_DateTimeStamp         }
+ ,{ _T("decimal"),              XmlDataType::XDT_Decimal               }
+ ,{ _T("integer"),              XmlDataType::XDT_Integer               }
+ ,{ _T("long"),                 XmlDataType::XDT_Long                  }
+ ,{ _T("int"),                  XmlDataType::XDT_Int                   }
+ ,{ _T("short"),                XmlDataType::XDT_Short                 }
+ ,{ _T("byte"),                 XmlDataType::XDT_Byte                  }
+ ,{ _T("nonNegativeInteger"),   XmlDataType::XDT_NonNegativeInteger    }
+ ,{ _T("positiveInteger"),      XmlDataType::XDT_PositiveInteger       }
+ ,{ _T("unsignedLong"),         XmlDataType::XDT_UnsignedLong          }
+ ,{ _T("unsignedInt"),          XmlDataType::XDT_UnsignedInt           }
+ ,{ _T("unsignedShort"),        XmlDataType::XDT_UnsignedShort         }
+ ,{ _T("unsignedByte"),         XmlDataType::XDT_UnsignedByte          }
+ ,{ _T("nonPositiveInteger"),   XmlDataType::XDT_NonPositiveInteger    }
+ ,{ _T("negativeInteger"),      XmlDataType::XDT_NegativeInteger       }
+ ,{ _T("double"),               XmlDataType::XDT_Double                }
+ ,{ _T("duration"),             XmlDataType::XDT_Duration              }
+ ,{ _T("dayTimeDuration"),      XmlDataType::XDT_DayTimeDuration       }
+ ,{ _T("yearMonthDuration"),    XmlDataType::XDT_YearMonthDuration     }
+ ,{ _T("float"),                XmlDataType::XDT_Float                 }
+ ,{ _T("gDay"),                 XmlDataType::XDT_GregDay               }
+ ,{ _T("gMonth"),               XmlDataType::XDT_GregMonth             }
+ ,{ _T("gMonthDay"),            XmlDataType::XDT_GregMonthDay          }
+ ,{ _T("gYear"),                XmlDataType::XDT_GregYear              }
+ ,{ _T("gYearMonth"),           XmlDataType::XDT_GregYearMonth         }
+ ,{ _T("hexBinary"),            XmlDataType::XDT_HexBinary             }
+ ,{ _T("NOTATION"),             XmlDataType::XDT_NOTATION              }
+ ,{ _T("QName"),                XmlDataType::XDT_QName                 }
+ ,{ _T("string"),               XmlDataType::XDT_String                }
+ ,{ _T("normalizedString"),     XmlDataType::XDT_NormalizedString      }
+ ,{ _T("token"),                XmlDataType::XDT_Token                 }
+ ,{ _T("language"),             XmlDataType::XDT_Language              }
+ ,{ _T("Name"),                 XmlDataType::XDT_Name                  }
+ ,{ _T("NCName"),               XmlDataType::XDT_NCName                }
+ ,{ _T("ENTITY"),               XmlDataType::XDT_ENTITY                }
+ ,{ _T("ID"),                   XmlDataType::XDT_ID                    }
+ ,{ _T("IDREF"),                XmlDataType::XDT_IDREF                 }
+ ,{ _T("NMTOKEN"),              XmlDataType::XDT_NMTOKEN               }
+ ,{ _T("time"),                 XmlDataType::XDT_Time                  }
+ ,{ _T("ENTITIES"),             XmlDataType::XDT_ENTITIES              }
+ ,{ _T("IDREFS"),               XmlDataType::XDT_IDREFS                }
+ ,{ _T("NMTOKENS"),             XmlDataType::XDT_NMTOKENS              }
+ ,{ _T("anyAtomicType"),        XmlDataType::XDT_String                }
+ ,{ _T("anySimpleType"),        XmlDataType::XDT_String                }
+ ,{ _T("anyType"),              XmlDataType::XDT_String                }
+ ,{ NULL,                       XmlDataType::XDT_Unknown               }
 };
 
 // Reading a WSDL file is protected by a SEH handler
@@ -1733,7 +1733,7 @@ WSDLCache::ReadTypesElement(XMLMessage& p_wsdl,const XString& p_element)
   return nullptr;
 }
 
-int
+XmlDataType
 WSDLCache::ReadElementaryType(const XString& p_type)
 {
   int index = 0;
@@ -1745,42 +1745,42 @@ WSDLCache::ReadElementaryType(const XString& p_type)
     }
     ++index;
   }
-  return 0;
+  return XmlDataType::XDT_Unknown;
 }
 
 // Reading the node options for mandatory/optional and relations
 // Beware: if not set, the options must default to "1" = Mandatory
-int
+XmlDataType
 WSDLCache::ReadWSDLOptions(XMLMessage& p_wsdl,XMLElement* p_element)
 {
-  int      options = WSDL_Mandatory;
-  XString  minOccurs = p_wsdl.GetAttribute(p_element,_T("minOccurs"));
-  XString  maxOccurs = p_wsdl.GetAttribute(p_element,_T("maxOccurs"));
-  unsigned minNum = static_cast<unsigned>(_ttoi(minOccurs));
+  XmlDataType options = XmlDataType::WSDL_Mandatory;
+  XString   minOccurs = p_wsdl.GetAttribute(p_element,_T("minOccurs"));
+  XString   maxOccurs = p_wsdl.GetAttribute(p_element,_T("maxOccurs"));
+  unsigned     minNum = static_cast<unsigned>(_ttoi(minOccurs));
 
   if(!minOccurs.IsEmpty() && minNum == 0)
   {
-    options = WSDL_Optional;
+    options = XmlDataType::WSDL_Optional;
   }
   if(maxOccurs.Compare(_T("unbounded")) == 0)
   {
-    options = (options == WSDL_Optional) ? WSDL_ZeroMany : WSDL_OneMany;
+    options = (options == XmlDataType::WSDL_Optional) ? XmlDataType::WSDL_ZeroMany : XmlDataType::WSDL_OneMany;
   }
   return options;
 }
 
-int 
+XmlDataType
 WSDLCache::ReadWSDLOrdering(XMLElement* p_order)
 {
   if(p_order->GetName() == _T("choice"))
   {
-    return WSDL_Choice;
+    return XmlDataType::WSDL_Choice;
   }
   if(p_order->GetName() == _T("sequence"))
   {
-    return WSDL_Sequence;
+    return XmlDataType::WSDL_Sequence;
   }
-  return 0;
+  return XmlDataType::XDT_Unknown;
 }
 
 bool
@@ -1789,7 +1789,7 @@ WSDLCache::ReadParametersInOrder(XMLMessage&  p_wsdl
                                 ,XMLElement*  p_base
                                 ,XMLElement*  p_order)
 {
-  int typeOptions = ReadWSDLOrdering(p_order);
+  XmlDataType typeOptions = ReadWSDLOrdering(p_order);
 
   XMLElement* child = p_wsdl.GetElementFirstChild(p_order);
   while(child)
@@ -1816,13 +1816,13 @@ WSDLCache::ReadParametersInOrder(XMLMessage&  p_wsdl
     }
 
     // Get minOccurs, maxOccurs (0,1,unbounded), nullable
-    int nodeOptions = ReadWSDLOptions(p_wsdl,child);
-    int options = typeOptions + nodeOptions;
+    XmlDataType nodeOptions = ReadWSDLOptions(p_wsdl,child);
+    XmlDataType     options = (XmlDataType)((int)typeOptions + (int)nodeOptions);
 
-    int elemtype = ReadElementaryType(type);
-    if(elemtype)
+    XmlDataType elemtype = ReadElementaryType(type);
+    if(elemtype != XmlDataType::XDT_Unknown)
     {
-      XMLElement* newElm = p_message.AddElement(p_base,elName,(ushort)(options + elemtype),type);
+      XMLElement* newElm = p_message.AddElement(p_base,elName,type,(XmlDataType)((int)options + (int)elemtype));
       if(!nspcName.IsEmpty())
       {
         XString atName = _T("xmlns:") + nspc;
@@ -1831,7 +1831,7 @@ WSDLCache::ReadParametersInOrder(XMLMessage&  p_wsdl
     }
     else
     {
-      XMLElement* newelem = p_message.AddElement(p_base,elName,(ushort)(XDT_Complex + options),_T(""));
+      XMLElement* newelem = p_message.AddElement(p_base,elName,_T(""),(XmlDataType)((int)XmlDataType::XDT_Complex + (int)options));
       if(!nspcName.IsEmpty())
       {
         XString atName = _T("xmlns:") + nspc;
@@ -1873,12 +1873,12 @@ WSDLCache::ReadParametersInOrder(XMLMessage&  p_wsdl
         {
           // Still no complex type
           // Give up and roll over. Add as a string
-          newelem->SetType((ushort) (XDT_String + options));
+          newelem->SetType((XmlDataType)((int)XmlDataType::XDT_String + (int)options));
           newelem->SetValue(type);
         }
       }
     }
-    typeOptions = 0;
+    typeOptions = XmlDataType::XDT_Unknown;
     // Next element
     child = p_wsdl.GetElementSibling(child);
   }
@@ -1890,7 +1890,7 @@ WSDLCache::ReadRestriction(XMLMessage& p_wsdl
                           ,XMLElement* p_newelem
                           ,XMLElement* p_restrict
                           ,const XString& p_restriction
-                          ,int         p_options)
+                          ,XmlDataType p_options)
 {
   // Create the enumeration restriction
   XMLRestriction* restrict = m_restrictions.AddRestriction(p_restriction);
@@ -1901,8 +1901,8 @@ WSDLCache::ReadRestriction(XMLMessage& p_wsdl
   if(!baseType.IsEmpty())
   {
     SplitNamespace(baseType);
-    int elemBaseType = ReadElementaryType(baseType);
-    p_newelem->SetType((ushort)(elemBaseType + p_options));
+    XmlDataType elemBaseType = ReadElementaryType(baseType);
+    p_newelem->SetType((XmlDataType)((int)elemBaseType + (int)p_options));
     p_newelem->SetValue(baseType);
 
     restrict->AddBaseType(baseType);

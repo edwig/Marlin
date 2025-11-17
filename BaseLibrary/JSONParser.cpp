@@ -630,7 +630,7 @@ JSONParserSOAP::ScanForArray(XMLElement& p_element,XString& p_arrayName)
 {
   // If the WSDL type tells us that there is an array af same elements
   // Under this element, we will convert to an array in JSON
-  if(p_element.GetType() & XDT_Array)
+  if((int)p_element.GetType() & (int)XmlDataType::XDT_Array)
   {
     return true;
   }
