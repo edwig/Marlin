@@ -12,6 +12,8 @@ that can be shared with other library modules like SQLComponents and CXHibernate
 CHANGES IN VERSION 8.5.x of xx-xx-2025
 --------------------------------------
 1)  Converted to Visual Studio 2026
+2)  Dropped the support for 32-bits applications. 
+    Marlin is now only available as a 64-bits library and modules.
 
 CHANGES IN VERSION 8.5.0 of 10-10-2025
 --------------------------------------

@@ -187,8 +187,8 @@ CreateSoapMessage(XString       p_namespace
   msg->SetParameter(_T("One"),_T("ABC"));
   msg->SetParameter(_T("Two"),_T("1-2-3")); // "17" will stop the server
   XMLElement* param = msg->SetParameter(_T("Units"),_T(""));
-  XMLElement* enh1 = msg->AddElement(param,_T("Unit"),XDT_String,_T(""));
-  XMLElement* enh2 = msg->AddElement(param,_T("Unit"),XDT_String,_T(""));
+  XMLElement* enh1 = msg->AddElement(param,_T("Unit"),_T(""));
+  XMLElement* enh2 = msg->AddElement(param,_T("Unit"),_T(""));
   msg->SetElement(enh1,_T("Unitnumber"),12345);
   msg->SetElement(enh2,_T("Unitnumber"),67890);
   msg->SetAttribute(enh1,_T("Independent"),true);

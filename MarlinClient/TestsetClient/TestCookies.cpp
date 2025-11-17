@@ -58,7 +58,7 @@ DoTestApplication(HTTPMessage* p_msg)
 }
 
 int
-DoSend(HTTPClient& p_client,HTTPMessage* p_msg,XString p_expected)
+DoSend(HTTPClient& p_client,HTTPMessage* p_msg,XString /*p_expected*/)
 {
   int  errors    = 0;
   bool encryptie = false;
@@ -74,7 +74,7 @@ DoSend(HTTPClient& p_client,HTTPMessage* p_msg,XString p_expected)
       success = false;
       ++errors;
     }
-    Cookie* cookie = p_msg->GetCookie(0);
+    const Cookie* cookie = p_msg->GetCookie(0);
     if(cookie && cookie->GetName() == _T("session"))
     {
       if(cookie->GetValue() != _T("456"))

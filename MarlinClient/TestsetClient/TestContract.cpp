@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "TestClient.h"
 #include "WebServiceClient.h"
+#include <XmlDataType.h>
+#include <SOAPMessage.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -184,16 +186,16 @@ TestWSDLFloating(WebServiceClient& p_client,XString p_contract)
   XString pi = _T("3.141592653589793");
   SOAPMessage msg(p_contract,command);
   XMLElement* param = msg.SetParameter(_T("Parameters"),_T(""));
-  msg.AddElement(param,_T("Dialect"), XDT_String,_T("Math"));
-  msg.AddElement(param,_T("Region"),  XDT_String,_T("Europe"));
-  msg.AddElement(param,_T("PiApprox"),XDT_Double,pi);
-  XMLElement* data = msg.AddElement(param,_T("DataTypes"),XDT_Complex,_T(""));
-  msg.AddElement(data,_T("MinLength"),  XDT_Integer, _T("4"));
-  msg.AddElement(data,_T("MaxLength"),  XDT_Integer,_T("20"));
-  msg.AddElement(data,_T("MaxDecimals"),XDT_Integer,_T("16"));
+  msg.AddElement(param,_T("Dialect"), _T("Math"));
+  msg.AddElement(param,_T("Region"),  _T("Europe"));
+  msg.AddElement(param,_T("PiApprox"),pi,XmlDataType::XDT_Double);
+  XMLElement* data = msg.AddElement(param,_T("DataTypes"),_T(""),XmlDataType::XDT_Complex);
+  msg.AddElement(data,_T("MinLength"),  _T("4"), XmlDataType::XDT_Integer);
+  msg.AddElement(data,_T("MaxLength"),  _T("20"),XmlDataType::XDT_Integer);
+  msg.AddElement(data,_T("MaxDecimals"),_T("16"),XmlDataType::XDT_Integer);
 
   XMLElement* dword = msg.SetParameter(_T("DoubleWord"),_T(""));
-  msg.AddElement(dword,_T("Word"),XDT_String,_T("PI"));
+  msg.AddElement(dword,_T("Word"),_T("PI"));
 
   bool error = true;
 
@@ -216,16 +218,16 @@ TestWSDLFloatingWrong(WebServiceClient& p_client,XString p_contract)
   XString pi = _T("3,141592653589793"); // THIS IS THE WRONG NUMBER !!
   SOAPMessage msg(p_contract,command);
   XMLElement* param = msg.SetParameter(_T("Parameters"),_T(""));
-  msg.AddElement(param,_T("Dialect"), XDT_String,_T("Math"));
-  msg.AddElement(param,_T("Region"),  XDT_String,_T("Europe"));
-  msg.AddElement(param,_T("PiApprox"),XDT_Double,pi);
-  XMLElement* data = msg.AddElement(param,_T("DataTypes"),XDT_Complex,_T(""));
-  msg.AddElement(data,_T("MinLength"),  XDT_Integer,_T("4"));
-  msg.AddElement(data,_T("MaxLength"),  XDT_Integer,_T("20"));
-  msg.AddElement(data,_T("MaxDecimals"),XDT_Integer,_T("16"));
+  msg.AddElement(param,_T("Dialect"), _T("Math"));
+  msg.AddElement(param,_T("Region"),  _T("Europe"));
+  msg.AddElement(param,_T("PiApprox"),pi,XmlDataType::XDT_Double);
+  XMLElement* data = msg.AddElement(param,_T("DataTypes"),_T(""),XmlDataType::XDT_Complex);
+  msg.AddElement(data,_T("MinLength"),  _T("4"), XmlDataType::XDT_Integer);
+  msg.AddElement(data,_T("MaxLength"),  _T("20"),XmlDataType::XDT_Integer);
+  msg.AddElement(data,_T("MaxDecimals"),_T("16"),XmlDataType::XDT_Integer);
 
   XMLElement* dword = msg.SetParameter(_T("DoubleWord"),_T(""));
-  msg.AddElement(dword,_T("Word"),XDT_String,_T("PI"));
+  msg.AddElement(dword,_T("Word"),_T("PI"));
 
   bool error = true;
 
