@@ -291,6 +291,12 @@
     <ClInclude Include="ErrorReport.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RotatingTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IsUnicodeUTF8.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bcd.cpp">
@@ -516,6 +522,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BaseLibrary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RotatingTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IsUnicodeUTF8.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -58,7 +58,7 @@ public:
   // CTOR from other string
   XString(const stdstring& p_string);
 #ifdef _UNICODE
-// CTOR form a wchar_t stream
+  // CTOR form a wchar_t stream
   XString(wchar_t* p_string);
   // CTOR from a ANSI string
   XString(PCSTR p_string);
@@ -301,11 +301,6 @@ inline int XString::GetLength() const
 inline LPCTSTR XString::GetString() const
 {
   return c_str();
-}
-
-inline int XString::GetAt(int p_index) const
-{
-  return at(p_index);
 }
 
 inline unsigned  XString::GetAllocLength() const

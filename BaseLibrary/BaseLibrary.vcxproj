@@ -295,6 +295,7 @@
     <ClInclude Include="HTTPError.h" />
     <ClInclude Include="HTTPMessage.h" />
     <ClInclude Include="HTTPTime.h" />
+    <ClInclude Include="IsUnicodeUTF8.h" />
     <ClInclude Include="JSONMessage.h" />
     <ClInclude Include="JSONParser.h" />
     <ClInclude Include="JSONPath.h" />
@@ -308,6 +309,7 @@
     <ClInclude Include="ProcInfo.h" />
     <ClInclude Include="QueryReWriter.h" />
     <ClInclude Include="Redirect.h" />
+    <ClInclude Include="RotatingTree.h" />
     <ClInclude Include="Routing.h" />
     <ClInclude Include="RunRedirect.h" />
     <ClInclude Include="ServiceQuality.h" />
@@ -380,6 +382,7 @@
     <ClCompile Include="HTTPError.cpp" />
     <ClCompile Include="HTTPMessage.cpp" />
     <ClCompile Include="HTTPTime.cpp" />
+    <ClCompile Include="IsUnicodeUTF8.cpp" />
     <ClCompile Include="JSONMessage.cpp" />
     <ClCompile Include="JSONParser.cpp" />
     <ClCompile Include="JSONPath.cpp" />
@@ -400,6 +403,7 @@
     <ClCompile Include="ProcInfo.cpp" />
     <ClCompile Include="QueryReWriter.cpp" />
     <ClCompile Include="Redirect.cpp" />
+    <ClCompile Include="RotatingTree.cpp" />
     <ClCompile Include="RunRedirect.cpp" />
     <ClCompile Include="ServiceQuality.cpp" />
     <ClCompile Include="ServiceReporting.cpp" />

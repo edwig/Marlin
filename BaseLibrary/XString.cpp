@@ -56,13 +56,13 @@ XString::XString(TCHAR p_char,int p_count /* = 1*/)
 // CTOR from other string
 XString::XString(const XString& p_string)
 {
-  append(p_string.c_str());
+  append(p_string);
 }
 
 // CTOR from other string
 XString::XString(const stdstring& p_string)
 {
-  append(p_string.c_str());
+  append(p_string);
 }
 
 #ifdef _UNICODE
@@ -79,6 +79,7 @@ XString::XString(PCSTR p_string)
   int len = MultiByteToWideChar(CP_ACP,0,p_string,(int)strlen(p_string),nullptr,0);
   wchar_t* buffer = alloc_new wchar_t[len + 1];
   MultiByteToWideChar(CP_ACP,0,p_string,len,buffer,len);
+  buffer[len] = 0;
   append(buffer);
   delete [] buffer;
 }
@@ -90,13 +91,14 @@ XString::XString(unsigned char* p_string)
   append((const char*)p_string);
 }
 
-// CTOR from unicode string
+// CTOR from Unicode string
 XString::XString(PCWSTR p_string)
 {
   int strlen = (int)wcslen(p_string);
   int len = WideCharToMultiByte(CP_ACP,0,p_string,strlen,nullptr,0,nullptr,nullptr);
   char* buffer = alloc_new char[len + 1];
   WideCharToMultiByte(CP_ACP,0,p_string,strlen,buffer,len,0,nullptr);
+  buffer[len] = 0;
   append(buffer);
   delete [] buffer;
 }
@@ -345,6 +347,17 @@ XString::FormatMessageV(UINT p_strID,va_list* p_list)
 
     *this = (LPCTSTR)pszTemp;
   }
+}
+
+// Getting one character of the string safely
+int
+XString::GetAt(int p_index) const
+{
+  if(p_index >= 0 && (int)p_index < size())
+  {
+    return at(p_index);
+  }
+  return 0;
 }
 
 // Getting buffer of at least p_length + 1 size
@@ -754,15 +767,18 @@ XString::Tokenize(LPCTSTR p_tokens,int& p_curpos) const
 XString& 
 XString::TrimLeft(TCHAR p_char)
 {
-  int count = 0;
-  LPCTSTR str = c_str();
-  while(*str && *str == p_char)
+  if(!empty())
   {
-    ++str;
-    ++count;
-  }
+    int count = 0;
+    LPCTSTR str = c_str();
+    while(*str && *str == p_char)
+    {
+      ++str;
+      ++count;
+    }
 
-  erase(0,count);
+    erase(0,count);
+  }
   return *this;
 }
 
@@ -770,7 +786,7 @@ XString&
 XString::TrimLeft(LPCTSTR p_string)
 {
   // if we're not trimming anything, we're not doing any work
-  if((p_string == nullptr) || (*p_string == 0))
+  if((p_string == nullptr) || (*p_string == 0) || empty())
   {
     return(*this);
   }
@@ -814,14 +830,14 @@ XString&
 XString::TrimRight(LPCTSTR p_string)
 {
   // if we're not trimming anything, we're not doing any work
-  if((p_string == nullptr) || (*p_string == 0))
+  if((p_string == nullptr) || (*p_string == 0) || empty())
   {
     return(*this);
   }
 
   // Start at the ending of the string
   size_t pos = size() - 1;
-  while(pos != stdstring::npos)
+  while(pos && (pos != stdstring::npos))
   {
     if(_tcschr(p_string,at(pos)) != nullptr)
     {
