@@ -7,8 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include <afxwin.h>
+#include "pch.h"
 #include "http_private.h"
 #include "URL.h"
 #include "Request.h"
@@ -458,8 +457,8 @@ Request::SendResponse(PHTTP_RESPONSE p_response,ULONG p_flags,PULONG p_bytes)
     if(p_response->EntityChunkCount)
     {
       ULONG bytes = 0;
-      int  result = SendEntityChunks(p_response->pEntityChunks,p_response->EntityChunkCount,&bytes);
-      if (result == NO_ERROR)
+      int  send_result = SendEntityChunks(p_response->pEntityChunks,p_response->EntityChunkCount,&bytes);
+      if (send_result == NO_ERROR)
       {
         *p_bytes += bytes;
       }
@@ -736,7 +735,6 @@ Request::SetAddresses(SOCKET p_socket)
   // Get local socket information
   if(getsockname(p_socket,(PSOCKADDR)&sockaddr,&namelen))
   {
-    int error = WSAGetLastError();
     LogError(_T("Cannot get local address name for connection: %s"),m_request.pRawUrl);
   }
   // Keep the address info
@@ -748,7 +746,6 @@ Request::SetAddresses(SOCKET p_socket)
   // Get remote address information
   if(getpeername(p_socket,(PSOCKADDR)&sockaddr,&namelen))
   {
-    int error = WSAGetLastError();
     LogError(_T("Cannot get remote address name for connection: %s"),m_request.pRawUrl);
   }
   // Keep as the remote side of the channel
@@ -937,8 +934,6 @@ Request::ProcessHeader(LPSTR p_line)
 {
   // Remove end-of-line markers.
   int len = (int)strlen(p_line);
-  LPSTR begin = p_line;
-  LPSTR end   = &p_line[len];
   if (len > 2)
   {
     if(p_line[len - 1] == '\n') --len;
@@ -1081,8 +1076,8 @@ Request::CorrectFullURL()
   {
     USES_CONVERSION;
 
-    CStringT<char,StrTraitMFC< char > > newpath;
-    CStringT<char,StrTraitMFC< char > > absolute = W2A(abspath);
+    CStringT<char,StrTraitATL< char > > newpath;
+    CStringT<char,StrTraitATL< char > > absolute = W2A(abspath);
     newpath.Format("http://%s%s",host,absolute.GetString());
 
     if(m_request.CookedUrl.pFullUrl)
@@ -1236,8 +1231,8 @@ Request::FindProtocol(LPCSTR p_protocol)
     LPCSTR minor = strchr(p_protocol,'.');
     if(minor)
     {
-      m_request.Version.MajorVersion = atoi(major);
-      m_request.Version.MinorVersion = atoi(++minor);
+      m_request.Version.MajorVersion = (USHORT) atoi(major);
+      m_request.Version.MinorVersion = (USHORT) atoi(++minor);
       return;
     }
   }
@@ -1661,12 +1656,10 @@ Request::CheckAuthenticationProvider(PHTTP_REQUEST_AUTH_INFO p_info,const XStrin
   SECURITY_STATUS ss = AcquireCredentialsHandle(NULL,(LPTSTR)p_provider.GetString(),SECPKG_CRED_INBOUND,NULL,NULL,NULL,NULL,&credentials,&lifetime);
   if(ss >= 0)
   {
-    TimeStamp         lifetime;
     SecBufferDesc     OutBuffDesc;
     SecBuffer         OutSecBuff;
     SecBufferDesc     InBuffDesc;
     SecBuffer         InSecBuff;
-    ULONG             Attribs = 0;
     PBYTE             pOut    = alloc_new BYTE[maxTokenLength + 1];
     DWORD             cbOut   = maxTokenLength;
 
@@ -1962,7 +1955,7 @@ Request::SendEntityChunkFromFragment(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
     return SendEntityChunkFromMemory(chunk,p_bytes);
   }
   // Log error : Chunk not found
-  LogError(_T("Data chunk [%s] not found"),prefix);
+  LogError(_T("Data chunk [%s] not found"),prefix.GetString());
   return ERROR_INVALID_PARAMETER;
 }
 
@@ -1994,11 +1987,11 @@ Request::SendEntityChunkFromFragmentEx(PHTTP_DATA_CHUNK p_chunk,PULONG p_bytes)
       }
       return result;
     }
-    LogError(_T("Data chunk [%s] out of range"),prefix);
+    LogError(_T("Data chunk [%s] out of range"),prefix.GetString());
     return ERROR_RANGE_NOT_FOUND;
   }
   // Log error : Chunk not found
-  LogError(_T("Data chunk [%s] not found"),prefix);
+  LogError(_T("Data chunk [%s] not found"),prefix.GetString());
   return ERROR_INVALID_PARAMETER;
 }
 

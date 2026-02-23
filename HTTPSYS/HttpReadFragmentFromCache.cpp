@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "RequestQueue.h"
 #include "OpaqueHandles.h"
@@ -15,7 +15,7 @@
 ULONG WINAPI
 HttpReadFragmentFromCache(IN HANDLE           RequestQueueHandle
                          ,IN PCWSTR           UrlPrefix
-                         ,IN PHTTP_BYTE_RANGE ByteRange OPTIONAL
+                         ,IN PHTTP_BYTE_RANGE /*ByteRange */OPTIONAL
                          ,_Out_writes_bytes_to_(BufferLength, *BytesRead) PVOID Buffer
                          ,IN ULONG            BufferLength
                          ,_Out_opt_ PULONG    BytesRead

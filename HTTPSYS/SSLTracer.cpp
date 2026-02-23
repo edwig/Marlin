@@ -6,7 +6,7 @@
 // David Maw: https://www.codeproject.com/Articles/1000189/A-Working-TCP-Client-and-Server-With-SSL
 // License:   https://www.codeproject.com/info/cpol10.aspx
 //
-#include "stdafx.h"
+#include "pch.h"
 #include "SSLTracer.h"
 #include "SecureServerSocket.h"
 #include "Logging.h"
@@ -133,7 +133,6 @@ void SSLTracer::TraceHandshake()
     BufPtr += 2 + cipherSuitesLength; // Skip CipherSuites
     UINT8 compressionMethodsLength = *BufPtr;
     BufPtr += 1 + compressionMethodsLength; // Skip Compression methods
-    bool extensionsPresent = BufPtr < m_bufEnd;
     UINT16 extensionsLength = (*(BufPtr) << 8) + *(BufPtr + 1);
     BufPtr += 2;
     if(extensionsLength == m_bufEnd - BufPtr)
@@ -208,8 +207,6 @@ XString SSLTracer::GetSNIHostname()
       BufPtr += 2 + cipherSuitesLength; // Skip CipherSuites
       UINT8 compressionMethodsLength = *BufPtr;
       BufPtr += 1 + compressionMethodsLength; // Skip Compression methods
-      bool extensionsPresent = BufPtr < m_bufEnd;
-      UINT16 extensionsLength = (*(BufPtr) << 8) + *(BufPtr + 1);
       BufPtr += 2;
       while (BufPtr < m_bufEnd)
       {

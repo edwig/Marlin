@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "URL.h"
 #include "RequestQueue.h"
@@ -305,7 +305,7 @@ RequestQueue::GetNextRequest(HTTP_REQUEST_ID  RequestId
     {
       lock.Unlock();
       // Wait for event of incoming request
-      DWORD result = WaitForSingleObject(m_event,INFINITE);
+      result = WaitForSingleObject(m_event,INFINITE);
       lock.Relock();
 
       // Check if server is stopping
@@ -376,7 +376,7 @@ RequestQueue::GetNextRequest(HTTP_REQUEST_ID  RequestId
     }
 
     // Get the buffer
-    int result = HttpReceiveRequestEntityBody(this,RequestId,Flags,buffer,length,Bytes,NULL);
+    result = HttpReceiveRequestEntityBody(this,RequestId,Flags,buffer,length,Bytes,NULL);
     if(result == NO_ERROR)
     {
       // If no problem, set as first chunk in the request structure

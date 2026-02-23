@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "RequestQueue.h"
 #include "OpaqueHandles.h"
@@ -19,7 +19,7 @@ HttpQueryRequestQueueProperty(_In_ HANDLE                 RequestQueueHandle
                              ,_Out_writes_bytes_to_opt_(PropertyInformationLength, *ReturnLength) PVOID PropertyInformation
                              ,_In_ ULONG                  PropertyInformationLength
                              ,_Reserved_ _In_ ULONG       Reserved1
-                             ,_Out_opt_ PULONG            ReturnLength OPTIONAL
+                             ,_Out_opt_ PULONG            /*ReturnLength*/ OPTIONAL
                              ,_Reserved_ _In_ PVOID       Reserved2)
 {
   // Must always be zero

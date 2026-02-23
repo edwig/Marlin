@@ -15,7 +15,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "SYSWebSocket.h"
 #include "SocketStream.h"
@@ -60,7 +60,7 @@ SYSWebSocket::Close()
     {
       // Log the error
       int error = m_socket->GetLastError();
-      LogError(_T("Error shutdown websocket: %s Error: %d"),m_serverkey,error);
+      LogError(_T("Error shutdown websocket: %s Error: %d"),m_serverkey.GetString(),error);
     }
     m_socket->DropReference();
     m_socket = nullptr;

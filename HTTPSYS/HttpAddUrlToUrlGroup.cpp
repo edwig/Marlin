@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "UrlGroup.h"
 #include "OpaqueHandles.h"

@@ -7,8 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include <afxwin.h>
+#include "pch.h"
 #include "http_private.h"
 #include "URL.h"
 #include "Listener.h"
@@ -21,12 +20,11 @@
 #include <LogAnalysis.h>
 #include <process.h>
 #include <strsafe.h>
-#include <atlconv.h>
 #include <WS2tcpip.h>
 
 // Listener object, listens for connections on one thread, and initiates a worker
 // thread each time a client connects. Listens on both IPv4 and IPv6 addresses
-Listener::Listener(RequestQueue* p_queue,int p_port,URL* p_url,USHORT p_timeout)
+Listener::Listener(RequestQueue* p_queue,USHORT p_port,URL* p_url,USHORT p_timeout)
          :m_queue(p_queue)
          ,m_port(p_port)
          ,m_sendTimeoutSeconds(p_timeout)

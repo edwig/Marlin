@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #pragma once
-#include <afxmt.h>
+#include "KernelObjects.h"
 #include <functional>
 #include <wincrypt.h>
 
@@ -30,7 +30,7 @@ class SocketStream;
 class Listener
 {
 public:
-  Listener(RequestQueue* p_queue,int p_port,URL* p_url,USHORT p_timeout);
+  Listener(RequestQueue* p_queue,USHORT p_port,URL* p_url,USHORT p_timeout);
  ~Listener();
 
 public:
@@ -58,19 +58,19 @@ public:
   static unsigned __stdcall Worker(void* p_param);
 
   ULONGLONG m_workerThreadCount;
-  CEvent    m_stopEvent;
+  XEvent    m_stopEvent;
 private:
   void              Listen(void);
 
   // Primary objects of the server
   RequestQueue*     m_queue;          // We are running for this queue
-  int               m_port   { INTERNET_DEFAULT_HTTP_PORT };
+  USHORT            m_port   { INTERNET_DEFAULT_HTTP_PORT };
   bool              m_secure { false };
   // Listener data
   SOCKET            m_listenSockets[FD_SETSIZE];
   HANDLE            m_hSocketEvents[FD_SETSIZE];
   int               m_numListenSockets;
-  CCriticalSection  m_workerThreadLock;
+  XCriticalSection  m_workerThreadLock;
   HANDLE            m_listenerThread { NULL };
   // Timeouts
   int               m_sendTimeoutSeconds { 30 };  // Send timeout in seconds

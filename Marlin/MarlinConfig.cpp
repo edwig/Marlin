@@ -25,7 +25,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#include "Stdafx.h"
+#include "pch.h"
 #include "MarlinConfig.h"
 #include "Crypto.h"
 #include <io.h>

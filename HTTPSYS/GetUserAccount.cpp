@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "StdAfx.h"
+#include "pch.h"
 #include "GetUserAccount.h"
 
 #pragma comment(lib,"secur32.lib")

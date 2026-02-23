@@ -7,14 +7,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 
 HTTPAPI_LINKAGE
 ULONG WINAPI HttpDeleteServiceConfiguration(_Reserved_ IN HANDLE        ServiceHandle
                                            ,IN HTTP_SERVICE_CONFIG_ID   ConfigId
-                                           ,_In_reads_bytes_(ConfigInformationLength) IN PVOID pConfigInformation
-                                           ,IN ULONG                    ConfigInformationLength
+                                           ,_In_reads_bytes_(ConfigInformationLength) IN PVOID /*pConfigInformation*/
+                                           ,IN ULONG                    /*ConfigInformationLength*/
                                            ,_Reserved_ IN LPOVERLAPPED  pOverlapped)
 {
   // Service handle should be zero: Not used by Microsoft either

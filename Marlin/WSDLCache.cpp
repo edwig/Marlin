@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "WSDLCache.h"
 #include "HTTPClient.h"
 #include "CrackURL.h"

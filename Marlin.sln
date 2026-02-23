@@ -12,7 +12,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarlinServer", "MarlinServe
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A8F17E01-82AE-4A85-AAE9-945AF1FFB2BB}"
 	ProjectSection(SolutionItems) = preProject
-		framework.h = framework.h
 		Documentation\License.txt = Documentation\License.txt
 		Documentation\logfile.config = Documentation\logfile.config
 		Documentation\MarlinConfig.txt = Documentation\MarlinConfig.txt

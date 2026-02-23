@@ -7,13 +7,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 
 // This is a API 1.0 call and should not be used
 
 ULONG WINAPI
-HttpCreateHttpHandle(OUT PHANDLE RequestQueueHandle, _Reserved_ ULONG Reserved)
+HttpCreateHttpHandle(OUT PHANDLE /*RequestQueueHandle*/,_Reserved_ ULONG /*Reserved*/)
 {
   return ERROR_INVALID_PARAMETER;
 }

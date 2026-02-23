@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 
 // The system is/was initialized by calling HttpInitialize
@@ -16,7 +16,7 @@ bool    g_httpsys_initialized = false;
 // Initialization follows here
 HTTPAPI_LINKAGE
 ULONG WINAPI
-HttpInitialize(IN HTTPAPI_VERSION Version, IN ULONG Flags,_Reserved_ IN OUT PVOID pReserved)
+HttpInitialize(IN HTTPAPI_VERSION Version, IN ULONG Flags,_Reserved_ IN OUT PVOID /*pReserved*/)
 {
   // See if doubly called
   if(g_httpsys_initialized)

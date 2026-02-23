@@ -25,7 +25,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#include "stdafx.h"
+#include "pch.h"
 #include "SiteFilter.h"
 
 SiteFilter::SiteFilter(unsigned p_priority,const XString& p_name)

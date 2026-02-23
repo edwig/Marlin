@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "ServerSession.h"
 #include "RequestQueue.h"
@@ -51,10 +51,9 @@ HttpSetServerSessionProperty(IN HTTP_SERVER_SESSION_ID  ServerSessionId
     case HttpServerAuthenticationProperty:          // Fall through
     case HttpServerExtendedAuthenticationProperty:  return SetServerAuthentication(session,PropertyInformation,PropertyInformationLength);
     case HttpServerChannelBindProperty:             // Fall through
-    default:                                        return ERROR_INVALID_PARAMETER;
+    default:                                        break;
   }
-
-  return NO_ERROR;
+  return ERROR_INVALID_PARAMETER;
 }
 
 ULONG 

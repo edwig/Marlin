@@ -25,7 +25,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#include "StdAfx.h"
+#include "pch.h"
 #include <ws2tcpip.h>
 #include "CreateURLPrefix.h"
 #include <winhttp.h>

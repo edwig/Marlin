@@ -37,7 +37,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "WebServiceServer.h"
 #include "SiteHandlerSoap.h"
 #include "SiteHandlerGet.h"

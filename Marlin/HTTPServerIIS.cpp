@@ -31,7 +31,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 //
-#include "stdafx.h"
+#include "pch.h"
 #include "HTTPServerIIS.h"
 #include "HTTPSiteIIS.h"
 #include "AutoCritical.h"

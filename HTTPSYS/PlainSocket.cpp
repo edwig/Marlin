@@ -6,7 +6,7 @@
 // David Maw: https://www.codeproject.com/Articles/1000189/A-Working-TCP-Client-and-Server-With-SSL
 // License:   https://www.codeproject.com/info/cpol10.aspx
 //
-#include "stdafx.h"
+#include "pch.h"
 #include <process.h>
 #include <stdlib.h>
 #include <WS2tcpip.h>
@@ -650,7 +650,7 @@ PlainSocket::RecvPartialOverlapped(LPVOID p_buffer, const ULONG p_length,LPOVERL
 }
 
 void
-PlainSocket::ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
+PlainSocket::ReceiveOverlapped(DWORD dwError,DWORD cbTransferred,DWORD /*dwFlags*/)
 {
   if(!InSecureMode())
   {
@@ -809,7 +809,7 @@ PlainSocket::SendPartialOverlapped(LPVOID p_buffer,const ULONG p_length,LPOVERLA
 }
 
 void
-PlainSocket::SendingOverlapped(DWORD dwError,DWORD cbTransferred,DWORD dwFlags)
+PlainSocket::SendingOverlapped(DWORD dwError,DWORD cbTransferred,DWORD /*dwFlags*/)
 {
   if(!InSecureMode())
   {

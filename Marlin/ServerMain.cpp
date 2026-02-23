@@ -29,7 +29,7 @@
 // Service can be started/stopped or installed or removed
 // Service can be run as a stand-alone server
 //
-#include "stdafx.h"
+#include "pch.h"
 #include "Marlin.h"
 #include "ServerMain.h"
 #include "MarlinConfig.h"

@@ -207,7 +207,7 @@
     <ClCompile Include="LongTermEvent.cpp">
       <Filter>MarlinGeneral</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="pch.cpp">
       <Filter>Configuration</Filter>
     </ClCompile>
     <ClCompile Include="CPULoad.cpp">
@@ -420,7 +420,7 @@
     <ClInclude Include="LongTermEvent.h">
       <Filter>MarlinGeneral\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="pch.h">
       <Filter>Configuration</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">

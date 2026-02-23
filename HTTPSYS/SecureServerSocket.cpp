@@ -6,7 +6,7 @@
 // David Maw: https://www.codeproject.com/Articles/1000189/A-Working-TCP-Client-and-Server-With-SSL
 // License:   https://www.codeproject.com/info/cpol10.aspx
 //
-#include "stdafx.h"
+#include "pch.h"
 #include "SecureServerSocket.h"
 #include "SSLUtilities.h"
 #include "SSLTracer.h"

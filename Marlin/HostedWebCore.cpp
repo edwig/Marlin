@@ -37,7 +37,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "HostedWebCore.h"
 #include "ServerApp.h"
 #include "LogAnalysis.h"

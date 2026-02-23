@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "ServerSession.h"
 #include "OpaqueHandles.h"
@@ -17,7 +17,7 @@ ServerSession* g_session = nullptr;
 ULONG WINAPI
 HttpCreateServerSession(IN  HTTPAPI_VERSION         Version
                        ,OUT PHTTP_SERVER_SESSION_ID ServerSessionId
-                       ,_Reserved_ IN ULONG         Reserved)
+                       ,_Reserved_ IN ULONG         /*Reserved*/)
 {
   // Check if we did not already have a server session
   if(g_session)

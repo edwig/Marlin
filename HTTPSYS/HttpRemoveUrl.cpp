@@ -7,14 +7,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 
 // HTTPServer API 1.0 function. SHould not be called on this implementation!
 
 ULONG WINAPI
-HttpRemoveUrl(IN HANDLE RequestQueueHandle
-             ,IN PCWSTR FullyQualifiedUrl)
+HttpRemoveUrl(IN HANDLE /*RequestQueueHandle*/
+             ,IN PCWSTR /*FullyQualifiedUrl*/)
 {
   return ERROR_INVALID_PARAMETER;
 }

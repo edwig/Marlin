@@ -7,7 +7,7 @@
 // Brandon Wilson: https://blogs.technet.microsoft.com/askpfeplat/2017/11/13/demystifying-schannel/
 // License:        https://www.codeproject.com/info/cpol10.aspx
 //
-#include "stdafx.h"
+#include "pch.h"
 #include "SSLUtilities.h"
 #include "CreateCertificate.h"
 #include "Logging.h"
@@ -822,8 +822,8 @@ SSLEncodeThumbprint(XString& p_thumbprint,PCRYPT_HASH_BLOB p_blob,DWORD p_len)
 
   for(int ind = 0; ind < p_thumbprint.GetLength();)
   {
-    int c1 = _totupper(p_thumbprint.GetAt(ind++));
-    int c2 = _totupper(p_thumbprint.GetAt(ind++));
+    int c1 = _totupper((unsigned short) p_thumbprint.GetAt(ind++));
+    int c2 = _totupper((unsigned short) p_thumbprint.GetAt(ind++));
 
     c1 = (c1 <= '9') ? c1 = c1 - _T('0') : c1 - _T('A') + 10;
     c2 = (c2 <= '9') ? c2 = c2 - _T('0') : c2 - _T('A') + 10;
@@ -868,7 +868,7 @@ SelectServerCert(PCCERT_CONTEXT& pCertContext, LPCTSTR p_storeName,BYTE* p_thumb
   SECURITY_STATUS status = FindCertificateByThumbprint(pCertContext,p_storeName,p_thumbprint);
   if(pCertContext)
   {
-    DebugMsg(_T("Server certificate requested for found %s"),GetCertificateName(pCertContext));
+    DebugMsg(_T("Server certificate requested for found %s"),GetCertificateName(pCertContext).GetString());
   }
   return status;
 }
@@ -885,7 +885,7 @@ ClientCertAcceptable(PCCERT_CONTEXT pCertContext, const bool trusted)
   {
     type = _T("An untrusted");
   }
-  DebugMsg(_T("%s client certificate was returned for: %s"),type,GetCertificateName(pCertContext));
+  DebugMsg(_T("%s client certificate was returned for: %s"),type.GetString(),GetCertificateName(pCertContext).GetString());
 
   // Meaning any certificate is fine, trusted or not, but there must be one
   return NULL != pCertContext;

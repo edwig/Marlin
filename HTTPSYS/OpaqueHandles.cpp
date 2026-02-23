@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "OpaqueHandles.h"
 #include <AutoCritical.h>
 #include <time.h>

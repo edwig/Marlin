@@ -7,14 +7,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "ServerSession.h"
 #include <windows.h>
 
-extern "C" BOOL WINAPI DllMain(HINSTANCE const instance,  // handle to DLL module
-                               DWORD     const reason,    // reason for calling function
-                               LPVOID    const reserved)  // reserved
+extern "C" BOOL WINAPI DllMain(HINSTANCE const /*instance*/,  // handle to DLL module
+                               DWORD     const reason,        // reason for calling function
+                               LPVOID    const /*reserved*/)  // reserved
 {
   // Perform actions based on the reason for calling.
   switch(reason)

@@ -10,6 +10,7 @@
 #pragma once
 #define SECURITY_WIN32
 #include <sspi.h>
+#include <time.h>
 
 // Test to see if it is still a request object
 #define HTTP_REQUEST_IDENT 0x00EDED0000EDED00

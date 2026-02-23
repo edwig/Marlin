@@ -70,7 +70,7 @@
     <ClCompile Include="ServerTestset\TestWebSocket.cpp">
       <Filter>Testset</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TestMarlinServerApp.cpp">
@@ -105,7 +105,7 @@
     <ClInclude Include="TestMarlinServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="pch.h">
       <Filter>Configuration</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">

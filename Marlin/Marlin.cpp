@@ -35,7 +35,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#include "stdafx.h"
+#include "pch.h"
 #include "Marlin.h"
 
 // Not much here: just the names of a bunch of things

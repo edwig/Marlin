@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Stdafx.h"
+#include "pch.h"
 #include "AutoCritical.h"
 #include "MarlinModule.h"
 #include "RunRedirect.h"

@@ -6,7 +6,7 @@
 // http://blogs.msdn.com/b/alejacma/archive/2009/03/16/how-to-create-a-self-signed-certificate-with-cryptoapi-c.aspx
 // Create a self-signed certificate and store it in the machine personal store
 // 
-#include "stdafx.h"
+#include "pch.h"
 #include "CreateCertificate.h"
 #include "Logging.h"
 #include <LogAnalysis.h>

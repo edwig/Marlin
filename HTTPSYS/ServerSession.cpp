@@ -7,7 +7,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "pch.h"
 #include "http_private.h"
 #include "ServerSession.h"
 #include "UrlGroup.h"
@@ -22,7 +22,7 @@
 // CTOR of HTTP Server session
 ServerSession::ServerSession()
 {
-  ASSERT(g_session == nullptr);
+  assert(g_session == nullptr);
 
   ReadRegistrySettings();
   InitializeCriticalSection(&m_lock);
@@ -30,7 +30,7 @@ ServerSession::ServerSession()
 
 ServerSession::~ServerSession()
 {
-  ASSERT(g_session);
+  assert(g_session);
 
   // Remove all URL groups
   do
