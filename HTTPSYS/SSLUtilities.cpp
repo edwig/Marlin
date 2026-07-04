@@ -553,13 +553,14 @@ HRESULT ShowCertInfo(PCCERT_CONTEXT pCertContext,const XString& Title)
     LogError(_T("CertGetName failed."));
   }
 
-	int Extensions = pCertContext->pCertInfo->cExtension;
-
-	auto *p = pCertContext->pCertInfo->rgExtension;
+#ifdef _DEBUG
+  int Extensions = pCertContext->pCertInfo->cExtension;
+    auto* p = pCertContext->pCertInfo->rgExtension;
 	for (int i = 0; i < Extensions; i++)
 	{
 		DebugMsg(_T("Extension %s"), (p++)->pszObjId);
 	}
+#endif
 
 	//-------------------------------------------------------------------
 	// Loop to find all of the property identifiers for the specified  

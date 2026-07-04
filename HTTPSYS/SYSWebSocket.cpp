@@ -59,8 +59,7 @@ SYSWebSocket::Close()
     if(m_socket->Close() == false)
     {
       // Log the error
-      int error = m_socket->GetLastError();
-      LogError(_T("Error shutdown websocket: %s Error: %d"),m_serverkey.GetString(),error);
+      LogError(_T("Error shutdown websocket: %s Error: %d"),m_serverkey.GetString(),m_socket->GetLastError());
     }
     m_socket->DropReference();
     m_socket = nullptr;

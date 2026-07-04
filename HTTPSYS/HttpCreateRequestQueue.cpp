@@ -55,10 +55,10 @@ HttpCreateRequestQueue(IN  HTTPAPI_VERSION      Version
   }
 
   // Create a name for the request queue
-  XString orgName(Name);
-  if(orgName.IsEmpty())
+  XString orgName(_T("HTTPServer"));
+  if(Name)
   {
-    orgName = "HTTPServer";
+    orgName = Name;
   }
 
   // Check if name is unique

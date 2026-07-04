@@ -374,7 +374,7 @@ HTTPManagerDlg::CheckPortRange()
 }
 
 void
-HTTPManagerDlg::CheckPathname(bool p_allow)
+HTTPManagerDlg::CheckPathname(bool /*p_allow*/)
 {
   // Check the absolute path
   if(m_absPath.IsEmpty())
@@ -586,8 +586,7 @@ HTTPManagerDlg::OnBnClickedAskurl()
   for(int port = m_port;port <= m_portUpto;++port)
   {
     XString prefix = CreateURLPrefix(m_binding,m_secure,port,(LPCTSTR)m_absPath);
-    prefix = _T("Inquiring for URL reservation: ") + prefix;
-    m_editStatus.SetWindowText(prefix.GetString());
+    m_editStatus.SetWindowText(_T("Inquiring for URL reservation: ") + prefix);
     MessagePump();
 
     if(DoCommand(CONFIG_ASKURL,prefix,command,parameters))
@@ -717,7 +716,7 @@ HTTPManagerDlg::OnBnClickedAskFW()
   CWaitCursor diepe_zucht;
 
   XString naam = MakeFirewallRuleName(ports);
-  parameters.Format(_T("advfirewall firewall show rule name=\"%s\" verbose"), naam);
+  parameters.Format(_T("advfirewall firewall show rule name=\"%s\" verbose"), naam.GetString());
 
   m_editStatus.SetWindowText(_T("Inquiring for Firewall rules for: ") + naam);
   MessagePump();

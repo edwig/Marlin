@@ -281,8 +281,7 @@ PlainSocket::AssociateThreadPool(HANDLE p_threadPoolIOCP)
   p_threadPoolIOCP = CreateIoCompletionPort((HANDLE)m_actualSocket,p_threadPoolIOCP,(ULONG_PTR)PlainSocketOverlappedResult,0);
   if(!p_threadPoolIOCP)
   {
-    DWORD error = GetLastError();
-    LogError(_T("Threadpool cannot register file handle for asynchroneous I/O completion. Error: %d"),error);
+    LogError(_T("Threadpool cannot register file handle for asynchroneous I/O completion. Error: %d"),GetLastError());
   }
 
   SetFileCompletionNotificationModes((HANDLE)m_actualSocket,FILE_SKIP_SET_EVENT_ON_HANDLE);

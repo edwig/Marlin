@@ -225,7 +225,7 @@ WebConfigDlg::WriteWebConfig()
 // WebConfigDlg message handlers
 
 void
-WebConfigDlg::OnTcnSelchangeTab(NMHDR *pNMHDR,LRESULT *pResult)
+WebConfigDlg::OnTcnSelchangeTab(NMHDR *pNMHDR,LRESULT* /*pResult*/)
 {
   int num = TabCtrl_GetCurSel(pNMHDR->hwndFrom);
     

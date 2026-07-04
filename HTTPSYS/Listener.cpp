@@ -242,8 +242,7 @@ void Listener::Listen(void)
     readSocket = WSAAccept(m_listenSockets[iMyIndex],0,0,0,0);
     if(readSocket == INVALID_SOCKET)
     {
-      int error = WSAGetLastError();
-      LogError(_T("Accept: readSocket == INVALID_SOCKET. Error: %d"), error);
+      LogError(_T("Accept: readSocket == INVALID_SOCKET. Error: %d"),WSAGetLastError());
       continue;
     }
 

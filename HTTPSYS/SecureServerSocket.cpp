@@ -155,7 +155,6 @@ SecureServerSocket::LogSSLInitError(HRESULT hr)
   if(FAILED(hr))
   {
     // ServerSocket will have m_secureMode = false
-    int err = GetLastError();
     switch(hr)
     {
       case CRYPT_E_NOT_FOUND:         LogError(_T("A usable SSL certificate could not be found"));
@@ -168,7 +167,7 @@ SecureServerSocket::LogSSLInitError(HRESULT hr)
                                       break;
       case E_ACCESSDENIED:            LogError(_T("Could not access certificate store, is this program running with administrative privileges?"));
                                       break;
-      default:                        LogError(_T("SSL could not be used, hr=0x%lx, lasterror=0x%lx"), hr, err);
+      default:                        LogError(_T("SSL could not be used, hr=0x%lx, lasterror=0x%lx"), hr,GetLastError());
                                       break;
     }
   }
@@ -391,7 +390,7 @@ int SecureServerSocket::SendPartial(LPCVOID p_buffer, const ULONG p_length)
   Buffers[3].BufferType = SECBUFFER_EMPTY;
 
   // Put the message in the right place in the buffer
-  memcpy_s(m_writeBuffer + m_sizes.cbHeader, sizeof(m_writeBuffer) - m_sizes.cbHeader - m_sizes.cbTrailer, p_buffer, p_length);
+  memcpy_s(m_writeBuffer + m_sizes.cbHeader, (m_maxMsgSize + m_maxExtraSize) - m_sizes.cbHeader - m_sizes.cbTrailer, p_buffer, p_length);
 
   //
   // Line up the buffers so that the header, trailer and content will be
@@ -874,41 +873,40 @@ SecureServerSocket::Disconnect(int p_how /*=SD_BOTH*/)
 SECURITY_STATUS 
 SecureServerSocket::CreateCredentialsFromCertificate(PCredHandle phCreds, PCCERT_CONTEXT pCertContext)
 {
-   // Build SCHANNEL credential structure.
-   SCHANNEL_CRED   SchannelCred = { 0 };
-   SchannelCred.dwVersion = SCHANNEL_CRED_VERSION;
-   SchannelCred.cCreds    = 1;
-   SchannelCred.paCred    = &pCertContext;
-   SchannelCred.dwFlags   = SCH_USE_STRONG_CRYPTO;
-   SchannelCred.grbitEnabledProtocols = SP_PROT_TLS1_2_SERVER;
+  // Build SCHANNEL credential structure.
+  SCHANNEL_CRED   SchannelCred = { 0 };
+  SchannelCred.dwVersion = SCHANNEL_CRED_VERSION;
+  SchannelCred.cCreds    = 1;
+  SchannelCred.paCred    = &pCertContext;
+  SchannelCred.dwFlags   = SCH_USE_STRONG_CRYPTO;
+  SchannelCred.grbitEnabledProtocols = SP_PROT_TLS1_2_SERVER;
 
-   SECURITY_STATUS Status;
-   TimeStamp       tsExpiry;
-   // Get a handle to the SSPI credential
-   Status = g_pSSPI->AcquireCredentialsHandle(NULL,                   // Name of principal
-                                              (LPTSTR)UNISP_NAME,     // Name of package
-                                              SECPKG_CRED_INBOUND,    // Flags indicating use
-                                              NULL,                   // Pointer to logon ID
-                                              &SchannelCred,          // Package specific data
-                                              NULL,                   // Pointer to GetKey() func
-                                              NULL,                   // Value to pass to GetKey()
-                                              phCreds,                // (out) Cred Handle
-                                              &tsExpiry);             // (out) Lifetime (optional)
+  SECURITY_STATUS Status;
+  TimeStamp       tsExpiry;
+  // Get a handle to the SSPI credential
+  Status = g_pSSPI->AcquireCredentialsHandle(NULL,                   // Name of principal
+                                            (LPTSTR)UNISP_NAME,     // Name of package
+                                            SECPKG_CRED_INBOUND,    // Flags indicating use
+                                            NULL,                   // Pointer to logon ID
+                                            &SchannelCred,          // Package specific data
+                                            NULL,                   // Pointer to GetKey() func
+                                            NULL,                   // Value to pass to GetKey()
+                                            phCreds,                // (out) Cred Handle
+                                            &tsExpiry);             // (out) Lifetime (optional)
 
-   if (Status != SEC_E_OK)
-   {
-      DWORD dw = GetLastError();
-      if(Status == SEC_E_UNKNOWN_CREDENTIALS)
-      {
-        LogError(_T("**** Error: 'Unknown Credentials' returned by AcquireCredentialsHandle. Be sure app has administrator rights. LastError=%d"),dw);
-      }
-      else
-      {
-        LogError(_T("**** Error 0x%x returned by AcquireCredentialsHandle. LastError=%d."),Status,dw);
-      }
-      return Status;
-   }
-   return SEC_E_OK;
+  if (Status != SEC_E_OK)
+  {
+    if(Status == SEC_E_UNKNOWN_CREDENTIALS)
+    {
+      LogError(_T("**** Error: 'Unknown Credentials' returned by AcquireCredentialsHandle. Be sure app has administrator rights. LastError=%d"),GetLastError());
+    }
+    else
+    {
+      LogError(_T("**** Error 0x%x returned by AcquireCredentialsHandle. LastError=%d."),Status,GetLastError());
+    }
+    return Status;
+  }
+  return SEC_E_OK;
 }
 
 // sends all the data or returns a timeout
@@ -932,7 +930,7 @@ SecureServerSocket::SendMsg(LPCVOID p_buffer,const ULONG p_length)
     {
       toSend = m_maxMsgSize;
     }
-    bytes_sent = SecureServerSocket::SendPartial((TCHAR*)p_buffer + total_bytes_sent,toSend);
+    bytes_sent = SecureServerSocket::SendPartial((BYTE*)p_buffer + total_bytes_sent,toSend);
     if((bytes_sent == SOCKET_ERROR))
     {
       return SOCKET_ERROR;
@@ -966,7 +964,7 @@ SecureServerSocket::RecvMsg(LPVOID p_buffer,const ULONG p_length)
 
   while(total_bytes_received < p_length)
   {
-    bytes_received = SecureServerSocket::RecvPartial((TCHAR*)p_buffer + total_bytes_received,p_length - total_bytes_received);
+    bytes_received = SecureServerSocket::RecvPartial((BYTE*)p_buffer + total_bytes_received,p_length - total_bytes_received);
     if(bytes_received == SOCKET_ERROR)
     {
       return SOCKET_ERROR;

@@ -185,8 +185,7 @@ Request::CloseRequest()
     if(m_socket->Close() == false)
     {
       // Log the error
-      int error = m_socket->GetLastError();
-      LogError(_T("Error shutdown connection: %s Error: %d"),m_request.pRawUrl,error);
+      LogError(_T("Error shutdown connection: %s Error: %d"),m_request.pRawUrl,m_socket->GetLastError());
     }
     m_socket->DropReference();
     m_socket = nullptr;
