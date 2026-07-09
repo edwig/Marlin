@@ -383,6 +383,7 @@ WebSocketServerIIS::SocketReader(HRESULT p_error
     {
       OnBinary();
     }
+    return;
   }
 
   if(m_server && m_iis_socket)
