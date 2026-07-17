@@ -245,6 +245,7 @@ ServerEventDriver::SetChannelPolicy(int              p_channel
                                    ,LPFN_CALLBACK    p_application /*= nullptr*/
                                    ,UINT64           p_data        /*= nullptr*/)
 {
+  AutoCritSec lock(&m_lock);
   ChannelMap::iterator it = m_channels.find(p_channel);
 
   if(it != m_channels.end())
@@ -258,6 +259,7 @@ ServerEventDriver::SetChannelPolicy(int              p_channel
 bool
 ServerEventDriver::CheckChannelPolicy(int m_channel)
 {
+  AutoCritSec lock(&m_lock);
   ChannelMap::iterator it = m_channels.find(m_channel);
 
   if(it != m_channels.end())
